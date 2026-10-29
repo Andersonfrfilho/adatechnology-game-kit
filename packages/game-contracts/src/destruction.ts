@@ -45,6 +45,18 @@ export type PartShape =
 
 export type FluidKind = 'water' | 'fuel' | 'oil' | 'gas' | 'sap' | 'acid' | 'blood' | string
 
+/** Seconds from a trigger to the blast: fixed, or `[min, max]` drawn from the world seed. */
+export type ChainDelay = number | readonly [number, number]
+
+/** How an explosive part is set off by what happens around it. See `PartSpec.explodes`. */
+export interface ExplosionChain {
+  shot?: ChainDelay
+  fire?: ChainDelay
+  explosion?: ChainDelay
+  /** Fraction of the part's hit points a shot must have taken off before it sets the part off (default 0: any hit). */
+  shotDamageFraction?: number
+}
+
 export interface PartSpec {
   /** Unique inside the object. */
   id: string
@@ -65,9 +77,30 @@ export interface PartSpec {
   /** Axis of the grain for `splinter` materials, in local space (default the longest axis). */
   grain?: 'x' | 'y' | 'z'
   /** Fluid inside the part; punctures make it leak (a `leak` event per hole, the level drops in `update`). */
-  contains?: { fluid: FluidKind; liters: number; pressurized?: boolean }
+  contains?: {
+    fluid: FluidKind
+    liters: number
+    pressurized?: boolean
+    /**
+     * Object-local direction the fluid leaves through a hole (the `leak` event's `direction`), for a fluid that does not spray back out of the hole
+     * but runs down through it: the water on a roof membrane goes `[0, -1, 0]` into the floor below. Default: out of the hole (its normal).
+     */
+    outflow?: Vec3
+  }
   /** The part explodes when destroyed, or when its temperature passes `atC` (gas bottle, fuel tank, aerosol). */
-  explodes?: { energy: number; radius: number; atC?: number }
+  explodes?: {
+    energy: number
+    radius: number
+    atC?: number
+    /**
+     * Chain reaction: what sets the part off before it is destroyed and the seconds from that to the blast (a number, or `[min, max]` drawn
+     * from the world seed). `shot`: a bullet hit; `fire`: the part gets to `atC` (default 300 °C) or burns; `explosion`: a blast reaches it.
+     * Each part goes off once. Without `chain`, it explodes only when destroyed (or at `atC`).
+     */
+    chain?: ExplosionChain
+    /** Id of the effect the host plays for the blast (`explosion_fuel_barrel`); without it the host picks a generic one by `energy` and `radius`. */
+    effect?: string
+  }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
@@ -77,8 +110,119 @@ export interface PartSpec {
    * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
    * or furniture is not part of the structure. Objects without any structural part behave as before.
    */
-  structure?: { role: StructureRole; capacity?: number }
+  structure?: { role: StructureRole; capacity?: number; rebar?: TensionRebar; pile?: PileSpec }
+  /**
+   * Coats over the core, outermost first (plaster, tile, the paper of a drywall board). `thickness` of the part is the core only; each coat adds
+   * `material.penetration x thickness` to what a bullet must get through, and a hit spalls the outer coat at the impact (`spall` event) before it
+   * reaches the core.
+   */
+  layers?: readonly SurfaceLayer[]
+  /** Steel inside a concrete part: when the part reaches 0 hp the concrete crumbles but the cage stays (`expose`, `PartState.stripped`). */
+  reinforcement?: Reinforcement
+  /** Masonry made of units (bricks, blocks, panels): fragments of a breach or a fracture are the size of one unit, laid in `bond`. */
+  units?: PartUnits
+  /**
+   * Opts the part into damage stages (`PartState.stage`, `stage` events). Through damage (through holes, blunt and explosive damage) within
+   * `radius` metres of a point that adds up to `area` square metres opens the part: stage 2, the part stays with an opening.
+   */
+  breach?: PartBreach
+  /**
+   * The part is a tuned mass damper: a mass on springs and dashpots near the top of a building that moves against its sway (`wind`). Its `mass` is the
+   * damper's mass and enters the load like any other part. Without `frequency` and `damping` the world tunes it to the building (Den Hartog).
+   */
+  damper?: TunedMassDamper
 }
+
+/** A tuned mass damper (`PartSpec.damper`). */
+export interface TunedMassDamper {
+  /** Natural frequency of the damper on its springs, in Hz (default: tuned to the first mode of the building by `wind.tuning`). */
+  frequency?: number
+  /** Damping ratio of the damper (default: the optimum for its mass ratio). */
+  damping?: number
+}
+
+/** A coat over a part's core. `faces` says on which side(s) of the part's thinnest axis it lies (`'+'` and `'-'` are the local +/- directions). */
+export interface SurfaceLayer {
+  material: MaterialId
+  /** Metres. */
+  thickness: number
+  faces: 'both' | '+' | '-'
+}
+
+/** Rebar of a concrete part. Plates get two perpendicular grids at mid thickness, long members (columns, beams) bars along their length. */
+export interface Reinforcement {
+  material: MaterialId
+  /** Metres between bars (0.18). */
+  spacing: number
+  /** Bar diameter in metres (0.007 to 0.010). */
+  diameter: number
+  /** Fraction of the part's structural capacity the bare cage keeps (default 0.15). */
+  residualCapacity?: number
+}
+
+/**
+ * Tension steel of a concrete beam, slab, roof or stair for the bending model (`DestructionOptions.structure.flexure`), when it is not taken from the
+ * `reinforcement` cage. `ratio` is the steel area over the effective section of the tension face, `As / (b * d)` (NBR 6118: at least 0.15% for
+ * C25-C30; beams 0.5-1.5%, slabs 0.2-0.6%). Unlike `reinforcement` it draws no bars and does not stage the part.
+ */
+export interface TensionRebar {
+  /** `As / (b * d)` of the tension face, 0..0.04. */
+  ratio: number
+  /** Yield strength of the steel in MPa (default `flexure.rebarYieldMPa`, 500 = CA-50). */
+  yieldMPa?: number
+  /** Concrete cover to the bar in metres (default `flexure.cover`). */
+  cover?: number
+}
+
+/**
+ * Deep foundation under a `foundation` part (its pile cap): `count` concrete piles of `diameter` going `length` metres down from the bottom of the
+ * part, laid out in a grid under it. They carry the load by end bearing at the tip and skin friction along the shaft, from the soil layers they go
+ * through (`DestructibleSpec.soil`). Without it a foundation part is a shallow footing (pad, strip or raft) that bears on the soil under it.
+ */
+export interface PileSpec {
+  /** Metres below the bottom of the part. */
+  length: number
+  /** Metres. */
+  diameter: number
+  /** Piles under the part (default 1). */
+  count?: number
+  /** `bored` (cast in place, the default) or `driven` (precast): how much of the soil's resistance the pile mobilises. */
+  method?: 'bored' | 'driven'
+}
+
+/** One layer of soil, from the top down. `soil` is a soil class id (`clay_soft`, `sand_dense`, `rock`...); the last layer goes on forever. */
+export interface SoilLayer {
+  soil: string
+  /** Metres (ignored on the last layer). */
+  thickness?: number
+}
+
+/** The ground under an object. Settlement, tilt and bearing failure are computed only for objects that have one. */
+export interface SoilProfile {
+  layers: readonly SoilLayer[]
+  /** Object-local height of the ground surface (default: the top of the highest foundation part). */
+  surface?: number
+  /** Width a footing has at least where a part rests on a foundation tagged `terrain` (default 0.6 m, the NBR 6122 minimum). */
+  footingWidth?: number
+}
+
+/** Size of one masonry unit in the part's axes (`size[2]` is along the part's thinnest axis, clamped to it) and how rows are laid. */
+export interface PartUnits {
+  size: Vec3
+  bond: 'running' | 'stack'
+  mortar: MaterialId
+}
+
+export interface PartBreach {
+  /** Square metres of through damage inside the breach radius that open the part (default 0.25). */
+  area?: number
+}
+
+/**
+ * Damage stage of a part with `breach`/`layers`/`units`/`reinforcement`: 0 intact, 1 marked (first hole or crack), 2 breached (an opening you can
+ * pass through), 3 gone (fractured or collapsed).
+ */
+export type DamageStage = 0 | 1 | 2 | 3
 
 /**
  * Role of a part in the structure of a building. `partition` is a non-load-bearing wall: it is supported by other parts and carries nothing, so
@@ -123,6 +267,32 @@ export interface DestructibleSpec {
   joints?: JointSpec[]
   /** Free tags (`furniture`, `vehicle`, `plant`, `structure`, `weapon`, `item`...). */
   tags?: string[]
+  /**
+   * The ground the object stands on: a soil class id (one layer) or a profile. With it the foundations bear on the soil: the object settles, tilts
+   * and, when the soil cannot carry it, sinks and tips over (`ObjectState.soil`, `settle` events). Without it the foundations are fixed as before.
+   */
+  soil?: string | SoilProfile
+  /**
+   * How this object takes the wind of the world (`DestructionOptions.wind`): where it stands and what shape it has. Each field replaces the world's for
+   * this object. `false` keeps the object out of the wind. Without the world's `wind` it does nothing.
+   */
+  wind?: WindExposure | false
+}
+
+/** What belongs to the place and the shape of one building in the wind (`DestructibleSpec.wind`; the world's `wind` has the same fields as defaults). */
+export interface WindExposure {
+  /** Roughness category of the terrain around it, `I` (sea, flat water) to `V` (city centre with tall buildings): NBR 6123 table 1. */
+  terrain?: 'I' | 'II' | 'III' | 'IV' | 'V'
+  /** Class by the largest dimension, `A` up to 20 m, `B` to 50 m, `C` above (`auto`: from the building). */
+  class?: 'auto' | 'A' | 'B' | 'C'
+  /** Topographic factor S1 (1: flat ground; a hill top is above 1). */
+  topography?: number
+  /** Statistical factor S3 (1: homes and offices; 1.1 for essential buildings). */
+  statistical?: number
+  /** Drag coefficient Ca of the whole building (1.3: windward 0.8 + leeward 0.5). */
+  drag?: number
+  /** Structural damping ratio of the first mode (0.016: reinforced concrete). */
+  damping?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,6 +316,94 @@ export type DamageType =
   /** heat without flame (cutting torch, hot plate): `temperature`, `radius`, `duration`; heats and melts */
   | 'heat'
 
+/**
+ * What stands between a blast and what it reaches (`blast.shelter`). Each part the line from the centre to the target crosses lets through
+ * `exp(-resistance / k)` of the energy, with `resistance = hpPerKg * density * path * damageScale.shelter` (the hit points of the slab it crosses,
+ * per square metre). Defaults: `k` 2800, `brokenTransmission` 0.5 (a brick wall of 20 cm lets 19%, a 4 cm wooden door 53%, 6 mm glass 83%).
+ */
+export interface ShelterOptions {
+  /** Hit points per square metre at which a slab lets `1/e` (37%) through (default 2800). */
+  k?: number
+  /** Share of what a blocker held back that goes through anyway when the blocker is destroyed or breached by this same blast (default 0.5). */
+  brokenTransmission?: number
+  /** Shortest path through a part that counts as a crossing, in metres (default 0.005). */
+  minPath?: number
+}
+
+/**
+ * Fragments of a part a blast breaks, thrown as low-energy hits on what they reach (`blast.fragmentHits`). Each fragment hits with
+ * `energyFactor * m * v^2 / 2` joules. Defaults: `max` 24, `energyFactor` 0.5, `hitType` blunt, `range` 6 m, `flightTime` 0.4 s, `spread` 10 deg, `aim` 40 deg.
+ */
+export interface FragmentHitOptions {
+  /** Most fragment hits in one blast; the most energetic go first (default 24). */
+  max?: number
+  /** Share of the fragment's kinetic energy that lands as the hit (default 0.5). */
+  energyFactor?: number
+  /** `blunt` (default), or `ballistic` (the hit carries the fragment's mass in grams and a calibre from its size). */
+  hitType?: 'blunt' | 'ballistic'
+  /** Longest throw in metres (default 6); the throw is also limited to `speed * flightTime`. */
+  range?: number
+  /** Seconds of flight that set the throw range with the speed (default 0.4). */
+  flightTime?: number
+  /** Half angle in degrees of the seeded scatter around the aim (default 10). */
+  spread?: number
+  /** With `shelter`: fragments of a blocker whose line to a target is within this many degrees of their flight aim at that target (default 40). */
+  aim?: number
+}
+
+/** Pressure of a blast in an enclosed volume (`blast.confinement`): `1 + gain * closed^power * clamp(radius / meanDistance, 0, 2)`, up to `max`. */
+export interface ConfinementOptions {
+  /** Seeded rays from the centre (default 26). */
+  rays?: number
+  /** The rays reach `radius * reach` (default 1.5). */
+  reach?: number
+  /** Default 1.5. */
+  gain?: number
+  /** Exponent on the closed share of the rays (default 2). */
+  power?: number
+  /** Largest multiplier (default 3). */
+  max?: number
+}
+
+/**
+ * Options of a blast, all off by default (the blast then behaves exactly as before): world defaults in `DestructionOptions.blast`, per call in
+ * `world.explode(..., options)` and on the explosive `Hit`.
+ */
+export interface BlastOptions {
+  /** Walls and other parts between the centre and the target take their share of the blast. `true` for the defaults. */
+  shelter?: boolean | ShelterOptions
+  /** Fragments of what the blast breaks fly on to hit what is behind. `true` for the defaults. */
+  fragmentHits?: boolean | FragmentHitOptions
+  /** A number is the multiplier itself (a room volume the host knows, skips the rays); `true` or options estimate it with rays. */
+  confinement?: boolean | number | ConfinementOptions
+}
+
+/** What a blast did to one target (`HitResult.blast`). */
+export interface BlastReport {
+  /** Share of the blast that reaches the target, 0..1 (the most exposed part of an object; 1 without `shelter`). */
+  shelter: number
+  /** Share per part that took the blast, when `shelter` is on. */
+  parts?: Record<string, number>
+  /** Pressure multiplier applied to the blast energy (1 without `confinement`). */
+  confinement: number
+  /** Fragment hits that landed on this target. */
+  fragmentHits: number
+}
+
+/**
+ * How likely a round is to set flammable vapour or fuel alight when it hits a container of it, as the weapons module resolves them for the round
+ * (core, jacket, incendiary or tracer composition, each with a configured chance). 0..1 each, per hit.
+ */
+export interface HitIgnition {
+  /** Sparks from a hard core or jacket striking metal: counts only when the struck part is metal. */
+  spark: number
+  /** A flame the round carries (incendiary, tracer): counts whatever it hits. */
+  flame: number
+}
+
+/** The ballistic fields of a `Hit` that come from the round and not from the shot geometry (see `shotExtras`). */
+export type BallisticExtras = Pick<Hit, 'piercing' | 'penetration' | 'incendiary' | 'tracer' | 'ignition'>
+
 export interface Hit {
   type: DamageType
   /** Point of the hit (world space unless `space: 'local'`). For `explosive` it is the centre of the blast. */
@@ -166,6 +424,36 @@ export interface Hit {
   space?: 'world' | 'local'
   /** Who caused it (passed through to events). */
   source?: string
+  /** Projectile mass in grams (ballistic): the penetration of a body needs it, the energy alone does not say how much a bullet pushes. */
+  mass?: number
+  /** 0..1, how much of the blow is an edge that cuts through (slash 0.85, blunt 0, explosive 1; a bullet carries its own). */
+  cut?: number
+  /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
+  part?: string
+  /**
+   * Ballistic: how well the bullet cuts through for its energy, default 1 (a rifle FMJ). Soft lead (a slug, buckshot) deforms and goes through
+   * less steel than its joules say, an armour-piercing core more: the energy that counts against the penetration of a hard material (metal, masonry) is `energy * piercing`; wood, glass and soft materials take the energy as it is.
+   */
+  piercing?: number
+  /**
+   * Ballistic: how far the projectile goes through, in millimetres, by material class (`steel`, `concrete`, `brick`, `wood`, or a material id). The world
+   * takes the entry of the struck material (its `penetrationClass`, else its id, scaled by its `penetrationScale`) and the bullet goes through when it is
+   * at least as thick as the part; a material with no entry falls back to the energy rule (`energy` and `piercing`). The engine reads no calibre
+   * names: the weapons put the numbers here (`ammo.penetration` of `@adatechnology/game-weapons`, scaled by the energy left at the hit).
+   */
+  penetration?: Readonly<Record<string, number>>
+  /** Ballistic: the round carries an incendiary composition (it can light flammable vapour and fuel whatever it hits). */
+  incendiary?: boolean
+  /** Ballistic: the round is a tracer (a burning pyrotechnic in the base). */
+  tracer?: boolean
+  /** Ballistic: chances that the round lights flammable vapour or fuel (see `HitIgnition`). Absent: it never does. */
+  ignition?: HitIgnition
+  /** Explosive: pressure multiplier the host knows (a room volume); the energy is then `energy * confinement` and the ray estimate is skipped. */
+  confinement?: number
+  /** Explosive: per-call blast options (see `BlastOptions`). */
+  blast?: BlastOptions
+  /** Explosive hit on an impl: the share of the blast that reaches it after what stood between; `energy` is already reduced by it. Informational. */
+  shelter?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,8 +526,75 @@ export interface PartState {
    */
   load?: number
   stress?: number
+  /** Damage stage; only present on parts that opted in (see `PartSpec.breach`). */
+  stage?: DamageStage
+  /**
+   * Beams, slabs, roofs and stairs of a material with `strength.tensileMPa` only: bending moment at rest over the moment the section holds (the steel's
+   * when it is reinforced and holds more than the concrete's cracking moment, else the cracking moment). `stress` is the largest of this and the
+   * compression ratio.
+   */
+  flexure?: number
+  /** Axial force the wind adds to a wall or column, in newtons (compression positive, tension negative; `DestructionOptions.wind`). */
+  wind?: number
+  /** The tension face cracked (a blast, an impact or the load bent it past the cracking moment): the concrete no longer carries tension, the steel does. */
+  cracked?: boolean
+  /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
+  stripped?: boolean
+  /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
+  opening?: { center: Vec3; radius: number }
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
+}
+
+/** How the ground under an object is holding (`DestructibleSpec.soil`). */
+export interface SoilState {
+  /** Metres the foundations went down, at their centre of stiffness. */
+  settlement: number
+  /** Degrees the object leans from the vertical. */
+  tilt: number
+  /** Object-local horizontal unit vector the top leans toward (zero when it stands straight). */
+  direction: Vec3
+  /** Weight of the object over what its foundations can carry before the soil gives way (above 1 it sinks). */
+  bearing: number
+  /** Largest share of its capacity any foundation (a strip of a footing, a pile) is using, 0..1: at 1 the soil under it is yielding. */
+  edge: number
+  /** `stable`: at rest; `yielding`: the soil is giving way and the object is still moving; `toppled`: it tipped over. */
+  status: 'stable' | 'yielding' | 'toppled'
+  /**
+   * The settled pose relative to the pose the host gave (`setTransform`), in object-local space: draw the object's parts under a node with this
+   * transform. `ObjectState.position` and `rotation` already include it.
+   */
+  offset: { position: Vec3; rotation: Quat }
+}
+
+/** How a building is taking the wind (`DestructionOptions.wind`). */
+export interface WindState {
+  /** Basic speed of the wind in m/s. */
+  speed: number
+  /** Design pressure at the top, N/m². */
+  pressure: number
+  /** Design shear at the base, N (the sum of the forces on every storey). */
+  shear: number
+  /** Design overturning moment at the base, N m. */
+  moment: number
+  /** Top deflection under the design wind, metres. */
+  deflection: number
+  /** Top deflection over the height (the drift) and its limit (default 1/500). */
+  drift: number
+  limit: number
+  /** Overturning moment over what the weight resists (above 1 the building tips over on its foundation). */
+  overturn: number
+  /** First-mode frequency in Hz. */
+  frequency: number
+  /** Top deflection under the mean wind, metres: how far the building leans while the wind blows. */
+  lean: number
+  /** Swing of the top about that lean now and its recent peak, metres, along the wind. */
+  sway: number
+  peak: number
+  /** Tuned mass damper: mass over the modal mass and its travel against the top now, metres. */
+  damper?: { ratio: number; travel: number }
+  /** `ok`; `drift`: the drift is over its limit; `overturn`: the overturning moment passes what the weight resists. */
+  status: 'ok' | 'drift' | 'overturn'
 }
 
 export interface JointState {
@@ -271,6 +626,12 @@ export interface ObjectState {
   groups: string[][]
   /** Every part is broken, melted or ash. */
   destroyed: boolean
+  /** Only objects with `DestructibleSpec.soil`: how the ground under it is holding. */
+  soil?: SoilState
+  /** Only structures in the wind of the world (`DestructionOptions.wind`): the load, the drift and the sway of the building. */
+  wind?: WindState
+  /** Only objects that are a living body (a character, an animal): the summary the crowd and the HUD read. */
+  body?: { alive: boolean; vitality: number; missing: number; limp: boolean; crawl: boolean }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -290,6 +651,15 @@ export interface Fragment {
   velocity: Vec3
   angularVelocity: Vec3
   mass: number
+  /** Holes the part had where this fragment came from, in the fragment's own axes: the renderer keeps them on the debris. */
+  marks?: readonly FragmentMark[]
+}
+
+export interface FragmentMark {
+  /** Relative to the fragment's centre, in the fragment's axes. */
+  point: Vec3
+  normal: Vec3
+  diameter: number
 }
 
 interface EventBase {
@@ -316,11 +686,62 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; effect?: string })
+  /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
+  | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
   | (EventBase & { type: 'stress'; part: string; stress: number; load: number })
+  /**
+   * The ground under an object moved (`DestructibleSpec.soil`): it settled or leans more, the soil started or stopped yielding, or it tipped over
+   * (`status: 'toppled'`, followed by a `collapse` of everything). Throttled to once per 0.5 s while it moves. `direction` is in world space.
+   */
+  | (EventBase & { type: 'settle'; settlement: number; tilt: number; direction: Vec3; bearing: number; status: SoilState['status'] })
+  /**
+   * A building in the wind (`DestructionOptions.wind`) changed how it stands: the drift went over its limit or came back, the overturning moment passed
+   * what the weight resists, or the sway of the top grew. Throttled to once per 0.5 s. `direction` is the wind's, in world space.
+   */
+  | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
+  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */
+  | (EventBase & { type: 'spall'; part: string; layer: number; point: Vec3; area: number })
+  /**
+   * A staged part changed stage. At stage 2 `opening` is where the breach is and `fragments` the unit-sized pieces that came out (the part is not
+   * removed: draw the fragments and cut the opening, do not hide the part). Stage 3 follows a `fracture` or a `collapse`.
+   */
+  | (EventBase & { type: 'stage'; part: string; stage: DamageStage; opening?: { center: Vec3; radius: number }; fragments?: readonly Fragment[] })
+  /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
+  | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
+  /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */
+  | (EventBase & {
+      type: 'body'
+      part?: string
+      change: 'wound' | 'broken' | 'severed' | 'destroyed' | 'split' | 'limp' | 'crawl' | 'stunned' | 'killed'
+      cause?: 'head' | 'vitality' | 'bleed' | 'explosion'
+      below?: string[]
+      exit?: Vec3
+    })
+  /** A blast with `shelter`, `fragmentHits` or `confinement` on: what it did (once per blast, after its damage). `energy` is the blast energy after confinement. */
+  | (EventBase & {
+      type: 'blast'
+      point: Vec3
+      energy: number
+      radius: number
+      confinement: number
+      shelter: Array<{ object: string; part?: string; factor: number }>
+      fragmentHits: number
+    })
+  /** A fragment of a part the blast broke hit something (`blast.fragmentHits`); the target's own events follow. */
+  | (EventBase & {
+      type: 'fragment_hit'
+      from: { object: string; part: string }
+      target: { object: string; part?: string }
+      point: Vec3
+      direction: Vec3
+      energy: number
+      mass: number
+      speed: number
+    })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']
@@ -338,6 +759,8 @@ export interface HitResult {
   penetrated: boolean
   exitEnergy: number
   events: DestructionEvent[]
+  /** Explosive hits with `shelter`, `fragmentHits` or `confinement` on: what the blast did to this target. */
+  blast?: BlastReport
 }
 
 export interface RayHit {

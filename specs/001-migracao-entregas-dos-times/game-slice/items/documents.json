@@ -1,0 +1,161 @@
+[
+  {
+    "id": "survivor_diary",
+    "teamId": "diario",
+    "name": "Diário de sobrevivente",
+    "category": "collectibles",
+    "weight": 0.3,
+    "rarity": "unique",
+    "use": "Fica onde um NPC nomeado morreu ou partiu. Atualiza o diário do jogador.",
+    "regions": []
+  },
+  {
+    "id": "military_map",
+    "teamId": "mapa_militar",
+    "name": "Mapa militar",
+    "category": "collectibles",
+    "weight": 0.05,
+    "rarity": "very_rare",
+    "use": "Revela as rotas de horda monitoradas e o ponto de evacuação.",
+    "regions": [
+      "base_7_bis"
+    ]
+  },
+  {
+    "id": "evacuation_order",
+    "teamId": "ordem_evac",
+    "name": "Ordem de evacuação do 7º BIS",
+    "category": "collectibles",
+    "weight": 0.05,
+    "rarity": "unique",
+    "use": "Pista final: por que a evacuação falhou.",
+    "regions": [
+      "base_7_bis"
+    ]
+  },
+  {
+    "id": "patient_zero_record",
+    "teamId": "prontuario",
+    "name": "Prontuário do paciente zero",
+    "category": "collectibles",
+    "weight": 0.1,
+    "rarity": "unique",
+    "use": "Primeira pista do Dr. Sato.",
+    "regions": [
+      "santa_aurora"
+    ]
+  },
+  {
+    "id": "prisoner_files",
+    "teamId": "fichas_presos",
+    "name": "Fichas da penitenciária",
+    "category": "collectibles",
+    "weight": 0.2,
+    "rarity": "unique",
+    "use": "Mostra quem fugiu na rebelião e para onde.",
+    "regions": [
+      "penitentiary"
+    ]
+  },
+  {
+    "id": "mine_logbook",
+    "teamId": "registro_mina",
+    "name": "Livro de registro da Mina São Jorge",
+    "category": "collectibles",
+    "weight": 0.4,
+    "rarity": "unique",
+    "use": "Diz onde ficou a dinamite.",
+    "regions": [
+      "serra_and_mata_funda"
+    ]
+  },
+  {
+    "id": "radio_tape",
+    "teamId": "fita_radio",
+    "name": "Fita da Rádio Vale FM (12)",
+    "category": "collectibles",
+    "weight": 0.05,
+    "rarity": "unique",
+    "use": "Coleção: 12 fitas contam a semana 0 do surto pela voz da Jéssica.",
+    "regions": [
+      "santa_aurora"
+    ]
+  },
+  {
+    "id": "valley_postcard",
+    "teamId": "postal",
+    "name": "Cartão-postal do Vale (19)",
+    "category": "collectibles",
+    "weight": 0.01,
+    "rarity": "unique",
+    "use": "Coleção: um por cidade e vila. Cada um marca no mapa um esconderijo com loot.",
+    "regions": [
+      "villages_and_roads",
+      "vila_do_corvo"
+    ]
+  },
+  {
+    "id": "npc_marked_item",
+    "teamId": "item_marcado",
+    "name": "Item marcado de NPC (31)",
+    "category": "collectibles",
+    "weight": 0.2,
+    "rarity": "unique",
+    "use": "Fones da Jéssica, terço da Zilda, capacete do Kauã. Saqueado do zumbi nomeado, abre diálogo.",
+    "regions": []
+  },
+  {
+    "id": "dam_badge",
+    "teamId": "cracha_rep",
+    "name": "Crachá da hidrelétrica",
+    "category": "keys",
+    "weight": 0.01,
+    "rarity": "unique",
+    "use": "Abre a casa de força; precisa de energia para o leitor.",
+    "regions": [
+      "dam"
+    ]
+  },
+  {
+    "id": "bunker_code",
+    "teamId": "codigo_bunker",
+    "name": "Código do bunker (3 pedaços)",
+    "category": "keys",
+    "weight": 0.01,
+    "rarity": "unique",
+    "use": "Seis dígitos em três papéis: um na torre, um com a Cabo Renata, um num oficial zumbi. Abre o cofre interno; a porta externa pede o cartão do bunker (cartao_bunker).",
+    "regions": [
+      "base_7_bis"
+    ]
+  },
+  {
+    "id": "cable_car_key",
+    "teamId": "chave_teleferico",
+    "name": "Chave do teleférico",
+    "category": "keys",
+    "weight": 0.05,
+    "rarity": "unique",
+    "use": "Com gerador, a cabine leva à Serra do Corvo sem passar pela trilha.",
+    "regions": [
+      "vila_do_corvo"
+    ]
+  },
+  {
+    "id": "house_d_key",
+    "teamId": "chave_casa_d",
+    "name": "Chave da Casa D",
+    "category": "keys",
+    "weight": 0.02,
+    "rarity": "unique",
+    "use": "Abre a porta da Casa D, a casa trancada da rua."
+  },
+  {
+    "id": "signal_flare",
+    "teamId": "sinalizador",
+    "name": "Sinalizador",
+    "category": "electronics",
+    "weight": 0.3,
+    "rarity": "unique",
+    "use": "Acenda no telhado da Casa 8 para chamar o resgate."
+  }
+]

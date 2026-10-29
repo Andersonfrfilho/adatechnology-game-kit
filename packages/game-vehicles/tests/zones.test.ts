@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { makeKit } from './helpers/kit'
+
+/* the builds are long synchronous loops: let the worker report between tests */
+afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
 const kit = makeKit()
 

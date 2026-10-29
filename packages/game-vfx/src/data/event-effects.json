@@ -1,0 +1,8 @@
+{
+  "spall": "impact_{material}",
+  "stage": { "1": "stage_crack", "2": "breach_dust", "3": "collapse_dust" },
+  "expose": "rebar_expose",
+  "collapse": "collapse_dust",
+  "explode": "explosion",
+  "fracture": { "glass": "glass_burst" }
+}

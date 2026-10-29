@@ -35,13 +35,17 @@ const plan = engine.generate('mid_modern_townhouse', { seed: 12, floors: 3, zone
 | `single_storey_a` | budget | residential_single | 1 |
 | `townhouse` | budget | residential_single | 2 |
 | `apartment_basic` | budget | residential_multi | one unit, 1 per floor |
-| `budget_slab_house` | budget | residential_single | 1 (party wall right) |
+| `budget_slab_house` | budget | residential_single | 1 to 3 (`floors`, or `randomFloors`; side stair; party wall right) |
 | `budget_semi_detached` | budget | residential_single | 1 (party wall left) |
 | `mid_modern_single_storey` | mid | residential_single | 1 |
 | `mid_modern_townhouse` | mid | residential_single | 2 to 3 |
 | `high_end_contemporary` | high | residential_single | 2 to 3 |
 | `mansion` | high | residential_single | 1 to 3 (optional elevator) |
 | `apartment_modern` | mid / high (`tier`) | residential_multi | one unit of a 3 to 20 floor building |
+
+### Residential tower
+
+`residential_tower` (`residentialTowerTemplate`, `RESIDENTIAL_TOWER_DEFAULTS`) is the plan of an apartment skyscraper built from the layout of `game-floorplan-structure` (`skyscraperLayout`): 30 storeys by default (`floors`, 20 to 60, the default maximum `SKYSCRAPER_MAX_STOREYS`), 2.8 m clear height, 9 m bays, a punched masonry facade, a plant floor every 25 storeys and a damper above 150 m. Every storey has the stairs, the elevators and the lobby in the core and the corridors around it; the ground floor has the entrance lobby (3 m door), the concierge and the bicycle room; a typical storey has six apartments (living, bedroom, kitchen, hall, bathroom) and a shared laundry and a storage room at the ends. `buildResidentialTower(options)` is the destructible tower of the same layout (core, piles, facade, wind). The numbers are options: `options.tower` takes any `SkyscraperOptions`, and `residentialTowerTemplate(preset, plan)` builds a template with other numbers to register. The zone `zt` (towers, 60 storeys and 240 m) is in the `br` region.
 
 ## Regions
 
@@ -72,3 +76,15 @@ engine.generate('townhouse', { seed: 3, locale: 'pt-BR' })   // "Sobrado (2 anda
 - Ids antigos: `casaA` é `single_storey_a`, `sobrado` é `townhouse`, `apartamento` é `apartment_basic`, `popular_laje` é `budget_slab_house`, `popular_geminada` é `budget_semi_detached`, `media_terrea_moderna` é `mid_modern_single_storey`, `sobrado_medio_moderno` é `mid_modern_townhouse`, `alto_padrao_contemporanea` é `high_end_contemporary`, `mansao` é `mansion`, `apartamento_novo` é `apartment_modern`.
 - **Zoneamento (região `br`):** ZR1 (baixa densidade, só casas, 2 pavimentos, ~9 m), ZR-AP (alto padrão, casas até 3 pavimentos, ~12 m, recuos e lote mínimo maiores), ZR2 (média densidade, casas e prédios pequenos até 4 pavimentos), ZR3/ZM (uso misto, até 12 pavimentos). A região é um objeto de dados, então `regions/us` pode ser adicionada sem mexer nos modelos.
 - Tabela completa de nomes antigos e novos em [MIGRATION.md](MIGRATION.md).
+
+### Configurar pelo jogo (torre residencial)
+
+`floors` é o número de andares (vence `tower.storeys`) e `tower` aceita qualquer `SkyscraperOptions` (andares, `height`, `bay`, `facade`, `mechanicalEvery`, `damperAbove`, `piles`, `wind`, `range`). O máximo padrão é 60; o jogo o sobe com `range` (e com uma zona própria no lugar de `zt`, que limita a 60).
+
+```ts
+const plan = engine.generate('residential_tower', {
+  seed: 4, floors: 45,
+  tower: { height: 2.9, bay: [8, 8], facade: 'punched', mechanicalEvery: 15, damperAbove: false, range: [20, 70] },
+})
+const structure = buildResidentialTower({ storeys: 45, piles: { diameter: 1.2 } })
+```

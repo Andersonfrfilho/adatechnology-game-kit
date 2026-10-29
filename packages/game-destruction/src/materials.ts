@@ -1,7 +1,10 @@
 import materialsJson from './data/materials.json'
 import hintsJson from './data/material-hints.json'
 import { aabbOf, quatFromEuler, shapeDims } from './math'
-import type { JointKind, JointSpec, MaterialDef, MaterialId, PartShape, PartSpec, ToolKind } from './types'
+import { GRAVITY, isSlender, resolveFlexure, resolveMasonry, slendernessFactor } from './flexure'
+import { thinAxisOf } from './layers'
+import { rebarBars } from './rebar'
+import type { FlexureOptions, JointKind, JointSpec, MasonryOptions, MaterialDef, MaterialId, PartShape, PartSpec, ToolKind } from './types'
 
 /** Built-in materials (data in `src/data/materials.json`). Override or extend with the `materials` option of `createDestruction`. */
 export const MATERIALS: MaterialDef[] = materialsJson as unknown as MaterialDef[]
@@ -99,16 +102,32 @@ export const inferJoints = (parts: PartSpec[], tolerance = 0.01, materials: Read
 }
 
 /**
- * Load in kg a structural part carries before it fails: `structure.capacity`, else `material.compressive` (default 20 000 kg/m²) times the
- * section. The section is the product of the two smallest dimensions (thickness times longest dimension for slabs; thickness times horizontal length for walls); foundations get x10.
+ * Load in kg a structural part carries before it fails in compression: `structure.capacity`, else the section times the material's strength. The
+ * section is the product of the two smallest dimensions (thickness times longest dimension for slabs; thickness times horizontal length for walls);
+ * foundations get x10. With `material.strength` (real values) the strength is `compressiveMPa`: a slender masonry or plain concrete wall or pillar keeps
+ * `slendernessFactor` of it (the unavoidable eccentricity and its height over thickness), a reinforced pillar carries `0.85 * fck * Ac + As * fy`
+ * (NBR 6118). Without it, the game-tuned `material.compressive` (default 20 000 kg/m²).
  */
-export const partCapacity = (part: PartSpec, material: MaterialDef): number => {
+export const partCapacity = (part: PartSpec, material: MaterialDef, options: { masonry?: MasonryOptions; flexure?: FlexureOptions } = {}): number => {
   if (part.structure?.capacity !== undefined) return part.structure.capacity
   const d = shapeDims(part.shape).sort((a, b) => a - b)
   const role = part.structure?.role
   const sh = shapeDims(part.shape)
   const section = role === 'wall' || role === 'partition' ? Math.min(sh[0], sh[2]) * Math.max(sh[0], sh[2]) : role === 'slab' ? d[0] * d[2] : d[0] * d[1]
-  return Math.max(1, section * (material.compressive ?? 20000) * (role === 'foundation' ? 10 : 1))
+  const foundation = role === 'foundation' ? 10 : 1
+  const strength = material.strength
+  if (!strength) return Math.max(1, section * (material.compressive ?? 20000) * foundation)
+  const fc = strength.compressiveMPa * 1e6
+  let newtons = fc * section
+  const upright = role === 'wall' || role === 'partition' || role === 'column'
+  if (upright && isSlender(part, material)) newtons *= slendernessFactor(sh[1], Math.min(sh[0], sh[2]), options.masonry)
+  else if (role === 'column' && part.reinforcement) {
+    const m = resolveMasonry(options.masonry)
+    const bars = rebarBars(sh, thinAxisOf(sh), part.reinforcement.spacing).length
+    const steel = bars * Math.PI * (part.reinforcement.diameter / 2) ** 2
+    newtons = m.concreteFactor * fc * section + steel * resolveFlexure(options.flexure).rebarYieldMPa * 1e6
+  }
+  return Math.max(1, (newtons / GRAVITY) * foundation)
 }
 
 

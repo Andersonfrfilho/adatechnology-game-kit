@@ -1,3 +1,6 @@
+import type { ControlValue } from '@adatechnology/game-contracts'
+import { createBenchPanel } from './bench-panel'
+import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
@@ -24,6 +27,10 @@ export interface InspectInfo {
   stress?: number
   joints: Array<{ id: string; kind: string; tools: string[]; open: boolean; progress: number }>
   note?: string
+  /** Thumbnail of the aimed item (`TestRoomItem.thumbnail`). */
+  thumbnail?: string
+  /** Author and licence of the thumbnail (`TestRoomItem.thumbnailCredit`). */
+  thumbnailCredit?: string
   distance: number
 }
 
@@ -45,8 +52,12 @@ export interface HudState {
   timeScale: number
   fast: boolean
   tap: boolean
+  /** The room's blast options that are on. */
+  blast: { shelter: boolean; fragmentHits: boolean; confinement: boolean }
   quality: string
   objects: number
+  /** The view when the room has a body (`null`: no body, no shortcut). */
+  camera: 'first' | 'third' | null
 }
 
 export interface UiOptions {
@@ -69,8 +80,12 @@ export interface UiOptions {
   onRunAll: () => Promise<ScenarioReport | void>
   onTool: (index: number) => void
   onTap: () => void
+  onBlast: (key: 'shelter' | 'fragmentHits' | 'confinement') => void
   onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
+  onControl: (id: string, value: ControlValue) => void
+  onLayer: (id: string, on: boolean) => void
+  onAction: (id: string) => void
 }
 
 export interface RoomUi {
@@ -78,14 +93,30 @@ export interface RoomUi {
   toast(text: string): void
   /** Re-read the catalogue and the scenarios (after `loadModule`). */
   refresh(): void
+  /** Open the catalogue on a group tab (its translated name), clearing the search. */
+  showGroup(group: string): void
   togglePanels(): void
+  /** The active module's bench (null: none). */
+  bench(view: BenchView | null): void
+  /** Room counters and the active module's metrics, text only. */
+  metrics(rows: { room: readonly MetricRow[]; module: readonly MetricRow[] }): void
+  /** The bench panel has something to show and is on screen (the room samples its counters only then). */
+  readonly benchVisible: boolean
   dispose(): void
 }
 
 const CSS = `
 .tr-root{position:absolute;inset:0;pointer-events:none;font:12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#e8eaee;overflow:hidden}
 .tr-root *{box-sizing:border-box}
-.tr-root button,.tr-root select,.tr-root label{pointer-events:auto}
+.tr-root button,.tr-root select,.tr-root label,.tr-root input{pointer-events:auto}
+.tr-search{width:100%;margin:0 0 6px;padding:5px 8px;border-radius:5px;border:1px solid #3a404c;background:#0f1116;color:#e8eaee;font:inherit}
+.tr-search::placeholder{color:#7d8594}
+.tr-item small{color:#7d8594;margin-left:4px}
+.tr-thumb{display:block;width:100%;height:26px;background:currentColor;-webkit-mask:var(--tr-thumb) center/contain no-repeat;mask:var(--tr-thumb) center/contain no-repeat}
+.tr-item{min-width:0}
+.tr-item .tr-btn.has-thumb{display:flex;flex-direction:column;gap:3px;min-width:0}.tr-item .tr-btn.has-thumb .tr-name{overflow:hidden;text-overflow:ellipsis}
+.tr-insp .tr-thumb{width:140px;height:28px;margin-bottom:3px}
+.tr-empty{color:#9aa3b2;padding:4px 2px;grid-column:1/-1}
 .tr-cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
 .tr-cross:before,.tr-cross:after{content:"";position:absolute;background:#fff;opacity:.85;box-shadow:0 0 2px #000}
 .tr-cross:before{left:8px;top:0;width:2px;height:18px}.tr-cross:after{top:8px;left:0;height:2px;width:18px}
@@ -96,6 +127,13 @@ const CSS = `
 .tr-status{margin-top:4px;min-height:16px;color:#ffd23f;text-shadow:0 1px 2px #000}
 .tr-prog{margin:4px auto 0;width:260px;background:rgba(10,12,16,.72);border-radius:6px;padding:4px 8px;display:none}
 .tr-prog b{display:block;font-weight:500;margin-bottom:3px}
+.tr-sheet{margin-top:8px;padding:8px;border:1px solid #2a2e36;border-radius:6px;font-size:12px;line-height:1.4}
+.tr-sheet h4{margin:2px 0 4px;font-size:13px}.tr-sheet p{margin:4px 0}
+.tr-facts{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:4px 0}.tr-facts dt{opacity:.7}.tr-facts dd{margin:0}
+.tr-steps{margin:4px 0;padding-left:16px}.tr-swatches{display:flex;flex-wrap:wrap;gap:6px}.tr-swatch i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.tr-timeline{position:relative;height:22px;margin:8px 0;background:#1b1e24;border-radius:4px;overflow:hidden}
+.tr-segment{position:absolute;top:0;height:100%;font-size:10px;overflow:hidden;white-space:nowrap;opacity:.85;padding:0 3px;box-sizing:border-box;color:#000}
+.tr-tick{position:absolute;top:0;bottom:0;width:1px;background:#fff6;text-decoration:none}.tr-playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;text-decoration:none}
 .tr-bar{height:7px;background:#2a2e36;border-radius:4px;overflow:hidden}
 .tr-bar i{display:block;height:100%;background:#4fc3f7;width:0}
 .tr-bar.hp i{background:#66bb6a}.tr-bar.warn i{background:#ffb300}.tr-bar.bad i{background:#ef5350}
@@ -129,6 +167,13 @@ const CSS = `
 .tr-cat{flex:0 1 auto;max-height:40%}
 .tr-anim{flex:0 0 auto;max-height:18%}
 .tr-anim .list{display:flex;flex-wrap:wrap;gap:4px}.tr-anim .sub{color:#9aa3b2;margin-bottom:4px}
+.tr-bench{flex:0 1 auto;max-height:34%}
+.tr-bench .sub{color:#9aa3b2;margin-bottom:4px}
+.tr-ctls{display:flex;flex-direction:column;gap:5px}
+.tr-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.tr-ctl input[type=range]{flex:1;min-width:90px}.tr-ctl output{min-width:48px;text-align:right;color:#cfd3da}
+.tr-seg{display:inline-flex;flex-wrap:wrap;gap:2px}
+.tr-layers{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.tr-metrics{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:6px 0 0}.tr-metrics dt{color:#9aa3b2}.tr-metrics dd{margin:0}
 .tr-tests{flex:1 1 auto;min-height:100px}
 .tr-tests .list{display:flex;flex-direction:column;gap:3px;margin-top:6px}.tr-tests .list .tr-btn{text-align:left}
 .tr-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}
@@ -137,10 +182,26 @@ const CSS = `
 @media (max-width:980px){.tr-left,.tr-right{display:none}.tr-root.open .tr-left,.tr-root.open .tr-right{display:flex}.tr-toggle{display:block;pointer-events:auto}.tr-root.open .tr-toggle{right:min(310px,34vw)}.tr-left{width:min(400px,46vw)}.tr-help{display:none}}
 `
 
+// accents are dropped on both sides of a search, so "gas" finds "gás"
+const fold = (text: string): string => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
 const mk = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] => {
   const e = document.createElement(tag)
   if (cls) e.className = cls
   if (text !== undefined) e.textContent = text
+  return e
+}
+
+// An SVG given as markup becomes a data URI; either way the picture is a mask over the text colour, so a one-colour silhouette follows the theme.
+const thumbSource = (thumbnail: string): string => {
+  const source = thumbnail.trim().startsWith('<') ? `data:image/svg+xml,${encodeURIComponent(thumbnail.trim())}` : thumbnail.trim()
+  return source.replace(/["\\\n\r]/g, (char) => encodeURIComponent(char))
+}
+const thumb = (thumbnail: string, credit?: string): HTMLElement => {
+  const e = mk('span', 'tr-thumb')
+  if (credit) e.title = credit
+  else e.setAttribute('aria-hidden', 'true')
+  e.style.setProperty('--tr-thumb', `url("${thumbSource(thumbnail)}")`)
   return e
 }
 
@@ -289,18 +350,33 @@ export function createUi(o: UiOptions): RoomUi {
   const cat = mk('div', 'tr-panel tr-cat')
   const anim = mk('div', 'tr-panel tr-anim')
   const tests = mk('div', 'tr-panel tr-tests')
-  right.append(cat, anim, tests)
+  const benchPanel = createBenchPanel({ t, num: (n, d) => num(n, d), onControl: o.onControl, onLayer: o.onLayer, onAction: o.onAction })
+  right.append(cat, anim, benchPanel.element, tests)
 
   cat.appendChild(mk('h3', undefined, t('ui.catalog')))
+  const itemSearch = mk('input', 'tr-search')
+  itemSearch.type = 'search'
+  itemSearch.placeholder = t('ui.search_items')
   const tabs = mk('div', 'tr-tabs')
   const items = mk('div', 'tr-items')
-  cat.append(tabs, items)
+  cat.append(itemSearch, tabs, items)
   let activeGroup = ''
+  // a search looks in every group, so an item is found without knowing its tab
+  const visibleItems = (): Array<{ item: TestRoomItem; group: string }> => {
+    const term = fold(itemSearch.value.trim())
+    if (!term) return (o.groups().get(activeGroup) ?? []).map((item) => ({ item, group: activeGroup }))
+    return [...o.groups()].flatMap(([group, list]) => list.filter((item) => fold(`${item.name} ${item.id} ${group}`).includes(term)).map((item) => ({ item, group })))
+  }
   const renderItems = (): void => {
     items.textContent = ''
-    for (const it of o.groups().get(activeGroup) ?? []) {
+    const searching = itemSearch.value.trim() !== ''
+    const found = visibleItems()
+    if (!found.length) items.appendChild(mk('div', 'tr-empty', t('ui.no_results')))
+    for (const { item: it, group } of found) {
       const wrap = mk('div', 'tr-item')
-      const b = mk('button', 'tr-btn', it.name)
+      const b = mk('button', it.thumbnail ? 'tr-btn has-thumb' : 'tr-btn', it.thumbnail ? undefined : it.name)
+      if (it.thumbnail) b.append(thumb(it.thumbnail), mk('span', 'tr-name', it.name))
+      if (searching) b.appendChild(mk('small', undefined, group))
       b.type = 'button'
       b.title = it.note ?? it.name
       b.onclick = () => o.onSpawn(it.id)
@@ -331,6 +407,9 @@ export function createUi(o: UiOptions): RoomUi {
     renderItems()
   }
   renderTabs()
+  itemSearch.oninput = renderItems
+  // typing in a search box must not move the player or switch tools
+  for (const box of [itemSearch]) box.addEventListener('keydown', (e) => e.stopPropagation())
 
   const controls = mk('div', 'tr-row')
   const ctl = (label: string, fn: (b: HTMLButtonElement) => void): HTMLButtonElement => {
@@ -355,6 +434,8 @@ export function createUi(o: UiOptions): RoomUi {
     o.onFast(fast)
   })
   const tapBtn = ctl(t('ui.tap'), () => o.onTap())
+  const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
+  for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
   const qSel = mk('select')
   for (const q of ['low', 'medium', 'high'] as const) {
     const op = mk('option', undefined, t(`ui.quality.${q}`))
@@ -375,8 +456,16 @@ export function createUi(o: UiOptions): RoomUi {
   const runAll = mk('button', 'tr-btn', t('ui.run_all'))
   runAll.type = 'button'
   const summary = mk('div', 'tr-summary')
+  const testSearch = mk('input', 'tr-search')
+  testSearch.type = 'search'
+  testSearch.placeholder = t('ui.search_tests')
+  testSearch.addEventListener('keydown', (e) => e.stopPropagation())
   const list = mk('div', 'list')
-  tests.append(runAll, summary, list)
+  tests.append(runAll, summary, testSearch, list)
+  testSearch.oninput = () => {
+    const term = fold(testSearch.value.trim())
+    for (const b of scBtns.values()) b.style.display = !term || fold(b.textContent ?? '').includes(term) ? '' : 'none'
+  }
   const scBtns = new Map<string, HTMLButtonElement>()
   let busy = false
   const mark = (rep: ScenarioReport | void): void => {
@@ -455,6 +544,7 @@ export function createUi(o: UiOptions): RoomUi {
       insp.appendChild(mk('div', undefined, t('ui.aim_at_something')))
       return
     }
+    if (i.thumbnail) insp.appendChild(thumb(i.thumbnail, i.thumbnailCredit))
     insp.appendChild(mk('div', 't', `${i.object} › ${i.part}`))
     insp.appendChild(row(t('ins.material'), i.material))
     insp.appendChild(row(t('ins.status'), i.status + (i.burning ? ` · ${t('ins.burning')}` : '')))
@@ -518,6 +608,9 @@ export function createUi(o: UiOptions): RoomUi {
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))
       if (s.ammo) toolBox.append(mk('small', undefined, s.ammo))
+      if (s.camera) toolBox.append(mk('small', undefined, t(`camera.${s.camera}`)))
+      const helpText = s.camera ? `${t('ui.help')} · ${t('ui.help.camera')}` : t('ui.help')
+      if (help.textContent !== helpText) help.textContent = helpText
       if (s.status) status.textContent = s.status
       else if (!toastTimer) status.textContent = ''
       if (s.progress) {
@@ -559,6 +652,7 @@ export function createUi(o: UiOptions): RoomUi {
       }
       slotsEl.forEach((b, i) => b.classList.toggle('on', i === s.slot))
       tapBtn.classList.toggle('on', s.tap)
+      for (const { key, b } of blastBtns) b.classList.toggle('on', s.blast[key])
       count.textContent = t('ui.objects', { n: s.objects })
       const ak = JSON.stringify(s.animations)
       if (ak !== lastAnim) {
@@ -582,7 +676,17 @@ export function createUi(o: UiOptions): RoomUi {
       renderTabs()
       renderScenarios()
     },
+    showGroup(group) {
+      activeGroup = group
+      itemSearch.value = ''
+      renderTabs()
+    },
     togglePanels,
+    bench: benchPanel.show,
+    metrics: benchPanel.metrics,
+    get benchVisible() {
+      return benchPanel.visible
+    },
     dispose() {
       offLog()
       if (toastTimer) clearTimeout(toastTimer)

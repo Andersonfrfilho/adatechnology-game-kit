@@ -1,0 +1,5 @@
+{
+  "groups": { "domestic": "Domestic", "farm": "Farm", "wild": "Wild", "environment": "Environment" },
+  "phases": { "mvp": "MVP", "phase_2": "Phase 2", "phase_3": "Phase 3" },
+  "outcomes": { "turns": "Turns", "dies": "Dies", "immune": "Immune" }
+}

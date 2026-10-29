@@ -1,0 +1,106 @@
+{
+  "typeText": {
+    "walker": {
+      "role": "A massa da horda: cerca e prende.",
+      "ai": "Visão 15 m (cone 90°), audição 40 m, olfato 10 m. Segue o som dos outros. Agarra e depois morde.",
+      "counter": "Gargalos, empurrão + golpe na cabeça, distância.",
+      "voice": "Gemido grave e longo"
+    },
+    "runner": {
+      "role": "Predador que quebra a formação do grupo.",
+      "ai": "Visão 30 m, audição 50 m. Linha reta, pula obstáculos baixos. Investida que derruba e morde.",
+      "counter": "Tiro na perna, portas fechadas, iscas sonoras.",
+      "voice": "Rosnado curto, grito ao avistar"
+    },
+    "crawler": {
+      "role": "Emboscada no chão.",
+      "ai": "Visão 5 m, audição 20 m. Esconde-se no mato e sob carros. Morde o tornozelo sem agarrar.",
+      "counter": "Lanterna, olhar para o chão, pisão (40 na cabeça).",
+      "voice": "Gorgolejo, unhas raspando"
+    },
+    "brute": {
+      "role": "Tanque que quebra barricadas.",
+      "ai": "Visão 20 m, audição 30 m. Dano ×3 em portas. Golpe em arco que derruba 2 m, com aviso de 0,8 s. Cabeça baixa: −40% de área de headshot.",
+      "counter": "Atirar quando ele ergue a cabeça após o golpe (1,2 s), fogo, explosivos.",
+      "voice": "Urro subgrave"
+    },
+    "sniffer": {
+      "role": "Caçador que segue rastro.",
+      "ai": "Olfato 60 m, segue rastro de sangue (jogador ferido, zumbis frescos) e puxa até 8 Lentos atrás. Visão 10 m.",
+      "counter": "Curativo para estancar, atravessar água, isca de carne.",
+      "voice": "Fungadas, rosnado baixo"
+    },
+    "leaper": {
+      "role": "Pula sobre o grupo e derruba quem está atrás de cobertura.",
+      "ai": "Visão 25 m, audição 40 m. Salta 6 m na horizontal e 3 m para cima (capôs, muros baixos, telhados). O salto derruba o alvo por 1,5 s. Recarga de 5 s.",
+      "counter": "Tiro no ar durante o salto (ele não desvia), ficar junto de parede alta, empurrão no pouso.",
+      "voice": "Chiado agudo antes do salto"
+    },
+    "bloater": {
+      "role": "Perigo de área.",
+      "ai": "Visão 10 m, olfato 25 m. Ao morrer explode numa nuvem de 4 m: cega 5 s, dobra seu rastro de cheiro e faz tossir.",
+      "counter": "Tiro de longe, explodir no meio da horda, máscara.",
+      "voice": "Borbulho e gases"
+    },
+    "stalker": {
+      "role": "Terror de interiores.",
+      "ai": "Finge de morto entre os corpos. Acorda se alguém passa a menos de 3 m ou de costas. Bote de 4 m/s por 3 s, agarra por trás.",
+      "counter": "Tiro de confirmação nos corpos; corpo de verdade tem olho apagado. Entrar em dupla.",
+      "voice": "Silencioso; estalo de articulação a <8 m"
+    },
+    "blind": {
+      "role": "Caça só pelo som.",
+      "ai": "Não enxerga. Ouve tiros a 80 m e passos a 6 m (agachado, 2 m). Vai direto à fonte do som e ataca o que encontrar, até outros zumbis.",
+      "counter": "Andar agachado, jogar garrafa para desviar, não atirar sem supressor por perto.",
+      "voice": "Estalos de língua, como um morcego"
+    },
+    "screamer": {
+      "role": "O alarme vivo.",
+      "ai": "Audição 60 m, visão 25 m. Ao ver alguém grita: chama todos num raio de 150 m e dá +20% de velocidade por 30 s. Repete a cada 20 s e foge do combate.",
+      "counter": "Matar primeiro e em silêncio (arco, supressor), cortar a linha de visão.",
+      "voice": "Grito de 3 s ouvido a 100 m"
+    },
+    "charred": {
+      "role": "Brasa ambulante.",
+      "ai": "Imune a fogo. O corpo a corpo queima (3 de dano por segundo durante 4 s). À noite ilumina o entorno e se denuncia. Água apaga as brasas e tira 30% da vida.",
+      "counter": "Tiro à distância, água, extintor.",
+      "voice": "Crepitar e chiado"
+    },
+    "drowned": {
+      "role": "Emboscada na água.",
+      "ai": "Fica submerso em rios, lagos e enchentes. Agarra quem atravessa e puxa para baixo: 3 s para se soltar ou começa a afogar. Fora d'água é lento.",
+      "counter": "Pontes, barco, atirar nas bolhas da água.",
+      "voice": "Gorgolejo encharcado"
+    },
+    "devourer": {
+      "role": "Fica mais forte comendo.",
+      "ai": "Procura os corpos que ficam 15 min no chão e come: cada um dá +20 de vida e +5% de tamanho, até 3 vezes. Enquanto come, só vê a 5 m. Defende a comida.",
+      "counter": "Queimar ou recolher os corpos, atacar enquanto ele come.",
+      "voice": "Mastigar molhado, rosnado"
+    }
+  },
+  "ages": {
+    "fresh": "Fresco",
+    "recent": "Recente",
+    "old": "Antigo",
+    "decrepit": "Decrépito"
+  },
+  "outfits": {
+    "civilian": "Civil",
+    "police": "Policial",
+    "military": "Militar",
+    "firefighter": "Bombeiro"
+  },
+  "stages": [
+    "Saudável",
+    "Mal-estar (2 a 12 h)",
+    "Febre alta (12 a 30 h)",
+    "Delírio (30 a 48 h)",
+    "Reanimado: corredor"
+  ],
+  "wounds": {
+    "scratch": "Arranhão",
+    "laceration": "Laceração",
+    "bite": "Mordida"
+  }
+}

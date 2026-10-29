@@ -1,0 +1,456 @@
+{
+ "schema": 1,
+ "name": "game-animal-skin",
+ "seed": 1,
+ "events": [
+  {
+   "type": "hash",
+   "data": {
+    "algorithm": "fnv1a-32 over round(value * 1e4)"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "dog",
+    "infected": false,
+    "nodes": 51,
+    "vertices": 41544,
+    "size": 0.62,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "3c30d047",
+    "normal": "266b9381",
+    "cor": "8c3b357d",
+    "rme": "9d0e1825",
+    "bi": "1b5b4be5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "dog",
+    "infected": true,
+    "nodes": 51,
+    "vertices": 48000,
+    "size": 0.62,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "cab101a1",
+    "normal": "a122670f",
+    "cor": "b3f9e8c5",
+    "rme": "961b79c5",
+    "bi": "61d4bc45"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "cat",
+    "infected": false,
+    "nodes": 55,
+    "vertices": 43992,
+    "size": 0.36,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "01ebde8d",
+    "normal": "05dd9855",
+    "cor": "a57da40d",
+    "rme": "5901fd65",
+    "bi": "e57b64a5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "cat",
+    "infected": true,
+    "nodes": 55,
+    "vertices": 50448,
+    "size": 0.36,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "3d8d8bbf",
+    "normal": "36106f43",
+    "cor": "a5065be1",
+    "rme": "fcd54c05",
+    "bi": "d3271505"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "chicken",
+    "infected": false,
+    "nodes": 28,
+    "vertices": 25572,
+    "size": 0.421,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "8ba7cee3",
+    "normal": "118fdd39",
+    "cor": "62408bf1",
+    "rme": "ffb083b5",
+    "bi": "96276555"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "chicken",
+    "infected": true,
+    "nodes": 28,
+    "vertices": 25572,
+    "size": 0.421,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "8ba7cee3",
+    "normal": "118fdd39",
+    "cor": "62408bf1",
+    "rme": "ffb083b5",
+    "bi": "96276555"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "cow",
+    "infected": false,
+    "nodes": 43,
+    "vertices": 43176,
+    "size": 1.65,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "71062f09",
+    "normal": "3de02eb1",
+    "cor": "f067c1bd",
+    "rme": "8d984ca5",
+    "bi": "399b2be5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "cow",
+    "infected": true,
+    "nodes": 43,
+    "vertices": 43176,
+    "size": 1.65,
+    "infectedVisual": false,
+    "dead": true,
+    "position": "71062f09",
+    "normal": "3de02eb1",
+    "cor": "f067c1bd",
+    "rme": "8d984ca5",
+    "bi": "399b2be5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "horse",
+    "infected": false,
+    "nodes": 43,
+    "vertices": 39312,
+    "size": 1.45,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "1e979247",
+    "normal": "d539f4fd",
+    "cor": "32beb905",
+    "rme": "4cfa9805",
+    "bi": "7a6d4945"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "horse",
+    "infected": true,
+    "nodes": 43,
+    "vertices": 39312,
+    "size": 1.45,
+    "infectedVisual": false,
+    "dead": true,
+    "position": "1e979247",
+    "normal": "d539f4fd",
+    "cor": "32beb905",
+    "rme": "4cfa9805",
+    "bi": "7a6d4945"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "pig",
+    "infected": false,
+    "nodes": 53,
+    "vertices": 39120,
+    "size": 1,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "23d8138b",
+    "normal": "64dce9fd",
+    "cor": "72c2d825",
+    "rme": "8e795505",
+    "bi": "91b99a85"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "pig",
+    "infected": true,
+    "nodes": 53,
+    "vertices": 45576,
+    "size": 1,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "d93a1ce9",
+    "normal": "bcad8763",
+    "cor": "763d301d",
+    "rme": "3abafd25",
+    "bi": "84ba54e5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "wild_boar",
+    "infected": false,
+    "nodes": 51,
+    "vertices": 39492,
+    "size": 1.05,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "dc4168c3",
+    "normal": "2e9343e9",
+    "cor": "abbe47ed",
+    "rme": "f68a6fb5",
+    "bi": "c12bff55"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "wild_boar",
+    "infected": true,
+    "nodes": 51,
+    "vertices": 45948,
+    "size": 1.05,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "7c91a76b",
+    "normal": "2691a26d",
+    "cor": "655d4f09",
+    "rme": "6671e5d5",
+    "bi": "883268b5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "capybara",
+    "infected": false,
+    "nodes": 37,
+    "vertices": 39840,
+    "size": 0.95,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "04479735",
+    "normal": "52b2be6d",
+    "cor": "50433855",
+    "rme": "919ba145",
+    "bi": "5ede3ec5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "capybara",
+    "infected": true,
+    "nodes": 37,
+    "vertices": 39840,
+    "size": 0.95,
+    "infectedVisual": false,
+    "dead": true,
+    "position": "04479735",
+    "normal": "52b2be6d",
+    "cor": "50433855",
+    "rme": "919ba145",
+    "bi": "5ede3ec5"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "jaguar",
+    "infected": false,
+    "nodes": 57,
+    "vertices": 47184,
+    "size": 1.1,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "b1d61bc7",
+    "normal": "2cac82bd",
+    "cor": "f5004671",
+    "rme": "a1b51305",
+    "bi": "56ab6405"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "jaguar",
+    "infected": true,
+    "nodes": 57,
+    "vertices": 52656,
+    "size": 1.1,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "44cf73df",
+    "normal": "9aba9d51",
+    "cor": "45cb3f31",
+    "rme": "52d4d385",
+    "bi": "1d92e185"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "vulture",
+    "infected": false,
+    "nodes": 28,
+    "vertices": 20580,
+    "size": 0.5,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "25144e3d",
+    "normal": "66efbb7b",
+    "cor": "5c04b4c1",
+    "rme": "e8d939b5",
+    "bi": "83fcde55"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "vulture",
+    "infected": true,
+    "nodes": 28,
+    "vertices": 20580,
+    "size": 0.5,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "25144e3d",
+    "normal": "66efbb7b",
+    "cor": "5c04b4c1",
+    "rme": "e8d939b5",
+    "bi": "83fcde55"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "southern_lapwing",
+    "infected": false,
+    "nodes": 28,
+    "vertices": 22530,
+    "size": 0.342,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "9f63d9fd",
+    "normal": "f9bd7be5",
+    "cor": "6d390a8d",
+    "rme": "30c18b1d",
+    "bi": "9f763d4d"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "southern_lapwing",
+    "infected": true,
+    "nodes": 28,
+    "vertices": 22530,
+    "size": 0.342,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "9f63d9fd",
+    "normal": "f9bd7be5",
+    "cor": "6d390a8d",
+    "rme": "30c18b1d",
+    "bi": "9f763d4d"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "lancehead",
+    "infected": false,
+    "nodes": 53,
+    "vertices": 42276,
+    "size": 0.5,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "42a13241",
+    "normal": "d5a6f251",
+    "cor": "55ad018d",
+    "rme": "40159735",
+    "bi": "ada1b595"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "lancehead",
+    "infected": true,
+    "nodes": 53,
+    "vertices": 42276,
+    "size": 0.5,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "42a13241",
+    "normal": "d5a6f251",
+    "cor": "55ad018d",
+    "rme": "40159735",
+    "bi": "ada1b595"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "rat",
+    "infected": false,
+    "nodes": 57,
+    "vertices": 47184,
+    "size": 0.17,
+    "infectedVisual": false,
+    "dead": false,
+    "position": "17ae5e51",
+    "normal": "df8ef539",
+    "cor": "23a747a5",
+    "rme": "a1b51305",
+    "bi": "56ab6405"
+   }
+  },
+  {
+   "type": "skin",
+   "data": {
+    "species": "rat",
+    "infected": true,
+    "nodes": 57,
+    "vertices": 52656,
+    "size": 0.17,
+    "infectedVisual": true,
+    "dead": false,
+    "position": "c306b025",
+    "normal": "73d4684d",
+    "cor": "f03c7ea5",
+    "rme": "52d4d385",
+    "bi": "1d92e185"
+   }
+  }
+ ],
+ "scenes": {}
+}

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { IMPACT_CONTRACT, checkAnimation, checkDestructible, checkHit, shotToHit } from '../src'
-import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, Hit, ObjectState, Shot, TestableModule } from '../src'
+import { IMPACT_CONTRACT, MISSING_BITS, checkAnimation, checkDestructible, checkHit, shotExtras, shotToHit } from '../src'
+import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, HostEvent, Hit, ModuleHost, ObjectState, PlayerState, Shot, TestableModule } from '../src'
 
 /** A tiny module-owned destructible: one panel that dents by its own rule. */
 const panelImpl = (id = 'panel_1', material = 'steel'): DestructibleImpl => {
@@ -71,6 +71,33 @@ describe('weapon contract', () => {
     expect(shotToHit(shot(), [0, 1, 0], [0, 0, 1]).source).toBe('pistol_9mm')
     expect(shotToHit(shot(), [0, 1, 0]).energy).toBe(500)
   })
+
+  it('shotToHit carries the round: penetration scaled by the energy left, the flags and the ignition chances', () => {
+    const round = { penetration: { steel: 10, concrete: 100 }, incendiary: true, tracer: true, ignition: { spark: 0.05, flame: 0.5 }, ammo: 'incendiary' }
+    const s = shot({ ...round })
+    const near = shotToHit(s, [0, 1, 0])
+    expect(near.penetration).toEqual({ steel: 10, concrete: 100 })
+    expect(near).toMatchObject({ incendiary: true, tracer: true, ignition: { spark: 0.05, flame: 0.5 } })
+    const far = shotToHit(s, [0, 1, -50])
+    expect(far.penetration!.steel).toBeCloseTo(9, 5) // 450 J of 500 J
+    expect(shotExtras(s, 50).penetration).toEqual(far.penetration)
+    expect(shotToHit(shot(), [0, 1, 0]).penetration).toBeUndefined()
+    expect(shotToHit(shot(), [0, 1, 0]).incendiary).toBeUndefined()
+    expect(checkHit(far)).toEqual([])
+  })
+
+  it('shotToHit copies the projectile mass and leaves the field out when the shot has none', () => {
+    expect(shotToHit(shot({ mass: 7.5 }), [0, 1, -5]).mass).toBe(7.5)
+    expect('mass' in shotToHit(shot(), [0, 1, -5])).toBe(false)
+  })
+})
+
+describe('body contract', () => {
+  it('MISSING_BITS is the mask the instanced body shader reads: ten distinct bits', () => {
+    const values = Object.values(MISSING_BITS)
+    expect(values).toEqual([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
+    expect(new Set(values).size).toBe(values.length)
+  })
 })
 
 describe('animation contract', () => {
@@ -122,5 +149,16 @@ describe('testable module', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as Record<string, unknown>
     expect(pkg.dependencies).toBeUndefined()
     expect(pkg.peerDependencies).toBeUndefined()
+  })
+})
+
+describe('player state', () => {
+  it('is what the host reports and a player event carries nothing more', () => {
+    const state: PlayerState = { position: [1, 0, -2], yaw: 0.5, pitch: -0.1, crouching: true, speed: 1, running: false, cameraMode: 'first' }
+    const host: Pick<ModuleHost, 'player'> = { player: () => state }
+    const events: HostEvent[] = [{ type: 'player' }]
+    expect(host.player().crouching).toBe(true)
+    expect(host.player().position).toEqual([1, 0, -2])
+    expect(events[0]?.type).toBe('player')
   })
 })

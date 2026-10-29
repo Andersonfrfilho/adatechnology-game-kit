@@ -1,7 +1,10 @@
 /** Smoke test: the demo vehicle of `example/example.html`, built through a content plugin exactly as the example does. */
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { DEMO_CAR } from './helpers/sample-fleet'
 import { makeKit } from './helpers/kit'
+
+/* the builds are long synchronous loops: let the worker report between tests */
+afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
 function demoKit() {
   const kit = makeKit(

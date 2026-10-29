@@ -444,10 +444,11 @@ function analyse(hh, type, GT) {
 // The module
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /**
- * @param {{ GameInteractablesHousehold: any, GameInteractablesThree: any, locale?: string }} options
+ * @param {{ GameInteractablesHousehold: any, GameInteractablesThree: any, fillContainers?: (THREE: any, group: any, spec: any, type: string) => void, locale?: string }} options
+ * `fillContainers` puts the contents of the containers of a piece of furniture in its group (the entry gives the one that draws them as real items).
  * @returns {import('@adatechnology/game-contracts').TestableModule<any>}
  */
-export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, locale: defaultLocale = 'en' }) {
+export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, locale: defaultLocale = 'en' }) {
   const isEn = (l) => (l ?? defaultLocale) === 'en'
   const households = {}
   const household = (loc) => {
@@ -492,6 +493,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     // household ids can be kebab-case; the groups were named by `finish` with the original id
     res.group.name = type
     res.group.userData.furnitureType = type
+    fillContainers?.(THREE, res.group, spec, type)
     return res.group
   }
 

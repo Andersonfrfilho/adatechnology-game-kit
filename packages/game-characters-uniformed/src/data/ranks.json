@@ -1,0 +1,310 @@
+{
+  "ladders": {
+    "army": [
+      {
+        "id": "private",
+        "name": {
+          "en": "Private",
+          "pt-BR": "Soldado"
+        },
+        "order": 0
+      },
+      {
+        "id": "corporal",
+        "name": {
+          "en": "Corporal",
+          "pt-BR": "Cabo"
+        },
+        "order": 1
+      },
+      {
+        "id": "sergeant_3rd",
+        "name": {
+          "en": "3rd Sergeant",
+          "pt-BR": "3º Sargento"
+        },
+        "order": 2
+      },
+      {
+        "id": "sergeant_2nd",
+        "name": {
+          "en": "2nd Sergeant",
+          "pt-BR": "2º Sargento"
+        },
+        "order": 3
+      },
+      {
+        "id": "sergeant_1st",
+        "name": {
+          "en": "1st Sergeant",
+          "pt-BR": "1º Sargento"
+        },
+        "order": 4
+      },
+      {
+        "id": "sub_lieutenant",
+        "name": {
+          "en": "Sub-lieutenant",
+          "pt-BR": "Subtenente"
+        },
+        "order": 5
+      },
+      {
+        "id": "cadet_officer",
+        "name": {
+          "en": "Cadet officer",
+          "pt-BR": "Aspirante"
+        },
+        "order": 6
+      },
+      {
+        "id": "lieutenant_2nd",
+        "name": {
+          "en": "2nd Lieutenant",
+          "pt-BR": "2º Tenente"
+        },
+        "order": 7
+      },
+      {
+        "id": "lieutenant_1st",
+        "name": {
+          "en": "1st Lieutenant",
+          "pt-BR": "1º Tenente"
+        },
+        "order": 8
+      },
+      {
+        "id": "captain",
+        "name": {
+          "en": "Captain",
+          "pt-BR": "Capitão"
+        },
+        "order": 9
+      },
+      {
+        "id": "major",
+        "name": {
+          "en": "Major",
+          "pt-BR": "Major"
+        },
+        "order": 10
+      },
+      {
+        "id": "lieutenant_colonel",
+        "name": {
+          "en": "Lieutenant Colonel",
+          "pt-BR": "Tenente-Coronel"
+        },
+        "order": 11
+      },
+      {
+        "id": "colonel",
+        "name": {
+          "en": "Colonel",
+          "pt-BR": "Coronel"
+        },
+        "order": 12
+      }
+    ],
+    "military_police": [
+      {
+        "id": "private",
+        "name": {
+          "en": "Private",
+          "pt-BR": "Soldado"
+        },
+        "order": 0
+      },
+      {
+        "id": "corporal",
+        "name": {
+          "en": "Corporal",
+          "pt-BR": "Cabo"
+        },
+        "order": 1
+      },
+      {
+        "id": "sergeant_3rd",
+        "name": {
+          "en": "3rd Sergeant",
+          "pt-BR": "3º Sargento"
+        },
+        "order": 2
+      },
+      {
+        "id": "sergeant_2nd",
+        "name": {
+          "en": "2nd Sergeant",
+          "pt-BR": "2º Sargento"
+        },
+        "order": 3
+      },
+      {
+        "id": "sergeant_1st",
+        "name": {
+          "en": "1st Sergeant",
+          "pt-BR": "1º Sargento"
+        },
+        "order": 4
+      },
+      {
+        "id": "sub_lieutenant",
+        "name": {
+          "en": "Sub-lieutenant",
+          "pt-BR": "Subtenente"
+        },
+        "order": 5
+      },
+      {
+        "id": "cadet_officer",
+        "name": {
+          "en": "Cadet officer",
+          "pt-BR": "Aspirante"
+        },
+        "order": 6
+      },
+      {
+        "id": "lieutenant_2nd",
+        "name": {
+          "en": "2nd Lieutenant",
+          "pt-BR": "2º Tenente"
+        },
+        "order": 7
+      },
+      {
+        "id": "lieutenant_1st",
+        "name": {
+          "en": "1st Lieutenant",
+          "pt-BR": "1º Tenente"
+        },
+        "order": 8
+      },
+      {
+        "id": "captain",
+        "name": {
+          "en": "Captain",
+          "pt-BR": "Capitão"
+        },
+        "order": 9
+      },
+      {
+        "id": "major",
+        "name": {
+          "en": "Major",
+          "pt-BR": "Major"
+        },
+        "order": 10
+      },
+      {
+        "id": "lieutenant_colonel",
+        "name": {
+          "en": "Lieutenant Colonel",
+          "pt-BR": "Tenente-Coronel"
+        },
+        "order": 11
+      },
+      {
+        "id": "colonel",
+        "name": {
+          "en": "Colonel",
+          "pt-BR": "Coronel"
+        },
+        "order": 12
+      }
+    ],
+    "civil_police": [
+      {
+        "id": "agent",
+        "name": {
+          "en": "Agent",
+          "pt-BR": "Agente"
+        },
+        "order": 0
+      },
+      {
+        "id": "clerk",
+        "name": {
+          "en": "Clerk",
+          "pt-BR": "Escrivão"
+        },
+        "order": 1
+      },
+      {
+        "id": "investigator",
+        "name": {
+          "en": "Investigator",
+          "pt-BR": "Investigador"
+        },
+        "order": 2
+      },
+      {
+        "id": "chief_of_police",
+        "name": {
+          "en": "Chief of police",
+          "pt-BR": "Delegado"
+        },
+        "order": 3
+      }
+    ],
+    "highway_police": [
+      {
+        "id": "highway_officer",
+        "name": {
+          "en": "Federal highway officer",
+          "pt-BR": "Policial rodoviário federal"
+        },
+        "order": 0
+      },
+      {
+        "id": "post_chief",
+        "name": {
+          "en": "Post chief (by function)",
+          "pt-BR": "Chefe de posto"
+        },
+        "order": 1
+      }
+    ],
+    "prison_police": [
+      {
+        "id": "prison_officer",
+        "name": {
+          "en": "Prison officer",
+          "pt-BR": "Policial penal"
+        },
+        "order": 0
+      },
+      {
+        "id": "shift_chief",
+        "name": {
+          "en": "Shift chief",
+          "pt-BR": "Chefe de plantão"
+        },
+        "order": 1
+      },
+      {
+        "id": "director",
+        "name": {
+          "en": "Director",
+          "pt-BR": "Diretor"
+        },
+        "order": 2
+      }
+    ]
+  },
+  "rule": {
+    "commander": {
+      "choose": "highest-rank-alive",
+      "minimumCourageAndLoyalty": 100
+    },
+    "disobeyBelowOpinion": -20,
+    "onDisobey": [
+      "disobey",
+      "desert",
+      "mutiny"
+    ],
+    "text": {
+      "en": "In the game, rank decides who leads when the leader falls (the highest living rank with courage + loyalty ≥ 100) and what a soldier obeys. A higher rank beats opinion, unless the soldier's opinion of the superior is below −20: then they disobey, desert or mutiny.",
+      "pt-BR": "No jogo, patente decide quem manda quando o líder cai (maior patente viva com coragem + lealdade ≥ 100) e o que um soldado obedece. Ordem de patente maior vence opinião, a menos que a opinião do soldado pelo superior esteja abaixo de −20: aí ele desobedece, deserta ou se amotina."
+    }
+  }
+}

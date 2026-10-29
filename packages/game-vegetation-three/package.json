@@ -1,0 +1,65 @@
+{
+  "name": "@adatechnology/game-vegetation-three",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "The vegetation test module for the shared test room: the 18 plants of the Viveiro as destructible items (separable pieces, joints, real wood thickness, sway clips), its 13 scenarios and the nursery lot with the walker that bends the plants.",
+  "keywords": [
+    "game",
+    "vegetation",
+    "three",
+    "threejs",
+    "test-room",
+    "trees",
+    "plants"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-vegetation-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
+    "@adatechnology/game-vegetation": "workspace:*",
+    "@adatechnology/game-vegetation-species": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/game-test-room": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "three": ">=0.160.0"
+  }
+}

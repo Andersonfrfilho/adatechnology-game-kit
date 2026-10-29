@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-post-apocalyptic",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT",
   "description": "Post-apocalyptic genre pack for @adatechnology/game-floorplan: the fortified and abandoned house states as a state plugin, with their item types, flags and a configurable seed distribution.",
   "keywords": [
@@ -52,6 +52,8 @@
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
-    "@adatechnology/game-floorplan-commercial": "workspace:*"
+    "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-rural": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*"
   }
 }

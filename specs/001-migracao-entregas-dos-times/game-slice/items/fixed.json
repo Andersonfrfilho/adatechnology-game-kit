@@ -1,0 +1,78 @@
+[
+  {
+    "house": "Casa 3",
+    "container": "nightstand_drawer",
+    "items": [
+      "flashlight",
+      "bandage",
+      "biscuits"
+    ]
+  },
+  {
+    "house": "Casa 4",
+    "container": "nightstand_drawer",
+    "items": [
+      "house_d_key"
+    ]
+  },
+  {
+    "house": "Casa 5",
+    "container": "wardrobe",
+    "items": [
+      "firearm_remington_870",
+      "ammo_12ga_00buck"
+    ]
+  },
+  {
+    "house": "Casa D",
+    "container": "wardrobe",
+    "items": [
+      "firearm_ak_47",
+      "ammo_7_62x39",
+      "throwable_m67",
+      "throwable_m67"
+    ]
+  },
+  {
+    "house": "Casa 7",
+    "container": "wardrobe",
+    "items": [
+      "firearm_remington_700",
+      "ammo_7_62x51"
+    ]
+  },
+  {
+    "house": "Casa 1",
+    "container": "workbench",
+    "items": [
+      "hammer",
+      "wooden_plank",
+      "wooden_plank",
+      "nails",
+      "glass_bottle",
+      "gasoline"
+    ]
+  },
+  {
+    "house": "Casa 6",
+    "container": "workbench",
+    "items": [
+      "glass_bottle",
+      "cachaca"
+    ]
+  },
+  {
+    "house": "Casa 7",
+    "container": "nightstand_drawer",
+    "items": [
+      "throwable_m67"
+    ]
+  },
+  {
+    "house": "Casa D",
+    "container": "nightstand_drawer",
+    "items": [
+      "signal_flare"
+    ]
+  }
+]

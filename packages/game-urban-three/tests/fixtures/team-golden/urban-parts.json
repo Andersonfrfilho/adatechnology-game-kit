@@ -1,0 +1,1241 @@
+{
+ "schema": 1,
+ "name": "urban-parts",
+ "seed": 1,
+ "events": [
+  {
+   "type": "lists",
+   "data": {
+    "label": "led_on",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "led_on",
+    "nodes": 8,
+    "hash": "bd77902a"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "led_off",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "led_off",
+    "nodes": 7,
+    "hash": "6900ab01"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "led_rotated",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "led_rotated",
+    "nodes": 8,
+    "hash": "bd77902a"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "led_flicker",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "led_flicker",
+    "nodes": 8,
+    "hash": "bd77902a"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "led_no_budget",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": -1
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "led_no_budget",
+    "nodes": 7,
+    "hash": "3bd08559"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "concrete_on",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "concrete_on",
+    "nodes": 5,
+    "hash": "c3423ff9"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "concrete_off",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "concrete_off",
+    "nodes": 4,
+    "hash": "62cee3e8"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "concrete_negative_arm",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "concrete_negative_arm",
+    "nodes": 5,
+    "hash": "c3423ff9"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "concrete_transformer",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "concrete_transformer",
+    "nodes": 6,
+    "hash": "f37bd59b"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "iron_on",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "iron_on",
+    "nodes": 5,
+    "hash": "2ac7487e"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "iron_off",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "iron_off",
+    "nodes": 4,
+    "hash": "2317a0bd"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "wood_on",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "wood_on",
+    "nodes": 5,
+    "hash": "6b23c1f6"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "wood_off",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "wood_off",
+    "nodes": 4,
+    "hash": "62cee3e8"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "flood_on",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 98
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "flood_on",
+    "nodes": 10,
+    "hash": "285fb1d1"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "flood_off",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "flood_off",
+    "nodes": 9,
+    "hash": "a1f4dad6"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "budget_of_two",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": -3
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "budget_of_two",
+    "nodes": 26,
+    "hash": "e9927e48"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "road_x",
+    "items": 12,
+    "itemsHash": "ec224835",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "road_x",
+    "nodes": 3,
+    "hash": "8fd85dd8"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "road_z",
+    "items": 8,
+    "itemsHash": "a109275",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "road_z",
+    "nodes": 3,
+    "hash": "4c0e52c9"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "walk",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "walk",
+    "nodes": 2,
+    "hash": "b6fa4b99"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "ground",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "ground",
+    "nodes": 2,
+    "hash": "b6fa4b99"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "street_grid",
+    "items": 310,
+    "itemsHash": "b79805ef",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "street_grid",
+    "nodes": 28,
+    "hash": "a5a9044"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "block_default",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 8,
+    "litHash": "6d76de83",
+    "dark": 136,
+    "darkHash": "b1aa3255",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "block_default",
+    "nodes": 14,
+    "hash": "58364c59"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "block_three_by_three",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 23,
+    "litHash": "9dce9c9f",
+    "dark": 249,
+    "darkHash": "3067e0b3",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "block_three_by_three",
+    "nodes": 14,
+    "hash": "9c6c1939"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "building_alone",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 21,
+    "litHash": "facf0e62",
+    "dark": 87,
+    "darkHash": "f8a0b9ea",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "building_alone",
+    "nodes": 12,
+    "hash": "ad24bfe9"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "fence",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "fence",
+    "nodes": 9,
+    "hash": "9d50ea2a"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "fence_default_colour",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "fence_default_colour",
+    "nodes": 7,
+    "hash": "c815ff6e"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "tent",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "tent",
+    "nodes": 2,
+    "hash": "858a9781"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "pine",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "pine",
+    "nodes": 4,
+    "hash": "245143c8"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "tree",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "tree",
+    "nodes": 3,
+    "hash": "753ae12f"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "container",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "container",
+    "nodes": 8,
+    "hash": "a1dbc9b0"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "watchtower_plain",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "watchtower_plain",
+    "nodes": 9,
+    "hash": "a1f4dad6"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "watchtower_searchlight",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "watchtower_searchlight",
+    "nodes": 11,
+    "hash": "a160ab42"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "sandbags",
+    "items": 54,
+    "itemsHash": "68643e5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "sandbags",
+    "nodes": 2,
+    "hash": "f3ac421d"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "sandbags_z",
+    "items": 22,
+    "itemsHash": "cfe1cb91",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "sandbags_z",
+    "nodes": 2,
+    "hash": "a75d3f1c"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "label",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "label",
+    "nodes": 2,
+    "hash": "99c7fbeb"
+   }
+  },
+  {
+   "type": "lists",
+   "data": {
+    "label": "wires",
+    "items": 0,
+    "itemsHash": "741638a5",
+    "lit": 0,
+    "litHash": "741638a5",
+    "dark": 0,
+    "darkHash": "741638a5",
+    "lightBudgetLeft": 99
+   }
+  },
+  {
+   "type": "surface",
+   "data": {
+    "label": "wires",
+    "nodes": 2,
+    "hash": "5bc95d08"
+   }
+  }
+ ],
+ "scenes": {
+  "led_on": {
+   "objects": 8,
+   "hash": "6d7caf37",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "PointLight p0,8,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "led_off": {
+   "objects": 7,
+   "hash": "9386d551",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshStandardMaterial:3a3a3a:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshStandardMaterial:3a3a3a:1"
+   ]
+  },
+  "led_rotated": {
+   "objects": 8,
+   "hash": "b8a1697f",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p4,0,-3 q0,0.3429,0,0.9394 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "PointLight p4,8,-3 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "led_flicker": {
+   "objects": 8,
+   "hash": "6d7caf37",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "PointLight p0,8,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "led_no_budget": {
+   "objects": 7,
+   "hash": "96ab5c51",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1"
+   ]
+  },
+  "concrete_on": {
+   "objects": 5,
+   "hash": "125027a5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v28:11fc8885 i48 bbox-0.2,-4,-0.2,0.2,4,0.2 mat:MeshStandardMaterial:8a8a84:1",
+    "Mesh p0.7,7.65,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:1b27cb0c i576 bbox-0.7,-0.05,-0.05,0.7,0.05,0.05 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p1.35,7.53,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:390139d4 i576 bbox-0.25,-0.08,-0.15,0.25,0.08,0.15 mat:MeshBasicMaterial:ffa040:1",
+    "PointLight p1.35,7.2,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "concrete_off": {
+   "objects": 4,
+   "hash": "57b66073",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v28:11fc8885 i48 bbox-0.2,-4,-0.2,0.2,4,0.2 mat:MeshStandardMaterial:8a8a84:1",
+    "Mesh p0.7,7.65,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:1b27cb0c i576 bbox-0.7,-0.05,-0.05,0.7,0.05,0.05 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p1.35,7.53,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:390139d4 i576 bbox-0.25,-0.08,-0.15,0.25,0.08,0.15 mat:MeshStandardMaterial:3a3a3a:1"
+   ]
+  },
+  "concrete_negative_arm": {
+   "objects": 5,
+   "hash": "d0b8e890",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p5,4,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v28:11fc8885 i48 bbox-0.2,-4,-0.2,0.2,4,0.2 mat:MeshStandardMaterial:8a8a84:1",
+    "Mesh p4.3,7.65,2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:1b27cb0c i576 bbox-0.7,-0.05,-0.05,0.7,0.05,0.05 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p3.65,7.53,2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:390139d4 i576 bbox-0.25,-0.08,-0.15,0.25,0.08,0.15 mat:MeshBasicMaterial:ffa040:1",
+    "PointLight p3.65,7.2,2 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "concrete_transformer": {
+   "objects": 6,
+   "hash": "d310bd51",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v28:11fc8885 i48 bbox-0.2,-4,-0.2,0.2,4,0.2 mat:MeshStandardMaterial:8a8a84:1",
+    "Mesh p0.7,7.65,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:1b27cb0c i576 bbox-0.7,-0.05,-0.05,0.7,0.05,0.05 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p1.35,7.53,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:390139d4 i576 bbox-0.25,-0.08,-0.15,0.25,0.08,0.15 mat:MeshBasicMaterial:ffa040:1",
+    "Mesh p-0.35,6.55,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v52:ca1a07f5 i96 bbox-0.28,-0.35,-0.28,0.28,0.35,0.28 mat:MeshStandardMaterial:5a5e62:1",
+    "PointLight p1.35,7.2,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "iron_on": {
+   "objects": 5,
+   "hash": "7259f314",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,2,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v52:3498c725 i96 bbox-0.12,-2,-0.12,0.12,2,0.12 mat:MeshStandardMaterial:1e2022:1",
+    "Mesh p0,4.25,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:7118d72c i576 bbox-0.21,-0.25,-0.21,0.21,0.25,0.21 mat:MeshBasicMaterial:ffd090:1",
+    "Mesh p0,4.65,0 q0,0,0,1 s1,1,1 geo:ConeGeometry v19:e3f9a4e9 i36 bbox-0.36,-0.15,-0.36,0.36,0.15,0.36 mat:MeshStandardMaterial:1e2022:1",
+    "PointLight p0,3.9,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "iron_off": {
+   "objects": 4,
+   "hash": "8a655499",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,2,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v52:3498c725 i96 bbox-0.12,-2,-0.12,0.12,2,0.12 mat:MeshStandardMaterial:1e2022:1",
+    "Mesh p0,4.25,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:7118d72c i576 bbox-0.21,-0.25,-0.21,0.21,0.25,0.21 mat:MeshStandardMaterial:2a2a2a:1",
+    "Mesh p0,4.65,0 q0,0,0,1 s1,1,1 geo:ConeGeometry v19:e3f9a4e9 i36 bbox-0.36,-0.15,-0.36,0.36,0.15,0.36 mat:MeshStandardMaterial:1e2022:1"
+   ]
+  },
+  "wood_on": {
+   "objects": 5,
+   "hash": "8c0d0a8c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,3.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:e3f8294d i72 bbox-0.1212,-3.5,-0.14,0.1212,3.5,0.14 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p0,6.64,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:96df56e0 i576 bbox-0.6,-0.04,-0.04,0.6,0.04,0.04 mat:MeshStandardMaterial:4a3a28:1",
+    "Mesh p0.5,6.46,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:b243746c i576 bbox-0.08,-0.11,-0.08,0.08,0.11,0.08 mat:MeshBasicMaterial:ffe08a:1",
+    "PointLight p0.5,6.2,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "wood_off": {
+   "objects": 4,
+   "hash": "8563160c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,3.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:e3f8294d i72 bbox-0.1212,-3.5,-0.14,0.1212,3.5,0.14 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p0,6.64,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:96df56e0 i576 bbox-0.6,-0.04,-0.04,0.6,0.04,0.04 mat:MeshStandardMaterial:4a3a28:1",
+    "Mesh p0.5,6.46,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:b243746c i576 bbox-0.08,-0.11,-0.08,0.08,0.11,0.08 mat:MeshStandardMaterial:3a3a3a:1"
+   ]
+  },
+  "flood_on": {
+   "objects": 10,
+   "hash": "b6b507e0",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-0.4,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p-0.4,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0.4,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0.4,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0,12.075,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:69580d7c i576 bbox-1,-0.075,-0.6,1,0.075,0.6 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p-0.6,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1",
+    "Mesh p0,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1",
+    "Mesh p0.6,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1",
+    "PointLight p0,11.5,2 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "flood_off": {
+   "objects": 9,
+   "hash": "c288614",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-0.4,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p-0.4,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0.4,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0.4,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0,12.075,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:69580d7c i576 bbox-1,-0.075,-0.6,1,0.075,0.6 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p-0.6,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshStandardMaterial:3a3a3a:1",
+    "Mesh p0,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshStandardMaterial:3a3a3a:1",
+    "Mesh p0.6,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshStandardMaterial:3a3a3a:1"
+   ]
+  },
+  "budget_of_two": {
+   "objects": 26,
+   "hash": "a69778af",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,4.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33df20ad i168 bbox-0.1365,-4.5,-0.14,0.1365,4.5,0.14 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p-1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "Mesh p0.8,8.85,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f73fe0dc i576 bbox-0.8,-0.05,-0.06,0.8,0.05,0.06 mat:MeshStandardMaterial:55595e:1",
+    "Mesh p1.5,8.66,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:be1148a0 i576 bbox-0.3,-0.06,-0.15,0.3,0.06,0.15 mat:MeshBasicMaterial:eef4ff:1",
+    "PointLight p0,8,0 q0,0,0,1 s1,1,1",
+    "Mesh p8,4,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v28:11fc8885 i48 bbox-0.2,-4,-0.2,0.2,4,0.2 mat:MeshStandardMaterial:8a8a84:1",
+    "Mesh p8.7,7.65,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:1b27cb0c i576 bbox-0.7,-0.05,-0.05,0.7,0.05,0.05 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p9.35,7.53,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:390139d4 i576 bbox-0.25,-0.08,-0.15,0.25,0.08,0.15 mat:MeshBasicMaterial:ffa040:1",
+    "PointLight p9.35,7.2,0 q0,0,0,1 s1,1,1",
+    "Mesh p16,2,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v52:3498c725 i96 bbox-0.12,-2,-0.12,0.12,2,0.12 mat:MeshStandardMaterial:1e2022:1",
+    "Mesh p16,4.25,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:7118d72c i576 bbox-0.21,-0.25,-0.21,0.21,0.25,0.21 mat:MeshBasicMaterial:ffd090:1",
+    "Mesh p16,4.65,0 q0,0,0,1 s1,1,1 geo:ConeGeometry v19:e3f9a4e9 i36 bbox-0.36,-0.15,-0.36,0.36,0.15,0.36 mat:MeshStandardMaterial:1e2022:1",
+    "Mesh p24,3.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:e3f8294d i72 bbox-0.1212,-3.5,-0.14,0.1212,3.5,0.14 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p24,6.64,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:96df56e0 i576 bbox-0.6,-0.04,-0.04,0.6,0.04,0.04 mat:MeshStandardMaterial:4a3a28:1",
+    "Mesh p24.5,6.46,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:b243746c i576 bbox-0.08,-0.11,-0.08,0.08,0.11,0.08 mat:MeshBasicMaterial:ffe08a:1",
+    "Mesh p31.6,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p31.6,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p32.4,6,-0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p32.4,6,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:36eb24a0 i576 bbox-0.06,-6,-0.06,0.06,6,0.06 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p32,12.075,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:69580d7c i576 bbox-1,-0.075,-0.6,1,0.075,0.6 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p31.4,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1",
+    "Mesh p32,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1",
+    "Mesh p32.6,12.375,0.4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:dff7ff40 i576 bbox-0.225,-0.175,-0.1,0.225,0.175,0.1 mat:MeshBasicMaterial:fff2d8:1"
+   ]
+  },
+  "road_x": {
+   "objects": 3,
+   "hash": "c10a29b0",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:8cf7739d i6 bbox-30,0,-3.5,30,0,3.5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8179a9b4 i576 bbox-0.5,-0.5,-0.5,0.5,0.5,0.5 mat:MeshStandardMaterial:ffffff:1"
+   ]
+  },
+  "road_z": {
+   "objects": 3,
+   "hash": "364bebc2",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p10,0.02,5 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:53dbd7fd i6 bbox-3,0,-21,3,0,21 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8179a9b4 i576 bbox-0.5,-0.5,-0.5,0.5,0.5,0.5 mat:MeshStandardMaterial:ffffff:1"
+   ]
+  },
+  "walk": {
+   "objects": 2,
+   "hash": "20a6ae81",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p3,0.075,4 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:b4f7b04 i576 bbox-30,-0.075,-1,30,0.075,1 mat:MeshStandardMaterial:3a3b3c:1"
+   ]
+  },
+  "ground": {
+   "objects": 2,
+   "hash": "5f9a82de",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:cd14fa8d i6 bbox-250,0,-250,250,0,250 mat:MeshStandardMaterial:15181a:1"
+   ]
+  },
+  "street_grid": {
+   "objects": 28,
+   "hash": "ac0e4849",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-72,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:e68bc7bd i6 bbox-5,0,-77,5,0,77 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,-72 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:517d909d i6 bbox-77,0,-5,77,0,5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p-36,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:e68bc7bd i6 bbox-5,0,-77,5,0,77 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,-36 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:517d909d i6 bbox-77,0,-5,77,0,5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:e68bc7bd i6 bbox-5,0,-77,5,0,77 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:517d909d i6 bbox-77,0,-5,77,0,5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p36,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:e68bc7bd i6 bbox-5,0,-77,5,0,77 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,36 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:517d909d i6 bbox-77,0,-5,77,0,5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p72,0.02,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:e68bc7bd i6 bbox-5,0,-77,5,0,77 mat:MeshStandardMaterial:222428:1",
+    "Mesh p0,0.02,72 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:517d909d i6 bbox-77,0,-5,77,0,5 mat:MeshStandardMaterial:222428:1",
+    "Mesh p-54,0.075,-54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-54,0.075,-18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-54,0.075,18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-54,0.075,54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-18,0.075,-54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-18,0.075,-18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-18,0.075,18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p-18,0.075,54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p18,0.075,-54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p18,0.075,-18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p18,0.075,18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p18,0.075,54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p54,0.075,-54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p54,0.075,-18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p54,0.075,18 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p54,0.075,54 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d9642e80 i576 bbox-13,-0.075,-13,13,0.075,13 mat:MeshStandardMaterial:3a3b3c:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8179a9b4 i576 bbox-0.5,-0.5,-0.5,0.5,0.5,0.5 mat:MeshStandardMaterial:ffffff:1"
+   ]
+  },
+  "block_default": {
+   "objects": 14,
+   "hash": "a269a1d8",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p6,8.8314,-6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ad5b728c i576 bbox-4.8757,-8.8314,-5.0089,4.8757,8.8314,5.0089 mat:MeshStandardMaterial:463a3a:1",
+    "Mesh p6,17.8378,-6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:42275d6c i576 bbox-5.0257,-0.175,-5.1589,5.0257,0.175,5.1589 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p6.36,18.7128,-4.3871 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:990389ad i168 bbox-0.7799,-0.7,-0.8,0.7799,0.7,0.8 mat:MeshStandardMaterial:4b4540:1",
+    "Mesh p6,4.6,-0.1911 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:92b99502 i576 bbox-4.8757,-0.1,-0.8,4.8757,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p6,1.75,-0.9611 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:dc8fe975 i36 bbox-2.9254,-1.75,-0.025,2.9254,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p6,5.3,-0.8711 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:3c5a27c9 i6 bbox-3.413,-0.5,0,3.413,0.5,0 mat:MeshBasicMaterial:ffffff:1",
+    "Mesh p6,4.6,-11.8089 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:92b99502 i576 bbox-4.8757,-0.1,-0.8,4.8757,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p6,1.75,-11.0389 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:dc8fe975 i36 bbox-2.9254,-1.75,-0.025,2.9254,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p6,5.3,-11.1289 q0,1,0,0 s1,1,1 geo:PlaneGeometry v4:3c5a27c9 i6 bbox-3.413,-0.5,0,3.413,0.5,0 mat:MeshBasicMaterial:ffffff:1",
+    "Mesh p6,10.1641,6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ffa8da36 i576 bbox-4.7861,-10.1641,-5.3957,4.7861,10.1641,5.3957 mat:MeshStandardMaterial:35403d:1",
+    "Mesh p6,20.5032,6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d1b25dbc i576 bbox-4.9361,-0.175,-5.5457,4.9361,0.175,5.5457 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshStandardMaterial:0d1217:1"
+   ]
+  },
+  "block_three_by_three": {
+   "objects": 14,
+   "hash": "a1739b31",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p17.3333,5.4157,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:678a46a8 i576 bbox-5.2091,-5.4157,-5.3422,5.2091,5.4157,5.3422 mat:MeshStandardMaterial:463a3a:1",
+    "Mesh p17.3333,11.0064,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:19b5ed96 i576 bbox-5.3591,-0.175,-5.4922,5.3591,0.175,5.4922 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p17.7289,11.8814,-5.5673 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:990389ad i168 bbox-0.7799,-0.7,-0.8,0.7799,0.7,0.8 mat:MeshStandardMaterial:4b4540:1",
+    "Mesh p30,9.2632,-32.6667 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:74d2dc2e i576 bbox-5.7006,-9.2632,-5.2201,5.7006,9.2632,5.2201 mat:MeshStandardMaterial:3f3b34:1",
+    "Mesh p30,18.7013,-32.6667 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:612a88a2 i576 bbox-5.8506,-0.175,-5.3701,5.8506,0.175,5.3701 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p30,5.2133,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:94b9613a i576 bbox-5.3591,-5.2133,-5.1841,5.3591,5.2133,5.1841 mat:MeshStandardMaterial:35403d:1",
+    "Mesh p30,10.6016,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4cacbfd0 i576 bbox-5.5091,-0.175,-5.3341,5.5091,0.175,5.3341 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p42.6667,4.1285,-32.6667 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:d79c3ef0 i576 bbox-5.4455,-4.1285,-5.5118,5.4455,4.1285,5.5118 mat:MeshStandardMaterial:2f3439:1",
+    "Mesh p42.6667,8.432,-32.6667 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:77dc50f6 i576 bbox-5.5955,-0.175,-5.6618,5.5955,0.175,5.6618 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p42.6667,8.6896,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:2975c44c i576 bbox-5.4388,-8.6896,-5.0508,5.4388,8.6896,5.0508 mat:MeshStandardMaterial:3f3b34:1",
+    "Mesh p42.6667,17.5542,-7.3333 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:5bf840c0 i576 bbox-5.5888,-0.175,-5.2008,5.5888,0.175,5.2008 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshStandardMaterial:0d1217:1"
+   ]
+  },
+  "building_alone": {
+   "objects": 12,
+   "hash": "1c0eda",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,10,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:a5feda8 i576 bbox-6,-10,-7,6,10,7 mat:MeshStandardMaterial:8a8a86:1",
+    "Mesh p0,20.175,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:5c38d94 i576 bbox-6.15,-0.175,-7.15,6.15,0.175,7.15 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p-3.9424,21.05,5.246 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:990389ad i168 bbox-0.7799,-0.7,-0.8,0.7799,0.7,0.8 mat:MeshStandardMaterial:4b4540:1",
+    "Mesh p0,4.6,7.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:9347480 i576 bbox-6,-0.1,-0.8,6,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,1.75,7.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:b284dfbd i36 bbox-3.6,-1.75,-0.025,3.6,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p0,5.3,7.12 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a77501ad i6 bbox-4,-0.5,0,4,0.5,0 mat:MeshBasicMaterial:ffffff:1",
+    "Mesh p0,4.6,-7.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:9347480 i576 bbox-6,-0.1,-0.8,6,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,1.75,-7.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:b284dfbd i36 bbox-3.6,-1.75,-0.025,3.6,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p0,5.3,-7.12 q0,1,0,0 s1,1,1 geo:PlaneGeometry v4:a77501ad i6 bbox-4,-0.5,0,4,0.5,0 mat:MeshBasicMaterial:ffffff:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a34688ed i6 bbox-0.5,-0.5,0,0.5,0.5,0 mat:MeshStandardMaterial:0d1217:1"
+   ]
+  },
+  "fence": {
+   "objects": 9,
+   "hash": "7bc0efaf",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:b2895ac8 i60 bbox-0.0476,-0.6,-0.0405,0.0476,0.6,0.05 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p2.25,0.6,1 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:b2895ac8 i60 bbox-0.0476,-0.6,-0.0405,0.0476,0.6,0.05 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p4.5,0.6,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:b2895ac8 i60 bbox-0.0476,-0.6,-0.0405,0.0476,0.6,0.05 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p6.75,0.6,3 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:b2895ac8 i60 bbox-0.0476,-0.6,-0.0405,0.0476,0.6,0.05 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p9,0.6,4 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:b2895ac8 i60 bbox-0.0476,-0.6,-0.0405,0.0476,0.6,0.05 mat:MeshStandardMaterial:5a4630:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:e969e412 bbox0,0.42,0,9,0.42,4 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:e1c6f9d2 bbox0,0.78,0,9,0.78,4 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:c7376d02 bbox0,1.176,0,9,1.176,4 mat:LineBasicMaterial:8a8c8e:1"
+   ]
+  },
+  "fence_default_colour": {
+   "objects": 7,
+   "hash": "ebd6435",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-3,0.45,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p0,0.45,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:6a6c6e:1",
+    "Mesh p3,0.45,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:6a6c6e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:651f6930 bbox-3,0.315,2,3,0.315,2 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:78e06e70 bbox-3,0.585,2,3,0.585,2 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:2f918b00 bbox-3,0.882,2,3,0.882,2 mat:LineBasicMaterial:8a8c8e:1"
+   ]
+  },
+  "tent": {
+   "objects": 2,
+   "hash": "9aacc5f5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p2,0,3 q0,0.1987,0,0.9801 s1,1,1 geo:ExtrudeGeometry v24:dcc9966d bbox-3,0,-4,3,4.2,4 mat:MeshStandardMaterial:4f5638:1"
+   ]
+  },
+  "pine": {
+   "objects": 4,
+   "hash": "bfdbb5c4",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p1,0.7,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ab43c55d i168 bbox-0.2184,-0.7,-0.224,0.2184,0.7,0.224 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p1,2.66,2 q0,0,0,1 s1,1,1 geo:ConeGeometry v27:e6df48c5 i54 bbox-1.3337,-1.54,-1.54,1.3337,1.54,1.54 mat:MeshStandardMaterial:1f3324:1",
+    "Mesh p1,4.2,2 q0,0,0,1 s1,1,1 geo:ConeGeometry v27:d0ab69d5 i54 bbox-0.9699,-1.26,-1.12,0.9699,1.26,1.12 mat:MeshStandardMaterial:1f3324:1"
+   ]
+  },
+  "tree": {
+   "objects": 3,
+   "hash": "95122b46",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p1,1.08,2 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:2d27237d i168 bbox-0.2106,-1.08,-0.216,0.2106,1.08,0.216 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p1,3.12,2 q0,0,0,1 s1,1,1 geo:DodecahedronGeometry v108:350ce1b2 bbox-1.4573,-1.4573,-1.4573,1.4573,1.4573,1.4573 mat:MeshStandardMaterial:34452a:1"
+   ]
+  },
+  "container": {
+   "objects": 8,
+   "hash": "4d4ca982",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p3,0,4 q0,0.0998,0,0.995 s1,1,1",
+    "Mesh p0,1.3,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:e0d17738 i576 bbox-1.22,-1.3,-3.03,1.22,1.3,3.03 mat:MeshStandardMaterial:8a3a2a:1",
+    "Mesh p-1,1.3,3.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:fc739ea5 i36 bbox-0.03,-1.3,-0.02,0.03,1.3,0.02 mat:MeshStandardMaterial:1a1a1a:1",
+    "Mesh p-0.5,1.3,3.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:fc739ea5 i36 bbox-0.03,-1.3,-0.02,0.03,1.3,0.02 mat:MeshStandardMaterial:1a1a1a:1",
+    "Mesh p0,1.3,3.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:fc739ea5 i36 bbox-0.03,-1.3,-0.02,0.03,1.3,0.02 mat:MeshStandardMaterial:1a1a1a:1",
+    "Mesh p0.5,1.3,3.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:fc739ea5 i36 bbox-0.03,-1.3,-0.02,0.03,1.3,0.02 mat:MeshStandardMaterial:1a1a1a:1",
+    "Mesh p1,1.3,3.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:fc739ea5 i36 bbox-0.03,-1.3,-0.02,0.03,1.3,0.02 mat:MeshStandardMaterial:1a1a1a:1"
+   ]
+  },
+  "watchtower_plain": {
+   "objects": 9,
+   "hash": "77e7d50e",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-1.2,3.5,-1.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p-1.2,3.5,1.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p1.2,3.5,-1.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p1.2,3.5,1.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p0,7.6,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:fa2ed338 i576 bbox-1.6,-0.6,-1.6,1.6,0.6,1.6 mat:MeshStandardMaterial:4f5638:1",
+    "Mesh p0,8.275,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4329acfc i576 bbox-1.8,-0.075,-1.8,1.8,0.075,1.8 mat:MeshStandardMaterial:3a3a2a:1",
+    "Mesh p-1.5,9,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:22df9960 i576 bbox-0.075,-0.8,-0.075,0.075,0.8,0.075 mat:MeshStandardMaterial:3a3a2a:1",
+    "Mesh p1.5,9,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:22df9960 i576 bbox-0.075,-0.8,-0.075,0.075,0.8,0.075 mat:MeshStandardMaterial:3a3a2a:1"
+   ]
+  },
+  "watchtower_searchlight": {
+   "objects": 11,
+   "hash": "806fb8b5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.8,3.5,-4.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p0.8,3.5,-1.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p3.2,3.5,-4.2 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p3.2,3.5,-1.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:ef095ae4 i576 bbox-0.125,-3.5,-0.125,0.125,3.5,0.125 mat:MeshStandardMaterial:4a3a2a:1",
+    "Mesh p2,7.6,-3 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:fa2ed338 i576 bbox-1.6,-0.6,-1.6,1.6,0.6,1.6 mat:MeshStandardMaterial:4f5638:1",
+    "Mesh p2,8.275,-3 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4329acfc i576 bbox-1.8,-0.075,-1.8,1.8,0.075,1.8 mat:MeshStandardMaterial:3a3a2a:1",
+    "Mesh p0.5,9,-3 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:22df9960 i576 bbox-0.075,-0.8,-0.075,0.075,0.8,0.075 mat:MeshStandardMaterial:3a3a2a:1",
+    "Mesh p3.5,9,-3 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:22df9960 i576 bbox-0.075,-0.8,-0.075,0.075,0.8,0.075 mat:MeshStandardMaterial:3a3a2a:1",
+    "SpotLight p2,9,-3 q0,0,0,1 s1,1,1",
+    "Object3D p22,0,17 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "sandbags": {
+   "objects": 2,
+   "hash": "5464f659",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8179a9b4 i576 bbox-0.5,-0.5,-0.5,0.5,0.5,0.5 mat:MeshStandardMaterial:ffffff:1"
+   ]
+  },
+  "sandbags_z": {
+   "objects": 2,
+   "hash": "5464f659",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8179a9b4 i576 bbox-0.5,-0.5,-0.5,0.5,0.5,0.5 mat:MeshStandardMaterial:ffffff:1"
+   ]
+  },
+  "label": {
+   "objects": 2,
+   "hash": "ac0d1222",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,2.4,20 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:dd50d0d i6 bbox-11,-2.2,0,11,2.2,0 mat:MeshBasicMaterial:ffffff:1"
+   ]
+  },
+  "wires": {
+   "objects": 2,
+   "hash": "112a2a4d",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v3:4a56bcac bbox0,6.9,-1,28,6.9,2 mat:LineBasicMaterial:2a2a2a:1"
+   ]
+  }
+ }
+}

@@ -1,0 +1,765 @@
+<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"v":1,"capabilities":{"artifact":"artifact.BBvTDtAn.js","assets":"assets.DOAjpBS9.js","comments":"comments.BjISm5Q7.js","db":"db.zFlAA4qL.js","dictation":"dictation.f3j7VXQ8.js","downloads":"downloads.axDW2QAi.js","embed":"embed.SWCZLzn6.js","endpoints":"endpoints.BPfoKaE1.js","files":"files.IkpCjcgM.js","mcp":"mcp.kl0G36TA.js","network":"network.B5UA9Su4.js","paste":"paste.DeKNLIxx.js","permissions":"permissions.6yWoDecA.js","reads":"reads.Bgov9hIw.js","room":"room.BYRHiLCc.js","sample":"sample.D0G8eGrV.js","self":"artifact.BBvTDtAn.js","tts":"tts.iS74i_mi.js","user":"user.uKicftX-.js"},"transforms":"_transforms.CRcnZuGX.js","comments":"_comments.AKhddNYY.js","translate":"_translate.DqxC5ek1.js","ldx":"_ldx.B4FSryPi.js"}                                                                                                                                                                                                                                                                                                                                                                                 </script><script>(function(){"use strict";function dr(t){return t==="cookie"||t==="query"?t:void 0}function hr(t){return typeof t=="number"&&Number.isSafeInteger(t)&&t>0?t:void 0}var to=3e5;function pr(t,e){try{const r=t("navigation")[0],n=[r.responseStart,r.redirectEnd-r.redirectStart,r.domContentLoadedEventStart,e(),r.connectEnd-r.domainLookupStart,r.responseStart-r.requestStart];r.requestStart>0||(n.length=4);for(let a=0;a<n.length;a++)if(n[a]>=0&&n[a]<=3e5)n[a]=n[a]|0;else{if(a<4)return;n.length=4}return n}catch{return}}var mr=["light","dark","system"],vr=/^[A-Za-z0-9_-]{1,64}$/,Mt=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,_r=new Set(["class","hidden","value","checked","style","title","alt","placeholder","lang","dir","role","tabindex","disabled","readonly","contenteditable","open","colspan","rowspan"]);function yr(t){const e=t.toLowerCase();return e.startsWith("data-")||e.startsWith("aria-")||_r.has(e)}var Pt="data-ldx-props";function gr(t,e){if(e.toLowerCase()===Pt)return!0;const r=t.getAttribute(Pt);if(r===null)return!1;try{const n=JSON.parse(r);if(n===null||typeof n!="object"||Array.isArray(n))return!0;const a=e.toLowerCase();return Object.keys(n).some(s=>s.toLowerCase()===a)}catch{return!0}}var ro="http://www.w3.org/1999/xhtml",wr="http://www.w3.org/2000/svg",br=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),Er=new Set(["script","style"]);function Sr(t){const e=t.localName.toLowerCase();return t.namespaceURI==="http://www.w3.org/1999/xhtml"?!br.has(e):t.namespaceURI===wr?!Er.has(e):!1}function ot(t,e){return t===e||(t===160||t===32)&&(e===160||e===32)}function kr(t,e){const r=t.length,n=e.length;let a=0;for(;a<r&&a<n&&ot(t.charCodeAt(a),e.charCodeAt(a));)a++;let s=0;for(;s<r-a&&s<n-a&&ot(t.charCodeAt(r-1-s),e.charCodeAt(n-1-s));)s++;return{p:a,s}}function Ar(t,e){const r=t.firstChild;if(t.childNodes.length!==1||r===null||r.nodeType!==Node.TEXT_NODE){t.textContent=e;return}const n=r.data,a=n.length,s=e.length,{p:l,s:u}=kr(n,e);l===a&&u===0&&a===s||r.replaceData(l,a-l-u,e.slice(l,s-u));const R=r.data,b=t.ownerDocument.getSelection?.()??null,y=b!==null&&b.rangeCount>0&&(b.anchorNode===r||b.focusNode===r)?{anchor:b.anchorNode,anchorOffset:b.anchorOffset,focus:b.focusNode,focusOffset:b.focusOffset}:null;let p=-1,k=-1;for(let m=0;m<R.length&&m<e.length;m++){const j=R.charCodeAt(m),A=e.charCodeAt(m);j!==A&&ot(j,A)&&(p<0&&(p=m),k=m)}const L=p>=0;if(L&&r.replaceData(p,k-p+1,e.slice(p,k+1)),L&&y!==null&&y.anchor!==null&&y.focus!==null)try{b.setBaseAndExtent(y.anchor,y.anchorOffset,y.focus,y.focusOffset)}catch{}}var Rr=new Set(["html","head","body","frameset"]);function Tr(t){return t.namespaceURI==="http://www.w3.org/1999/xhtml"&&Rr.has(t.localName)}function Lr(t){if(t===null||typeof t!="object")return!1;const e=t;if(typeof e.target!="string"||!vr.test(e.target)||e.text!==void 0&&typeof e.text!="string")return!1;if(e.attrsSet!==void 0){if(e.attrsSet===null||typeof e.attrsSet!="object")return!1;for(const[r,n]of Object.entries(e.attrsSet))if(!Mt.test(r)||typeof n!="string")return!1}if(e.attrsRemoved!==void 0){if(!Array.isArray(e.attrsRemoved))return!1;for(const r of e.attrsRemoved)if(typeof r!="string"||!Mt.test(r))return!1}return!0}function Or(t,e){if(t===null||typeof t!="object")return!1;const{seq:r,elements:n}=t;if(typeof r!="number"||!Number.isSafeInteger(r)||!Array.isArray(n)||n.length===0||n.length>64)return!1;for(let a=0;a<n.length;a++)if(!e(n[a]))return!1;return!0}function Mr(t){return t===null||typeof t!="object"?!1:Or(t.__frame_patch,Lr)}function Pr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_init;return e!==null&&typeof e=="object"}function Nr(t){return t!==null&&typeof t=="object"&&t.__frame_size_poke===!0}function Cr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_host_visible;return e!==null&&typeof e=="object"&&typeof e.visible=="boolean"}function Fr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_theme;if(e===null||typeof e!="object")return!1;const r=e.theme;return typeof r=="string"&&mr.includes(r)}var xr=["ok","empty","snapshot_error","snapshot_timeout","unclonable","oversize","unavailable","restore_error","withheld"],jr=["TypeError","RangeError","ReferenceError","SyntaxError","DataCloneError","QuotaExceededError","AbortError","TimeoutError","SecurityError","Error","other"];function Ir(t){return typeof t=="string"&&jr.includes(t)?t:"other"}var Dr=Object.freeze({until:null,now:!1}),Hr="__claude_hot",Br="__claude_hot_in",qr=/^__claude_hot(?:_in)?(?::|$)/,Nt=/^[0-9a-z]{1,32}$/,at=t=>t===void 0?Hr:"__claude_hot:"+t,Oe=t=>t===void 0?Br:"__claude_hot_in:"+t;function Ur(t,e){const r=[];for(let n=0;n<t.length;n++){const a=t.key(n);a!==null&&a!==e&&qr.test(a)&&r.push(a)}for(const n of r)t.removeItem(n)}function Kr(t){let e=null;try{e=U(JSON.parse(t)?.hot)}catch{return null}return e===null||typeof e.k!="string"||!Nt.test(e.k)?null:he(e.g)?{k:e.k,g:e.g}:{k:e.k}}var no=262144,Gr=3e3,$r=5e3,Ct=/^[a-z0-9._:-]{1,64}$/,zr=["none","hot-restart","hard-reload"],Wr=["asset","doc","added","removed"],Vr=1500,Xr=/^[0-9a-f]{64}$/;function U(t){return t!==null&&typeof t=="object"?t:null}function he(t){return typeof t=="number"&&Number.isInteger(t)&&t>=0&&t<2**31}function Ft(t){return t===void 0||typeof t=="number"&&Number.isFinite(t)}function Yr(t){return t===void 0||typeof t=="string"&&Ct.test(t)}function xt(t){const e=U(t);return e!==null&&(e.until===null||typeof e.until=="number"&&Number.isFinite(e.until))&&typeof e.now=="boolean"}function st(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Ft(e.seq)&&typeof e.handoff=="string"&&xr.includes(e.handoff)&&Yr(e.note)}function jt(t){const e=U(t);return e!==null&&he(e.gen)&&(e.phase==="final"||e.phase==="pending")&&(e.from===null||st(e.from))}function Jr(t){const e=U(t);return e!==null&&e.kv===1&&he(e.gen)&&st(e.from)&&Object.hasOwn(e,"data")}function Zr(t){const e=U(t);return e!==null&&e.__frame_hot_snapshot===!0&&he(e.gen)&&typeof e.timeoutMs=="number"&&e.timeoutMs>=0&&e.timeoutMs<=6e4&&(e.handoff===void 0||typeof e.handoff=="boolean")&&(e.deadline===void 0||xt(e.deadline))&&Ft(e.seq)&&(e.note===void 0||typeof e.note=="string")&&(e.key===void 0||typeof e.key=="string")}function Qr(t){const e=U(t);return e!==null&&e.__frame_hot_start===!0&&he(e.gen)&&st(e.from)}function en(t){return typeof t=="string"&&t.length>=1&&t.length<=128}function It(t){return U(t)!==null&&!Array.isArray(t)}function tn(t){const e=U(t);return e!==null&&e.__frame_cap_grant===!0&&typeof e.cap=="string"&&en(e.ver)&&(e.grant===void 0||It(e.grant))&&(e.budgets===void 0||It(e.budgets)&&Object.values(e.budgets).every(Number.isFinite))&&(e.brokerGen===void 0||he(e.brokerGen))}function rn(t){const e=U(t);return e!==null&&e.__frame_cap_rewired===!0&&(e.caps===void 0||Array.isArray(e.caps)&&e.caps.every(r=>typeof r=="string"))&&(e.brokerGen===void 0||he(e.brokerGen))}function Ge(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Number.isFinite(e.seq)}function Dt(t){if(t==null||typeof t=="string")return!0;const e=U(t);return e!==null&&typeof e.doc=="string"&&typeof e.profile=="string"}function nn(t){const e=U(t);return e!==null&&typeof e.path=="string"&&Wr.includes(e.kind)&&Dt(e.from)&&Dt(e.to)}function on(t){return t===null?null:Object.freeze(t.filter(nn))}function an(t){const e=U(t);return e!==null&&e.__frame_hot_update===!0&&Number.isFinite(e.id)&&Ge(e.from)&&Ge(e.to)&&(e.changed===null||Array.isArray(e.changed))&&zr.includes(e.required)&&xt(e.deadline)&&typeof e.verdictTimeoutMs=="number"&&e.verdictTimeoutMs>=0&&e.verdictTimeoutMs<=6e4&&(e.preflight===void 0||typeof e.preflight=="string"&&Xr.test(e.preflight))}function sn(t){const e=U(t);return e!==null&&e.__frame_hot_readdress===!0&&Ge(e.from)&&Ge(e.to)}var pe=/^[\w.-]+\.js$/;function ln(t,e,r){return r?"inert":typeof e=="string"&&pe.test(e)?t?[e]:"inert":t?"inert":"framed"}var Ht=Object.freeze({[Symbol("claude.hot.restart")]:!0});function Bt(t,e){let r;try{r=t??sessionStorage}catch{return null}const n=at(e?.k),a=Oe(e?.k);let s=null;try{s=r.getItem(n)}catch{}try{r.removeItem(n)}catch{}try{Ur(r,a)}catch{}let l=null;if(s!==null&&!(e!==null&&e.g===void 0))try{const u=JSON.parse(s);Jr(u)&&(e===null||u.gen===e.g)&&(l=u)}catch{}if(l===null)try{r.removeItem(a)}catch{}return l}function qt(){const t=/^\/_f\/([^/]{1,128})\//.exec(location.pathname);return t?t[1]:""}var cn=/^[^/\\?#]{1,128}$/,it=t=>cn.test(t)&&t!=="."&&t!=="..";function Ut(t,e,r){const n=new URL(t),a="/_f/"+e+"/";if(!e||!n.pathname.startsWith(a)||!it(r))return null;const s=n.search.slice(1).split("&").filter(l=>!/^__frame_t(?:=|$)/.test(l)).join("&");return n.origin+"/_f/"+r+"/"+n.pathname.slice(a.length)+(s?"?"+s:"")+n.hash}var $e="{}";function Me(t){if(!t)return null;const e={ver:t.ver,handoff:t.handoff};return t.seq!==void 0&&(e.seq=t.seq),t.note!==void 0&&(e.note=t.note),e}function Kt(t,e){return t!==null&&t.note===void 0&&e?.note!==void 0?{...t,note:e.note}:t}function Gt(t){const e=t?.k;return e!==null&&typeof e=="object"?e:void 0}function un(t,e,r,n=null){const a=setTimeout,s=clearTimeout,l=queueMicrotask,u=performance.now.bind(performance),R=new TextEncoder;let b=null,y=null;try{b=history,y=b.replaceState.bind(b)}catch{}const p=(...o)=>{try{console.warn(...o)}catch{}};let k=qt(),L=null;try{L=sessionStorage}catch{}const m={storage:L,fetch:typeof fetch=="function"?fetch.bind(globalThis):null,entry:location.origin+location.pathname+location.search,ver:k,priors:[],key:n?.k};let j=n?.k;const A=typeof requestAnimationFrame=="function"?requestAnimationFrame:o=>a(()=>o(u()),16);let _=e?.data??{},E=Me(e?.from),I=e?.gen??0,D=e!==null,q=!1,$=!1,H=null,xe=!1;const be=new AbortController;let je=null,K=null,Ee=null,Ie=!1,le=()=>{};const te=new Promise(o=>{le=o});let ve=!1,Je=!1,Se=!1,c,h=null,g=!1,C=!1,O=!1,z=!1,B=!1,J=!1;const ce=o=>{for(const f of[at(o),Oe(o)])try{L?.removeItem(f)}catch{}},G=(o,f)=>{try{f!==null&&r.post(o,f)}catch{}},_e=()=>B||=O&&(K===null||z),Q=()=>{const o={__frame_hot:!0,ready:K!==null,accept:Ee!==null,demand:!0};J=!B,J&&(o.booting=!0),ve&&(o.readData=!0),Se&&(o.threw=!0),h?.assess&&(o.preflight=!0),G(o,H)};let De=!1,He=!1,ue=!1,re=!1;const Be=()=>{De||!xe||ue||(De=!0,G({__frame_reveal_hold:!0},"*"))},ke=()=>new Promise(o=>{let f,d=0;const v=P=>{if(f===void 0)f=P;else if(P!==f||++d>=8){o();return}try{A(v)}catch{o()}};try{A(v)}catch{o()}}),Ze=()=>{ue=!0,G({__frame_reveal_ready:!0},"*")},ye=o=>{He||(He=!0,o.then(f=>{if(f===!1)return;let d=null;try{d=h?.settle?.()??null}catch{}return(d===null?ke():new Promise(v=>{a(v,50),Promise.resolve(d).then(v,v)}).then(ke)).then(Ze)}))},Qe=()=>{if(re||!ue)return;re=!0;const o=()=>{try{h?.afterReveal?.()}catch{}};o(),ke().then(()=>{o(),Ze()})},ge=(o=!1)=>{if(Ie||K===null||!D||!$)return;Ie=!0;const f=K,d=_;l(()=>{let v;try{v=f(d)}catch(N){throw le(!1),N}let P=!1;try{P=typeof v?.then=="function"}catch{}if(!P){le(!0);return}Promise.resolve(v).then(()=>le(!0),N=>{le(!1),l(()=>{throw N})})}),ye(o?te:r.dcl.then(()=>te))},Ae=o=>typeof o=="string"&&Ct.test(o)?o:void 0,qe=o=>{const f={__frame_hot_restart:!0},d=Ae(o?.note);d!==void 0&&(f.note=d),o?.required==="hard-reload"&&(f.required="hard-reload"),G(f,H)},fe=Object.freeze({get data(){return $||(Je=!0),!D&&!ve&&(ve=!0,$&&Q()),_},get from(){return E},get gen(){return I},signal:be.signal,snapshot(o){typeof o=="function"&&(je=o)},ready(o){typeof o!="function"||K!==null||(K=o,Be(),Q(),q&&G({__frame_hot_ready:!0,gen:I},H),ge())},accept(o){typeof o=="function"&&(Ee=o,Q())},restart(o){const f={note:o?.note,required:o?.required};if($){qe(f);return}const d=c;c={note:Ae(d?.note)??f.note,required:d?.required==="hard-reload"||f.required==="hard-reload"?"hard-reload":void 0}}});let de=null,Ue=()=>{};const et=new Promise(o=>{Ue=o});let i=null;const S=()=>i??=r.dcl.then(()=>{let o=!1;try{o=de!==null&&de.expect()}catch{}if(!o)return;const f=de.maxMs;return new Promise(d=>{et.then(d),a(d,f)})}),w=()=>{if(!g||C||h===null)return;C=!0;const o=h;S().then(()=>{try{ue||o.afterStart(Gt(e),!1)}catch{}})},M=o=>{e!==null&&Je&&(ve=!0),_={},E=null,I=0;try{L?.removeItem(Oe(n?.k))}catch{}e!==null&&!o&&ye(r.dcl.then(()=>K!==null?te:void 0))},ee=()=>{g=!0,ye(S().then(()=>K!==null?te:void 0)),w()};try{addEventListener("error",()=>{Se||K!==null||(Se=!0,Q())})}catch{}const Z=()=>{a(()=>{!B&&_e()&&J&&Q()},0)};try{O=document.readyState==="complete",O||addEventListener("load",()=>{O=!0,Z()},{once:!0})}catch{O=!0}_e(),te.then(()=>{z=!0,Z()});let W=-1,Et,St,Ke=!0,kt=!1,At,tt=null;const Rt=o=>{const f=tt===null;tt=Ke&&o[0]!=="withheld"?o:["withheld",o[1],$e];let d=o[0];if(Ke&&d!=="withheld"){const P={ver:k,handoff:d};Et!==void 0&&(P.seq=Et),St!==void 0&&(P.note=St);try{if(L===null)throw new Error("no storage");L.setItem(at(j),'{"kv":1,"gen":'+W+',"from":'+JSON.stringify(P)+(At!==void 0?',"k":'+JSON.stringify(At):"")+',"data":'+(d==="ok"?o[2]:$e)+"}")}catch{d="unavailable"}}else{d="withheld",ce(j);try{h?.release?.()}catch{}}const v={__frame_hot_snapshotted:!0,gen:W,handoff:d,bytes:o[1]};o[3]!==void 0&&(v.errName=o[3]),G(v,H),f&&(d==="snapshot_error"||d==="unclonable"||d==="oversize")&&p("claude.hot: snapshot",d,o[3])},Re=o=>{try{return Ir(o?.name)}catch{return"other"}},Te=(o,f,d=0)=>Rt(f===void 0?[o,d,$e]:[o,d,$e,Re(f)]),zn=o=>{if(o.gen<=W)return;const f=W>=0;if(W=o.gen,Et=o.seq,St=Ae(o.note),typeof o.key=="string"&&Nt.test(o.key)&&o.key!==j&&(ce(j),j=o.key),Ke&&=o.handoff!==!1,f){tt!==null?Rt(tt):kt&&G({__frame_hot_held:!0,gen:W},H);return}be.abort();const d=Object.freeze({handoff:Ke,timeoutMs:o.timeoutMs,deadline:o.deadline??Dr}),v=je,P=()=>{if(Ke)try{At=h?.capture()}catch{}if(v===null){Te("empty");return}let T=!1;const V=a(()=>{T||(T=!0,Te("snapshot_timeout"))},Math.max(0,d.timeoutMs));Promise.resolve().then(()=>v(d)).then(Le=>{if(T)return;T=!0,s(V);let ne;try{ne=JSON.stringify(Le)}catch(Tt){Te("unclonable",Tt);return}if(typeof ne!="string"){Te("unclonable");return}let oe=ne.length;try{oe=R.encode(ne).length}catch{}if(oe>262144){Te("oversize",void 0,oe);return}Rt(["ok",oe,ne])},Le=>{T||(T=!0,s(V),Te("snapshot_error",Le))})};let N=null;try{N=h?.holdForIme()??null}catch{}if(N===null)P();else{kt=!0,G({__frame_hot_held:!0,gen:W},H);const T=()=>{kt=!1,P()};N.then(T,T)}},Wn=o=>{if(!q||D||K===null||o.gen!==I)return;let f=null;try{f=Bt(L,n&&{k:n.k,g:o.gen})}catch{}if(f!==null&&f.gen!==o.gen){f=null;try{L?.removeItem(Oe(n?.k))}catch{}}_=f?.data??{},E=Kt(Me(f?.from??o.from),Me(o.from)),f!==null&&(I=f.gen),D=!0,q=!1;const d=Gt(f);te.then(v=>{try{v&&h?.afterStart(d,!0)}catch{}}),ge(!0)},lr=o=>{const f=k,d=m.entry;let v="",P,N=null;try{if(v=location.href,P=b.state,N=Ut(v,f,o),N!==null)if(y(P,"",N),location.pathname.startsWith("/_f/"+o+"/"))N=location.href;else return{failed:"navigate event canceled"}}catch(T){return{failed:Re(T)}}k=m.ver=o,m.priors.push(f)>8&&m.priors.splice(1,1);try{m.entry=Ut(d,f,o)??d}catch{}return[N,f,d,v,P]},Vn=({from:o,to:f})=>{let d,v;if(!it(f.ver))d="adopt_failed",v="not a version path segment";else if(f.ver===k)d="adopted";else if(!k||o.ver!==k)d="stale";else{const N=lr(f.ver);"failed"in N?(d="adopt_failed",v=N.failed):d=N[0]===null?"adopt_skipped":"adopted"}v!==void 0&&p(`claude.hot: could not move this page's URL to its new version folder /_f/${f.ver}/ (${v})`);const P={__frame_hot_readdressed:!0,to:f.ver,at:k,outcome:d};G(P,H)};let rt=0;const Xn=o=>{const f=Ee;if(f===null||o.id<=rt)return;rt=o.id;const d=h?.assess;if(o.preflight===void 0||d===void 0){cr(o,f);return}let v=!1;const P=V=>{v||(v=!0,s(T),o.id===rt&&cr(o,f,V))},N=()=>P(d.timeout(o)),T=a(N,Vr+100);d.run(o,window).then(P,N)},cr=(o,f,d)=>{let v,P=!1,N=!1,T,V,Le=null;const ne=F=>{if(N)return!1;if(T!==void 0&&T!==F)return p(`claude.hot: u.${F}() ignored - u.${T}() was called first`),!1;const ae=T===void 0;return T=F,ae},oe=F=>{T="restart",p(`claude.hot: ${F} - restarting`)},Tt=()=>{if(!ne("adopt")||o.id!==rt)return;const F=o.to.ver;if(nt.required!=="none"){oe(`u.adopt() needs required 'none', it is '${nt.required}'`);return}if(!it(F)){oe("u.adopt() cannot address this version");return}if(!k||F===k)return;const ae=lr(F);if("failed"in ae){V="adopt_failed",oe(`adopt_failed ${ae.failed}; URL not changed`);return}const[Y,Ot,Zn,fr,Qn]=ae;Y===null?(V="adopt_skipped",p(`claude.hot: adopt_skipped - page already left /_f/${Ot}/; URL not changed, update still applied`)):V="adopted",Le=()=>{if(k===F){if(Y!==null)try{if(location.href!==Y)p("claude.hot: adopt_revert_skipped - update not applied; URL left where the page navigated");else{if(y(Qn,"",fr),location.href!==fr){p("claude.hot: adopt_revert_failed navigate event canceled - URL still at the new version");return}V="adopt_reverted",p("claude.hot: adopt_reverted - adopt() was called but the handler threw; URL restored")}}catch(eo){p(`claude.hot: adopt_revert_failed ${Re(eo)} - URL still at the new version`);return}k=m.ver=Ot,m.entry=Zn,m.priors[m.priors.length-1]===Ot&&m.priors.pop(),Y===null&&(V=void 0)}}},nt=Object.freeze({from:{ver:o.from.ver,seq:o.from.seq},to:{ver:o.to.ver,seq:o.to.seq},changed:on(o.changed),required:o.required,deadline:o.deadline,adopt:Tt,defer(){return ne("defer")&&nt.deadline.now&&oe("u.defer() past the deadline"),Ht},restart(F){return ne("restart"),T==="restart"&&!N&&(v??=Ae(F?.note),P||=F?.required==="hard-reload"),Ht},...d?.update}),Yn=(F,ae)=>{N=!0,F==="threw"?(Le?.(),v??=Re(ae).toLowerCase()):T===void 0&&p(F==="timeout"?"claude.hot: accept handler did not answer in time - restarting":"claude.hot: accept handler settled without defer/restart/adopt - restarting");const Y={__frame_hot_verdict:!0,id:o.id};Y.verdict=F==="threw"||T===void 0||T==="restart"?"restart":T==="adopt"?"applied":"deferred",Y.verdict==="restart"&&(P&&(Y.required="hard-reload"),v!==void 0&&(Y.note=v)),V!==void 0&&(Y.verdict==="applied"||V!=="adopted")&&(Y.adopt=V),G(Object.assign(Y,d?.verdict),H)};let ur=!1;const Lt=(F,ae)=>ur?!1:(ur=!0,s(Jn),Yn(F,ae),!0),Jn=a(()=>Lt("timeout"),o.verdictTimeoutMs);Promise.resolve().then(()=>f(nt)).then(()=>Lt("settled"),F=>{!Lt("threw",F)&&T==="adopt"&&qe({note:Re(F).toLowerCase()}),p("claude.hot: accept",Re(F))})};try{t.hot===void 0&&Object.defineProperty(t,"hot",{value:fe,writable:!1,configurable:!1,enumerable:!1})}catch{}return{hot:fe,boot:m,afterConnect(){xe=!0,(e!==null||K!==null)&&Be()},onInit(o,f){H=f,$=!0;const d=jt(o)?o:null;d?.phase==="final"&&e!==null&&e.gen===d.gen?(D=!0,E=Kt(E,Me(d.from)),ee()):(q=d?.phase==="pending",M(q),D=!q,I=d?.gen??0,E=Me(d?.from)),Q(),J&&a(()=>{B||(B=!0,Q())},$r),q&&K!==null&&G({__frame_hot_ready:!0,gen:I},f),c!==void 0&&(qe(c),c=void 0),ge()},onNoInit(){$=!0,M(!1),D=!0,ge()},onShell(o){return o?.__frame_revealed===!0?(Qe(),!1):Zr(o)?(zn(o),!0):Qr(o)?(Wn(o),!0):an(o)?(Xn(o),!0):sn(o)?(Vn(o),!0):!1},attachExtras(o){h=o,w(),o.assess&&Q()},inSlot:()=>Oe(j),hydration(o,f){de??={expect:o,maxMs:f}},hydrated(){Ue()},carried(){return D?_:{}},presented:()=>ue}}var oo="frame_ldx_runtime",fn="frame_ldx_build",ao="script#an-form",dn=256;function lt(t,e,r){for(const n of t)r(n)&&t.delete(n);t.size>=dn&&!t.has(e)&&t.delete(t.values().next().value),t.add(e)}function Pe(t,e,r,n){try{const a=t[e];if(typeof a!="function")return;t[e]=function(...s){if(n){let u;try{u=n(this)}catch{}if(u!==void 0)return u}const l=a.apply(this,s);try{r?.(this)}catch{}return l}}catch{}}var hn=()=>{},ct;function pn(){if(ct)return ct;const t={media:new Set,contexts:new Set,wakeLocks:new Set,gate:null,refuse:null,onStart:null,onStop:null};ct=t;const e=l=>t.gate?.(l),r=l=>{t.onStop?.(l)},n=window.HTMLMediaElement?.prototype;n&&(Pe(n,"play",l=>{lt(t.media,l,u=>u.paused),t.onStart?.(l)},e),Pe(n,"pause",r));const a=window.AudioContext,s=window.AudioNode?.prototype;a&&s&&(Pe(s,"connect",l=>{const u=l.context;u instanceof a&&(lt(t.contexts,u,R=>R.state==="closed"),t.onStart?.(u))}),Pe(a.prototype,"resume",void 0,e),Pe(a.prototype,"suspend",r));try{const l=window.WakeLock?.prototype,u=l?.request;l&&typeof u=="function"&&(l.request=function(...R){if(t.refuse)return t.refuse();const b=u.apply(this,R);return Promise.resolve(b).then(y=>{lt(t.wakeLocks,y,p=>p.released),t.onStart?.(y)},hn),b})}catch{}return t}function mn(t){let e=window;for(let r=0;e.parent&&e.parent!==e&&r<8;r++)if(e=e.parent,t(e))return!0;return!1}function vn(){let t=null;const e=()=>t??parent,r=n=>t?n===t:mn(a=>a===n);return{post(n,a){if(t){e().postMessage(n,a);return}let s=parent;for(let l=0;l<8&&(s.postMessage(n,a),!(!s.parent||s.parent===s));l++)s=s.parent},on(n){const a=s=>{const l=s.source;r(l)&&n(s.data,s.origin,s.isTrusted,()=>{t??=l})};return addEventListener("message",a),()=>removeEventListener("message",a)},port:n=>({post(a,s){if(s?.activation){e().postMessage(a,{targetOrigin:n,includeUserActivation:!0});return}if(s?.transfer){e().postMessage(a,n,s.transfer);return}e().postMessage(a,n)},on(a,s){const l=u=>{r(u.source)&&u.origin===n&&a(u.data,u)};return addEventListener("message",l,s),()=>removeEventListener("message",l,s)}})}}function _n(){const t={post:()=>{},on:()=>()=>{}};return{...t,port:()=>t}}var yn=500,gn=2e4,wn="data-token-reads",bn="data-frame-refused-watch",En="data-frame-unsupported",Sn=/(?:^|\s)stylesheet(?:\s|$)/i;function kn(t,e){let r="";if(t instanceof HTMLScriptElement?r=t.src:t instanceof HTMLLinkElement&&Sn.test(t.rel)&&(r=t.href),!r)return null;try{const n=new URL(r);return n.origin===location.origin&&n.pathname.startsWith(e)?n.origin+n.pathname:null}catch{return null}}function An(t,e,r){if(!t||e!=="query")return;const n="/_f/"+t+"/";document.documentElement.setAttribute(bn,"");const a=location.href,s=fetch,l=setTimeout,u={method:"HEAD",cache:"no-store",credentials:"same-origin"},R=m=>m.ok||m.status===304;let b=!1,y=!1;const p=()=>removeEventListener("error",L,!0),k=async m=>{const j=await s(m,u);if(R(j))y=!0;else if(j.status===403){const A=await s(a,u);if(R(A)){const _=(await s(m,u)).status;_===403?(y=!0,document.documentElement.setAttribute(En,""),r()):_<500&&(y=!0)}else A.status>=400&&A.status<500&&(y=!0)}},L=m=>{if(y||b)return;if(document.documentElement.hasAttribute(wn)){y=!0,p();return}const j=kn(m.target,n);j&&(b=!0,l(()=>{k(j).catch(()=>{}).finally(()=>{b=!1,y&&p()})},yn))};addEventListener("error",L,!0),addEventListener("load",p,{once:!0}),l(p,gn)}var ut="__frame_scroll",Rn=150,Tn=310,Ln=160,On=3e4,$t="p,h1,h2,h3,h4,h5,h6,li,pre,blockquote,tr,dt,dd,figcaption,summary",zt=()=>innerWidth<=Tn&&innerHeight<=Ln,Wt=t=>{const e=document.createTreeWalker(t,NodeFilter.SHOW_TEXT);let r="";for(;r.length<600&&e.nextNode();)r+=e.currentNode.nodeValue.slice(0,600-r.length);const n=r.replace(/\s+/g," ").trim().slice(0,120);let a=2166136261;for(let s=0;s<n.length;s++)a=Math.imul(a^n.charCodeAt(s),16777619);return n.length>11?a>>>0||1:0},Vt=t=>{for(let e=t;e&&e!==document.scrollingElement;e=e.parentElement){const r=getComputedStyle(e).position;if(r==="fixed"||r==="sticky"||e!==t&&e.scrollTop)return!1}return!0},Mn=()=>{const t=[],e=[];try{for(let r=0;r<16;r++){const n=document.elementFromPoint(innerWidth/(r%2?4:2),innerHeight*(r>>1)/8+1);let a=n?.closest($t)??n;for(;a&&!a.matches($t)&&![...a.childNodes].some(l=>l.nodeType===3&&l.nodeValue?.trim());)a=a.parentElement;const s=a&&!e.includes(a)?Wt(a):0;s&&!t.some(l=>l[0]===s&&l[2]===a.tagName)&&Vt(a)&&(e.push(a),t.push([s,Math.round(a.getBoundingClientRect().top),a.tagName]))}}catch{}return t.sort((r,n)=>+(r[1]<0)-+(n[1]<0)),t.length?t.slice(0,3):void 0},Pn=t=>{try{for(const[e,r,n]of t.a??[]){const a=document.getElementsByTagName(n);let s;for(let u=0;u<a.length&&a.length<5e3;u++)Wt(a[u])===e&&(s=s===void 0||s?.contains(a[u])?a[u]:null);const l=s?.getBoundingClientRect();if(l?.height&&s.checkVisibility?.()!==!1&&Vt(s)&&isFinite(r))return Math.max(0,Math.round(scrollY+l.top-r))}}catch{}return t.y};function Nn(){let t=0,e=!1,r=!1,n=!1,a={y:0},s=null;const l=E=>{try{sessionStorage.setItem(ut,JSON.stringify(E))}catch{}},u=E=>{if(clearTimeout(t),s===null)return;const I=s;s=null,l({y:I,a:E&&I>0?Mn():void 0})},R=()=>{if(e){e=!1;return}r=!0,s=scrollY,clearTimeout(t),t=setTimeout(u,Rn,!0)};try{addEventListener("scroll",R,{passive:!0}),addEventListener("pagehide",()=>u())}catch{}const b=()=>{let E;try{E=sessionStorage.getItem(ut)}catch{return null}if(E===null)return null;let I;try{I=JSON.parse(E)}catch{I=null}const{y:D,a:q}=I??{};if(!(typeof D=="number"&&Number.isFinite(D)&&D>=0)){try{sessionStorage.removeItem(ut)}catch{}return null}const $=H=>Array.isArray(H)&&typeof H[0]=="number"&&Number.isFinite(H[1])&&typeof H[2]=="string";return{y:D,a:Array.isArray(q)&&q.length<4&&q.every($)?q:void 0}};let y=!1,p=-1;const k=E=>{try{const I=scrollY,D=Pn(E);scrollTo({top:D,left:0,behavior:"instant"}),a=zt()?E:{y:D,a:E.a},n=!0,clearTimeout(t),s=null,l(a),p=scrollY,p!==I&&(e=!0);const q=D!==E.y&&document.readyState!=="complete";(p!==D||q)&&!y&&(y=!0,addEventListener("load",()=>{try{scrollY===p&&k(b()??a)}catch{}},{once:!0}))}catch{}},L=()=>{try{return!!location.hash}catch{return!0}};let m=!1;const j=()=>{try{if(m||!zt())return;m=!0;const E=Date.now(),I=()=>{try{removeEventListener("resize",I)}catch{}Date.now()-E>On||r||L()||k(b()??a)};addEventListener("resize",I)}catch{}};let A=!1,_=!1;return{restore(){if(A||(A=!0,L()))return;const E=b();E!==null&&(k(E),j())},promoted(){if(_||(_=!0,L()))return;const E=b();E!==null?(k(E),j()):n&&k(a)}}}function Cn(t,e,r,n){let a=null;try{a=window.trustedTypes?.createPolicy("frame-runtime",{createScriptURL:R=>R})??null}catch{}const s=window.Worker,l=s?.prototype,u=Object.freeze({Worker:s,workerOn:l?.addEventListener,workerPost:l?.postMessage,workerTerminate:l?.terminate,fetch:window.fetch.bind(window),preventDefault:Event.prototype.preventDefault,now:Date.now,policy:a,origins:e});r(t).then(R=>R?.bootTopLevel?R.bootTopLevel(u,n):n.settle()).catch(()=>n.settle())}var so="modulepreload",io=function(t){return"/"+t},lo={},Fn=function(e,r,n){let a=Promise.resolve();function s(l){const u=new Event("vite:preloadError",{cancelable:!0});if(u.payload=l,window.dispatchEvent(u),!u.defaultPrevented)throw l}return a.then(l=>{for(const u of l||[])u.status==="rejected"&&s(u.reason);return e().catch(s)})},xn=window===top,Xt=Object.getOwnPropertyDescriptor(window,"claude"),ze=ln(xn,window.__FRAME_PREAMBLE?.topLevel,Xt?.writable===!1),ft=typeof ze=="object"&&ze[0],x=ft?_n():vn();(function(){const t=Object.defineProperty,e=globalThis,r=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let n=0;for(let a=0;a<r.length;a++){const s=r[a];try{t(e,s,{value:void 0,writable:!1,configurable:!1})}catch{try{delete e[s]}catch{}try{t(e,s,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof e[s]=="function"&&n++}if(n&&ze==="framed")try{x.post({__frame_rtc_lockdown_failed:n},"*")}catch{}})();var Yt=1e4,jn=2e3,dt=2e3,ht=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function Jt(t){for(const e of ht)if(e.endsWith(":*"))try{const r=new URL(t);if(`${r.protocol}//${r.hostname}:*`===e)return!0}catch{}else if(t===e)return!0;return!1}var Ne=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),Ce=window.__FRAME_PREAMBLE?.transforms,pt=window.__FRAME_PREAMBLE?.comments,mt=window.__FRAME_PREAMBLE?.translate,me=window.__FRAME_PREAMBLE?.ldx,We=dr(window.__FRAME_PREAMBLE?.cred),Zt=(()=>{try{const[t]=performance.getEntriesByType("navigation"),e=t?.serverTiming?.find(r=>r.name==="frame-cred-exp");return e!==void 0&&/^\d{1,15}$/.test(e.description)?hr(Number(e.description)):void 0}catch{return}})();function Qt(t){return Fn(()=>import("/_runtime/"+t),void 0)}var Fe=new Set,er=setTimeout,In=fetch,Dn=AbortController,Hn=800+800*Math.random(),Bn=3e3,Ve=null,tr=new Map;function qn(t,e){let r=tr.get(t);return r||tr.set(t,r=Un(t,e)),r}function Un(t,e){if(Ve?.has(t))return Promise.resolve("csp");if(navigator.onLine===!1)return Promise.resolve("offline");const r=new Dn;let n=!1;return er(()=>{n=!0,r.abort()},Bn),In("/_runtime/"+t,{signal:r.signal}).then(a=>(r.abort(),a.ok?/javascript/i.test(a.headers.get("content-type")??"")?e instanceof Error&&/:\d+:\d+\)?$/m.test(e.stack??"")?"eval":"served":"mime":"http"),()=>n?"timeout":Ve?.has(t)?"csp":"net")}function se(t){if(!Ve){const e=Ve=new Set;try{document.addEventListener("securitypolicyviolation",r=>{const n=/\/_runtime\/([^/?#]+)/.exec(r.blockedURI);n&&r.disposition!=="report"&&e.add(n[1])})}catch{}}return Qt(t).catch(()=>new Promise(e=>er(e,Hn)).then(()=>Qt(t+"?r=1")).then(e=>(e!==void 0&&Fe.add(t),e)))}function rr(t,e,r){return{contract:t.contract,changes:new Set(t.changes??[]),flags:new Set(t.flags??[]),capabilities:t.capabilities??{},capBudgets:t.capBudgets??{},brokerGen:t.brokerGen,transforms:new Map,shellOrigin:e,shell:r,mount:bt,hooks:Xe,pipe:()=>({wrap:(n,a)=>(...s)=>{try{return a(...s)}catch(l){return Promise.reject(l)}}})}}var we=null,X=null;function nr(t,e,r){try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var vt=!1,Xe={editBefore:null,edit:null};function Kn(t,e,r=!1){const n=[];let a;if(r)try{Xe.editBefore?.(t)}catch{}for(const s of t.elements){const l=document.querySelector(`[data-id="${s.target}"]`);if(!l){a=s.target;break}if([...Object.keys(s.attrsSet??{}),...s.attrsRemoved??[]].some(u=>!yr(u)||gr(l,u))){a=s.target;break}if(s.text!==void 0&&(!Sr(l)||Tr(l))){a=s.target;break}for(const[u,R]of Object.entries(s.attrsSet??{}))if(!ar(l,u)){try{l.setAttribute(u,R)}catch{}or(l,u,R)}for(const u of s.attrsRemoved??[])ar(l,u)||(l.removeAttribute(u),or(l,u,null));typeof s.text=="string"&&Ar(l,s.text),n.push(s.target)}if(r)try{Xe.edit?.(t.seq,n,a)}catch{}if(a!==void 0){x.post({__frame_patch_miss:{seq:t.seq}},e);return}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:t.seq,targets:n}}))}catch{}}function or(t,e,r){if(!(t instanceof HTMLInputElement))return;const n=e.toLowerCase();n==="checked"?t.checked=r!==null:n==="value"&&t.type!=="file"&&(t.value=r??"")}function ar(t,e){const r=e.toLowerCase(),n=t;return r==="data-id"||(r==="value"||r==="checked")&&(n.__artifactSecret===!0||/^(password|hidden|file)$/.test(n.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${t.getAttribute("autocomplete")??""} ${n.autocomplete??""}`))}function sr(t){const e=document.documentElement;t==="light"||t==="dark"?(e.dataset.theme=t,e.style.colorScheme=t,vt=!0):vt&&(delete e.dataset.theme,e.style.colorScheme="",vt=!1)}var ie=new Map,_t=null;function yt(){let t;const e={u:new Promise(r=>{t=r}),r:r=>{e.done=!0,t(r)},done:!1,nulled:!1};return e}function Ye(t,e){t.nulled=!0,t.ver=e,t.r(null)}function gt(t,e){for(const[r,n]of ie)n.done||(e&&n.asked?e(r,n):Ye(n,t))}function Gn(){for(const t of ie.values())if(t.asked&&!t.done)return!0;return!1}var $n=Object.freeze(Object.assign(Object.create(null),{call:Function.prototype.call,apply:Function.prototype.apply,bind:Function.prototype.bind})),wt=!1,bt=(t,e)=>{let r=ie.get(t);if(r?.nulled&&wt)r=yt(),ie.set(t,r);else if(!r||r.done){r?.nulled&&X&&x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:t,phase:"install"}},X);return}const n=typeof e=="function"?Object.setPrototypeOf(e,$n):Object.assign(Object.create(null),e);typeof n.then=="function"&&delete n.then,r.want=void 0,r.r(Object.freeze(n))};function ir(){const t=Xt?.value??{};nr(window,"claude",t);for(const e of Object.keys(Ne)){if(t[e]!==void 0){nr(t,e,t[e]);continue}ie.set(e,yt())}if(t.use===void 0){const e=r=>{if(typeof r!="string"||!Object.hasOwn(Ne,r))return Promise.resolve(null);let n=ie.get(r);return n?(_t&&(n.nulled||n.want!==void 0)&&(n=_t(r,n)),n.asked=!0,n.u):Promise.resolve(t[r]??null)};try{Object.defineProperty(t,"use",{value:e,writable:!0,configurable:!0,enumerable:!1})}catch{}}return t}if(ze==="framed"){let t;const e=Ce&&pe.test(Ce)?se(Ce).catch(c=>{t={f:Ce,e:c}}):Promise.resolve(void 0),r=c=>{if(c.type==="auxclick"&&c.button!==1)return;const h=c.target,g=h&&h.closest?h.closest("a[href],area[href]"):null;if(!g)return;const C=g.getAttribute("href");if(!C)return;let O;try{O=new URL(C,document.baseURI)}catch{return}if((O.protocol==="http:"||O.protocol==="https:")&&O.origin!==location.origin){c.preventDefault();const z=(g.getAttribute("target")??"").toLowerCase(),B=c.type==="auxclick"||c.metaKey||c.ctrlKey||c.shiftKey||c.altKey||!["","_self","_top","_parent"].includes(z);x.post({__frame_nav:!0,url:O.href,newTab:B},"*")}};addEventListener("click",r,!0),addEventListener("auxclick",r,!0);const n={},a=c=>{c.isTrusted&&(n.pointer=!0)},s=c=>{c.isTrusted&&(n.click=!0)};addEventListener("pointermove",a,{capture:!0,passive:!0}),addEventListener("click",s,{capture:!0,passive:!0});const l={cb:null};addEventListener("keydown",c=>l.cb?.(c),!0);const u={cb:null};addEventListener("keydown",c=>u.cb?.(c));const R=pn();e.then(c=>c?.installEscapeForward?.(l,h=>{X&&x.post(h,X)})),e.then(c=>{try{c?.installFocusKeep?.()}catch{}}),e.then(c=>{if(!c?.wireNav)return;const h=x.port("*");c.wireNav(h),removeEventListener("click",r,!0),removeEventListener("auxclick",r,!0),removeEventListener("pointermove",a,!0),removeEventListener("click",s,!0),c.wireEngagement?.(n,h,R)});let b=null;try{b=Nn()}catch{}const y=document.readyState==="loading"?new Promise(c=>document.addEventListener("DOMContentLoaded",()=>c(),{once:!0})):Promise.resolve();let p="dcl",k=!1;y.then(()=>{k=!0});let L=null,m=null;try{m=Kr(window.name),L=Bt(null,m)}catch{}const j=ir();let A=null;try{A=un(j,L,{post:(c,h)=>x.post(c,h),dcl:y},m)}catch{}e.then(c=>{try{A&&c?.installHotExtras?.(A)}catch{}});let _=null;const E=()=>Array.isArray(_?.flags)&&_.flags.includes("frame_ldx_runtime")&&!!me&&pe.test(me)&&document.querySelector("script#an-form")!==null;try{A?.hydration(E,Gr)}catch{}let I=null,D=0;const q=x.on((c,h,g,C)=>{Jt(h)&&Pr(c)&&(C(),_=c.__frame_init,X=h,q(),clearTimeout(D),I?.())});if(We){const c=Zt===void 0?{__frame_cred:We}:{__frame_cred:We,exp:Zt};for(const h of ht)try{h.endsWith(":*")||x.post(c,h)}catch{}}x.post({__frame_connect:!0},"*");try{A?.afterConnect()}catch{}const $=setTimeout,H=clearTimeout,xe=()=>new Promise(c=>$(c,0));let be=()=>NaN,je=()=>[];try{be=performance.now.bind(performance),je=performance.getEntriesByType.bind(performance)}catch{}let K=0;const Ee=()=>{try{x.post({__frame_alive:!0},"*")}catch{}K=$(Ee,jn)},Ie=()=>H(K);Ee(),addEventListener("load",Ie,{once:!0});const le=new Promise(c=>{I=c,D=setTimeout(()=>{q(),c()},Yt)}),te=new WeakSet;addEventListener("error",c=>{c.target&&te.add(c.target)},!0);try{An(qt(),We,()=>{e.then(c=>{try{c?.drawRefusedNotice?.()}catch{}})})}catch{}const ve=()=>{let c=[];try{c=[...document.querySelectorAll("link[rel~=stylesheet]:not([rel~=alternate])")].filter(g=>!g.sheet&&!g.disabled&&!te.has(g)&&g.getAttribute("href")&&URL.canParse(g.href)&&(!g.media||matchMedia(g.media).matches))}catch{}let h=c.length;return h===0?Promise.resolve():new Promise(g=>{try{const C=dt-be();C>0&&(p="sheets");const O=$(g,C>0?C<dt?C:dt:0),z=()=>{--h===0&&(H(O),g())};for(const B of c)B.addEventListener("load",z,{once:!0}),B.addEventListener("error",z,{once:!0})}catch{g()}})};y.then(()=>{try{b?.restore()}catch{}});const Je=Promise.all([le,y,e]).then(c=>{if(_?.hostOverlays!==!0||!X)return;const h=c[2],g=B=>{try{return B?.()===!0}catch{return!1}},C=g(h?.declaresCover),O=_.hostSides===!0?{cover:C,sides:g(h?.declaresSides)}:{cover:C};if(x.post({__frame_layout:O},X),_.hostBackground!==!0)return;const z=X;return xe().then(ve).then(()=>{try{h?.watchBackground?.(B=>x.post({__frame_layout:{...O,background:B}},z))}catch{}})}),Se={cb:null};x.on((c,h)=>{if(Jt(h)&&Nr(c)){try{b?.promoted()}catch{}Se.cb?.()}}),le.then(async()=>{if(!_||!X){gt();try{A?.onNoInit()}catch{}return}if(sr(_.theme),_.hostVisible===!1&&e.then(i=>i?.applyHostVisible?.(!1,R)),_.hostKeys!==void 0){const i=X,S=_.hostKeys;e.then(w=>w?.installHostKeyForward?.(u,S,M=>x.post(M,i)))}try{A?.onInit(_.hot,X)}catch{}let c;const h=()=>{try{!c&&me&&E()&&(c=se(me),c.then(i=>i?.prefetch?.()).catch(()=>{}))}catch{}};h(),y.then(h);const g=X,C=x.port(g),O=(i,S)=>x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:i,phase:S}},g),z=(i,S,w)=>{new Promise(M=>M(qn(S,w))).then(M=>O(i,M),()=>O(i))},B=i=>x.post({__frame_cap_recovered:{cap:i}},g);let J=_.brokerGen;const ce=()=>A?.boot.ver??"",G=ce(),_e=(i,S)=>{const w=ce();H(S.t),S.want=w,S.t=$(()=>{S.done||Ye(S,w)},Yt),x.post({__frame_cap_want:!0,cap:i,ver:w},g)},Q=(i,S)=>{const w=ie.get(i.cap),M=Ne[i.cap];if(!S||!w||w.done||w.want!==i.ver||!pe.test(M))return;if(H(w.t),w.want=void 0,J=i.brokerGen??J,i.ver!==ce()){_e(i.cap,w);return}if(!i.grant||i.cap==="network"){Ye(w,i.ver);return}const ee=we,Z=we={...ee,capabilities:{...ee.capabilities,[i.cap]:i.grant},capBudgets:{...ee.capBudgets,[i.cap]:{...ee.capBudgets[i.cap],...i.budgets}}};se(M).then(W=>{Fe.has(M)&&B(i.cap),Z.brokerGen=J,wt=!0;try{W?.install?.(Z)}catch{O(i.cap,"install")}finally{wt=!1}},W=>z(i.cap,M,W)).then(()=>{w.done||Ye(w,i.ver)})};let De=!1,He=!1;x.on((i,S,w)=>{if(S!==g)return;try{if(A?.onShell(i))return}catch{}if(Fr(i)&&sr(i.__frame_theme.theme),tn(i)&&Q(i,w),w&&rn(i)&&(J=i.brokerGen??J),Cr(i)){const Z=i.__frame_host_visible.visible;e.then(W=>W?.applyHostVisible?.(Z,R))}Mr(i)&&Kn(i.__frame_patch,g,w);const M=i?.__fc_mode;M&&typeof M=="object"&&!De&&pt&&pe.test(pt)&&(De=!0,se(pt).then(Z=>Z.install?.(g,M.on===!0,C)).catch(()=>{}));const ee=i?.__ft_cmd;ee&&typeof ee=="object"&&!He&&mt&&pe.test(mt)&&(He=!0,se(mt).then(Z=>Z.install?.(g,ee,C)).catch(()=>{}))});const ue=Object.keys(_.capabilities??{}).filter(i=>Object.hasOwn(Ne,i)).map(i=>[i,Ne[i]]).filter(i=>typeof i[1]=="string"&&pe.test(i[1])),re=g;let Be=!1,ke=()=>{};const Ze=new Promise(i=>{ke=()=>{Be=!0,i()}}),ye=()=>(Be||(p="caps"),Ze),Qe=L!==null||jt(_.hot)||_.hostVisible===!1||_.hostOverlays===!0;k&&(p="init");const ge=_.hostBackground===!0,Ae=y.then(()=>(ge&&ye(),ge?Je:void 0)).then(()=>Qe?ye():xe()).then(ve).then(()=>{let i=!0;try{i=Qe||Gn()}catch{}return i?ye():void 0}).then(()=>{Ie();const i=pr(je,be);x.post(i?{__frame_ready:!0,nav:i,gate:p}:{__frame_ready:!0,gate:p},re),e.then(S=>{S?.installSizeReporter?.(re,Se,C),S?.installPaintReporter?.(C)})}),qe=await Promise.allSettled(ue.map(([,i])=>se(i))),fe=await e;if(fe?.buildBoot||(t?z("_transforms",t.f,t.e):O("_transforms")),fe?.buildBoot)try{we=fe.buildBoot(_,fe.TRANSFORMS??{},{shellOrigin:re,mount:bt,hooks:Xe,shell:C},i=>x.post({__frame_cap_telemetry:i},re))}catch{O("_transforms","install"),we=rr(_,re,C)}else we=rr(_,re,C);fe?.buildBoot&&Fe.has(Ce??"")&&B("_transforms");const de=we;de.brokerGen=J,qe.forEach((i,S)=>{const[w,M]=ue[S];if(i.status!=="fulfilled"){z(w,M,i.reason);return}Fe.has(M)&&B(w);try{i.value?.install?.(de)}catch{O(w,"install")}});const Ue=_.capWants===!0;Ue&&(_t=(i,S)=>{const w=ce();if(!w)return S;if(!S.nulled)return S.want!==w&&_e(i,S),S;if(w===S.ver)return S;const M=yt();return ie.set(i,M),_e(i,M),M}),gt(G,Ue&&ce()!==G?_e:void 0),ke(),await Ae;let et=!1;try{et=E()}catch{}me&&et?(c??se(me)).then(i=>i?.boot?.({shellOrigin:g,build:de.flags.has(fn),hot:A?.hot??null,carried:A?.carried(),presented:()=>A?.presented()??!0})).catch(()=>!1).then(i=>{A?.hydrated(),i!==!0?O("_ldx"):Fe.has(me)&&B("_ldx")}):A?.hydrated()})}else ft&&(ir(),Cn(ft,ht,se,{settle:gt,mount:bt}))})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bancada de Hordas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: cena em tela cheia, painel de instrumentos fixo à esquerda (embaixo no celular). Visual único escuro, de propósito. */
+:root{
+  --bg:#0f1213; --panel:rgba(16,20,21,.86); --ink:#e3e6df; --muted:#8c958c; --line:#2b3331;
+  --accent:#e3c341; --ok:#7fd18b; --bad:#ff6a55;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hud{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:var(--panel);border:1px solid var(--line);padding:14px;display:grid;gap:12px;font-family:var(--f-mono);font-size:12px;backdrop-filter:blur(4px)}
+h1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.02em;margin:0;line-height:1;text-wrap:balance}
+.sub{color:var(--muted);margin:2px 0 0;font-size:11px;line-height:1.45}
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.big div{display:grid;gap:2px}
+.big b{font-family:var(--f-display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.lab{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+dl{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0}
+dt{color:var(--muted)} dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.ok{color:var(--ok)} .bad{color:var(--bad)}
+#verdict{font-weight:600}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+input[type=range]{flex:1;accent-color:var(--accent);min-width:120px}
+label{display:flex;gap:6px;align-items:center;cursor:pointer}
+button{font:600 12px var(--f-mono);background:var(--accent);color:#16140a;border:0;padding:8px 10px;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;color:var(--muted);font-size:10.5px;max-height:120px;overflow:auto}
+.keys{color:var(--muted);font-size:10.5px;line-height:1.5}
+@media (max-width:520px){.hud{top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-height:45%}}
+</style>
+<canvas id="c" aria-label="Cena 3D com a horda e o bloco da cidade"></canvas>
+<aside class="hud" aria-label="Medição">
+  <div>
+    <h1>Bancada de Hordas</h1>
+    <p class="sub">Bloco de 256 × 256 m do mapa vivo, horda com LOD por relevância (R0 35 m · R1 120 m · R2 400 m), 13 tipos do Bestiário, chuva, ciclo de dia, pássaros, 20 sobreviventes e uma horda migrando a cada 45 s. Meta: 2.000 zumbis ≥ 30 FPS, 500 ≥ 60 FPS.</p>
+  </div>
+  <div class="big">
+    <div><span class="lab">FPS</span><b id="fps">–</b></div>
+    <div><span class="lab">1% low</span><b id="low">–</b></div>
+    <div><span class="lab">ms/quadro</span><b id="ms">–</b></div>
+  </div>
+  <div id="verdict">medindo…</div>
+  <dl>
+    <dt>Simulação (CPU)</dt><dd><span id="sim">–</span> ms</dd>
+    <dt>Envio do render (CPU)</dt><dd><span id="rend">–</span> ms</dd>
+    <dt>GPU</dt><dd><span id="gpu">–</span> ms</dd>
+    <dt>Draw calls</dt><dd id="calls">–</dd>
+    <dt>Triângulos</dt><dd id="tris">–</dd>
+    <dt>Zumbis vivos</dt><dd id="zn">–</dd>
+    <dt>Malha LOD0/1/2</dt><dd id="lods">–</dd>
+    <dt>Relevância R0/R1/R2/R3</dt><dd id="bands">–</dd>
+    <dt>Vagas de ataque (máx. 6)</dt><dd id="slots">–</dd>
+    <dt>Abatidos (.308, PEN 4)</dt><dd id="kills">0</dd>
+    <dt>Hora do dia</dt><dd id="dayval">–</dd>
+  </dl>
+  <div class="row"><span class="lab">Zumbis</span><input id="n" type="range" min="250" max="6000" step="250"><b id="nval">2000</b></div>
+  <div class="row">
+    <label><input id="shadows" type="checkbox" checked> sombras</label>
+    <label><input id="rain" type="checkbox" checked> chuva</label>
+    <label><input id="day" type="checkbox" checked> dia e noite</label>
+  </div>
+  <div class="row"><button id="bench" type="button">Medir 30 s</button><button id="copy" class="ghost" type="button">Copiar resultado</button></div>
+  <pre id="result">Clique em "Medir 30 s" e me mande o resultado. GPU: <span id="gpuname"></span></pre>
+  <p class="keys">WASD anda · Shift corre · arraste gira a câmera · roda aproxima · clique atira (.308 atravessa até 4 corpos; Brutamonte conta 2).</p>
+</aside>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+// ZombiAdA: simulação de horda com LOD por relevância (R0..R3), flow field e grade espacial.
+// Tudo em arrays tipados, sem alocação por quadro. Unidades: metros e segundos.
+
+const WORLD = 256;           // bloco do mapa vivo: 256 x 256 m, centrado em 0
+const HALF = WORLD / 2;
+const CELL = 1;                     // grade do flow field e de obstáculos: 1 m
+const GW = WORLD / CELL;
+const SEP_R = 0.62;                 // raio de separação (Bestiário 12.2)
+const HCELL = 1.0;                  // célula da grade espacial
+const HW = Math.ceil(WORLD / HCELL);
+
+// Faixas de relevância (revisão, seção 4) e tick de cada uma
+const BANDS = [
+  { max: 35, dt: 1 / 20 },          // R0: IA completa 20 Hz
+  { max: 120, dt: 1 / 5 },          // R1: flow field 5 Hz
+  { max: 400, dt: 1 },              // R2: grupos 1 Hz
+  { max: Infinity, dt: 5 },         // R3: 0,2 Hz
+];
+const HYST = 10;
+
+// 13 tipos do Bestiário v11/12: [nome, peso no spawn, vel. perseguição m/s, cor dos olhos]
+const CATS = [
+  ['Lento', 48, 1.4, 0xE3C341], ['Corredor', 14, 5.5, 0xE5392B], ['Rastejante', 9, 0.4, 0xA9D14A],
+  ['Brutamonte', 5, 2.0, 0xEF8A2A], ['Farejador', 5, 3.5, 0x4FC6D6], ['Saltador', 4, 4.5, 0xD94FD9],
+  ['Inchado', 3, 1.0, 0x5FE08A], ['Espreitador', 3, 4.0, 0x9B5CE0], ['Cego', 3, 1.6, 0xBBBBBB],
+  ['Gritador', 2, 3.0, 0xF2F2EA], ['Carbonizado', 2, 1.6, 0xFF6A1A], ['Afogado', 1, 1.2, 0x6FA8D8],
+  ['Devorador', 1, 2.4, 0xB0122A],
+];
+
+function rng(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+class Horde {
+  constructor(cap, seed = 1) {
+    this.cap = cap;
+    this.n = 0;
+    this.rand = rng(seed);
+    this.x = new Float32Array(cap); this.z = new Float32Array(cap);
+    this.vx = new Float32Array(cap); this.vz = new Float32Array(cap);
+    this.yaw = new Float32Array(cap); this.phase = new Float32Array(cap);
+    this.cat = new Uint8Array(cap); this.speed = new Float32Array(cap);
+    this.height = new Float32Array(cap); this.build = new Float32Array(cap);
+    this.band = new Uint8Array(cap); this.next = new Float32Array(cap);
+    this.alive = new Uint8Array(cap); this.crawl = new Uint8Array(cap);
+    this.attacking = new Uint8Array(cap);
+    this.blocked = new Uint8Array(GW * GW);
+    this.flow = new Int8Array(GW * GW * 2);
+    this.dist = new Float32Array(GW * GW);
+    this.queue = new Int32Array(GW * GW * 4);
+    this.hHead = new Int32Array(HW * HW); this.hNext = new Int32Array(cap);
+    this.target = { x: 0, z: 0 };
+    this.flowCell = -1;
+    this.time = 0;
+    this.flowBudget = 0.6; // ms por quadro para o flow field
+    this.stats = { flowMs: 0, tickMs: 0, bands: [0, 0, 0, 0], slots: 0, ticks: 0 };
+    this.catTable = [];
+    for (let c = 0; c < CATS.length; c++) for (let k = 0; k < CATS[c][1]; k++) this.catTable.push(c);
+  }
+
+  // Obstáculo retangular (prédio, carro, muro) em metros
+  block(x0, z0, x1, z1) {
+    for (let gz = Math.max(0, Math.floor(z0 + HALF)); gz < Math.min(GW, Math.ceil(z1 + HALF)); gz++)
+      for (let gx = Math.max(0, Math.floor(x0 + HALF)); gx < Math.min(GW, Math.ceil(x1 + HALF)); gx++)
+        this.blocked[gz * GW + gx] = 1;
+  }
+  isBlocked(x, z) {
+    const gx = Math.floor(x + HALF), gz = Math.floor(z + HALF);
+    if (gx < 0 || gz < 0 || gx >= GW || gz >= GW) return true;
+    return this.blocked[gz * GW + gx] === 1;
+  }
+
+  spawn(x, z) {
+    if (this.n >= this.cap) return -1;
+    const i = this.n++, r = this.rand;
+    this.x[i] = x; this.z[i] = z; this.vx[i] = 0; this.vz[i] = 0;
+    const c = this.catTable[Math.floor(r() * this.catTable.length)];
+    this.cat[i] = c;
+    this.crawl[i] = c === 2 ? 1 : 0;
+    // altura normal (média 1, desvio 0,045) e porte por faixa (Bestiário 3.2c)
+    const g = (r() + r() + r() - 1.5) * 0.09;
+    this.height[i] = Math.min(1.1, Math.max(0.9, 1 + g)) * (c === 3 ? 1.42 : 1);
+    const b = r();
+    this.build[i] = (b < 0.3 ? 0.85 + r() * 0.1 : b < 0.8 ? 0.95 + r() * 0.13 : 1.08 + r() * 0.17) * (c === 3 ? 1.3 : 1);
+    this.speed[i] = CATS[c][2] * (0.9 + r() * 0.2);
+    this.yaw[i] = r() * Math.PI * 2; this.phase[i] = r() * 10;
+    this.band[i] = 3; this.next[i] = r() * 0.05; this.alive[i] = 1; this.attacking[i] = 0;
+    return i;
+  }
+
+  kill(i) {
+    // troca com o último para manter o array compacto
+    const j = --this.n;
+    if (i !== j) for (const k of ['x', 'z', 'vx', 'vz', 'yaw', 'phase', 'cat', 'speed', 'height', 'build', 'band', 'next', 'alive', 'crawl', 'attacking']) this[k][i] = this[k][j];
+  }
+
+  // Flow field 8-vizinhos a partir do alvo, fatiado em quadros (sem pico): calcula no buffer de trás
+  // com orçamento de tempo por quadro e troca quando termina.
+  startFlow(x, z) {
+    this.fb = this.fb || { flow: new Int8Array(GW * GW * 2), phase: 0, qh: 0, qt: 0, c: 0, t: 0 };
+    const fb = this.fb, D = this.dist, Q = this.queue;
+    D.fill(1e9);
+    const gx0 = Math.max(0, Math.min(GW - 1, Math.floor(x + HALF))), gz0 = Math.max(0, Math.min(GW - 1, Math.floor(z + HALF)));
+    const s = gz0 * GW + gx0;
+    D[s] = 0; Q[0] = s; fb.qh = 0; fb.qt = 1; fb.phase = 1; fb.c = 0; fb.t = 0;
+  }
+  stepFlow(budgetMs) {
+    const fb = this.fb; if (!fb || fb.phase === 0) return;
+    const t0 = performance.now();
+    const D = this.dist, B = this.blocked, Q = this.queue, F = fb.flow;
+    let n = 0;
+    while (fb.phase === 1) {
+      if (fb.qh >= fb.qt) { fb.phase = 2; break; }
+      const c = Q[fb.qh++], cx = c % GW, cz = (c / GW) | 0, dc = D[c];
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dz) continue;
+        const nx = cx + dx, nz = cz + dz;
+        if (nx < 0 || nz < 0 || nx >= GW || nz >= GW) continue;
+        const k = nz * GW + nx;
+        if (B[k]) continue;
+        if (dx && dz && (B[cz * GW + nx] || B[nz * GW + cx])) continue;
+        const nd = dc + (dx && dz ? 1.414 : 1);
+        if (nd < D[k] - 1e-3) { D[k] = nd; if (fb.qt < Q.length) Q[fb.qt++] = k; }
+      }
+      if ((++n & 1023) === 0 && performance.now() - t0 > budgetMs) { fb.t += performance.now() - t0; return; }
+    }
+    while (fb.phase === 2) {
+      const c = fb.c++;
+      if (c >= GW * GW) { // terminou: troca os buffers
+        const tmp = this.flow; this.flow = F; fb.flow = tmp; fb.phase = 0;
+        this.stats.flowMs = fb.t + performance.now() - t0; return;
+      }
+      if (B[c]) { F[c * 2] = 0; F[c * 2 + 1] = 0; continue; }
+      const cx = c % GW, cz = (c / GW) | 0;
+      let best = D[c], bx = 0, bz = 0;
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = cx + dx, nz = cz + dz;
+        if (nx < 0 || nz < 0 || nx >= GW || nz >= GW) continue;
+        const d = D[nz * GW + nx];
+        if (d < best) { best = d; bx = dx; bz = dz; }
+      }
+      F[c * 2] = bx; F[c * 2 + 1] = bz;
+      if ((c & 4095) === 0 && performance.now() - t0 > budgetMs) { fb.t += performance.now() - t0; return; }
+    }
+  }
+  buildFlow() { this.startFlow(this.target.x, this.target.z); this.stepFlow(1e9); }
+
+  // Grade espacial só para quem está em R0 (separação fina)
+  buildHash() {
+    this.hHead.fill(-1);
+    for (let i = 0; i < this.n; i++) {
+      if (this.band[i] !== 0) continue;
+      const hx = Math.floor((this.x[i] + HALF) / HCELL), hz = Math.floor((this.z[i] + HALF) / HCELL);
+      if (hx < 0 || hz < 0 || hx >= HW || hz >= HW) continue;
+      const h = hz * HW + hx;
+      this.hNext[i] = this.hHead[h]; this.hHead[h] = i;
+    }
+  }
+
+  // players: [{x,z}] — a relevância é a distância ao jogador mais próximo
+  update(dt, players) {
+    const t0 = performance.now();
+    this.time += dt;
+    const p0 = players[0];
+    const pc = Math.floor(p0.z + HALF) * GW + Math.floor(p0.x + HALF);
+    if (this.flowCell < 0) { this.target.x = p0.x; this.target.z = p0.z; this.buildFlow(); this.flowCell = pc; }
+    else if (pc !== this.flowCell && (!this.fb || this.fb.phase === 0)) { this.target.x = p0.x; this.target.z = p0.z; this.startFlow(p0.x, p0.z); this.flowCell = pc; }
+    this.stepFlow(this.flowBudget);
+    this.buildHash();
+    const st = this.stats; st.bands[0] = st.bands[1] = st.bands[2] = st.bands[3] = 0;
+    let slots = 0, ticks = 0;
+    const X = this.x, Z = this.z, VX = this.vx, VZ = this.vz, F = this.flow;
+    for (let i = 0; i < this.n; i++) {
+      // relevância com histerese
+      let d2 = Infinity;
+      for (let p = 0; p < players.length; p++) { const dx = X[i] - players[p].x, dz = Z[i] - players[p].z; const q = dx * dx + dz * dz; if (q < d2) d2 = q; }
+      const d = Math.sqrt(d2);
+      let b = this.band[i];
+      while (b > 0 && d < BANDS[b - 1].max - HYST) b--;
+      while (b < 3 && d > BANDS[b].max + HYST) b++;
+      this.band[i] = b; st.bands[b]++;
+
+      this.next[i] -= dt;
+      if (this.next[i] <= 0) {
+        ticks++;
+        this.next[i] += BANDS[b].dt;
+        const gx = Math.floor(X[i] + HALF), gz = Math.floor(Z[i] + HALF);
+        let fx = 0, fz = 0;
+        if (gx >= 0 && gz >= 0 && gx < GW && gz < GW) { const c = gz * GW + gx; fx = F[c * 2]; fz = F[c * 2 + 1]; }
+        const fl = Math.hypot(fx, fz) || 1;
+        let sp = this.speed[i];
+        let dirx = fx / fl, dirz = fz / fl;
+        this.attacking[i] = 0;
+        if (d < 3) { // perto: vai direto, respeitando 6 vagas de ataque por jogador
+          dirx = (p0.x - X[i]) / (d || 1); dirz = (p0.z - Z[i]) / (d || 1);
+          if (d < 1.2) { if (slots < 6) { slots++; this.attacking[i] = 1; } sp = 0; }
+        }
+        let sx = 0, sz = 0;
+        if (b === 0) { // separação dos vizinhos (raio 0,62 m)
+          const hx = Math.floor((X[i] + HALF) / HCELL), hz = Math.floor((Z[i] + HALF) / HCELL);
+          for (let oz = -1; oz <= 1; oz++) for (let ox = -1; ox <= 1; ox++) {
+            const qx = hx + ox, qz = hz + oz;
+            if (qx < 0 || qz < 0 || qx >= HW || qz >= HW) continue;
+            for (let j = this.hHead[qz * HW + qx]; j !== -1; j = this.hNext[j]) {
+              if (j === i) continue;
+              const ex = X[i] - X[j], ez = Z[i] - Z[j], e2 = ex * ex + ez * ez;
+              if (e2 < SEP_R * SEP_R * 4 && e2 > 1e-6) { const e = Math.sqrt(e2), w = (SEP_R * 2 - e) / (SEP_R * 2) / e; sx += ex * w; sz += ez * w; }
+            }
+          }
+        }
+        VX[i] = dirx * sp + sx * 2.5; VZ[i] = dirz * sp + sz * 2.5;
+        if (sp > 0.05 || sx || sz) this.yaw[i] = Math.atan2(dirx, dirz);
+      }
+      // integra todo quadro (movimento suave mesmo com tick baixo)
+      const nx = X[i] + VX[i] * dt, nz = Z[i] + VZ[i] * dt;
+      if (!this.isBlocked(nx, Z[i])) X[i] = nx; else VX[i] = 0;
+      if (!this.isBlocked(X[i], nz)) Z[i] = nz; else VZ[i] = 0;
+      this.phase[i] += dt * (0.6 + Math.hypot(VX[i], VZ[i]) * 1.1);
+    }
+    st.slots = slots; st.ticks = ticks;
+    st.tickMs = performance.now() - t0;
+  }
+
+  // Tiro: percorre a grade ao longo do raio e aplica penetração por pontos (Arsenal)
+  shoot(ox, oz, dx, dz, pen, maxDist = 300) {
+    const hits = [];
+    for (let i = 0; i < this.n; i++) {
+      const rx = this.x[i] - ox, rz = this.z[i] - oz;
+      const t = rx * dx + rz * dz;
+      if (t < 0 || t > maxDist) continue;
+      const px = rx - dx * t, pz = rz - dz * t;
+      if (px * px + pz * pz < 0.35 * 0.35 * this.build[i]) hits.push([t, i]);
+    }
+    hits.sort((a, b) => a[0] - b[0]);
+    const killed = [];
+    for (const [, i] of hits) {
+      const cost = this.cat[i] === 3 ? 2 : 1; // Brutamonte conta como 2 corpos
+      if (pen <= 0) break;
+      killed.push(i); pen -= cost;
+    }
+    killed.sort((a, b) => b - a).forEach(i => this.kill(i));
+    return killed.length;
+  }
+}
+
+// Cena de medição: horda + bloco do mapa vivo. Mede FPS, 1% low, ms de simulação, ms de GPU, draw calls e triângulos.
+import * as THREE from 'three';
+
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+let TARGET = +(params.get('n') || 2000);
+const MAXN = 6000;
+
+// ---------- renderer ----------
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.info.autoReset = false;
+const scene = new THREE.Scene();
+const fogCol = new THREE.Color(0x2a2f33);
+scene.fog = new THREE.Fog(fogCol, 30, 220);
+scene.background = fogCol.clone();
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 400);
+
+const hemi = new THREE.HemisphereLight(0x9aa6b0, 0x2b2a24, 0.8);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe2b8, 1.6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+const sc = sun.shadow.camera; sc.left = -45; sc.right = 45; sc.top = 45; sc.bottom = -45; sc.near = 1; sc.far = 200;
+scene.add(sun, sun.target);
+
+// ---------- mapa: bloco de 256 m ----------
+const horde = new Horde(MAXN, 7);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(WORLD, WORLD), new THREE.MeshLambertMaterial({ color: 0x4a4a46 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const bldGeo = new THREE.BoxGeometry(1, 1, 1); bldGeo.translate(0, 0.5, 0);
+const bldMat = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
+const blds = [];
+for (let bx = -120; bx < 120; bx += 24) for (let bz = -120; bz < 120; bz += 24) {
+  if (Math.abs(bx + 12) < 20 && Math.abs(bz + 12) < 20) continue; // praça central
+  // lote com 2 a 4 casas
+  const k = 2 + ((bx * 7 + bz * 13) & 1) * 2;
+  for (let i = 0; i < k; i++) {
+    const w = 7 + ((bx + i * 5) & 3), d = 7 + ((bz + i * 3) & 3), h = 3 + ((bx ^ bz ^ i) & 3) * 2.6;
+    const x = bx + 2 + (i % 2) * 10, z = bz + 2 + Math.floor(i / 2) * 10;
+    blds.push([x, z, w, d, h]);
+    horde.block(x, z, x + w, z + d);
+  }
+}
+const bldMesh = new THREE.InstancedMesh(bldGeo, bldMat, blds.length);
+const m4 = new THREE.Matrix4(), col = new THREE.Color();
+const palette = [0xb9a68a, 0x8c8f86, 0xa07560, 0x7d8a7a, 0xc2b8a0, 0x6f6a63];
+blds.forEach(([x, z, w, d, h], i) => {
+  m4.makeScale(w, h, d).setPosition(x + w / 2, 0, z + d / 2);
+  bldMesh.setMatrixAt(i, m4); bldMesh.setColorAt(i, col.set(palette[i % palette.length]));
+});
+bldMesh.castShadow = bldMesh.receiveShadow = true; scene.add(bldMesh);
+
+// carros abandonados e postes (instanciados)
+const props = [];
+for (let i = 0; i < 160; i++) {
+  const x = -118 + ((i * 37) % 236), z = -118 + ((i * 61) % 236);
+  if (!horde.isBlocked(x, z) && !horde.isBlocked(x + 4, z + 2)) { props.push([x, z]); horde.block(x, z, x + 4, z + 1.8); }
+}
+const carGeo = new THREE.BoxGeometry(4, 1.4, 1.8); carGeo.translate(2, 0.7, 0.9);
+const cars = new THREE.InstancedMesh(carGeo, new THREE.MeshLambertMaterial({ color: 0xffffff }), props.length);
+props.forEach(([x, z], i) => { m4.makeTranslation(x, 0, z); cars.setMatrixAt(i, m4); cars.setColorAt(i, col.set([0x6b2b24, 0x2d3b4c, 0x8a8a80, 0x3c4a2e][i % 4])); });
+cars.castShadow = true; scene.add(cars);
+
+const lampGeo = new THREE.CylinderGeometry(0.08, 0.1, 6, 6); lampGeo.translate(0, 3, 0);
+const lampPos = [];
+for (let x = -120; x <= 120; x += 24) for (let z = -120; z <= 120; z += 24) lampPos.push([x - 1, z - 1]);
+const lamps = new THREE.InstancedMesh(lampGeo, new THREE.MeshLambertMaterial({ color: 0x333333 }), lampPos.length);
+const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(0.25, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffd28a }), lampPos.length);
+lampPos.forEach(([x, z], i) => { m4.makeTranslation(x, 0, z); lamps.setMatrixAt(i, m4); m4.makeTranslation(x, 6, z); bulbs.setMatrixAt(i, m4); });
+scene.add(lamps, bulbs);
+
+// ---------- zumbi: corpo arredondado com animação na GPU (equivalente ao VAT) ----------
+// Cada vértice carrega o "osso" (0 tronco, 1 cabeça, 2/3 braços, 4/5 pernas, 6 olhos) e o pivô.
+function part(geo, bone, pivot) {
+  const n = geo.attributes.position.count;
+  geo.setAttribute('bone', new THREE.Float32BufferAttribute(new Float32Array(n).fill(bone), 1));
+  const pv = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) pv.set(pivot, i * 3);
+  geo.setAttribute('pivot', new THREE.Float32BufferAttribute(pv, 3));
+  return geo.toNonIndexed ? geo.index ? geo.toNonIndexed() : geo : geo;
+}
+function mergeGeos(list) {
+  let n = 0; for (const g of list) n += g.attributes.position.count;
+  const out = new THREE.BufferGeometry();
+  for (const [name, size] of [['position', 3], ['normal', 3], ['bone', 1], ['pivot', 3]]) {
+    const arr = new Float32Array(n * size); let o = 0;
+    for (const g of list) { arr.set(g.attributes[name].array, o); o += g.attributes[name].array.length; }
+    out.setAttribute(name, new THREE.BufferAttribute(arr, size));
+  }
+  return out;
+}
+function buildZombie(seg) {
+  const L = [];
+  const torso = new THREE.CapsuleGeometry(0.2, 0.42, Math.max(2, seg / 4), seg); torso.scale(1.12, 1, 0.64); torso.translate(0, 1.22, 0);
+  L.push(part(torso, 0, [0, 0.95, 0]));
+  const hips = new THREE.CapsuleGeometry(0.17, 0.08, Math.max(2, seg / 4), seg); hips.scale(1.15, 1, 0.7); hips.translate(0, 0.92, 0);
+  L.push(part(hips, 0, [0, 0.95, 0]));
+  const head = new THREE.SphereGeometry(0.15, seg, Math.max(4, seg * 0.75)); head.scale(0.96, 1.1, 1.02); head.translate(0, 1.68, 0.02);
+  L.push(part(head, 1, [0, 1.55, 0]));
+  for (const s of [-1, 1]) {
+    const arm = new THREE.CapsuleGeometry(0.06, 0.52, 2, Math.max(4, seg / 2)); arm.translate(s * 0.27, 1.17, 0);
+    L.push(part(arm, s < 0 ? 2 : 3, [s * 0.27, 1.45, 0]));
+    const leg = new THREE.CapsuleGeometry(0.085, 0.72, 2, Math.max(4, seg / 2)); leg.translate(s * 0.11, 0.46, 0);
+    L.push(part(leg, s < 0 ? 4 : 5, [s * 0.11, 0.88, 0]));
+    { const eye = new THREE.SphereGeometry(0.022, 4, 3); eye.translate(s * 0.05, 1.7, 0.16); L.push(part(eye, 6, [0, 1.55, 0])); }
+  }
+  return mergeGeos(L.map(g => g.index ? g.toNonIndexed() : g));
+}
+const LODS = [
+  { seg: 16, dist: 25, geo: null },   // LOD0 ~2.500 triângulos
+  { seg: 8, dist: 60, geo: null },    // LOD1 ~800
+  { seg: 4, dist: 1e9, geo: null },   // LOD2 ~250 (longe: sem olhos modelados, brilho no shader)
+];
+LODS.forEach(l => { l.geo = buildZombie(l.seg); l.tris = l.geo.attributes.position.count / 3; });
+
+const animChunk = `
+  attribute float bone; attribute vec3 pivot;
+  attribute vec4 iA; attribute vec4 iB; attribute vec3 iEye;
+  uniform float uTime; varying float vEye; varying vec3 vEyeCol; varying float vSkin;
+  mat3 rotX(float a){ float c=cos(a), s=sin(a); return mat3(1.,0.,0., 0.,c,s, 0.,-s,c); }
+  mat3 rotY(float a){ float c=cos(a), s=sin(a); return mat3(c,0.,-s, 0.,1.,0., s,0.,c); }
+  vec3 animate(vec3 p, out mat3 R){
+    float ph = iA.w; float crawl = iB.w; float gait = iB.z;
+    float sw = sin(ph*6.2831);
+    // cascata: cada junta atrasa em relação ao quadril (Bestiário 12.3)
+    float lag = bone==1. ? 0.12 : (bone>=2. && bone<4. ? 0.07 : 0.);
+    float swl = sin((ph-lag)*6.2831);
+    R = mat3(1.);
+    if (bone==4.) R = rotX(-swl*0.55*gait);
+    else if (bone==5.) R = rotX(swl*0.55*gait);
+    else if (bone==2.) R = rotX(-1.25 + swl*0.25);
+    else if (bone==3.) R = rotX(-1.25 - swl*0.25);
+    else if (bone==1. || bone==6.) R = rotX(0.25 + 0.08*sin(uTime*1.7+ph*3.));
+    vec3 q = R*(p - pivot) + pivot;
+    // tronco inclinado (corredor mais à frente) e balanço
+    float lean = 0.18 + 0.25*gait;
+    if (bone!=4. && bone!=5.) { q.y -= 0.95; q = rotX(lean)*q; q.y += 0.95; R = rotX(lean)*R; }
+    q.y += abs(sw)*0.04*gait;
+    if (crawl > 0.5) { q = rotX(1.45)*q; q.y += 0.18; R = rotX(1.45)*R; }
+    return q;
+  }
+`;
+function patch(mat, depth) {
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = timeU;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + animChunk)
+      .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+        mat3 RR; vec3 _ap = animate(position, RR); objectNormal = RR*objectNormal;
+        objectNormal = rotY(iA.z)*objectNormal;`)
+      .replace('#include <begin_vertex>', `
+        mat3 RR2; vec3 transformed = animate(position, RR2);
+        transformed *= vec3(iB.y, iB.x, iB.y);
+        transformed = rotY(iA.z)*transformed + vec3(iA.x, 0., iA.y);
+        vEye = bone==6. ? 1. : 0.; vEyeCol = iEye; vSkin = fract(iA.w*0.0 + iB.x*7.3);`);
+    if (!depth) sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vEye; varying vec3 vEyeCol; varying float vSkin;')
+      .replace('#include <dithering_fragment>', '#include <dithering_fragment>\n if (vEye>0.5) gl_FragColor = vec4(vEyeCol*2.2, 1.);');
+  };
+  return mat;
+}
+// Lambert precisa de beginnormal antes de begin_vertex: declaramos RR lá.
+const timeU = { value: 0 };
+const zMeshes = LODS.map(l => {
+  const g = l.geo.clone();
+  const iA = new THREE.InstancedBufferAttribute(new Float32Array(MAXN * 4), 4); iA.setUsage(THREE.DynamicDrawUsage);
+  const iB = new THREE.InstancedBufferAttribute(new Float32Array(MAXN * 4), 4); iB.setUsage(THREE.DynamicDrawUsage);
+  const iE = new THREE.InstancedBufferAttribute(new Float32Array(MAXN * 3), 3); iE.setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('iA', iA); g.setAttribute('iB', iB); g.setAttribute('iEye', iE);
+  const mat = patch(new THREE.MeshLambertMaterial({ color: 0x6f7a5c }), false);
+  const m = new THREE.InstancedMesh(g, mat, MAXN);
+  m.frustumCulled = false; m.count = 0;
+  m.customDepthMaterial = patch(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), true);
+  m.castShadow = l.seg >= 8; // LOD2 não projeta sombra
+  m.receiveShadow = false;
+  scene.add(m);
+  return { m, iA, iB, iE };
+});
+const eyeCols = CATS.map(c => new THREE.Color(c[3]));
+
+// ---------- mapa vivo: chuva, pássaros, sobreviventes, dia e noite, horda migrando ----------
+const RAIN = 16000;
+const rainGeo = new THREE.BufferGeometry();
+const rp = new Float32Array(RAIN * 3);
+for (let i = 0; i < RAIN; i++) { rp[i * 3] = (Math.random() - .5) * 80; rp[i * 3 + 1] = Math.random() * 30; rp[i * 3 + 2] = (Math.random() - .5) * 80; }
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rp, 3));
+const rainMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: timeU, uCam: { value: new THREE.Vector3() } }, transparent: true, depthWrite: false,
+  vertexShader: `uniform float uTime; uniform vec3 uCam; void main(){ vec3 p = position; p.y = mod(p.y - uTime*14., 30.); p.xz += uCam.xz; gl_Position = projectionMatrix*viewMatrix*vec4(p,1.); gl_PointSize = 2.; }`,
+  fragmentShader: `void main(){ gl_FragColor = vec4(.7,.75,.8,.35); }`,
+});
+const rain = new THREE.Points(rainGeo, rainMat); rain.frustumCulled = false; scene.add(rain);
+
+const BIRDS = 40;
+const birds = new THREE.InstancedMesh(new THREE.ConeGeometry(0.15, 0.5, 3).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x111111 }), BIRDS);
+scene.add(birds);
+
+// sobreviventes: mesmo corpo, sem olhos acesos, cor por grupo
+const NPCS = 20;
+const npc = { x: new Float32Array(NPCS), z: new Float32Array(NPCS), tx: new Float32Array(NPCS), tz: new Float32Array(NPCS), ph: new Float32Array(NPCS) };
+for (let i = 0; i < NPCS; i++) { npc.x[i] = (Math.random() - .5) * 30; npc.z[i] = (Math.random() - .5) * 30; npc.tx[i] = npc.x[i]; npc.tz[i] = npc.z[i]; }
+const npcGeo = LODS[1].geo.clone();
+const nA = new THREE.InstancedBufferAttribute(new Float32Array(NPCS * 4), 4), nB = new THREE.InstancedBufferAttribute(new Float32Array(NPCS * 4), 4), nE = new THREE.InstancedBufferAttribute(new Float32Array(NPCS * 3), 3);
+npcGeo.setAttribute('iA', nA); npcGeo.setAttribute('iB', nB); npcGeo.setAttribute('iEye', nE);
+const npcMesh = new THREE.InstancedMesh(npcGeo, patch(new THREE.MeshLambertMaterial({ color: 0x3a6ea5 }), false), NPCS);
+npcMesh.frustumCulled = false; npcMesh.castShadow = true; scene.add(npcMesh);
+
+// ---------- jogador e câmera ----------
+const player = { x: 0, z: 0, yaw: 0 };
+const playerMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.2, 4, 8), new THREE.MeshLambertMaterial({ color: 0xd8c27a }));
+playerMesh.castShadow = true; scene.add(playerMesh);
+let camYaw = 0.6, camPitch = 0.55, camDist = 26;
+const keys = {};
+addEventListener('keydown', e => keys[e.code] = true);
+addEventListener('keyup', e => keys[e.code] = false);
+let dragging = false, lx = 0, ly = 0, moved = 0;
+canvas.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; moved = 0; });
+addEventListener('pointerup', e => { if (dragging && moved < 5) shootAt(e); dragging = false; });
+addEventListener('pointermove', e => { if (!dragging) return; moved += Math.abs(e.clientX - lx) + Math.abs(e.clientY - ly); camYaw -= (e.clientX - lx) * 0.005; camPitch = Math.min(1.4, Math.max(0.15, camPitch + (e.clientY - ly) * 0.004)); lx = e.clientX; ly = e.clientY; });
+canvas.addEventListener('wheel', e => { camDist = Math.min(120, Math.max(6, camDist * (1 + e.deltaY * 0.001))); e.preventDefault(); }, { passive: false });
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hitP = new THREE.Vector3();
+const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.4);
+let kills = 0;
+function shootAt(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  if (!ray.ray.intersectPlane(plane, hitP)) return;
+  const dx = hitP.x - player.x, dz = hitP.z - player.z, l = Math.hypot(dx, dz) || 1;
+  // .308 FMJ: PEN 4 (Arsenal)
+  kills += horde.shoot(player.x, player.z, dx / l, dz / l, 4);
+  flash = 0.06;
+}
+let flash = 0;
+
+// ---------- população e eventos ----------
+function spawnEdge(count) {
+  for (let k = 0; k < count && horde.n < TARGET; k++) {
+    for (let t = 0; t < 20; t++) {
+      const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 80;
+      const x = player.x + Math.cos(a) * r, z = player.z + Math.sin(a) * r;
+      if (Math.abs(x) < 126 && Math.abs(z) < 126 && !horde.isBlocked(x, z)) { horde.spawn(x, z); break; }
+    }
+  }
+}
+function setTarget(n) {
+  TARGET = n; $('nval').textContent = n;
+  while (horde.n > TARGET) horde.kill(horde.n - 1);
+  spawnEdge(TARGET - horde.n);
+}
+
+let dayT = 0.75; // 0..1, 0.75 = fim de tarde
+let autoDay = true, rainOn = true, shadowsOn = true;
+const sky = new THREE.Color();
+function updateDay(dt) {
+  if (autoDay) dayT = (dayT + dt / 240) % 1; // ciclo de 4 min na bancada
+  const s = Math.sin(dayT * Math.PI * 2 - Math.PI / 2) * 0.5 + 0.5; // 0 noite, 1 meio-dia
+  sun.intensity = 0.15 + s * 1.6; hemi.intensity = 0.25 + s * 0.6;
+  sky.setRGB(0.05 + s * 0.25, 0.06 + s * 0.28, 0.08 + s * 0.3);
+  scene.fog.color.copy(sky); scene.background.copy(sky);
+  bulbs.visible = s < 0.45;
+  sun.position.set(player.x + Math.cos(dayT * 6.28) * 60, 20 + s * 60, player.z + 40);
+  sun.target.position.set(player.x, 0, player.z);
+  $('dayval').textContent = String(Math.floor(dayT * 24)).padStart(2, '0') + 'h';
+}
+
+// ---------- medição ----------
+const frames = new Float32Array(600); let fi = 0, fcount = 0;
+let simMs = 0, renderMs = 0, gpuMs = -1;
+const gl = renderer.getContext();
+const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+let query = null, queryActive = false;
+let bench = null;
+
+function lodBuckets() {
+  const cx = camera.position.x, cz = camera.position.z;
+  const counts = [0, 0, 0];
+  const n = horde.n, H = horde;
+  for (let i = 0; i < n; i++) {
+    const dx = H.x[i] - cx, dz = H.z[i] - cz, d = Math.sqrt(dx * dx + dz * dz);
+    const l = d < LODS[0].dist ? 0 : d < LODS[1].dist ? 1 : 2;
+    const z = zMeshes[l], k = counts[l]++;
+    const c = H.cat[i], gait = Math.min(1, H.speed[i] / 4.5);
+    z.iA.array.set([H.x[i], H.z[i], H.yaw[i], H.phase[i] * (0.35 + gait * 0.4)], k * 4);
+    z.iB.array.set([H.height[i], H.build[i], gait + 0.4, H.crawl[i]], k * 4);
+    const e = eyeCols[c]; z.iE.array.set([e.r, e.g, e.b], k * 3);
+  }
+  zMeshes.forEach((z, l) => {
+    z.m.count = counts[l];
+    for (const a of [z.iA, z.iB, z.iE]) { a.clearUpdateRanges?.(); a.addUpdateRange?.(0, counts[l] * a.itemSize); a.needsUpdate = true; }
+  });
+  return counts;
+}
+
+function updateNPCs(dt) {
+  for (let i = 0; i < NPCS; i++) {
+    const dx = npc.tx[i] - npc.x[i], dz = npc.tz[i] - npc.z[i], d = Math.hypot(dx, dz);
+    if (d < 0.5) { npc.tx[i] = (Math.random() - .5) * 30; npc.tz[i] = (Math.random() - .5) * 30; continue; }
+    const sp = 1.6;
+    const nx = npc.x[i] + dx / d * sp * dt, nz = npc.z[i] + dz / d * sp * dt;
+    if (!horde.isBlocked(nx, nz)) { npc.x[i] = nx; npc.z[i] = nz; } else { npc.tx[i] = npc.x[i]; npc.tz[i] = npc.z[i]; }
+    npc.ph[i] += dt * 2.2;
+    nA.array.set([npc.x[i], npc.z[i], Math.atan2(dx, dz), npc.ph[i] * 0.5], i * 4);
+    nB.array.set([1, 1, 0.5, 0], i * 4);
+  }
+  nA.needsUpdate = nB.needsUpdate = true;
+}
+function updateBirds(t) {
+  for (let i = 0; i < BIRDS; i++) {
+    const a = t * 0.3 + i * 0.4, r = 20 + (i % 7) * 4;
+    m4.makeRotationY(-a).setPosition(Math.cos(a) * r, 25 + Math.sin(t + i) * 2, Math.sin(a) * r);
+    birds.setMatrixAt(i, m4);
+  }
+  birds.instanceMatrix.needsUpdate = true;
+}
+
+let last = performance.now(), t = 0, migrateT = 45, hud = 0;
+function frame(now) {
+  const realMs = now - last, dt = Math.min(0.05, realMs / 1000); last = now; t += dt;
+  frames[fi] = realMs; fi = (fi + 1) % frames.length; fcount++;
+  timeU.value = t;
+
+  // jogador
+  const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0), s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+  const sp = keys.ShiftLeft ? 5.6 : 2.4;
+  if (bench) { const a = bench.t * 0.25; player.x = Math.cos(a) * 12; player.z = Math.sin(a) * 12; camYaw = a + 2.2; }
+  else if (f || s) {
+    const fx = -Math.sin(camYaw), fz = -Math.cos(camYaw);
+    const nx = player.x + (fx * f - fz * s) * sp * dt, nz = player.z + (fz * f + fx * s) * sp * dt;
+    if (!horde.isBlocked(nx, player.z)) player.x = nx; if (!horde.isBlocked(player.x, nz)) player.z = nz;
+  }
+  playerMesh.position.set(player.x, 0.85, player.z);
+
+  // simulação (inclui flow field fatiado)
+  const s0 = performance.now();
+  horde.update(dt, [player]);
+  if (horde.n < TARGET) spawnEdge(Math.min(50, TARGET - horde.n));
+  // evento do mapa vivo: horda migrando entra pela borda a cada 45 s (respeita o teto)
+  migrateT -= dt;
+  if (migrateT <= 0) { migrateT = 45; let k = 0; while (horde.n > TARGET - 150 && k++ < 150) horde.kill(Math.floor(Math.random() * horde.n)); spawnEdge(150); }
+  updateNPCs(dt); updateBirds(t);
+  simMs = simMs * 0.9 + (performance.now() - s0) * 0.1;
+
+  updateDay(dt);
+  camera.position.set(player.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist, Math.sin(camPitch) * camDist + 1.5, player.z + Math.cos(camYaw) * Math.cos(camPitch) * camDist);
+  camera.lookAt(player.x, 1.2, player.z);
+  rainMat.uniforms.uCam.value.copy(camera.position);
+  rain.visible = rainOn;
+  sun.castShadow = shadowsOn;
+  const counts = lodBuckets();
+
+  // GPU time (quando o navegador expõe o timer)
+  if (tq && queryActive) {
+    const avail = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
+    if (avail && !gl.getParameter(tq.GPU_DISJOINT_EXT)) { gpuMs = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6; queryActive = false; }
+    else if (avail) queryActive = false;
+  }
+  const startQ = tq && !queryActive;
+  if (startQ) { query = query || gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, query); }
+  const r0 = performance.now();
+  renderer.info.reset();
+  renderer.render(scene, camera);
+  renderMs = renderMs * 0.9 + (performance.now() - r0) * 0.1;
+  if (startQ) { gl.endQuery(tq.TIME_ELAPSED_EXT); queryActive = true; }
+
+  if (bench) {
+    bench.t += dt; bench.ft.push(realMs); bench.sim.push(horde.stats.tickMs); bench.rend.push(renderMs); if (gpuMs >= 0) bench.gpu.push(gpuMs);
+    if (now - bench.start > bench.dur * 1000) endBench();
+  }
+  if ((hud += dt) > 0.25) { hud = 0; drawHud(counts); }
+  requestAnimationFrame(frame);
+}
+
+function stats(arr) {
+  const a = Array.from(arr).filter(x => x > 0).sort((x, y) => x - y);
+  if (!a.length) return { avg: 0, low1: 0 };
+  const avg = a.reduce((x, y) => x + y) / a.length;
+  const worst = a.slice(Math.floor(a.length * 0.99));
+  const low = worst.reduce((x, y) => x + y) / worst.length;
+  return { avg, fps: 1000 / avg, low1: 1000 / low, p99: a[Math.floor(a.length * 0.99)] };
+}
+function drawHud(counts) {
+  const st = stats(fcount < frames.length ? frames.slice(0, fcount) : frames);
+  const i = renderer.info.render;
+  const H = horde.stats;
+  $('fps').textContent = st.fps ? st.fps.toFixed(0) : '–';
+  $('low').textContent = st.low1 ? st.low1.toFixed(0) : '–';
+  $('ms').textContent = st.avg.toFixed(1);
+  $('sim').textContent = simMs.toFixed(2);
+  $('rend').textContent = renderMs.toFixed(2);
+  $('gpu').textContent = gpuMs >= 0 ? gpuMs.toFixed(2) : 'n/d';
+  $('calls').textContent = i.calls;
+  $('tris').textContent = (i.triangles / 1e6).toFixed(2) + ' M';
+  $('zn').textContent = horde.n;
+  $('lods').textContent = counts.join(' / ');
+  $('bands').textContent = H.bands.join(' / ');
+  $('slots').textContent = H.slots;
+  $('kills').textContent = kills;
+  const ok = st.fps >= (TARGET >= 2000 ? 30 : 60);
+  $('verdict').textContent = ok ? 'dentro da meta' : 'abaixo da meta';
+  $('verdict').className = ok ? 'ok' : 'bad';
+}
+
+function startBench() {
+  bench = { t: 0, start: performance.now(), dur: window.__benchDur || 30, ft: [], sim: [], rend: [], gpu: [] };
+  $('bench').disabled = true; $('result').textContent = 'Medindo por 30 s… não mexa na janela.';
+}
+function endBench() {
+  const b = bench; bench = null; $('bench').disabled = false;
+  const f = stats(b.ft), s = stats(b.sim), r = stats(b.rend), g = stats(b.gpu);
+  const line = {
+    zumbis: TARGET, fps_medio: +f.fps.toFixed(1), fps_1pct_low: +f.low1.toFixed(1), quadro_ms: +f.avg.toFixed(2),
+    sim_ms: +s.avg.toFixed(3), sim_p99_ms: +(s.p99 || 0).toFixed(3), cpu_render_ms: +r.avg.toFixed(2), gpu_ms: b.gpu.length ? +g.avg.toFixed(2) : null,
+    draw_calls: renderer.info.render.calls, triangulos: renderer.info.render.triangles, sombras: shadowsOn, chuva: rainOn,
+    resolucao: `${canvas.width}x${canvas.height}`, gpu: gpuName(), navegador: navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg)\/[\d.]+/)?.[0] || '',
+  };
+  results.push(line);
+  $('result').textContent = results.map(x => JSON.stringify(x)).join('\n');
+}
+const results = [];
+function gpuName() { const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : ''; }
+
+// ---------- UI ----------
+$('n').addEventListener('input', e => setTarget(+e.target.value));
+$('n').value = TARGET;
+$('bench').onclick = startBench;
+$('shadows').onchange = e => shadowsOn = e.target.checked;
+$('rain').onchange = e => rainOn = e.target.checked;
+$('day').onchange = e => autoDay = e.target.checked;
+$('copy').onclick = () => navigator.clipboard?.writeText($('result').textContent);
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+$('gpuname').textContent = gpuName() || 'não informado pelo navegador';
+setTarget(TARGET);
+horde.update(0.016, [player]);
+window.__zb = { horde, renderer, startBench, results, setTarget, LODS };
+requestAnimationFrame(frame);
+
+</script>
+
+</body></html>

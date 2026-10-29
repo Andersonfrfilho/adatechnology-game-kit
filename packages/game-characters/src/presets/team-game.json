@@ -1,0 +1,71 @@
+{
+  "id": "team-game",
+  "segments": {
+    "head": 40,
+    "arm": 60,
+    "leg": 80
+  },
+  "calibers": {
+    "7_62x51": {
+      "gameKey": "308",
+      "name": "7,62×51 (.308)",
+      "points": 75,
+      "penetration": 4,
+      "effectiveRangeMetres": 600,
+      "noiseMetres": 130,
+      "skullRange": 1,
+      "class": "rifle"
+    },
+    "9x19": {
+      "gameKey": "9x19",
+      "name": "9×19 mm",
+      "points": 35,
+      "penetration": 1.2,
+      "effectiveRangeMetres": 35,
+      "noiseMetres": 60,
+      "skullRange": 1,
+      "class": "pistol"
+    },
+    "12ga_00buck": {
+      "gameKey": "12ga",
+      "name": "12 ga 00",
+      "points": 12,
+      "pellets": 9,
+      "penetration": 0.5,
+      "effectiveRangeMetres": 15,
+      "noiseMetres": 90,
+      "skullRange": 8,
+      "class": "pistol"
+    },
+    "7_62x39": {
+      "gameKey": "762x39",
+      "name": "7,62×39 mm",
+      "points": 55,
+      "penetration": 3,
+      "effectiveRangeMetres": 250,
+      "noiseMetres": 110,
+      "skullRange": 1,
+      "class": "rifle"
+    }
+  },
+  "regionCost": {
+    "head": 0.7,
+    "torso": 1,
+    "bruteTorso": 2,
+    "limb": 0.5
+  },
+  "damageKeptPerBody": 0.75,
+  "falloff": {
+    "fullAtRange": 1,
+    "atTwiceRange": 0.5
+  },
+  "helmetAbsorbs": "pistol",
+  "regions": [
+    "head",
+    "torso",
+    "armL",
+    "armR",
+    "legL",
+    "legR"
+  ]
+}

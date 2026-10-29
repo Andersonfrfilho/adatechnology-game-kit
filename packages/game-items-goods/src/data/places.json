@@ -1,0 +1,98 @@
+[
+  {
+    "id": "house",
+    "name": "House"
+  },
+  {
+    "id": "apartment",
+    "name": "Apartment building"
+  },
+  {
+    "id": "supermarket",
+    "name": "Supermarket"
+  },
+  {
+    "id": "pharmacy",
+    "name": "Pharmacy"
+  },
+  {
+    "id": "gun_shop",
+    "name": "Gun and hunting shop"
+  },
+  {
+    "id": "mall",
+    "name": "Mall"
+  },
+  {
+    "id": "police_station",
+    "name": "Police station"
+  },
+  {
+    "id": "hospital",
+    "name": "Hospital"
+  },
+  {
+    "id": "school",
+    "name": "School"
+  },
+  {
+    "id": "gas_station",
+    "name": "Gas station"
+  },
+  {
+    "id": "church",
+    "name": "Church"
+  },
+  {
+    "id": "warehouse",
+    "name": "Warehouse and metalworks"
+  },
+  {
+    "id": "farm",
+    "name": "Farm"
+  },
+  {
+    "id": "military_base",
+    "name": "Military base and roadblock"
+  },
+  {
+    "id": "workshop",
+    "name": "Car workshop"
+  },
+  {
+    "id": "car",
+    "name": "Abandoned car"
+  },
+  {
+    "id": "road",
+    "name": "Road and camp"
+  },
+  {
+    "id": "train",
+    "name": "Derailed train"
+  },
+  {
+    "id": "prison",
+    "name": "Prison"
+  },
+  {
+    "id": "mine",
+    "name": "Mine and quarry"
+  },
+  {
+    "id": "docks",
+    "name": "Docks and fish market"
+  },
+  {
+    "id": "lodge",
+    "name": "Inn and chalet"
+  },
+  {
+    "id": "dam",
+    "name": "Hydroelectric dam"
+  },
+  {
+    "id": "zombie_corpse",
+    "name": "Zombie corpse"
+  }
+]

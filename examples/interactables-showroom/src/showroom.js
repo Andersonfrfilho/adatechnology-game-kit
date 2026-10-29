@@ -1901,6 +1901,11 @@
     },
     showToast,
   }
+  // ?area=kitchen opens the house in that room, the way the demo site links each area of the index
+  const AREA_SPOTS = { kitchen: 'stove', living: 'sofa', bedroom: 'bed_double', bathroom: 'shower', laundry: 'washing_machine', yard: 'bbq', cabin: 'wood_stove', camp: 'campfire' }
+  const area = params.get('area')
+  if (area && AREA_SPOTS[area]) teleport(AREA_SPOTS[area])
+
 
   start()
 })()

@@ -1,0 +1,5 @@
+{
+  "categories": { "weapon": "Arma", "protection": "Proteção", "equipment": "Equipamento", "consumable": "Consumo", "key": "Chave", "document": "Documento", "trade": "Troca" },
+  "rarities": { "comum": "Comum", "incomum": "Incomum", "raro": "Raro", "muito raro": "Muito raro", "lendário": "Lendário" },
+  "rule": "Patente decide quem manda quando o líder cai (a maior patente viva com coragem + lealdade de pelo menos 100) e o que um soldado obedece. Patente maior vence opinião, a menos que a opinião do soldado pelo superior esteja abaixo de −20: aí ele desobedece, deserta ou se amotina."
+}

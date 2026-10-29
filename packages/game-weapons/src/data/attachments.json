@@ -1,0 +1,1094 @@
+[
+  {
+    "id": "suppressor",
+    "name": "Suppressor",
+    "kind": "suppressor",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "thread_1/2x28",
+      "thread_5/8x24",
+      "thread_14x1lh",
+      "thread_24x1.5",
+      "hk_3lug"
+    ],
+    "mass": 0.45,
+    "install": "tool",
+    "model": "suppressor",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "calibers": {
+      "maxDiameter": 12.7,
+      "maxEnergy": 6500
+    },
+    "dims": {
+      "length": 0.2,
+      "diameter": 0.045
+    },
+    "removable": true,
+    "effects": [
+      {
+        "stat": "noise",
+        "mul": 0.4
+      },
+      {
+        "stat": "noise",
+        "mul": 0.625,
+        "when": "subsonic"
+      },
+      {
+        "stat": "muzzleSpeed",
+        "mul": 0.97468
+      },
+      {
+        "stat": "heatPerShot",
+        "mul": 1.5
+      }
+    ]
+  },
+  {
+    "id": "oil_filter_suppressor",
+    "name": "Improvised oil filter suppressor",
+    "kind": "suppressor",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "thread_1/2x28",
+      "thread_5/8x24",
+      "thread_14x1lh",
+      "thread_24x1.5",
+      "hk_3lug"
+    ],
+    "mass": 0.35,
+    "install": "tool",
+    "model": "oil_filter_suppressor",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "calibers": {
+      "maxDiameter": 9,
+      "maxEnergy": 2500
+    },
+    "dims": {
+      "length": 0.17,
+      "diameter": 0.07
+    },
+    "durability": {
+      "shots": [
+        30,
+        60
+      ]
+    },
+    "effects": [
+      {
+        "stat": "noise",
+        "mul": 0.6
+      },
+      {
+        "stat": "heatPerShot",
+        "mul": 1.5
+      }
+    ]
+  },
+  {
+    "id": "muzzle_brake",
+    "name": "Muzzle brake",
+    "kind": "muzzle_device",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "thread_1/2x28",
+      "thread_5/8x24",
+      "thread_14x1lh",
+      "thread_24x1.5",
+      "hk_3lug",
+      "fixed_muzzle_device"
+    ],
+    "mass": 0.15,
+    "install": "tool",
+    "model": "muzzle_brake",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.75
+      },
+      {
+        "stat": "recoilHorizontal",
+        "mul": 0.75
+      },
+      {
+        "stat": "noise",
+        "mul": 1.1
+      }
+    ]
+  },
+  {
+    "id": "muzzle_brake_heavy",
+    "name": "Heavy muzzle brake",
+    "kind": "muzzle_device",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "thread_1/2x28",
+      "thread_5/8x24",
+      "thread_14x1lh",
+      "thread_24x1.5",
+      "hk_3lug",
+      "fixed_muzzle_device"
+    ],
+    "mass": 0.35,
+    "install": "tool",
+    "model": "muzzle_brake_heavy",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.75
+      },
+      {
+        "stat": "recoilHorizontal",
+        "mul": 0.75
+      },
+      {
+        "stat": "noise",
+        "mul": 1.1
+      }
+    ]
+  },
+  {
+    "id": "compensator",
+    "name": "Compensator",
+    "kind": "muzzle_device",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "thread_1/2x28",
+      "thread_5/8x24",
+      "thread_14x1lh",
+      "thread_24x1.5",
+      "hk_3lug",
+      "fixed_muzzle_device"
+    ],
+    "mass": 0.1,
+    "install": "tool",
+    "model": "compensator",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.75
+      },
+      {
+        "stat": "recoilHorizontal",
+        "mul": 0.75
+      },
+      {
+        "stat": "noise",
+        "mul": 1.1
+      }
+    ]
+  },
+  {
+    "id": "red_dot",
+    "name": "Red dot sight",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side"
+    ],
+    "mass": 0.15,
+    "install": "tool",
+    "model": "red_dot",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        1,
+        1
+      ],
+      "reticle": "dot"
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 0.8
+      }
+    ]
+  },
+  {
+    "id": "holographic_sight",
+    "name": "Holographic sight",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side"
+    ],
+    "mass": 0.3,
+    "install": "tool",
+    "model": "holographic_sight",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        1,
+        1
+      ],
+      "reticle": "holo"
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 0.8
+      }
+    ]
+  },
+  {
+    "id": "acog_4x",
+    "name": "ACOG 4x",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side"
+    ],
+    "mass": 0.4,
+    "install": "tool",
+    "model": "acog_4x",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        4,
+        4
+      ],
+      "reticle": "chevron"
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 1.1
+      }
+    ]
+  },
+  {
+    "id": "scope_3_9x",
+    "name": "Rifle scope 3-9x",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side",
+      "dovetail"
+    ],
+    "mass": 0.6,
+    "install": "tool",
+    "model": "scope_3_9x",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        3,
+        9
+      ],
+      "reticle": "duplex"
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 1.15
+      }
+    ]
+  },
+  {
+    "id": "scope_6_24x",
+    "name": "Rifle scope 6-24x",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side",
+      "dovetail"
+    ],
+    "mass": 1.1,
+    "install": "tool",
+    "model": "scope_6_24x",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        6,
+        24
+      ],
+      "reticle": "mildot"
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 1.25
+      }
+    ]
+  },
+  {
+    "id": "night_vision_scope",
+    "name": "Night vision scope",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side",
+      "dovetail"
+    ],
+    "mass": 0.9,
+    "install": "tool",
+    "model": "night_vision_scope",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        1,
+        4
+      ],
+      "reticle": "duplex",
+      "vision": "night",
+      "batteryHours": 40
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 1.2
+      }
+    ]
+  },
+  {
+    "id": "thermal_scope",
+    "name": "Thermal scope",
+    "kind": "optic",
+    "mounts": [
+      "rail_top",
+      "rail_left"
+    ],
+    "interfaces": [
+      "picatinny",
+      "ak_side",
+      "dovetail"
+    ],
+    "mass": 1.2,
+    "install": "tool",
+    "model": "thermal_scope",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        1,
+        4
+      ],
+      "reticle": "duplex",
+      "vision": "thermal",
+      "batteryHours": 8
+    },
+    "effects": [
+      {
+        "stat": "aim",
+        "mul": 1.2
+      }
+    ]
+  },
+  {
+    "id": "integral_optic_1_5x",
+    "name": "Integral 1.5x optic of the AUG",
+    "kind": "optic",
+    "mounts": [
+      "rail_top"
+    ],
+    "interfaces": [
+      "integral",
+      "pso_1_side"
+    ],
+    "mass": 0.2,
+    "install": "bench",
+    "model": "integral_optic_1_5x",
+    "sources": [
+      "gallery",
+      "reference"
+    ],
+    "optic": {
+      "zoom": [
+        1.5,
+        1.5
+      ],
+      "reticle": "duplex"
+    },
+    "removable": false,
+    "effects": []
+  },
+  {
+    "id": "pso_1",
+    "name": "PSO-1 scope",
+    "kind": "optic",
+    "mounts": [
+      "rail_top"
+    ],
+    "interfaces": [
+      "integral",
+      "pso_1_side"
+    ],
+    "mass": 0.6,
+    "install": "bench",
+    "model": "pso_1",
+    "sources": [
+      "gallery",
+      "reference"
+    ],
+    "optic": {
+      "zoom": [
+        4,
+        4
+      ],
+      "reticle": "chevron"
+    },
+    "removable": false,
+    "effects": []
+  },
+  {
+    "id": "fixed_scope_10x",
+    "name": "Fixed 10x scope of the M24",
+    "kind": "optic",
+    "mounts": [
+      "rail_top"
+    ],
+    "interfaces": [
+      "integral",
+      "pso_1_side"
+    ],
+    "mass": 0.8,
+    "install": "bench",
+    "model": "fixed_scope_10x",
+    "sources": [
+      "gallery",
+      "reference"
+    ],
+    "optic": {
+      "zoom": [
+        10,
+        10
+      ],
+      "reticle": "mildot"
+    },
+    "removable": false,
+    "effects": []
+  },
+  {
+    "id": "vertical_grip",
+    "name": "Vertical foregrip",
+    "kind": "grip",
+    "mounts": [
+      "rail_bottom"
+    ],
+    "interfaces": [
+      "picatinny",
+      "mlok"
+    ],
+    "mass": 0.15,
+    "install": "field",
+    "model": "vertical_grip",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "dims": {
+      "length": 0.1
+    },
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.85
+      }
+    ]
+  },
+  {
+    "id": "bipod",
+    "name": "Bipod",
+    "kind": "bipod",
+    "mounts": [
+      "rail_bottom"
+    ],
+    "interfaces": [
+      "picatinny",
+      "bipod_stud"
+    ],
+    "mass": 0.4,
+    "install": "field",
+    "model": "bipod",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "derived"
+    ],
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.4,
+        "when": "supported"
+      },
+      {
+        "stat": "recoilHorizontal",
+        "mul": 0.4,
+        "when": "supported"
+      }
+    ]
+  },
+  {
+    "id": "m203",
+    "name": "M203 grenade launcher",
+    "kind": "underbarrel",
+    "mounts": [
+      "underbarrel"
+    ],
+    "interfaces": [
+      "m203"
+    ],
+    "mass": 1.36,
+    "install": "bench",
+    "model": "m203",
+    "sources": [
+      "arsenal",
+      "reference"
+    ],
+    "blocks": [
+      "rail_bottom"
+    ],
+    "categories": [
+      "rifle",
+      "carbine",
+      "dmr"
+    ],
+    "launcher": "m203",
+    "dims": {
+      "length": 0.38
+    },
+    "effects": []
+  },
+  {
+    "id": "gp_25",
+    "name": "GP-25 grenade launcher",
+    "kind": "underbarrel",
+    "mounts": [
+      "underbarrel"
+    ],
+    "interfaces": [
+      "gp25"
+    ],
+    "mass": 1.5,
+    "install": "bench",
+    "model": "gp_25",
+    "sources": [
+      "reference"
+    ],
+    "blocks": [
+      "rail_bottom"
+    ],
+    "categories": [
+      "rifle",
+      "carbine",
+      "dmr"
+    ],
+    "launcher": "gp_25",
+    "dims": {
+      "length": 0.323
+    },
+    "effects": []
+  },
+  {
+    "id": "ag36",
+    "name": "AG36 grenade launcher",
+    "kind": "underbarrel",
+    "mounts": [
+      "underbarrel"
+    ],
+    "interfaces": [
+      "ag36"
+    ],
+    "mass": 1.5,
+    "install": "bench",
+    "model": "ag36",
+    "sources": [
+      "reference"
+    ],
+    "blocks": [
+      "rail_bottom"
+    ],
+    "categories": [
+      "rifle",
+      "carbine",
+      "dmr"
+    ],
+    "launcher": "ag36",
+    "dims": {
+      "length": 0.35
+    },
+    "effects": []
+  },
+  {
+    "id": "weapon_light",
+    "name": "Weapon light",
+    "kind": "light",
+    "mounts": [
+      "rail_left",
+      "rail_right",
+      "rail_bottom"
+    ],
+    "interfaces": [
+      "picatinny",
+      "mlok"
+    ],
+    "mass": 0.12,
+    "install": "field",
+    "model": "weapon_light",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "light": {
+      "coneDeg": 30,
+      "range": 60,
+      "visibleFrom": 40,
+      "batteryHours": 20
+    },
+    "dims": {
+      "length": 0.1,
+      "diameter": 0.03
+    },
+    "effects": []
+  },
+  {
+    "id": "laser_sight",
+    "name": "Laser sight",
+    "kind": "laser",
+    "mounts": [
+      "rail_left",
+      "rail_right",
+      "rail_bottom"
+    ],
+    "interfaces": [
+      "picatinny",
+      "mlok"
+    ],
+    "mass": 0.1,
+    "install": "field",
+    "model": "laser_sight",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "laser": {
+      "color": 16711680,
+      "range": 120,
+      "visibleFrom": 30
+    },
+    "dims": {
+      "length": 0.08,
+      "diameter": 0.025
+    },
+    "effects": [
+      {
+        "stat": "hipSpreadExcess",
+        "mul": 0.5,
+        "when": "hip"
+      }
+    ]
+  },
+  {
+    "id": "extended_magazine",
+    "name": "Extended magazine",
+    "kind": "magazine",
+    "mounts": [
+      "magazine"
+    ],
+    "interfaces": [
+      "mag_box",
+      "mag_curved",
+      "mag_pistol"
+    ],
+    "mass": 0.15,
+    "install": "field",
+    "model": "extended_magazine",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "categories": [
+      "pistol",
+      "smg",
+      "rifle",
+      "carbine",
+      "dmr",
+      "machine_gun"
+    ],
+    "effects": [
+      {
+        "stat": "capacity",
+        "mul": 1.5
+      },
+      {
+        "stat": "reload",
+        "mul": 1.15
+      }
+    ]
+  },
+  {
+    "id": "drum_magazine",
+    "name": "Drum magazine",
+    "kind": "magazine",
+    "mounts": [
+      "magazine"
+    ],
+    "interfaces": [
+      "mag_box",
+      "mag_curved"
+    ],
+    "mass": 1.2,
+    "install": "field",
+    "model": "drum_magazine",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "categories": [
+      "smg",
+      "rifle",
+      "carbine",
+      "dmr",
+      "machine_gun"
+    ],
+    "effects": [
+      {
+        "stat": "capacity",
+        "set": 75
+      },
+      {
+        "stat": "faultChance",
+        "mul": 1.5
+      },
+      {
+        "stat": "reload",
+        "mul": 1.3
+      }
+    ]
+  },
+  {
+    "id": "dual_coupler",
+    "name": "Dual magazine coupler",
+    "kind": "magazine",
+    "mounts": [
+      "magazine"
+    ],
+    "interfaces": [
+      "mag_box",
+      "mag_curved"
+    ],
+    "mass": 0.1,
+    "install": "field",
+    "model": "dual_coupler",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "secondReload": true,
+    "categories": [
+      "smg",
+      "rifle",
+      "carbine",
+      "dmr",
+      "machine_gun"
+    ],
+    "effects": [
+      {
+        "stat": "reload",
+        "mul": 0.5
+      }
+    ]
+  },
+  {
+    "id": "sawn_off_barrel",
+    "name": "Sawn-off barrel",
+    "kind": "barrel",
+    "mounts": [
+      "barrel"
+    ],
+    "interfaces": [
+      "barrel_swap"
+    ],
+    "mass": -0.4,
+    "install": "bench",
+    "model": "sawn_off_barrel",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "categories": [
+      "shotgun"
+    ],
+    "effects": [
+      {
+        "stat": "spread",
+        "mul": 1.6
+      },
+      {
+        "stat": "range",
+        "mul": 0.6
+      },
+      {
+        "stat": "draw",
+        "mul": 0.8
+      }
+    ]
+  },
+  {
+    "id": "long_barrel",
+    "name": "Long barrel",
+    "kind": "barrel",
+    "mounts": [
+      "barrel"
+    ],
+    "interfaces": [
+      "barrel_swap"
+    ],
+    "mass": 0.4,
+    "install": "bench",
+    "model": "long_barrel",
+    "sources": [
+      "arsenal",
+      "derived"
+    ],
+    "categories": [
+      "shotgun"
+    ],
+    "effects": [
+      {
+        "stat": "range",
+        "mul": 1.2
+      },
+      {
+        "stat": "muzzleSpeed",
+        "mul": 1.03
+      }
+    ]
+  },
+  {
+    "id": "sling",
+    "name": "Sling",
+    "kind": "sling",
+    "mounts": [
+      "sling"
+    ],
+    "interfaces": [
+      "swivel"
+    ],
+    "mass": 0.15,
+    "install": "field",
+    "model": "sling",
+    "sources": [
+      "derived"
+    ],
+    "stowable": true,
+    "categories": [
+      "smg",
+      "rifle",
+      "carbine",
+      "sniper",
+      "dmr",
+      "hunting",
+      "machine_gun",
+      "shotgun"
+    ],
+    "effects": [
+      {
+        "stat": "draw",
+        "mul": 0.85
+      }
+    ]
+  },
+  {
+    "id": "ammo_backpack",
+    "name": "Ammunition backpack",
+    "kind": "feed",
+    "mounts": [
+      "feed"
+    ],
+    "interfaces": [
+      "belt"
+    ],
+    "mass": 1.5,
+    "install": "field",
+    "model": "ammo_backpack",
+    "sources": [
+      "derived"
+    ],
+    "carry": "back",
+    "categories": [
+      "machine_gun",
+      "rifle"
+    ],
+    "effects": [
+      {
+        "stat": "capacity",
+        "set": 500
+      }
+    ]
+  },
+  {
+    "id": "tripod",
+    "name": "Tripod mount",
+    "kind": "mount",
+    "mounts": [
+      "underbarrel"
+    ],
+    "interfaces": [
+      "tripod"
+    ],
+    "mass": 6,
+    "install": "bench",
+    "model": "tripod",
+    "sources": [
+      "derived"
+    ],
+    "categories": [
+      "machine_gun"
+    ],
+    "effects": [
+      {
+        "stat": "recoilVertical",
+        "mul": 0.4
+      },
+      {
+        "stat": "recoilHorizontal",
+        "mul": 0.4
+      },
+      {
+        "stat": "spread",
+        "mul": 0.7
+      }
+    ]
+  },
+  {
+    "id": "integral_suppressor",
+    "name": "Integral suppressor",
+    "kind": "suppressor",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "integral"
+    ],
+    "mass": 0.45,
+    "install": "bench",
+    "model": "integral_suppressor",
+    "sources": [
+      "reference",
+      "derived"
+    ],
+    "dims": {
+      "length": 0.2,
+      "diameter": 0.045
+    },
+    "removable": false,
+    "effects": [
+      {
+        "stat": "noise",
+        "mul": 0.4
+      },
+      {
+        "stat": "noise",
+        "mul": 0.625,
+        "when": "subsonic"
+      },
+      {
+        "stat": "muzzleSpeed",
+        "mul": 0.97468
+      },
+      {
+        "stat": "heatPerShot",
+        "mul": 1.5
+      }
+    ]
+  },
+  {
+    "id": "integral_optic_3x",
+    "name": "Integral 3x optic of the G36",
+    "kind": "optic",
+    "mounts": [
+      "rail_top"
+    ],
+    "interfaces": [
+      "integral"
+    ],
+    "mass": 0.3,
+    "install": "bench",
+    "model": "integral_optic_3x",
+    "sources": [
+      "reference",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        3,
+        3
+      ],
+      "reticle": "duplex"
+    },
+    "removable": false,
+    "effects": []
+  }
+]

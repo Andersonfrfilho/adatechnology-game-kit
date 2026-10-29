@@ -1,23 +1,24 @@
 import { EPS } from './constants'
+import { carCandidates } from './parking'
 import { clearRect, extent, insideUnion, overlaps, r2, usableParts } from './geometry'
 import { createGrid, reachable } from './grid'
 import { blocksWindow, windowZone, windowsOfRoom, zonesOfFloor } from './queries'
 import { CATALOG, SEED_KEYS } from './registry'
 import { weightedOrder } from './rng'
 import type { Rng } from './rng'
-import type { ItemDef, Json, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
+import type { FurnitureDef, Json, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
 
-function candidatesOf(cats: Weights): { it: ItemDef; weight: number }[] {
-  const out: { it: ItemDef; weight: number }[] = []
+function candidatesOf(cats: Weights): { it: FurnitureDef; weight: number }[] {
+  const out: { it: FurnitureDef; weight: number }[] = []
   for (const [cat, weight] of Object.entries(cats)) {
     const exact = cat[0] === '='
-    const its = Object.values(CATALOG).filter((i) => !i.decor && (exact ? i.type === cat.slice(1) : i.category === cat || i.type === cat))
+    const its = Object.values(CATALOG).filter((i) => !i.decor && (exact ? i.type === cat.slice(1) : !i.exactOnly && (i.category === cat || i.type === cat)))
     for (const it of its) out.push({ it, weight: weight / its.length })
   }
   return out
 }
 
-function itemRect(slot: Slot, it: ItemDef, shift: number): Rect {
+function itemRect(slot: Slot, it: FurnitureDef, shift: number): Rect {
   const c = slot._cell
   const f: Vec2 = c.f
   const [extentU, extentV] = extent([it.w, it.d], f)
@@ -37,6 +38,9 @@ function itemRect(slot: Slot, it: ItemDef, shift: number): Rect {
   }
   return [u0, v0, u0 + extentU, v0 + extentV]
 }
+
+/** Radius of the relaxed pass: a required item that did not fit settles for a narrower walkway. */
+const RELAXED_RADIUS = 0.12
 
 const MESH_FRONT: Record<string, Vec2> = { '+z': [0, 1], '-z': [0, -1], '+x': [1, 0], '-x': [-1, 0] }
 
@@ -59,9 +63,10 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
   const rims: Rect[] = []
   const inners = usableParts(room, 0)
   const grid = createGrid(plan, room)
+  const relaxedGrid = room.outdoor ? grid : createGrid(plan, room, null, RELAXED_RADIUS)
   const zones = zonesOfFloor(plan, room.floor)
   const windowZones = windowsOfRoom(plan, room).map((j) => ({ z: windowZone(j, room.outdoor), j }))
-  const inflation = room.outdoor ? 0.15 : 0.12
+  const inflation = room.outdoor ? 0.15 : plan.playerRadius
   interface Unit {
     group: string | null
     members: Slot[]
@@ -89,7 +94,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       .filter((id) => slots.some((s) => s.id === id && !u.members.includes(s)))
   const done = new Set<string>()
   const ready = (u: Unit) => dependencies(u).every((id) => done.has(id as string))
-  const make = (s: Slot, it: ItemDef, r: Rect, parent: PlacedItem | null) => {
+  const make = (s: Slot, it: FurnitureDef, r: Rect, parent: PlacedItem | null, overheadOff?: boolean) => {
     const f: Vec2 = [s.frontU, s.frontV]
     const id = room.id + '.' + s.id
     const m: Json = {
@@ -118,13 +123,18 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       _r: r,
       _seedId: SEED_KEYS.items[id] ?? id,
     }
+    if (it.overhead) m.overhead = !overheadOff
+    if (it.category === 'car') {
+      m.driver = [f[1], -f[0]]
+      m.carClearance = plan.carClearance
+    }
     if (parent && s.anchor === 'inside') m.y = r2(parent.y || 0)
     if (room.link) m.link = { from: room.link[0], to: room.link[1] }
     state[s.id] = m
     items.push(m as PlacedItem)
     return m as PlacedItem
   }
-  const tryFit = (s: Slot, relax: boolean): PlacedItem | null => {
+  const tryFit = (s: Slot, relax: boolean, overheadOff?: boolean): PlacedItem | null => {
     const cands = weightedOrder(candidatesOf(s.cats), rng)
     if (s.anchor === 'on' || s.anchor === 'inside') {
       const parent = state[s.on as string]
@@ -147,19 +157,22 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       const shifts = [0]
       for (let k = 1; k * 0.1 <= slide + 1e-9; k++) shifts.push(k * 0.1, -k * 0.1)
       let found: { rect: Rect; cl?: Rect | null; rimRect?: Rect | null } | null = null
-      for (const shift of shifts) {
-        const r = itemRect(s, it, shift)
+      const car = it.category === 'car' && !relax
+      const tries: { rect: Rect; clear?: Rect }[] = car ? carCandidates(s, it, plan.carClearance) : shifts.map((shift) => ({ rect: itemRect(s, it, shift) }))
+      for (const attempt of tries) {
+        const r = attempt.rect
         if (!insideUnion(r, inners)) continue
+        if (car && (!insideUnion(attempt.clear as Rect, inners) || solids.some((o) => overlaps(attempt.clear as Rect, o)))) continue
         if (it.flat) {
           found = { rect: r }
           break
         }
         if (zones.some((z) => overlaps(r, z))) continue
-        if (windowZones.some(({ z, j }) => blocksWindow(it, j) && overlaps(r, z))) continue
+        if (windowZones.some(({ z, j }) => blocksWindow(it, j, overheadOff) && overlaps(r, z))) continue
         if (solids.some((o) => overlaps(r, o))) continue
         if (!it.deck && rims.some((a) => overlaps(r, a))) continue
-        let cl: Rect | null = null
-        if (!relax && s.clearance > 0 && !it.low) {
+        let cl: Rect | null = car ? (attempt.clear as Rect) : null
+        if (!car && !relax && s.clearance > 0 && !it.low) {
           cl = clearRect(r, f, s.clearance)
           if (!insideUnion(cl, inners)) continue
           if (items.some((m) => !m.low && !m.flat && !m.on && overlaps(cl as Rect, m._r))) continue
@@ -170,14 +183,14 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
           rimRect = [r[0] - it.rim, r[1] - it.rim, r[2] + it.rim, r[3] + it.rim]
           if (!insideUnion(rimRect, inners) || solids.some((o) => overlaps(rimRect as Rect, o)) || zones.some((z) => overlaps(rimRect as Rect, z))) continue
         }
-        if (!reachable(grid, solids.concat([r]), inflation)) continue
+        if (!(relax ? reachable(relaxedGrid, solids.concat([r]), RELAXED_RADIUS) : reachable(grid, solids.concat([r]), inflation))) continue
         found = { rect: r, cl, rimRect }
         break
       }
       if (!found) continue
       const { rect: r, cl, rimRect } = found
       if (it.flat) return make(s, it, r, null)
-      const m = make(s, it, r, null)
+      const m = make(s, it, r, null, overheadOff)
       if (cl) reserves.push(cl)
       if (rimRect) rims.push(rimRect)
       solids.push(r)
@@ -200,9 +213,16 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
         break
       }
     }
+    if (!ok)
+      for (const m of applicable) {
+        if (tryFit(m, false, true)) {
+          ok = true
+          break
+        }
+      }
     if (!ok && u.required)
       for (const m of applicable) {
-        if (tryFit(m, true)) {
+        if (tryFit(m, true, true)) {
           ok = true
           break
         }

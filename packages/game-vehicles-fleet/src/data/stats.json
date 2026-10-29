@@ -1,0 +1,692 @@
+{
+  "compact_hatch": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 5,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 170
+  },
+  "taxi": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 5,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 175
+  },
+  "entry_hatch": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 4,
+    "noiseRadius": 55,
+    "maxSpeedKmh": 156
+  },
+  "electric_hatch": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 1,
+    "noiseRadius": 15,
+    "maxSpeedKmh": 150
+  },
+  "midsize_sedan": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 195
+  },
+  "police_sedan": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 205
+  },
+  "highway_police_sedan": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 205
+  },
+  "bicycle": {
+    "speed": 1,
+    "acceleration": 10,
+    "handling": 10,
+    "toughness": 1,
+    "load": 1,
+    "consumption": 0,
+    "noiseRadius": 5,
+    "maxSpeedKmh": 25
+  },
+  "scooter": {
+    "speed": 5,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 1,
+    "noiseRadius": 50,
+    "maxSpeedKmh": 115
+  },
+  "commuter_motorcycle": {
+    "speed": 5,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 1,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 115
+  },
+  "trail_bike": {
+    "speed": 5,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 1,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 115
+  },
+  "adventure_bike": {
+    "speed": 10,
+    "acceleration": 8,
+    "handling": 8,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 2,
+    "noiseRadius": 85,
+    "maxSpeedKmh": 220
+  },
+  "highway_police_bike": {
+    "speed": 10,
+    "acceleration": 8,
+    "handling": 8,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 2,
+    "noiseRadius": 85,
+    "maxSpeedKmh": 220
+  },
+  "quad_bike": {
+    "speed": 5,
+    "acceleration": 8,
+    "handling": 8,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 5,
+    "noiseRadius": 65,
+    "maxSpeedKmh": 100
+  },
+  "beetle": {
+    "speed": 5,
+    "acceleration": 8,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 120
+  },
+  "compact_suv": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 190
+  },
+  "hybrid_suv": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 3,
+    "noiseRadius": 20,
+    "maxSpeedKmh": 170
+  },
+  "midsize_suv": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 190
+  },
+  "large_suv": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 7,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 180
+  },
+  "compact_pickup": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 5,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 171
+  },
+  "crossover_pickup": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 6,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 193
+  },
+  "midsize_pickup": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 6,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 180
+  },
+  "monster_truck": {
+    "speed": 5,
+    "acceleration": 6,
+    "handling": 5,
+    "toughness": 7,
+    "load": 5,
+    "consumption": 10,
+    "noiseRadius": 220,
+    "maxSpeedKmh": 110
+  },
+  "cargo_van": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 6,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 155
+  },
+  "ambulance": {
+    "speed": 7,
+    "acceleration": 6,
+    "handling": 6,
+    "toughness": 7,
+    "load": 5,
+    "consumption": 7,
+    "noiseRadius": 80,
+    "maxSpeedKmh": 150
+  },
+  "box_truck": {
+    "speed": 5,
+    "acceleration": 6,
+    "handling": 5,
+    "toughness": 7,
+    "load": 5,
+    "consumption": 8,
+    "noiseRadius": 105,
+    "maxSpeedKmh": 110
+  },
+  "tanker_truck": {
+    "speed": 5,
+    "acceleration": 5,
+    "handling": 5,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 10,
+    "noiseRadius": 115,
+    "maxSpeedKmh": 100
+  },
+  "school_bus": {
+    "speed": 4,
+    "acceleration": 5,
+    "handling": 5,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 9,
+    "noiseRadius": 100,
+    "maxSpeedKmh": 90
+  },
+  "city_bus": {
+    "speed": 4,
+    "acceleration": 5,
+    "handling": 4,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 10,
+    "noiseRadius": 105,
+    "maxSpeedKmh": 90
+  },
+  "armored_truck": {
+    "speed": 5,
+    "acceleration": 5,
+    "handling": 4,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 9,
+    "noiseRadius": 90,
+    "maxSpeedKmh": 100
+  },
+  "tractor": {
+    "speed": 1,
+    "acceleration": 6,
+    "handling": 6,
+    "toughness": 7,
+    "load": 5,
+    "consumption": 8,
+    "noiseRadius": 90,
+    "maxSpeedKmh": 28
+  },
+  "light_4x4": {
+    "speed": 5,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 7,
+    "noiseRadius": 85,
+    "maxSpeedKmh": 120
+  },
+  "troop_truck": {
+    "speed": 4,
+    "acceleration": 5,
+    "handling": 5,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 9,
+    "noiseRadius": 120,
+    "maxSpeedKmh": 95
+  },
+  "apc_6x6": {
+    "speed": 5,
+    "acceleration": 5,
+    "handling": 4,
+    "toughness": 9,
+    "load": 7,
+    "consumption": 10,
+    "noiseRadius": 140,
+    "maxSpeedKmh": 100
+  },
+  "armored_car_6x6": {
+    "speed": 5,
+    "acceleration": 5,
+    "handling": 4,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 10,
+    "noiseRadius": 120,
+    "maxSpeedKmh": 100
+  },
+  "battle_tank": {
+    "speed": 3,
+    "acceleration": 4,
+    "handling": 3,
+    "toughness": 10,
+    "load": 8,
+    "consumption": 10,
+    "noiseRadius": 320,
+    "maxSpeedKmh": 65
+  },
+  "transport_helicopter": {
+    "speed": 10,
+    "acceleration": 6,
+    "handling": 5,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 8,
+    "noiseRadius": 600,
+    "maxSpeedKmh": 295
+  },
+  "river_skiff": {
+    "speed": 2,
+    "acceleration": 8,
+    "handling": 8,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 8,
+    "noiseRadius": 90,
+    "maxSpeedKmh": 50
+  },
+  "speedboat": {
+    "speed": 4,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 8,
+    "noiseRadius": 110,
+    "maxSpeedKmh": 85
+  },
+  "fishing_boat": {
+    "speed": 1,
+    "acceleration": 5,
+    "handling": 5,
+    "toughness": 8,
+    "load": 6,
+    "consumption": 8,
+    "noiseRadius": 80,
+    "maxSpeedKmh": 18
+  },
+  "single_engine_plane": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 8,
+    "noiseRadius": 300,
+    "maxSpeedKmh": 302
+  },
+  "crop_duster": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 8,
+    "noiseRadius": 300,
+    "maxSpeedKmh": 230
+  },
+  "piston_helicopter": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 8,
+    "noiseRadius": 400,
+    "maxSpeedKmh": 240
+  },
+  "rescue_helicopter": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 8,
+    "noiseRadius": 450,
+    "maxSpeedKmh": 287
+  },
+  "step_through_scooter": {
+    "speed": 4,
+    "acceleration": 8,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 1,
+    "noiseRadius": 55,
+    "maxSpeedKmh": 95
+  },
+  "naked_bike": {
+    "speed": 5,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 2,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 135
+  },
+  "sport_bike": {
+    "speed": 8,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 3,
+    "noiseRadius": 85,
+    "maxSpeedKmh": 190
+  },
+  "cruiser": {
+    "speed": 8,
+    "acceleration": 8,
+    "handling": 6,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 5,
+    "noiseRadius": 110,
+    "maxSpeedKmh": 180
+  },
+  "delivery_bike": {
+    "speed": 5,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 4,
+    "consumption": 1,
+    "noiseRadius": 70,
+    "maxSpeedKmh": 110
+  },
+  "boxy_hatch": {
+    "speed": 6,
+    "acceleration": 6,
+    "handling": 7,
+    "toughness": 4,
+    "load": 3,
+    "consumption": 3,
+    "noiseRadius": 62,
+    "maxSpeedKmh": 153
+  },
+  "family_hatch": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 4,
+    "noiseRadius": 60,
+    "maxSpeedKmh": 168
+  },
+  "rideshare_hatch": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 4,
+    "noiseRadius": 58,
+    "maxSpeedKmh": 161
+  },
+  "turbo_hatch": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 5,
+    "noiseRadius": 58,
+    "maxSpeedKmh": 197
+  },
+  "fastback_sedan": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 6,
+    "noiseRadius": 62,
+    "maxSpeedKmh": 200
+  },
+  "classic_six_sedan": {
+    "speed": 7,
+    "acceleration": 7,
+    "handling": 5,
+    "toughness": 6,
+    "load": 5,
+    "consumption": 8,
+    "noiseRadius": 78,
+    "maxSpeedKmh": 170
+  },
+  "v8_coupe": {
+    "speed": 10,
+    "acceleration": 9,
+    "handling": 5,
+    "toughness": 6,
+    "load": 3,
+    "consumption": 9,
+    "noiseRadius": 120,
+    "maxSpeedKmh": 250
+  },
+  "jet_ski": {
+    "speed": 4,
+    "acceleration": 9,
+    "handling": 9,
+    "toughness": 3,
+    "load": 3,
+    "consumption": 6,
+    "noiseRadius": 85,
+    "maxSpeedKmh": 80
+  },
+  "sailboat": {
+    "speed": 1,
+    "acceleration": 3,
+    "handling": 4,
+    "toughness": 7,
+    "load": 6,
+    "consumption": 2,
+    "noiseRadius": 30,
+    "maxSpeedKmh": 13
+  },
+  "rescue_dinghy": {
+    "speed": 3,
+    "acceleration": 7,
+    "handling": 8,
+    "toughness": 3,
+    "load": 4,
+    "consumption": 5,
+    "noiseRadius": 75,
+    "maxSpeedKmh": 55
+  },
+  "patrol_boat": {
+    "speed": 3,
+    "acceleration": 4,
+    "handling": 5,
+    "toughness": 9,
+    "load": 5,
+    "consumption": 9,
+    "noiseRadius": 160,
+    "maxSpeedKmh": 54
+  },
+  "tandem_trainer": {
+    "speed": 6,
+    "acceleration": 5,
+    "handling": 6,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 3,
+    "noiseRadius": 250,
+    "maxSpeedKmh": 140
+  },
+  "regional_turboprop": {
+    "speed": 10,
+    "acceleration": 6,
+    "handling": 5,
+    "toughness": 7,
+    "load": 7,
+    "consumption": 9,
+    "noiseRadius": 650,
+    "maxSpeedKmh": 430
+  },
+  "amphibian_turboprop": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 6,
+    "load": 6,
+    "consumption": 9,
+    "noiseRadius": 500,
+    "maxSpeedKmh": 300
+  },
+  "light_jet": {
+    "speed": 10,
+    "acceleration": 9,
+    "handling": 6,
+    "toughness": 6,
+    "load": 4,
+    "consumption": 10,
+    "noiseRadius": 900,
+    "maxSpeedKmh": 722
+  },
+  "light_attack_turboprop": {
+    "speed": 10,
+    "acceleration": 9,
+    "handling": 7,
+    "toughness": 7,
+    "load": 5,
+    "consumption": 10,
+    "noiseRadius": 800,
+    "maxSpeedKmh": 590
+  },
+  "trainer_helicopter": {
+    "speed": 8,
+    "acceleration": 7,
+    "handling": 8,
+    "toughness": 3,
+    "load": 2,
+    "consumption": 5,
+    "noiseRadius": 350,
+    "maxSpeedKmh": 190
+  },
+  "turbine_helicopter": {
+    "speed": 9,
+    "acceleration": 7,
+    "handling": 7,
+    "toughness": 5,
+    "load": 4,
+    "consumption": 7,
+    "noiseRadius": 450,
+    "maxSpeedKmh": 225
+  },
+  "police_helicopter": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 6,
+    "toughness": 7,
+    "load": 6,
+    "consumption": 9,
+    "noiseRadius": 600,
+    "maxSpeedKmh": 268
+  },
+  "attack_helicopter": {
+    "speed": 10,
+    "acceleration": 7,
+    "handling": 5,
+    "toughness": 9,
+    "load": 7,
+    "consumption": 10,
+    "noiseRadius": 900,
+    "maxSpeedKmh": 300
+  }
+}

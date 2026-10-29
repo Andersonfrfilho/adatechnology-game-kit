@@ -1,0 +1,86 @@
+{
+ "hk_mp5sd3": {
+  "hash": "7d9ac160",
+  "objects": 62
+ },
+ "fn_parafal": {
+  "hash": "12b6b976",
+  "objects": 58
+ },
+ "taurus_t4_civil": {
+  "hash": "1793e721",
+  "objects": 200
+ },
+ "taurus_th380": {
+  "hash": "6c803653",
+  "objects": 39
+ },
+ "mossberg_500_cruiser": {
+  "hash": "dd79cd15",
+  "objects": 36
+ },
+ "hk_mp5k": {
+  "hash": "b45b4f63",
+  "objects": 45
+ },
+ "hk_ump9": {
+  "hash": "9072e979",
+  "objects": 92
+ },
+ "mini_uzi": {
+  "hash": "7dc84d1c",
+  "objects": 40
+ },
+ "hk_mp7a1": {
+  "hash": "2cfd30c7",
+  "objects": 108
+ },
+ "hk_g36": {
+  "hash": "5396a502",
+  "objects": 70
+ },
+ "hk_g36k": {
+  "hash": "8001bbd3",
+  "objects": 64
+ },
+ "hk_g36c": {
+  "hash": "b932212a",
+  "objects": 87
+ },
+ "fn_m249": {
+  "hash": "a09460d4",
+  "objects": 78
+ },
+ "fn_minimi_para": {
+  "hash": "c3d9c3d3",
+  "objects": 79
+ },
+ "fn_mag": {
+  "hash": "e1a447ff",
+  "objects": 82
+ },
+ "rpk": {
+  "hash": "e7e0e49",
+  "objects": 64
+ },
+ "sig_mpx": {
+  "hash": "97fc0cfb",
+  "objects": 134
+ },
+ "mg3": {
+  "hash": "197fe39c",
+  "objects": 78
+ },
+ "pp19_bizon": {
+  "hash": "d514465c",
+  "objects": 61
+ },
+ "vz61": {
+  "hash": "982437a0",
+  "objects": 40
+ },
+ "m134": {
+  "hash": "a154c64b",
+  "objects": 55
+ }
+}

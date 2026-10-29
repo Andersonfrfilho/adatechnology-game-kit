@@ -1,0 +1,25 @@
+# Demo site local: docker compose -p adatechnology-game-kit watch
+# Each saved edit under site/, examples/ or packages/ rebuilds the image and restarts the container.
+services:
+  site:
+    build:
+      context: .
+      dockerfile: site/Dockerfile
+    ports:
+      - "4801:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./site
+          ignore:
+            - dist/
+        - action: rebuild
+          path: ./examples
+          ignore:
+            - "**/dist/"
+            - "**/node_modules/"
+        - action: rebuild
+          path: ./packages
+          ignore:
+            - "**/dist/"
+            - "**/node_modules/"

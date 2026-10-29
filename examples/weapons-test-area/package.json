@@ -1,0 +1,16 @@
+{
+  "name": "@adatechnology/weapons-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Weapons area for the shared test room: every weapon of the arsenal on counters (the real models of the Galeria 3D do Arsenal, the generic ones with the model of their first brand), targets, and the weapon in the hands with fire, burst, cycle, jam and clear, safety, the seven reloads and the sound of each shot. Grenades, rockets and charges explode by the rule of the arsenal and a corner holds fuel barrels, a propane cylinder and a car tank for the chain reaction. Controls: aim at a weapon and press H to equip, click fires or throws, R reloads, Q changes the fire mode, X clears a jam, B turns the safety on, Y detonates charges set down, E grabs, G throws what is held. Accessories: the bench fits and removes what is compatible with the weapon in hand at each mount (suppressors, optics, grips, bipods, lights, lasers, magazines, sling, backpack, the launcher under the barrel), L turns the light on and off, K the laser, V folds or opens the stock, U switches to the launcher under the barrel and the right mouse button aims through the optic. The bench sets the weapon condition, the ammunition and the sound distance, and turns the muzzle flash, casings, magazines, accessory models and beams on or off.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*"
+  }
+}

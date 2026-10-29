@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-camera",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Shoulder, third-person and first-person camera rig plus viewmodel for three.js games. Knows nothing about any game.",
   "keywords": [
@@ -47,6 +47,7 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

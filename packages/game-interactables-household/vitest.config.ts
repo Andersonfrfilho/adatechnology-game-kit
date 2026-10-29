@@ -6,5 +6,5 @@ export default defineConfig({
   resolve: {
     alias: { '@adatechnology/game-interactables': fileURLToPath(new URL('../game-interactables/src/index.ts', import.meta.url)) },
   },
-  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
+  test: { environment: 'node', include: ['tests/**/*.test.ts'], setupFiles: ['../../test-support/yield-between-tests.ts'] },
 })

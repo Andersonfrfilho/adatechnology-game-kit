@@ -1,0 +1,4520 @@
+[
+  {
+    "area": "animals-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/animals-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/animals-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1203,
+    "fps": 12,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 9866,
+        "valid": true,
+        "count": 29,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.034,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Vaca"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 11,
+      "results": [
+        {
+          "buttonText": "Vivo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Infectado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Morto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Parado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Andando",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Correndo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Morder todos os bichos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Curar todos os bichos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fazer os bichos com chamado chamarem (galinha, quero-quero, vaca, cachorro)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Pôr 40 bichos como pele de nós",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tirar as peles",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        4,
+        12.856250000000001
+      ],
+      "posAfterW": [
+        0,
+        4,
+        12.856250000000001
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "animals-test-area-pt-br.png",
+    "screenshotSize": 222703,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "animals-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/animals-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/animals-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1339,
+    "fps": 12,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 9880,
+        "valid": true,
+        "count": 29,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.055,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Cow:"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 11,
+      "results": [
+        {
+          "buttonText": "Alive",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Infected",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Dead",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Idle",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Walk",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Run",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Bite every animal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Heal every animal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Make the animals with a call call (hen, lapwing, cow, dog)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Add 40 animals as node skins",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Remove the skins",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        4,
+        12.856250000000001
+      ],
+      "posAfterW": [
+        0,
+        4,
+        12.856250000000001
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "animals-test-area-en.png",
+    "screenshotSize": 221036,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "audio-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/audio-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/audio-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1026,
+    "fps": 37,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1475,
+        "valid": true,
+        "count": 5,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.038,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Sond"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 6,
+      "results": [
+        {
+          "buttonText": "Ajustes da bancada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "A sonda",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Cena de Arte",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tocar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tempestade de vozes",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        3
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        2.3200000000000003
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "audio-test-area-pt-br.png",
+    "screenshotSize": 165425,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "audio-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/audio-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/audio-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1052,
+    "fps": 36,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1453,
+        "valid": true,
+        "count": 5,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.047,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Soun"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 6,
+      "results": [
+        {
+          "buttonText": "Bench settings",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "The probe",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Game",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Art scene",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Play",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Voice storm",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        3
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        2.319659999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "audio-test-area-en.png",
+    "screenshotSize": 160397,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "characters-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/characters-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/characters-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1791,
+    "fps": 6,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 21236,
+        "valid": true,
+        "count": 58,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.029,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Lent"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 20,
+      "results": [
+        {
+          "buttonText": "Criança",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jovem",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Adulto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Idoso",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Física",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Do jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vitalidade ou cabeça",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Só a cabeça",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Segmentos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Regiões",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Andar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Parado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5.5,
+        13
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        12.49
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "characters-test-area-pt-br.png",
+    "screenshotSize": 387696,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "characters-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/characters-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/characters-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1714,
+    "fps": 6,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 21059,
+        "valid": true,
+        "count": 58,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.048,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Walk"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 20,
+      "results": [
+        {
+          "buttonText": "Child",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Young",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Adult",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Elder",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Physical",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Team game",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vitality or head",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Head only",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Segments",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Regions",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Walk",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Stand",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5.5,
+        13
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        12.49
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "characters-test-area-en.png",
+    "screenshotSize": 387832,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "crowd-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/crowd-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1361,
+    "fps": 7,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 971,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.05,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Módu"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "Mais 100",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Barulho aqui (80 m)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tiro na cabeça do mais perto",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Matar todos",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civis vêm com você",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civis fogem",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Trazer os bichos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Trazer 50 da região",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Empurrar (soltar-se)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Recomeçar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        6
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        5.886440000000001
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "crowd-test-area-pt-br.png",
+    "screenshotSize": 167185,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "crowd-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/crowd-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1381,
+    "fps": 7,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 942,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.053,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "Add 100",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Noise here (80 m)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Shoot the nearest in the head",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Kill all",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civilians join you",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civilians run away",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Bring the animals",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Bring 50 from the region",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Push (break a grab)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Start again",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        6
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        6
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/crowd-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "crowd-test-area-en.png",
+    "screenshotSize": 161505,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "floorplan-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/floorplan-test-area/?lang=pt-BR&arena=40",
+    "localUrl": "http://127.0.0.1:4888/floorplan-test-area/?lang=pt-BR&arena=40",
+    "status": "completed",
+    "loadTimeMs": 3541,
+    "fps": 13,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 3210,
+        "valid": true,
+        "count": 9,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.046,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Casa"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 25,
+      "results": [
+        {
+          "buttonText": "Residencial",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Comercial e público",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Rural e acampamento",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Pós-apocalíptico",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Normal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fortificada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Abandonada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Auto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "0 completo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "1 sem peças pequenas",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        4.5,
+        15.5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        15.16
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "floorplan-test-area-pt-br.png",
+    "screenshotSize": 374303,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "floorplan-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/floorplan-test-area/?lang=en&arena=40",
+    "localUrl": "http://127.0.0.1:4888/floorplan-test-area/?lang=en&arena=40",
+    "status": "completed",
+    "loadTimeMs": 3523,
+    "fps": 13,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 3181,
+        "valid": true,
+        "count": 9,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.027,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Sing"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 25,
+      "results": [
+        {
+          "buttonText": "Residential",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Commercial and public",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Rural and camp",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Post-apocalyptic",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Normal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fortified",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Abandoned",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Game",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "High",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Auto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "0 complete",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "1 no small pieces",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        4.5,
+        15.5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        15.33
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "floorplan-test-area-en.png",
+    "screenshotSize": 367235,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 2250,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 2194,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/interactables-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 10542,
+    "fps": 14,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 347458,
+        "valid": true,
+        "count": 952,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0.064,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ pisto"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "Nova",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Usada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Gasta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Enferrujada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "De fábrica",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Recarregada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Ligar/desligar a lanterna (L)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Ligar/desligar o laser (K)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Dobrar ou abrir a coronha (V)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Lança-granada sob o cano (U)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        8.4,
+        6.299999999999999,
+        11.200000000000001
+      ],
+      "posAfterW": [
+        8.196,
+        1.7,
+        10.928000000000003
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "interactables-test-area-pt-br.png",
+    "screenshotSize": 280468,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/interactables-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 10428,
+    "fps": 14,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 346208,
+        "valid": true,
+        "count": 954,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0.067,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ 9 mm "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "New",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Used",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Worn",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Rusty",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Factory",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Reloaded",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Light on/off (L)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Laser on/off (K)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fold or open the stock (V)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Launcher under the barrel (U)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        8.4,
+        6.299999999999999,
+        11.200000000000001
+      ],
+      "posAfterW": [
+        8.196,
+        1.7,
+        10.928000000000003
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/interactables-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "interactables-test-area-en.png",
+    "screenshotSize": 280452,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "items-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/items-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/items-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1405,
+    "fps": 20,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 273869,
+        "valid": true,
+        "count": 741,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.049,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Feij"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 8,
+      "results": [
+        {
+          "buttonText": "Novo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Usado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Estragado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Normal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fortificado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Abandonado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Sortear achados",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fabricar",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5.5,
+        16
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        16
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "items-test-area-pt-br.png",
+    "screenshotSize": 265862,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "items-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/items-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/items-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1372,
+    "fps": 20,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 272623,
+        "valid": true,
+        "count": 741,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.048,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Cann"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 8,
+      "results": [
+        {
+          "buttonText": "New",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Used",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Spoiled",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Normal",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fortified",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Abandoned",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Roll finds",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Craft",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5.5,
+        16
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        16
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "items-test-area-en.png",
+    "screenshotSize": 269125,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "player-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/player-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/player-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1058,
+    "fps": 37,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 907,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.07,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Módu"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 9,
+      "results": [
+        {
+          "buttonText": "Levar um golpe (10)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Mordida",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Ser agarrado",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Empurrar (E)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Faca (F)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Curativo (B)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Derrubado 1,5 s",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Agachar (C)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Recomeçar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.263559999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "player-test-area-pt-br.png",
+    "screenshotSize": 148387,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "player-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/player-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/player-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1102,
+    "fps": 37,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 882,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.042,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 9,
+      "results": [
+        {
+          "buttonText": "Take a hit (10)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Bite",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Get grabbed",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Push (E)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Knife (F)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Bandage (B)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Knocked down 1.5 s",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Crouch (C)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Start again",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.3199999999999985
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "player-test-area-en.png",
+    "screenshotSize": 141269,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "stories-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/stories-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/stories-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1043,
+    "fps": 38,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 907,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.037,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mód"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 2,
+      "results": [
+        {
+          "buttonText": "Próximo dia",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Recomeçar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.376439999999996
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "stories-test-area-pt-br.png",
+    "screenshotSize": 148904,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "stories-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/stories-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/stories-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1049,
+    "fps": 38,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 875,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.061,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 2,
+      "results": [
+        {
+          "buttonText": "Next day",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Start again",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.376440000000001
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "stories-test-area-en.png",
+    "screenshotSize": 143205,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 855,
+    "fps": 38,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 2,
+        "valid": true,
+        "count": 0,
+        "sample": "[]"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.32
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-pt-br.png",
+    "screenshotSize": 138422,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 860,
+    "fps": 36,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 2,
+        "valid": true,
+        "count": 0,
+        "sample": "[]"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.263559999999998
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-en.png",
+    "screenshotSize": 136520,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "urban-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/urban-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/urban-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 2542,
+    "fps": 7,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 12968,
+        "valid": true,
+        "count": 37,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.007,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Post"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "Os do padrão",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Todos acesos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Metade",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Nenhum",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Nenhum (padrão)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Plantas das espécies",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Veículos da frota",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Os dois",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Desenhar o bairro",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tirar o bairro",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        20,
+        190,
+        -20
+      ],
+      "posAfterW": [
+        20,
+        1.7,
+        -20
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "urban-test-area-pt-br.png",
+    "screenshotSize": 243972,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "urban-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/urban-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/urban-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 2415,
+    "fps": 7,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 13077,
+        "valid": true,
+        "count": 37,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0.016,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Doubl"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "The pattern's own",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "All on",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Half",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "None",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "None (default)",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Plants of the species pack",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vehicles of the fleet",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Both",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Draw the neighbourhood",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Take the neighbourhood away",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        20,
+        190,
+        -20
+      ],
+      "posAfterW": [
+        20,
+        1.7,
+        -20
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "urban-test-area-en.png",
+    "screenshotSize": 241113,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vegetation-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/vegetation-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/vegetation-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1290,
+    "fps": 18,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 18557,
+        "valid": true,
+        "count": 53,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.05,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Mangu"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 16,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 0",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 2",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Saudável",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Seca",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Morta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Malcuidada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Primavera",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Verão",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Outono",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        6,
+        8
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        7.32
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vegetation-test-area-pt-br.png",
+    "screenshotSize": 388192,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vegetation-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/vegetation-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/vegetation-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1264,
+    "fps": 18,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 18608,
+        "valid": true,
+        "count": 53,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.054,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ Mang"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 16,
+      "results": [
+        {
+          "buttonText": "High",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Game",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 0",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "LOD 2",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Healthy",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Dry",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Dead",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Overgrown",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Spring",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Summer",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Autumn",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        6,
+        8
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        7.32
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vegetation-test-area-en.png",
+    "screenshotSize": 380031,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vehicles-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/vehicles-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/vehicles-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 10291,
+    "fps": 2,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 14181,
+        "valid": true,
+        "count": 40,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.038,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mód"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 11,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Leve",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Auto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civil",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Militar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Arcade",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Semissimulação",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Repintar com a semente",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Percorrer a pista",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Tirar o carro da pista",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Buzinar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5,
+        15.303
+      ],
+      "posAfterW": [
+        0,
+        5,
+        15.303
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vehicles-test-area-pt-br.png",
+    "screenshotSize": 343851,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vehicles-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/vehicles-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/vehicles-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 10302,
+    "fps": 2,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 14131,
+        "valid": true,
+        "count": 40,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.037,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 11,
+      "results": [
+        {
+          "buttonText": "High",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Light",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Auto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Civil",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Military",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Arcade",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Semi-simulation",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Repaint with the seed",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Drive the lane",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Remove the lane car",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Honk the horn",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        5,
+        15.303
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        15.303
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vehicles-test-area-en.png",
+    "screenshotSize": 334607,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vfx-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/vfx-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/vfx-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1524,
+    "fps": 20,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 760,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.073,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mód"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 8,
+      "results": [
+        {
+          "buttonText": "Repetir",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Automático",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Perto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Meio",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Longe",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Média",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Baixa",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        8.4,
+        6.3,
+        11.2
+      ],
+      "posAfterW": [
+        8.059932,
+        1.7,
+        10.746576000000003
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vfx-test-area-pt-br.png",
+    "screenshotSize": 184698,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "vfx-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/vfx-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/vfx-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1480,
+    "fps": 18,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 740,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.056,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 8,
+      "results": [
+        {
+          "buttonText": "Replay",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Auto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Near",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Middle",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Far",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "High",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Medium",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Low",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        8.4,
+        6.3,
+        11.2
+      ],
+      "posAfterW": [
+        8.094,
+        1.7,
+        10.792000000000002
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "vfx-test-area-en.png",
+    "screenshotSize": 182184,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "weapons-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/weapons-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/weapons-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 2963,
+    "fps": 3,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 118761,
+        "valid": true,
+        "count": 325,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.065,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ pist"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "Nova",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Usada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Gasta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Enferrujada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "De fábrica",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Recarregada",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Ligar/desligar a lanterna (L)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Ligar/desligar o laser (K)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Dobrar ou abrir a coronha (V)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Lança-granada sob o cano (U)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        -3.4,
+        1.9,
+        9.2
+      ],
+      "posAfterW": [
+        -3.4,
+        1.9,
+        9.2
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "weapons-test-area-pt-br.png",
+    "screenshotSize": 268817,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "weapons-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/weapons-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/weapons-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 2103,
+    "fps": 3,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 119025,
+        "valid": true,
+        "count": 325,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.066,\n    \"channel\": \"check\",\n    \"type\": \"pass\",\n    \"text\": \"✓ 9 mm"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 10,
+      "results": [
+        {
+          "buttonText": "New",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Used",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Worn",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Rusty",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Factory",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Reloaded",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Light on/off (L)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Laser on/off (K)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Fold or open the stock (V)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Launcher under the barrel (U)",
+          "logsChanged": true,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        -3.4,
+        1.9,
+        9.2
+      ],
+      "posAfterW": [
+        -3.4,
+        1.9,
+        9.2
+      ],
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "weapons-test-area-en.png",
+    "screenshotSize": 272416,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "weather-test-area",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=pt-BR",
+    "localUrl": "http://127.0.0.1:4888/weather-test-area/?lang=pt-BR",
+    "status": "completed",
+    "loadTimeMs": 1090,
+    "fps": 19,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 799,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.056,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mód"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 2,
+      "results": [
+        {
+          "buttonText": "De uma vez",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "10 segundos",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.32
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=pt-BR",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "weather-test-area-pt-br.png",
+    "screenshotSize": 150300,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "weather-test-area",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=en",
+    "localUrl": "http://127.0.0.1:4888/weather-test-area/?lang=en",
+    "status": "completed",
+    "loadTimeMs": 1222,
+    "fps": 20,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 777,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": -0.045,\n    \"channel\": \"action\",\n    \"type\": \"module\",\n    \"text\": \"Mod"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 2,
+      "results": [
+        {
+          "buttonText": "At once",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "10 seconds",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.32
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/weather-test-area/?lang=en",
+          "lineNumber": 3696,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "screenshot": "weather-test-area-en.png",
+    "screenshotSize": 145073,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      },
+      {
+        "step": "Renderização do Canvas",
+        "expected": "Objetos 3D visíveis no centro da tela",
+        "seen": "Pixels centrais completamente pretos",
+        "severity": "bloqueia"
+      }
+    ]
+  }
+]

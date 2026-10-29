@@ -1,0 +1,11 @@
+{
+  "sources": {
+    "page": "site/pages/zumbis-personagens/personagens.html, \"Memória e opinião\" and \"Modelo de dados\"",
+    "memories": "\"Cada NPC guarda até 30 lembranças com peso e data\"; memorias: [{ evento, alvoId, peso, dia }] // máx 30",
+    "opinion": "\"A opinião sobre cada jogador vai de −100 a +100 e decai devagar para o neutro. Em +60 o NPC aceita entrar no grupo; abaixo de −60 pode roubar, delatar a base a outro grupo ou atacar à noite.\"",
+    "decayPerDay": "not in the document (\"decai devagar\"): 1 point a day is the kit's reversible default, listed as a question",
+    "memoryDrop": "not in the document: past 30, the lightest memory goes (the oldest first on a tie), listed as a question"
+  },
+  "memories": { "max": 30 },
+  "opinion": { "min": -100, "max": 100, "joins": 60, "hostile": -60, "decayPerDay": 1 }
+}

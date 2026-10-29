@@ -1,4 +1,5 @@
-import { entryPoints, inRect, inner, usableParts } from './geometry'
+import { MARGIN } from './constants'
+import { entryPoints, eq, inRect, inner, sharedEdge, usableParts } from './geometry'
 import { openingsOfFloor } from './queries'
 import type { Json, Plan, Rect, Room } from './types'
 
@@ -13,9 +14,30 @@ export interface Grid {
   center: [number, number]
 }
 
-/** Coarse walkability grid of a room. `ignored` lists opening ids to leave out of the entries. */
-export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null): Grid {
-  const gs = room.outdoor ? 0.3 : 0.2
+/** Wall bodies of a storey (the wall line plus half a wall each side); a wall end that stops at a door opening has no extension there. */
+function wallBodies(plan: Plan, floor: number): Rect[] {
+  const cache = (plan.wallBodies = plan.wallBodies || {})
+  if (cache[floor]) return cache[floor]
+  const doors = plan.doors.filter((p) => p.floor === floor)
+  return (cache[floor] = plan.walls
+    .filter((p) => p.floor === floor && (p.type === 'wall' || p.type === 'railing'))
+    .map((p) => {
+      const a0 = p.axis === 'u' ? p.u0 : p.v0
+      const a1 = p.axis === 'u' ? p.u1 : p.v1
+      const pos = p.axis === 'u' ? p.v0 : p.u0
+      const atDoor = (x: number) => doors.some((q) => q.axis === p.axis && eq(q.pos, pos) && (eq(q.at - q.width / 2, x) || eq(q.at + q.width / 2, x)))
+      const e0 = atDoor(a0) ? 0 : MARGIN
+      const e1 = atDoor(a1) ? 0 : MARGIN
+      return (p.axis === 'u' ? [a0 - e0, pos - MARGIN, a1 + e1, pos + MARGIN] : [pos - MARGIN, a0 - e0, pos + MARGIN, a1 + e1]) as Rect
+    }))
+}
+
+/**
+ * Walkability grid of a room (10 cm cells inside, 30 cm outside). Indoors a cell is walkable only when a player body of `radius`
+ * fits between it and the walls. `ignored` lists opening ids to leave out of the entries.
+ */
+export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null, radius: number = plan.playerRadius): Grid {
+  const gs = room.outdoor ? 0.3 : 0.1
   let u0 = 1e9
   let v0 = 1e9
   let u1 = -1e9
@@ -29,12 +51,20 @@ export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null)
   const nx = Math.ceil((u1 - u0) / gs)
   const nz = Math.ceil((v1 - v0) / gs)
   const insideCells = new Uint8Array(nx * nz)
-  const insets = usableParts(room, 0.08)
+  const insets = room.outdoor ? usableParts(room, 0.08) : room.parts
+  // only the walls within reach of the room's box can be closer than the player's body to one of its cells (a tower floor has hundreds of them)
+  const bodies = room.outdoor ? null : wallBodies(plan, room.floor).filter((r) => r[0] - radius <= u1 && r[2] + radius >= u0 && r[1] - radius <= v1 && r[3] + radius >= v0)
+  const tooClose = (u: number, v: number) =>
+    (bodies as Rect[]).some((r) => {
+      const dx = Math.max(r[0] - u, 0, u - r[2])
+      const dz = Math.max(r[1] - v, 0, v - r[3])
+      return dx * dx + dz * dz < radius * radius - 1e-9
+    })
   for (let j = 0; j < nz; j++)
     for (let i = 0; i < nx; i++) {
       const u = u0 + (i + 0.5) * gs
       const v = v0 + (j + 0.5) * gs
-      if (insets.some((r) => u >= r[0] && u <= r[2] && v >= r[1] && v <= r[3])) insideCells[j * nx + i] = 1
+      if (insets.some((r) => u >= r[0] && u <= r[2] && v >= r[1] && v <= r[3]) && (room.outdoor || !tooClose(u, v))) insideCells[j * nx + i] = 1
     }
   const entries: [number, number][] = []
   for (const ab of openingsOfFloor(plan, room.floor) as Json[])
@@ -45,6 +75,22 @@ export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null)
         const j = Math.floor((pt[1] - v0) / gs)
         if (i >= 0 && j >= 0 && i < nx && j < nz && insideCells[j * nx + i]) entries.push([i, j])
       }
+  if (!room.outdoor)
+    for (const pair of plan.openPairs[room.floor] || []) {
+      const otherId = pair[0] === room.id ? pair[1] : pair[1] === room.id ? pair[0] : null
+      const other = otherId && plan.rooms.find((c) => c.id === otherId && c.floor === room.floor)
+      if (!other) continue
+      const edge = sharedEdge(room, other, null)
+      if (!edge || edge.a1 - edge.a0 > 2.0) continue
+      const mid = (edge.a0 + edge.a1) / 2
+      for (const offset of [-0.4, 0.4]) {
+        const pt = edge.axis === 'u' ? [mid, edge.pos + offset] : [edge.pos + offset, mid]
+        if (!inRect(room, pt[0], pt[1])) continue
+        const i = Math.floor((pt[0] - u0) / gs)
+        const j = Math.floor((pt[1] - v0) / gs)
+        if (i >= 0 && j >= 0 && i < nx && j < nz && insideCells[j * nx + i]) entries.push([i, j])
+      }
+    }
   const R = inner(room.parts[0])
   return { gs, u0, v0, nx, nz, inside: insideCells, entries, center: [(R[0] + R[2]) / 2, (R[1] + R[3]) / 2] }
 }

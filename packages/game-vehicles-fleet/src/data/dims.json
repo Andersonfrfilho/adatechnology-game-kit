@@ -1,0 +1,347 @@
+{
+  "compact_hatch": {
+    "length": 4.212,
+    "width": 1.919,
+    "height": 1.472
+  },
+  "taxi": {
+    "length": 4.555,
+    "width": 1.919,
+    "height": 1.683
+  },
+  "entry_hatch": {
+    "length": 3.688,
+    "width": 1.834,
+    "height": 1.503
+  },
+  "electric_hatch": {
+    "length": 4.319,
+    "width": 1.959,
+    "height": 1.564
+  },
+  "midsize_sedan": {
+    "length": 4.681,
+    "width": 1.934,
+    "height": 1.467
+  },
+  "police_sedan": {
+    "length": 4.859,
+    "width": 1.953,
+    "height": 1.625
+  },
+  "highway_police_sedan": {
+    "length": 4.859,
+    "width": 1.953,
+    "height": 1.625
+  },
+  "bicycle": {
+    "length": 1.809,
+    "width": 0.611,
+    "height": 1.07
+  },
+  "scooter": {
+    "length": 1.953,
+    "width": 0.75,
+    "height": 1.255
+  },
+  "commuter_motorcycle": {
+    "length": 2.051,
+    "width": 0.77,
+    "height": 1.315
+  },
+  "trail_bike": {
+    "length": 2.092,
+    "width": 0.845,
+    "height": 1.415
+  },
+  "adventure_bike": {
+    "length": 2.28,
+    "width": 1.076,
+    "height": 1.555
+  },
+  "highway_police_bike": {
+    "length": 2.28,
+    "width": 1.076,
+    "height": 1.555
+  },
+  "quad_bike": {
+    "length": 2.134,
+    "width": 1.26,
+    "height": 1.251
+  },
+  "beetle": {
+    "length": 4.088,
+    "width": 1.6,
+    "height": 1.499
+  },
+  "compact_suv": {
+    "length": 4.212,
+    "width": 1.907,
+    "height": 1.573
+  },
+  "hybrid_suv": {
+    "length": 4.517,
+    "width": 1.983,
+    "height": 1.629
+  },
+  "midsize_suv": {
+    "length": 4.444,
+    "width": 1.976,
+    "height": 1.639
+  },
+  "large_suv": {
+    "length": 4.874,
+    "width": 1.996,
+    "height": 1.841
+  },
+  "compact_pickup": {
+    "length": 4.565,
+    "width": 1.892,
+    "height": 1.819
+  },
+  "crossover_pickup": {
+    "length": 5.035,
+    "width": 2.013,
+    "height": 1.954
+  },
+  "midsize_pickup": {
+    "length": 5.339,
+    "width": 2.022,
+    "height": 2.029
+  },
+  "monster_truck": {
+    "length": 5.427,
+    "width": 3.7,
+    "height": 3.389
+  },
+  "cargo_van": {
+    "length": 5.936,
+    "width": 2.309,
+    "height": 2.627
+  },
+  "ambulance": {
+    "length": 5.409,
+    "width": 2.328,
+    "height": 2.66
+  },
+  "box_truck": {
+    "length": 7.695,
+    "width": 3,
+    "height": 3.38
+  },
+  "tanker_truck": {
+    "length": 9.858,
+    "width": 3.3,
+    "height": 3.256
+  },
+  "school_bus": {
+    "length": 9.541,
+    "width": 2.96,
+    "height": 3.21
+  },
+  "city_bus": {
+    "length": 12.741,
+    "width": 2.92,
+    "height": 3.4
+  },
+  "armored_truck": {
+    "length": 7.716,
+    "width": 3.12,
+    "height": 3.6
+  },
+  "tractor": {
+    "length": 3.89,
+    "width": 2.02,
+    "height": 2.751
+  },
+  "light_4x4": {
+    "length": 3.89,
+    "width": 2.122,
+    "height": 3.134
+  },
+  "troop_truck": {
+    "length": 7.644,
+    "width": 3.16,
+    "height": 5.307
+  },
+  "apc_6x6": {
+    "length": 7.668,
+    "width": 2.76,
+    "height": 4.567
+  },
+  "armored_car_6x6": {
+    "length": 6.481,
+    "width": 2.614,
+    "height": 4.59
+  },
+  "battle_tank": {
+    "length": 9.666,
+    "width": 3.41,
+    "height": 4.782
+  },
+  "transport_helicopter": {
+    "length": 17.252,
+    "width": 11.954,
+    "height": 5.199
+  },
+  "river_skiff": {
+    "length": 5.405,
+    "width": 1.601,
+    "height": 1.43
+  },
+  "speedboat": {
+    "length": 8.023,
+    "width": 2.65,
+    "height": 2.122
+  },
+  "fishing_boat": {
+    "length": 11.47,
+    "width": 4.372,
+    "height": 5.911
+  },
+  "single_engine_plane": {
+    "length": 8.357,
+    "width": 11.168,
+    "height": 2.7
+  },
+  "crop_duster": {
+    "length": 7.734,
+    "width": 11.848,
+    "height": 2.581
+  },
+  "piston_helicopter": {
+    "length": 11.243,
+    "width": 3.609,
+    "height": 3.277
+  },
+  "rescue_helicopter": {
+    "length": 12.585,
+    "width": 9.265,
+    "height": 3.355
+  },
+  "step_through_scooter": {
+    "length": 1.925,
+    "width": 0.72,
+    "height": 1.225
+  },
+  "naked_bike": {
+    "length": 1.992,
+    "width": 0.77,
+    "height": 1.3
+  },
+  "sport_bike": {
+    "length": 2.023,
+    "width": 0.7,
+    "height": 1.146
+  },
+  "cruiser": {
+    "length": 2.354,
+    "width": 0.98,
+    "height": 1.105
+  },
+  "delivery_bike": {
+    "length": 2.046,
+    "width": 0.75,
+    "height": 1.303
+  },
+  "boxy_hatch": {
+    "length": 3.719,
+    "width": 1.876,
+    "height": 1.893
+  },
+  "family_hatch": {
+    "length": 3.928,
+    "width": 1.849,
+    "height": 1.839
+  },
+  "rideshare_hatch": {
+    "length": 4.034,
+    "width": 1.915,
+    "height": 1.464
+  },
+  "turbo_hatch": {
+    "length": 4.102,
+    "width": 1.916,
+    "height": 1.48
+  },
+  "fastback_sedan": {
+    "length": 4.669,
+    "width": 1.959,
+    "height": 1.462
+  },
+  "classic_six_sedan": {
+    "length": 4.896,
+    "width": 2.018,
+    "height": 1.409
+  },
+  "v8_coupe": {
+    "length": 4.853,
+    "width": 1.941,
+    "height": 1.393
+  },
+  "jet_ski": {
+    "length": 3.102,
+    "width": 1.167,
+    "height": 1.225
+  },
+  "sailboat": {
+    "length": 8.065,
+    "width": 2.91,
+    "height": 11.906
+  },
+  "rescue_dinghy": {
+    "length": 4.792,
+    "width": 1.907,
+    "height": 1.502
+  },
+  "patrol_boat": {
+    "length": 12.872,
+    "width": 2.833,
+    "height": 6.162
+  },
+  "tandem_trainer": {
+    "length": 6.968,
+    "width": 10.884,
+    "height": 2.065
+  },
+  "regional_turboprop": {
+    "length": 15.216,
+    "width": 15.508,
+    "height": 4.945
+  },
+  "amphibian_turboprop": {
+    "length": 11.77,
+    "width": 16.068,
+    "height": 5.185
+  },
+  "light_jet": {
+    "length": 12.82,
+    "width": 12.324,
+    "height": 4.339
+  },
+  "light_attack_turboprop": {
+    "length": 11.46,
+    "width": 11.284,
+    "height": 3.995
+  },
+  "trainer_helicopter": {
+    "length": 8.42,
+    "width": 2.381,
+    "height": 2.708
+  },
+  "turbine_helicopter": {
+    "length": 11.947,
+    "width": 2.727,
+    "height": 2.865
+  },
+  "police_helicopter": {
+    "length": 13.584,
+    "width": 10.322,
+    "height": 3.951
+  },
+  "attack_helicopter": {
+    "length": 20.66,
+    "width": 16.244,
+    "height": 6.5
+  }
+}

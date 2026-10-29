@@ -22,6 +22,11 @@
   .row { display:flex; gap:8px; } .row > * { flex:1; }
   .checks label { display:flex; align-items:center; gap:6px; color:var(--ink); margin:4px 0; }
   .checks input { width:auto; }
+  .legend { margin-top:6px; font-size:12px; }
+  .legend .sw { display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle; border:2px solid var(--c); box-sizing:border-box; }
+  .legend .sw.filled { background:var(--c); }
+  .legend .sw.dashed { height:0; border-width:0 0 2px; border-bottom-style:dashed; }
+  .legend .sw.line { height:0; border-width:0 0 2px; }
   #stage { position:relative; background:var(--canvas); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   canvas { display:block; width:100%; height:min(78vh, 760px); }
   #tip { position:absolute; left:8px; bottom:8px; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:12px; max-width:90%; }
@@ -45,9 +50,12 @@
   var engine = GameFloorplan.engine
   GameFloorplanResidential.register(engine, { region: 'br' })
   GameFloorplanCommercial.register(engine, { region: 'br' })
+  GameFloorplanRural.register(engine, { region: 'br' })
   GameFloorplanPostApocalyptic.register(engine)
+  GameFloorplanStructure.register(engine)
 
   var state = { locale: 'en', template: null, seed: 1, st: '', style: '', zone: '', floor: 0, opts: {}, auto: true, w: 0, d: 0, show: { labels: true, items: true, state: true, lot: true, grid: false } }
+  engine.viewerLayers.forEach(function (l) { state.show['layer:' + l.id] = !!l.defaultOn })
   var plan = null, hit = []
   try { var saved = localStorage.getItem('floorplan-viewer-locale'); if (saved) state.locale = saved } catch (e) {}
   if (!/^(en|pt-BR)$/.test(state.locale)) state.locale = (navigator.language || 'en').toLowerCase().indexOf('pt') === 0 ? 'pt-BR' : 'en'
@@ -89,7 +97,7 @@
       h += '<label>' + T('depth') + ': <b id="dv">' + state.d + '</b></label><input type="range" id="f-d" min="' + lim.d[0] + '" max="' + lim.d[1] + '" step="0.5" value="' + state.d + '">'
     }
     h += '<h2>' + T('floor') + '</h2><div id="floors"></div>'
-    h += '<h2>' + T('legend') + '</h2><div class="checks">' + [['labels', 'show_labels'], ['items', 'show_items'], ['state', 'show_state'], ['lot', 'show_lot'], ['grid', 'show_grid']].map(function (c) { return '<label><input type="checkbox" data-show="' + c[0] + '"' + (state.show[c[0]] ? ' checked' : '') + '>' + T(c[1]) + '</label>' }).join('') + '</div>'
+    h += '<h2>' + T('legend') + '</h2><div class="checks">' + [['labels', 'show_labels'], ['items', 'show_items'], ['state', 'show_state'], ['lot', 'show_lot'], ['grid', 'show_grid']].map(function (c) { return '<label><input type="checkbox" data-show="' + c[0] + '"' + (state.show[c[0]] ? ' checked' : '') + '>' + T(c[1]) + '</label>' }).join('') + engine.viewerLayers.map(function (l) { return '<label><input type="checkbox" data-show="layer:' + l.id + '"' + (state.show['layer:' + l.id] ? ' checked' : '') + '>' + esc(layerLabel(l)) + '</label>' }).join('') + '</div>' + layerLegend()
     $('controls').innerHTML = h
     bind()
   }
@@ -113,7 +121,7 @@
     })
     $('f-auto').onchange = function (e) { state.auto = e.target.checked; var t = cur(); if (!state.auto) { state.w = t.defaults.w; state.d = t.defaults.d } buildControls(); run() }
     if ($('f-w')) { $('f-w').oninput = function (e) { state.w = +e.target.value; $('wv').textContent = state.w; run() }; $('f-d').oninput = function (e) { state.d = +e.target.value; $('dv').textContent = state.d; run() } }
-    Array.prototype.forEach.call(document.querySelectorAll('[data-show]'), function (el) { el.onchange = function () { state.show[el.getAttribute('data-show')] = el.checked; draw() } })
+    Array.prototype.forEach.call(document.querySelectorAll('[data-show]'), function (el) { el.onchange = function () { state.show[el.getAttribute('data-show')] = el.checked; if (el.getAttribute('data-show').indexOf('layer:') === 0) buildControls(); draw() } })
   }
 
   function run() {
@@ -154,6 +162,12 @@
     return '#8f7a63'
   }
 
+  function layerLabel(l) { var t = engine.translate('ui', l.label, state.locale); return t === l.label ? l.label : t }
+  function layerLegend() {
+    return engine.viewerLayers.filter(function (l) { return l.legend && state.show['layer:' + l.id] && plan }).map(function (l) {
+      return '<div class="legend">' + l.legend(plan).map(function (e) { return '<div><i class="sw ' + e.shape + '" style="--c:' + esc(e.color) + '"></i>' + esc(engine.translate('ui', e.label, state.locale)) + '</div>' }).join('') + '</div>'
+    }).join('')
+  }
   function draw() {
     var cv = $('cv'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight
     cv.width = W * dpr; cv.height = H * dpr
@@ -196,6 +210,11 @@
       if (it.outdoor ? !(all || f === 0) : it.floor !== f) return
       rect(it.aabb, itemColor(it), '#d33', 2)
       hit.push({ r: it.aabb, text: it.id + ' · ' + it.type })
+    })
+    // layers registered by packs (structure...)
+    engine.viewerLayers.forEach(function (l) {
+      if (!state.show['layer:' + l.id]) return
+      l.draw({ g: g, plan: plan, floor: f, all: all, scale: s, X: X, Z: Z, rect: rect, hit: function (r, text) { hit.push({ r: r, text: text }) } })
     })
     // walls
     g.strokeStyle = '#555b66'

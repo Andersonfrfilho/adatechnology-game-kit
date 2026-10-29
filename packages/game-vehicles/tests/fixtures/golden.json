@@ -1,12 +1,12 @@
 {
  "proto intact": {
   "objects": 312,
-  "hash": "652b46a3",
+  "hash": "93dfc0c3",
   "counts": "0,1,0,0,21,6,5,4"
  },
  "truck intact": {
   "objects": 317,
-  "hash": "d953ddfe",
+  "hash": "8c6985ec",
   "counts": "0,1,0,0,17,3,4,10"
  },
  "bike intact": {
@@ -26,7 +26,7 @@
  },
  "plane intact": {
   "objects": 55,
-  "hash": "30c960a3",
+  "hash": "6040a5d0",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "heli intact": {
@@ -36,242 +36,242 @@
  },
  "bus intact": {
   "objects": 140,
-  "hash": "69289da3",
+  "hash": "fba6de9f",
   "counts": "0,1,0,0,5,1,0,4"
  },
  "proto damaged": {
   "objects": 312,
-  "hash": "b6b52f23",
+  "hash": "fca71841",
   "counts": "0,1,0,0,21,6,5,4"
  },
  "proto modified": {
   "objects": 489,
-  "hash": "c0cb8931",
+  "hash": "5127bca6",
   "counts": "0,1,0,0,21,6,5,4"
  },
  "truck damaged": {
   "objects": 317,
-  "hash": "dc5a6922",
+  "hash": "7ced26cc",
   "counts": "0,1,0,0,17,3,4,10"
  },
  "proto bumper_front@63": {
   "objects": 334,
-  "hash": "e2d908c5",
+  "hash": "29836ae5",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_front@38": {
   "objects": 335,
-  "hash": "a1d21832",
+  "hash": "974a4f2",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_front@13": {
   "objects": 338,
-  "hash": "ef13cf81",
+  "hash": "884d919",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_front@0": {
   "objects": 324,
-  "hash": "77cc00ee",
+  "hash": "7de3050e",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto door_front_left@63": {
   "objects": 340,
-  "hash": "3770a351",
+  "hash": "d29a40b1",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto door_front_left@38": {
   "objects": 340,
-  "hash": "da44a31",
+  "hash": "b53bdc31",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto door_front_left@13": {
   "objects": 377,
-  "hash": "c6767cc9",
+  "hash": "265fcd11",
   "counts": "41,1,0,0,21,6,5,4"
  },
  "proto door_front_left@0": {
   "objects": 354,
-  "hash": "d41be18e",
+  "hash": "11d6a4ae",
   "counts": "41,1,0,0,21,6,5,4"
  },
  "proto fender_front_right@63": {
   "objects": 340,
-  "hash": "bd7d8eff",
+  "hash": "ae0520ff",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto fender_front_right@38": {
   "objects": 338,
-  "hash": "2ad0b522",
+  "hash": "38ceaf7a",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto fender_front_right@13": {
   "objects": 346,
-  "hash": "f45c4371",
+  "hash": "f71ed749",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto fender_front_right@0": {
   "objects": 324,
-  "hash": "f47426e2",
+  "hash": "967ca7d2",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto side_rear_right@63": {
   "objects": 340,
-  "hash": "342805ff",
+  "hash": "f50d2ef",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto side_rear_right@38": {
   "objects": 338,
-  "hash": "4d77f3a2",
+  "hash": "4c210562",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto side_rear_right@13": {
   "objects": 346,
-  "hash": "6749719d",
+  "hash": "18c869e5",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto side_rear_right@0": {
   "objects": 334,
-  "hash": "d5685dc5",
+  "hash": "a0003a25",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_rear@63": {
   "objects": 334,
-  "hash": "4d866b86",
+  "hash": "2bf59926",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_rear@38": {
   "objects": 335,
-  "hash": "99f4ffb5",
+  "hash": "543b689d",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_rear@13": {
   "objects": 338,
-  "hash": "4e9fb216",
+  "hash": "7138746e",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto bumper_rear@0": {
   "objects": 324,
-  "hash": "f2aaef14",
+  "hash": "a1e6c44c",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto window_front_right@63": {
   "objects": 324,
-  "hash": "66b51ec5",
+  "hash": "a0ab1925",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto window_front_right@38": {
   "objects": 324,
-  "hash": "66b51ec5",
+  "hash": "a0ab1925",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto window_front_right@13": {
   "objects": 354,
-  "hash": "806497ff",
+  "hash": "18f7b72f",
   "counts": "41,1,0,0,21,6,5,4"
  },
  "proto window_front_right@0": {
   "objects": 355,
-  "hash": "cc323a99",
+  "hash": "2ba94a01",
   "counts": "42,1,0,0,21,6,5,4"
  },
  "proto windshield@63": {
   "objects": 324,
-  "hash": "7bd1e5e1",
+  "hash": "d09457a1",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto windshield@38": {
   "objects": 324,
-  "hash": "7bd1e5e1",
+  "hash": "d09457a1",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto windshield@13": {
   "objects": 334,
-  "hash": "f4faad34",
+  "hash": "b2215cf4",
   "counts": "22,1,0,0,21,6,5,4"
  },
  "proto windshield@0": {
   "objects": 338,
-  "hash": "d6730419",
+  "hash": "d7829c79",
   "counts": "26,1,0,0,21,6,5,4"
  },
  "proto headlight_left@63": {
   "objects": 324,
-  "hash": "97bf0c09",
+  "hash": "bebdd209",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto headlight_left@38": {
   "objects": 336,
-  "hash": "ac361c86",
+  "hash": "25ab4d86",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto headlight_left@13": {
   "objects": 336,
-  "hash": "81af400c",
+  "hash": "fbc6d1f4",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto headlight_left@0": {
   "objects": 336,
-  "hash": "5e572be4",
+  "hash": "3f985c2c",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto taillight_center@63": {
   "objects": 324,
-  "hash": "4a3ffbd5",
+  "hash": "b4f320f5",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto taillight_center@38": {
   "objects": 336,
-  "hash": "429b5fb0",
+  "hash": "c6450248",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto taillight_center@13": {
   "objects": 336,
-  "hash": "381a3331",
+  "hash": "b307bfc9",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto taillight_center@0": {
   "objects": 336,
-  "hash": "117cbe0",
+  "hash": "dee870c8",
   "counts": "24,1,0,0,21,6,5,4"
  },
  "proto wheel_rear_right@63": {
   "objects": 327,
-  "hash": "54a9c3b2",
+  "hash": "18e70194",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto wheel_rear_right@38": {
   "objects": 324,
-  "hash": "c62cec3f",
+  "hash": "66b5eeab",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto wheel_rear_right@13": {
   "objects": 324,
-  "hash": "dbce996f",
+  "hash": "3fbcc62",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto wheel_rear_right@0": {
   "objects": 325,
-  "hash": "2016ca44",
+  "hash": "ec2d7978",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto radiator@63": {
   "objects": 324,
-  "hash": "4a3ffbd5",
+  "hash": "b4f320f5",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto radiator@38": {
   "objects": 329,
-  "hash": "65782d64",
+  "hash": "b3897004",
   "counts": "17,2,0,0,21,6,5,4"
  },
  "proto radiator@13": {
   "objects": 334,
-  "hash": "9563b815",
+  "hash": "c3748c35",
   "counts": "22,2,0,0,21,6,5,4"
  },
  "proto radiator@0": {
   "objects": 340,
-  "hash": "bb343b12",
+  "hash": "f7d694b2",
   "counts": "28,2,0,0,21,6,5,4"
  },
  "__zones proto": [
@@ -310,102 +310,102 @@
  ],
  "truck cab_front@38": {
   "objects": 341,
-  "hash": "135aeef7",
+  "hash": "55e54a15",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck cab_front@0": {
   "objects": 327,
-  "hash": "45164899",
+  "hash": "631dc703",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck cab_right@38": {
   "objects": 341,
-  "hash": "8075482b",
+  "hash": "59d73c5",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck cab_right@0": {
   "objects": 327,
-  "hash": "9eb206e",
+  "hash": "365cc418",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck body_right@38": {
   "objects": 327,
-  "hash": "64208fd3",
+  "hash": "a9d8ed99",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck body_right@0": {
   "objects": 327,
-  "hash": "64208fd3",
+  "hash": "a9d8ed99",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck chassis@38": {
   "objects": 327,
-  "hash": "64208fd3",
+  "hash": "a9d8ed99",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck chassis@0": {
   "objects": 331,
-  "hash": "5585033f",
+  "hash": "cb09bcf5",
   "counts": "10,1,1,0,17,3,4,10"
  },
  "truck glass_left@38": {
   "objects": 327,
-  "hash": "64a16b0f",
+  "hash": "8c3d2975",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck glass_left@0": {
   "objects": 358,
-  "hash": "cc4b459f",
+  "hash": "af9d8f31",
   "counts": "40,1,0,0,17,3,4,10"
  },
  "truck headlight_right@38": {
   "objects": 341,
-  "hash": "f6d0a0f6",
+  "hash": "cff26d24",
   "counts": "24,1,0,0,17,3,4,10"
  },
  "truck headlight_right@0": {
   "objects": 341,
-  "hash": "95e31d83",
+  "hash": "70451d9d",
   "counts": "24,1,0,0,17,3,4,10"
  },
  "truck taillight_right@38": {
   "objects": 340,
-  "hash": "ddab951b",
+  "hash": "92964f69",
   "counts": "23,1,0,0,17,3,4,10"
  },
  "truck taillight_right@0": {
   "objects": 340,
-  "hash": "bbd1f8db",
+  "hash": "b0530939",
   "counts": "23,1,0,0,17,3,4,10"
  },
  "truck wheels_axle_1@38": {
   "objects": 327,
-  "hash": "e9ccf83d",
+  "hash": "4deff4dd",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck wheels_axle_1@0": {
   "objects": 329,
-  "hash": "59327f90",
+  "hash": "38d15388",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck wheels_axle_3@38": {
   "objects": 327,
-  "hash": "e46762e9",
+  "hash": "6b880f37",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck wheels_axle_3@0": {
   "objects": 331,
-  "hash": "2b19645a",
+  "hash": "7e74eed0",
   "counts": "10,1,0,0,17,3,4,10"
  },
  "truck fuel_tank@38": {
   "objects": 329,
-  "hash": "5e0c77e",
+  "hash": "5edb768c",
   "counts": "10,1,1,0,17,3,4,10"
  },
  "truck fuel_tank@0": {
   "objects": 329,
-  "hash": "379b9cea",
+  "hash": "503e192c",
   "counts": "10,1,1,0,17,3,4,10"
  },
  "__zones truck": [
@@ -580,42 +580,42 @@
  ],
  "plane nose@38": {
   "objects": 69,
-  "hash": "6453e8f7",
+  "hash": "dd03d170",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane nose@0": {
   "objects": 65,
-  "hash": "656b891d",
+  "hash": "9449defc",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane wing_left@38": {
   "objects": 69,
-  "hash": "405f8831",
+  "hash": "abe4a49c",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane wing_left@0": {
   "objects": 65,
-  "hash": "9d518bde",
+  "hash": "a96dd787",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane fuselage@38": {
   "objects": 69,
-  "hash": "95fe5ab",
+  "hash": "759f92",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane fuselage@0": {
   "objects": 65,
-  "hash": "588a7cb7",
+  "hash": "50045932",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane landing_gear@38": {
   "objects": 55,
-  "hash": "b5909c0f",
+  "hash": "fe90e697",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "plane landing_gear@0": {
   "objects": 56,
-  "hash": "35c69edf",
+  "hash": "79ea6474",
   "counts": "0,0,0,0,5,1,0,3"
  },
  "__zones plane": [
@@ -665,7 +665,7 @@
  },
  "heli engine@0": {
   "objects": 36,
-  "hash": "a592b74b",
+  "hash": "ced4815b",
   "counts": "26,2,0,0,3,1,0,0"
  },
  "__zones heli": [
@@ -679,52 +679,52 @@
  ],
  "bus cab_front@38": {
   "objects": 165,
-  "hash": "a87ce081",
+  "hash": "74604bdd",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus cab_front@0": {
   "objects": 151,
-  "hash": "65c1b3b4",
+  "hash": "4e3c54b4",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus cab_right@38": {
   "objects": 165,
-  "hash": "91093574",
+  "hash": "eed3594",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus cab_right@0": {
   "objects": 161,
-  "hash": "eaa6f4fa",
+  "hash": "7e6ea62e",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus body_right@38": {
   "objects": 165,
-  "hash": "f7359d0d",
+  "hash": "7a5e320d",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus body_right@0": {
   "objects": 161,
-  "hash": "57aa134c",
+  "hash": "1cd9b4b0",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus chassis@38": {
   "objects": 151,
-  "hash": "530fdfad",
+  "hash": "a8790b21",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus chassis@0": {
   "objects": 155,
-  "hash": "62e4dd6c",
+  "hash": "ea99e608",
   "counts": "11,1,1,0,5,1,0,4"
  },
  "bus wheels_axle_1@38": {
   "objects": 151,
-  "hash": "40179c65",
+  "hash": "a699cc91",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "bus wheels_axle_1@0": {
   "objects": 153,
-  "hash": "34b1d41b",
+  "hash": "7b1fbceb",
   "counts": "11,1,0,0,5,1,0,4"
  },
  "__zones bus": [
@@ -741,97 +741,97 @@
  ],
  "op zoneImpact front": {
   "objects": 407,
-  "hash": "ed102d0e",
+  "hash": "59a7d3e",
   "counts": "83,3,1,7,21,6,5,4"
  },
  "op zoneImpact rear": {
   "objects": 424,
-  "hash": "9e4ee6bf",
+  "hash": "1ac0a7a0",
   "counts": "102,4,1,5,21,6,5,4"
  },
  "op zoneImpact left": {
   "objects": 377,
-  "hash": "80d945a0",
+  "hash": "512da8c4",
   "counts": "57,1,0,3,21,6,5,4"
  },
  "op zoneImpact right": {
   "objects": 400,
-  "hash": "5c7a4539",
+  "hash": "b1ce5c91",
   "counts": "79,1,0,3,21,6,5,4"
  },
  "op impact": {
   "objects": 447,
-  "hash": "9fd2f82b",
+  "hash": "2b3e912b",
   "counts": "114,3,1,9,21,6,5,4"
  },
  "op impact windshield": {
   "objects": 429,
-  "hash": "3c9c5d2f",
+  "hash": "fd1dd46f",
   "counts": "107,1,0,3,21,6,5,4"
  },
  "op explode": {
   "objects": 584,
-  "hash": "d80398be",
+  "hash": "279e604f",
   "counts": "257,3,0,1,21,6,5,3"
  },
  "op explode delayed": {
   "objects": 579,
-  "hash": "4861d6a6",
+  "hash": "d4278e37",
   "counts": "252,4,0,1,21,6,5,3"
  },
  "op roll": {
   "objects": 640,
-  "hash": "1d18ddb7",
+  "hash": "b467f7de",
   "counts": "278,2,1,8,21,6,5,4"
  },
  "op roll left after hit": {
   "objects": 786,
-  "hash": "fdcc020b",
+  "hash": "89c65926",
   "counts": "400,4,2,15,21,6,5,4"
  },
  "op hood": {
   "objects": 323,
-  "hash": "26836159",
+  "hash": "832e92a9",
   "counts": "11,1,0,0,21,6,5,4"
  },
  "op splat": {
   "objects": 326,
-  "hash": "4653ce70",
+  "hash": "12a09c60",
   "counts": "11,1,1,0,21,6,5,4"
  },
  "op puddle": {
   "objects": 328,
-  "hash": "1dc2eadc",
+  "hash": "91d64f7c",
   "counts": "12,1,1,0,21,6,5,4"
  },
  "op particles": {
   "objects": 371,
-  "hash": "b273f980",
+  "hash": "10005220",
   "counts": "59,2,0,0,21,6,5,4"
  },
  "op flag burnt": {
   "objects": 338,
-  "hash": "677a271c",
+  "hash": "b8d1b1ce",
   "counts": "26,3,0,0,21,6,5,4"
  },
  "op flag abandoned": {
   "objects": 402,
-  "hash": "ff9bac4",
+  "hash": "9b06e068",
   "counts": "12,1,0,0,21,6,5,4"
  },
  "op flag flipped": {
   "objects": 633,
-  "hash": "ab3f0c58",
+  "hash": "25556785",
   "counts": "271,2,1,8,21,6,5,4"
  },
  "op flags combined": {
   "objects": 741,
-  "hash": "3baf0944",
+  "hash": "ce6ac7ce",
   "counts": "301,4,1,8,21,6,5,4"
  },
  "scenario sc1 proto": {
   "objects": 530,
-  "hash": "391057a9",
+  "hash": "16beb864",
   "counts": "71,5,1,0,21,6,5,4"
  },
  "__scenario sc1 proto": {
@@ -860,7 +860,7 @@
  },
  "scenario sc1 plane": {
   "objects": 107,
-  "hash": "c7412913",
+  "hash": "e41f7dc7",
   "counts": "24,3,0,0,5,1,0,3"
  },
  "__scenario sc1 plane": {

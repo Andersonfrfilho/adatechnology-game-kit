@@ -17,6 +17,7 @@ import type {
   LiquidId,
   Quat,
   StainState,
+  StainTint,
   StreamCause,
   StreamState,
   SurfaceSpec,
@@ -336,7 +337,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     if (victim) stains.delete(victim.id)
   }
 
-  const deposit = (liquid: LiquidId, hit: Pick<Hit, 'point' | 'surface' | 'normal'>, liters: number, velocity: Vec3 | null): void => {
+  const deposit = (liquid: LiquidId, hit: Pick<Hit, 'point' | 'surface' | 'normal'>, liters: number, velocity: Vec3 | null, tint?: StainTint): void => {
     const def = liquids.get(liquid)
     if (!def || liters <= 0) return
     let s = stainAt(hit.surface, liquid, hit.point)
@@ -344,6 +345,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       const basis: Basis = { normal: s.normal, t1: s.tangent, t2: cross(s.normal, s.tangent) }
       nudgeCenter(s, hit.point, clamp((liters / (s.liters + liters)) * 0.5, 0, 0.5), basis)
       addInflow(s, liters, velocity)
+      if (tint) s.tint = { ...tint }
       return
     }
     while (stains.size >= maxStains) evictStain()
@@ -351,6 +353,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     const basis: Basis = hit.surface === GROUND_ID ? makeBasis(hit.normal) : surface
     s = createStain(`stain_${++counters.stain}`, hit.surface, def, basis, hit.point, liters, rng)
     if (velocity) addInflow(s, 0, velocity)
+    if (tint) s.tint = { ...tint }
     s.sinceInflow = 0
     stains.set(s.id, s)
     emit({ type: 'stain', stain: s.id, surface: hit.surface, liquid, point: copy3(hit.point) })
@@ -571,6 +574,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     flow: s.flow ? copy3(s.flow) : undefined,
     mark: s.mark,
     age: s.age,
+    tint: s.tint ? { ...s.tint } : undefined,
   })
 
   // ---- world API ----
@@ -775,14 +779,14 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       for (const s of [...stains.values()]) if (s.surface === id) stains.delete(s.id)
     },
 
-    splash(liquid, point, liters, velocity) {
+    splash(liquid, point, liters, velocity, options) {
       if (!liquids.has(liquid) || !(liters > 0)) return
       const v: Vec3 = velocity ?? [0, -0.1, 0]
       const origin = add(point, [0, 0.02, 0])
       const hit = trace(landingSurfaces(), groundAt, origin, v, gravity)
       if (!hit) return
       emit({ type: 'splash', liquid, point: copy3(hit.point), intensity: clamp(0.3 + liters * 2, 0, 1) })
-      deposit(liquid, hit, liters, length(v) > 0.3 ? hit.velocity : null)
+      deposit(liquid, hit, liters, length(v) > 0.3 ? hit.velocity : null, options?.tint)
     },
 
     clearStains(point, radius) {

@@ -1,0 +1,6 @@
+{
+  "densityKgPerLitre": { "min": 0.02, "max": 22 },
+  "impactResponses": ["dent", "break", "shatter", "tear", "squash", "pierce", "none"],
+  "heatResistantMaterials": ["steel", "cast_iron", "aluminium", "copper", "ceramic", "tempered_glass", "stone", "brick"],
+  "bodySlots": ["head", "eyes", "torso", "arms", "hands", "legs", "feet", "over"]
+}

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-commercial",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT",
   "description": "Commercial content pack for @adatechnology/game-floorplan: market and pharmacy templates, shop catalogue, slot libraries, commercial style and en / pt-BR names. Extends the residential pack.",
   "keywords": [
@@ -44,7 +44,8 @@
   },
   "peerDependencies": {
     "@adatechnology/game-floorplan": "workspace:^",
-    "@adatechnology/game-floorplan-residential": "workspace:^"
+    "@adatechnology/game-floorplan-residential": "workspace:^",
+    "@adatechnology/game-floorplan-structure": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
@@ -52,6 +53,7 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:*",
-    "@adatechnology/game-floorplan-residential": "workspace:*"
+    "@adatechnology/game-floorplan-residential": "workspace:*",
+    "@adatechnology/game-floorplan-structure": "workspace:*"
   }
 }

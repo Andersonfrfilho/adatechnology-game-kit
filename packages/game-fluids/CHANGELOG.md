@@ -1,5 +1,102 @@
 # @adatechnology/game-fluids
 
+## 0.3.0
+
+### Minor Changes
+
+- 485acc7: The weather reaches the other packages (T6.2b). `game-weather` gets `createWeatherBridges(targets, options)`: every target is optional and a small interface of its own (so the weather imports none of them) - the fluids film (`setWeather({ rain, drying })`, with `wash()` every second while the rain is heavy or stronger), `interactables.water.setRain(mm/h)` and `setWind(x, z)`, the vegetation `setWind({ direction, strength: min(1, speed / 20), gust })`, the vfx `setWind`, the environment bus (`environmentOf(sample)`) and the sound. The rain, wind and thunder are recipes of `game-audio` (`WEATHER_BANK`: `rain_loop` and `wind_loop` from the art scene L1314-L1315, `rain_hiss_game` from the game L62116, `thunder` from the game's boom plus a rumble), played by `createWeatherSound` (rain 0.035 in a light rain to 0.06 in a heavy one, wind 0.05 at the breeze and in proportion, the thunder at its bearing when `thunder` arrives). `createWeatherTestModule` takes `targets` and `sound`. `game-fluids` films take `drying` (an extra scale on the drying; extreme heat is 2) and `wash(maxDryness = 0.5)`; `game-fluids-three` passes both on (`FilmBridge.setWeather({ rain, drying })`, `wash`, option `washable`, default blood and old blood); `VfxWorld` gets `setWind` and `wind`; the test room exposes `room.vfx`. `@adatechnology/game-weather` now depends on `@adatechnology/game-audio`.
+
+### Patch Changes
+
+- Updated dependencies [f49e466]
+  - @adatechnology/game-contracts@0.13.0
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+  - @adatechnology/game-contracts@0.10.0
+
+## 0.2.0
+
+### Minor Changes
+
+- ba652e9: The running film of the Fluid Standard (T5.3a, spec 001): `createFilm({ layout, profile, random })`, a literal port of the page's rules (F60-114). Drops land as impacts stretched by `1 / sin(angle)` with spikes, satellites and tails; a 180 Hz thin-film step limited to the wet box (at most 6 steps per frame, or `maxSteps`) runs rivulets with a bulb at the tip, follows the slope and the joints and dries from the thin edge in. Drips, continuous sources and drag smears are included. New: `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT`, `createFoldedLayout`, `layoutFromSurfaces({ floor, wall?, curb?, center })` (the fold built from the host's `SurfaceSpec`s), `FILM_PROFILES` and `filmProfileOf` (`data/film-profiles.json`: blood, old blood, bile, motor oil, fuel, with the Workshop's `spikes` and `landsAsBlob`), `createFilmLcg`, the `FilmSimulator` interface (the CPU version is the reference for a later GPU one) and `film.setWeather({ rain })` (drying stops, spread x1.5; a no-op until `game-weather` drives it). The film never calls `Math.random`: the host gives the stream, so a LAN client with the same seed gets the same film. Additive: nothing existing changes.
+- 0d9cb33: The team's values as the fluids defaults (T5.3b, spec 001 decision E2). `blood`: `stainColor` `0x3B1D14` (was `0x4A0506`) and `dryTime` 600 s (was 1200). `fuel`: `dryTime` 60 s (was 120) and `leavesMark: false` (was `true`: it evaporates and leaves nothing). `water`: `dryTime` 180 s (was 600). New liquids `old_blood` (`0x6C1C16` drying to `0x2A160E`, 360 s) and `bile` (`0x8A9A2A` to `0x3E4220`, 900 s), with `en` and `pt-BR` names. A game that wants the old values replaces the liquid by id: `createFluids({ liquids: [{ ...blood, dryTime: 1200, stainColor: 0x4a0506 }] })`. New `splash(liquid, point, liters, velocity, { tint: { fresh, dry } })` colours one splash and the stain it makes or joins (`StainState.tint`, kept by `serialize` and `load`), so the age of an infection stays in the characters' data and the liquid stays generic. The README imports `DestructionEvent` from `@adatechnology/game-contracts` (it said `DamageEvent` from `game-destruction`). `game-fluids-three` paints a stain with its `tint` when it has one.
+
+### Patch Changes
+
+- Updated dependencies [cb85470]
+- Updated dependencies [6aa11f1]
+  - @adatechnology/game-contracts@0.9.0
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [572f2fa]
+  - @adatechnology/game-contracts@0.7.0
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [bd41a66]
+- Updated dependencies [16c1453]
+  - @adatechnology/game-contracts@0.6.0
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [d10c7f7]
+- Updated dependencies [a569662]
+- Updated dependencies [b3a5d99]
+- Updated dependencies [9666008]
+- Updated dependencies [9666008]
+- Updated dependencies [f4da1a6]
+- Updated dependencies [c0fcb62]
+- Updated dependencies [85ac930]
+  - @adatechnology/game-contracts@0.5.0
+
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [71fb367]
+  - @adatechnology/game-contracts@0.4.0
+
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [6022fe5]
+  - @adatechnology/game-contracts@0.3.0
+
 ## 0.1.2
 
 ### Patch Changes

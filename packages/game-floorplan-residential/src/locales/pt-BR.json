@@ -17,6 +17,7 @@
     "bedroom_1": "Quarto 1",
     "bedroom_2": "Quarto 2",
     "bedroom_3": "Quarto 3",
+    "bedroom_4": "Quarto 4",
     "cinema": "Cinema",
     "circulation": "Circulação",
     "closet": "Closet",
@@ -61,9 +62,15 @@
     "terrace": "Terraço",
     "terrace_deck": "Terraço (deck e jacuzzi)",
     "upper_floor": "Andar superior",
+    "upper_floor_2": "Segundo andar superior",
     "veranda": "Varanda",
     "veranda_gourmet": "Varanda gourmet",
-    "void_living": "Vazio da sala"
+    "void_living": "Vazio da sala",
+    "concierge": "Portaria",
+    "bike_room": "Bicicletário",
+    "lobby_entrance": "Saguão de entrada",
+    "laundry_room": "Lavanderia coletiva",
+    "storage_room": "Depósito"
   },
   "templates": {
     "single_storey_a": "Casa tipo A (térrea)",
@@ -75,7 +82,8 @@
     "mid_modern_single_storey": "Térrea moderna (classe média)",
     "mid_modern_townhouse": "Sobrado moderno (classe média)",
     "high_end_contemporary": "Casa contemporânea de alto padrão",
-    "apartment_modern": "Apartamento (médio ou alto padrão)"
+    "apartment_modern": "Apartamento (médio ou alto padrão)",
+    "residential_tower": "Torre residencial"
   },
   "styles": {
     "budget": "Popular",
@@ -114,6 +122,7 @@
     "zr1": "ZR-1 – Residencial de baixa densidade",
     "zr_ap": "ZR-AP – Residencial de alto padrão (condomínio fechado)",
     "zr2": "ZR-2 – Residencial de média densidade",
-    "zr3_zm": "ZR-3 / ZM – Uso misto"
+    "zr3_zm": "ZR-3 / ZM – Uso misto",
+    "zt": "ZT – Torres"
   }
 }

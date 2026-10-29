@@ -1,0 +1,19 @@
+{
+  "name": "@adatechnology/player-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Player area for the shared test room: the room's camera is the game-player body and the body is seen in third person (V toggles; the avatar of game-characters-three), so walking and running spend and restore stamina and make footstep noise; the bench hurts, bites, grabs and knocks the player down, switches the individual infection (off by default, a normal world) and sets the sheet, and shows health, stamina, bleeding, wounds, the infection stage, panic and the aim spread.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-player": "workspace:*"
+  }
+}

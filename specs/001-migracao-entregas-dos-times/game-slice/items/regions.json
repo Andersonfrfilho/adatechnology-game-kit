@@ -1,0 +1,452 @@
+{
+  "regions": [
+    {
+      "id": "santa_aurora",
+      "teamCode": "SA",
+      "name": "Santa Aurora"
+    },
+    {
+      "id": "porto_turvo",
+      "teamCode": "PT",
+      "name": "Porto Turvo"
+    },
+    {
+      "id": "tres_pontes",
+      "teamCode": "TP",
+      "name": "Três Pontes"
+    },
+    {
+      "id": "campo_largo",
+      "teamCode": "CL",
+      "name": "Campo Largo"
+    },
+    {
+      "id": "vila_do_corvo",
+      "teamCode": "VC",
+      "name": "Vila do Corvo"
+    },
+    {
+      "id": "base_7_bis",
+      "teamCode": "BIS",
+      "name": "Base 7º BIS"
+    },
+    {
+      "id": "penitentiary",
+      "teamCode": "PEN",
+      "name": "Penitenciária"
+    },
+    {
+      "id": "dam",
+      "teamCode": "REP",
+      "name": "Represa"
+    },
+    {
+      "id": "villages_and_roads",
+      "teamCode": "VIL",
+      "name": "Vilas e estradas"
+    },
+    {
+      "id": "serra_and_mata_funda",
+      "teamCode": "SER",
+      "name": "Serra e Mata Funda"
+    }
+  ],
+  "itemRegions": {
+    "canned_sardines": [
+      "porto_turvo"
+    ],
+    "military_ration": [
+      "base_7_bis"
+    ],
+    "beans": [
+      "campo_largo"
+    ],
+    "cassava_flour": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "rapadura": [
+      "vila_do_corvo",
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "honey_jar": [
+      "vila_do_corvo",
+      "serra_and_mata_funda"
+    ],
+    "cheese": [
+      "campo_largo",
+      "vila_do_corvo"
+    ],
+    "raw_beef": [
+      "campo_largo"
+    ],
+    "eggs": [
+      "campo_largo"
+    ],
+    "banana_bunch": [
+      "villages_and_roads",
+      "campo_largo"
+    ],
+    "orange": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "cassava_root": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "fresh_fish": [
+      "porto_turvo"
+    ],
+    "salted_fish": [
+      "porto_turvo"
+    ],
+    "jerked_beef": [
+      "campo_largo"
+    ],
+    "game_meat": [
+      "serra_and_mata_funda",
+      "campo_largo"
+    ],
+    "home_preserves": [
+      "vila_do_corvo",
+      "campo_largo"
+    ],
+    "dirty_water": [
+      "porto_turvo",
+      "serra_and_mata_funda"
+    ],
+    "coconut_water": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "cachaca": [
+      "vila_do_corvo",
+      "campo_largo"
+    ],
+    "ceftriaxone": [
+      "base_7_bis"
+    ],
+    "antihistamine": [
+      "vila_do_corvo"
+    ],
+    "antivenom": [
+      "vila_do_corvo",
+      "serra_and_mata_funda"
+    ],
+    "bolt_cutters": [
+      "tres_pontes",
+      "penitentiary"
+    ],
+    "mechanic_toolbox": [
+      "tres_pontes"
+    ],
+    "gas_torch": [
+      "tres_pontes"
+    ],
+    "inverter_welder": [
+      "tres_pontes"
+    ],
+    "hoe": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "camp_stove": [
+      "vila_do_corvo"
+    ],
+    "lockpick_kit": [
+      "penitentiary"
+    ],
+    "flint_striker": [
+      "vila_do_corvo"
+    ],
+    "binoculars": [
+      "vila_do_corvo"
+    ],
+    "sharpening_stone": [
+      "campo_largo"
+    ],
+    "machete": [
+      "campo_largo",
+      "villages_and_roads",
+      "serra_and_mata_funda"
+    ],
+    "hatchet": [
+      "vila_do_corvo"
+    ],
+    "axe": [
+      "vila_do_corvo",
+      "serra_and_mata_funda"
+    ],
+    "baseball_bat": [
+      "santa_aurora"
+    ],
+    "sledgehammer": [
+      "tres_pontes"
+    ],
+    "pickaxe": [
+      "serra_and_mata_funda"
+    ],
+    "sickle": [
+      "campo_largo"
+    ],
+    "police_baton": [
+      "penitentiary"
+    ],
+    "chainsaw": [
+      "campo_largo",
+      "serra_and_mata_funda"
+    ],
+    "slingshot": [
+      "villages_and_roads"
+    ],
+    "recurve_bow": [
+      "santa_aurora",
+      "vila_do_corvo"
+    ],
+    "crossbow": [
+      "santa_aurora"
+    ],
+    "sheet_metal": [
+      "tres_pontes",
+      "porto_turvo"
+    ],
+    "barbed_wire": [
+      "campo_largo",
+      "base_7_bis"
+    ],
+    "rope": [
+      "porto_turvo"
+    ],
+    "cement_bag": [
+      "tres_pontes"
+    ],
+    "electronic_components": [
+      "dam"
+    ],
+    "copper_wire": [
+      "dam"
+    ],
+    "firewood": [
+      "vila_do_corvo",
+      "serra_and_mata_funda"
+    ],
+    "leather_motorcycle_jacket": [
+      "santa_aurora"
+    ],
+    "leather_motorcycle_pants": [
+      "santa_aurora"
+    ],
+    "army_camouflage_uniform": [
+      "base_7_bis"
+    ],
+    "mechanic_coveralls": [
+      "tres_pontes"
+    ],
+    "firefighter_suit": [
+      "santa_aurora"
+    ],
+    "beekeeper_suit": [
+      "vila_do_corvo"
+    ],
+    "raincoat": [
+      "porto_turvo"
+    ],
+    "padded_coat": [
+      "vila_do_corvo"
+    ],
+    "hard_hat": [
+      "tres_pontes"
+    ],
+    "combat_boots": [
+      "base_7_bis"
+    ],
+    "rubber_boots": [
+      "campo_largo",
+      "porto_turvo"
+    ],
+    "ballistic_vest": [
+      "base_7_bis"
+    ],
+    "delivery_bag": [
+      "santa_aurora"
+    ],
+    "hiking_backpack_40l": [
+      "vila_do_corvo"
+    ],
+    "military_backpack": [
+      "base_7_bis"
+    ],
+    "trekking_backpack_70l": [
+      "vila_do_corvo"
+    ],
+    "tactical_vest": [
+      "base_7_bis"
+    ],
+    "cooler_box": [
+      "porto_turvo"
+    ],
+    "wheelbarrow": [
+      "campo_largo"
+    ],
+    "headlamp": [
+      "vila_do_corvo",
+      "serra_and_mata_funda"
+    ],
+    "folding_solar_panel": [
+      "vila_do_corvo"
+    ],
+    "cb_radio": [
+      "dam",
+      "villages_and_roads"
+    ],
+    "military_radio": [
+      "base_7_bis"
+    ],
+    "portable_generator": [
+      "tres_pontes"
+    ],
+    "laptop": [
+      "santa_aurora"
+    ],
+    "electric_fence_energizer": [
+      "campo_largo"
+    ],
+    "night_vision_goggles": [
+      "base_7_bis"
+    ],
+    "fuel_jerrycan": [
+      "tres_pontes"
+    ],
+    "gasoline": [
+      "tres_pontes"
+    ],
+    "diesel": [
+      "campo_largo",
+      "porto_turvo"
+    ],
+    "kerosene": [
+      "villages_and_roads"
+    ],
+    "motor_oil": [
+      "tres_pontes"
+    ],
+    "bean_seeds": [
+      "campo_largo"
+    ],
+    "corn_seeds": [
+      "campo_largo"
+    ],
+    "pumpkin_seeds": [
+      "campo_largo"
+    ],
+    "kale_and_lettuce_seeds": [
+      "campo_largo",
+      "vila_do_corvo"
+    ],
+    "cassava_cuttings": [
+      "campo_largo",
+      "villages_and_roads"
+    ],
+    "fertilizer_bag": [
+      "campo_largo"
+    ],
+    "fishing_rod": [
+      "porto_turvo"
+    ],
+    "fishing_tackle_box": [
+      "porto_turvo"
+    ],
+    "fishing_net": [
+      "porto_turvo"
+    ],
+    "technical_manual": [
+      "tres_pontes",
+      "base_7_bis"
+    ],
+    "farmers_almanac": [
+      "campo_largo"
+    ],
+    "city_map": [
+      "santa_aurora"
+    ],
+    "dog_tag": [
+      "base_7_bis"
+    ],
+    "cigarettes": [
+      "penitentiary"
+    ],
+    "generator_key": [
+      "santa_aurora"
+    ],
+    "safe_key": [
+      "santa_aurora"
+    ],
+    "cell_key": [
+      "penitentiary"
+    ]
+  },
+  "specialties": [
+    {
+      "regiao": "Santa Aurora",
+      "lugares": "Cidade inteira, todos os tipos",
+      "itens": "Hospital (melhor material médico), delegacia, shopping, fitas da rádio, chaves de história.",
+      "regra": "×1,0 em tudo; farmácia e mercado saqueados mais rápido (×1,5)."
+    },
+    {
+      "regiao": "Porto Turvo",
+      "lugares": "Docas, peixaria, estaleiro",
+      "itens": "Pesca, rede, sal, peixe salgado, corda, chapa, capa de chuva, caixa térmica, diesel.",
+      "regra": "Ferrugem: ferramentas e armas brancas gastam 20% mais rápido."
+    },
+    {
+      "regiao": "Três Pontes",
+      "lugares": "Pátio de trens, rodoviária, centro de distribuição",
+      "itens": "Peças e combustível, maleta do mecânico, maçarico, solda, gerador, cimento, carga de trem.",
+      "regra": "Vagões de carga: lotes grandes de uma só categoria."
+    },
+    {
+      "regiao": "Campo Largo",
+      "lugares": "Cooperativa, silos, aeroclube",
+      "itens": "Sementes, adubo, maniva, ferramentas agrícolas, diesel, eletrificador de cerca, charque.",
+      "regra": "Única fonte confiável de sementes."
+    },
+    {
+      "regiao": "Vila do Corvo",
+      "lugares": "Pousadas, chalés, posto florestal",
+      "itens": "Roupa de frio, mochila de trilha, binóculo, mel, cachaça, lanterna de cabeça, antiofídico.",
+      "regra": "Equipamento de trilha e camping."
+    },
+    {
+      "regiao": "Base 7º BIS",
+      "lugares": "Quartel, paiol, hospital de campanha",
+      "itens": "Ração militar, roupa e mochila militar, rádio de longo alcance, código do bunker, mapa militar.",
+      "regra": "Loot máximo, risco máximo."
+    },
+    {
+      "regiao": "Penitenciária",
+      "lugares": "Pavilhões, armaria, oficina dos presos",
+      "itens": "Armas improvisadas, tonfa, corta-vergalhão, gazuas, chave de cela, cigarro (moeda).",
+      "regra": "Itens de rebelião espalhados nos pátios."
+    },
+    {
+      "regiao": "Represa",
+      "lugares": "Casa de força, vila dos operários",
+      "itens": "Componentes eletrônicos, fio de cobre, rádio PX, crachá da casa de força.",
+      "regra": "Peças para religar a hidrelétrica."
+    },
+    {
+      "regiao": "Vilas e estradas",
+      "lugares": "14 vilas, postos, engavetamento da BR-101",
+      "itens": "Comida de posto, mapa rodoviário, galão, carros com porta-malas cheio, cartões-postais.",
+      "regra": "Conteúdo pequeno a cada 500 m (regra do mapa)."
+    },
+    {
+      "regiao": "Serra e Mata Funda",
+      "lugares": "Gruta, mina, lapa, torre de vigia",
+      "itens": "Lenha, picareta, lanterna de cabeça, carne de caça, registro da mina.",
+      "regra": "Escuridão: pilha vira recurso."
+    }
+  ]
+}

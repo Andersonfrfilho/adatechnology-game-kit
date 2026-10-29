@@ -1,0 +1,26 @@
+// Weapon id -> [Commons search query, ...keys the file title must contain (letters and digits only, lower case)]. A generic weapon is searched by the real object it is.
+export const SUBJECTS = {
+  glock_17: ['Glock 17', 'glock17', 'glock'], glock_18: ['Glock 18', 'glock18'], glock_19: ['Glock 19', 'glock19'],
+  beretta_92fs: ['Beretta 92', 'beretta92', 'm9'], sig_sauer_p226: ['SIG Sauer P226', 'p226'], cz_75: ['CZ 75', 'cz75'],
+  colt_m1911: ['Colt M1911', 'm1911', '1911'], makarov_pm: ['Makarov pistol', 'makarov'], fn_five_seven: ['FN Five-seven', 'fiveseven', 'fnfive'],
+  desert_eagle_mark_xix: ['Desert Eagle', 'deserteagle'], sw_686: ['Smith Wesson 686', '686'], sw_model_29: ['Smith Wesson Model 29', 'model29'],
+  hk_mp5a3: ['HK MP5', 'mp5'], hk_mp5sd3: ['HK MP5SD', 'mp5sd'], hk_mp5k: ['HK MP5K', 'mp5k'], hk_ump_45: ['HK UMP', 'ump'], hk_ump9: ['HK UMP', 'ump'],
+  uzi: ['Uzi', 'uzi'], mini_uzi: ['Mini Uzi', 'uzi'], fn_p90: ['FN P90', 'p90'], kriss_vector: ['Kriss Vector', 'kriss'], thompson_m1a1: ['Thompson submachine gun', 'thompson'],
+  cz_scorpion_evo_3: ['CZ Scorpion EVO', 'scorpion'], mac_10: ['MAC-10', 'mac10', 'mac-10'], hk_mp7a1: ['HK MP7', 'mp7'], sig_mpx: ['SIG MPX', 'mpx'], pp19_bizon: ['PP-19 Bizon', 'bizon'], vz61: ['Skorpion vz. 61', 'vz61', 'skorpion'],
+  remington_870: ['Remington 870', '870'], mossberg_500: ['Mossberg 500', 'mossberg'], mossberg_500_cruiser: ['Mossberg 500', 'mossberg'], benelli_m4: ['Benelli M4', 'benellim4', 'm4super'],
+  franchi_spas_12: ['SPAS-12', 'spas12', 'spas'], kel_tec_ksg: ['Kel-Tec KSG', 'ksg'], saiga_12: ['Saiga-12', 'saiga'], aa_12: ['AA-12', 'aa12'],
+  ak_47: ['AK-47', 'ak47', 'ak-47'], akm: ['AKM', 'akm'], ak_74: ['AK-74', 'ak74'], ak_12: ['AK-12', 'ak12'], colt_m4a1: ['M4 carbine', 'm4a1', 'm4carbine'], colt_m16a2: ['M16', 'm16'],
+  hk416: ['HK416', 'hk416'], steyr_aug_a1: ['Steyr AUG', 'aug'], fn_fal: ['FN FAL', 'fnfal', 'fal'], fn_parafal: ['FN FAL', 'fnfal'], hk_g3a3: ['HK G3', 'g3'], sks: ['SKS', 'sks'],
+  hk_g36: ['HK G36', 'g36'], hk_g36k: ['HK G36', 'g36'], hk_g36c: ['HK G36', 'g36'],
+  m14_ebr: ['M14 rifle', 'm14'], svd_dragunov: ['Dragunov SVD', 'dragunov', 'svd'], fn_scar_h: ['FN SCAR', 'scar'], knights_sr_25_mk11: ['SR-25', 'sr25'], hk_psg_1: ['HK PSG1', 'psg1'],
+  steyr_ssg_69: ['Steyr SSG 69', 'ssg69'], barrett_mrad: ['Barrett MRAD', 'mrad'], cheytac_m200: ['CheyTac Intervention', 'cheytac', 'm200'], remington_700: ['Remington 700', '700'], remington_700_300wm: ['Remington 700', '700'],
+  m24_sws: ['M24 SWS', 'm24'], mosin_nagant_91_30: ['Mosin-Nagant', 'mosin'], accuracy_awm: ['Accuracy International AWM', 'awm'], sako_trg_42: ['Sako TRG', 'trg'], barrett_m82a1: ['Barrett M82', 'm82', 'barrett'],
+  ruger_10_22: ['Ruger 10/22', '1022'], winchester_1894: ['Winchester Model 1894', '1894'], rossi_puma: ['Rossi Puma', 'puma'],
+  fn_minimi: ['FN Minimi', 'minimi'], fn_minimi_para: ['FN Minimi', 'minimi'], fn_m249: ['M249 SAW', 'm249'], pkm: ['PKM', 'pkm'], m60: ['M60 machine gun', 'm60'], browning_m2: ['Browning M2', 'm2'], fn_mag: ['FN MAG', 'fnmag'], rpk: ['RPK', 'rpk'], mg3: ['MG3', 'mg3', 'mg42'], m134: ['M134 Minigun', 'm134', 'minigun'],
+  m79: ['M79 grenade launcher', 'm79'], rpg_7: ['RPG-7', 'rpg7'], m72_law: ['M72 LAW', 'm72'], at4: ['AT4', 'at4'], carl_gustaf_m4: ['Carl Gustaf', 'carlgustaf', 'gustaf'], m203: ['M203', 'm203'], gp_25: ['GP-25', 'gp25'], ag36: ['AG36', 'ag36'], m2_flamethrower: ['M2 flamethrower', 'flamethrower'], flamethrower: ['M2 flamethrower', 'flamethrower'],
+  crossbow: ['Crossbow', 'crossbow'], bow_compound: ['Compound bow', 'compoundbow'], hammer: ['Hammer', 'hammer'], claw_hammer: ['Claw hammer', 'clawhammer'], sledgehammer: ['Sledgehammer', 'sledgehammer'], baseball_bat: ['Baseball bat', 'baseballbat'],
+  crowbar: ['Crowbar', 'crowbar'], machete: ['Machete', 'machete'], axe: ['Axe', 'axe'], knife: ['Knife', 'knife'], lighter: ['Lighter', 'lighter'], blowtorch: ['Blowtorch', 'blowtorch'], screwdriver: ['Screwdriver', 'screwdriver'], wrench: ['Wrench', 'wrench'], pry_bar: ['Pry bar', 'prybar'], hacksaw: ['Hacksaw', 'hacksaw'], utility_knife: ['Utility knife', 'utilityknife', 'boxcutter'], extinguisher: ['Fire extinguisher', 'extinguisher'],
+  frag_grenade: ['M67 grenade', 'm67', 'grenade'], dynamite: ['Dynamite', 'dynamite'], claymore: ['Claymore mine', 'claymore'], flashbang: ['Flashbang', 'flashbang'], c4: ['C-4 explosive', 'c4'], molotov: ['Molotov cocktail', 'molotov'], pipe_bomb: ['Pipe bomb', 'pipebomb'],
+  hk_mp5: ['x'],
+}
+delete SUBJECTS.hk_mp5

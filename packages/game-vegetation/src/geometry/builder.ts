@@ -14,6 +14,8 @@ export class MeshBuilder {
   triTag: string[] = []
   /** tag given to the triangles emitted from now on */
   tag = ''
+  /** centerlines of the tubes drawn so far with the piece tag they were drawn under (see `tube`), for piece geometry */
+  tubes: { tag: string; path: Vec3[]; radii: number[] }[] = []
   /** after `build`: contiguous triangle-index ranges per tag, in index units (3 per triangle) */
   ranges: { tag: string; indexStart: number; indexCount: number }[] = []
 

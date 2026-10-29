@@ -36,7 +36,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     eventLabels: {
       damage: 'damage', dent: 'dent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
       disassemble_progress: 'taking apart', ignite: 'caught fire', extinguish: 'put out', burnout: 'burned to ash', melt: 'melting', drip: 'dripping',
-      leak: 'leak', explode: 'exploded', stress: 'overload', collapse: 'collapsed', destroyed: 'destroyed',
+      leak: 'leak', explode: 'exploded', primed: 'about to explode', stress: 'overload', collapse: 'collapsed', settle: 'ground gave way', sway: 'sway', spall: 'plaster came off', stage: 'damage stage', expose: 'rebar bare', body: 'body', blast: 'blast', fragment_hit: 'fragment hit', destroyed: 'destroyed',
     },
     fractureStyles: { shatter: 'shatter', crumble: 'crumble', splinter: 'splinter', tear: 'tear', snap: 'snap', none: 'none' },
     structureRoles: { foundation: 'foundation', column: 'column', beam: 'beam', slab: 'slab', wall: 'wall', partition: 'partition', roof: 'roof', stair: 'stairs', none: 'none' },
@@ -60,7 +60,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     eventLabels: {
       damage: 'dano', dent: 'amassado', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
       disassemble_progress: 'desmontando', ignite: 'pegou fogo', extinguish: 'apagou', burnout: 'virou cinza', melt: 'derretendo', drip: 'pingando',
-      leak: 'vazamento', explode: 'explodiu', stress: 'sobrecarga', collapse: 'desabou', destroyed: 'destruído',
+      leak: 'vazamento', explode: 'explodiu', primed: 'prestes a explodir', stress: 'sobrecarga', collapse: 'desabou', settle: 'recalque do solo', sway: 'balanço', spall: 'reboco soltou', stage: 'estágio de dano', expose: 'vergalhão à mostra', body: 'corpo', blast: 'explosão', fragment_hit: 'estilhaço atingiu', destroyed: 'destruído',
     },
     fractureStyles: { shatter: 'estilhaçar', crumble: 'esfarelar', splinter: 'lascar', tear: 'rasgar', snap: 'partir', none: 'nenhuma' },
     structureRoles: { foundation: 'fundação', column: 'pilar', beam: 'viga', slab: 'laje', wall: 'parede', partition: 'divisória', roof: 'telhado', stair: 'escada', none: 'nenhum' },

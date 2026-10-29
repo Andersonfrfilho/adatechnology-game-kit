@@ -1,0 +1,57 @@
+{
+  "name": "@adatechnology/game-items",
+  "version": "0.1.5",
+  "license": "MIT",
+  "description": "Engine-agnostic item catalog engine: item definitions (category, size, weight, rarity, durability, shelf life, protection, carry), an extensible registry with patch/remove/include, and the default rules for finds, freshness, storage, carry weight and protection. No content and no renderer.",
+  "keywords": [
+    "game",
+    "items",
+    "inventory",
+    "loot",
+    "catalog",
+    "survival"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-items"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "record:team-golden": "node scripts/record-team-golden.mjs"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-interactables": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,461 @@
+[
+  {
+    "id": "farda_eb",
+    "name": "Farda camuflada do Exército",
+    "faction": "eb",
+    "category": "protecao",
+    "where": "Bloqueio, soldados e zumbis fardados",
+    "effect": "Na mata e no campo, −15% na distância em que zumbis e humanos te veem. Soldados do Bloqueio não atiram de longe em quem está fardado.",
+    "rarity": "common"
+  },
+  {
+    "id": "capacete_bal",
+    "name": "Capacete balístico",
+    "faction": "eb",
+    "category": "protecao",
+    "where": "Bloqueio, zumbis fardados (30%)",
+    "effect": "Cabeça: reduz 1 nível de dano de bala e bloqueia mordida no topo da cabeça.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "colete_iii",
+    "name": "Colete com placa nível III",
+    "faction": "eb",
+    "category": "protecao",
+    "where": "Bloqueio, paiol da base",
+    "effect": "Tronco −50% de dano de bala, 60% de chance de bloquear mordida no tronco. 9 kg: estamina cai 20% mais rápido.",
+    "rarity": "rare"
+  },
+  {
+    "id": "ia2",
+    "name": "Fuzil IMBEL IA2 5,56",
+    "faction": "eb",
+    "category": "arma",
+    "where": "Bloqueio, paiol, zumbis fardados (10%, desgastado)",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "fal",
+    "name": "FN FAL / ParaFAL 7,62",
+    "faction": "eb",
+    "category": "arma",
+    "where": "Bloqueio (Ferraz), paiol",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "minimi",
+    "name": "FN Minimi",
+    "faction": "eb",
+    "category": "arma",
+    "where": "Torre de vigia da Renata, paiol",
+    "effect": "Ficha no Arsenal. Defesa de base.",
+    "rarity": "legendary"
+  },
+  {
+    "id": "m67",
+    "name": "Granada M67",
+    "faction": "eb",
+    "category": "arma",
+    "where": "Paiol, Bloqueio (2 por dupla)",
+    "effect": "Ficha no Arsenal e efeito no Laboratório de Explosões.",
+    "rarity": "rare"
+  },
+  {
+    "id": "fumaca",
+    "name": "Granada de fumaça",
+    "faction": "eb",
+    "category": "equip",
+    "where": "Bloqueio, viaturas do Exército",
+    "effect": "Cortina de 12 m por 40 s. Zumbis e atiradores perdem a linha de visão.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "racao_militar",
+    "name": "Ração operacional",
+    "faction": "eb",
+    "category": "consumo",
+    "where": "Bloqueio, base, mochilas de soldado",
+    "effect": "Um dia inteiro de fome, com esquentador químico. Validade de 12 meses. Moeda forte no norte.",
+    "rarity": "common"
+  },
+  {
+    "id": "aph",
+    "name": "Kit individual de primeiros socorros (APH)",
+    "faction": "eb",
+    "category": "consumo",
+    "where": "Soldados, Falcão, viaturas",
+    "effect": "Torniquete e gaze hemostática: para sangramento grave em 5 s.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "ht",
+    "name": "Rádio portátil (HT)",
+    "faction": "eb",
+    "category": "equip",
+    "where": "Bloqueio, delegacia, PRF, Falcão",
+    "effect": "Fala com quem estiver na mesma faixa, até 5 km. Bateria de 12 h.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "plaqueta",
+    "name": "Plaqueta de identificação",
+    "faction": "eb",
+    "category": "documento",
+    "where": "Todo soldado vivo ou zumbi",
+    "effect": "Sem valor de troca. Entregar a quem conhecia o soldado dá +10 de opinião e uma entrada no diário.",
+    "rarity": "common"
+  },
+  {
+    "id": "mapa_topo",
+    "name": "Mapa topográfico marcado",
+    "faction": "eb",
+    "category": "documento",
+    "where": "Caio, bunker de comando",
+    "effect": "Revela trilhas, o túnel da serra e as posições de horda conhecidas.",
+    "rarity": "rare"
+  },
+  {
+    "id": "binoculo_mil",
+    "name": "Binóculo militar 7×50",
+    "faction": "eb",
+    "category": "equip",
+    "where": "Ferraz, torre da base",
+    "effect": "Zoom 7× sem fazer barulho. Vê o item marcado de um zumbi nomeado a 200 m.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "cartao_bunker",
+    "name": "Cartão de acesso do bunker",
+    "faction": "eb",
+    "category": "chave",
+    "where": "Peito do Major Azevedo (zumbi)",
+    "effect": "Abre a porta externa do bunker, a sala de rádio e o paiol por dentro, sem a chave da Renata. O cofre interno pede o código do bunker (6 dígitos em 3 papéis, catálogo de Itens).",
+    "rarity": "unique"
+  },
+  {
+    "id": "chave_paiol",
+    "name": "Chave do paiol",
+    "faction": "eb",
+    "category": "chave",
+    "where": "Cabo Renata",
+    "effect": "Abre o paiol classe D da base.",
+    "rarity": "unique"
+  },
+  {
+    "id": "colete_iia",
+    "name": "Colete policial nível II-A",
+    "faction": "pm",
+    "category": "protecao",
+    "where": "Delegacia, viaturas, PMs zumbis",
+    "effect": "Tronco −30% de dano de bala, 60% de chance de bloquear mordida no tronco. 3 kg.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "pt100",
+    "name": "Taurus PT100 .40",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Delegacia, PMs zumbis",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "smt9",
+    "name": "Taurus SMT9 9×19",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Porta-malas de viatura (trava com chave)",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "pump",
+    "name": "CBC Pump Military 3.0",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Viaturas, penitenciária, PRF",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "common"
+  },
+  {
+    "id": "t4",
+    "name": "Taurus T4 5,56",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Arsenal da delegacia",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "algemas",
+    "name": "Algemas",
+    "faction": "pm",
+    "category": "equip",
+    "where": "Viaturas, delegacia, penitenciária",
+    "effect": "Prende humano rendido. Prende um zumbi Lento num poste ou grade: não mata, segura.",
+    "rarity": "common"
+  },
+  {
+    "id": "tonfa",
+    "name": "Tonfa",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Viaturas, Choque",
+    "effect": "Arma branca de bloqueio: empurra zumbi sem gastar estamina de golpe.",
+    "rarity": "common"
+  },
+  {
+    "id": "lanterna_tat",
+    "name": "Lanterna tática",
+    "faction": "pm",
+    "category": "equip",
+    "where": "Viaturas, Falcão, PRF",
+    "effect": "Acopla no trilho da arma. Zumbis veem a luz a 40 m.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "escudo",
+    "name": "Escudo balístico do Choque",
+    "faction": "pm",
+    "category": "protecao",
+    "where": "Pátio da penitenciária (zumbis do Choque)",
+    "effect": "Bloqueia agarrão frontal e empurra zumbis. Movimento −40%, só arma de uma mão.",
+    "rarity": "rare"
+  },
+  {
+    "id": "capacete_choque",
+    "name": "Capacete do Choque com viseira",
+    "faction": "pm",
+    "category": "protecao",
+    "where": "Pátio da penitenciária",
+    "effect": "Bloqueia mordida no rosto. Visão periférica −20%.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "gas",
+    "name": "Granada de gás lacrimogêneo",
+    "faction": "pm",
+    "category": "arma",
+    "where": "Penitenciária, delegacia",
+    "effect": "Humanos tossem e saem da área por 20 s. Zumbis não reagem.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "chave_viatura",
+    "name": "Chave de viatura",
+    "faction": "pm",
+    "category": "chave",
+    "where": "Quadro de chaves da delegacia, bolso de PM zumbi",
+    "effect": "Liga a Cruzi Patrulha da Frota. Sirene ligada chama horda num raio de 250 m: serve de isca.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "distintivo",
+    "name": "Distintivo da Polícia Civil",
+    "faction": "pc",
+    "category": "documento",
+    "where": "Rafa, cartório",
+    "effect": "Sem valor de troca. Abre conversa com a Rafa.",
+    "rarity": "rare"
+  },
+  {
+    "id": "lista_portao",
+    "name": "Pasta com a lista do portão",
+    "faction": "pc",
+    "category": "documento",
+    "where": "Rafa, depois Ítalo",
+    "effect": "Prova contra o Brasa. Levada à rádio, muda a assembleia do dia 50.",
+    "rarity": "unique"
+  },
+  {
+    "id": "chave_deposito",
+    "name": "Chave do depósito de armas apreendidas",
+    "faction": "pc",
+    "category": "chave",
+    "where": "Cartório do 4º DP (delegado zumbi)",
+    "effect": "Abre um depósito com armas variadas e munição desencontrada.",
+    "rarity": "unique"
+  },
+  {
+    "id": "colete_refl",
+    "name": "Colete refletivo da PRF",
+    "faction": "prf",
+    "category": "protecao",
+    "where": "Posto da PRF",
+    "effect": "Visível a 200 m: humanos amigáveis reconhecem de longe; zumbis também, à noite.",
+    "rarity": "common"
+  },
+  {
+    "id": "pente_pregos",
+    "name": "Pente de pregos e cones",
+    "faction": "prf",
+    "category": "equip",
+    "where": "Posto da PRF, viatura",
+    "effect": "Barreira de estrada: fura pneu de qualquer veículo e faz zumbi tropeçar.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "livro_ocorr",
+    "name": "Livro de ocorrências da PRF",
+    "faction": "prf",
+    "category": "documento",
+    "where": "Mesa da Lúcia",
+    "effect": "Lista quem entrou no vale: revela bases e genéricos com vínculo.",
+    "rarity": "unique"
+  },
+  {
+    "id": "mapa_rod",
+    "name": "Mapa rodoviário com bloqueios marcados",
+    "faction": "prf",
+    "category": "documento",
+    "where": "Posto, viatura",
+    "effect": "Mostra carros parados e rotas livres na BR e nas estradas.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "kit_desenc",
+    "name": "Kit de desencarceramento",
+    "faction": "prf",
+    "category": "equip",
+    "where": "Viatura da PRF",
+    "effect": "Corta-cinto e quebra-vidro: tira alguém preso num carro em 3 s.",
+    "rarity": "uncommon"
+  },
+  {
+    "id": "chave_moto",
+    "name": "Chave da moto da PRF",
+    "faction": "prf",
+    "category": "chave",
+    "where": "Douglas",
+    "effect": "GZ 1250 Aventura com pintura da PRF: rápida e barulhenta.",
+    "rarity": "unique"
+  },
+  {
+    "id": "chaveiro_c",
+    "name": "Chaveiro do bloco C",
+    "faction": "pp",
+    "category": "chave",
+    "where": "Josué",
+    "effect": "Abre celas, portões e a sala de armas da penitenciária.",
+    "rarity": "unique"
+  },
+  {
+    "id": "estoque",
+    "name": "Estoque (faca artesanal)",
+    "faction": "pp",
+    "category": "arma",
+    "where": "Presos, celas",
+    "effect": "Arma branca fraca e rápida. Quebra em 15 golpes.",
+    "rarity": "common"
+  },
+  {
+    "id": "celular_contrabando",
+    "name": "Celular contrabandeado com carregador solar",
+    "faction": "pp",
+    "category": "equip",
+    "where": "Jacaré, celas",
+    "effect": "Fala com quem tiver outro celular (o Brasa tem). Ouve conversas dos dois.",
+    "rarity": "rare"
+  },
+  {
+    "id": "cigarro",
+    "name": "Maço de cigarro",
+    "faction": "pp",
+    "category": "troca",
+    "where": "Celas, viaturas, mochilas",
+    "effect": "Moeda preferida na penitenciária e no Bloqueio.",
+    "rarity": "common"
+  },
+  {
+    "id": "sabao",
+    "name": "Sabão de cadeia",
+    "faction": "pp",
+    "category": "troca",
+    "where": "Penitenciária com feira",
+    "effect": "Limpa sangue seco de roupa e para-brisa; troca por comida.",
+    "rarity": "common"
+  },
+  {
+    "id": "hk416",
+    "name": "HK416 com supressor",
+    "faction": "fe",
+    "category": "arma",
+    "where": "Lince, destroços do helicóptero",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "very_rare"
+  },
+  {
+    "id": "nvg",
+    "name": "Óculos de visão noturna",
+    "faction": "fe",
+    "category": "equip",
+    "where": "Lince, piloto morto nos destroços",
+    "effect": "Enxerga 60 m no escuro sem lanterna. Bateria de 6 h.",
+    "rarity": "very_rare"
+  },
+  {
+    "id": "radio_sat",
+    "name": "Rádio de satélite",
+    "faction": "fe",
+    "category": "equip",
+    "where": "Kevin",
+    "effect": "Fala com o Comando de fora. Abre o evento de extração depois da temporada.",
+    "rarity": "unique"
+  },
+  {
+    "id": "gps",
+    "name": "GPS militar",
+    "faction": "fe",
+    "category": "equip",
+    "where": "Falcão, piloto",
+    "effect": "Marca até 10 pontos no mapa e mostra a posição do grupo.",
+    "rarity": "rare"
+  },
+  {
+    "id": "c4",
+    "name": "Carga de demolição",
+    "faction": "fe",
+    "category": "arma",
+    "where": "Mochila do Lince, paiol",
+    "effect": "Derruba porta blindada ou ponte pequena. Efeito no Laboratório de Explosões.",
+    "rarity": "very_rare"
+  },
+  {
+    "id": "kit_med",
+    "name": "Kit médico avançado",
+    "faction": "fe",
+    "category": "consumo",
+    "where": "Paula",
+    "effect": "Sutura, soro e antibiótico. Com a Paula, a amputação de um mordido em até 60 s salva 30% em vez de 15%.",
+    "rarity": "rare"
+  },
+  {
+    "id": "maleta",
+    "name": "Maleta térmica das amostras",
+    "faction": "fe",
+    "category": "documento",
+    "where": "Laboratório do Sato",
+    "effect": "Item de missão. Quem a entrega ao Lince decide o fim do arco do hospital.",
+    "rarity": "unique"
+  },
+  {
+    "id": "colete_iiia",
+    "name": "Colete tático III-A com porta-carregadores",
+    "faction": "tat",
+    "category": "protecao",
+    "where": "Zumbis da escolta tática",
+    "effect": "Tronco −40% de dano de bala, 60% de chance de bloquear mordida no tronco, 6 carregadores à mão (recarga 20% mais rápida).",
+    "rarity": "rare"
+  },
+  {
+    "id": "mp5",
+    "name": "HK MP5A3",
+    "faction": "tat",
+    "category": "arma",
+    "where": "Carro-forte de escolta",
+    "effect": "Ficha no Arsenal.",
+    "rarity": "uncommon"
+  }
+]

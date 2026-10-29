@@ -6,7 +6,9 @@
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
 import type * as THREE_NS from 'three'
-import type { DebrisKind, DestructibleSpec, DestructionWorld, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
+import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { VfxWorld } from '@adatechnology/game-vfx'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -33,10 +35,17 @@ export interface RendererOptions {
   autoSplit?: boolean
   /** Called when a loose piece is created (the bench registers it as grabbable). */
   onPiece?: (piece: Piece) => void
-  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). */
+  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
-  /** A point light flashes on explosions (default true; costs one light). */
-  explosionLight?: boolean
+  /**
+   * The effects world that draws blasts and fires. Pass the one the host shares with the other renderers (and step it, through its
+   * `VfxRenderer.update`, once per frame); without it the renderer makes its own world and its own three layer and steps them in `update`.
+   */
+  vfx?: VfxWorld
+  /** Which effect each destruction event plays (default `EVENT_EFFECTS_MAP` of `@adatechnology/game-vfx`): `spall`, `stage`, `expose`, `collapse`. Add, change or take out entries to tune it. */
+  eventEffects?: Readonly<Record<string, string | Readonly<Record<string, string>>>>
+  /** Camera of the own effects world (distance LOD, shake); only read when `vfx` is not given. Default: a camera at the origin. */
+  camera?: THREE_NS.Camera
   /**
    * Particle size scale in pixels per metre at one metre from the camera, roughly `viewportHeight / (2 * tan(fov / 2))` (default 700). Set it
    * when the viewport is much smaller or larger than about 720 px tall so smoke and fire keep their physical size.
@@ -89,6 +98,21 @@ export interface Piece {
   held: boolean
 }
 
+/** Options of `DestructionRenderer.explode`. */
+export interface ExplodeOptions {
+  /** Id of the effect to play (an explosive id of the effects catalogue). Default `generic`. */
+  readonly effect?: string
+  /** Where the blast is aimed (a shaped charge). */
+  readonly direction?: Vec3
+  /** `false`: the host drew the blast, only the shove and the sound are left. Default `true`. */
+  readonly visual?: boolean
+  /**
+   * What `world.explode` returned for this blast. When its results carry a `blast` report (`shelter`, `confinement`), the shove on each piece uses
+   * the energy that reached it (`energy * confinement * shelter` of the piece's object) instead of the raw energy. Without it the old formula.
+   */
+  readonly report?: readonly HitResult[]
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
@@ -103,11 +127,21 @@ export interface DestructionRenderer {
   update(dt: number): void
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
+  /**
+   * Draw a blast that has no exploding part (a grenade, a rocket): the effect (`options.effect`, an id of the effects catalogue, else `generic`
+   * scaled by the radius), sound and a shove on pieces in range. Call it next to `world.explode`, which emits no event of its own. A host that
+   * already played the effect itself passes `visual: false` and keeps only the shove and the sound.
+   */
+  explode(point: Vec3, energy: number, radius: number, options?: ExplodeOptions): void
   /** Remove every fragment, decal and particle, restore every bound mesh to its original geometry and colours. */
   clear(): void
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
+  /** Meshes that use the materials of the hole, patch and crack decals, to render once so that the first hit does not build their shader programs in the middle of a frame. */
+  warmUpProbes(): WarmUpProbes
+  /** Bars of exposed rebar drawn now (`expose` events; one instanced mesh per part). */
+  rebarCount(): number
   dispose(): void
 }
 

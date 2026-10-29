@@ -48,6 +48,15 @@ Before you push:
 pnpm build && pnpm test && pnpm typecheck && pnpm lint
 ```
 
+### Git hooks
+
+`pnpm install` points git at `.githooks/` (the `prepare` script), so the checks run before anything reaches CI:
+
+- `pre-commit`: eslint on the staged JS/TS files (a second or two).
+- `pre-push`: `pnpm build`, `pnpm -r typecheck`, `pnpm lint`, then the tests of the packages the branch changed since `origin/main` and of the
+  packages that depend on them, one package at a time as CI runs them. `PRE_PUSH_ALL=1 git push` tests every package.
+- Either hook can be skipped once with `--no-verify`.
+
 ## Changesets and commits
 
 - Every user-visible change needs a changeset (`pnpm changeset`). The first release of a package is a `minor` (0.1.0).

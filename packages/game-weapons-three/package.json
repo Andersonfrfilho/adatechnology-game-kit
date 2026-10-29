@@ -1,0 +1,71 @@
+{
+  "name": "@adatechnology/game-weapons-three",
+  "version": "0.7.2",
+  "license": "MIT AND CC-BY-SA-4.0 AND CC-BY-SA-3.0 AND CC-BY-3.0 AND CC0-1.0 AND LicenseRef-Public-Domain",
+  "description": "three.js presentation for @adatechnology/game-weapons: the real models of the Galeria 3D do Arsenal (78 weapons, a cartridge and a case per calibre), the weapon in the hands playing the tool-animation clips (fire, burst, cycle, jam, clear, safety and the seven reloads), ejected casings and dropped magazines, worn-metal conditions, synthesized sounds, and the weapons test area (counters with every weapon) as a TestableModule.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "weapons",
+    "firearms",
+    "viewmodel",
+    "procedural",
+    "webaudio"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-weapons-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-audio": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-interactables-three": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@adatechnology/game-destruction": "workspace:*",
+    "@adatechnology/game-test-room": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

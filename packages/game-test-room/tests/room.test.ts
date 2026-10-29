@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createTestRoom, demoItems } from '../src'
+import { createTestRoom } from '../src'
+import { demoItems } from './fixtures/demo-items'
 import * as THREE from 'three'
 import { makeRoom, stubRenderer } from './helpers'
 
@@ -55,6 +56,7 @@ describe('room basics', () => {
   it('weapons: hotbar tools come from the arsenal and any arsenal id can be equipped', () => {
     const room = makeRoom()
     room.setTool('pistol_9mm')
+    room.update(0.4)
     expect(room.tool.def.id).toBe('pistol_9mm')
     room.equip('baseball_bat')
     expect(room.tool.def.id).toBe('baseball_bat')
@@ -77,6 +79,7 @@ describe('shooting and the log', () => {
     const room = makeRoom()
     room.spawn('steel_sheet', [0, 0, -4], 0)
     room.setTool('pistol_9mm')
+    room.update(0.4)
     room.look([0, 1.1, -1.5], [0, 1.1, -4])
     room.use()
     const t = text(room)
@@ -91,6 +94,7 @@ describe('shooting and the log', () => {
     const room = makeRoom({ locale: 'pt-BR' })
     room.spawn('steel_sheet', [0, 0, -4], 0)
     room.setTool('pistol_9mm')
+    room.update(0.4)
     room.look([0, 1.1, -1.5], [0, 1.1, -4])
     room.use()
     expect(text(room)).toMatch(/Chapa de aço com suporte › sheet \(aço\): furo de 9 mm atravessou/)
@@ -100,6 +104,7 @@ describe('shooting and the log', () => {
     const room = makeRoom()
     room.spawn('wooden_crate', [0, 0, -4], 0)
     room.setTool('shotgun_pump_12')
+    room.update(0.4)
     room.look([0, 0.6, -1.8], [0, 0.25, -3.77])
     room.use()
     const shots = room.log.entries({ type: 'shoot' })
@@ -113,6 +118,7 @@ describe('shooting and the log', () => {
     const room = makeRoom()
     const can = room.spawn('jerrycan', [0, 0, -3.5], 0)
     room.setTool('pistol_9mm')
+    room.update(0.4)
     room.look([0, 0.4, -1.5], [0, 0.12, -3.43])
     room.use()
     const hole = room.log.entries({ type: 'hole' })[0]
@@ -294,6 +300,7 @@ describe('kick shortcut', () => {
     const room = makeRoom()
     room.spawn('chair', [0, 0, -4], 0)
     room.setTool('hammer')
+    room.update(0.4)
     room.look([-1, 0.2, -4.18], [-0.18, 0.2, -4.18])
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV' }))
     const hits = room.log.entries({ type: 'melee' })
@@ -341,5 +348,32 @@ describe('pause and walk', () => {
     expect(room.camera.position.z).toBeCloseTo(0, 1)
     run(room, 1)
     expect(room.camera.position.x).toBeCloseTo(2, 1)
+  })
+})
+
+describe('grenade blast', () => {
+  it('draws fire, flash and smoke: live puffs, sparks and glows of the effects layer, and a blast light, are in the scene', () => {
+    const room = makeRoom()
+    room.setTool('frag_grenade')
+    room.update(0.4)
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use()
+    for (let i = 0; i < 600 && room.log.entries({ type: 'explode' }).length === 0; i++) room.update(1 / 60)
+    expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
+    room.update(1 / 60)
+    // the effects world's instanced layers replaced the two `destruction-particles` point clouds
+    const liveInstances = (name: string): number => {
+      const mesh = room.scene.getObjectByName(name) as THREE.Mesh
+      expect(mesh).toBeDefined()
+      return (mesh.geometry as THREE.InstancedBufferGeometry).instanceCount
+    }
+    expect(liveInstances('vfx-sparks')).toBeGreaterThan(30)
+    expect(liveInstances('vfx-puffs')).toBeGreaterThan(30)
+    expect(liveInstances('vfx-glows')).toBeGreaterThan(0)
+    let lit = false
+    room.scene.traverse((object) => {
+      if (object instanceof THREE.PointLight && object.intensity > 0) lit = true
+    })
+    expect(lit).toBe(true)
   })
 })

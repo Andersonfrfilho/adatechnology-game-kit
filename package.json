@@ -13,11 +13,15 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
+    "check:items": "pnpm --filter \"@adatechnology/game-items-goods...\" build && node packages/game-items-goods/scripts/check-items.mjs",
     "lint": "eslint .",
     "clean": "pnpm -r exec rm -rf dist",
     "changeset": "changeset",
     "version:changeset": "changeset version",
-    "publish:changesets": "pnpm build && changeset publish"
+    "publish:changesets": "pnpm build && changeset publish",
+    "site:dev": "docker compose -p adatechnology-game-kit watch",
+    "site:thumbs": "node site/capture-thumbs.mjs",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",

@@ -18,7 +18,7 @@ pnpm add @adatechnology/game-vehicles three
 Browser without a bundler (the global is `GameVehicles`):
 
 ```html
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
 <script src="https://unpkg.com/@adatechnology/game-vehicles/dist/index.global.js"></script>
 <script>
   const kit = GameVehicles.createVehicleKit({ THREE })
@@ -201,6 +201,13 @@ Plain DOM and SVG, no framework: `ui.damageMap(host, c, { selected, onSelect })`
 ones in a strip below); `ui.bandButtons`, `ui.legend`, `ui.healthBar({ text, bar }, c)`, `ui.scenarioButtons`. `ui.injectStyles()` adds minimal CSS
 (`--panel-2`, `--line` and `--muted` customise it).
 
+## Geometry
+
+The kit's three is `shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`, thinned by the light mode: boxes, cylinders, cones, spheres,
+planes, circles, rings, tori, the tyre lathes and the straight-edged extrusions are made by game-shapes, bit-identical to three's
+(`tests/exact-golden.test.ts`, and the fleet's and `game-vehicles-three`'s) and cached by parameters across vehicles. Tubes, curved
+extrusions, the lofted bodies and the warps stay three's own or the kit's custom buffers. The IIFE build bundles game-shapes.
+
 ## Determinism and old seeds
 
 The random stream of a zone is seeded from the vehicle key, the zone id and the band. The first version of this engine used Portuguese ids, so ids
@@ -241,6 +248,12 @@ car.animations() // open/close clips for the doors, hood and trunk
 
 Fluids: the tank, the oil pan and the radiator hold fuel, oil and coolant; a hole below the level makes a `leak` event, a puddle and a falling level.
 
+Fuel tank: a bullet that goes through it **leaks and does not set it alight by itself**. The leak lights (event `ignite`, then the usual fire and, for a petrol tank, the explosion) with
+a spark of a hard round on the steel wall, an incendiary or tracer round, a burning part or burning fuel stain within `ignition.fireNear.radius`, or a blast. The chances of the round
+come in `Hit.ignition` (the weapons build them from the core and jacket of the ammunition) and are weighed by how full the tank is (`fuel`, 0 to 1, the starting level; a nearly empty tank lights
+easiest, a full one mostly leaks); diesel takes a spark far worse than petrol. `createVehicleDestructible(kit, vehicle, { fuel: 0.1, ignition: { fillCurve, fireNear, sparkTarget } })`;
+the defaults and every number are `IgnitionRules` of `@adatechnology/game-contracts`.
+
 ## Português
 
 Motor genérico de veículos procedurais para three.js: carrocerias, vidros, faróis, rodas, interiores, capô e compartimento do motor, **zonas de dano
@@ -266,3 +279,7 @@ scene.add(c.root)
 ### Contrato de destruição
 
 `createVehicleDestructible(kit, c, opções)` faz um veículo construído seguir o `DestructibleImpl` de `@adatechnology/game-contracts`: cada zona de dano vira uma peça com material, as peças mecânicas (bateria, alternador, câmbio, freios, direção, amortecedores, pneus, retrovisores, engate) são acrescentadas, as juntas (dobradiça, parafuso, solda) se desfazem por desgaste ou com a chave inglesa, e as peças saem do veículo e caem. `status()` diz o que a mecânica faz (freios, direção, bateria, câmbio). Os nomes em português estão em `locales/pt-BR.json` (`mechanics.*`).
+
+## Light mode and damageable parts
+
+`createVehicleKit({ lod })` takes the settings of the light mode (`defaultLodSettings`: every number can be overridden). `kit.build(key, state, zones, { lod: true })` builds the same vehicle with fewer triangles (rounded boxes with one ring, coarser lofts, grilles and generators, interiors tagged `userData.skipLite`) and puts the switch back; with it off nothing changes. `kit.damageables(c, matrix?)` lists the metal, glass, rubber and fuel parts of a built vehicle as `Box3` boxes (`kit.damageableKinds` maps zone types to parts and can be extended).

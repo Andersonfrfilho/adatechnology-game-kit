@@ -9,15 +9,19 @@
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
 import type * as THREE_NS from 'three'
-import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { AudioEngine } from '@adatechnology/game-audio'
+import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
-import type { FluidRenderer } from '@adatechnology/game-fluids-three'
+import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, DestructibleImpl, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, ThirdPersonOptions } from './avatar'
+import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -52,6 +56,66 @@ export interface TestRoomItem {
   impl?: (root: THREE_NS.Object3D, id: string) => DestructibleImpl
   /** Use animations the item brings (see `TestRoom.playAnimation`). Part poses move the child of the built object named after the part id. */
   animations?: AnimationClipSpec[]
+  /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
+  thumbnail?: string
+  /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector. */
+  thumbnailCredit?: string
+}
+
+/**
+ * One piece of destructible scenery of the arena (the target wall, the table, the shelf, or any piece the host adds): a spec, where it stands and how it is drawn.
+ * Keyed by arena object id in `TestRoomOptions.scenery`.
+ */
+export interface SceneryObject {
+  /** What the destruction world is given. */
+  spec: DestructibleSpec
+  /** World position of the spec's origin. Required for a new id; for a default id it defaults to the object it replaces. */
+  position?: Vec3
+  /** Turn about the vertical axis, radians (default 0). */
+  rotationY?: number
+  /** Colour per part id, then per material id, for the default drawing (`buildFromSpec`). */
+  colors?: Record<string, number>
+  /**
+   * Draws the object: a group whose meshes are named by part id (and carry `userData.destructionPart`), in the space of the spec. Without it the room
+   * draws one plain mesh per part with `buildFromSpec`.
+   */
+  build?: (THREE: ThreeNamespace) => THREE_NS.Object3D
+  /** Name shown in the inspector and the log (default the translated name of a default id, else the id). */
+  label?: string
+  /**
+   * A top that loose things rest on (and liquids pool on) while that part stands: the part id and the height of its upper face in the spec's space.
+   * The rectangle is the part's footprint. Without it nothing rests on the object.
+   */
+  top?: { part: string; y: number }
+  /**
+   * Where a water tap of the piece pours (a sink, a tub), in the spec's space: the room's tap (its stream and its HUD button) pours there, and the piece's own model is the tap. The first piece with a `spout` wins over the table tap.
+   */
+  spout?: Vec3
+}
+
+/** What the room asks when something thrown or set down needs a model: the tool in the hand, the explosive it carries (an id of the arsenal) and how it is used. */
+export interface ProjectileQuery {
+  weapon: string
+  explosive?: string
+  kind: 'grenade' | 'molotov' | 'rocket' | 'charge'
+}
+
+/** A model for a projectile: the object, and the axis along its length (default +y, what the room's own primitives use; a rocket points that axis along its flight). */
+export interface ProjectileModel {
+  model: THREE_NS.Object3D
+  axis?: Vec3
+}
+
+/** The room's tap (a stream of water): how it is drawn and where the water leaves it. */
+export interface SceneryTap {
+  /** Draws the tap in its own space (the origin where it stands). */
+  build: (THREE: ThreeNamespace) => THREE_NS.Object3D
+  /** Where the water leaves the spout, in the space of the model. */
+  spout: Vec3
+  /** World position of the model's origin. Default: standing on the `table` top, with the spout over its right half (no table, no tap). */
+  position?: Vec3
+  /** Turn about the vertical axis, radians (default 0). */
+  rotationY?: number
 }
 
 export interface TestRoomOptions {
@@ -81,17 +145,89 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
+  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
+  craters?: boolean
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
   arenaSize?: number
+  /**
+   * The destructible scenery of the arena, by object id. The defaults are `target_wall` (a brick wall of panels 11 m ahead of the start), `table` (with the
+   * water tap beside it) and `shelf`. A key that matches a default replaces it (the position defaults to the replaced one), `null` removes it, a new key adds
+   * a piece (its `position` is required). The player cannot walk through any of them: the collider is the footprint of the spec's parts.
+   */
+  scenery?: Record<string, SceneryObject | null>
+  /** The tap of the room. Omitted: a tap drawn from primitives on a post beside the table; an object: that model (see `SceneryTap`); `null`: no tap. */
+  tap?: SceneryTap | null
+  /**
+   * The model of something thrown (a grenade, a molotov, a rocket) or set down (a charge). The room only knows the arsenal's ids, so the host's weapons package
+   * supplies the real model; where it answers nothing the room draws a plain primitive (a sphere, a cylinder, a box).
+   */
+  projectileModel?: (query: ProjectileQuery) => ProjectileModel | null | undefined
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
+  /** Open on one catalogue group (`furniture`, `structure`, `weapons`…): see `TestRoom.openArea`. */
+  area?: string
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
   onSound?: (key: string, point: Vec3, volume: number) => void
+  /**
+   * The sound engine of the room (@adatechnology/game-audio): the destruction renderer's sound keys play on it, and modules get it as `host.audio`.
+   * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
+   */
+  audio?: AudioEngine | false
+  /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
+  environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
+  /** The player's body (see `TestRoom.setAvatar`). */
+  avatar?: RoomAvatar
+  /** The view the room starts in (default `first`; the V key and `TestRoom.setCameraMode` change it). */
+  cameraMode?: CameraMode
+  /**
+   * The strike clip each melee tool plays before its blow lands, by tool id. The blow (`meleeUse`, with the aim read again) falls at the clip's impact second, which
+   * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
+   */
+  strikeClips?: Readonly<Record<string, string>>
+  /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
+  handStances?: Readonly<Record<string, string>>
+  /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
+  thirdPerson?: ThirdPersonOptions
+  /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
+  metrics?: readonly RoomMetricId[] | false
+  /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
+  blast?: BlastOptions
+  /**
+   * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
+   * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
+   * `onChange` gets the encoded state of a module whenever it changes (a page keeps it in its URL). The room never touches `location`.
+   */
+  bench?: { readonly state?: Readonly<Record<string, string>>; readonly onChange?: (moduleId: string, encoded: string) => void }
+}
+
+/** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
+export type RoomMetricId =
+  | 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+  /** Of the last blast, once the room's blast options are on: the share that reached the most sheltered target (%), the pressure multiplier, the fragment hits. */
+  | 'blast_shelter' | 'blast_confinement' | 'blast_fragments'
+
+/** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
+export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }
+
+export type BenchLayer = ModuleLayer & { readonly on: boolean }
+
+/** The bench of a loaded module, driven from outside the panel (tests, scripts, a page that keeps the state in its URL). */
+export interface BenchHandle {
+  controls(): BenchControl[]
+  layers(): BenchLayer[]
+  value(id: string): ControlValue | undefined
+  layer(id: string): boolean
+  /** Numbers are clamped and snapped to the step. False for an unknown id, a wrong type, an option not offered or a disabled control. */
+  set(id: string, value: ControlValue): boolean
+  setLayer(id: string, on: boolean): boolean
+  act(id: string): boolean
+  /** `id=value;id=value`, the format `TestRoomOptions.bench.state[moduleId]` reads back. */
+  encode(): string
 }
 
 export interface SpawnedObject {
@@ -102,6 +238,10 @@ export interface SpawnedObject {
 }
 
 export interface TestRoom {
+  /** The room's sound engine, or `null` in a silent room. */
+  readonly audio: AudioEngine | null
+  /** The environment store lent to modules as `host.environment`. */
+  readonly environment: EnvironmentBus
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
@@ -114,6 +254,10 @@ export interface TestRoom {
   resetAll(): void
   readonly arsenal: Arsenal
   readonly fluids: FluidWorld
+  /** The running film of the liquids (blood, fuel, oil): `splat` throws drops into it (a wound), `setWeather` is the rain hook. */
+  readonly film: FilmBridge
+  /** The room's one effects world (what `host.effects` draws into): the weather moves its wind. */
+  readonly vfx: VfxWorld
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
   readonly tool: WeaponState
@@ -134,11 +278,16 @@ export interface TestRoom {
   spawned(): SpawnedObject[]
   /** Advance one frame (only needed when the host owns the loop). */
   update(dt: number): void
-  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event', fn: (data: unknown) => void): () => void
+  /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
+  waitUntilReady(maxSeconds?: number): number
+  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera', fn: (data: unknown) => void): () => void
   /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
   toggleTap(on?: boolean): boolean
+  /** The blast options the room's explosions use now, and a way to change them (each key replaces the old one; `undefined` clears it). */
+  blast(): BlastOptions
+  setBlast(options: BlastOptions): void
   /** Stop the simulation (time, physics, animations, tools, walks): the UI, the camera and the log stay live. `step` and `update` do nothing until `resume`. Scenarios run unpaused. */
   pause(): void
   resume(): void
@@ -151,6 +300,11 @@ export interface TestRoom {
   setFastForward(on: boolean): void
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
+  /**
+   * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
+   * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
+   */
+  openArea(group: string): SpawnedObject[]
   /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */
   readonly scenarios: TestRoomScenario[]
   /** The liquid renderer of `@adatechnology/game-fluids-three` (containers, streams, stains). */
@@ -165,6 +319,8 @@ export interface TestRoom {
    * clip) writing a check line (pass or fail) per result to the log. Loading the same module twice replaces its items and scenarios.
    */
   loadModule(module: TestableModule<ScenarioContext>): ModuleReport
+  /** Compiles the shader programs that the first hit, decal or effect would otherwise compile in the middle of a frame. Call it once the lights of the scene are set (a module that adds lights changes the programs). */
+  warmUp(): void
   /** Animations of the aimed (or held) item: what the animations panel shows. */
   animations(): AnimationInfo | null
   /**
@@ -172,6 +328,30 @@ export interface TestRoom {
    * offsets from the rest pose, interpolated linearly; the item keeps the last pose. Events are logged (and `sound` events reach `onSound`).
    */
   playAnimation(clipId: string, objectId?: string): boolean
+  /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
+  bench(moduleId?: string): BenchHandle | null
+  /**
+   * Show a body for the player (or none with null). The room adds `root` to the scene, puts it at the player's feet with the player's yaw every
+   * frame and calls `update` with the speed of the player's movement, Shift, the crouch/down set by `setAvatarState`, whether a firearm is in hand
+   * and the camera pitch. Hidden in first person, shown in third. In third person the carried item follows `avatar.hand('R')`. The previous
+   * avatar is taken out of the scene, not disposed.
+   */
+  setAvatar(avatar: RoomAvatar | null): void
+  readonly avatar: RoomAvatar | null
+  /** Crouch and knocked-down state a player module drives (merged over what is set; the room fills the rest). `armed` forces the armed arms (`null`: follow the tool in hand again). */
+  setAvatarState(state: { crouch?: boolean; down?: boolean; armed?: boolean | null }): void
+  /** What the avatar was last given. */
+  avatarState(): RoomAvatarState
+  /** `first` (the camera is the eye) or `third` (over the shoulder). V toggles it when a body is set. Logged as a `camera` action. */
+  setCameraMode(mode: CameraMode): void
+  readonly cameraMode: CameraMode
+  /** Room counters and the active module's metrics, read now. */
+  /**
+   * Shakes the camera for the render that follows, by the shake of the effects world, and answers the function that puts it back. The room's own loop
+   * wraps its render in it; a host that renders by itself calls it around its own `render`.
+   */
+  applyCamera(): () => void
+  metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
   dispose(): void
 }
 

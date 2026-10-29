@@ -15,6 +15,8 @@ export interface PlayerOptions {
   dom: HTMLElement
   /** `[minX, minZ, maxX, maxZ]` boxes to stay out of. */
   colliders: Array<[number, number, number, number]>
+  /** Extra places to stay out of, asked on every step (a module's walls): `(x, z, radius) => blocked`. The set may change while the player walks. */
+  blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -25,6 +27,15 @@ export interface Player {
   readonly yaw: number
   readonly pitch: number
   readonly locked: boolean
+  /** Where the feet are: x and z on the floor, y above it (a jump lifts it). The eye is `EYE` above, the camera sits there. */
+  readonly x: number
+  readonly z: number
+  readonly feet: number
+  /** Feet position. */
+  readonly position: Vec3
+  /** Horizontal metres per second walked in the last update. */
+  readonly speed: number
+  readonly running: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
   update(dt: number): void
@@ -41,7 +52,8 @@ export interface Player {
 }
 
 const EYE = 1.7
-const RADIUS = 0.3
+/** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
+export const PLAYER_RADIUS = 0.3
 const WALK = 3.4
 const RUN = 6.2
 const JUMP = 4.6
@@ -59,6 +71,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let y = 0
   let eye = EYE
   let vy = 0
+  let walked = 0
+  let running = false
   const px = { x: o.start[0], z: o.start[2] }
   let locked = false
   const keys = new Set<string>()
@@ -73,8 +87,9 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   apply()
 
   const blocked = (x: number, z: number): boolean => {
-    if (Math.abs(x) > o.limit - RADIUS || Math.abs(z) > o.limit - RADIUS) return true
-    for (const c of o.colliders) if (x > c[0] - RADIUS && x < c[2] + RADIUS && z > c[1] - RADIUS && z < c[3] + RADIUS) return true
+    if (Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS) return true
+    for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
+    if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
     return false
   }
   const move = (dx: number, dz: number): void => {
@@ -195,9 +210,29 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get locked() {
       return locked
     },
+    get x() {
+      return px.x
+    },
+    get z() {
+      return px.z
+    },
+    get feet() {
+      return y
+    },
+    get position() {
+      return [px.x, y, px.z] as Vec3
+    },
+    get speed() {
+      return walked
+    },
+    get running() {
+      return running
+    },
     keys,
     update(dt) {
       const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+      const fromX = px.x
+      const fromZ = px.z
       const speed = run ? RUN : WALK
       let f = 0
       let r = 0
@@ -214,6 +249,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         const rz = -Math.sin(yaw)
         move(((fx * f + rx * r) / len) * speed * dt, ((fz * f + rz * r) / len) * speed * dt)
       }
+      walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
+      running = run && walked > 0
       if (y <= 0 && keys.has('Space')) vy = JUMP
       if (y > 0 || vy > 0) {
         vy -= GRAVITY * dt

@@ -1,3 +1,6 @@
+import { deepMerge } from '@adatechnology/game-contracts'
+import type { DeepPartial } from '@adatechnology/game-contracts'
+
 /** Locales shipped with the package. Unknown locales fall back to `en`. */
 export type WeaponsLocale = 'en' | 'pt-BR'
 
@@ -8,14 +11,22 @@ export interface WeaponsStrings {
   modes: Record<string, string>
   /** Display name of each weapon category. */
   categories: Record<string, string>
+  /** Display name of each explosive id. */
+  explosives: Record<string, string>
+  /** Display name of each weapon fault. */
+  faults: Record<string, string>
+  /** Display name of each weapon condition. */
+  conditions: Record<string, string>
 }
 
-const modesEn = { single: 'single action', semi: 'semi-automatic', burst: 'burst', auto: 'automatic', pump: 'pump action', bolt: 'bolt action', lever: 'lever action', break: 'break action' }
+const modesEn = { single: 'single action', semi: 'semi-automatic', burst: 'burst', auto: 'automatic', pump: 'pump action', bolt: 'bolt action', lever: 'lever action', break: 'break action', volley: 'volley' }
 const categoriesEn = {
   pistol: 'pistol', revolver: 'revolver', smg: 'submachine gun', rifle: 'rifle', carbine: 'carbine', sniper: 'sniper rifle', shotgun: 'shotgun',
   bow: 'bow', crossbow: 'crossbow', melee_blunt: 'blunt melee', melee_blade: 'bladed melee', flame: 'flame', heat: 'heat', throwable: 'throwable',
-  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand',
+  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand', dmr: 'marksman rifle', hunting: 'hunting rifle', machine_gun: 'machine gun', launcher: 'launcher',
 }
+const faultsEn = { misfire: 'misfire', stovepipe: 'stovepipe', double_feed: 'double feed', failure_to_extract: 'failure to extract' }
+const conditionsEn = { new: 'new', used: 'used', worn: 'worn', rusty: 'rusty' }
 
 export const locales: Record<WeaponsLocale, WeaponsStrings> = {
   en: {
@@ -29,9 +40,19 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       flamethrower: 'Flamethrower', molotov: 'Molotov cocktail', cutting_torch: 'Oxy-fuel cutting torch', blowtorch: 'Blowtorch',
       frag_grenade: 'Fragmentation grenade', pipe_bomb: 'Pipe bomb', screwdriver: 'Screwdriver', wrench: 'Wrench', pry_bar: 'Pry bar', hacksaw: 'Hacksaw',
       utility_knife: 'Utility knife', claw_hammer: 'Claw hammer', extinguisher: 'Fire extinguisher',
+      boito_double_barrel: 'Boito double-barrel', hunting_rifle_30_06: '.30-06 hunting rifle', m2_flamethrower: 'M2 flamethrower', improvised_flamethrower: 'Improvised flamethrower',
+      m79: 'M79 grenade launcher',
     },
     modes: modesEn,
     categories: categoriesEn,
+    explosives: {
+      m67: 'M67 fragmentation grenade', molotov: 'Molotov cocktail', pipe_bomb: 'Pipe bomb', propane_p13: 'P13 propane cylinder', dynamite: 'Dynamite', c4: 'C4 charge',
+      claymore: 'Claymore mine', flashbang: 'Flashbang', m79_40mm: '40 mm grenade', m72_66mm: '66 mm HEAT rocket', at4_84mm: '84 mm HEAT rocket',
+      pg7v: 'PG-7V rocket', carl_gustaf_84mm: '84 mm HE/HEAT round', fuel_barrel: 'Fuel barrel', car_fuel_tank: 'Car fuel tank',
+      fuel_pump: 'Fuel pump', fuel_station_tank: 'Fuel station tank',
+    },
+    faults: faultsEn,
+    conditions: conditionsEn,
   },
   'pt-BR': {
     weapons: {
@@ -43,14 +64,26 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       knife: 'faca', fists: 'punhos', lighter: 'isqueiro', flamethrower: 'lança-chamas', molotov: 'coquetel molotov', cutting_torch: 'maçarico de corte',
       blowtorch: 'maçarico', frag_grenade: 'granada de fragmentação', pipe_bomb: 'bomba caseira', screwdriver: 'chave de fenda', wrench: 'chave inglesa',
       pry_bar: 'alavanca', hacksaw: 'serra de arco', utility_knife: 'estilete', claw_hammer: 'martelo de unha', extinguisher: 'extintor',
+      boito_double_barrel: 'Boito (2 canos)', hunting_rifle_30_06: 'Rifle de caça .30-06', m2_flamethrower: 'Lança-chamas M2', improvised_flamethrower: 'Lança-chamas caseiro',
+      m79: 'Lança-granadas M79',
     },
-    modes: { single: 'tiro único', semi: 'semiautomático', burst: 'rajada', auto: 'automático', pump: 'repetição', bolt: 'ferrolho', lever: 'alavanca', break: 'basculante' },
+    modes: { single: 'tiro único', semi: 'semiautomático', burst: 'rajada', auto: 'automático', pump: 'repetição', bolt: 'ferrolho', lever: 'alavanca', break: 'basculante', volley: 'salva' },
     categories: {
       pistol: 'pistola', revolver: 'revólver', smg: 'submetralhadora', rifle: 'fuzil', carbine: 'carabina', sniper: 'fuzil de precisão', shotgun: 'espingarda',
       bow: 'arco', crossbow: 'besta', melee_blunt: 'corpo a corpo contundente', melee_blade: 'corpo a corpo cortante', flame: 'chama', heat: 'calor',
-      throwable: 'arremessável', tool: 'ferramenta', extinguisher: 'extintor', hand: 'mão',
+      throwable: 'arremessável', tool: 'ferramenta', extinguisher: 'extintor', hand: 'mão', dmr: 'fuzil de precisão semiautomático', hunting: 'arma de caça',
+      machine_gun: 'metralhadora', launcher: 'lançador',
     },
+    explosives: {
+      m67: 'Granada M67', molotov: 'Coquetel molotov', pipe_bomb: 'Bomba caseira', propane_p13: 'Botijão de gás P13', dynamite: 'Dinamite', c4: 'C4 com detonador',
+      claymore: 'Mina Claymore', flashbang: 'Granada de luz', m79_40mm: 'Granada de 40 mm', m72_66mm: 'Foguete HEAT de 66 mm', at4_84mm: 'Foguete HEAT de 84 mm',
+      pg7v: 'Foguete PG-7V', carl_gustaf_84mm: 'Projétil de 84 mm (HE/HEAT)', fuel_barrel: 'Barril de combustível', car_fuel_tank: 'Tanque de combustível do carro',
+      fuel_pump: 'Bomba de combustível', fuel_station_tank: 'Tanque do posto de gasolina',
+    },
+    faults: { misfire: 'nega', stovepipe: 'chaminé', double_feed: 'dupla alimentação', failure_to_extract: 'falha de extração' },
+    conditions: { new: 'nova', used: 'usada', worn: 'gasta', rusty: 'enferrujada' },
   },
 }
 
-export const resolveStrings = (locale: string | undefined): WeaponsStrings => locales[(locale as WeaponsLocale) ?? 'en'] ?? locales.en
+export const resolveStrings = (locale: string | undefined, overrides?: DeepPartial<WeaponsStrings>): WeaponsStrings =>
+  deepMerge(locales[(locale as WeaponsLocale) ?? 'en'] ?? locales.en, overrides)

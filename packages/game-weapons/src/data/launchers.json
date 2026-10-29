@@ -1,0 +1,336 @@
+[
+  {
+    "id": "rpg_7",
+    "name": "RPG-7",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "pg7v",
+      "magazine": 1,
+      "reload": 4.5,
+      "timings": {
+        "draw": 0.35,
+        "reload": 4.5,
+        "clear": 1.2
+      },
+      "family": "rocket",
+      "speed": 117,
+      "minArmDistance": 10,
+      "backblast": 5,
+      "backblastHalfAngleDeg": 19,
+      "recoil": [
+        4,
+        1
+      ]
+    },
+    "mass": 6.3,
+    "dimensions": {
+      "length": 0.95,
+      "barrel": 0.95,
+      "emptyMass": 6.3
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "m72_law",
+    "name": "M72 LAW",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m72_66mm",
+      "magazine": 1,
+      "reload": 1.15,
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.15,
+        "clear": 1.2
+      },
+      "family": "rocket",
+      "disposable": true,
+      "speed": 145,
+      "minArmDistance": 10,
+      "backblast": 5,
+      "backblastHalfAngleDeg": 19,
+      "recoil": [
+        2.75,
+        0.69
+      ]
+    },
+    "mass": 2.5,
+    "dimensions": {
+      "length": 0.881,
+      "barrel": 0.881,
+      "emptyMass": 2.5
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "at4",
+    "name": "AT4",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "at4_84mm",
+      "magazine": 1,
+      "reload": 1.15,
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.15,
+        "clear": 1.2
+      },
+      "family": "rocket",
+      "disposable": true,
+      "speed": 285,
+      "minArmDistance": 10,
+      "backblast": 5,
+      "backblastHalfAngleDeg": 19,
+      "recoil": [
+        3.25,
+        0.81
+      ]
+    },
+    "mass": 6.7,
+    "dimensions": {
+      "length": 1.02,
+      "barrel": 1.02,
+      "emptyMass": 6.7
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "carl_gustaf_m4",
+    "name": "Carl Gustaf M4",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "carl_gustaf_84mm",
+      "magazine": 1,
+      "reload": 1.05,
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.05,
+        "clear": 1.2
+      },
+      "family": "rocket",
+      "speed": 255,
+      "minArmDistance": 10,
+      "backblast": 5,
+      "backblastHalfAngleDeg": 19,
+      "recoil": [
+        3.5,
+        0.87
+      ]
+    },
+    "mass": 6.6,
+    "dimensions": {
+      "length": 0.95,
+      "barrel": 0.95,
+      "emptyMass": 6.6
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "m2_flamethrower",
+    "name": "M2 flamethrower",
+    "category": "launcher",
+    "action": {
+      "kind": "flame",
+      "temperature": 900,
+      "radius": 0.6,
+      "range": 6,
+      "fuelPerSecond": 1,
+      "fuel": 9,
+      "cone": true,
+      "noise": 20,
+      "family": "flame",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.1,
+        "clear": 1.2
+      }
+    },
+    "mass": 32,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.62,
+      "emptyMass": 32
+    },
+    "archetype": "flamethrower",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "improvised_flamethrower",
+    "name": "Improvised flamethrower",
+    "category": "launcher",
+    "action": {
+      "kind": "flame",
+      "temperature": 900,
+      "radius": 0.6,
+      "range": 3.6,
+      "fuelPerSecond": 1,
+      "fuel": 5,
+      "cone": true,
+      "noise": 20,
+      "family": "flame",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.1,
+        "clear": 1.2
+      }
+    },
+    "mass": 6,
+    "dimensions": {
+      "length": 0.8,
+      "barrel": 0.66,
+      "emptyMass": 6
+    },
+    "archetype": "flamethrower",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "m203",
+    "name": "M203 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.59,
+    "dimensions": {
+      "length": 0.38,
+      "barrel": 0.305,
+      "emptyMass": 1.36
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "gp_25",
+    "name": "GP-25 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "vog_25",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.73,
+    "dimensions": {
+      "length": 0.323,
+      "barrel": 0.26,
+      "emptyMass": 1.5
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "ag36",
+    "name": "AG36 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.73,
+    "dimensions": {
+      "length": 0.35,
+      "barrel": 0.28,
+      "emptyMass": 1.5
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  }
+]

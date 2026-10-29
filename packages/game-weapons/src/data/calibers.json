@@ -6,52 +6,21 @@
     "bulletGrams": 2.6,
     "muzzleSpeed": 350,
     "dragPer100m": 0.15,
-    "kind": "rimfire"
-  },
-  {
-    "id": "9x19",
-    "label": "9×19 mm",
-    "diameter": 9,
-    "bulletGrams": 7.5,
-    "muzzleSpeed": 365,
-    "dragPer100m": 0.2,
-    "kind": "fmj"
-  },
-  {
-    "id": "38spl",
-    "label": ".38 Special",
-    "diameter": 9.1,
-    "bulletGrams": 10.2,
-    "muzzleSpeed": 247,
-    "dragPer100m": 0.2,
-    "kind": "fmj"
-  },
-  {
-    "id": "357mag",
-    "label": ".357 Magnum",
-    "diameter": 9.1,
-    "bulletGrams": 10.2,
-    "muzzleSpeed": 396,
-    "dragPer100m": 0.18,
-    "kind": "hp"
-  },
-  {
-    "id": "40sw",
-    "label": ".40 S&W",
-    "diameter": 10.2,
-    "bulletGrams": 11.7,
-    "muzzleSpeed": 310,
-    "dragPer100m": 0.2,
-    "kind": "fmj"
-  },
-  {
-    "id": "45acp",
-    "label": ".45 ACP",
-    "diameter": 11.5,
-    "bulletGrams": 14.9,
-    "muzzleSpeed": 254,
-    "dragPer100m": 0.2,
-    "kind": "fmj"
+    "kind": "rimfire",
+    "noise": 60,
+    "caseType": "tiny",
+    "rim": "rimfire",
+    "cartridge": {
+      "caseDiameter": 5.7,
+      "overallLength": 25.4,
+      "caseLength": 15.6,
+      "projectileDiameter": 5.7
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "380acp",
@@ -60,52 +29,224 @@
     "bulletGrams": 6.2,
     "muzzleSpeed": 295,
     "dragPer100m": 0.22,
-    "kind": "fmj"
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 9.5,
+      "overallLength": 25,
+      "caseLength": 17.3,
+      "projectileDiameter": 9
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
-    "id": "5_56x45",
-    "label": "5.56×45 mm",
+    "id": "9x18",
+    "label": "9×18 mm Makarov",
+    "diameter": 9.3,
+    "bulletGrams": 6.1,
+    "muzzleSpeed": 315,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 9.9,
+      "overallLength": 25.3,
+      "caseLength": 18,
+      "projectileDiameter": 9.3
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "9x19",
+    "label": "9×19 mm",
+    "diameter": 9,
+    "bulletGrams": 7.5,
+    "muzzleSpeed": 365,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "cartridge": {
+      "caseDiameter": 9.9,
+      "overallLength": 29.7,
+      "caseLength": 19.15,
+      "projectileDiameter": 9
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "40sw",
+    "label": ".40 S&W",
+    "diameter": 10.2,
+    "bulletGrams": 11.7,
+    "muzzleSpeed": 310,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "cartridge": {
+      "caseDiameter": 10.8,
+      "overallLength": 28.6,
+      "caseLength": 21.6,
+      "projectileDiameter": 10.2
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "45acp",
+    "label": ".45 ACP",
+    "diameter": 11.5,
+    "bulletGrams": 14.9,
+    "muzzleSpeed": 254,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "cartridge": {
+      "caseDiameter": 12,
+      "overallLength": 32.4,
+      "caseLength": 22.8,
+      "projectileDiameter": 11.5
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "5_7x28",
+    "label": "5.7×28 mm",
     "diameter": 5.7,
-    "bulletGrams": 4,
-    "muzzleSpeed": 935,
-    "dragPer100m": 0.1,
-    "kind": "fmj"
+    "bulletGrams": 2,
+    "muzzleSpeed": 715,
+    "dragPer100m": 0.12,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 7.9,
+      "overallLength": 40.5,
+      "caseLength": 28.9,
+      "projectileDiameter": 5.7
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
-    "id": "7_62x39",
-    "label": "7.62×39 mm",
-    "diameter": 7.9,
-    "bulletGrams": 8,
-    "muzzleSpeed": 725,
-    "dragPer100m": 0.1,
-    "kind": "fmj"
+    "id": "38spl",
+    "label": ".38 Special",
+    "diameter": 9.1,
+    "bulletGrams": 10.2,
+    "muzzleSpeed": 247,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 9.6,
+      "overallLength": 39.4,
+      "caseLength": 29.3,
+      "projectileDiameter": 9.1
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
-    "id": "7_62x51",
-    "label": "7.62×51 mm (.308)",
-    "diameter": 7.8,
-    "bulletGrams": 9.7,
-    "muzzleSpeed": 850,
-    "dragPer100m": 0.08,
-    "kind": "fmj"
+    "id": "357mag",
+    "label": ".357 Magnum",
+    "diameter": 9.1,
+    "bulletGrams": 10.2,
+    "muzzleSpeed": 396,
+    "dragPer100m": 0.18,
+    "kind": "hp",
+    "noise": 300,
+    "caseType": "pistol",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 9.6,
+      "overallLength": 40,
+      "caseLength": 33,
+      "projectileDiameter": 9.1
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
-    "id": "338lapua",
-    "label": ".338 Lapua Magnum",
-    "diameter": 8.6,
-    "bulletGrams": 16.2,
-    "muzzleSpeed": 903,
-    "dragPer100m": 0.06,
-    "kind": "fmj"
+    "id": "44mag",
+    "label": ".44 Magnum",
+    "diameter": 10.9,
+    "bulletGrams": 15.6,
+    "muzzleSpeed": 440,
+    "dragPer100m": 0.18,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "pistol",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 11.6,
+      "overallLength": 40.9,
+      "caseLength": 32.6,
+      "projectileDiameter": 10.9
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
-    "id": "50bmg",
-    "label": ".50 BMG",
+    "id": "50ae",
+    "label": ".50 AE",
     "diameter": 12.7,
-    "bulletGrams": 42,
-    "muzzleSpeed": 925,
-    "dragPer100m": 0.05,
-    "kind": "ap"
+    "bulletGrams": 19.4,
+    "muzzleSpeed": 470,
+    "dragPer100m": 0.18,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "pistol",
+    "cartridge": {
+      "caseDiameter": 13.9,
+      "overallLength": 40.9,
+      "caseLength": 32.6,
+      "projectileDiameter": 12.7
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "12ga_00buck",
@@ -115,7 +256,21 @@
     "muzzleSpeed": 414,
     "pellets": 9,
     "dragPer100m": 0.45,
-    "kind": "buck"
+    "kind": "buck",
+    "noise": 350,
+    "caseType": "shell",
+    "rim": "shell",
+    "cartridge": {
+      "caseDiameter": 20,
+      "overallLength": 70,
+      "caseLength": 70,
+      "projectileDiameter": 18.5
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "12ga_slug",
@@ -124,7 +279,21 @@
     "bulletGrams": 28,
     "muzzleSpeed": 463,
     "dragPer100m": 0.3,
-    "kind": "slug"
+    "kind": "slug",
+    "noise": 350,
+    "caseType": "shell",
+    "rim": "shell",
+    "cartridge": {
+      "caseDiameter": 20,
+      "overallLength": 70,
+      "caseLength": 70,
+      "projectileDiameter": 18.5
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "12ga_birdshot",
@@ -134,7 +303,21 @@
     "muzzleSpeed": 400,
     "pellets": 90,
     "dragPer100m": 0.6,
-    "kind": "birdshot"
+    "kind": "birdshot",
+    "noise": 350,
+    "caseType": "shell",
+    "rim": "shell",
+    "cartridge": {
+      "caseDiameter": 20,
+      "overallLength": 70,
+      "caseLength": 70,
+      "projectileDiameter": 18.5
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "20ga_buck",
@@ -144,7 +327,257 @@
     "muzzleSpeed": 400,
     "pellets": 20,
     "dragPer100m": 0.5,
-    "kind": "buck"
+    "kind": "buck",
+    "noise": 350,
+    "caseType": "shell",
+    "rim": "shell",
+    "sources": [
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "5_56x45",
+    "label": "5.56×45 mm",
+    "diameter": 5.7,
+    "bulletGrams": 4,
+    "muzzleSpeed": 935,
+    "dragPer100m": 0.1,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 9.6,
+      "overallLength": 57.4,
+      "caseLength": 44.7,
+      "projectileDiameter": 5.7
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "5_45x39",
+    "label": "5.45×39 mm",
+    "diameter": 5.6,
+    "bulletGrams": 3.4,
+    "muzzleSpeed": 900,
+    "dragPer100m": 0.1,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 10,
+      "overallLength": 57,
+      "caseLength": 39.8,
+      "projectileDiameter": 5.6
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "7_62x39",
+    "label": "7.62×39 mm",
+    "diameter": 7.9,
+    "bulletGrams": 8,
+    "muzzleSpeed": 725,
+    "dragPer100m": 0.1,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 11.3,
+      "overallLength": 56,
+      "caseLength": 38.7,
+      "projectileDiameter": 7.9
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "30_30",
+    "label": ".30-30 Winchester",
+    "diameter": 7.8,
+    "bulletGrams": 9.7,
+    "muzzleSpeed": 670,
+    "dragPer100m": 0.1,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "rifle",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 10.7,
+      "overallLength": 64.8,
+      "caseLength": 51.8,
+      "projectileDiameter": 7.8
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "7_62x51",
+    "label": "7.62×51 mm (.308)",
+    "diameter": 7.8,
+    "bulletGrams": 9.7,
+    "muzzleSpeed": 850,
+    "dragPer100m": 0.08,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 12,
+      "overallLength": 71.1,
+      "caseLength": 51.2,
+      "projectileDiameter": 7.8
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "7_62x54r",
+    "label": "7.62×54R",
+    "diameter": 7.9,
+    "bulletGrams": 9.6,
+    "muzzleSpeed": 865,
+    "dragPer100m": 0.08,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "rifle",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 12.4,
+      "overallLength": 77.2,
+      "caseLength": 53.7,
+      "projectileDiameter": 7.9
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "30_06",
+    "label": ".30-06 Springfield",
+    "diameter": 7.8,
+    "bulletGrams": 9.7,
+    "muzzleSpeed": 880,
+    "dragPer100m": 0.08,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 12,
+      "overallLength": 84.8,
+      "caseLength": 63.3,
+      "projectileDiameter": 7.8
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "300wm",
+    "label": ".300 Winchester Magnum",
+    "diameter": 7.8,
+    "bulletGrams": 11.7,
+    "muzzleSpeed": 900,
+    "dragPer100m": 0.07,
+    "kind": "fmj",
+    "noise": 600,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 13,
+      "overallLength": 84.8,
+      "caseLength": 66.5,
+      "projectileDiameter": 7.8
+    },
+    "sources": [
+      "reference",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "338lapua",
+    "label": ".338 Lapua Magnum",
+    "diameter": 8.6,
+    "bulletGrams": 16.2,
+    "muzzleSpeed": 903,
+    "dragPer100m": 0.06,
+    "kind": "fmj",
+    "noise": 600,
+    "caseType": "rifle",
+    "cartridge": {
+      "caseDiameter": 14.9,
+      "overallLength": 93.5,
+      "caseLength": 69.2,
+      "projectileDiameter": 8.6
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "408cheytac",
+    "label": ".408 CheyTac",
+    "diameter": 10.4,
+    "bulletGrams": 27.2,
+    "muzzleSpeed": 900,
+    "dragPer100m": 0.05,
+    "kind": "fmj",
+    "noise": 600,
+    "caseType": "big",
+    "cartridge": {
+      "caseDiameter": 16,
+      "overallLength": 115.6,
+      "caseLength": 77,
+      "projectileDiameter": 10.36
+    },
+    "sources": [
+      "reference",
+      "arsenal"
+    ]
+  },
+  {
+    "id": "50bmg",
+    "label": ".50 BMG",
+    "diameter": 12.7,
+    "bulletGrams": 42,
+    "muzzleSpeed": 925,
+    "dragPer100m": 0.05,
+    "kind": "ap",
+    "noise": 600,
+    "caseType": "big",
+    "cartridge": {
+      "caseDiameter": 20.4,
+      "overallLength": 138,
+      "caseLength": 99,
+      "projectileDiameter": 12.7
+    },
+    "sources": [
+      "sdk",
+      "gallery",
+      "arsenal"
+    ]
   },
   {
     "id": "arrow",
@@ -153,7 +586,12 @@
     "bulletGrams": 25,
     "muzzleSpeed": 90,
     "dragPer100m": 0.12,
-    "kind": "arrow"
+    "kind": "arrow",
+    "noise": 20,
+    "propellant": "none",
+    "sources": [
+      "sdk"
+    ]
   },
   {
     "id": "crossbow_bolt",
@@ -162,6 +600,77 @@
     "bulletGrams": 20,
     "muzzleSpeed": 122,
     "dragPer100m": 0.12,
-    "kind": "bolt"
+    "kind": "bolt",
+    "noise": 25,
+    "propellant": "none",
+    "sources": [
+      "sdk"
+    ]
+  },
+  {
+    "id": "4_6x30",
+    "label": "4.6×30 mm",
+    "diameter": 4.65,
+    "bulletGrams": 2,
+    "muzzleSpeed": 735,
+    "dragPer100m": 0.12,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 8,
+      "overallLength": 38.5,
+      "caseLength": 30.5,
+      "projectileDiameter": 4.65
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "32acp",
+    "label": ".32 ACP",
+    "diameter": 7.94,
+    "bulletGrams": 4.6,
+    "muzzleSpeed": 276,
+    "dragPer100m": 0.22,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 9.1,
+      "overallLength": 25,
+      "caseLength": 17.3,
+      "projectileDiameter": 7.94
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "45_70_bp",
+    "label": ".45-70 Government (black powder)",
+    "diameter": 11.43,
+    "bulletGrams": 26.2,
+    "muzzleSpeed": 400,
+    "dragPer100m": 0.09,
+    "kind": "fmj",
+    "noise": 350,
+    "caseType": "rifle",
+    "rim": "rimmed",
+    "propellant": "black_powder",
+    "cartridge": {
+      "caseDiameter": 12.07,
+      "overallLength": 66.5,
+      "caseLength": 53.3,
+      "projectileDiameter": 11.43
+    },
+    "sources": [
+      "sdk"
+    ]
   }
 ]

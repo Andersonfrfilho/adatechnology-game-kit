@@ -96,8 +96,31 @@ export class FragmentSystem {
     return g
   }
 
+  private markGeometry: THREE_NS.CircleGeometry | null = null
+  private markMaterial: THREE_NS.MeshBasicMaterial | null = null
+
+  /**
+   * Bullet holes that stay on a fragment (`Fragment.marks`): dark discs that are children of its mesh, so they fall, spin and settle with it. The mesh is
+   * a unit box scaled to the fragment, so each disc is scaled back; exact for a mark on a face, which is where a bullet hole is.
+   */
+  addMarks(mesh: THREE_NS.Mesh, f: Fragment): void {
+    if (!f.marks?.length) return
+    this.markGeometry ??= new this.THREE.CircleGeometry(1, 10)
+    this.markMaterial ??= new this.THREE.MeshBasicMaterial({ color: 0x0b0a09, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })
+    const sc = mesh.scale
+    for (const mark of f.marks) {
+      const disc = new this.THREE.Mesh(this.markGeometry, this.markMaterial)
+      const radius = Math.max(0.004, mark.diameter) * 0.6
+      const n = this.v.set(mark.normal[0], mark.normal[1], mark.normal[2]).normalize()
+      disc.position.set(mark.point[0] / sc.x + (n.x * 0.002) / sc.x, mark.point[1] / sc.y + (n.y * 0.002) / sc.y, mark.point[2] / sc.z + (n.z * 0.002) / sc.z)
+      disc.quaternion.setFromUnitVectors(this.w.set(0, 0, 1), n)
+      disc.scale.set(radius / sc.x, radius / sc.y, radius / sc.z)
+      mesh.add(disc)
+    }
+  }
+
   /** Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget. */
-  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): void {
+  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh {
     const geo = f.shape === 'shard' ? this.shardGeometry(hashString(f.id)) : this.box
     const mesh = new this.THREE.Mesh(geo, material)
     mesh.position.set(f.center[0], f.center[1], f.center[2])
@@ -131,6 +154,8 @@ export class FragmentSystem {
         alive--
       }
     }
+    this.addMarks(mesh, f)
+    return mesh
   }
 
   /** Add velocity to every fragment within `radius` of a point (blasts). */
@@ -263,6 +288,8 @@ export class FragmentSystem {
   dispose(): void {
     this.clear()
     this.box.dispose()
+    this.markGeometry?.dispose()
+    this.markMaterial?.dispose()
     for (const g of this.shardGeos) g?.dispose()
     this.shardGeos = []
     for (const m of this.materials.values()) m.dispose()

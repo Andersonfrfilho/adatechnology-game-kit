@@ -1,0 +1,62 @@
+{
+  "name": "@adatechnology/game-floorplan-structure",
+  "version": "1.0.5",
+  "license": "MIT",
+  "description": "Structure pack for @adatechnology/game-floorplan: construction systems (masonry, wood frame, log, improvised, canvas), the load path of every plan (roof, trusses, beams, pillars, bearing walls, foundation, porches), the destructible spec of the structure, wall detail, specimens and utilities.",
+  "keywords": [
+    "game",
+    "floorplan",
+    "structure",
+    "destruction",
+    "load-path",
+    "house"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-floorplan-structure"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-destruction": "workspace:*"
+  },
+  "peerDependencies": {
+    "@adatechnology/game-floorplan": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4",
+    "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-items": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*"
+  }
+}

@@ -3,7 +3,7 @@ import type { ContainerState, FluidWorld, Vec3 } from '@adatechnology/game-fluid
 import { boxSolid, clipSolid, cylinderSolid } from './clip'
 import type { Solid, V3 } from './clip'
 import type { MaterialCache } from './materials'
-import type { ParticlePool } from './particles'
+import type { FluidSprites } from './sprites'
 import type { QualityProfile } from './quality'
 import type { ThreeLib } from './types'
 
@@ -77,10 +77,16 @@ export class LiquidBody {
     } else this.mesh.geometry = this.geometry
   }
 
-  update(dt: number, world: FluidWorld, materials: MaterialCache, quality: QualityProfile, particles: ParticlePool): void {
+  update(dt: number, world: FluidWorld, materials: MaterialCache, quality: QualityProfile, particles: FluidSprites): void {
     const state = world.container(this.containerId)
     const def = state?.liquid ? world.liquids.get(state.liquid) : undefined
     if (!state || !state.shape || !def || state.liters <= 1e-6) {
+      if (this.mesh) this.mesh.visible = false
+      this.vertices = 0
+      return
+    }
+    // Nothing of a sealed opaque shell shows its liquid, and a dent in that shell goes deeper than the liquid wall and would let the liquid through.
+    if (state.closed && this.isShellOpaque()) {
       if (this.mesh) this.mesh.visible = false
       this.vertices = 0
       return
@@ -114,6 +120,18 @@ export class LiquidBody {
         particles.steam([o.x, o.y + 0.01, o.z])
       }
     } else this.steamAcc = 0
+  }
+
+  /** Every mesh of the bound object (the liquid itself aside) is drawn with an opaque material. */
+  private isShellOpaque(): boolean {
+    let opaque = true
+    this.object.traverse((child) => {
+      const mesh = child as THREE_NS.Mesh
+      if (!opaque || !mesh.isMesh || child === this.mesh) return
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      if (materials.some((material) => material.transparent || material.opacity < 1)) opaque = false
+    })
+    return opaque
   }
 
   get triangles(): number {

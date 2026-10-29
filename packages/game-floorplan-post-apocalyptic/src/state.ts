@@ -50,16 +50,19 @@ function toolbox(c: StateContext) {
   }
   const exteriorDoors = plan.doors.filter((p) => p.floor === 0 && p.exterior)
   const groundFloorRooms = plan.rooms.filter((r) => r.floor === 0)
-  return { plan, items, rng, ctx, kit, CATALOG, r2, MARGIN, make, placeOnFloor, itemsOfRoom, extraSolids, roomById, out, nextId, register, addSolid, placeItem, placeMany, exteriorDoors, groundFloorRooms, counter: () => counter, bump: () => ++counter }
+  const campZones = plan.zones.filter((z) => z.type === 'camp')
+  return { plan, items, rng, ctx, kit, CATALOG, r2, MARGIN, make, placeOnFloor, itemsOfRoom, extraSolids, roomById, out, nextId, register, addSolid, placeItem, placeMany, exteriorDoors, groundFloorRooms, campZones, counter: () => counter, bump: () => ++counter }
 }
 
 function fortified(c: StateContext): PlacedItem[] {
   const t = toolbox(c)
-  const { plan, items, rng, ctx, kit, CATALOG, r2, MARGIN, make, placeOnFloor, itemsOfRoom, extraSolids, roomById, out, register, addSolid, placeMany, exteriorDoors, groundFloorRooms } = t
+  const { plan, items, rng, ctx, kit, CATALOG, r2, MARGIN, make, placeOnFloor, itemsOfRoom, extraSolids, roomById, out, register, addSolid, placeMany, exteriorDoors, groundFloorRooms, campZones } = t
   const { insideUnion, overlaps, usableParts, reachable, extent, roomAt, shuffle, facingRotation, topOf } = kit
   // boards on windows
+  let boarded = 0
   for (const j of plan.windows) {
-    if (rng() >= (j.floor === 0 ? 0.92 : 0.5)) continue
+    if (rng() >= (j.floor === 0 ? 0.92 : 0.5) && !(j === plan.windows[plan.windows.length - 1] && !boarded)) continue // at least one window is boarded
+    boarded++
     const room = roomById(j.room)
     if (!room) continue
     const n = NORMALS[j.side]
@@ -73,7 +76,10 @@ function fortified(c: StateContext): PlacedItem[] {
   // barricades
   const blocked = new Set<string>()
   for (const p of exteriorDoors) {
-    if (p.model === 'steel' || p.width > 2.0) continue
+    if (p.model === 'steel' || p.width > 2.0 || p.type === 'zip') continue
+    const hasGarageDoor = plan.style === 'rural' && exteriorDoors.some((q) => roomById(q.a)?.type === 'garage')
+    const usable = exteriorDoors.filter((q) => roomById(q.a)?.type !== 'garage')
+    if (hasGarageDoor && p.side !== 'front' && usable.filter((q) => !blocked.has(q.id) && q !== p).length === 0) continue // with a garage door, one entrance stays unbarricaded
     if (!(p.side === 'front' || rng() < 0.6)) continue
     const room = roomById(p.a)
     if (!room) continue
@@ -96,9 +102,9 @@ function fortified(c: StateContext): PlacedItem[] {
       for (const dl of SHIFTS) {
         const c2 = p.axis === 'u' ? [cx + dl, cz] : [cx, cz + dl]
         const r: Rect = [c2[0] - extentU / 2, c2[1] - extentV / 2, c2[0] + extentU / 2, c2[1] + extentV / 2]
-        if (!insideUnion(r, inners) || solids.some((o) => overlaps(r, o)) || otherZones.some((z) => overlaps(r, z))) continue
+        if (!insideUnion(r, inners) || solids.some((o) => overlaps(r, o)) || otherZones.some((z) => overlaps(r, z)) || !p.zones.some((z: Rect) => overlaps(r, z, 0.01))) continue // the barricade must cover the door zone
         ctx.setIgnored(new Set([...blocked, p.id]))
-        const free = reachable(ctx.gridOf(room), solids.concat([r]), 0.12)
+        const free = reachable(ctx.gridOf(room), solids.concat([r]), room.outdoor ? 0.12 : plan.playerRadius)
         ctx.setIgnored(blocked)
         if (!free) continue
         return { rect: r, f }
@@ -194,7 +200,7 @@ function fortified(c: StateContext): PlacedItem[] {
     if (!out.some((e) => e.category === 'barbed_wire' || e.category === 'razor_wire') && segs.length) applyTop(segs[0])
   }
   // supplies
-  const supplyRooms = groundFloorRooms.filter((r) => ['kitchen', 'laundry', 'stockroom', 'dining', 'shop', 'living'].includes(r.type))
+  const supplyRooms = groundFloorRooms.filter((r) => ['kitchen', 'laundry', 'stockroom', 'dining', 'shop', 'living'].includes(r.type)).concat(campZones)
   for (let i = 0, n = 2 + Math.floor(rng() * 3); i < n; i++) placeMany(supplyRooms, ['water_bottle_crates', 'canned_food', 'water_jug'][Math.floor(rng() * 3)], {}, 1)
   // safest room: fewest openings to the outside
   const cands = groundFloorRooms
@@ -215,6 +221,27 @@ function fortified(c: StateContext): PlacedItem[] {
     }
     if (seg) break
   }
+  if (!seg) {
+    // tight houses: sweep the floor on a fixed grid for a free corner for the mattress
+    const fallback = (cands as { at: Room; s?: number }[]).concat(groundFloorRooms.filter((r) => !cands.some((q) => q.at === r) && !['garage', 'bathroom', 'stairs', 'elevator', 'void'].includes(r.type)).map((r) => ({ at: r })))
+    for (const cd of fallback) {
+      for (const dim of [[0.9, 1.9], [1.9, 0.9], [0.8, 1.6], [1.6, 0.8], [0.7, 1.4], [1.4, 0.7]]) {
+        const parts = usableParts(cd.at, 0)
+        const spots: Rect[] = []
+        for (const p of parts) for (let x = p[0]; x + dim[0] <= p[2] + 1e-6; x += 0.2) for (let z = p[1]; z + dim[1] <= p[3] + 1e-6; z += 0.2) spots.push([x, z, x + dim[0], z + dim[1]])
+        const margin = (q: Rect) => Math.min(...parts.map((p) => Math.min(q[0] - p[0], q[1] - p[1], p[2] - q[2], p[3] - q[3])).filter((v) => v >= -1e-6), 9)
+        spots.sort((m, n) => margin(m) - margin(n) || m[0] - n[0] || m[1] - n[1]) // against the walls, away from the walkway
+        const r = placeOnFloor(cd.at, 'floor_mattress', rng, { dim, cands: spots, ordered: true })
+        if (r) {
+          addSolid(cd.at, r)
+          register(make(cd.at, 'floor_mattress', r, dim[0] > dim[1] ? [1, 0] : [0, 1], { mount: 'floor', w: Math.min(...dim), d: Math.max(...dim) }) as Item)
+          seg = cd.at
+          break
+        }
+      }
+      if (seg) break
+    }
+  }
   const lanternRoom = seg || groundFloorRooms[0]
   if (lanternRoom) {
     const table = (itemsOfRoom(lanternRoom) as Item[]).find((m) => SUPPORT_CATEGORIES.has(m.category) && !m.decor && !m.on && m.w >= 0.35)
@@ -233,7 +260,7 @@ function fortified(c: StateContext): PlacedItem[] {
 
 function abandoned(c: StateContext): PlacedItem[] {
   const t = toolbox(c)
-  const { plan, items, rng, make, roomById, out, placeMany, groundFloorRooms } = t
+  const { plan, items, rng, make, roomById, out, placeMany, groundFloorRooms, campZones } = t
   void make
   void roomById
   const openedDoors: string[] = []
@@ -250,12 +277,14 @@ function abandoned(c: StateContext): PlacedItem[] {
   if (openedDoors.length) out.push({ id: t.nextId('open_doors'), state: c.state, type: 'open_doors', category: 'open_doors', doors: openedDoors, stateItem: true } as unknown as Item)
   const bedrooms = groundFloorRooms.concat(plan.rooms.filter((r) => r.floor > 0)).filter((r) => r.type === 'bedroom')
   if (placeMany(bedrooms, 'open_suitcases', {}, Math.min(2, bedrooms.length)) === 0) placeMany(groundFloorRooms.filter((r) => ['living', 'corridor', 'hall', 'dining', 'shop'].includes(r.type)), 'open_suitcases', {}, 1)
-  const everything = plan.rooms.filter((r) => ['bedroom', 'living', 'corridor', 'kitchen', 'bathroom', 'dining', 'office', 'hall', 'shop', 'stockroom', 'counter'].includes(r.type))
-  placeMany(everything, 'clothes_on_floor', { flat: true }, 3 + Math.floor(rng() * 3))
+  const everything = plan.rooms.filter((r) => ['bedroom', 'living', 'corridor', 'kitchen', 'bathroom', 'dining', 'office', 'hall', 'shop', 'stockroom', 'counter'].includes(r.type)).concat(campZones)
+  const clothesWanted = 3 + Math.floor(rng() * 3)
+  let clothes = placeMany(everything, 'clothes_on_floor', { flat: true }, clothesWanted)
+  for (let k = 0; k < 6 && clothes < 2; k++) clothes += placeMany(everything, 'clothes_on_floor', { flat: true }, 2 - clothes)
   const ransacked = (items as Item[]).filter((m) => CONTAINER_CATEGORIES.has(m.category) && !m.decor && !m.on && rng() < 0.65)
   for (const m of ransacked) m.ransacked = true
   if (ransacked.length) out.push({ id: t.nextId('ransacked_drawers'), state: c.state, type: 'ransacked_drawers', category: 'ransacked_drawers', items: ransacked.map((m) => m.id), stateItem: true } as unknown as Item)
-  const tableRooms = plan.rooms.filter((r) => ['dining', 'kitchen', 'living', 'gourmet', 'shop', 'office'].includes(r.type))
+  const tableRooms = plan.rooms.filter((r) => ['dining', 'kitchen', 'living', 'gourmet', 'shop', 'office'].includes(r.type)).concat(campZones)
   placeMany(tableRooms, 'fallen_chair', {}, 1 + Math.floor(rng() * 2))
   const cars = (items as Item[]).filter((m) => m.category === 'car' && !m.decor)
   const inGarage = cars.filter((m) => {
@@ -268,8 +297,10 @@ function abandoned(c: StateContext): PlacedItem[] {
     const n = t.bump()
     out.push(Object.assign({}, car, { id: 'state.' + n + '.car', _seedId: legacyCarId(n), state: c.state, type: 'car', category: 'car', item: car.id, doorOpen: true, stateItem: true, _r: car._r }) as Item)
   }
-  const bloodRooms = plan.rooms.filter((r) => ['corridor', 'living', 'bedroom', 'kitchen', 'hall', 'dining', 'shop', 'stockroom'].includes(r.type))
-  placeMany(bloodRooms, 'blood_stains', { flat: true }, 2 + Math.floor(rng() * 3))
+  const bloodRooms = plan.rooms.filter((r) => ['corridor', 'living', 'bedroom', 'kitchen', 'hall', 'dining', 'shop', 'stockroom'].includes(r.type)).concat(campZones)
+  const stainsWanted = 2 + Math.floor(rng() * 3)
+  let stains = placeMany(bloodRooms, 'blood_stains', { flat: true }, stainsWanted)
+  for (let k = 0; k < 6 && stains < 2; k++) stains += placeMany(bloodRooms, 'blood_stains', { flat: true }, 2 - stains) // a tight room: insist until there are at least 2 stains
   if (plan.lot) {
     const openedGates: string[] = []
     for (const g of plan.gates)

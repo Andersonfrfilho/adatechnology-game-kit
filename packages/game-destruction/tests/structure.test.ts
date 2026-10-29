@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildFrame, createDestruction, partCapacity, MATERIALS, resolveStrings } from '../src'
+import { buildFrame, createDestruction, partCapacity, MATERIALS, resolveStrings, sizeStructure } from '../src'
 import type { DestructibleSpec, DestructionEvent, DestructionWorld, JointSpec, PartSpec } from '../src'
 import { chair } from './helpers'
 
@@ -19,7 +19,8 @@ const slabSpec = (weak: number[] = [], extra: { wall?: boolean; partition?: bool
     joints.push({ a: `c${i}`, b: `f${i}`, kind: 'rebar', bears: 'a_on_b' })
     joints.push({ a: 'slab', b: `c${i}`, kind: 'rebar', bears: 'a_on_b' })
   })
-  parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab' } })
+  // a reinforced slab (0.5% of tension steel): plain concrete would snap in bending once a column goes (see flexure.test.ts)
+  parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab', rebar: { ratio: 0.005 } } })
   if (extra.wall) {
     parts.push({ id: 'wall', material: 'brick', shape: { kind: 'box', size: [1, 2, 0.2] }, position: [0, 4.2, 0], structure: { role: 'wall' } })
     joints.push({ a: 'wall', b: 'slab', kind: 'mortar', bears: 'a_on_b' })
@@ -54,9 +55,15 @@ describe('structure', () => {
     const brick = MATERIALS.find((m) => m.id === 'brick')!
     const wood = MATERIALS.find((m) => m.id === 'wood_soft')!
     const col: PartSpec = { id: 'c', material: 'concrete', shape: { kind: 'box', size: [0.3, 3, 0.3] }, position: [0, 0, 0], structure: { role: 'column' } }
-    expect(partCapacity(col, conc)).toBeCloseTo(40000, -2)
+    // real strengths (MaterialDef.strength): a plain 30 x 30 cm column of C25, 3 m high (slenderness 10): 0.09 m² x 25 MPa x 0.9 x (1 - (10/40)^3) / g
+    expect(partCapacity(col, conc)).toBeCloseTo((0.09 * 25e6 * 0.9 * (1 - (10 / 40) ** 3)) / 9.81, -1)
+    // with a cage of 4 bars of 16 mm (CA-50) it is a reinforced pillar: 0.85 fck Ac + As fy
+    const caged: PartSpec = { ...col, reinforcement: { material: 'steel', spacing: 0.3, diameter: 0.016 } }
+    expect(partCapacity(caged, conc)).toBeCloseTo((0.85 * 25e6 * 0.09 + 4 * Math.PI * 0.008 ** 2 * 500e6) / 9.81, -1)
+    // a 20 cm clay brick wall 2.8 m high (fk 2.35 MPa, slenderness 14): 41 t per metre
     const wall: PartSpec = { id: 'w', material: 'brick', shape: { kind: 'box', size: [1, 2.8, 0.2] }, position: [0, 0, 0], structure: { role: 'wall' } }
-    expect(partCapacity(wall, brick)).toBeCloseTo(8000, -1)
+    expect(partCapacity(wall, brick)).toBeCloseTo((0.2 * 2.35e6 * 0.9 * (1 - (14 / 40) ** 3)) / 9.81, -1)
+    // a material without real strengths keeps the game-tuned compressive: softwood 100 000 kg/m²
     const beam: PartSpec = { id: 'b', material: 'wood_soft', shape: { kind: 'box', size: [0.1, 0.2, 3] }, position: [0, 0, 0], structure: { role: 'beam' } }
     expect(partCapacity(beam, wood)).toBeCloseTo(2000, -1)
     expect(partCapacity({ ...col, structure: { role: 'column', capacity: 123 } }, conc)).toBe(123)
@@ -198,15 +205,16 @@ describe('structure', () => {
     const pid = probe.add(base)
     const load0 = probe.part(pid, 'column_0_0_0')!.load!
     expect(probe.part(pid, 'column_0_0_0')!.stress!).toBeLessThan(0.5)
-    const cascade = (capacity: number) => {
+    const cascade = (capacity: number, rebar?: { beam: number; slab: number }) => {
       const w = createDestruction()
-      const id = w.add(buildFrame({ columnsX: 2, columnsZ: 2, spanX: 4, spanZ: 4, floors: 2, columnCapacity: capacity }))
+      const id = w.add(buildFrame({ columnsX: 2, columnsZ: 2, spanX: 4, spanZ: 4, floors: 2, columnCapacity: capacity, ...(rebar ? { rebar } : {}) }))
       w.hit(id, { type: 'blunt', point: [-1.85, 1.5, -2], direction: [-1, 0, 0], energy: 3e6, radius: 0.05 })
       const ev = run(w, 300)
       const broken = w.state(id)!.parts.filter((p) => p.id.startsWith('column_0') && p.status === 'broken').length
       return { broken, ev, w, id }
     }
-    const strong = cascade(load0 * 2)
+    // the strong frame is also designed for the loss of a corner column (alternate path): its beams and slab have the steel to hang on the rest
+    const strong = cascade(load0 * 2, { beam: 0.025, slab: 0.008 })
     expect(strong.broken).toBe(1)
     expect(types(strong.ev)).not.toContain('collapse')
     const weak = cascade(load0 * 1.25)
@@ -288,5 +296,44 @@ describe('structure', () => {
     expect(w2.part(id, 'wall')!.status).toBe('collapsed')
     w.reset(id)
     expect(w.state(id)!.parts.every((p) => p.status === 'intact')).toBe(true)
+  })
+
+  describe('a slab is held by the sum of its columns', () => {
+    /** The four columns of `slabSpec` sized so that each rests at `safety` of its capacity and the loss of one leaves the rest under `redundancy`. */
+    const sized = (safety: number, redundancy: number) => sizeStructure(slabSpec(), { safety, redundancy })
+    const stressOf = (w: DestructionWorld, id: string, part: string) => w.part(id, part)!.stress!
+
+    it('four columns share the load; each loss moves it to the rest; the slab falls when the capacity left is less than the load', () => {
+      const w = createDestruction()
+      const id = w.add(sized(0.72, 0.97))
+      const rest = stressOf(w, id, 'c0')
+      expect(rest).toBeCloseTo(0.72, 2)
+      for (const c of ['c1', 'c2', 'c3']) expect(stressOf(w, id, c)).toBeCloseTo(rest, 2)
+      // capacity of the four = load / 0.72; the three left carry the load of the lost one on top of theirs (its own mass leaves too): over the 0.72 of rest, under 1
+      w.hitPart(id, 'c0', { type: 'blunt', point: [-1.65, 1.5, -1.8], energy: 3e6, radius: 0.05 })
+      expect(w.part(id, 'c0')!.status).toBe('broken')
+      expect(stressOf(w, id, 'c1')).toBeGreaterThan(rest * 1.2)
+      expect(stressOf(w, id, 'c1')).toBeLessThan(1)
+      expect(types(run(w, 60))).not.toContain('collapse')
+      // two left carry about twice the load each, over 1: the slab goes
+      w.hitPart(id, 'c1', { type: 'blunt', point: [1.95, 1.5, -1.8], energy: 3e6, radius: 0.05 })
+      expect(stressOf(w, id, 'c2')).toBeGreaterThan(1.1)
+      const ev = run(w, 120)
+      const col = ev.find((e) => e.type === 'collapse')
+      expect(col && col.type === 'collapse' && col.parts).toContain('slab')
+    })
+
+    it('structure.safetyFactor loads every part harder (or softer) than the capacities were sized for', () => {
+      const spec = sized(0.65, 0.97)
+      const base = createDestruction()
+      const harder = createDestruction({ structure: { safetyFactor: 1.6 } })
+      const a = base.add(spec)
+      const b = harder.add(spec)
+      expect(stressOf(base, a, 'c0')).toBeCloseTo(0.65, 2)
+      expect(stressOf(harder, b, 'c0')).toBeCloseTo(0.65 * 1.6, 2)
+      // 1.04 at rest: the columns give way on their own and the slab falls
+      expect(types(run(harder, 120))).toContain('collapse')
+      expect(types(run(base, 120))).not.toContain('collapse')
+    })
   })
 })

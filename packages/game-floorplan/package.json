@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Procedural floor plans and lots engine: rooms, walls, doors, windows, recorded slots, seeded item fill, placement rules, perimeter, gates, paths, ground cover, multi-floor stairs and a colour-harmony palette. Knows nothing about any particular furniture or game.",
   "keywords": [
@@ -45,7 +45,10 @@
     "viewer:build": "node viewer/build-viewer.mjs"
   },
   "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"

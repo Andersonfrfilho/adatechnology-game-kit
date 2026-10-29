@@ -1,0 +1,24 @@
+{
+  "name": "@adatechnology/urban-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Urban area for the shared test room: the five street poles of the Galeria in a row, a street grid with a filled block, a patch of terrain and the ten neighbourhoods of the sample sheet (downtown, suburb, working class, historic street, industrial and port, railway village, mountain resort, stilt village, military, rural), drawn by game-urban and game-urban-three. The bench draws any neighbourhood in front of the player with a seed, a share of lamps on, a light budget and, when asked, the vehicles of the fleet and the species of the region; layers show the reach of the real lights and the box of each sample. Eight scenarios: pole heights, the light budget, the dashes of a road, block heights, the seed, burnt-out lamps, the terrain and the providers.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-urban": "workspace:*",
+    "@adatechnology/game-urban-three": "workspace:*",
+    "@adatechnology/game-vegetation": "workspace:*",
+    "@adatechnology/game-vegetation-species": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-driving": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*"
+  }
+}

@@ -1,9 +1,11 @@
 // Builds the static demo site into site/dist: one page per example plus a landing page.
 // Run after `pnpm install` and `pnpm build` at the repo root. No dependencies beyond Node.
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { renderLanding } from './landing.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const out = join(root, 'site/dist')
@@ -11,13 +13,21 @@ const out = join(root, 'site/dist')
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'))
 const dirs = (base) =>
   existsSync(base) ? readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort() : []
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+// Every published example gets a way back to the landing page; the standalone builds stay untouched.
+const BACK_LINK = `<a href="../" id="kit-back" title="Voltar ao Game Kit" style="position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483647;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-left:0;border-radius:0 8px 8px 0;padding:10px 10px 10px 8px;font:600 13px/1.2 system-ui,sans-serif;text-decoration:none;writing-mode:vertical-rl;transform-origin:center">← Voltar ao kit</a>`
+const withBackLink = (html) => (/<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, (body) => `${body}\n${BACK_LINK}`) : `${BACK_LINK}\n${html}`)
+
+// Pages that show the weapon thumbnails link their credits (CC BY and CC BY-SA ask for the credit where the picture appears).
+const CREDITS_LINK = `<a href="../weapon-svg/credits.html" id="kit-weapon-credits" style="position:fixed;right:8px;bottom:8px;z-index:2147483646;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-radius:6px;padding:3px 8px;font:12px/1.4 system-ui,sans-serif;text-decoration:none">Miniaturas das armas: créditos e licenças</a>`
+const WEAPON_THUMBNAIL_EXAMPLES = new Set(['weapons-test-area', 'test-room'])
+const withCreditsLink = (name, html) => (WEAPON_THUMBNAIL_EXAMPLES.has(name) && /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${CREDITS_LINK}\n</body>`) : html)
 
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 
 const examples = []
-// test-room goes first: other examples (interactables-test-area) load their area into its page
+// test-room goes first: other examples (interactables-test-area, vfx-test-area, weapons-test-area) load their area into its page
 const exampleNames = dirs(join(root, 'examples')).sort((a, b) => (b === 'test-room') - (a === 'test-room'))
 for (const name of exampleNames) {
   const dir = join(root, 'examples', name)
@@ -35,66 +45,26 @@ for (const name of exampleNames) {
   }
   const target = join(out, name)
   mkdirSync(target, { recursive: true })
-  copyFileSync(join(distDir, pages[0]), join(target, 'index.html'))
+  writeFileSync(join(target, 'index.html'), withCreditsLink(name, withBackLink(readFileSync(join(distDir, pages[0]), 'utf8'))))
   // Any additional page is kept next to the first one.
-  for (const extra of pages.slice(1)) copyFileSync(join(distDir, extra), join(target, extra))
+  for (const extra of pages.slice(1)) writeFileSync(join(target, extra), withCreditsLink(name, withBackLink(readFileSync(join(distDir, extra), 'utf8'))))
   examples.push({ name, description: pkg.description ?? '' })
 }
+
+// Weapon thumbnails (SVG, each with its own licence: see CREDITS.md and LICENSE-NOTE.md) are served from /weapon-svg, which the example pages reach as ../weapon-svg/.
+const thumbnailSource = join(root, 'packages/game-weapons-three/assets/weapon-svg')
+if (existsSync(thumbnailSource)) cpSync(thumbnailSource, join(out, 'weapon-svg'), { recursive: true })
 
 const packages = dirs(join(root, 'packages'))
   .filter((d) => existsSync(join(root, 'packages', d, 'package.json')))
   .map((d) => readJson(join(root, 'packages', d, 'package.json')))
   .map((p) => ({ name: p.name, version: p.version ?? '', description: p.description ?? '' }))
 
-const exampleItems = examples
-  .map((e) => `<li><a href="${esc(e.name)}/"><strong>${esc(e.name)}</strong></a><p>${esc(e.description)}</p></li>`)
-  .join('\n      ')
-const packageItems = packages
-  .map((p) => `<li><code>${esc(p.name)}</code> <span class="v">${esc(p.version)}</span><p>${esc(p.description)}</p></li>`)
-  .join('\n      ')
+// Thumbnails come from site/thumbs (node site/capture-thumbs.mjs); a missing one shows a placeholder.
+const thumbsDir = join(root, 'site/thumbs')
+const thumbs = new Set(existsSync(thumbsDir) ? readdirSync(thumbsDir).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4)) : [])
+if (thumbs.size) cpSync(thumbsDir, join(out, 'thumbs'), { recursive: true })
 
-const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AdA Technology Game Kit</title>
-<style>
-  :root { color-scheme: light dark; --bg: #fafafa; --fg: #1a1a1f; --muted: #5f6470; --card: #fff; --line: #e1e3e8; --accent: #3a5bd9; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #14151a; --fg: #e8e9ee; --muted: #9aa0ad; --card: #1c1e25; --line: #2d303a; --accent: #8aa4ff; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 48px 16px 64px; }
-  h1 { font-size: 2rem; margin: 0 0 8px; }
-  h2 { font-size: 1.2rem; margin: 40px 0 12px; }
-  .lead { color: var(--muted); margin: 0; }
-  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
-  li p { margin: 4px 0 0; color: var(--muted); font-size: 0.92rem; }
-  a { color: var(--accent); }
-  code { font: 0.95rem ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .v { color: var(--muted); font-size: 0.85rem; margin-left: 6px; }
-  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
-</style>
-</head>
-<body>
-<main>
-  <h1>AdA Technology Game Kit</h1>
-  <p class="lead">Engine-agnostic game building blocks, published under <code>@adatechnology/</code>. Try the examples below in your browser.</p>
-  <h2>Examples</h2>
-  <ul>
-      ${exampleItems}
-  </ul>
-  <h2>Packages</h2>
-  <ul>
-      ${packageItems}
-  </ul>
-  <footer>MIT licensed. Source on <a href="https://github.com/Andersonfrfilho/adatechnology-game-kit">GitHub</a>.</footer>
-</main>
-</body>
-</html>
-`
+const html = renderLanding({ examples, packages, hasThumb: (key) => thumbs.has(key) })
 writeFileSync(join(out, 'index.html'), html)
 console.log(`site/dist ready: ${examples.length} examples, ${packages.length} packages`)

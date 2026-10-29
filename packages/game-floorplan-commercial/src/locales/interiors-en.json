@@ -1,0 +1,71 @@
+{
+  "templates": {
+    "church": "Church",
+    "drugstore": "Drugstore",
+    "emergency_room": "Emergency room",
+    "farm": "Farm",
+    "gas_station": "Gas station",
+    "gun_shop": "Gun shop",
+    "metalworks": "Metalworks",
+    "police_station": "Police station",
+    "school": "School",
+    "supermarket": "Supermarket"
+  },
+  "labels": {
+    "arsenal": "Arsenal",
+    "bakery": "Bakery",
+    "bullpen": "Squad room",
+    "butcher": "Butcher and cold room",
+    "cafeteria": "Cafeteria",
+    "canteen": "Canteen",
+    "cell_1": "Cell 1",
+    "cell_2": "Cell 2",
+    "checkouts": "Checkouts",
+    "chief_office": "Chief's office",
+    "classroom": "Classroom",
+    "compounding_room": "Compounding room",
+    "controlled_storage": "Controlled drugs store",
+    "convenience_store": "Convenience store",
+    "dispensing": "Dispensing",
+    "emergency_room": "Emergency room",
+    "evidence_depot": "Evidence depot",
+    "farm_kitchen": "Farmhouse kitchen",
+    "icu": "Intensive care",
+    "library": "Library",
+    "living_room": "Living room",
+    "locker_room": "Locker room",
+    "manager_office": "Manager's office",
+    "nave": "Nave",
+    "office_mezzanine": "Mezzanine office",
+    "oil_bay": "Oil-change bay",
+    "pallet_storage": "Pallet storage",
+    "parish_hall": "Parish hall",
+    "production_floor": "Production floor",
+    "reception": "Reception",
+    "restroom": "Restroom",
+    "sacristy": "Sacristy",
+    "sales_floor": "Sales floor",
+    "sanctuary": "Sanctuary",
+    "school_kitchen": "School kitchen",
+    "service_corridor": "Service corridor",
+    "shipping_bay": "Shipping bay",
+    "shooting_range": "Shooting range",
+    "sports_court": "Sports court",
+    "utility": "Utility room",
+    "vault": "Armored vault",
+    "ward_a": "Ward A",
+    "ward_b": "Ward B"
+  },
+  "facadeColors": {
+    "barn_red": "Barn red",
+    "farm_cream": "Farm cream",
+    "ochre": "Ochre",
+    "whitewash": "Whitewash"
+  },
+  "styles": {
+    "farm": "Farm"
+  },
+  "zones": {
+    "za": "ZA – Agricultural"
+  }
+}

@@ -1,0 +1,506 @@
+import data from '../data/models.json'
+
+import { cannedBeans } from './canned-beans'
+import { waterBottle } from './water-bottle'
+import { rice } from './rice'
+import { militaryRation } from './military-ration'
+import { cachaca } from './cachaca'
+import { firstAidKit } from './first-aid-kit'
+import { bandage } from './bandage'
+import { amoxicillin } from './amoxicillin'
+import { crowbar } from './crowbar'
+import { hammer } from './hammer'
+import { machete } from './machete'
+import { axe } from './axe'
+import { nailBat } from './nail-bat'
+import { hikingBackpack40L } from './hiking-backpack-40l'
+import { flashlight } from './flashlight'
+import { portableRadio } from './portable-radio'
+import { houseKey } from './house-key'
+import { survivorDiary } from './survivor-diary'
+import { motorcycleHelmet } from './motorcycle-helmet'
+import { lpgCylinder13Kg } from './lpg-cylinder-13kg'
+import { fuelJerrycan } from './fuel-jerrycan'
+import { walkieTalkies } from './walkie-talkies'
+import { batteries } from './batteries'
+import { woodenPlank } from './wooden-plank'
+import { sugar } from './sugar'
+import { chocolateBar } from './chocolate-bar'
+import { potatoes } from './potatoes'
+import { biscuits } from './biscuits'
+import { coffee } from './coffee'
+import { rawBeef } from './raw-beef'
+import { gameMeat } from './game-meat'
+import { jerkedBeef } from './jerked-beef'
+import { homePreserves } from './home-preserves'
+import { eggs } from './eggs'
+import { cassavaFlour } from './cassava-flour'
+import { beans } from './beans'
+import { frozenChicken } from './frozen-chicken'
+import { orange } from './orange'
+import { condensedMilk } from './condensed-milk'
+import { pasta } from './pasta'
+import { instantNoodles } from './instant-noodles'
+import { cassavaRoot } from './cassava-root'
+import { cannedCornAndPeas } from './canned-corn-and-peas'
+import { mortadella } from './mortadella'
+import { freshFish } from './fresh-fish'
+import { saltedFish } from './salted-fish'
+import { bananaBunch } from './banana-bunch'
+import { honeyJar } from './honey-jar'
+import { bread } from './bread'
+import { cheese } from './cheese'
+import { rapadura } from './rapadura'
+import { dogFood } from './dog-food'
+import { salt } from './salt'
+import { snackChips } from './snack-chips'
+import { cannedSausages } from './canned-sausages'
+import { cannedSardines } from './canned-sardines'
+import { cookingOil } from './cooking-oil'
+import { beerCan } from './beer-can'
+import { energyDrink } from './energy-drink'
+import { waterJug5l } from './water-jug-5l'
+import { sportsDrink } from './sports-drink'
+import { milkCarton } from './milk-carton'
+import { sodaCan } from './soda-can'
+import { juiceBox } from './juice-box'
+import { communionWine } from './communion-wine'
+import { coconutWater } from './coconut-water'
+import { dirtyWater } from './dirty-water'
+import { painkillers } from './painkillers'
+import { tramadol } from './tramadol'
+import { ibuprofen } from './ibuprofen'
+import { antihistamine } from './antihistamine'
+import { ceftriaxone } from './ceftriaxone'
+import { clonazepam } from './clonazepam'
+import { activatedCharcoal } from './activated-charcoal'
+import { adhesiveBandages } from './adhesive-bandages'
+import { medicalTape } from './medical-tape'
+import { sterileGauze } from './sterile-gauze'
+import { povidoneIodine } from './povidone-iodine'
+import { sutureKit } from './suture-kit'
+import { examGloves } from './exam-gloves'
+import { n95Mask } from './n95-mask'
+import { multivitamin } from './multivitamin'
+import { maintenanceMedication } from './maintenance-medication'
+import { rehydrationSalts } from './rehydration-salts'
+import { syringe } from './syringe'
+import { antivenom } from './antivenom'
+import { salineIvBag } from './saline-iv-bag'
+import { splint } from './splint'
+import { thermometer } from './thermometer'
+import { alcohol70 } from './alcohol-70'
+import { canOpener } from './can-opener'
+import { pliers } from './pliers'
+import { boltCutters } from './bolt-cutters'
+import { bucket } from './bucket'
+import { binoculars } from './binoculars'
+import { matches } from './matches'
+import { pocketKnife } from './pocket-knife'
+import { screwdriver } from './screwdriver'
+import { adjustableWrench } from './adjustable-wrench'
+import { hoe } from './hoe'
+import { fireExtinguisher } from './fire-extinguisher'
+import { ductTape } from './duct-tape'
+import { campStove } from './camp-stove'
+import { lighter } from './lighter'
+import { lockpickKit } from './lockpick-kit'
+import { sewingKit } from './sewing-kit'
+import { carJack } from './car-jack'
+import { mechanicToolbox } from './mechanic-toolbox'
+import { gasTorch } from './gas-torch'
+import { inverterWelder } from './inverter-welder'
+import { pot } from './pot'
+import { cordlessDrill } from './cordless-drill'
+import { flintStriker } from './flint-striker'
+import { sharpeningStone } from './sharpening-stone'
+import { shovel } from './shovel'
+import { hacksaw } from './hacksaw'
+import { handsaw } from './handsaw'
+import { scissors } from './scissors'
+import { recurveBow } from './recurve-bow'
+import { crossbow } from './crossbow'
+import { ironPipe } from './iron-pipe'
+import { meatCleaver } from './meat-cleaver'
+import { slingshot } from './slingshot'
+import { knife } from './knife'
+import { tacticalKnife } from './tactical-knife'
+import { arrowsAndBolts } from './arrows-and-bolts'
+import { sickle } from './sickle'
+import { castIronSkillet } from './cast-iron-skillet'
+import { improvisedSpear } from './improvised-spear'
+import { hatchet } from './hatchet'
+import { sledgehammer } from './sledgehammer'
+import { chainsaw } from './chainsaw'
+import { pickaxe } from './pickaxe'
+import { baseballBat } from './baseball-bat'
+import { policeBaton } from './police-baton'
+import { wireRoll } from './wire-roll'
+import { barbedWire } from './barbed-wire'
+import { glassShards } from './glass-shards'
+import { sheetMetal } from './sheet-metal'
+import { cementBag } from './cement-bag'
+import { epoxyGlue } from './epoxy-glue'
+import { electronicComponents } from './electronic-components'
+import { rope } from './rope'
+import { copperWire } from './copper-wire'
+import { petBottle } from './pet-bottle'
+import { glassBottle } from './glass-bottle'
+import { emptyCan } from './empty-can'
+import { firewood } from './firewood'
+import { tarp } from './tarp'
+import { screws } from './screws'
+import { nails } from './nails'
+import { raffiaSack } from './raffia-sack'
+import { scrapMetal } from './scrap-metal'
+import { bricks } from './bricks'
+import { rag } from './rag'
+import { rebar } from './rebar'
+import { lubricantSpray } from './lubricant-spray'
+import { armyCamouflageUniform } from './army-camouflage-uniform'
+import { backpack } from './backpack'
+import { ballisticVest } from './ballistic-vest'
+import { battery9V } from './battery-9v'
+import { beanSeeds } from './bean-seeds'
+import { beekeeperSuit } from './beekeeper-suit'
+import { candles } from './candles'
+import { carAlarmRemote } from './car-alarm-remote'
+import { carBattery12V } from './car-battery-12v'
+import { carKey } from './car-key'
+import { cash } from './cash'
+import { cassavaCuttings } from './cassava-cuttings'
+import { cbRadio } from './cb-radio'
+import { cellKey } from './cell-key'
+import { charcoalBag } from './charcoal-bag'
+import { cigarettes } from './cigarettes'
+import { cityMap } from './city-map'
+import { combatBoots } from './combat-boots'
+import { coolerBox } from './cooler-box'
+import { cornSeeds } from './corn-seeds'
+import { crossbodyBag } from './crossbody-bag'
+import { deliveryBag } from './delivery-bag'
+import { denimJacket } from './denim-jacket'
+import { diesel } from './diesel'
+import { diyMagazine } from './diy-magazine'
+import { dogTag } from './dog-tag'
+import { electricFenceEnergizer } from './electric-fence-energizer'
+import { extensionCord } from './extension-cord'
+import { fannyPack } from './fanny-pack'
+import { farmersAlmanac } from './farmers-almanac'
+import { fertilizerBag } from './fertilizer-bag'
+import { firefighterSuit } from './firefighter-suit'
+import { fishingNet } from './fishing-net'
+import { fishingRod } from './fishing-rod'
+import { fishingTackleBox } from './fishing-tackle-box'
+import { flipFlops } from './flip-flops'
+import { foldingSolarPanel } from './folding-solar-panel'
+import { gasCartridge } from './gas-cartridge'
+import { gasoline } from './gasoline'
+import { generatorKey } from './generator-key'
+import { hardHat } from './hard-hat'
+import { headlamp } from './headlamp'
+import { hoodie } from './hoodie'
+import { janitorKeys } from './janitor-keys'
+import { jeans } from './jeans'
+import { kaleAndLettuceSeeds } from './kale-and-lettuce-seeds'
+import { kerosene } from './kerosene'
+import { laptop } from './laptop'
+import { leatherMotorcycleJacket } from './leather-motorcycle-jacket'
+import { leatherMotorcyclePants } from './leather-motorcycle-pants'
+import { leatherWorkGloves } from './leather-work-gloves'
+import { ledCampLantern } from './led-camp-lantern'
+import { magazineArmGuard } from './magazine-arm-guard'
+import { magazinesAndComics } from './magazines-and-comics'
+import { masterKey } from './master-key'
+import { mechanicCoveralls } from './mechanic-coveralls'
+import { militaryBackpack } from './military-backpack'
+import { militaryRadio } from './military-radio'
+import { mobilePhone } from './mobile-phone'
+import { motorOil } from './motor-oil'
+import { nightVisionGoggles } from './night-vision-goggles'
+import { note } from './note'
+import { paddedCoat } from './padded-coat'
+import { padlockKey } from './padlock-key'
+import { photo } from './photo'
+import { portableGenerator } from './portable-generator'
+import { powerBank } from './power-bank'
+import { pumpkinSeeds } from './pumpkin-seeds'
+import { raincoat } from './raincoat'
+import { roadMap } from './road-map'
+import { rollingSuitcase } from './rolling-suitcase'
+import { rubberBoots } from './rubber-boots'
+import { safeKey } from './safe-key'
+import { safetyGoggles } from './safety-goggles'
+import { sheetMetalForearmGuard } from './sheet-metal-forearm-guard'
+import { shoppingBag } from './shopping-bag'
+import { shoppingCart } from './shopping-cart'
+import { skillBook } from './skill-book'
+import { snareTrap } from './snare-trap'
+import { sneakers } from './sneakers'
+import { tacticalVest } from './tactical-vest'
+import { technicalManual } from './technical-manual'
+import { toolBelt } from './tool-belt'
+import { trashBag } from './trash-bag'
+import { trekkingBackpack70L } from './trekking-backpack-70l'
+import { tshirt } from './tshirt'
+import { wateringCan } from './watering-can'
+import { wheelbarrow } from './wheelbarrow'
+import { windupAlarmClock } from './windup-alarm-clock'
+import type { ItemModelBuilder, ItemModelEntry } from './registry'
+
+/** The builder of each model of the showcase, by catalog id. */
+const BUILDERS: Readonly<Record<string, ItemModelBuilder>> = {
+  canned_beans: cannedBeans,
+  water_bottle: waterBottle,
+  rice: rice,
+  military_ration: militaryRation,
+  cachaca: cachaca,
+  first_aid_kit: firstAidKit,
+  bandage: bandage,
+  amoxicillin: amoxicillin,
+  crowbar: crowbar,
+  hammer: hammer,
+  machete: machete,
+  axe: axe,
+  nail_bat: nailBat,
+  hiking_backpack_40l: hikingBackpack40L,
+  flashlight: flashlight,
+  portable_radio: portableRadio,
+  house_key: houseKey,
+  survivor_diary: survivorDiary,
+  motorcycle_helmet: motorcycleHelmet,
+  lpg_cylinder_13kg: lpgCylinder13Kg,
+  fuel_jerrycan: fuelJerrycan,
+  walkie_talkies: walkieTalkies,
+  batteries: batteries,
+  wooden_plank: woodenPlank,
+  sugar: sugar,
+  chocolate_bar: chocolateBar,
+  potatoes: potatoes,
+  biscuits: biscuits,
+  coffee: coffee,
+  raw_beef: rawBeef,
+  game_meat: gameMeat,
+  jerked_beef: jerkedBeef,
+  home_preserves: homePreserves,
+  eggs: eggs,
+  cassava_flour: cassavaFlour,
+  beans: beans,
+  frozen_chicken: frozenChicken,
+  orange: orange,
+  condensed_milk: condensedMilk,
+  pasta: pasta,
+  instant_noodles: instantNoodles,
+  cassava_root: cassavaRoot,
+  canned_corn_and_peas: cannedCornAndPeas,
+  mortadella: mortadella,
+  fresh_fish: freshFish,
+  salted_fish: saltedFish,
+  banana_bunch: bananaBunch,
+  honey_jar: honeyJar,
+  bread: bread,
+  cheese: cheese,
+  rapadura: rapadura,
+  dog_food: dogFood,
+  salt: salt,
+  snack_chips: snackChips,
+  canned_sausages: cannedSausages,
+  canned_sardines: cannedSardines,
+  cooking_oil: cookingOil,
+  beer_can: beerCan,
+  energy_drink: energyDrink,
+  water_jug_5l: waterJug5l,
+  sports_drink: sportsDrink,
+  milk_carton: milkCarton,
+  soda_can: sodaCan,
+  juice_box: juiceBox,
+  communion_wine: communionWine,
+  coconut_water: coconutWater,
+  dirty_water: dirtyWater,
+  painkillers: painkillers,
+  tramadol: tramadol,
+  ibuprofen: ibuprofen,
+  antihistamine: antihistamine,
+  ceftriaxone: ceftriaxone,
+  clonazepam: clonazepam,
+  activated_charcoal: activatedCharcoal,
+  adhesive_bandages: adhesiveBandages,
+  medical_tape: medicalTape,
+  sterile_gauze: sterileGauze,
+  povidone_iodine: povidoneIodine,
+  suture_kit: sutureKit,
+  exam_gloves: examGloves,
+  n95_mask: n95Mask,
+  multivitamin: multivitamin,
+  maintenance_medication: maintenanceMedication,
+  rehydration_salts: rehydrationSalts,
+  syringe: syringe,
+  antivenom: antivenom,
+  saline_iv_bag: salineIvBag,
+  splint: splint,
+  thermometer: thermometer,
+  alcohol_70: alcohol70,
+  can_opener: canOpener,
+  pliers: pliers,
+  bolt_cutters: boltCutters,
+  bucket: bucket,
+  binoculars: binoculars,
+  matches: matches,
+  pocket_knife: pocketKnife,
+  screwdriver: screwdriver,
+  adjustable_wrench: adjustableWrench,
+  hoe: hoe,
+  fire_extinguisher: fireExtinguisher,
+  duct_tape: ductTape,
+  camp_stove: campStove,
+  lighter: lighter,
+  lockpick_kit: lockpickKit,
+  sewing_kit: sewingKit,
+  car_jack: carJack,
+  mechanic_toolbox: mechanicToolbox,
+  gas_torch: gasTorch,
+  inverter_welder: inverterWelder,
+  pot: pot,
+  cordless_drill: cordlessDrill,
+  flint_striker: flintStriker,
+  sharpening_stone: sharpeningStone,
+  shovel: shovel,
+  hacksaw: hacksaw,
+  handsaw: handsaw,
+  scissors: scissors,
+  recurve_bow: recurveBow,
+  crossbow: crossbow,
+  iron_pipe: ironPipe,
+  meat_cleaver: meatCleaver,
+  slingshot: slingshot,
+  knife: knife,
+  tactical_knife: tacticalKnife,
+  arrows_and_bolts: arrowsAndBolts,
+  sickle: sickle,
+  cast_iron_skillet: castIronSkillet,
+  improvised_spear: improvisedSpear,
+  hatchet: hatchet,
+  sledgehammer: sledgehammer,
+  chainsaw: chainsaw,
+  pickaxe: pickaxe,
+  baseball_bat: baseballBat,
+  police_baton: policeBaton,
+  wire_roll: wireRoll,
+  barbed_wire: barbedWire,
+  glass_shards: glassShards,
+  sheet_metal: sheetMetal,
+  cement_bag: cementBag,
+  epoxy_glue: epoxyGlue,
+  electronic_components: electronicComponents,
+  rope: rope,
+  copper_wire: copperWire,
+  pet_bottle: petBottle,
+  glass_bottle: glassBottle,
+  empty_can: emptyCan,
+  firewood: firewood,
+  tarp: tarp,
+  screws: screws,
+  nails: nails,
+  raffia_sack: raffiaSack,
+  scrap_metal: scrapMetal,
+  bricks: bricks,
+  rag: rag,
+  rebar: rebar,
+  lubricant_spray: lubricantSpray,
+  army_camouflage_uniform: armyCamouflageUniform,
+  backpack: backpack,
+  ballistic_vest: ballisticVest,
+  battery_9v: battery9V,
+  bean_seeds: beanSeeds,
+  beekeeper_suit: beekeeperSuit,
+  candles: candles,
+  car_alarm_remote: carAlarmRemote,
+  car_battery_12v: carBattery12V,
+  car_key: carKey,
+  cash: cash,
+  cassava_cuttings: cassavaCuttings,
+  cb_radio: cbRadio,
+  cell_key: cellKey,
+  charcoal_bag: charcoalBag,
+  cigarettes: cigarettes,
+  city_map: cityMap,
+  combat_boots: combatBoots,
+  cooler_box: coolerBox,
+  corn_seeds: cornSeeds,
+  crossbody_bag: crossbodyBag,
+  delivery_bag: deliveryBag,
+  denim_jacket: denimJacket,
+  diesel: diesel,
+  diy_magazine: diyMagazine,
+  dog_tag: dogTag,
+  electric_fence_energizer: electricFenceEnergizer,
+  extension_cord: extensionCord,
+  fanny_pack: fannyPack,
+  farmers_almanac: farmersAlmanac,
+  fertilizer_bag: fertilizerBag,
+  firefighter_suit: firefighterSuit,
+  fishing_net: fishingNet,
+  fishing_rod: fishingRod,
+  fishing_tackle_box: fishingTackleBox,
+  flip_flops: flipFlops,
+  folding_solar_panel: foldingSolarPanel,
+  gas_cartridge: gasCartridge,
+  gasoline: gasoline,
+  generator_key: generatorKey,
+  hard_hat: hardHat,
+  headlamp: headlamp,
+  hoodie: hoodie,
+  janitor_keys: janitorKeys,
+  jeans: jeans,
+  kale_and_lettuce_seeds: kaleAndLettuceSeeds,
+  kerosene: kerosene,
+  laptop: laptop,
+  leather_motorcycle_jacket: leatherMotorcycleJacket,
+  leather_motorcycle_pants: leatherMotorcyclePants,
+  leather_work_gloves: leatherWorkGloves,
+  led_camp_lantern: ledCampLantern,
+  magazine_arm_guard: magazineArmGuard,
+  magazines_and_comics: magazinesAndComics,
+  master_key: masterKey,
+  mechanic_coveralls: mechanicCoveralls,
+  military_backpack: militaryBackpack,
+  military_radio: militaryRadio,
+  mobile_phone: mobilePhone,
+  motor_oil: motorOil,
+  night_vision_goggles: nightVisionGoggles,
+  note: note,
+  padded_coat: paddedCoat,
+  padlock_key: padlockKey,
+  photo: photo,
+  portable_generator: portableGenerator,
+  power_bank: powerBank,
+  pumpkin_seeds: pumpkinSeeds,
+  raincoat: raincoat,
+  road_map: roadMap,
+  rolling_suitcase: rollingSuitcase,
+  rubber_boots: rubberBoots,
+  safe_key: safeKey,
+  safety_goggles: safetyGoggles,
+  sheet_metal_forearm_guard: sheetMetalForearmGuard,
+  shopping_bag: shoppingBag,
+  shopping_cart: shoppingCart,
+  skill_book: skillBook,
+  snare_trap: snareTrap,
+  sneakers: sneakers,
+  tactical_vest: tacticalVest,
+  technical_manual: technicalManual,
+  tool_belt: toolBelt,
+  trash_bag: trashBag,
+  trekking_backpack_70l: trekkingBackpack70L,
+  tshirt: tshirt,
+  watering_can: wateringCan,
+  wheelbarrow: wheelbarrow,
+  windup_alarm_clock: windupAlarmClock,
+}
+
+/** The 24 models of the showcase in the page's order: the entry of `data/models.json` (generated by `tools/items-catalog`) and the builder ported from the page. */
+export const SHIPPED_MODELS: ReadonlyArray<{ readonly entry: ItemModelEntry; readonly builder: ItemModelBuilder }> = (data as unknown as ItemModelEntry[]).map((entry) => {
+  const builder = BUILDERS[entry.id]
+  if (!builder) throw new Error(`game-items-three: no builder for the model "${entry.id}"`)
+  return { entry, builder }
+})

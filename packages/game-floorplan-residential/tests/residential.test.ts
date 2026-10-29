@@ -11,9 +11,9 @@ beforeAll(() => {
 const flatten = (o: any, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flatten(v, p + k + '.') : [p + k]))
 
 describe('residential pack', () => {
-  it('registers the ten templates under their English ids', () => {
+  it('registers the eleven templates under their English ids', () => {
     expect(residentialTemplateIds.slice().sort()).toEqual(
-      ['apartment_basic', 'apartment_modern', 'budget_semi_detached', 'budget_slab_house', 'high_end_contemporary', 'mansion', 'mid_modern_single_storey', 'mid_modern_townhouse', 'single_storey_a', 'townhouse'].sort(),
+      ['apartment_basic', 'apartment_modern', 'budget_semi_detached', 'budget_slab_house', 'high_end_contemporary', 'mansion', 'mid_modern_single_storey', 'mid_modern_townhouse', 'residential_tower', 'single_storey_a', 'townhouse'].sort(),
     )
     const ids = engine.listTemplates().map((t) => t.id)
     for (const id of residentialTemplateIds) expect(ids).toContain(id)
@@ -76,7 +76,8 @@ describe('urban zoning (region br)', () => {
       })
       expect(ok.length, `${id} fits no zone`).toBeGreaterThan(0)
     }
-  })
+    // the residential tower has 30 storeys by default: a few seconds a zone
+  }, 180000)
 
   it('a plan that violates a zone is caught', () => {
     const apartment = engine.generate('apartment_modern', { seed: 1 })
@@ -130,5 +131,79 @@ describe('urban zoning (region br)', () => {
   it('output without a zone has no adjustments and a null-safe report', () => {
     const r = engine.generate('townhouse', { seed: 1 })
     expect(r.zoning?.adjustments ?? []).toEqual([])
+  })
+})
+
+describe('budget slab house, 1 to 3 floors', () => {
+  const SEEDS = Array.from({ length: 60 }, (_, index) => index + 1)
+
+  it('declares the floor range and keeps one floor when nothing is asked (the page plans)', () => {
+    expect(engine.listTemplates().find((t) => t.id === 'budget_slab_house')?.floorRange).toEqual([1, 3])
+    expect(engine.generate('budget_slab_house', { seed: 3 }).floors).toHaveLength(1)
+    expect(engine.generate('budget_slab_house', { seed: 3 }).config.sideStair).toBeNull()
+  })
+
+  for (const floors of [2, 3]) {
+    it(`${floors} floors: ground floor as before, then two bedrooms and a bathroom per upper floor, valid for ${SEEDS.length} seeds x 3 states`, () => {
+      const problems: string[] = []
+      for (const seed of SEEDS)
+        for (const state of ['normal', 'fortified', 'abandoned']) {
+          const plan = engine.generate('budget_slab_house', { seed, state, floors })
+          const tag = `#${seed}/${state}`
+          if (plan.floors.length !== floors) problems.push(`${tag}: ${plan.floors.length} floors`)
+          for (const message of engine.validate(plan)) problems.push(`${tag}: ${message}`)
+          for (let floor = 1; floor < floors; floor++) {
+            const rooms = plan.rooms.filter((room: { floor: number }) => room.floor === floor)
+            if (rooms.filter((room: { type: string }) => room.type === 'bedroom').length !== 2 || rooms.filter((room: { type: string }) => room.type === 'bathroom').length !== 1) problems.push(`${tag}: floor ${floor} is not 2 bedrooms + bathroom`)
+            for (const room of rooms) if (!plan.items.some((item: { room: string }) => item.room === room.id)) problems.push(`${tag}: ${room.id} is empty`)
+          }
+        }
+      expect(problems.slice(0, 5)).toEqual([])
+    })
+  }
+
+  it('the upper floors repeat the ground footprint', () => {
+    const plan = engine.generate('budget_slab_house', { seed: 5, floors: 3 })
+    const hull = (floor: number) => {
+      const rects = plan.rooms.filter((room: { floor: number }) => room.floor === floor).flatMap((room: { parts: number[][] }) => room.parts)
+      return [Math.min(...rects.map((r: number[]) => r[0])), Math.min(...rects.map((r: number[]) => r[1])), Math.max(...rects.map((r: number[]) => r[2])), Math.max(...rects.map((r: number[]) => r[3]))]
+    }
+    expect(hull(1)).toEqual(hull(0))
+    expect(hull(2)).toEqual(hull(0))
+  })
+
+  it('the stair goes straight up the side margin and every upper floor has the outside door where it arrives', () => {
+    for (const floors of [2, 3]) {
+      const plan = engine.generate('budget_slab_house', { seed: 9, floors })
+      const stair = plan.config.sideStair
+      expect(stair.side).toBe('left')
+      expect(stair.flights).toBe(floors - 1)
+      expect(stair.rect[0]).toBeGreaterThanOrEqual(-plan.lot.sideYard.left)
+      expect(stair.rect[2]).toBeLessThanOrEqual(0)
+      expect(stair.rect[3]).toBeLessThan(plan.d)
+      stair.doors.forEach((id: string, index: number) => {
+        const door = plan.doors.find((x: { id: string }) => x.id === id)
+        expect(door).toMatchObject({ floor: index + 1, exterior: true, side: 'left' })
+        expect(door.v).toBeCloseTo(stair.rect[1] + 3.9 * (index + 1), 5)
+      })
+    }
+  })
+
+  it('rebar starter bars come out of the top slab in about 60% of the houses (always on the one-floor house, as on the page)', () => {
+    const rebar = (floors: number) => SEEDS.concat(SEEDS.map((s) => s + 100)).map((seed) => engine.generate('budget_slab_house', { seed, floors }).facade.slab.exposedRebar)
+    expect(rebar(1).every(Boolean)).toBe(true)
+    for (const floors of [2, 3]) {
+      const share = rebar(floors).filter(Boolean).length / 120
+      expect(share).toBeGreaterThan(0.45)
+      expect(share).toBeLessThan(0.75)
+    }
+  })
+
+  it('randomFloors draws 1 to 3 evenly from the seed, and the zone still clamps it', () => {
+    const counts = [0, 0, 0, 0]
+    for (let seed = 1; seed <= 300; seed++) counts[engine.generate('budget_slab_house', { seed, randomFloors: true }).floors.length]++
+    for (const floors of [1, 2, 3]) expect(counts[floors]).toBeGreaterThan(60)
+    expect(engine.generate('budget_slab_house', { seed: 1, floors: 3, zone: 'zr1' }).floors.length).toBe(2)
+    expect(engine.generate('budget_slab_house', { seed: 2, randomFloors: true }).floors).toEqual(engine.generate('budget_slab_house', { seed: 2, randomFloors: true }).floors)
   })
 })

@@ -1,0 +1,703 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Andersonfrfilho/adatechnology-game-kit/packages/game-shapes/schema/shape.schema.json",
+  "title": "game-shapes shape",
+  "type": "object",
+  "required": [
+    "version",
+    "root"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/material"
+      }
+    },
+    "root": {
+      "$ref": "#/$defs/node"
+    },
+    "lod": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/lodLevel"
+      }
+    },
+    "cullDistance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "$defs": {
+    "number": {
+      "type": "number"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vec2": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "mat4": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 16,
+      "maxItems": 16
+    },
+    "color": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777215
+        },
+        {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      ]
+    },
+    "uvRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u0",
+        "v0",
+        "u1",
+        "v1"
+      ],
+      "properties": {
+        "u0": {
+          "type": "number"
+        },
+        "v0": {
+          "type": "number"
+        },
+        "u1": {
+          "type": "number"
+        },
+        "v1": {
+          "type": "number"
+        }
+      }
+    },
+    "rotationOrder": {
+      "enum": [
+        "XYZ",
+        "YXZ",
+        "ZXY",
+        "ZYX",
+        "YZX",
+        "XZY"
+      ]
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/vec3"
+        },
+        "rotationOrder": {
+          "$ref": "#/$defs/rotationOrder"
+        },
+        "scale": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/vec3"
+            }
+          ]
+        },
+        "heading": {
+          "type": "number"
+        },
+        "matrix": {
+          "$ref": "#/$defs/mat4"
+        }
+      }
+    },
+    "instance": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/transform"
+        }
+      ],
+      "properties": {
+        "position": true,
+        "rotation": true,
+        "rotationOrder": true,
+        "scale": true,
+        "heading": true,
+        "matrix": true,
+        "color": {
+          "$ref": "#/$defs/color"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "metalness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transparent": {
+          "type": "boolean"
+        },
+        "emissive": {
+          "$ref": "#/$defs/color"
+        },
+        "emissiveIntensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "side": {
+          "enum": [
+            "front",
+            "back",
+            "double"
+          ]
+        },
+        "flatShading": {
+          "type": "boolean"
+        },
+        "vertexColors": {
+          "type": "boolean"
+        },
+        "depthWrite": {
+          "type": "boolean"
+        }
+      }
+    },
+    "lodLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distance",
+        "detail"
+      ],
+      "properties": {
+        "distance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "detail": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "minSize": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minSegments": {
+          "type": "integer",
+          "minimum": 3
+        }
+      }
+    },
+    "common": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/transform"
+        }
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "uv": {
+          "$ref": "#/$defs/uvRect"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/instance"
+          }
+        },
+        "minDetail": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/common"
+        }
+      ],
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/node"
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "box"
+            },
+            "size": {
+              "$ref": "#/$defs/vec3"
+            },
+            "segments": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "cylinder"
+            },
+            "radiusTop": {
+              "type": "number"
+            },
+            "radiusBottom": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "radialSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "heightSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "openEnded": {
+              "type": "boolean"
+            },
+            "thetaStart": {
+              "type": "number"
+            },
+            "thetaLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "cone"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "radialSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "heightSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "openEnded": {
+              "type": "boolean"
+            },
+            "thetaStart": {
+              "type": "number"
+            },
+            "thetaLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "sphere"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "widthSegments": {
+              "type": "integer",
+              "minimum": 3
+            },
+            "heightSegments": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "phiStart": {
+              "type": "number"
+            },
+            "phiLength": {
+              "type": "number"
+            },
+            "thetaStart": {
+              "type": "number"
+            },
+            "thetaLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "plane"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "widthSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "heightSegments": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "segments": {
+              "type": "integer",
+              "minimum": 3
+            },
+            "thetaStart": {
+              "type": "number"
+            },
+            "thetaLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "ring"
+            },
+            "innerRadius": {
+              "type": "number"
+            },
+            "outerRadius": {
+              "type": "number"
+            },
+            "thetaSegments": {
+              "type": "integer",
+              "minimum": 3
+            },
+            "phiSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "thetaStart": {
+              "type": "number"
+            },
+            "thetaLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "required": [
+            "points"
+          ],
+          "properties": {
+            "kind": {
+              "const": "lathe"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/vec2"
+              },
+              "minItems": 2
+            },
+            "segments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "phiStart": {
+              "type": "number"
+            },
+            "phiLength": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "torus"
+            },
+            "radius": {
+              "type": "number"
+            },
+            "tube": {
+              "type": "number"
+            },
+            "radialSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "tubularSegments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "arc": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "required": [
+            "shape"
+          ],
+          "properties": {
+            "kind": {
+              "const": "extrude"
+            },
+            "shape": {
+              "type": "object",
+              "required": [
+                "outer"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "outer": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/vec2"
+                  },
+                  "minItems": 3
+                },
+                "holes": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/vec2"
+                    },
+                    "minItems": 3
+                  }
+                }
+              }
+            },
+            "depth": {
+              "type": "number"
+            },
+            "steps": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "bevel": {
+              "oneOf": [
+                {
+                  "const": false
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "size": {
+                      "type": "number"
+                    },
+                    "offset": {
+                      "type": "number"
+                    },
+                    "segments": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "required": [
+            "size",
+            "subtract"
+          ],
+          "properties": {
+            "kind": {
+              "const": "difference"
+            },
+            "size": {
+              "$ref": "#/$defs/vec3"
+            },
+            "subtract": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "min": {
+                    "$ref": "#/$defs/vec2"
+                  },
+                  "max": {
+                    "$ref": "#/$defs/vec2"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": [
+            "positions"
+          ],
+          "properties": {
+            "kind": {
+              "const": "mesh"
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "normals": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "uvs": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "indices": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/count"
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "point"
+            },
+            "data": {}
+          }
+        },
+        {
+          "required": [
+            "generator"
+          ],
+          "properties": {
+            "kind": {
+              "const": "custom"
+            },
+            "generator": {
+              "type": "string"
+            },
+            "params": {}
+          }
+        }
+      ]
+    }
+  }
+}

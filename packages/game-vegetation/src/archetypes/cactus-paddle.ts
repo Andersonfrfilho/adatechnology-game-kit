@@ -71,6 +71,7 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
   for (const p of pads) {
     if (p.gen > maxGen) continue
     ctx.piece(`pad${p.index}`, 'pad', p.parent === undefined ? undefined : `pad${p.parent}`, p.start)
+    ctx.pieceGeom(`pad${p.index}`, { radius: p.l * 0.085, length: p.l, axis: p.dir, base: p.start })
     const frame: Frame = { o: p.center, x: p.x, y: p.dir, z: p.z }
     const c = jitter(base, rng.fork(p.gen * 31 + Math.floor(p.l * 1000)), 0.012, 0.05, 0.04)
     icoShell(ctx.foliage, {

@@ -1,0 +1,166 @@
+{
+  "item": {
+    "name": "Item",
+    "description": "Qualquer objeto do catálogo: tem tamanho e peso reais, partes que quebram e um jeito de reagir a impacto."
+  },
+  "consumable": {
+    "name": "Consumível",
+    "description": "O que se come, bebe ou aplica e some ao ser usado."
+  },
+  "food_ready": {
+    "name": "Comida pronta",
+    "description": "Pode ser comida do jeito que se encontra, sem preparo."
+  },
+  "canned_food": {
+    "name": "Comida enlatada",
+    "description": "Lata de metal fechada: abre com a lata e deixa a lata vazia."
+  },
+  "food_improves_cooked": {
+    "name": "Comida melhor cozida",
+    "description": "Come-se crua ou fria, mas rende mais depois de aquecida."
+  },
+  "food_needs_prep": {
+    "name": "Comida que pede preparo",
+    "description": "Crua faz mal: precisa de fogo e panela antes de comer."
+  },
+  "ingredient": {
+    "name": "Ingrediente",
+    "description": "Entra em receitas; sozinho alimenta pouco."
+  },
+  "drink_ready": {
+    "name": "Bebida pronta",
+    "description": "Bebida própria para beber, na embalagem em que vem."
+  },
+  "canned_drink": {
+    "name": "Bebida em lata",
+    "description": "Lata de alumínio: abre com a lata e deixa a lata vazia."
+  },
+  "drink_untreated": {
+    "name": "Água sem tratamento",
+    "description": "Líquido que pode adoecer: precisa ser fervido ou tratado."
+  },
+  "medicine": {
+    "name": "Remédio",
+    "description": "Medicamento ou curativo que se toma ou aplica para tratar o corpo."
+  },
+  "first_aid": {
+    "name": "Primeiros socorros",
+    "description": "Material de curativo: ataduras, gaze, luvas, tala e afins."
+  },
+  "container": {
+    "name": "Recipiente",
+    "description": "Coisa que guarda outra: embalagem, panela, louça ou reservatório."
+  },
+  "packaging": {
+    "name": "Embalagem",
+    "description": "Lata, garrafa ou pote que guarda ou guardou algo."
+  },
+  "metal_can": {
+    "name": "Lata de metal",
+    "description": "Lata de aço fino que amassa; muda aqui e muda em todas as latas parecidas."
+  },
+  "glass_bottle": {
+    "name": "Garrafa de vidro",
+    "description": "Vidro que estilhaça e espalha cacos."
+  },
+  "plastic_bottle": {
+    "name": "Garrafa plástica",
+    "description": "Plástico fino que amassa."
+  },
+  "jar": {
+    "name": "Pote",
+    "description": "Pote de vidro com tampa."
+  },
+  "cookware": {
+    "name": "Panela e frigideira",
+    "description": "Vai ao fogo: as partes têm de aguentar chama."
+  },
+  "tableware": {
+    "name": "Louça",
+    "description": "Prato, tigela, copo e taça."
+  },
+  "tank": {
+    "name": "Reservatório",
+    "description": "Balde, tambor ou regador: guarda líquido em quantidade."
+  },
+  "weapon": {
+    "name": "Arma",
+    "description": "Tudo o que fere: corpo a corpo, à distância, munição e explosivos."
+  },
+  "melee": {
+    "name": "Corpo a corpo",
+    "description": "Arma de mão com o id da arma no arsenal."
+  },
+  "ranged": {
+    "name": "Arma à distância",
+    "description": "Arco, besta, estilingue: dispara projéteis sem pólvora."
+  },
+  "firearm": {
+    "name": "Arma de fogo",
+    "description": "Arma de fogo do arsenal."
+  },
+  "ammo": {
+    "name": "Munição",
+    "description": "Munição de um calibre do arsenal."
+  },
+  "throwable": {
+    "name": "Arremessável",
+    "description": "Granada, coquetel molotov e afins."
+  },
+  "wearable": {
+    "name": "Vestível",
+    "description": "O que se veste ou se carrega no corpo."
+  },
+  "clothing": {
+    "name": "Roupa",
+    "description": "Cobre partes do corpo e protege em parte."
+  },
+  "bag": {
+    "name": "Bolsa e mochila",
+    "description": "Aumenta o quanto se carrega."
+  },
+  "equipment": {
+    "name": "Equipamento",
+    "description": "Ferramenta, aparelho, combustível e material de acampamento."
+  },
+  "tool": {
+    "name": "Ferramenta",
+    "description": "Ferramenta de mão para consertar, cortar, abrir e construir."
+  },
+  "electronics": {
+    "name": "Eletrônico",
+    "description": "Aparelho ou bateria: perde carga com o tempo."
+  },
+  "fuel": {
+    "name": "Combustível",
+    "description": "Líquido ou gás que queima ou move máquinas."
+  },
+  "camping": {
+    "name": "Acampamento",
+    "description": "Fogareiro, cobertor, vela e outros itens de acampar."
+  },
+  "material_misc": {
+    "name": "Material e diversos",
+    "description": "Matéria-prima, papéis, chaves e objetos sem uso próprio."
+  },
+  "material": {
+    "name": "Material",
+    "description": "Matéria-prima para construir e consertar, e lixo reaproveitável."
+  },
+  "book": {
+    "name": "Livro",
+    "description": "Livros, manuais e revistas."
+  },
+  "key": {
+    "name": "Chave",
+    "description": "Chaves e crachás que abrem algo."
+  },
+  "collectible": {
+    "name": "Colecionável",
+    "description": "Papéis, documentos, dinheiro e lembranças."
+  },
+  "hygiene": {
+    "name": "Higiene",
+    "description": "Sabonete, pasta de dente, papel higiênico e toalha."
+  }
+}

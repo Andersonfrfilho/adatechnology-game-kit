@@ -1,0 +1,695 @@
+{
+  "sources": {
+    "file": "specs/001-migracao-entregas-dos-times/sources/sobreviventes__os-vivos-do-vale.js",
+    "groups": "GROUPS (lines 6-25)",
+    "relations": "RELS (lines 316-334)",
+    "couples": "COUPLES (line 615)",
+    "flagCouples": "life() line 641: F.casalRT forms Rosa and Tadeu",
+    "placeRisk": "REG (line 608)",
+    "exposure": "EXPO (line 609)",
+    "riskFlags": "line 662: F.radioMuda ? 1.3 : 1",
+    "hostileBases": "HOSTB (line 613)",
+    "closedBases": "bestBase (line 637) and fill (line 747): not the nomads, not the 7º BIS tower",
+    "raidImmune": "line 711: b !== \"bloqueio\"",
+    "midwives": "line 650",
+    "anchors": "line 627: id === \"taina\" && d < 38",
+    "orphans": "lines 683-684: \"criancas\"",
+    "foodDrift": "line 701",
+    "traitorDestinations": "line 696",
+    "raids": "line 710",
+    "arrivals": "lines 722-728",
+    "numbers": "CAP, ROOM (line 614); the valley has bites (infection on)"
+  },
+  "groups": {
+    "igreja": {
+      "name": "Igreja Matriz",
+      "defence": 0.45,
+      "food": 9
+    },
+    "deleg": {
+      "name": "Delegacia do 4º DP",
+      "defence": 0.75,
+      "food": 30
+    },
+    "radio": {
+      "name": "Rádio Vale FM",
+      "defence": 0.3,
+      "food": 12
+    },
+    "oficina": {
+      "name": "Auto Center Tavares",
+      "defence": 0.65,
+      "food": 15
+    },
+    "colegio": {
+      "name": "Colégio Estadual",
+      "defence": 0.4,
+      "food": 6
+    },
+    "hospital": {
+      "name": "Hospital Regional, ala isolada",
+      "defence": 0.55,
+      "food": 14
+    },
+    "vila": {
+      "name": "Igreja da Vila",
+      "defence": 0.35,
+      "food": 8
+    },
+    "aurora": {
+      "name": "Sobrado da rua das Acácias",
+      "defence": 0.2,
+      "food": 3
+    },
+    "fabril": {
+      "name": "Depósito de combustível",
+      "defence": 0.4,
+      "food": 10
+    },
+    "armas": {
+      "name": "Kessler Armas e Caça",
+      "defence": 0.6,
+      "food": 20
+    },
+    "oeste": {
+      "name": "Sítios do Oeste",
+      "defence": 0.5,
+      "food": 60
+    },
+    "serra": {
+      "name": "Serra do Corvo",
+      "defence": 0.5,
+      "food": 25
+    },
+    "base": {
+      "name": "Torre de vigia do 7º BIS",
+      "defence": 0.7,
+      "food": 5
+    },
+    "bloqueio": {
+      "name": "Bloqueio Norte (Exército)",
+      "defence": 0.7,
+      "food": 12
+    },
+    "prf": {
+      "name": "Posto da PRF",
+      "defence": 0.45,
+      "food": 10
+    },
+    "penit": {
+      "name": "Penitenciária estadual, bloco C",
+      "defence": 0.8,
+      "food": 8
+    },
+    "falcao": {
+      "name": "Equipe Falcão",
+      "defence": 0.5,
+      "food": 6
+    },
+    "nomade": {
+      "name": "Nômades",
+      "defence": 0,
+      "food": 0
+    }
+  },
+  "relations": [
+    [
+      "zilda",
+      "arnaldo",
+      "family",
+      "casada há 44 anos"
+    ],
+    [
+      "zilda",
+      "mariana",
+      "family",
+      "cuida como neta"
+    ],
+    [
+      "zilda",
+      "criancas",
+      "family",
+      "cuida dos três"
+    ],
+    [
+      "zilda",
+      "val",
+      "trust",
+      "braço direito"
+    ],
+    [
+      "val",
+      "arnaldo",
+      "secret",
+      "tem a cópia da chave"
+    ],
+    [
+      "mariana",
+      "arnaldo",
+      "secret",
+      "viu o prato descer"
+    ],
+    [
+      "zilda",
+      "neide",
+      "hatred",
+      "duas igrejas, duas correntes"
+    ],
+    [
+      "zilda",
+      "sato",
+      "hatred",
+      "não perdoa o que ele faz com os presos"
+    ],
+    [
+      "brasa",
+      "bigode",
+      "trust",
+      "15 anos juntos"
+    ],
+    [
+      "brasa",
+      "italo",
+      "fear",
+      "Ítalo obedece por medo"
+    ],
+    [
+      "brasa",
+      "rafa",
+      "secret",
+      "ela guarda a lista"
+    ],
+    [
+      "brasa",
+      "jessica",
+      "hatred",
+      "o portão"
+    ],
+    [
+      "italo",
+      "jessica",
+      "secret",
+      "é o informante dela e fechou o portão"
+    ],
+    [
+      "bigode",
+      "profeta",
+      "secret",
+      "vende munição aos Corvos"
+    ],
+    [
+      "gil",
+      "bigode",
+      "secret",
+      "leva as cartas dele"
+    ],
+    [
+      "brasa",
+      "rosa",
+      "hatred",
+      "quer o diesel"
+    ],
+    [
+      "brasa",
+      "armando",
+      "hatred",
+      "quer as armas dele"
+    ],
+    [
+      "brasa",
+      "otavio",
+      "fear",
+      "Otávio teme o que ele faria com explosivo"
+    ],
+    [
+      "jessica",
+      "nelson",
+      "trust",
+      "dividem a torre"
+    ],
+    [
+      "nelson",
+      "renata",
+      "secret",
+      "rádio secreto com a base"
+    ],
+    [
+      "kauan",
+      "jessica",
+      "trust",
+      "ouve todas as transmissões"
+    ],
+    [
+      "helena",
+      "jessica",
+      "trust",
+      "pedido de socorro no ar"
+    ],
+    [
+      "rosa",
+      "gil",
+      "trust",
+      "ele vai dirigir o ônibus"
+    ],
+    [
+      "rosa",
+      "nelson",
+      "trust",
+      "anota o que a rádio diz"
+    ],
+    [
+      "rosa",
+      "chico",
+      "hatred",
+      "disputa por combustível"
+    ],
+    [
+      "tadeu",
+      "rosa",
+      "family",
+      "apaixonado por ela"
+    ],
+    [
+      "otavio",
+      "bianca",
+      "family",
+      "protege como filha"
+    ],
+    [
+      "bianca",
+      "livia",
+      "trust",
+      "mesma turma"
+    ],
+    [
+      "kauan",
+      "livia",
+      "family",
+      "irmãos"
+    ],
+    [
+      "livia",
+      "sato",
+      "fear",
+      "ouviu o gravador"
+    ],
+    [
+      "diego",
+      "sato",
+      "secret",
+      "viu a lista"
+    ],
+    [
+      "nicole",
+      "sato",
+      "trust",
+      "admira o médico"
+    ],
+    [
+      "diego",
+      "nicole",
+      "family",
+      "namorados"
+    ],
+    [
+      "kauan",
+      "biel",
+      "hatred",
+      "rivais de entrega"
+    ],
+    [
+      "neide",
+      "biel",
+      "family",
+      "criou o menino"
+    ],
+    [
+      "dito",
+      "ivone",
+      "trust",
+      "vizinhos de cerca"
+    ],
+    [
+      "ivone",
+      "tadeu",
+      "family",
+      "mãe e filho"
+    ],
+    [
+      "dito",
+      "profeta",
+      "hatred",
+      "quer o sítio"
+    ],
+    [
+      "dito",
+      "cida",
+      "family",
+      "namoro antigo"
+    ],
+    [
+      "cida",
+      "profeta",
+      "secret",
+      "trata os Corvos e sabe onde está a munição"
+    ],
+    [
+      "taina",
+      "zilda",
+      "trust",
+      "a Zilda vai fazer o parto"
+    ],
+    [
+      "taina",
+      "val",
+      "trust",
+      "anota os boatos no caderno dele"
+    ],
+    [
+      "lucas",
+      "gil",
+      "trust",
+      "amigos de posto de estrada"
+    ],
+    [
+      "lucas",
+      "bigode",
+      "secret",
+      "dívida de contrabando"
+    ],
+    [
+      "lucia",
+      "lucas",
+      "secret",
+      "a placa no livro de ocorrências"
+    ],
+    [
+      "lucia",
+      "rosa",
+      "trust",
+      "escolta as caravanas"
+    ],
+    [
+      "douglas",
+      "lucia",
+      "trust",
+      "parceiros de posto"
+    ],
+    [
+      "caio",
+      "ferraz",
+      "hatred",
+      "a ordem escondida"
+    ],
+    [
+      "caio",
+      "vinicius",
+      "trust",
+      "protege o recruta"
+    ],
+    [
+      "ferraz",
+      "vinicius",
+      "fear",
+      "o recruta teme o sargento"
+    ],
+    [
+      "caio",
+      "renata",
+      "trust",
+      "mesma unidade, rádio mudo"
+    ],
+    [
+      "josue",
+      "jacare",
+      "secret",
+      "o acordo do bloco C"
+    ],
+    [
+      "jacare",
+      "brasa",
+      "secret",
+      "celular e o carro-forte"
+    ],
+    [
+      "lince",
+      "sato",
+      "secret",
+      "a missão é ele"
+    ],
+    [
+      "paula",
+      "lince",
+      "hatred",
+      "o que é a missão"
+    ],
+    [
+      "kevin",
+      "renata",
+      "trust",
+      "faixa militar à noite"
+    ],
+    [
+      "kevin",
+      "nelson",
+      "trust",
+      "trocam peças de rádio"
+    ],
+    [
+      "lince",
+      "profeta",
+      "hatred",
+      "os Corvos saquearam o helicóptero"
+    ],
+    [
+      "azevedo",
+      "renata",
+      "secret",
+      "o cartão e a chave do paiol"
+    ]
+  ],
+  "couples": [
+    [
+      "diego",
+      "nicole"
+    ],
+    [
+      "zilda",
+      "arnaldo"
+    ]
+  ],
+  "flagCouples": [
+    {
+      "flag": "casalRT",
+      "a": "rosa",
+      "b": "tadeu"
+    }
+  ],
+  "placeRisk": {
+    "igreja": 0.008,
+    "deleg": 0.008,
+    "radio": 0.006,
+    "oficina": 0.005,
+    "colegio": 0.004,
+    "hospital": 0.008,
+    "vila": 0.004,
+    "aurora": 0.002,
+    "fabril": 0.005,
+    "armas": 0.008,
+    "oeste": 0.002,
+    "serra": 0.0015,
+    "base": 0.02,
+    "nomade": 0.006,
+    "bloqueio": 0.005,
+    "prf": 0.004,
+    "penit": 0.006,
+    "falcao": 0.007
+  },
+  "exposure": {
+    "kauan": 0.8,
+    "biel": 0.6,
+    "gil": 0.5,
+    "lucas": 0.5,
+    "lince": 0.6,
+    "paula": 0.5,
+    "kevin": 0.5,
+    "douglas": 0.6,
+    "lucia": 0.5,
+    "profeta": 0.5,
+    "dito": 0.4,
+    "tadeu": 0.4,
+    "ferraz": 0.4,
+    "caio": 0.3,
+    "bigode": 0.4,
+    "brasa": 0.3,
+    "italo": 0.4,
+    "chico": 0.4,
+    "armando": 0.2,
+    "zilda": 0.1,
+    "nelson": 0.2,
+    "jessica": 0.2,
+    "renata": 0.1,
+    "criancas": 0.05,
+    "mariana": 0.05,
+    "livia": 0.2,
+    "taina": 0.1
+  },
+  "riskFlags": {
+    "radioMuda": 1.3
+  },
+  "hostileBases": {
+    "deleg": {
+      "flag": "brasaDomina"
+    },
+    "serra": true,
+    "penit": {
+      "flag": "penitArmada"
+    },
+    "bloqueio": {
+      "flag": "bloqueioHostil"
+    }
+  },
+  "closedBases": [
+    "base"
+  ],
+  "raidImmune": [
+    "bloqueio"
+  ],
+  "nomadBase": "nomade",
+  "playerBase": "jogador",
+  "midwives": [
+    "zilda",
+    "diego",
+    "paula",
+    "cida",
+    "sato",
+    "nicole"
+  ],
+  "anchors": [
+    {
+      "id": "taina",
+      "beforeDay": 38
+    }
+  ],
+  "orphans": {
+    "criancas": "um dos três órfãos"
+  },
+  "foodDrift": {
+    "oeste": 0.15,
+    "penit": {
+      "flag": "penitFeira",
+      "value": 0.05
+    }
+  },
+  "traitorDestinations": [
+    {
+      "base": "deleg",
+      "when": {
+        "all": [
+          {
+            "flag": "brasaDomina"
+          },
+          {
+            "living": "brasa"
+          }
+        ]
+      }
+    },
+    {
+      "base": "serra",
+      "when": {
+        "living": "profeta"
+      }
+    }
+  ],
+  "raids": [
+    {
+      "from": "deleg",
+      "when": {
+        "all": [
+          {
+            "flag": "brasaDomina"
+          },
+          {
+            "living": "brasa"
+          }
+        ]
+      },
+      "who": "Os homens do Brasa"
+    },
+    {
+      "from": "serra",
+      "when": {
+        "all": [
+          {
+            "flag": "corvosOeste"
+          },
+          {
+            "living": "profeta"
+          }
+        ]
+      },
+      "who": "Os Corvos"
+    },
+    {
+      "from": "penit",
+      "when": {
+        "all": [
+          {
+            "flag": "penitArmada"
+          },
+          {
+            "living": "jacare"
+          }
+        ]
+      },
+      "who": "Os presos do Jacaré"
+    }
+  ],
+  "arrivals": {
+    "origins": [
+      "pela BR-Sul",
+      "pelo pátio de trens",
+      "pela trilha da serra"
+    ],
+    "notes": [
+      {
+        "origin": "pela BR-Sul",
+        "when": {
+          "all": [
+            {
+              "living": "lucia"
+            },
+            {
+              "base": "lucia",
+              "is": "prf"
+            }
+          ]
+        },
+        "text": " e a Lúcia anota o nome no livro da PRF"
+      }
+    ],
+    "announcements": [
+      {
+        "when": {
+          "any": [
+            {
+              "living": "jessica"
+            },
+            {
+              "living": "nelson"
+            }
+          ]
+        },
+        "text": " A rádio anuncia a chegada às 20h."
+      }
+    ]
+  },
+  "numbers": {
+    "infection": true,
+    "arrivals": {
+      "cap": 104,
+      "room": 8
+    }
+  }
+}

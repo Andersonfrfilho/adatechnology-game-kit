@@ -5,10 +5,12 @@
 import { engine } from '@adatechnology/game-floorplan'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
+import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { register as registerPostApocalyptic } from '../src'
 
 registerResidential(engine)
 registerCommercial(engine)
+registerRural(engine)
 registerPostApocalyptic(engine)
 
 export { engine }
@@ -56,7 +58,7 @@ const rectOf = (m: any): Rect => {
 const isSolid = (m: any) => !m.flat && !m.on && (!m.decor || m.mount === 'floor')
 const NON_SOLID_MOUNTS = new Set(['window', 'support', 'wall_top', 'ground', 'ceiling', 'wall', 'roof'])
 const HEAVY = new Set(['sofa', 'wardrobe', 'wardrobe_large', 'fridge', 'shelf_unit', 'tv_unit', 'buffet', 'china_cabinet', 'pantry', 'bookcase', 'dining_table_large', 'freezer', 'wall_shelving'])
-const NO_LIGHT_ROOMS = new Set(['void', 'elevator', 'balcony', 'terrace'])
+const NO_LIGHT_ROOMS = new Set(['void', 'elevator', 'balcony', 'terrace', 'porch', 'tent'])
 
 function openingZone(a: any): Rect[] {
   const h = a.width / 2
@@ -172,7 +174,8 @@ function checkDecor(tag: string, res: Plan, F: Failures) {
     for (const j of res.windows) if (j.floor === q.floor && overlap(q.aabb, openingRect(j), 0.001)) F.add('picture over a window', tag + ' ' + q.id + ' ' + j.id)
     for (const p of res.doors) if (p.floor === q.floor && overlap(q.aabb, openingRect(p), 0.001)) F.add('picture over a door', tag + ' ' + q.id + ' ' + p.id)
   }
-  for (const c of res.rooms) if (!NO_LIGHT_ROOMS.has(c.type) && !res.items.some((m: any) => m.room === c.id && m.category === 'ceiling_light')) F.add('room without ceiling_light', tag + ' ' + c.id)
+  const lightCategory = res.config?.power === 'offgrid' ? 'oil_lamp' : 'ceiling_light'
+  for (const c of res.rooms) if (!NO_LIGHT_ROOMS.has(c.type) && !res.items.some((m: any) => m.room === c.id && m.category === lightCategory)) F.add('room without ' + lightCategory, tag + ' ' + c.id)
   for (const m of res.items.filter((m: any) => m.category === 'curtain')) if (!res.windows.some((j: any) => j.id === m.window)) F.add('curtain without window', tag + m.id)
   if (res.style !== 'budget') for (const j of res.windows) if (!res.items.some((m: any) => m.category === 'curtain' && m.window === j.id) && res.style !== 'commercial') F.add('window without curtain (mid/high)', tag + ' ' + j.id)
   for (const m of res.items.filter((m: any) => m.category === 'ceiling_light')) {
@@ -253,8 +256,26 @@ function checkState(tag: string, res: Plan, F: Failures) {
   }
 }
 
+/** Upper floors reached by a stair outside (slab house): every upper floor has the outside door the stair serves, and its rooms connect to it. */
+function checkSideStair(tag: string, res: Plan, F: Failures) {
+  const stair = res.config.sideStair
+  if (stair.flights !== res.floors.length - 1) F.add('side stair flights', tag)
+  if (stair.rect[0] < -res.lot.sideYard.left - 1e-6 || stair.rect[2] > 1e-6) F.add('side stair outside its margin', tag)
+  const adj: Record<string, Set<string>> = {}
+  for (const p of res.doors) if (p.b !== 'outside') for (const [a, b] of [[p.a, p.b], [p.b, p.a]]) (adj[a] = adj[a] || new Set()).add(b)
+  for (const id of stair.doors) {
+    const door = res.doors.find((p: any) => p.id === id)
+    if (!door || !door.exterior || door.side !== 'left') { F.add('side stair door', tag + ' ' + id); continue }
+    const seenRooms = new Set<string>([door.a])
+    const queue = [door.a]
+    for (let h = 0; h < queue.length; h++) for (const n of adj[queue[h]] || []) if (!seenRooms.has(n)) { seenRooms.add(n); queue.push(n) }
+    for (const c of res.rooms.filter((c: any) => c.floor === door.floor)) if (!seenRooms.has(c.id)) F.add('unreachable room from the side stair', tag + ' ' + c.id)
+  }
+}
+
 function checkStairs(tag: string, res: Plan, F: Failures) {
   if (res.floors.length < 2) return
+  if (res.config?.sideStair) return checkSideStair(tag, res, F)
   const stairs = res.items.filter((m: any) => m.type === 'stairs')
   const rooms = res.rooms.filter((c: any) => c.type === 'stairs')
   for (let a = 0; a < res.floors.length - 1; a++) if (!rooms.some((r: any) => r.floor === a)) F.add('floor without stairs', tag + ' floor ' + a)
@@ -343,9 +364,17 @@ export function checkPlan(name: string, res: Plan, seed: number, seen: Set<strin
       for (const m of all) if (m.outdoor && c.rects.some((z: Rect) => overlap(rectOf(m), z))) F.add('path blocked', tag + ' ' + c.id + ' by ' + m.id)
       const g = L.gates.find((x: any) => x.id === c.from)
       const pt = res.doors.find((x: any) => x.id === c.to)
-      if (!g || !pt) { F.add('path without ends', tag + c.id); continue }
+      // a building at the street line has no pedestrian gate: its entrance path starts at the door (`from` is null)
+      if ((!g && c.from != null) || !pt) { F.add('path without ends', tag + c.id); continue }
       const inside = (rs: Rect[], u: number, v: number) => rs.some((r) => u >= r[0] - 1e-6 && u <= r[2] + 1e-6 && v >= r[1] - 1e-6 && v <= r[3] + 1e-6)
-      if (!inside(c.rects, g.u, g.v) || !inside(c.rects, pt.u, pt.v)) F.add('path does not join gate and door', tag + ' ' + c.id)
+      // a path of an exterior door may reach its gate through the paths it touches or through the parking zone (they are paved too)
+      const reached: Rect[] = c.rects.slice()
+      const pool: Rect[] = L.paths.filter((o: any) => o !== c).flatMap((o: any) => o.rects).concat(L.zones.filter((z: any) => z.id === 'parking').flatMap((z: any) => z.parts))
+      for (let grew = true; grew; ) {
+        grew = false
+        for (const r of pool) if (!reached.includes(r) && reached.some((a) => a[0] <= r[2] + 1e-6 && a[2] >= r[0] - 1e-6 && a[1] <= r[3] + 1e-6 && a[3] >= r[1] - 1e-6)) { reached.push(r); grew = true }
+      }
+      if ((g && !inside(reached, g.u, g.v)) || !inside(c.rects, pt.u, pt.v)) F.add('path does not join gate and door', tag + ' ' + c.id)
       const joined: Rect[] = [c.rects[0]]
       const rest: Rect[] = c.rects.slice(1)
       let progress = true
@@ -389,14 +418,25 @@ export function sizes(id: string, s: number, opts: Record<string, unknown>) {
   return { w: Math.round((L.w[0] + r() * (L.w[1] - L.w[0])) * 2) / 2, d: Math.round((L.d[0] + r() * (L.d[1] - L.d[0])) * 2) / 2 }
 }
 
+/** Skyscraper templates, checked with the same properties on 20 storeys and a few seeds (`floorplan.test.ts`). */
+export const TOWER_TEMPLATES = ['office_tower', 'residential_tower']
+
 /** Template variants exercised by the suite: [name, template id, extra options]. */
 export function variants(): [string, string, Record<string, unknown>][] {
   const out: [string, string, Record<string, unknown>][] = []
   for (const t of engine.listTemplates()) {
+    // the skyscrapers have tens of storeys a plan (seconds each): `TOWER_TEMPLATES` below, a few seeds
+    if (TOWER_TEMPLATES.includes(t.id)) continue
     if (t.id === 'apartment_modern') out.push([t.id + '[mid]', t.id, { tier: 'mid' }], [t.id + '[high]', t.id, { tier: 'high' }])
     else if (t.id === 'mansion') out.push([t.id + '[3]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[1]', t.id, { floors: 1 }], [t.id + '[3+elevator]', t.id, { floors: 3, elevator: true }])
     else if (t.id === 'high_end_contemporary') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
     else if (t.id === 'mid_modern_townhouse') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
+    else if (t.id === 'budget_slab_house') out.push([t.id + '[1]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[3]', t.id, { floors: 3 }])
+    else if (t.id === 'wood_frame_house') out.push([t.id + '[1]', t.id, { floors: 1 }], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[2+basement+fireplace]', t.id, { floors: 2, basement: 'basement', fireplace: true }], [t.id + '[1+4 bedrooms, no garage]', t.id, { floors: 1, garage: false, bedrooms: 4 }])
+    else if (t.id === 'a_frame_chalet') out.push([t.id + '[stilts]', t.id, { foundation: 'stilts' }], [t.id + '[slab]', t.id, { foundation: 'slab' }])
+    else if (t.id === 'log_cabin') out.push([t.id + '[1 room, off the grid]', t.id, { rooms: 1, power: 'offgrid' }], [t.id + '[2 rooms, indoor bathroom]', t.id, { rooms: 2, bathroom: 'indoor', power: 'grid' }], [t.id + '[2 rooms, off the grid, well]', t.id, { rooms: 2, power: 'offgrid', water: 'well' }])
+    else if (t.id === 'shack') out.push([t.id + '[1 room]', t.id, { rooms: 1 }], [t.id + '[2 rooms, indoor bathroom]', t.id, { rooms: 2, bathroom: 'indoor' }], [t.id + '[2 rooms, outside bathroom]', t.id, { rooms: 2, bathroom: 'outside' }])
+    else if (t.id === 'campsite') out.push([t.id + '[1 tent]', t.id, { tents: 1 }], [t.id + '[4 tents]', t.id, { tents: 4 }])
     else out.push([t.id, t.id, {}])
   }
   return out

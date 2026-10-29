@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { runResultExtensions } from '../src/extensions'
 import { engine, checkLot, createRng, defineZone, getZone, hashString, listStates, listZones, translate } from '../src'
 
 describe('seeded rng', () => {
@@ -90,5 +91,63 @@ describe('zoning (engine layer)', () => {
   it('rejects an unknown zone id', () => {
     const p = plan()
     expect(() => checkLot('nope', p.lot, p)).toThrow()
+  })
+})
+
+describe('result extensions and finds', () => {
+  it('runs an extension after the ones it names, with its own seeded stream', () => {
+    const order: string[] = []
+    engine.registerResultExtension('zz_second', ({ rng }) => (order.push('second'), rng()), { after: ['zz_first'], seedKey: 'team_flow' })
+    engine.registerResultExtension('zz_first', () => (order.push('first'), 1))
+    const result: Record<string, unknown> = {}
+    runResultExtensions({} as never, result, 3, {})
+    expect(order).toEqual(['first', 'second'])
+    expect(result.zz_first).toBe(1)
+    expect(result.zz_second).toBe(engine.createRng(3, 'team_flow')())
+  })
+
+  it('asks the registered provider what a container holds', () => {
+    expect(engine.findsFor({ place: 'house', container: 'fridge', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([])
+    engine.registerFindsProvider({ findsFor: ({ container }) => (container === 'fridge' ? [{ itemId: 'milk', count: 2 }] : null) })
+    expect(engine.findsFor({ place: 'house', container: 'fridge', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([{ itemId: 'milk', count: 2 }])
+    // null passes to the next provider or to the default of the pack; an empty array is an answer
+    expect(engine.findsAnswer({ place: 'house', container: 'sofa', state: 'normal', rng: engine.createRng(1, 'x') })).toBeNull()
+    engine.registerFindsProvider({ findsFor: () => [] })
+    expect(engine.findsAnswer({ place: 'house', container: 'sofa', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([])
+  })
+})
+
+describe('registries packs read back', () => {
+  it('exposes the palette recipes so a pack can build on one', () => {
+    const recipe = { facadeColors: [['x', 0, 0, 0.5]] as [string, number, number, number][], early: () => ({}) as never, late: () => ({}) }
+    engine.registerPaletteStyle('zz_recipe', recipe)
+    expect(engine.paletteStyles.zz_recipe).toBe(recipe)
+  })
+})
+
+describe('furniture and window rules', () => {
+  const window = { y0: 1.0 }
+  it('a wall cabinet blocks a window unless it was dropped', () => {
+    const cabinet = { window: true, h: 0.95, overhead: true }
+    expect(engine.blocksWindow(cabinet, window)).toBe(true)
+    expect(engine.blocksWindow(cabinet, window, true)).toBe(false)
+  })
+  it('a shower enclosure blocks by its glass height, not by its tray', () => {
+    expect(engine.blocksWindow({ window: true, h: 0.1, windowHeight: 1.95 }, window)).toBe(true)
+    expect(engine.blocksWindow({ window: true, h: 0.1 }, window)).toBe(false)
+  })
+  it('the player radius is an option that reaches the plan', () => {
+    expect(engine.constants.PLAYER_RADIUS).toBe(0.24)
+  })
+})
+
+describe('viewer layers', () => {
+  it('keeps the layers packs register, replacing by id', () => {
+    const draw = () => undefined
+    engine.registerViewerLayer({ id: 'zz_structure', label: 'Structure', draw })
+    engine.registerViewerLayer({ id: 'zz_structure', label: 'Structure 2', draw, defaultOn: true })
+    const layers = engine.viewerLayers.filter((layer) => layer.id === 'zz_structure')
+    expect(layers).toHaveLength(1)
+    expect(layers[0]?.label).toBe('Structure 2')
   })
 })

@@ -32,7 +32,7 @@ Browser without a bundler (the global is `GameContracts`):
 | Destruction | `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState`, `PartState`, `JointSpec`... | the vocabulary of parts, joints, hits, events and state |
 | Impact | `IMPACT_CONTRACT`, `checkHit(hit)` | the fields a weapon or hazard must put in a `Hit`, per damage type |
 | Own destruction | `DestructibleImpl`, `checkDestructible(impl, { materials })` | a module that owns its destruction (a car with its own panel rule) |
-| Weapons | `Shot`, `Use`, `shotToHit(shot, point, normal?)` | what a weapon produces, and the `Hit` a shot makes at a point |
+| Weapons | `Shot`, `Use`, `shotToHit(shot, point, normal?)`, `shotExtras(shot, distance?)` | what a weapon produces, and the `Hit` a shot makes at a point |
 | Fluids | `ContainerSpec`, `LiquidId`, `ItemUseDef` | what an item says about the liquid it holds and how it is used |
 | Animation | `AnimationClipSpec`, `ItemAnimationContract`, `checkAnimation(clip, partIds)` | use animations an item brings (a door `open`, a pistol `reload`) |
 | Module | `TestableModule`, `TestableItem`, `ModuleScenario` | what a module hands the test room |
@@ -100,9 +100,61 @@ room.loadModule(RENTAL_CARS) // items join the catalogue, scenarios become butto
 `build` receives the host's three.js namespace and returns its `Object3D` (both are `unknown` here: this package has no dependency on three.js).
 `impl` receives the object id the host gives the item and `DestructibleImpl.id` must equal it.
 
+### A bench for the module
+
+A module can also declare a bench as data: `controls` (number, boolean, choice, action), `layers` (things the viewer turns on or off) and
+`metrics` (counters the host pulls with `read()` a few times a second). The host keeps the values, draws them, and lends the module a
+`ModuleBench` in `attach` (`host.bench`): `value(id)`, `layer(id)`, `onChange(listener)` (right after `attach` it gets one change per control and
+layer, in order), `patch(id, { hidden, disabled, options, value })` (no echo) and `look(eye, target)`. `checkBench({ controls, layers, metrics })`
+checks the declaration (snake_case ids unique across the three, `min < max`, `step > 0`, defaults in range and among the options, `max > 0`).
+A choice's options may carry a `group` (the host lists them under that heading; the options of a group sit next to each other, and `checkBench` says
+so when they do not). `ModuleBench.sheet(sheet)` puts a card on the host's panel (`BenchSheet`: kicker, title, body, facts, steps, colour swatches, note and a
+timeline of segments whose playhead follows a module metric); a host with no sheet area leaves it out.
+
+### Effects the host lends
+
+`ModuleHost.effects` is an `EffectSink`: `play({ effect, point, direction?, normal?, seed?, param?, scale? })` starts an effect of the host's catalogue by id
+and answers a handle (or `null` when the host does not know it), `stop(handle)` ends a looping one, and `configure`, `stats` and `catalog` are optional. The
+`explosion` host event carries `explosive` (the id of the explosive), `PartSpec.explodes.effect` and the `explode` event name the effect of a part's blast.
+
+```ts
+controls: () => [
+  { kind: 'choice', id: 'distance', name: 'Distance', options: [{ id: 'near', name: 'Near' }, { id: 'far', name: 'Far' }], default: 'near' },
+  { kind: 'action', id: 'replay', name: 'Replay' },
+],
+layers: () => [{ id: 'smoke', name: 'Smoke' }],
+metrics: () => [{ id: 'particles', name: 'Particles', max: 400, read: () => fx.particles }],
+```
+
+Tool events are named after a tool's cycle, not a firearm: `mode`, `fault`, `clear` (start / end) and `safety`, and `shot` carries `rounds`
+(cartridges spent) next to `shots` (projectiles, always 1 or more) and the `mode`; a dud round is its own `misfire` event, not a `shot` of zero. `HostTool` may report `mode`, `fault`, `safety` and `heat` (0..1).
+`host.configureTool(settings)` takes a `Record<string, string>` keyed by the id of the module's own control; the test room applies `condition` and `ammo_quality` and ignores other ids.
+`host.player()` returns the `PlayerState` (`position`, `yaw`, `pitch`, `crouching`, `speed` in m/s, `running`, `cameraMode`); a `{ type: 'player' }` event tells when crouching or the camera mode changes.
+
+### Sound and weather the host lends
+
+`ModuleHost.audio?` is an `AudioSink` (`play(SoundRequest)`, `stop(handle)`, and optionally `loop`, `setListener`, `register`): one shared sound engine, so every module is mixed,
+limited and panned the same way. `ModuleHost.environment?` is an `EnvironmentBus` (`get`, `set(patch)`, `on`) holding an `EnvironmentState` (`rain` mm/h, wind, `fogFar`, `visibility`,
+`nightFactor`, `temperatureC`, `wetness`): the weather module writes it, the others read it. Both are optional, additive and generic; `createEnvironmentBus(initial?)` is a plain
+store that implements the bus, and `DEFAULT_ENVIRONMENT` is the calm dry day.
+
 ## API
 
 Everything is exported from the package root; see `src/*.ts` for the doc comments. Units: metres, seconds, joules, millimetres (calibre), degrees Celsius.
+
+## Ignition of a leak
+
+`Hit.ignition` (`{ spark, flame }`), `Hit.incendiary` and `Hit.tracer` say what a round brings to a leak of flammable fluid; `IgnitionRules` / `DEFAULT_IGNITION_RULES` are the numbers
+of the container side (the `fillCurve`, the `sparkTarget` of the wall, `fireNear`), `ignitionChance(hit, { sparkTarget, fill, fluid? }, rules?)` is the chance that one round that went through
+lights the leak, `fillFactor(fill, curve?)` the curve and `sparkTargetFactor(materialId, isMetal, rules?)` the wall. `game-destruction` and `game-vehicles` use them; a plain bullet only leaks.
+
+## Categories (kinds with inheritance)
+
+`defineCategories(defs, { extra, patches, remove })` builds a `CategoryRegistry`: each `CategoryDef` has an `id`, an optional `extends` (any depth), `defaults`, `requires` (contract ids) and `abstract`.
+`defaults(id)` deep-merges along the chain (root first, arrays replace), `requires(id)` is the deduped union, `chain(id)`, `isA(id, ancestor)` and `check()` (unknown parent, cycle, duplicate id) complete it.
+`resolveEntry(registry, entry)` puts the category defaults under an entry (the entry wins); `checkCategorized(entries, registry, checkers, { allow })` runs the `ContractChecker` of every required contract on the resolved entry and
+reports `"<id>" (<kind>): <problem>, required by <category>`; `allow` lists known gaps that go to `allowed` instead of `problems`.
+Items only name their `kind`, so a game can insert a new parent above existing types (`patches: { canned_food: { extends: 'preserved' } }` with `preserved` extending the old parent) or add a child under any type, and every item keeps resolving, now with the extra defaults and requirements, without being edited.
 
 ## Português
 
@@ -116,6 +168,9 @@ antes definiam, então `import { Hit } from '@adatechnology/game-destruction'` c
 - **Impacto**: `IMPACT_CONTRACT` e `checkHit(hit)` dizem quais campos cada tipo de dano exige.
 - **Armas**: `Shot`, `Use` e `shotToHit(shot, ponto)`.
 - **Fluidos**: `ContainerSpec`, `LiquidId` e `ItemUseDef`.
+- **Som e clima**: `ModuleHost.audio?` (`AudioSink`) e `ModuleHost.environment?` (`EnvironmentBus` com `EnvironmentState`), emprestados pela sala; `createEnvironmentBus()` e `DEFAULT_ENVIRONMENT` (o dia seco e calmo).
 - **Animações**: `AnimationClipSpec` e `checkAnimation(clipe, idsDasPeças)` (uma porta `open`, uma pistola `reload`).
 - **Módulo**: `TestableModule` entrega itens, animações e cenários à sala de testes; `room.loadModule(modulo)` roda as verificações e escreve linhas
   ✓ / ✗ no log. Assim o módulo de um carro de aluguel já nasce com as suas animações e o seu jeito de quebrar.
+- **Bancada**: o módulo declara `controls`, `layers` e `metrics` como dados; a sala guarda os valores, desenha e empresta `host.bench`
+  (`ModuleBench`). `checkBench` valida a declaração. Eventos de ciclo da ferramenta: `mode`, `fault`, `clear`, `safety`, e `rounds` no `shot`.

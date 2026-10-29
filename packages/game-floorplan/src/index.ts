@@ -1,4 +1,5 @@
-import { DOOR_CLEARANCE, WALL_THICKNESS } from './constants'
+import { CAR_CLEARANCE, DOOR_CLEARANCE, DOOR_EDGE_CLEARANCE, OVERHEAD_TOP, PLAYER_RADIUS, WALL_THICKNESS, WINDOW_EDGE_CLEARANCE } from './constants'
+import { findsAnswer, findsFor } from './extensions'
 import { generate, limitsOf, listTemplates, slots, validate } from './generate'
 import { registerGroundItems } from './ground-items'
 import { listLocales, registerLocale, translate } from './locale'
@@ -6,10 +7,14 @@ import { HIGH_SATURATION, MIN_FABRIC_FLOOR_CONTRAST, MIN_WALL_FLOOR_CONTRAST, he
 import {
   CATALOG,
   LIBRARIES,
+  PALETTE_STYLES,
   STYLES,
   TEMPLATES,
+  VIEWER_LAYERS,
+  registerViewerLayer,
   listStates,
   registerDecorProfile,
+  registerFindsProvider,
   registerGroundOverlay,
   registerItem,
   registerItems,
@@ -17,6 +22,7 @@ import {
   registerLibraryAlias,
   registerPass,
   registerPaletteStyle,
+  registerResultExtension,
   registerRoomColors,
   registerSeedKeys,
   registerState,
@@ -29,7 +35,7 @@ import { createRng, hashString, mulberry32 } from './rng'
 import { slotKit } from './slot-kit'
 import { checkLot, defineZone, getZone, listZones, registerPermeableGround } from './zoning'
 import { overlaps, openingZones } from './geometry'
-import { windowZone } from './queries'
+import { blocksWindow, windowZone } from './queries'
 
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
@@ -71,6 +77,13 @@ export const engine = {
   registerState,
   setStateDistribution,
   registerLocale,
+  registerResultExtension,
+  registerFindsProvider,
+  findsFor,
+  findsAnswer,
+  registerViewerLayer,
+  viewerLayers: VIEWER_LAYERS,
+  blocksWindow,
   // zoning
   defineZone,
   getZone,
@@ -85,6 +98,7 @@ export const engine = {
   catalog: CATALOG,
   libraries: LIBRARIES,
   styles: STYLES,
+  paletteStyles: PALETTE_STYLES,
   createRng,
   mulberry32,
   hashString,
@@ -92,7 +106,7 @@ export const engine = {
   windowZone,
   openingZones,
   color: { lstar, hex: hexString, hsl: intToHsl, HIGH_SATURATION, MIN_WALL_FLOOR_CONTRAST, MIN_FABRIC_FLOOR_CONTRAST },
-  constants: { WALL_THICKNESS, DOOR_CLEARANCE },
+  constants: { WALL_THICKNESS, DOOR_CLEARANCE, PLAYER_RADIUS, DOOR_EDGE_CLEARANCE, WINDOW_EDGE_CLEARANCE, OVERHEAD_TOP, CAR_CLEARANCE },
 }
 export type FloorplanEngine = typeof engine
 
@@ -120,6 +134,12 @@ export {
   registerState,
   setStateDistribution,
   registerLocale,
+  registerResultExtension,
+  registerFindsProvider,
+  findsFor,
+  findsAnswer,
+  registerViewerLayer,
+  blocksWindow,
   translate,
   listLocales,
   defineZone,
@@ -137,3 +157,4 @@ export {
 }
 export type * from './types'
 export type { PaletteDraw, PaletteEarly, PaletteStyleDef } from './palette'
+export * from './silhouettes'

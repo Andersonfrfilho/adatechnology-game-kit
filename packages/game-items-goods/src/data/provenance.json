@@ -1,0 +1,2374 @@
+{
+  "canned_beans": {
+    "ite": "feijao_lata",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "feijao_lata"
+    ]
+  },
+  "canned_sardines": {
+    "ite": "sardinha",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "sardinha"
+    ]
+  },
+  "canned_corn_and_peas": {
+    "ite": "milho_lata",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "lata_milho"
+    ],
+    "game": [
+      "milho_lata"
+    ]
+  },
+  "canned_sausages": {
+    "ite": "salsicha_lata",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "salsicha_lata"
+    ]
+  },
+  "condensed_milk": {
+    "ite": "leite_condensado",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "leite_condensado"
+    ]
+  },
+  "military_ration": {
+    "ite": "racao_militar",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "racao_militar"
+    ]
+  },
+  "rice": {
+    "ite": "arroz",
+    "household": "rice",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "vc3": [
+      "arroz"
+    ],
+    "game": [
+      "arroz"
+    ]
+  },
+  "beans": {
+    "ite": "feijao_seco",
+    "household": "beans",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "feijao"
+    ],
+    "game": [
+      "feijao_seco"
+    ]
+  },
+  "pasta": {
+    "ite": "macarrao",
+    "household": "pasta",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "macarrao"
+    ],
+    "game": [
+      "macarrao"
+    ]
+  },
+  "instant_noodles": {
+    "ite": "macarrao_inst",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "macarrao_inst"
+    ]
+  },
+  "cassava_flour": {
+    "ite": "farinha_mandioca",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "farinha_mandioca"
+    ]
+  },
+  "biscuits": {
+    "ite": "biscoito",
+    "household": "biscuits",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "biscoito"
+    ],
+    "game": [
+      "biscoito"
+    ]
+  },
+  "snack_chips": {
+    "ite": "salgadinho",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "salgadinho"
+    ]
+  },
+  "chocolate_bar": {
+    "ite": "chocolate",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "chocolate"
+    ]
+  },
+  "rapadura": {
+    "ite": "rapadura",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "rapadura"
+    ]
+  },
+  "honey_jar": {
+    "ite": "mel",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bread": {
+    "ite": "pao_forma",
+    "household": "bread",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "pao_forma"
+    ]
+  },
+  "cheese": {
+    "ite": "queijo",
+    "household": "cheese",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "queijo"
+    ],
+    "game": [
+      "queijo"
+    ]
+  },
+  "mortadella": {
+    "ite": "mortadela",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "mortadela"
+    ]
+  },
+  "raw_beef": {
+    "ite": "carne_bovina",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "carne"
+    ],
+    "game": [
+      "carne_bovina"
+    ]
+  },
+  "frozen_chicken": {
+    "ite": "frango",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "frango"
+    ]
+  },
+  "eggs": {
+    "ite": "ovos",
+    "household": "eggs",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "ovos"
+    ],
+    "game": [
+      "ovos"
+    ]
+  },
+  "banana_bunch": {
+    "ite": "banana",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "banana"
+    ]
+  },
+  "orange": {
+    "ite": "laranja",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "laranja"
+    ]
+  },
+  "potatoes": {
+    "ite": "batata",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "batata"
+    ]
+  },
+  "cassava_root": {
+    "ite": "mandioca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fresh_fish": {
+    "ite": "peixe_fresco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "salted_fish": {
+    "ite": "peixe_salgado",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "jerked_beef": {
+    "ite": "charque",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "charque"
+    ]
+  },
+  "game_meat": {
+    "ite": "carne_caca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "home_preserves": {
+    "ite": "conserva",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "conserva"
+    ]
+  },
+  "dog_food": {
+    "ite": "racao_cao",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "racao_cao"
+    ]
+  },
+  "sugar": {
+    "ite": "acucar",
+    "household": "sugar",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "acucar"
+    ],
+    "game": [
+      "acucar"
+    ]
+  },
+  "salt": {
+    "ite": "sal",
+    "household": "salt",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "sal"
+    ]
+  },
+  "cooking_oil": {
+    "ite": "oleo_cozinha",
+    "household": "cooking_oil",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "oleo"
+    ],
+    "game": [
+      "oleo_cozinha"
+    ]
+  },
+  "coffee": {
+    "ite": "cafe_po",
+    "household": "coffee",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "cafe"
+    ],
+    "game": [
+      "cafe_po"
+    ]
+  },
+  "water_bottle": {
+    "ite": "agua_500",
+    "household": "water_bottle",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "vc3": [
+      "agua_garrafa"
+    ],
+    "game": [
+      "agua_500"
+    ]
+  },
+  "water_jug_5l": {
+    "ite": "galao_agua",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "agua_galao"
+    ],
+    "game": [
+      "galao_agua"
+    ]
+  },
+  "dirty_water": {
+    "ite": "agua_suja",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "soda_can": {
+    "ite": "refri_lata",
+    "household": "soda_can",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "refrigerante"
+    ],
+    "game": [
+      "refri_lata"
+    ]
+  },
+  "juice_box": {
+    "ite": "suco_cx",
+    "household": "juice_box",
+    "idSource": "merge",
+    "sizeSource": "REF",
+    "game": [
+      "suco_cx"
+    ]
+  },
+  "milk_carton": {
+    "ite": "leite",
+    "household": "milk_carton",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "leite"
+    ],
+    "game": [
+      "leite"
+    ]
+  },
+  "sports_drink": {
+    "ite": "isotonico",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "isotonico"
+    ]
+  },
+  "energy_drink": {
+    "ite": "energetico",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "energetico"
+    ]
+  },
+  "coconut_water": {
+    "ite": "agua_coco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "beer_can": {
+    "ite": "cerveja",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "cerveja"
+    ]
+  },
+  "cachaca": {
+    "ite": "cachaca",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "cachaca"
+    ]
+  },
+  "communion_wine": {
+    "ite": "vinho",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bandage": {
+    "ite": "atadura",
+    "household": "bandage",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "game": [
+      "atadura"
+    ]
+  },
+  "sterile_gauze": {
+    "ite": "gaze",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "gaze"
+    ]
+  },
+  "adhesive_bandages": {
+    "ite": "curativo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "curativo"
+    ],
+    "game": [
+      "curativo"
+    ]
+  },
+  "medical_tape": {
+    "ite": "esparadrapo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "esparadrapo"
+    ]
+  },
+  "alcohol_70": {
+    "ite": "alcool70",
+    "household": "alcohol_70",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "alcool"
+    ],
+    "game": [
+      "alcool70"
+    ]
+  },
+  "povidone_iodine": {
+    "ite": "pvpi",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "pvpi"
+    ]
+  },
+  "saline_iv_bag": {
+    "ite": "soro",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "painkillers": {
+    "ite": "analgesico",
+    "household": "painkillers",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "paracetamol"
+    ],
+    "game": [
+      "analgesico"
+    ]
+  },
+  "ibuprofen": {
+    "ite": "ibuprofeno",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "ibuprofeno"
+    ]
+  },
+  "tramadol": {
+    "ite": "opioide",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "opioide"
+    ]
+  },
+  "clonazepam": {
+    "ite": "calmante",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "calmante"
+    ]
+  },
+  "amoxicillin": {
+    "ite": "amoxicilina",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "amoxicilina"
+    ]
+  },
+  "ceftriaxone": {
+    "ite": "ceftriaxona",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "syringe": {
+    "ite": "seringa",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "seringa"
+    ]
+  },
+  "suture_kit": {
+    "ite": "kit_sutura",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "splint": {
+    "ite": "tala",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "first_aid_kit": {
+    "ite": "kit_ps",
+    "household": "first_aid_kit",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "game": [
+      "kit_ps"
+    ]
+  },
+  "exam_gloves": {
+    "ite": "luva_proc",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "luva_proc"
+    ]
+  },
+  "n95_mask": {
+    "ite": "n95",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "n95"
+    ]
+  },
+  "activated_charcoal": {
+    "ite": "carvao_ativado",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "carvao_ativado"
+    ]
+  },
+  "rehydration_salts": {
+    "ite": "sais_reidrat",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "sais_reidrat"
+    ]
+  },
+  "antihistamine": {
+    "ite": "antialergico",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "antialergico"
+    ]
+  },
+  "antivenom": {
+    "ite": "antiofidico",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "thermometer": {
+    "ite": "termometro",
+    "household": "thermometer",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "termometro"
+    ]
+  },
+  "maintenance_medication": {
+    "ite": "remedio_continuo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "remedio"
+    ],
+    "game": [
+      "remedio_continuo"
+    ]
+  },
+  "multivitamin": {
+    "ite": "vitamina",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "vitamina"
+    ]
+  },
+  "hammer": {
+    "ite": "martelo",
+    "household": "hammer",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "vc3": [
+      "martelo"
+    ],
+    "game": [
+      "martelo"
+    ]
+  },
+  "screwdriver": {
+    "ite": "chave_fenda",
+    "household": "screwdriver",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "chave_fenda"
+    ],
+    "game": [
+      "chave_fenda"
+    ]
+  },
+  "crowbar": {
+    "ite": "pe_cabra",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "pe_cabra"
+    ]
+  },
+  "handsaw": {
+    "ite": "serrote",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "serrote"
+    ],
+    "game": [
+      "serrote"
+    ]
+  },
+  "hacksaw": {
+    "ite": "serra_arco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bolt_cutters": {
+    "ite": "corta_vergalhao",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "pliers": {
+    "ite": "alicate",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "alicate"
+    ],
+    "game": [
+      "alicate"
+    ]
+  },
+  "adjustable_wrench": {
+    "ite": "chave_inglesa",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "mechanic_toolbox": {
+    "ite": "kit_mecanico",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "car_jack": {
+    "ite": "macaco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "gas_torch": {
+    "ite": "macarico",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "inverter_welder": {
+    "ite": "solda",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "cordless_drill": {
+    "ite": "parafusadeira",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "parafusadeira"
+    ]
+  },
+  "shovel": {
+    "ite": "pa",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "pa"
+    ]
+  },
+  "hoe": {
+    "ite": "enxada",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "pocket_knife": {
+    "ite": "canivete",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "canivete"
+    ]
+  },
+  "can_opener": {
+    "ite": "abridor",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "abridor"
+    ]
+  },
+  "scissors": {
+    "ite": "tesoura",
+    "household": "scissors",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "tesoura"
+    ],
+    "game": [
+      "tesoura"
+    ]
+  },
+  "duct_tape": {
+    "ite": "silver_tape",
+    "household": "duct_tape",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "silver_tape"
+    ]
+  },
+  "pot": {
+    "ite": "panela",
+    "household": "pot",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "panela"
+    ],
+    "game": [
+      "panela"
+    ]
+  },
+  "camp_stove": {
+    "ite": "fogareiro",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sewing_kit": {
+    "ite": "kit_costura",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "kit_costura"
+    ]
+  },
+  "lockpick_kit": {
+    "ite": "kit_chaveiro",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "lighter": {
+    "ite": "isqueiro",
+    "household": "lighter",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "isqueiro"
+    ]
+  },
+  "matches": {
+    "ite": "fosforo",
+    "household": "matches",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "fosforo"
+    ]
+  },
+  "flint_striker": {
+    "ite": "pederneira",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bucket": {
+    "ite": "balde",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "balde"
+    ],
+    "game": [
+      "balde"
+    ]
+  },
+  "binoculars": {
+    "ite": "binoculo",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fire_extinguisher": {
+    "ite": "extintor",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sharpening_stone": {
+    "ite": "amolador",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "amolador"
+    ]
+  },
+  "knife": {
+    "ite": "faca_cozinha",
+    "household": "knife",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "faca"
+    ],
+    "game": [
+      "faca_cozinha"
+    ]
+  },
+  "tactical_knife": {
+    "ite": "faca_tatica",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "machete": {
+    "ite": "facao",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "facao"
+    ]
+  },
+  "meat_cleaver": {
+    "ite": "cutelo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "cutelo"
+    ]
+  },
+  "hatchet": {
+    "ite": "machadinha",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "axe": {
+    "ite": "machado",
+    "idSource": "decision",
+    "sizeSource": "model"
+  },
+  "baseball_bat": {
+    "ite": "taco",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "taco"
+    ]
+  },
+  "nail_bat": {
+    "ite": "taco_pregos",
+    "idSource": "decision",
+    "sizeSource": "model"
+  },
+  "iron_pipe": {
+    "ite": "cano",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sledgehammer": {
+    "ite": "marreta",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "pickaxe": {
+    "ite": "picareta",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sickle": {
+    "ite": "foice",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "police_baton": {
+    "ite": "tonfa",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "cast_iron_skillet": {
+    "ite": "frigideira",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "frigideira"
+    ]
+  },
+  "improvised_spear": {
+    "ite": "lanca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "chainsaw": {
+    "ite": "motosserra",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "slingshot": {
+    "ite": "estilingue",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "estilingue"
+    ]
+  },
+  "recurve_bow": {
+    "ite": "arco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "crossbow": {
+    "ite": "besta",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "arrows_and_bolts": {
+    "ite": "flecha",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "wooden_plank": {
+    "ite": "tabua",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "tabua"
+    ]
+  },
+  "nails": {
+    "ite": "pregos",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "pregos"
+    ],
+    "game": [
+      "pregos"
+    ]
+  },
+  "screws": {
+    "ite": "parafusos",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "parafusos"
+    ]
+  },
+  "sheet_metal": {
+    "ite": "chapa",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "scrap_metal": {
+    "ite": "sucata",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "wire_roll": {
+    "ite": "arame",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "arame"
+    ]
+  },
+  "barbed_wire": {
+    "ite": "arame_farpado",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "rope": {
+    "ite": "corda",
+    "household": "rope",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "corda"
+    ]
+  },
+  "tarp": {
+    "ite": "lona",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "raffia_sack": {
+    "ite": "saco_areia",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bricks": {
+    "ite": "tijolo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "tijolo"
+    ]
+  },
+  "cement_bag": {
+    "ite": "cimento",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "rag": {
+    "ite": "trapo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "trapo"
+    ]
+  },
+  "glass_bottle": {
+    "ite": "garrafa_vidro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "garrafa_vidro"
+    ]
+  },
+  "pet_bottle": {
+    "ite": "garrafa_pet",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "garrafa_pet"
+    ]
+  },
+  "empty_can": {
+    "ite": "lata_vazia",
+    "household": "empty_can",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "lata_vazia"
+    ],
+    "game": [
+      "lata_vazia"
+    ]
+  },
+  "glass_shards": {
+    "ite": "cacos",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "cacos"
+    ]
+  },
+  "epoxy_glue": {
+    "ite": "cola",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "cola"
+    ]
+  },
+  "electronic_components": {
+    "ite": "componentes",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "copper_wire": {
+    "ite": "fio_cobre",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "fio_cobre"
+    ]
+  },
+  "firewood": {
+    "ite": "lenha",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "rebar": {
+    "ite": "vergalhao",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "lubricant_spray": {
+    "ite": "lubrificante",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "lubrificante"
+    ]
+  },
+  "tshirt": {
+    "ite": "camiseta",
+    "household": "tshirt",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "camisa",
+      "camiseta"
+    ],
+    "game": [
+      "camiseta"
+    ]
+  },
+  "hoodie": {
+    "ite": "moletom",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "moletom"
+    ]
+  },
+  "denim_jacket": {
+    "ite": "jaqueta_jeans",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "jaqueta_jeans"
+    ]
+  },
+  "leather_motorcycle_jacket": {
+    "ite": "jaqueta_couro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "jaqueta_couro"
+    ]
+  },
+  "jeans": {
+    "ite": "calca_jeans",
+    "household": "jeans",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "calca"
+    ],
+    "game": [
+      "calca_jeans"
+    ]
+  },
+  "leather_motorcycle_pants": {
+    "ite": "calca_couro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "calca_couro"
+    ]
+  },
+  "army_camouflage_uniform": {
+    "ite": "farda_eb",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "farda_eb"
+    ]
+  },
+  "mechanic_coveralls": {
+    "ite": "macacao",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "firefighter_suit": {
+    "ite": "bombeiro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "bombeiro"
+    ]
+  },
+  "beekeeper_suit": {
+    "ite": "apicultor",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "raincoat": {
+    "ite": "capa_chuva",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "capa_chuva"
+    ]
+  },
+  "padded_coat": {
+    "ite": "casaco_frio",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "motorcycle_helmet": {
+    "ite": "capacete_moto",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "capacete_moto"
+    ]
+  },
+  "hard_hat": {
+    "ite": "capacete_obra",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "safety_goggles": {
+    "ite": "oculos",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "leather_work_gloves": {
+    "ite": "luva_couro",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "combat_boots": {
+    "ite": "coturno",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "coturno"
+    ]
+  },
+  "rubber_boots": {
+    "ite": "bota_borracha",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sneakers": {
+    "ite": "tenis",
+    "household": "sneakers",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "tenis",
+      "sapato"
+    ],
+    "game": [
+      "tenis"
+    ]
+  },
+  "flip_flops": {
+    "ite": "chinelo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "chinelo"
+    ],
+    "game": [
+      "chinelo"
+    ]
+  },
+  "magazine_arm_guard": {
+    "ite": "braco_revista",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "sheet_metal_forearm_guard": {
+    "ite": "braco_chapa",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "ballistic_vest": {
+    "ite": "colete",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "colete"
+    ]
+  },
+  "shopping_bag": {
+    "ite": "sacola",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "sacola"
+    ]
+  },
+  "trash_bag": {
+    "ite": "saco_lixo",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "saco_lixo"
+    ],
+    "game": [
+      "saco_lixo"
+    ]
+  },
+  "fanny_pack": {
+    "ite": "pochete",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "pochete"
+    ]
+  },
+  "crossbody_bag": {
+    "ite": "bolsa",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "bolsa"
+    ]
+  },
+  "backpack": {
+    "ite": "mochila_escolar",
+    "household": "backpack",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "vc3": [
+      "mochila"
+    ],
+    "game": [
+      "mochila_escolar"
+    ]
+  },
+  "delivery_bag": {
+    "ite": "bag_entregador",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "bag_entregador"
+    ]
+  },
+  "hiking_backpack_40l": {
+    "ite": "mochila_trilha",
+    "idSource": "decision",
+    "sizeSource": "model"
+  },
+  "military_backpack": {
+    "ite": "mochila_militar",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "mochila_militar"
+    ]
+  },
+  "trekking_backpack_70l": {
+    "ite": "cargueira",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "rolling_suitcase": {
+    "ite": "mala",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "mala"
+    ]
+  },
+  "tactical_vest": {
+    "ite": "colete_tatico",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "tool_belt": {
+    "ite": "cinto_ferramentas",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "cooler_box": {
+    "ite": "caixa_termica",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "caixa_termica"
+    ]
+  },
+  "shopping_cart": {
+    "ite": "carrinho_merc",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "carrinho_merc"
+    ]
+  },
+  "wheelbarrow": {
+    "ite": "carrinho_mao",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "flashlight": {
+    "ite": "lanterna",
+    "household": "flashlight",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "vc3": [
+      "lanterna"
+    ],
+    "game": [
+      "lanterna"
+    ]
+  },
+  "headlamp": {
+    "ite": "lanterna_cabeca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "batteries": {
+    "ite": "pilha_aa",
+    "household": "batteries",
+    "idSource": "merge",
+    "sizeSource": "model",
+    "vc3": [
+      "pilhas"
+    ],
+    "game": [
+      "pilha_aa"
+    ]
+  },
+  "battery_9v": {
+    "ite": "bateria_9v",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "bateria_9v"
+    ]
+  },
+  "power_bank": {
+    "ite": "power_bank",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "power_bank"
+    ]
+  },
+  "folding_solar_panel": {
+    "ite": "painel_solar",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "portable_radio": {
+    "ite": "radio_portatil",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "radio_portatil"
+    ]
+  },
+  "walkie_talkies": {
+    "ite": "walkie",
+    "idSource": "decision",
+    "sizeSource": "model"
+  },
+  "cb_radio": {
+    "ite": "radio_px",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "radio_px"
+    ]
+  },
+  "military_radio": {
+    "ite": "radio_militar",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "portable_generator": {
+    "ite": "gerador",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "led_camp_lantern": {
+    "ite": "lampiao_led",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "mobile_phone": {
+    "ite": "celular",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "celular"
+    ]
+  },
+  "laptop": {
+    "ite": "notebook",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "windup_alarm_clock": {
+    "ite": "despertador",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "despertador"
+    ]
+  },
+  "car_alarm_remote": {
+    "ite": "controle_alarme",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "controle_alarme"
+    ]
+  },
+  "electric_fence_energizer": {
+    "ite": "eletrificador",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "extension_cord": {
+    "ite": "extensao",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "extensao"
+    ]
+  },
+  "candles": {
+    "ite": "vela",
+    "household": "candles",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "vela"
+    ]
+  },
+  "night_vision_goggles": {
+    "ite": "nvg",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fuel_jerrycan": {
+    "ite": "galao",
+    "idSource": "decision",
+    "sizeSource": "model"
+  },
+  "gasoline": {
+    "ite": "gasolina",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "diesel": {
+    "ite": "diesel",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "lpg_cylinder_13kg": {
+    "ite": "botijao",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "game": [
+      "botijao"
+    ]
+  },
+  "gas_cartridge": {
+    "ite": "cartucho_gas",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "kerosene": {
+    "ite": "querosene",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "charcoal_bag": {
+    "ite": "carvao",
+    "household": "charcoal_bag",
+    "idSource": "merge",
+    "sizeSource": "household",
+    "game": [
+      "carvao"
+    ]
+  },
+  "car_battery_12v": {
+    "ite": "bateria_12v",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "motor_oil": {
+    "ite": "oleo_motor",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bean_seeds": {
+    "ite": "sem_feijao",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "corn_seeds": {
+    "ite": "sem_milho",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "pumpkin_seeds": {
+    "ite": "sem_abobora",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "kale_and_lettuce_seeds": {
+    "ite": "sem_couve",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "cassava_cuttings": {
+    "ite": "maniva",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fertilizer_bag": {
+    "ite": "adubo",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "watering_can": {
+    "ite": "regador",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fishing_rod": {
+    "ite": "vara_pesca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fishing_tackle_box": {
+    "ite": "kit_pesca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "fishing_net": {
+    "ite": "rede_pesca",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "snare_trap": {
+    "ite": "armadilha_laco",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "skill_book": {
+    "ite": "livro_hab",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "livro_hab"
+    ]
+  },
+  "technical_manual": {
+    "ite": "livro_tecnico",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "diy_magazine": {
+    "ite": "revista_receita",
+    "idSource": "decision",
+    "sizeSource": "derived",
+    "game": [
+      "revista_receita"
+    ]
+  },
+  "magazines_and_comics": {
+    "ite": "revista_passa",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "revista_passa"
+    ]
+  },
+  "farmers_almanac": {
+    "ite": "almanaque",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "almanaque"
+    ]
+  },
+  "note": {
+    "ite": "bilhete",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "bilhete"
+    ]
+  },
+  "photo": {
+    "ite": "foto",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "foto"
+    ]
+  },
+  "city_map": {
+    "ite": "mapa_cidade",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "road_map": {
+    "ite": "mapa_rodoviario",
+    "idSource": "decision",
+    "sizeSource": "derived"
+  },
+  "dog_tag": {
+    "ite": "plaqueta",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "plaqueta"
+    ]
+  },
+  "cash": {
+    "ite": "dinheiro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "dinheiro"
+    ]
+  },
+  "cigarettes": {
+    "ite": "cigarro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "cigarro"
+    ]
+  },
+  "house_key": {
+    "ite": "chave_casa",
+    "idSource": "decision",
+    "sizeSource": "model",
+    "vc3": [
+      "chaves"
+    ],
+    "game": [
+      "chave_casa"
+    ]
+  },
+  "car_key": {
+    "ite": "chave_carro",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "chave_carro"
+    ]
+  },
+  "master_key": {
+    "ite": "chave_mestra",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "janitor_keys": {
+    "ite": "molho_zelador",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "generator_key": {
+    "ite": "chave_gerador",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "safe_key": {
+    "ite": "chave_cofre",
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "padlock_key": {
+    "ite": "cadeado_chave",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "cadeado_chave"
+    ]
+  },
+  "cell_key": {
+    "ite": "chave_cela",
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "game": [
+      "chave_cela"
+    ]
+  },
+  "canned_food": {
+    "household": "canned_food",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "lata_atum"
+    ]
+  },
+  "flour": {
+    "household": "flour",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "farinha"
+    ]
+  },
+  "cereal_box": {
+    "household": "cereal_box",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "butter": {
+    "household": "butter",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "ketchup": {
+    "household": "ketchup",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "ham": {
+    "household": "ham",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "yogurt": {
+    "household": "yogurt",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "iogurte"
+    ]
+  },
+  "apple": {
+    "household": "apple",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "fruta"
+    ]
+  },
+  "tomato": {
+    "household": "tomato",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "frozen_meat": {
+    "household": "frozen_meat",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "ice_cream": {
+    "household": "ice_cream",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "sorvete"
+    ]
+  },
+  "frozen_pizza": {
+    "household": "frozen_pizza",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "frozen_vegetables": {
+    "household": "frozen_vegetables",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "plate": {
+    "household": "plate",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "prato"
+    ]
+  },
+  "bowl": {
+    "household": "bowl",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "cup": {
+    "household": "cup",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "copo",
+      "caneca"
+    ]
+  },
+  "cutlery": {
+    "household": "cutlery",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "pan": {
+    "household": "pan",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "soap": {
+    "household": "soap",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "sabonete"
+    ]
+  },
+  "shampoo": {
+    "household": "shampoo",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "shampoo"
+    ]
+  },
+  "toothpaste": {
+    "household": "toothpaste",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "toothbrush": {
+    "household": "toothbrush",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "escova_dente"
+    ]
+  },
+  "deodorant": {
+    "household": "deodorant",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "toilet_paper": {
+    "household": "toilet_paper",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "papel_higienico"
+    ]
+  },
+  "towel": {
+    "household": "towel",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "detergent": {
+    "household": "detergent",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "detergente"
+    ]
+  },
+  "bleach": {
+    "household": "bleach",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "agua_sanitaria"
+    ]
+  },
+  "sponge": {
+    "household": "sponge",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "esponja"
+    ]
+  },
+  "jacket": {
+    "household": "jacket",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "casaco"
+    ]
+  },
+  "socks": {
+    "household": "socks",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "meias"
+    ]
+  },
+  "underwear": {
+    "household": "underwear",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "roupa_intima"
+    ]
+  },
+  "hat": {
+    "household": "hat",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "scarf": {
+    "household": "scarf",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "blanket": {
+    "household": "blanket",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "cobertor"
+    ]
+  },
+  "pillow": {
+    "household": "pillow",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "documents": {
+    "household": "documents",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "documento"
+    ]
+  },
+  "wallet": {
+    "household": "wallet",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "phone_charger": {
+    "household": "phone_charger",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "carregador"
+    ]
+  },
+  "notebook": {
+    "household": "notebook",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "pen": {
+    "household": "pen",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "caneta"
+    ]
+  },
+  "crumpled_paper": {
+    "household": "crumpled_paper",
+    "idSource": "household",
+    "sizeSource": "REF",
+    "vc3": [
+      "papel_amassado"
+    ]
+  },
+  "empty_bottle": {
+    "household": "empty_bottle",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "food_scraps": {
+    "household": "food_scraps",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "plastic_bag": {
+    "household": "plastic_bag",
+    "idSource": "household",
+    "sizeSource": "REF"
+  },
+  "bill": {
+    "household": "bill",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "conta"
+    ]
+  },
+  "letter": {
+    "household": "letter",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "carta"
+    ]
+  },
+  "flyer": {
+    "household": "flyer",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "panfleto"
+    ]
+  },
+  "postcard": {
+    "household": "postcard",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "tongs": {
+    "household": "tongs",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "skewers": {
+    "household": "skewers",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "firelighter": {
+    "household": "firelighter",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "paint_can": {
+    "household": "paint_can",
+    "idSource": "household",
+    "sizeSource": "household",
+    "vc3": [
+      "lata_tinta"
+    ]
+  },
+  "ice_pack": {
+    "household": "ice_pack",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "sandwich": {
+    "household": "sandwich",
+    "idSource": "household",
+    "sizeSource": "household"
+  },
+  "branch": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "stick": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "feather": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "bread_mold": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "glass_jar": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "broomstick": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "barrel": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "access_badge": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "insulin": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "insulina"
+    ]
+  },
+  "leftover_meal": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "sobras"
+    ]
+  },
+  "disinfectant": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "desinfetante"
+    ]
+  },
+  "seasoning": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "tempero"
+    ]
+  },
+  "stapler": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "grampeador"
+    ]
+  },
+  "remote_control": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "controle_remoto"
+    ]
+  },
+  "dvd": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "dvd"
+    ]
+  },
+  "cable_bundle": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "cabos"
+    ]
+  },
+  "shoe_polish": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "graxa"
+    ]
+  },
+  "laundry_powder": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "sabao_po"
+    ]
+  },
+  "broom": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "vassoura"
+    ]
+  },
+  "rubber_gloves": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "luvas"
+    ]
+  },
+  "fabric_softener": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "amaciante"
+    ]
+  },
+  "clothespins": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "cesto_pregadores"
+    ]
+  },
+  "electrical_tape": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "fita_isolante"
+    ]
+  },
+  "full_trash_bag": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "saco_lixo_cheio"
+    ]
+  },
+  "food_packaging": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "embalagem"
+    ]
+  },
+  "wine_glass": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "taca"
+    ]
+  },
+  "book": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "livro"
+    ]
+  },
+  "eyeglasses": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF",
+    "vc3": [
+      "oculos"
+    ]
+  }
+}

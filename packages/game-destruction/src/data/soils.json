@@ -1,0 +1,18 @@
+[
+  { "id": "rock", "kind": "rock", "allowableKPa": 3000, "spt": 50, "elasticMPa": 10000, "poisson": 0.2, "pile": { "tipKPa": 9000, "skinKPa": 500 } },
+  { "id": "rock_fractured", "kind": "rock", "allowableKPa": 1500, "spt": 50, "elasticMPa": 2000, "poisson": 0.25, "pile": { "tipKPa": 4500, "skinKPa": 300 } },
+  { "id": "gravel_dense", "kind": "gravel", "allowableKPa": 600, "spt": 40, "elasticMPa": 132, "poisson": 0.3 },
+  { "id": "gravel_loose", "kind": "gravel", "allowableKPa": 300, "spt": 8, "elasticMPa": 26, "poisson": 0.3 },
+  { "id": "sand_very_dense", "kind": "sand", "allowableKPa": 500, "spt": 45, "elasticMPa": 120, "poisson": 0.3 },
+  { "id": "sand_dense", "kind": "sand", "allowableKPa": 400, "spt": 25, "elasticMPa": 68, "poisson": 0.3 },
+  { "id": "sand_medium", "kind": "sand", "allowableKPa": 200, "spt": 12, "elasticMPa": 32, "poisson": 0.3 },
+  { "id": "sand_loose", "kind": "sand", "allowableKPa": 50, "spt": 3, "elasticMPa": 8, "poisson": 0.3 },
+  { "id": "silt_hard", "kind": "silt", "allowableKPa": 300, "spt": 25, "elasticMPa": 44, "poisson": 0.35 },
+  { "id": "silt_stiff", "kind": "silt", "allowableKPa": 200, "spt": 15, "elasticMPa": 26, "poisson": 0.35 },
+  { "id": "silt_medium", "kind": "silt", "allowableKPa": 100, "spt": 8, "elasticMPa": 14, "poisson": 0.35 },
+  { "id": "clay_hard", "kind": "clay", "allowableKPa": 300, "spt": 25, "elasticMPa": 35, "poisson": 0.4 },
+  { "id": "clay_stiff", "kind": "clay", "allowableKPa": 200, "spt": 15, "elasticMPa": 21, "poisson": 0.4 },
+  { "id": "clay_medium", "kind": "clay", "allowableKPa": 100, "spt": 8, "elasticMPa": 11, "poisson": 0.4 },
+  { "id": "clay_soft", "kind": "clay", "allowableKPa": 30, "spt": 3, "elasticMPa": 4.2, "poisson": 0.4 },
+  { "id": "clay_very_soft", "kind": "clay", "allowableKPa": 15, "spt": 1, "elasticMPa": 1.4, "poisson": 0.4 }
+]

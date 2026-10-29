@@ -1,0 +1,953 @@
+{
+  "_notes": [
+    "Penetration of a projectile at close range (muzzle to about 100 m), at normal incidence, in millimetres of: steel = RHA-equivalent (about 300 HB); concrete = unreinforced structural concrete; brick = fired clay brick masonry; wood = dry hardwood (oak). A game scales it by the energy left at the hit (shotToHit does).",
+    "basis 'published' = taken from a manufacturer figure quoted in sources. basis 'estimated' = our estimate from published orders of magnitude (ball ammunition defeats 4 to 6 mm of RHA, steel-core 6 to 8 mm, AP 10 to 22 mm, .50 BMG ball about 14 mm), muzzle energy and bullet construction; the concrete, brick and wood columns scale with penetrator energy and hardness the way test firings against masonry and timber do. They are meant to be refined with datasheets: override any entry with ArsenalOptions.ammo / patch.ammo.",
+    "Anchors: Nammo 7.62 mm x 51 Armor Piercing 8 (M993): 18 mm RHA at 100 m, 7 mm at 500 m (https://www.nammo.com/products/ammunition/small-caliber-ammunition/7-62mm-series/7-62-mm-x-51-armor-piercing-8-m993/). Constructions (M80 lead core with gilding-metal jacket, M43 and 7N6 steel cores, M995 and M993 tungsten carbide, M33 lead with steel insert, M2 hardened steel, BZ and B-32 steel core API) follow the usual military ammunition references (TM 43-0001-27, Army small-arms ammunition tables).",
+    "core: lead, lead_steel (lead with a steel tip or insert), steel, hardened_steel, tungsten_carbide, copper, none. jacket: gilding_metal, copper, brass, steel (copper-washed or lacquered steel), none. They only feed the ignition rules (rules.ignition.spark).",
+    "bulletGrams and muzzleSpeed, when present, replace those of the calibre for this load; absent they are the calibre's."
+  ],
+  "loads": [
+    {
+      "id": "22lr:rimfire",
+      "caliber": "22lr",
+      "kind": "rimfire",
+      "label": ".22 LR lead round nose",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 1.4,
+        "concrete": 12,
+        "brick": 25,
+        "wood": 60
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "380acp:fmj",
+      "caliber": "380acp",
+      "kind": "fmj",
+      "label": ".380 ACP FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 2.2,
+        "concrete": 20,
+        "brick": 40,
+        "wood": 80
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "9x18:fmj",
+      "caliber": "9x18",
+      "kind": "fmj",
+      "label": "9x18 Makarov FMJ",
+      "core": "lead",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 2.6,
+        "concrete": 22,
+        "brick": 45,
+        "wood": 85
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "9x19:fmj",
+      "caliber": "9x19",
+      "kind": "fmj",
+      "label": "9x19 FMJ 124 gr",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.0,
+        "concrete": 25,
+        "brick": 50,
+        "wood": 80
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "9x19:hp",
+      "caliber": "9x19",
+      "kind": "hp",
+      "label": "9x19 JHP",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 2.0,
+        "concrete": 15,
+        "brick": 35,
+        "wood": 55
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "40sw:fmj",
+      "caliber": "40sw",
+      "kind": "fmj",
+      "label": ".40 S&W FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.0,
+        "concrete": 28,
+        "brick": 55,
+        "wood": 85
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "45acp:fmj",
+      "caliber": "45acp",
+      "kind": "fmj",
+      "label": ".45 ACP FMJ 230 gr",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 2.8,
+        "concrete": 28,
+        "brick": 55,
+        "wood": 85
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "45acp:hp",
+      "caliber": "45acp",
+      "kind": "hp",
+      "label": ".45 ACP JHP",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 1.8,
+        "concrete": 18,
+        "brick": 40,
+        "wood": 60
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_7x28:fmj",
+      "caliber": "5_7x28",
+      "kind": "fmj",
+      "label": "5.7x28 SS190",
+      "core": "lead_steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 25,
+        "brick": 50,
+        "wood": 100
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "38spl:fmj",
+      "caliber": "38spl",
+      "kind": "fmj",
+      "label": ".38 Special lead round nose",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 2.0,
+        "concrete": 20,
+        "brick": 40,
+        "wood": 70
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "357mag:hp",
+      "caliber": "357mag",
+      "kind": "hp",
+      "label": ".357 Magnum JHP",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.0,
+        "concrete": 25,
+        "brick": 45,
+        "wood": 90
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "44mag:fmj",
+      "caliber": "44mag",
+      "kind": "fmj",
+      "label": ".44 Magnum FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 40,
+        "brick": 70,
+        "wood": 150
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "50ae:fmj",
+      "caliber": "50ae",
+      "kind": "fmj",
+      "label": ".50 AE FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 38,
+        "brick": 65,
+        "wood": 130
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "12ga_00buck:buck",
+      "caliber": "12ga_00buck",
+      "kind": "buck",
+      "label": "12 ga 00 buck (one pellet)",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 0.8,
+        "concrete": 10,
+        "brick": 25,
+        "wood": 60
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "12ga_slug:slug",
+      "caliber": "12ga_slug",
+      "kind": "slug",
+      "label": "12 ga rifled slug",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 60,
+        "brick": 100,
+        "wood": 250
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "12ga_birdshot:birdshot",
+      "caliber": "12ga_birdshot",
+      "kind": "birdshot",
+      "label": "12 ga birdshot (one pellet)",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 0.2,
+        "concrete": 3,
+        "brick": 8,
+        "wood": 20
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "20ga_buck:buck",
+      "caliber": "20ga_buck",
+      "kind": "buck",
+      "label": "20 ga buck (one pellet)",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 0.6,
+        "concrete": 8,
+        "brick": 20,
+        "wood": 50
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_56x45:fmj",
+      "caliber": "5_56x45",
+      "kind": "fmj",
+      "label": "5.56x45 M855 (steel tip, lead core)",
+      "core": "lead_steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 4.5,
+        "concrete": 90,
+        "brick": 180,
+        "wood": 280
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_45x39:fmj",
+      "caliber": "5_45x39",
+      "kind": "fmj",
+      "label": "5.45x39 7N6 (steel core)",
+      "core": "steel",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 5.5,
+        "concrete": 90,
+        "brick": 180,
+        "wood": 280
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x39:fmj",
+      "caliber": "7_62x39",
+      "kind": "fmj",
+      "label": "7.62x39 M43 (steel core)",
+      "core": "steel",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 6.5,
+        "concrete": 110,
+        "brick": 220,
+        "wood": 300
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "30_30:fmj",
+      "caliber": "30_30",
+      "kind": "fmj",
+      "label": ".30-30 Winchester flat nose",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.0,
+        "concrete": 80,
+        "brick": 160,
+        "wood": 250
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x51:fmj",
+      "caliber": "7_62x51",
+      "kind": "fmj",
+      "label": "7.62x51 M80 ball",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 5.0,
+        "concrete": 120,
+        "brick": 250,
+        "wood": 330
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x54r:fmj",
+      "caliber": "7_62x54r",
+      "kind": "fmj",
+      "label": "7.62x54R LPS (steel core)",
+      "core": "steel",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 6.5,
+        "concrete": 130,
+        "brick": 260,
+        "wood": 330
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "30_06:fmj",
+      "caliber": "30_06",
+      "kind": "fmj",
+      "label": ".30-06 M1 ball",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 5.5,
+        "concrete": 130,
+        "brick": 260,
+        "wood": 340
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "300wm:fmj",
+      "caliber": "300wm",
+      "kind": "fmj",
+      "label": ".300 Win Mag FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 6.5,
+        "concrete": 150,
+        "brick": 290,
+        "wood": 360
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "338lapua:fmj",
+      "caliber": "338lapua",
+      "kind": "fmj",
+      "label": ".338 Lapua Magnum FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 8.0,
+        "concrete": 190,
+        "brick": 360,
+        "wood": 450
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "408cheytac:fmj",
+      "caliber": "408cheytac",
+      "kind": "fmj",
+      "label": ".408 CheyTac solid",
+      "core": "copper",
+      "jacket": "none",
+      "penetration": {
+        "steel": 12.0,
+        "concrete": 250,
+        "brick": 450,
+        "wood": 550
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "arrow:arrow",
+      "caliber": "arrow",
+      "kind": "arrow",
+      "label": "Arrow (steel broadhead)",
+      "core": "steel",
+      "jacket": "none",
+      "penetration": {
+        "steel": 0.5,
+        "concrete": 5,
+        "brick": 15,
+        "wood": 100
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "crossbow_bolt:bolt",
+      "caliber": "crossbow_bolt",
+      "kind": "bolt",
+      "label": "Crossbow bolt",
+      "core": "steel",
+      "jacket": "none",
+      "penetration": {
+        "steel": 0.8,
+        "concrete": 8,
+        "brick": 20,
+        "wood": 120
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "4_6x30:fmj",
+      "caliber": "4_6x30",
+      "kind": "fmj",
+      "label": "4.6x30 DM11",
+      "core": "steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.5,
+        "concrete": 25,
+        "brick": 50,
+        "wood": 100
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "32acp:fmj",
+      "caliber": "32acp",
+      "kind": "fmj",
+      "label": ".32 ACP FMJ",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 1.8,
+        "concrete": 15,
+        "brick": 30,
+        "wood": 60
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "9x19:tracer",
+      "caliber": "9x19",
+      "kind": "tracer",
+      "label": "9x19 tracer",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "tracer": true,
+      "penetration": {
+        "steel": 2.8,
+        "concrete": 22,
+        "brick": 45,
+        "wood": 75
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_56x45:ap",
+      "caliber": "5_56x45",
+      "kind": "ap",
+      "label": "5.56x45 M995 AP (tungsten carbide)",
+      "bulletGrams": 3.6,
+      "muzzleSpeed": 1013,
+      "core": "tungsten_carbide",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 10.0,
+        "concrete": 110,
+        "brick": 210,
+        "wood": 300
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_56x45:tracer",
+      "caliber": "5_56x45",
+      "kind": "tracer",
+      "label": "5.56x45 M856 tracer",
+      "bulletGrams": 3.95,
+      "muzzleSpeed": 914,
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "tracer": true,
+      "penetration": {
+        "steel": 3.5,
+        "concrete": 80,
+        "brick": 160,
+        "wood": 260
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "5_45x39:tracer",
+      "caliber": "5_45x39",
+      "kind": "tracer",
+      "label": "5.45x39 7T3M tracer",
+      "core": "lead",
+      "jacket": "steel",
+      "tracer": true,
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 80,
+        "brick": 160,
+        "wood": 260
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x39:incendiary",
+      "caliber": "7_62x39",
+      "kind": "incendiary",
+      "label": "7.62x39 BZ API",
+      "bulletGrams": 7.7,
+      "muzzleSpeed": 720,
+      "core": "hardened_steel",
+      "jacket": "steel",
+      "incendiary": true,
+      "penetration": {
+        "steel": 8.0,
+        "concrete": 110,
+        "brick": 220,
+        "wood": 300
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x39:tracer",
+      "caliber": "7_62x39",
+      "kind": "tracer",
+      "label": "7.62x39 T-45 tracer",
+      "core": "lead",
+      "jacket": "steel",
+      "tracer": true,
+      "penetration": {
+        "steel": 4.5,
+        "concrete": 100,
+        "brick": 200,
+        "wood": 280
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x51:ap",
+      "caliber": "7_62x51",
+      "kind": "ap",
+      "label": "7.62x51 M993 AP (tungsten carbide)",
+      "bulletGrams": 8.2,
+      "muzzleSpeed": 930,
+      "core": "tungsten_carbide",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 18.0,
+        "concrete": 160,
+        "brick": 300,
+        "wood": 360
+      },
+      "basis": "published",
+      "sources": [
+        "Nammo, 7.62 mm x 51 Armor Piercing 8 (M993) product page: 18 mm RHA (300 HB) at 100 m, 7 mm at 500 m."
+      ]
+    },
+    {
+      "id": "7_62x51:tracer",
+      "caliber": "7_62x51",
+      "kind": "tracer",
+      "label": "7.62x51 M62 tracer",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "tracer": true,
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 110,
+        "brick": 230,
+        "wood": 320
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x54r:ap",
+      "caliber": "7_62x54r",
+      "kind": "ap",
+      "label": "7.62x54R 7N37 AP",
+      "core": "hardened_steel",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 11.0,
+        "concrete": 140,
+        "brick": 270,
+        "wood": 340
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x54r:incendiary",
+      "caliber": "7_62x54r",
+      "kind": "incendiary",
+      "label": "7.62x54R B-32 API",
+      "bulletGrams": 10.0,
+      "muzzleSpeed": 830,
+      "core": "hardened_steel",
+      "jacket": "steel",
+      "incendiary": true,
+      "penetration": {
+        "steel": 10.0,
+        "concrete": 130,
+        "brick": 260,
+        "wood": 330
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_62x54r:tracer",
+      "caliber": "7_62x54r",
+      "kind": "tracer",
+      "label": "7.62x54R T-46 tracer",
+      "core": "lead",
+      "jacket": "steel",
+      "tracer": true,
+      "penetration": {
+        "steel": 4.5,
+        "concrete": 110,
+        "brick": 220,
+        "wood": 300
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "30_06:ap",
+      "caliber": "30_06",
+      "kind": "ap",
+      "label": ".30-06 M2 AP (hardened steel)",
+      "bulletGrams": 10.8,
+      "muzzleSpeed": 860,
+      "core": "hardened_steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 10.0,
+        "concrete": 140,
+        "brick": 270,
+        "wood": 340
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "30_06:tracer",
+      "caliber": "30_06",
+      "kind": "tracer",
+      "label": ".30-06 M25 tracer",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "tracer": true,
+      "penetration": {
+        "steel": 4.0,
+        "concrete": 110,
+        "brick": 230,
+        "wood": 320
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "338lapua:ap",
+      "caliber": "338lapua",
+      "kind": "ap",
+      "label": ".338 Lapua AP (tungsten)",
+      "core": "tungsten_carbide",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 16.0,
+        "concrete": 200,
+        "brick": 380,
+        "wood": 470
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "50bmg:fmj",
+      "caliber": "50bmg",
+      "kind": "fmj",
+      "label": ".50 BMG M33 ball",
+      "core": "lead_steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 14.0,
+        "concrete": 330,
+        "brick": 560,
+        "wood": 600
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "50bmg:ap",
+      "caliber": "50bmg",
+      "kind": "ap",
+      "label": ".50 BMG M2 AP (hardened steel)",
+      "core": "hardened_steel",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 22.0,
+        "concrete": 350,
+        "brick": 580,
+        "wood": 600
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "50bmg:incendiary",
+      "caliber": "50bmg",
+      "kind": "incendiary",
+      "label": ".50 BMG M8 API",
+      "core": "hardened_steel",
+      "jacket": "gilding_metal",
+      "incendiary": true,
+      "penetration": {
+        "steel": 18.0,
+        "concrete": 340,
+        "brick": 570,
+        "wood": 600
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "50bmg:tracer",
+      "caliber": "50bmg",
+      "kind": "tracer",
+      "label": ".50 BMG M17 tracer",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "tracer": true,
+      "penetration": {
+        "steel": 9.0,
+        "concrete": 300,
+        "brick": 520,
+        "wood": 580
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "12ga_00buck:incendiary",
+      "caliber": "12ga_00buck",
+      "kind": "incendiary",
+      "label": "12 ga incendiary shell (one pellet, magnesium)",
+      "core": "none",
+      "jacket": "none",
+      "incendiary": true,
+      "penetration": {
+        "steel": 0.1,
+        "concrete": 3,
+        "brick": 8,
+        "wood": 15
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "45_70_bp:fmj",
+      "caliber": "45_70_bp",
+      "kind": "fmj",
+      "label": ".45-70 Government 405 gr lead",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 2.5,
+        "concrete": 75,
+        "brick": 150,
+        "wood": 240
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    }
+  ]
+}

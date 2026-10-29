@@ -3,7 +3,8 @@
  * Default: 25 seeds per variant and per state. FULL=1 runs the original 200.
  */
 import { afterEach, describe, expect, it } from 'vitest'
-import { FULL, N, STATES, checkPlan, createFailures, engine, sizes, variants } from './support'
+import { interiorTemplateIds } from '@adatechnology/game-floorplan-commercial'
+import { FULL, N, STATES, TOWER_TEMPLATES, checkPlan, createFailures, engine, sizes, variants } from './support'
 
 // The suite is CPU-bound and synchronous; yield a macrotask between tests so the worker can report progress.
 afterEach(() => new Promise<void>((r) => setTimeout(r, 0)))
@@ -13,6 +14,8 @@ const FILTER = process.env.TPL ? new RegExp(process.env.TPL) : null
 describe('generated plans (seeds x states x variants)', () => {
   for (const [name, id, extra] of variants()) {
     if (FILTER && !FILTER.test(name)) continue
+    // The triage tent is not a house: fortified and abandoned would barricade doors and stock rooms it does not have. tests/triage.test.ts covers it in every state.
+    if (id === 'triage_tent') continue
     const seen = new Set<string>()
     for (const state of STATES) {
       it(`${name}/${state}: ${N} seeds hold every property`, () => {
@@ -37,6 +40,8 @@ describe('generated plans (seeds x states x variants)', () => {
         expect(F.report()).toEqual([])
       })
     }
+    // The interior buildings are authored scenes (fixed rooms and fixtures); only the size and the state make them differ.
+    if (interiorTemplateIds.includes(id)) continue
     it(`${name}: layouts vary across seeds`, () => {
       // Runs after the three state tests above, which fill `seen`.
       expect(seen.size).toBeGreaterThanOrEqual(Math.min(50, N * 0.9))
@@ -79,7 +84,8 @@ describe('density by class', () => {
     const high = avg('high_end_contemporary')
     expect(pop[0]).toBeLessThan(mid[0])
     expect(mid[0]).toBeLessThan(high[0])
-    expect(mid[1]).toBeGreaterThanOrEqual(8)
+    // the yard water tank is gone (the tank sits on the slab), which took about 0.1 item per yard off the mid average
+    expect(mid[1]).toBeGreaterThanOrEqual(7.5)
     expect(high[1]).toBeGreaterThanOrEqual(12)
   })
 })
@@ -198,5 +204,22 @@ describe('colour palettes', () => {
       if (JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' })) !== JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' }))) F.add('palette is not deterministic', style)
       expect(F.report()).toEqual([])
     })
+  }
+})
+
+// A tower is 20 storeys at least and takes seconds to generate: the same properties on 20 storeys, 3 seeds and the three states.
+describe('skyscraper plans (the same properties on 20 storeys)', () => {
+  for (const id of TOWER_TEMPLATES) {
+    for (const state of STATES) {
+      it(`${id}/${state}: 3 seeds hold every property`, () => {
+        const F = createFailures()
+        const seen = new Set<string>()
+        for (let s = 1; s <= 3; s++) {
+          const res = engine.generate(id, { seed: s, state, floors: 20 })
+          checkPlan(id, res, s, seen, F)
+        }
+        expect(F.report()).toEqual([])
+      }, 300000)
+    }
   }
 })

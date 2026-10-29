@@ -1,0 +1,13 @@
+{
+  "id": "horn",
+  "bus": "world",
+  "order": "chord",
+  "duration": 0.6,
+  "tail": 0.02,
+  "layers": [
+    { "source": { "kind": "osc", "wave": "square", "frequency": { "set": 415 } }, "envelope": [[0, 0.08, "set"], [0.6, 0.0001, "set", "fixed"]] },
+    { "source": { "kind": "osc", "wave": "square", "frequency": { "set": 523 } }, "envelope": [[0, 0.08, "set"], [0.6, 0.0001, "set", "fixed"]] }
+  ],
+  "falloff": { "model": "none" },
+  "sources": ["jogo:L70272-70276 buzina: squares at 415 and 523 Hz, 0.08 for 0.6 s", "temporary home until the vehicles package (Q12)"]
+}
