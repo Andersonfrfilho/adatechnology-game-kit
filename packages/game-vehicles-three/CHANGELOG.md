@@ -1,5 +1,18 @@
 # @adatechnology/game-vehicles-three
 
+## 0.3.0
+
+### Minor Changes
+
+- d64e58a: The vehicles area of the test room has the burnt wrecks `sedan_burnt` (Burnt sedan / Sedã queimado) and `hatch_burnt` (Burnt hatch / Hatch queimado), built with the fleet's `burnt` scenario through `kit.build(key, state, { scenario })`. The list is the `wrecks` option of `VehiclesTestOptions` (`{ key, vehicle, scenario }`, default `DEFAULT_TEST_WRECKS`, `[]` lays none), and the new scenario `vehicles_burnt_wreck` checks the burnt flag and the glass at 0.
+
+### Patch Changes
+
+- Updated dependencies [d64e58a]
+- Updated dependencies [bcceeaf]
+  - @adatechnology/game-vehicles@0.4.0
+  - @adatechnology/game-vehicles-fleet@4.0.0
+
 ## 0.2.0
 
 ### Minor Changes

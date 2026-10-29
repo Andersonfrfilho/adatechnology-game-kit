@@ -1,5 +1,13 @@
 # @adatechnology/game-urban-three
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [d64e58a]
+  - @adatechnology/game-vehicles-three@0.3.0
+  - @adatechnology/game-urban@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

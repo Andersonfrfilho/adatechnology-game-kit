@@ -1,5 +1,15 @@
 # @adatechnology/game-vehicles
 
+## 0.4.0
+
+### Minor Changes
+
+- d64e58a: `kit.build(key, state, { scenario })` builds a vehicle with a registered damage scenario (id or name, e.g. the fleet's `burnt`) in one call: the scenario is computed on the vehicle being built, with no probe build, and an explicit `health` / `flags` given alongside override its result. An unknown scenario damages nothing, like `zoneScenario`. `buildVehicleItem(kit, key, { scenario })` passes it through. New type `BuildZoneState`.
+
+### Patch Changes
+
+- bcceeaf: Building a heavily damaged vehicle (the fleet's `burnt` scenario) is about four times faster, with the same result bit for bit: the decal rays of `zoneDecals` test only the triangles of the bodywork that they can reach (instead of every triangle of the shell per ray), `zoneDent` skips the vertices and triangles outside the zone box before transforming them, and `crease` (smooth normals) hashes numbers instead of strings and keeps the face normals in one typed array.
+
 ## 0.3.0
 
 ### Minor Changes
