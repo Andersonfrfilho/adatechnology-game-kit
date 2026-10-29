@@ -425,6 +425,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     blockers,
     limit: arenaSize,
     start: arena.playerStart,
+    crouchKeys: options.crouch?.keys,
     hooks: {
       primaryDown: () => {
         useHeld = true
@@ -722,6 +723,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const third: Required<ThirdPersonOptions> = { ...THIRD_PERSON_DEFAULTS, ...options.thirdPerson }
   let avatar: RoomAvatar | null = null
   let cameraMode: CameraMode = options.cameraMode ?? 'first'
+  /** Crouched by a player module (`setAvatarState`); the Ctrl key crouches too. */
+  let crouchForced = false
   const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
   let feetPrev: [number, number] | null = null
   /** `armed` forced by a module (the bench); null follows the tool in hand. */
@@ -778,9 +781,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (avatarState.speed < 0.02) avatarState.speed = 0
     }
     feetPrev = [x, z]
-    avatarState.running = player.keys.has('ShiftLeft') || player.keys.has('ShiftRight')
+    avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
+    avatarState.crouch = crouchForced || player.crouching
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
+    avatarState.holding = heldPiece !== null
+    avatarState.itemUse = useItemPlayer
+      ? { id: useItemName, ...useItemPlayer.pose() }
+      : heldPiece && heldTilt > 0.01
+        ? { id: 'tilt', position: [0.2, -0.1, -0.38], rotation: [-heldTilt, 0, 0] }
+        : null
     avatar.root.position.set(x, player.feet, z)
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
     avatar.update(dt, avatarState)
@@ -1288,7 +1298,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const useTool = (dt: number, held: boolean): void => {
     aim()
     const cat = tool.def.category
-    if (cat === 'hand') return
+    if (cat === 'hand') {
+      if (strikes.some((strike) => strike.key === 'hand' || strike.key === 'fists')) return
+      strikeUse({ kind: 'melee', damage: 'blunt', energy: 25, radius: 0.1, reach: 0.8, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, 'hand')
+      return
+    }
     if (strikes.some((strike) => strike.key === toolId)) return // the blow of this tool is still on its way
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
     flushEvents(toolId, tool, res.recoil)
@@ -1390,6 +1404,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let heldTilt = 0
   let tiltKey = 0
   const heldLocal = new THREE.Vector3()
+  const heldSize = new THREE.Vector3(0.2, 0.2, 0.2)
   let heldRadius = 0.2
   const heldVel: Vec3 = [0, 0, 0]
   let useItemPlayer: ItemUsePlayer | null = null
@@ -1437,13 +1452,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldName = nameOf(r.object)
     piece.held = true
     piece.sleeping = false
-    // centre of the object's bounding box in its own space, to hold it by its middle
-    const box = new THREE.Box3().setFromObject(piece.root)
-    const c = box.getCenter(new THREE.Vector3())
+    // centre and unrotated size of the object's bounding box in its own space, to hold it by its middle or cylindrical side
+    const savedQ = piece.root.quaternion.clone()
+    piece.root.quaternion.identity()
     piece.root.updateMatrixWorld(true)
-    heldLocal.copy(c).sub(piece.root.position)
-    heldLocal.applyQuaternion(piece.root.quaternion.clone().invert())
-    heldRadius = box.getSize(new THREE.Vector3()).length() / 3
+    const box = new THREE.Box3().setFromObject(piece.root)
+    box.getCenter(heldLocal).sub(piece.root.position)
+    box.getSize(heldSize)
+    piece.root.quaternion.copy(savedQ)
+    piece.root.updateMatrixWorld(true)
+    heldRadius = heldSize.length() / 3
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
@@ -1466,20 +1484,56 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return true
   }
 
-  /** The right hand under the carried item, palm up, for the first-person arms: under the middle of its underside, the fingers the way the player faces. */
-  const carriedTargets = (root: THREE_NS.Object3D): HandTargets => {
+  /**
+   * Where the first-person hands take the carried item: cylindrical cans, bottles and cartons are gripped around their side (and rotated with the item's
+   * tilt during drinking, sipping or pouring, with the left hand reaching the cap on `open`/`close`); wide or flat items rest on the palm underneath.
+   */
+  const carriedTargets = (root: THREE_NS.Object3D, gripQ: THREE_NS.Quaternion): HandTargets => {
+    const width = Math.max(heldSize.x, heldSize.z)
+    const sideGrip = heldSize.y > width * 1.04 && width <= 0.22
+    if (sideGrip) {
+      const center = heldLocal.clone().applyQuaternion(root.quaternion).add(root.position)
+      const radius = Math.min(heldSize.x, heldSize.z) * 0.5
+      const handX = new THREE.Vector3(-0.35, 0, -0.94).normalize().applyQuaternion(gripQ)
+      const handY = new THREE.Vector3(0.94, 0, -0.35).normalize().applyQuaternion(gripQ)
+      const handZ = new THREE.Vector3().crossVectors(handX, handY).normalize()
+      const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(handX, handY, handZ))
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(gripQ)
+      const palm = center
+        .clone()
+        .addScaledVector(handY, radius + CARRY_PALM)
+        .addScaledVector(handX, -0.022)
+        .addScaledVector(up, heldSize.y > 0.16 ? -heldSize.y * 0.08 : -0.005)
+      if (useItemName === 'open' || useItemName === 'close') {
+        const leftX = new THREE.Vector3(0.35, 0, -0.94).normalize().applyQuaternion(gripQ)
+        const leftY = new THREE.Vector3(-0.94, 0, -0.35).normalize().applyQuaternion(gripQ)
+        const leftZ = new THREE.Vector3().crossVectors(leftX, leftY).normalize()
+        const lq = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(leftX, leftY, leftZ))
+        const leftPalm = center
+          .clone()
+          .addScaledVector(up, heldSize.y * 0.45)
+          .addScaledVector(leftY, radius * 0.65 + CARRY_PALM)
+          .addScaledVector(leftX, -0.018)
+        return {
+          R: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] },
+          L: { position: [leftPalm.x, leftPalm.y, leftPalm.z], quaternion: [lq.x, lq.y, lq.z, lq.w] },
+          grip: 0.85,
+          gripL: 0.8,
+        }
+      }
+      return { R: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: 0.85 }
+    }
     const box = new THREE.Box3().setFromObject(root)
     const center = box.getCenter(new THREE.Vector3())
-    const forward = camera.getWorldDirection(new THREE.Vector3())
-    forward.y = 0
-    if (forward.lengthSq() < 1e-6) forward.set(0, 0, -1)
-    forward.normalize()
-    const back = new THREE.Vector3(0, -1, 0) // the back of the hand faces down: the palm carries
-    const z = forward.clone().cross(back).normalize()
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(forward, back, z))
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(gripQ).normalize()
+    const back = new THREE.Vector3(0, -1, 0).applyQuaternion(gripQ).normalize()
+    const z = new THREE.Vector3().crossVectors(forward, back).normalize()
+    const y = new THREE.Vector3().crossVectors(z, forward).normalize()
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(forward, y, z))
     return { R: { position: [center.x, box.min.y - CARRY_PALM, center.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: CARRY_GRIP }
   }
 
+  const gripQuat = new THREE.Quaternion()
   const followHeld = (dt: number): void => {
     const piece = heldPiece
     carriedHand = null
@@ -1489,24 +1543,49 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let pos: THREE_NS.Vector3
     const targetQ = tmpQ
     const hand = thirdActive() ? avatar?.hand?.('R') : undefined
+    const isDrink = useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug'
     if (hand) {
-      // shoulder view: the item rides the avatar's weapon hand (the body is in view, the camera is not at the eye)
-      pos = hand.getWorldPosition(tmpHand)
-      targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
+      // shoulder view: the item rides the avatar's weapon hand, and tilts with `useItemPlayer` or `heldTilt`
+      const handWorld = hand.getWorldPosition(tmpHand)
+      const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
+      const pose = useItemPlayer?.pose()
+      const rx = pose ? (isDrink ? Math.abs(pose.rotation[0]) * 0.9 : pose.rotation[0]) : -heldTilt
+      const ry = pose ? pose.rotation[1] : 0
+      const rz = pose ? pose.rotation[2] : 0
+      gripQuat.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), ry, rz, 'XYZ')))
+      targetQ.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ')))
+      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
+      const gripOffset = new THREE.Vector3(-0.02, 0.015, -0.04).applyQuaternion(gripQuat)
+      pos = tmpV.copy(handWorld).add(gripOffset)
     } else if (useItemPlayer) {
-      // the hand frame follows the camera's yaw only, so looking down at the item does not tilt it
       const pose = useItemPlayer.pose()
-      const handQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
-      pos = tmpV.set(pose.position[0], pose.position[1], pose.position[2]).applyQuaternion(handQ).add(camera.position)
-      const eq = new THREE.Quaternion().setFromEuler(new THREE.Euler(pose.rotation[0], pose.rotation[1], pose.rotation[2], 'XYZ'))
-      targetQ.copy(handQ).multiply(eq)
+      const frameQ = avatar?.firstPerson ? camera.quaternion : new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
+      const raise = isDrink ? Math.max(0, Math.min(1, (pose.position[1] + 0.2) / 0.22)) : 0
+      const px = pose.position[0] + (isDrink ? 0.02 * raise : 0)
+      const py = pose.position[1] - (isDrink ? 0.08 * raise : 0)
+      const pz = pose.position[2] - (isDrink ? 0.05 * raise : 0)
+      pos = tmpV.set(px, py, pz).applyQuaternion(frameQ).add(camera.position)
+      const rx = isDrink ? Math.abs(pose.rotation[0]) * 0.85 : pose.rotation[0]
+      const eq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, pose.rotation[1], pose.rotation[2], 'XYZ'))
+      const wristEq = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), pose.rotation[1], pose.rotation[2], 'XYZ'))
+      gripQuat.copy(frameQ).multiply(wristEq)
+      targetQ.copy(frameQ).multiply(eq)
       targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
     } else {
-      // with arms to reach it, a small item is held close; a big one stays out to the usual distance
-      pos = tmpV.set(0.05, -0.28, avatar?.firstPerson ? -Math.min(1.15, CARRY_NEAR + heldRadius) : -1.15).applyMatrix4(camera.matrixWorld)
+      // with first-person arms, small items sit in the right hand at [0.22, -0.2, -0.42] (matching the start of `ITEM_USES`); large ones stay further out
+      const small = heldRadius < 0.22
+      const holdX = avatar?.firstPerson ? (small ? 0.22 : 0.08) : 0.05
+      const holdY = avatar?.firstPerson ? (small ? -0.2 : -0.26) : -0.28
+      const holdZ = avatar?.firstPerson ? (small ? -0.42 : -Math.min(1.15, CARRY_NEAR + heldRadius)) : -1.15
+      pos = tmpV.set(holdX, holdY, holdZ).applyMatrix4(camera.matrixWorld)
+      const baseQ = avatar?.firstPerson && small ? camera.quaternion : new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
+      gripQuat.copy(baseQ).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.max(-1.35, -heldTilt)))
       targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
+      if (avatar?.firstPerson && small && heldTilt <= 1e-4) {
+        targetQ.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
+      } else {
+        targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
+      }
     }
     const k = Math.min(1, (useItemPlayer ? 30 : 16) * dt)
     const px = root.position.x
@@ -1522,7 +1601,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldVel[2] = (root.position.z - pz) / dt
     }
     root.updateMatrixWorld(true)
-    if (avatar?.firstPerson && cameraMode === 'first') carriedHand = carriedTargets(root)
+    if (avatar?.firstPerson && cameraMode === 'first') carriedHand = carriedTargets(root, gripQuat)
   }
 
   const useItem = (useId: string): boolean => {
@@ -1533,11 +1612,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = fluids.container(e.containerId)
     if (!c) return false
     if (def.liquids && def.liquids.length > 0 && (!c.liquid || !def.liquids.includes(c.liquid))) return false
-    if ((useId === 'drink' || useId === 'sip' || useId === 'chug' || useId === 'pour' || useId === 'pour_out') && c.liters <= 1e-6) {
+    const consuming = useId === 'drink' || useId === 'sip' || useId === 'chug' || useId === 'pour' || useId === 'pour_out'
+    if (consuming && c.liters <= 1e-6) {
       say(t('hud.empty_container', { name: e.name }))
       return false
     }
     if (useItemPlayer && !useItemPlayer.done) return false
+    if (consuming && c.closed) fluids.open(e.containerId)
     useItemPlayer = createItemUse(fluids, e.containerId, def)
     useItemName = def.id
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
@@ -1668,7 +1749,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (heldEntry?.uses[0]) useItem(heldEntry.uses[0])
         break
       case 'KeyC':
-        if (heldEntry?.uses[1]) useItem(heldEntry.uses[1])
+        // C crouches by default: the item's second use takes it only when the page moved the crouch to other keys
+        if (heldEntry?.uses[1] && !(options.crouch?.keys ?? ['KeyC']).includes('KeyC')) useItem(heldEntry.uses[1])
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
@@ -1774,6 +1856,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
+    const drinkingHeld = useItemPlayer !== null && (useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug')
     for (const e of entries.values()) {
       if (!e.containerId) continue
       const host = hostOf(e)
@@ -1782,7 +1865,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const p = tmpV.set(e.fluidOffset[0], e.fluidOffset[1], e.fluidOffset[2]).applyMatrix4(host.root.matrixWorld)
       const vel: Vec3 | undefined = sdt > 0 ? [(p.x - e.last[0]) / sdt, (p.y - e.last[1]) / sdt, (p.z - e.last[2]) / sdt] : undefined
       e.last = [p.x, p.y, p.z]
-      fluids.setTransform(e.containerId, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w], vel)
+      // while the player's mouth covers the opening to drink, keep the fluid simulation upright so the drink does not spill onto the floor
+      const rot: Quat = drinkingHeld && e === heldEntry ? [0, 0, 0, 1] : [q.x, q.y, q.z, q.w]
+      fluids.setTransform(e.containerId, [p.x, p.y, p.z], rot, vel)
     }
   }
 
@@ -2597,7 +2682,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return avatar
     },
     setAvatarState(state) {
-      if (state.crouch !== undefined) avatarState.crouch = state.crouch
+      if (state.crouch !== undefined) {
+        crouchForced = state.crouch
+        avatarState.crouch = state.crouch || player.crouching
+      }
       if (state.down !== undefined) avatarState.down = state.down
       if (state.armed !== undefined) armedForced = state.armed
     },

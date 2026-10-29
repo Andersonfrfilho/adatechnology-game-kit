@@ -21,6 +21,8 @@ export interface PlayerOptions {
   limit: number
   start: Vec3
   hooks: PlayerHooks
+  /** `KeyboardEvent.code`s that crouch while held (default `['KeyC']`). Ctrl is not one by default: Ctrl+W closes the tab and no page can stop it. */
+  crouchKeys?: readonly string[]
 }
 
 export interface Player {
@@ -36,6 +38,8 @@ export interface Player {
   /** Horizontal metres per second walked in the last update. */
   readonly speed: number
   readonly running: boolean
+  /** Whether the player is crouched (a crouch key held): the eye sinks and the walk slows. */
+  readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
   update(dt: number): void
@@ -55,6 +59,10 @@ const EYE = 1.7
 /** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
 export const PLAYER_RADIUS = 0.3
 const WALK = 3.4
+/** How far (m) the eye sinks when crouched, the speed of a crouched walk, and how fast the eye goes down and up (per second). */
+export const CROUCH_DROP = 0.55
+const CROUCH_WALK = 1.7
+const CROUCH_RATE = 9
 const RUN = 6.2
 const JUMP = 4.6
 const GRAVITY = 13
@@ -70,18 +78,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let pitch = 0
   let y = 0
   let eye = EYE
+  let crouch = 0
   let vy = 0
   let walked = 0
   let running = false
   const px = { x: o.start[0], z: o.start[2] }
   let locked = false
   const keys = new Set<string>()
+  const crouchKeys = o.crouchKeys ?? ['KeyC']
+  const isCrouchHeld = (): boolean => crouchKeys.some((code) => keys.has(code))
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
 
   const apply = (): void => {
     euler.set(pitch, yaw, 0, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + y, px.z)
+    cam.position.set(px.x, eye + y - CROUCH_DROP * crouch, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -109,6 +120,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   }
   const onLockChange = (): void => {
     locked = document.pointerLockElement === o.dom
+    if (locked) {
+      try {
+        const nav = (typeof navigator !== 'undefined' ? navigator : null) as unknown as { keyboard?: { lock?(keys?: string[]): Promise<void> } } | null
+        nav?.keyboard?.lock?.().catch(() => {})
+      } catch {
+        // ignore if not supported
+      }
+    } else {
+      try {
+        const nav = (typeof navigator !== 'undefined' ? navigator : null) as unknown as { keyboard?: { unlock?(): void } } | null
+        nav?.keyboard?.unlock?.()
+      } catch {
+        // ignore
+      }
+    }
   }
   const onMouseDown = (e: MouseEvent): void => {
     o.dom.focus?.()
@@ -179,6 +205,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const onKeyDown = (e: KeyboardEvent): void => {
     if (typing(e)) return
     if (e.code === 'Space' || e.code === 'Tab') e.preventDefault()
+    // Ctrl/Meta/Alt chords are game input while playing (crouch + key); only F keys stay with the browser
+    const isControlHeld = e.ctrlKey || e.metaKey || keys.has('ControlLeft') || keys.has('ControlRight')
+    if (isControlHeld || (e.altKey && locked)) {
+      if (!/^F\d+$/.test(e.code)) e.preventDefault()
+    }
     if (!e.repeat) keys.add(e.code)
     o.hooks.key(e.code, true, e)
   }
@@ -189,6 +220,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   }
   const onContext = (e: Event): void => e.preventDefault()
   const onBlur = (): void => keys.clear()
+  const onBeforeUnload = (e: BeforeUnloadEvent): void => {
+    if (!locked && !keys.has('ControlLeft') && !keys.has('ControlRight')) return
+    e.preventDefault()
+    e.returnValue = ''
+  }
 
   o.dom.addEventListener('mousedown', onMouseDown)
   window.addEventListener('mouseup', onMouseUp)
@@ -199,6 +235,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('blur', onBlur)
+  window.addEventListener('beforeunload', onBeforeUnload)
 
   return {
     get yaw() {
@@ -228,12 +265,18 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get running() {
       return running
     },
+    get crouching() {
+      return isCrouchHeld()
+    },
     keys,
     update(dt) {
-      const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+      const crouched = isCrouchHeld()
+      crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
+      if (!crouched && crouch < 1e-3) crouch = 0
+      const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
-      const speed = run ? RUN : WALK
+      const speed = crouched ? CROUCH_WALK : run ? RUN : WALK
       let f = 0
       let r = 0
       if (keys.has('KeyW') || keys.has('ArrowUp')) f += 1
@@ -309,6 +352,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('blur', onBlur)
+      window.removeEventListener('beforeunload', onBeforeUnload)
       if (document.pointerLockElement === o.dom) document.exitPointerLock?.()
     },
   }

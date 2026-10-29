@@ -1788,14 +1788,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const crackLen = clamp(0.03 + ratio * 0.2, 0.03, 0.8)
     let exitPoint: Vec3 | undefined
     if (penetrated) {
-      exitPoint = vec.madd(entry, d, Math.min(pathLen, effM + layersThickness(p.layers, face) / slant + layersThickness(p.layers, -face) / slant))
+      const exitDist = (p.spec.contains || (p.spec.fill !== undefined && p.spec.fill < 0.5) || p.thickness < pathLen * 0.5)
+        ? pathLen
+        : Math.min(pathLen, effM + layersThickness(p.layers, face) / slant + layersThickness(p.layers, -face) / slant)
+      exitPoint = vec.madd(entry, d, exitDist)
       const hole = addHole(o, p, entry, n, (caliber / 1000) * (mat.ductility >= 0.3 ? 1 : 1.5), true, exitPoint, src)
       if (p.layers.length > 0) spallOuter(o, p, exitPoint, -face, vec.scale(n, -1), Math.max(0.03, (caliber / 1000) * 4), src)
       addBreach(o, p, entry, Math.PI * (hole.diameter / 2) * (hole.diameter / 2), E, d, src)
       // a thin ductile sheet is dished around the hole it is punched through: deeper the more energy the shot carries
       if (mat.ductility >= 0.5 && p.thickness <= THIN_SHEET_DISHING) addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(E * 0.00002, 0.001, 0.03), src)
       if (brittle && mat.fracture === 'shatter') addCrack(o, p, entry, n, crackLen, src)
-      if (p.spec.contains && (p.st.liters ?? 0) > 0) {
+      if (p.spec.contains && (p.st.liters ?? 0) > 1e-4) {
         emit({
           ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry,
           direction: p.spec.contains.outflow ? vec.normalize(rotateVec(o.st.rotation, rotateVec(p.q, p.spec.contains.outflow))) : n, rate: holeRate(hole, !!p.spec.contains.pressurized),

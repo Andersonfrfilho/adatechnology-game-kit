@@ -11,6 +11,7 @@ import {
 import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@adatechnology/game-characters'
 
 import preset from '../presets/player-avatar.json'
+import { buildHand } from '../rich/accessories/hands'
 import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
@@ -23,9 +24,12 @@ const FALL_SECONDS = 0.3
 
 // Constants carried from the team game's GPU pose code, `BODY_CHUNK` (src/instanced/body-chunk.ts), whose line numbers are quoted below.
 const HIP_HEIGHT = 0.95 // :68, :74 the trunk pivot
-const WALK_ARM = 0.45 // :36 `armS*0.45*gait`
+const WALK_ARM = 0.28 // arms swing naturally beside the hips, staying below the waist
 const WALK_BOB = 0.035 // :71 `abs(sin(ph))*0.035*gait`
 const WALK_LEAN = 0.04 // :64 `0.04*gait`
+const RUN_LEAN = 0.16
+const RUN_BOB = 0.05
+const REST_ARM_Z = 0.18 // outward carrying angle: clears hips and pelvis comfortably
 const CROUCH = { thigh: -0.95, thighWalk: 0.3, shin: 1.9, lean: 0.25, drop: -0.35 } // :29, :66, :71
 const AIMED = { shoulder: -1.42, perAim: 0.85, swing: 0.02, zRight: -0.54, zLeft: 0.36, elbowRight: -0.04, elbowLeft: -0.12 } // :45, :47
 const DOWN = { thighWalk: 0.5, shinSwing: 0.85, shinBend: 1.3, armHigh: -2.8, armLow: -0.35, armWave: 0.3, armZ: 0.5, armZWave: 0.3, tilt: 1.5, roll: 0.3, hipY: 0.16, hipZ: 0.6, hipZFlip: 1.2 } // :29-:47, :74
@@ -51,6 +55,12 @@ export type PlayerAvatarOptions = {
 
 export type AvatarEvent = PoseClipEvent & { clip: string }
 
+export type AvatarItemUsePose = {
+  readonly id: string
+  readonly position: readonly [number, number, number]
+  readonly rotation: readonly [number, number, number]
+}
+
 export type AvatarUpdate = {
   /** Ground speed, m/s. Ties cadence and swing to the ground (the game's `walkCad` and `walkGait`). */
   speed?: number
@@ -64,6 +74,10 @@ export type AvatarUpdate = {
   pitch?: number
   /** Leg yaw toward the step while armed (the game's `P.hip`, radians). */
   hip?: number
+  /** Whether the player is carrying an item in the right hand. */
+  holding?: boolean
+  /** Active scripted item use (`drink`, `sip`, `chug`, `pour`, `open`, `close`, `tilt`). */
+  itemUse?: AvatarItemUsePose | null
 }
 
 export type PlayPoseOptions = {
@@ -103,7 +117,18 @@ type ClipRun = { clip: PoseClip; time: number; weight: number; target: 0 | 1; bl
  * to the ground speed, with the crouch and the knock-down of the game's GPU pose code (`BODY_CHUNK`) and a pose-clip overlay (`play`).
  */
 export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = {}): PlayerAvatar => {
-  const spec = { ...preset.spec, ...options.spec } as Record<string, unknown>
+  const pose = {
+    armL: 0,
+    armR: 0,
+    elbL: -0.08,
+    elbR: -0.08,
+    lean: 0.04,
+    headX: 0,
+    headZ: 0,
+    ...(preset.spec as { pose?: Record<string, number> }).pose,
+    ...(options.spec?.pose as Record<string, number> | undefined),
+  }
+  const spec = { ...preset.spec, ...options.spec, pose } as Record<string, unknown>
   for (const key of ['skin', 'hair']) if (typeof spec[key] === 'string') spec[key] = hexOf(spec[key])
   const best = createBestBuilder(THREE, { types: [{ name: String(spec.type), eye: 0 }], random: createRng(Number(spec.seed ?? 1)) })
   const body = best.build(spec) as THREE_NS.Object3D
@@ -142,6 +167,44 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     sockets[side].name = `hand_${side}`
     sockets[side].position.set(HAND_OFFSET.x, HAND_OFFSET.y, HAND_OFFSET.z)
     ;(armOf[side].el as unknown as THREE_NS.Object3D).add(sockets[side])
+  }
+
+  // Replace the single flattened sphere hand of the zombie builder on the player body with the articulated palm, four two-jointed fingers and thumb (`buildHand` of Retratos do Vale)
+  const addMesh = (parent: THREE_NS.Object3D, geometry: THREE_NS.BufferGeometry, material: THREE_NS.Material, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0): THREE_NS.Mesh => {
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z)
+    if (rx || ry || rz) mesh.rotation.set(rx, ry, rz)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    parent.add(mesh)
+    return mesh
+  }
+  type ThirdPersonHand = { side: 1 | -1; hg: THREE_NS.Group; fingers: THREE_NS.Object3D[]; th: THREE_NS.Object3D | null }
+  const hands: ThirdPersonHand[] = []
+  rig.arms.forEach((arm, index) => {
+    const el = arm.el as unknown as THREE_NS.Object3D
+    const side: 1 | -1 = index === 0 ? 1 : -1
+    const oldHand = meshesOf(el).find((mesh) => Math.abs(mesh.position.y + 0.33) < 0.025)
+    const handMaterial = (oldHand?.material as THREE_NS.Material | undefined) ?? new THREE.MeshLambertMaterial({ color: colors.skin })
+    if (oldHand) {
+      oldHand.geometry?.dispose()
+      el.remove(oldHand)
+    }
+    const hg = new THREE.Group()
+    hg.name = side > 0 ? 'hand_group_L' : 'hand_group_R'
+    hg.position.set(side * 0.02, -0.3, 0.01)
+    el.add(hg)
+    const palm = addMesh(hg, new THREE.SphereGeometry(0.048, 14, 10), handMaterial, 0, -0.035, 0)
+    palm.scale.set(0.6, 1.05, 1)
+    const built = buildHand({ THREE, add: addMesh, hg, handM: handMaterial, s: side, detailed: true })
+    hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
+  })
+  const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
+    hand.fingers.forEach((finger, j) => {
+      finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
+    })
+    if (hand.th) hand.th.rotation.z = -hand.side * (0.32 + grip * 0.25)
+    hand.hg.rotation.x = wristX
   }
 
   const legRestX = rig.legs.map((leg) => leg.g.position.x)
@@ -191,12 +254,78 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     return { armR: shoulder, armL: shoulder, armRz: AIMED.zRight, armLz: AIMED.zLeft, elbR: AIMED.elbowRight, elbL: AIMED.elbowLeft }
   }
 
+  /** Right-hand carry and item-use poses in third person (`arms[1]` is the puppet's right arm at `-x`, `arms[0]` is the left arm at `+x`). */
+  const holdingPose = (gait: number, itemUse?: AvatarItemUsePose | null): PoseTargets => {
+    const bob = Math.sin(cycles * TWO_PI) * 0.05 * gait
+    if (!itemUse) {
+      return { armL: -0.45 + bob, armLz: 0.22, elbL: -1.05 }
+    }
+    const { id, position, rotation } = itemUse
+    if (id === 'drink' || id === 'sip' || id === 'chug') {
+      const raise = clamp((position[1] + 0.2) / 0.22, 0, 1)
+      const tilt = clamp(Math.abs(rotation[0]) / 1.22, 0, 1.15)
+      return {
+        armL: -0.45 - 0.95 * raise - 0.22 * tilt,
+        armLz: 0.22 + 0.44 * raise,
+        elbL: -1.05 - 0.85 * raise + 0.12 * tilt,
+        headX: -0.26 * tilt,
+      }
+    }
+    if (id === 'open' || id === 'close') {
+      const reach = clamp((0.22 - position[0]) / 0.12, 0, 1)
+      return {
+        armL: -0.45 - 0.35 * reach,
+        armLz: 0.22 + 0.28 * reach,
+        elbL: -1.05 - 0.25 * reach,
+        armR: -0.78 * reach,
+        armRz: -0.48 * reach,
+        elbR: -1.25 * reach,
+      }
+    }
+    // pour, pour_out, tilt
+    const raise = clamp((position[1] + 0.2) / 0.25, 0, 1)
+    const tilt = clamp(Math.abs(rotation[0]) / 1.75, 0, 1.2)
+    const ext = Math.max(raise, tilt * 0.75)
+    return {
+      armL: -0.45 - 0.48 * ext,
+      armLz: 0.22 + 0.08 * ext,
+      elbL: -1.05 + 0.38 * ext,
+    }
+  }
   const resetLegYaw = (): void => {
     rig.legs.forEach((leg, index) => {
       leg.g.rotation.y = 0
       leg.g.position.x = legRestX[index]!
       leg.g.position.z = 0
     })
+  }
+
+  /** Running gait: forward torso lean, pronounced body drop, higher knee lift and bent-elbow arm pumping. */
+  const runningPose = (gait: number, busyHands = false): PoseTargets => {
+    const ph = cycles * TWO_PI
+    const sine = Math.sin(ph)
+    const cosine = Math.cos(ph)
+    const legL = sine * 0.65 * gait
+    const legR = -sine * 0.65 * gait
+    const kneeL = Math.max(0, -cosine) * 1.15 * gait
+    const kneeR = Math.max(0, cosine) * 1.15 * gait
+    const targets: PoseTargets = {
+      lean: RUN_LEAN * Math.min(1, gait),
+      drop: Math.abs(cosine) * RUN_BOB * gait,
+      legL,
+      legR,
+      kneeL,
+      kneeR,
+    }
+    if (!busyHands) {
+      targets.armR = -0.32 - sine * 0.65 * gait
+      targets.armL = -0.32 + sine * 0.65 * gait
+      targets.elbR = -1.25 + Math.max(0, sine) * 0.3 * gait
+      targets.elbL = -1.25 + Math.max(0, -sine) * 0.3 * gait
+      targets.armRz = 0.22
+      targets.armLz = -0.22
+    }
+    return targets
   }
 
   const crouchPose = (gait: number): PoseTargets => {
@@ -301,23 +430,53 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     update(dt, state = {}) {
       const speed = state.speed ?? 0
       const moving = speed >= 0.05 // the game: `spd < 0.05 ? 0 : walkCad(spd)`
-      if (moving) cycles += dt * walkCadence(speed)
-      const gait = Math.min(MAX_GAIT, walkGait(speed))
-      profile.arm = WALK_ARM * gait
-      profile.bob = WALK_BOB * gait
-      time = cycles / walkCadence(Math.max(speed, 0))
-      animator.animate(body, time, { speed })
       const down = !!state.down
+      const running = Boolean(state.running && moving && !down && !state.crouch)
+      if (moving) cycles += dt * (running ? walkCadence(speed) * 1.3 : walkCadence(speed))
+      const gait = Math.min(MAX_GAIT, walkGait(speed))
+      profile.arm = (running ? 0.55 : WALK_ARM) * gait
+      profile.bob = (running ? RUN_BOB : WALK_BOB) * gait
+      time = cycles / (walkCadence(Math.max(speed, 0)) * (running ? 1.3 : 1))
+      animator.animate(body, time, { speed })
       fall = fallSeconds <= 0 ? (down ? 1 : 0) : clamp(fall + (down ? dt : -dt) / fallSeconds, 0, 1)
       resetLegYaw()
       if (down) animator.setPose(rig, downPose())
       else {
+        if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
         if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
+        else if (state.holding || state.itemUse) animator.setPose(rig, holdingPose(gait, state.itemUse))
+        else if (!running) {
+          animator.setPose(rig, {
+            armRz: REST_ARM_Z,
+            armLz: -REST_ARM_Z,
+            elbR: -0.12,
+            elbL: -0.12,
+          })
+        }
       }
       placeBody(fall)
       stepClip(dt, down)
       if (smooth) animator.cascade(rig, dt)
+      const clipId = run ? run.clip.id : null
+      const ph = cycles * TWO_PI
+      hands.forEach((hand) => {
+        const isRight = hand.side < 0
+        const holdRight = isRight && (!!state.holding || !!state.itemUse)
+        const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close')
+        const grip =
+          clipId === 'punch_right'
+            ? 1.4
+            : clipId === 'shove_two_hands'
+              ? 0.15
+              : state.armed || holdRight || holdLeft
+                ? 1.22
+                : running
+                  ? 0.85
+                  : 0.12
+        const wristSwing = holdRight || state.armed || running ? 0 : -Math.min(1, gait) * Math.sin(ph - 0.6) * 0.12 * hand.side
+        setHandGrip(hand, grip, wristSwing)
+      })
     },
     play(clip, playOptions = {}) {
       const found = typeof clip === 'string' ? clips.get(clip) : clip
