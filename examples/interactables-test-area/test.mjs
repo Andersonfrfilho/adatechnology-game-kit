@@ -269,7 +269,8 @@ for (const lang of ['pt-BR', 'en']) {
     const shot = async (name, setup) => {
       await p.evaluate(setup)
       await p.waitForTimeout(500)
-      await p.screenshot({ path: join(shots, name) })
+      // software GL: the first picture of a fresh page also compiles every material in view (the weather rig's fleet car among them), so the 30 s default is too tight; the test-room test uses the same 180 s
+      await p.screenshot({ path: join(shots, name), timeout: 180000 })
     }
     const run = (f) => `(${f.toString()})()`
     await shot('01-kitchen-doors-open.png', run(() => {
