@@ -85,6 +85,7 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
       step(0.6)
       const start = (body: Placed): Vec3 => [body.root.position.x, body.root.position.y, body.root.position.z]
       const origin = new Map(placed.map((body) => [body.objectId, start(body)] as const))
+      const partsOf = (objectId: string): number => room.world.state(objectId)?.parts.length ?? 0
       // the loose things of the area itself that the blast reaches: the zombie, the survivor and the table
       for (const spawned of room.spawned()) {
         const known = placed.some((body) => body.objectId === spawned.objectId)
@@ -95,6 +96,7 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         placed.push(body)
         origin.set(body.objectId, body.from)
       }
+      const partsBefore = new Map(placed.map((body) => [body.objectId, partsOf(body.objectId)] as const))
       expect(placed.length > 0, fillText(text.push_found, { n: placed.length, kinds: [...new Set(placed.map((body) => body.kind))].join(', ') }), { placed: placed.map((body) => body.itemId) })
       if (mode === 'p13') bench.actions.shoot()
       else {
@@ -120,10 +122,12 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const outward = ((now[0] - from[0]) * (from[0] - blast.point[0]) + (now[2] - from[2]) * (from[2] - blast.point[2])) / away
         return { ...body, distance, outward, moved: flat(now, from) }
       })
-      const reached = rows.filter((row) => row.distance < blast.radius * 0.85)
+      // a loose item the blast tore apart (a can whose welded shell split into pieces) is no longer one body: its root is the piece that kept it, not where the item went
+      const torn = (row: { kind: string; objectId: string }): boolean => PUSH_KINDS.some((entry) => entry.kind === row.kind) && partsOf(row.objectId) < (partsBefore.get(row.objectId) ?? 0)
+      const reached = rows.filter((row) => row.distance < blast.radius * 0.85 && !torn(row))
       const movedAway = reached.filter((row) => row.outward >= MOVED)
       const least = reached.length === 0 ? 0 : Math.min(...reached.map((row) => row.outward))
-      expect(reached.length > 0 && movedAway.length === reached.length, fillText(text.push_outward, { moved: movedAway.length, n: reached.length, least: least.toFixed(2) }), { rows: reached.map((row) => ({ kind: row.kind, distance: row.distance, outward: row.outward })) })
+      expect(reached.length > 0 && movedAway.length === reached.length, fillText(text.push_outward, { moved: movedAway.length, n: reached.length, least: least.toFixed(2) }), { rows: reached.map((row) => ({ kind: row.kind, distance: row.distance, outward: row.outward })), torn: rows.filter(torn).map((row) => row.objectId) })
       for (const { kind } of PUSH_KINDS) {
         const ofKind = reached.filter((row) => row.kind === kind).sort((a, b) => a.distance - b.distance)
         if (ofKind.length < 2) continue
