@@ -21,6 +21,8 @@ export interface PlayerOptions {
   limit: number
   start: Vec3
   hooks: PlayerHooks
+  /** `KeyboardEvent.code`s that crouch while held (default `['KeyC']`). Ctrl is not one by default: Ctrl+W closes the tab and no page can stop it. */
+  crouchKeys?: readonly string[]
 }
 
 export interface Player {
@@ -36,7 +38,7 @@ export interface Player {
   /** Horizontal metres per second walked in the last update. */
   readonly speed: number
   readonly running: boolean
-  /** Whether the player is crouched (Ctrl held): the eye sinks and the walk slows. */
+  /** Whether the player is crouched (a crouch key held): the eye sinks and the walk slows. */
   readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
@@ -83,6 +85,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const px = { x: o.start[0], z: o.start[2] }
   let locked = false
   const keys = new Set<string>()
+  const crouchKeys = o.crouchKeys ?? ['KeyC']
+  const isCrouchHeld = (): boolean => crouchKeys.some((code) => keys.has(code))
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
 
   const apply = (): void => {
@@ -216,6 +220,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   }
   const onContext = (e: Event): void => e.preventDefault()
   const onBlur = (): void => keys.clear()
+  const onBeforeUnload = (e: BeforeUnloadEvent): void => {
+    if (!locked && !keys.has('ControlLeft') && !keys.has('ControlRight')) return
+    e.preventDefault()
+    e.returnValue = ''
+  }
 
   o.dom.addEventListener('mousedown', onMouseDown)
   window.addEventListener('mouseup', onMouseUp)
@@ -226,6 +235,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('blur', onBlur)
+  window.addEventListener('beforeunload', onBeforeUnload)
 
   return {
     get yaw() {
@@ -256,11 +266,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return running
     },
     get crouching() {
-      return keys.has('ControlLeft') || keys.has('ControlRight') || keys.has('KeyC')
+      return isCrouchHeld()
     },
     keys,
     update(dt) {
-      const crouched = keys.has('ControlLeft') || keys.has('ControlRight') || keys.has('KeyC')
+      const crouched = isCrouchHeld()
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
       const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
@@ -342,6 +352,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('blur', onBlur)
+      window.removeEventListener('beforeunload', onBeforeUnload)
       if (document.pointerLockElement === o.dom) document.exitPointerLock?.()
     },
   }

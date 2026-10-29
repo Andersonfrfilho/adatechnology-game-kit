@@ -205,6 +205,23 @@ const thumb = (thumbnail: string, credit?: string): HTMLElement => {
   return e
 }
 
+type KeyboardLock = { lock?: () => Promise<void>; unlock?: () => void }
+
+async function toggleFullscreen(): Promise<void> {
+  const keyboard = (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard
+  try {
+    if (document.fullscreenElement) {
+      keyboard?.unlock?.()
+      await document.exitFullscreen()
+      return
+    }
+    await document.documentElement.requestFullscreen()
+    await keyboard?.lock?.()
+  } catch {
+    // refused by the browser (no gesture, unsupported): the page just stays as it was
+  }
+}
+
 export function createUi(o: UiOptions): RoomUi {
   const { t } = o
   const style = mk('style')
@@ -434,6 +451,8 @@ export function createUi(o: UiOptions): RoomUi {
     o.onFast(fast)
   })
   const tapBtn = ctl(t('ui.tap'), () => o.onTap())
+  const fullscreenBtn = ctl(t('ui.fullscreen'), () => void toggleFullscreen())
+  fullscreenBtn.title = t('ui.fullscreen.hint')
   const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
   for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
   const qSel = mk('select')

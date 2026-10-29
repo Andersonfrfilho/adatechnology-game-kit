@@ -425,6 +425,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     blockers,
     limit: arenaSize,
     start: arena.playerStart,
+    crouchKeys: options.crouch?.keys,
     hooks: {
       primaryDown: () => {
         useHeld = true
