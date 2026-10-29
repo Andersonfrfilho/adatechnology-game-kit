@@ -119,6 +119,175 @@ export function installZoneDecals(kit: Kit): void {
   }
   /* ---- surface inside the box: rays from outside in ---- */
   const _zr = new THREE.Raycaster()
+  /* Every ray of a `zoneDecals` call stays inside one region around the zone (the rays of `zoneSurf` and the strokes of `scratchPath`). Bodywork
+     meshes have tens of thousands of triangles and three.js tests all of them per ray, so for those the call raycasts a proxy that holds only the
+     triangles whose box meets the region: same triangles that can be hit, same faces and distances, a fraction of the tests. */
+  const PROXY_MIN_TRIANGLES = 500
+  const STROKE_REACH = 0.6 /* scratchPath: 0.08 above the surface + 0.2 of ray + up to 0.25 along the stroke + the 0.02 of the box test */
+  const _pv = new V3()
+  const _pm = new THREE.Matrix4()
+  function decalRegion(c: any, z: any) {
+    const B = z.box
+    const lo = [0, 1, 2].map(function (k) {
+      return I.boxLo(B, k) - STROKE_REACH
+    })
+    const hi = [0, 1, 2].map(function (k) {
+      return I.boxHi(B, k) + STROKE_REACH
+    })
+    const a = axisOf(z.dir)
+    const dn = z.dir.clone().normalize()
+    const sg = z.dir.getComponent(a) > 0 ? 1 : -1
+    const outer = sg > 0 ? I.boxLo(B, a) - 0.6 : I.boxHi(B, a) + 0.6
+    const far = 0.6 + (I.boxHi(B, a) - I.boxLo(B, a)) + 0.05
+    for (let i = 0; i < 8; i++) {
+      const p = new V3()
+      p.setComponent(a, outer)
+      ;[0, 1, 2]
+        .filter(function (k) {
+          return k !== a
+        })
+        .forEach(function (k, j) {
+          p.setComponent(k, (i >> j) & 1 ? I.boxHi(B, k) : I.boxLo(B, k))
+        })
+      for (let e = 0; e < 2; e++) {
+        const q = e ? p.clone().addScaledVector(dn, far) : p
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k], q.getComponent(k) - 0.05)
+          hi[k] = Math.max(hi[k], q.getComponent(k) + 0.05)
+        }
+      }
+    }
+    return { lo, hi }
+  }
+  /* the candidates of a decal call with the heavy meshes cut down to the region of the zone (the others stay as they are) */
+  function regionCands(c: any, z: any, cands: any) {
+    if (!cands.some(heavy)) return cands
+    const R = decalRegion(c, z)
+    const Mw = c.vehicle.matrixWorld
+    return cands.map(function (o: any) {
+      if (!heavy(o)) return o
+      /* the ray test would have left the bounds of the mesh computed; the mesh keeps that */
+      if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere()
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
+      return proxyIn(o, Mw, R)
+    })
+  }
+  function heavy(o: any) {
+    const g = o.geometry
+    const pos = g && g.attributes && g.attributes.position
+    return (
+      o.raycast === THREE.Mesh.prototype.raycast /* a mesh with a raycast of its own (the no-op of marks and puddles) keeps it */ &&
+      !o.isSkinnedMesh &&
+      !Array.isArray(o.material) &&
+      pos &&
+      !pos.isInterleavedBufferAttribute &&
+      pos.itemSize === 3 &&
+      !g.groups.length &&
+      !(g.morphAttributes && g.morphAttributes.position) &&
+      (g.index ? g.index.count : pos.count) / 3 >= PROXY_MIN_TRIANGLES
+    )
+  }
+  function proxyIn(o: any, Mw: any, R: any) {
+    /* the region (vehicle frame) as a box in the frame of the mesh */
+    _pm.copy(o.matrixWorld).invert().multiply(Mw)
+    const lo = [Infinity, Infinity, Infinity]
+    const hi = [-Infinity, -Infinity, -Infinity]
+    for (let i = 0; i < 8; i++) {
+      _pv.set(i & 1 ? R.hi[0] : R.lo[0], i & 2 ? R.hi[1] : R.lo[1], i & 4 ? R.hi[2] : R.lo[2]).applyMatrix4(_pm)
+      for (let k = 0; k < 3; k++) {
+        lo[k] = Math.min(lo[k], _pv.getComponent(k))
+        hi[k] = Math.max(hi[k], _pv.getComponent(k))
+      }
+    }
+    const g = o.geometry
+    const P = g.attributes.position.array
+    const ix = g.index ? g.index.array : null
+    const n = ix ? ix.length : P.length / 3
+    const keep = new Uint32Array(n - (n % 3))
+    let nk = 0
+    for (let t = 0; t + 2 < n; t += 3) {
+      const a = (ix ? ix[t] : t) * 3
+      const b = (ix ? ix[t + 1] : t + 1) * 3
+      const d = (ix ? ix[t + 2] : t + 2) * 3
+      let out = false
+      for (let k = 0; k < 3 && !out; k++) {
+        const u = P[a + k]
+        const v = P[b + k]
+        const w = P[d + k]
+        out = Math.max(u, v, w) < lo[k] || Math.min(u, v, w) > hi[k]
+      }
+      if (!out) {
+        keep[nk++] = ix ? ix[t] : t
+        keep[nk++] = ix ? ix[t + 1] : t + 1
+        keep[nk++] = ix ? ix[t + 2] : t + 2
+      }
+    }
+    if (!nk) return null
+    /* the triangles of the region (kept) and the ones a single ray needs (scratch, narrowed again in castAt) share one index buffer */
+    const kept = keep.slice(0, nk)
+    const box = new Float32Array((kept.length / 3) * 6)
+    for (let t = 0, j = 0; t < kept.length; t += 3, j += 6) {
+      const a = kept[t] * 3
+      const b = kept[t + 1] * 3
+      const d = kept[t + 2] * 3
+      for (let k = 0; k < 3; k++) {
+        box[j + k] = Math.min(P[a + k], P[b + k], P[d + k])
+        box[j + 3 + k] = Math.max(P[a + k], P[b + k], P[d + k])
+      }
+    }
+    const pg = new THREE.BufferGeometry()
+    pg.setAttribute('position', g.attributes.position)
+    pg.setIndex(new THREE.BufferAttribute(new Uint32Array(kept.length), 1))
+    /* the bounds of the whole mesh hold for the proxy too (the ray test only skips with them), and the proxy shares its positions: no pass over all vertices */
+    pg.boundingSphere = g.boundingSphere
+    pg.boundingBox = g.boundingBox
+    const proxy: any = new THREE.Mesh(pg, o.material)
+    proxy.layers.mask = o.layers.mask
+    proxy.proxyOf = o
+    proxy.kept = kept
+    proxy.keptBox = box
+    return proxy
+  }
+  /* the triangles of a proxy whose box meets the box of the ray (in the frame of the mesh): the rest cannot be hit by it */
+  function narrowTo(rc: any, proxy: any) {
+    const o = proxy.proxyOf
+    const ray = rc.ray
+    _pm.copy(o.matrixWorld).invert()
+    _pv.copy(ray.origin).applyMatrix4(_pm)
+    const x0 = _pv.x
+    const y0 = _pv.y
+    const z0 = _pv.z
+    _pv.copy(ray.direction).multiplyScalar(rc.far).add(ray.origin).applyMatrix4(_pm)
+    const lo0 = Math.min(x0, _pv.x) - 1e-4
+    const lo1 = Math.min(y0, _pv.y) - 1e-4
+    const lo2 = Math.min(z0, _pv.z) - 1e-4
+    const hi0 = Math.max(x0, _pv.x) + 1e-4
+    const hi1 = Math.max(y0, _pv.y) + 1e-4
+    const hi2 = Math.max(z0, _pv.z) + 1e-4
+    const K = proxy.kept
+    const X = proxy.keptBox
+    const dst = proxy.geometry.index.array
+    let m = 0
+    for (let t = 0, j = 0; t < K.length; t += 3, j += 6) {
+      if (X[j + 3] < lo0 || X[j] > hi0 || X[j + 4] < lo1 || X[j + 1] > hi1 || X[j + 5] < lo2 || X[j + 2] > hi2) continue
+      dst[m++] = K[t]
+      dst[m++] = K[t + 1]
+      dst[m++] = K[t + 2]
+    }
+    proxy.geometry.setDrawRange(0, m)
+  }
+  /* raycast against decal candidates; a hit on a proxy is reported on the mesh it stands for */
+  function castAt(rc: any, cands: any) {
+    for (let i = 0; i < cands.length; i++) {
+      const q = cands[i]
+      if (!q.proxyOf) continue
+      q.matrixWorld.copy(q.proxyOf.matrixWorld)
+      narrowTo(rc, q)
+    }
+    const hits = rc.intersectObjects(cands, false)
+    for (let i = 0; i < hits.length; i++) if (hits[i].object.proxyOf) hits[i].object = hits[i].object.proxyOf
+    return hits
+  }
   function zoneCands(c: any, z: any, inv: any, glassToo: any) {
     const out: any = []
     c.vehicle.traverse(function (o: any) {
@@ -172,7 +341,7 @@ export function installZoneDecals(kit: Kit): void {
       })
       _zr.set(org.clone().applyMatrix4(Mw), d.clone().transformDirection(Mw))
       _zr.far = 0.6 + (I.boxHi(B, a) - I.boxLo(B, a)) + 0.05
-      const hits = _zr.intersectObjects(cands, false)
+      const hits = castAt(_zr, cands)
       for (let i = 0; i < hits.length; i++) {
         const h = hits[i]
         if (!h.face) continue
@@ -202,7 +371,7 @@ export function installZoneDecals(kit: Kit): void {
       const q = s.p.clone().addScaledVector(t, (len * 0.5 * k) / M)
       _rt.set(q.clone().addScaledVector(n, 0.08).applyMatrix4(Mw), n.clone().negate().transformDirection(Mw))
       _rt.far = 0.2
-      const h = _rt.intersectObjects(cands, false).find(function (x: any) {
+      const h = castAt(_rt, cands).find(function (x: any) {
         return x.face
       })
       if (!h) return null
@@ -281,6 +450,7 @@ export function installZoneDecals(kit: Kit): void {
       (spec.soot || 0) +
       (spec.crater || 0)
     if (!need) return []
+    cands = regionCands(c, z, cands).filter(Boolean)
     const S = zoneSurf(c, z, need + 2, R, cands)
     let k = 0
     const ang0 = R() * PI

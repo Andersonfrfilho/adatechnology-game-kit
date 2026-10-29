@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { createVehicleDestructible } from '../src'
 import type { Plugin, ScenarioDefinition } from '../src'
 import { makeKit } from './helpers/kit'
 import { DEMO_CAR } from './helpers/sample-fleet'
@@ -79,6 +80,46 @@ describe('plugins and scenarios', () => {
     const c = kit.build('proto', 'intact')
     expect(kit.zoneScenario(c, 'Crashed nose').scenario).toBe('crashed')
     expect(kit.zoneScenario(c, 'nope')).toEqual({ health: {}, flags: {}, scenario: 'nope' })
+  })
+
+  it('builds a scenario in one call, equal to the probe + zoneScenario + build steps', () => {
+    const kit = makeKit({ plugins: [pack] })
+    const probe = kit.build('proto', 'intact')
+    const state = kit.zoneScenario(probe, 'crashed')
+    kit.dispose(probe)
+    const twoStep = kit.build('proto', 'intact', { health: state.health, flags: state.flags })
+    const direct = kit.build('proto', 'intact', { scenario: 'crashed' })
+    expect(direct.zoneState).toEqual(twoStep.zoneState)
+    expect(direct.zoneState.flags.burnt).toBe(true)
+    expect(direct.zones.map((z) => z.band)).toEqual(twoStep.zones.map((z) => z.band))
+    expect(kit.build('proto', 'intact', { scenario: 'Crashed nose' }).zoneState).toEqual(twoStep.zoneState)
+  })
+
+  it('lets explicit health and flags given with a scenario override it', () => {
+    const kit = makeKit({ plugins: [pack] })
+    const c = kit.build('proto', 'intact', { scenario: 'crashed', health: { roof: 80 }, flags: { burnt: false, flipped: true } })
+    expect(c.zoneState.health.roof).toBe(80)
+    expect(c.zoneState.flags.burnt).toBe(false)
+    expect(c.zoneState.flags.flipped).toBe(true)
+    expect(c.zoneState.health.hood).toBeLessThan(100)
+  })
+
+  it('keeps the scenario a vehicle was built in, so a destructible reset rebuilds the wreck', () => {
+    const kit = makeKit({ plugins: [pack] })
+    const c = kit.build('proto', 'intact', { scenario: 'crashed' })
+    expect(c.scenario).toBe('crashed')
+    const d = createVehicleDestructible(kit, c, { headless: true })
+    d.reset!()
+    expect(d.vehicle).not.toBe(c)
+    expect(d.vehicle.scenario).toBe('crashed')
+    expect(d.vehicle.zoneState.flags.burnt).toBe(true)
+  })
+
+  it('builds an unknown scenario like zoneScenario answers it: nothing damaged', () => {
+    const kit = makeKit({ plugins: [pack] })
+    const c = kit.build('proto', 'intact', { scenario: 'nope' })
+    expect(Object.values(c.zoneState.health).every((h) => h === 100)).toBe(true)
+    expect(c.zoneState.flags).toEqual({})
   })
 
   it('rejects a scenario without id or zone()', () => {

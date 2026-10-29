@@ -34,6 +34,14 @@ export type VehicleSoundIds = { readonly engine: string; readonly horn: string; 
 
 export const defaultSoundIds: VehicleSoundIds = { engine: 'engine_saw', horn: 'horn', crash: 'sfx_impact' }
 
+/** A damaged vehicle of the area: the item id, the fleet vehicle it is built from and the scenario of the kit applied while building. */
+export type VehicleWreck = { readonly key: string; readonly vehicle: string; readonly scenario: string }
+
+export const DEFAULT_TEST_WRECKS: readonly VehicleWreck[] = [
+  { key: 'sedan_burnt', vehicle: 'midsize_sedan', scenario: 'burnt' },
+  { key: 'hatch_burnt', vehicle: 'compact_hatch', scenario: 'burnt' },
+]
+
 export type VehiclesTestOptions = {
   /** `en` or `pt-BR` (default). */
   readonly locale?: string
@@ -44,6 +52,8 @@ export type VehiclesTestOptions = {
   readonly three?: unknown
   /** The vehicles to lay out, as fleet ids (default the 8 of the Frota test: hatch, sedan, pickup, sport bike, box truck, city bus, battle tank, attack helicopter). */
   readonly vehicles?: readonly string[]
+  /** Wrecks laid out after the vehicles: item `key` is the fleet vehicle `vehicle` built with the registered damage `scenario` (default `sedan_burnt` and `hatch_burnt`, the fleet's `burnt`; an empty list lays none). */
+  readonly wrecks?: readonly VehicleWreck[]
   /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` (pool and drips only), `vehicle_leak_ignited` (the whole sequence) and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
   readonly effects?: Partial<VehicleEffectIds>
   /** Sound ids requested through `host.audio` (the defaults are the `game-audio` ones: `engine_saw`, `horn`, `sfx_impact`). */

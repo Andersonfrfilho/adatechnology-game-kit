@@ -240,6 +240,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
    * Builds vehicle `key` in a state (`'intact' | 'damaged' | 'modified'`). Returns the context; add `c.root` to the scene.
    * `zoneState` (optional) = `{ health: { zoneId: 0..100 }, flags: { flipped, burnt, abandoned, ...plugin flags } }` applies the damage zones.
    * Without it, `'damaged'` uses the scenario `config.damagedScenario` when a plugin registered one.
+   * `zoneState.scenario` (an id or name a pack registered) computes that scenario on the vehicle being built, so a burnt or wrecked
+   * vehicle is one call; an explicit `health` / `flags` given alongside override the scenario's (health per zone id, flags by name).
    */
   kit.build = function (key: string, state?: string, zoneState?: any, options?: { lod?: boolean }) {
     const spec = kit.find(key)
@@ -291,6 +293,19 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       else kit.applyArmor(c)
     }
     if (zoneState == null && st === 'damaged' && kit.config.damagedScenario) zoneState = kit.zoneScenario(c, kit.config.damagedScenario)
+    else if (zoneState && zoneState.scenario != null) {
+      c.scenario = zoneState.scenario
+      let fromScenario: any = { health: {}, flags: {} }
+      try {
+        fromScenario = kit.zoneScenario(c, zoneState.scenario)
+      } catch (e: any) {
+        ;(c.zoneErrors = c.zoneErrors || []).push('scenario: ' + (e && e.message))
+      }
+      zoneState = {
+        health: Object.assign({}, fromScenario.health, zoneState.health),
+        flags: Object.assign({}, fromScenario.flags, zoneState.flags),
+      }
+    }
     if (zoneState) kit.applyZones(c, zoneState)
     else {
       c.zoneState = { health: {}, flags: {} }

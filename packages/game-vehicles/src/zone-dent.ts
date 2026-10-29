@@ -14,8 +14,26 @@ export function installZoneDent(kit: Kit): void {
   }
   function subdivIn(geo: any, rel: any, B: any, maxLen: any) {
     const a = geo.attributes.position.array
-    const out = []
-    const v = new V3()
+    /* the result grows from the size of the mesh (a typed array: a plain array of this many numbers is the slowest part of the call) */
+    let out = new Float32Array(a.length + 4096)
+    let used = 0
+    const push = function (a0: number, a1: number, a2: number, b0: number, b1: number, b2: number, c0: number, c1: number, c2: number) {
+      if (used + 9 > out.length) {
+        const bigger = new Float32Array(out.length * 2)
+        bigger.set(out)
+        out = bigger
+      }
+      out[used] = a0
+      out[used + 1] = a1
+      out[used + 2] = a2
+      out[used + 3] = b0
+      out[used + 4] = b1
+      out[used + 5] = b2
+      out[used + 6] = c0
+      out[used + 7] = c1
+      out[used + 8] = c2
+      used += 9
+    }
     const e = 0.15
     function d(p: any, q: any) {
       return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
@@ -29,7 +47,7 @@ export function installZoneDent(kit: Kit): void {
       const ca = d(C, A)
       const mx = Math.max(ab, bc, ca)
       if (mx <= maxLen || depth > 9) {
-        out.push(A[0], A[1], A[2], Bv[0], Bv[1], Bv[2], C[0], C[1], C[2])
+        push(A[0], A[1], A[2], Bv[0], Bv[1], Bv[2], C[0], C[1], C[2])
         return
       }
       if (mx === ab) {
@@ -46,31 +64,27 @@ export function installZoneDent(kit: Kit): void {
         tri(F2, Bv, C, depth + 1)
       }
     }
+    /* the box test of each triangle runs on the raw array (what is outside the zone is the most of the mesh and is copied as it is) */
+    const M = rel.elements
+    const at = function (x: number, y: number, z: number, k: number) {
+      const w = 1 / (M[3] * x + M[7] * y + M[11] * z + M[15])
+      return k === 0 ? (M[0] * x + M[4] * y + M[8] * z + M[12]) * w : k === 1 ? (M[1] * x + M[5] * y + M[9] * z + M[13]) * w : (M[2] * x + M[6] * y + M[10] * z + M[14]) * w
+    }
+    const lo = [B.x0 - e, B.y0 - e, B.z0 - e]
+    const hi = [B.x1 + e, B.y1 + e, B.z1 + e]
     for (let i = 0; i < a.length; i += 9) {
-      const A = [a[i], a[i + 1], a[i + 2]]
-      const Bv = [a[i + 3], a[i + 4], a[i + 5]]
-      const C = [a[i + 6], a[i + 7], a[i + 8]]
-      let x0 = 1e9
-      let x1 = -1e9
-      let y0 = 1e9
-      let y1 = -1e9
-      let z0 = 1e9
-      let z1 = -1e9
-      ;[A, Bv, C].forEach(function (p) {
-        v.set(p[0], p[1], p[2]).applyMatrix4(rel)
-        x0 = Math.min(x0, v.x)
-        x1 = Math.max(x1, v.x)
-        y0 = Math.min(y0, v.y)
-        y1 = Math.max(y1, v.y)
-        z0 = Math.min(z0, v.z)
-        z1 = Math.max(z1, v.z)
-      })
-      if (x1 < B.x0 - e || x0 > B.x1 + e || y1 < B.y0 - e || y0 > B.y1 + e || z1 < B.z0 - e || z0 > B.z1 + e)
-        out.push(A[0], A[1], A[2], Bv[0], Bv[1], Bv[2], C[0], C[1], C[2])
-      else tri(A, Bv, C, 0)
+      let outside = false
+      for (let k = 0; k < 3 && !outside; k++) {
+        const p = at(a[i], a[i + 1], a[i + 2], k)
+        const q = at(a[i + 3], a[i + 4], a[i + 5], k)
+        const r = at(a[i + 6], a[i + 7], a[i + 8], k)
+        outside = Math.max(p, q, r) < lo[k] || Math.min(p, q, r) > hi[k]
+      }
+      if (outside) push(a[i], a[i + 1], a[i + 2], a[i + 3], a[i + 4], a[i + 5], a[i + 6], a[i + 7], a[i + 8])
+      else tri([a[i], a[i + 1], a[i + 2]], [a[i + 3], a[i + 4], a[i + 5]], [a[i + 6], a[i + 7], a[i + 8]], 0)
     }
     const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3))
+    g.setAttribute('position', new THREE.BufferAttribute(out.slice(0, used), 3))
     g.userData.crease = true
     g.userData.p0 = null
     return g
@@ -93,6 +107,18 @@ export function installZoneDent(kit: Kit): void {
       out.push({ o: o, deform: dset.has(o) })
     })
     return out
+  }
+  /* the box `B` (zone frame) seen from the frame that `m` maps into it: [x0, y0, z0, x1, y1, z1] of its 8 corners, widened a hair */
+  function boxInFrame(B: any, m: any, tmp: any) {
+    const r = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
+    for (let i = 0; i < 8; i++) {
+      tmp.set(i & 1 ? B.x1 : B.x0, i & 2 ? B.y1 : B.y0, i & 4 ? B.z1 : B.z0).applyMatrix4(m)
+      for (let k = 0; k < 3; k++) {
+        r[k] = Math.min(r[k], tmp.getComponent(k) - 1e-4)
+        r[k + 3] = Math.max(r[k + 3], tmp.getComponent(k) + 1e-4)
+      }
+    }
+    return r
   }
   /* dents: [{ u, v (centre, absolute tangent coordinates), ru, rv (radii in m), depth }], crease: { v, w, depth } */
   function zoneDent(c: any, z: any, dents: any, dirty: any, opt: any) {
@@ -149,6 +175,7 @@ export function installZoneDent(kit: Kit): void {
         g = msh.geometry = g.clone()
         msh.userData.zCloned = true
       }
+      let boundsDue = false
       const nonIdx = !g.index
       const onlyPos = Object.keys(g.attributes).every(function (k) {
         return k === 'position' || k === 'normal'
@@ -157,15 +184,18 @@ export function installZoneDent(kit: Kit): void {
         const ng = subdivIn(g, rel, B, opt.sub || 0.075)
         g.dispose()
         g = msh.geometry = ng
-        ng.computeBoundingSphere()
-        ng.computeBoundingBox()
+        boundsDue = true /* computed once, after the vertices moved */
         dirty.add(msh)
       }
       irel.copy(rel).invert()
       const pos = g.attributes.position
       let changed = false
+      /* the box of the zone in the frame of the mesh: a vertex outside it is outside the field (it returns 0 there), so it skips the transform */
+      const near = boxInFrame(B, irel, v)
       for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i).applyMatrix4(rel)
+        v.fromBufferAttribute(pos, i)
+        if (v.x < near[0] || v.x > near[3] || v.y < near[1] || v.y > near[4] || v.z < near[2] || v.z > near[5]) continue
+        v.applyMatrix4(rel)
         const f = field(v)
         if (f <= 1e-5) continue
         v.addScaledVector(d, f)
@@ -186,9 +216,11 @@ export function installZoneDent(kit: Kit): void {
       }
       if (changed) {
         pos.needsUpdate = true
+        dirty.add(msh)
+      }
+      if (changed || boundsDue) {
         g.computeBoundingSphere()
         g.computeBoundingBox()
-        dirty.add(msh)
       }
     })
     /* rigid parts (trim, handles, liner, plate) follow the field at their centre */

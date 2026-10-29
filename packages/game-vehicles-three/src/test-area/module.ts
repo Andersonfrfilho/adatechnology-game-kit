@@ -8,7 +8,7 @@ import { createVehiclesThree, primaryPaint } from '../build'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
-import { defaultEffectIds, defaultSoundIds } from './types'
+import { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
 import type { EffectsLike, VehiclesContext, VehiclesTestOptions } from './types'
 
 export const VEHICLES_AREA_ID = 'vehicles_area'
@@ -18,6 +18,9 @@ export const DEFAULT_TEST_VEHICLES: readonly string[] = ['compact_hatch', 'midsi
 const ITEM_OF: Readonly<Record<string, string>> = { compact_hatch: 'hatch', midsize_sedan: 'sedan', midsize_pickup: 'pickup', sport_bike: 'sport_bike', box_truck: 'box_truck', city_bus: 'city_bus', battle_tank: 'battle_tank', attack_helicopter: 'attack_helicopter' }
 const itemId = (key: string): string => ITEM_OF[key] ?? key
 
+/** One item of the area: the fleet vehicle it is built from, its item id and, for a wreck, the scenario built into it. */
+type Entry = { readonly key: string; readonly id: string; readonly scenario?: string }
+
 const LANE = { z: 11, from: -12, wall: 13 }
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
@@ -26,6 +29,8 @@ type Three = any
 type Placed = {
   readonly root: any
   readonly key: string
+  /** The damage scenario built into a wreck (its size is not the design size, so it is left out of the size error). */
+  readonly scenario?: string
   readonly item: VehicleItem
   readonly index: number
   paint?: any
@@ -43,6 +48,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale] ?? (TEXT['pt-BR'] as (typeof TEXT)[string])
   const keys = options.vehicles ?? DEFAULT_TEST_VEHICLES
+  const wrecks = options.wrecks ?? DEFAULT_TEST_WRECKS
+  const entries: Entry[] = [...keys.map((key): Entry => ({ key, id: itemId(key) })), ...wrecks.map((w): Entry => ({ key: w.vehicle, id: w.key, scenario: w.scenario }))]
   const effectIds = { ...defaultEffectIds, ...options.effects }
   const soundIds = { ...defaultSoundIds, ...options.sounds }
   const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt' }
@@ -98,17 +105,17 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     entry.paint.color.set(color)
   }
 
-  const item = (key: string): TestableItem => ({
-    id: itemId(key),
-    name: text.items[itemId(key)] ?? key,
+  const item = ({ key, id: itemKey, scenario }: Entry): TestableItem => ({
+    id: itemKey,
+    name: text.items[itemKey] ?? key,
     movable: false,
     // the first build of a vehicle takes most of a second
     slow: true,
     build: (THREE: unknown) => {
       const kit = kitFor(THREE as Three)
-      const built = buildVehicleItem(kit, key, { lod: settings.quality === 'lite' })
+      const built = buildVehicleItem(kit, key, { lod: settings.quality === 'lite', ...(scenario ? { scenario } : {}) })
       built.root.userData.kit = kit
-      const entry: Placed = { root: built.root, key, item: built, index: counter++, helpers: [] }
+      const entry: Placed = { root: built.root, key, ...(scenario ? { scenario } : {}), item: built, index: counter++, helpers: [] }
       placed.set(built.root.uuid, entry)
       // measured now, before the destructible adds its own plates and mirrors: this is the size the fleet records
       measure(entry)
@@ -118,7 +125,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     impl: (root: unknown, id: string) => {
       const r = root as { userData: Record<string, unknown> }
       const kit = r.userData.kit as VehicleKit
-      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemId(key)] ?? key })
+      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key })
       tapEffects(d)
       r.userData.destructible = d
       return d
@@ -390,7 +397,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     for (const entry of placed.values()) {
       const want = fleetDims(entry.key)
       const got = entry.size
-      if (!want || !got) continue
+      if (!want || !got || entry.scenario) continue
       worst = Math.max(worst, Math.abs(got.length - want.length), Math.abs(got.width - want.width), Math.abs(got.height - want.height))
     }
     return Math.round(worst * 1000)
@@ -403,24 +410,24 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     get placed() {
       return placed
     },
-    items: () => keys.map(item),
+    items: () => entries.map(item),
     area: (): ModuleArea => {
       // the front row, each vehicle given room by its width, the front to +z; what is wider than a street (a helicopter with its rotor) stands alone in a row behind
       const gap = 1.6
       const WIDE = 6
-      const rowOf = (list: readonly string[], z: number) => {
+      const rowOf = (list: readonly Entry[], z: number) => {
         let cursor = 0
-        const spots = list.map((key) => {
-          const width = fleetDims(key)?.width ?? 2
+        const spots = list.map((entry) => {
+          const width = fleetDims(entry.key)?.width ?? 2
           const x = cursor + width / 2
           cursor += width + gap
-          return { key, x }
+          return { id: entry.id, x }
         })
         return { spots, z, width: Math.max(0, cursor - gap) }
       }
-      const front = rowOf(keys.filter((key) => (fleetDims(key)?.width ?? 2) <= WIDE), 0)
-      const back = rowOf(keys.filter((key) => (fleetDims(key)?.width ?? 2) > WIDE), -16)
-      const placements = [front, back].flatMap((row) => row.spots.map(({ key, x }) => ({ item: itemId(key), position: [x - row.width / 2, 0, row.z] as Vec3, rotationY: 0 })))
+      const front = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) <= WIDE), 0)
+      const back = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) > WIDE), -16)
+      const placements = [front, back].flatMap((row) => row.spots.map(({ id, x }) => ({ item: id, position: [x - row.width / 2, 0, row.z] as Vec3, rotationY: 0 })))
       return { placements, view: { eye: [0, 5, Math.max(14, front.width * 0.6)], target: [0, 1, -2] } }
     },
     controls: (): ModuleControl[] => {

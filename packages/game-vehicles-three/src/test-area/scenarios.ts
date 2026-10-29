@@ -1,6 +1,7 @@
 import type { ModuleScenario, Vec3 } from '@adatechnology/game-contracts'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
 import type { SemiInput, SemiWorld } from '@adatechnology/game-vehicles-driving'
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 
 import { fill } from './text'
 import type { VehiclesText } from './text'
@@ -27,7 +28,7 @@ const add = (p: Vec3, dx: number, dy: number, dz: number): Vec3 => [p[0] + dx, p
 
 /**
  * The scenarios of the vehicles area. The first eleven are the Frota test page's, literal (same shots, same hits, same checks and the same sentences); the vehicle faces +z,
- * its left is +x and its right -x. The last two are new in the kit: the arcade driver down a lane that ends in a wall, and the semi-simulation braking on three surfaces.
+ * its left is +x and its right -x. Then the burnt sedan built by the kit's `burnt` scenario, the arcade driver down a lane that ends in a wall, and the semi-simulation braking on three surfaces (new in the kit).
  */
 export const createScenarios = (deps: ScenarioDeps): ModuleScenario<VehiclesContext>[] => {
   const { text, locale } = deps
@@ -174,6 +175,14 @@ export const createScenarios = (deps: ScenarioDeps): ModuleScenario<VehiclesCont
       step(30)
       const t = part(room, v, 'tyre_front_left')
       expect(events(room, 'melt', v) >= 1 && (t.status === 'melted' || t.melt > 0.5), say('tyre_melt', t.status, Math.round(t.melt * 100), events(room, 'melt', v)))
+    }),
+    // new in the kit: the burnt wreck comes ready from the kit (the fleet's `burnt` scenario built into the vehicle), no damage applied by the area
+    scenario('vehicles_burnt_wreck', ({ room, expect }) => {
+      const c = room.spawn('sedan_burnt', [0, 0, -7], 0).root.userData.vehicle as VehicleContext
+      expect(c.zoneState.flags.burnt === true, say('wreck_burnt', c.zoneState.flags.burnt === true))
+      const glass = c.zones.filter((z) => z.type === 'glass')
+      const up = glass.filter((z) => (c.zoneState.health[z.id] ?? 100) > 0)
+      expect(glass.length >= 1 && up.length === 0, say('wreck_glass', glass.length, up.length))
     }),
     // new in the kit: the drivers, headless (no vehicle is spawned)
     scenario('vehicles_drive_arcade', ({ expect }) => {
