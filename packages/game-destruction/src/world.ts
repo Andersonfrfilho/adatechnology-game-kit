@@ -85,6 +85,8 @@ interface PartRT {
   structural: boolean
   anchored: boolean
   cap: number
+  /** Structural part that never had a support path (the spec itself leaves it floating): it is held by its joints like a non-structural part and does not collapse by itself. */
+  orphan: boolean
   /** The part has layers, units, reinforcement or a breach: it goes through damage stages. */
   staged: boolean
   /** Axis the part is thinnest along (the wall's depth). */
@@ -131,6 +133,8 @@ interface ObjRT {
   active: boolean
   tmp: number[]
   hasStructure: boolean
+  /** Set only while `build` solves the structure for the first time. */
+  seeding?: boolean
   dirty: boolean
   maxStress: number
   collapsed: Set<string>
@@ -383,7 +387,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
-        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0,
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0, orphan: false,
         staged, thin: thinAxisOf(shapeDims(ps.shape)), layers, span: 0, spanKey: '', restMoment: 0, bendLoad: 0, snap: false,
         ...(ps.shape.kind === 'box' && isFlexural(ps, mat, flexure) ? { bend: bendGeometry(ps) } : {}),
       }
@@ -423,7 +427,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (windCfg && o.hasStructure && spec.wind !== false) o.wind = newWind(o, carry?.wind)
     const ground = spec.soil ?? soilCfg.site
     if (ground !== undefined && o.parts.some((p) => p.spec.structure?.role === 'foundation')) initSoil(o, profileOf(ground), carry?.soil, carry?.soilSets)
+    o.seeding = true
     solveStructure(o)
+    o.seeding = false
     if (o.soil && !carry?.soil) settleSoil(o, 0)
     if (o.soil) o.soil.dirty = false
     recomputeGroups(o)
@@ -480,13 +486,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     list.forEach((g, gi) => g.ix.forEach((i) => (o.parts[i].st.group = gi)))
   }
 
-  /** Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. */
-  const restsOn = (j: JointRT, r: number): number => {
+  /**
+   * Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. A `tie` is a rope: it only pulls,
+   * so it holds `r` up only when `r` hangs below the part it is tied to (a lamp from a ceiling), never when that part is beside or under it
+   * (a guy rope to a stake in the ground).
+   */
+  const restsOn = (o: ObjRT, j: JointRT, r: number): number => {
     const b = j.bears
     if (!b) return -1
-    if (b === true) return j.ia === r ? j.ib : j.ia
-    if (b === 'a_on_b') return j.ia === r ? j.ib : -1
-    return j.ib === r ? j.ia : -1
+    const k = b === true ? (j.ia === r ? j.ib : j.ia) : b === 'a_on_b' ? (j.ia === r ? j.ib : -1) : j.ib === r ? j.ia : -1
+    if (k < 0 || j.spec.kind !== 'tie') return k
+    return partXf(o, o.parts[k]).c[1] > partXf(o, o.parts[r]).c[1] + 1e-6 ? k : -1
   }
 
   // -------------------------------------------------------------------------------------------------------------------------------------------
@@ -650,7 +660,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (const j of o.byPart.get(parts[s].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const r = j.ia === s ? j.ib : j.ia
-        if (dist[r] >= 0 || !ok(r) || restsOn(j, r) !== s) continue
+        if (dist[r] >= 0 || !ok(r) || restsOn(o, j, r) !== s) continue
         dist[r] = dist[s] + 1
         queue.push(r)
       }
@@ -661,7 +671,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const lower: number[] = []
       for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
-        const k = restsOn(j, i)
+        const k = restsOn(o, j, i)
         if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
       }
       lowerOf.set(i, lower)
@@ -694,7 +704,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (dist[i] < 0 || isLost(p)) {
         p.st.load = p.st.mass
         p.st.stress = 0
-        o.unsup[i] = o.anyAnchor && !isLost(p)
+        if (o.seeding && !p.anchored && !isLost(p) && p.st.status !== 'collapsed' && !o.collapsed.has(p.spec.id)) p.orphan = true
+        o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
       p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p))
@@ -908,7 +919,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (j.st.open || !j.bears) continue
         const r = j.ia === fi ? j.ib : j.ia
         const q = o.parts[r]
-        if (!q.structural || isLost(q) || restsOn(j, r) !== fi) continue
+        if (!q.structural || isLost(q) || restsOn(o, j, r) !== fi) continue
         const c = box(q)
         const x0 = Math.max(c.min[0], b.min[0]), x1 = Math.min(c.max[0], b.max[0]), z0 = Math.max(c.min[2], b.min[2]), z1 = Math.min(c.max[2], b.max[2])
         const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2
@@ -1587,7 +1598,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const i = o.idx.get(p.spec.id)!
     const opened: JointRT[] = []
     for (const j of o.byPart.get(p.spec.id) ?? []) {
-      if (j.st.open || restsOn(j, i) < 0) continue
+      if (j.st.open || restsOn(o, j, i) < 0) continue
       j.st.open = true
       j.st.hp = 0
       j.st.openedBy = 'break'

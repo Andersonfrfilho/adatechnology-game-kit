@@ -67,6 +67,7 @@ export class GroundSpots {
     mesh.position.set(x, y, z)
     mesh.scale.setScalar(0.001)
     mesh.renderOrder = 1
+    mesh.userData.destructionDebris = true
     this.scene.add(mesh)
     this.spots.push({ mesh, kind, home, x, z, radius: 0.001, target: Math.min(MAX_RADIUS, radius) })
   }
