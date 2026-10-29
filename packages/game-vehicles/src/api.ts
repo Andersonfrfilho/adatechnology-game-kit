@@ -128,6 +128,12 @@ export interface ZoneState {
   flags: Record<string, boolean>
 }
 
+/** The zone-state argument of `kit.build`: a `ZoneState` plus an optional scenario to compute on the vehicle being built. */
+export interface BuildZoneState extends Partial<ZoneState> {
+  /** Id or name of a registered scenario (e.g. the fleet's `burnt`); explicit `health` / `flags` override its result. */
+  scenario?: string
+}
+
 export interface ScenarioResult {
   health: Record<string, number>
   flags: Record<string, boolean>
@@ -388,7 +394,7 @@ export interface VehicleKit {
   hook(event: string, ...args: any[]): void
 
   /* build and lifecycle */
-  build(key: string, state?: BuildState, zoneState?: Partial<ZoneState>, options?: BuildOptions): VehicleContext
+  build(key: string, state?: BuildState, zoneState?: BuildZoneState, options?: BuildOptions): VehicleContext
   /** The damageable parts of a built vehicle as boxes (optionally in the frame of `matrix`). */
   damageables(c: VehicleContext, matrix?: ThreeObject): Damageable[]
   dispose(c: VehicleContext): void

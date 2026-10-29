@@ -64,6 +64,9 @@ scene.remove(c.root); kit.dispose(c)
 const hurt = kit.build('meteor', 'intact', state)
 scene.add(hurt.root)
 
+// ...or name a registered scenario and build it in one call (explicit health / flags given alongside win)
+const wreck = kit.build('meteor', 'intact', { scenario: 'burnt' })
+
 // 4. animate (particles, fluids, hood, rollover, explosions)
 kit.tick(hurt, dt)
 ```
@@ -89,7 +92,7 @@ and a band decided by the health:
 | 3 | `destroyed` | 1 to 25 | Heavy deformation, parts fall off |
 | 4 | `torn_off` | 0 | The part is gone |
 
-Bands only change the look when the band changes; `kit.build(key, state, zoneState)` rebuilds the vehicle and reapplies every zone.
+Bands only change the look when the band changes; `kit.build(key, state, zoneState)` rebuilds the vehicle and reapplies every zone. `zoneState` may also carry `scenario: 'id or name'`: the scenario is computed on the vehicle being built (no probe build) and any `health` / `flags` given with it are merged on top. An unknown scenario damages nothing, like `zoneScenario`.
 
 **Content packs.** A pack is a plugin: `{ name, configure, install(kit) }`. `configure` accepts everything in the configuration table below and
 `install` can call `kit.register(...)`, `kit.scenario(...)`, `kit.defineFluid(...)`, `kit.on(...)` and so on. The engine never imports a pack.
@@ -139,7 +142,7 @@ created with, so `kit.t('mypack.some.key')` reads from it, with English as the f
 | Area | Methods |
 |---|---|
 | Registry | `register(spec, build)`, `find(key)`, `fleet`, `configure`, `plugin`, `on`/`hook`, `scenario`, `defineFluid` |
-| Lifecycle | `build(key, state?, zoneState?)`, `dispose(c)`, `tick(c, dt)`, `settle(c, seconds)`, `defaultDamage(c)` |
+| Lifecycle | `build(key, state?, zoneState?)` (`zoneState.scenario` runs a scenario), `dispose(c)`, `tick(c, dt)`, `settle(c, seconds)`, `defaultDamage(c)` |
 | Zones | `bandOf(health)`, `zonesOf(c)`, `applyZones(c, state)`, `zoneScenario(c, id)`, `zoneOverall(c)`, `zoneAt(c, point)`, `zoneDamageAt(c, point, dir, force)`, `zonePoint(c, zone)`, `zoneEffect(zone, health?)`, `zoneOwner` |
 | Events | `impact(c, point, dir, force, options?)`, `zoneImpact(c, side, force)` (side: `front`, `rear`, `left`, `right` or `rolled`), `explode(c, options?)`, `blastDamage(c, amount)`, `roll(c, side?)`, `setHood(c, open)` |
 | Fluids and particles | `splat`, `puddle`, `wipe(c, mode)` (`wiper` or `rain`), `spawn`, `burst`, `addEmitter` |
@@ -175,6 +178,7 @@ kit.scenario({
 })
 const result = kit.zoneScenario(c, 'front') // { health, flags, scenario }
 const hurt = kit.build('meteor', 'intact', result)
+const same = kit.build('meteor', 'intact', { scenario: 'front' }) // the two steps in one call
 ```
 
 `x` has `c`, `meta`, `front`, `rear`, `length`, `width`, `clearance`, `top`, `rand()`, `set(zone, health)`, `flags`, `health`, `center` (of the zone
