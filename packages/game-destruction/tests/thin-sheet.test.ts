@@ -8,7 +8,7 @@ const blow = (thickness: number, type: 'blunt' | 'slash', energy: number, radius
   const world = createDestruction({ seed: 1 })
   const id = world.add({ parts: [can(thickness)] })
   world.hit(id, { type, point: [0, 0.06, 0.033], direction: [0, 0, -1], energy, radius, source: 'test' })
-  return world.state(id).parts[0]!
+  return world.state(id)!.parts[0]!
 }
 
 describe('a foil-thin sheet (a can)', () => {
@@ -34,6 +34,6 @@ describe('a foil-thin sheet (a can)', () => {
     const id = world.add({ parts: [can(0.00025)] })
     const [shot] = world.shoot([0, 0.6, 0.5], [0, -0.54, -0.5], 500, 9, 'test')
     expect(shot?.penetrated).toBe(true)
-    expect(world.state(id).parts[0]!.holes.length).toBeGreaterThan(0)
+    expect(world.state(id)!.parts[0]!.holes.length).toBeGreaterThan(0)
   })
 })
