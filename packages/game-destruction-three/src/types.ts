@@ -151,6 +151,8 @@ export interface DestructionRenderer {
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: { mass?: number; velocity?: Vec3 }): Piece
   pieces(): Piece[]
+  /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
+  wakeRegion(x: number, z: number, radius: number): void
   piece(objectId: string): Piece | null
   /**
    * World boxes of what is drawn around (x, z) within `radius`: each drawn mesh of a fixed object (meshes wider than 3 m and parts inside a merged

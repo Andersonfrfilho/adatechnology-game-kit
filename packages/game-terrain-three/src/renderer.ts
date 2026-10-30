@@ -14,6 +14,8 @@ export interface TerrainRendererOptions {
   readonly lodDistance?: number
   /** Marks farther than this in metres are not drawn (default 45). */
   readonly markDistance?: number
+  /** Metres the untouched ground goes on beyond the terrain, so that it has no edge in sight (default 300). */
+  readonly skirt?: number
 }
 
 export interface TerrainRenderer {
@@ -27,6 +29,7 @@ export interface TerrainRenderer {
 
 const DEFAULT_LOD_DISTANCE = 30
 const DEFAULT_MARK_DISTANCE = 45
+const DEFAULT_SKIRT = 300
 const LOD_CHECK_METRES = 4
 const REBAR_COLOUR = 0x4a3528
 
@@ -40,6 +43,7 @@ interface DrawnChunk {
 export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererOptions): TerrainRenderer {
   const { terrain } = options
   const lodDistance = options.lodDistance ?? DEFAULT_LOD_DISTANCE
+  const skirt = options.skirt ?? DEFAULT_SKIRT
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-terrain-three', kind: 'ground' })
   group.name = 'floor'
   const surface = createSurfaceMaterial(THREE)
@@ -102,7 +106,7 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
       if (chunk.pristine) chunks.push(chunk)
     }
     pristineMesh.geometry.dispose()
-    pristineMesh.geometry = buildPristineGeometry(THREE, terrain, chunks)
+    pristineMesh.geometry = buildPristineGeometry(THREE, terrain, chunks, skirt)
     pristineCount = chunks.length
     pristineStale = false
   }

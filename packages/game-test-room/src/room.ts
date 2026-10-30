@@ -306,6 +306,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
     playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
   }
+  terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
   const registerGround = (): void => {
     if (!world.has(GROUND_ID)) world.register(groundImpl, { id: GROUND_ID })
@@ -742,6 +743,47 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     // a module hides or shows its object through the root it built (the category filter of the items area does): the holder answers for it
     Object.defineProperty(holder, 'visible', { get: () => built.visible, set: (v: boolean) => void (built.visible = v), configurable: true })
     return holder
+  }
+
+  /** The items modules put in the world as scenery (`ModuleHost.addObject`): kept through `clear`; the scenarios run without them (each starts from the seeded room) and they come back after. */
+  const sceneryObjects = new Map<string, { item: TestRoomItem; position: Vec3; rotationY: number }>()
+  const placeScenery = (objectId: string, item: TestRoomItem, position: Vec3, rotationY: number): Entry => {
+    const root = buildRoot(item)
+    root.position.set(position[0], position[1], position[2])
+    root.rotation.y = rotationY
+    root.name = item.id
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    const own = item.impl?.(root, objectId)
+    const { spec, parts } = own ? { spec: structuredCloneSpec(own.describe()), parts: undefined } : resolveSpec(item, root)
+    root.updateMatrixWorld(true)
+    const q = root.getWorldQuaternion(tmpQ)
+    if (own) world.register(own, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    else world.add(spec, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, true, false)
+    fire('spawn', e.so)
+    return e
+  }
+  const restoreScenery = (): void => {
+    for (const [objectId, o] of sceneryObjects) if (!entries.has(objectId)) placeScenery(objectId, o.item, o.position, o.rotationY)
+  }
+  const addScenery = (itemId: string, position: Vec3, rotationY = 0): { objectId: string; root: unknown; remove(): void } | null => {
+    const item = catalogMap.get(itemId)
+    if (!item) return null
+    const objectId = `${item.id}_scenery_${sceneryObjects.size + 1}`
+    sceneryObjects.set(objectId, { item, position: [position[0], position[1], position[2]], rotationY })
+    const e = placeScenery(objectId, item, position, rotationY)
+    action('spawn', t('act.spawn', { name: item.name, x: num(position[0], 1), z: num(position[2], 1) }), { objectId, itemId: item.id, data: { position, movable: false, scenery: true } })
+    return {
+      objectId,
+      get root() {
+        return entries.get(objectId)?.so.root ?? e.so.root
+      },
+      remove() {
+        sceneryObjects.delete(objectId)
+        removeEntry(objectId)
+      },
+    }
   }
 
   const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
@@ -2775,6 +2817,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
     },
+    addObject(itemId, place) {
+      return addScenery(itemId, place.position, place.rotationY)
+    },
   }
   let sendingInitial = false
   const lendBench = (store: BenchStore): ModuleBench => ({
@@ -2983,6 +3028,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     } finally {
       scenarioRunning = false
       paused = wasPaused
+      restoreScenery()
     }
     return report
   }
