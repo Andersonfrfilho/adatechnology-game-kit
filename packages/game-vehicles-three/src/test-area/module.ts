@@ -26,6 +26,10 @@ const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44a
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
 type Three = any
+/** A floor rectangle in an object's own space, metres. */
+type Footprint = { minX: number; maxX: number; minZ: number; maxZ: number }
+/** Parts whose bottom is above this (m, from the ground) are overhead: the player walks under them (the helicopter's rotor, the tank's gun). */
+const BODY_HEIGHT = 1.7
 type Placed = {
   readonly root: any
   readonly key: string
@@ -35,6 +39,8 @@ type Placed = {
   readonly index: number
   paint?: any
   size?: { length: number; width: number; height: number }
+  /** What the walking player bumps into, in the root's own space: the box of the parts low enough to hit a body (a rotor overhead is walked under). */
+  footprint?: Footprint
   helpers: any[]
 }
 
@@ -190,6 +196,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     entry.root.updateMatrixWorld(true)
     const inverse = new three.Matrix4().copy(entry.root.matrixWorld).invert()
     const bounds = new three.Box3()
+    const low = new three.Box3()
     const piece = new three.Box3()
     const matrix = new three.Matrix4()
     entry.root.traverse((mesh: any) => {
@@ -199,9 +206,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       mesh.geometry.computeBoundingBox()
       piece.copy(mesh.geometry.boundingBox).applyMatrix4(matrix.multiplyMatrices(inverse, mesh.matrixWorld))
       bounds.union(piece)
+      if (piece.min.y < BODY_HEIGHT) low.union(piece)
     })
     const size = bounds.getSize(new three.Vector3())
     entry.size = { length: size.z, width: size.x, height: size.y }
+    if (!low.isEmpty()) entry.footprint = { minX: low.min.x, maxX: low.max.x, minZ: low.min.z, maxZ: low.max.z }
     return entry.size
   }
   const clearHelpers = (): void => {
@@ -249,6 +258,26 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       }
     }
     helpersShown = boxKey()
+  }
+
+  // ---- the walking player ------------------------------------------------------------------------------------------------------------------
+  // every vehicle on the floor (and the car on the lane) is solid: the point is taken into the vehicle's own space, so a turned vehicle blocks by its turned footprint
+  const local = { m: null as any, v: null as any }
+  const inside = (root: any, fp: Footprint, x: number, z: number, radius: number): boolean => {
+    if (!three) return false
+    local.m ??= new three.Matrix4()
+    local.v ??= new three.Vector3()
+    root.updateWorldMatrix(true, false)
+    const p = local.v.set(x, 0, z).applyMatrix4(local.m.copy(root.matrixWorld).invert())
+    return p.x > fp.minX - radius && p.x < fp.maxX + radius && p.z > fp.minZ - radius && p.z < fp.maxZ + radius
+  }
+  const blocked = (x: number, z: number, radius: number): boolean => {
+    for (const entry of placed.values()) if (entry.root.parent && entry.footprint && inside(entry.root, entry.footprint, x, z, radius)) return true
+    if (lane) {
+      const half = { l: lane.car.length / 2, w: lane.car.width / 2 }
+      if (inside(lane.group, { minX: -half.w, maxX: half.w, minZ: -half.l, maxZ: half.l }, x, z, radius)) return true
+    }
+    return false
   }
 
   // ---- the lane ---------------------------------------------------------------------------------------------------------------------------
@@ -464,11 +493,13 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       three = lent.THREE
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
+      const stopBlocker = lent.addBlocker?.(blocked)
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       return () => {
         stopChange?.()
         stopFrame()
+        stopBlocker?.()
         clearHelpers()
         clearLane()
         host = null
