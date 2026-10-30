@@ -4,7 +4,7 @@ import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
+import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -16,6 +16,7 @@ export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   maxSlideCellsPerFrame: 2500,
   maxBurningCells: 300,
   maxCracks: 120,
+  maxDecals: 300,
 }
 
 const GRAVITY = 9.81
@@ -43,9 +44,16 @@ const FIRE_SPREAD_PER_SECOND = 0.35
 const SLIDE_SHARE = 0.4
 const SLIDE_EPSILON = 0.002
 /** Radius of a thrown piece per kind: a clod is a fist of soil, a chip is a thumb of concrete. */
-const PIECE_RADIUS: Record<TerrainMaterial['debris'], number> = { clods: 0.045, chips: 0.022, shards: 0.028, splinters: 0.02, dust: 0.012 }
+const PIECE_RADIUS: Record<TerrainMaterial['debris'], number> = { clods: 0.045, chips: 0.022, shards: 0.028, splinters: 0.02, dust: 0.012, blocks: 0.08 }
 /** Metres per second the fastest piece of a blow leaves at: a blast throws, a dropped weight only kicks. */
 const MAX_PIECE_SPEED: Record<TerrainBlow, number> = { explosive: 14, ballistic: 5, blunt: 2.5, slash: 1.5 }
+
+/** Cells the bed takes to go from the bank down to the full depth, so that a body wades in instead of falling. */
+const BANK_CELLS = 6
+const CRACK_MIN_RADIUS = 0.18
+const RIPPLE_SECONDS = 1.6
+/** Water thinner than this at the bank neither splashes nor floats anything. */
+const WATER_MINIMUM = 0.02
 
 const clampIndex = (value: number, max: number): number => Math.max(0, Math.min(max, value))
 const sparse = (array: Float32Array): [number, number][] => {
@@ -107,10 +115,13 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const indexOfProfile = new Map(profileList.map((profile, index) => [profile.id, index]))
   const maxDepthOf = profileList.map(totalThickness)
 
-  const base = new Float32Array(vertexCount)
+  // `surface` is the ground as the map has it; `base` is that less the water standing on it, so that everything that stands on the ground stands on the bed
+  const surface = new Float32Array(vertexCount)
   if (options.baseHeight) {
-    for (let row = 0; row <= rows; row++) for (let column = 0; column <= columns; column++) base[row * stride + column] = options.baseHeight(x0 + column * cellSize, z0 + row * cellSize)
+    for (let row = 0; row <= rows; row++) for (let column = 0; column <= columns; column++) surface[row * stride + column] = options.baseHeight(x0 + column * cellSize, z0 + row * cellSize)
   }
+  const base = Float32Array.from(surface)
+  const hasWater = profileList.some((profile) => profile.water)
   const dug = new Float32Array(vertexCount)
   const loose = new Float32Array(vertexCount)
   const scorch = new Float32Array(vertexCount)
@@ -121,6 +132,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const dirty = new Set<number>()
   const marks = createMarkStore(budget)
   const cracks = createCrackStore()
+  const decalList: TerrainDecal[] = []
+  let decalSerial = 0
+  let decalsVersion = 0
+  const unitDamage = new Map<string, number>()
   const debrisStore = createDebrisStore(() => budget.maxDebris)
   const sliding = new Set<number>()
   const burning = new Map<number, number>()
@@ -162,16 +177,18 @@ export function createTerrain(options: TerrainOptions): Terrain {
       const row1 = clampIndex(Math.round((zz1 - z0) / cellSize), rows)
       for (let row = row0; row <= row1; row++) profileIndex.fill(index, row * stride + column0, row * stride + column1 + 1)
     }
+    if (hasWater) layBeds()
     for (let chunkZ = 0; chunkZ < chunksZ; chunkZ++) {
       for (let chunkX = 0; chunkX < chunksX; chunkX++) {
         const chunk = chunkZ * chunksX + chunkX
         const first = profileIndex[(chunkZ * chunkCells) * stride + chunkX * chunkCells]
+        const firstDrop = surface[(chunkZ * chunkCells) * stride + chunkX * chunkCells]! - base[(chunkZ * chunkCells) * stride + chunkX * chunkCells]!
         let isMixed = 0
         const lastRow = Math.min(rows, (chunkZ + 1) * chunkCells)
         const lastColumn = Math.min(columns, (chunkX + 1) * chunkCells)
         for (let row = chunkZ * chunkCells; row <= lastRow && !isMixed; row++) {
           for (let column = chunkX * chunkCells; column <= lastColumn; column++) {
-            if (profileIndex[row * stride + column] !== first) {
+            if (profileIndex[row * stride + column] !== first || surface[row * stride + column]! - base[row * stride + column]! !== firstDrop) {
               isMixed = 1
               break
             }
@@ -183,11 +200,42 @@ export function createTerrain(options: TerrainOptions): Terrain {
     }
   }
 
+  /** Lowers the ground under the water, in a bank from the edge of each pool. */
+  function layBeds(): void {
+    const steps = new Uint8Array(vertexCount)
+    for (let index = 0; index < vertexCount; index++) steps[index] = profileList[profileIndex[index]!]!.water ? BANK_CELLS : 0
+    for (let pass = 0; pass < BANK_CELLS; pass++) {
+      for (let row = 0; row <= rows; row++) {
+        for (let column = 0; column <= columns; column++) {
+          const index = row * stride + column
+          if (steps[index] === 0) continue
+          const lowest = Math.min(column > 0 ? steps[index - 1]! : BANK_CELLS, column < columns ? steps[index + 1]! : BANK_CELLS, row > 0 ? steps[index - stride]! : BANK_CELLS, row < rows ? steps[index + stride]! : BANK_CELLS)
+          steps[index] = Math.min(steps[index]!, lowest + 1)
+        }
+      }
+    }
+    for (let index = 0; index < vertexCount; index++) base[index] = surface[index]! - (profileList[profileIndex[index]!]!.water?.depth ?? 0) * (steps[index]! / BANK_CELLS)
+  }
+
   const vertexHeight = (column: number, row: number): number => {
     const index = row * stride + column
     return base[index]! - dug[index]! + loose[index]!
   }
   const contains = (x: number, z: number): boolean => x >= x0 && x <= x1 && z >= z0 && z <= z1
+
+  function addDecal(spec: Omit<TerrainDecal, 'id' | 'age'>): void {
+    if (decalList.length >= budget.maxDecals) decalList.shift()
+    decalList.push({ ...spec, id: ++decalSerial, age: 0 })
+    decalsVersion++
+  }
+  function clearDecalsInside(x: number, z: number, radius: number): void {
+    const before = decalList.length
+    for (let i = before - 1; i >= 0; i--) {
+      const decal = decalList[i]!
+      if (decal.kind !== 'ripple' && decal.kind !== 'splat' && decal.kind !== 'crack' && Math.hypot(decal.x - x, decal.z - z) < radius) decalList.splice(i, 1)
+    }
+    if (decalList.length !== before) decalsVersion++
+  }
 
   function heightAt(x: number, z: number): number {
     // beyond the terrain the ground is untouched: no blow can dig it and a piece thrown out lands on it
@@ -207,6 +255,43 @@ export function createTerrain(options: TerrainOptions): Terrain {
     const column = clampIndex(Math.round((x - x0) / cellSize), columns)
     const row = clampIndex(Math.round((z - z0) / cellSize), rows)
     return { column, row, index: row * stride + column }
+  }
+
+  function waterAt(x: number, z: number): { liquid: string; level: number; depth: number } | null {
+    if (!hasWater || !contains(x, z)) return null
+    const { index } = vertexOf(x, z)
+    const water = profileList[profileIndex[index]!]!.water
+    if (!water) return null
+    const level = surface[index]!
+    const depth = level - heightAt(x, z)
+    return depth > WATER_MINIMUM ? { liquid: water.liquid, level, depth } : null
+  }
+  const exposedAt = (x: number, z: number): TerrainMaterial => {
+    const { column, row } = vertexOf(x, z)
+    return vertexMaterial(column, row)
+  }
+  const footAt = (x: number, z: number): number => {
+    if (!contains(x, z)) return heightAt(x, z)
+    return heightAt(x, z) - (exposedAt(x, z).footing?.sink ?? 0)
+  }
+  function walkFactorAt(x: number, z: number): number {
+    if (!contains(x, z)) return 1
+    const water = waterAt(x, z) ? profileList[profileIndex[vertexOf(x, z).index]!]!.water : null
+    return Math.min(water?.drag ?? 1, exposedAt(x, z).footing?.drag ?? 1)
+  }
+  function ripple(x: number, z: number, radius: number): void {
+    addDecal({ kind: 'ripple', x, z, radius, angle: 0, material: exposedAt(x, z).id })
+  }
+  function press(spec: { x: number; z: number; radius: number; angle?: number; kind?: 'print' | 'rut' }): boolean {
+    if (!contains(spec.x, spec.z)) return false
+    if (waterAt(spec.x, spec.z)) {
+      ripple(spec.x, spec.z, spec.radius * 2)
+      return true
+    }
+    const material = exposedAt(spec.x, spec.z)
+    if (!material.footing?.prints) return false
+    addDecal({ kind: spec.kind ?? 'print', x: spec.x, z: spec.z, radius: spec.radius, angle: spec.angle ?? 0, material: material.id })
+    return true
   }
 
   function vertexMaterial(column: number, row: number): TerrainMaterial {
@@ -278,6 +363,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       }
     }
     marks.removeInside(x, z, radius)
+    clearDecalsInside(x, z, radius)
     emitDeform(x, z, reach)
   }
 
@@ -309,9 +395,15 @@ export function createTerrain(options: TerrainOptions): Terrain {
     const { x, z } = spec
     const start = columnAt(x, z)
     const profile = profileMap.get(start.profile)!
+    const waterHere = waterAt(x, z)
+    const waterResult = waterHere ? { water: { liquid: waterHere.liquid, level: waterHere.level } } : {}
+    if (waterHere) ripple(x, z, Math.min(1.5, 0.15 + Math.cbrt(spec.energy) / 40))
     const removed: { material: string; volume: number }[] = []
     const point: [number, number, number] = [x, heightAt(x, z), z]
-    let energy = spec.energy
+    const startLayer = stratumAtDepth(profile, start.depth)
+    if (start.loose <= 0 && materials.get(startLayer.stratum.material)!.units) return strikeUnits(blow, spec, startLayer, profile, point)
+    const blowEnergy = spec.energy * (waterHere ? (profile.water?.blowShare[blow] ?? 1) : 1)
+    let energy = blowEnergy
     let depth = start.depth
     let radius = 0
     let carved = 0
@@ -371,7 +463,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     }
     let collapsed = loadBars(blow, spec.energy, x, z, profile)
     const crack = crackAround(blow, spec.energy, x, z, start.loose > 0 ? undefined : firstMaterial)
-    const extra = { ...(crack ? { crack } : {}), ...(breached ? { breached } : {}) }
+    const extra = { ...(crack ? { crack } : {}), ...(breached ? { breached } : {}), ...waterResult }
     if (radius <= 0) return { point, radius: 0, depth: 0, totalDepth: columnAt(x, z).depth, removed: [], exposed: start.material, atLimit: start.remaining <= 1e-6, rebarExposed: rebarShowing(profile, start.depth), collapsed, fine: true, ...extra }
 
     // a rigid floor cannot go down any more where it is already deep: the next blow breaks the edge of the hole, so a hole in a slab opens as it deepens
@@ -384,7 +476,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
       const rimShare = materials.get(removed[0]!.material)!.rimShare ?? 0
       stampBowl(x, z, radius, carved, volumeTotal * rimShare)
     }
-    let quota = budget.maxDebrisPerBlow
+    if (firstMaterial.cracks) addDecal({ kind: 'crack', x, z, radius: Math.max(CRACK_MIN_RADIUS, radius * firstMaterial.cracks), angle: random() * 6.283, material: firstMaterial.id })
+    // under water what comes off stays a cloud at the bottom, unless a blast opens the water
+    let quota = waterHere && blow !== 'explosive' ? 0 : budget.maxDebrisPerBlow
     for (const entry of removed) {
       const material = materials.get(entry.material)!
       const thrown = entry.volume * (1 - (fine ? 0 : (material.rimShare ?? 0)))
@@ -407,6 +501,75 @@ export function createTerrain(options: TerrainOptions): Terrain {
     if (blow === 'slash') return undefined
     const scale = Math.cbrt(energy / CRACK_REFERENCE_JOULES)
     return cracks.add({ x, z, reach: response.reach * scale, width: response.width * scale, material: material.id, seed: Math.floor(random() * 2 ** 31) }, budget.maxCracks)
+  }
+
+  /**
+   * A floor of separate pieces: a blow does not dig them, it shakes them. Each takes the energy that reaches it, added blow by blow, and past its limit it comes off the bed whole and is thrown.
+   * Under the limit the blow only chips it.
+   */
+  function strikeUnits(blow: TerrainBlow, spec: { x: number; z: number; energy: number; direction?: readonly number[]; contactRadius?: number }, layer: { stratum: TerrainStratum; top: number }, profile: TerrainProfile, point: [number, number, number]): TerrainBlowResult {
+    const { x, z, energy } = spec
+    const material = materials.get(layer.stratum.material)!
+    const units = material.units!
+    const response = material.hits[blow]
+    const bottom = layer.top + layer.stratum.thickness
+    const miss: TerrainBlowResult = { point, radius: 0, depth: 0, totalDepth: layer.top, removed: [], exposed: material.id, atLimit: false, rebarExposed: false, collapsed: false, fine: true }
+    if (!response || energy < (response.thresholdJoules ?? 0)) return miss
+    const reach = Math.max(spec.contactRadius ?? 0, response.minRadius ?? 0, Math.cbrt((2 * energy) / response.specificEnergy / (Math.PI * response.aspect)))
+    const rowFirst = Math.floor((z - reach) / units.width)
+    const rowLast = Math.floor((z + reach) / units.width)
+    let loosened = 0
+    for (let row = rowFirst; row <= rowLast; row++) {
+      const shift = Math.abs(row % 2) * cellSize
+      const unitFirst = Math.floor((x - reach - shift) / units.length)
+      const unitLast = Math.floor((x + reach - shift) / units.length)
+      for (let unit = unitFirst; unit <= unitLast; unit++) {
+        const minX = unit * units.length + shift
+        const minZ = row * units.width
+        const near = Math.hypot(Math.max(minX - x, 0, x - minX - units.length), Math.max(minZ - z, 0, z - minZ - units.width))
+        if (near > reach) continue
+        const key = `${unit}:${row}`
+        const taken = (unitDamage.get(key) ?? 0) + energy * (1 - (near / (reach + 1e-6)) ** 2)
+        unitDamage.set(key, taken)
+        if (taken >= units.looseJoules && liftUnit(minX, minZ, units, bottom, material, profile)) {
+          loosened++
+          const speed = Math.min(MAX_PIECE_SPEED[blow], Math.sqrt((2 * energy * THROW_SHARE) / Math.max(1, loosened * 15)))
+          const angle = random() * 6.283
+          debrisStore.throwPiece({ material: material.id, kind: 'blocks', radius: units.length / 2, position: [minX + units.length / 2, point[1] + 0.05, minZ + units.width / 2], velocity: [Math.cos(angle) * speed * 0.6, speed * (0.5 + random() * 0.5), Math.sin(angle) * speed * 0.6], spin: [(random() - 0.5) * 8, (random() - 0.5) * 8, (random() - 0.5) * 8] })
+        }
+      }
+    }
+    if (loosened === 0) {
+      // not enough to lift a piece: a chip off its face and a hairline
+      addDecal({ kind: 'crack', x, z, radius: Math.max(0.05, reach * 2), angle: random() * 6.283, material: material.id })
+      throwPieces({ x, y: point[1], z, volume: 1e-5, material: { ...material, debris: 'chips' }, energy, ...(spec.direction ? { direction: spec.direction } : {}), quota: 3, bowlRadius: 0.02, blow })
+      return { ...miss, radius: Math.max(0.02, Math.min(reach, 0.06)) }
+    }
+    emitDeform(x, z, reach + units.length)
+    clearDecalsInside(x, z, reach)
+    const volume = loosened * units.length * units.width * layer.stratum.thickness
+    const after = columnAt(x, z)
+    return { point, radius: reach, depth: layer.stratum.thickness, totalDepth: after.depth, removed: [{ material: material.id, volume }], exposed: after.material, atLimit: false, rebarExposed: false, collapsed: false, fine: false }
+  }
+
+  /** Takes one piece off its bed. False when it had already gone. */
+  function liftUnit(minX: number, minZ: number, units: { length: number; width: number }, bottom: number, material: TerrainMaterial, profile: TerrainProfile): boolean {
+    const column0 = clampIndex(Math.round((minX - x0) / cellSize), columns)
+    const column1 = clampIndex(Math.round((minX + units.length - x0) / cellSize), columns)
+    const row0 = clampIndex(Math.round((minZ - z0) / cellSize), rows)
+    const row1 = clampIndex(Math.round((minZ + units.width - z0) / cellSize), rows)
+    let lifted = false
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const index = row * stride + column
+        if (profileList[profileIndex[index]!]!.id !== profile.id || dug[index]! >= bottom) continue
+        if (materials.get(stratumAtDepth(profile, dug[index]!).stratum.material) !== material) continue
+        dug[index] = bottom
+        lifted = true
+        touchVertex(column, row)
+      }
+    }
+    return lifted
   }
 
   /**
@@ -495,24 +658,30 @@ export function createTerrain(options: TerrainOptions): Terrain {
     const column1 = clampIndex(Math.ceil((spec.x + spec.radius - x0) / cellSize), columns)
     const row0 = clampIndex(Math.floor((spec.z - spec.radius - z0) / cellSize), rows)
     const row1 = clampIndex(Math.ceil((spec.z + spec.radius - z0) / cellSize), rows)
+    let melted = false
     for (let row = row0; row <= row1; row++) {
       for (let column = column0; column <= column1; column++) {
         if (Math.hypot(x0 + column * cellSize - spec.x, z0 + row * cellSize - spec.z) > spec.radius) continue
-        burnVertex(column, row, spec.seconds)
+        // water does not catch: only what floats on it could burn
+        if (hasWater && base[row * stride + column]! < surface[row * stride + column]!) continue
+        melted = burnVertex(column, row, spec.seconds) || melted
       }
     }
+    if (melted) emitDeform(spec.x, spec.z, spec.radius)
   }
 
-  function burnVertex(column: number, row: number, seconds: number): void {
+  /** True when the flame took ground away, so that what stood there must look again. */
+  function burnVertex(column: number, row: number, seconds: number): boolean {
     const index = row * stride + column
     const material = vertexMaterial(column, row)
     const response = material.fire
-    if (!response) return
+    if (!response) return false
     const before = scorch[index]!
     scorch[index] = Math.max(before, Math.min(response.maxScorch, before + response.scorchPerSecond * seconds))
     if (response.burnsAway) removeFromVertex(index, response.burnsAway * seconds)
     if (scorch[index] !== before || response.burnsAway) touchVertex(column, row)
     if (response.flammable) ignite(x0 + column * cellSize, z0 + row * cellSize)
+    return (response.burnsAway ?? 0) > 0
   }
 
   const fireKey = (x: number, z: number): number => Math.floor((z - z0) / FIRE_CELL) * 65536 + Math.floor((x - x0) / FIRE_CELL)
@@ -588,7 +757,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
   /** A piece of soft ground joins the height where it stops, so that what is thrown out piles up and can be walked on. */
   function settle(piece: TerrainDebris): boolean {
     const material = materials.get(piece.material)
-    if (!material || material.reposeDegrees === undefined) return false
+    if (!material || material.reposeDegrees === undefined || material.scatters) return false
+    if (material.splats && contains(piece.position[0], piece.position[2]) && !waterAt(piece.position[0], piece.position[2])) addDecal({ kind: 'splat', x: piece.position[0], z: piece.position[2], radius: piece.radius * 2.6, angle: piece.id * 2.399, material: material.id })
     if (!contains(piece.position[0], piece.position[2])) return true
     const { index, column, row } = vertexOf(piece.position[0], piece.position[2])
     addToVertex(index, ((4 / 3) * Math.PI * piece.radius ** 3) / (cellSize * cellSize), false)
@@ -666,6 +836,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
     touched.fill(0)
     marks.clear()
     cracks.clear()
+    decalList.length = 0
+    decalsVersion++
+    unitDamage.clear()
     debrisStore.clear()
     sliding.clear()
     burning.clear()
@@ -703,6 +876,15 @@ export function createTerrain(options: TerrainOptions): Terrain {
       reset()
     },
     heightAt,
+    footAt,
+    walkFactorAt,
+    waterAt,
+    press,
+    ripple,
+    decals: () => decalList,
+    get decalsVersion() {
+      return decalsVersion
+    },
     vertexHeight,
     vertexMaterial,
     columnAt,
@@ -719,6 +901,14 @@ export function createTerrain(options: TerrainOptions): Terrain {
       debrisStore.update(dt, { heightAt, gravity, settle })
       updateSlides()
       updateFire(dt)
+      for (let i = decalList.length - 1; i >= 0; i--) {
+        const decal = decalList[i]!
+        decal.age += dt
+        if (decal.kind === 'ripple' && decal.age > RIPPLE_SECONDS) {
+          decalList.splice(i, 1)
+          decalsVersion++
+        }
+      }
     },
     get dirtyChunkCount() {
       return dirty.size
@@ -750,7 +940,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     stats: () => ({ marks: marks.list.length, debris: debrisStore.list.length, debrisMoving: debrisStore.list.filter((piece) => !piece.atRest).length, dirtyChunks: dirty.size, burning: burning.size }),
     reset,
     serialize(): TerrainSnapshot {
-      return { layout: currentLayout, dug: sparse(dug), loose: sparse(loose), scorch: sparse(scorch), barBend: sparse(barBend), marks: marks.list.map((mark) => ({ ...mark })), cracks: cracks.list.map((crack) => ({ ...crack })) }
+      return { layout: currentLayout, dug: sparse(dug), loose: sparse(loose), scorch: sparse(scorch), barBend: sparse(barBend), marks: marks.list.map((mark) => ({ ...mark })), cracks: cracks.list.map((crack) => ({ ...crack })), decals: decalList.filter((decal) => decal.kind !== 'ripple').map((decal) => ({ ...decal })) }
     },
     load(snapshot) {
       currentLayout = snapshot.layout
@@ -761,6 +951,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
       fillSparse(barBend, snapshot.barBend ?? [])
       marks.load(snapshot.marks)
       cracks.load(snapshot.cracks ?? [])
+      decalList.push(...(snapshot.decals ?? []).map((decal) => ({ ...decal })))
+      decalSerial = decalList.reduce((highest, decal) => Math.max(highest, decal.id), decalSerial)
       for (let chunkIndex = 0; chunkIndex < touched.length; chunkIndex++) markChunk(chunkIndex)
     },
   }

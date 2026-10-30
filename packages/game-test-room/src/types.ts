@@ -198,7 +198,7 @@ export interface TestRoomOptions {
    * renderer the room makes. Default off (the fixed look of `quality`).
    */
   graphics?: boolean | RoomGraphicsOptions
-  /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
+  /** What the floor is made of until an area is opened: the area lays its own (`TestableModule.ground`), or a concrete slab. Default a concrete slab. */
   ground?: GroundLayout
   /** Limits of the floor's marks, thrown pieces and redraws per frame. */
   terrainBudget?: Partial<TerrainBudget>

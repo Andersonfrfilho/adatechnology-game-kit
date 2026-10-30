@@ -282,13 +282,14 @@ function composeMushroom(context: Context, spec: MushroomSpec): void {
 function composeAfterEffects(context: Context): void {
   const { core, def, random, x, y, z } = context
   const mark = def.mark
-  if (mark.crater && mark.dent && y < 1.2) {
+  const keepsMarks = !core.marklessAt?.(x, z)
+  if (keepsMarks && mark.crater && mark.dent && y < 1.2) {
     core.emit({ type: 'crater', x, z, radius: mark.crater, depth: mark.dent })
     core.trace?.crater?.(x, z, mark.crater, mark.dent)
     addCrater(core.marks, core.ground, random, { x, z, radius: mark.crater, depth: mark.dent, marks: core.layers.mark })
     if (core.layers.shrapnel) composeRimDebris(context)
   }
-  if (mark.scorch && y < 1.2 && core.layers.mark) {
+  if (keepsMarks && mark.scorch && y < 1.2 && core.layers.mark) {
     core.trace?.scorch?.(x, z, mark.scorch)
     addScorch(core.marks, random, x, z, mark.scorch)
   }

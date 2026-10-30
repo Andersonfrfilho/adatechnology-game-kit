@@ -32,6 +32,8 @@ export interface PlayerOptions {
   crouchKeys?: readonly string[]
   /** Height of the ground the player walks on (a crater, a heap). Default flat at 0. */
   floorAt?: (x: number, z: number) => number
+  /** What is left of the walking speed here, 0..1 (mud, snow, water). */
+  speedAt?: (x: number, z: number) => number
   /** The feet leave the floor on a jump, or meet it again after a fall (`speed`: m/s downward at the touch). For the body's sounds. */
   /**
    * A body thrown by a knock hit something on its way (`obstacle`: a wall, a car, a cupboard, which stopped it) or the floor (`ground`, falling): `speed` m/s into it,
@@ -219,7 +221,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (outside(x, z)) return true
     for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
     if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
-    return o.footing ? o.footing(x, z, radius, y).blocked : false
+    return o.footing ? o.footing(x, z, radius, floorLevel + y).blocked : false
   }
   /** The widest body that fits where the player is, or null when not even the narrowest does: how deep something has come into the player. */
   const clearRadius = (): number | null => {
@@ -536,7 +538,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
-      const speed = crouched ? CROUCH_WALK : run ? RUN : WALK
+      const speed = (crouched ? CROUCH_WALK : run ? RUN : WALK) * (o.speedAt?.(px.x, px.z) ?? 1)
       const [walkX, walkZ] = walkKeys()
       if ((walkX || walkZ || keys.has('Space')) && eye !== EYE) eye = EYE
       if ((walkX || walkZ) && !walkHeld) move(walkX * speed * dt, walkZ * speed * dt)

@@ -56,6 +56,8 @@ export interface VfxOptions {
   readonly areaCap?: AreaCap | false
   /** Height of the ground for what bounces. Default: the `ground` field, else flat at 0. */
   readonly groundAt?: (x: number, z: number) => number
+  /** A surface that keeps no mark here (water): a blast over it leaves no crater, scorch or rim of rock. */
+  readonly marklessAt?: (x: number, z: number) => boolean
   /** A deformable ground the craters dig into (see `createGroundField`). */
   readonly ground?: GroundField
   readonly wind?: Vec3Like
@@ -250,6 +252,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     spawned: { puffs: 0, sparks: 0, chunks: 0, lights: 0 },
     clock: { time: 0, lastBlast: -1, lod: 1, forcedLod: null },
     groundAt,
+    ...(options.marklessAt ? { marklessAt: options.marklessAt } : {}),
     emit: (request) => options.onRequest?.(request),
   }
 

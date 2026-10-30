@@ -1054,5 +1054,124 @@
    "brittle"
   ],
   "compressive": 100000
- }
+ },
+  {
+    "id": "mud",
+    "density": 1700,
+    "hpPerKg": 1,
+    "penetration": 5,
+    "ductility": 0.8,
+    "fracture": "crumble",
+    "fragmentSize": [
+      0.02,
+      0.08
+    ],
+    "hitDebris": "dust",
+    "breakDebris": "dust",
+    "thermal": {
+      "conductivity": 0.5,
+      "heatCapacity": 3.2
+    },
+    "tags": [
+      "soil",
+      "wet"
+    ],
+    "compressive": 5000
+  },
+  {
+    "id": "clay",
+    "density": 1800,
+    "hpPerKg": 5,
+    "penetration": 7,
+    "ductility": 0.05,
+    "fracture": "crumble",
+    "fragmentSize": [
+      0.02,
+      0.1
+    ],
+    "hitDebris": "chips",
+    "breakDebris": "dust",
+    "thermal": {
+      "conductivity": 0.15,
+      "heatCapacity": 2.2
+    },
+    "tags": [
+      "soil",
+      "brittle"
+    ],
+    "compressive": 60000
+  },
+  {
+    "id": "snow",
+    "density": 300,
+    "hpPerKg": 1,
+    "penetration": 3,
+    "ductility": 0.6,
+    "fracture": "crumble",
+    "fragmentSize": [
+      0.01,
+      0.05
+    ],
+    "hitDebris": "dust",
+    "breakDebris": "dust",
+    "thermal": {
+      "conductivity": 0.1,
+      "heatCapacity": 2.1
+    },
+    "tags": [
+      "soil",
+      "frozen"
+    ],
+    "compressive": 1000
+  },
+  {
+    "id": "cobble",
+    "density": 2650,
+    "hpPerKg": 25,
+    "penetration": 25,
+    "penetrationClass": "concrete",
+    "penetrationScale": 0.9,
+    "ductility": 0.03,
+    "fracture": "crumble",
+    "fragmentSize": [
+      0.05,
+      0.15
+    ],
+    "hitDebris": "chips",
+    "breakDebris": "chips",
+    "thermal": {
+      "conductivity": 0.2,
+      "heatCapacity": 2.5
+    },
+    "tags": [
+      "masonry",
+      "brittle"
+    ],
+    "compressive": 300000
+  },
+  {
+    "id": "paver",
+    "density": 2300,
+    "hpPerKg": 14,
+    "penetration": 18,
+    "penetrationClass": "concrete",
+    "penetrationScale": 1,
+    "ductility": 0.03,
+    "fracture": "crumble",
+    "fragmentSize": [
+      0.04,
+      0.12
+    ],
+    "hitDebris": "chips",
+    "breakDebris": "chips",
+    "thermal": {
+      "conductivity": 0.15,
+      "heatCapacity": 2.5
+    },
+    "tags": [
+      "masonry",
+      "brittle"
+    ],
+    "compressive": 350000
+  }
 ]

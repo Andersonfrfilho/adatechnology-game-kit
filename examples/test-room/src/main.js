@@ -23,6 +23,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { blastFireSampleBank } from '@adatechnology/game-destruction-three'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
+import { terrainLotsGround } from '@adatechnology/game-terrain-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
@@ -79,6 +80,8 @@ const room = createTestRoom({
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   strikeCombo: PUNCH_COMBO,
   strikeComboOn: params.get('combo') === '1',
+  // the default page has every ground to try, in lots before the wall; a page that asked for something in particular has the plain floor its tests expect
+  ...(deferred && !params.get('area') && !items && !params.get('scenario') && !params.get('scene') ? { ground: terrainLotsGround(locale) } : {}),
   quality,
   // the default page calibrates once the teams' content is in (start() below), so the 3 s measure the room and not the loading
   graphics: params.get('graphics') === '1' || (params.get('graphics') !== '0' && !navigator.webdriver) ? { calibrate: deferred ? 'manual' : 'idle' } : false,

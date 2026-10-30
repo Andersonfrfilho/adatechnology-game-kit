@@ -2,7 +2,9 @@ import type * as THREE_NS from 'three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Terrain, TerrainChunk } from '@adatechnology/game-terrain'
 import { buildChunkGeometry, buildPristineGeometry, chunkVertexCount } from './chunk-geometry'
+import { createDecalLayers } from './decal-layers'
 import { createCrackLayer, createDebrisLayer, createMarkLayer } from './layers'
+import { createZoneLayer } from './zone-layer'
 import { buildRebarGeometry } from './rebar'
 import { createSurfaceMaterial } from './surface-material'
 
@@ -59,7 +61,9 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
   const marks = createMarkLayer(THREE, terrain, options.markDistance ?? DEFAULT_MARK_DISTANCE)
   const debris = createDebrisLayer(THREE, terrain)
   const cracks = createCrackLayer(THREE, terrain)
-  group.add(marks.mesh, cracks.mesh, debris.mesh)
+  const decals = createDecalLayers(THREE, terrain)
+  const zones = createZoneLayer(THREE, terrain)
+  group.add(marks.mesh, cracks.mesh, debris.mesh, decals.group, zones.group)
   let pristineStale = true
   let pristineBuilt = false
   let pristineCount = 0
@@ -180,6 +184,8 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
       marks.sync(camera)
       cracks.sync()
       debris.sync()
+      decals.sync()
+      zones.sync()
     },
     stats: () => ({ chunkMeshes: drawn.size, pristineChunks: pristineCount, marksDrawn: marks.mesh.count, debrisDrawn: debris.mesh.count, crackQuads: cracks.mesh.geometry.drawRange.count / 6 }),
     dispose() {
@@ -191,6 +197,8 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
       marks.dispose()
       cracks.dispose()
       debris.dispose()
+      decals.dispose()
+      zones.dispose()
       group.removeFromParent()
     },
   }

@@ -17,7 +17,7 @@ export interface TerrainBlowResponse {
   readonly minRadius?: number
 }
 
-export type TerrainDebrisKind = 'clods' | 'chips' | 'shards' | 'splinters' | 'dust'
+export type TerrainDebrisKind = 'clods' | 'chips' | 'shards' | 'splinters' | 'dust' | 'blocks'
 
 /** How a material of the destruction catalogue behaves as ground. `id` is the catalogue's. */
 export interface TerrainMaterial {
@@ -37,6 +37,18 @@ export interface TerrainMaterial {
   readonly crack?: TerrainCrackResponse
   /** A rigid layer a contact charge breaks right through once it has enough for the whole thickness (the scabbing of a slab): `explosive` only. */
   readonly breach?: TerrainBreachResponse
+  /** What a foot does on it. */
+  readonly footing?: TerrainFooting
+  /** Liquid (of the fluids catalogue) a blow on it throws up. */
+  readonly splash?: string
+  /** Its pieces do not join the ground where they land: they stay as loose stones. */
+  readonly scatters?: boolean
+  /** Its pieces leave a splat on whatever they land on. */
+  readonly splats?: boolean
+  /** A brittle crust: each blow runs cracks this many bowl radii around it. */
+  readonly cracks?: number
+  /** Laid in separate pieces on a bed: a blow loosens whole pieces instead of digging a bowl. */
+  readonly units?: TerrainUnits
 }
 
 export interface TerrainCrackResponse {
@@ -55,6 +67,24 @@ export interface TerrainBreachResponse {
   readonly radiusOverThickness: number
 }
 
+export interface TerrainFooting {
+  /** Metres the foot goes in. */
+  readonly sink: number
+  /** What is left of the walking speed, 0..1. */
+  readonly drag: number
+  /** Keeps the print of what presses it. */
+  readonly prints?: boolean
+}
+
+export interface TerrainUnits {
+  /** Metres along x, in rows that shift every other one. Multiples of the cell keep the hole sharp. */
+  readonly length: number
+  /** Metres along z. */
+  readonly width: number
+  /** Joules a piece takes, added blow by blow, before it comes off its bed. */
+  readonly looseJoules: number
+}
+
 export interface TerrainFireResponse {
   /** How black it gets, 0..1: concrete only soots, wood and turf char through. */
   readonly maxScorch: number
@@ -66,7 +96,7 @@ export interface TerrainFireResponse {
   readonly flammable?: boolean
 }
 
-export const TERRAIN_PATTERNS = ['plain', 'grass', 'soil', 'sand', 'asphalt', 'concrete', 'tile', 'planks', 'stone'] as const
+export const TERRAIN_PATTERNS = ['plain', 'grass', 'soil', 'sand', 'asphalt', 'concrete', 'tile', 'planks', 'stone', 'mud', 'gravel', 'clay', 'snow', 'cobble', 'paver'] as const
 export type TerrainPattern = (typeof TERRAIN_PATTERNS)[number]
 
 /** One layer of a column, from the top down. */
@@ -92,6 +122,19 @@ export interface TerrainProfile {
   readonly strata: readonly TerrainStratum[]
   /** A slab with nothing under it: where its bars give way the floor opens, and the ground is this many metres further down (the floor below). Without it the ground under the slab holds it up. */
   readonly drop?: number
+  /** Water standing over the column: the strata are its bed. */
+  readonly water?: TerrainWater
+}
+
+export interface TerrainWater {
+  /** A liquid of the fluids catalogue. */
+  readonly liquid: string
+  /** Metres from the surface to the bed. */
+  readonly depth: number
+  /** What is left of the walking speed, 0..1. */
+  readonly drag: number
+  /** Share of a blow that reaches the bed. */
+  readonly blowShare: Partial<Record<TerrainBlow, number>>
 }
 
 export interface TerrainBudget {
@@ -110,6 +153,8 @@ export interface TerrainBudget {
   readonly maxBurningCells: number
   /** Stars of cracks kept; past it the oldest goes. */
   readonly maxCracks: number
+  /** Cracks, prints, ruts, splats and ripples at once; past it the oldest goes. */
+  readonly maxDecals: number
 }
 
 export interface TerrainOptions {
@@ -147,6 +192,23 @@ export interface TerrainMark {
   count: number
   /** Order of creation: the oldest is the one recycled. */
   born: number
+}
+
+export type TerrainDecalKind = 'crack' | 'print' | 'rut' | 'splat' | 'ripple'
+
+/** A mark with no depth of its own: drawn over the surface, it changes nothing that stands there. */
+export interface TerrainDecal {
+  readonly id: number
+  readonly kind: TerrainDecalKind
+  readonly x: number
+  readonly z: number
+  readonly radius: number
+  /** Radians around y. */
+  readonly angle: number
+  /** The material whose colour it takes. */
+  readonly material: string
+  /** Seconds it has been there; a ripple fades with it. */
+  age: number
 }
 
 export interface TerrainDebris {
@@ -204,6 +266,15 @@ export interface TerrainBlowResult {
   readonly crack?: TerrainCrack
   /** A contact charge broke the rigid layer right through (`TerrainMaterial.breach`). */
   readonly breached?: boolean
+  /** The water the blow crossed: `level` is where the splash goes up. */
+  readonly water?: { readonly liquid: string; readonly level: number }
+}
+
+/** The water standing at a point. */
+export interface TerrainWaterHere {
+  readonly liquid: string
+  readonly level: number
+  readonly depth: number
 }
 
 export interface TerrainRegion {
@@ -283,6 +354,19 @@ export interface Terrain {
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */
   applyHit(hit: Hit): TerrainBlowResult | null
+  /** Height a foot stands at: the ground less what it sinks in. */
+  footAt(x: number, z: number): number
+  /** What is left of the walking speed here, 0..1. */
+  walkFactorAt(x: number, z: number): number
+  /** The water standing here, or null. */
+  waterAt(x: number, z: number): TerrainWaterHere | null
+  /** A foot or a wheel on the ground: it leaves its print where the ground keeps one, a ripple in water. False where it leaves nothing. */
+  press(spec: { x: number; z: number; radius: number; angle?: number; kind?: 'print' | 'rut' }): boolean
+  /** Rings on the water at (x, z). */
+  ripple(x: number, z: number, radius: number): void
+  decals(): readonly TerrainDecal[]
+  /** Goes up when the decals change. */
+  readonly decalsVersion: number
   /** Follow the ground changing: `region` is the disc it changed in. What rests there has lost its support and must look again. Returns the unsubscribe function. */
   onDeform(listener: (region: TerrainRegion) => void): () => void
   /** Moves the pieces, the sliding ground and the fire. */
@@ -316,4 +400,5 @@ export interface TerrainSnapshot {
   readonly barBend?: readonly (readonly [number, number])[]
   readonly marks: readonly TerrainMark[]
   readonly cracks?: readonly TerrainCrack[]
+  readonly decals?: readonly TerrainDecal[]
 }

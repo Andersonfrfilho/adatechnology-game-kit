@@ -41,9 +41,51 @@ vec3 terrainSurface(vec3 base, vec2 xz, float kind) {
     float grain = tsNoise(vec2(along * 3.0, xz.y * 70.0)) * 0.6 + tsNoise(vec2(along * 11.0, xz.y * 180.0)) * 0.4;
     return base * (0.72 + 0.56 * tsHash(vec2(row, floor(along / 2.4)))) * (0.75 + 0.5 * grain) * (1.0 - 0.75 * seam);
   }
-  vec2 cell = floor(xz / 0.22);
-  float seams = max(tsLine(xz.x, 0.22, 0.012), tsLine(xz.y, 0.22, 0.012));
-  return base * (0.7 + 0.6 * tsHash(cell)) * (0.85 + 0.3 * tsFbm(xz * 16.0)) * (1.0 - 0.55 * seams);
+  if (k < 8.5) {
+    vec2 cell = floor(xz / 0.22);
+    float seams = max(tsLine(xz.x, 0.22, 0.012), tsLine(xz.y, 0.22, 0.012));
+    return base * (0.7 + 0.6 * tsHash(cell)) * (0.85 + 0.3 * tsFbm(xz * 16.0)) * (1.0 - 0.55 * seams);
+  }
+  if (k < 9.5) {
+    float wet = smoothstep(0.42, 0.62, tsFbm(xz * 2.6));
+    return base * (0.65 + 0.7 * tsFbm(xz * 11.0)) * mix(1.25, 0.55, wet);
+  }
+  if (k < 10.5) {
+    vec2 grid = xz / 0.045;
+    vec2 cell = floor(grid);
+    vec2 inside = fract(grid) - 0.5 + (vec2(tsHash(cell), tsHash(cell + 9.0)) - 0.5) * 0.5;
+    float stone = 1.0 - smoothstep(0.22, 0.5, length(inside));
+    return base * (0.45 + 1.15 * tsHash(cell + 4.0)) * (0.35 + 0.85 * stone);
+  }
+  if (k < 11.5) {
+    vec2 p = xz / 0.45 + (vec2(tsNoise(xz * 3.0), tsNoise(xz * 3.0 + 5.0)) - 0.5) * 0.7;
+    vec2 cell = floor(p);
+    float nearest = 8.0;
+    float second = 8.0;
+    for (int j = -1; j <= 1; j++) {
+      for (int i = -1; i <= 1; i++) {
+        vec2 other = cell + vec2(float(i), float(j));
+        vec2 at = other + vec2(tsHash(other), tsHash(other + 3.0));
+        float d = length(at - p);
+        if (d < nearest) { second = nearest; nearest = d; } else if (d < second) second = d;
+      }
+    }
+    float crack = 1.0 - smoothstep(0.0, 0.06, second - nearest);
+    return base * (0.82 + 0.3 * tsFbm(xz * 9.0)) * (1.0 - 0.78 * crack);
+  }
+  if (k < 12.5) return min(base * (0.97 + 0.08 * tsFbm(xz * 1.8)) + 0.05 * tsNoise(xz * 140.0), vec3(1.0));
+  if (k < 13.5) {
+    float row = floor(xz.y / 0.2);
+    float along = xz.x - mod(abs(row), 2.0) * 0.1;
+    vec2 cell = vec2(floor(along / 0.3), row);
+    float seam = max(tsLine(xz.y, 0.2, 0.014), tsLine(along, 0.3, 0.014));
+    return base * (0.72 + 0.6 * tsHash(cell)) * (0.82 + 0.36 * tsFbm(xz * 22.0)) * (1.0 - 0.8 * seam);
+  }
+  float row = floor(xz.y / 0.2);
+  float along = xz.x - mod(abs(row), 2.0) * 0.1;
+  vec2 cell = vec2(floor(along / 0.2), row);
+  float seam = max(tsLine(xz.y, 0.2, 0.008), tsLine(along, 0.2, 0.008));
+  return base * (0.86 + 0.26 * tsHash(cell)) * (0.92 + 0.16 * tsNoise(xz * 70.0)) * (1.0 - 0.7 * seam);
 }
 `
 
