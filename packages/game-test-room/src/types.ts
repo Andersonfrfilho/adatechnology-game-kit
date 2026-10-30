@@ -220,6 +220,10 @@ export interface TestRoomOptions {
   strikeClips?: Readonly<Record<string, string>>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
+  /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
+  kickHeights?: readonly number[]
+  /** Keys (`KeyboardEvent.code`) that kick with the arsenal's `kick` tool, whatever tool is in hand; default `['KeyK']` (Shift+V kicks too). */
+  kick?: { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
@@ -356,6 +360,8 @@ export interface TestRoom {
   setStrikeCombo(on: boolean): void
   /** Whether the strike combo is on; null when the room has none. */
   readonly strikeCombo: boolean | null
+  /** Kick with the arsenal's `kick` tool, whatever tool is in hand (K, Shift+V and the kick button do the same); false when there is none or it is not ready yet. */
+  kick(): boolean
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
   /**

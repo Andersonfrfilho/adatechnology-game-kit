@@ -86,6 +86,7 @@ export interface UiOptions {
   onTap: () => void
   /** The combo button: its label (the combo's name) and what it toggles; absent when the room has no combo. */
   combo?: { label: string; onToggle: () => void }
+  kick?: { label: string; onKick: () => void }
   onBlast: (key: 'shelter' | 'fragmentHits' | 'confinement') => void
   onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
@@ -462,6 +463,7 @@ export function createUi(o: UiOptions): RoomUi {
   })
   const tapBtn = ctl(t('ui.tap'), () => o.onTap())
   const comboBtn = o.combo ? ctl(`${o.combo.label} (N)`, () => o.combo!.onToggle()) : null
+  if (o.kick) ctl(o.kick.label, () => o.kick!.onKick())
   const fullscreenBtn = ctl(t('ui.fullscreen'), () => void toggleFullscreen())
   fullscreenBtn.title = t('ui.fullscreen.hint')
   const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))

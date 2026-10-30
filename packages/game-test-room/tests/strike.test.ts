@@ -137,6 +137,52 @@ describe('strikes wait for the impact of the clip', () => {
     expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['shove', 'kick'])
   })
 
+  it('K kicks with any tool in hand, as Shift+V and room.kick() do, and the kick waits for its own cooldown', () => {
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    room.setTool('fists')
+    wait(room, 0.5)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyK' }))
+    expect(avatar.struck).toEqual(['front_kick'])
+    expect(room.tool.def.id).toBe('fists')
+    expect(room.kick()).toBe(false) // the first one is still on its way
+    wait(room, 1.2)
+    expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['kick'])
+    expect(room.kick()).toBe(true)
+    expect(avatar.struck).toEqual(['front_kick', 'front_kick'])
+  })
+
+  it('the kick lands from the foot: it finds a chair low in front while the eye looks over it', () => {
+    const room = makeRoom()
+    room.setAvatar(fakeAvatar())
+    room.spawn('chair', [0, 0, -4], 0)
+    room.update(0.4)
+    aimAt(room, [0, 1.7, -3.15], [0, 2.4, -6])
+    wait(room, 0.5)
+    room.kick()
+    wait(room, 0.6)
+    const hits = room.log.entries({ type: 'melee' })
+    expect(hits).toHaveLength(1)
+    expect(hits[0]!.objectId).toBe(room.spawned()[0]!.objectId)
+    expect(hits[0]!.data?.energyJ).toBe(250)
+    // a punch from the same place goes over it
+    room.setTool('fists')
+    wait(room, 0.5)
+    room.use()
+    wait(room, 0.5)
+    expect(room.log.entries({ type: 'melee' })[1]!.objectId).toBeUndefined()
+  })
+
+  it('the kick keys are an option', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom({ kick: { keys: ['KeyJ'] } })
+    room.setAvatar(avatar)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyK' }))
+    expect(avatar.struck).toEqual([])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ' }))
+    expect(avatar.struck).toEqual(['front_kick'])
+  })
+
   const kicks = (kickLeg?: 'alternate' | 'left' | 'right', count = 3) => {
     const avatar = fakeAvatar()
     const room = makeRoom(kickLeg ? { kickLeg } : {})
