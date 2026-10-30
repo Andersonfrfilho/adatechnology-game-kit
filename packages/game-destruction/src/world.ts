@@ -1412,8 +1412,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     setStage(o, p, 1, {}, src)
   }
 
-  const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string) =>
-    emit({ ...base(o, src), type: 'debris', part: p.spec.id, kind, point, normal, count, speed })
+  const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string, material?: MaterialId) =>
+    emit({ ...base(o, src), type: 'debris', part: p.spec.id, kind, point, normal, count, speed, ...(material && material !== p.spec.material ? { material } : {}) })
 
   const holeRate = (hole: Hole, pressurized: boolean) => (pressurized ? 0.5 : 0.1) * (hole.diameter / 0.009)
 
@@ -1528,7 +1528,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (spalls.length > MAX_SPALLS) spalls.shift()
     markDamaged(p)
     emit({ ...base(o, src), type: 'spall', part: p.spec.id, layer: layer.index, point: wp, area: Math.PI * radius * radius })
-    debris(o, p, layer.mat.hitDebris, wp, normal, 5, 2, src)
+    debris(o, p, layer.mat.hitDebris, wp, normal, 5, 2, src, layer.mat.id)
     setStage(o, p, 1, {}, src)
   }
 

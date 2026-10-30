@@ -396,6 +396,7 @@
   },
   "hitDebris": "chips",
   "breakDebris": "dust",
+  "visual": { "innerColor": 10197652 },
   "thermal": {
    "conductivity": 0.15,
    "heatCapacity": 2.5
@@ -426,6 +427,7 @@
   ],
   "hitDebris": "chips",
   "breakDebris": "dust",
+  "visual": { "innerColor": 12085567 },
   "thermal": {
    "conductivity": 0.15,
    "heatCapacity": 2.5
@@ -456,6 +458,7 @@
   ],
   "hitDebris": "dust",
   "breakDebris": "dust",
+  "visual": { "innerColor": 14999507 },
   "thermal": {
    "conductivity": 0.1,
    "heatCapacity": 1.5
@@ -481,6 +484,7 @@
   ],
   "hitDebris": "chips",
   "breakDebris": "dust",
+  "visual": { "innerColor": 9407364 },
   "thermal": {
    "conductivity": 0.2,
    "heatCapacity": 2.5

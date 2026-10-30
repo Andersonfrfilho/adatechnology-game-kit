@@ -549,7 +549,7 @@ class Renderer implements DestructionRenderer {
         break
       }
       case 'debris':
-        this.vfx.burst(ev.kind, ev.point, ev.normal, ev.count, ev.speed > 0 ? ev.speed : DEFAULT_SPEED[ev.kind] ?? 1, this.debrisOptions(ev.kind, ev.object, ev.part))
+        this.vfx.burst(ev.kind, ev.point, ev.normal, ev.count, ev.speed > 0 ? ev.speed : DEFAULT_SPEED[ev.kind] ?? 1, this.debrisOptions(ev.kind, ev.object, ev.part, ev.material))
         break
       case 'fracture':
         this.onFracture(ev)
@@ -730,10 +730,12 @@ class Renderer implements DestructionRenderer {
     return def ? fallbackColor(def.id, def) : null
   }
 
-  private debrisOptions(kind: DebrisKind, objectId: string, partId: string): { color?: number } | undefined {
+  private debrisOptions(kind: DebrisKind, objectId: string, partId: string, material?: string): { color?: number } | undefined {
     const pv = this.partVis(objectId, partId)
-    const def = pv ? this.world.materials.get(pv.material) : undefined
+    const def = this.world.materials.get(material ?? pv?.material ?? '')
     if (kind === 'smoke') return { color: SMOKE_TONES[def?.thermal.smoke ?? 'grey'] }
+    // crushed masonry is the colour of its inside (brick orange, plaster light, concrete grey), not of the paint over it
+    if ((kind === 'dust' || kind === 'chips') && def?.visual?.innerColor !== undefined) return { color: def.visual.innerColor }
     if (kind === 'fibers' || kind === 'leaves') {
       if (def?.visual?.innerColor !== undefined) return { color: def.visual.innerColor }
       const c = pv ? this.visuals.baseColorHex(pv.meshes[0] ?? ({} as never)) : -1
@@ -850,8 +852,12 @@ class Renderer implements DestructionRenderer {
     const mv = this.nearestMesh(pv, wp)
     if (!mv) return
     const def = this.world.materials.get(pv.material)
-    this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
-    this.visuals.addSpall(mv, wp, this.faceNormal(mv, wp), Math.sqrt(ev.area / Math.PI), fallbackColor(pv.material, def))
+    const normal = this.faceNormal(mv, wp)
+    const core = def?.visual?.innerColor
+    // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
+    if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
+    else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
+    this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
   }
 
   /**
