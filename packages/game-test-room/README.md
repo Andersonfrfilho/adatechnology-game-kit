@@ -181,6 +181,7 @@ when a body (the player, an object of the room) crosses it; whatever was already
 | E | grab / drop |
 | R | rotate the held item |
 | Right button or G | throw |
+| K | kick with the `kick` tool whatever is in hand (`kick.keys`, default `['KeyK']`; also the Kick button and `room.kick()`); a 250 J blunt blow, ten times the punch, that lands from the leg (`kickHeights`, every 10 cm from 0.25 to 0.85 m above the feet, level) on what stands low in front, else where the eye aims |
 | F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item); otherwise V toggles 1st/3rd person when a body is set (`setAvatar`), and kicks when there is none (Shift+V kicks with a body too; the `kick` tool whatever is selected) |
 | Tab | show / hide the panels |
 
@@ -237,7 +238,7 @@ automáticos conferem o resultado e gravam aprovado/reprovado no mesmo registro.
 Um módulo que declara controles, camadas ou contadores ganha um painel de bancada genérico; o estado vai para a URL do exemplo (`?bench.<idDoMódulo>=`) e
 `room.bench()` / `room.metrics()` dirigem e leem a bancada por script.
 
-Corpo do jogador: `room.setAvatar(corpo)` põe um corpo (qualquer objeto no formato `RoomAvatar`) nos pés do jogador; `room.setCameraMode('first' | 'third')` e a tecla V alternam entre 1ª e 3ª pessoa (câmera sobre o ombro com os números do jogo da equipe, puxada para perto de paredes). `room.setAvatarState({ crouch, down })` deixa um módulo de jogador agachar e derrubar o corpo. Com corpo, V alterna a câmera e Shift+V chuta. Em primeira pessoa o corpo pode trazer braços e mãos (`avatar.firstPerson`) que seguram a arma onde o módulo manda (`host.setHandTargets`): mão direita no punho, esquerda no guarda-mão, as duas na pistola, esquerda ao carregador na recarga; sem nada na mão ficam relaxadas, e `fists` levanta os punhos. Soco, empurrão e chute tocam o clipe (`avatar.strike`, opção `strikeClips`) e o efeito só acontece no instante do impacto, não no clique; um golpe pendente bloqueia a mesma ferramenta.
+Corpo do jogador: `room.setAvatar(corpo)` põe um corpo (qualquer objeto no formato `RoomAvatar`) nos pés do jogador; `room.setCameraMode('first' | 'third')` e a tecla V alternam entre 1ª e 3ª pessoa (câmera sobre o ombro com os números do jogo da equipe, puxada para perto de paredes). `room.setAvatarState({ crouch, down })` deixa um módulo de jogador agachar e derrubar o corpo. Com corpo, V alterna a câmera; K (ou Shift+V, o botão Chute e `room.kick()`) chuta com qualquer ferramenta na mão. Em primeira pessoa o corpo pode trazer braços e mãos (`avatar.firstPerson`) que seguram a arma onde o módulo manda (`host.setHandTargets`): mão direita no punho, esquerda no guarda-mão, as duas na pistola, esquerda ao carregador na recarga; sem nada na mão ficam relaxadas, e `fists` levanta os punhos. Soco, empurrão e chute tocam o clipe (`avatar.strike`, opção `strikeClips`) e o efeito só acontece no instante do impacto, não no clique; um golpe pendente bloqueia a mesma ferramenta.
 
 ## Known limitations
 
