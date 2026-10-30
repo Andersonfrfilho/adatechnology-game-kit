@@ -303,3 +303,31 @@ describe('blockers', () => {
     room.dispose()
   })
 })
+
+describe('scenery objects of a module', () => {
+  it('a module puts a catalogue item in the world: it stays through clears and hard resets, takes hits and goes when removed', async () => {
+    const room = makeRoom()
+    let host: ModuleHost | undefined
+    room.loadModule(benchModule((h) => { host = h }))
+    expect(host?.addObject?.('no_such_item', { position: [0, 0, 0] })).toBeNull()
+    const placed = host?.addObject?.('bench', { position: [2, 0, -3], rotationY: Math.PI / 2 })
+    expect(placed).toBeTruthy()
+    const id = placed!.objectId
+    expect(room.world.has(id)).toBe(true)
+    expect((placed!.root as THREE.Object3D).parent).toBe(room.scene)
+    room.clear()
+    expect(room.world.has(id)).toBe(true)
+    // the scenarios start from the seeded room without it, and it comes back after them
+    let during: boolean | undefined
+    await room.runScenarios([{ id: 'probe', name: 'probe', run: ({ expect: check }: ScenarioContext) => { during = room.world.has(id); check(true, 'ran') } }] as never)
+    expect(during).toBe(false)
+    expect(room.world.has(id)).toBe(true)
+    const hits = room.world.shoot([2, 0.5, 2], [0, 0, -1], 500, 9, 'test')
+    expect(hits.some((h) => h.object === id)).toBe(true)
+    placed!.remove()
+    expect(room.world.has(id)).toBe(false)
+    room.clear()
+    expect(room.world.has(id)).toBe(false)
+  })
+})
+

@@ -247,6 +247,12 @@ export interface ModuleHost {
    */
   addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
   /**
+   * Puts an item of the host's catalogue (from any loaded module, by its id) in the world as part of the scenery: it stays through the clears and the openings of areas, and shots, blows, blasts
+   * and fire hit it like any item (a module's lamp rig standing on a real car of the fleet). Scenarios that start from a seeded world run without it, and it comes back after them. `rotationY` turns it about the vertical axis. Returns null while no loaded module has the item; `remove`
+   * takes it away. A host without a catalogue leaves it out.
+   */
+  addObject?(itemId: string, place: { readonly position: Vec3; readonly rotationY?: number }): { readonly objectId: string; readonly root: unknown; remove(): void } | null
+  /**
    * Lends the host the place of the hands for the tool in the module's hands (a weapon's grip and handguard): the host that draws the player's arms reads `source` every frame, after the
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */

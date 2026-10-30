@@ -136,7 +136,7 @@ function loadSteps(room, options, lang) {
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang) }) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture

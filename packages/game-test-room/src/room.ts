@@ -545,6 +545,47 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return holder
   }
 
+  /** The items modules put in the world as scenery (`ModuleHost.addObject`): kept through `clear`; the scenarios run without them (each starts from the seeded room) and they come back after. */
+  const sceneryObjects = new Map<string, { item: TestRoomItem; position: Vec3; rotationY: number }>()
+  const placeScenery = (objectId: string, item: TestRoomItem, position: Vec3, rotationY: number): Entry => {
+    const root = buildRoot(item)
+    root.position.set(position[0], position[1], position[2])
+    root.rotation.y = rotationY
+    root.name = item.id
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    const own = item.impl?.(root, objectId)
+    const { spec, parts } = own ? { spec: structuredCloneSpec(own.describe()), parts: undefined } : resolveSpec(item, root)
+    root.updateMatrixWorld(true)
+    const q = root.getWorldQuaternion(tmpQ)
+    if (own) world.register(own, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    else world.add(spec, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, true, false)
+    fire('spawn', e.so)
+    return e
+  }
+  const restoreScenery = (): void => {
+    for (const [objectId, o] of sceneryObjects) if (!entries.has(objectId)) placeScenery(objectId, o.item, o.position, o.rotationY)
+  }
+  const addScenery = (itemId: string, position: Vec3, rotationY = 0): { objectId: string; root: unknown; remove(): void } | null => {
+    const item = catalogMap.get(itemId)
+    if (!item) return null
+    const objectId = `${item.id}_scenery_${sceneryObjects.size + 1}`
+    sceneryObjects.set(objectId, { item, position: [position[0], position[1], position[2]], rotationY })
+    const e = placeScenery(objectId, item, position, rotationY)
+    action('spawn', t('act.spawn', { name: item.name, x: num(position[0], 1), z: num(position[2], 1) }), { objectId, itemId: item.id, data: { position, movable: false, scenery: true } })
+    return {
+      objectId,
+      get root() {
+        return entries.get(objectId)?.so.root ?? e.so.root
+      },
+      remove() {
+        sceneryObjects.delete(objectId)
+        removeEntry(objectId)
+      },
+    }
+  }
+
   const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
@@ -2382,6 +2423,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
     },
+    addObject(itemId, place) {
+      return addScenery(itemId, place.position, place.rotationY)
+    },
   }
   let sendingInitial = false
   const lendBench = (store: BenchStore): ModuleBench => ({
@@ -2589,6 +2633,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     } finally {
       scenarioRunning = false
       paused = wasPaused
+      restoreScenery()
     }
     return report
   }
