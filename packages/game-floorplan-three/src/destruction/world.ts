@@ -61,6 +61,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
               const c = bodies.get(e.part); if (c) { for (const b of c) { b.mesh.removeFromParent(); b.mesh.geometry.dispose(); } bodies.delete(e.part); } else D.hide(e.part);
               fragments(e); break; }
             case 'stage': breach.stage(e); break;
+            case 'chip': breach.chip(e); break;
             case 'collapse': for (const id of e.parts) { breach.drop(id); if (!R && structure.meshesOf(id).length) D.dropPiece(id); } break;
             case 'leak': if (e.part === 'water_tank') { flow += e.rate; if (water.leak) water.leak(flow); } break;
             default: break;
@@ -85,6 +86,22 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
         D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; };
+        // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
+        // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
+        D.follow = (world, id, spec) => {
+          D.spec = spec;
+          const offFollow = world.on('*', e => {
+            if (e.object !== id) return;
+            switch (e.type) {
+              case 'stage': breach.stage(e); break;
+              case 'chip': breach.chip(e); break;
+              case 'fracture': breach.drop(e.part); break;
+              case 'collapse': for (const p of e.parts) breach.drop(p); break;
+              default: break;
+            }
+          });
+          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); } };
+        };
         D.piece = id => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);
         D.reset = () => { if (D.active) D.world.reset(D.id); D.restore(); };

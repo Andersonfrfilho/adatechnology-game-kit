@@ -55,7 +55,15 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return null
     }
 
-    function courses(part: any, units: any, opening: { center: number[]; radius: number }, paint: number | null) {
+    /** A world point in the house's own space (the space of the structure's parts). */
+    const local = (p: number[]): number[] => {
+      house.updateMatrixWorld(true)
+      const v = house.worldToLocal(tmp.p.set(p[0], p[1], p[2]))
+      return [v.x, v.y, v.z]
+    }
+
+    /** Units of the wall, without those inside the opening and those a `chip` knocked out (`chips`: house-local points inside each unit that came out). */
+    function courses(part: any, units: any, opening: { center: number[]; radius: number } | null, chips: number[][], paint: number | null) {
       const [u0, v0, u1, v1] = part.aabb
       const alongU = u1 - u0 >= v1 - v0
       const len = alongU ? u1 - u0 : v1 - v0
@@ -78,24 +86,39 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           const x = alongU ? u0 + mid : (u0 + u1) / 2
           const z = alongU ? (v0 + v1) / 2 : v0 + mid
           const y = part.y0 + (r + 0.5) * rowH
-          const d = Math.hypot(x - opening.center[0], y - opening.center[1], z - opening.center[2])
-          if (d < opening.radius) continue
-          list.push({ x, y, z, sx: alongU ? b - a : thick, sy: rowH, sz: alongU ? thick : b - a, colour: d < opening.radius + 0.25 || paint === null ? edge : paint })
+          const d = opening ? Math.hypot(x - opening.center[0], y - opening.center[1], z - opening.center[2]) : Infinity
+          if (opening && d < opening.radius) continue
+          // a unit that came out: its centre falls in this unit's span along the wall and in its course
+          const gone = (c: number[]) => Math.abs(c[1] - y) <= rowH / 2 && (alongU ? c[0] >= u0 + a && c[0] <= u0 + b : c[2] >= v0 + a && c[2] <= v0 + b)
+          if (chips.some(gone)) continue
+          const near = (opening && d < opening.radius + 0.25) || chips.some((c) => Math.hypot(c[0] - x, c[1] - y, c[2] - z) < 0.15)
+          list.push({ x, y, z, sx: alongU ? b - a : thick, sy: rowH, sz: alongU ? thick : b - a, colour: near || paint === null ? edge : paint })
         }
       }
       return list
     }
 
-    function open(event: any): boolean {
-      if (lod !== 0 || views.has(event.part) || !event.opening) return false
-      const part = structure.byId.get(event.part)
-      const spec = opts.spec()?.parts?.find((q: any) => q.id === event.part)
+    /** Draws the wall `partId` as its courses (the first time its range in the merged mesh collapses), without what its opening and its chips took out. */
+    function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: number[] }): boolean {
+      if (lod !== 0) return false
+      const part = structure.byId.get(partId)
+      const spec = opts.spec()?.parts?.find((q: any) => q.id === partId)
       if (!part || !spec || !spec.units) return false
-      const items = structure.meshesOf(event.part).filter((it: any) => it.mesh)
-      if (!items.length) return false
-      const list = courses(part, spec.units, event.opening, wallColour(items))
+      let view = views.get(partId)
+      if (!view) {
+        const items = structure.meshesOf(partId).filter((it: any) => it.mesh)
+        if (!items.length) return false
+        view = { mesh: null, saved: null, items, paint: wallColour(items), units: 0, opening: null, chips: [] }
+      }
+      if (change.opening) {
+        if (view.opening) return false
+        view.opening = { center: local(change.opening.center), radius: change.opening.radius }
+      }
+      if (change.chip) view.chips.push(local(change.chip))
+      const list = courses(part, spec.units, view.opening, view.chips, view.paint)
+      if (view.mesh) { view.mesh.removeFromParent(); view.mesh.dispose() }
       const mesh = new THREE.InstancedMesh(unitGeometry, unitMaterial, Math.max(1, list.length))
-      mesh.name = 'breach:' + event.part
+      mesh.name = 'breach:' + partId
       list.forEach((u, i) => {
         tmp.m.compose(tmp.p.set(u.x, u.y, u.z), tmp.q.identity(), tmp.s.set(u.sx, u.sy, u.sz))
         mesh.setMatrixAt(i, tmp.m)
@@ -107,8 +130,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       mesh.castShadow = true
       mesh.receiveShadow = true
       house.add(mesh)
-      const saved = items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
-      views.set(event.part, { mesh, saved, units: list.length, opening: event.opening })
+      if (!view.saved) view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
+      view.mesh = mesh
+      view.units = list.length
+      views.set(partId, view)
       invalidate(); invalidateShadow()
       return true
     }
@@ -122,7 +147,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     return {
       /** Handles a `stage` event of the house's object. Returns true when the wall was redrawn as courses. */
-      stage(event: any): boolean { return event.stage === 2 ? open(event) : false },
+      stage(event: any): boolean { return event.stage === 2 && !!event.opening ? draw(event.part, { opening: event.opening }) : false },
+      /** Handles a `chip` event: the unit that came out leaves a gap in the courses. Returns true when the wall was redrawn. */
+      chip(event: any): boolean { return draw(event.part, { chip: event.center }) },
       /** The part broke or fell: the courses go (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
         const v = views.get(partId)
