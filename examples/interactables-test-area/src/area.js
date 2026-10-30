@@ -28,14 +28,6 @@ const FLUIDS = {
   utility_sink: { liters: 8, capacity: 28, size: [0.5, 0.25, 0.4], opening: 0.22 },
   toilet: { liters: 3, capacity: 6, size: [0.3, 0.18, 0.3], opening: 0.14 },
 }
-// total mass of a whole object in kg (the household drawing is solid blocks, so the volume would give a fridge of two tonnes)
-const MASS = {
-  fridge: 70, fridge_compact: 30, kitchen_cabinet_base: 35, kitchen_cabinet_wall: 15, pantry: 50, wardrobe: 90, dresser: 45, nightstand: 12,
-  bathroom_cabinet: 10, stove: 45, gas_bottle: 16, sink_kitchen: 40, sink_bathroom: 25, shower: 90, toilet: 30, utility_sink: 25,
-  wall_socket: 0.05, wall_switch: 0.05, service_entrance: 60, electrical_panel: 8, power_meter: 3, conduit_run: 2, tv: 12, microwave: 14,
-  washing_machine: 70, sofa: 45, armchair: 25, dining_chair: 5, bed_double: 60, bed_single: 30, bench: 15, blinds: 3, curtain: 3, trash_bin: 3,
-  wheelie_bin: 12, mailbox: 6, dog_house: 20, bbq: 400, clothesline: 15,
-}
 const DENSITY = {
   steel: 7850, aluminium: 2700, cast_iron: 7200, copper: 8900, wood_soft: 550, wood_hard: 750, mdf: 700, plywood: 600, glass: 2500,
   tempered_glass: 2500, ceramic: 2300, plastic: 1000, rubber: 1100, fabric: 250, foam: 40, brick: 1800, concrete: 2400, foliage: 100,
@@ -370,7 +362,8 @@ function analyse(hh, type, GT) {
     return (thin ? Math.min(pc.vol, 2 * (dx * dy + dy * dz + dz * dx) * thin) : pc.vol) * (DENSITY[pc.material] ?? 800)
   }
   const totalWeight = all.reduce((sum, pc) => sum + weight(pc), 0) || 1
-  const targetMass = MASS[type]
+  // the real mass of the object (the pack's `massKg`): the drawing is solid blocks, so the volume alone would give a fridge of two tonnes
+  const targetMass = hh.types.find((t) => t.id === type)?.massKg
   const parts = all.map((pc) => {
     const extra = {}
     const own = pc.mover ? pc.tag : null
