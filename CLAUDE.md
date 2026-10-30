@@ -73,3 +73,9 @@ multidão; a arma usa a destruição, os efeitos e o som. Antes de reimplementar
 - O que é específico de um domínio (balcão de armas, arma na mão, cápsulas, sons) fica no pacote da lib e num
   `examples/<lib>-test-area` que carrega o módulo na sala com `room.loadModule`.
 - Cada área da página do kit abre o seu ambiente de teste já montado (`?area=`).
+
+## 5. Física de cada objeto: os vinte e um critérios
+
+Nenhum objeto (móvel, item, veículo, parede, estrutura, planta) é dado como pronto sem passar nos vinte e um critérios de
+[`docs/criterios-fisica-objetos.md`](docs/criterios-fisica-objetos.md) (material e massa, tiro, golpes, explosão e fogo, destruição no padrão da latinha, pegar,
+usar, entre outros objetos, personagem esbarrando, ser empurrado, persistência, animações com o item inteiro e quebrado, som, peso, queda, líquidos, reação em cadeia, desgaste visual, desempenho, NPCs e zumbis, inventário), testado na sala de testes com print.
