@@ -176,8 +176,6 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
   }
 
   const moveWith = (lean: Leaning, dx: number, dz: number): void => {
-    lean.piece ??= options.makePiece(lean.target.objectId)
-    lean.piece.held = true
     lean.target.root.position.x += dx
     lean.target.root.position.z += dz
     lean.target.root.updateMatrixWorld(true)
@@ -255,7 +253,14 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       const gripping = control.phase === 'grip'
       if (gripping) approach(lean, dt)
       const result = control.update(dt, { walk: scriptedWalk ?? player.walkIntent, isFree: (dx, dz) => isFree(lean, dx, dz) })
-      if (result.engaged) event(control.block === 'too_heavy' ? 'too_heavy' : 'engaged', lean)
+      if (result.engaged) {
+        // a body from here on: held, the room's collision of the player and of this sweep no longer sees it as something in the way
+        if (control.block !== 'too_heavy') {
+          lean.piece ??= options.makePiece(lean.target.objectId)
+          lean.piece.held = true
+        }
+        event(control.block === 'too_heavy' ? 'too_heavy' : 'engaged', lean)
+      }
       if (result.hitObstacle) {
         options.hitSound(lean.target.objectId, [lean.contact[0], lean.min[1] + 0.3, lean.contact[1]])
         event('obstacle', lean)

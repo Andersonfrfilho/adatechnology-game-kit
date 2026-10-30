@@ -60,6 +60,8 @@ export interface Player {
   setBend(metres: number): void
   /** Keeps the view within `range` radians of `yaw`; null frees it. */
   setLookLimit(limit: { readonly yaw: number; readonly range: number } | null): void
+  /** The floor offset the player tried to walk (keys, `moveBy`, `walk`) since the last call, blocked or not; the call resets it. */
+  takeWish(): [number, number]
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
   walk(forward: number, right: number): void
   dispose(): void
@@ -116,9 +118,19 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
     return false
   }
+  // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
+  const wish = { x: 0, z: 0 }
   const move = (dx: number, dz: number): void => {
-    if (!blocked(px.x + dx, px.z)) px.x += dx
-    if (!blocked(px.x, px.z + dz)) px.z += dz
+    wish.x += dx
+    wish.z += dz
+    // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
+    const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
+    const sx = dx / steps
+    const sz = dz / steps
+    for (let i = 0; i < steps; i++) {
+      if (!blocked(px.x + sx, px.z)) px.x += sx
+      if (!blocked(px.x, px.z + sz)) px.z += sz
+    }
   }
 
   const walkKeys = (): readonly [number, number] => {
@@ -367,6 +379,12 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     moveBy(dx, dz) {
       move(dx, dz)
       apply()
+    },
+    takeWish() {
+      const out: [number, number] = [wish.x, wish.z]
+      wish.x = 0
+      wish.z = 0
+      return out
     },
     walk(forward, right) {
       move(-Math.sin(yaw) * forward + Math.cos(yaw) * right, -Math.cos(yaw) * forward - Math.sin(yaw) * right)
