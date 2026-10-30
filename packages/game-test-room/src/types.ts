@@ -106,7 +106,7 @@ export interface SceneryObject {
    * A top that loose things rest on (and liquids pool on) while that part stands: the part id and the height of its upper face in the spec's space.
    * The rectangle is the part's footprint. Without it nothing rests on the object.
    */
-  top?: { part: string; y: number }
+  top?: { part: string; y: number; parts?: readonly string[] }
   /**
    * Where a water tap of the piece pours (a sink, a tub), in the spec's space: the room's tap (its stream and its HUD button) pours there, and the piece's own model is the tap. The first piece with a `spout` wins over the table tap.
    */

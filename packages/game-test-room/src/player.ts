@@ -17,6 +17,11 @@ export interface PlayerOptions {
   colliders: Array<[number, number, number, number]>
   /** Extra places to stay out of, asked on every step (a module's walls): `(x, z, radius) => blocked`. The set may change while the player walks. */
   blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
+  /**
+   * What stands where the body would be, asked on every step with the feet height: `floor` is the highest top it can step onto there (a low
+   * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop.
+   */
+  footing?: (x: number, z: number, radius: number, feet: number) => { floor: number; blocked: boolean }
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -62,6 +67,8 @@ export interface Player {
 const EYE = 1.7
 /** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
 export const PLAYER_RADIUS = 0.3
+/** Share of the radius the feet stand on: at the edge of a heap the player steps down instead of hovering on its corner. */
+const FOOT = 0.5
 const WALK = 3.4
 /** How far (m) the eye sinks when crouched, the speed of a crouched walk, and how fast the eye goes down and up (per second). */
 export const CROUCH_DROP = 0.55
@@ -124,24 +131,27 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   }
   apply()
 
+  const outside = (x: number, z: number): boolean => Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS
   const blocked = (x: number, z: number): boolean => {
-    if (Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS) return true
+    if (outside(x, z)) return true
     for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
     if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
-    return false
+    return o.footing ? o.footing(x, z, PLAYER_RADIUS, y).blocked : false
   }
   // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
   const wish = { x: 0, z: 0 }
   const move = (dx: number, dz: number): void => {
     wish.x += dx
     wish.z += dz
+    // caught inside something (a piece fell on the spot) the player walks out of it
+    const stuck = blocked(px.x, px.z)
     // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
     const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
     const sx = dx / steps
     const sz = dz / steps
     for (let i = 0; i < steps; i++) {
-      if (!blocked(px.x + sx, px.z)) px.x += sx
-      if (!blocked(px.x, px.z + sz)) px.z += sz
+      if (stuck ? !outside(px.x + sx, px.z) : !blocked(px.x + sx, px.z)) px.x += sx
+      if (stuck ? !outside(px.x, px.z + sz) : !blocked(px.x, px.z + sz)) px.z += sz
     }
   }
 
@@ -339,12 +349,15 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       }
       walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
       running = run && walked > 0
-      if (y <= 0 && keys.has('Space')) vy = JUMP
-      if (y > 0 || vy > 0) {
+      // the floor under the feet: a step up is taken at once, a drop is a fall
+      const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
+      if (y < floor && vy <= 0) y = floor
+      if (y <= floor && keys.has('Space')) vy = JUMP
+      if (y > floor || vy > 0) {
         vy -= GRAVITY * dt
         y += vy * dt
-        if (y <= 0) {
-          y = 0
+        if (y <= floor) {
+          y = floor
           vy = 0
         }
       }
