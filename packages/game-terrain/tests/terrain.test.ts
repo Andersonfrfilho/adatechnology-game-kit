@@ -102,6 +102,56 @@ describe('repeated blows', () => {
   })
 })
 
+describe('bars under load', () => {
+  const digDown = (terrain: ReturnType<typeof make>): void => {
+    terrain.dug.fill(0.12)
+  }
+  const bendAtCentre = (terrain: ReturnType<typeof make>): number => terrain.barBend[Math.round(terrain.rows / 2) * terrain.stride + Math.round(terrain.columns / 2)]!
+
+  it('covered bars take nothing; bare bars bend with each blow', () => {
+    const terrain = make('concrete_slab')
+    terrain.strike('explosive', { x: 0, z: 0, energy: 1000 })
+    expect(bendAtCentre(terrain)).toBe(0)
+    digDown(terrain)
+    const before = bendAtCentre(terrain)
+    terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    expect(bendAtCentre(terrain)).toBeGreaterThan(before)
+  })
+
+  it('a slab on the ground keeps the floor when its bars give way', () => {
+    const terrain = make('concrete_slab')
+    digDown(terrain)
+    let collapsed = false
+    for (let i = 0; i < 40; i++) collapsed = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE }).collapsed || collapsed
+    expect(bendAtCentre(terrain)).toBeGreaterThan(1)
+    expect(collapsed).toBe(false)
+    expect(terrain.heightAt(0, 0)).toBeGreaterThanOrEqual(-0.12 - 1e-4)
+  })
+
+  it('a slab with nothing under it opens onto the floor below, only where the bars gave way', () => {
+    const terrain = make('suspended_slab')
+    digDown(terrain)
+    let result = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    expect(result.collapsed).toBe(false)
+    expect(terrain.heightAt(0, 0)).toBeGreaterThan(-0.2)
+    for (let i = 0; i < 40 && !result.collapsed; i++) result = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    expect(result.collapsed).toBe(true)
+    expect(terrain.heightAt(0, 0)).toBeLessThan(-3)
+    expect(terrain.heightAt(5, 5)).toBeCloseTo(-0.12, 5)
+  })
+
+  it('the snapshot keeps the bent bars', () => {
+    const terrain = make('concrete_slab')
+    digDown(terrain)
+    terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    const bend = bendAtCentre(terrain)
+    const saved = JSON.parse(JSON.stringify(terrain.serialize()))
+    terrain.reset()
+    terrain.load(saved)
+    expect(bendAtCentre(terrain)).toBeCloseTo(bend, 5)
+  })
+})
+
 describe('budget', () => {
   it('keeps the marks of an area under its limit by merging', () => {
     const terrain = make('concrete_slab', { maxMarksPerArea: 8 })
