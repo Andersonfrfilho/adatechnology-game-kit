@@ -89,6 +89,8 @@ export interface PieceBody extends Piece {
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean
+  /** The contact impulses each point of the box gave in the last substep (normal, friction x, friction z per point), to start the next one from. */
+  warm?: Float64Array
 }
 
 export interface Bound {

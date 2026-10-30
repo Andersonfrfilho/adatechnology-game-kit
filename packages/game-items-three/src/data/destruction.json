@@ -96,5 +96,11 @@
       "liquid": "honey",
       "fill": 0.9
     }
+  },
+  "shapes": {
+    "box": {
+      "hollow": true,
+      "welded": true
+    }
   }
 }

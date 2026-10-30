@@ -48,6 +48,11 @@ export interface ItemContents {
 
 const FAMILIES = data.families as Readonly<Record<string, ItemFamily>>
 const CONTENTS = data.contents as Readonly<Record<string, ItemContents>>
+/** The rule of an item drawn as a simple shape (no model of its own), by shape id: a `box` is a printed carton, a thin cardboard shell. */
+const SHAPES = data.shapes as Readonly<Record<string, ItemDestruction>>
+
+/** The rule of an item drawn as the simple shape `shapeId` (`game-items-three`'s `drawShape`), if any. */
+export const shapeDestruction = (shapeId: string): ItemDestruction | undefined => SHAPES[shapeId]
 
 const FAMILY_OF_MODEL = new Map<string, string>(Object.entries(FAMILIES).flatMap(([family, entry]) => entry.models.map((model) => [model, family] as const)))
 
@@ -120,6 +125,8 @@ function volumeOf(mesh: THREE_NS.Mesh): number {
 /** What `tagForDestruction` needs to know about the item beside its meshes. */
 export interface DestructionTagOptions {
   readonly modelId?: string
+  /** The simple shape the item is drawn as when it has no model (`shapeDestruction`). */
+  readonly shapeId?: string
   /** Real weight in kg. */
   readonly weight?: number
   /** Size in metres, for the contents of the shell. */
@@ -171,13 +178,13 @@ function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation): void {
 
 /**
  * Writes the `userData` that `specFromObject3D` reads onto the meshes of a drawn item: the destruction material of each mesh from its kit material tag,
- * the item's real weight in kg (`destructionMass`, so the world weighs what the thing weighs) and what the model's family in `data/destruction.json` asks for (hollow shells, welded parts, skins),
+ * the item's real weight in kg (`destructionMass`, so the world weighs what the thing weighs) and what the model's family (or the simple shape it is drawn as) in `data/destruction.json` asks for (hollow shells, welded parts, skins),
  * with the liquid the model holds on its shell (`destructionContains`).
  */
 export function tagForDestruction(root: THREE_NS.Object3D, options: DestructionTagOptions = {}): void {
-  const { modelId, weight, size } = options
+  const { modelId, shapeId, weight, size } = options
   if (weight !== undefined && weight > 0) root.userData.destructionMass = weight
-  const rule = modelId === undefined ? undefined : itemDestruction(modelId)
+  const rule = modelId !== undefined ? itemDestruction(modelId) : shapeId !== undefined ? shapeDestruction(shapeId) : undefined
   if (rule?.tessellate) tessellateShapes(root, rule.tessellate)
   const solid: THREE_NS.Mesh[] = []
   root.traverse((object) => {

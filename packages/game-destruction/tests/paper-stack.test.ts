@@ -34,4 +34,16 @@ describe('a stack of paper (a book)', () => {
       expect(fr.inner).toBeUndefined()
     }
   })
+
+  it('a 9 mm through a cardboard box (a hollow shell of paper) punches holes and goes on, it does not tear the box apart', () => {
+    const w = createDestruction()
+    const id = w.add({ parts: [{ id: 'carton', material: 'paper', fill: 0.05, shape: { kind: 'box', size: [0.2, 0.3, 0.07] }, position: [0, 0, 0] }] })
+    const r = w.hit(id, { type: 'ballistic', point: [0, 0, 0.035], direction: [0, 0, -1], energy: 500, caliber: 9 })
+    expect(fracture(r.events)).toBeUndefined()
+    expect(r.events.some((e) => e.type === 'hole')).toBe(true)
+    expect(r.penetrated).toBe(true)
+    // the box takes a few joules of the 500: the round keeps nearly all its speed, so it gives the box nearly none of its push
+    expect(r.exitEnergy).toBeGreaterThan(450)
+    expect(w.state(id)!.parts[0].status).not.toBe('broken')
+  })
 })

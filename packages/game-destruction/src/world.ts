@@ -2021,8 +2021,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
-    // 3 mm plastic bin leaves 24 of its 500 J. Brittle, fibrous and layered materials (glass, wood, paper, masonry) take the whole shock of the impact, as before.
-    const absorbed = penetrated && mat.ductility >= 0.5 && mat.fracture !== 'tear' ? Math.min(E, thr) : E
+    // 3 mm plastic bin leaves 24 of its 500 J. So does a hollow shell of a material that tears (a cardboard box, a carton): the round punches through its thin wall and
+    // leaves a hole, it does not shred the box. Brittle, fibrous and layered materials (glass, wood, a solid stack of paper, masonry) take the whole shock, as before.
+    const hollowTear = mat.fracture === 'tear' && p.spec.fill !== undefined && p.spec.fill < 0.5
+    const absorbed = penetrated && ((mat.ductility >= 0.5 && mat.fracture !== 'tear') || hollowTear) ? Math.min(E, thr) : E
     const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
     chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)

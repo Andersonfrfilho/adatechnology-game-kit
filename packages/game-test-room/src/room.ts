@@ -622,9 +622,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const movable = own ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
+      // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
       const box = new THREE.Box3().setFromObject(root)
       const base = Math.max(pos[1], groundAt(pos[0], pos[2]))
-      pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
+      if (!box.isEmpty()) pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
       root.position.set(pos[0], pos[1], pos[2])
       root.updateMatrixWorld(true)
     }
@@ -1228,12 +1229,22 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           hits++
           end = r0.point
           if (!first) first = { object: r0.object, part: r0.part, point: r0.point, normal: [0, 1, 0], distance: dist3(s.origin, r0.point) }
-          const speed = Math.max(80, s.speed)
-          const momentum = (2 * s.energy) / speed
-          pushPiece(r0.object, s.direction, momentum, r0.point)
-          const push = pushes.get(r0.object) ?? { impulse: [0, 0, 0] as Vec3, point: r0.point }
+        }
+        // each part the round went into takes the momentum the round lost in it (m v in, m v out: v goes with the square root of the energy), at the point it hit: a
+        // round that stops in a part gives all of it, one that goes through an empty cardboard box keeps most of it and barely moves the box
+        const speed = Math.max(80, s.speed)
+        const momentumOf = (e: number): number => ((2 * s.energy) / speed) * Math.sqrt(Math.max(0, e) / Math.max(1e-9, s.energy))
+        let entering = s.energy
+        for (const r of results) {
+          if (!r.point || !r.part) continue
+          const leaving = r.penetrated ? Math.min(entering, Math.max(0, r.exitEnergy)) : 0
+          const momentum = momentumOf(entering) - momentumOf(leaving)
+          entering = leaving
+          if (momentum <= 0) continue
+          pushPiece(r.object, s.direction, momentum, r.point)
+          const push = pushes.get(r.object) ?? { impulse: [0, 0, 0] as Vec3, point: r.point }
           for (let k = 0; k < 3; k++) push.impulse[k] += s.direction[k] * momentum
-          pushes.set(r0.object, push)
+          pushes.set(r.object, push)
         }
         if (shots.length <= 3 || rnd() < 0.34) tracer(m, end)
       }
