@@ -383,6 +383,17 @@
   "damageScale": {
    "explosive": 1.2
   },
+  "hits": {
+   "ballistic": {
+    "unitJoules": 500,
+    "floor": 900,
+    "crater": true
+   },
+   "blunt": {
+    "unitJoules": 1500,
+    "floor": 60
+   }
+  },
   "hitDebris": "chips",
   "breakDebris": "dust",
   "thermal": {

@@ -115,6 +115,26 @@ export interface MaterialThermal {
   smoke?: 'white' | 'grey' | 'black'
 }
 
+/** What one kind of blow does to a material where it lands (`MaterialDef.hits`). */
+export interface MaterialHit {
+  /** What the blow tears off a part that is not made of units: `splinters` (wood), `lumps` (MDF, particle board) or nothing. */
+  tear?: 'splinters' | 'lumps' | 'none'
+  /** Joules each torn piece costs. */
+  tearJoules?: number
+  /**
+   * Joules per kilogram of a unit (`PartSpec.units`: a brick, a block of concrete) that knock it out of its part; blows of this kind wear the unit they
+   * land on (and a little the ones around it) until one comes out (`chip`). Default `breach.chipEnergy` of the world.
+   */
+  unitJoules?: number
+  /**
+   * Joules of each blow that only scar the surface and wear no unit: a small round or a fist leaves a crater in concrete and takes nothing out, a heavy
+   * round takes what it carries above this (default 0).
+   */
+  floor?: number
+  /** The blow leaves a crater in the bare surface of the material (a `spall` with `layer` -1) where it lands, with its dust and chips. */
+  crater?: boolean
+}
+
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
@@ -147,6 +167,11 @@ export interface MaterialDef {
    * a ream, a magazine) and comes apart as thin loose scraps (`Fragment.inner` for the pages) instead of slabs as thick as the part.
    */
   sheet?: number
+  /**
+   * What a blow of each damage type takes out of the material where it lands (the same blow does different things to different materials, and a shot
+   * is not a punch). See `MaterialHit`.
+   */
+  hits?: Partial<Record<DamageType, MaterialHit>>
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
