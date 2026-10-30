@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-characters-undead",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "MIT",
   "description": "Zombie-only layer over @adatechnology/game-characters, as data: the 13 undead types (health, speeds, multipliers, perception, eyes, posture, gait, abilities), 4 infection ages, 4 outfits with protection and loot, the infection timeline and the speed moments. Kept apart so a GTA-style game never imports anything about zombies.",
   "keywords": [

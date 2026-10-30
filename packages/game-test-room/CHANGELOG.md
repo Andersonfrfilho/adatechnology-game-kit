@@ -1,5 +1,25 @@
 # @adatechnology/game-test-room
 
+## 0.15.0
+
+### Minor Changes
+
+- 7e0f629: Test table: `room.testTable` lays the catalogue on a `test_table` scenery piece a page at a time (with a search that finds the page of an item) and runs a trial on the item picked: a shot, a punch, a knife blow, a flamethrower burst or a fragmentation grenade set off beside it, plus a **Put back** that restores the table and the page. The room's panel gets a **Test table** card. `examples/test-room` uses the long dining table of the furniture catalogue (`?table=<group>` lays a group on start).
+
+### Patch Changes
+
+- fbd213a: Bare hands punch at the click again: the default tool (the hand) used to only grab on the left button, so the punch clip never played. Now the click punches (`strikeClips.hand`, on the arms and on the body), lets go of what is held, and E or the right button grab; `room.use()` does the same. A click pressed and let go between two frames is no longer lost.
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-destruction@0.9.0
+  - @adatechnology/game-destruction-three@0.9.0
+  - @adatechnology/game-audio@0.3.1
+  - @adatechnology/game-fluids@0.3.3
+  - @adatechnology/game-fluids-three@0.4.2
+  - @adatechnology/game-vfx@0.4.2
+  - @adatechnology/game-vfx-three@0.3.2
+  - @adatechnology/game-weapons@0.5.2
+
 ## 0.14.0
 
 ### Minor Changes

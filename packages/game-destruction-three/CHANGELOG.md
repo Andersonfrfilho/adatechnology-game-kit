@@ -1,5 +1,20 @@
 # @adatechnology/game-destruction-three
 
+## 0.9.0
+
+### Minor Changes
+
+- bf68a04: A shot book tears into loose pages instead of slabs as thick as the book. New `MaterialDef.sheet` (thickness of one sheet; paper 1 mm): a `tear` part thicker than a few sheets comes apart as layers of thin scraps, a little askew, three in four marked `Fragment.inner` (pages) and the rest cover. New `visual.innerColor` (paper: cream) colours the inner scraps and the fibres a hit throws out. The renderer lets those thin scraps glide and flutter down before they settle flat.
+
+### Patch Changes
+
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-destruction@0.9.0
+  - @adatechnology/game-audio@0.3.1
+  - @adatechnology/game-vfx@0.4.2
+  - @adatechnology/game-vfx-three@0.3.2
+
 ## 0.8.2
 
 ### Patch Changes

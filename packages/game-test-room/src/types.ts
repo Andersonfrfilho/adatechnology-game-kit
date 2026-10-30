@@ -84,6 +84,12 @@ export interface SceneryObject {
    * draws one plain mesh per part with `buildFromSpec`.
    */
   build?: (THREE: ThreeNamespace) => THREE_NS.Object3D
+  /**
+   * Lets the drawing follow the object in the destruction world, for what the room's destruction renderer cannot draw on it (a house wall redraws its
+   * courses without the bricks that shots knock out). Called once the object is in the world as `objectId`; the room calls `restore` when it resets the
+   * object and `dispose` when it removes it.
+   */
+  follow?: (root: THREE_NS.Object3D, world: DestructionWorld, objectId: string) => { restore?(): void; dispose?(): void } | null | void
   /** Name shown in the inspector and the log (default the translated name of a default id, else the id). */
   label?: string
   /**

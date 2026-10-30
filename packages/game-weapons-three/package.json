@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-weapons-three",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "license": "MIT AND CC-BY-SA-4.0 AND CC-BY-SA-3.0 AND CC-BY-3.0 AND CC0-1.0 AND LicenseRef-Public-Domain",
   "description": "three.js presentation for @adatechnology/game-weapons: the real models of the Galeria 3D do Arsenal (78 weapons, a cartridge and a case per calibre), the weapon in the hands playing the tool-animation clips (fire, burst, cycle, jam, clear, safety and the seven reloads), ejected casings and dropped magazines, worn-metal conditions, synthesized sounds, and the weapons test area (counters with every weapon) as a TestableModule.",
   "keywords": [

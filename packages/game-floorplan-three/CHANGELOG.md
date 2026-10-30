@@ -1,5 +1,16 @@
 # @adatechnology/game-floorplan-three
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-destruction@0.9.0
+  - @adatechnology/game-floorplan-structure@1.2.2
+  - @adatechnology/game-floorplan-interactables@0.1.0
+  - @adatechnology/game-floorplan-residential@4.0.0
+
 ## 0.4.1
 
 ### Patch Changes

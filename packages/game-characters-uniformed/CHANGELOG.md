@@ -1,5 +1,11 @@
 # @adatechnology/game-characters-uniformed
 
+## 0.1.9
+
+### Patch Changes
+
+- @adatechnology/game-characters@0.2.2
+
 ## 0.1.8
 
 ### Patch Changes

@@ -53,6 +53,8 @@ type Vars = Record<string, string | number>
 
 interface Entry {
   so: SpawnedObject
+  /** What draws the object's own damage on it (`SceneryObject.follow`). */
+  follower?: { restore?(): void; dispose?(): void } | null
   item?: TestRoomItem
   name: string
   arena: boolean
@@ -513,6 +515,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
       const e = registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
       if (o.free) e.free = true
+      e.follower = o.follow?.(root, world, o.id) || null
     }
   }
   addArena()
@@ -619,6 +622,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     } catch {
       // not bound
     }
+    e.follower?.dispose?.()
     if (world.has(id)) world.remove(id)
     e.so.root.removeFromParent()
     letGo(e.so.root)
@@ -656,6 +660,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const e of entries.values()) {
       world.reset(e.so.objectId)
       renderer.restore(e.so.objectId)
+      e.follower?.restore?.()
     }
     renderer.clear()
     vfx.world.clear()
@@ -679,6 +684,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (heldEntry === e) continue
       world.reset(e.so.objectId)
       renderer.restore(e.so.objectId)
+      e.follower?.restore?.()
       if (e.containerId) {
         const c = fluids.container(e.containerId)
         const f = e.item?.fluid?.container

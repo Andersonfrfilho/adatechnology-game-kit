@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vehicles-driving",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "MIT",
   "description": "Driving for vehicles, without three.js and without a game: an arcade driver (the game's car: acceleration, braking, handbrake, steering, corner collision, crash damage, noise, run-over of bodies) and a semi-simulation driver (suspension, tyre friction, gearbox, surfaces, damage coupling, consumption). Knows nothing about any game.",
   "keywords": [

@@ -1,5 +1,15 @@
 # @adatechnology/game-characters-three
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-audio@0.3.1
+  - @adatechnology/game-characters@0.2.2
+  - @adatechnology/game-characters-people@0.3.2
+
 ## 0.4.0
 
 ### Minor Changes
