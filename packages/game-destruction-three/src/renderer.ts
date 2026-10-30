@@ -1019,6 +1019,11 @@ class Renderer implements DestructionRenderer {
       const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
+    // what a blow tore off a face leaves the hole it made where it is
+    if (ev.torn) {
+      this.sound(impactKey(def), ev.center, 0.5)
+      return
+    }
     // the holes and spalls drawn on the unit leave with it (also those on the wall a beam is drawn inside), and on the ragged edge of plaster around it
     const T = this.THREE
     const center = new T.Vector3(ev.center[0], ev.center[1], ev.center[2])

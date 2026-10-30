@@ -2063,7 +2063,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       })
     }
     const patch: Vec3 = [scale * 4, scale * 4, scale * 4]
-    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments })
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments, torn: true })
   }
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }

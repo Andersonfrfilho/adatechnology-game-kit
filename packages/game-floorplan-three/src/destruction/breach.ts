@@ -296,7 +296,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       /** Handles a `stage` event of the house's object. Returns true when the wall was cut. */
       stage(event: any): boolean { return event.stage === 2 && !!event.opening ? draw(event.part, { opening: event.opening }) : false },
       /** Handles a `chip` event: the unit that came out leaves a hole in the wall where it was. Returns true when the wall was cut. */
-      chip(event: any): boolean { return draw(event.part, { chip: event.center }) },
+      chip(event: any): boolean { return event.torn ? false : draw(event.part, { chip: event.center }) },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
         const v = views.get(partId)

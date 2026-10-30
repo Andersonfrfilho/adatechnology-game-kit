@@ -149,6 +149,19 @@ describe('chip and the impact marks of the effects', () => {
     renderer.update(0.016)
     expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.8])
   })
+
+  it('keeps the bullet hole where a shot only tore lumps off the face of a board', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const vfx = createVfx()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    world.addObject('o1', [partState('board', 'mdf')])
+    const decals = vfx.workshop().decals
+    decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
+    renderer.update(0.016)
+    expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.02])
+  })
 })
 
 describe('the colour of crushed masonry', () => {
