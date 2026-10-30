@@ -1169,6 +1169,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (e) {
       shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
       shotRay.far = 60
+      // sprites (labels, effects) under the object raycast against the camera
+      shotRay.camera = camera
       const hit = shotRay.intersectObject(e.so.root, true).find((h) => (h.object as THREE_NS.Mesh).isMesh && !h.object.userData.destructionDebris && h.face)
       if (hit?.face) {
         point = [hit.point.x, hit.point.y, hit.point.z]
