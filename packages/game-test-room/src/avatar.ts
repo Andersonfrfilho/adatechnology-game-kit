@@ -65,6 +65,11 @@ export interface RoomAvatar {
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
    */
   strike?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
+  /**
+   * Brings the body's hands to the tool in them (`HandTargets`, world space: the module's, as the first-person arms get them). The room calls it in third person every frame, after the
+   * modules have placed the tool and before the render; an avatar without it keeps the hands where its own pose puts them.
+   */
+  reach?(targets: HandTargets | null): void
 }
 
 /** Which leg a kick uses: `alternate` swaps at each kick (right first). */

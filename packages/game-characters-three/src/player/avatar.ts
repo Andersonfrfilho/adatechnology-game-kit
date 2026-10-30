@@ -9,6 +9,7 @@ import {
   walkGait,
 } from '@adatechnology/game-characters'
 import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@adatechnology/game-characters'
+import type { HandTargets } from '@adatechnology/game-contracts'
 
 import preset from '../presets/player-avatar.json'
 import { buildHand } from '../rich/accessories/hands'
@@ -16,6 +17,7 @@ import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
+import { createArmReach } from './arm-reach'
 
 const TWO_PI = Math.PI * 2
 const MAX_GAIT = 1.4
@@ -110,6 +112,11 @@ export type PlayerAvatar = {
   readonly playing: string | null
   /** A socket at the hand: 'R' is the weapon hand (the puppet's right, at -x), 'L' the other one. */
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  /**
+   * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
+   * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   */
+  reach(targets: HandTargets | null): void
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -208,6 +215,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     const built = buildHand({ THREE, add: addMesh, hg, handM: handMaterial, s: side, detailed: true })
     hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
   })
+  const armReach = createArmReach(THREE, rig, { R: hands.find((hand) => hand.side < 0)!.hg, L: hands.find((hand) => hand.side > 0)!.hg })
   const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
@@ -460,6 +468,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return run ? run.clip.id : null
     },
     update(dt, state = {}) {
+      armReach.restore()
       const speed = state.speed ?? 0
       const moving = speed >= 0.05 // the game: `spd < 0.05 ? 0 : walkCad(spd)`
       const down = !!state.down
@@ -524,6 +533,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run) run.target = 0
     },
     hand: (side) => sockets[side],
+    reach(targets) {
+      if (run || fall > 0) return
+      root.updateMatrixWorld(true)
+      armReach.apply(targets)
+    },
     on(_type, listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)

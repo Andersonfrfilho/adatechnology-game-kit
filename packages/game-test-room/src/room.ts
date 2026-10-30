@@ -1171,6 +1171,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     lastHand = { stance: state.stance, triggerFinger: state.triggerFinger, targets }
     arms.update(dt, state)
   }
+  /** Third person: the body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push poses the hands itself). */
+  const reachAvatar = (): void => {
+    if (!avatar?.reach || !thirdActive()) return
+    avatar.reach(push.active || heldPiece ? null : (handSource?.() ?? null))
+  }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
     if (!thirdActive()) return () => undefined
@@ -2485,6 +2490,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     stepFirstPerson(paused ? 0 : dt)
+    reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
