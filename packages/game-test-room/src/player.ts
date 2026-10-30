@@ -50,6 +50,16 @@ export interface Player {
   kick(pitchDeg: number, yawDeg: number): void
   /** Move the player by a world offset on the floor plane, stopped by the colliders and the arena limit (scripted walks). */
   moveBy(dx: number, dz: number): void
+  /** Where the keys ask to go on the floor: a unit `[x, z]`, or `[0, 0]`. */
+  readonly walkIntent: readonly [number, number]
+  /** Whether a body can stand at this point (arena, colliders, blockers). */
+  canStand(x: number, z: number): boolean
+  /** While held the keys do not walk or jump: whoever holds it moves the player with `moveBy` (pushing a piece of furniture). */
+  setWalkHeld(held: boolean): void
+  /** Lowers the eye by this many metres, eased (bending over something low); 0 stands up. */
+  setBend(metres: number): void
+  /** Keeps the view within `range` radians of `yaw`; null frees it. */
+  setLookLimit(limit: { readonly yaw: number; readonly range: number } | null): void
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
   walk(forward: number, right: number): void
   dispose(): void
@@ -63,6 +73,7 @@ const WALK = 3.4
 export const CROUCH_DROP = 0.55
 const CROUCH_WALK = 1.7
 const CROUCH_RATE = 9
+const BEND_RATE = 7
 const RUN = 6.2
 const JUMP = 4.6
 const GRAVITY = 13
@@ -79,6 +90,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let y = 0
   let eye = EYE
   let crouch = 0
+  let bend = 0
+  let bendTarget = 0
   let vy = 0
   let walked = 0
   let running = false
@@ -92,7 +105,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const apply = (): void => {
     euler.set(pitch, yaw, 0, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + y - CROUCH_DROP * crouch, px.z)
+    cam.position.set(px.x, eye + y - CROUCH_DROP * crouch - bend, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -108,14 +121,28 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (!blocked(px.x, px.z + dz)) px.z += dz
   }
 
+  const walkKeys = (): readonly [number, number] => {
+    const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0)
+    const r = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0)
+    if (!f && !r) return [0, 0]
+    const len = Math.hypot(f, r)
+    return [(-Math.sin(yaw) * f + Math.cos(yaw) * r) / len, (-Math.cos(yaw) * f - Math.sin(yaw) * r) / len]
+  }
+
   let dragging = false
   let moved = 0
   let downAt = 0
   let useStarted = false
   let holdTimer: ReturnType<typeof setTimeout> | null = null
 
+  let walkHeld = false
+  let lookLimit: { readonly yaw: number; readonly range: number } | null = null
   const look = (dx: number, dy: number): void => {
     yaw -= dx * LOOK
+    if (lookLimit) {
+      const off = Math.atan2(Math.sin(yaw - lookLimit.yaw), Math.cos(yaw - lookLimit.yaw))
+      yaw = lookLimit.yaw + Math.max(-lookLimit.range, Math.min(lookLimit.range, off))
+    }
     pitch = Math.max(-1.5, Math.min(1.5, pitch - dy * LOOK))
   }
   const onLockChange = (): void => {
@@ -238,6 +265,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('beforeunload', onBeforeUnload)
 
   return {
+    get walkIntent() {
+      return walkKeys()
+    },
+    canStand(x, z) {
+      return !blocked(x, z)
+    },
+    setWalkHeld(held) {
+      walkHeld = held
+    },
+    setBend(metres) {
+      bendTarget = metres
+    },
+    setLookLimit(limit) {
+      lookLimit = limit
+    },
     get yaw() {
       return yaw
     },
@@ -273,28 +315,17 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       const crouched = isCrouchHeld()
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
-      const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
+      bend += (bendTarget - bend) * Math.min(1, dt * BEND_RATE)
+      const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
       const speed = crouched ? CROUCH_WALK : run ? RUN : WALK
-      let f = 0
-      let r = 0
-      if (keys.has('KeyW') || keys.has('ArrowUp')) f += 1
-      if (keys.has('KeyS') || keys.has('ArrowDown')) f -= 1
-      if (keys.has('KeyD') || keys.has('ArrowRight')) r += 1
-      if (keys.has('KeyA') || keys.has('ArrowLeft')) r -= 1
-      if ((f || r || keys.has('Space')) && eye !== EYE) eye = EYE
-      if (f || r) {
-        const len = Math.hypot(f, r)
-        const fx = -Math.sin(yaw)
-        const fz = -Math.cos(yaw)
-        const rx = Math.cos(yaw)
-        const rz = -Math.sin(yaw)
-        move(((fx * f + rx * r) / len) * speed * dt, ((fz * f + rz * r) / len) * speed * dt)
-      }
+      const [walkX, walkZ] = walkKeys()
+      if ((walkX || walkZ || keys.has('Space')) && eye !== EYE) eye = EYE
+      if ((walkX || walkZ) && !walkHeld) move(walkX * speed * dt, walkZ * speed * dt)
       walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
       running = run && walked > 0
-      if (y <= 0 && keys.has('Space')) vy = JUMP
+      if (y <= 0 && keys.has('Space') && !walkHeld) vy = JUMP
       if (y > 0 || vy > 0) {
         vy -= GRAVITY * dt
         y += vy * dt

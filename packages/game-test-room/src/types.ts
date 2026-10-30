@@ -11,6 +11,8 @@
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { FurniturePushRules } from '@adatechnology/game-player'
+import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
@@ -214,6 +216,8 @@ export interface TestRoomOptions {
    * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
    */
   strikeClips?: Readonly<Record<string, string>>
+  /** The numbers of pushing furniture (`FurniturePushRules` of game-player): the player's force, the friction by material, the hold time, the speed. */
+  push?: Partial<FurniturePushRules>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
   /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
@@ -319,8 +323,20 @@ export interface TestRoom {
   useItem(useId: string): boolean
   /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
   use(hold?: number): void
+  /** Where the player's feet are. */
+  readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
+  /**
+   * Pushing furniture, as holding E against it does: `begin` leans on what the camera looks at (false: nothing within reach to lean on), `setWalk` walks by script (world `[x, z]`, unit; null: the keys), `end`
+   * lets go, and `state` says the phase (`grip` while the hold timer fills, `push`, `strain`), the timer and what stops it (`too_heavy`, `obstacle`).
+   */
+  readonly push: {
+    begin(): boolean
+    end(): boolean
+    setWalk(walk: readonly [number, number] | null): void
+    readonly state: RoomPushState | null
+  }
   /** Throw what is held at `speed` m/s (default 9). */
   throwHeld(speed?: number): boolean
   /** Point the camera (scripted demos and tests). */
@@ -535,6 +551,7 @@ export interface ScenarioReport {
 }
 
 export type { DestructionEvent, Vec3 }
+export type { RoomPushEvent, RoomPushState } from './furniture-push'
 export type {
   AnimationClipSpec,
   ItemAnimationContract,

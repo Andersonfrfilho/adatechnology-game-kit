@@ -106,6 +106,13 @@ async function start() {
     const goods = room.testTable.items().find((item) => item.id === 'item_canned_beans')?.group
     room.testTable.open(groups.includes(table) ? table : (goods ?? groups[0]))
   }
+  // pushing furniture: a light piece, one too heavy for the player and one against the wall
+  if (params.get('scene') === 'push') {
+    room.spawn('nightstand', [-1.6, 0, 6], 0)
+    room.spawn('bbq', [1.6, 0, 6], 0)
+    room.spawn('wardrobe', [0, 0, -10.45], 0)
+    room.look([-1.6, 1.7, 7.4], [-1.6, 0.5, 6])
+  }
   const wanted = params.get('scenario')
   if (wanted) {
     const list = wanted === 'all' ? undefined : room.scenarios.filter((s) => s.id === wanted)
