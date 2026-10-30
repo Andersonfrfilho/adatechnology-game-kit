@@ -10,6 +10,14 @@ import type { ThreeLib } from './types'
 /** How far the liquid is kept inside the container walls so it does not fight with them. */
 const INSET = 0.985
 
+/** The opening is less than half as wide as the container: nothing of the liquid inside can be seen through it. */
+const narrowMouth = (state: ContainerState): boolean => {
+  const shape = state.shape
+  if (!shape || state.lipRadius === undefined) return false
+  const inner = shape.kind === 'cylinder' ? shape.radius : Math.min(shape.size[0], shape.size[2]) / 2
+  return state.lipRadius < inner * 0.5
+}
+
 /**
  * The liquid inside one bound container: the container's inner shape clipped by the world surface plane, expressed in the bound object's space,
  * so the cap always lies on the plane whatever the tilt. Plus steam puffs above a hot surface.
@@ -86,7 +94,8 @@ export class LiquidBody {
       return
     }
     // Nothing of a sealed opaque shell shows its liquid, and a dent in that shell goes deeper than the liquid wall and would let the liquid through.
-    if (state.closed && this.isShellOpaque()) {
+    // A narrow mouth (the tab of a can, a bullet hole) shows no more of it than a sealed one does: only the stream that comes out of it.
+    if ((state.closed || narrowMouth(state)) && this.isShellOpaque()) {
       if (this.mesh) this.mesh.visible = false
       this.vertices = 0
       return
@@ -122,12 +131,15 @@ export class LiquidBody {
     } else this.steamAcc = 0
   }
 
-  /** Every mesh of the bound object (the liquid itself aside) is drawn with an opaque material. */
+  /**
+   * Every mesh of the bound object (the liquid itself aside) is drawn with an opaque material. The marks drawn on its surface (bullet holes, scorches: the
+   * `userData.destructionDebris` meshes of `game-destruction-three`) are see-through discs on the shell, not windows into it.
+   */
   private isShellOpaque(): boolean {
     let opaque = true
     this.object.traverse((child) => {
       const mesh = child as THREE_NS.Mesh
-      if (!opaque || !mesh.isMesh || child === this.mesh) return
+      if (!opaque || !mesh.isMesh || child === this.mesh || child.userData?.destructionDebris === true) return
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (materials.some((material) => material.transparent || material.opacity < 1)) opaque = false
     })
