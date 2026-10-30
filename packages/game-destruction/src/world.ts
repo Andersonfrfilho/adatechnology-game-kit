@@ -31,6 +31,33 @@ import { ignitionChance, resolveIgnitionRules, sparkTargetFactor } from '@adatec
 /** Hit points removed per joule (before the material's `damageScale`). */
 /** Metres: a ductile part this thin or thinner dishes around a bullet hole. */
 const THIN_SHEET_DISHING = 0.005
+/** Rays of a box sweep start this far inside its face, so that a box touching a wall still sees it. */
+const SWEEP_BACK = 0.01
+
+/** Where the rays of a box sweep leave from: a grid on each face the box moves toward. */
+function sweepOrigins(box: { readonly min: Vec3; readonly max: Vec3 }, d: Vec3, spacing: number): Vec3[] {
+  const origins: Vec3[] = []
+  const line = (from: number, to: number): number[] => {
+    const n = Math.max(1, Math.ceil((to - from) / spacing))
+    return Array.from({ length: n + 1 }, (_, i) => from + ((to - from) * i) / n)
+  }
+  for (const axis of [0, 1, 2] as const) {
+    if (Math.abs(d[axis]) < 1e-3) continue
+    const lead = d[axis] > 0 ? box.max[axis] - SWEEP_BACK : box.min[axis] + SWEEP_BACK
+    const u = ((axis + 1) % 3) as 0 | 1 | 2
+    const v = ((axis + 2) % 3) as 0 | 1 | 2
+    for (const a of line(box.min[u], box.max[u])) {
+      for (const b of line(box.min[v], box.max[v])) {
+        const point: Vec3 = [0, 0, 0]
+        point[axis] = lead
+        point[u] = a
+        point[v] = b
+        origins.push(point)
+      }
+    }
+  }
+  return origins
+}
 /** Metres: a ductile part this thin or thinner is a foil-like sheet (a drink can, a food tin): a blow folds it where it lands, a blade cuts through it. */
 const THIN_SHEET_CRUSH = 0.0005
 /** Metres: the widest dent a blow leaves on such a sheet; the sheet folds under the fist, the shoe or the corner it lands on, not under the whole reach of the blow. */
@@ -3005,6 +3032,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     raycast(origin, direction, maxDistance = Infinity) {
       const r = raycastInternal(origin, direction, maxDistance)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
+    },
+    sweepBox(box, direction, distance, options = {}) {
+      const d = vec.normalize(direction)
+      const ignored = options.ignore === undefined ? undefined : objects.get(options.ignore)
+      const ignore = ignored ? new Set(ignored.parts.map((p) => `${ignored.id}\0${p.spec.id}`)) : undefined
+      let best: RayHit | null = null
+      for (const origin of sweepOrigins(box, d, options.spacing ?? 0.2)) {
+        const r = raycastInternal(origin, d, distance + SWEEP_BACK, ignore)
+        if (!r || (best && r.distance >= best.distance)) continue
+        best = { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: Math.max(0, r.distance - SWEEP_BACK) }
+      }
+      return best
     },
     shoot(origin, direction, energy, caliber, source, round) {
       const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}

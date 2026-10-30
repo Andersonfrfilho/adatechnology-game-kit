@@ -11,7 +11,7 @@ import type { THREE_NS } from '../three'
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
 export type RoomAvatarLike = {
   root: THREE_NS.Object3D
-  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; holding?: boolean; itemUse?: AvatarItemUsePose | null }): void
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
   firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean; contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }): void }
@@ -78,7 +78,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
   let guarding = false
   const stepGuard = (dt: number, state: Parameters<RoomAvatarLike['update']>[1]): void => {
     if (!guard) return
-    const free = state.speed < GUARD_SPEED && !state.down && !state.armed && !state.holding && !state.itemUse && !state.running
+    const free = state.speed < GUARD_SPEED && !state.down && !state.armed && !state.holding && !state.push && !state.itemUse && !state.running
     if (strikeLeft > 0) {
       strikeLeft -= dt
       if (strikeLeft <= 0 && guardLeft > 0 && free) {
@@ -109,6 +109,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         pitch: -state.pitch,
         ...(state.holding !== undefined ? { holding: state.holding } : {}),
         ...(state.itemUse !== undefined ? { itemUse: state.itemUse } : {}),
+        ...(state.push !== undefined ? { push: state.push } : {}),
       })
     },
     hand: (side) => avatar.hand(side),

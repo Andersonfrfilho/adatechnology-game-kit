@@ -28,6 +28,8 @@ export interface RoomAvatarState {
   holding?: boolean
   /** Active scripted item use (`drink`, `sip`, `chug`, `pour`, `open`, `close`, `tilt`). */
   itemUse?: RoomAvatarItemUse | null
+  /** Hands on a piece of furniture: `grip` while the hold timer fills (`progress`), `push` walking with it, `strain` straining against what does not give. */
+  push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
 }
 
 /** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */

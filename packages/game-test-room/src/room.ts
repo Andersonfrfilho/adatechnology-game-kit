@@ -3,7 +3,7 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
-import { createDestructionRenderer, createDestructionSound, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -31,6 +31,8 @@ import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import { createRoomPush, PUSH_REACH } from './furniture-push'
+import type { RoomPushTarget } from './furniture-push'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -562,6 +564,71 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let slot = 0
   const maxCarry = options.maxCarryKg ?? 60
 
+  /** How far from straight ahead (cosine) something can be and still be what the player leans on. */
+  const PUSH_AHEAD = 0.6
+  const heaviestMaterial = (id: string): string | undefined => {
+    let best: { mass: number; material: string } | undefined
+    for (const p of world.state(id)?.parts ?? []) if (p.status !== 'broken' && (!best || p.mass > best.mass)) best = { mass: p.mass, material: p.material }
+    return best?.material
+  }
+  /** What the player stands against when the aim is not on it (from the shoulder the aim of something low falls on the floor beside it): the closest thing ahead within arm's reach. */
+  const leanedOn = (): RoomPushTarget | null => {
+    const fx = -Math.sin(player.yaw)
+    const fz = -Math.cos(player.yaw)
+    let best: Entry | null = null
+    let bestDistance = PUSH_REACH
+    for (const e of entries.values()) {
+      if (e.arena || (!e.piece && !e.free)) continue
+      const b = bodyBox(e)
+      if (!b) continue
+      const dx = Math.max(b.minX, Math.min(b.maxX, player.x)) - player.x
+      const dz = Math.max(b.minZ, Math.min(b.maxZ, player.z)) - player.z
+      const distance = Math.hypot(dx, dz)
+      if (distance >= bestDistance || (distance > 1e-3 && (dx * fx + dz * fz) / distance < PUSH_AHEAD)) continue
+      best = e
+      bestDistance = distance
+    }
+    return best ? { objectId: best.so.objectId, root: best.so.root, name: nameOf(best.so.objectId), piece: best.piece ?? null } : null
+  }
+  const push = createRoomPush({
+    THREE,
+    player,
+    world,
+    arena: { limit: arenaSize, colliders: arena.colliders },
+    blockers,
+    ...(options.push ? { rules: options.push } : {}),
+    pick: () => {
+      if (heldPiece || (tool.def.category !== 'hand' && toolId !== 'fists')) return null
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
+      if (r && aimed) return { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null }
+      return leanedOn()
+    },
+    massOf: (objectId) => massOfObject(objectId),
+    materialOf: heaviestMaterial,
+    makePiece: (objectId) => {
+      const piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
+      const e = entries.get(objectId)
+      if (e) e.piece = piece
+      rendererPieces.set(objectId, piece)
+      return piece
+    },
+    dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
+    hitSound: (objectId, point) => playSound(impactKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, 0.5),
+    onEvent: (ev) => {
+      const vars = { name: ev.name, kg: num(ev.massKg, 0) }
+      action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
+      fire('push', ev)
+      if (ev.type === 'engaged') say(t('hud.push_on', vars))
+      else if (ev.type === 'too_heavy') say(t('hud.push_too_heavy', vars))
+      else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
+    },
+    ring: (value) => ui?.holdRing(value),
+  })
+  /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
+  let pushByKey = false
+
   const massOfObject = (id: string): number => {
     const st = world.state(id)
     let m = 0
@@ -992,10 +1059,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     feetPrev = [x, z]
     avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
-    avatarState.crouch = crouchForced || player.crouching
+    avatarState.crouch = crouchForced || player.crouching || push.isBent
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
+    avatarState.push = push.avatarState
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
@@ -1017,11 +1085,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const stepFirstPerson = (dt: number): void => {
     const arms = avatar?.firstPerson
     if (!arms) return
-    const targets = handSource?.() ?? carriedHand
+    const targets = push.handTargets() ?? handSource?.() ?? carriedHand
     const state: RoomFirstPersonState = {
       camera,
       targets,
-      stance: handStances[toolId] ?? (targets ? 'hold' : 'relaxed'),
+      stance: push.active ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       speed: avatarState.speed,
       running: avatarState.running,
       crouch: avatarState.crouch,
@@ -1780,6 +1848,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     else useTool(FIXED_DT, false)
   }
   const grab = (): boolean => {
+    if (push.active) return false
     if (heldPiece) {
       const name = heldName
       releaseHeld()
@@ -2072,6 +2141,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const onKey = (code: string, down: boolean, e: KeyboardEvent): void => {
     if (!down) {
       if (code === 'KeyZ') tiltKey = 0
+      if (code === 'KeyE' && pushByKey) {
+        pushByKey = false
+        if (push.end()) grab()
+      }
       return
     }
     const digit = /^Digit(\d)$/.exec(code)
@@ -2089,7 +2162,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     switch (code) {
       case 'KeyE':
-        grab()
+        if (e.repeat) break
+        // a tap grabs, a hold against something that stands on the floor pushes it
+        pushByKey = !heldPiece && push.begin()
+        if (!pushByKey) grab()
         break
       case 'KeyG':
         throwHeld()
@@ -2313,6 +2389,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
     player.update(dt)
+    if (pushByKey && !player.keys.has('KeyE')) {
+      // the window lost the key without a key up
+      pushByKey = false
+      push.end()
+    }
+    push.step(paused ? 0 : dt)
     if (!paused) kickLight(dt)
     if (!paused) pushByPlayer(dt)
     else player.takeWish()
@@ -2321,7 +2403,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
     // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
-    if ((useHeld || useFirst) && !paused) {
+    if ((useHeld || useFirst) && !paused && !push.active) {
       if (tool.def.category === 'hand') {
         if (useFirst) handUse()
       } else if (useHeld) useTool(dt, !useFirst)
@@ -2826,6 +2908,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const n = Math.max(1, Math.round(seconds / dt))
     for (let i = 0; i < n; i++) {
       player.update(0)
+      push.step(dt)
       followHeld(dt)
       stepSim(dt)
     }
@@ -3156,6 +3239,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       debugView.updateProjectionMatrix()
       debugView.updateMatrixWorld(true)
     },
+    get playerPosition() {
+      return player.position
+    },
+    push: { begin: () => push.begin(), end: () => push.end(), setWalk: (walk) => push.setWalk(walk), get state() { return push.state } },
     setCameraMode,
     get cameraMode() {
       return cameraMode

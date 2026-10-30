@@ -115,6 +115,9 @@ export function impactKey(def: MaterialDef | undefined): string {
   return def.fracture === 'none' ? 'impact_metal' : 'impact_wood'
 }
 
+/** Sound key (`drag_*`) of a base of this material dragged on a floor. */
+export const dragSoundKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'drag_')
+
 function fractureKey(def: MaterialDef | undefined, style: string): string {
   switch (style) {
     case 'shatter':

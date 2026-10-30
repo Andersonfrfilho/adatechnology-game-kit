@@ -84,6 +84,8 @@ export type AvatarUpdate = {
   holding?: boolean
   /** Active scripted item use (`drink`, `sip`, `chug`, `pour`, `open`, `close`, `tilt`). */
   itemUse?: AvatarItemUsePose | null
+  /** Hands on a piece of furniture: `grip` closes on it with `progress`, `push` walks with it, `strain` strains against what does not give. */
+  push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
 }
 
 export type PlayPoseOptions = {
@@ -259,6 +261,26 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     })
     // arms[0] is the support hand (+x), arms[1] the weapon hand (-x)
     return { armR: shoulder, armL: shoulder, armRz: AIMED.zRight, armLz: AIMED.zLeft, elbR: AIMED.elbowRight, elbL: AIMED.elbowLeft }
+  }
+
+  /** The stretched arms of `shove_two_hands` (attack clips) held on the piece, the body leaning into it; straining, the legs brace and the arms shake. */
+  const pushingPose = (push: NonNullable<AvatarUpdate['push']>): PoseTargets => {
+    const on = push.phase === 'grip' ? Math.min(1, push.progress * 2.2) : 1
+    const strain = push.phase === 'strain' ? 1 : 0
+    const shake = strain * Math.sin(time * 40) * 0.025
+    const raise = -1.5 * on
+    const elbow = -0.9 + 0.72 * (push.phase === 'grip' ? push.progress : 1) + strain * 0.12
+    return {
+      lean: (0.2 + 0.2 * strain) * on,
+      headX: (0.05 + 0.08 * strain) * on,
+      armR: raise + shake,
+      armL: raise - shake,
+      armRz: -0.08 * on,
+      armLz: 0.08 * on,
+      elbR: elbow,
+      elbL: elbow,
+      ...(strain ? { legL: -0.5, legR: 0.4, kneeL: 0.55, kneeR: 0.08, drop: -0.05 } : {}),
+    }
   }
 
   /** Right-hand carry and item-use poses in third person (`arms[1]` is the puppet's right arm at `-x`, `arms[0]` is the left arm at `+x`). */
@@ -454,7 +476,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       else {
         if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
-        if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
+        if (state.push) animator.setPose(rig, pushingPose(state.push))
+        else if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
         else if (state.holding || state.itemUse) animator.setPose(rig, holdingPose(gait, state.itemUse))
         else if (!running) {
           animator.setPose(rig, {
