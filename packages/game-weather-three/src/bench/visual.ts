@@ -1,4 +1,5 @@
-import type { ModuleHost, ModuleLayer } from '@adatechnology/game-contracts'
+import { footprintBlocker } from '@adatechnology/game-contracts'
+import type { Footprint, ModuleHost, ModuleLayer } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from '@adatechnology/game-weather'
 import type * as THREE_NS from 'three'
@@ -26,7 +27,7 @@ export type WeatherVisualOptions = Pick<WeatherRendererOptions, 'profile' | 'ran
 
 /** What the rig needs of the vehicles SDK (`VehiclesThree` of game-vehicles-three): a car in the game frame (front on +z, wheels on y = 0) and its length. */
 export interface RigVehicles {
-  build(key: string, options?: { quality?: 'high' | 'lite' }): { readonly group: THREE_NS.Object3D; readonly length: number; dispose(): void }
+  build(key: string, options?: { quality?: 'high' | 'lite' }): { readonly group: THREE_NS.Object3D; readonly length: number; readonly width?: number; dispose(): void }
 }
 
 const RIG_VEHICLE = 'midsize_sedan'
@@ -37,7 +38,7 @@ const RIG_DEFAULT = [1.6, -2.5, 0] as const
  * The lamps of the Workshop's car and, when the vehicles SDK is lent, a car of the fleet under them, its nose just ahead of the lamps: what the headlights are attached to when the viewer has no
  * car in the room.
  */
-function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: string): { readonly group: THREE_NS.Group; dispose(): void } {
+function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: string): { readonly group: THREE_NS.Group; readonly footprint?: Footprint; dispose(): void } {
   const group = new THREE.Group()
   group.name = 'weather-lamp-rig'
   const car = vehicles?.build(key, { quality: 'lite' })
@@ -45,8 +46,11 @@ function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: strin
     car.group.position.z = HEADLIGHTS.lamp[2] + 0.1 - car.length / 2
     group.add(car.group)
   }
+  // the car is solid: the walking player stops at its body (its length and width, measured by the vehicles SDK) instead of walking through it
+  const footprint = car ? footprintOf(car) : undefined
   return {
     group,
+    ...(footprint ? { footprint } : {}),
     dispose() {
       car?.dispose()
     },
@@ -83,15 +87,23 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
   }
 }
 
+function footprintOf(car: { readonly group: THREE_NS.Object3D; readonly length: number; readonly width?: number }): Footprint | undefined {
+  if (!car.width) return undefined
+  const z = car.group.position.z
+  return { minX: -car.width / 2, maxX: car.width / 2, minZ: z - car.length / 2, maxZ: z + car.length / 2 }
+}
+
 function attachRig(THREE: ThreeLib, host: ModuleHost, renderer: WeatherRenderer, place: readonly [number, number, number] | false, vehicles: RigVehicles | undefined, key: string): WeatherVisual {
   const scene = host.scene as THREE_NS.Scene
   const rig = place === false ? undefined : buildRig(THREE, vehicles, key)
   let detach: (() => void) | undefined
+  let unblock: (() => void) | undefined
   if (rig && place) {
     rig.group.position.set(place[0], 0, place[1])
     rig.group.rotation.y = place[2]
     scene.add(rig.group)
     detach = renderer.headlights.attach(rig.group)
+    if (rig.footprint) unblock = host.addBlocker?.(footprintBlocker(rig.group, rig.footprint))
   }
   return {
     update: (dt) => renderer.update(dt),
@@ -100,6 +112,7 @@ function attachRig(THREE: ThreeLib, host: ModuleHost, renderer: WeatherRenderer,
     },
     dispose() {
       detach?.()
+      unblock?.()
       if (rig) {
         scene.remove(rig.group)
         rig.dispose()
