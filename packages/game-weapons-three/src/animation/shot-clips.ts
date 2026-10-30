@@ -80,10 +80,21 @@ export function faultClips(context: ClipContext): AnimationClipSpec[] {
   return [misfire, ...stopped]
 }
 
-/** The selector or safety lever flicks over: on turns it down, off brings it back. The gallery draws the lever and does not move it. */
+// the safety (`safety_on`, `safety_off`): the weapon cants to the right so its left side comes up to the eye, the thumb of the shooting hand
+// (`data/hand-work.json`) goes to the lever and flicks it, and the weapon comes back level. Seconds and radians of the motion, not of any weapon.
+export const SAFETY_MOTION = { cant: 0.22, lift: 0.012, in: 0.14, flickAt: 0.16, flick: 0.1, outAt: 0.32, out: 0.16, lever: 0.6 } as const
+
+/**
+ * Putting the safety on or taking it off (destravar): the weapon cants and rises a little toward the eye, the lever (the model's `safety`, when it
+ * draws one) flicks down for on and back for off while the thumb is on it, and the weapon settles. Every model has it, so B always shows the move.
+ */
 export function safetyClips(context: ClipContext): AnimationClipSpec[] {
-  if (!context.parts.safety) return []
-  return [composeClip('safety_on', [turn('safety', 'z', 0, 0.12, 0, -0.6)]), composeClip('safety_off', [turn('safety', 'z', 0, 0.12, -0.6, 0)]), composeClip('mode', [turn('safety', 'z', 0, 0.07, 0, 0.4), turn('safety', 'z', 0.07, 0.07, 0.4, 0)])]
+  const { cant, lift, in: rise, flickAt, flick, outAt, out, lever } = SAFETY_MOTION
+  const carry = (): Tween[] => [turn(ROOT, 'x', 0, rise, 0, cant), move(ROOT, 'y', 0, rise, 0, lift), turn(ROOT, 'x', outAt, out, cant, 0), move(ROOT, 'y', outAt, out, lift, 0)]
+  const flickTo = (from: number, to: number): Tween[] => (context.parts.safety ? [turn('safety', 'z', flickAt, flick, from, to)] : [])
+  const clips = [composeClip('safety_on', [...carry(), ...flickTo(0, -lever)]), composeClip('safety_off', [...carry(), ...flickTo(-lever, 0)])]
+  if (context.parts.safety) clips.push(composeClip('mode', [turn('safety', 'z', 0, 0.07, 0, 0.4), turn('safety', 'z', 0.07, 0.07, 0.4, 0)]))
+  return clips
 }
 
 /** Raising the weapon: it comes up from low with the muzzle down. The gallery shows no hands, so this is the SDK's own motion. */
