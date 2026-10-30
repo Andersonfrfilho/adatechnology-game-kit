@@ -29,6 +29,8 @@ export class VehicleVisuals {
   /** Hinged panels created for the doors and the lid, by part id. */
   readonly plates = new Map<string, Obj>()
   private readonly gone = new Set<string>()
+  /** Shows or hides the plate and the recess of a door or lid by its state (see `showWhenOpen`). */
+  private readonly syncPlates = new Map<string, () => void>()
   private lightsOn = true
   readonly hood: { id: string; open: number; sign: number } | null
 
@@ -153,9 +155,10 @@ export class VehicleVisuals {
       piv.position.set(hx, cy, sk + s * 0.016)
       piv.userData.rigid = true
       this.c.vehicle.add(piv)
-      this.box(len, hgt, 0.022, this.paint(), hingeFront ? -len / 2 : len / 2, 0, 0, piv)
+      const panel = this.box(len, hgt, 0.022, this.paint(), hingeFront ? -len / 2 : len / 2, 0, 0, piv)
       this.plates.set(p.id, piv)
       this.extra.set(`recess_${p.id}`, [recess])
+      this.showWhenOpen(p.id, piv, panel, recess)
     } else {
       // the lid is the rear panel: it hinges on its top edge and lifts away from the body
       const sk = this.surface('x', -1, B, grid(B.y0, B.y1, B.z0, B.z1))
@@ -169,10 +172,37 @@ export class VehicleVisuals {
       piv.position.set(sk - 0.016, B.y1 - 0.05, 0)
       piv.userData.rigid = true
       this.c.vehicle.add(piv)
-      this.box(0.022, wy, wz, this.paint(), 0, -wy / 2, 0, piv)
+      const panel = this.box(0.022, wy, wz, this.paint(), 0, -wy / 2, 0, piv)
       this.plates.set(p.id, piv)
       this.extra.set(`recess_${p.id}`, [recess])
+      this.showWhenOpen(p.id, piv, panel, recess)
     }
+  }
+  /**
+   * A closed door or lid is the body's own surface: the flat plate over it and the dark recess under it show only while it swings open or once it has come off, so the closed car
+   * keeps the shape of its model instead of flat panels over its curved sides. Follows the hinge's rotation, whoever turns it (the clips of a host, `detach`).
+   */
+  private showWhenOpen(id: string, piv: Obj, panel: Obj, recess: Obj): void {
+    const sync = (): void => {
+      const r = piv.rotation
+      const open = Math.abs(r.x) + Math.abs(r.y) + Math.abs(r.z) > 1e-3 || this.gone.has(id) || piv.parent !== this.c.vehicle
+      panel.visible = open
+      recess.visible = open
+    }
+    const euler = piv.rotation
+    const quaternion = piv.quaternion
+    const onEuler = euler._onChangeCallback
+    const onQuaternion = quaternion._onChangeCallback
+    euler._onChange(() => {
+      onEuler()
+      sync()
+    })
+    quaternion._onChange(() => {
+      onQuaternion()
+      sync()
+    })
+    this.syncPlates.set(id, sync)
+    sync()
   }
   private makeMirror(p: PartDef): void {
     const [cx, cy, cz] = p.box.center
@@ -361,6 +391,7 @@ export class VehicleVisuals {
     const trail = 0
     let moved = false
     this.gone.add(p.id)
+    this.syncPlates.get(p.id)?.()
     switch (p.role) {
       case 'door':
       case 'lid':

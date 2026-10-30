@@ -17,6 +17,11 @@ export interface PlayerOptions {
   colliders: Array<[number, number, number, number]>
   /** Extra places to stay out of, asked on every step (a module's walls): `(x, z, radius) => blocked`. The set may change while the player walks. */
   blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
+  /**
+   * What stands where the body would be, asked on every step with the feet height: `floor` is the highest top it can step onto there (a low
+   * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop.
+   */
+  footing?: (x: number, z: number, radius: number, feet: number) => { floor: number; blocked: boolean }
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -52,6 +57,16 @@ export interface Player {
   kick(pitchDeg: number, yawDeg: number): void
   /** Move the player by a world offset on the floor plane, stopped by the colliders and the arena limit (scripted walks). */
   moveBy(dx: number, dz: number): void
+  /** Where the keys ask to go on the floor: a unit `[x, z]`, or `[0, 0]`. */
+  readonly walkIntent: readonly [number, number]
+  /** Whether a body can stand at this point (arena, colliders, blockers). */
+  canStand(x: number, z: number): boolean
+  /** While held the keys do not walk or jump: whoever holds it moves the player with `moveBy` (pushing a piece of furniture). */
+  setWalkHeld(held: boolean): void
+  /** Lowers the eye by this many metres, eased (bending over something low); 0 stands up. */
+  setBend(metres: number): void
+  /** Keeps the view within `range` radians of `yaw`; null frees it. */
+  setLookLimit(limit: { readonly yaw: number; readonly range: number } | null): void
   /** The floor offset the player tried to walk (keys, `moveBy`, `walk`) since the last call, blocked or not; the call resets it. */
   takeWish(): [number, number]
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
@@ -62,11 +77,16 @@ export interface Player {
 const EYE = 1.7
 /** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
 export const PLAYER_RADIUS = 0.3
+/** Share of the radius the feet stand on: at the edge of a heap the player steps down instead of hovering on its corner. */
+const FOOT = 0.5
 const WALK = 3.4
 /** How far (m) the eye sinks when crouched, the speed of a crouched walk, and how fast the eye goes down and up (per second). */
 export const CROUCH_DROP = 0.55
 const CROUCH_WALK = 1.7
 const CROUCH_RATE = 9
+const BEND_RATE = 7
+/** The widths of the body, against its full width, that say how deep something has come into it. */
+const CLEAR_SHARES = [1, 0.75, 0.5, 0.25]
 /** A crouch key released within this many seconds was a tap, which stays crouched; a longer press was a hold. */
 const CROUCH_TAP = 0.25
 const RUN = 6.2
@@ -87,6 +107,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let y = 0
   let eye = EYE
   let crouch = 0
+  let bend = 0
+  let bendTarget = 0
   let vy = 0
   let walked = 0
   let running = false
@@ -119,30 +141,47 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const apply = (): void => {
     euler.set(pitch, yaw, 0, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + floorLevel + y - CROUCH_DROP * crouch, px.z)
+    cam.position.set(px.x, eye + floorLevel + y - CROUCH_DROP * crouch - bend, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
 
-  const blocked = (x: number, z: number): boolean => {
-    if (Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS) return true
-    for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
-    if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
-    return false
+  const outside = (x: number, z: number): boolean => Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS
+  const blocked = (x: number, z: number, radius = PLAYER_RADIUS): boolean => {
+    if (outside(x, z)) return true
+    for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
+    if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
+    return o.footing ? o.footing(x, z, radius, y).blocked : false
+  }
+  /** The widest body that fits where the player is, or null when not even the narrowest does: how deep something has come into the player. */
+  const clearRadius = (): number | null => {
+    for (const share of CLEAR_SHARES) if (!blocked(px.x, px.z, PLAYER_RADIUS * share)) return PLAYER_RADIUS * share
+    return null
   }
   // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
   const wish = { x: 0, z: 0 }
   const move = (dx: number, dz: number): void => {
     wish.x += dx
     wish.z += dz
+    // caught in something (a piece fell on the spot, a piece settling touches the body) the player walks out of it, and never deeper; right inside, every way is out
+    const radius = clearRadius()
+    const free = (x: number, z: number): boolean => (radius === null ? !outside(x, z) : !blocked(x, z, radius))
     // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
     const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
     const sx = dx / steps
     const sz = dz / steps
     for (let i = 0; i < steps; i++) {
-      if (!blocked(px.x + sx, px.z)) px.x += sx
-      if (!blocked(px.x, px.z + sz)) px.z += sz
+      if (free(px.x + sx, px.z)) px.x += sx
+      if (free(px.x, px.z + sz)) px.z += sz
     }
+  }
+
+  const walkKeys = (): readonly [number, number] => {
+    const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0)
+    const r = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0)
+    if (!f && !r) return [0, 0]
+    const len = Math.hypot(f, r)
+    return [(-Math.sin(yaw) * f + Math.cos(yaw) * r) / len, (-Math.cos(yaw) * f - Math.sin(yaw) * r) / len]
   }
 
   let dragging = false
@@ -151,8 +190,14 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let useStarted = false
   let holdTimer: ReturnType<typeof setTimeout> | null = null
 
+  let walkHeld = false
+  let lookLimit: { readonly yaw: number; readonly range: number } | null = null
   const look = (dx: number, dy: number): void => {
     yaw -= dx * LOOK
+    if (lookLimit) {
+      const off = Math.atan2(Math.sin(yaw - lookLimit.yaw), Math.cos(yaw - lookLimit.yaw))
+      yaw = lookLimit.yaw + Math.max(-lookLimit.range, Math.min(lookLimit.range, off))
+    }
     pitch = Math.max(-1.5, Math.min(1.5, pitch - dy * LOOK))
   }
   const onLockChange = (): void => {
@@ -282,6 +327,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('beforeunload', onBeforeUnload)
 
   return {
+    get walkIntent() {
+      return walkKeys()
+    },
+    canStand(x, z) {
+      return !blocked(x, z)
+    },
+    setWalkHeld(held) {
+      walkHeld = held
+    },
+    setBend(metres) {
+      bendTarget = metres
+    },
+    setLookLimit(limit) {
+      lookLimit = limit
+    },
     get yaw() {
       return yaw
     },
@@ -318,33 +378,25 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       const crouched = isCrouched()
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
-      const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
+      bend += (bendTarget - bend) * Math.min(1, dt * BEND_RATE)
+      const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
       const speed = crouched ? CROUCH_WALK : run ? RUN : WALK
-      let f = 0
-      let r = 0
-      if (keys.has('KeyW') || keys.has('ArrowUp')) f += 1
-      if (keys.has('KeyS') || keys.has('ArrowDown')) f -= 1
-      if (keys.has('KeyD') || keys.has('ArrowRight')) r += 1
-      if (keys.has('KeyA') || keys.has('ArrowLeft')) r -= 1
-      if ((f || r || keys.has('Space')) && eye !== EYE) eye = EYE
-      if (f || r) {
-        const len = Math.hypot(f, r)
-        const fx = -Math.sin(yaw)
-        const fz = -Math.cos(yaw)
-        const rx = Math.cos(yaw)
-        const rz = -Math.sin(yaw)
-        move(((fx * f + rx * r) / len) * speed * dt, ((fz * f + rz * r) / len) * speed * dt)
-      }
+      const [walkX, walkZ] = walkKeys()
+      if ((walkX || walkZ || keys.has('Space')) && eye !== EYE) eye = EYE
+      if ((walkX || walkZ) && !walkHeld) move(walkX * speed * dt, walkZ * speed * dt)
       walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
       running = run && walked > 0
-      if (y <= 0 && keys.has('Space')) vy = JUMP
-      if (y > 0 || vy > 0) {
+      // the floor under the feet: a step up is taken at once, a drop is a fall
+      const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
+      if (y < floor && vy <= 0) y = floor
+      if (y <= floor && keys.has('Space') && !walkHeld) vy = JUMP
+      if (y > floor || vy > 0) {
         vy -= GRAVITY * dt
         y += vy * dt
-        if (y <= 0) {
-          y = 0
+        if (y <= floor) {
+          y = floor
           vy = 0
         }
       }

@@ -27,9 +27,15 @@ export interface ItemDestruction {
   readonly materials?: Readonly<Record<string, string>>
   /** Segments the cylinder and box meshes of the model are rebuilt with, so a bullet dent (a few millimetres wide) finds vertices to push in. */
   readonly tessellate?: {
-    readonly cylinder?: { readonly heightSegments: number; readonly radialSegments: number }
+    /**
+     * With `capRings` (and `three` given to `tagForDestruction`) a cylinder becomes one lathe with that many rings on each end, so the lid and the bottom dent
+     * too; its rows then are about as tall as its columns are wide, never more than `heightSegments`.
+     */
+    readonly cylinder?: { readonly heightSegments: number; readonly radialSegments: number; readonly capRings?: number }
     readonly box?: { readonly widthSegments: number; readonly heightSegments: number; readonly depthSegments: number }
   }
+  /** Real wall thickness in metres of the shell (`body`, the largest mesh) and of its other parts (`ends`: lid, bottom, neck), for the destruction world. */
+  readonly wall?: { readonly body: number; readonly ends: number }
 }
 
 /** A family of models that behave alike: one rule for all of them, so adding a model is one id and changing the rule changes them all. */
@@ -131,6 +137,8 @@ export interface DestructionTagOptions {
   readonly weight?: number
   /** Size in metres, for the contents of the shell. */
   readonly size?: readonly [number, number, number]
+  /** three.js, for the shapes three only makes from scratch (a cylinder with rings on its ends: `tessellate.cylinder.capRings`). */
+  readonly three?: typeof THREE_NS
 }
 
 type CylinderParameters = { radiusTop: number; radiusBottom: number; height: number; openEnded: boolean; thetaStart: number; thetaLength: number }
@@ -138,12 +146,67 @@ type BoxParameters = { width: number; height: number; depth: number }
 type Tessellation = NonNullable<ItemDestruction['tessellate']>
 type GeometryConstructor = new (...args: readonly (number | boolean)[]) => THREE_NS.BufferGeometry
 
+/**
+ * A cylinder drawn as one lathe: rings on the bottom from the axis out, the side, rings on the top back to the axis. The corners are two points (one of the end,
+ * one of the side), so the rim stays sharp and the vertices of each face move with that face only.
+ */
+function ringedCylinder(T: typeof THREE_NS, p: CylinderParameters, radial: number, maxRows: number, rings: number): THREE_NS.BufferGeometry {
+  const half = p.height / 2
+  // rows about as tall as a column is wide on the wider end
+  const column = (2 * Math.PI * Math.max(p.radiusTop, p.radiusBottom, 1e-6)) / radial
+  const rows = Math.max(1, Math.min(maxRows, Math.round(p.height / column)))
+  const points: THREE_NS.Vector2[] = []
+  if (!p.openEnded) for (let i = 0; i <= rings; i++) points.push(new T.Vector2((p.radiusBottom * i) / rings, -half))
+  for (let j = 0; j <= rows; j++) points.push(new T.Vector2(p.radiusBottom + ((p.radiusTop - p.radiusBottom) * j) / rows, -half + (p.height * j) / rows))
+  if (!p.openEnded) for (let i = rings; i >= 0; i--) points.push(new T.Vector2((p.radiusTop * i) / rings, half))
+  return lathed(T, points, radial, p.thetaStart, p.thetaLength)
+}
+
+/**
+ * The lathe of `points` with its normals from its faces: the lathe's own normals blend an end into the side at a doubled corner point. A point on the axis that
+ * only degenerate triangles touch gets the normal of the end it closes (up on the top, down on the bottom).
+ */
+function lathed(T: typeof THREE_NS, points: readonly THREE_NS.Vector2[], radial: number, phiStart?: number, phiLength?: number): THREE_NS.BufferGeometry {
+  const geometry = new T.LatheGeometry([...points], radial, phiStart, phiLength)
+  geometry.computeVertexNormals()
+  const position = geometry.getAttribute('position')
+  const normal = geometry.getAttribute('normal')
+  const middle = (Math.min(...points.map((point) => point.y)) + Math.max(...points.map((point) => point.y))) / 2
+  for (let i = 0; i < normal.count; i++) {
+    if (Math.hypot(normal.getX(i), normal.getY(i), normal.getZ(i)) > 0.5) continue
+    normal.setXYZ(i, 0, position.getY(i) >= middle ? 1 : -1, 0)
+  }
+  return geometry
+}
+
+/** The profile of a lathe with every stretch split into pieces no longer than `step`, so its rows are about as fine as its columns. */
+function finerProfile(T: typeof THREE_NS, points: readonly THREE_NS.Vector2[], step: number): THREE_NS.Vector2[] {
+  const out: THREE_NS.Vector2[] = []
+  points.forEach((point, index) => {
+    const next = points[index + 1]
+    out.push(point.clone())
+    if (!next) return
+    const pieces = Math.max(1, Math.round(point.distanceTo(next) / step))
+    for (let k = 1; k < pieces; k++) out.push(point.clone().lerp(next, k / pieces))
+  })
+  return out
+}
+
 /** The same shape as `geometry` with the segments of the rule, or undefined when the rule says nothing about its kind. */
-function tessellated(geometry: THREE_NS.BufferGeometry, rule: Tessellation): THREE_NS.BufferGeometry | undefined {
+function tessellated(geometry: THREE_NS.BufferGeometry, rule: Tessellation, T?: typeof THREE_NS): THREE_NS.BufferGeometry | undefined {
   const Shape = geometry.constructor as GeometryConstructor
   if (geometry.type === 'CylinderGeometry' && rule.cylinder) {
-    const { radiusTop, radiusBottom, height, openEnded, thetaStart, thetaLength } = (geometry as unknown as { parameters: CylinderParameters }).parameters
+    const parameters = (geometry as unknown as { parameters: CylinderParameters }).parameters
+    const { radiusTop, radiusBottom, height, openEnded, thetaStart, thetaLength } = parameters
+    if (T && rule.cylinder.capRings !== undefined) return ringedCylinder(T, parameters, rule.cylinder.radialSegments, rule.cylinder.heightSegments, rule.cylinder.capRings)
     return new Shape(radiusTop, radiusBottom, height, rule.cylinder.radialSegments, rule.cylinder.heightSegments, openEnded, thetaStart, thetaLength)
+  }
+  // a model drawn as a lathe already (an empty can) gets the same columns, and rows to match
+  if (geometry.type === 'LatheGeometry' && rule.cylinder && T && rule.cylinder.capRings !== undefined) {
+    const { points, segments, phiStart, phiLength } = (geometry as unknown as { parameters: { points: THREE_NS.Vector2[]; segments: number; phiStart: number; phiLength: number } }).parameters
+    if (segments >= rule.cylinder.radialSegments) return undefined
+    const widest = Math.max(...points.map((point) => point.x), 1e-6)
+    return lathed(T, finerProfile(T, points, (2 * Math.PI * widest) / rule.cylinder.radialSegments), rule.cylinder.radialSegments, phiStart, phiLength)
   }
   if (geometry.type === 'BoxGeometry' && rule.box) {
     const { width, height, depth } = (geometry as unknown as { parameters: BoxParameters }).parameters
@@ -155,14 +218,14 @@ function tessellated(geometry: THREE_NS.BufferGeometry, rule: Tessellation): THR
 const triangleCount = (geometry: THREE_NS.BufferGeometry): number => (geometry.index ? geometry.index.count : geometry.getAttribute('position').count) / 3
 
 /** Rebuilds the cylinder and box geometries of every mesh under `root` with the segments of the rule; a geometry shared by several meshes is rebuilt once. */
-function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation): void {
+function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation, T?: typeof THREE_NS): void {
   const rebuilt = new Map<THREE_NS.BufferGeometry, THREE_NS.BufferGeometry>()
   root.traverse((object) => {
     const mesh = object as THREE_NS.Mesh
     if (!mesh.isMesh) return
     let fresh = rebuilt.get(mesh.geometry)
     if (!fresh) {
-      fresh = tessellated(mesh.geometry, rule)
+      fresh = tessellated(mesh.geometry, rule, T)
       if (!fresh) return
       rebuilt.set(mesh.geometry, fresh)
     }
@@ -179,13 +242,13 @@ function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation): void {
 /**
  * Writes the `userData` that `specFromObject3D` reads onto the meshes of a drawn item: the destruction material of each mesh from its kit material tag,
  * the item's real weight in kg (`destructionMass`, so the world weighs what the thing weighs) and what the model's family (or the simple shape it is drawn as) in `data/destruction.json` asks for (hollow shells, welded parts, skins),
- * with the liquid the model holds on its shell (`destructionContains`).
+ * with the liquid the model holds on its shell (`destructionContains`) and the real thickness of each wall (`destructionThickness`).
  */
 export function tagForDestruction(root: THREE_NS.Object3D, options: DestructionTagOptions = {}): void {
-  const { modelId, shapeId, weight, size } = options
+  const { modelId, shapeId, weight, size, three } = options
   if (weight !== undefined && weight > 0) root.userData.destructionMass = weight
   const rule = modelId !== undefined ? itemDestruction(modelId) : shapeId !== undefined ? shapeDestruction(shapeId) : undefined
-  if (rule?.tessellate) tessellateShapes(root, rule.tessellate)
+  if (rule?.tessellate) tessellateShapes(root, rule.tessellate, three)
   const solid: THREE_NS.Mesh[] = []
   root.traverse((object) => {
     const mesh = object as THREE_NS.Mesh
@@ -205,6 +268,7 @@ export function tagForDestruction(root: THREE_NS.Object3D, options: DestructionT
   const anchor = solid.reduce((largest, mesh) => (volumeOf(mesh) > volumeOf(largest) ? mesh : largest))
   solid.forEach((mesh, index) => {
     mesh.userData.destructionPart = mesh === anchor ? { id: SHELL_PART_ID } : { id: `shell_${index}`, parent: SHELL_PART_ID, kind: 'weld' }
+    if (rule.wall) mesh.userData.destructionThickness = mesh === anchor ? rule.wall.body : rule.wall.ends
   })
   const contents = size === undefined ? undefined : itemContents({ ...(modelId === undefined ? {} : { model: modelId }), size, ...(weight === undefined ? {} : { weight }) })
   if (contents) anchor.userData.destructionContains = { fluid: contents.liquid, liters: contents.liters }

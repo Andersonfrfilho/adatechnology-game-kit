@@ -15,7 +15,7 @@ import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
-import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 let rendererCount = 0
@@ -27,6 +27,14 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
+const STATIC_REFRESH = 0.5
+/** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
+const STATIC_SPAN = 3
+/** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
+const FEET_BAND = 0.03
+const TIP_MIN_HEIGHT = 0.3
+const TIP_NARROW = 0.3
 /** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
@@ -107,6 +115,9 @@ export function impactKey(def: MaterialDef | undefined): string {
   return def.fracture === 'none' ? 'impact_metal' : 'impact_wood'
 }
 
+/** Sound key (`drag_*`) of a base of this material dragged on a floor. */
+export const dragSoundKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'drag_')
+
 function fractureKey(def: MaterialDef | undefined, style: string): string {
   switch (style) {
     case 'shatter':
@@ -151,6 +162,14 @@ class Renderer implements DestructionRenderer {
   private readonly autoSplit: boolean
   private readonly maxFragments: number
   private readonly bounds = new Map<string, Bound>()
+  /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
+  private readonly staticBoxes = new Map<string, number[]>()
+  /** Objects to measure again; `staticAll` measures every one. */
+  private readonly staticDirty = new Set<string>()
+  private staticAll = true
+  /** Boxes of the pieces' meshes (as `staticBoxes`), with the time they were measured. */
+  private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
+  private staticAt = 0
   private readonly queue: DestructionEvent[] = []
   private readonly unsubscribe: () => void
   private readonly visuals: Visuals
@@ -215,6 +234,7 @@ class Renderer implements DestructionRenderer {
     this.cages = new RebarCages(THREE, o.scene)
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
+      staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       gravity: this.gravity,
       scene: o.scene,
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
@@ -229,6 +249,7 @@ class Renderer implements DestructionRenderer {
   // ----------------------------------------------------------------------------------------------------------------------------------
 
   bind(objectId: string, root: Object3D, options: BindOptions = {}): void {
+    this.staticDirty.add(objectId)
     if (this.bounds.has(objectId)) this.unbind(objectId)
     const state = this.world.state(objectId)
     const partIds = new Set((state?.parts ?? []).map((p) => p.id))
@@ -352,6 +373,7 @@ class Renderer implements DestructionRenderer {
   }
 
   unbind(objectId: string): void {
+    this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -396,6 +418,7 @@ class Renderer implements DestructionRenderer {
   }
 
   makePiece(objectId: string, options: { mass?: number; velocity?: Vec3 } = {}): Piece {
+    this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
     if (!b) throw new Error(`game-destruction-three: object "${objectId}" is not bound`)
     if (b.root.parent && b.root.parent !== this.scene) this.scene.attach(b.root)
@@ -526,7 +549,106 @@ class Renderer implements DestructionRenderer {
   // Events
   // ----------------------------------------------------------------------------------------------------------------------------------
 
+  /**
+   * The highest top of a bound object that is not a piece under (x, z) a corner at height `y` can land on (at most `step` above it). The world boxes
+   * of their drawn meshes are kept until an event or a moved root changes them; parts drawn inside a merged mesh and meshes wider than `STATIC_SPAN`
+   * are left out (walls, floors, roofs: the terrain under them is the host's `groundAt`).
+   */
+  private staticTopAt(x: number, z: number, y: number, step: number): number {
+    let top = -Infinity
+    for (const a of this.staticNow().values()) {
+      // the first six numbers are the box around all of the object's boxes
+      if (a.length === 0 || x < a[0] || x > a[3] || z < a[2] || z > a[5]) continue
+      for (let i = 6; i < a.length; i += 6) {
+        if (x < a[i] || x > a[i + 3] || z < a[i + 2] || z > a[i + 5]) continue
+        const t = a[i + 4]
+        if (t > top && t <= y + step) top = t
+      }
+    }
+    return top
+  }
+
+  /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
+  private staticNow(): Map<string, number[]> {
+    if (this.time - this.staticAt > STATIC_REFRESH) {
+      this.staticAt = this.time
+      this.staticAll = true
+    }
+    if (!this.staticAll && this.staticDirty.size === 0) return this.staticBoxes
+    const box = new this.THREE.Box3()
+    const measure = (b: Bound): void => {
+      if (b.piece || this.pieceSys.get(b.id)) {
+        this.staticBoxes.delete(b.id)
+        return
+      }
+      const out: number[] = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
+      for (const mv of this.meshesOf(b)) {
+        if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+        this.visuals.worldBox(mv, box)
+        if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+        this.visuals.fittedBoxes(mv, out)
+        for (let k = 0; k < 3; k++) {
+          out[k] = Math.min(out[k], box.min.getComponent(k))
+          out[k + 3] = Math.max(out[k + 3], box.max.getComponent(k))
+        }
+      }
+      this.staticBoxes.set(b.id, out.length > 6 ? out : [])
+    }
+    if (this.staticAll) {
+      this.staticBoxes.clear()
+      for (const b of this.bounds.values()) measure(b)
+    } else {
+      for (const id of this.staticDirty) {
+        const b = this.bounds.get(id)
+        if (b) measure(b)
+        else this.staticBoxes.delete(id)
+      }
+    }
+    this.staticAll = false
+    this.staticDirty.clear()
+    return this.staticBoxes
+  }
+
+  /** The boxes of a piece's drawn meshes, measured once per frame. */
+  private pieceBoxesOf(pc: PieceBody): number[] {
+    const cached = this.pieceBoxes.get(pc)
+    if (cached && cached.at === this.time) return cached.boxes
+    const boxes: number[] = []
+    const b = this.bounds.get(pc.objectId)
+    if (b) {
+      for (const mv of this.meshesOf(b)) {
+        if (this.visuals.shown(mv)) this.visuals.fittedBoxes(mv, boxes)
+      }
+    }
+    this.pieceBoxes.set(pc, { at: this.time, boxes })
+    return boxes
+  }
+
+  solidsNear(x: number, z: number, radius: number): SolidBox[] {
+    const found: SolidBox[] = []
+    const scan = (a: number[], id: string, piece: Piece | null, from: number): void => {
+      if (from > 0 && (a.length === 0 || x < a[0] - radius || x > a[3] + radius || z < a[2] - radius || z > a[5] + radius)) return
+      for (let i = from; i < a.length; i += 6) {
+        if (x < a[i] - radius || x > a[i + 3] + radius || z < a[i + 2] - radius || z > a[i + 5] + radius) continue
+        found.push({ objectId: id, min: [a[i], a[i + 1], a[i + 2]], max: [a[i + 3], a[i + 4], a[i + 5]], piece })
+      }
+    }
+    for (const [id, a] of this.staticNow()) scan(a, id, null, 6)
+    const c = this.v1
+    for (const pc of this.pieceSys.list) {
+      if (pc.held) continue
+      // only the pieces whose box can reach the point are measured
+      this.pieceSys.centerOf(pc, c)
+      const reach = Math.hypot(pc.halfExtents[0], pc.halfExtents[1], pc.halfExtents[2]) + radius
+      if (Math.abs(c.x - x) > reach || Math.abs(c.z - z) > reach) continue
+      scan(this.pieceBoxesOf(pc), pc.objectId, pc, 0)
+    }
+    this.fragments.solidsNear(x, z, radius, (home, min, max, loose) => found.push({ objectId: home, min, max, piece: null, loose }))
+    return found
+  }
+
   private apply(ev: DestructionEvent): void {
+    this.staticDirty.add(ev.object)
     switch (ev.type) {
       case 'damage':
         if (ev.damageType === 'heat' || ev.damageType === 'fire' || ev.damageType === 'explosive') this.activate(ev.object, ev.part)
@@ -882,7 +1004,12 @@ class Renderer implements DestructionRenderer {
     const def = pv ? this.world.materials.get(pv.material) : undefined
     const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
-    for (const fr of ev.fragments) this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, fallbackColor(fr.material, def), false), ev.object, maxAlive)
+    for (const fr of ev.fragments) {
+      const fdef = this.world.materials.get(fr.material)
+      // the inside of the material (fresh wood) when the piece came from it, else the part's colour
+      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
+      this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
+    }
     if (!this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.center)) this.vfx.burst('dust', ev.center, [0, 1, 0], 6, 0.8, { color })
     this.sound(impactKey(def), ev.center, 0.7)
   }
@@ -967,6 +1094,10 @@ class Renderer implements DestructionRenderer {
       this.pieceSys.setCenter(old, center)
       old.mass = Math.max(0.05, this.massOf(objectId))
       old.sleeping = false
+    } else if (kitOriginOf(b.root)?.kind === 'furniture') {
+      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
+      this.makePiece(objectId)
+      this.tipIfTopHeavy(b)
     }
   }
 
@@ -1016,7 +1147,33 @@ class Renderer implements DestructionRenderer {
     }
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
+    if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
+  }
+
+  /**
+   * A piece of furniture standing on feet too close for its height (a board on two legs in a line, a lone leg) does not stay up: the box of a piece hides that its weight is up
+   * high and its feet are thin, so it gets the start of the fall, across the line of its feet.
+   */
+  private tipIfTopHeavy(b: Bound): void {
+    const piece = b.piece
+    if (!piece) return
+    const box = new this.THREE.Box3()
+    const boxes = this.meshesOf(b).filter((mv) => this.visuals.shown(mv)).map((mv) => this.visuals.worldBox(mv, new this.THREE.Box3()))
+    if (boxes.length === 0) return
+    for (const one of boxes) box.union(one)
+    const height = box.max.y - box.min.y
+    const feet = new this.THREE.Box3()
+    for (const one of boxes) if (one.min.y < box.min.y + FEET_BAND) feet.union(one)
+    const spanX = feet.max.x - feet.min.x
+    const spanZ = feet.max.z - feet.min.z
+    if (height < TIP_MIN_HEIGHT || Math.min(spanX, spanZ) >= TIP_NARROW * height) return
+    const across = spanX <= spanZ ? 0 : 2
+    const lean = across === 0 ? box.min.x + box.max.x - feet.min.x - feet.max.x : box.min.z + box.max.z - feet.min.z - feet.max.z
+    const away = lean < 0 ? -1 : 1
+    // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
+    if (across === 0) this.pieceSys.tip(piece, 0, -away)
+    else this.pieceSys.tip(piece, away, 0)
   }
 
   private onExplode(ev: Ev<'explode'>, options: ExplodeOptions = {}): void {
@@ -1297,6 +1454,11 @@ class Renderer implements DestructionRenderer {
     this.primedBurning.clear()
     this.vfx.sprites().clear()
     this.ownVfx?.world.clear()
+  }
+
+  wakeRegion(x: number, z: number, radius: number): void {
+    this.fragments.wakeRegion(x, z, radius)
+    this.pieceSys.wakeRegion(x, z, radius)
   }
 
   stats(): { fragments: number; particles: number; pieces: number; decals: number } {

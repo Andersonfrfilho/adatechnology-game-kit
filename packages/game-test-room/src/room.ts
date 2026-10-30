@@ -3,7 +3,7 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
-import { createDestructionRenderer, createDestructionSound, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -31,6 +31,8 @@ import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import { createRoomPush, PUSH_REACH } from './furniture-push'
+import type { RoomPushTarget } from './furniture-push'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -86,6 +88,15 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
+const SOLID_SPAN = 3
+/** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
+const STEP_UP = 0.45
+/** Height of the walking body (m): what starts above it is walked under. */
+const BODY_HEIGHT = 1.75
+/** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
+const KICK_MASS = 6
+const KICK_HEIGHT = 0.6
 /** Object id of the floor in the destruction world. */
 const GROUND_ID = 'room_ground'
 const TERRAIN_CELL = 0.1
@@ -175,10 +186,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
   const pristineWorld = ownWorld ? world.serialize() : null
-  const topOk = (t: ArenaTop): boolean => {
-    const p = world.part(t.id, t.topPart)
-    return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes'
+  const partStands = (object: string, part: string): boolean => {
+    const p = world.part(object, part)
+    return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes' && !renderer.piece(object)
   }
+  const topOk = (t: ArenaTop): boolean => (t.boards ? t.boards.some((b) => partStands(t.id, b.part)) : partStands(t.id, t.topPart))
+  /** Whether the top holds what is at (x, z): the board there, on a top of boards. */
+  const topHolds = (t: ArenaTop, x: number, z: number): boolean => (t.boards ? t.boards.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && partStands(t.id, b.part)) : topOk(t))
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
   const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
   const restingTopAt = (x: number, z: number): number => {
@@ -188,7 +202,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const sceneryTopAt = (x: number, z: number): number => {
     let top = 0
-    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topOk(t)) top = t.top
+    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topHolds(t, x, z)) top = t.top
     return top
   }
   // the floor is the terrain: 0 was the height of a flat floor, now a hole goes under it and a heap over it; a top (a table, a counter) answers only where there is one
@@ -256,6 +270,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
+      leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
       action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
@@ -291,6 +306,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
     playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
   }
+  terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
   const registerGround = (): void => {
     if (!world.has(GROUND_ID)) world.register(groundImpl, { id: GROUND_ID })
@@ -462,10 +478,88 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let useFirst = false
   /** What modules ask the walking player to stay out of (`ModuleHost.addBlocker`). */
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
+  // the scenery the renderer draws stops the player by what is drawn now (a fallen bookcase is walked onto, not its old footprint); what is
+  // too wide for the renderer's boxes (the wall closing the arena) and the tap's post keep their footprint
+  const drawnScenery = (i: number): boolean => {
+    const c = arena.colliders[i]
+    return arena.colliderIds[i] !== null && c[2] - c[0] <= SOLID_SPAN && c[3] - c[1] <= SOLID_SPAN
+  }
+  // the footprints that still hold: the player and the push read this same list
+  const standingColliders: Array<[number, number, number, number]> = []
+  const standingIds: Array<string | null> = []
+  /** Scenery too wide for the renderer's boxes that came loose: the body stops the player from then on (`inTheWay`), wherever it goes. */
+  const footprintsWithBody = new Set<string>()
+  /** Every piece of the scenery back where it stands. */
+  const standFootprints = (): void => {
+    standingColliders.length = 0
+    standingIds.length = 0
+    footprintsWithBody.clear()
+    arena.colliders.forEach((collider, i) => {
+      if (drawnScenery(i)) return
+      standingColliders.push(collider)
+      standingIds.push(arena.colliderIds[i] ?? null)
+    })
+  }
+  standFootprints()
+  /** The object is a body now: the footprint it had where it stood no longer means anything. */
+  const leaveFootprint = (objectId: string): void => {
+    const i = standingIds.indexOf(objectId)
+    if (i < 0) return
+    standingIds.splice(i, 1)
+    standingColliders.splice(i, 1)
+    footprintsWithBody.add(objectId)
+  }
+  /**
+   * The footing of the player at (x, z) with the feet at `feet`: what is drawn there and not lighter than `KICK_MASS` (that is kicked, see
+   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body.
+   */
+  const footing = (x: number, z: number, radius: number, feet: number): { floor: number; blocked: boolean } => {
+    let floor = -Infinity
+    let blocked = false
+    for (const s of renderer.solidsNear(x, z, radius)) {
+      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS) continue
+      const dx = Math.max(s.min[0] - x, 0, x - s.max[0])
+      const dz = Math.max(s.min[2] - z, 0, z - s.max[2])
+      if (dx * dx + dz * dz > radius * radius) continue
+      if (s.max[1] <= feet + STEP_UP) floor = Math.max(floor, s.max[1])
+      else if (s.min[1] < feet + BODY_HEIGHT) blocked = true
+    }
+    return { floor, blocked }
+  }
+  /** Light pieces at the player's feet (books, boards) are kicked along: away from the player at a little more than the walking speed. */
+  const kickFrom = { x: 0, z: 0 }
+  const kickLight = (dt: number): void => {
+    const x = player.x
+    const z = player.z
+    // walked by the keys or by a scripted walk: the distance since the last frame
+    const speed = dt > 0 ? Math.hypot(x - kickFrom.x, z - kickFrom.z) / dt : 0
+    kickFrom.x = x
+    kickFrom.z = z
+    if (speed < 0.2 || speed > 20) return
+    const kicked = new Set<object>()
+    for (const s of renderer.solidsNear(x, z, PLAYER_RADIUS)) {
+      const pc = s.piece
+      const body = pc ?? s.loose
+      if (!body || body.mass >= KICK_MASS || kicked.has(body) || s.min[1] > player.feet + KICK_HEIGHT) continue
+      kicked.add(body)
+      const cx = (s.min[0] + s.max[0]) / 2 - x
+      const cz = (s.min[2] + s.max[2]) / 2 - z
+      const d = Math.hypot(cx, cz) || 1
+      const v = speed * 1.2
+      if (!pc) {
+        s.loose?.push((cx / d) * v, (cz / d) * v)
+        continue
+      }
+      if (pc.velocity[0] * cx + pc.velocity[2] * cz >= v * d) continue
+      pc.velocity = [(cx / d) * v, Math.max(pc.velocity[1], 0.6), (cz / d) * v]
+      pc.sleeping = false
+    }
+  }
   const player = createPlayer(THREE, {
     camera,
     dom,
-    colliders: arena.colliders,
+    colliders: standingColliders,
+    footing: (x, z, radius, feet) => footing(x, z, radius, feet),
     blockers,
     limit: arenaSize,
     floorAt: terrain.heightAt,
@@ -496,6 +590,72 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let counter = 0
   let slot = 0
   const maxCarry = options.maxCarryKg ?? 60
+
+  /** How far from straight ahead (cosine) something can be and still be what the player leans on. */
+  const PUSH_AHEAD = 0.6
+  const heaviestMaterial = (id: string): string | undefined => {
+    let best: { mass: number; material: string } | undefined
+    for (const p of world.state(id)?.parts ?? []) if (p.status !== 'broken' && (!best || p.mass > best.mass)) best = { mass: p.mass, material: p.material }
+    return best?.material
+  }
+  /** What the player stands against when the aim is not on it (from the shoulder the aim of something low falls on the floor beside it): the closest thing ahead within arm's reach. */
+  const leanedOn = (): RoomPushTarget | null => {
+    const fx = -Math.sin(player.yaw)
+    const fz = -Math.cos(player.yaw)
+    let best: Entry | null = null
+    let bestDistance = PUSH_REACH
+    for (const e of entries.values()) {
+      if (e.arena || (!e.piece && !e.free)) continue
+      const b = bodyBox(e)
+      if (!b) continue
+      const dx = Math.max(b.minX, Math.min(b.maxX, player.x)) - player.x
+      const dz = Math.max(b.minZ, Math.min(b.maxZ, player.z)) - player.z
+      const distance = Math.hypot(dx, dz)
+      if (distance >= bestDistance || (distance > 1e-3 && (dx * fx + dz * fz) / distance < PUSH_AHEAD)) continue
+      best = e
+      bestDistance = distance
+    }
+    return best ? { objectId: best.so.objectId, root: best.so.root, name: nameOf(best.so.objectId), piece: best.piece ?? null } : null
+  }
+  const push = createRoomPush({
+    THREE,
+    player,
+    world,
+    arena: { limit: arenaSize, colliders: standingColliders },
+    blockers,
+    ...(options.push ? { rules: options.push } : {}),
+    pick: () => {
+      if (heldPiece || (tool.def.category !== 'hand' && toolId !== 'fists')) return null
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
+      if (r && aimed) return { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null }
+      return leanedOn()
+    },
+    massOf: (objectId) => massOfObject(objectId),
+    materialOf: heaviestMaterial,
+    makePiece: (objectId) => {
+      const piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
+      const e = entries.get(objectId)
+      if (e) e.piece = piece
+      rendererPieces.set(objectId, piece)
+      leaveFootprint(objectId)
+      return piece
+    },
+    dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
+    hitSound: (objectId, point) => playSound(impactKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, 0.5),
+    onEvent: (ev) => {
+      const vars = { name: ev.name, kg: num(ev.massKg, 0) }
+      action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
+      fire('push', ev)
+      if (ev.type === 'engaged') say(t('hud.push_on', vars))
+      else if (ev.type === 'too_heavy') say(t('hud.push_too_heavy', vars))
+      else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
+    },
+    ring: (value) => ui?.holdRing(value),
+  })
+  /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
+  let pushByKey = false
 
   const massOfObject = (id: string): number => {
     const st = world.state(id)
@@ -585,6 +745,47 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return holder
   }
 
+  /** The items modules put in the world as scenery (`ModuleHost.addObject`): kept through `clear`; the scenarios run without them (each starts from the seeded room) and they come back after. */
+  const sceneryObjects = new Map<string, { item: TestRoomItem; position: Vec3; rotationY: number }>()
+  const placeScenery = (objectId: string, item: TestRoomItem, position: Vec3, rotationY: number): Entry => {
+    const root = buildRoot(item)
+    root.position.set(position[0], position[1], position[2])
+    root.rotation.y = rotationY
+    root.name = item.id
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    const own = item.impl?.(root, objectId)
+    const { spec, parts } = own ? { spec: structuredCloneSpec(own.describe()), parts: undefined } : resolveSpec(item, root)
+    root.updateMatrixWorld(true)
+    const q = root.getWorldQuaternion(tmpQ)
+    if (own) world.register(own, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    else world.add(spec, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
+    const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, true, false)
+    fire('spawn', e.so)
+    return e
+  }
+  const restoreScenery = (): void => {
+    for (const [objectId, o] of sceneryObjects) if (!entries.has(objectId)) placeScenery(objectId, o.item, o.position, o.rotationY)
+  }
+  const addScenery = (itemId: string, position: Vec3, rotationY = 0): { objectId: string; root: unknown; remove(): void } | null => {
+    const item = catalogMap.get(itemId)
+    if (!item) return null
+    const objectId = `${item.id}_scenery_${sceneryObjects.size + 1}`
+    sceneryObjects.set(objectId, { item, position: [position[0], position[1], position[2]], rotationY })
+    const e = placeScenery(objectId, item, position, rotationY)
+    action('spawn', t('act.spawn', { name: item.name, x: num(position[0], 1), z: num(position[2], 1) }), { objectId, itemId: item.id, data: { position, movable: false, scenery: true } })
+    return {
+      objectId,
+      get root() {
+        return entries.get(objectId)?.so.root ?? e.so.root
+      },
+      remove() {
+        sceneryObjects.delete(objectId)
+        removeEntry(objectId)
+      },
+    }
+  }
+
   const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
@@ -643,8 +844,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // The player against the objects: what stands on the floor blocks the walk, and the walk pushes what is light enough to slide
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  /** Objects lower than this (m) the player steps over (a can, a book on the floor): they do not block, the feet scuff them along. */
-  const STEP_OVER = 0.3
+  /** Objects lower than this (m) the player steps onto (a can, a concrete block): they do not block, the feet scuff them along. */
+  const STEP_OVER = STEP_UP
   /** Things that hang higher than this (m) above the feet pass over the head. */
   const HEADROOM = 1.9
   /**
@@ -679,7 +880,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * own footprint in `root.userData.collider` (a plant: the trunk as a cylinder, or null for grass the feet walk through) is tested against that instead of its whole box.
    */
   const inTheWay = (e: Entry, x: number, z: number, r: number): BodyBox | null => {
-    if (e.arena || (e.piece && e.piece.held)) return null
+    if ((e.arena && !footprintsWithBody.has(e.so.objectId)) || (e.piece && e.piece.held)) return null
     const ud = e.so.root.userData as { collider?: { kind?: string; radius?: number; height?: number } | null }
     if ('collider' in ud && !ud.collider?.kind) return null
     const b = bodyBox(e)
@@ -831,6 +1032,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** Reset the worlds to their seeded start: used by scenarios so that each one is deterministic. */
   const hardReset = (): void => {
+    pushByKey = false
+    push.end()
     clearEverything()
     for (const id of [...entries.keys()]) removeEntry(id)
     tools.clear()
@@ -852,6 +1055,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     prevVy.clear()
     lastImpact.clear()
     addArena()
+    standFootprints()
     timeScale = 1
     fastForward = false
     walkPlan = null
@@ -928,10 +1132,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     feetPrev = [x, z]
     avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
-    avatarState.crouch = crouchForced || player.crouching
+    avatarState.crouch = crouchForced || player.crouching || push.isBent
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
+    avatarState.push = push.avatarState
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
@@ -953,11 +1158,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const stepFirstPerson = (dt: number): void => {
     const arms = avatar?.firstPerson
     if (!arms) return
-    const targets = handSource?.() ?? carriedHand
+    const targets = push.handTargets() ?? handSource?.() ?? carriedHand
     const state: RoomFirstPersonState = {
       camera,
       targets,
-      stance: handStances[toolId] ?? (targets ? 'hold' : 'relaxed'),
+      stance: push.active ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       speed: avatarState.speed,
       running: avatarState.running,
       crouch: avatarState.crouch,
@@ -1191,6 +1396,50 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.impulse(objectId, [dir[0] * momentum, dir[1] * momentum, dir[2] * momentum], point)
   }
 
+  const shotRay = new THREE.Raycaster()
+  /** Metres of water a pistol round crosses to lose 1/e of its speed (a full can takes about a fifth of it in its 6 cm). */
+  const LIQUID_SLOWING = 0.25
+  /** Share of the momentum along the surface a round leaves in a wall it meets at a slant (the rest goes on with it). */
+  const SHOT_GRIP = 0.3
+  /**
+   * The push a round gives what it hits, at the point of the drawn surface it meets (not the box the world sees): the momentum the round lost there (all of it when
+   * it stopped; through a thin shell, only what the wall and the liquid inside took), along the inward normal of that surface plus a little along it. So a round on the
+   * right of a can pushes it away and to the left and spins it, as a real one does.
+   */
+  const shotPush = (s: Shot, objectId: string, results: readonly { readonly object: string; readonly penetrated: boolean; readonly exitEnergy: number }[], fallback: Vec3): { impulse: Vec3; point: Vec3 } => {
+    const e = entries.get(objectId)
+    const speed = Math.max(80, s.speed)
+    const onIt = results.filter((r) => r.object === objectId)
+    const last = onIt[onIt.length - 1]
+    let kept = last && last.penetrated ? Math.sqrt(Math.max(0, Math.min(1, last.exitEnergy / Math.max(s.energy, 1e-6)))) : 0
+    let point = fallback
+    let inward: Vec3 = [s.direction[0], s.direction[1], s.direction[2]]
+    if (e) {
+      shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
+      shotRay.far = 60
+      // sprites (labels, effects) under the object raycast against the camera
+      shotRay.camera = camera
+      const hit = shotRay.intersectObject(e.so.root, true).find((h) => (h.object as THREE_NS.Mesh).isMesh && !h.object.userData.destructionDebris && h.face)
+      if (hit?.face) {
+        point = [hit.point.x, hit.point.y, hit.point.z]
+        const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
+        if (n.x * s.direction[0] + n.y * s.direction[1] + n.z * s.direction[2] > 0) n.negate()
+        inward = [-n.x, -n.y, -n.z]
+      }
+      // the liquid inside slows the round down along the chord it crosses
+      const c = kept > 0 && e.containerId ? fluids.container(e.containerId) : null
+      if (c && c.liters > 1e-4) {
+        const size = new THREE.Box3().setFromObject(e.so.root).getSize(new THREE.Vector3())
+        kept *= Math.exp(-(Math.min(size.x, size.z) * 0.9) / LIQUID_SLOWING)
+      }
+    }
+    const momentum = ((2 * s.energy) / speed) * (1 - kept)
+    // the momentum of the round, split along the inward normal (all of it) and along the surface (a share)
+    const along = s.direction[0] * inward[0] + s.direction[1] * inward[1] + s.direction[2] * inward[2]
+    const impulse: Vec3 = [0, 1, 2].map((k) => momentum * (along * inward[k]! + SHOT_GRIP * (s.direction[k]! - along * inward[k]!))) as unknown as Vec3
+    return { impulse, point }
+  }
+
   /**
    * The push of one trigger pull on what stands free (`free`) and is not a piece yet: when the momentum of every round that hit it is enough to move
    * its mass (`SHOVE_SPEED`: a shotgun's load into a bookcase, not a pistol round), it becomes a piece and takes the push.
@@ -1204,6 +1453,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const piece = renderer.makePiece(objectId, { mass })
       e.piece = piece
       rendererPieces.set(objectId, piece)
+      leaveFootprint(objectId)
       action('loosened', t('act.shoved', { name: e.name }), { objectId, itemId: e.so.itemId })
       renderer.impulse(objectId, push.impulse, push.point)
     }
@@ -1229,22 +1479,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           hits++
           end = r0.point
           if (!first) first = { object: r0.object, part: r0.part, point: r0.point, normal: [0, 1, 0], distance: dist3(s.origin, r0.point) }
-        }
-        // each part the round went into takes the momentum the round lost in it (m v in, m v out: v goes with the square root of the energy), at the point it hit: a
-        // round that stops in a part gives all of it, one that goes through an empty cardboard box keeps most of it and barely moves the box
-        const speed = Math.max(80, s.speed)
-        const momentumOf = (e: number): number => ((2 * s.energy) / speed) * Math.sqrt(Math.max(0, e) / Math.max(1e-9, s.energy))
-        let entering = s.energy
-        for (const r of results) {
-          if (!r.point || !r.part) continue
-          const leaving = r.penetrated ? Math.min(entering, Math.max(0, r.exitEnergy)) : 0
-          const momentum = momentumOf(entering) - momentumOf(leaving)
-          entering = leaving
-          if (momentum <= 0) continue
-          pushPiece(r.object, s.direction, momentum, r.point)
-          const push = pushes.get(r.object) ?? { impulse: [0, 0, 0] as Vec3, point: r.point }
-          for (let k = 0; k < 3; k++) push.impulse[k] += s.direction[k] * momentum
-          pushes.set(r.object, push)
+          const blow = shotPush(s, r0.object, results, r0.point)
+          if (rendererPieces.has(r0.object)) renderer.impulse(r0.object, blow.impulse, blow.point)
+          const push = pushes.get(r0.object) ?? { impulse: [0, 0, 0] as Vec3, point: blow.point }
+          for (let k = 0; k < 3; k++) push.impulse[k] += blow.impulse[k]!
+          pushes.set(r0.object, push)
         }
         if (shots.length <= 3 || rnd() < 0.34) tracer(m, end)
       }
@@ -1683,6 +1922,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     else useTool(FIXED_DT, false)
   }
   const grab = (): boolean => {
+    if (push.active) return false
     if (heldPiece) {
       const name = heldName
       releaseHeld()
@@ -1975,6 +2215,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const onKey = (code: string, down: boolean, e: KeyboardEvent): void => {
     if (!down) {
       if (code === 'KeyZ') tiltKey = 0
+      if (code === 'KeyE' && pushByKey) {
+        pushByKey = false
+        if (push.end()) grab()
+      }
       return
     }
     const digit = /^Digit(\d)$/.exec(code)
@@ -1992,7 +2236,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     switch (code) {
       case 'KeyE':
-        grab()
+        if (e.repeat) break
+        // a tap grabs, a hold against something that stands on the floor pushes it
+        pushByKey = !heldPiece && push.begin()
+        if (!pushByKey) grab()
         break
       case 'KeyG':
         throwHeld()
@@ -2216,6 +2463,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
     player.update(dt)
+    if (pushByKey && !player.keys.has('KeyE')) {
+      // the window lost the key without a key up
+      pushByKey = false
+      push.end()
+    }
+    push.step(paused ? 0 : dt)
+    if (!paused) kickLight(dt)
     if (!paused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(paused ? 0 : dt)
@@ -2223,7 +2477,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
     // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
-    if ((useHeld || useFirst) && !paused) {
+    if ((useHeld || useFirst) && !paused && !push.active) {
       if (tool.def.category === 'hand') {
         if (useFirst) handUse()
       } else if (useHeld) useTool(dt, !useFirst)
@@ -2564,6 +2818,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
     },
+    addObject(itemId, place) {
+      return addScenery(itemId, place.position, place.rotationY)
+    },
   }
   let sendingInitial = false
   const lendBench = (store: BenchStore): ModuleBench => ({
@@ -2728,6 +2985,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const n = Math.max(1, Math.round(seconds / dt))
     for (let i = 0; i < n; i++) {
       player.update(0)
+      push.step(dt)
       followHeld(dt)
       stepSim(dt)
     }
@@ -2771,6 +3029,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     } finally {
       scenarioRunning = false
       paused = wasPaused
+      restoreScenery()
     }
     return report
   }
@@ -3058,6 +3317,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       debugView.updateProjectionMatrix()
       debugView.updateMatrixWorld(true)
     },
+    get playerPosition() {
+      return player.position
+    },
+    push: { begin: () => push.begin(), end: () => push.end(), setWalk: (walk) => push.setWalk(walk), get state() { return push.state } },
     setCameraMode,
     get cameraMode() {
       return cameraMode

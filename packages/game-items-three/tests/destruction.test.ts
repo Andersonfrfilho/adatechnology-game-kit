@@ -67,19 +67,58 @@ describe('families of models', () => {
     }
   })
 
-  it('rebuilds the cylinders and boxes of every can with enough segments for a dent to find vertices, only when destructible', () => {
+  it('rebuilds the cylinders of every can as ringed lathes, so the side, the lid and the bottom all have vertices for a dent, only when destructible', () => {
     for (const model of Object.values(ITEM_FAMILIES).flatMap((entry) => entry.models)) {
       const item = { id: model, category: 'food', size: [0.07, 0.12, 0.07] as [number, number, number], model }
-      const plain = meshesOf(buildItem(THREE, item).root).filter((m) => m.geometry.type === 'CylinderGeometry')
-      const dented = meshesOf(buildItem(THREE, item, { destructible: true }).root).filter((m) => m.geometry.type === 'CylinderGeometry')
-      expect(dented.length, model).toBe(plain.length)
-      for (const mesh of dented) {
-        const parameters = (mesh.geometry as THREE.CylinderGeometry).parameters
-        expect(parameters.heightSegments, model).toBeGreaterThanOrEqual(6)
-        expect(parameters.radialSegments, model).toBeGreaterThanOrEqual(20)
+      const plain = meshesOf(buildItem(THREE, item).root)
+      const cylinders = plain.filter((m) => m.geometry.type === 'CylinderGeometry')
+      const round = plain.filter((m) => m.geometry.type === 'CylinderGeometry' || m.geometry.type === 'LatheGeometry')
+      const dented = meshesOf(buildItem(THREE, item, { destructible: true }).root).filter((m) => m.geometry.type === 'LatheGeometry')
+      expect(dented.length, model).toBe(round.length)
+      expect(meshesOf(buildItem(THREE, item, { destructible: true }).root).filter((m) => m.geometry.type === 'CylinderGeometry'), model).toHaveLength(0)
+      for (const mesh of dented) expect((mesh.geometry as THREE.LatheGeometry).parameters.segments, model).toBeGreaterThanOrEqual(40)
+      // a closed cylinder gets rings on both ends: more than the centre and the rim at its lowest and at its highest height
+      const closed = dented.filter((mesh) => {
+        const { points } = (mesh.geometry as THREE.LatheGeometry).parameters
+        return points[0]?.x === 0 && points[points.length - 1]?.x === 0
+      })
+      expect(closed.length, model).toBeGreaterThanOrEqual(cylinders.length)
+      for (const mesh of closed) {
+        const { points } = (mesh.geometry as THREE.LatheGeometry).parameters
+        expect(points.filter((p) => p.y === points[0]!.y).length, model).toBeGreaterThan(3)
+        expect(points.filter((p) => p.y === points[points.length - 1]!.y).length, model).toBeGreaterThan(3)
       }
-      for (const mesh of plain) expect((mesh.geometry as THREE.CylinderGeometry).parameters.heightSegments, model).toBeLessThan(6)
+      for (const mesh of cylinders) expect((mesh.geometry as THREE.CylinderGeometry).parameters.heightSegments, model).toBeLessThan(6)
     }
+  })
+
+  it('keeps the lathe of a can outward: the side faces away from the axis, the lid up, the bottom down', () => {
+    const { root } = buildItem(THREE, { id: 'soda_can', category: 'food', size: [0.066, 0.12, 0.066], model: 'soda_can' }, { destructible: true })
+    const shell = meshesOf(root).find((m) => (m.userData.destructionPart as { id: string } | undefined)?.id === 'shell') as THREE.Mesh
+    const geometry = shell.geometry
+    geometry.computeBoundingBox()
+    const box = geometry.boundingBox as THREE.Box3
+    const position = geometry.getAttribute('position')
+    const normal = geometry.getAttribute('normal')
+    let side = 0, top = 0, bottom = 0
+    for (let i = 0; i < position.count; i++) {
+      const y = position.getY(i)
+      const radial = Math.hypot(position.getX(i), position.getZ(i))
+      if (y === box.max.y && radial < 1e-6) top = normal.getY(i)
+      else if (y === box.min.y && radial < 1e-6) bottom = normal.getY(i)
+      else if (y > box.min.y && y < box.max.y) side = Math.max(side, (normal.getX(i) * position.getX(i) + normal.getZ(i) * position.getZ(i)) / radial)
+    }
+    expect(top).toBeGreaterThan(0.9)
+    expect(bottom).toBeLessThan(-0.9)
+    expect(side).toBeGreaterThan(0.9)
+  })
+
+  it('gives each wall of a can its real thickness: a tenth of a millimetre on the body, more on the ends', () => {
+    const { root } = buildItem(THREE, { id: 'soda_can', category: 'food', size: [0.066, 0.12, 0.066], model: 'soda_can', weight: 0.37 }, { destructible: true })
+    const walls = meshesOf(root).filter((m) => !m.userData.destructionSkin)
+    const body = walls.find((m) => (m.userData.destructionPart as { id: string }).id === 'shell') as THREE.Mesh
+    expect(body.userData.destructionThickness).toBeCloseTo(0.0001, 6)
+    for (const mesh of walls) if (mesh !== body) expect(mesh.userData.destructionThickness).toBeGreaterThan(body.userData.destructionThickness as number)
   })
 
   it('rebuilds the boxes of a tin too', () => {

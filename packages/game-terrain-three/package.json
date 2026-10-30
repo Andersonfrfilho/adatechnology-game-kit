@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-terrain-three",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-terrain: chunked ground with a material pattern per surface, simplified far away, the marks as instanced decals, rebar where a slab is dug past its cover, and the clods.",
   "keywords": [

@@ -102,6 +102,56 @@ describe('repeated blows', () => {
   })
 })
 
+describe('bars under load', () => {
+  const digDown = (terrain: ReturnType<typeof make>): void => {
+    terrain.dug.fill(0.12)
+  }
+  const bendAtCentre = (terrain: ReturnType<typeof make>): number => terrain.barBend[Math.round(terrain.rows / 2) * terrain.stride + Math.round(terrain.columns / 2)]!
+
+  it('covered bars take nothing; bare bars bend with each blow', () => {
+    const terrain = make('concrete_slab')
+    terrain.strike('explosive', { x: 0, z: 0, energy: 1000 })
+    expect(bendAtCentre(terrain)).toBe(0)
+    digDown(terrain)
+    const before = bendAtCentre(terrain)
+    terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    expect(bendAtCentre(terrain)).toBeGreaterThan(before)
+  })
+
+  it('a slab on the ground keeps the floor when its bars give way', () => {
+    const terrain = make('concrete_slab')
+    digDown(terrain)
+    let collapsed = false
+    for (let i = 0; i < 40; i++) collapsed = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE }).collapsed || collapsed
+    expect(bendAtCentre(terrain)).toBeGreaterThan(1)
+    expect(collapsed).toBe(false)
+    expect(terrain.heightAt(0, 0)).toBeGreaterThanOrEqual(-0.12 - 1e-4)
+  })
+
+  it('a slab with nothing under it opens onto the floor below, only where the bars gave way', () => {
+    const terrain = make('suspended_slab')
+    digDown(terrain)
+    let result = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    expect(result.collapsed).toBe(false)
+    expect(terrain.heightAt(0, 0)).toBeGreaterThan(-0.2)
+    for (let i = 0; i < 40 && !result.collapsed; i++) result = terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    expect(result.collapsed).toBe(true)
+    expect(terrain.heightAt(0, 0)).toBeLessThan(-3)
+    expect(terrain.heightAt(5, 5)).toBeCloseTo(-0.12, 5)
+  })
+
+  it('the snapshot keeps the bent bars', () => {
+    const terrain = make('concrete_slab')
+    digDown(terrain)
+    terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE / 8 })
+    const bend = bendAtCentre(terrain)
+    const saved = JSON.parse(JSON.stringify(terrain.serialize()))
+    terrain.reset()
+    terrain.load(saved)
+    expect(bendAtCentre(terrain)).toBeCloseTo(bend, 5)
+  })
+})
+
 describe('budget', () => {
   it('keeps the marks of an area under its limit by merging', () => {
     const terrain = make('concrete_slab', { maxMarksPerArea: 8 })
@@ -176,6 +226,50 @@ describe('what is thrown and the rim', () => {
     let steepest = 0
     for (let x = -1.5; x <= 1.5; x += 0.1) steepest = Math.max(steepest, Math.abs(terrain.heightAt(x + 0.1, 0) - terrain.heightAt(x, 0)) / 0.1)
     expect(steepest).toBeLessThan(limit + 0.25)
+  })
+})
+
+describe('support', () => {
+  it('a piece at rest falls when the ground under it is dug, and stays on the new floor', () => {
+    const rock = createTerrain({ bounds: BOUNDS, layout: { surface: 'stone_paving' } })
+    rock.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    settle(rock as ReturnType<typeof make>)
+    const piece = rock.debris().find((candidate) => candidate.atRest && rock.contains(candidate.position[0] + 2, candidate.position[2] + 2) && rock.contains(candidate.position[0] - 2, candidate.position[2] - 2))!
+    const before = piece.position[1]
+    rock.strike('explosive', { x: piece.position[0], z: piece.position[2], energy: GRENADE * 40 })
+    settle(rock as ReturnType<typeof make>)
+    expect(piece.position[1]).toBeLessThan(before)
+    expect(piece.position[1]).toBeLessThan(rock.heightAt(piece.position[0], piece.position[2]) + 0.05)
+  })
+
+  it('tells where the ground changed, for what rests on it', () => {
+    const terrain = make('dirt')
+    const regions: { x: number; z: number; radius: number }[] = []
+    const stop = terrain.onDeform((region) => regions.push(region))
+    terrain.strike('explosive', { x: 3, z: -2, energy: GRENADE })
+    expect(regions[0]).toMatchObject({ x: 3, z: -2 })
+    expect(regions[0]!.radius).toBeGreaterThan(0.5)
+    stop()
+    regions.length = 0
+    terrain.strike('explosive', { x: 3, z: -2, energy: GRENADE })
+    expect(regions).toHaveLength(0)
+  })
+
+  it('a slab that opens says so too', () => {
+    const terrain = make('suspended_slab')
+    terrain.dug.fill(0.12)
+    let regions = 0
+    terrain.onDeform(() => regions++)
+    for (let i = 0; i < 12; i++) terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    expect(terrain.heightAt(0, 0)).toBeLessThan(-3)
+    expect(regions).toBeGreaterThan(0)
+  })
+
+  it('beyond the terrain the ground is flat, whatever happened at its edge', () => {
+    const terrain = make('dirt')
+    terrain.strike('explosive', { x: 9.9, z: 0, energy: GRENADE * 4 })
+    expect(terrain.heightAt(9.9, 0)).toBeLessThan(0)
+    expect(terrain.heightAt(10.5, 0)).toBe(0)
   })
 })
 

@@ -81,3 +81,12 @@ describe('a piece on the edge of a table', () => {
     expect(piece.sleeping).toBe(true)
   })
 })
+
+describe('a piece under a table top', () => {
+  it('a box on the floor half under the table stays on the floor, neither lifted onto the top nor through the floor', () => {
+    const { piece, root, ys } = onEdge(0.05, { floor: true })
+    expect(Math.max(...ys)).toBeLessThan(0.2)
+    expect(root.position.y).toBeGreaterThan(0.05)
+    expect(piece.sleeping).toBe(true)
+  })
+})

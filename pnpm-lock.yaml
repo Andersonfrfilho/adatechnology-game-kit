@@ -1242,6 +1242,9 @@ importers:
       '@adatechnology/game-fluids-three':
         specifier: workspace:*
         version: link:../game-fluids-three
+      '@adatechnology/game-player':
+        specifier: workspace:*
+        version: link:../game-player
       '@adatechnology/game-terrain':
         specifier: workspace:*
         version: link:../game-terrain

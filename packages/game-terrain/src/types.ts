@@ -56,13 +56,22 @@ export interface TerrainStratum {
   /** Metres. */
   readonly thickness: number
   /** Bars inside the layer: exposed at `cover`, they make the digging `resistance` times harder. */
-  readonly reinforcement?: { readonly material: string; readonly cover: number; readonly spacing: number; readonly resistance: number }
+  readonly reinforcement?: {
+    readonly material: string
+    readonly cover: number
+    readonly spacing: number
+    readonly resistance: number
+    /** Joules on one spot of bare bars before they give way (default `DEFAULT_BAR_YIELD_JOULES`). */
+    readonly yieldJoules?: number
+  }
 }
 
 /** What a column of ground is made of. The strata end at the digging limit: under them nothing is removed. */
 export interface TerrainProfile {
   readonly id: string
   readonly strata: readonly TerrainStratum[]
+  /** A slab with nothing under it: where its bars give way the floor opens, and the ground is this many metres further down (the floor below). Without it the ground under the slab holds it up. */
+  readonly drop?: number
 }
 
 export interface TerrainBudget {
@@ -149,8 +158,16 @@ export interface TerrainBlowResult {
   readonly atLimit: boolean
   /** Reinforcement is showing at the point. */
   readonly rebarExposed: boolean
+  /** The bars gave way here and the slab opened (`TerrainProfile.drop`). */
+  readonly collapsed: boolean
   /** Left a fine mark (`true`) or dug the height field (`false`). */
   readonly fine: boolean
+}
+
+export interface TerrainRegion {
+  readonly x: number
+  readonly z: number
+  readonly radius: number
 }
 
 export interface TerrainColumn {
@@ -200,6 +217,8 @@ export interface Terrain {
   readonly loose: Float32Array
   /** Per vertex: 0..1, how burnt. */
   readonly scorch: Float32Array
+  /** Per vertex: how far the bare bars have given, 0 straight, 1 or more gone. */
+  readonly barBend: Float32Array
   /** Per vertex: index in `profileList`. */
   readonly profileIndex: Uint8Array
   readonly profileList: readonly TerrainProfile[]
@@ -222,6 +241,8 @@ export interface Terrain {
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */
   applyHit(hit: Hit): TerrainBlowResult | null
+  /** Follow the ground changing: `region` is the disc it changed in. What rests there has lost its support and must look again. Returns the unsubscribe function. */
+  onDeform(listener: (region: TerrainRegion) => void): () => void
   /** Moves the pieces, the sliding ground and the fire. */
   update(dt: number): void
   /** Takes up to the budget's chunks that changed since the last call. */
@@ -245,5 +266,6 @@ export interface TerrainSnapshot {
   readonly dug: readonly (readonly [number, number])[]
   readonly loose: readonly (readonly [number, number])[]
   readonly scorch: readonly (readonly [number, number])[]
+  readonly barBend?: readonly (readonly [number, number])[]
   readonly marks: readonly TerrainMark[]
 }

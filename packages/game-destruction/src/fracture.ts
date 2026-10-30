@@ -104,7 +104,7 @@ const splinterBox = (inp: PlanInput, box: Box, limit = inp.maxFragments): Planne
   return pieces.slice(0, limit).map((p) => ({ center: p.c, size: [p.s[g], p.s[a], p.s[b]] as Vec3, q: frame(g, a, b), shape: 'splinter' as const, weight: p.s[0] * p.s[1] * p.s[2] }))
 }
 
-/** Broken across at `at` along the longest axis: a stub each side and splinters out of the band `gap` wide between them. */
+/** Broken across at `at` along the longest axis: a stub each side and splinters (lumps for `snap`) out of the band `gap` wide between them. */
 const severAt = (inp: PlanInput, root: Box, at: number, gap: number): PlannedFragment[] => {
   const dims = root.s
   const L = [0, 1, 2].sort((x, y) => dims[y] - dims[x])[0]
@@ -123,8 +123,11 @@ const severAt = (inp: PlanInput, root: Box, at: number, gap: number): PlannedFra
   const band: Box = { c: [root.c[0], root.c[1], root.c[2]], s: [dims[0], dims[1], dims[2]] }
   band.c[L] = (lo + hi) / 2
   band.s[L] = Math.max(hi - lo, 0.01)
-  // the splinters of the break lie along the grain when it runs across the cut, else they are short slivers of the band
-  for (const p of splinterBox(inp, band, Math.max(3, inp.maxFragments - out.length))) out.push(p)
+  // a snapping board (MDF, plastic) crumbles in the band; the splinters of a splintering one lie along the grain when it runs across the cut,
+  // else they are short slivers of the band
+  if (inp.style === 'snap') {
+    for (const b of bsp(band, Math.max(3, Math.min(6, inp.maxFragments - out.length)), [0, 1, 2], inp.rnd)) out.push({ center: b.c, size: b.s, q: quat.identity(), shape: 'chunk', weight: b.s[0] * b.s[1] * b.s[2] })
+  } else for (const p of splinterBox(inp, band, Math.max(3, inp.maxFragments - out.length))) out.push(p)
   return out
 }
 
@@ -162,6 +165,7 @@ export const planFragments = (inp: PlanInput): PlannedFragment[] => {
   const [u, v] = [sorted[1], sorted[2]].sort((a, b) => a - b)
 
   if (style === 'snap') {
+    if (inp.cut) return severAt(inp, root, inp.cut.at, inp.cut.gap)
     const n = Math.min(maxFragments, 2 + Math.floor(rnd() * 3))
     for (const b of bsp(root, n, [0, 1, 2], rnd)) out.push({ center: b.c, size: b.s, q: idq, shape: 'slab', weight: b.s[0] * b.s[1] * b.s[2] })
     return out

@@ -154,14 +154,21 @@
    "smoke": "grey"
   },
   "visual": {
-   "charColor": 1709072
+   "charColor": 1709072,
+   "innerColor": 14730131
   },
   "tags": [
    "wood",
    "organic",
    "flammable"
   ],
-  "compressive": 100000
+  "compressive": 100000,
+  "hits": {
+   "blunt": {
+    "tear": "splinters",
+    "tearJoules": 60
+   }
+  }
  },
  {
   "id": "wood_hard",
@@ -191,14 +198,21 @@
    "smoke": "grey"
   },
   "visual": {
-   "charColor": 1709072
+   "charColor": 1709072,
+   "innerColor": 13213802
   },
   "tags": [
    "wood",
    "organic",
    "flammable"
   ],
-  "compressive": 150000
+  "compressive": 150000,
+  "hits": {
+   "blunt": {
+    "tear": "splinters",
+    "tearJoules": 150
+   }
+  }
  },
  {
   "id": "plywood",
@@ -228,14 +242,24 @@
    "smoke": "grey"
   },
   "visual": {
-   "charColor": 1709072
+   "charColor": 1709072,
+   "innerColor": 14862234
   },
   "tags": [
    "wood",
    "organic",
    "flammable"
   ],
-  "compressive": 60000
+  "compressive": 60000,
+  "hits": {
+   "ballistic": {
+    "tear": "splinters"
+   },
+   "blunt": {
+    "tear": "splinters",
+    "tearJoules": 80
+   }
+  }
  },
  {
   "id": "mdf",
@@ -262,14 +286,25 @@
    "smoke": "grey"
   },
   "visual": {
-   "charColor": 1709072
+   "charColor": 1709072,
+   "innerColor": 12096362
   },
   "tags": [
    "wood",
    "organic",
    "flammable"
   ],
-  "compressive": 30000
+  "compressive": 30000,
+  "hits": {
+   "ballistic": {
+    "tear": "lumps",
+    "tearJoules": 120
+   },
+   "blunt": {
+    "tear": "lumps",
+    "tearJoules": 20
+   }
+  }
  },
  {
   "id": "glass",
@@ -762,7 +797,8 @@
    "smoke": "white"
   },
   "visual": {
-   "charColor": 1709072
+   "charColor": 1709072,
+   "innerColor": 14207126
   },
   "tags": [
    "plant",
@@ -770,7 +806,12 @@
    "organic",
    "flammable"
   ],
-  "compressive": 60000
+  "compressive": 60000,
+  "hits": {
+   "blunt": {
+    "tear": "none"
+   }
+  }
  },
  {
   "id": "cactus",

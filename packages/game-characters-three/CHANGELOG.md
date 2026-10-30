@@ -1,5 +1,27 @@
 # @adatechnology/game-characters-three
 
+## 0.5.0
+
+### Minor Changes
+
+- e5ac121: Pushing furniture: holding the interaction button against a piece fills a ring by its mass, then the player walks with it, slower with the load; `world.sweepBox` tests the volume of the piece before each step, an obstacle or too much mass locks it and the player strains; poses in first and third person, and a drag sound by material.
+- a2b0bb3: Third-person punches redone from boxing technique: jab, cross, hook and uppercut move the whole body (guard, hip and shoulder turn, full extension, front knee) from and back to a new looping `fight_guard` clip; `toRoomAvatar` holds that guard between punches (`guardClip`, `guardHold`, `punchBlend`), and a `grip` event closes the fists on a clip with no impact.
+
+### Patch Changes
+
+- ae81390: Crouching in the test room. A tap of C stays crouched until the next tap and a longer press crouches while held; before, a tap only dipped the view for a moment. A crouched body keeps its legs bent under a punch and the fighting guard, which used to stand it up while the camera stayed low; only a kick takes the legs.
+- 2961d53: Deformable ground: new `game-terrain` and `game-terrain-three` (height field with strata per column, digging by material and blow, marks under a budget, clods, fire). The test room's floor is now a terrain, and each area lays its own ground through `TestableModule.ground`. The room's `craters` option is gone: the floor always digs. Adds the catalogue materials `asphalt`, `sand`, `gravel`, `turf` and `mortar`.
+- 8aa480b: A punch combo as an ability. `ATTACK_CLIPS` and `FIRST_PERSON_CLIPS` gain `jab`, `hook` and `uppercut` (written for the right hand, the left plays the mirror), and `PUNCH_COMBO` (`StrikeCombo`) chains jab (left), cross (right), hook (left), uppercut (right). The test room takes it as `strikeCombo`: while it is on (N, its button, `setStrikeCombo`, `strikeComboOn`) each punch is the next step and a pause longer than `reset` starts over; off, the punch is the usual one. The player body closes the hands for any clip whose impact is a punch.
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [a2b0bb3]
+- Updated dependencies [8aa480b]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+  - @adatechnology/game-audio@0.3.3
+  - @adatechnology/game-characters-people@0.4.0
+  - @adatechnology/game-characters@0.2.4
+
 ## 0.4.2
 
 ### Patch Changes
