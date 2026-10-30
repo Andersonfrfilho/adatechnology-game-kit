@@ -9,6 +9,8 @@ export interface PlannedFragment {
   shape: Fragment['shape']
   /** Share of the part's mass (unnormalised). */
   weight: number
+  /** Cut from inside a stack of sheets (a page of a book), not from its cover. */
+  inner?: boolean
 }
 
 export interface PlanInput {
@@ -23,6 +25,8 @@ export interface PlanInput {
   fragmentSize: [number, number]
   maxFragments: number
   rnd: () => number
+  /** Thickness of one sheet of the material (`MaterialDef.sheet`): a `tear` part thicker than a few sheets comes apart as loose sheets. */
+  sheet?: number
 }
 
 interface Box {
@@ -75,6 +79,27 @@ const frame = (ax: number, ay: number, az: number, angle = 0): Quat => {
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
+/** Leaves of a stack torn apart (a book, a ream): `layers` of thin scraps through the thickness, a little askew; one scrap in four is cover, the rest pages. */
+const tearStack = (inp: PlanInput, root: Box, t: number, u: number, v: number, n: number, sheet: number): PlannedFragment[] => {
+  const { dims, rnd, maxFragments } = inp
+  const layers = clamp(Math.ceil(dims[t] / STACK_LAYER), 2, 4)
+  const per = clamp(n, 3, Math.max(3, Math.floor(maxFragments / layers)))
+  const out: PlannedFragment[] = []
+  for (let k = 0; k < layers; k++) {
+    const off = -dims[t] / 2 + ((k + 0.5) * dims[t]) / layers
+    for (const b of bsp(root, per, [u, v], rnd)) {
+      if (out.length >= maxFragments) return out
+      const c: Vec3 = [b.c[0], b.c[1], b.c[2]]
+      c[t] = off
+      out.push({ center: c, size: [b.s[u], b.s[v], sheet], q: frame(u, v, t, (rnd() - 0.5) * 0.8), shape: 'scrap', weight: b.s[u] * b.s[v], inner: out.length % 4 !== 0 })
+    }
+  }
+  return out
+}
+
+/** Metres of a stack of sheets that one layer of scraps stands for. */
+const STACK_LAYER = 0.012
+
 /** Deterministic fragment layout for a failed part, in part space. */
 export const planFragments = (inp: PlanInput): PlannedFragment[] => {
   const { style, dims, rnd, maxFragments } = inp
@@ -119,6 +144,8 @@ export const planFragments = (inp: PlanInput): PlannedFragment[] => {
   }
   if (style === 'tear') {
     const n = clamp(Math.round((dims[u] * dims[v]) / (mean * mean)), 3, maxFragments)
+    const sheet = inp.sheet ?? 0
+    if (sheet > 0 && dims[t] > sheet * 4) return tearStack(inp, root, t, u, v, n, sheet)
     const th = Math.min(inp.thickness, dims[t])
     for (const b of bsp(root, n, [u, v], rnd)) {
       out.push({ center: [b.c[0], b.c[1], b.c[2]], size: [b.s[u], b.s[v], th], q: frame(u, v, t), shape: 'scrap', weight: b.s[u] * b.s[v] })
