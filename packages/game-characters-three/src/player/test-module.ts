@@ -96,6 +96,7 @@ export function createAvatarTestModule(options: AvatarTestOptions): TestableModu
   return {
     id: AVATAR_AREA_ID,
     name: textOf().name,
+    ground: { surface: 'concrete_slab' },
     group: textOf().group,
     state,
     items: () => [],

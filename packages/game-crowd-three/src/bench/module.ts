@@ -533,6 +533,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   const module: CrowdTestModule = {
     id: CROWD_AREA_ID,
     name: text.name,
+    ground: { surface: 'road' },
     group: text.group,
     get crowd() {
       return world.crowd

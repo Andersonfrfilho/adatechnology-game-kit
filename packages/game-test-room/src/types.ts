@@ -15,6 +15,8 @@ import type { RoomLoading } from './loading'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
+import type { GroundLayout } from '@adatechnology/game-contracts'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
@@ -168,8 +170,10 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
-  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
-  craters?: boolean
+  /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
+  ground?: GroundLayout
+  /** Limits of the floor's marks, thrown pieces and redraws per frame. */
+  terrainBudget?: Partial<TerrainBudget>
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
@@ -358,6 +362,8 @@ export interface TestRoom {
    * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
    */
+  /** The floor: what it is made of, how deep it was dug, its marks and thrown pieces. */
+  readonly terrain: Terrain
   openArea(group: string): SpawnedObject[]
   /** The loaded modules (`loadModule`): id, name, catalogue group and whether it lays an area of its own. */
   modules(): Array<{ id: string; name: string; group?: string; hasArea: boolean }>

@@ -3,15 +3,15 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
-import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createDestructionRenderer, createDestructionSound, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { createGroundField, createVfx } from '@adatechnology/game-vfx'
-import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
+import { createVfx } from '@adatechnology/game-vfx'
+import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -31,6 +31,8 @@ import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
+import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
@@ -84,6 +86,16 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Object id of the floor in the destruction world. */
+const GROUND_ID = 'room_ground'
+const TERRAIN_CELL = 0.1
+/** A huge arena gets coarser cells, not more memory. */
+const TERRAIN_MAX_CELLS = 1000
+const GROUND_BURST_MAX = 28
+const GROUND_BURST_PER_METRE = 30
+const GROUND_DUST_RADIUS = 0.2
+const GROUND_FIRE_EVERY = 0.3
+
 /** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
 const SHOVE_SPEED = 0.04
 const METRICS_INTERVAL_S = 0.25
@@ -179,7 +191,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topOk(t)) top = t.top
     return top
   }
-  const groundAt = (x: number, z: number): number => Math.max(sceneryTopAt(x, z), restingTopAt(x, z))
+  // the floor is the terrain: 0 was the height of a flat floor, now a hole goes under it and a heap over it; a top (a table, a counter) answers only where there is one
+  const defaultGround = options.ground ?? { surface: DEFAULT_PROFILE }
+  const terrain = createTerrain({ bounds: [-arenaSize, -arenaSize, arenaSize, arenaSize], cellSize: Math.max(TERRAIN_CELL, (2 * arenaSize) / TERRAIN_MAX_CELLS), layout: defaultGround, ...(options.terrainBudget ? { budget: options.terrainBudget } : {}) })
+  const terrainView = createTerrainRenderer(THREE, { terrain })
+  arena.group.add(terrainView.group)
+  const groundAt = (x: number, z: number): number => {
+    const top = Math.max(sceneryTopAt(x, z), restingTopAt(x, z))
+    const floor = terrain.heightAt(x, z)
+    return top > 0 ? Math.max(top, floor) : floor
+  }
 
   const ownFluids = !options.fluids
   const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
@@ -206,13 +227,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
-  const craterField = options.craters ? createGroundField() : undefined
-  const craterPatch = craterField ? createGroundPatch(THREE, { field: craterField, material: new THREE.MeshStandardMaterial({ color: 0x8e8e8a, roughness: 0.95 }) }) : undefined
-  if (craterPatch) {
-    const floor = arena.group.getObjectByName('floor')
-    if (floor) floor.visible = false
-    scene.add(craterPatch.mesh)
-  }
   const vfx = createVfxRenderer(THREE, {
     scene,
     camera,
@@ -221,8 +235,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     vfx: createVfx({
       profile: quality,
-      groundAt: (x, z) => groundAt(x, z) + (craterField?.heightAt(x, z) ?? 0),
-      ...(craterField ? { ground: craterField } : {}),
+      groundAt,
     }),
   })
   const renderer = createDestructionRenderer(THREE, {
@@ -268,6 +281,32 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (best) splitOf.set(piece.objectId, best)
     },
   })
+
+  // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else
+  const showGroundBlow = (result: TerrainBlowResult): void => {
+    const material = terrain.material(result.removed[0]?.material ?? result.exposed)
+    const def = world.materials.get(material.id)
+    const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
+    renderer.emit(material.debris === 'clods' ? 'dust' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
+    if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
+    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
+  }
+  const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
+  const registerGround = (): void => {
+    if (!world.has(GROUND_ID)) world.register(groundImpl, { id: GROUND_ID })
+  }
+  registerGround()
+  let groundFireClock = 0
+  const showGroundFire = (dt: number): void => {
+    groundFireClock += dt
+    if (groundFireClock < GROUND_FIRE_EVERY) return
+    groundFireClock = 0
+    for (const [x, z] of terrain.burningPoints()) {
+      const y = terrain.heightAt(x, z)
+      renderer.emit('fire', [x, y + 0.05, z], [0, 1, 0], 3, 1.6)
+      if (rnd() < 0.25) renderer.emit('smoke', [x, y + 0.2, z], [0, 1, 0], 1, 1)
+    }
+  }
   const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale, vfx: vfx.world })
   // the running film of the liquids that have one (blood, fuel, oil): grids near the player, fed by the leaks of the fluid world
   const filmRandom = createFilmLcg(1)
@@ -429,6 +468,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     colliders: arena.colliders,
     blockers,
     limit: arenaSize,
+    floorAt: terrain.heightAt,
     start: arena.playerStart,
     crouchKeys: options.crouch?.keys,
     hooks: {
@@ -655,6 +695,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     explosives.clear()
     fireZones.length = 0
     burningStains.length = 0
+    terrain.setLayout(defaultGround)
     for (const id of [...entries.keys()]) if (!entries.get(id)?.arena) removeEntry(id)
     clearLoose()
     for (const e of entries.values()) {
@@ -703,6 +744,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (pristineWorld) {
       for (const id of world.ids()) world.remove(id)
       world.load(pristineWorld)
+      registerGround()
     }
     if (pristineFluids) {
       fluids.load(pristineFluids)
@@ -1739,7 +1781,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const reach = Math.max(size.x, size.y, size.z) * 0.5
       const origin: Vec3 = [centre.x + dir[0] * (reach + 0.02), centre.y + dir[1] * (reach + 0.02), centre.z + dir[2] * (reach + 0.02)]
       const r = withoutHeld(() => world.raycast(origin, dir, speed * FIXED_DT * 2 + 0.06))
-      if (!r || r.object === piece.objectId) return
+      if (!r || r.object === piece.objectId || r.object === GROUND_ID) return
       const energy = 0.5 * piece.mass * speed * speed
       lastImpact.set(piece.objectId, simTime)
       world.hitPart(r.object, r.part, { type: 'blunt', point: r.point, direction: dir, energy, radius: 0.08, source: 'thrown' })
@@ -1752,6 +1794,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         data: { energyJ: Math.round(energy), speedMs: Math.round(speed * 10) / 10, target: r.object, targetPart: r.part },
       })
     }
+    const strikeGroundWith = (piece: Piece, energy: number): void => {
+      const box = tmpBox.setFromObject(piece.root)
+      const centre = box.getCenter(tmpV)
+      const size = box.getSize(tmpV2)
+      if (sceneryTopAt(centre.x, centre.z) > 0 || restingTopAt(centre.x, centre.z) > 0) return
+      const result = terrain.strike('blunt', { x: centre.x, z: centre.z, energy, contactRadius: Math.max(size.x, size.z) / 2 })
+      if (result.radius > 0) showGroundBlow(result)
+    }
     const land = (piece: Piece): void => {
       const vy = piece.velocity[1]
       const prev = prevVy.get(piece.objectId) ?? 0
@@ -1759,6 +1809,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       // the renderer applies the landing damage itself (source 'fall'); here we only describe it in the log
       if (piece.held || prev > -MIN_LANDING_LOG || vy < prev + 2 || !world.has(piece.objectId)) return
       const energy = 0.5 * piece.mass * prev * prev
+      strikeGroundWith(piece, energy)
       action('landing', t('act.landing', { name: nameOf(piece.objectId), speed: num(-prev, 1), energy: num(energy, energy < 100 ? 1 : 0) }), {
         objectId: piece.objectId,
         itemId: entryOf(piece.objectId)?.so.itemId,
@@ -1983,8 +2034,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    terrainView.sync(camera.position)
+    showGroundFire(dt)
     vfx.update(dt)
-    craterPatch?.sync()
     updateImpacts()
     fluidView.update(dt)
     filmBridge.update(dt)
@@ -2608,6 +2660,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const openArea = (area: string): SpawnedObject[] => {
     clear()
     const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
+    if (mod?.ground) terrain.setLayout(mod.ground)
     const label = mod?.group ?? S.groups[area] ?? area
     ui?.showGroup(label)
     activeBench = mod && benches.has(mod.id) ? mod.id : lastBench()
@@ -2796,6 +2849,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return combo ? comboOn : null
     },
     equip,
+    terrain,
     openArea,
     modules: () => [...modules.values()].map((m) => ({ id: m.id, name: m.name, group: m.group, hasArea: typeof m.area === 'function' })),
     openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
@@ -2868,7 +2922,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       loading.dispose()
       renderer.dispose()
       vfx.dispose()
-      craterPatch?.dispose()
       fluidView.dispose()
       filmBridge.dispose()
       film.dispose()
