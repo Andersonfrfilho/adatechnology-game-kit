@@ -94,6 +94,22 @@ A `SceneryObject` is `{ spec, position?, rotationY?, colors?, build?, label?, to
 
 `tap` is the room's water tap: omitted, the room draws a post with an arm beside the table; `{ build(THREE), spout, position?, rotationY? }` puts the host's model there (the origin where it stands, `spout` where the water leaves it; by default it stands on the table top with the spout over its right half); `null` removes it.
 
+## Test table
+
+`room.testTable` lays the catalogue on a table a page at a time, so every item can be tried one by one with the same hit. The table is a `scenery` piece with a `top` (id `test_table`, or `testTable: { scenery }`); the room never draws one of its own, the host passes its model (the example uses the long dining table of the furniture catalogue, `furnitureSpec` of `game-floorplan-three`). Without that piece the table lays nothing; `testTable: false` also leaves the panel out.
+
+```ts
+createTestRoom({ ..., scenery: { test_table: { spec, build, top, position: [-8, 0, 3] } } })
+room.testTable.open('Items')          // clears the room and lays the first page of the group along the front edge of the table
+room.testTable.next()                 // the next page (a page holds what fits on the table)
+room.testTable.find('item_canned_beans') // the page that holds that item, with it picked
+room.testTable.select(objectId)       // the item the trials hit (the first one until another is picked)
+room.testTable.trial('shot')          // 'shot' | 'punch' | 'stab' | 'fire' | 'blast'
+room.testTable.relay()                // puts the table and the page back as they were
+```
+
+A trial equips its tool, puts the player in front of the item, aims at its centre and uses the tool: a 9 mm pistol from 2.5 m, the fists and a knife up close, a flamethrower burst from 1.6 m, and a fragmentation grenade set off just behind the item (`DEFAULT_TRIALS`; `testTable: { trials: { shot: { weapon: 'rifle_5_56' } } }` changes one). What happens goes to the log like any other hit. With the UI on, the **Test table** panel (between the inspector and the log) has the group, the pages, a search that lays the page of an item, the items on the table (a click picks one) and a button per trial plus **Put back**.
+
 ## Models of thrown and placed explosives
 
 The room knows the arsenal's ids, not the weapons' models. `projectileModel({ weapon, explosive, kind })` (`kind`: `grenade`, `molotov`, `rocket` or `charge`) is the host's hook: it answers `{ model, axis? }` (`axis`: the length of the model, default +y; a rocket points it along its flight) or `null`, and the room draws a plain primitive (a sphere, a cylinder, a box) only where it answers nothing. `@adatechnology/game-weapons-three` has one: `projectileModel(THREE, query)`.

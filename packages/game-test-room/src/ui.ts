@@ -2,6 +2,8 @@ import type { ControlValue } from '@adatechnology/game-contracts'
 import { createBenchPanel } from './bench-panel'
 import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
+import { createTestTablePanel, TEST_TABLE_CSS } from './test-table-panel'
+import type { TestTable } from './test-table'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
 
@@ -86,6 +88,8 @@ export interface UiOptions {
   onControl: (id: string, value: ControlValue) => void
   onLayer: (id: string, on: boolean) => void
   onAction: (id: string) => void
+  /** The room's test table: its panel goes between the inspector and the log. Absent: no panel. */
+  testTable?: TestTable
 }
 
 export interface RoomUi {
@@ -225,7 +229,7 @@ async function toggleFullscreen(): Promise<void> {
 export function createUi(o: UiOptions): RoomUi {
   const { t } = o
   const style = mk('style')
-  style.textContent = CSS
+  style.textContent = CSS + (o.testTable ? TEST_TABLE_CSS : '')
   const root = mk('div', 'tr-root')
   const pos = getComputedStyle?.(o.container)?.position
   if (!pos || pos === 'static') o.container.style.position = 'relative'
@@ -258,7 +262,9 @@ export function createUi(o: UiOptions): RoomUi {
   const left = mk('div', 'tr-left')
   const insp = mk('div', 'tr-panel tr-insp')
   const logPanel = mk('div', 'tr-panel tr-log')
-  left.append(insp, logPanel)
+  // the test table sits between the inspector and the log (the log gives way), so the catalogue keeps its room on the right
+  const tablePanel = o.testTable ? createTestTablePanel(o.testTable, t) : null
+  left.append(insp, ...(tablePanel ? [tablePanel.element] : []), logPanel)
 
   // log panel
   const logTitle = mk('h3', undefined, t('ui.log'))
@@ -694,6 +700,7 @@ export function createUi(o: UiOptions): RoomUi {
     refresh() {
       renderTabs()
       renderScenarios()
+      tablePanel?.refresh()
     },
     showGroup(group) {
       activeGroup = group
@@ -708,6 +715,7 @@ export function createUi(o: UiOptions): RoomUi {
     },
     dispose() {
       offLog()
+      tablePanel?.dispose()
       if (toastTimer) clearTimeout(toastTimer)
       root.remove()
     },

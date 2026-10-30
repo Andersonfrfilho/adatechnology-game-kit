@@ -109,6 +109,55 @@ describe('the hands work the parts the reload clip moves', () => {
   })
 })
 
+/** How far the hand target strays from where it rests while B turns the safety, and its closest pass to `partName` (when given), in metres. */
+const safetyReach = (weapon: string, hand: 'R' | 'L', partName?: string): { moved: number; min: number; rest: number; safe: boolean } => {
+  const { room, last } = setup()
+  room.setTool(weapon)
+  step(room, 40)
+  const part = partName ? room.scene.getObjectByName('weapon-viewmodel')!.getObjectByName(partName) : undefined
+  const at = (): THREE.Vector3 => new THREE.Vector3(...last().targets![hand]!.position)
+  const distance = (): number => {
+    if (!part) return 0
+    const box = new THREE.Box3().setFromObject(part)
+    return (box.isEmpty() ? part.getWorldPosition(new THREE.Vector3()) : box.getCenter(new THREE.Vector3())).distanceTo(at())
+  }
+  const start = at()
+  const rest = distance()
+  const safe = room.tool.safety
+  window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyB' }))
+  let moved = 0
+  let min = Infinity
+  step(room, 40, () => {
+    moved = Math.max(moved, at().distanceTo(start))
+    min = Math.min(min, distance())
+  })
+  return { moved, min, rest, safe: room.tool.safety !== safe }
+}
+
+describe('the safety (B): the weapon cants and a hand works the lever', () => {
+  it.each([
+    ['glock_18', 'R'],
+    ['colt_m4a1', 'R'],
+    ['ak_47', 'L'],
+    ['remington_870', 'R'],
+    ['glock_17', 'R'],
+  ] as const)('%s: the %s hand moves while the safety turns', (weapon, hand) => {
+    const { moved, safe } = safetyReach(weapon, hand)
+    expect(safe).toBe(true)
+    expect(moved).toBeGreaterThan(0.01)
+  })
+
+  it('glock_18: the thumb of the shooting hand comes toward the lever', () => {
+    const { min, rest } = safetyReach('glock_18', 'R', 'safety')
+    expect(min).toBeLessThan(rest - 0.01)
+  })
+
+  it('ak_47: the support hand goes over to the lever on the right of the receiver', () => {
+    const { min } = safetyReach('ak_47', 'L', 'bolt')
+    expect(min).toBeLessThan(0.05)
+  })
+})
+
 describe('the trigger finger', () => {
   const indexAfter = (weapon: string, frames: number[]): number[] => {
     const { room, last } = setup()

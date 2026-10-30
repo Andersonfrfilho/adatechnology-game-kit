@@ -1706,7 +1706,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const hitLocal = toLocal(c, q, hitW)
     const unitPlan = p.spec.units ? unitFragmentPlan(p, maxFragments * UNIT_FRAGMENT_FACTOR) : []
     const plan = unitPlan.length > 0 ? unitPlan : planFragments({
-      style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd,
+      style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd, sheet: p.mat.sheet,
     })
     const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
     const mass = p.st.mass
@@ -1723,7 +1723,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         id: `${p.spec.id}#${i}`, part: p.spec.id, material: p.spec.material, shape: f.shape, center: cw, size: f.size, rotation: quat.mul(q, f.q),
         velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k],
         angularVelocity: [(rnd() - 0.5) * 12, (rnd() - 0.5) * 12, (rnd() - 0.5) * 12],
-        mass: (mass * f.weight) / totW, ...(marks.length > 0 ? { marks } : {}),
+        mass: (mass * f.weight) / totW, ...(marks.length > 0 ? { marks } : {}), ...(f.inner ? { inner: true } : {}),
       }
     })
     const reinforcement = p.spec.reinforcement

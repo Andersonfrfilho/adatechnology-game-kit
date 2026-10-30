@@ -725,6 +725,7 @@ class Renderer implements DestructionRenderer {
     const def = pv ? this.world.materials.get(pv.material) : undefined
     if (kind === 'smoke') return { color: SMOKE_TONES[def?.thermal.smoke ?? 'grey'] }
     if (kind === 'fibers' || kind === 'leaves') {
+      if (def?.visual?.innerColor !== undefined) return { color: def.visual.innerColor }
       const c = pv ? this.visuals.baseColorHex(pv.meshes[0] ?? ({} as never)) : -1
       return c >= 0 ? { color: c } : undefined
     }
@@ -898,7 +899,8 @@ class Renderer implements DestructionRenderer {
     for (let i = 0; i < ev.fragments.length; i += step) {
       const fr = ev.fragments[i]
       const fdef = this.world.materials.get(fr.material)
-      const mat = this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fr.material, fdef), transparent || fdef?.visual?.transparent === true, opacity)
+      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def || !fdef ? color : fallbackColor(fr.material, fdef)
+      const mat = this.fragments.materialFor(fr.material, tone, transparent || fdef?.visual?.transparent === true, opacity)
       this.fragments.spawn(fr, mat, ev.object, maxAlive)
     }
     const up: Vec3 = [0, 1, 0]
@@ -916,7 +918,7 @@ class Renderer implements DestructionRenderer {
         this.vfx.burst('dust', ev.point, up, 5, 0.8, { color: 0xb59a74 })
         break
       case 'tear':
-        this.vfx.burst('fibers', ev.point, up, 12 * sizeK, 1.6, { color: color })
+        this.vfx.burst('fibers', ev.point, up, 12 * sizeK, 1.6, { color: def?.visual?.innerColor ?? color })
         break
       case 'snap':
         this.vfx.burst('chips', ev.point, up, 8 * sizeK, 3)

@@ -10,6 +10,7 @@
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
+//   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table; ?table=1 lays the first group
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
@@ -37,11 +38,15 @@ const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, op
 const shelf = furnitureSpec(THREE, 'bookcase')
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
 const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
+// the test table is a long dining table of the furniture catalogue: the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
+// a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
+const testTable = furnitureSpec(THREE, 'dining_table', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
 const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
   shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build },
+  test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
   sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
 }
 
@@ -87,6 +92,11 @@ async function start() {
     if (items) for (const [i, id] of items.split(',').filter(Boolean).entries()) room.spawn(id, [(i - (items.split(',').filter(Boolean).length - 1) / 2) * 1.3, 0, 0.5])
     // an area with hundreds of items takes a second: the room's loading indicator says which one is opening
     if (params.get('area')) await room.openAreaAsync(params.get('area'))
+  }
+  const table = params.get('table')
+  if (table) {
+    const groups = room.testTable.groups()
+    room.testTable.open(groups.includes(table) ? table : groups[0])
   }
   const wanted = params.get('scenario')
   if (wanted) {

@@ -661,6 +661,8 @@ export interface Fragment {
   mass: number
   /** Holes the part had where this fragment came from, in the fragment's own axes: the renderer keeps them on the debris. */
   marks?: readonly FragmentMark[]
+  /** Cut from inside the part (a page of a book, not its cover): the renderer draws it in the material's inner colour. */
+  inner?: boolean
 }
 
 export interface FragmentMark {

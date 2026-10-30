@@ -54,6 +54,20 @@ const anchorsOf = (THREE: Three, model: WeaponModel, right: HandAnchor | null): 
       if (!right || !parts.slide) return null
       return { part: right.part, offset: right.offset.clone().add(V(THREE, 0, 0.012, 0)), quaternion: right.quaternion }
     }
+    if (kind === 'thumb_safety') {
+      // the shooting hand stays on the grip and slides up toward the lever, as far as a thumb reaches; with no lever drawn, up the grip
+      if (!right) return null
+      const toward = parts.safety ? right.part.worldToLocal(parts.safety.getWorldPosition(V(THREE, 0, 0, 0))).sub(right.offset) : V(THREE, 0, HAND_HOLD.thumbReach, 0)
+      return { part: right.part, offset: right.offset.clone().add(toward.clampLength(0, HAND_HOLD.thumbReach)), quaternion: right.quaternion }
+    }
+    if (kind === 'lever_right') {
+      // the big lever on the right of an AK-style receiver, over the trigger: the support hand reaches over the top and pushes it
+      const receiver = parts.bolt ?? parts.boltHandle
+      if (!receiver) return null
+      const b = boxIn(THREE, root, receiver)
+      const x = parts.trigger ? root.worldToLocal(parts.trigger.getWorldPosition(V(THREE, 0, 0, 0))).x : b.min.x
+      return anchorAt(receiver, V(THREE, x, b.getCenter(V(THREE, 0, 0, 0)).y, b.max.z + palm), handFrame(THREE, V(THREE, 1, 0, 0), V(THREE, 0, 0, 1)))
+    }
     if (!part) return null
     const b = boxIn(THREE, root, part)
     const c = b.getCenter(V(THREE, 0, 0, 0))

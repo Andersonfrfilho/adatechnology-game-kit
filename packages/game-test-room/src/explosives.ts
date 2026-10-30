@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 import type { BlastOptions, DestructionWorld, HitResult, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
-import { backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
-import type { Arsenal, Detonation, ExplosiveBody, SurfaceProbe, Use } from '@adatechnology/game-weapons'
+import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
+import type { Arsenal, Detonation, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
 
 import { segmentTouchesBox } from './segment-box'
@@ -95,6 +95,8 @@ export type Explosives = {
   backblastUse: (use: Extract<Use, { kind: 'backblast' }>) => void
   /** Sets off the charges set down that wait for the remote detonator; returns how many went off. A trip wire charge goes off by itself, when a body crosses the wire. */
   detonateCharges: () => number
+  /** Sets the explosive `explosive` off at `point` at once, as if `weapon` had put it there (the test table's blast); false for an unknown explosive. */
+  blastAt: (weapon: string, explosive: string, point: Vec3) => boolean
   update: (dt: number) => void
   /** Removes every projectile and charge, and their meshes. */
   clear: () => void
@@ -341,6 +343,15 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     })
   }
 
+  const blastAt = (weapon: string, explosive: string, point: Vec3): boolean => {
+    const def = arsenal.explosives.get(explosive)
+    if (!def) return false
+    const event = new ExplosiveBody({ explosive: def, origin: point, triggers: ['remote'], rules: arsenal.rules.explosives }).trigger('remote')
+    if (event?.type !== 'detonate') return false
+    detonate({ weapon } as Projectile, event.detonation)
+    return true
+  }
+
   const detonateCharges = (): number => {
     let count = 0
     for (const projectile of [...projectiles]) {
@@ -439,5 +450,5 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     }
   }
 
-  return { throwUse, placeUse, backblastUse, detonateCharges, update, clear }
+  return { throwUse, placeUse, backblastUse, detonateCharges, blastAt, update, clear }
 }

@@ -183,6 +183,167 @@
       "hand": "L",
       "anchor": "cylinder_side",
       "merge": 1
+    },
+    {
+      "family": "pistol",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "revolver",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "rifle",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3,
+      "style": "ar"
+    },
+    {
+      "family": "p90",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "pump",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "semi12",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "semiint",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "break",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "bolt",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "boltmag",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "lever",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "belt",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "R",
+      "anchor": "thumb_safety",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "rifle",
+      "clips": [
+        "safety_on",
+        "safety_off"
+      ],
+      "hand": "L",
+      "anchor": "lever_right",
+      "style": "ak",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     }
-  ]
+  ],
+  "safety": {
+    "comment": "Safety on and off (B): the shooting hand slides up its grip so the thumb flicks the lever while the clip cants the weapon; an AK-style rifle (akCharge) has its big lever on the right, pushed by the support hand over the top."
+  }
 }
