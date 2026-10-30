@@ -267,6 +267,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   return {
     id: URBAN_AREA_ID,
     name: text.name,
+    ground: { surface: 'road' },
     group: text.group,
     get placed() {
       return placed

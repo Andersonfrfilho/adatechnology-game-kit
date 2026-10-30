@@ -178,16 +178,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   sun.shadow.bias = -0.0006
   group.add(sun)
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(size * 2, size * 2), new THREE.MeshStandardMaterial({ color: 0x8e8e8a, roughness: 0.95 }))
-  floor.rotation.x = -Math.PI / 2
-  floor.receiveShadow = true
-  floor.name = 'floor'
-  group.add(floor)
-
-  const grid = new THREE.GridHelper(size * 2, size * 2, 0x4c4c52, 0x77777b)
-  grid.position.y = 0.004
-  group.add(grid)
-
   const sceneryObjects = resolveScenery(scenery)
   const wallObject = sceneryObjects.find((o) => o.id === WALL_ID)
   const wallZ = wallObject ? wallObject.position[2] : DEFAULT_WALL_Z

@@ -296,6 +296,7 @@ export function createVfxTestModule(
   return {
     id: "vfx",
     name: text.module,
+    ground: { surface: 'dirt' },
     group: "effects",
     items: () => [],
     controls,

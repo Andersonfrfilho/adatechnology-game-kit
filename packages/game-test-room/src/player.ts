@@ -28,6 +28,8 @@ export interface PlayerOptions {
   hooks: PlayerHooks
   /** `KeyboardEvent.code`s that crouch (default `['KeyC']`): a tap stays crouched until the next tap, a longer press crouches while held. Ctrl is not one by default: Ctrl+W closes the tab and no page can stop it. */
   crouchKeys?: readonly string[]
+  /** Height of the ground the player walks on (a crater, a heap). Default flat at 0. */
+  floorAt?: (x: number, z: number) => number
 }
 
 export interface Player {
@@ -77,6 +79,8 @@ const CROUCH_TAP = 0.25
 const RUN = 6.2
 const JUMP = 4.6
 const GRAVITY = 13
+const FLOOR_CLIMB_SPEED = 3
+const FLOOR_FALL_SPEED = 6
 const LOOK = 0.0022
 
 /**
@@ -110,11 +114,19 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     crouchPress = null
   }
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
+  const floorHere = (): number => o.floorAt?.(px.x, px.z) ?? 0
+  let floorLevel = 0
+  // the eye eases over a rim and falls into a hole instead of jumping with every cell of the ground
+  const followFloor = (dt: number): void => {
+    const gap = floorHere() - floorLevel
+    const reach = (gap > 0 ? FLOOR_CLIMB_SPEED : FLOOR_FALL_SPEED) * dt
+    floorLevel += Math.max(-reach, Math.min(reach, gap))
+  }
 
   const apply = (): void => {
     euler.set(pitch, yaw, 0, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + y - CROUCH_DROP * crouch, px.z)
+    cam.position.set(px.x, eye + floorLevel + y - CROUCH_DROP * crouch, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -296,10 +308,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return px.z
     },
     get feet() {
-      return y
+      return floorLevel + y
     },
     get position() {
-      return [px.x, y, px.z] as Vec3
+      return [px.x, floorLevel + y, px.z] as Vec3
     },
     get speed() {
       return walked
@@ -338,7 +350,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
       running = run && walked > 0
       // the floor under the feet: a step up is taken at once, a drop is a fall
-      const floor = o.footing ? Math.max(0, o.footing(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor) : 0
+      const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
       if (y < floor && vy <= 0) y = floor
       if (y <= floor && keys.has('Space')) vy = JUMP
       if (y > floor || vy > 0) {
@@ -349,12 +361,14 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
           vy = 0
         }
       }
+      followFloor(dt)
       apply()
     },
     setPose(position, yw, pt) {
       px.x = position[0]
       px.z = position[2]
-      eye = position[1]
+      floorLevel = floorHere()
+      eye = position[1] - floorLevel
       y = 0
       vy = 0
       yaw = yw
@@ -364,7 +378,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     look(position, target) {
       px.x = position[0]
       px.z = position[2]
-      eye = position[1]
+      floorLevel = floorHere()
+      eye = position[1] - floorLevel
       y = 0
       vy = 0
       const dx = target[0] - position[0]

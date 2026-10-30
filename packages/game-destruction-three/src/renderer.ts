@@ -105,7 +105,7 @@ const DEFAULT_SPEED: Record<string, number> = {
 }
 
 /** Sound key for an impact on a material. */
-function impactKey(def: MaterialDef | undefined): string {
+export function impactKey(def: MaterialDef | undefined): string {
   if (!def) return 'impact_wood'
   const tags = def.tags ?? []
   if (tags.includes('metal')) return 'impact_metal'

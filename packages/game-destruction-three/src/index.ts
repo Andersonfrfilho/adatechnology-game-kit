@@ -1,4 +1,4 @@
-export { createDestructionRenderer } from './renderer'
+export { impactKey, createDestructionRenderer } from './renderer'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'

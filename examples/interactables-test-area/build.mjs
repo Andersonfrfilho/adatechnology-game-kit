@@ -31,7 +31,7 @@ const urban = ['game-urban', 'game-urban-three']
   const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
   // the stories: casting, beats, the life simulation and the character sheet (no 3D)
   const stories = ['game-stories']
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-weather-three', ...people, ...houses, ...vehicles, ...vegetation, ...urban, 'game-player', ...crowd, ...stories]) {
+for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-terrain', 'game-terrain-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-weather-three', ...people, ...houses, ...vehicles, ...vegetation, ...urban, 'game-player', ...crowd, ...stories]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -53,6 +53,8 @@ const result = await esbuild.build({
     // the effects bench rides along: the smoke, sparks and blood of what the furniture goes through
     '@adatechnology/game-vfx': join(pkg('game-vfx'), 'dist/index.js'),
     '@adatechnology/game-vfx-three': join(pkg('game-vfx-three'), 'dist/index.js'),
+    '@adatechnology/game-terrain': join(pkg('game-terrain'), 'dist/index.js'),
+    '@adatechnology/game-terrain-three': join(pkg('game-terrain-three'), 'dist/index.js'),
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),

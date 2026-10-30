@@ -1,0 +1,6 @@
+export { createTerrain, DEFAULT_TERRAIN_BUDGET } from './terrain'
+export { createTerrainImpl } from './impl'
+export type { TerrainImplOptions } from './impl'
+export { DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
+export { TERRAIN_PATTERNS } from './types'
+export type * from './types'

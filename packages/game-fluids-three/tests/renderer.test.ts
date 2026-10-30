@@ -361,3 +361,30 @@ describe('sealed containers', () => {
     expect(sealed(true)).toBe(true)
   })
 })
+
+describe('a shot can', () => {
+  const shown = (opening: number, holed: boolean): boolean => {
+    const world = createFluids()
+    world.addContainer({ capacity: 0.36, liquid: 'soda', liters: 0.33, shape: { kind: 'cylinder', radius: 0.03, height: 0.11 }, opening, closed: false }, { id: 'can', position: [0, 1, 0] })
+    const scene = new THREE.Scene()
+    const can = new THREE.Group()
+    can.add(new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.12), new THREE.MeshStandardMaterial()))
+    if (holed) {
+      // a bullet hole drawn by game-destruction-three: a see-through disc on the shell
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.005), new THREE.MeshBasicMaterial({ transparent: true }))
+      hole.userData.destructionDebris = true
+      can.add(hole)
+    }
+    scene.add(can)
+    const renderer = createFluidRenderer(THREE, { scene, fluids: world })
+    renderer.bindContainer('can', can)
+    step(world, renderer, 0.1)
+    return find(can, 'fluid_liquid').some((mesh) => mesh.visible)
+  }
+
+  it('shows nothing of its soda through the tab or a bullet hole, and still shows the liquid of a wide open pot', () => {
+    expect(shown(0.012, false)).toBe(false)
+    expect(shown(0.012, true)).toBe(false)
+    expect(shown(0.03, true)).toBe(true)
+  })
+})
