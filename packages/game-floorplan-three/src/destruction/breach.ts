@@ -309,8 +309,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const base = fragmentMaterial(part.material).color.getHex()
         const n = noise2(centre * 3.1, y * 2.7, 0.07)
         if (units.mortar === 'concrete') {
-          // cast concrete: no joints, a rough face that goes in and out
-          at(len, h, thick - 2 * COVER - 0.03 * n, tone(base, 0.86 + 0.2 * n))
+          // cast concrete: one face with no joints (the cells only cut it where a shot went through), its grey a little uneven
+          at(len, h, thick - 2 * COVER, tone(base, 0.9 + 0.04 * n))
         } else {
           // brick in its mortar: the joint behind, the unit a little smaller and standing out of it
           at(len, h, thick - 2 * COVER - 0.012, 0x9d978c)

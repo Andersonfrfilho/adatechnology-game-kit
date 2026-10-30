@@ -23,6 +23,10 @@ let rendererCount = 0
 const COLLAPSE_CLOUD_KG = 1000
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
+/** Metres the cracks around a hit reach on an opaque body (glass cracks as far as the event says). */
+const OPAQUE_CRACK = 0.1
+/** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
+const WOOD_RIM = 1.5
 const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -918,6 +922,9 @@ class Renderer implements DestructionRenderer {
         const seed = hashNumbers(ev.time, point[0], point[1], point[2])
         this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, ev.hole.diameter * 5), 0xe8f4ff, seed)
       } else {
+        // wood tears its fibres around the hole: a ragged rim of fresh wood under it
+        const fresh = def?.penetrationClass === 'wood' ? def.visual?.innerColor : undefined
+        if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, ev.hole.diameter * WOOD_RIM), fresh)
         this.visuals.addHole(mv, wp, normal, ev.hole.diameter)
       }
     }
@@ -935,8 +942,13 @@ class Renderer implements DestructionRenderer {
     const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
     const mv = this.nearestMesh(pv, wp)
     if (mv) {
-      const color = def?.visual?.transparent ? 0xe8f4ff : 0x2a2724
-      this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
+      // glass cracks right across in white lines; an opaque body (a ceramic tub, a concrete slab) cracks a hand around the hit, in a dark shade of
+      // its own colour, not black lines over the whole piece
+      const glass = !!def?.visual?.transparent
+      const own = this.partColor(pv, def) ?? fallbackColor(pv.material, def)
+      const color = glass ? 0xe8f4ff : new this.THREE.Color(own).multiplyScalar(0.45).getHex()
+      const length = glass ? ev.crack.length : Math.min(ev.crack.length, OPAQUE_CRACK)
+      this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
     }
     this.sound(impactKey(def), ev.worldPoint, 0.5)
   }
