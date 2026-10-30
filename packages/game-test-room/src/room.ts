@@ -266,13 +266,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       return e?.free === true && !e.piece
     },
-    onLoosened: (objectId, piece) => {
+    onLoosened: (objectId, piece, cause) => {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
       leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
-      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+      action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)

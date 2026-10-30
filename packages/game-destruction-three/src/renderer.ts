@@ -1113,8 +1113,10 @@ class Renderer implements DestructionRenderer {
       old.sleeping = false
     } else if (kitOriginOf(b.root)?.kind === 'furniture') {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
-      this.makePiece(objectId)
+      const piece = this.makePiece(objectId)
       this.tipIfTopHeavy(b)
+      // the host stops keeping the footprint it had where it stood: it is a body that moves now
+      this.o.onLoosened?.(objectId, piece, 'apart')
     }
   }
 
@@ -1232,7 +1234,7 @@ class Renderer implements DestructionRenderer {
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
       if (!body) continue
-      this.o.onLoosened?.(b.id, piece)
+      this.o.onLoosened?.(b.id, piece, 'blast')
       const spread = half[0]
       const momentum = hit.speed * mass
       this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
