@@ -112,6 +112,8 @@ export type PlayerAvatar = {
   readonly playing: string | null
   /** A socket at the hand: 'R' is the weapon hand (the puppet's right, at -x), 'L' the other one. */
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  /** The joint of a shoulder ('R' the weapon side, at -x): where a long gun's stock rests, just inside it. */
+  shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /**
    * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
    * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
@@ -533,6 +535,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run) run.target = 0
     },
     hand: (side) => sockets[side],
+    shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
     reach(targets) {
       if (run || fall > 0) return
       root.updateMatrixWorld(true)

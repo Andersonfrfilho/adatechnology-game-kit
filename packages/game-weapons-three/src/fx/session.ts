@@ -33,7 +33,8 @@ export interface Session {
   readonly caliber: CaliberDef | undefined
   readonly model: WeaponModel
   /** How much the model is scaled down to sit in the hands. */
-  readonly holderScale: number
+  /** The size the model is drawn at: smaller than real in front of the eye, 1 on the body. */
+  holderScale: number
   readonly lengthMetres: number
   readonly caseType: CaseType
   /** How the weapon sounds: the weight of its metal and what it is made of. */
