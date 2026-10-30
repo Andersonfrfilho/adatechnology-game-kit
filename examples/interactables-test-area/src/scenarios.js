@@ -242,6 +242,8 @@ export function buildScenarios(locale, analysisOf) {
     }),
 
     sc('furniture_push', T('Empurrar móvel: o leve anda, o pesado demais não se mexe e o móvel na parede trava', 'Pushing furniture: the light piece walks, the one too heavy does not budge and the one at the wall locks'), ({ room, step, expect }) => {
+      // the hands are free for this: a scenario before it may have left a weapon in them
+      room.setTool('hand')
       const hold = (id, eye, target, seconds) => {
         room.look(eye, target)
         const leaned = room.push.begin()
