@@ -270,6 +270,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
+      leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
       action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
@@ -483,6 +484,31 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = arena.colliders[i]
     return arena.colliderIds[i] !== null && c[2] - c[0] <= SOLID_SPAN && c[3] - c[1] <= SOLID_SPAN
   }
+  // the footprints that still hold: the player and the push read this same list
+  const standingColliders: Array<[number, number, number, number]> = []
+  const standingIds: Array<string | null> = []
+  /** Scenery too wide for the renderer's boxes that came loose: the body stops the player from then on (`inTheWay`), wherever it goes. */
+  const footprintsWithBody = new Set<string>()
+  /** Every piece of the scenery back where it stands. */
+  const standFootprints = (): void => {
+    standingColliders.length = 0
+    standingIds.length = 0
+    footprintsWithBody.clear()
+    arena.colliders.forEach((collider, i) => {
+      if (drawnScenery(i)) return
+      standingColliders.push(collider)
+      standingIds.push(arena.colliderIds[i] ?? null)
+    })
+  }
+  standFootprints()
+  /** The object is a body now: the footprint it had where it stood no longer means anything. */
+  const leaveFootprint = (objectId: string): void => {
+    const i = standingIds.indexOf(objectId)
+    if (i < 0) return
+    standingIds.splice(i, 1)
+    standingColliders.splice(i, 1)
+    footprintsWithBody.add(objectId)
+  }
   /**
    * The footing of the player at (x, z) with the feet at `feet`: what is drawn there and not lighter than `KICK_MASS` (that is kicked, see
    * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body.
@@ -532,7 +558,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const player = createPlayer(THREE, {
     camera,
     dom,
-    colliders: arena.colliders.filter((_, i) => !drawnScenery(i)),
+    colliders: standingColliders,
     footing: (x, z, radius, feet) => footing(x, z, radius, feet),
     blockers,
     limit: arenaSize,
@@ -595,7 +621,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     THREE,
     player,
     world,
-    arena: { limit: arenaSize, colliders: arena.colliders },
+    arena: { limit: arenaSize, colliders: standingColliders },
     blockers,
     ...(options.push ? { rules: options.push } : {}),
     pick: () => {
@@ -613,6 +639,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       if (e) e.piece = piece
       rendererPieces.set(objectId, piece)
+      leaveFootprint(objectId)
       return piece
     },
     dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
@@ -852,7 +879,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * own footprint in `root.userData.collider` (a plant: the trunk as a cylinder, or null for grass the feet walk through) is tested against that instead of its whole box.
    */
   const inTheWay = (e: Entry, x: number, z: number, r: number): BodyBox | null => {
-    if (e.arena || (e.piece && e.piece.held)) return null
+    if ((e.arena && !footprintsWithBody.has(e.so.objectId)) || (e.piece && e.piece.held)) return null
     const ud = e.so.root.userData as { collider?: { kind?: string; radius?: number; height?: number } | null }
     if ('collider' in ud && !ud.collider?.kind) return null
     const b = bodyBox(e)
@@ -1004,6 +1031,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** Reset the worlds to their seeded start: used by scenarios so that each one is deterministic. */
   const hardReset = (): void => {
+    pushByKey = false
+    push.end()
     clearEverything()
     for (const id of [...entries.keys()]) removeEntry(id)
     tools.clear()
@@ -1025,6 +1054,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     prevVy.clear()
     lastImpact.clear()
     addArena()
+    standFootprints()
     timeScale = 1
     fastForward = false
     walkPlan = null
@@ -1422,6 +1452,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const piece = renderer.makePiece(objectId, { mass })
       e.piece = piece
       rendererPieces.set(objectId, piece)
+      leaveFootprint(objectId)
       action('loosened', t('act.shoved', { name: e.name }), { objectId, itemId: e.so.itemId })
       renderer.impulse(objectId, push.impulse, push.point)
     }

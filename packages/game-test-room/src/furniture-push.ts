@@ -132,7 +132,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
     const maxZ = lean.max[2] + dz
     if (Math.max(Math.abs(minX), Math.abs(maxX)) > arena.limit || Math.max(Math.abs(minZ), Math.abs(maxZ)) > arena.limit) return false
     for (const c of arena.colliders) {
-      // what the piece already stands in is its own footprint (scenery that stands free), not an obstacle
+      // what the piece already stands in does not hold it: it can always back out
       if (lean.max[0] > c[0] && lean.min[0] < c[2] && lean.max[2] > c[1] && lean.min[2] < c[3]) continue
       if (maxX > c[0] && minX < c[2] && maxZ > c[1] && minZ < c[3]) return false
     }
