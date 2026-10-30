@@ -632,11 +632,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     bodyBoxes.set(id, box)
     return box
   }
-  /** Whether `e` stands in the player's way at the floor point (x, z): the arena has its own colliders, a held thing and a low one do not block. */
+  const footPos = new THREE.Vector3()
+  /**
+   * Whether `e` stands in the player's way at the floor point (x, z): the arena has its own colliders, a held thing and a low one do not block. A piece that declares its
+   * own footprint in `root.userData.collider` (a plant: the trunk as a cylinder, or null for grass the feet walk through) is tested against that instead of its whole box.
+   */
   const inTheWay = (e: Entry, x: number, z: number, r: number): BodyBox | null => {
     if (e.arena || (e.piece && e.piece.held)) return null
+    const ud = e.so.root.userData as { collider?: { kind?: string; radius?: number; height?: number } | null }
+    if ('collider' in ud && !ud.collider?.kind) return null
     const b = bodyBox(e)
     if (!b || b.base > player.feet + HEADROOM) return null
+    const c = ud.collider
+    if (c?.kind === 'cylinder' && c.radius != null) {
+      e.so.root.getWorldPosition(footPos)
+      const reach = c.radius + r
+      return (x - footPos.x) ** 2 + (z - footPos.z) ** 2 < reach * reach ? { ...b, top: Math.min(b.top, footPos.y + (c.height ?? b.top - footPos.y)) } : null
+    }
     return x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r ? b : null
   }
   blockers.add((x, z, r) => {
