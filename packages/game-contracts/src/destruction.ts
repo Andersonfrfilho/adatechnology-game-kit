@@ -697,7 +697,8 @@ export type DestructionEvent =
   | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3 })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
   | (EventBase & { type: 'ricochet'; part: string; point: Vec3; direction: Vec3; energy: number })
-  | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number })
+  /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */
+  | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number; material?: MaterialId })
   | (EventBase & { type: 'fracture'; part: string; style: FractureStyle; fragments: Fragment[]; point: Vec3 })
   | (EventBase & { type: 'detach'; joint: string; parts: [string, string]; by: 'break' | 'tool' | 'part_lost'; groups: string[][] })
   | (EventBase & { type: 'disassemble_progress'; joint: string; tool: ToolKind; progress: number })

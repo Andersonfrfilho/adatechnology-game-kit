@@ -139,11 +139,22 @@ describe('fracture and reset', () => {
   })
 
   it('draws a spall decal where a bullet hits a wall', () => {
-    const { d, world, renderer, centre, run } = setup()
+    const { d, world, renderer, centre, run, events } = setup()
+    const decals = renderer.stats().decals
+    // a 9 mm round: it scars the plaster but does not knock the brick under it out (a brick that comes out takes its marks with it)
+    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 500, caliber: 9 })
+    run(0.2)
+    expect(events.some((e) => e.type === 'chip')).toBe(false)
+    expect(renderer.stats().decals).toBeGreaterThan(decals)
+  })
+
+  it('takes the marks of a brick that comes out away with it', () => {
+    const { d, world, renderer, centre, run, events } = setup()
     const decals = renderer.stats().decals
     world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 2e4, caliber: 12 })
     run(0.2)
-    expect(renderer.stats().decals).toBeGreaterThan(decals)
+    expect(events.some((e) => e.type === 'chip')).toBe(true)
+    expect(renderer.stats().decals).toBe(decals)
   })
 
   it('draws the rebar cage of a concrete slab that spalls, as instanced bars', () => {
@@ -167,7 +178,7 @@ describe('fracture and reset', () => {
   })
 })
 
-describe('brick courses at full detail', () => {
+describe('a wall cut where its units came out, at full detail', () => {
   /** A blunt hit on a wall that reaches stage 2 without fracturing it, read at the moment of the stage event (stage 3 comes in the same step). */
   function breach() {
     const s = setup()
@@ -180,17 +191,44 @@ describe('brick courses at full detail', () => {
     return { ...s, seen }
   }
 
-  it('redraws the wall as instanced units without the ones in the opening', () => {
-    const { seen } = breach()
-    expect(seen).toHaveLength(1)
-    const [first] = seen
-    expect(first!.statistics.walls).toBe(1)
-    expect(first!.statistics.units).toBeGreaterThan(100)
-    expect(first!.hidden).toBe(true)
-    expect(first!.mesh?.isInstancedMesh).toBe(true)
-    expect(first!.mesh.count).toBe(first!.statistics.units)
-    expect(first!.mesh.instanceColor).toBeTruthy()
-    expect(first!.opening.radius).toBeGreaterThan(0)
+  it('cuts the wall only where the units came out and keeps the paint of the rest', () => {
+    const s = setup()
+    let checked = false
+    s.world.on('stage', (e: any) => {
+      if (e.part !== 'wall_0_0' || e.stage !== 2) return
+      const statistics = s.d.statistics().breached
+      expect(statistics.walls).toBe(1)
+      expect(statistics.gone).toBeGreaterThan(0)
+      expect(hidden(s.house, 'wall_0_0')).toBe(true)
+      // the units around the opening, drawn behind the cut
+      const units = s.house.group.getObjectByName('breach:wall_0_0') as any
+      expect(units?.isInstancedMesh).toBe(true)
+      expect(units.count).toBe(statistics.units)
+      expect(units.count).toBeGreaterThan(0)
+      expect(units.instanceColor).toBeTruthy()
+      // the wall itself: the same geometry and material as the house drew it, cut by a mask only at the opening
+      const shell = s.house.group.getObjectByName('breach-shell') as any
+      const item = s.house.structure.meshesOf('wall_0_0').find((it: any) => it.mesh)
+      expect(shell.material.type).toBe(item.mesh.material.type)
+      expect(shell.material.map).toBe(item.mesh.material.map)
+      expect(shell.geometry.attributes.position.count).toBe(item.v1 - item.v0)
+      expect(Array.from(shell.geometry.attributes.color.array.slice(0, 3))).toEqual(Array.from(item.mesh.geometry.attributes.color.array.slice(item.v0 * 3, item.v0 * 3 + 3)))
+      const mask = shell.userData.breachMask
+      const at = (p: number[]) => {
+        const v = s.house.group.worldToLocal(new THREE.Vector3(p[0], p[1], p[2]))
+        const i = Math.floor(((mask.alongU ? v.x : v.z) - mask.start) / mask.len * mask.w), j = Math.floor((v.y - mask.y0) / mask.height * mask.h)
+        return mask.data[j * mask.w + i]
+      }
+      expect(at(e.opening.center)).toBe(255)
+      const part = s.house.structure.byId.get('wall_0_0')
+      const far = mask.alongU ? [part.aabb[0] + 0.05, part.y0 + 0.05, 0] : [0, part.y0 + 0.05, part.aabb[1] + 0.05]
+      expect(mask.data[Math.floor((far[1] - mask.y0) / mask.height * mask.h) * mask.w + Math.floor(((mask.alongU ? far[0] : far[2]) - mask.start) / mask.len * mask.w)]).toBe(0)
+      expect(mask.data.filter((x: number) => x > 0).length).toBeLessThan(mask.data.length / 4)
+      checked = true
+    })
+    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.run(0.5)
+    expect(checked).toBe(true)
   })
 
   it('leaves no unit inside the opening', () => {
@@ -208,26 +246,31 @@ describe('brick courses at full detail', () => {
     expect(checked).toBe(true)
   })
 
-  it('goes back to the box at LOD 1 and 2 and to the courses at LOD 0', () => {
+  it('goes back to the box at LOD 1 and 2 and to the cut wall at LOD 0', () => {
     const s = setup()
     s.world.on('stage', (e: any) => {
       if (e.part !== 'wall_0_0' || e.stage !== 2) return
       const mesh = s.house.group.getObjectByName('breach:wall_0_0') as any
+      const shell = s.house.group.getObjectByName('breach-shell') as any
       expect(mesh.visible).toBe(true)
+      expect(shell.visible).toBe(true)
       s.house.setLod(1)
       expect(mesh.visible).toBe(false)
+      expect(shell.visible).toBe(false)
       expect(hidden(s.house, 'wall_0_0')).toBe(false)
       s.house.setLod(0)
       expect(mesh.visible).toBe(true)
+      expect(shell.visible).toBe(true)
       expect(hidden(s.house, 'wall_0_0')).toBe(true)
     })
     s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
   })
 
-  it('takes the courses away when the wall comes down', () => {
+  it('takes the cut wall away when the wall comes down', () => {
     const { house, d } = breach()
     expect(house.group.getObjectByName('breach:wall_0_0')).toBeUndefined()
+    expect(house.group.getObjectByName('breach-shell')).toBeUndefined()
     expect(d.statistics().breached.walls).toBe(0)
   })
 

@@ -128,3 +128,47 @@ describe('concrete under fire: a material answers each kind of blow its own way'
     expect(rows.size).toBe(2)
   })
 })
+
+describe('a row of shots along a wall', () => {
+  /** A free-standing brick wall ten metres long with a concrete bond beam on top, on a slab of ground (the wall of the test room). */
+  const longWall = () => {
+    const world = createDestruction()
+    world.add({
+      parts: [
+        { id: 'wall', material: 'brick', shape: { kind: 'box', size: [10.15, 2.8, 0.13] }, position: [0, 1.4, 0], structure: { role: 'wall' } },
+        { id: 'beam', material: 'concrete', shape: { kind: 'box', size: [10.15, 0.2, 0.15] }, position: [0, 2.9, 0], structure: { role: 'beam' } },
+        { id: 'ground', material: 'concrete', shape: { kind: 'box', size: [16, 0.5, 6] }, position: [0, -0.25, 0], anchored: true, tags: ['terrain'] },
+      ],
+      joints: [
+        { a: 'wall', b: 'ground', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+        { a: 'beam', b: 'wall', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+      ],
+    } as any, { id: 'W', position: [0, 0, -11] })
+    return world
+  }
+  const row = (world: ReturnType<typeof createDestruction>, y: number, shots: number) => {
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    for (let k = 0; k < shots; k++) {
+      const x = -2.4 + (k % 24) * 0.2
+      const d = [0, y - 1.6, -4], len = Math.hypot(d[0], d[1], d[2])
+      world.shoot([x, 1.6, -7], [d[0] / len, d[1] / len, d[2] / len], 2102.5, 7.9, 'player', { penetration: { steel: 6.5, concrete: 110, brick: 220, wood: 300 } })
+      for (let t = 0; t < 7; t++) world.update(0.1)
+    }
+    return events
+  }
+
+  it('leaves the wall standing after two passes of 7.62 across its middle', () => {
+    const world = longWall()
+    const events = row(world, 1.3, 48)
+    expect(events.filter((e) => e.type === 'detach' || e.type === 'collapse')).toEqual([])
+    expect(world.part('W', 'wall')!.status).not.toBe('collapsed')
+  })
+
+  it('does not shake the bond beam off the wall with a row of 7.62 along it', () => {
+    const world = longWall()
+    const events = row(world, 2.9, 48)
+    expect(events.filter((e) => e.type === 'detach' || e.type === 'collapse')).toEqual([])
+    expect(world.part('W', 'beam')!.status).not.toBe('collapsed')
+  })
+})

@@ -492,6 +492,22 @@ export class Visuals {
     this.decalCount = Math.max(0, this.decalCount - 1)
   }
 
+  /**
+   * Takes away the decals of a mesh that sit inside a box (world `center`, `half` extents along the axes of the world `rotation`): the surface they
+   * marked is gone (a unit came out of the wall with its bullet holes and spalls).
+   */
+  clearDecals(mv: MeshVis, center: THREE_NS.Vector3, half: THREE_NS.Vector3, rotation: THREE_NS.Quaternion): void {
+    const inv = rotation.clone().invert()
+    const p = new this.THREE.Vector3()
+    for (let i = mv.decals.length - 1; i >= 0; i--) {
+      const d = mv.decals[i]!
+      d.obj.getWorldPosition(p).sub(center).applyQuaternion(inv)
+      if (Math.abs(p.x) > half.x || Math.abs(p.y) > half.y || Math.abs(p.z) > half.z) continue
+      this.disposeDecal(d)
+      mv.decals.splice(i, 1)
+    }
+  }
+
   addHole(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, diameter: number): void {
     const { s, pos, quat } = this.decalPose(mv.mesh, worldPoint, worldNormal, 0.0025)
     const work = (mv.host ? mv.host.work : mv.work) as Float32Array | undefined
