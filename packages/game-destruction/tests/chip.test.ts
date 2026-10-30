@@ -19,7 +19,7 @@ const setup = (options: DestructionOptions = {}) => {
 }
 
 describe('chipping a wall of units', () => {
-  it('a few pistol rounds on the same brick knock it out; the wall stays', () => {
+  it('a few pistol rounds on the same brick break it where they land: a crater through it, the rest of the brick stays; the wall stays', () => {
     const { world, chips, pistol } = setup()
     pistol()
     expect(chips).toHaveLength(0)
@@ -27,12 +27,27 @@ describe('chipping a wall of units', () => {
     expect(chips.length).toBeGreaterThanOrEqual(1)
     const chip = chips[0]!
     expect(chip.part).toBe('wall')
-    expect(chip.fragments).toHaveLength(1)
-    expect(chip.size[0]).toBeCloseTo(0.23, 2)
+    // a crater a few centimetres across, not the whole 23 cm brick
+    expect(chip.size[0]).toBeGreaterThan(0.03)
+    expect(chip.size[0]).toBeLessThan(0.1)
+    expect(Math.abs(chip.center[0] - 0.05)).toBeLessThan(0.05)
+    // small bits of the inside of the brick, most out of the far face (the shot goes -z)
+    expect(chip.fragments.length).toBeGreaterThanOrEqual(4)
+    expect(chip.fragments.every((f) => f.inner && Math.max(...f.size) < 0.05)).toBe(true)
+    expect(chip.fragments.filter((f) => f.center[2] < 0).length).toBeGreaterThan(chip.fragments.length / 2)
     const part = world.part('w', 'wall')!
     expect(part.status).not.toBe('broken')
     expect(part.chipped?.length).toBe(chips.length)
-    expect(part.mass).toBeLessThan(1800)
+  })
+
+  it('rounds that keep breaking one brick take the rest of it out, in pieces', () => {
+    const { world, chips } = setup()
+    for (let i = 0; i < 40 && !chips.some((c) => c.size[0] > 0.2); i++) world.shoot([-0.1 + (i % 9) * 0.025, 1.2, 5], [0, 0, -1], 2100, 7.62, 'test')
+    const rest = chips.find((c) => c.size[0] > 0.2)
+    expect(rest).toBeDefined()
+    expect(rest!.size[0]).toBeCloseTo(0.23, 2)
+    expect(rest!.fragments.length).toBeGreaterThanOrEqual(4)
+    expect(rest!.fragments.every((f) => f.inner && Math.max(...f.size) < 0.06)).toBe(true)
   })
 
   it('a round through the gap passes', () => {
@@ -170,5 +185,56 @@ describe('a row of shots along a wall', () => {
     const events = row(world, 2.9, 48)
     expect(events.filter((e) => e.type === 'detach' || e.type === 'collapse')).toEqual([])
     expect(world.part('W', 'beam')!.status).not.toBe('collapsed')
+  })
+})
+
+describe('a wall of units shot along its base', () => {
+  /** The wall of the test room: ten metres of plastered brick with a concrete bond beam on top, on a slab of ground. */
+  const roomWall = () => {
+    const world = createDestruction()
+    world.add({
+      parts: [
+        {
+          id: 'wall', material: 'brick', shape: { kind: 'box', size: [10.15, 2.8, 0.13] }, position: [0, 1.4, 0], mass: 7673, thickness: 0.09,
+          layers: [{ material: 'plaster', thickness: 0.02, faces: 'both' }], units: { size: [0.23, 0.075, 0.11], bond: 'running', mortar: 'plaster' },
+          breach: { area: 0.25 }, structure: { role: 'wall', capacity: 12929 },
+        },
+        { id: 'beam', material: 'concrete', shape: { kind: 'box', size: [10.15, 0.2, 0.15] }, position: [0, 2.9, 0], mass: 731, structure: { role: 'beam', capacity: 1624 } },
+        { id: 'ground', material: 'concrete', shape: { kind: 'box', size: [16, 0.5, 6] }, position: [0, -0.25, 0], anchored: true, structure: { role: 'foundation' }, tags: ['terrain'] },
+      ],
+      joints: [
+        { a: 'wall', b: 'ground', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+        { a: 'beam', b: 'wall', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+      ],
+    } as any, { id: 'W', position: [0, 0, -11] })
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    const shoot = (x: number, y: number) => {
+      world.shoot([x, y, -7], [0, 0, -1], 2102.5, 7.9, 'player', { penetration: { steel: 6.5, concrete: 110, brick: 220, wood: 300 } })
+      for (let t = 0; t < 3; t++) world.update(0.1)
+    }
+    const settle = () => { for (let t = 0; t < 100; t++) world.update(0.1) }
+    return { world, events, shoot, settle }
+  }
+  const fell = (events: DestructionEvent[]) => events.some((e) => e.type === 'collapse' || e.type === 'fracture')
+
+  it('brings the wall down once a slot cut through it along its base takes away what it stands on', () => {
+    const { world, events, shoot, settle } = roomWall()
+    let n = 0
+    for (const y of [0.25, 0.33, 0.41]) for (let x = -2; x <= 2; x += 0.08, n++) shoot(x, y)
+    settle()
+    expect(fell(events)).toBe(true)
+    expect(world.part('W', 'wall')!.status).toBe('broken')
+    // it held while the slot was short
+    const first = events.findIndex((e) => e.type === 'collapse' || e.type === 'fracture')
+    expect(events.slice(0, first).filter((e) => e.type === 'chip').length).toBeGreaterThan(20)
+  })
+
+  it('keeps standing under as many rounds spread over its face', () => {
+    const { world, events, shoot, settle } = roomWall()
+    for (let k = 0; k < 150; k++) shoot(-4.5 + ((k * 0.618) % 1) * 9, 0.2 + ((k * 0.381) % 1) * 2.4)
+    settle()
+    expect(fell(events)).toBe(false)
+    expect(world.part('W', 'wall')!.status).not.toBe('broken')
   })
 })

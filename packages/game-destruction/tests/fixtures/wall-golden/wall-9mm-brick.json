@@ -457,7 +457,7 @@
      1.1,
      0.065
     ],
-    "rays": 8,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -527,7 +527,7 @@
      1.25,
      0.065
     ],
-    "rays": 6,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -683,7 +683,7 @@
      0.95,
      0.065
     ],
-    "rays": 5,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -753,7 +753,7 @@
      1.25,
      0.065
     ],
-    "rays": 8,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -823,7 +823,7 @@
      0.8,
      0.065
     ],
-    "rays": 6,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -893,7 +893,7 @@
      0.95,
      0.065
     ],
-    "rays": 5,
+    "rays": 6,
     "length": 0.1004
    }
   },
@@ -1049,7 +1049,7 @@
      0.8,
      0.065
     ],
-    "rays": 7,
+    "rays": 6,
     "length": 0.1004
    }
   },
@@ -1119,7 +1119,7 @@
      0.95,
      0.065
     ],
-    "rays": 8,
+    "rays": 7,
     "length": 0.1004
    }
   },
@@ -1275,7 +1275,7 @@
      1.25,
      0.065
     ],
-    "rays": 5,
+    "rays": 8,
     "length": 0.1004
    }
   },
@@ -1338,7 +1338,7 @@
      0.95,
      0.065
     ],
-    "rays": 7,
+    "rays": 6,
     "length": 0.1036
    }
   },
@@ -1401,7 +1401,7 @@
      1.1,
      0.065
     ],
-    "rays": 7,
+    "rays": 5,
     "length": 0.1036
    }
   },
@@ -1460,11 +1460,105 @@
     "time": 0,
     "part": "wall",
     "at": [
+     0.2,
+     1.25,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.1036
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.2,
+     1.25,
+     0.065
+    ],
+    "diameter": 0.009,
+    "through": false
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 9.72,
+    "hp": 12194.28,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.8,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.1036
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.009,
+    "through": false
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 9.72,
+    "hp": 12184.56,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
      -0.2,
      1.1,
      0.065
     ],
-    "rays": 7,
+    "rays": 8,
     "length": 0.1036
    }
   },
@@ -1497,7 +1591,7 @@
     "time": 0,
     "part": "wall",
     "amount": 9.72,
-    "hp": 12194.28,
+    "hp": 12174.84,
     "damageType": "ballistic"
    }
   },
@@ -1527,7 +1621,7 @@
      1.25,
      0.065
     ],
-    "rays": 7,
+    "rays": 6,
     "length": 0.1036
    }
   },
@@ -1560,7 +1654,7 @@
     "time": 0,
     "part": "wall",
     "amount": 9.72,
-    "hp": 12184.56,
+    "hp": 12165.12,
     "damageType": "ballistic"
    }
   },
@@ -1578,6 +1672,53 @@
     "part": "wall",
     "kind": "dust",
     "count": 6
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.95,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.1036
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.95,
+     0.065
+    ],
+    "diameter": 0.009,
+    "through": false
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 9.72,
+    "hp": 12155.4,
+    "damageType": "ballistic"
    }
   }
  ],

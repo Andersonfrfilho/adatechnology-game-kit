@@ -50,6 +50,18 @@ describe('spall', () => {
   })
 })
 
+describe('a mark on the face as drawn', () => {
+  it('goes on the face the renderer drew when the world point is a few millimetres behind it (a coat of plaster thicker than the part)', () => {
+    const { world, renderer, wall } = setup()
+    // the drawn face is at z 0.1; the world's part ends 4 mm short of it
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.3, 1.2, 0.096], area: 0.0113 })
+    world.emit({ type: 'hole', object: 'o1', part: 'wall', hole: { point: [0.3, 1.2, 0.096], normal: [0, 0, 1], diameter: 0.009, through: false }, worldPoint: [0.3, 1.2, 0.096] } as any)
+    renderer.update(0.016)
+    expect(wall.children).toHaveLength(2)
+    for (const mark of wall.children) expect(mark.position.z).toBeGreaterThan(0.1)
+  })
+})
+
 describe('stage 2', () => {
   it('throws the unit fragments, keeps the part drawn and keeps the holes on the units', () => {
     const { scene, world, renderer, wall, sounds } = setup()

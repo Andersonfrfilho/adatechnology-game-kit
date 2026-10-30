@@ -623,6 +623,8 @@ export interface PartRuntime {
   breach?: Array<[number, number, number, number]>
   /** Energy each unit of the part took so far (`breach.chipEnergy`), by its index in the unit grid; -1 when the unit came out. */
   chips?: Record<number, number>
+  /** Face area (m²) the craters of shots took out of each unit so far, by its index in the unit grid: the rest of a unit comes out past `CRATER_SPENT`. */
+  craters?: Record<number, number>
   /** Mass in kg that left the part in a breach. */
   removed?: number
   /** Damage taken by each band across a long wooden part (`splinter`), by band index from its negative end: the band that runs out breaks it there. */

@@ -231,6 +231,37 @@ describe('a wall cut where its units came out, at full detail', () => {
     expect(checked).toBe(true)
   })
 
+  it('breaks a brick where a rifle round goes through it: a crater cut through the brick, the rest of the brick and the wall around it stay', () => {
+    const s = setup()
+    const at = s.centre('wall_0_0')
+    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 2100, caliber: 7.62, source: 'test' })
+    s.run(0.2)
+    const chip = s.events.find((e: any) => e.type === 'chip' && e.part === 'wall_0_0') as any
+    expect(chip).toBeDefined()
+    expect(Math.max(chip.size[0], chip.size[2])).toBeLessThan(0.15)
+    const statistics = s.d.statistics().breached
+    expect(statistics.gone).toBe(0)
+    expect(statistics.craters).toBe(1)
+    const shell = s.house.group.getObjectByName('breach-shell') as any
+    const mask = shell.userData.breachMask
+    const units = s.house.group.getObjectByName('breach:wall_0_0') as any
+    expect(units.count).toBeGreaterThan(0)
+    expect(units.material.side).toBe(THREE.DoubleSide)
+    const texel = (m: any, p: number[]) => {
+      const v = s.house.group.worldToLocal(new THREE.Vector3(p[0], p[1], p[2]))
+      return m.data[Math.floor((v.y - m.y0) / m.height * m.h) * m.w + Math.floor(((m.alongU ? v.x : v.z) - m.start) / m.len * m.w)]
+    }
+    // the plaster is off around the crater and the brick is cut through at its centre, a hand away it is whole
+    expect(texel(mask, chip.center)).toBe(255)
+    const core = units.material.userData.breachCore ?? null
+    expect(core).not.toBeNull()
+    expect(texel(core, chip.center)).toBe(255)
+    const aside = [chip.center[0] + (mask.alongU ? 0.2 : 0), chip.center[1], chip.center[2] + (mask.alongU ? 0 : 0.2)]
+    expect(texel(core, aside)).toBe(0)
+    expect(texel(mask, aside)).toBe(0)
+    expect(core.data.filter((x: number) => x > 0).length).toBeLessThan(mask.data.filter((x: number) => x > 0).length)
+  })
+
   it('leaves no unit inside the opening', () => {
     const s = setup()
     let checked = false

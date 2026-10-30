@@ -95,12 +95,15 @@ const SKIN_SLACK = 0.0005
 const SKIN_LAYER_SLACK = 4
 /** And at least this many times the distance to the nearest vertex, so even the nearest one is pushed visibly. */
 const NEAREST_MARGIN = 1.5
+/** Metres along its normal a mark looks for the drawn face under it (`onFace`). */
+const DECAL_SNAP = 0.03
 
 export class Visuals {
   readonly kit: DecalKit
   private readonly a: THREE_NS.Vector3
   private readonly b: THREE_NS.Vector3
   private readonly m4: THREE_NS.Matrix4
+  private readonly ray: THREE_NS.Raycaster
   private readonly box: THREE_NS.Box3
   private readonly t: THREE_NS.Vector3
   private readonly lbox: THREE_NS.Box3
@@ -116,6 +119,7 @@ export class Visuals {
     this.a = tmpV(THREE)
     this.b = tmpV(THREE)
     this.m4 = new THREE.Matrix4()
+    this.ray = new THREE.Raycaster()
     this.box = new THREE.Box3()
     this.t = tmpV(THREE)
     this.lbox = new THREE.Box3()
@@ -464,12 +468,34 @@ export class Visuals {
   // Decals
   // ------------------------------------------------------------------------------------------------------------------------------------
 
+  /**
+   * The point on the drawn face of `mesh` under a world point, within `DECAL_SNAP` metres along the normal: the world's box of a part and the face
+   * the renderer drew (a coat of plaster, a merged house mesh) can be a few millimetres apart, and a mark behind the drawn face does not show.
+   */
+  private onFace(mesh: Mesh, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3): THREE_NS.Vector3 {
+    if (!(mesh as { isMesh?: boolean }).isMesh || !mesh.geometry?.attributes?.position) return worldPoint
+    const n = worldNormal.clone().normalize()
+    this.ray.set(worldPoint.clone().addScaledVector(n, DECAL_SNAP), n.clone().negate())
+    this.ray.near = 0
+    this.ray.far = 2 * DECAL_SNAP
+    const hits: THREE_NS.Intersection[] = []
+    mesh.raycast(this.ray, hits)
+    // a wall the house cut where it was shot is drawn by a mesh of its own next to the merged one (`breach-shell` of the house renderer)
+    for (const c of mesh.parent?.children ?? []) if (c !== mesh && c.name === 'breach-shell') c.raycast(this.ray, hits)
+    let best: THREE_NS.Intersection | null = null
+    for (const h of hits) {
+      if (h.face && h.face.normal.clone().transformDirection(h.object.matrixWorld).dot(n) <= 0.3) continue
+      if (!best || Math.abs(h.distance - DECAL_SNAP) < Math.abs(best.distance - DECAL_SNAP)) best = h
+    }
+    return best ? best.point : worldPoint
+  }
+
   /** Decal pose in mesh space: position and a rotation taking +Z to the surface normal. */
   private decalPose(mesh: Mesh, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, lift: number): { s: number; pos: THREE_NS.Vector3; quat: THREE_NS.Quaternion } {
     mesh.updateWorldMatrix(true, false)
     const s = mesh.matrixWorld.getMaxScaleOnAxis() || 1
     const ln = worldNormal.clone().transformDirection(this.m4.copy(mesh.matrixWorld).invert()).normalize()
-    const pos = mesh.worldToLocal(worldPoint.clone()).addScaledVector(ln, lift / s)
+    const pos = mesh.worldToLocal(this.onFace(mesh, worldPoint, worldNormal).clone()).addScaledVector(ln, lift / s)
     const quat = new this.THREE.Quaternion().setFromUnitVectors(new this.THREE.Vector3(0, 0, 1), ln)
     return { s, pos, quat }
   }
