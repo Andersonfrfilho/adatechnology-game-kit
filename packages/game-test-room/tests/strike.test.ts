@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import type { HandTargets } from '@adatechnology/game-contracts'
 import type { RoomAvatar, RoomFirstPersonState } from '../src'
 import { DEFAULT_STRIKE_CLIPS } from '../src'
-import { makeRoom } from './helpers'
+import { makeRoom, stubRenderer } from './helpers'
 
 type Fake = RoomAvatar & {
   struck: string[]
@@ -81,6 +81,42 @@ describe('strikes wait for the impact of the clip', () => {
     const hits = room.log.entries({ type: 'melee' })
     expect(hits).toHaveLength(1)
     expect(hits[0]!.data).toMatchObject({ weapon: 'fists', damage: 'blunt' })
+  })
+
+  it('bare hands punch at the click: the mouse pressed and let go between two frames plays the clip and lands the blow', () => {
+    const avatar = fakeAvatar()
+    const renderer = stubRenderer()
+    const room = makeRoom({ renderer })
+    room.setAvatar(avatar)
+    room.spawn('chair', [0, 0, -4], 0)
+    room.update(0.4)
+    aimAt(room, [-0.6, 0.2, -4.18], [0.22, 0.2, -4.18])
+    expect(room.tool.def.id).toBe('hand')
+    wait(room, 0.5)
+    const dom = renderer.domElement
+    dom.dispatchEvent(new MouseEvent('mousedown', { button: 0, bubbles: true }))
+    window.dispatchEvent(new MouseEvent('mouseup', { button: 0 }))
+    wait(room, 1 / 60)
+    expect(avatar.struck).toEqual(['punch_right'])
+    expect(room.log.entries({ type: 'strike' })[0]!.data).toMatchObject({ weapon: 'hand', clip: 'punch_right', impactIn: 0.16 })
+    expect(room.log.entries({ type: 'grab' })).toHaveLength(0)
+    wait(room, 0.3)
+    expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['hand'])
+  })
+
+  it('bare hands: room.use() punches as the click does, and with something held it lets it go instead', () => {
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    wait(room, 0.5)
+    room.use()
+    expect(avatar.struck).toEqual(['punch_right'])
+    wait(room, 0.5)
+    room.spawn('coffee_cup', [0, 0, -3], 0)
+    aimAt(room, [0, 1.0, -1.8], [0, 0.05, -3])
+    expect(room.grab()).toBe(true)
+    room.use()
+    expect(avatar.struck).toEqual(['punch_right'])
+    expect(room.log.entries({ type: 'drop' })).toHaveLength(1)
   })
 
   it('the shove tool and the kick shortcut take their own clips', () => {
