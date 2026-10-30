@@ -1,4 +1,4 @@
-/* global THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree */
+/* global THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree, GameTerrain, GameTerrainThree */
 // Walkable showroom of every household interactive object. Plain browser JS on top of the globals set by src/entry.js.
 // Generic example of @adatechnology/game-interactables (+ household pack + three adapter): nothing here is specific to a game.
 ;(function () {
@@ -298,6 +298,8 @@
   const scene = new T.Scene()
   scene.fog = new T.Fog(0xcfe0ec, 45, 150)
   const camera = new T.PerspectiveCamera(72, 1, 0.06, 400)
+  let terrain = null
+  let terrainView = null
   camera.rotation.order = 'YXZ'
   scene.add(camera)
 
@@ -475,10 +477,24 @@
     env.group.add(ceil)
 
     // floors
-    env.group.add(texturedPlane(0, 0, 7.95, 3.55, 0, tileKitchen, 0.6))
-    env.group.add(texturedPlane(0, 3.55, 7.95, 8, 0, woodFloor, 1))
-    env.group.add(texturedPlane(8.05, 0, 12, 3.55, 0, tileBath, 0.6))
-    env.group.add(texturedPlane(8.05, 3.65, 12, 8, 0, woodFloor, 1))
+    // the floors and the yard are the kit's terrain, each with the ground it is made of
+    terrain = GameTerrain.createTerrain({
+      bounds: [-30, -30, 42, 44],
+      layout: {
+        surface: 'lawn',
+        zones: [
+          { rect: [0, 0, 12, 8], surface: 'wood_floor' },
+          { rect: [0, 0, 7.95, 3.55], surface: 'tile_floor' },
+          { rect: [8.05, 0, 12, 3.55], surface: 'tile_floor' },
+          { rect: [2.2, 8.12, 9.4, 11.6], surface: 'concrete_slab' },
+          { rect: [6.55, 11.6, 7.55, 14.4], surface: 'concrete_slab' },
+          { rect: [9.6, 12.4, 11.6, 13.9], surface: 'concrete_slab' },
+        ],
+      },
+    })
+    terrainView = GameTerrainThree.createTerrainRenderer(T, { terrain })
+    scene.add(terrainView.group)
+    terrainView.sync(camera.position)
     // thresholds under the partitions
     trim.box(7.95, 0, 0, 8.05, 0.004, 8, 0xb59a78, 0)
     trim.box(8.05, 0, 3.55, 12, 0.004, 3.65, 0xb59a78, 0)
@@ -496,16 +512,8 @@
       [-0.12, -250, 12.12, -0.12],
       [-0.12, 8.12, 12.12, 250],
     ]
-    for (const r of ring) env.group.add(texturedPlane(r[0], r[1], r[2], r[3], 0, grass, 3))
-    const patio = texturedPlane(2.2, 8.12, 9.4, 11.6, 0.004, concrete, 1.6)
-    patio.material.polygonOffset = true
-    patio.material.polygonOffsetFactor = -2
-    env.group.add(patio)
-    const walk = texturedPlane(6.55, 11.6, 7.55, 14.4, 0.004, concrete, 1.6)
-    env.group.add(walk)
-    const pad = texturedPlane(9.6, 12.4, 11.6, 13.9, 0.004, concrete, 1.6)
-    env.group.add(pad)
-
+    // beyond the terrain's edge: the same grass, under it
+    for (const r of ring) env.group.add(texturedPlane(r[0], r[1], r[2], r[3], -0.02, grass, 3))
     // fence (lot): pickets and rails, gate gap on the south side
     function fenceX(x0, x1, z) {
       for (const [ya, yb] of [[0.25, 0.32], [0.75, 0.82]]) trim.box(x0, ya, z - 0.03, x1, yb, z + 0.03, 0xd7cfc1, 0.02)
@@ -1476,6 +1484,7 @@
   }
   function render() {
     renderer.info.reset()
+    terrainView?.sync(camera.position)
     renderer.render(scene, camera)
     lastCalls = renderer.info.render.calls
   }

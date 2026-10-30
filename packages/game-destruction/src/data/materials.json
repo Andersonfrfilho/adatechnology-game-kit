@@ -885,5 +885,129 @@
    "masonry"
   ],
   "compressive": 20000
+ },
+ {
+  "id": "asphalt",
+  "density": 2350,
+  "hpPerKg": 10,
+  "penetration": 14,
+  "penetrationClass": "concrete",
+  "penetrationScale": 0.8,
+  "ductility": 0.1,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.03,
+   0.15
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 2,
+   "ignitionC": 400,
+   "burnRate": 0.002,
+   "smoke": "black"
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ],
+  "compressive": 30000
+ },
+ {
+  "id": "sand",
+  "density": 1600,
+  "hpPerKg": 2,
+  "penetration": 6,
+  "ductility": 0.4,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.01,
+   0.04
+  ],
+  "hitDebris": "dust",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 2
+  },
+  "tags": [
+   "soil"
+  ],
+  "compressive": 10000
+ },
+ {
+  "id": "gravel",
+  "density": 1800,
+  "hpPerKg": 3,
+  "penetration": 8,
+  "ductility": 0.3,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.02,
+   0.06
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 2
+  },
+  "tags": [
+   "soil",
+   "masonry"
+  ],
+  "compressive": 20000
+ },
+ {
+  "id": "turf",
+  "density": 900,
+  "hpPerKg": 3,
+  "penetration": 4,
+  "ductility": 0.5,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.03,
+   0.1
+  ],
+  "hitDebris": "dust",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 1.5,
+   "ignitionC": 250,
+   "burnRate": 0.03,
+   "smoke": "white"
+  },
+  "tags": [
+   "soil",
+   "organic"
+  ],
+  "compressive": 15000
+ },
+ {
+  "id": "mortar",
+  "density": 1900,
+  "hpPerKg": 10,
+  "penetration": 12,
+  "penetrationClass": "concrete",
+  "penetrationScale": 1.2,
+  "ductility": 0.03,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.02,
+   0.08
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.15,
+   "heatCapacity": 2.5
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ],
+  "compressive": 100000
  }
 ]

@@ -425,6 +425,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   return {
     id: VEHICLES_AREA_ID,
     name: text.name,
+    ground: { surface: 'road' },
     group: text.group,
     get placed() {
       return placed

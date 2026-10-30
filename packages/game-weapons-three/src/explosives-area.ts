@@ -71,6 +71,7 @@ export function createExplosivesTestModule(options: ExplosivesTestModuleOptions 
   return {
     id: EXPLOSIVES_AREA_ID,
     name: text.name,
+    ground: { surface: 'concrete_slab' },
     group: text.group,
     bench,
     // the cylinder of this area is the world explosive of the weapons module with the bench's strength: the same id, the same model, the same part

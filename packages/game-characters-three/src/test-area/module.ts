@@ -379,6 +379,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
   return {
     id: CHARACTERS_AREA_ID,
     name: text.name,
+    ground: { surface: 'concrete_slab' },
     group: text.group,
     get entries() {
       return entries
