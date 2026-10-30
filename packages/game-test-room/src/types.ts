@@ -54,6 +54,8 @@ export interface TestRoomItem {
   specOptions?: SpecFromObjectOptions
   /** Can be grabbed and thrown (default: total mass <= `maxCarryKg`). Vehicles and trees are usually `false`. */
   movable?: boolean
+  /** A big piece that stands on the floor (a sofa, a wardrobe, a fridge) and can be pushed by leaning on it (`TestableItem.pushable`). Default false. */
+  pushable?: boolean
   /** Short note shown in the inspector. */
   note?: string
   /** Building it takes a noticeable time (a vehicle): the catalogue shows the loading indicator while it spawns one. `true`, or the text to show. */
@@ -118,6 +120,8 @@ export interface SceneryObject {
    * not a pistol), make it a piece and shove it. Default false: the scenery stays put.
    */
   free?: boolean
+  /** Can also be pushed by leaning on it (needs `free`). Default false. */
+  pushable?: boolean
 }
 
 /** What the room asks when something thrown or set down needs a model: the tool in the hand, the explosive it carries (an id of the arsenal) and how it is used. */

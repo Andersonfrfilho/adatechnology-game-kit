@@ -49,7 +49,7 @@ const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
-  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true },
+  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true, pushable: true },
   test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
   sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
 }

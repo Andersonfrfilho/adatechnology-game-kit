@@ -71,6 +71,8 @@ interface Entry {
   velocity: Vec3
   /** Heavy but not fixed (a fridge, a table): not grabbable, yet a blast that reaches it with enough speed makes it a piece and shoves it. */
   free?: boolean
+  /** Leaning on it pushes it. */
+  pushable?: boolean
 }
 
 interface FireZone {
@@ -605,7 +607,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let best: Entry | null = null
     let bestDistance = PUSH_REACH
     for (const e of entries.values()) {
-      if (e.arena || (!e.piece && !e.free)) continue
+      if (!e.pushable || (!e.piece && !e.free)) continue
       const b = bodyBox(e)
       if (!b) continue
       const dx = Math.max(b.minX, Math.min(b.maxX, player.x)) - player.x
@@ -629,7 +631,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       aim()
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
       const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
-      if (r && aimed) return { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null }
+      // the eye on something that is not pushed (a can on the floor) is the eye on what the hand takes, even against a sofa
+      if (r && aimed) return entries.get(r.object)?.pushable ? { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null } : null
       return leanedOn()
     },
     massOf: (objectId) => massOfObject(objectId),
@@ -715,6 +718,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
       const e = registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
       if (o.free) e.free = true
+      if (o.pushable) e.pushable = true
       e.follower = o.follow?.(root, world, o.id) || null
     }
   }
@@ -835,6 +839,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
     // heavy by its mass and not said to be fixed: a blast can still push it
     if (!own && !movable && item.movable === undefined) e.free = true
+    if (item.pushable) e.pushable = true
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
     return e.so
@@ -2887,6 +2892,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         build: (T) => ti.build(T) as THREE_NS.Object3D,
         spec: ti.spec as TestRoomItem['spec'],
         movable: ti.movable,
+        pushable: ti.pushable,
         slow: ti.slow,
         fluid: ti.fluid,
         weapon: ti.weapon,

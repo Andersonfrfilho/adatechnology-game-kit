@@ -530,6 +530,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         const fluid = fluidOf(loc, t.id, a)
         if (fluid) item.fluid = fluid
         if (!t.solid || t.group === 'window') item.movable = false
+        if (t.pushable) item.pushable = true
         return item
       })
     },
