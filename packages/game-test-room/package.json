@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-test-room",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "license": "MIT",
   "description": "Reusable test room for three.js: any module loads its objects, then the player grabs, carries and throws them, shoots them with the weapons of @adatechnology/game-weapons, hits, burns, melts and takes them apart, with a behaviour log that can be exported and scripted checks. Knows nothing about any game.",
   "keywords": [

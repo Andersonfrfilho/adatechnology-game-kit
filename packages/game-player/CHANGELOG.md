@@ -1,5 +1,19 @@
 # @adatechnology/game-player
 
+## 0.3.0
+
+### Minor Changes
+
+- e5ac121: Pushing furniture: holding the interaction button against a piece fills a ring by its mass, then the player walks with it, slower with the load; `world.sweepBox` tests the volume of the piece before each step, an obstacle or too much mass locks it and the player strains; poses in first and third person, and a drag sound by material.
+
+### Patch Changes
+
+- 2961d53: Deformable ground: new `game-terrain` and `game-terrain-three` (height field with strata per column, digging by material and blow, marks under a budget, clods, fire). The test room's floor is now a terrain, and each area lays its own ground through `TestableModule.ground`. The room's `craters` option is gone: the floor always digs. Adds the catalogue materials `asphalt`, `sand`, `gravel`, `turf` and `mortar`.
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+
 ## 0.2.4
 
 ### Patch Changes

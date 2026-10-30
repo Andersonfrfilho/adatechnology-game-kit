@@ -1,5 +1,16 @@
 # @adatechnology/game-vfx-three
 
+## 0.3.4
+
+### Patch Changes
+
+- 2961d53: Deformable ground: new `game-terrain` and `game-terrain-three` (height field with strata per column, digging by material and blow, marks under a budget, clods, fire). The test room's floor is now a terrain, and each area lays its own ground through `TestableModule.ground`. The room's `craters` option is gone: the floor always digs. Adds the catalogue materials `asphalt`, `sand`, `gravel`, `turf` and `mortar`.
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+  - @adatechnology/game-vfx@0.4.4
+
 ## 0.3.3
 
 ### Patch Changes
