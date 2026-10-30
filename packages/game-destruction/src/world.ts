@@ -1954,7 +1954,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
-    const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
+    // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
+    // 3 mm plastic bin leaves 24 of its 500 J. Brittle, fibrous and layered materials (glass, wood, paper, masonry) take the whole shock of the impact, as before.
+    const absorbed = penetrated && mat.ductility >= 0.5 && mat.fracture !== 'tear' ? Math.min(E, thr) : E
+    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
     chipUnits(o, p, entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
@@ -1974,6 +1977,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         } else if (E >= thrMm * 0.2) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.00006, 0.001, 0.04), src)
       } else if (mat.fracture === 'tear') {
         addHole(o, p, point, n, clamp(0.02 + E * 0.0005, 0.02, 0.3), true, undefined, src)
+      } else if (mat.ductility >= 0.3 && E >= thrMm) {
+        // a blade with more energy than the wall takes to cross goes through it and leaves a slit the width of the blade (a knife into a 3 mm plastic bin or a
+        // drink can, an axe through a thin board); brittle walls (glass, ceramic, masonry, MDF) are only scratched
+        addHole(o, p, point, n, clamp(contactR, 0.01, 0.08), true, undefined, src)
       } else if (mat.ductility >= 0.5) {
         addDent(o, p, point, n, Math.max(contactR, 0.01), clamp(E * 0.00004, 0.0005, 0.02), src)
       }

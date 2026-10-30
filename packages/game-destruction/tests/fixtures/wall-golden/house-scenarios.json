@@ -5724,8 +5724,8 @@
     "scenario": "tank_leak",
     "time": 0,
     "part": "tank",
-    "amount": 12,
-    "hp": 62191.5345,
+    "amount": 0.8,
+    "hp": 62202.7345,
     "damageType": "ballistic"
    }
   },
