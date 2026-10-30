@@ -657,6 +657,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
   const module: ItemsTestModule = {
     id: 'items_area',
     name: text.name,
+    ground: { surface: 'tile_floor' },
     group: text.group,
     state,
     placed: () => entries.map((entry) => ({ id: entry.id, itemId: entry.itemId, group: entry.group, kind: entry.kind, size: entry.size, root: entry.root })),

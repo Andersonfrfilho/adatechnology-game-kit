@@ -97,7 +97,7 @@ const DEFAULT_SPEED: Record<string, number> = {
 }
 
 /** Sound key for an impact on a material. */
-function impactKey(def: MaterialDef | undefined): string {
+export function impactKey(def: MaterialDef | undefined): string {
   if (!def) return 'impact_wood'
   const tags = def.tags ?? []
   if (tags.includes('metal')) return 'impact_metal'
@@ -107,8 +107,6 @@ function impactKey(def: MaterialDef | undefined): string {
   return def.fracture === 'none' ? 'impact_metal' : 'impact_wood'
 }
 
-/** Sound key (`impact_*`) of what hits or is hit, by its material. */
-export const impactSoundKey = impactKey
 /** Sound key (`drag_*`) of a base of this material dragged on a floor. */
 export const dragSoundKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'drag_')
 

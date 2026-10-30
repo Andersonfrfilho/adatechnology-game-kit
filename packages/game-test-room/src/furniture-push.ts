@@ -11,7 +11,7 @@ import type { FurniturePushBlock, FurniturePushPhase, FurniturePushRules } from 
 import type { Player } from './player'
 
 /** How close to the piece the player must be to lean on it, metres from the feet to its box. */
-const REACH = 1.1
+export const PUSH_REACH = 1.1
 /** Where the player ends up from the face, for the arms to be straight but not stretched. */
 const STANDOFF = 0.58
 /** Lower than this the hands go on top of the piece and the player bends over it, closer. */
@@ -214,7 +214,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       const min: [number, number, number] = [box3.min.x, box3.min.y, box3.min.z]
       const max: [number, number, number] = [box3.max.x, box3.max.y, box3.max.z]
       const { contact, into, distance } = contactOf({ min, max }, player)
-      if (distance > REACH) return false
+      if (distance > PUSH_REACH) return false
       const massKg = options.massOf(target.objectId)
       const material = options.materialOf(target.objectId)
       const isLow = max[1] - player.feet < LOW_TOP
@@ -229,7 +229,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       control.begin(material === undefined ? { massKg } : { massKg, material })
       dragged = 0
       player.setWalkHeld(true)
-      if (isLow) player.setBend(Math.min(MAX_BEND, Math.max(0, STANDING_EYE - (max[1] + LOW_EYE_OVER_TOP))))
+      if (isLow) player.setBend(Math.min(MAX_BEND, Math.max(0, STANDING_EYE - (max[1] - player.feet + LOW_EYE_OVER_TOP))))
       player.setLookLimit({ yaw: Math.atan2(-into[0], -into[1]), range: LOOK_RANGE })
       event('grip', leaning)
       return true

@@ -216,6 +216,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   return {
     id: VEGETATION_AREA_ID,
     name: text.name,
+    ground: { surface: 'lawn' },
     group: text.group,
     get placed() {
       return placed

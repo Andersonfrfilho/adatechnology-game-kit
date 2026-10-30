@@ -1,4 +1,4 @@
-export { createDestructionRenderer, dragSoundKey, impactSoundKey } from './renderer'
+export { impactKey, dragSoundKey, createDestructionRenderer } from './renderer'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'

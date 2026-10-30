@@ -110,12 +110,17 @@ export function buildScenarios(locale, analysisOf) {
       const shell = analysisOf('gas_canister').destructible.parts.find((p) => p.explodes)
       const c0 = room.spawned().find((q) => q.objectId === stove).root.position.clone()
       room.setTool('pistol_9mm')
+      // a 0.4 kg can is knocked about by each hit: the shots and the flame follow it where it went
+      const here = () => {
+        const q = room.spawned().find((o) => o.objectId === id)?.root.position
+        return q ? [q.x, q.y, q.z] : AT
+      }
       let shots = 0
-      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8)
+      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8, here())
       let seconds = 0
       // a pierced can leaks gas: a flame at the hole lights it and the rest goes up
       for (; seconds < 60 && count(room, 'explode', id) === 0; seconds++) {
-        room.world.hit(id, { type: 'fire', point: world(shell), temperature: 1000, radius: 0.3, duration: 1 })
+        room.world.hit(id, { type: 'fire', point: world(shell, here()), temperature: 1000, radius: 0.3, duration: 1 })
         step(1)
       }
       step(1.5)
