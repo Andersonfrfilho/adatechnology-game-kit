@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, GroundLayout, ModuleArea, ModuleHost, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import { locale as localeTable } from './locale'
 
@@ -33,7 +34,7 @@ function buildWeight(THREE: ThreeLib): THREE_NS.Object3D {
   mesh.name = 'block'
   mesh.position.y = WEIGHT_SIDE / 2
   mesh.castShadow = true
-  const root = new THREE.Group()
+  const root = markKitOrigin(new THREE.Group(), { owner: 'game-terrain-three', kind: 'item' })
   root.add(mesh)
   return root
 }
@@ -54,6 +55,7 @@ function buildLabel(THREE: ThreeLib, text: string, x: number): THREE_NS.Object3D
   context.fillText(text, 256, 50)
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(LABEL_WIDTH, LABEL_HEIGHT), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }))
   // read from the start of the area, looking along +z
+  markKitOrigin(mesh, { owner: 'game-terrain-three', kind: 'room' })
   mesh.rotation.set(-Math.PI / 2, 0, Math.PI)
   mesh.position.set(x, LABEL_Y, STRIP_Z0 - LABEL_HEIGHT)
   return mesh

@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Terrain, TerrainChunk } from '@adatechnology/game-terrain'
 import { buildChunkGeometry, buildPristineGeometry } from './chunk-geometry'
 import { createDebrisLayer, createMarkLayer } from './layers'
@@ -39,7 +40,7 @@ interface DrawnChunk {
 export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererOptions): TerrainRenderer {
   const { terrain } = options
   const lodDistance = options.lodDistance ?? DEFAULT_LOD_DISTANCE
-  const group = new THREE.Group()
+  const group = markKitOrigin(new THREE.Group(), { owner: 'game-terrain-three', kind: 'ground' })
   group.name = 'floor'
   const surface = createSurfaceMaterial(THREE)
   const rebarMaterial = new THREE.MeshStandardMaterial({ color: REBAR_COLOUR, roughness: 0.75, metalness: 0.35 })
