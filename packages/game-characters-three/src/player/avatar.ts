@@ -465,8 +465,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       placeBody(fall)
       stepClip(dt, down)
       if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
-      // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut)
-      const blow = run?.clip.events?.find((event) => event.type === 'impact')?.data?.kind
+      // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut); a clip with no impact,
+      // such as the fighting guard, closes them with a `grip` event
+      const blow = run?.clip.events?.find((event) => (event.type === 'impact' || event.type === 'grip') && event.data?.kind)?.data?.kind
       const ph = cycles * TWO_PI
       hands.forEach((hand) => {
         const isRight = hand.side < 0

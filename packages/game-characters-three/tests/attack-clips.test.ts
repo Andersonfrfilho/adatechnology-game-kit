@@ -13,7 +13,7 @@ describe('attack clips on the player body', () => {
     for (const clip of ATTACK_CLIPS) for (const key of clip.keys) for (const joint of Object.keys(key.pose)) expect(BODY_JOINTS, `${clip.id}.${joint}`).toContain(joint)
   })
 
-  it('move the joints they name, without NaN, and leave the legs to the gait when upper', () => {
+  it('move the joints they name, without NaN, and leave the legs to the gait when upper (a punch only bends the knees, a kick lifts the leg)', () => {
     for (const clip of ATTACK_CLIPS) {
       const avatar = createPlayerAvatar(THREE, { cascade: false })
       avatar.update(1 / 60, { speed: 0 })
@@ -33,7 +33,7 @@ describe('attack clips on the player body', () => {
       }
       expect(armMoved, clip.id).toBeGreaterThan(0.2)
       if (clip.channels === 'upper') expect(kneeMoved, clip.id).toBeLessThan(1e-6)
-      else expect(kneeMoved, clip.id).toBeGreaterThan(0.5)
+      else expect(kneeMoved, clip.id).toBeGreaterThan(clip.id === 'front_kick' ? 0.5 : 0.1)
     }
   })
 

@@ -1,4 +1,4 @@
-import { clipEventsBetween, samplePoseClip } from '@adatechnology/game-characters'
+import { clipEventsBetween, mirrorPoseClip, samplePoseClip } from '@adatechnology/game-characters'
 import type { PoseClip } from '@adatechnology/game-characters'
 import { PLAYER_DEFAULTS } from '@adatechnology/game-player'
 import { describe, expect, it } from 'vitest'
@@ -10,27 +10,37 @@ const NEUTRAL_UPPER: Record<string, number> = { lean: 0, twist: 0, side: 0, head
 const NEUTRAL_FULL: Record<string, number> = { ...NEUTRAL_UPPER, drop: 0, legL: -0.05, legR: 0.05, kneeL: 0.05, kneeR: 0.05 }
 /** Both hands on the weapon at pitch 0, as `createPlayerAvatar` poses the armed body (`AIMED` in the avatar); the recoil clips start and end here. */
 const NEUTRAL_AIMED: Record<string, number> = { lean: 0, twist: 0, headX: 0, armR: -1.42, armL: -1.42, elbR: -0.04, elbL: -0.12, armRz: -0.54, armLz: 0.36 }
+/** The orthodox fighting guard (left foot and left fist forward, chin down) the punches leave from and go back to: the `fight_guard` clip's first key. */
+const GUARD: Record<string, number> = { lean: 0.12, twist: -0.3, side: 0, drop: -0.06, headX: 0.18, headY: 0.28, headZ: 0, armR: -0.85, elbR: -1.95, armRz: -0.5, armL: -0.75, elbL: -2.0, armLz: 0.55, legL: 0.25, kneeL: 0.3, legR: -0.3, kneeR: 0.3 }
+/** The guard as a lead-hand punch written for the right hand stores it: its mirror, so the left hand plays it from the orthodox guard. */
+const GUARD_MIRRORED: Record<string, number> = mirrorPose(GUARD)
 const TOLERANCE = 0.12
 const STEPS = 200
 
 type Expectation = { duration: number; channels: 'upper' | 'full'; impactAt: [number, number]; neutral: Record<string, number>; phases: string[] }
 
 const EXPECTED: Record<string, Expectation> = {
-  punch_right: { duration: 0.35, channels: 'upper', impactAt: [0.1, 0.25], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
-  jab: { duration: 0.28, channels: 'upper', impactAt: [0.08, 0.16], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
-  hook: { duration: 0.4, channels: 'upper', impactAt: [0.15, 0.3], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
-  uppercut: { duration: 0.4, channels: 'upper', impactAt: [0.15, 0.3], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  punch_right: { duration: 0.38, channels: 'full', impactAt: [0.1, 0.18], neutral: GUARD, phases: ['windup', 'strike', 'recover'] },
+  jab: { duration: 0.3, channels: 'full', impactAt: [0.08, 0.14], neutral: GUARD_MIRRORED, phases: ['windup', 'strike', 'recover'] },
+  hook: { duration: 0.42, channels: 'full', impactAt: [0.15, 0.22], neutral: GUARD_MIRRORED, phases: ['windup', 'strike', 'recover'] },
+  uppercut: { duration: 0.42, channels: 'full', impactAt: [0.15, 0.22], neutral: GUARD, phases: ['windup', 'strike', 'recover'] },
   shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
   recoil_rifle: { duration: 0.22, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
   recoil_pistol: { duration: 0.18, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
 }
 
+function mirrorPose(pose: Record<string, number>): Record<string, number> {
+  return mirrorPoseClip({ id: 'guard', duration: 0, keys: [{ t: 0, pose }] }, 'mirrored').keys[0]!.pose as Record<string, number>
+}
+
 const byId = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
 
 describe('attack clips', () => {
   it('holds the clips of the brief, by snake_case id', () => {
-    expect(ATTACK_CLIPS.map((clip) => clip.id)).toEqual(Object.keys(EXPECTED))
+    const ids = Object.keys(EXPECTED)
+    ids.splice(ids.indexOf('uppercut') + 1, 0, 'fight_guard')
+    expect(ATTACK_CLIPS.map((clip) => clip.id)).toEqual(ids)
     for (const clip of ATTACK_CLIPS) expect(clip.id).toMatch(/^[a-z]+(_[a-z]+)*$/)
   })
 
@@ -80,6 +90,20 @@ describe('attack clips', () => {
       })
     })
   }
+})
+
+describe('fight_guard', () => {
+  const clip = byId('fight_guard')
+  it('loops on the guard with the fists closed and strikes nothing', () => {
+    expect(clip.loop).toBe(true)
+    expect(clip.channels).toBe('full')
+    for (const time of [0, clip.duration / 2, clip.duration]) {
+      const pose = samplePoseClip(clip, time)
+      for (const [joint, value] of Object.entries(GUARD)) expect(Math.abs(pose[joint]! - value), `${joint} at ${time}`).toBeLessThanOrEqual(0.05)
+    }
+    expect(clip.events?.some((event) => event.type === 'impact')).toBe(false)
+    expect(clip.events?.find((event) => event.type === 'grip')?.data?.kind).toBe('punch')
+  })
 })
 
 describe('attack clips against the game-player rules', () => {
