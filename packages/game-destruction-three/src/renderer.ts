@@ -21,6 +21,8 @@ import { Visuals } from './visual'
 let rendererCount = 0
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
 const COLLAPSE_CLOUD_KG = 1000
+/** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
+const CHIP_DECAL_EDGE = 0.05
 const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -874,8 +876,9 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
-   * A unit came out of a wall of units: the unit flies as a fragment with a puff of its dust. The gap itself is the drawing's (the house renderer redraws
-   * the wall as its courses without that unit); a part drawn as one box keeps its box.
+   * A unit came out of a wall of units: the unit flies as a fragment with a puff of its dust, and the marks drawn on it (bullet holes, spalls, the impact
+   * marks of the effects) go with it. The gap itself is the drawing's (the house renderer cuts the wall where the unit was); a part drawn as one box
+   * keeps its box.
    */
   private onChip(ev: Ev<'chip'>): void {
     const pv = this.partVis(ev.object, ev.part)
@@ -883,7 +886,15 @@ class Renderer implements DestructionRenderer {
     const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     for (const fr of ev.fragments) this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, fallbackColor(fr.material, def), false), ev.object, maxAlive)
-    if (!this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.center)) this.vfx.burst('dust', ev.center, [0, 1, 0], 6, 0.8, { color })
+    // the holes and spalls drawn on the unit leave with it (also those on the wall a beam is drawn inside), and on the ragged edge of plaster around it
+    const T = this.THREE
+    const center = new T.Vector3(ev.center[0], ev.center[1], ev.center[2])
+    const half = new T.Vector3(ev.size[0] / 2 + CHIP_DECAL_EDGE, ev.size[1] / 2 + CHIP_DECAL_EDGE, ev.size[2] / 2 + CHIP_DECAL_EDGE)
+    const rotation = new T.Quaternion(ev.rotation[0], ev.rotation[1], ev.rotation[2], ev.rotation[3])
+    for (const part of this.bounds.get(ev.object)?.parts.values() ?? []) for (const mv of part.meshes) this.visuals.clearDecals(mv, center, half, rotation)
+    this.vfx.peekWorkshop()?.decals.clearInside(ev.center, [half.x, half.y, half.z], ev.rotation)
+    // a puff of the unit's own dust; not the bullet impact effect, which would leave its black mark on the hole the unit left
+    this.vfx.burst('dust', ev.center, [0, 1, 0], 8, 0.8, { color })
     this.sound(impactKey(def), ev.center, 0.7)
   }
 

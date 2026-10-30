@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
 
@@ -117,5 +118,35 @@ describe('exposed rebar', () => {
     renderer.restore('o1')
     expect(renderer.rebarCount()).toBe(0)
     expect(scene.children.some((c) => c instanceof THREE.InstancedMesh)).toBe(false)
+  })
+})
+
+describe('chip', () => {
+  it('takes away the holes and spalls on the unit that came out and keeps those elsewhere on the wall', () => {
+    const { world, renderer, wall } = setup()
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.02, 1.01, 0.1], area: 0.01 })
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.8, 1.6, 0.1], area: 0.01 })
+    renderer.update(0.016)
+    expect(renderer.stats().decals).toBe(2)
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0')] })
+    renderer.update(0.016)
+    expect(renderer.stats().decals).toBe(1)
+    expect((wall.children[0] as THREE.Mesh).position.x).toBeCloseTo(0.8, 3)
+  })
+})
+
+describe('chip and the impact marks of the effects', () => {
+  it('takes away the bullet marks the impact effect left on the unit that came out', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const vfx = createVfx()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    world.addObject('o1', [partState('wall', 'concrete')])
+    const decals = vfx.workshop().decals
+    decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    decals.add(0.8, 1.6, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0')] })
+    renderer.update(0.016)
+    expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.8])
   })
 })

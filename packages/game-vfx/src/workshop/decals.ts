@@ -69,6 +69,26 @@ export class DecalPool {
     this.count = 0
   }
 
+  /**
+   * Takes away the marks inside a box: world `center`, `half` extents along the axes of the world `rotation` (a quaternion, x y z w; none means the
+   * world axes). The surface they were on is gone (a brick came out of a wall with its bullet holes). Returns how many went.
+   */
+  clearInside(center: Vec3Tuple, half: Vec3Tuple, rotation: readonly [number, number, number, number] = [0, 0, 0, 1]): number {
+    // the inverse rotation takes a point into the box's axes: v' = v + 2w(q x v) + 2 q x (q x v) with q = -xyz of the rotation
+    const qx = -rotation[0], qy = -rotation[1], qz = -rotation[2], qw = rotation[3]
+    let gone = 0
+    for (const decal of this.decals) {
+      if (!decal.on) continue
+      const vx = decal.x - center[0], vy = decal.y - center[1], vz = decal.z - center[2]
+      const tx = 2 * (qy * vz - qz * vy), ty = 2 * (qz * vx - qx * vz), tz = 2 * (qx * vy - qy * vx)
+      const lx = vx + qw * tx + (qy * tz - qz * ty), ly = vy + qw * ty + (qz * tx - qx * tz), lz = vz + qw * tz + (qx * ty - qy * tx)
+      if (Math.abs(lx) > half[0] || Math.abs(ly) > half[1] || Math.abs(lz) > half[2]) continue
+      decal.on = false
+      gone++
+    }
+    return gone
+  }
+
   update(dt: number): void {
     this.count = 0
     for (const decal of this.decals) {
