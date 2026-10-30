@@ -7,7 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
-import type { HandTargetSource } from './hands'
+import type { HandPose, HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -270,6 +270,12 @@ export interface ModuleHost {
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */
   setHandTargets?(source: HandTargetSource | null): () => void
+  /**
+   * Where the player's body holds a tool now (world space), for a view that shows the body (third person): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
+   * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size, instead of in front of the eye. Null while the view draws the tool in front of
+   * the eye (first person); a host without a body leaves it out.
+   */
+  holdFrame?(): HandPose | null
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */

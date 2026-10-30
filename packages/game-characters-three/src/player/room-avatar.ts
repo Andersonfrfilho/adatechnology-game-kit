@@ -13,6 +13,7 @@ export type RoomAvatarLike = {
   root: THREE_NS.Object3D
   update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
   firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean; contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }): void }
   /** Brings the body's hands to the tool in them, in third person (`RoomAvatar.reach`). */
@@ -115,6 +116,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
       })
     },
     hand: (side) => avatar.hand(side),
+    shoulder: (side) => avatar.shoulder(side),
     reach: (targets) => avatar.reach(targets),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)
