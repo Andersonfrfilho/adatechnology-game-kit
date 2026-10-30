@@ -21,6 +21,66 @@
       ]
     },
     {
+      "id": "jab",
+      "source": { "authored": "game-kit", "note": "authored in the kit for the right hand (the left plays its mirror); one step of the punch combo, replace with the Elenco team's clip when delivered" },
+      "duration": 0.28,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
+        { "t": 0.06, "pose": { "lean": 0.03, "twist": 0.08, "side": 0, "headX": 0, "headY": -0.06, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -0.85, "elbL": -2.0, "armLz": 0.15 } },
+        { "t": 0.12, "pose": { "lean": 0.08, "twist": -0.15, "side": 0, "headX": 0, "headY": 0.12, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -1.55, "elbL": -0.05, "armLz": 0.25 } },
+        { "t": 0.17, "pose": { "lean": 0.06, "twist": -0.12, "side": 0, "headX": 0, "headY": 0.1, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -1.45, "elbL": -0.2, "armLz": 0.22 } },
+        { "t": 0.28, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.06, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.12, "type": "impact", "data": { "kind": "punch" } },
+        { "t": 0.17, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
+    },
+    {
+      "id": "hook",
+      "source": { "authored": "game-kit", "note": "authored in the kit for the right hand (the left plays its mirror); one step of the punch combo, replace with the Elenco team's clip when delivered" },
+      "duration": 0.4,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
+        { "t": 0.1, "pose": { "lean": 0.04, "twist": 0.35, "side": 0, "headX": 0, "headY": -0.25, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -1.15, "elbL": -0.9, "armLz": -0.75 } },
+        { "t": 0.2, "pose": { "lean": 0.1, "twist": -0.8, "side": 0, "headX": 0, "headY": 0.45, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -1.3, "elbL": -0.6, "armLz": -0.55 } },
+        { "t": 0.27, "pose": { "lean": 0.08, "twist": -0.7, "side": 0, "headX": 0, "headY": 0.4, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -1.25, "elbL": -0.65, "armLz": -0.5 } },
+        { "t": 0.4, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.1, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.2, "type": "impact", "data": { "kind": "punch" } },
+        { "t": 0.27, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
+    },
+    {
+      "id": "uppercut",
+      "source": { "authored": "game-kit", "note": "authored in the kit for the right hand (the left plays its mirror); one step of the punch combo, replace with the Elenco team's clip when delivered" },
+      "duration": 0.4,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
+        { "t": 0.1, "pose": { "lean": 0.12, "twist": 0.2, "side": 0.08, "headX": 0, "headY": -0.1, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -0.15, "elbL": -1.7, "armLz": 0.15 } },
+        { "t": 0.2, "pose": { "lean": -0.03, "twist": -0.4, "side": -0.04, "headX": -0.1, "headY": 0.25, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -0.85, "elbL": -1.95, "armLz": 0.3 } },
+        { "t": 0.27, "pose": { "lean": -0.03, "twist": -0.35, "side": -0.03, "headX": -0.08, "headY": 0.2, "headZ": 0, "armR": -0.95, "elbR": -1.95, "armRz": -0.25, "armL": -0.8, "elbL": -1.9, "armLz": 0.28 } },
+        { "t": 0.4, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.1, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.2, "type": "impact", "data": { "kind": "punch" } },
+        { "t": 0.27, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
+    },
+    {
       "id": "shove_two_hands",
       "source": { "authored": "game-kit", "note": "authored in the kit; replace with the Elenco team's clip when delivered" },
       "duration": 0.5,

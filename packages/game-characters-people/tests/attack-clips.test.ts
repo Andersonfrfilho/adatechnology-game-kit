@@ -17,6 +17,9 @@ type Expectation = { duration: number; channels: 'upper' | 'full'; impactAt: [nu
 
 const EXPECTED: Record<string, Expectation> = {
   punch_right: { duration: 0.35, channels: 'upper', impactAt: [0.1, 0.25], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  jab: { duration: 0.28, channels: 'upper', impactAt: [0.08, 0.16], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  hook: { duration: 0.4, channels: 'upper', impactAt: [0.15, 0.3], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  uppercut: { duration: 0.4, channels: 'upper', impactAt: [0.15, 0.3], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
   recoil_rifle: { duration: 0.22, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
