@@ -598,6 +598,99 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fire('spawn', e.so)
     return e.so
   }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // The player against the objects: what stands on the floor blocks the walk, and the walk pushes what is light enough to slide
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  /** Objects lower than this (m) the player steps over (a can, a book on the floor): they do not block, the feet scuff them along. */
+  const STEP_OVER = 0.3
+  /** Things that hang higher than this (m) above the feet pass over the head. */
+  const HEADROOM = 1.9
+  /**
+   * Horizontal force (N) a walking and a running player puts into what is in the way, and the floor's friction coefficient the push has to beat: a 3 kg bin slides off,
+   * a 12 kg nightstand moves, a 70 kg fridge only blocks (it would take 0.5 x 70 x 9.8 = 343 N, a shove with the shoulder).
+   */
+  const PUSH_WALK_N = 250
+  const PUSH_RUN_N = 450
+  const FLOOR_FRICTION = 0.5
+  interface BodyBox { minX: number; maxX: number; minZ: number; maxZ: number; base: number; top: number; stamp: number }
+  const bodyBoxes = new Map<string, BodyBox>()
+  const bodyBounds = new THREE.Box3()
+  let frameStamp = 0
+  /** World box of an object the player can bump into, kept until the object moves (a piece that is awake is measured again each frame). */
+  const bodyBox = (e: Entry): BodyBox | null => {
+    const id = e.so.objectId
+    const known = bodyBoxes.get(id)
+    if (known && (known.stamp === frameStamp || !e.piece || e.piece.sleeping)) return known
+    if (!e.so.root.parent || world.state(id)?.destroyed) {
+      bodyBoxes.delete(id)
+      return null
+    }
+    bodyBounds.setFromObject(e.so.root)
+    if (bodyBounds.isEmpty()) return null
+    const box = { minX: bodyBounds.min.x, maxX: bodyBounds.max.x, minZ: bodyBounds.min.z, maxZ: bodyBounds.max.z, base: bodyBounds.min.y, top: bodyBounds.max.y, stamp: frameStamp }
+    bodyBoxes.set(id, box)
+    return box
+  }
+  const footPos = new THREE.Vector3()
+  /**
+   * Whether `e` stands in the player's way at the floor point (x, z): the arena has its own colliders, a held thing and a low one do not block. A piece that declares its
+   * own footprint in `root.userData.collider` (a plant: the trunk as a cylinder, or null for grass the feet walk through) is tested against that instead of its whole box.
+   */
+  const inTheWay = (e: Entry, x: number, z: number, r: number): BodyBox | null => {
+    if (e.arena || (e.piece && e.piece.held)) return null
+    const ud = e.so.root.userData as { collider?: { kind?: string; radius?: number; height?: number } | null }
+    if ('collider' in ud && !ud.collider?.kind) return null
+    const b = bodyBox(e)
+    if (!b || b.base > player.feet + HEADROOM) return null
+    const c = ud.collider
+    if (c?.kind === 'cylinder' && c.radius != null) {
+      e.so.root.getWorldPosition(footPos)
+      const reach = c.radius + r
+      return (x - footPos.x) ** 2 + (z - footPos.z) ** 2 < reach * reach ? { ...b, top: Math.min(b.top, footPos.y + (c.height ?? b.top - footPos.y)) } : null
+    }
+    return x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r ? b : null
+  }
+  blockers.add((x, z, r) => {
+    for (const e of entries.values()) {
+      const b = inTheWay(e, x, z, r)
+      if (b && b.top - b.base >= STEP_OVER) return true
+    }
+    return false
+  })
+  /**
+   * The walk pushes what it runs into, by the force of a person leaning on it against the floor's grip: the push brings the object up to the walking speed at most, at the
+   * middle of where the body touches it (a waist-high bin slides, a tall light thing can tip), and a low thing the feet step over is scuffed along.
+   */
+  const pushByPlayer = (dt: number): void => {
+    const [wx, wz] = player.takeWish()
+    const len = Math.hypot(wx, wz)
+    if (dt <= 0 || len < 1e-6) return
+    const dx = wx / len
+    const dz = wz / len
+    const speed = len / dt
+    const force = player.running ? PUSH_RUN_N : PUSH_WALK_N
+    // where the step tried to go (and a hair more), so what the blocked step stopped against is found
+    const ax = player.x + dx * (Math.min(len, 0.5) + 0.03)
+    const az = player.z + dz * (Math.min(len, 0.5) + 0.03)
+    for (const e of entries.values()) {
+      const piece = e.piece
+      if (!piece) continue
+      const b = inTheWay(e, ax, az, PLAYER_RADIUS)
+      if (!b) continue
+      const grip = FLOOR_FRICTION * piece.mass * 9.81
+      if (force <= grip) continue
+      const along = piece.velocity[0] * dx + piece.velocity[2] * dz
+      const impulse = Math.min(piece.mass * Math.max(0, speed - along), (force - grip) * dt)
+      if (impulse <= 1e-4) continue
+      // the body touches it from the floor up to the chest (or its top): the push acts at the middle of that span
+      const y = (b.base + Math.max(b.base, Math.min(b.top, player.feet + 1.4))) / 2
+      const point: Vec3 = [Math.max(b.minX, Math.min(b.maxX, player.x)), y, Math.max(b.minZ, Math.min(b.maxZ, player.z))]
+      piece.sleeping = false
+      renderer.impulse(e.so.objectId, [dx * impulse, 0, dz * impulse], point)
+      log.coalesce(`bump:${e.so.objectId}`, { channel: 'action', type: 'bump', text: t('act.bump', { name: e.name, kg: num(piece.mass, 1) }), objectId: e.so.objectId, itemId: e.so.itemId, data: { massKg: Math.round(piece.mass * 10) / 10, pushN: force } }, 1)
+    }
+  }
   const massGuess = (spec: DestructibleSpec): number => {
     let m = 0
     for (const p of spec.parts) {
@@ -844,6 +937,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** Height of the hip above the feet (m): where a kick leaves from; and how far (rad) below the look it goes, so a level look kicks at the height of a chair seat. */
+  const KICK_HIP = 0.9
+  const KICK_DROP = 0.35
+  /**
+   * A kick leaves the hip, not the eye: along the facing, 20 degrees below the look and kept between 50 degrees down (a stomp on what lies on the floor) and 6 up, so a kick
+   * at a bin or a chair in front of the feet lands on it, as the leg reaches it, instead of on what the eye ray would find beyond the leg's reach.
+   */
+  const legAim = (): void => {
+    aim()
+    // never above the eye: a player low on the ground kicks from where it is, along its look
+    const low = aimO[1] < player.feet + KICK_HIP
+    const pitch = Math.max(-0.9, Math.min(0.1, player.pitch - (low ? 0 : KICK_DROP)))
+    aimO[0] = player.x
+    aimO[1] = Math.min(player.feet + KICK_HIP, aimO[1])
+    aimO[2] = player.z
+    aimD[0] = -Math.sin(player.yaw) * Math.cos(pitch)
+    aimD[1] = Math.sin(pitch)
+    aimD[2] = -Math.cos(player.yaw) * Math.cos(pitch)
+  }
   const aim = (): void => {
     camera.updateMatrixWorld(true)
     camera.getWorldPosition(tmpV)
@@ -1236,7 +1348,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       comboAt = simTime
     }
     if (clip === undefined || seconds === null) {
-      meleeUse(u, id)
+      if (leg) {
+        legAim()
+        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id)
+      } else meleeUse(u, id)
       return
     }
     const text = leg ? 'act.strike.leg' : hand ? 'act.strike.hand' : 'act.strike'
@@ -1247,7 +1362,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       key: id,
       remaining: seconds,
       land: () => {
-        aim()
+        if (leg) legAim()
+        else aim()
         meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id)
       },
     })
@@ -2035,7 +2151,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const update = (dt: number): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
+    frameStamp++
     player.update(dt)
+    if (!paused) pushByPlayer(dt)
+    else player.takeWish()
     stepAvatar(paused ? 0 : dt)
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
