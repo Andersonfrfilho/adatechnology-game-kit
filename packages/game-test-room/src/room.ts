@@ -1189,22 +1189,41 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const punchHand = options.punchHand ?? 'alternate'
   const punchTools = new Set(options.punchTools ?? ['hand', 'fists'])
   let nextHand: 'left' | 'right' = 'right'
+  // the combo (an ability the page gives, `strikeCombo`): while it is on, each blow of its tools is its next step, and a pause longer than `reset` starts it over
+  const combo = options.strikeCombo
+  let comboOn = !!combo && options.strikeComboOn === true
+  let comboNext = 0
+  let comboAt = -Infinity
+  const setStrikeCombo = (on: boolean): void => {
+    if (!combo || on === comboOn) return
+    comboOn = on
+    comboNext = 0
+    const name = combo.name?.[locale] ?? combo.id
+    action('combo', t(on ? 'act.combo.on' : 'act.combo.off', { name }), { data: { combo: combo.id, on } })
+    say(t(on ? 'act.combo.on' : 'act.combo.off', { name }))
+  }
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
-    const clip = strikeClips[id]
-    // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way), whatever the avatar does with them
+    const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
+    const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
+    const clip = step ? step.clip : strikeClips[id]
+    // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way) or the one of its combo step, whatever the avatar does with them
     const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
-    const hand = punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
+    const hand = step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
     const side = leg ? { leg } : hand ? { hand } : undefined
     const seconds = clip === undefined ? null : (avatar?.strike?.(clip, side) ?? null)
     if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
-    if (hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
+    if (!step && hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
+    if (step && stepIndex !== null) {
+      comboNext = (stepIndex + 1) % combo!.steps.length
+      comboAt = simTime
+    }
     if (clip === undefined || seconds === null) {
       meleeUse(u, id)
       return
     }
     const text = leg ? 'act.strike.leg' : hand ? 'act.strike.hand' : 'act.strike'
     action('strike', t(text, { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '', hand: hand ? t(`hand.${hand}`) : '' }), {
-      data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}) },
+      data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}), ...(step ? { combo: combo!.id, step: stepIndex } : {}) },
     })
     strikes.push({
       key: id,
@@ -1814,6 +1833,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyY':
         explosives.detonateCharges()
         break
+      case 'KeyN':
+        setStrikeCombo(!comboOn)
+        break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
@@ -2037,6 +2059,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       timeScale,
       fast: fastForward,
       tap: isTapOn(),
+      combo: combo ? comboOn : null,
       blast: { shelter: blastOn('shelter'), fragmentHits: blastOn('fragmentHits'), confinement: blastOn('confinement') },
       quality: qualityName,
       camera: avatar ? cameraMode : null,
@@ -2664,6 +2687,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     setBlast(options: BlastOptions): void
     setSlowMotion(on: boolean): void
     setFastForward(on: boolean): void
+    setStrikeCombo(on: boolean): void
+    readonly strikeCombo: boolean | null
     equip(weaponId: string): void
     readonly scenarios: TestRoomScenario[]
     readonly fluidRenderer: FluidRenderer
@@ -2765,6 +2790,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     setFastForward(on) {
       fastForward = on
+    },
+    setStrikeCombo,
+    get strikeCombo() {
+      return combo ? comboOn : null
     },
     equip,
     openArea,
@@ -2923,6 +2952,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         setTool(loadout[index])
       },
       onTap: () => toggleTap(),
+      ...(combo ? { combo: { label: combo.name?.[locale] ?? combo.id, onToggle: () => setStrikeCombo(!comboOn) } } : {}),
       onBlast: (key) => toggleBlast(key),
       onPlay: (objectId, clipId) => {
         playAnimation(clipId, objectId)

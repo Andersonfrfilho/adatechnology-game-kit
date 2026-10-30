@@ -44,7 +44,8 @@ describe('avatar test area', () => {
 
   it('offers a button per attack clip, plays it and logs the impact', () => {
     const { room, avatar, bench } = setupWith({ clips: [...POSE_CLIPS, ...ATTACK_CLIPS], clipLocales: ATTACK_CLIP_LOCALES })
-    for (const clip of ATTACK_CLIPS) {
+    // the strikes (the fighting guard has no impact; it holds the fists up between punches)
+    for (const clip of ATTACK_CLIPS.filter((candidate) => candidate.events?.some((event) => event.type === 'impact'))) {
       const button = bench().controls().find((c) => c.id === `play_${clip.id}`)!
       expect(button.name).toBe(`Tocar: ${clip.id}`)
       expect(bench().act(`play_${clip.id}`)).toBe(true)

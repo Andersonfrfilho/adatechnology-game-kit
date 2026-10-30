@@ -7,6 +7,7 @@
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
+//   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
@@ -16,6 +17,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__ */
@@ -59,6 +61,9 @@ const room = createTestRoom({
   scenery,
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
+  // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut
+  strikeCombo: PUNCH_COMBO,
+  strikeComboOn: params.get('combo') === '1',
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',
