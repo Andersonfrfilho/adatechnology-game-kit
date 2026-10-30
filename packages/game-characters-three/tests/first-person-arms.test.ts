@@ -124,8 +124,8 @@ describe('createFirstPersonArms', () => {
     for (; clock < 0.8; clock += 1 / 120) arms.update(1 / 120, { camera: camera(), stance: 'fists' })
     const impacts = events.filter((event) => event.type === 'impact')
     expect(impacts).toHaveLength(1)
-    expect(impacts[0]!.at).toBeGreaterThanOrEqual(0.16 - 1 / 120 - 1e-6)
-    expect(impacts[0]!.at).toBeLessThan(0.16 + 0.02)
+    expect(impacts[0]!.at).toBeGreaterThanOrEqual(0.14 - 1 / 120 - 1e-6)
+    expect(impacts[0]!.at).toBeLessThan(0.14 + 0.02)
     expect(arms.playing).toBeNull()
   })
 
@@ -134,7 +134,7 @@ describe('createFirstPersonArms', () => {
     step(arms, 0.6, { camera: camera(), stance: 'fists' })
     const guard = arms.handPose('R').position.clone()
     arms.play('punch_right')
-    step(arms, 0.16, { camera: camera(), stance: 'fists' })
+    step(arms, 0.14, { camera: camera(), stance: 'fists' })
     expect(arms.handPose('R').position.z).toBeLessThan(guard.z - 0.1)
   })
 
@@ -215,7 +215,7 @@ describe('createFirstPersonArms', () => {
       const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
       step(arms, 0.6, { camera: camera(), stance: 'fists' })
       arms.play('punch_right', { hand })
-      step(arms, 0.16, { camera: camera(), stance: 'fists' })
+      step(arms, 0.14, { camera: camera(), stance: 'fists' })
       return { R: arms.handPose('R').position.clone(), L: arms.handPose('L').position.clone() }
     }
     const guard = (() => {
@@ -262,7 +262,7 @@ describe('toRoomAvatar with the first-person arms', () => {
   })
 
   it.each([
-    ['punch_right', 0.16],
+    ['punch_right', 0.14],
     ['shove_two_hands', 0.26],
     ['front_kick', 0.32],
   ])('strike(%s) plays on the body and the arms and answers the attack clip impact second (%f)', (id, seconds) => {
@@ -293,6 +293,41 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(left).toBe(right)
     expect(room.avatar.playing).toBe('punch_right_left')
     expect(room.arms!.playing).toBe('punch_right')
+  })
+
+  const standing = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
+  const run = (room: ReturnType<typeof toRoomAvatar>, seconds: number, state = standing): void => {
+    for (let t = 0; t < seconds; t += 1 / 60) room.update(1 / 60, state)
+  }
+
+  it('holds the guard after a punch while the body stands, then drops it', () => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    run(room, 0.2)
+    room.strike('jab', { hand: 'left' })
+    run(room, 0.5)
+    expect(room.avatar.playing).toBe('fight_guard')
+    // the next punch leaves from the guard
+    room.strike('punch_right', { hand: 'right' })
+    expect(room.avatar.playing).toBe('punch_right')
+    run(room, 0.5)
+    expect(room.avatar.playing).toBe('fight_guard')
+    run(room, 1.5)
+    expect(room.avatar.playing).toBe(null)
+  })
+
+  it('gives the legs back to the walk: no guard while it moves, and none after a kick', () => {
+    const walking = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    walking.strike('punch_right')
+    run(walking, 0.6, { ...standing, speed: 1.4 })
+    expect(walking.avatar.playing).not.toBe('fight_guard')
+    const kick = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    kick.strike('front_kick')
+    run(kick, 0.9)
+    expect(kick.avatar.playing).not.toBe('fight_guard')
+    const none = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false, guardClip: false })
+    none.strike('punch_right')
+    run(none, 0.5)
+    expect(none.avatar.playing).not.toBe('fight_guard')
   })
 })
 

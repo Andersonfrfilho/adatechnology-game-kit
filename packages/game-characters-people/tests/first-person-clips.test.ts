@@ -1,14 +1,14 @@
 import { clipEventsBetween, sampleFirstPersonClip } from '@adatechnology/game-characters'
 import { describe, expect, it } from 'vitest'
 
-import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES, FIRST_PERSON_CLIPS } from '../src'
+import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES, FIRST_PERSON_CLIPS, PUNCH_COMBO } from '../src'
 
-const IDS = ['punch_right', 'shove_two_hands', 'front_kick']
+const IDS = ['punch_right', 'jab', 'hook', 'uppercut', 'shove_two_hands', 'front_kick']
 const attack = (id: string) => ATTACK_CLIPS.find((clip) => clip.id === id)!
 const firstPerson = (id: string) => FIRST_PERSON_CLIPS.find((clip) => clip.id === id)!
 
 describe('first-person strike clips', () => {
-  it('has the three strikes that the third person has', () => {
+  it('has the strikes that the third person has', () => {
     expect(FIRST_PERSON_CLIPS.map((clip) => clip.id)).toEqual(IDS)
   })
 
@@ -46,5 +46,19 @@ describe('first-person strike clips', () => {
     expect(Object.keys(sampleFirstPersonClip(firstPerson('front_kick'), 0.3))).toEqual(['F'])
     expect(Object.keys(sampleFirstPersonClip(firstPerson('shove_two_hands'), 0.3)).sort()).toEqual(['L', 'R'])
     expect(Object.keys(sampleFirstPersonClip(firstPerson('punch_right'), 0.3))).toEqual(['R'])
+  })
+})
+
+describe('the punch combo', () => {
+  it('is jab, cross, hook, uppercut, hands alternating from the left (orthodox stance), every step a punch both views can play', () => {
+    expect(PUNCH_COMBO.steps.map((step) => step.clip)).toEqual(['jab', 'punch_right', 'hook', 'uppercut'])
+    expect(PUNCH_COMBO.steps.map((step) => step.hand)).toEqual(['left', 'right', 'left', 'right'])
+    for (const step of PUNCH_COMBO.steps) {
+      expect(attack(step.clip).events!.find((event) => event.type === 'impact')!.data).toEqual({ kind: 'punch' })
+      expect(firstPerson(step.clip)).toBeDefined()
+    }
+    expect(PUNCH_COMBO.tools).toEqual(['hand', 'fists'])
+    expect(PUNCH_COMBO.reset).toBeGreaterThan(0.4)
+    expect(PUNCH_COMBO.name['pt-BR']).toBe('Sequência de socos')
   })
 })
