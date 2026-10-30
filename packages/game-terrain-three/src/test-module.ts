@@ -6,7 +6,7 @@ import { locale as localeTable } from './locale'
 type ThreeLib = typeof THREE_NS
 
 /** The strips of the area, side by side, one of each ground. */
-export const TERRAIN_STRIPS = ['dirt', 'lawn', 'sand', 'road', 'concrete_slab', 'wood_floor', 'tile_floor', 'stone_paving'] as const
+export const TERRAIN_STRIPS = ['dirt', 'lawn', 'sand', 'road', 'concrete_slab', 'suspended_slab', 'wood_floor', 'tile_floor', 'stone_paving'] as const
 const STRIP_WIDTH = 3
 const STRIP_Z0 = 4
 const STRIP_Z1 = 13
@@ -30,7 +30,7 @@ function weightSpec(): DestructibleSpec {
 }
 
 function buildWeight(THREE: ThreeLib): THREE_NS.Object3D {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(WEIGHT_SIDE, WEIGHT_SIDE, WEIGHT_SIDE), new THREE.MeshStandardMaterial({ color: 0x6d6d68, roughness: 0.9 }))
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(WEIGHT_SIDE, WEIGHT_SIDE, WEIGHT_SIDE), new THREE.MeshStandardMaterial({ color: 0xb4b4ae, roughness: 0.9 }))
   mesh.name = 'block'
   mesh.position.y = WEIGHT_SIDE / 2
   mesh.castShadow = true
