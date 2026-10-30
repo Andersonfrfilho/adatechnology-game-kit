@@ -234,9 +234,6 @@
     "stack": 4,
     "shape": "bag",
     "color": 15261888,
-    "powder": {
-      "color": 15722710
-    },
     "rarity": "common",
     "durability": {
       "kind": "portions",
@@ -257,7 +254,13 @@
         "school"
       ]
     },
-    "model": "rice"
+    "model": "rice",
+    "powder": {
+      "color": 15722710
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   {
     "id": "beans",
@@ -1191,9 +1194,6 @@
     "stack": 4,
     "shape": "bag",
     "color": 15790320,
-    "powder": {
-      "color": 16184558
-    },
     "rarity": "common",
     "durability": {
       "kind": "portions",
@@ -1213,8 +1213,12 @@
     },
     "model": "sugar",
     "nonPerishable": true,
+    "powder": {
+      "color": 16184558
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   {
@@ -1233,9 +1237,6 @@
     "stack": 2,
     "shape": "box",
     "color": 15263984,
-    "powder": {
-      "color": 15921902
-    },
     "rarity": "common",
     "durability": {
       "kind": "uses",
@@ -1255,8 +1256,12 @@
     },
     "model": "salt",
     "nonPerishable": true,
+    "powder": {
+      "color": 15921902
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   {
@@ -1312,9 +1317,6 @@
     "stack": 4,
     "shape": "bag",
     "color": 5913124,
-    "powder": {
-      "color": 4861984
-    },
     "rarity": "common",
     "durability": {
       "kind": "uses",
@@ -1334,7 +1336,13 @@
         "police_station"
       ]
     },
-    "model": "coffee"
+    "model": "coffee",
+    "powder": {
+      "color": 4861984
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   {
     "id": "water_bottle",
@@ -8440,18 +8448,19 @@
     "stack": 4,
     "shape": "bag",
     "color": 16052452,
-    "powder": {
-      "color": 15986662
-    },
     "rarity": "common",
     "nutrition": {
       "satiety": 5,
       "hydration": -8
     },
     "shelfLife": 365,
+    "powder": {
+      "color": 15986662
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   {
@@ -8470,18 +8479,19 @@
     "stack": 2,
     "shape": "box",
     "color": 14182960,
-    "powder": {
-      "color": 14201962
-    },
     "rarity": "common",
     "nutrition": {
       "satiety": 18,
       "hydration": -5
     },
     "shelfLife": 270,
+    "powder": {
+      "color": 14201962
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   {
