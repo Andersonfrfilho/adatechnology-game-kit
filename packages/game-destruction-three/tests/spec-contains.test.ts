@@ -18,4 +18,15 @@ describe('specFromObject3D with contents', () => {
     expect(spec.parts.find((part) => part.id === 'shell')?.contains).toEqual({ fluid: 'soda', liters: 0.3 })
     expect(spec.parts.find((part) => part.id === 'lid')?.contains).toBeUndefined()
   })
+
+  it('gives the part the loose dry contents a mesh says it holds', () => {
+    const root = new THREE.Group()
+    const carton = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.08), new THREE.MeshStandardMaterial())
+    carton.userData.destructionMaterial = 'paper'
+    carton.userData.hollow = true
+    carton.userData.destructionPowder = { color: 0xd8b46a }
+    root.add(carton)
+    const { spec } = specFromObject3D(THREE, root)
+    expect(spec.parts[0].powder).toEqual({ color: 0xd8b46a })
+  })
 })

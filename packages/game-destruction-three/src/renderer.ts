@@ -920,6 +920,12 @@ class Renderer implements DestructionRenderer {
     draw(ev.worldPoint, n)
     if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
+    if (ev.powder) {
+      // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
+      const puff = { color: ev.powder.color, size: 0.6, life: 1.6, alpha: 1.3 }
+      this.vfx.burst('dust', ev.worldPoint, [n.x, n.y, n.z], this.low ? 5 : 10, 0.7, puff)
+      if (ev.hole.through && ev.exitPoint) this.vfx.burst('dust', ev.exitPoint, [-n.x, -n.y, -n.z], this.low ? 10 : 20, 1.3, puff)
+    }
     this.sound(impactKey(def), ev.worldPoint, 0.6)
   }
 

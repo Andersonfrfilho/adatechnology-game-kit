@@ -1431,7 +1431,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.holes.push(hole)
     if (p.st.holes.length > maxHoles) p.st.holes.shift()
     markDamaged(p)
-    emit({ ...base(o, src), type: 'hole', part: p.spec.id, hole, worldPoint: wp, ...(exit ? { exitPoint: exit } : {}) })
+    emit({ ...base(o, src), type: 'hole', part: p.spec.id, hole, worldPoint: wp, ...(exit ? { exitPoint: exit } : {}), ...(p.spec.powder ? { powder: { ...p.spec.powder } } : {}) })
     setStage(o, p, 1, {}, src)
     return hole
   }
