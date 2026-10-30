@@ -31,6 +31,10 @@ const QUEUE_CAP = 4000
 const STATIC_REFRESH = 0.5
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
 const STATIC_SPAN = 3
+/** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
+const FEET_BAND = 0.03
+const TIP_MIN_HEIGHT = 0.3
+const TIP_NARROW = 0.3
 /** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
@@ -1087,6 +1091,10 @@ class Renderer implements DestructionRenderer {
       this.pieceSys.setCenter(old, center)
       old.mass = Math.max(0.05, this.massOf(objectId))
       old.sleeping = false
+    } else if (kitOriginOf(b.root)?.kind === 'furniture') {
+      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
+      this.makePiece(objectId)
+      this.tipIfTopHeavy(b)
     }
   }
 
@@ -1136,7 +1144,33 @@ class Renderer implements DestructionRenderer {
     }
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
+    if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
+  }
+
+  /**
+   * A piece of furniture standing on feet too close for its height (a board on two legs in a line, a lone leg) does not stay up: the box of a piece hides that its weight is up
+   * high and its feet are thin, so it gets the start of the fall, across the line of its feet.
+   */
+  private tipIfTopHeavy(b: Bound): void {
+    const piece = b.piece
+    if (!piece) return
+    const box = new this.THREE.Box3()
+    const boxes = this.meshesOf(b).filter((mv) => this.visuals.shown(mv)).map((mv) => this.visuals.worldBox(mv, new this.THREE.Box3()))
+    if (boxes.length === 0) return
+    for (const one of boxes) box.union(one)
+    const height = box.max.y - box.min.y
+    const feet = new this.THREE.Box3()
+    for (const one of boxes) if (one.min.y < box.min.y + FEET_BAND) feet.union(one)
+    const spanX = feet.max.x - feet.min.x
+    const spanZ = feet.max.z - feet.min.z
+    if (height < TIP_MIN_HEIGHT || Math.min(spanX, spanZ) >= TIP_NARROW * height) return
+    const across = spanX <= spanZ ? 0 : 2
+    const lean = across === 0 ? box.min.x + box.max.x - feet.min.x - feet.max.x : box.min.z + box.max.z - feet.min.z - feet.max.z
+    const away = lean < 0 ? -1 : 1
+    // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
+    if (across === 0) this.pieceSys.tip(piece, 0, -away)
+    else this.pieceSys.tip(piece, away, 0)
   }
 
   private onExplode(ev: Ev<'explode'>, options: ExplodeOptions = {}): void {

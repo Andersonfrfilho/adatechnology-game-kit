@@ -26,7 +26,7 @@ export interface PlayerOptions {
   limit: number
   start: Vec3
   hooks: PlayerHooks
-  /** `KeyboardEvent.code`s that crouch while held (default `['KeyC']`). Ctrl is not one by default: Ctrl+W closes the tab and no page can stop it. */
+  /** `KeyboardEvent.code`s that crouch (default `['KeyC']`): a tap stays crouched until the next tap, a longer press crouches while held. Ctrl is not one by default: Ctrl+W closes the tab and no page can stop it. */
   crouchKeys?: readonly string[]
 }
 
@@ -43,7 +43,7 @@ export interface Player {
   /** Horizontal metres per second walked in the last update. */
   readonly speed: number
   readonly running: boolean
-  /** Whether the player is crouched (a crouch key held): the eye sinks and the walk slows. */
+  /** Whether the player is crouched (a crouch key tapped or held): the eye sinks and the walk slows. */
   readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
@@ -55,6 +55,8 @@ export interface Player {
   kick(pitchDeg: number, yawDeg: number): void
   /** Move the player by a world offset on the floor plane, stopped by the colliders and the arena limit (scripted walks). */
   moveBy(dx: number, dz: number): void
+  /** The floor offset the player tried to walk (keys, `moveBy`, `walk`) since the last call, blocked or not; the call resets it. */
+  takeWish(): [number, number]
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
   walk(forward: number, right: number): void
   dispose(): void
@@ -70,6 +72,8 @@ const WALK = 3.4
 export const CROUCH_DROP = 0.55
 const CROUCH_WALK = 1.7
 const CROUCH_RATE = 9
+/** A crouch key released within this many seconds was a tap, which stays crouched; a longer press was a hold. */
+const CROUCH_TAP = 0.25
 const RUN = 6.2
 const JUMP = 4.6
 const GRAVITY = 13
@@ -94,6 +98,17 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const keys = new Set<string>()
   const crouchKeys = o.crouchKeys ?? ['KeyC']
   const isCrouchHeld = (): boolean => crouchKeys.some((code) => keys.has(code))
+  let crouchLatched = false
+  let crouchPress: { held: number; latched: boolean } | null = null
+  const isCrouched = (): boolean => crouchLatched || isCrouchHeld()
+  const pressCrouch = (code: string): void => {
+    if (crouchKeys.includes(code) && !isCrouchHeld()) crouchPress = { held: 0, latched: crouchLatched }
+  }
+  const releaseCrouch = (code: string): void => {
+    if (!crouchKeys.includes(code) || !crouchPress || isCrouchHeld()) return
+    crouchLatched = crouchPress.held < CROUCH_TAP ? !crouchPress.latched : false
+    crouchPress = null
+  }
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
 
   const apply = (): void => {
@@ -111,11 +126,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
     return o.footing ? o.footing(x, z, PLAYER_RADIUS, y).blocked : false
   }
+  // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
+  const wish = { x: 0, z: 0 }
   const move = (dx: number, dz: number): void => {
+    wish.x += dx
+    wish.z += dz
     // caught inside something (a piece fell on the spot) the player walks out of it
     const stuck = blocked(px.x, px.z)
-    if (stuck ? !outside(px.x + dx, px.z) : !blocked(px.x + dx, px.z)) px.x += dx
-    if (stuck ? !outside(px.x, px.z + dz) : !blocked(px.x, px.z + dz)) px.z += dz
+    // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
+    const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
+    const sx = dx / steps
+    const sz = dz / steps
+    for (let i = 0; i < steps; i++) {
+      if (stuck ? !outside(px.x + sx, px.z) : !blocked(px.x + sx, px.z)) px.x += sx
+      if (stuck ? !outside(px.x, px.z + sz) : !blocked(px.x, px.z + sz)) px.z += sz
+    }
   }
 
   let dragging = false
@@ -220,16 +245,23 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (isControlHeld || (e.altKey && locked)) {
       if (!/^F\d+$/.test(e.code)) e.preventDefault()
     }
-    if (!e.repeat) keys.add(e.code)
+    if (!e.repeat) {
+      pressCrouch(e.code)
+      keys.add(e.code)
+    }
     o.hooks.key(e.code, true, e)
   }
   const onKeyUp = (e: KeyboardEvent): void => {
     keys.delete(e.code)
+    releaseCrouch(e.code)
     if (typing(e)) return
     o.hooks.key(e.code, false, e)
   }
   const onContext = (e: Event): void => e.preventDefault()
-  const onBlur = (): void => keys.clear()
+  const onBlur = (): void => {
+    keys.clear()
+    crouchPress = null
+  }
   const onBeforeUnload = (e: BeforeUnloadEvent): void => {
     if (!locked && !keys.has('ControlLeft') && !keys.has('ControlRight')) return
     e.preventDefault()
@@ -276,11 +308,12 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return running
     },
     get crouching() {
-      return isCrouchHeld()
+      return isCrouched()
     },
     keys,
     update(dt) {
-      const crouched = isCrouchHeld()
+      if (crouchPress) crouchPress.held += dt
+      const crouched = isCrouched()
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
       const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
@@ -349,6 +382,12 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     moveBy(dx, dz) {
       move(dx, dz)
       apply()
+    },
+    takeWish() {
+      const out: [number, number] = [wish.x, wish.z]
+      wish.x = 0
+      wish.z = 0
+      return out
     },
     walk(forward, right) {
       move(-Math.sin(yaw) * forward + Math.cos(yaw) * right, -Math.cos(yaw) * forward - Math.sin(yaw) * right)

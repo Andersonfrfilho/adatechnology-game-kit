@@ -62,14 +62,14 @@ describe('big fragments', () => {
 
   it('a board that lands on its end falls flat', () => {
     const { system, spawn } = fragments()
-    const mesh = spawn('stub', [0.04, 0.8, 0.16], 3.5)
+    const mesh = spawn('stub', [0.04, 0.8, 0.16], 3.5)!
     for (let t = 0; t < 4; t += 1 / 60) system.update(1 / 60)
     expect(new THREE.Box3().setFromObject(mesh).max.y).toBeLessThan(0.2)
   })
 
   it('is kicked along the floor', () => {
     const { system, spawn, near } = fragments()
-    const mesh = spawn('stub', [0.7, 0.04, 0.16], 3.5)
+    const mesh = spawn('stub', [0.7, 0.04, 0.16], 3.5)!
     for (let t = 0; t < 2; t += 1 / 60) system.update(1 / 60)
     near()[0]!.push(2, 0)
     for (let t = 0; t < 1; t += 1 / 60) system.update(1 / 60)
@@ -82,6 +82,7 @@ describe('big fragments', () => {
     const spawn = (id: string, size: [number, number, number]) => system.spawn({ id, part: 'p', material: 'wood_hard', shape: 'chunk', center: [0, 0.1, 0], size, rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], mass: 1 }, new THREE.MeshBasicMaterial(), 'table', 2)
     spawn('stub', [0.7, 0.04, 0.16])
     spawn('splinter_a', [0.1, 0.01, 0.01])
+    system.update(1 / 60)
     spawn('splinter_b', [0.1, 0.01, 0.01])
     const found: number[] = []
     system.solidsNear(0, 0, 1, (_h, _a, _b, body) => found.push(body.mass))

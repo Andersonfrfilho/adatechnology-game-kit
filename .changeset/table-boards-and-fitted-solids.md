@@ -9,3 +9,5 @@ A solid wooden top (`furnitureSpec`: 3.5 to 7 cm thick and at least 50 cm wide) 
 `DestructionRenderer.solidsNear` follows what is drawn: a turned mesh gives several boxes along its length instead of one axis box of mostly air, and big fragments (half a board) are solids with a `loose` body. They stay where they lie instead of shrinking away and are the last to go over the fragment limit.
 
 The test room rests loose things on the board under them (`SceneryObject.top.parts`), and its player steps on or kicks big fragments.
+
+Furniture that comes apart no longer leaves anything fixed: what stayed standing becomes a piece too, and a piece whose feet are too close for its height (a lone leg, a board on two legs in a line) falls over until it lies.

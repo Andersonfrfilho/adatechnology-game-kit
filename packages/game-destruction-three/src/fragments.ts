@@ -22,6 +22,8 @@ interface Live {
   air: number
   /** A big one (`isBig`): it stays where it lies, and what walks steps on it or kicks it. */
   body: LooseBody | null
+  /** The `update` count when it was made. */
+  born: number
 }
 
 export interface FragmentSystemOptions {
@@ -59,6 +61,8 @@ export class FragmentSystem {
   private readonly v: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
   private readonly rng = createRng(0x51ed270b)
+  /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
+  private tick = 0
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -140,8 +144,29 @@ export class FragmentSystem {
     }
   }
 
-  /** Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget. */
-  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh {
+  /**
+   * Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget: over it the oldest fragment still showing fades out to make room, and a burst
+   * bigger than the budget (every live fragment was made in this same frame) does not make the rest at all, so a blast never builds a thousand meshes only to fade them
+   * out. Returns null when the fragment was not made.
+   */
+  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh | null {
+    if (this.list.length >= maxAllowed) {
+      let alive = 0
+      let oldest: Live | undefined
+      let oldestSmall: Live | undefined
+      for (const l of this.list) {
+        if (l.dying) continue
+        alive++
+        oldest ??= l
+        if (!l.body) oldestSmall ??= l
+      }
+      // the splinters go first; the big ones only when nothing else is left
+      oldest = oldestSmall ?? oldest
+      if (alive >= maxAllowed) {
+        if (!oldest || oldest.born === this.tick) return null
+        oldest.dying = true
+      }
+    }
     const geo = f.shape === 'shard' ? this.shardGeometry(hashString(f.id)) : this.box
     const mesh = new this.THREE.Mesh(geo, material)
     mesh.position.set(f.center[0], f.center[1], f.center[2])
@@ -168,6 +193,7 @@ export class FragmentSystem {
       dying: false,
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
       body: null,
+      born: this.tick,
     }
     if (f.shape !== 'shard' && isBig(f.size)) {
       live.body = {
@@ -182,16 +208,6 @@ export class FragmentSystem {
       }
     }
     this.list.push(live)
-    let alive = this.list.reduce((n, l) => n + (l.dying ? 0 : 1), 0)
-    // over the limit the splinters go first; the big ones only when nothing else is left
-    for (const big of [false, true]) {
-      for (let i = 0; i < this.list.length && alive > maxAllowed; i++) {
-        if (!this.list[i].dying && (this.list[i].body !== null) === big) {
-          this.list[i].dying = true
-          alive--
-        }
-      }
-    }
     this.addMarks(mesh, f)
     return mesh
   }
@@ -230,6 +246,7 @@ export class FragmentSystem {
   }
 
   update(dt: number): void {
+    this.tick++
     const g = this.o.gravity
     for (let i = this.list.length - 1; i >= 0; i--) {
       const f = this.list[i]

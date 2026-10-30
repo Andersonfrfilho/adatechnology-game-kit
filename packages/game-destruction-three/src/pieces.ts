@@ -27,6 +27,10 @@ const SLOP = 0.002
 const NARROW = 0.3
 /** Angular acceleration (rad/s^2 per metre of height) that pushes a balancing piece off its edge, toward the side its centre of mass leans to. */
 const TOPPLE = 3
+/** Angular acceleration (rad/s^2) of a piece that falls over (`tip`), beyond what the box of its bounds would allow, and the height of the centre of mass (m) at which it lies. */
+const TIP_ACCELERATION = 30
+const TIP_LYING = 0.25
+const TIP_SECONDS = 3
 /** How far (m) above a corner a top may be and still catch it (on top of what the corner falls in one sub-step): higher is beside it, not under it. */
 const STEP = 0.03
 
@@ -94,6 +98,12 @@ export class PieceSystem {
     return this.list.find((b) => b.objectId === objectId) ?? null
   }
 
+  /** Sets a piece falling over, about the world axes x and z (a unit axis): its feet are thinner than the box that stands for it, so the box alone would hold it up. */
+  tip(body: PieceBody, x: number, z: number): void {
+    body.tipping = { x, z, seconds: TIP_SECONDS }
+    body.sleeping = false
+  }
+
   create(objectId: string, root: THREE_NS.Object3D, halfExtents: Vec3, localCenter: THREE_NS.Vector3, mass: number, velocity?: Vec3, angular?: Vec3): PieceBody {
     const existing = this.get(objectId)
     if (existing) {
@@ -107,6 +117,7 @@ export class PieceSystem {
     }
     const body: PieceBody = {
       objectId,
+      tipping: null,
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],
       angularVelocity: angular ? [...angular] : [0, 0, 0],
@@ -343,6 +354,15 @@ export class PieceSystem {
       const wx = x1 - x0
       const wz = z1 - z0
       unstable = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+      if (b.tipping) {
+        b.tipping.seconds -= h
+        if (height < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
+        else {
+          w[0] += b.tipping.x * TIP_ACCELERATION * h
+          w[2] += b.tipping.z * TIP_ACCELERATION * h
+          unstable = true
+        }
+      }
       if (unstable) {
         // the support centre relative to the centre of mass: the piece falls away from it (toward +axis when it is centred)
         const dirX = x0 + x1 > 0 ? -1 : 1

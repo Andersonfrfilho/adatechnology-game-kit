@@ -89,6 +89,8 @@ export interface PieceBody extends Piece {
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean
+  /** Falling over (`tip`): the spin it is given per second on the ground, about x and z, and the seconds it may still take; null when it lies or never had to fall. */
+  tipping: { x: number; z: number; seconds: number } | null
 }
 
 export interface Bound {
