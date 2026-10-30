@@ -393,6 +393,7 @@ export function createAudioTestModule(options: AudioTestModuleOptions = {}): Aud
   const module: AudioTestModule = {
     id: 'audio_area',
     name: text.name,
+    ground: { surface: 'concrete_slab' },
     group: text.group,
     get engine() {
       return engine

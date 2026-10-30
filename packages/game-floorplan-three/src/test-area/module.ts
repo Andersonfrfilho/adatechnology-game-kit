@@ -435,6 +435,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   return {
     id: FLOORPLAN_AREA_ID,
     name: text.name,
+    ground: { surface: 'lawn' },
     group: text.group,
     get houses() {
       return placed

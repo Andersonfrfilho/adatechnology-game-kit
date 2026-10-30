@@ -275,6 +275,7 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
   const module: PlayerTestModule = {
     id: 'player_area',
     name: text.name,
+    ground: { surface: 'dirt' },
     group: text.group,
     get player() {
       return player

@@ -248,6 +248,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
   const module: WeatherTestModule = {
     id: 'weather_area',
     name: text.name,
+    ground: { surface: 'lawn' },
     group: text.group,
     get weather() {
       return weather

@@ -399,7 +399,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     for (const event of clipEventsBetween(r.clip, from, to)) emit({ ...event, clip: r.clip.id }, r.onEvent)
   }
 
-  const stepClip = (dt: number, down: boolean): void => {
+  const stepClip = (dt: number, down: boolean, crouch: boolean): void => {
     if (!run) return
     const r = run
     const from = r.time
@@ -419,7 +419,10 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return
     }
     if (down) return
-    const sampled = filterPoseChannels(samplePoseClip(r.clip, Math.min(r.time, duration)), r.clip.channels ?? 'full')
+    // a crouched body keeps its legs bent under a punch or the guard: only a kick needs them
+    const keepsCrouch = crouch && !r.clip.events?.some((event) => event.data?.kind === 'kick')
+    const channels = r.clip.channels ?? 'full'
+    const sampled = filterPoseChannels(filterPoseChannels(samplePoseClip(r.clip, Math.min(r.time, duration)), channels), keepsCrouch ? 'upper' : 'full')
     const current = readPose()
     const blended: Record<string, number> = {}
     for (const [name, value] of Object.entries(sampled)) if (name in current) blended[name] = current[name]! + (value - current[name]!) * r.weight
@@ -463,7 +466,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         }
       }
       placeBody(fall)
-      stepClip(dt, down)
+      stepClip(dt, down, Boolean(state.crouch))
       if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
       // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut); a clip with no impact,
       // such as the fighting guard, closes them with a `grip` event

@@ -307,6 +307,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   return {
     id: 'weapons_area',
     name: text.name,
+    ground: { surface: 'concrete_slab' },
     group: text.group,
     get audio() {
       return audio
