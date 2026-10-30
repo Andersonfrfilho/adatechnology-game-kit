@@ -156,14 +156,12 @@ class Renderer implements DestructionRenderer {
   private readonly maxFragments: number
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
-  private staticBoxes: number[] = []
-  /** The object of each box of `staticBoxes`. */
-  private staticIds: string[] = []
-  /** Boxes of the pieces' meshes (as `staticBoxes`) at `pieceBoxesAt`. */
-  private pieceBoxes: number[] = []
-  private pieceBoxOwners: PieceBody[] = []
-  private pieceBoxesAt = -1
-  private staticDirty = true
+  private readonly staticBoxes = new Map<string, number[]>()
+  /** Objects to measure again; `staticAll` measures every one. */
+  private readonly staticDirty = new Set<string>()
+  private staticAll = true
+  /** Boxes of the pieces' meshes (as `staticBoxes`), with the time they were measured. */
+  private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   private staticAt = 0
   private readonly queue: DestructionEvent[] = []
   private readonly unsubscribe: () => void
@@ -244,7 +242,7 @@ class Renderer implements DestructionRenderer {
   // ----------------------------------------------------------------------------------------------------------------------------------
 
   bind(objectId: string, root: Object3D, options: BindOptions = {}): void {
-    this.staticDirty = true
+    this.staticDirty.add(objectId)
     if (this.bounds.has(objectId)) this.unbind(objectId)
     const state = this.world.state(objectId)
     const partIds = new Set((state?.parts ?? []).map((p) => p.id))
@@ -368,7 +366,7 @@ class Renderer implements DestructionRenderer {
   }
 
   unbind(objectId: string): void {
-    this.staticDirty = true
+    this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -413,8 +411,7 @@ class Renderer implements DestructionRenderer {
   }
 
   makePiece(objectId: string, options: { mass?: number; velocity?: Vec3 } = {}): Piece {
-    this.staticDirty = true
-    this.pieceBoxesAt = -1
+    this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
     if (!b) throw new Error(`game-destruction-three: object "${objectId}" is not bound`)
     if (b.root.parent && b.root.parent !== this.scene) this.scene.attach(b.root)
@@ -551,77 +548,102 @@ class Renderer implements DestructionRenderer {
    * are left out (walls, floors, roofs: the terrain under them is the host's `groundAt`).
    */
   private staticTopAt(x: number, z: number, y: number, step: number): number {
-    if (this.time - this.staticAt > STATIC_REFRESH) this.staticDirty = true
-    if (this.staticDirty) this.collectStatic()
     let top = -Infinity
-    const a = this.staticBoxes
-    for (let i = 0; i < a.length; i += 6) {
-      if (x < a[i] || x > a[i + 3] || z < a[i + 2] || z > a[i + 5]) continue
-      const t = a[i + 4]
-      if (t > top && t <= y + step) top = t
+    for (const a of this.staticNow().values()) {
+      // the first six numbers are the box around all of the object's boxes
+      if (a.length === 0 || x < a[0] || x > a[3] || z < a[2] || z > a[5]) continue
+      for (let i = 6; i < a.length; i += 6) {
+        if (x < a[i] || x > a[i + 3] || z < a[i + 2] || z > a[i + 5]) continue
+        const t = a[i + 4]
+        if (t > top && t <= y + step) top = t
+      }
     }
     return top
   }
 
-  private collectStatic(): void {
-    this.staticDirty = false
-    this.staticAt = this.time
-    const out: number[] = []
-    const ids: string[] = []
+  /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
+  private staticNow(): Map<string, number[]> {
+    if (this.time - this.staticAt > STATIC_REFRESH) {
+      this.staticAt = this.time
+      this.staticAll = true
+    }
+    if (!this.staticAll && this.staticDirty.size === 0) return this.staticBoxes
     const box = new this.THREE.Box3()
-    for (const b of this.bounds.values()) {
-      if (b.piece || this.pieceSys.get(b.id)) continue
+    const measure = (b: Bound): void => {
+      if (b.piece || this.pieceSys.get(b.id)) {
+        this.staticBoxes.delete(b.id)
+        return
+      }
+      const out: number[] = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
       for (const mv of this.meshesOf(b)) {
         if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
         this.visuals.worldBox(mv, box)
         if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
         out.push(box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z)
-        ids.push(b.id)
+        for (let k = 0; k < 3; k++) {
+          out[k] = Math.min(out[k], box.min.getComponent(k))
+          out[k + 3] = Math.max(out[k + 3], box.max.getComponent(k))
+        }
+      }
+      this.staticBoxes.set(b.id, out.length > 6 ? out : [])
+    }
+    if (this.staticAll) {
+      this.staticBoxes.clear()
+      for (const b of this.bounds.values()) measure(b)
+    } else {
+      for (const id of this.staticDirty) {
+        const b = this.bounds.get(id)
+        if (b) measure(b)
+        else this.staticBoxes.delete(id)
       }
     }
-    this.staticBoxes = out
-    this.staticIds = ids
+    this.staticAll = false
+    this.staticDirty.clear()
+    return this.staticBoxes
+  }
+
+  /** The boxes of a piece's drawn meshes, measured once per frame. */
+  private pieceBoxesOf(pc: PieceBody): number[] {
+    const cached = this.pieceBoxes.get(pc)
+    if (cached && cached.at === this.time) return cached.boxes
+    const boxes: number[] = []
+    const b = this.bounds.get(pc.objectId)
+    const box = new this.THREE.Box3()
+    if (b) {
+      for (const mv of this.meshesOf(b)) {
+        if (!this.visuals.shown(mv)) continue
+        this.visuals.worldBox(mv, box)
+        if (!box.isEmpty()) boxes.push(box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z)
+      }
+    }
+    this.pieceBoxes.set(pc, { at: this.time, boxes })
+    return boxes
   }
 
   solidsNear(x: number, z: number, radius: number): SolidBox[] {
-    if (this.time - this.staticAt > STATIC_REFRESH) this.staticDirty = true
-    if (this.staticDirty) this.collectStatic()
-    if (this.pieceBoxesAt !== this.time) {
-      this.pieceBoxesAt = this.time
-      const out: number[] = []
-      const owners: PieceBody[] = []
-      const box = new this.THREE.Box3()
-      for (const pc of this.pieceSys.list) {
-        if (pc.held) continue
-        const b = this.bounds.get(pc.objectId)
-        if (!b) continue
-        for (const mv of this.meshesOf(b)) {
-          if (!this.visuals.shown(mv)) continue
-          this.visuals.worldBox(mv, box)
-          if (box.isEmpty()) continue
-          out.push(box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z)
-          owners.push(pc)
-        }
-      }
-      this.pieceBoxes = out
-      this.pieceBoxOwners = owners
-    }
     const found: SolidBox[] = []
-    const scan = (a: number[], at: (k: number) => { id: string; piece: Piece | null }): void => {
-      for (let i = 0, k = 0; i < a.length; i += 6, k++) {
+    const scan = (a: number[], id: string, piece: Piece | null, from: number): void => {
+      if (from > 0 && (a.length === 0 || x < a[0] - radius || x > a[3] + radius || z < a[2] - radius || z > a[5] + radius)) return
+      for (let i = from; i < a.length; i += 6) {
         if (x < a[i] - radius || x > a[i + 3] + radius || z < a[i + 2] - radius || z > a[i + 5] + radius) continue
-        const o = at(k)
-        found.push({ objectId: o.id, min: [a[i], a[i + 1], a[i + 2]], max: [a[i + 3], a[i + 4], a[i + 5]], piece: o.piece })
+        found.push({ objectId: id, min: [a[i], a[i + 1], a[i + 2]], max: [a[i + 3], a[i + 4], a[i + 5]], piece })
       }
     }
-    scan(this.staticBoxes, (k) => ({ id: this.staticIds[k], piece: null }))
-    scan(this.pieceBoxes, (k) => ({ id: this.pieceBoxOwners[k].objectId, piece: this.pieceBoxOwners[k] }))
+    for (const [id, a] of this.staticNow()) scan(a, id, null, 6)
+    const c = this.v1
+    for (const pc of this.pieceSys.list) {
+      if (pc.held) continue
+      // only the pieces whose box can reach the point are measured
+      this.pieceSys.centerOf(pc, c)
+      const reach = Math.hypot(pc.halfExtents[0], pc.halfExtents[1], pc.halfExtents[2]) + radius
+      if (Math.abs(c.x - x) > reach || Math.abs(c.z - z) > reach) continue
+      scan(this.pieceBoxesOf(pc), pc.objectId, pc, 0)
+    }
     return found
   }
 
   private apply(ev: DestructionEvent): void {
-    this.staticDirty = true
-    this.pieceBoxesAt = -1
+    this.staticDirty.add(ev.object)
     switch (ev.type) {
       case 'damage':
         if (ev.damageType === 'heat' || ev.damageType === 'fire' || ev.damageType === 'explosive') this.activate(ev.object, ev.part)

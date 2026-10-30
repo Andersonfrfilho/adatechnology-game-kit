@@ -36,6 +36,8 @@ interface Solid {
   c: Vec3
   e: number[]
   half: Vec3
+  /** Radius of the box around its centre: a point farther than it on the ground plane misses it. */
+  r: number
 }
 
 /** Height where the vertical line through `(x, z)` leaves the top of a box, or -Infinity when it misses the box. */
@@ -188,7 +190,8 @@ export class PieceSystem {
     this.time += dt
     this.solids = this.list.map((body) => {
       const c = this.centerOf(body, new this.THREE.Vector3())
-      return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: body.halfExtents }
+      const h = body.halfExtents
+      return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: h, r: Math.hypot(h[0], h[1], h[2]) }
     })
     for (const b of this.list) {
       if (b.held) {
@@ -208,7 +211,7 @@ export class PieceSystem {
   private supportAt(self: PieceBody, x: number, y: number, z: number, step: number): number {
     let top = this.o.groundAt(x, z)
     for (const s of this.solids) {
-      if (s.body === self || s.body.held) continue
+      if (s.body === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
       if (t > top && t <= y + step) top = t
     }
