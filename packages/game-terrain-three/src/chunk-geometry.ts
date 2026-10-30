@@ -10,6 +10,8 @@ const MIN_DEPTH_LIGHT = 0.55
 const LOOSE_VISIBLE = 0.004
 /** A skin thinner than this (turf, asphalt) is not what comes out of a hole: what is under it is. */
 const THIN_SKIN = 0.1
+const BROKEN_DEPTH = 0.004
+const BROKEN_TONE = 0.62
 
 /** What a vertex shows: the colour and pattern of what is exposed or heaped on it, sharp at the edge between materials, and its light and burn, which blend. */
 function vertexLook(terrain: Terrain, column: number, row: number, base: [number, number, number], shade: [number, number]): number {
@@ -20,12 +22,15 @@ function vertexLook(terrain: Terrain, column: number, row: number, base: [number
     const first = profile.strata[0]!
     material = terrain.material(first.thickness < THIN_SKIN && profile.strata[1] ? profile.strata[1].material : first.material)
   }
-  base[0] = material.color[0]
-  base[1] = material.color[1]
-  base[2] = material.color[2]
+  // dug concrete shows its broken aggregate, not the troweled surface with its joints
+  const broken = material.pattern === 'concrete' && terrain.dug[index]! > BROKEN_DEPTH
+  const tone = broken ? BROKEN_TONE : 1
+  base[0] = material.color[0] * tone
+  base[1] = material.color[1] * tone
+  base[2] = material.color[2] * tone
   shade[0] = Math.max(MIN_DEPTH_LIGHT, 1 - terrain.dug[index]! / DEPTH_SHADE)
   shade[1] = terrain.scorch[index]!
-  return patternIndex(material.pattern)
+  return patternIndex(broken ? 'soil' : material.pattern)
 }
 
 /** The chunk as a grid with one vertex every `step` cells; the normals come from the height field, so that neighbouring chunks meet without a seam. */

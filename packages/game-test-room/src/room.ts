@@ -88,6 +88,15 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
+const SOLID_SPAN = 3
+/** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
+const STEP_UP = 0.45
+/** Height of the walking body (m): what starts above it is walked under. */
+const BODY_HEIGHT = 1.75
+/** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
+const KICK_MASS = 6
+const KICK_HEIGHT = 0.6
 /** Object id of the floor in the destruction world. */
 const GROUND_ID = 'room_ground'
 const TERRAIN_CELL = 0.1
@@ -177,10 +186,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
   const pristineWorld = ownWorld ? world.serialize() : null
-  const topOk = (t: ArenaTop): boolean => {
-    const p = world.part(t.id, t.topPart)
-    return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes'
+  const partStands = (object: string, part: string): boolean => {
+    const p = world.part(object, part)
+    return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes' && !renderer.piece(object)
   }
+  const topOk = (t: ArenaTop): boolean => (t.boards ? t.boards.some((b) => partStands(t.id, b.part)) : partStands(t.id, t.topPart))
+  /** Whether the top holds what is at (x, z): the board there, on a top of boards. */
+  const topHolds = (t: ArenaTop, x: number, z: number): boolean => (t.boards ? t.boards.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && partStands(t.id, b.part)) : topOk(t))
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
   const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
   const restingTopAt = (x: number, z: number): number => {
@@ -190,7 +202,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const sceneryTopAt = (x: number, z: number): number => {
     let top = 0
-    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topOk(t)) top = t.top
+    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topHolds(t, x, z)) top = t.top
     return top
   }
   // the floor is the terrain: 0 was the height of a flat floor, now a hole goes under it and a heap over it; a top (a table, a counter) answers only where there is one
@@ -464,10 +476,63 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let useFirst = false
   /** What modules ask the walking player to stay out of (`ModuleHost.addBlocker`). */
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
+  // the scenery the renderer draws stops the player by what is drawn now (a fallen bookcase is walked onto, not its old footprint); what is
+  // too wide for the renderer's boxes (the wall closing the arena) and the tap's post keep their footprint
+  const drawnScenery = (i: number): boolean => {
+    const c = arena.colliders[i]
+    return arena.colliderIds[i] !== null && c[2] - c[0] <= SOLID_SPAN && c[3] - c[1] <= SOLID_SPAN
+  }
+  /**
+   * The footing of the player at (x, z) with the feet at `feet`: what is drawn there and not lighter than `KICK_MASS` (that is kicked, see
+   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body.
+   */
+  const footing = (x: number, z: number, radius: number, feet: number): { floor: number; blocked: boolean } => {
+    let floor = -Infinity
+    let blocked = false
+    for (const s of renderer.solidsNear(x, z, radius)) {
+      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS) continue
+      const dx = Math.max(s.min[0] - x, 0, x - s.max[0])
+      const dz = Math.max(s.min[2] - z, 0, z - s.max[2])
+      if (dx * dx + dz * dz > radius * radius) continue
+      if (s.max[1] <= feet + STEP_UP) floor = Math.max(floor, s.max[1])
+      else if (s.min[1] < feet + BODY_HEIGHT) blocked = true
+    }
+    return { floor, blocked }
+  }
+  /** Light pieces at the player's feet (books, boards) are kicked along: away from the player at a little more than the walking speed. */
+  const kickFrom = { x: 0, z: 0 }
+  const kickLight = (dt: number): void => {
+    const x = player.x
+    const z = player.z
+    // walked by the keys or by a scripted walk: the distance since the last frame
+    const speed = dt > 0 ? Math.hypot(x - kickFrom.x, z - kickFrom.z) / dt : 0
+    kickFrom.x = x
+    kickFrom.z = z
+    if (speed < 0.2 || speed > 20) return
+    const kicked = new Set<object>()
+    for (const s of renderer.solidsNear(x, z, PLAYER_RADIUS)) {
+      const pc = s.piece
+      const body = pc ?? s.loose
+      if (!body || body.mass >= KICK_MASS || kicked.has(body) || s.min[1] > player.feet + KICK_HEIGHT) continue
+      kicked.add(body)
+      const cx = (s.min[0] + s.max[0]) / 2 - x
+      const cz = (s.min[2] + s.max[2]) / 2 - z
+      const d = Math.hypot(cx, cz) || 1
+      const v = speed * 1.2
+      if (!pc) {
+        s.loose?.push((cx / d) * v, (cz / d) * v)
+        continue
+      }
+      if (pc.velocity[0] * cx + pc.velocity[2] * cz >= v * d) continue
+      pc.velocity = [(cx / d) * v, Math.max(pc.velocity[1], 0.6), (cz / d) * v]
+      pc.sleeping = false
+    }
+  }
   const player = createPlayer(THREE, {
     camera,
     dom,
-    colliders: arena.colliders,
+    colliders: arena.colliders.filter((_, i) => !drawnScenery(i)),
+    footing: (x, z, radius, feet) => footing(x, z, radius, feet),
     blockers,
     limit: arenaSize,
     floorAt: terrain.heightAt,
@@ -709,8 +774,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // The player against the objects: what stands on the floor blocks the walk, and the walk pushes what is light enough to slide
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  /** Objects lower than this (m) the player steps over (a can, a book on the floor): they do not block, the feet scuff them along. */
-  const STEP_OVER = 0.3
+  /** Objects lower than this (m) the player steps onto (a can, a concrete block): they do not block, the feet scuff them along. */
+  const STEP_OVER = STEP_UP
   /** Things that hang higher than this (m) above the feet pass over the head. */
   const HEADROOM = 1.9
   /**
@@ -2330,6 +2395,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       push.end()
     }
     push.step(paused ? 0 : dt)
+    if (!paused) kickLight(dt)
     if (!paused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(paused ? 0 : dt)

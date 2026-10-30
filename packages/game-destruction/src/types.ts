@@ -117,9 +117,12 @@ export interface MaterialThermal {
 
 /** What one kind of blow does to a material where it lands (`MaterialDef.hits`). */
 export interface MaterialHit {
-  /** What the blow tears off a part that is not made of units: `splinters` (wood), `lumps` (MDF, particle board) or nothing. */
+  /**
+   * Pieces torn out at the point hit: `splinters` (solid wood, plywood: long thin pieces along the grain), `lumps` (pressed fibre such as MDF:
+   * short crumbly pieces) or `none`. A round tears them out of the exit (and one in three out of the entry), a blow out of the face it lands on.
+   */
   tear?: 'splinters' | 'lumps' | 'none'
-  /** Joules each torn piece costs. */
+  /** Joules per torn piece (default 150). A blow weaker than one piece's worth tears nothing; a round always tears at least one. */
   tearJoules?: number
   /**
    * Joules per kilogram of a unit (`PartSpec.units`: a brick, a block of concrete) that knock it out of its part; blows of this kind wear the unit they

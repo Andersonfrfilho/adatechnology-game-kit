@@ -5,6 +5,8 @@ type ThreeLib = typeof THREE_NS
 
 const BAR_RADIUS = 0.006
 const EXPOSED_MARGIN = 0.002
+/** Metres a bar hangs just before it gives way. */
+const MAX_SAG = 0.07
 
 /** The bars of a reinforced layer where the digging passed their cover: a mesh of the chunk, or null when none is showing. */
 export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: TerrainChunk): THREE_NS.BufferGeometry | null {
@@ -21,7 +23,12 @@ export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
     }
     return null
   }
-  const showing = (index: number, depth: number): boolean => terrain.dug[index]! > depth + EXPOSED_MARGIN
+  // past the bottom of its strata the slab has opened: the bars are gone there and stay bent around the hole
+  const showing = (index: number, depth: number): boolean => {
+    const profile = terrain.profileList[terrain.profileIndex[index]!]!
+    const limit = profile.strata.reduce((sum, stratum) => sum + stratum.thickness, 0)
+    return terrain.dug[index]! > depth + EXPOSED_MARGIN && terrain.dug[index]! <= limit + EXPOSED_MARGIN
+  }
   const onBar = (coordinate: number, spacing: number): boolean => Math.floor(coordinate / spacing) !== Math.floor((coordinate + cellSize) / spacing)
   const addBox = (ax: number, az: number, bx: number, bz: number, y: number): void => {
     boxes.push(Math.min(ax, bx) - BAR_RADIUS, y - BAR_RADIUS, Math.min(az, bz) - BAR_RADIUS, Math.max(ax, bx) + BAR_RADIUS, y + BAR_RADIUS, Math.max(az, bz) + BAR_RADIUS)
@@ -33,7 +40,7 @@ export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
       if (!cover || !showing(index, cover.depth)) continue
       const x = x0 + column * cellSize
       const z = z0 + row * cellSize
-      const y = -cover.depth - BAR_RADIUS
+      const y = -cover.depth - BAR_RADIUS - Math.min(1, terrain.barBend[index]!) * MAX_SAG
       if (onBar(z, cover.spacing) && column < lastColumn && showing(index + 1, cover.depth)) addBox(x, z, x + cellSize, z, y)
       if (onBar(x, cover.spacing) && row < lastRow && showing(index + stride, cover.depth)) addBox(x, z, x, z + cellSize, y)
     }
