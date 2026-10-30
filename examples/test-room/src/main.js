@@ -44,7 +44,7 @@ const testTable = furnitureSpec(THREE, 'dining_table', { w: 4.4, d: 0.9, h: 0.78
 const scenery = {
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
-  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build },
+  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true },
   test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
   sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
 }

@@ -13,11 +13,14 @@ import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 let rendererCount = 0
+/** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
+const COLLAPSE_CLOUD_KG = 1000
 const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -555,10 +558,15 @@ class Renderer implements DestructionRenderer {
       case 'settle':
         this.onSettle(ev.object)
         break
-      case 'collapse':
+      case 'collapse': {
+        // a storey coming down raises the cloud of the collapse effect; a piece of furniture (a shelf and its books) only a puff
+        const root = this.bounds.get(ev.object)?.root
+        const furniture = !!root && kitOriginOf(root)?.kind === 'furniture'
         this.splitLoose(ev.object)
-        this.playEvent({ kind: 'collapse' }, this.rootPoint(ev.object))
+        if (!furniture || ev.mass >= COLLAPSE_CLOUD_KG) this.playEvent({ kind: 'collapse' }, this.rootPoint(ev.object))
+        else this.vfx.burst('dust', this.rootPoint(ev.object), [0, 1, 0], clamp(Math.round(ev.mass / 4), 4, 24), 0.8)
         break
+      }
       case 'disassemble_progress': {
         const k = `unscrew:${ev.joint}`
         if (this.time - (this.throttles.get(k) ?? -1) > 0.25) {

@@ -60,6 +60,28 @@ interface Drawn {
 }
 
 const WOOD_THIN = 0.035
+/** A shelf falls when what holds it leaves it this many times its own length of span (one side gone: twice its length). */
+const SHELF_SPAN = 1.5
+/** Types that are cases with shelves: their `plain` boxes are books and boxes, and they stand as a carcass. */
+const SHELVING = /shelf|bookcase|rack/
+
+/**
+ * The frame of a case piece (a bookcase, a shelf unit, a rack): the uprights stand on the floor and carry, each shelf rests on them and needs both
+ * ends held (`structure.maxSpan`), and the back panel carries nothing. Break a side and the shelves it held fall with what is on them.
+ */
+function carcass(parts: PartSpec[], drawn: Map<string, Drawn>): void {
+  const all = [...drawn.values()]
+  const width = Math.max(...all.map((p) => p.max[0])) - Math.min(...all.map((p) => p.min[0]))
+  for (const part of parts) {
+    if (LOOSE.has(part.material) || part.shape.kind !== 'box' || part.rotation) continue
+    const [x, y, z] = part.shape.size
+    if (y >= x && y >= z) {
+      // upright: a side (thin across the width) carries; a back or front panel (thin in depth, as wide as the piece) does not
+      if (z < x && x >= 0.6 * width) continue
+      part.structure = { role: 'column' }
+    } else if (y <= x && y <= z) part.structure = { role: 'beam', maxSpan: SHELF_SPAN * Math.max(x, z) }
+  }
+}
 const FLOOR_TOUCH = 0.005
 const LOOSE = new Set(['paper'])
 const BASE_MATERIAL: Record<string, string> = {
@@ -88,6 +110,8 @@ interface RecordOptions {
   /** Destruction material per builder material key, over the defaults. */
   materials: Record<string, string>
   chairs?: boolean
+  /** The piece is a case with shelves (`carcass`). */
+  carcass?: boolean
 }
 
 /** Runs `run` with a recording stand-in for the drawing api and turns what it drew into a spec, a drawing and the top. `root` is the frame of the piece (the builder's `M`). */
@@ -190,6 +214,7 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
     if (!top || p.max[1] > top.y + 1e-6) top = { part: p.id, y: p.max[1] }
   }
 
+  if (opts.carcass) carcass(parts, byId)
   const spec: DestructibleSpec = { name, parts, joints, tags: ['furniture'] }
   const colors = new Map(drawn.map((p) => [p.id, p.color]))
 
@@ -234,7 +259,8 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
  * Materials: `wood` is `wood_hard`, and `wood_soft` for thin boards and panels (under 3.5 cm); `metal` is `steel`; `fabric`, `glass` and `plant` keep
  * their name; `plain` is `plastic`, or `paper` for shelves and racks (their books and boxes). Parts that touch the floor are anchored. Joints come from
  * `inferJoints` (screws between wood, welds or bolts between metal...), except that paper rests on what it lies on with a `resting` joint (weak: it falls when
- * the board breaks) and is not joined to its neighbours.
+ * the board breaks) and is not joined to its neighbours. Shelves and racks stand as a carcass: the sides carry, each shelf needs both of its ends
+ * held, and the back panel carries nothing, so a broken side drops the shelves it held, with their books.
  *
  * @example
  * const { spec, build, top } = furnitureSpec(THREE, 'bookcase') // 1.2 x 0.35 x 2 m, boards and books
@@ -250,7 +276,7 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
   if (w === undefined || d === undefined || h === undefined) throw new Error(`game-floorplan-three: furniture type "${type}" is not in the catalogue, so give w, d and h`)
   const o = opts.options ?? {}
   const seed = Math.round(opts.seed ?? 1)
-  const plain = /shelf|bookcase|rack/.test(type) ? 'paper' : 'plastic'
+  const plain = SHELVING.test(type) ? 'paper' : 'plastic'
   const root: any = { x: seed, z: 0, ry: 0, w, d, h, y: 0, base: 0, palette: o.palette, seed: `furniture_${type}_${seed}` }
   const { K, shared } = renderer.internals
   const before = K.PARTS.length
@@ -269,7 +295,7 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
         shared.ctx = saved.ctx
       }
     },
-    { materials: { plain, ...o.materials }, chairs: o.chairs },
+    { materials: { plain, ...o.materials }, chairs: o.chairs, carcass: SHELVING.test(type) },
   )
   const spouts = K.PARTS.slice(before)
     .filter((p: any) => p.type === 'water_tap')

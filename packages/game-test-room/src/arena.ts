@@ -15,6 +15,7 @@ export interface ArenaObject {
   label?: string
   top?: SceneryObject['top']
   spout?: SceneryObject['spout']
+  free?: boolean
 }
 
 /** A top that loose things rest on while its part stands: the footprint in world space and the height of the upper face. */
@@ -148,7 +149,7 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
     if (!position) throw new Error(`game-test-room: scenery "${id}" is new, so it needs a position`)
     merged.set(id, { ...obj, position })
   }
-  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, label: o.label, top: o.top, spout: o.spout }))
+  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, label: o.label, top: o.top, spout: o.spout, free: o.free }))
 }
 
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {

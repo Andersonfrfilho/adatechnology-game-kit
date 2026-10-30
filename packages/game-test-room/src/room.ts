@@ -82,6 +82,8 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
+const SHOVE_SPEED = 0.04
 const METRICS_INTERVAL_S = 0.25
 /** The carried item in first person: how far the nearest of a small item is held (m), how far the palm sits under it and how closed the fingers are. */
 const CARRY_NEAR = 0.62
@@ -509,7 +511,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       scene.add(root)
       root.updateMatrixWorld(true)
       world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
-      registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
+      const e = registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
+      if (o.free) e.free = true
     }
   }
   addArena()
@@ -1027,6 +1030,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.impulse(objectId, [dir[0] * momentum, dir[1] * momentum, dir[2] * momentum], point)
   }
 
+  /**
+   * The push of one trigger pull on what stands free (`free`) and is not a piece yet: when the momentum of every round that hit it is enough to move
+   * its mass (`SHOVE_SPEED`: a shotgun's load into a bookcase, not a pistol round), it becomes a piece and takes the push.
+   */
+  const shoveFree = (pushes: Map<string, { impulse: Vec3; point: Vec3 }>): void => {
+    for (const [objectId, push] of pushes) {
+      const e = entries.get(objectId)
+      if (!e || e.piece || !e.free) continue
+      const mass = Math.max(0.2, massOfObject(objectId))
+      if (Math.hypot(...push.impulse) / mass < SHOVE_SPEED) continue
+      const piece = renderer.makePiece(objectId, { mass })
+      e.piece = piece
+      rendererPieces.set(objectId, piece)
+      action('loosened', t('act.shoved', { name: e.name }), { objectId, itemId: e.so.itemId })
+      renderer.impulse(objectId, push.impulse, push.point)
+    }
+  }
+
   const fireShots = (shots: Shot[], recoil: [number, number]): void => {
     if (shots.length === 0) return
     const w = toolName()
@@ -1036,6 +1057,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let hits = 0
     let first: RayHit | null = null
     let energy = 0
+    const pushes = new Map<string, { impulse: Vec3; point: Vec3 }>()
     withoutHeld(() => {
       for (const s of shots) {
         energy = Math.max(energy, s.energy)
@@ -1047,11 +1069,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           end = r0.point
           if (!first) first = { object: r0.object, part: r0.part, point: r0.point, normal: [0, 1, 0], distance: dist3(s.origin, r0.point) }
           const speed = Math.max(80, s.speed)
-          pushPiece(r0.object, s.direction, (2 * s.energy) / speed, r0.point)
+          const momentum = (2 * s.energy) / speed
+          pushPiece(r0.object, s.direction, momentum, r0.point)
+          const push = pushes.get(r0.object) ?? { impulse: [0, 0, 0] as Vec3, point: r0.point }
+          for (let k = 0; k < 3; k++) push.impulse[k] += s.direction[k] * momentum
+          pushes.set(r0.object, push)
         }
         if (shots.length <= 3 || rnd() < 0.34) tracer(m, end)
       }
     })
+    shoveFree(pushes)
     player.kick(recoil[0], recoil[1])
     const f = first as RayHit | null
     const d = f ? num(f.distance, 1) : ''

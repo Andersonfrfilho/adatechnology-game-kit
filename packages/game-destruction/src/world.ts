@@ -55,6 +55,11 @@ const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
 const BREACH_BLAST_REACH = 0.12
 const RESIDUAL_CAPACITY = 0.15
+/** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
+const SEVER_BAND = 0.1
+const SEVER_ASPECT = 3
+/** A round that goes through wood tears its exit out in splinters: its damage counts this many times over in the band it crosses. */
+const SEVER_BALLISTIC = 2
 /** Metres two parts may be apart and still rest on each other, for the span of a beam or a slab. */
 const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
@@ -640,6 +645,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.rt.hinge >= (flexure.failRotationDeg * Math.PI) / 180) hingeDrop(o, p, src)
   }
 
+  /** Span a part is left with on `supports` along its longest axis: twice the farthest any point of it is from a support (a cantilever's is twice its overhang). */
+  const freeSpan = (p: PartRT, supports: readonly PartRT[]): number => {
+    if (supports.length === 0) return Infinity
+    const d = p.dims
+    const L = [0, 1, 2].sort((a, b) => d[b] - d[a])[0]
+    const spans = supports.map((k) => contactBox(p, k)).map(([lo, hi]) => [lo[L], hi[L]] as const)
+    let far = 0
+    for (let i = 0; i <= 16; i++) {
+      const x = (i / 16 - 0.5) * d[L]
+      let near = Infinity
+      for (const [lo, hi] of spans) near = Math.min(near, Math.max(lo - x, x - hi, 0))
+      far = Math.max(far, near)
+    }
+    return 2 * far
+  }
+
   /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
   const solveStructure = (o: ObjRT) => {
     o.maxStress = 0
@@ -647,35 +668,49 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const parts = o.parts
     const n = parts.length
     const dist = new Array<number>(n).fill(-1)
-    const queue: number[] = []
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
-    for (let i = 0; i < n; i++) if (ok(i) && parts[i].anchored) {
-      dist[i] = 0
-      queue.push(i)
-    }
-    for (let h = 0; h < queue.length; h++) {
-      const s = queue[h]
-      if (isPartition(s)) continue
-      for (const j of o.byPart.get(parts[s].spec.id)!) {
-        if (j.st.open || !j.bears) continue
-        const r = j.ia === s ? j.ib : j.ia
-        if (dist[r] >= 0 || !ok(r) || restsOn(o, j, r) !== s) continue
-        dist[r] = dist[s] + 1
-        queue.push(r)
+    // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
+    const out = new Set<number>()
+    let queue: number[] = []
+    let lowerOf = new Map<number, number[]>()
+    for (;;) {
+      dist.fill(-1)
+      queue = []
+      for (let i = 0; i < n; i++) if (ok(i) && !out.has(i) && parts[i].anchored) {
+        dist[i] = 0
+        queue.push(i)
       }
+      for (let h = 0; h < queue.length; h++) {
+        const s = queue[h]
+        if (isPartition(s)) continue
+        for (const j of o.byPart.get(parts[s].spec.id)!) {
+          if (j.st.open || !j.bears) continue
+          const r = j.ia === s ? j.ib : j.ia
+          if (dist[r] >= 0 || !ok(r) || out.has(r) || restsOn(o, j, r) !== s) continue
+          dist[r] = dist[s] + 1
+          queue.push(r)
+        }
+      }
+      lowerOf = new Map<number, number[]>()
+      let dropped = false
+      for (const i of queue) {
+        const lower: number[] = []
+        for (const j of o.byPart.get(parts[i].spec.id)!) {
+          if (j.st.open || !j.bears) continue
+          const k = restsOn(o, j, i)
+          if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
+        }
+        lowerOf.set(i, lower)
+        const max = parts[i].spec.structure?.maxSpan
+        if (max !== undefined && !parts[i].anchored && freeSpan(parts[i], lower.map((k) => parts[k])) > max) {
+          out.add(i)
+          dropped = true
+        }
+      }
+      if (!dropped) break
     }
     const incoming = new Array<number>(n).fill(0)
-    const lowerOf = new Map<number, number[]>()
-    for (const i of queue) {
-      const lower: number[] = []
-      for (const j of o.byPart.get(parts[i].spec.id)!) {
-        if (j.st.open || !j.bears) continue
-        const k = restsOn(o, j, i)
-        if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
-      }
-      lowerOf.set(i, lower)
-    }
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
     // and bends that one only if it is away from its own supports
@@ -1632,8 +1667,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const grain = p.spec.grain ? AXIS[p.spec.grain] : undefined
     const hitLocal = toLocal(c, q, hitW)
     const unitPlan = p.spec.units ? unitFragmentPlan(p, maxFragments * UNIT_FRAGMENT_FACTOR) : []
+    const axis = style === 'splinter' ? severAxis(p) : -1
+    const cutAt = axis < 0 ? undefined : p.rt.cutAt ?? (origin ? hitLocal[axis] : undefined)
     const plan = unitPlan.length > 0 ? unitPlan : planFragments({
       style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd, sheet: p.mat.sheet,
+      ...(cutAt !== undefined ? { cut: { at: cutAt, gap: SEVER_BAND } } : {}),
     })
     const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
     const mass = p.st.mass
@@ -1692,10 +1730,38 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const CHAIN_TRIGGER_OF: Partial<Record<DamageType, ChainTrigger>> = { ballistic: 'shot', explosive: 'explosion' }
 
   /** Remove hit points. Returns the amount actually removed. */
+  /**
+   * A long wooden part (a board, a batten, a beam: `splinter`, box, at least `SEVER_ASPECT` times longer than it is wide) breaks where it is hit: its
+   * length is cut in bands `SEVER_BAND` long, each with its share of the hit points, and the band whose share runs out breaks it across there. A thin
+   * board has little in each band and goes in a few shots; a beam or a log carries its whole section in each band and takes many.
+   */
+  const severAxis = (p: PartRT): number => {
+    if (p.mat.fracture !== 'splinter' || p.spec.shape.kind !== 'box') return -1
+    const d = p.dims
+    const order = [0, 1, 2].sort((a, b) => d[b] - d[a])
+    return d[order[0]] >= SEVER_ASPECT * d[order[1]] && d[order[0]] >= 3 * SEVER_BAND ? order[0] : -1
+  }
+  const bandOf = (o: ObjRT, p: PartRT, axis: number, origin: Vec3): number => {
+    const { c, q } = partXf(o, p)
+    const along = toLocal(c, q, origin)[axis]
+    const L = p.dims[axis]
+    return clamp(Math.floor((along + L / 2) / SEVER_BAND), 0, Math.ceil(L / SEVER_BAND) - 1)
+  }
+
   const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string): number => {
     if (isLost(p) || amount <= 0) return 0
     const prev = p.st.hp
     p.st.hp -= amount
+    const axis = origin && type !== 'fire' && type !== 'heat' ? severAxis(p) : -1
+    if (axis >= 0 && p.st.hp > 0) {
+      const band = bandOf(o, p, axis, origin!)
+      const cuts = (p.rt.cuts ??= {})
+      cuts[band] = (cuts[band] ?? 0) + amount * (type === 'ballistic' ? SEVER_BALLISTIC : 1)
+      if (cuts[band] >= (p.st.maxHp * SEVER_BAND) / p.dims[axis]) {
+        p.rt.cutAt = -p.dims[axis] / 2 + (band + 0.5) * SEVER_BAND
+        p.st.hp = 0
+      }
+    }
     markDamaged(p)
     const trigger = CHAIN_TRIGGER_OF[type]
     const chained = trigger !== undefined && chainDelayOf(p.spec, trigger) !== undefined
