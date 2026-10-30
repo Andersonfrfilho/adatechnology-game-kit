@@ -90,4 +90,18 @@ export const DRAG_SOUNDS: readonly SoundRecipe[] = [
   drag('drag_soft', [noise({ type: 'lowpass', f: 420, d: 0.28, vol: 0.3 })]),
 ]
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }
+const leaf = (id: string, layers: readonly Layer[]): SoundRecipe => ({ ...sceneRecipe(id, layers, ''), sources: ['sdk: a door, lid or drawer worked by hand'] })
+
+/** A leaf worked by hand: the latch, the hinge as it turns (by what the leaf is made of), the leaf meeting its frame, a locked leaf shaken, a drawer on its runners. */
+export const LEAF_SOUNDS: readonly SoundRecipe[] = [
+  leaf('latch', [noise({ type: 'bandpass', f: 2400, q: 4, d: 0.03, vol: 0.35 }), tone({ f: 1900, f2: 1500, d: 0.025, vol: 0.06, delay: 0.035 })]),
+  leaf('creak_wood', [tone({ f: [190, 240], f2: 310, d: 0.5, vol: 0.05 }), noise({ type: 'bandpass', f: 520, q: 6, a: 0.05, d: 0.45, vol: 0.12 })]),
+  leaf('creak_metal', [tone({ f: [620, 760], f2: 900, d: 0.35, vol: 0.035 }), noise({ type: 'bandpass', f: 1400, q: 8, a: 0.04, d: 0.3, vol: 0.08 })]),
+  leaf('shut_wood', [tone({ f: 120, f2: 60, d: 0.14, vol: 0.5 }), noise({ type: 'bandpass', f: 600, q: 1.2, d: 0.1, vol: 0.55, wet: 0.25 }), noise({ type: 'bandpass', f: 2400, q: 4, d: 0.03, vol: 0.25, delay: 0.02 })]),
+  leaf('shut_metal', [tone({ f: 160, f2: 85, d: 0.18, vol: 0.55 }), noise({ type: 'bandpass', f: 900, q: 1.6, d: 0.12, vol: 0.45, wet: 0.3 }), tone({ f: 1250, f2: 1150, d: 0.12, vol: 0.06 })]),
+  leaf('shut_soft', [tone({ f: 95, f2: 55, d: 0.12, vol: 0.35 }), noise({ type: 'lowpass', f: 500, d: 0.1, vol: 0.3 })]),
+  leaf('rattle', many(5, () => noise({ type: 'bandpass', f: [1600, 2600], q: 3, d: 0.035, vol: 0.32, delay: [0, 0.45] }))),
+  leaf('slide', [noise({ type: 'bandpass', f: 700, q: 2, a: 0.04, d: 0.35, vol: 0.22 }), noise({ type: 'bandpass', f: 2200, q: 5, d: 0.3, vol: 0.05 })]),
+]
+
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }

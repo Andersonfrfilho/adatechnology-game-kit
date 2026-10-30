@@ -242,6 +242,22 @@ export interface PlayerState {
   readonly cameraMode: string
 }
 
+/** A leaf a module moves itself, for the host's hand (`ModuleHost.reachFor`). */
+export interface HostReach {
+  /** World point of the handle now. */
+  handle(): Vec3
+  /** World point of the hinge of a turning leaf: the host stands the player beside the free edge, clear of the swing. Left out, the player stands in front of the handle. */
+  hinge?(): Vec3
+  /** How long the hand stays on the handle after the grip, seconds (the module's swing). */
+  readonly seconds: number
+  /** The leaf comes toward the body (true) or goes away (false). Default true. */
+  readonly pull?: boolean
+  /** Locked or barred: the hand only shakes it. */
+  readonly locked?: boolean
+  /** The hand is on the handle. */
+  onGrip?(): void
+}
+
 /**
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
@@ -294,6 +310,12 @@ export interface ModuleHost {
    * the eye (first person); a host without a body leaves it out.
    */
   holdFrame?(): HandPose | null
+  /**
+   * Puts the player's hand on a leaf the module moves itself (a door of a house): the host plays the reach to `handle()`, calls `onGrip` when the hand is on it (the module then turns
+   * the handle and swings the leaf), keeps the hand on `handle()` for `seconds` as it moves, and takes it back; the body pulls or pushes (`pull`) or shakes a locked one (`locked`).
+   * `handle` answers the world point of the handle every frame. A host without a body leaves it out (the module then moves the leaf at once).
+   */
+  reachFor?(reach: HostReach): void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */

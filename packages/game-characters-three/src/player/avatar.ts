@@ -39,6 +39,9 @@ const SIT = { thigh: -1.5, lean: -0.08, arm: -0.45, armZ: 0.12, elbow: -0.75 }
 const LIE = { knee: 0.08, armZ: 0.12, elbow: -0.1 }
 const DOWN = { thighWalk: 0.5, shinSwing: 0.85, shinBend: 1.3, armHigh: -2.8, armLow: -0.35, armWave: 0.3, armZ: 0.5, armZWave: 0.3, tilt: 1.5, roll: 0.3, hipY: 0.16, hipZ: 0.6, hipZFlip: 1.2 } // :29-:47, :74
 /** `playerHand()`: the elbow-to-hand offset of the weapon hand (the weapon hand is the puppet's right, at -x). */
+/** A hand on a handle: the shoulder over the feet and the length of the arm to the palm, metres. */
+const DOOR_SHOULDER = 1.42
+const DOOR_ARM = 0.62
 const HAND_OFFSET = { x: 0, y: -0.33, z: 0.04 }
 
 export type PlayerAvatarSpec = Record<string, unknown>
@@ -92,6 +95,11 @@ export type AvatarUpdate = {
   push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
   /** On a seat: `sit` folds the legs under hips `hip` metres above the feet, `lie` lays the body face up with the pelvis there, the head behind the facing. */
   seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
+  /**
+   * A hand on a door, lid or drawer: `reach` to the handle, `swing` with it (`pull` toward the body or pushed away), `release` back, `rattle` on a locked one.
+   * `height` is the hand over the feet, metres (a fridge handle, a car door, a low drawer).
+   */
+  door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
 }
 
 export type PlayPoseOptions = {
@@ -303,6 +311,31 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       elbR: elbow,
       elbL: elbow,
       ...(strain ? { legL: -0.5, legR: 0.4, kneeL: 0.55, kneeR: 0.08, drop: -0.05 } : {}),
+    }
+  }
+
+  /**
+   * The right arm on a handle: raised toward the hand's height, the elbow bending as the leaf comes toward the body (pulled) or straightening as it goes away (pushed),
+   * shaking on a locked one; the body leans back pulling and into it pushing, and bends to a low handle.
+   */
+  const doorPose = (door: NonNullable<AvatarUpdate['door']>): PoseTargets => {
+    const { phase, progress } = door
+    const on = phase === 'reach' ? progress : phase === 'release' ? 1 - progress : 1
+    const swing = phase === 'swing' ? progress : phase === 'release' ? 1 : 0
+    const shake = phase === 'rattle' ? Math.sin(time * 55) * 0.06 * (1 - progress) : 0
+    // the shoulder about 1.42 m over the feet, the arm 0.62 m: the angle down from the shoulder to the handle, a low handle bends the body
+    const drop = clamp((DOOR_SHOULDER - door.height) / DOOR_ARM, -0.9, 1)
+    const low = clamp((0.75 - door.height) / 0.5, 0, 1)
+    const raise = -Math.acos(clamp(drop, -1, 1)) * on - 0.35 * low * on
+    const elbow = door.pull ? -0.35 - 0.75 * swing : -0.95 + 0.75 * swing
+    return {
+      armR: raise + shake,
+      armRz: REST_ARM_Z * (1 - on) + 0.05 * on,
+      elbR: -0.12 + (elbow + 0.12) * on,
+      armLz: -REST_ARM_Z,
+      elbL: -0.12,
+      lean: ((door.pull ? -0.06 : 0.1) * swing + 0.35 * low) * on,
+      headX: 0.06 * on + 0.2 * low * on,
     }
   }
 
@@ -531,6 +564,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
         if (state.push) animator.setPose(rig, pushingPose(state.push))
+        else if (state.door) animator.setPose(rig, doorPose(state.door))
         else if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
         else if (state.holding || state.itemUse) animator.setPose(rig, holdingPose(gait, state.itemUse))
         else if (!running) {

@@ -11,7 +11,7 @@ import type { THREE_NS } from '../three'
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
 export type RoomAvatarLike = {
   root: THREE_NS.Object3D
-  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
@@ -81,7 +81,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
   let guarding = false
   const stepGuard = (dt: number, state: Parameters<RoomAvatarLike['update']>[1]): void => {
     if (!guard) return
-    const free = state.speed < GUARD_SPEED && !state.down && !state.armed && !state.holding && !state.push && !state.itemUse && !state.running
+    const free = state.speed < GUARD_SPEED && !state.down && !state.armed && !state.holding && !state.push && !state.door && !state.itemUse && !state.running
     if (strikeLeft > 0) {
       strikeLeft -= dt
       if (strikeLeft <= 0 && guardLeft > 0 && free) {
@@ -114,6 +114,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         ...(state.itemUse !== undefined ? { itemUse: state.itemUse } : {}),
         ...(state.push !== undefined ? { push: state.push } : {}),
         ...(state.seat !== undefined ? { seat: state.seat } : {}),
+        ...(state.door !== undefined ? { door: state.door } : {}),
       })
     },
     hand: (side) => avatar.hand(side),

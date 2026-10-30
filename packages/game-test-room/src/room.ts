@@ -35,6 +35,8 @@ import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
+import { createRoomDoors, DOOR_REACH } from './door-open'
+import type { RoomLeaf } from './door-open'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -684,6 +686,73 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
   let pushByKey = false
 
+  // ----- doors, lids and drawers worked by hand: a tap of E on a leaf (a part an `open_*` clip of the item moves) opens or closes it
+  const leafCache = new WeakMap<object, RoomLeaf[]>()
+  /** The leaves of an item: each part its `open_*` clips move, with the clip that opens it (a clip of its own wins over one that opens several together). */
+  const leavesOf = (objectId: string): RoomLeaf[] => {
+    const item = entries.get(objectId)?.item
+    if (!item?.animations?.length) return []
+    const cached = leafCache.get(item)
+    if (cached) return cached
+    const byPart = new Map<string, { clip: AnimationClipSpec; n: number }>()
+    for (const clip of item.animations) {
+      if (!clip.id.startsWith('open_')) continue
+      const parts = new Set<string>()
+      for (const k of clip.keys) for (const id of Object.keys(k.parts ?? {})) parts.add(id)
+      for (const part of parts) {
+        const had = byPart.get(part)
+        if (!had || parts.size < had.n) byPart.set(part, { clip, n: parts.size })
+      }
+    }
+    const leaves = [...byPart].map(([part, v]) => ({ part, clip: v.clip }))
+    leafCache.set(item, leaves)
+    return leaves
+  }
+  /** Locked leaves: `objectId\0part`, or `objectId\0*` for every leaf of the object. */
+  const lockedLeaves = new Set<string>()
+  const doors = createRoomDoors({
+    THREE,
+    player,
+    world,
+    camera,
+    arena: { limit: arenaSize, colliders: standingColliders, ids: standingIds },
+    ...(options.doors ? { rules: options.doors } : {}),
+    pick: () => {
+      if (heldPiece) return null
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], DOOR_REACH)
+      return r ? { objectId: r.object, part: r.part, point: r.point as Vec3 } : null
+    },
+    leaves: leavesOf,
+    objectOf: (objectId, part) => entries.get(objectId)?.so.root.getObjectByName(part) ?? null,
+    pose: (objectId, part, clip, fraction) => {
+      const e = entries.get(objectId)
+      const obj = e?.so.root.getObjectByName(part)
+      if (!e || !obj) return
+      if (!restPose.has(obj)) restPose.set(obj, { p: [obj.position.x, obj.position.y, obj.position.z], r: [obj.rotation.x, obj.rotation.y, obj.rotation.z] })
+      const rest = restPose.get(obj)!
+      const pose = poseAt(clip, part, Math.max(0, Math.min(1, fraction)) * clip.duration)
+      obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
+      obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+      const ps = specs.get(objectId)?.parts.find((q) => q.id === part)
+      if (ps) {
+        const r0 = ps.rotation ?? ZERO
+        world.setPartPose(objectId, part, [ps.position[0] + pose.position[0], ps.position[1] + pose.position[1], ps.position[2] + pose.position[2]], [r0[0] + pose.rotation[0], r0[1] + pose.rotation[1], r0[2] + pose.rotation[2]])
+      }
+    },
+    isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
+    nameOf,
+    impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
+    sound: playSound,
+    onEvent: (ev) => {
+      const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }
+      action(`door_${ev.type}`, t(`act.door_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, part: ev.part, data: { opening: Math.round(ev.opening * 1000) / 1000, ...(ev.by ? { by: ev.by } : {}) } })
+      fire('door', ev)
+      if (ev.type === 'locked') say(t('hud.door_locked', vars))
+      else if (ev.type === 'blocked') say(t('hud.door_blocked', vars))
+    },
+  })
+
   const massOfObject = (id: string): number => {
     const st = world.state(id)
     let m = 0
@@ -991,6 +1060,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.so.root.removeFromParent()
     letGo(e.so.root)
     entries.delete(id)
+    doors.forget(id)
     rendererPieces.delete(id)
     specs.delete(id)
   }
@@ -1169,6 +1239,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.push = push.avatarState
     const seat = seating.seat
     avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
+    avatarState.door = doors.avatarState
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
@@ -1190,11 +1261,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const stepFirstPerson = (dt: number): void => {
     const arms = avatar?.firstPerson
     if (!arms) return
-    const targets = push.handTargets() ?? handSource?.() ?? carriedHand
+    const doorHand = doors.handTargets()
+    const targets = push.handTargets() ?? doorHand ?? handSource?.() ?? carriedHand
     const state: RoomFirstPersonState = {
       camera,
       targets,
-      stance: push.active ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
+      stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       speed: avatarState.speed,
       running: avatarState.running,
       crouch: avatarState.crouch,
@@ -2270,7 +2342,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (code === 'KeyZ') tiltKey = 0
       if (code === 'KeyE' && pushByKey) {
         pushByKey = false
-        if (push.end()) grab()
+        // a tap on a leaf opens or closes it; a hold pushed the piece
+        if (push.end() && !doors.use()) grab()
       }
       return
     }
@@ -2292,7 +2365,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (e.repeat) break
         // a tap grabs, a hold against something that stands on the floor pushes it
         pushByKey = !heldPiece && push.begin()
-        if (!pushByKey) grab()
+        if (!pushByKey && (heldPiece || !doors.use())) grab()
         break
       case 'KeyG':
         throwHeld()
@@ -2374,6 +2447,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return rayWorld(aimO, aimD, 14)
   }
 
+  /** What E does to the leaf in reach the eye rests on (open, close, locked). */
+  const leafNote = (distance: number): string | undefined => {
+    if (distance > DOOR_REACH) return undefined
+    const leaf = doors.aimed()
+    if (!leaf) return undefined
+    return t(leaf.locked ? 'hud.door_hint_locked' : leaf.open ? 'hud.door_hint_close' : 'hud.door_hint_open')
+  }
+
   const inspectInfo = (): InspectInfo | null => {
     const r = inspectTarget()
     if (!r) return null
@@ -2411,7 +2492,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       load: ext.load,
       stress: ext.stress,
       joints,
-      note: e?.item?.note,
+      note: leafNote(r.distance) ?? e?.item?.note,
       thumbnail: e?.item?.thumbnail,
       thumbnailCredit: e?.item?.thumbnailCredit,
       distance: r.distance,
@@ -2523,6 +2604,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       push.end()
     }
     push.step(paused ? 0 : dt)
+    doors.step(paused ? 0 : dt)
     if (!paused) kickLight(dt)
     if (!paused) pushByPlayer(dt)
     else player.takeWish()
@@ -2857,6 +2939,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return () => frameListeners.delete(update)
     },
     holdFrame: () => bodyHoldFrame(),
+    reachFor(reach) {
+      if (!avatar) {
+        reach.onGrip?.()
+        return
+      }
+      doors.reachFor(reach)
+    },
     setHandTargets(source) {
       handSource = source
       return () => {
@@ -3045,6 +3134,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       seating.update()
       player.update(0)
       push.step(dt)
+      doors.step(dt)
       followHeld(dt)
       stepSim(dt)
     }
@@ -3337,6 +3427,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     animations: animationsOf,
     playAnimation,
+    useLeaf: (objectId, part) => doors.useLeaf(objectId, part),
+    leafOpening: (objectId, part) => doors.opening(objectId, part ?? leavesOf(objectId)[0]?.part ?? ''),
+    leaves: (objectId) => leavesOf(objectId).map((l) => l.part),
+    lockLeaf(objectId, locked = true, part) {
+      const k = `${objectId}\0${part ?? '*'}`
+      if (locked) lockedLeaves.add(k)
+      else lockedLeaves.delete(k)
+    },
+    get door() {
+      return doors.state
+    },
     bench(moduleId) {
       const id = moduleId ?? activeBench
       return (id ? benches.get(id) : undefined) ?? null

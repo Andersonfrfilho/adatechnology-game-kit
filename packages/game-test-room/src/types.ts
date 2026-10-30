@@ -11,7 +11,8 @@
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
-import type { FurniturePushRules } from '@adatechnology/game-player'
+import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-player'
+import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
@@ -229,6 +230,8 @@ export interface TestRoomOptions {
   strikeClips?: Readonly<Record<string, string>>
   /** The numbers of pushing furniture (`FurniturePushRules` of game-player): the player's force, the friction by material, the hold time, the speed. */
   push?: Partial<FurniturePushRules>
+  /** The numbers of opening by hand (`DoorUseRules` of game-player): how long the hand takes to the handle, how fast a leaf of each mass swings. */
+  doors?: Partial<DoorUseRules>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
   /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
@@ -448,6 +451,19 @@ export interface TestRoom {
    * offsets from the rest pose, interpolated linearly; the item keeps the last pose. Events are logged (and `sound` events reach `onSound`).
    */
   playAnimation(clipId: string, objectId?: string): boolean
+  /**
+   * Opens or closes a leaf (a door, a lid, a drawer: a part an `open_*` clip of the item moves) as the hand does with E: the hand goes to the handle, the leaf swings at the speed of
+   * its mass and stops at what is in its way; a locked leaf only rattles. Default part: the first leaf of the object. Answers false when the object has no such leaf.
+   */
+  useLeaf(objectId: string, part?: string): boolean
+  /** How open a leaf is, 0 closed to 1 open (default part: the first leaf). */
+  leafOpening(objectId: string, part?: string): number
+  /** The parts of an object that open by hand. */
+  leaves(objectId: string): string[]
+  /** Locks (or unlocks) a leaf, or every leaf of the object when `part` is left out: E then only rattles it. */
+  lockLeaf(objectId: string, locked?: boolean, part?: string): void
+  /** The leaf being worked by hand now, or null. */
+  readonly door: RoomDoorState | null
   /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
   bench(moduleId?: string): BenchHandle | null
   /**
