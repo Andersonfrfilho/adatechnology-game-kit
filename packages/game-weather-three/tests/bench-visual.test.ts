@@ -86,4 +86,23 @@ describe('the weather bench with the visual', () => {
     detach?.()
     expect(disposed).toBe(1)
   })
+
+  it('keeps the walking player out of the rig car (its length and width), and takes the block away with the module', () => {
+    const { host, scene } = lend()
+    const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
+    ;(host as { addBlocker?: unknown }).addBlocker = (fn: (x: number, z: number, radius: number) => boolean) => (blockers.add(fn), () => blockers.delete(fn))
+    const vehicles = () => ({ build: () => ({ group: new THREE.Group(), length: 4.8, width: 1.9, dispose: () => undefined }) })
+    const module = createWeatherTestModule({ seed: 3, autoSchedule: false, sound: false, visual: createWeatherVisual({ vehicles }) })
+    const detach = module.attach?.(host)
+    const rig = scene.getObjectByName('weather-lamp-rig')!
+    rig.updateWorldMatrix(true, true)
+    const centre = new THREE.Vector3(0, 0, 2.15 + 0.1 - 2.4).applyMatrix4(rig.matrixWorld)
+    const side = new THREE.Vector3(1.9 / 2 + 0.5, 0, 2.15 + 0.1 - 2.4).applyMatrix4(rig.matrixWorld)
+    const blocked = (p: THREE.Vector3): boolean => [...blockers].some((fn) => fn(p.x, p.z, 0.3))
+    expect(blockers.size).toBe(1)
+    expect(blocked(centre)).toBe(true)
+    expect(blocked(side)).toBe(false)
+    detach?.()
+    expect(blockers.size).toBe(0)
+  })
 })

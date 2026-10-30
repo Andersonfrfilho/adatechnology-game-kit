@@ -1,4 +1,5 @@
-import type { AnimationClipSpec, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import { footprintBlocker } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
@@ -26,8 +27,6 @@ const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44a
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
 type Three = any
-/** A floor rectangle in an object's own space, metres. */
-type Footprint = { minX: number; maxX: number; minZ: number; maxZ: number }
 /** Parts whose bottom is above this (m, from the ground) are overhead: the player walks under them (the helicopter's rotor, the tank's gun). */
 const BODY_HEIGHT = 1.7
 type Placed = {
@@ -262,22 +261,13 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
 
   // ---- the walking player ------------------------------------------------------------------------------------------------------------------
   // every vehicle on the floor (and the car on the lane) is solid: the point is taken into the vehicle's own space, so a turned vehicle blocks by its turned footprint
-  const local = { m: null as any, v: null as any }
-  const inside = (root: any, fp: Footprint, x: number, z: number, radius: number): boolean => {
-    if (!three) return false
-    local.m ??= new three.Matrix4()
-    local.v ??= new three.Vector3()
-    root.updateWorldMatrix(true, false)
-    const p = local.v.set(x, 0, z).applyMatrix4(local.m.copy(root.matrixWorld).invert())
-    return p.x > fp.minX - radius && p.x < fp.maxX + radius && p.z > fp.minZ - radius && p.z < fp.maxZ + radius
-  }
+  const laneBlocked = footprintBlocker(
+    () => lane?.group,
+    () => (lane ? { minX: -lane.car.width / 2, maxX: lane.car.width / 2, minZ: -lane.car.length / 2, maxZ: lane.car.length / 2 } : null),
+  )
   const blocked = (x: number, z: number, radius: number): boolean => {
-    for (const entry of placed.values()) if (entry.root.parent && entry.footprint && inside(entry.root, entry.footprint, x, z, radius)) return true
-    if (lane) {
-      const half = { l: lane.car.length / 2, w: lane.car.width / 2 }
-      if (inside(lane.group, { minX: -half.w, maxX: half.w, minZ: -half.l, maxZ: half.l }, x, z, radius)) return true
-    }
-    return false
+    for (const entry of placed.values()) if (entry.footprint && footprintBlocker(entry.root, entry.footprint)(x, z, radius)) return true
+    return laneBlocked(x, z, radius)
   }
 
   // ---- the lane ---------------------------------------------------------------------------------------------------------------------------
