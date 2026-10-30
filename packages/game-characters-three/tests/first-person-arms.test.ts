@@ -210,6 +210,28 @@ describe('createFirstPersonArms', () => {
     expect(left).toBeCloseTo(-right, 3)
   })
 
+  it('a punch with the left hand throws the left fist, mirrored, and leaves the right one in its guard', () => {
+    const punch = (hand: 'left' | 'right'): { R: THREE.Vector3; L: THREE.Vector3 } => {
+      const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+      step(arms, 0.6, { camera: camera(), stance: 'fists' })
+      arms.play('punch_right', { hand })
+      step(arms, 0.16, { camera: camera(), stance: 'fists' })
+      return { R: arms.handPose('R').position.clone(), L: arms.handPose('L').position.clone() }
+    }
+    const guard = (() => {
+      const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+      step(arms, 0.76, { camera: camera(), stance: 'fists' })
+      return { R: arms.handPose('R').position.clone(), L: arms.handPose('L').position.clone() }
+    })()
+    const right = punch('right')
+    const left = punch('left')
+    expect(left.L.z).toBeLessThan(guard.L.z - 0.1)
+    expect(left.R.distanceTo(guard.R)).toBeLessThan(1e-6)
+    // the mirror image of the right punch
+    expect(left.L.x).toBeCloseTo(-right.R.x, 3)
+    expect(left.L.z).toBeCloseTo(right.R.z, 3)
+  })
+
   it('dispose releases the geometries and materials without throwing', () => {
     const arms = createFirstPersonArms(THREE)
     expect(() => arms.dispose()).not.toThrow()
@@ -261,6 +283,16 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(left).toBe(right)
     expect(room.avatar.playing).not.toBe(rightClip)
     expect(room.avatar.playing).toBe('front_kick_left')
+  })
+
+  it('a punch with the left hand plays the mirrored body clip and the left fist on the arms, with the same impact second', () => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
+    const right = room.strike('punch_right', { hand: 'right' })
+    expect(room.avatar.playing).toBe('punch_right')
+    const left = room.strike('punch_right', { hand: 'left' })
+    expect(left).toBe(right)
+    expect(room.avatar.playing).toBe('punch_right_left')
+    expect(room.arms!.playing).toBe('punch_right')
   })
 })
 

@@ -20,6 +20,7 @@ import type { Three, THREE_NS } from '../three'
 const TWO_PI = Math.PI * 2
 const MAX_GAIT = 1.4
 const CLIP_BLEND = 0.12
+const CLIP_CASCADE = 5
 const FALL_SECONDS = 0.3
 
 // Constants carried from the team game's GPU pose code, `BODY_CHUNK` (src/instanced/body-chunk.ts), whose line numbers are quoted below.
@@ -51,6 +52,11 @@ export type PlayerAvatarOptions = {
   readonly fallSeconds?: number
   /** Smooth the joints with the Bestiário cascade (default true). */
   readonly cascade?: boolean
+  /**
+   * How many times faster the cascade follows while a clip that does not loop plays: a strike is over in a third of a second, and at the walk's pace the joints would
+   * still be on their way when it ends (a punch that never reaches the shoulder). 1 keeps the walk's pace. Default 5.
+   */
+  readonly clipCascade?: number
 }
 
 export type AvatarEvent = PoseClipEvent & { clip: string }
@@ -142,6 +148,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const blendDefault = options.blend ?? CLIP_BLEND
   const fallSeconds = options.fallSeconds ?? FALL_SECONDS
   const smooth = options.cascade ?? true
+  const clipCascade = options.clipCascade ?? CLIP_CASCADE
 
   const root = new THREE.Group()
   const tilt = new THREE.Group()
@@ -457,7 +464,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       }
       placeBody(fall)
       stepClip(dt, down)
-      if (smooth) animator.cascade(rig, dt)
+      if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
       const clipId = run ? run.clip.id : null
       const ph = cycles * TWO_PI
       hands.forEach((hand) => {
@@ -465,7 +472,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         const holdRight = isRight && (!!state.holding || !!state.itemUse)
         const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close')
         const grip =
-          clipId === 'punch_right'
+          clipId?.startsWith('punch_')
             ? 1.4
             : clipId === 'shove_two_hands'
               ? 0.15

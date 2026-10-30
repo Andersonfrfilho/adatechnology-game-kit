@@ -1159,17 +1159,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    */
   const kickLeg = options.kickLeg ?? 'alternate'
   let nextLeg: 'left' | 'right' = 'right'
+  const punchHand = options.punchHand ?? 'alternate'
+  const punchTools = new Set(options.punchTools ?? ['hand', 'fists'])
+  let nextHand: 'left' | 'right' = 'right'
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const clip = strikeClips[id]
-    // a kick uses the leg the option says (alternating from the right), whatever the avatar does with it
+    // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way), whatever the avatar does with them
     const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
-    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, leg ? { leg } : undefined) ?? null)
+    const hand = punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
+    const side = leg ? { leg } : hand ? { hand } : undefined
+    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, side) ?? null)
     if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
+    if (hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
     if (clip === undefined || seconds === null) {
       meleeUse(u, id)
       return
     }
-    action('strike', t(leg ? 'act.strike.leg' : 'act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '' }), { data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}) } })
+    const text = leg ? 'act.strike.leg' : hand ? 'act.strike.hand' : 'act.strike'
+    action('strike', t(text, { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '', hand: hand ? t(`hand.${hand}`) : '' }), {
+      data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}) },
+    })
     strikes.push({
       key: id,
       remaining: seconds,

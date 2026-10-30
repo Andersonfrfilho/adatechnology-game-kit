@@ -8,6 +8,7 @@ import { makeRoom, stubRenderer } from './helpers'
 type Fake = RoomAvatar & {
   struck: string[]
   legs: Array<'left' | 'right' | undefined>
+  hands: Array<'left' | 'right' | undefined>
   states: RoomFirstPersonState[]
   armsRoot: THREE.Group
   /** Seconds to impact per clip; a clip not here cannot be played. */
@@ -18,12 +19,14 @@ const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove
   const armsRoot = new THREE.Group()
   const struck: string[] = []
   const legs: Array<'left' | 'right' | undefined> = []
+  const hands: Array<'left' | 'right' | undefined> = []
   const states: RoomFirstPersonState[] = []
   return {
     root: new THREE.Group(),
     armsRoot,
     struck,
     legs,
+    hands,
     states,
     impacts,
     update: () => undefined,
@@ -32,6 +35,7 @@ const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove
       if (!(clip in impacts)) return null
       struck.push(clip)
       legs.push(options?.leg)
+      hands.push(options?.hand)
       return impacts[clip]!
     },
   }
@@ -161,6 +165,39 @@ describe('strikes wait for the impact of the clip', () => {
     wait(room, 0.5)
     room.use()
     expect(avatar.legs).toEqual([undefined])
+  })
+
+  const punches = (extra: Parameters<typeof makeRoom>[0] = {}, tool = 'fists', count = 3) => {
+    const avatar = fakeAvatar()
+    const room = makeRoom(extra)
+    room.setAvatar(avatar)
+    room.setTool(tool)
+    run(room, 0.5)
+    for (let i = 0; i < count; i++) {
+      room.use()
+      run(room, 0.6)
+    }
+    return { avatar, room }
+  }
+
+  it('punches alternate hands by default, starting with the right, with fists and bare hands, and log the hand', () => {
+    for (const tool of ['fists', 'hand']) {
+      const { avatar, room } = punches({}, tool)
+      expect(avatar.struck).toEqual(['punch_right', 'punch_right', 'punch_right'])
+      expect(avatar.hands).toEqual(['right', 'left', 'right'])
+      const entries = room.log.entries({ type: 'strike' })
+      expect(entries.map((entry) => entry.data?.hand)).toEqual(['right', 'left', 'right'])
+      expect(entries[1]!.text).toContain('left hand')
+    }
+  })
+
+  it('punchHand left or right keeps one hand; punchTools says which tools punch with one hand; the shove and the kick carry no hand', () => {
+    expect(punches({ punchHand: 'left' }, 'fists', 2).avatar.hands).toEqual(['left', 'left'])
+    expect(punches({ punchHand: 'right' }, 'fists', 2).avatar.hands).toEqual(['right', 'right'])
+    expect(punches({ punchTools: ['hand'] }, 'fists', 2).avatar.hands).toEqual([undefined, undefined])
+    expect(punches({}, 'shove', 1).avatar.hands).toEqual([undefined])
+    const { avatar } = kicks(undefined, 1)
+    expect(avatar.hands).toEqual([undefined])
   })
 
   it('the aim is read again at the impact: a target turned to meanwhile is the one hit', () => {
