@@ -70,6 +70,33 @@ describe('vehicles test area', () => {
     expect(room.playAnimation('open_nothing', sedan.objectId)).toBe(false)
   })
 
+  it('keeps the walking player out of a vehicle (turned with it) and lets them walk on once it is gone', () => {
+    const { room } = roomWithVehicles('en')
+    room.openArea(VEHICLES_AREA_ID)
+    room.clear()
+    // a sedan across the path, turned a quarter: its length lies along x
+    room.spawn('sedan', [0, 0, -4], Math.PI / 2)
+    room.update(1 / 60)
+    room.look([0, 1.6, 2], [0, 1.6, -4])
+    // the walk ends in the middle of the car: the player stops at its side
+    room.walk([0, 0, -4], 3)
+    for (let i = 0; i < 80; i++) room.update(0.05)
+    // stopped at the side of the car (half its width, about 0.9 m, plus the player's radius), not through it
+    expect(room.camera.position.z).toBeGreaterThan(-4 + 0.8)
+    expect(room.camera.position.z).toBeLessThan(-4 + 1.6)
+    // along its length the car is longer: walking past its end (x = 3) is free
+    room.look([3, 1.6, 2], [3, 1.6, -4])
+    room.walk([3, 0, -8], 3)
+    for (let i = 0; i < 80; i++) room.update(0.05)
+    expect(room.camera.position.z).toBeLessThan(-7.5)
+    room.clear()
+    room.update(1 / 60)
+    room.look([0, 1.6, 2], [0, 1.6, -4])
+    room.walk([0, 0, -4], 3)
+    for (let i = 0; i < 80; i++) room.update(0.05)
+    expect(room.camera.position.z).toBeLessThan(-3.9)
+  })
+
   it('passes the contract checks of the host and lays the 8 vehicles of the Frota test and the 2 burnt wrecks', () => {
     const { room, module } = roomWithVehicles()
     const placed = room.openArea(VEHICLES_AREA_ID)
