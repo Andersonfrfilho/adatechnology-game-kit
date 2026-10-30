@@ -4,6 +4,7 @@
 //   ?scenario=all       run every scenario on load; the report lands in window.__testRoomReport
 //   ?scenario=<id>      run one scenario
 //   ?items=a,b          spawn these catalogue ids (e.g. fridge,wardrobe) in a row on start
+//   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
@@ -62,6 +63,8 @@ const room = createTestRoom({
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
   // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut
+  // ?pushForce=2000: the legs that move the loaded bookcase (242 kg), which the default force of the kit does not
+  ...(params.get('pushForce') ? { push: { forceN: Number(params.get('pushForce')) } } : {}),
   strikeCombo: PUNCH_COMBO,
   strikeComboOn: params.get('combo') === '1',
   quality,
@@ -105,6 +108,13 @@ async function start() {
     const groups = room.testTable.groups()
     const goods = room.testTable.items().find((item) => item.id === 'item_canned_beans')?.group
     room.testTable.open(groups.includes(table) ? table : (goods ?? groups[0]))
+  }
+  // pushing furniture: a light piece, one too heavy for the player and one against the wall
+  if (params.get('scene') === 'push') {
+    room.spawn('nightstand', [-1.6, 0, 6], 0)
+    room.spawn('bbq', [1.6, 0, 6], 0)
+    room.spawn('wardrobe', [0, 0, -10.45], 0)
+    room.look([-1.6, 1.7, 7.4], [-1.6, 0.5, 6])
   }
   const wanted = params.get('scenario')
   if (wanted) {

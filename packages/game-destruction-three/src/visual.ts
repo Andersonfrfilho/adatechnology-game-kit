@@ -4,6 +4,7 @@ import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
 import { shellDisplacementAt, type ShellSnapshot } from './skin-dent'
+import { pushFittedBoxes } from './fitted-boxes'
 
 type Mesh = THREE_NS.Mesh
 
@@ -191,6 +192,21 @@ export class Visuals {
   }
 
   /** Box of the part in world space. */
+  /** Appends the boxes that follow the mesh in the world (`pushFittedBoxes`) to `out`. */
+  fittedBoxes(mv: MeshVis, out: number[]): void {
+    const box = new this.THREE.Box3()
+    if (mv.host) this.localBox(mv, box)
+    else {
+      const geometry = mv.mesh.geometry
+      if (!geometry.boundingBox) geometry.computeBoundingBox()
+      if (geometry.boundingBox) box.copy(geometry.boundingBox)
+      else box.makeEmpty()
+    }
+    if (box.isEmpty()) return
+    mv.mesh.updateWorldMatrix(true, false)
+    pushFittedBoxes(box, mv.mesh.matrixWorld, out)
+  }
+
   worldBox(mv: MeshVis, out: THREE_NS.Box3): THREE_NS.Box3 {
     if (!mv.host) return out.setFromObject(mv.mesh)
     this.localBox(mv, out)

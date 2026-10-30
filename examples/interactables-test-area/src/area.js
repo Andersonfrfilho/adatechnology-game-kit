@@ -514,6 +514,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   const area = {
     id: 'furniture_area',
     name: isEn(defaultLocale) ? 'Furniture and objects' : 'Móveis e objetos',
+    ground: { surface: 'tile_floor' },
     group: isEn(defaultLocale) ? 'Furniture & objects' : 'Móveis e objetos',
     items(loc) {
       const hh = household(loc)

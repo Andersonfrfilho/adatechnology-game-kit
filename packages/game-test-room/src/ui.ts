@@ -99,6 +99,8 @@ export interface UiOptions {
 
 export interface RoomUi {
   hud(state: HudState): void
+  /** The hold timer around the crosshair, 0 to 1; null hides it. Called every frame while it runs. */
+  holdRing(value: number | null): void
   toast(text: string): void
   /** Re-read the catalogue and the scenarios (after `loadModule`). */
   refresh(): void
@@ -129,6 +131,8 @@ const CSS = `
 .tr-cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
 .tr-cross:before,.tr-cross:after{content:"";position:absolute;background:#fff;opacity:.85;box-shadow:0 0 2px #000}
 .tr-cross:before{left:8px;top:0;width:2px;height:18px}.tr-cross:after{top:8px;left:0;height:2px;width:18px}
+.tr-ring{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;transform:rotate(-90deg);display:none;pointer-events:none;filter:drop-shadow(0 0 2px #000)}
+.tr-ring circle{fill:none;stroke-width:5}.tr-ring .tr-ring-bg{stroke:rgba(255,255,255,.25)}.tr-ring .tr-ring-fill{stroke:#ffd166;stroke-linecap:round}
 .tr-cross i{position:absolute;left:6px;top:6px;width:6px;height:6px;background:#0b0c0e;border-radius:50%;z-index:1}
 .tr-top{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;max-width:46vw}
 .tr-tool{display:inline-block;background:rgba(10,12,16,.72);padding:4px 12px;border-radius:6px;font-size:14px;font-weight:600}
@@ -244,6 +248,22 @@ export function createUi(o: UiOptions): RoomUi {
   // crosshair, top bar
   const cross = mk('div', 'tr-cross')
   cross.appendChild(mk('i'))
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  ring.setAttribute('class', 'tr-ring')
+  ring.setAttribute('viewBox', '0 0 64 64')
+  const ringCircle = (className: string): SVGCircleElement => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    circle.setAttribute('class', className)
+    circle.setAttribute('cx', '32')
+    circle.setAttribute('cy', '32')
+    circle.setAttribute('r', '27')
+    ring.appendChild(circle)
+    return circle
+  }
+  ringCircle('tr-ring-bg')
+  const ringFill = ringCircle('tr-ring-fill')
+  const RING_LENGTH = 2 * Math.PI * 27
+  ringFill.style.strokeDasharray = String(RING_LENGTH)
   const top = mk('div', 'tr-top')
   const toolBox = mk('div', 'tr-tool')
   const status = mk('div', 'tr-status')
@@ -550,7 +570,7 @@ export function createUi(o: UiOptions): RoomUi {
   }
   toggle.onclick = togglePanels
 
-  root.append(cross, top, bottom, help, left, right, toggle)
+  root.append(cross, ring, top, bottom, help, left, right, toggle)
 
   // inspector
   const bar = (value: number, max: number, cls: string): HTMLElement => {
@@ -636,6 +656,10 @@ export function createUi(o: UiOptions): RoomUi {
   let hudPage = 0
 
   const api: RoomUi = {
+    holdRing(value) {
+      ring.style.display = value === null ? 'none' : 'block'
+      if (value !== null) ringFill.style.strokeDashoffset = String(RING_LENGTH * (1 - value))
+    },
     hud(s) {
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))

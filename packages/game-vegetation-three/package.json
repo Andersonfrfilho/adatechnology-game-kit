@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vegetation-three",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "MIT",
   "description": "The vegetation test module for the shared test room: the 18 plants of the Viveiro as destructible items (separable pieces, joints, real wood thickness, sway clips), its 13 scenarios and the nursery lot with the walker that bends the plants.",
   "keywords": [

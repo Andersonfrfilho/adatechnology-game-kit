@@ -16,7 +16,7 @@ describe('furnitureSpec', () => {
     expect(new Set(ids).size).toBe(ids.length)
     const books = f.spec.parts.filter((p) => p.material === 'paper')
     expect(books.length).toBeGreaterThan(20)
-    expect(f.spec.parts.filter((p) => p.material === 'wood_soft').length).toBeGreaterThanOrEqual(5)
+    expect(f.spec.parts.filter((p) => p.material === 'mdf').length).toBeGreaterThanOrEqual(5)
     // the uprights touch the floor and stand; the books are loose and rest on a board
     expect(f.spec.parts.filter((p) => p.anchored).length).toBeGreaterThanOrEqual(2)
     expect(books.every((b) => !b.anchored)).toBe(true)
@@ -40,9 +40,43 @@ describe('furnitureSpec', () => {
     const bare = make('dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
     expect(bare.spec.parts.length).toBeLessThan(withChairs.spec.parts.length)
     expect(bare.spec.parts.filter((p) => p.anchored)).toHaveLength(4)
-    expect(bare.top).toEqual({ part: expect.any(String), y: expect.closeTo(0.78, 3) })
+    expect(bare.top).toEqual({ part: expect.any(String), y: expect.closeTo(0.78, 3), parts: expect.any(Array) })
     expect(bare.spec.parts.find((p) => p.id === bare.top!.part)!.material).toBe('wood_hard')
     expect(bare.spec.joints!.filter((j) => j.kind === 'screw').length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('a solid top is boards glued edge to edge, and it breaks board by board where it is shot', () => {
+    const table = make('gourmet_table_small', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
+    const boards = table.top!.parts!
+    expect(boards).toHaveLength(5)
+    const parts = boards.map((id) => table.spec.parts.find((p) => p.id === id)!)
+    let width = 0
+    for (const p of parts) {
+      expect(p.material).toBe('wood_hard')
+      if (p.shape.kind !== 'box') throw new Error('a board is a box')
+      expect(p.shape.size[0]).toBeCloseTo(1.6)
+      width += p.shape.size[2]
+    }
+    expect(width).toBeCloseTo(0.8)
+    const near = parts.find((p) => Math.abs(p.position[2] - 0.16) < 0.01)!
+    const world = createDestruction({ seed: 1 })
+    world.add(table.spec, { id: 'table', position: [0, 0, 0] })
+    const fractures: string[] = []
+    world.on('fracture', (e) => {
+      if (e.type === 'fracture') fractures.push(e.part)
+    })
+    for (let i = 0; i < 6 && fractures.length === 0; i++) {
+      world.shoot([0.4, 1.5, near.position[2]], [0, -1, 0], 2045, 7.62)
+      world.update(1 / 60)
+    }
+    expect(fractures).toEqual([near.id])
+    const left = boards.filter((id) => world.part('table', id)!.status !== 'broken')
+    expect(left).toHaveLength(4)
+  })
+
+  it('a case keeps its boards as they are, and a top too thin for boards is one panel', () => {
+    expect(make('bookcase').spec.parts.some((p) => /_b\d+$/.test(p.id))).toBe(false)
+    expect(make('dining_table', { w: 1.6, d: 0.3, h: 0.78, options: { chairs: false } }).top?.parts).toBeUndefined()
   })
 
   it('builds one mesh per part named by the part id', () => {

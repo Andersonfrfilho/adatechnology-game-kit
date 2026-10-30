@@ -24,6 +24,8 @@ export interface ArenaTop {
   /** Id of the arena object the top belongs to, and of its part. */
   id: string
   topPart: string
+  /** A top made of boards (`SceneryObject.top.parts`): each holds what is over it while it stands; `topPart` is one of them. */
+  boards?: ReadonlyArray<{ part: string; minX: number; maxX: number; minZ: number; maxZ: number }>
   minX: number
   maxX: number
   minZ: number
@@ -39,6 +41,8 @@ export interface Arena {
   surfaces: SurfaceSpec[]
   /** `[minX, minZ, maxX, maxZ]` boxes the player cannot walk into. */
   colliders: Array<[number, number, number, number]>
+  /** The object of each collider (`colliders[i]`), `null` for what is not an object of the world (the tap's post). */
+  colliderIds: Array<string | null>
   playerStart: Vec3
   wallZ: number
   /** Tops of the scenery (pieces rest on them while their part stands). */
@@ -174,16 +178,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   sun.shadow.bias = -0.0006
   group.add(sun)
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(size * 2, size * 2), new THREE.MeshStandardMaterial({ color: 0x8e8e8a, roughness: 0.95 }))
-  floor.rotation.x = -Math.PI / 2
-  floor.receiveShadow = true
-  floor.name = 'floor'
-  group.add(floor)
-
-  const grid = new THREE.GridHelper(size * 2, size * 2, 0x4c4c52, 0x77777b)
-  grid.position.y = 0.004
-  group.add(grid)
-
   const sceneryObjects = resolveScenery(scenery)
   const wallObject = sceneryObjects.find((o) => o.id === WALL_ID)
   const wallZ = wallObject ? wallObject.position[2] : DEFAULT_WALL_Z
@@ -226,18 +220,25 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   const surfaces: SurfaceSpec[] = [{ id: 'floor', point: [0, 0, 0], normal: [0, 1, 0], halfSize: [size, size], porosity: 0.05 }]
   for (const o of sceneryObjects) {
     if (!o.top) continue
-    const b = specBounds(THREE, o.spec, o.position, o.rotationY, { onlyPart: o.top.part })
-    if (!b) continue
+    const boards = (o.top.parts ?? []).flatMap((part) => {
+      const f = specBounds(THREE, o.spec, o.position, o.rotationY, { onlyPart: part })
+      return f ? [{ part, minX: f.minX, maxX: f.maxX, minZ: f.minZ, maxZ: f.maxZ }] : []
+    })
+    const whole = specBounds(THREE, o.spec, o.position, o.rotationY, { onlyPart: o.top.part })
+    if (!whole) continue
+    const b = boards.length === 0 ? whole : { minX: Math.min(...boards.map((f) => f.minX)), maxX: Math.max(...boards.map((f) => f.maxX)), minZ: Math.min(...boards.map((f) => f.minZ)), maxZ: Math.max(...boards.map((f) => f.maxZ)) }
     const top = o.position[1] + o.top.y
-    tops.push({ id: o.id, topPart: o.top.part, minX: b.minX, maxX: b.maxX, minZ: b.minZ, maxZ: b.maxZ, top })
+    tops.push({ id: o.id, topPart: o.top.part, minX: b.minX, maxX: b.maxX, minZ: b.minZ, maxZ: b.maxZ, top, ...(boards.length > 0 ? { boards } : {}) })
     surfaces.push({ id: o.id, point: [(b.minX + b.maxX) / 2, top, (b.minZ + b.maxZ) / 2], normal: [0, 1, 0], halfSize: [(b.maxX - b.minX) / 2, (b.maxZ - b.minZ) / 2], porosity: 0.3 })
   }
 
   // colliders: the footprint of every object (what lies flat on the floor is walked over); the wall also closes the arena behind it
   const colliders: Array<[number, number, number, number]> = []
+  const colliderIds: Array<string | null> = []
   for (const o of sceneryObjects) {
     const b = specBounds(THREE, o.spec, o.position, o.rotationY, { minHeight: 0.1 })
     if (!b) continue
+    colliderIds.push(o.id)
     colliders.push(o.id === WALL_ID ? [-size, b.minZ - 1, size, b.maxZ + 0.1] : [b.minX, b.minZ, b.maxX, b.maxZ])
   }
 
@@ -281,6 +282,7 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
       }
       tapSpout = [cx + 0.3, y + 0.5, cz]
       colliders.push([postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1])
+      colliderIds.push(null)
     }
   }
 
@@ -289,6 +291,7 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     objects: sceneryObjects,
     surfaces,
     colliders,
+    colliderIds,
     playerStart,
     wallZ,
     tops,

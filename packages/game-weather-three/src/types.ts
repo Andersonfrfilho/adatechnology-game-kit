@@ -5,6 +5,7 @@ import type { WeatherSample } from '@adatechnology/game-weather'
 export type ThreeLib = Pick<
   typeof THREE_NS,
   | 'AdditiveBlending'
+  | 'Box3'
   | 'BoxGeometry'
   | 'BufferAttribute'
   | 'BufferGeometry'
@@ -16,6 +17,7 @@ export type ThreeLib = Pick<
   | 'Group'
   | 'HemisphereLight'
   | 'Mesh'
+  | 'Matrix4'
   | 'MeshBasicMaterial'
   | 'Object3D'
   | 'PlaneGeometry'

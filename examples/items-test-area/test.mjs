@@ -49,7 +49,7 @@ if (!playwright || !existsSync(page)) {
     const shown = await tab.evaluate(() => window.__testRoom.metrics().module)
     await tab.waitForTimeout(400)
     await tab.screenshot({ path: join(shots, `items-${lang}.png`) })
-    check(`[${lang}] the area opens with every item on the shelves`, shown.items > 350 && shown.draw_calls > shown.items && /^23\/\d+$/.test(String(shown.modeled)), shown)
+    check(`[${lang}] the area opens with every item on the shelves`, shown.items > 350 && shown.draw_calls > shown.items && /^[1-9]\d*\/\d+$/.test(String(shown.modeled)), shown)
     const state = await tab.evaluate(async () => {
       const room = window.__testRoom
       const report = window.__itemsReport

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-structure",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "license": "MIT",
   "description": "Structure pack for @adatechnology/game-floorplan: construction systems (masonry, wood frame, log, improvised, canvas), the load path of every plan (roof, trusses, beams, pillars, bearing walls, foundation, porches), the destructible spec of the structure, wall detail, specimens and utilities.",
   "keywords": [

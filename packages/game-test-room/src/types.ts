@@ -11,10 +11,14 @@
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { FurniturePushRules } from '@adatechnology/game-player'
+import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
+import type { GroundLayout } from '@adatechnology/game-contracts'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
@@ -104,7 +108,7 @@ export interface SceneryObject {
    * A top that loose things rest on (and liquids pool on) while that part stands: the part id and the height of its upper face in the spec's space.
    * The rectangle is the part's footprint. Without it nothing rests on the object.
    */
-  top?: { part: string; y: number }
+  top?: { part: string; y: number; parts?: readonly string[] }
   /**
    * Where a water tap of the piece pours (a sink, a tub), in the spec's space: the room's tap (its stream and its HUD button) pours there, and the piece's own model is the tap. The first piece with a `spout` wins over the table tap.
    */
@@ -168,8 +172,10 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
-  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
-  craters?: boolean
+  /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
+  ground?: GroundLayout
+  /** Limits of the floor's marks, thrown pieces and redraws per frame. */
+  terrainBudget?: Partial<TerrainBudget>
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
@@ -214,6 +220,8 @@ export interface TestRoomOptions {
    * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
    */
   strikeClips?: Readonly<Record<string, string>>
+  /** The numbers of pushing furniture (`FurniturePushRules` of game-player): the player's force, the friction by material, the hold time, the speed. */
+  push?: Partial<FurniturePushRules>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
   /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
@@ -319,8 +327,20 @@ export interface TestRoom {
   useItem(useId: string): boolean
   /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
   use(hold?: number): void
+  /** Where the player's feet are. */
+  readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
+  /**
+   * Pushing furniture, as holding E against it does: `begin` leans on what the camera looks at (false: nothing within reach to lean on), `setWalk` walks by script (world `[x, z]`, unit; null: the keys), `end`
+   * lets go, and `state` says the phase (`grip` while the hold timer fills, `push`, `strain`), the timer and what stops it (`too_heavy`, `obstacle`).
+   */
+  readonly push: {
+    begin(): boolean
+    end(): boolean
+    setWalk(walk: readonly [number, number] | null): void
+    readonly state: RoomPushState | null
+  }
   /** Throw what is held at `speed` m/s (default 9). */
   throwHeld(speed?: number): boolean
   /** Point the camera (scripted demos and tests). */
@@ -364,6 +384,8 @@ export interface TestRoom {
    * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
    */
+  /** The floor: what it is made of, how deep it was dug, its marks and thrown pieces. */
+  readonly terrain: Terrain
   openArea(group: string): SpawnedObject[]
   /** The loaded modules (`loadModule`): id, name, catalogue group and whether it lays an area of its own. */
   modules(): Array<{ id: string; name: string; group?: string; hasArea: boolean }>
@@ -535,6 +557,7 @@ export interface ScenarioReport {
 }
 
 export type { DestructionEvent, Vec3 }
+export type { RoomPushEvent, RoomPushState } from './furniture-push'
 export type {
   AnimationClipSpec,
   ItemAnimationContract,

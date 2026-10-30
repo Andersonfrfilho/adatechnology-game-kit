@@ -79,6 +79,19 @@ export interface AreaPlacement {
   asleep?: boolean
 }
 
+/** A rectangle of the floor made of something else: `rect` is `[x0, z0, x1, z1]` in world metres, `surface` a ground profile id of the host. */
+export interface GroundZone {
+  readonly rect: readonly [number, number, number, number]
+  readonly surface: string
+}
+
+/** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */
+export interface GroundLayout {
+  readonly surface: string
+  /** Later zones over earlier ones. */
+  readonly zones?: readonly GroundZone[]
+}
+
 /** How the host sets the module's area up: what goes where, and where the camera starts. */
 export interface ModuleArea {
   placements: AreaPlacement[]
@@ -247,6 +260,12 @@ export interface ModuleHost {
    */
   addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
   /**
+   * Puts an item of the host's catalogue (from any loaded module, by its id) in the world as part of the scenery: it stays through the clears and the openings of areas, and shots, blows, blasts
+   * and fire hit it like any item (a module's lamp rig standing on a real car of the fleet). Scenarios that start from a seeded world run without it, and it comes back after them. `rotationY` turns it about the vertical axis. Returns null while no loaded module has the item; `remove`
+   * takes it away. A host without a catalogue leaves it out.
+   */
+  addObject?(itemId: string, place: { readonly position: Vec3; readonly rotationY?: number }): { readonly objectId: string; readonly root: unknown; remove(): void } | null
+  /**
    * Lends the host the place of the hands for the tool in the module's hands (a weapon's grip and handguard): the host that draws the player's arms reads `source` every frame, after the
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */
@@ -285,6 +304,8 @@ export interface TestableModule<Context = unknown> {
   controls?(locale: string): ModuleControl[]
   layers?(locale: string): ModuleLayer[]
   metrics?(locale: string): ModuleMetric[]
+  /** The floor of the module's area, laid when the host opens it. Without it the host keeps its default floor. */
+  ground?: GroundLayout
   /** Called once when the module is loaded, with what the host lends. Returns the function that undoes it. */
   attach?(host: ModuleHost): () => void
 }

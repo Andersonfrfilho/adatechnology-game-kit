@@ -22,7 +22,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       steel: 'steel', cast_iron: 'cast iron', aluminium: 'aluminium', copper: 'copper', wood_soft: 'softwood', wood_hard: 'hardwood', plywood: 'plywood',
       mdf: 'MDF', glass: 'glass', tempered_glass: 'tempered glass', ceramic: 'ceramic', concrete: 'concrete', brick: 'brick', plaster: 'plaster',
       stone: 'stone', plastic: 'plastic', rubber: 'rubber', fabric: 'fabric', foam: 'foam', leather: 'leather', paper: 'paper', foliage: 'foliage',
-      green_wood: 'green wood', cactus: 'cactus', flesh_fruit: 'fruit', wax: 'wax', soil: 'soil',
+      green_wood: 'green wood', cactus: 'cactus', flesh_fruit: 'fruit', wax: 'wax', soil: 'soil', asphalt: 'asphalt', sand: 'sand', gravel: 'gravel', turf: 'turf', mortar: 'mortar',
     },
     partStatus: { intact: 'intact', damaged: 'damaged', collapsed: 'collapsed', broken: 'broken', melted: 'melted', ashes: 'ashes' },
     jointKinds: {
@@ -46,7 +46,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       steel: 'aço', cast_iron: 'ferro fundido', aluminium: 'alumínio', copper: 'cobre', wood_soft: 'madeira macia', wood_hard: 'madeira de lei',
       plywood: 'compensado', mdf: 'MDF', glass: 'vidro', tempered_glass: 'vidro temperado', ceramic: 'cerâmica', concrete: 'concreto', brick: 'tijolo',
       plaster: 'gesso', stone: 'pedra', plastic: 'plástico', rubber: 'borracha', fabric: 'tecido', foam: 'espuma', leather: 'couro', paper: 'papel',
-      foliage: 'folhagem', green_wood: 'madeira verde', cactus: 'cacto', flesh_fruit: 'fruta', wax: 'cera', soil: 'terra',
+      foliage: 'folhagem', green_wood: 'madeira verde', cactus: 'cacto', flesh_fruit: 'fruta', wax: 'cera', soil: 'terra', asphalt: 'asfalto', sand: 'areia', gravel: 'brita', turf: 'grama', mortar: 'argamassa',
     },
     partStatus: { intact: 'intacto', damaged: 'danificado', collapsed: 'desabado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
     jointKinds: {
