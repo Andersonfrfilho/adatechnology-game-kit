@@ -30,6 +30,8 @@ export const HAND_HOLD = {
   /** Closure of the fingers on a grip and on a forend (0 open, 1 closed). */
   closed: 0.9,
   forend: 0.6,
+  /** How far the shooting hand slides on its grip so the thumb reaches the safety lever. */
+  thumbReach: 0.02,
   /** How fast the supporting hand goes to the magazine and back, per second. */
   magRate: 7,
   /** The hands shrink with the tool: a tool drawn at scale `s` takes hands at `s ** handScaleExponent`. */
