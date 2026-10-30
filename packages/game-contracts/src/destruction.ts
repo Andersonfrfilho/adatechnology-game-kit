@@ -724,7 +724,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
-  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */
+  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²); `layer` -1 is a crater in the bare core (`MaterialHit.crater`). */
   | (EventBase & { type: 'spall'; part: string; layer: number; point: Vec3; area: number })
   /**
    * A staged part changed stage. At stage 2 `opening` is where the breach is and `fragments` the unit-sized pieces that came out (the part is not

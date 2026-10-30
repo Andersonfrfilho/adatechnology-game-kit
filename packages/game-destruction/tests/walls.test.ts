@@ -65,14 +65,17 @@ describe('layered penetration and spall', () => {
     expect(w.world.part(w.objectId, 'wall')!.status).not.toBe('broken')
   })
 
-  it('a 7.62 burst never breaches reinforced concrete: stage 1, no through hole, the wall stands', () => {
+  it('a 7.62 burst takes the concrete out where it lands and leaves the steel: blocks out, the bars show there, no round goes through, the wall stands', () => {
     const w = wallWorld('reinforced_concrete')
     burst(w, RIFLE_762, 80)
     expect(ofType(w.events, 'hole').some((e) => e.hole.through)).toBe(false)
-    expect(ofType(w.events, 'stage').map((e) => e.stage)).toEqual([1])
+    expect(ofType(w.events, 'chip').length).toBeGreaterThan(0)
+    const expose = ofType(w.events, 'expose')
+    expect(expose.length).toBeGreaterThan(0)
+    expect(expose.at(-1)!.bars.length).toBeGreaterThan(0)
     const wall = w.world.part(w.objectId, 'wall')!
     expect(wall.status).not.toBe('broken')
-    expect(wall.opening).toBeUndefined()
+    expect(wall.stripped).toBeUndefined()
   })
 
   it.each([
