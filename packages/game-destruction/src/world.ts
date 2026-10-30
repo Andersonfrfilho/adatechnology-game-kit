@@ -58,6 +58,10 @@ function sweepOrigins(box: { readonly min: Vec3; readonly max: Vec3 }, d: Vec3, 
   }
   return origins
 }
+/** Metres: a ductile part this thin or thinner is a foil-like sheet (a drink can, a food tin): a blow folds it where it lands, a blade cuts through it. */
+const THIN_SHEET_CRUSH = 0.0005
+/** Metres: the widest dent a blow leaves on such a sheet; the sheet folds under the fist, the shoe or the corner it lands on, not under the whole reach of the blow. */
+const THIN_SHEET_CONTACT = 0.025
 const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
@@ -2062,9 +2066,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // brittle thin shells (a bottle, a mug, a pane) break from a knock that a thick block shrugs off
     const fragile = kind === 'blunt' ? fragility(mat.ductility, p.thickness) : 1
     const Ec = E * fragile
+    // a foil-like sheet folds deeper than a plate for the same blow (up to 4 times for a tenth of a millimetre), on the patch the blow touches
+    const sheet = mat.ductility >= 0.5 && p.thickness <= THIN_SHEET_CRUSH
+    const fold = sheet ? Math.min(4, Math.sqrt(0.001 / p.thickness)) : 1
+    const patch = sheet ? Math.min(contactR, THIN_SHEET_CONTACT) : contactR
     if (E > 0) {
       if (kind === 'blunt') {
-        if (mat.ductility >= 0.5) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.0001, 0.001, 0.06), src)
+        // a sheet folds in at most to near its middle, never through its far wall
+        if (mat.ductility >= 0.5) addDent(o, p, point, n, Math.max(patch, 0.015), clamp(E * 0.0001 * fold, 0.001, sheet ? Math.min(0.06, Math.min(...p.dims) * 0.45) : 0.06), src)
         else if (mat.ductility < 0.3) {
           if (Ec >= 5) addCrack(o, p, point, n, clamp(0.04 + Math.min(Ec, E * 6) * 0.0008, 0.04, 0.6), src)
         } else if (E >= thrMm * 0.2) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.00006, 0.001, 0.04), src)
@@ -2074,6 +2083,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         // a blade with more energy than the wall takes to cross goes through it and leaves a slit the width of the blade (a knife into a 3 mm plastic bin or a
         // drink can, an axe through a thin board); brittle walls (glass, ceramic, masonry, MDF) are only scratched
         addHole(o, p, point, n, clamp(contactR, 0.01, 0.08), true, undefined, src)
+        // a foil-thin sheet (a can) is pushed in around the slit
+        if (sheet) addDent(o, p, point, n, Math.max(patch * 0.6, 0.01), clamp(E * 0.00004 * fold, 0.0005, 0.02), src)
       } else if (mat.ductility >= 0.5) {
         addDent(o, p, point, n, Math.max(contactR, 0.01), clamp(E * 0.00004, 0.0005, 0.02), src)
       }

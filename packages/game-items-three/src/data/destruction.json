@@ -19,14 +19,19 @@
         },
         "tessellate": {
           "cylinder": {
-            "heightSegments": 6,
-            "radialSegments": 20
+            "heightSegments": 24,
+            "radialSegments": 40,
+            "capRings": 6
           },
           "box": {
             "widthSegments": 6,
             "heightSegments": 1,
             "depthSegments": 4
           }
+        },
+        "wall": {
+          "body": 0.0001,
+          "ends": 0.00025
         }
       }
     },
@@ -50,14 +55,19 @@
         },
         "tessellate": {
           "cylinder": {
-            "heightSegments": 6,
-            "radialSegments": 20
+            "heightSegments": 24,
+            "radialSegments": 40,
+            "capRings": 6
           },
           "box": {
             "widthSegments": 6,
             "heightSegments": 1,
             "depthSegments": 4
           }
+        },
+        "wall": {
+          "body": 0.00018,
+          "ends": 0.00022
         }
       }
     }

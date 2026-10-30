@@ -31,9 +31,11 @@ export function shellDisplacementAt(THREE: typeof THREE_NS, worldPoint: THREE_NS
       const ids = [0, 1, 2].map((corner) => (index ? index.getX(t * 3 + corner) : t * 3 + corner))
       ids.forEach((id, corner) => corners[corner]!.set(shell.before[id * 3]!, shell.before[id * 3 + 1]!, shell.before[id * 3 + 2]!))
       triangle.set(corners[0], corners[1], corners[2])
+      // a degenerate triangle (the tip of a lathe on its axis, the doubled rim of a can) has no surface to follow and no closest point (NaN must never win)
+      if (triangle.getArea() <= 1e-14) continue
       triangle.closestPointToPoint(local, closest)
       const distance = closest.distanceToSquared(local)
-      if (distance >= nearest) continue
+      if (!(distance < nearest)) continue
       nearest = distance
       nearestScale = shell.mesh.matrixWorld.getMaxScaleOnAxis() || 1
       triangle.getBarycoord(closest, weights)
