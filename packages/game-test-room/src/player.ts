@@ -85,6 +85,8 @@ export const CROUCH_DROP = 0.55
 const CROUCH_WALK = 1.7
 const CROUCH_RATE = 9
 const BEND_RATE = 7
+/** The widths of the body, against its full width, that say how deep something has come into it. */
+const CLEAR_SHARES = [1, 0.75, 0.5, 0.25]
 /** A crouch key released within this many seconds was a tap, which stays crouched; a longer press was a hold. */
 const CROUCH_TAP = 0.25
 const RUN = 6.2
@@ -145,26 +147,32 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   apply()
 
   const outside = (x: number, z: number): boolean => Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS
-  const blocked = (x: number, z: number): boolean => {
+  const blocked = (x: number, z: number, radius = PLAYER_RADIUS): boolean => {
     if (outside(x, z)) return true
-    for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
-    if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
-    return o.footing ? o.footing(x, z, PLAYER_RADIUS, y).blocked : false
+    for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
+    if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
+    return o.footing ? o.footing(x, z, radius, y).blocked : false
+  }
+  /** The widest body that fits where the player is, or null when not even the narrowest does: how deep something has come into the player. */
+  const clearRadius = (): number | null => {
+    for (const share of CLEAR_SHARES) if (!blocked(px.x, px.z, PLAYER_RADIUS * share)) return PLAYER_RADIUS * share
+    return null
   }
   // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
   const wish = { x: 0, z: 0 }
   const move = (dx: number, dz: number): void => {
     wish.x += dx
     wish.z += dz
-    // caught inside something (a piece fell on the spot) the player walks out of it
-    const stuck = blocked(px.x, px.z)
+    // caught in something (a piece fell on the spot, a piece settling touches the body) the player walks out of it, and never deeper; right inside, every way is out
+    const radius = clearRadius()
+    const free = (x: number, z: number): boolean => (radius === null ? !outside(x, z) : !blocked(x, z, radius))
     // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
     const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
     const sx = dx / steps
     const sz = dz / steps
     for (let i = 0; i < steps; i++) {
-      if (stuck ? !outside(px.x + sx, px.z) : !blocked(px.x + sx, px.z)) px.x += sx
-      if (stuck ? !outside(px.x, px.z + sz) : !blocked(px.x, px.z + sz)) px.z += sz
+      if (free(px.x + sx, px.z)) px.x += sx
+      if (free(px.x, px.z + sz)) px.z += sz
     }
   }
 
