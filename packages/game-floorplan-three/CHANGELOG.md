@@ -1,5 +1,25 @@
 # @adatechnology/game-floorplan-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 2a1bb17: Wall damage stays where the shot lands. The house no longer redraws a whole wall as plain white blocks on the first brick that comes out: the wall keeps
+  its geometry, plaster and paint, and is cut by a mask only where units came out, with a ragged edge of plaster and the bricks (in their mortar) or the
+  rough concrete of a beam showing around the hole. Bullet holes, spalls and the impact marks of the effects go with the brick that comes out
+  (`DecalPool.clearInside` in game-vfx). A bullet now wears only its stretch of a joint (`BULLET_JOINT_SPAN`), so a row of shots along a ten-metre wall no
+  longer opens the whole mortar bed and brings the wall down.
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-destruction@0.12.0
+  - @adatechnology/game-floorplan-structure@1.3.1
+  - @adatechnology/game-floorplan-interactables@0.1.0
+  - @adatechnology/game-floorplan-residential@5.0.0
+
 ## 0.6.0
 
 ### Minor Changes
