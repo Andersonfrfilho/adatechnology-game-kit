@@ -187,7 +187,7 @@ export interface TestRoomOptions {
    * supplies the real model; where it answers nothing the room draws a plain primitive (a sphere, a cylinder, a box).
    */
   projectileModel?: (query: ProjectileQuery) => ProjectileModel | null | undefined
-  /** Keys (`KeyboardEvent.code`) that crouch while held; default `['KeyC']`. Ctrl is left out on purpose: Ctrl+W closes the tab. */
+  /** Keys (`KeyboardEvent.code`) that crouch (a tap stays crouched until the next tap, a longer press crouches while held); default `['KeyC']`. Ctrl is left out on purpose: Ctrl+W closes the tab. */
   crouch?: { keys?: string[] }
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]

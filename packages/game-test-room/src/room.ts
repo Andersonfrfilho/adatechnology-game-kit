@@ -826,7 +826,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const third: Required<ThirdPersonOptions> = { ...THIRD_PERSON_DEFAULTS, ...options.thirdPerson }
   let avatar: RoomAvatar | null = null
   let cameraMode: CameraMode = options.cameraMode ?? 'first'
-  /** Crouched by a player module (`setAvatarState`); the Ctrl key crouches too. */
+  /** Crouched by a player module (`setAvatarState`); the crouch keys crouch too. */
   let crouchForced = false
   const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
   let feetPrev: [number, number] | null = null
