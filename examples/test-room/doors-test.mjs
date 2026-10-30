@@ -108,7 +108,7 @@ for (const mode of modes) {
   await waitIdle()
   const bst = await page.evaluate((o) => window.__testRoom.leaves(o).map((p) => [p, window.__testRoom.leafOpening(o, p)]), bl.id)
   const moved = bst.filter(([, v]) => v > 0)
-  check((await lastAction('door_blocked')) > blockedBefore && moved.length === 1 && moved[0][1] < 0.9, `the door hits the nightstand and stops at ${moved.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
+  check((await lastAction('door_blocked')) > blockedBefore && moved.length === 1 && moved[0][1] < 0.9, `the door hits the barbecue and stops at ${moved.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-blocked`)
   // close it again for the next run
   await lookFromHere([bl.at[0] - 0.3, 1.2, bl.at[2] + 0.3])
