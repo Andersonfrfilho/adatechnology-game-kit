@@ -10,7 +10,7 @@ import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechn
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { createGroundField, createVfx } from '@adatechnology/game-vfx'
+import { SPRITE_KINDS, createGroundField, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
@@ -221,6 +221,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     vfx: createVfx({
       profile: quality,
+      ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
       groundAt: (x, z) => groundAt(x, z) + (craterField?.heightAt(x, z) ?? 0),
       ...(craterField ? { ground: craterField } : {}),
     }),
@@ -232,6 +233,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     groundAt,
     pointScale,
+    ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
+    ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it

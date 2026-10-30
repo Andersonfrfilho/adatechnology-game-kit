@@ -20,14 +20,20 @@ interface Live {
   air: number
   /** The `update` count when it was made. */
   born: number
+  /** Seconds it stays at rest before it fades (0 = forever). */
+  life: number
 }
+
+/** What a fragment's resting time can depend on: the fragment (its material, size, shape) and the id of the object it came from. */
+export type FragmentLifeRule = (fragment: Fragment, objectId: string) => number
 
 export interface FragmentSystemOptions {
   scene: THREE_NS.Scene
   groundAt: (x: number, z: number) => number
   gravity: number
   max: number
-  life: number
+  /** Seconds a resting fragment stays before it fades (0 = forever), or a rule that gives it per fragment. */
+  life: number | FragmentLifeRule
 }
 
 /** Thickest scrap that flies as a sheet (m), its air drag (1/s) and how hard it sways (m/s²). */
@@ -175,6 +181,7 @@ export class FragmentSystem {
       dying: false,
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
       born: this.tick,
+      life: Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
     }
     this.list.push(live)
     this.addMarks(mesh, f)
@@ -213,7 +220,7 @@ export class FragmentSystem {
       }
       if (f.asleep) {
         f.rest += dt
-        if (this.o.life > 0 && f.rest > this.o.life) f.dying = true
+        if (f.life > 0 && f.rest > f.life) f.dying = true
         continue
       }
       this.step(f, dt, g)

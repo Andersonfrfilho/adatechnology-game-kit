@@ -417,3 +417,23 @@ describe('the player against the objects', () => {
   })
 })
 
+
+describe('how long what breaks off stays on screen (debris)', () => {
+  it('passes the fragment life rule and the fragment budget to the renderer', () => {
+    const seen: string[] = []
+    const room = makeRoom({ debris: { maxFragments: 4, fragmentLife: (_f, objectId) => (seen.push(objectId), 0) } })
+    const pane = room.spawn('glass_pane', [0, 0, -4], 0)
+    for (let i = 0; i < 12 && room.world.part(pane.objectId, 'pane')?.status !== 'broken'; i++) {
+      room.world.hitPart(pane.objectId, 'pane', { type: 'ballistic', point: [0, 1.05, -4.0], direction: [0, 0, -1], energy: 500, caliber: 9 })
+    }
+    room.update(1 / 60)
+    expect(seen.length).toBeGreaterThan(0)
+    expect(seen.every((id) => id === pane.objectId)).toBe(true)
+    for (let i = 0; i < 120; i++) room.update(1 / 60)
+    expect(room.renderer.stats().fragments).toBeLessThanOrEqual(4)
+  })
+
+  it('tunes the dust and the other sprites by kind', () => {
+    expect(() => makeRoom({ debris: { particles: { dust: { life: [10, 30] } } } })).not.toThrow()
+  })
+})

@@ -12,9 +12,9 @@ import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
-import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
@@ -237,6 +237,13 @@ export interface TestRoomOptions {
   thirdPerson?: ThirdPersonOptions
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
+  /**
+   * How long what breaks off stays on screen. `fragmentLife`: seconds a resting fragment (a chip, a shard, a chunk) stays before it fades, 0 = forever, or a rule per
+   * fragment from its material, size and object (default 12 s); `maxFragments`: how many live at once, the oldest fades first (default 160). `particles` tunes the
+   * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
+   * a slab) stay as part of the map, with collision.
+   */
+  debris?: { fragmentLife?: number | FragmentLifeRule; maxFragments?: number; particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>> }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
   /**
