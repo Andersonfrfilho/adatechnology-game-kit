@@ -136,6 +136,36 @@ const bodyOk = before.mode === 'first' && before.visible === false && before.hin
 console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: hidden in first person, shown after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
 
+// the test table: the goods and the weapons laid on the long dining table of the furniture catalogue a page at a time, and each trial (shot, punch, knife, fire, blast) reaches the item picked
+await page.goto(`${url}?ui=1&table=1`, { timeout: 180000 })
+await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
+const table = await page.evaluate(() => {
+  const r = window.__testRoom
+  const groups = r.testTable.groups()
+  const sizes = Object.fromEntries(groups.map((g) => [g, r.testTable.items().filter((i) => i.group === g).length]))
+  const reached = {}
+  for (const kind of ['shot', 'punch', 'stab', 'fire', 'blast']) {
+    const page = r.testTable.find('item_canned_beans') ?? r.testTable.find(r.testTable.items()[0].id)
+    const target = page.selected
+    const before = r.log.entries().length
+    r.testTable.trial(kind)
+    for (let i = 0; i < 60; i++) r.update(1 / 60)
+    reached[kind] = r.log.entries().slice(before).some((e) => e.objectId === target && e.type !== 'spawn')
+  }
+  const panel = !!document.querySelector('.tr-table') && document.querySelectorAll('.tr-table [data-trial]').length === 5
+  return { groups: groups.length, sizes, reached, panel }
+})
+await page.evaluate(() => {
+  const r = window.__testRoom
+  r.testTable.relay()
+  r.look([-8, 2.2, 6], [-8, 0.8, 3])
+})
+await page.waitForTimeout(400)
+await page.screenshot({ path: join(shotsDir, 'test-table.png'), ...SHOT })
+const tableOk = table.panel && table.groups > 5 && Object.values(table.reached).every(Boolean)
+console.log(`${tableOk ? 'PASS' : 'FAIL'}  test table: every group laid a page at a time, each trial reaches the item picked`, JSON.stringify(table))
+if (!tableOk) report.failed++
+
 lap('before the first-person steps')
 // the first-person arms and the strikes, in both languages: bare hands, fists, a pistol and a rifle held, the rifle mid-reload, the punch, the shove and the kick at their impact, and the punch seen from behind
 const fpSteps = [

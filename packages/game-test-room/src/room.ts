@@ -23,6 +23,7 @@ import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { createExplosives } from './explosives'
+import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { createLoading } from './loading'
@@ -2546,6 +2547,65 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return [...row(front, 1.6, 1.5), ...row(back, 4.5, -4)]
   }
 
+  // ----- the test table: a group of the catalogue laid on the `test_table` piece a page at a time, and the trials on one of its items
+  const catalogGroups = (): Map<string, TestRoomItem[]> => {
+    const m = new Map<string, TestRoomItem[]>()
+    for (const i of catalog) {
+      const g = m.get(i.group) ?? []
+      g.push(i)
+      m.set(i.group, g)
+    }
+    return m
+  }
+  const tableOptions = options.testTable === false ? {} : (options.testTable ?? {})
+  const tableScenery = tableOptions.scenery ?? 'test_table'
+  const measured = new Map<string, { w: number; d: number }>()
+  const testTable = createTestTable(
+    {
+      groups: catalogGroups,
+      top: () => {
+        const top = arena.tops.find((x) => x.id === tableScenery)
+        return top && topOk(top) ? top : null
+      },
+      measure: (itemId) => {
+        let size = measured.get(itemId)
+        if (!size) {
+          const item = catalogMap.get(itemId)
+          const box = item ? new THREE.Box3().setFromObject(buildRoot(item)) : null
+          size = box && !box.isEmpty() ? { w: box.max.x - box.min.x, d: box.max.z - box.min.z } : { w: 0.3, d: 0.3 }
+          measured.set(itemId, size)
+        }
+        return size
+      },
+      spawn: (itemId, position) => spawn(itemId, position, 0),
+      clear,
+      resetAll,
+      box: (objectId) => {
+        const e = entries.get(objectId)
+        if (!e || !world.has(objectId)) return null
+        const box = new THREE.Box3().setFromObject(e.so.root)
+        return box.isEmpty() ? null : { min: [box.min.x, box.min.y, box.min.z], max: [box.max.x, box.max.y, box.max.z] }
+      },
+      equip: (weapon) => {
+        if (!arsenal.weapons.has(weapon)) return false
+        if (heldEntry) releaseHeld()
+        equip(weapon)
+        room.waitUntilReady()
+        return true
+      },
+      look: (eye, target) => player.look(eye, target),
+      use: (hold) => room.use(hold),
+      blastAt: (weapon, point) => {
+        const def = arsenal.weapons.get(weapon)
+        const explosive = def?.action.kind === 'throwable' ? def.action.explosive : def?.action.kind === 'launcher' ? def.action.projectile : undefined
+        return explosive !== undefined && explosives.blastAt(weapon, explosive, point)
+      },
+      log: (type, text, data) => action(type, text, { data }),
+      translate: t,
+    },
+    tableOptions,
+  )
+
   const room: TestRoom & {
     tilt(rad: number): void
     toggleTap(on?: boolean): boolean
@@ -2576,6 +2636,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     get scenarios() {
       return allScenarios()
     },
+    testTable,
     spawn,
     clear,
     resetAll,
@@ -2824,6 +2885,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       onAction: (id) => {
         if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.act(id))
       },
+      ...(options.testTable !== false && arena.tops.some((x) => x.id === tableScenery) ? { testTable } : {}),
     })
     ui.hud(hudState())
     showBench()
