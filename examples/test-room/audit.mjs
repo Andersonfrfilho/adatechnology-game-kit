@@ -270,10 +270,12 @@ await step('jogador_esbarra', async () => {
   const r = await page.evaluate(() => {
     const room = window.__testRoom
     room.look([-7, 1.6, -4], [-7, 1.0, -6])
-    room.walk([-7, 0, -8], 2)
+    room.walk([-7, 0, -9], 4)
+    // the walk in simulated time, 60 steps a second (a software-rendered page runs a few frames a second)
+    for (let i = 0; i < 300; i++) room.update(1 / 60)
     return true
   })
-  await sleep(3000)
+  await sleep(500)
   const player = await page.evaluate(() => window.__testRoom.camera.position.toArray().map((v) => Math.round(v * 100) / 100))
   return { walked: r, playerEnd: player, ...(await result('jogador-esbarra', { cost: 0 })) }
 })
