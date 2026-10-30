@@ -2191,7 +2191,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } else if (mat.ductility >= 0.5) {
       addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(Math.min(Math.max(p.thickness * 3, 0.003), ratio * 0.01), 0.001, 0.05), src)
     } else if (brittle) {
-      addCrack(o, p, entry, n, crackLen, src)
+      // a wall of units (brick, block) takes a round in a crater, not a star of cracks: those are glass's and a slab's
+      if (!p.spec.units) addCrack(o, p, entry, n, crackLen, src)
       if (mat.fracture !== 'shatter') addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     } else addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)

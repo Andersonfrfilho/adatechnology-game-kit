@@ -95,6 +95,28 @@ const SKIN_SLACK = 0.0005
 const SKIN_LAYER_SLACK = 4
 /** And at least this many times the distance to the nearest vertex, so even the nearest one is pushed visibly. */
 const NEAREST_MARGIN = 1.5
+/**
+ * The first positions of a merged mesh: `userData._p0` when another drawing keeps them there (the house renderer, which collapses the ranges of what it
+ * draws itself, `userData.collapsedRanges`), else those of the geometry it was bound with.
+ */
+const basePositions = (host: { mesh: Mesh; origGeometry: THREE_NS.BufferGeometry }): Float32Array | null => {
+  const p0 = host.mesh.userData._p0 as Float32Array | undefined
+  if (p0) return p0
+  const op = positionAttr(host.origGeometry)
+  return op ? (op.array as unknown as Float32Array) : null
+}
+
+/** Collapses in `arr` the ranges another drawing hides on the mesh (`userData.collapsedRanges`, each to its first vertex). */
+const collapseForeign = (mesh: Mesh, arr: Float32Array): void => {
+  for (const [v0, v1] of (mesh.userData.collapsedRanges as Array<[number, number]> | undefined) ?? []) {
+    for (let k = v0 + 1; k < v1; k++) {
+      arr[k * 3] = arr[v0 * 3]!
+      arr[k * 3 + 1] = arr[v0 * 3 + 1]!
+      arr[k * 3 + 2] = arr[v0 * 3 + 2]!
+    }
+  }
+}
+
 /** Metres along its normal a mark looks for the drawn face under it (`onFace`). */
 const DECAL_SNAP = 0.03
 
@@ -288,7 +310,7 @@ export class Visuals {
     host.ownGeo = true
     const g = host.mesh.geometry.clone()
     host.mesh.geometry = g
-    host.work = new Float32Array((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>)
+    host.work = new Float32Array(basePositions(host) ?? ((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>))
     return true
   }
 
@@ -480,10 +502,17 @@ export class Visuals {
     this.ray.far = 2 * DECAL_SNAP
     const hits: THREE_NS.Intersection[] = []
     mesh.raycast(this.ray, hits)
-    // a wall the house cut where it was shot is drawn by a mesh of its own next to the merged one (`breach-shell` of the house renderer)
-    for (const c of mesh.parent?.children ?? []) if (c !== mesh && c.name === 'breach-shell') c.raycast(this.ray, hits)
+    // a wall the house cut where it was shot is drawn by a mesh of its own next to the merged one (`breach-shell` of the house renderer); where it is
+    // cut (`userData.cutAt`), the mark goes on what shows through (`userData.behind`: the bricks)
+    for (const c of mesh.parent?.children ?? []) {
+      if (c === mesh || c.name !== 'breach-shell') continue
+      c.raycast(this.ray, hits)
+      const behind = (c.userData.behind as (() => THREE_NS.Object3D | null) | undefined)?.()
+      if (behind) behind.raycast(this.ray, hits)
+    }
     let best: THREE_NS.Intersection | null = null
     for (const h of hits) {
+      if ((h.object.userData.cutAt as ((p: THREE_NS.Vector3) => boolean) | undefined)?.(h.point)) continue
       if (h.face && h.face.normal.clone().transformDirection(h.object.matrixWorld).dot(n) <= 0.3) continue
       if (!best || Math.abs(h.distance - DECAL_SNAP) < Math.abs(best.distance - DECAL_SNAP)) best = h
     }
@@ -753,6 +782,7 @@ export class Visuals {
     if (!pos || !work) return
     const arr = pos.array as unknown as Float32Array
     arr.set(work)
+    collapseForeign(host.mesh, arr)
     for (const s of host.sharers) {
       if (s.merged && s.merged.host === host) {
         if (s.collapsed) this.collapseRange(arr, s.merged.range)
@@ -964,9 +994,9 @@ export class Visuals {
     if (!host.ownGeo) return
     // positions and colours of the range go back to the original ones
     const work = host.work as Float32Array
-    const op = positionAttr(host.origGeometry)
+    const op = basePositions(host)
     const [v0, v1] = merged.range
-    if (op) work.set((op.array as unknown as Float32Array).subarray(v0 * 3, v1 * 3), v0 * 3)
+    if (op) work.set(op.subarray(v0 * 3, v1 * 3), v0 * 3)
     const attr = host.mesh.geometry.getAttribute('color') as THREE_NS.BufferAttribute | undefined
     if (attr) {
       const orig = host.origGeometry.getAttribute('color') as THREE_NS.BufferAttribute | undefined
@@ -980,6 +1010,14 @@ export class Visuals {
     if (host.sharers.every((s) => !s.touched)) {
       host.mesh.geometry.dispose()
       host.mesh.geometry = host.origGeometry
+      // the original geometry as it is now: its first positions, with what another drawing keeps collapsed
+      const base = basePositions(host), back = positionAttr(host.origGeometry)
+      if (base && back) {
+        const arr = back.array as unknown as Float32Array
+        arr.set(base)
+        collapseForeign(host.mesh, arr)
+        back.needsUpdate = true
+      }
       host.work = null
       host.ownGeo = false
       if (host.ownMat) {

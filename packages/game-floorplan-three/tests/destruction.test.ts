@@ -148,6 +148,32 @@ describe('fracture and reset', () => {
     expect(renderer.stats().decals).toBeGreaterThan(decals)
   })
 
+  it('takes the plaster off a 9 mm hit in a ragged patch with the brick under it, and no flat patch or star of cracks', () => {
+    const { d, house, world, centre, run, events } = setup()
+    const at = centre('wall_0_0')
+    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 500, caliber: 9 })
+    run(0.2)
+    const spall = events.find((e: any) => e.type === 'spall' && e.part === 'wall_0_0') as any
+    expect(spall).toBeDefined()
+    expect(events.some((e: any) => e.type === 'crack' && e.part === 'wall_0_0')).toBe(false)
+    const statistics = d.statistics().breached
+    expect(statistics.flakes).toBe(1)
+    expect(statistics.gone).toBe(0)
+    expect(statistics.craters).toBe(0)
+    const shell = house.group.getObjectByName('breach-shell') as any
+    expect(shell.userData.cutAt(new THREE.Vector3(...(spall.point as [number, number, number])))).toBe(true)
+    const units = house.group.getObjectByName('breach:wall_0_0') as any
+    expect(units.count).toBeGreaterThan(0)
+    expect(units.material.userData.breachCore.data.some((x: number) => x > 0)).toBe(false)
+    // the destruction renderer drew no patch of its own on the wall (a patch is a disc in the brick's colour)
+    const item = house.structure.meshesOf('wall_0_0').find((it: any) => it.mesh)
+    expect(item.mesh.userData.drawnSpalls).toContain('wall_0_0')
+    expect(item.mesh.children.filter((c: any) => c.renderOrder === 1)).toHaveLength(0)
+    // the hole sits on the brick laid bare, behind the face of the plaster
+    const hole = item.mesh.children.find((c: any) => c.renderOrder === 2)
+    expect(hole).toBeDefined()
+  })
+
   it('takes the marks of a brick that comes out away with it', () => {
     const { d, world, renderer, centre, run, events } = setup()
     const decals = renderer.stats().decals

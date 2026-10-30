@@ -979,6 +979,8 @@ class Renderer implements DestructionRenderer {
     // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
     if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
     else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
+    // a drawing that shows the coat coming off itself (the house renderer cuts its plaster and draws the bricks under it) takes no flat patch
+    if ((mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
     this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
   }
 
