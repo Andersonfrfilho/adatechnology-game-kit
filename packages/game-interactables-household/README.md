@@ -58,7 +58,7 @@ volumes (clothes, curtains, glass), `world.emitters()` for flames, smoke, steam 
 | Member | Description |
 |---|---|
 | `createHousehold({ locale?, region? })` | Creates the pack. `locale` is `en` (default) or `pt-BR`; `region` is `br` or `us` (default: `br` for `pt-BR`, else `us`) |
-| `hh.types` | `[{ id, name, group, w, d, h, y, solid }]`, `name` localized. `y` is the default mounting height, `solid: false` marks wall items and wires |
+| `hh.types` | `[{ id, name, group, w, d, h, y, solid, massKg }]`, `name` localized. `y` is the default mounting height, `solid: false` marks wall items and wires, `massKg` is the real mass of the whole object, empty (absent for what is built into the ground) |
 | `hh.items` | `ItemCatalog`, the 92 household items (same ids as before) with `size`, `weight`, `stack`, `shape`, `color`, `category` (one of the 14 of `game-items`; the old household category is in `tags`) and the rest of the `game-items` `ItemDef`. They come from `@adatechnology/game-items-goods`; `HOUSEHOLD_ITEM_IDS` lists them |
 | `hh.loot` | `LootTables` for `fridge`, `freezer`, `kitchen_cabinet`, `kitchen_drawer`, `pantry`, `wardrobe`, `dresser`, `nightstand`, `bathroom_cabinet`, `under_sink`, `trash`, `mailbox`, `bbq_counter`, `garage_shelf` |
 | `hh.strings` | `{ en, 'pt-BR' }`: `type.<id>`, `item.<id>` (from the goods locales), `prompt.<x>` (with `.open` / `.closed` / `.on` / `.off` variants) and `letter.*` texts. Pass it to `createWorld({ strings })` |

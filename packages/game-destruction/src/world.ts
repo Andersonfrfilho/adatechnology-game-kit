@@ -31,6 +31,10 @@ import { ignitionChance, resolveIgnitionRules, sparkTargetFactor } from '@adatec
 /** Hit points removed per joule (before the material's `damageScale`). */
 /** Metres: a ductile part this thin or thinner dishes around a bullet hole. */
 const THIN_SHEET_DISHING = 0.005
+/** Metres: a ductile part this thin or thinner is a foil-like sheet (a drink can, a food tin): a blow folds it where it lands, a blade cuts through it. */
+const THIN_SHEET_CRUSH = 0.0005
+/** Metres: the widest dent a blow leaves on such a sheet; the sheet folds under the fist, the shoe or the corner it lands on, not under the whole reach of the blow. */
+const THIN_SHEET_CONTACT = 0.025
 const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
@@ -60,6 +64,10 @@ const SEVER_BAND = 0.1
 const SEVER_ASPECT = 3
 /** A round that goes through wood tears its exit out in splinters: its damage counts this many times over in the band it crosses. */
 const SEVER_BALLISTIC = 2
+/** Joules per piece a blow tears out of a material that tears (`MaterialHit.tearJoules` default): a round leaving wood tears 2 to 7 splinters. */
+const TEAR_JOULES = 150
+/** Running number of the torn pieces (their ids). */
+let tears = 0
 /** Metres two parts may be apart and still rest on each other, for the span of a beam or a slab. */
 const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
@@ -1805,7 +1813,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const grain = p.spec.grain ? AXIS[p.spec.grain] : undefined
     const hitLocal = toLocal(c, q, hitW)
     const unitPlan = p.spec.units ? unitFragmentPlan(p, maxFragments * UNIT_FRAGMENT_FACTOR) : []
-    const axis = style === 'splinter' ? severAxis(p) : -1
+    const axis = style === 'splinter' || style === 'snap' ? severAxis(p) : -1
     const cutAt = axis < 0 ? undefined : p.rt.cutAt ?? (origin ? hitLocal[axis] : undefined)
     const plan = unitPlan.length > 0 ? unitPlan : planFragments({
       style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd, sheet: p.mat.sheet,
@@ -1874,7 +1882,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * board has little in each band and goes in a few shots; a beam or a log carries its whole section in each band and takes many.
    */
   const severAxis = (p: PartRT): number => {
-    if (p.mat.fracture !== 'splinter' || p.spec.shape.kind !== 'box') return -1
+    // boards and beams break where they are hit: wood along the grain, a snapping board (MDF, plastic) across
+    if ((p.mat.fracture !== 'splinter' && p.mat.fracture !== 'snap') || p.spec.shape.kind !== 'box') return -1
     const d = p.dims
     const order = [0, 1, 2].sort((a, b) => d[b] - d[a])
     return d[order[0]] >= SEVER_ASPECT * d[order[1]] && d[order[0]] >= 3 * SEVER_BAND ? order[0] : -1
@@ -1951,6 +1960,51 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  /** What a blow of `kind` tears out of the material (`MaterialDef.hits`): a round into wood tears splinters by default. */
+  const tearOf = (mat: MaterialDef, kind: DamageType): { tear: 'splinters' | 'lumps' | 'none'; joules: number } => {
+    const h = mat.hits?.[kind]
+    const tear = h?.tear ?? (kind === 'ballistic' && mat.penetrationClass === 'wood' ? 'splinters' : 'none')
+    return { tear, joules: h?.tearJoules ?? TEAR_JOULES }
+  }
+
+  /**
+   * Pieces torn out where a blow lands, as the material answers that kind of blow (`MaterialDef.hits`): splinters of fresh wood, lumps of MDF.
+   * A round (`exit` when it went through) throws most out of the exit along the shot and one in three back out of the entry, two out of the entry
+   * when it stayed; a blow knocks them out of the face it hits, one per `tearJoules`, none below. `scale` is the calibre or the contact size (m).
+   * Reported as a `chip` where they came off. The part stays: its hit points take the blow apart.
+   */
+  const tearAt = (o: ObjRT, p: PartRT, kind: DamageType, entry: Vec3, exit: Vec3 | undefined, d: Vec3, E: number, scale: number, src?: string) => {
+    const { tear, joules } = tearOf(p.mat, kind)
+    if (tear === 'none') return
+    const shot = kind === 'ballistic'
+    const n = shot ? (exit ? clamp(Math.round(E / joules), 1, 7) : 1) : clamp(Math.floor(E / joules), 0, 5)
+    if (n === 0) return
+    const fibre = tear === 'lumps'
+    const { q } = partXf(o, p)
+    const along = (p.spec.grain ? AXIS[p.spec.grain] : undefined) ?? [0, 1, 2].sort((a, b) => p.dims[b] - p.dims[a])[0]
+    const fragments: Fragment[] = []
+    for (let i = 0; i < n; i++) {
+      // out of the entry (back towards the shooter or the fist), or out of the exit along the shot
+      const back = !exit || i % 3 === 2
+      const len = scale * (fibre ? 1.2 + 1.2 * rnd() : 3 + 4 * rnd()), w = scale * (0.8 + 0.8 * rnd()), t = scale * (fibre ? 0.7 + 0.6 * rnd() : 0.4 + 0.4 * rnd())
+      const size: Vec3 = [w, w, w]
+      size[along] = len
+      size[(along + 1) % 3] = w
+      size[(along + 2) % 3] = t
+      const spread: Vec3 = [(rnd() - 0.5) * 0.8, (rnd() - 0.2) * 0.8, (rnd() - 0.5) * 0.8]
+      const speed = shot ? (back ? 1.5 + 2 * rnd() : 2 + 4 * rnd()) : 0.8 + 1.2 * rnd()
+      const v = vec.scale(vec.normalize(vec.add(back ? vec.scale(d, -1) : d, spread)), speed)
+      const mass = size[0] * size[1] * size[2] * p.mat.density
+      fragments.push({
+        id: `${p.spec.id}#t${tears++}-${i}`, part: p.spec.id, material: p.spec.material, shape: fibre ? 'chunk' : 'splinter',
+        center: back || !exit ? vec.madd(entry, d, -0.01) : vec.madd(exit, d, 0.01), size, rotation: q, velocity: v, inner: true,
+        angularVelocity: [(rnd() - 0.5) * 30, (rnd() - 0.5) * 30, (rnd() - 0.5) * 30], mass,
+      })
+    }
+    const patch: Vec3 = [scale * 4, scale * 4, scale * 4]
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments })
+  }
+
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
 
   const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
@@ -2020,7 +2074,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
-    const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
+    // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
+    // 3 mm plastic bin leaves 24 of its 500 J. Brittle, fibrous and layered materials (glass, wood, paper, masonry) take the whole shock of the impact, as before.
+    const absorbed = penetrated && mat.ductility >= 0.5 && mat.fracture !== 'tear' ? Math.min(E, thr) : E
+    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
+    if (!isLost(p)) tearAt(o, p, 'ballistic', entry, penetrated ? exitPoint : undefined, d, E, caliber / 1000, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
     chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
@@ -2032,14 +2090,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // brittle thin shells (a bottle, a mug, a pane) break from a knock that a thick block shrugs off
     const fragile = kind === 'blunt' ? fragility(mat.ductility, p.thickness) : 1
     const Ec = E * fragile
+    // a foil-like sheet folds deeper than a plate for the same blow (up to 4 times for a tenth of a millimetre), on the patch the blow touches
+    const sheet = mat.ductility >= 0.5 && p.thickness <= THIN_SHEET_CRUSH
+    const fold = sheet ? Math.min(4, Math.sqrt(0.001 / p.thickness)) : 1
+    const patch = sheet ? Math.min(contactR, THIN_SHEET_CONTACT) : contactR
     if (E > 0) {
       if (kind === 'blunt') {
-        if (mat.ductility >= 0.5) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.0001, 0.001, 0.06), src)
+        // a sheet folds in at most to near its middle, never through its far wall
+        if (mat.ductility >= 0.5) addDent(o, p, point, n, Math.max(patch, 0.015), clamp(E * 0.0001 * fold, 0.001, sheet ? Math.min(0.06, Math.min(...p.dims) * 0.45) : 0.06), src)
         else if (mat.ductility < 0.3) {
           if (Ec >= 5) addCrack(o, p, point, n, clamp(0.04 + Math.min(Ec, E * 6) * 0.0008, 0.04, 0.6), src)
         } else if (E >= thrMm * 0.2) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.00006, 0.001, 0.04), src)
       } else if (mat.fracture === 'tear') {
         addHole(o, p, point, n, clamp(0.02 + E * 0.0005, 0.02, 0.3), true, undefined, src)
+      } else if (mat.ductility >= 0.3 && E >= thrMm) {
+        // a blade with more energy than the wall takes to cross goes through it and leaves a slit the width of the blade (a knife into a 3 mm plastic bin or a
+        // drink can, an axe through a thin board); brittle walls (glass, ceramic, masonry, MDF) are only scratched
+        addHole(o, p, point, n, clamp(contactR, 0.01, 0.08), true, undefined, src)
+        // a foil-thin sheet (a can) is pushed in around the slit
+        if (sheet) addDent(o, p, point, n, Math.max(patch * 0.6, 0.01), clamp(E * 0.00004 * fold, 0.0005, 0.02), src)
       } else if (mat.ductility >= 0.5) {
         addDent(o, p, point, n, Math.max(contactR, 0.01), clamp(E * 0.00004, 0.0005, 0.02), src)
       }
@@ -2056,6 +2125,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     addBreach(o, p, point, breachAreaOf(p, done, false), E, d, src)
     // a blow that did not open the wall wears the units it lands on
     if (kind === 'blunt') chipUnits(o, p, 'blunt', point, E, d, Math.max(contactR, 0.03), src)
+    if (E > 0 && !isLost(p)) tearAt(o, p, kind, point, undefined, d, E, clamp(contactR * 0.2, 0.006, 0.02), src)
     return done
   }
 

@@ -5,6 +5,11 @@ import { clamp } from './math'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
+  /**
+   * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
+   * `-Infinity` when none. The ground and the other pieces are added by the system.
+   */
+  staticTopAt?: (x: number, z: number, y: number, step: number) => number
   gravity: number
   /** A piece hit the ground faster than 3 m/s (throttled per piece). */
   onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
@@ -22,10 +27,51 @@ const SLOP = 0.002
 const NARROW = 0.3
 /** Angular acceleration (rad/s^2 per metre of height) that pushes a balancing piece off its edge, toward the side its centre of mass leans to. */
 const TOPPLE = 3
+/** Angular acceleration (rad/s^2) of a piece that falls over (`tip`), beyond what the box of its bounds would allow, and the height of the centre of mass (m) at which it lies. */
+const TIP_ACCELERATION = 30
+const TIP_LYING = 0.25
+const TIP_SECONDS = 3
+/** How far (m) above a corner a top may be and still catch it (on top of what the corner falls in one sub-step): higher is beside it, not under it. */
+const STEP = 0.03
+
+/** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
+interface Solid {
+  body: PieceBody
+  c: Vec3
+  e: number[]
+  half: Vec3
+  /** Radius of the box around its centre: a point farther than it on the ground plane misses it. */
+  r: number
+}
+
+/** Height where the vertical line through `(x, z)` leaves the top of a box, or -Infinity when it misses the box. */
+const boxTopAt = (s: Solid, x: number, z: number): number => {
+  const e = s.e
+  const dx = x - s.c[0], dz = z - s.c[2]
+  let t0 = -Infinity, t1 = Infinity
+  for (let k = 0; k < 3; k++) {
+    // the line is c + (dx, t, dz) with t the height over the centre; along axis k: p + t d
+    const p = e[k * 4] * dx + e[k * 4 + 2] * dz
+    const d = e[k * 4 + 1]
+    const h = s.half[k]
+    if (Math.abs(d) < 1e-9) {
+      if (Math.abs(p) > h) return -Infinity
+      continue
+    }
+    let a = (-h - p) / d, b = (h - p) / d
+    if (a > b) [a, b] = [b, a]
+    t0 = Math.max(t0, a)
+    t1 = Math.min(t1, b)
+    if (t0 > t1) return -Infinity
+  }
+  return s.c[1] + t1
+}
 
 /**
  * Light rigid-body physics for loose pieces: gravity, the 8 corners of the local box against the ground with an impulse (restitution, friction,
- * angular response), damping, sleeping, and a gentle horizontal separation between pieces. Not a general solver: no piece-vs-scenery contact.
+ * angular response), damping, sleeping, and a gentle horizontal separation between pieces side by side. The ground a corner lands on is the
+ * highest of the terrain, the top of any other piece under it and what the host reports as fixed (`staticTopAt`): a falling shelf lands on the books
+ * below it, a tipping panel on the chair in front of it. Not a general solver: what lies under a corner holds it, what stands beside it does not.
  */
 export class PieceSystem {
   readonly list: PieceBody[] = []
@@ -35,6 +81,7 @@ export class PieceSystem {
   private readonly dq: THREE_NS.Quaternion
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
+  private solids: Solid[] = []
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -51,6 +98,12 @@ export class PieceSystem {
     return this.list.find((b) => b.objectId === objectId) ?? null
   }
 
+  /** Sets a piece falling over, about the world axes x and z (a unit axis): its feet are thinner than the box that stands for it, so the box alone would hold it up. */
+  tip(body: PieceBody, x: number, z: number): void {
+    body.tipping = { x, z, seconds: TIP_SECONDS }
+    body.sleeping = false
+  }
+
   create(objectId: string, root: THREE_NS.Object3D, halfExtents: Vec3, localCenter: THREE_NS.Vector3, mass: number, velocity?: Vec3, angular?: Vec3): PieceBody {
     const existing = this.get(objectId)
     if (existing) {
@@ -64,6 +117,7 @@ export class PieceSystem {
     }
     const body: PieceBody = {
       objectId,
+      tipping: null,
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],
       angularVelocity: angular ? [...angular] : [0, 0, 0],
@@ -145,6 +199,11 @@ export class PieceSystem {
 
   update(dt: number): void {
     this.time += dt
+    this.solids = this.list.map((body) => {
+      const c = this.centerOf(body, new this.THREE.Vector3())
+      const h = body.halfExtents
+      return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: h, r: Math.hypot(h[0], h[1], h[2]) }
+    })
     for (const b of this.list) {
       if (b.held) {
         b.velocity = [0, 0, 0]
@@ -157,6 +216,18 @@ export class PieceSystem {
       this.integrate(b, dt)
     }
     this.separate(dt)
+  }
+
+  /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */
+  private supportAt(self: PieceBody, x: number, y: number, z: number, step: number): number {
+    let top = this.o.groundAt(x, z)
+    for (const s of this.solids) {
+      if (s.body === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
+      const t = boxTopAt(s, x, z)
+      if (t > top && t <= y + step) top = t
+    }
+    const fixed = this.o.staticTopAt?.(x, z, y, step) ?? -Infinity
+    return Math.max(top, fixed)
   }
 
   private integrate(b: PieceBody, dt: number): void {
@@ -199,8 +270,9 @@ export class PieceSystem {
         const sy = i & 2 ? hy : -hy
         const sz = i & 4 ? hz : -hz
         const r: Vec3 = [e[0] * sx + e[4] * sy + e[8] * sz, e[1] * sx + e[5] * sy + e[9] * sz, e[2] * sx + e[6] * sy + e[10] * sz]
-        const gy = this.o.groundAt(pos[0] + r[0], pos[2] + r[2])
-        const pen = gy - (pos[1] + r[1])
+        const cy = pos[1] + r[1]
+        const gy = this.supportAt(b, pos[0] + r[0], cy, pos[2] + r[2], STEP + Math.max(0, -v[1]) * h * 2)
+        const pen = gy - cy
         if (pen > -SLOP) {
           rs.push(r)
           if (pen > maxPen) maxPen = pen
@@ -223,7 +295,7 @@ export class PieceSystem {
         }
         const lx = pos[0] + sx / rs.length
         const lz = pos[2] + sz / rs.length
-        landPoint = [lx, this.o.groundAt(lx, lz), lz]
+        landPoint = [lx, pos[1] - Math.max(...rs.map((r) => -r[1])), lz]
       }
       for (let it = 0; it < 4; it++) {
         for (const r of rs) {
@@ -282,6 +354,15 @@ export class PieceSystem {
       const wx = x1 - x0
       const wz = z1 - z0
       unstable = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+      if (b.tipping) {
+        b.tipping.seconds -= h
+        if (height < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
+        else {
+          w[0] += b.tipping.x * TIP_ACCELERATION * h
+          w[2] += b.tipping.z * TIP_ACCELERATION * h
+          unstable = true
+        }
+      }
       if (unstable) {
         // the support centre relative to the centre of mass: the piece falls away from it (toward +axis when it is centred)
         const dirX = x0 + x1 > 0 ? -1 : 1
@@ -326,6 +407,12 @@ export class PieceSystem {
     }
   }
 
+  /** Half the height of the box of a piece as it is turned now. */
+  private halfHeight(b: PieceBody): number {
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    return Math.abs(e[1]) * b.halfExtents[0] + Math.abs(e[5]) * b.halfExtents[1] + Math.abs(e[9]) * b.halfExtents[2]
+  }
+
   /** Push overlapping pieces apart (horizontal bounding circles), gently, so they do not interpenetrate forever. */
   private separate(dt: number): void {
     const n = this.list.length
@@ -344,6 +431,8 @@ export class PieceSystem {
         this.centerOf(a, ca)
         this.centerOf(b, cb)
         if (Math.abs(ca.y - cb.y) > ra + rb) continue
+        // one lies on the other (a book on a shelf): the corners hold them apart, a sideways push would slide it off
+        if (Math.abs(ca.y - cb.y) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9) continue
         const rh = (Math.max(a.halfExtents[0], a.halfExtents[2]) + Math.max(b.halfExtents[0], b.halfExtents[2])) * 0.8
         let dx = cb.x - ca.x
         let dz = cb.z - ca.z

@@ -79,6 +79,19 @@ export interface AreaPlacement {
   asleep?: boolean
 }
 
+/** A rectangle of the floor made of something else: `rect` is `[x0, z0, x1, z1]` in world metres, `surface` a ground profile id of the host. */
+export interface GroundZone {
+  readonly rect: readonly [number, number, number, number]
+  readonly surface: string
+}
+
+/** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */
+export interface GroundLayout {
+  readonly surface: string
+  /** Later zones over earlier ones. */
+  readonly zones?: readonly GroundZone[]
+}
+
 /** How the host sets the module's area up: what goes where, and where the camera starts. */
 export interface ModuleArea {
   placements: AreaPlacement[]
@@ -291,6 +304,8 @@ export interface TestableModule<Context = unknown> {
   controls?(locale: string): ModuleControl[]
   layers?(locale: string): ModuleLayer[]
   metrics?(locale: string): ModuleMetric[]
+  /** The floor of the module's area, laid when the host opens it. Without it the host keeps its default floor. */
+  ground?: GroundLayout
   /** Called once when the module is loaded, with what the host lends. Returns the function that undoes it. */
   attach?(host: ModuleHost): () => void
 }

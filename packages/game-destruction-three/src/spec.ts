@@ -16,6 +16,8 @@ interface Entry {
   tags?: string[]
   /** `userData.destructionContains`: the fluid the part holds (a hole in it makes it leak). */
   contains?: { fluid: string; liters: number }
+  /** `userData.destructionThickness`: the real wall thickness in metres (a can is a tenth of a millimetre, far less than its box says). */
+  thickness?: number
   /** Part id wished by the host (`userData.destructionPart`). */
   fixedId: boolean
   name: string
@@ -120,6 +122,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
         const fill = options.fillOf?.(o, material)
         const tags = Array.isArray(ud.destructionTags) ? (ud.destructionTags as string[]) : undefined
         const contains = containsOf(ud.destructionContains)
+        const thickness = typeof ud.destructionThickness === 'number' && ud.destructionThickness > 0 ? (ud.destructionThickness as number) : undefined
         const existing = explicit ? byKey.get(explicit) : undefined
         if (existing) {
           const before = sizeOf(existing.box)
@@ -132,8 +135,9 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           existing.skin = existing.skin && skin
           if (fill !== undefined) existing.fill = fill
           if (contains) existing.contains = contains
+          if (thickness !== undefined) existing.thickness = Math.min(existing.thickness ?? thickness, thickness)
         } else {
-          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
+          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), ...(thickness !== undefined ? { thickness } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
           entries.push(e)
           if (explicit) byKey.set(explicit, e)
         }
@@ -206,7 +210,8 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
     const minSide = Math.min(...size)
     if (e.fill !== undefined) part.fill = e.fill
     else if (e.hollow) part.fill = 0.05
-    if (minSide < 0.01 && METAL.test(e.material)) {
+    if (e.thickness !== undefined) part.thickness = e.thickness
+    else if (minSide < 0.01 && METAL.test(e.material)) {
       part.fill = e.fill ?? 1
       part.thickness = Math.max(minSide, 0.0005)
     }

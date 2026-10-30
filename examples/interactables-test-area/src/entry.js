@@ -20,6 +20,7 @@ import { buildItem, createItemsTestModule } from '@adatechnology/game-items-thre
 import { createWeatherTestModule } from '@adatechnology/game-weather'
 import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
+import { createTerrainTestModule } from '@adatechnology/game-terrain-three'
 import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { createPersonBuilder, personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three'
 import { PROFESSIONS } from '@adatechnology/game-characters-people'
@@ -88,7 +89,7 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
+export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
@@ -132,6 +133,7 @@ function loadSteps(room, options, lang) {
   mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(room.world))
   mod('animals', () => createAnimalsModule({ locale: lang }))
   mod('vfx', () => createVfxTestModule({ locale: lang }))
+  mod('terrain', () => createTerrainTestModule({ locale: lang }))
   // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root

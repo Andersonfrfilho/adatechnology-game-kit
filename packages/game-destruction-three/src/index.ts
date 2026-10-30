@@ -1,4 +1,4 @@
-export { createDestructionRenderer } from './renderer'
+export { impactKey, createDestructionRenderer } from './renderer'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'
@@ -14,6 +14,8 @@ export type {
   MeshRange,
   Object3D,
   Piece,
+  LooseBody,
+  SolidBox,
   Quality,
   Quat,
   RendererOptions,

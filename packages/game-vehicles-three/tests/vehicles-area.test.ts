@@ -84,9 +84,9 @@ describe('vehicles test area', () => {
     // stopped at the side of the car (half its width, about 0.9 m, plus the player's radius), not through it
     expect(room.camera.position.z).toBeGreaterThan(-4 + 0.8)
     expect(room.camera.position.z).toBeLessThan(-4 + 1.6)
-    // along its length the car is longer: walking past its end (x = 3) is free
-    room.look([3, 1.6, 2], [3, 1.6, -4])
-    room.walk([3, 0, -8], 3)
+    // along its length the car is longer: walking past its end is free (x = 5.5, clear of the room's own table at x = 3.5 and shelf at x = -3.5)
+    room.look([5.5, 1.6, 2], [5.5, 1.6, -4])
+    room.walk([5.5, 0, -8], 3)
     for (let i = 0; i < 80; i++) room.update(0.05)
     expect(room.camera.position.z).toBeLessThan(-7.5)
     room.clear()

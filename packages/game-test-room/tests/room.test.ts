@@ -377,3 +377,80 @@ describe('grenade blast', () => {
     expect(lit).toBe(true)
   })
 })
+
+describe('walking over what lies on the floor', () => {
+  it('steps onto a low heavy block, is stopped by a tall heavy one and kicks a light cup away', () => {
+    const room = makeRoom()
+    const block = room.spawn('concrete_block', [0, 0, 2], 0)
+    run(room, 1)
+    expect(block.root.position.y).toBeLessThan(0.05)
+    room.look([0, 1.7, 4], [0, 1.7, 0])
+    room.walk([0, 0, 0.5], 1.5)
+    run(room, 1.6)
+    // on top of the 40 cm block
+    expect(room.camera.position.z).toBeCloseTo(0.5, 1)
+    let top = 0
+    room.walk([0, 0, 2], 0.2)
+    for (let t = 0; t < 0.3; t += 1 / 60) {
+      room.update(1 / 60)
+      top = Math.max(top, room.camera.position.y)
+    }
+    expect(top).toBeGreaterThan(1.7 + 0.3)
+
+    const sofa = room.spawn('sofa', [3, 0, 2], 0)
+    run(room, 1)
+    room.look([3, 1.7, 4.2], [3, 1.7, 0])
+    room.walk([3, 0, 0], 2)
+    run(room, 2.2)
+    expect(room.camera.position.z).toBeGreaterThan(2.3)
+    expect(sofa.root.position.z).toBeCloseTo(2, 1)
+
+    const cup = room.spawn('coffee_cup', [-1.5, 0, 2.5], 0)
+    run(room, 1)
+    room.look([-1.5, 1.7, 4], [-1.5, 1.7, 0])
+    room.walk([-1.5, 0, 1], 2)
+    run(room, 2.2)
+    expect(room.camera.position.z).toBeCloseTo(1, 1)
+    expect(Math.hypot(cup.root.position.x + 1.5, cup.root.position.z - 2.5)).toBeGreaterThan(0.3)
+  })
+})
+
+describe('the player against the objects', () => {
+  it('does not walk through a spawned object, and pushes a light one along', () => {
+    const room = makeRoom()
+    const chair = room.spawn('chair', [0, 0, -2], 0)
+    const z0 = chair.root.position.z
+    room.look([0, 1.6, 1], [0, 1, -2])
+    room.walk([0, 0, -2], 2)
+    run(room, 2.5)
+    expect(room.log.entries({ type: 'bump' }).length).toBeGreaterThan(0)
+    // the chair went ahead of the player instead of being walked through
+    expect(chair.root.position.z).toBeLessThan(z0 - 0.2)
+    expect(room.camera.position.z).toBeGreaterThan(chair.root.position.z)
+  })
+
+  it('a heavy fixed piece only blocks: the player stops at it and it does not move', () => {
+    const room = makeRoom()
+    const shelf = room.spawn('shelf', [0, 0, -2], 0)
+    const z0 = shelf.root.position.z
+    room.look([0, 1.6, 1], [0, 1, -2])
+    room.walk([0, 0, -4], 3)
+    run(room, 3.5)
+    expect(room.camera.position.z).toBeGreaterThan(-1.7)
+    expect(shelf.root.position.z).toBeCloseTo(z0, 5)
+    expect(room.log.entries({ type: 'bump' })).toHaveLength(0)
+  })
+
+  it('a kick leaves the hip: standing up and looking ahead, it lands on a chair in front of the feet', () => {
+    const room = makeRoom()
+    const chair = room.spawn('chair', [0, 0, -0.75], 0)
+    room.setTool('kick')
+    room.update(0.6)
+    room.look([0, 1.6, 0], [0, 1.6, -3])
+    room.use()
+    run(room, 1)
+    const hits = room.log.entries({ type: 'melee' })
+    expect(hits.some((h) => h.objectId === chair.objectId)).toBe(true)
+  })
+})
+

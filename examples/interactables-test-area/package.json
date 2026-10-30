@@ -37,6 +37,8 @@
     "@adatechnology/game-player": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*",
     "@adatechnology/game-stories": "workspace:*",
+    "@adatechnology/game-terrain": "workspace:*",
+    "@adatechnology/game-terrain-three": "workspace:*",
     "@adatechnology/game-urban": "workspace:*",
     "@adatechnology/game-urban-three": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
