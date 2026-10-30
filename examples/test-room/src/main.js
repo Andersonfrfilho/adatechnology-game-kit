@@ -38,9 +38,10 @@ const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, op
 const shelf = furnitureSpec(THREE, 'bookcase')
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
 const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
-// the test table is a long dining table of the furniture catalogue: the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
+// the test table is a long wooden table of the furniture catalogue (the gourmet table, without the dining table's cloth: a shot at the cloth moved it as a loose white sheet
+// over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
-const testTable = furnitureSpec(THREE, 'dining_table', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
+const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
 const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
