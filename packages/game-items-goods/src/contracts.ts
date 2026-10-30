@@ -1,5 +1,5 @@
 import { checkSpec } from '@adatechnology/game-contracts'
-import type { BodySlot, ContractChecker, DestructibleSpec } from '@adatechnology/game-contracts'
+import type { BodySlot, ContractChecker, DestructibleSpec, SealSpec } from '@adatechnology/game-contracts'
 import type { ItemDef, RecipeDef } from '@adatechnology/game-items'
 
 import { GOODS_ITEMS, GOODS_RECIPES } from './data'
@@ -18,6 +18,8 @@ export interface KindedItem extends Omit<ItemDef, 'category' | 'rarity'> {
   readonly parts?: readonly ItemPart[]
   readonly impact?: ItemImpact
   readonly use?: { readonly clip?: string; readonly sounds?: readonly string[] }
+  /** The seal of a closed container (`SealSpec` of game-contracts): what opens it and whether a breach spoils it. */
+  readonly seal?: SealSpec
   readonly leftover?: ItemLeftover
   /** What eating or drinking it raw does. `sickChance` is the chance of getting sick, 0..1. */
   readonly rawEffect?: { readonly sickChance?: number }

@@ -9,6 +9,7 @@ import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
 import type { HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
+import type { SealSpec } from './seal'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
 export interface ModuleItemFluid {
@@ -17,6 +18,14 @@ export interface ModuleItemFluid {
   /** Item uses offered while held (`drink`, `pour`...). */
   uses?: string[]
   offset?: Vec3
+}
+
+/** A closed container the player opens before eating or drinking it (a food tin, a drink can): the seal, and how the item looks open. */
+export interface ModuleItemSeal extends SealSpec {
+  /** Draws the item opened: gets the root `build` returned (the cut lid of a tin, the mouth of a can). */
+  open?: (root: unknown) => void
+  /** Shows what is left in it once open: `share` of what it held (0 eaten up), after each bite or sip. */
+  contents?: (root: unknown, share: number) => void
 }
 
 /** A picture of an item for catalogues and inventories: a hand-made `svg`, or `render` to have the host draw the 3D model (camera angles in radians, `wear` 0 new, 1 worn, 2 ruined). */
@@ -41,6 +50,8 @@ export interface TestableItem {
   /** The module's own destruction: parts, hits and state are its business. The world hosts it next to its own objects. `id` is the object id the host gives it: `DestructibleImpl.id` must be that id. */
   impl?: (root: unknown, id: string) => DestructibleImpl
   fluid?: ModuleItemFluid
+  /** The item is a sealed container: it is opened first (with a tool or by hand), and a breach may spoil it (`SealSpec`). */
+  seal?: ModuleItemSeal
   /** The item is also a weapon the player can equip: an id of the arsenal in use. */
   weapon?: string
   /** Use animations this item brings (a pistol `reload` moves `mag`; a car door `open` rotates `door_l`). */

@@ -37,8 +37,11 @@ export interface ItemUseDef {
   id: string
   /** Seconds. */
   duration: number
-  /** Keyframes: time 0..duration, the hand-relative position/rotation (Euler XYZ) of the item and the container action during that key. */
-  keys: Array<{ t: number; position: Vec3; rotation: Vec3; action?: 'drink' | 'pour' | 'open' | 'close' | 'none'; rate?: number }>
+  /**
+   * Keyframes: time 0..duration, the hand-relative position/rotation (Euler XYZ) of the item and the container action during that key. `eat` takes the contents
+   * out as `drink` does, as food: the liquid packed with it (the brine of a tin, the oil of the sardines) goes with the food, without the effects of drinking it.
+   */
+  keys: Array<{ t: number; position: Vec3; rotation: Vec3; action?: 'drink' | 'eat' | 'pour' | 'open' | 'close' | 'none'; rate?: number }>
   /** Only valid when the container holds one of these (empty = any). */
   liquids?: LiquidId[]
 }

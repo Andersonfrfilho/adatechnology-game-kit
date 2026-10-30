@@ -11,6 +11,7 @@ import type { ShelfPlan } from './area-layout'
 import { buildItem } from './build-item'
 import type { DrawableItem } from './build-item'
 import { itemContents, SHELL_PART_ID } from './destruction'
+import { itemOpening, openItem, setOpeningContents } from './opening'
 import type { ContentsSubject } from './destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from './budgets'
 import { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
@@ -331,12 +332,30 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     return contents ? { fluid: { container: contents.container, part: SHELL_PART_ID } } : {}
   }
 
+  /**
+   * A sealed item (`ItemDef.seal`) whose model opens: the room opens it before eating (`TestableItem.seal`), with the tools of the seal as catalog ids and as
+   * the ids of this area's items (`item_can_opener`), and draws it open with `openItem`. A tin is eaten (`eat`); the other uses stay the room's defaults.
+   */
+  const sealOf = (def: ItemDef, fluid: Pick<TestableItem, 'fluid'>): Pick<TestableItem, 'seal' | 'fluid'> => {
+    const model = def.model
+    if (!def.seal || model === undefined || !itemOpening(model)) return fluid
+    const openWith = def.seal.openWith ? [...def.seal.openWith, ...def.seal.openWith.map((id) => `${ITEM_PREFIX}${id}`)] : undefined
+    const seal = {
+      ...def.seal,
+      ...(openWith ? { openWith } : {}),
+      open: (root: unknown) => void (latestTHREE && openItem(latestTHREE, root as THREE_NS.Object3D, model)),
+      contents: (root: unknown, share: number) => setOpeningContents(root as THREE_NS.Object3D, share),
+    }
+    const eaten = def.category === 'food' && fluid.fluid ? { fluid: { ...fluid.fluid, uses: ['eat', 'pour_out'] } } : fluid
+    return { ...eaten, seal }
+  }
+
   const itemOf = (def: ItemDef): TestableItem => ({
     id: `${ITEM_PREFIX}${def.id}`,
     name: nameOf(def),
     movable: true,
     thumbnail: itemThumbnailSvg(drawable(def)),
-    ...fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight }),
+    ...sealOf(def, fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight })),
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T

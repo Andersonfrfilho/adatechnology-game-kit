@@ -1,0 +1,14 @@
+{
+  "families": {
+    "drink_can": { "style": "pull_tab" },
+    "food_tin": { "style": "cut_lid" }
+  },
+  "models": {
+    "empty_can": { "style": "none" },
+    "canned_beans": { "food": "#7a2e1c" },
+    "canned_corn_and_peas": { "food": "#c7b03c" },
+    "canned_sausages": { "food": "#c98d5c" },
+    "canned_sardines": { "style": "peel_lid", "food": "#8e979c" },
+    "condensed_milk": { "food": "#e3cf9c" }
+  }
+}

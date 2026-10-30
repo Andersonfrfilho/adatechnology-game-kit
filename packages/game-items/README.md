@@ -70,7 +70,7 @@ const { contents, leftover } = placeFinds(stacks, slots, items)                 
 | `advanceAge`, `moveToStorage`, `storageMultiplier`, `freshness`, `shelfRatio`, `chargeLevel`, `failsToStart` | aging and decay |
 | `blockChance`, `wearBlocked`, `repairPiece`, `pieceBlock` | layered clothing protection |
 | `maxLoadKg`, `carriedKg`, `loadState`, `bagOption`, `canTake` | carry weight and slots |
-| `resolveUse` | what using an item does, as data |
+| `resolveUse` | what using an item does, as data; with `UseContext.seal` a sealed item (`ItemDef.seal`, a `SealSpec` of game-contracts) still closed, holed or leaking is not eaten (`blocked`) |
 | `canCraft`, `craft` | recipes |
 | `createFindsProvider`, `rollByCategory`, `rollExplicitPool`, `spawnData`, `depletionFactor`, `placeFinds`, `toLootTables` | finds |
 | `itemsFromArsenal` | the arsenal as items |

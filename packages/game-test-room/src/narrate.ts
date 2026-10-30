@@ -500,6 +500,8 @@ export function createNarrator(c: NarrateContext) {
         break
       }
       case 'drink': {
+        // food eaten with its liquid: the host says what was eaten, not what was drunk
+        if (ev.eaten) break
         // a sip arrives as many small drink events: one line per sip, updated while it goes on
         const now = c.now()
         let acc = drinkAcc.get(ev.container)

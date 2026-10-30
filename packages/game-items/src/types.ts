@@ -4,7 +4,7 @@
  * An `ItemDef` is a real-world thing (a can of beans, a hammer, a jacket) with its true size and weight; the rest of the fields are optional groups that
  * only the categories that need them fill (nutrition for food, protection for clothing, carry for bags). Units: metres, kilograms, litres, days.
  */
-import type { BodySlot } from '@adatechnology/game-contracts'
+import type { BodySlot, SealSpec } from '@adatechnology/game-contracts'
 import type { ItemDef as BaseItemDef } from '@adatechnology/game-interactables'
 
 import type { RecipeDef } from './recipe-types'
@@ -107,6 +107,8 @@ export interface ItemDef extends BaseItemDef {
   /** Fuel-like items: after `afterDays` each use fails with probability `chance`. */
   agingFault?: { afterDays: number; chance: number }
   /** Key of the 3D model in `game-items-three`; without it a simple shape from `shape` is drawn. */
+  /** A sealed container (a food tin, a drink can): what opens it and whether a breach spoils it. The kinds of a content pack give it (`game-items-goods`). */
+  seal?: SealSpec
   model?: string
 }
 

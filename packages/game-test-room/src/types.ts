@@ -21,7 +21,7 @@ import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { GroundLayout } from '@adatechnology/game-contracts'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -63,6 +63,11 @@ export interface TestRoomItem {
    * bullet hole in it makes it leak). `uses` are the item uses offered while it is held (`drink`, `pour`...; defaults from `ITEM_USES`).
    */
   fluid?: { container: ContainerSpec; part?: string; uses?: string[]; offset?: Vec3 }
+  /**
+   * The item is a sealed container (`ModuleItemSeal`): a use that empties it (`eat`, `drink`, `pour`) opens it first, by hand or with one of `openWith` (an item
+   * within reach or a weapon of the loadout), and refuses while it needs a tool there is not; a hole through it or a leak spoils it for eating and drinking.
+   */
+  seal?: ModuleItemSeal
   /** The item is also a weapon the player can equip from the catalogue (e.g. a crowbar, a knife, a pistol on the table). */
   weapon?: string
   /**

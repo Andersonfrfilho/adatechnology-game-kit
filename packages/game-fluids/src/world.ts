@@ -731,7 +731,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       return out
     },
 
-    drink(id, liters) {
+    drink(id, liters, options) {
       const c = containers.get(id)
       const def = c ? defOf(c) : null
       if (!c || !def || c.closed || c.liters <= 1e-6 || !(liters > 0)) return null
@@ -744,8 +744,9 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
         liters: amount,
         temperature: c.temperature,
         thirst: (def.drink?.thirst ?? 0) * amount,
-        effects: [...(def.drink?.effects ?? [])],
+        effects: options?.eaten ? [] : [...(def.drink?.effects ?? [])],
         burn: c.temperature > 65,
+        ...(options?.eaten ? { eaten: true } : {}),
       }
       emit(event)
       refreshLevel(c)

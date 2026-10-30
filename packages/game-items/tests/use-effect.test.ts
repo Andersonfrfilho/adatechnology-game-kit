@@ -22,6 +22,16 @@ describe('resolveUse', () => {
     expect(resolveUse(item('backpack', { category: 'bags' }), effects)?.effect).toBe('swap_bag')
   })
 
+  it('a sealed tin is eaten only open and whole: closed, holed or leaking it is not spent', () => {
+    const tin = item('canned_beans', { nutrition: { satiety: 25 }, seal: { openWith: ['can_opener'], spoilsWhenBreached: true } })
+    expect(resolveUse(tin, effects)?.consumes).toBe(true)
+    expect(resolveUse(tin, effects, { seal: {} })).toMatchObject({ consumes: false, blocked: 'sealed', nutrition: { isEdible: false } })
+    expect(resolveUse(tin, effects, { seal: { opened: true } })).toMatchObject({ consumes: true, nutrition: { satiety: 25, isEdible: true } })
+    expect(resolveUse(tin, effects, { seal: { opened: true }, freshness: 'fresh' })?.blocked).toBeUndefined()
+    expect(resolveUse(tin, effects, { seal: { opened: true, breached: true } })?.blocked).toBe('breached')
+    expect(resolveUse(tin, effects, { seal: { opened: true, leaked: true } })?.blocked).toBe('leaked')
+  })
+
   it('answers undefined when nothing happens', () => {
     expect(resolveUse(item('rock', { category: 'materials' }), effects)).toBeUndefined()
   })

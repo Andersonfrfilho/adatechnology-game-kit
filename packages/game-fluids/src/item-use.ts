@@ -2,7 +2,7 @@ import itemUsesData from './data/item-uses.json'
 import { lerp3, quatFromEuler, quatMultiply, quatRotate, add } from './math'
 import type { FluidEvent, FluidWorld, ItemUseDef, ItemUsePlayer, Quat, Vec3 } from './types'
 
-/** Built-in scripted uses of a held item (data in `data/item-uses.json`): `sip`, `drink`, `chug`, `pour`, `pour_out`, `open`, `close`. */
+/** Built-in scripted uses of a held item (data in `data/item-uses.json`): `sip`, `drink`, `chug`, `eat` (spoonfuls from an open tin), `pour`, `pour_out`, `open`, `close`. */
 export const ITEM_USES: ItemUseDef[] = itemUsesData as unknown as ItemUseDef[]
 
 /** World transform of the hand (or any holder) the item pose is relative to. */
@@ -11,7 +11,7 @@ export type HandTransform = () => { position: Vec3; rotation: Quat }
 const DEFAULT_DRINK_RATE = 0.1
 
 /**
- * Plays an item use on a container: interpolates the keys, applies `drink` (rate × dt litres) and `pour` (`world.pour`, `rate` multiplies the
+ * Plays an item use on a container: interpolates the keys, applies `drink` and `eat` (rate × dt litres) and `pour` (`world.pour`, `rate` multiplies the
  * time) while the current key has that action, and fires `open` / `close` once when their key is reached. When `getHandTransform` is given, the
  * container's world transform follows hand ∘ pose every update; otherwise the host animates the viewmodel from `pose()`.
  */
@@ -85,8 +85,8 @@ export function createItemUse(world: FluidWorld, containerId: string, def: ItemU
           }
           const overlap = Math.min(end, spanEnd) - Math.max(start, spanStart)
           if (overlap <= 0) continue
-          if (key.action === 'drink') {
-            const ev = world.drink(containerId, (key.rate ?? DEFAULT_DRINK_RATE) * overlap)
+          if (key.action === 'drink' || key.action === 'eat') {
+            const ev = world.drink(containerId, (key.rate ?? DEFAULT_DRINK_RATE) * overlap, key.action === 'eat' ? { eaten: true } : undefined)
             const left = world.container(containerId)
             if (!ev || !left || left.liters <= 1e-6) {
               time = def.duration

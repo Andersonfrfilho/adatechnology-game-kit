@@ -172,7 +172,7 @@ export type FluidEvent =
   | { type: 'pour'; container: string; liquid: LiquidId; rate: number; stream: string }
   | { type: 'spill'; container: string; liquid: LiquidId; rate: number; stream: string }
   | { type: 'leak'; container: string; liquid: LiquidId; rate: number; stream: string; point: Vec3 }
-  | { type: 'drink'; container: string; liquid: LiquidId; liters: number; temperature: number; thirst: number; effects: string[]; burn: boolean }
+  | { type: 'drink'; container: string; liquid: LiquidId; liters: number; temperature: number; thirst: number; effects: string[]; burn: boolean; eaten?: boolean }
   | { type: 'empty'; container: string }
   | { type: 'stream_end'; stream: string }
   | { type: 'splash'; liquid: LiquidId; point: Vec3; intensity: number }
@@ -216,7 +216,8 @@ export interface FluidWorld {
   /** Pour on purpose for `dt` seconds (tilts the flow out of the opening even when not tilted far). Returns litres out. */
   pour(id: string, dt: number, into?: string): number
   /** Drink `liters` (sip ~0.03 l); returns the drink event or null when empty/closed. Too hot (> 65 °C) sets `burn`. */
-  drink(id: string, liters: number): Extract<FluidEvent, { type: 'drink' }> | null
+  /** Takes `liters` out of an open container into the mouth. `eaten`: it is the liquid packed with food, eaten with it (no drinking effects). */
+  drink(id: string, liters: number, options?: { eaten?: boolean }): Extract<FluidEvent, { type: 'drink' }> | null
   /** Punch a hole (local space) — call it from a damage model's `hole`/`leak` events. */
   puncture(id: string, point: Vec3, normal: Vec3, diameter: number): void
   /** Heat or cool the content (a stove under a kettle, a fire). */
