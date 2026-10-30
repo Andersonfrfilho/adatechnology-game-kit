@@ -298,7 +298,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   }
 
   const listeners = new Set<(event: FirstPersonEvent) => void>()
-  let run: { clip: FirstPersonClip; time: number; left: boolean } | null = null
+  /** `left`: the foot is the left one; `swap`: the hands swap sides in a mirror. */
+  let run: { clip: FirstPersonClip; time: number; left: boolean; swap: boolean } | null = null
   const emit = (event: FirstPersonEvent): void => {
     for (const listener of listeners) listener(event)
   }
@@ -325,10 +326,12 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const towards = new THREE.Vector3()
 
   /** The hand of the clip's channel, in the camera's space, as a pose. */
-  const fromChannel = (channel: FirstPersonSampleChannel, side: 'R' | 'L', base: Pose, out: Pose): Pose => {
+  /** `from`: the side the channel was written for (the other one when the hands swap); numbers written for the right hand, or the right's in a mirror, are mirrored onto the left and the other way round. */
+  const fromChannel = (channel: FirstPersonSampleChannel, side: 'R' | 'L', base: Pose, out: Pose, from: 'R' | 'L' = side): Pose => {
     out.p.set(...channel.p)
     out.q.copy(quaternionOf(channel.r))
-    if (channel.mirror && side === 'L') {
+    const rightNumbers = from === 'R' || channel.mirror
+    if (rightNumbers !== (side === 'R')) {
       out.p.x = -out.p.x
       out.q.copy(mirrorQuaternion(THREE, out.q))
     }
@@ -401,7 +404,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     play(id, options) {
       const clip = clips.get(id)
       if (!clip) return false
-      run = { clip, time: 0, left: options?.leg === 'left' }
+      run = { clip, time: 0, left: options?.leg === 'left', swap: options?.hand === 'left' }
       fire(clip, -1e-9, 0) // the events at t = 0 fire as the clip starts
       return true
     },
@@ -455,10 +458,11 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         arm.blend = blendSeconds <= 0 ? 1 : Math.min(1, arm.blend + dt / blendSeconds)
         if (arm.blend >= 1) copyPose(arm.shown, desired)
         else mixPose(THREE, arm.shown, arm.from, desired, ease(arm.blend))
-        const channel = sample?.[side]
+        const from = run?.swap ? (side === 'R' ? 'L' : 'R') : side
+        const channel = sample?.[from]
         let pose: Pose
         if (channel && channel.w > 0) {
-          fromChannel(channel, side, arm.shown, channelPose)
+          fromChannel(channel, side, arm.shown, channelPose, from)
           mixPose(THREE, mixed, arm.shown, channelPose, channel.w)
           pose = mode === 'target' ? mixed : keepOutside(mixed, handReach(mixed))
         } else pose = mode === 'target' ? arm.shown : keepOutside(arm.shown, handReach(arm.shown))

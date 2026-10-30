@@ -21,8 +21,8 @@ import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, Contr
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
-export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, ThirdPersonOptions } from './avatar'
-import type { CameraMode, KickLeg, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, PunchHand, ThirdPersonOptions } from './avatar'
+import type { CameraMode, KickLeg, PunchHand, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 import type { TestTable, TestTableOptions } from './test-table'
 
 export type ThreeNamespace = typeof THREE_NS
@@ -197,6 +197,10 @@ export interface TestRoomOptions {
   strikeClips?: Readonly<Record<string, string>>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
+  /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
+  punchHand?: PunchHand
+  /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
+  punchTools?: readonly string[]
   /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */

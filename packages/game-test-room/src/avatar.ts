@@ -62,11 +62,13 @@ export interface RoomAvatar {
    * Plays the strike `clipId` (on the body and on the arms) and answers the seconds until its impact, or null when this avatar has no such clip. The room then waits that long
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
    */
-  strike?(clipId: string, options?: { leg?: 'left' | 'right' }): number | null
+  strike?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
 }
 
 /** Which leg a kick uses: `alternate` swaps at each kick (right first). */
 export type KickLeg = 'alternate' | 'left' | 'right'
+/** Which hand a punch uses: `alternate` swaps at each punch (right first). */
+export type PunchHand = 'alternate' | 'left' | 'right'
 
 export type CameraMode = 'first' | 'third'
 

@@ -16,7 +16,7 @@ export type RoomAvatarLike = {
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
   firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean; contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }): void }
   /** Plays a strike on the body and the arms and answers the seconds to its impact (`RoomAvatar.strike`). */
-  strike(clipId: string, options?: { leg?: 'left' | 'right' }): number | null
+  strike(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
   /** The avatar it wraps. */
   readonly avatar: PlayerAvatar
   /** The first-person arms, for whoever wants more of them than the room asks (`play`, `on('event')`). */
@@ -39,7 +39,7 @@ const impactOf = (clip: PoseClip): number | null => clip.events?.find((event) =>
  * Fits the player's body to the test room's `RoomAvatar` (`room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))`). It changes the sign of the pitch: the room
  * counts a look up as positive, the team game's `view.pitch` (what `AvatarUpdate.pitch` reads) counts a look down as positive. It also gives the room the first-person arms, dressed in the
  * colours of the body (`firstPerson: false` for none), and `strike(clipId)`: the strike plays on the body (the attack clips) and on the arms (the first-person clips), and answers the seconds to its
- * impact, which are the same in both views.
+ * impact, which are the same in both views. A kick with the left leg (`leg: 'left'`) or a punch with the left hand (`hand: 'left'`) plays the mirror of the clip written for the right.
  */
 export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions = {}): RoomAvatarLike => {
   const arms =
@@ -53,7 +53,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         })
   const strikes = new Map((options.strikeClips ?? ATTACK_CLIPS).map((clip) => [clip.id, clip]))
   const mirrored = new Map<string, PoseClip>()
-  /** The clip for a kick with the left leg: the mirror of the one that is written for the right. */
+  /** The clip for a kick with the left leg or a punch with the left hand: the mirror of the one that is written for the right. */
   const leftOf = (clip: PoseClip): PoseClip => {
     let found = mirrored.get(clip.id)
     if (!found) mirrored.set(clip.id, (found = mirrorPoseClip(clip, `${clip.id}_left`)))
@@ -79,9 +79,9 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)
       if (!clip) return null
-      const left = strikeOptions?.leg === 'left'
+      const left = strikeOptions?.leg === 'left' || strikeOptions?.hand === 'left'
       avatar.play(left ? leftOf(clip) : clip)
-      arms?.play(clipId, left ? { leg: 'left' } : undefined)
+      arms?.play(clipId, strikeOptions?.leg === 'left' ? { leg: 'left' } : strikeOptions?.hand === 'left' ? { hand: 'left' } : undefined)
       return impactOf(clip)
     },
   }

@@ -8,9 +8,9 @@
       "channels": "upper",
       "keys": [
         { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
-        { "t": 0.1, "pose": { "lean": 0.04, "twist": -0.35, "side": 0, "headX": 0, "headY": 0.28, "headZ": 0, "armR": 0.45, "armL": -0.7, "elbR": -1.9, "elbL": -1.6, "armRz": 0, "armLz": 0.1 } },
-        { "t": 0.16, "pose": { "lean": 0.2, "twist": 0.5, "side": 0, "headX": 0, "headY": -0.38, "headZ": 0, "armR": -1.5, "armL": -0.6, "elbR": -0.1, "elbL": -1.7, "armRz": -0.1, "armLz": 0.1 } },
-        { "t": 0.22, "pose": { "lean": 0.16, "twist": 0.4, "side": 0, "headX": 0, "headY": -0.3, "headZ": 0, "armR": -1.35, "armL": -0.6, "elbR": -0.25, "elbL": -1.6, "armRz": -0.08, "armLz": 0.08 } },
+        { "t": 0.1, "pose": { "lean": 0.04, "twist": 0.3, "side": 0, "headX": 0, "headY": -0.24, "headZ": 0, "armR": -0.9, "armL": -0.35, "elbR": -1.9, "elbL": -2.1, "armRz": -0.2, "armLz": 0.15 } },
+        { "t": 0.16, "pose": { "lean": 0.16, "twist": -0.35, "side": 0, "headX": 0, "headY": 0.3, "headZ": 0, "armR": -0.95, "armL": -1.55, "elbR": -1.95, "elbL": -0.05, "armRz": -0.25, "armLz": 0.3 } },
+        { "t": 0.22, "pose": { "lean": 0.13, "twist": -0.3, "side": 0, "headX": 0, "headY": 0.25, "headZ": 0, "armR": -0.9, "armL": -1.45, "elbR": -1.9, "elbL": -0.2, "armRz": -0.22, "armLz": 0.26 } },
         { "t": 0.35, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
       ],
       "events": [
@@ -48,9 +48,9 @@
       "channels": "full",
       "keys": [
         { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "drop": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0, "legL": -0.05, "legR": 0.05, "kneeL": 0.05, "kneeR": 0.05 } },
-        { "t": 0.18, "pose": { "lean": -0.1, "twist": 0, "side": 0.04, "drop": -0.05, "headX": 0.05, "headY": 0, "headZ": 0, "armR": -0.5, "armL": 0.4, "elbR": -0.5, "elbL": -0.4, "armRz": -0.1, "armLz": 0.1, "legL": 0.1, "legR": -1.1, "kneeL": 0.35, "kneeR": 1.8 } },
-        { "t": 0.32, "pose": { "lean": -0.22, "twist": 0, "side": 0.04, "drop": -0.06, "headX": 0.1, "headY": 0, "headZ": 0, "armR": -0.7, "armL": 0.7, "elbR": -0.6, "elbL": -0.3, "armRz": -0.15, "armLz": 0.15, "legL": 0.12, "legR": -1.45, "kneeL": 0.2, "kneeR": 0.1 } },
-        { "t": 0.42, "pose": { "lean": -0.18, "twist": 0, "side": 0.03, "drop": -0.05, "headX": 0.08, "headY": 0, "headZ": 0, "armR": -0.5, "armL": 0.5, "elbR": -0.5, "elbL": -0.3, "armRz": -0.1, "armLz": 0.1, "legL": 0.1, "legR": -1.2, "kneeL": 0.3, "kneeR": 1.2 } },
+        { "t": 0.18, "pose": { "lean": -0.1, "twist": 0, "side": -0.04, "drop": -0.05, "headX": 0.05, "headY": 0, "headZ": 0, "armR": 0.4, "armL": -0.5, "elbR": -0.4, "elbL": -0.5, "armRz": -0.1, "armLz": 0.1, "legL": -1.1, "legR": 0.1, "kneeL": 1.8, "kneeR": 0.35 } },
+        { "t": 0.32, "pose": { "lean": -0.22, "twist": 0, "side": -0.04, "drop": -0.06, "headX": 0.1, "headY": 0, "headZ": 0, "armR": 0.7, "armL": -0.7, "elbR": -0.3, "elbL": -0.6, "armRz": -0.15, "armLz": 0.15, "legL": -1.45, "legR": 0.12, "kneeL": 0.1, "kneeR": 0.2 } },
+        { "t": 0.42, "pose": { "lean": -0.18, "twist": 0, "side": -0.03, "drop": -0.05, "headX": 0.08, "headY": 0, "headZ": 0, "armR": 0.5, "armL": -0.5, "elbR": -0.3, "elbL": -0.5, "armRz": -0.1, "armLz": 0.1, "legL": -1.2, "legR": 0.1, "kneeL": 1.2, "kneeR": 0.3 } },
         { "t": 0.6, "pose": { "lean": 0, "twist": 0, "side": 0, "drop": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0, "legL": -0.05, "legR": 0.05, "kneeL": 0.05, "kneeR": 0.05 } }
       ],
       "events": [
