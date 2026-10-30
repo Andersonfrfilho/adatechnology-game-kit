@@ -275,7 +275,7 @@ export interface TestRoom {
   readonly tool: WeaponState
   /** Play an item use on the held item (`drink`, `pour`...). Returns false when nothing is held or the use does not apply. */
   useItem(useId: string): boolean
-  /** Use the current tool once from the camera (tests and scripted demos). `hold` seconds for continuous tools. */
+  /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
   use(hold?: number): void
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean

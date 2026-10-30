@@ -1423,6 +1423,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldTilt = 0
   }
 
+  /**
+   * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the arms and on the body and the blow lands at its impact). With something in the hands the
+   * click lets it go; E grabs and drops, the right button grabs or throws.
+   */
+  const handUse = (): void => {
+    if (heldPiece) grab()
+    else useTool(FIXED_DT, false)
+  }
   const grab = (): boolean => {
     if (heldPiece) {
       const name = heldName
@@ -1942,10 +1950,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
-    if (useHeld && !paused) {
+    // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
+    if ((useHeld || useFirst) && !paused) {
       if (tool.def.category === 'hand') {
-        if (useFirst) grab()
-      } else useTool(dt, !useFirst)
+        if (useFirst) handUse()
+      } else if (useHeld) useTool(dt, !useFirst)
       useFirst = false
     }
     if (!paused) followHeld(dt)
@@ -2583,7 +2592,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     useItem,
     use(hold = 0) {
       if (tool.def.category === 'hand') {
-        grab()
+        handUse()
+        flush()
         return
       }
       useTool(FIXED_DT, false)
