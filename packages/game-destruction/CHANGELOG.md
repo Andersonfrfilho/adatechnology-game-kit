@@ -1,5 +1,23 @@
 # @adatechnology/game-destruction
 
+## 0.12.0
+
+### Minor Changes
+
+- 73f3cf2: Crushed masonry takes the colour of its material: brick, concrete, plaster and stone get `visual.innerColor`, the `debris` event names the material of
+  the bits when it is not the part's own (`material`, the plaster coat over a brick wall), and the renderer throws chips and dust and draws spalls in that
+  colour (brick orange, plaster light, concrete grey) instead of the dark grey of the generic concrete impact.
+
+### Patch Changes
+
+- 2a1bb17: Wall damage stays where the shot lands. The house no longer redraws a whole wall as plain white blocks on the first brick that comes out: the wall keeps
+  its geometry, plaster and paint, and is cut by a mask only where units came out, with a ragged edge of plaster and the bricks (in their mortar) or the
+  rough concrete of a beam showing around the hole. Bullet holes, spalls and the impact marks of the effects go with the brick that comes out
+  (`DecalPool.clearInside` in game-vfx). A bullet now wears only its stretch of a joint (`BULLET_JOINT_SPAN`), so a row of shots along a ten-metre wall no
+  longer opens the whole mortar bed and brings the wall down.
+- Updated dependencies [73f3cf2]
+  - @adatechnology/game-contracts@0.19.0
+
 ## 0.11.0
 
 ### Minor Changes

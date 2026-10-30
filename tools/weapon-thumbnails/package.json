@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/weapon-thumbnails-tool",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "private": true,
   "license": "MIT",
   "description": "Weapon thumbnails tool: projects the 3D model of each weapon onto its side plane and writes a compact, deterministic SVG silhouette per weapon, then writes the manifest and the credits of the thumbnails (generated or from Wikimedia Commons).",
