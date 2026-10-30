@@ -1,5 +1,29 @@
 # @adatechnology/game-test-room
 
+## 0.16.0
+
+### Minor Changes
+
+- da5261d: A shot bookcase comes apart like one. A long wooden part (a board, a batten, a beam) breaks where it is hit: its length is cut in 10 cm bands with their share of its hit points, and the band that runs out breaks it across there, a stub each side and splinters between; a thin board goes in a few shots, a beam or a log takes many. New `structure.maxSpan`: a part whose remaining supports leave it a longer span falls with what rests on it. `furnitureSpec` stands shelves and racks as a carcass (the sides carry, each shelf needs both ends, the back carries nothing), so a broken side drops its shelves and their books. The test room's scenery takes `free`: shots whose push moves its mass (a shotgun, not a pistol) shove it. A light collapse of furniture raises a puff of dust instead of a storey's cloud.
+- 2a371c7: Walls of units come apart under fire. A shot or a blow on a wall made of units (`PartSpec.units`: bricks, blocks) wears the unit it lands on and a little the ones around it; a unit that took `breach.chipEnergy` joules per kilogram (default 200: two 9 mm rounds in the same brick, one rifle round) comes out as a fragment (new `chip` event, `PartState.chipped`), shots and rays pass through the gap, and enough units out close together open the wall (stage 2) as before. The destruction renderer throws the unit with its dust; the house renderer redraws the wall as its courses without the units that came out (and now places the opening of a breach in the house's own space). `wallPiece` keeps the detail of the houses' walls (plaster, bricks, breach) and gains `follow`, and the test room's scenery takes `follow` so its target wall shows the gaps.
+
+### Patch Changes
+
+- 454e821: Punches alternate hands and the third-person punch reads as one. The room throws `hand`/`fists` punches right, left, right (`punchHand`: `alternate` default, `left`, `right`; `punchTools`) and logs the hand; `strike(clip, { hand: 'left' })` plays the mirror of the clip on the body and the left fist on the first-person arms (`arms.play(clip, { hand: 'left' })`). On the body, `punch_right` and `front_kick` now move the same arm and leg the first-person view shows (they moved the other side), the punch aims at the centre with the guard up, and the joints follow a clip that does not loop 5 times faster (`clipCascade`), so the arm reaches the shoulder by the impact instead of lagging halfway.
+- 5ec938d: Test table panel: the trial buttons (Shot, Punch, Knife, Fire, Blast, Put back) sit above the list of items on the table, so a long page no longer scrolls them out of sight.
+- Updated dependencies [da5261d]
+- Updated dependencies [50d8074]
+- Updated dependencies [2a371c7]
+  - @adatechnology/game-contracts@0.17.0
+  - @adatechnology/game-destruction@0.10.0
+  - @adatechnology/game-destruction-three@0.10.0
+  - @adatechnology/game-audio@0.3.2
+  - @adatechnology/game-fluids@0.3.4
+  - @adatechnology/game-fluids-three@0.4.3
+  - @adatechnology/game-vfx@0.4.3
+  - @adatechnology/game-vfx-three@0.3.3
+  - @adatechnology/game-weapons@0.5.3
+
 ## 0.15.0
 
 ### Minor Changes

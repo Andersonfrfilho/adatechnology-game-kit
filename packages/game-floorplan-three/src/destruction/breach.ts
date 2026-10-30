@@ -98,27 +98,54 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return list
     }
 
-    /** Draws the wall `partId` as its courses (the first time its range in the merged mesh collapses), without what its opening and its chips took out. */
+    const specOf = (id: string) => opts.spec()?.parts?.find((q: any) => q.id === id)
+    const same = (a: number[], b: number[]) => a.every((x, k) => Math.abs(x - b[k]) < 1e-3)
+
+    /**
+     * The part whose mesh draws `partId`: itself, or for a beam the house draws inside the wall under it (a bond beam behind the wall's plaster), that
+     * wall.
+     */
+    function hostOf(partId: string): string | null {
+      if (structure.meshesOf(partId).some((it: any) => it.mesh)) return partId
+      const part = structure.byId.get(partId)
+      if (!part) return null
+      for (const q of structure.parts) {
+        if (q.id !== partId && same(q.aabb, part.aabb) && Math.abs(q.y1 - part.y0) < 0.01 && structure.meshesOf(q.id).some((it: any) => it.mesh)) return q.id
+      }
+      return null
+    }
+
+    /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
+    const riders = (hostId: string): string[] =>
+      structure.parts.filter((q: any) => q.id !== hostId && specOf(q.id)?.units && hostOf(q.id) === hostId && !structure.meshesOf(q.id).some((it: any) => it.mesh)).map((q: any) => q.id)
+
+    /**
+     * Draws the wall of `partId` as its courses (the first time its range in the merged mesh collapses), and the beams the house draws inside it as their
+     * blocks, without what their opening and their chips took out.
+     */
     function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: number[] }): boolean {
       if (lod !== 0) return false
-      const part = structure.byId.get(partId)
-      const spec = opts.spec()?.parts?.find((q: any) => q.id === partId)
-      if (!part || !spec || !spec.units) return false
-      let view = views.get(partId)
+      const hostId = hostOf(partId)
+      if (!hostId || !specOf(partId)?.units) return false
+      let view = views.get(hostId)
       if (!view) {
-        const items = structure.meshesOf(partId).filter((it: any) => it.mesh)
+        const items = structure.meshesOf(hostId).filter((it: any) => it.mesh)
         if (!items.length) return false
-        view = { mesh: null, saved: null, items, paint: wallColour(items), units: 0, opening: null, chips: [] }
+        const parts = [hostId, ...riders(hostId)].filter((id) => structure.byId.get(id) && specOf(id)?.units)
+        view = { mesh: null, saved: null, items, paint: wallColour(items), units: 0, opening: null, chips: new Map(parts.map((id) => [id, [] as number[][]])), openings: new Map() }
       }
+      if (!view.chips.has(partId)) return false
       if (change.opening) {
-        if (view.opening) return false
-        view.opening = { center: local(change.opening.center), radius: change.opening.radius }
+        if (view.openings.has(partId)) return false
+        view.openings.set(partId, { center: local(change.opening.center), radius: change.opening.radius })
+        if (partId === hostId) view.opening = view.openings.get(partId)
       }
-      if (change.chip) view.chips.push(local(change.chip))
-      const list = courses(part, spec.units, view.opening, view.chips, view.paint)
+      if (change.chip) view.chips.get(partId).push(local(change.chip))
+      const list: any[] = []
+      for (const [id, chips] of view.chips) list.push(...courses(structure.byId.get(id), specOf(id).units, view.openings.get(id) ?? null, chips, view.paint))
       if (view.mesh) { view.mesh.removeFromParent(); view.mesh.dispose() }
       const mesh = new THREE.InstancedMesh(unitGeometry, unitMaterial, Math.max(1, list.length))
-      mesh.name = 'breach:' + partId
+      mesh.name = 'breach:' + hostId
       list.forEach((u, i) => {
         tmp.m.compose(tmp.p.set(u.x, u.y, u.z), tmp.q.identity(), tmp.s.set(u.sx, u.sy, u.sz))
         mesh.setMatrixAt(i, tmp.m)
@@ -133,7 +160,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       if (!view.saved) view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
       view.mesh = mesh
       view.units = list.length
-      views.set(partId, view)
+      views.set(hostId, view)
       invalidate(); invalidateShadow()
       return true
     }

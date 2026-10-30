@@ -15,10 +15,15 @@ const kit = createCharacters({ packs: [createPeoplePack()] })
 kit.create({ seed: 5, kind: 'nurse' })
 ```
 
-**Attack clips.** `ATTACK_CLIPS` are the player's strike poses as data in the `PoseClip` format of `game-characters`: `punch_right` (0.35 s, impact 0.16 s), `shove_two_hands` (0.5 s, 0.26 s),
-`front_kick` (0.6 s, 0.32 s, full body) and the body recoil of a shot, `recoil_rifle` (0.22 s) and `recoil_pistol` (0.18 s), both with the impact on the first frame. The punch, shove and recoils drive
-the upper body only (the legs keep walking). The `phase` labels (`attack_clip.phase.windup`, `strike`, `recover`) are in `ATTACK_CLIP_LOCALES` (`pt-BR`, `en`), in the shape of `POSE_CLIP_LOCALES`.
+**Attack clips.** `ATTACK_CLIPS` are the player's strike poses as data in the `PoseClip` format of `game-characters`: `punch_right` (the cross, 0.38 s, impact 0.14 s), `jab` (0.3 s, 0.11 s), `hook` (0.42 s, 0.18 s), `uppercut` (0.42 s, 0.19 s), the looping `fight_guard`, `shove_two_hands` (0.5 s, 0.26 s),
+`front_kick` (0.6 s, 0.32 s, full body) and the body recoil of a shot, `recoil_rifle` (0.22 s) and `recoil_pistol` (0.18 s), both with the impact on the first frame. The punches are whole-body boxing technique: they leave from the orthodox
+guard of `fight_guard` (left foot and left fist forward, chin down, fists closed by a `grip` event) and come back to it, turning hips and shoulders, reaching full extension and bending the front knee; the
+lead-hand punches (`jab`, `hook`) are written for the right hand from the mirrored guard, so the left hand plays them from the orthodox one. The shove and recoils drive the upper body only (the legs keep walking). The `phase` labels (`attack_clip.phase.windup`, `strike`, `recover`) are in `ATTACK_CLIP_LOCALES` (`pt-BR`, `en`), in the shape of `POSE_CLIP_LOCALES`.
+The punches are written for the right hand (`armL`, the weapon arm `arms[1]`); the left one plays their mirror (`mirrorPoseClip`). `FIRST_PERSON_CLIPS` has each strike for the first-person arms.
 Authored in the kit; replace with the Elenco team's clips when delivered.
+
+**Punch combo.** `PUNCH_COMBO` (`StrikeCombo`) is an ability: jab (left), cross (right), hook (left), uppercut (right), for the `hand` and `fists` tools, starting over after a 1 s pause. The test room
+takes it as `strikeCombo` (N turns it on); a game turns it on when the character has it.
 
 ```ts
 import { POSE_CLIPS, createPoseClipRegistry } from '@adatechnology/game-characters'

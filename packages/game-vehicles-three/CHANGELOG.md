@@ -1,5 +1,19 @@
 # @adatechnology/game-vehicles-three
 
+## 0.3.3
+
+### Patch Changes
+
+- 50d8074: `footprintBlocker` (game-contracts): the `ModuleHost.addBlocker` function of a solid object on the floor, a rectangle in the object's own space that turns and moves with it. The weather visual's lamp rig car now blocks the walking player with it (it stands in every area of the test room, and the player walked through it), and the vehicles test area uses it for its vehicles and the lane car.
+- Updated dependencies [da5261d]
+- Updated dependencies [50d8074]
+- Updated dependencies [2a371c7]
+  - @adatechnology/game-contracts@0.17.0
+  - @adatechnology/game-audio@0.3.2
+  - @adatechnology/game-vehicles@0.4.3
+  - @adatechnology/game-vehicles-driving@0.2.4
+  - @adatechnology/game-vehicles-fleet@4.0.0
+
 ## 0.3.2
 
 ### Patch Changes

@@ -58,6 +58,31 @@ export const rebarBars = (dims: Vec3, thin: number, spacing: number): Bar[] => {
   return out
 }
 
+/** The part of each bar that lies inside a box of `size` centred on `center` (part axes), in the plane of axes `u` and `v`; bars that miss it are dropped. */
+export const clipBarsToBox = (bars: readonly Bar[], u: number, v: number, center: Vec3, size: Vec3): Bar[] => {
+  const out: Bar[] = []
+  for (const [a, b] of bars) {
+    const axis = a[u] !== b[u] ? u : v
+    const other = axis === u ? v : u
+    if (Math.abs(a[other] - center[other]) > size[other] / 2) continue
+    const lo = Math.max(Math.min(a[axis], b[axis]), center[axis] - size[axis] / 2), hi = Math.min(Math.max(a[axis], b[axis]), center[axis] + size[axis] / 2)
+    if (hi - lo < 1e-6) continue
+    const p: Vec3 = [a[0], a[1], a[2]], q: Vec3 = [b[0], b[1], b[2]]
+    p[axis] = lo
+    q[axis] = hi
+    out.push([p, q])
+  }
+  return out
+}
+
+/** A bar bowed by `bow` metres per metre of its length out of the plane (along `thin`), as two segments meeting at the bowed middle; `i` alternates the side. */
+export const bendBar = ([a, b]: Bar, thin: number, bow: number, i: number): Bar[] => {
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])
+  const m: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]
+  m[thin] += (i % 2 === 0 ? 1 : -1) * bow * length
+  return [[a, m], [m, b]]
+}
+
 /** The part of each bar that lies within `radius` of `center` in the plane of axes `u` and `v` (bars that miss the disc are dropped). */
 export const clipBarsToDisc = (bars: readonly Bar[], u: number, v: number, center: [number, number], radius: number): Bar[] => {
   const out: Bar[] = []

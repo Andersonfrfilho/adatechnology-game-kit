@@ -1,4 +1,4 @@
-import type { DestructibleSpec, JointSpec, PartSpec, PileSpec, SoilProfile, StructureRole } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, SoilProfile, StructureRole } from '@adatechnology/game-contracts'
 import { GRAVITY, MATERIALS, SOILS, assemblyPart, partMass, pileLength, profileOf, sizeRebar } from '@adatechnology/game-destruction'
 import type { SoilDef } from '@adatechnology/game-destruction'
 import { sizeCapacities } from './loads'
@@ -102,7 +102,31 @@ const assemblySpec = (part: StructurePart, capacity: number | undefined): PartSp
   return spec
 }
 
-const partSpecOf = (part: StructurePart, capacity: number | undefined, detailed: boolean): PartSpec => (detailed && part.assembly ? assemblySpec(part, capacity) : boxSpec(part, capacity))
+/** The cage of a concrete beam or pillar (four bars in a small section, an NBR 6118 minimum) and the blocks a shot or a blow knocks out of its concrete. */
+export const MEMBER_CAGE = { spacing: 0.1, diameter: 0.008, unit: 0.1 }
+const CAGED_ROLES: ReadonlySet<PartRole> = new Set(['beam', 'column'])
+
+/**
+ * A concrete beam or pillar of a frame with rebar, in detail: its steel cage (`reinforcement`) and its concrete as blocks (`units`), so shots and blows
+ * take out the concrete where they land, the bars show there and the cage is what is left when the concrete is gone.
+ */
+const caged = (spec: PartSpec, part: StructurePart, rebar: MaterialId | null): PartSpec => {
+  if (!rebar || part.material !== 'concrete' || !CAGED_ROLES.has(part.role) || spec.reinforcement) return spec
+  const size = spec.shape.kind === 'box' ? spec.shape.size : null
+  if (!size) return spec
+  const thin = Math.min(...size)
+  return {
+    ...spec,
+    reinforcement: { material: rebar, spacing: MEMBER_CAGE.spacing, diameter: MEMBER_CAGE.diameter },
+    units: { size: [MEMBER_CAGE.unit, MEMBER_CAGE.unit, thin], bond: 'stack', mortar: 'concrete' },
+  }
+}
+
+const partSpecOf = (part: StructurePart, capacity: number | undefined, detailed: boolean, rebar: MaterialId | null): PartSpec => {
+  if (detailed && part.assembly) return assemblySpec(part, capacity)
+  const spec = boxSpec(part, capacity)
+  return detailed ? caged(spec, part, rebar) : spec
+}
 
 /**
  * The structure as a `DestructibleSpec` in the space of the house (x = u, y = height, z = v; the ground is y = 0), one box per part and a terrain slab
@@ -125,7 +149,7 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const sizing = { safety, redundancy, safetyOthers }
   const sized = { ...panels, capacities: options.sized === false ? new Map<string, number>() : sizeCapacities(panels.parts, panels.supports, sizing) }
   const { parts, supports, capacities } = detail === 'units' ? applyUnits(sized, structure) : sized
-  const specs = parts.map((part) => partSpecOf(part, capacities.get(part.id), detail !== 'coarse'))
+  const specs = parts.map((part) => partSpecOf(part, capacities.get(part.id), detail !== 'coarse', structure.construction.frame.rebar))
   const margin = options.terrainMargin ?? TERRAIN_MARGIN
   const x0 = Math.min(...parts.map((part) => part.aabb[0]))
   const z0 = Math.min(...parts.map((part) => part.aabb[1]))

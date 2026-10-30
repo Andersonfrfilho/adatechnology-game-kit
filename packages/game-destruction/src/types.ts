@@ -124,6 +124,18 @@ export interface MaterialHit {
   tear?: 'splinters' | 'lumps' | 'none'
   /** Joules per torn piece (default 150). A blow weaker than one piece's worth tears nothing; a round always tears at least one. */
   tearJoules?: number
+  /**
+   * Joules per kilogram of a unit (`PartSpec.units`: a brick, a block of concrete) that knock it out of its part; blows of this kind wear the unit they
+   * land on (and a little the ones around it) until one comes out (`chip`). Default `breach.chipEnergy` of the world.
+   */
+  unitJoules?: number
+  /**
+   * Joules of each blow that only scar the surface and wear no unit: a small round or a fist leaves a crater in concrete and takes nothing out, a heavy
+   * round takes what it carries above this (default 0).
+   */
+  floor?: number
+  /** The blow leaves a crater in the bare surface of the material (a `spall` with `layer` -1) where it lands, with its dust and chips. */
+  crater?: boolean
 }
 
 export interface MaterialDef {
@@ -159,8 +171,8 @@ export interface MaterialDef {
    */
   sheet?: number
   /**
-   * How the material answers each kind of blow at the point it lands (a shot and a punch do not break wood the same way). Missing entries take
-   * the defaults: a round into wood (`penetrationClass` wood) tears `splinters` at `TEAR_JOULES`; nothing else tears.
+   * What a blow of each damage type does to the material where it lands (the same blow does different things to different materials, and a shot
+   * is not a punch). See `MaterialHit`. Missing entries take the defaults: a round into wood (`penetrationClass` wood) tears `splinters`.
    */
   hits?: Partial<Record<DamageType, MaterialHit>>
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */

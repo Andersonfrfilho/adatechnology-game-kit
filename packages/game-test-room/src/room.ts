@@ -1218,8 +1218,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     )
   }
 
-  const meleeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+  /**
+   * A kick leaves the leg, not the eye: level, the way the player faces, at the heights of `kickHeights` above the feet (shin, knee, hip), it finds the nearest
+   * thing standing low in front (a chair, a door, a crate) within the tool's reach; when none of those rays finds anything the eye's aim decides, as for any other blow.
+   */
+  const kickHeights = options.kickHeights ?? [0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85]
+  const footRay = (u: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
+    const flat = Math.hypot(u.direction[0], u.direction[2])
+    const direction: Vec3 = flat > 1e-6 ? [u.direction[0] / flat, 0, u.direction[2] / flat] : [-Math.sin(player.yaw), 0, -Math.cos(player.yaw)]
+    const feet = player.position
+    let best: { origin: Vec3; distance: number } | null = null
+    for (const height of kickHeights) {
+      const origin: Vec3 = [feet[0], feet[1] + height, feet[2]]
+      const hit = rayWorld(origin, direction, u.reach)
+      if (hit && (!best || hit.distance < best.distance)) best = { origin, distance: hit.distance }
+    }
+    return best ? { ...u, origin: best.origin, direction } : u
+  }
+  const meleeUse = (use: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const w = toolName(id)
+    const u = id === 'kick' ? footRay(use) : use
     const r = rayWorld(u.origin, u.direction, u.reach)
     if (!r) {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
@@ -1246,22 +1264,41 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const punchHand = options.punchHand ?? 'alternate'
   const punchTools = new Set(options.punchTools ?? ['hand', 'fists'])
   let nextHand: 'left' | 'right' = 'right'
+  // the combo (an ability the page gives, `strikeCombo`): while it is on, each blow of its tools is its next step, and a pause longer than `reset` starts it over
+  const combo = options.strikeCombo
+  let comboOn = !!combo && options.strikeComboOn === true
+  let comboNext = 0
+  let comboAt = -Infinity
+  const setStrikeCombo = (on: boolean): void => {
+    if (!combo || on === comboOn) return
+    comboOn = on
+    comboNext = 0
+    const name = combo.name?.[locale] ?? combo.id
+    action('combo', t(on ? 'act.combo.on' : 'act.combo.off', { name }), { data: { combo: combo.id, on } })
+    say(t(on ? 'act.combo.on' : 'act.combo.off', { name }))
+  }
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
-    const clip = strikeClips[id]
-    // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way), whatever the avatar does with them
+    const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
+    const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
+    const clip = step ? step.clip : strikeClips[id]
+    // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way) or the one of its combo step, whatever the avatar does with them
     const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
-    const hand = punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
+    const hand = step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
     const side = leg ? { leg } : hand ? { hand } : undefined
     const seconds = clip === undefined ? null : (avatar?.strike?.(clip, side) ?? null)
     if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
-    if (hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
+    if (!step && hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
+    if (step && stepIndex !== null) {
+      comboNext = (stepIndex + 1) % combo!.steps.length
+      comboAt = simTime
+    }
     if (clip === undefined || seconds === null) {
       meleeUse(u, id)
       return
     }
     const text = leg ? 'act.strike.leg' : hand ? 'act.strike.hand' : 'act.strike'
     action('strike', t(text, { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '', hand: hand ? t(`hand.${hand}`) : '' }), {
-      data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}) },
+      data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}), ...(step ? { combo: combo!.id, step: stepIndex } : {}) },
     })
     strikes.push({
       key: id,
@@ -1467,14 +1504,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (res) applyUses(res, 0)
   }
 
-  /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
-  const kick = (): void => {
-    if (!arsenal.weapons.has('kick') || strikes.some((strike) => strike.key === 'kick')) return
+  /** The kick key (K, Shift+V) and the kick button: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). False when there is no kick or it is not ready. */
+  const kick = (): boolean => {
+    if (!arsenal.weapons.has('kick') || strikes.some((strike) => strike.key === 'kick')) return false
     aim()
     const res = toolState('kick').trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 0, false, 'player')
-    if (res.status !== 'ok') return
+    if (res.status !== 'ok') return false
     for (const u of res.uses) if (u.kind === 'melee') strikeUse(u, 'kick')
+    return true
   }
+  const kickKeys = options.kick?.keys ?? ['KeyK']
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
     releaseTrigger()
@@ -1825,6 +1864,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (idx < loadout.length) setTool(loadout[idx])
       return
     }
+    // the kick has a key of its own (K by default); a weapon module that takes the same key first (the laser of a firearm) wins while that weapon is in hand
+    if (kickKeys.includes(code) && !e.ctrlKey && !e.metaKey) {
+      kick()
+      return
+    }
     switch (code) {
       case 'KeyE':
         grab()
@@ -1870,6 +1914,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyY':
         explosives.detonateCharges()
+        break
+      case 'KeyN':
+        setStrikeCombo(!comboOn)
         break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
@@ -2095,6 +2142,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       timeScale,
       fast: fastForward,
       tap: isTapOn(),
+      combo: combo ? comboOn : null,
       blast: { shelter: blastOn('shelter'), fragmentHits: blastOn('fragmentHits'), confinement: blastOn('confinement') },
       quality: qualityName,
       camera: avatar ? cameraMode : null,
@@ -2722,6 +2770,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     setBlast(options: BlastOptions): void
     setSlowMotion(on: boolean): void
     setFastForward(on: boolean): void
+    setStrikeCombo(on: boolean): void
+    readonly strikeCombo: boolean | null
+    kick(): boolean
     equip(weaponId: string): void
     readonly scenarios: TestRoomScenario[]
     readonly fluidRenderer: FluidRenderer
@@ -2823,6 +2874,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     setFastForward(on) {
       fastForward = on
+    },
+    setStrikeCombo,
+    kick,
+    get strikeCombo() {
+      return combo ? comboOn : null
     },
     equip,
     openArea,
@@ -2981,6 +3037,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         setTool(loadout[index])
       },
       onTap: () => toggleTap(),
+      ...(combo ? { combo: { label: combo.name?.[locale] ?? combo.id, onToggle: () => setStrikeCombo(!comboOn) } } : {}),
+      ...(arsenal.weapons.has('kick') ? { kick: { label: `${t('ui.kick')} (${kickKeys.map((key) => key.replace(/^Key/, '')).join('/')})`, onKick: () => void kick() } } : {}),
       onBlast: (key) => toggleBlast(key),
       onPlay: (objectId, clipId) => {
         playAnimation(clipId, objectId)

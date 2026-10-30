@@ -21,6 +21,14 @@ import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, Contr
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
+/** What `strikeCombo` takes: the shape of `StrikeCombo` of game-characters-people, restated so the room does not depend on it. */
+export type StrikeComboOption = {
+  readonly id: string
+  readonly name?: Readonly<Record<string, string>>
+  readonly tools: readonly string[]
+  readonly steps: ReadonlyArray<{ readonly clip: string; readonly hand?: 'left' | 'right' }>
+  readonly reset: number
+}
 export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, PunchHand, ThirdPersonOptions } from './avatar'
 import type { CameraMode, KickLeg, PunchHand, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 import type { TestTable, TestTableOptions } from './test-table'
@@ -208,10 +216,21 @@ export interface TestRoomOptions {
   strikeClips?: Readonly<Record<string, string>>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
+  /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
+  kickHeights?: readonly number[]
+  /** Keys (`KeyboardEvent.code`) that kick with the arsenal's `kick` tool, whatever tool is in hand; default `['KeyK']` (Shift+V kicks too). */
+  kick?: { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
   punchTools?: readonly string[]
+  /**
+   * A strike combo the player has (an ability, such as `PUNCH_COMBO` of game-characters-people): while it is on (N, the combo button or `setStrikeCombo`), each blow of its
+   * `tools` plays its next step (`{ clip, hand }`) and a pause longer than `reset` seconds starts it over; while it is off the tools strike as usual. Default none.
+   */
+  strikeCombo?: StrikeComboOption
+  /** Start with the combo on. Default false. */
+  strikeComboOn?: boolean
   /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
@@ -333,6 +352,12 @@ export interface TestRoom {
   setSlowMotion(on: boolean): void
   /** Run the simulation 10x per frame (fire, melting and drying take a tenth of the time). */
   setFastForward(on: boolean): void
+  /** Turn the strike combo (`strikeCombo`) on or off (N and the combo button do the same); nothing without a combo. */
+  setStrikeCombo(on: boolean): void
+  /** Whether the strike combo is on; null when the room has none. */
+  readonly strikeCombo: boolean | null
+  /** Kick with the arsenal's `kick` tool, whatever tool is in hand (K, Shift+V and the kick button do the same); false when there is none or it is not ready yet. */
+  kick(): boolean
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
   /**

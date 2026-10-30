@@ -30,16 +30,27 @@ export type ToRoomAvatarOptions = {
   strikeClips?: readonly PoseClip[]
   /** The first-person clips the arms play. Default `FIRST_PERSON_CLIPS` of game-characters-people. */
   firstPersonClips?: readonly FirstPersonClip[]
+  /** The looping clip the body holds between punches (a clip of `strikeClips`), so a combo goes guard, punch, guard instead of dropping the hands each time; `false` for none. Default `'fight_guard'`. */
+  guardClip?: string | false
+  /** Seconds the guard stays up after a punch ends. Default 1.2. */
+  guardHold?: number
+  /** Seconds a punch takes to blend in over the walk (or the guard it comes from). Default 0.05: the fist leaves at once. */
+  punchBlend?: number
 }
 
 /** The impact second of a clip: the time of its first `impact` event. */
 const impactOf = (clip: PoseClip): number | null => clip.events?.find((event) => event.type === 'impact')?.t ?? null
+/** A punch is a clip whose impact is a `punch` (the hands close for it); after one the body keeps the guard. */
+const isPunch = (clip: PoseClip): boolean => clip.events?.some((event) => event.type === 'impact' && event.data?.kind === 'punch') ?? false
+/** Below this ground speed the body stands to keep the guard; walking gives the legs back to the gait. */
+const GUARD_SPEED = 0.3
 
 /**
  * Fits the player's body to the test room's `RoomAvatar` (`room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))`). It changes the sign of the pitch: the room
  * counts a look up as positive, the team game's `view.pitch` (what `AvatarUpdate.pitch` reads) counts a look down as positive. It also gives the room the first-person arms, dressed in the
  * colours of the body (`firstPerson: false` for none), and `strike(clipId)`: the strike plays on the body (the attack clips) and on the arms (the first-person clips), and answers the seconds to its
  * impact, which are the same in both views. A kick with the left leg (`leg: 'left'`) or a punch with the left hand (`hand: 'left'`) plays the mirror of the clip written for the right.
+ * After a punch the body holds the guard (`guardClip`) for `guardHold` seconds while it stands, so the next punch leaves from the guard.
  */
 export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions = {}): RoomAvatarLike => {
   const arms =
@@ -59,12 +70,36 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     if (!found) mirrored.set(clip.id, (found = mirrorPoseClip(clip, `${clip.id}_left`)))
     return found
   }
+  const guard = options.guardClip === false ? undefined : strikes.get(options.guardClip ?? 'fight_guard')
+  const guardHold = options.guardHold ?? 1.2
+  const punchBlend = options.punchBlend ?? 0.05
+  let strikeLeft = 0 // seconds of the punch still to play
+  let guardLeft = 0 // seconds the guard stays up after it
+  let guarding = false
+  const stepGuard = (dt: number, state: Parameters<RoomAvatarLike['update']>[1]): void => {
+    if (!guard) return
+    const free = state.speed < GUARD_SPEED && !state.down && !state.armed && !state.holding && !state.itemUse && !state.running
+    if (strikeLeft > 0) {
+      strikeLeft -= dt
+      if (strikeLeft <= 0 && guardLeft > 0 && free) {
+        avatar.play(guard)
+        guarding = true
+      }
+      return
+    }
+    guardLeft = Math.max(0, guardLeft - dt)
+    if (guarding && (guardLeft <= 0 || !free || avatar.playing !== guard.id)) {
+      if (avatar.playing === guard.id) avatar.stop()
+      guarding = false
+    }
+  }
   return {
     root: avatar.root,
     avatar,
     arms,
     ...(arms ? { firstPerson: { root: arms.root, update: (dt: number, state: Parameters<NonNullable<RoomAvatarLike['firstPerson']>['update']>[1]) => arms.update(dt, state) } } : {}),
-    update: (dt, state) =>
+    update: (dt, state) => {
+      stepGuard(dt, state)
       avatar.update(dt, {
         speed: state.speed,
         running: state.running,
@@ -74,13 +109,18 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         pitch: -state.pitch,
         ...(state.holding !== undefined ? { holding: state.holding } : {}),
         ...(state.itemUse !== undefined ? { itemUse: state.itemUse } : {}),
-      }),
+      })
+    },
     hand: (side) => avatar.hand(side),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)
       if (!clip) return null
       const left = strikeOptions?.leg === 'left' || strikeOptions?.hand === 'left'
-      avatar.play(left ? leftOf(clip) : clip)
+      const punch = guard !== undefined && isPunch(clip)
+      avatar.play(left ? leftOf(clip) : clip, punch ? { blend: punchBlend } : undefined)
+      strikeLeft = punch ? clip.duration : 0
+      guardLeft = punch ? guardHold : 0
+      guarding = false
       arms?.play(clipId, strikeOptions?.leg === 'left' ? { leg: 'left' } : strikeOptions?.hand === 'left' ? { hand: 'left' } : undefined)
       return impactOf(clip)
     },

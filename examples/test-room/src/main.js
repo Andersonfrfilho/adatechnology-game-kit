@@ -7,6 +7,7 @@
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
+//   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
@@ -16,6 +17,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__ */
@@ -38,9 +40,10 @@ const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, op
 const shelf = furnitureSpec(THREE, 'bookcase')
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
 const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
-// the test table is a long dining table of the furniture catalogue: the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
+// the test table is a long wooden table of the furniture catalogue (the gourmet table, without the dining table's cloth: a shot at the cloth moved it as a loose white sheet
+// over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
-const testTable = furnitureSpec(THREE, 'dining_table', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
+const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
 const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
@@ -58,6 +61,9 @@ const room = createTestRoom({
   scenery,
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
+  // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut
+  strikeCombo: PUNCH_COMBO,
+  strikeComboOn: params.get('combo') === '1',
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',

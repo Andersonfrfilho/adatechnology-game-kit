@@ -137,6 +137,52 @@ describe('strikes wait for the impact of the clip', () => {
     expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['shove', 'kick'])
   })
 
+  it('K kicks with any tool in hand, as Shift+V and room.kick() do, and the kick waits for its own cooldown', () => {
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    room.setTool('fists')
+    wait(room, 0.5)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyK' }))
+    expect(avatar.struck).toEqual(['front_kick'])
+    expect(room.tool.def.id).toBe('fists')
+    expect(room.kick()).toBe(false) // the first one is still on its way
+    wait(room, 1.2)
+    expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['kick'])
+    expect(room.kick()).toBe(true)
+    expect(avatar.struck).toEqual(['front_kick', 'front_kick'])
+  })
+
+  it('the kick lands from the foot: it finds a chair low in front while the eye looks over it', () => {
+    const room = makeRoom()
+    room.setAvatar(fakeAvatar())
+    room.spawn('chair', [0, 0, -4], 0)
+    room.update(0.4)
+    aimAt(room, [0, 1.7, -3.15], [0, 2.4, -6])
+    wait(room, 0.5)
+    room.kick()
+    wait(room, 0.6)
+    const hits = room.log.entries({ type: 'melee' })
+    expect(hits).toHaveLength(1)
+    expect(hits[0]!.objectId).toBe(room.spawned()[0]!.objectId)
+    expect(hits[0]!.data?.energyJ).toBe(250)
+    // a punch from the same place goes over it
+    room.setTool('fists')
+    wait(room, 0.5)
+    room.use()
+    wait(room, 0.5)
+    expect(room.log.entries({ type: 'melee' })[1]!.objectId).toBeUndefined()
+  })
+
+  it('the kick keys are an option', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom({ kick: { keys: ['KeyJ'] } })
+    room.setAvatar(avatar)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyK' }))
+    expect(avatar.struck).toEqual([])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ' }))
+    expect(avatar.struck).toEqual(['front_kick'])
+  })
+
   const kicks = (kickLeg?: 'alternate' | 'left' | 'right', count = 3) => {
     const avatar = fakeAvatar()
     const room = makeRoom(kickLeg ? { kickLeg } : {})
@@ -198,6 +244,79 @@ describe('strikes wait for the impact of the clip', () => {
     expect(punches({}, 'shove', 1).avatar.hands).toEqual([undefined])
     const { avatar } = kicks(undefined, 1)
     expect(avatar.hands).toEqual([undefined])
+  })
+
+  const COMBO = {
+    id: 'punch_combo',
+    name: { en: 'Punch combo' },
+    tools: ['hand', 'fists'],
+    steps: [
+      { clip: 'jab', hand: 'left' as const },
+      { clip: 'punch_right', hand: 'right' as const },
+      { clip: 'hook', hand: 'left' as const },
+      { clip: 'uppercut', hand: 'right' as const },
+    ],
+    reset: 1,
+  }
+  const comboAvatar = () => fakeAvatar({ punch_right: 0.16, jab: 0.12, hook: 0.2, uppercut: 0.2, shove_two_hands: 0.26, front_kick: 0.32 })
+
+  it('with the combo on, each punch is the next step (jab, cross, hook, uppercut with their hands) and it goes round', () => {
+    const avatar = comboAvatar()
+    const room = makeRoom({ strikeCombo: COMBO })
+    room.setAvatar(avatar)
+    expect(room.strikeCombo).toBe(false)
+    room.setStrikeCombo(true)
+    expect(room.strikeCombo).toBe(true)
+    room.setTool('fists')
+    run(room, 0.5)
+    // fists throw at most 120 a minute: a punch every 0.55 s, well inside the reset
+    for (let i = 0; i < 5; i++) {
+      room.use()
+      run(room, 0.55)
+    }
+    expect(avatar.struck).toEqual(['jab', 'punch_right', 'hook', 'uppercut', 'jab'])
+    expect(avatar.hands).toEqual(['left', 'right', 'left', 'right', 'left'])
+    const entries = room.log.entries({ type: 'strike' })
+    expect(entries.map((entry) => entry.data?.step)).toEqual([0, 1, 2, 3, 0])
+    expect(entries[0]!.data).toMatchObject({ combo: 'punch_combo', clip: 'jab', hand: 'left', impactIn: 0.12 })
+    expect(room.log.entries({ type: 'melee' })).toHaveLength(5)
+    expect(room.log.entries({ type: 'combo' })[0]!.data).toEqual({ combo: 'punch_combo', on: true })
+  })
+
+  it('a pause longer than the reset starts the combo over; off, a punch is the usual one; N toggles it; the shove and the kick are not in it', () => {
+    const avatar = comboAvatar()
+    const room = makeRoom({ strikeCombo: COMBO, strikeComboOn: true })
+    room.setAvatar(avatar)
+    room.setTool('hand')
+    run(room, 0.5)
+    room.use()
+    run(room, 0.4)
+    room.use()
+    run(room, 1.5)
+    room.use()
+    expect(avatar.struck).toEqual(['jab', 'punch_right', 'jab'])
+    run(room, 0.5)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyN' }))
+    expect(room.strikeCombo).toBe(false)
+    room.use()
+    run(room, 0.5)
+    expect(avatar.struck.at(-1)).toBe('punch_right')
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyN' }))
+    expect(room.strikeCombo).toBe(true)
+    room.setTool('shove')
+    run(room, 0.5)
+    room.use()
+    expect(avatar.struck.at(-1)).toBe('shove_two_hands')
+    expect(avatar.hands.at(-1)).toBeUndefined()
+  })
+
+  it('without a combo the room has none to turn on', () => {
+    const room = makeRoom()
+    expect(room.strikeCombo).toBeNull()
+    room.setStrikeCombo(true)
+    expect(room.strikeCombo).toBeNull()
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyN' }))
+    expect(room.log.entries({ type: 'combo' })).toHaveLength(0)
   })
 
   it('the aim is read again at the impact: a target turned to meanwhile is the one hit', () => {
