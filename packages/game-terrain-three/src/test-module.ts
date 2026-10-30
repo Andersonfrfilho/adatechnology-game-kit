@@ -30,7 +30,7 @@ function weightSpec(): DestructibleSpec {
 }
 
 function buildWeight(THREE: ThreeLib): THREE_NS.Object3D {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(WEIGHT_SIDE, WEIGHT_SIDE, WEIGHT_SIDE), new THREE.MeshStandardMaterial({ color: 0x6d6d68, roughness: 0.9 }))
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(WEIGHT_SIDE, WEIGHT_SIDE, WEIGHT_SIDE), new THREE.MeshStandardMaterial({ color: 0xb4b4ae, roughness: 0.9 }))
   mesh.name = 'block'
   mesh.position.y = WEIGHT_SIDE / 2
   mesh.castShadow = true
