@@ -465,7 +465,7 @@
     "h": 0.17,
     "y": 0,
     "solid": true,
-    "massKg": 3
+    "massKg": 2
   },
   {
     "id": "gas_canister",
