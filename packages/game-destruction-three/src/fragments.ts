@@ -1,6 +1,8 @@
 import type * as THREE_NS from 'three'
 import type { Fragment } from '@adatechnology/game-destruction'
+import { pushFittedBoxes } from './fitted-boxes'
 import { clamp, createRng, hashString } from './math'
+import type { LooseBody } from './types'
 
 interface Live {
   mesh: THREE_NS.Mesh
@@ -18,6 +20,8 @@ interface Live {
   dying: boolean
   /** Air drag per second: a loose sheet (a page) glides and flutters down instead of dropping. */
   air: number
+  /** A big one (`isBig`): it stays where it lies, and what walks steps on it or kicks it. */
+  body: LooseBody | null
 }
 
 export interface FragmentSystemOptions {
@@ -32,11 +36,21 @@ export interface FragmentSystemOptions {
 const SHEET_MAX = 0.004
 const SHEET_AIR = 2.5
 const SHEET_SWAY = 3
+/** A fragment at least this long (m) and this wide is a piece of the thing (half a board), not a splinter; a shard of glass never is. */
+const BIG_LENGTH = 0.2
+const BIG_WIDTH = 0.03
+
+const isBig = (size: readonly number[]): boolean => {
+  const [, middle, longest] = [...size].sort((a, b) => a - b)
+  return longest >= BIG_LENGTH && middle >= BIG_WIDTH
+}
 
 /** Light physics for fracture debris: gravity, ground bounce and friction, spin damping, settling flat, sleep, shrink-away and removal. */
 export class FragmentSystem {
   private readonly list: Live[] = []
   private readonly box: THREE_NS.BoxGeometry
+  /** The mesh box of a fragment before its scale. */
+  private readonly unitBox = { min: { x: -0.5, y: -0.5, z: -0.5 }, max: { x: 0.5, y: 0.5, z: 0.5 } }
   private shardGeos: THREE_NS.BufferGeometry[] = []
   private readonly materials = new Map<string, THREE_NS.Material>()
   private readonly q: THREE_NS.Quaternion
@@ -153,17 +167,50 @@ export class FragmentSystem {
       fade: 1,
       dying: false,
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
+      body: null,
+    }
+    if (f.shape !== 'shard' && isBig(f.size)) {
+      live.body = {
+        mass: f.mass,
+        push: (x, z) => {
+          live.vel.x = x
+          live.vel.z = z
+          live.vel.y = Math.max(live.vel.y, 0.3)
+          live.asleep = false
+          live.rest = 0
+        },
+      }
     }
     this.list.push(live)
     let alive = this.list.reduce((n, l) => n + (l.dying ? 0 : 1), 0)
-    for (let i = 0; i < this.list.length && alive > maxAllowed; i++) {
-      if (!this.list[i].dying) {
-        this.list[i].dying = true
-        alive--
+    // over the limit the splinters go first; the big ones only when nothing else is left
+    for (const big of [false, true]) {
+      for (let i = 0; i < this.list.length && alive > maxAllowed; i++) {
+        if (!this.list[i].dying && (this.list[i].body !== null) === big) {
+          this.list[i].dying = true
+          alive--
+        }
       }
     }
     this.addMarks(mesh, f)
     return mesh
+  }
+
+  /** The boxes of the big fragments around (x, z). */
+  solidsNear(x: number, z: number, radius: number, found: (home: string, min: [number, number, number], max: [number, number, number], body: LooseBody) => void): void {
+    const boxes: number[] = []
+    for (const f of this.list) {
+      if (!f.body || f.dying) continue
+      const reach = f.half.length() + radius
+      if (Math.abs(f.mesh.position.x - x) > reach || Math.abs(f.mesh.position.z - z) > reach) continue
+      f.mesh.updateMatrixWorld()
+      boxes.length = 0
+      pushFittedBoxes(this.unitBox, f.mesh.matrixWorld, boxes)
+      for (let i = 0; i < boxes.length; i += 6) {
+        if (x < boxes[i] - radius || x > boxes[i + 3] + radius || z < boxes[i + 2] - radius || z > boxes[i + 5] + radius) continue
+        found(f.home, [boxes[i], boxes[i + 1], boxes[i + 2]], [boxes[i + 3], boxes[i + 4], boxes[i + 5]], f.body)
+      }
+    }
   }
 
   /** Add velocity to every fragment within `radius` of a point (blasts). */
@@ -197,7 +244,7 @@ export class FragmentSystem {
       }
       if (f.asleep) {
         f.rest += dt
-        if (this.o.life > 0 && f.rest > this.o.life) f.dying = true
+        if (this.o.life > 0 && f.rest > this.o.life && !f.body) f.dying = true
         continue
       }
       this.step(f, dt, g)
@@ -276,7 +323,8 @@ export class FragmentSystem {
     let small = 0
     for (let i = 1; i < 3; i++) if (half[i] < half[small]) small = i
     let axis = small
-    if (Math.abs(up[small]) < 0.35) {
+    // a broken board does not stand on its end
+    if (Math.abs(up[small]) < 0.35 && !f.body) {
       axis = 0
       for (let i = 1; i < 3; i++) if (Math.abs(up[i]) > Math.abs(up[axis])) axis = i
     }

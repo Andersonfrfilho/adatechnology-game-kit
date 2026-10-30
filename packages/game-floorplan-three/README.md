@@ -58,7 +58,7 @@ const shelf = furnitureSpec(THREE, 'bookcase') // 1.2 x 0.35 x 2 m: uprights, ba
 world.add(shelf.spec, { id: 'shelf', position: [-3.5, 0, 0] })
 scene.add(shelf.build(THREE)) // meshes named by part id
 const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
-table.top // { part: 'wood_0', y: 0.78 }: what loose things rest on
+table.top // { part: 'wood_0_b2', y: 0.78, parts: ['wood_0_b0', ...] }: what loose things rest on (a solid wooden top is boards: it breaks board by board where it is hit)
 ```
 
 `tapSpec(THREE, { kind: 'counter' | 'wall', reach? })` does the same for the team's tap (`counterTap` of the sink, `wallTap` of the laundry tub): the steel parts of the base, column, spout and lever, and `spout`, where the water thread starts (the thread itself is not drawn).
