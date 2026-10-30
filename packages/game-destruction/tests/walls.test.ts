@@ -17,7 +17,8 @@ const swing = (w: ReturnType<typeof wallWorld>, point: Vec3 = [0, 1, 0.065]) =>
 
 describe('layered penetration and spall', () => {
   it('a bullet spends the coat on its way: the same shot stops, then goes through once the coat has spalled', () => {
-    const w = wallWorld('brick_wall_plastered')
+    // the coats alone: without chipping (the first shot would knock its brick out)
+    const w = wallWorld('brick_wall_plastered', { breach: { chipEnergy: 0 } })
     // core alone: 14 J/mm x 90 mm = 1260 J; with two coats of 60 J each the wall takes 1380 J
     const first = w.world.shoot([0, 1, 3], [0, 0, -1], 1330, 9)
     expect(first[0]!.penetrated).toBe(false)
@@ -39,23 +40,29 @@ describe('layered penetration and spall', () => {
     expect(ofType(w.events, 'spall')).toHaveLength(1)
   })
 
-  it('a 9 mm burst on plastered brick spalls and holes the wall, and never passes stage 1', () => {
+  it('a 9 mm burst on plastered brick spalls and holes the wall, knocks out the bricks hit most, and never passes stage 1', () => {
     const w = wallWorld('brick_wall_plastered')
     burst(w, NINE_MM, 60)
     const counts = countByType(w.events)
     expect(counts.spall).toBeGreaterThan(5)
-    expect(counts.hole).toBe(60)
+    // a round that finds the gap of a brick that came out goes through: it leaves no hole
+    expect(counts.chip).toBeGreaterThan(0)
+    expect(counts.hole).toBeGreaterThan(10)
+    expect(counts.hole).toBeLessThan(60)
+    expect(w.world.part(w.objectId, 'wall')!.chipped).toHaveLength(counts.chip!)
     expect(ofType(w.events, 'hole').some((e) => e.hole.through)).toBe(false)
     expect(maxStage(w.events)).toBe(1)
     expect(w.world.part(w.objectId, 'wall')!.stage).toBe(1)
   })
 
-  it('a 7.62 burst goes through brick (entry and exit coats spall) yet leaves it at stage 1', () => {
+  it('a 7.62 burst goes through brick (entry and exit coats spall), knocks the bricks out and opens the patch: stage 2, the wall stands', () => {
     const w = wallWorld('brick_wall_plastered')
     burst(w, RIFLE_762, 40)
     expect(ofType(w.events, 'hole').every((e) => e.hole.through)).toBe(true)
     expect(ofType(w.events, 'spall').length).toBeGreaterThan(ofType(w.events, 'hole').length / 2)
-    expect(maxStage(w.events)).toBe(1)
+    expect(ofType(w.events, 'chip').length).toBeGreaterThan(5)
+    expect(maxStage(w.events)).toBe(2)
+    expect(w.world.part(w.objectId, 'wall')!.status).not.toBe('broken')
   })
 
   it('a 7.62 burst never breaches reinforced concrete: stage 1, no through hole, the wall stands', () => {
@@ -105,7 +112,9 @@ describe('damage stages and breach', () => {
       expect(f.size[1]).toBeLessThanOrEqual(0.075 + 1e-9)
       expect(f.part).toBe('wall')
     }
-    const thrown = fragments.reduce((sum, f) => sum + f.mass, 0)
+    // the blows knocked bricks out one by one before the breach: the wall lost those too
+    const chipped = ofType(w.events, 'chip').flatMap((e) => e.fragments)
+    const thrown = [...fragments, ...chipped].reduce((sum, f) => sum + f.mass, 0)
     expect(w.world.part(w.objectId, 'wall')!.mass).toBeCloseTo(before - thrown, 6)
     expect(stage.opening!.center[2]).toBeCloseTo(0, 6)
   })
@@ -162,7 +171,8 @@ describe('damage stages and breach', () => {
 
 describe('holes stay on the pieces', () => {
   it('a wall that falls apart in blocks keeps its bullet holes on the blocks, inside each block', () => {
-    const w = wallWorld('brick_wall_plastered')
+    // every hole stays on the wall until it falls: without chipping (a brick knocked out takes its holes with it)
+    const w = wallWorld('brick_wall_plastered', { breach: { chipEnergy: 0 } })
     burst(w, NINE_MM, 12)
     const holes = w.world.part(w.objectId, 'wall')!.holes.length
     expect(holes).toBe(12)
@@ -182,7 +192,9 @@ describe('holes stay on the pieces', () => {
     w.world.shoot([0.02, 1.0, 3], [0, 0, -1], NINE_MM.energy, NINE_MM.caliber)
     while ((w.world.part(w.objectId, 'wall')!.stage ?? 0) < 2) swing(w)
     const stage = ofType(w.events, 'stage').find((e) => e.stage === 2)!
-    expect(stage.fragments!.flatMap((f) => f.marks ?? [])).toHaveLength(1)
+    // the brick with the hole leaves in the breach, or before it, knocked out by the blows
+    const out = [...stage.fragments!, ...ofType(w.events, 'chip').flatMap((e) => e.fragments)]
+    expect(out.flatMap((f) => f.marks ?? [])).toHaveLength(1)
     expect(w.world.part(w.objectId, 'wall')!.holes).toHaveLength(0)
   })
 })

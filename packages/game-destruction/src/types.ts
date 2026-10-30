@@ -402,6 +402,12 @@ export interface DestructionOptions {
     radius?: number
     /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
     blastFactor?: number
+    /**
+     * Joules per kilogram of a unit (`PartSpec.units`: a brick, a block) that knock it out of its wall: shots and blows wear the unit they land on and
+     * a little the ones around it, and a unit that took this much comes out (`chip` event). Default 200 (a 4 kg brick: two 9 mm rounds, one
+     * rifle round); 0 turns it off.
+     */
+    chipEnergy?: number
   }
   /**
    * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`
@@ -575,6 +581,8 @@ export interface PartRuntime {
   spalls?: Array<[number, number, number, number, number, number]>
   /** Through damage so far: `[x, y, z, area]` in object space, newest last. */
   breach?: Array<[number, number, number, number]>
+  /** Energy each unit of the part took so far (`breach.chipEnergy`), by its index in the unit grid; -1 when the unit came out. */
+  chips?: Record<number, number>
   /** Mass in kg that left the part in a breach. */
   removed?: number
   /** Plastic rotation in radians a reinforced beam or slab took in bending (blasts add it up; `flexure.failRotationDeg` breaks it). */

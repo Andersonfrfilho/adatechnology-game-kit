@@ -548,6 +548,8 @@ export interface PartState {
   stripped?: boolean
   /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
   opening?: { center: Vec3; radius: number }
+  /** Units (`PartSpec.units`) knocked out one by one by shots and blows, in the part's own axes (`chip` events). Raycasts and shots pass through them. */
+  chipped?: Array<{ center: Vec3; size: Vec3 }>
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
 }
@@ -716,6 +718,11 @@ export type DestructionEvent =
    * removed: draw the fragments and cut the opening, do not hide the part). Stage 3 follows a `fracture` or a `collapse`.
    */
   | (EventBase & { type: 'stage'; part: string; stage: DamageStage; opening?: { center: Vec3; radius: number }; fragments?: readonly Fragment[] })
+  /**
+   * One unit of a wall of units (`PartSpec.units`: a brick, a block) came out under shots or blows: `center` in world space, `size` in the part's own
+   * axes and `rotation` the part's world rotation (the box of the unit that left), `fragments` the unit itself. The part stays: draw the gap, do not hide it.
+   */
+  | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[] })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
   /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */

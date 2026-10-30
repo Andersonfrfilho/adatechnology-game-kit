@@ -60,6 +60,10 @@ const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
+/** Joules per kilogram of a masonry unit that knock it out of its wall (a 4 kg brick: two 9 mm rounds, one rifle round). */
+const CHIP_ENERGY = 200
+/** Share of a hit's energy the units next to the one hit take, at the edge of the unit hit (falls to 0 at the hit's radius). */
+const CHIP_SPLASH = 0.5
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -270,6 +274,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let windCfg: ResolvedWind | null = windOpts ? resolveWind(windOpts) : null
   const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
+  const chipEnergy = options.breach?.chipEnergy ?? CHIP_ENERGY
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
 
@@ -1212,6 +1217,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
         if (p.st.opening && insideOpening(o, p, vec.madd(origin, d, r.t0))) continue
+        if (p.st.chipped && insideChip(p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
     }
@@ -1520,6 +1526,72 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     openBreach(o, p, [sum[0] / total, sum[1] / total, sum[2] / total], total, energy, dir, src)
   }
 
+  /** The unit grid of a part with `units`, at the cap a breach uses (the same cells every time, so a unit keeps its index). Not saved: it is rebuilt from the spec. */
+  const unitGrids = new WeakMap<PartRT, UnitCell[]>()
+  const gridOf = (p: PartRT): UnitCell[] => {
+    let grid = unitGrids.get(p)
+    if (!grid) unitGrids.set(p, (grid = unitGrid(p.dims, p.thin, unitsOf(p), BREACH_GRID_CAP)))
+    return grid
+  }
+
+  /** The object-local point falls in a unit that was knocked out of the part (`PartState.chipped`). */
+  const insideChip = (p: PartRT, objectPoint: Vec3): boolean => {
+    const cells = p.st.chipped
+    if (!cells?.length) return false
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objectPoint)
+    return cells.some((c) => Math.abs(lp[u] - c.center[u]) <= c.size[u] / 2 && Math.abs(lp[v] - c.center[v]) <= c.size[v] / 2)
+  }
+
+  /**
+   * A shot or a blow on a wall of units (`PartSpec.units`) wears the unit it lands on, and a little the ones around it within `radius`: a unit that took
+   * `chipEnergy` joules per kilogram of its mass comes out (a `chip` event with the fragment, `PartState.chipped`), and what goes through it passes. The
+   * face area that came out adds up like through damage (`addBreach`), so enough units knocked out close together open the part. A reinforced part
+   * keeps its units (the cage holds them: it crumbles in a breach).
+   */
+  const chipUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, dir: Vec3 | null, radius: number, src?: string) => {
+    if (!p.spec.units || p.spec.reinforcement || !p.staged || chipEnergy <= 0 || energy <= 0 || p.st.stripped || isLost(p) || (p.st.stage ?? 0) >= 2) return
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objLocal(o, wp))
+    const grid = gridOf(p)
+    const worn = (p.rt.chips ??= {})
+    const out: UnitCell[] = []
+    for (let i = 0; i < grid.length; i++) {
+      const cell = grid[i]!
+      if (worn[i] === -1) continue
+      const gap = Math.hypot(Math.max(0, Math.abs(lp[u] - cell.center[u]) - cell.size[u] / 2), Math.max(0, Math.abs(lp[v] - cell.center[v]) - cell.size[v] / 2))
+      if (gap > radius) continue
+      const share = gap === 0 ? 1 : CHIP_SPLASH * (1 - gap / radius)
+      const total = (worn[i] ?? 0) + energy * share
+      const mass = p.mat.density * cell.size[0] * cell.size[1] * cell.size[2]
+      if (total < chipEnergy * mass) {
+        worn[i] = total
+        continue
+      }
+      worn[i] = -1
+      out.push(cell)
+    }
+    if (out.length === 0) return
+    const { c, q } = partXf(o, p)
+    const chipped = (p.st.chipped ??= [])
+    const holes = localHolesOf(p)
+    for (const cell of out) {
+      const mass = Math.min(p.st.mass, p.mat.density * cell.size[0] * cell.size[1] * cell.size[2])
+      const center = toWorld(c, q, cell.center)
+      const speed = clamp(Math.sqrt((2 * energy * 0.05) / Math.max(mass, 0.05)), 0.5, 6)
+      const fragments = cellFragments(o, p, [cell], wp, dir, speed, mass, `c${chipped.length}_`)
+      p.st.holes = p.st.holes.filter((_, k) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length === 0)
+      chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
+      p.st.mass = Math.max(0, p.st.mass - mass)
+      p.rt.removed = (p.rt.removed ?? 0) + mass
+      markDamaged(p)
+      setStage(o, p, 1, {}, src)
+      emit({ ...base(o, src), type: 'chip', part: p.spec.id, center, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q, fragments })
+      debris(o, p, p.mat.breakDebris, center, vec.scale(dir ?? [0, 1, 0], -1), 6, 2, src)
+    }
+    for (const cell of out) addBreach(o, p, toWorld(c, q, cell.center), cell.size[u] * cell.size[v], energy, dir, src)
+  }
+
   /**
    * Stage 2: the units around `center` (object-local) come out as fragments the size of one unit, the part keeps an opening and its mass drops. An
    * opening as wide as the part cuts it in two (a column, a lintel): that is a fracture instead.
@@ -1535,7 +1607,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       failPart(o, p, worldCenter, dir, energy, 12, src)
       return
     }
-    const cells = cellsWithin(unitGrid(p.dims, p.thin, unitsOf(p), BREACH_GRID_CAP), p.thin, lc, radius)
+    const worn = p.rt.chips
+    const cells = cellsWithin(gridOf(p).filter((_, i) => worn?.[i] !== -1), p.thin, lc, radius)
     const removed = (p.st.mass * cells.reduce((sum, cell) => sum + cell.size[u] * cell.size[v], 0)) / (p.dims[u] * p.dims[v])
     const speed = clamp(Math.sqrt((2 * energy * 0.1) / Math.max(removed, 0.05)), 0.5, 8)
     const fragments = cellFragments(o, p, cells, worldCenter, dir, speed, removed, 'b')
@@ -1753,7 +1826,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const mat = p.mat
     const piercing = round.piercing ?? 1
     // a bare cage and an opening do not stop a bullet
-    if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry)))) {
+    if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry))) || insideChip(p, objLocal(o, entry))) {
       return { penetrated: true, exitEnergy: E, exitPoint: vec.madd(entry, d, Math.min(pathLen, p.thickness)), damage: 0 }
     }
     const sin = Math.min(1, Math.abs(vec.dot(d, n)))
@@ -1816,6 +1889,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
+    // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
+    chipUnits(o, p, entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
   }
 
@@ -1847,6 +1922,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const scale = mat.damageScale?.[kind] ?? 1
     const done = applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
     addBreach(o, p, point, breachAreaOf(p, done, false), E, d, src)
+    // a blow that did not open the wall wears the units it lands on
+    if (kind === 'blunt') chipUnits(o, p, point, E, d, Math.max(contactR, 0.03), src)
     return done
   }
 

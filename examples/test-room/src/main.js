@@ -38,7 +38,8 @@ const shelf = furnitureSpec(THREE, 'bookcase')
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
 const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
 const scenery = {
-  target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build },
+  // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
+  target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
   shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build },
   sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },

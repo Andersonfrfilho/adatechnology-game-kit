@@ -589,6 +589,9 @@ class Renderer implements DestructionRenderer {
       case 'stage':
         this.onStage(ev)
         break
+      case 'chip':
+        this.onChip(ev)
+        break
       case 'expose':
         this.cages.set(`${ev.object}|${ev.part}`, ev.bars)
         if (ev.bars.length > 0) {
@@ -859,6 +862,20 @@ class Renderer implements DestructionRenderer {
     }
     if (!played) this.vfx.burst('dust', ev.opening.center, [0, 1, 0], 14, 1.2, { color })
     this.sound(impactKey(def), ev.opening.center, 0.8)
+  }
+
+  /**
+   * A unit came out of a wall of units: the unit flies as a fragment with a puff of its dust. The gap itself is the drawing's (the house renderer redraws
+   * the wall as its courses without that unit); a part drawn as one box keeps its box.
+   */
+  private onChip(ev: Ev<'chip'>): void {
+    const pv = this.partVis(ev.object, ev.part)
+    const def = pv ? this.world.materials.get(pv.material) : undefined
+    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
+    const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
+    for (const fr of ev.fragments) this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, fallbackColor(fr.material, def), false), ev.object, maxAlive)
+    if (!this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.center)) this.vfx.burst('dust', ev.center, [0, 1, 0], 6, 0.8, { color })
+    this.sound(impactKey(def), ev.center, 0.7)
   }
 
   private onFracture(ev: Ev<'fracture'>): void {

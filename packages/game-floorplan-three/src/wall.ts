@@ -25,6 +25,12 @@ export interface WallPiece {
   readonly spec: any
   /** Draws the wall with the house renderer: meshes carry `userData.destructionPart` of their part, in the space of the spec. */
   build(THREE: any): any
+  /**
+   * Once a drawing from `build` is in a destruction world as `objectId` (with this `spec`), the house renderer follows its events and draws on it what
+   * a generic destruction renderer cannot: the bricks that shots and blows knock out (`chip`) and the opening of a breach, as gaps in the wall's
+   * courses. `restore` puts the wall back (after `world.reset`), `dispose` stops following.
+   */
+  follow(root: any, world: any, objectId: string): { restore(): void; dispose(): void } | null
 }
 
 const PLASTER = 0xe8e2d4
@@ -52,8 +58,12 @@ function draw(THREE: any, plan: any, options: Partial<HouseRendererOptions>): Ho
   return create(THREE, { ...options, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true, pieces: 'meshes' })
 }
 
+/** The house each drawing of `build` came from (its root is the house's group). */
+const houses = new WeakMap<object, House>()
+
 /** Labels the meshes of each structural piece with its part id, so a destruction renderer binds them by `userData.destructionPart`. */
 function label(house: House): any {
+  houses.set(house.group, house)
   for (const [id, items] of Object.entries<any[]>(house.destruction.ranges())) {
     for (const item of items) {
       const object = item.isObject3D ? item : item.mesh
@@ -70,13 +80,15 @@ function label(house: House): any {
 export function wallPiece(THREE: any, options: WallPieceOptions): WallPiece {
   const plan = wallPlan(options)
   const houseOptions = options.house ?? {}
-  // no world: the wall is drawn once to describe its structure, as the houses' specimens are
+  // no world: the wall is drawn once to describe its structure, as the houses' specimens are. The wall keeps the detail of the houses' walls (its
+  // assembly's plaster, bricks and breach), so shots wear the brick they hit and knock it out
   const probe = draw(THREE, plan, { ...houseOptions, destruction: undefined, destructionRenderer: undefined })
-  const spec = probe.structure.spec({ wallDetail: 'coarse' })
+  const spec = probe.structure.spec()
   probe.dispose()
   return {
     plan,
     spec,
     build: (T: any) => label(draw(T, plan, houseOptions)),
+    follow: (root: any, world: any, objectId: string) => (houses.get(root) as any)?.destruction?.follow?.(world, objectId, spec) ?? null,
   }
 }
