@@ -179,6 +179,40 @@ describe('what is thrown and the rim', () => {
   })
 })
 
+describe('support', () => {
+  it('a piece at rest falls when the ground under it is dug, and stays on the new floor', () => {
+    const rock = createTerrain({ bounds: BOUNDS, layout: { surface: 'stone_paving' } })
+    rock.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    settle(rock as ReturnType<typeof make>)
+    const piece = rock.debris().find((candidate) => candidate.atRest && rock.contains(candidate.position[0] + 2, candidate.position[2] + 2) && rock.contains(candidate.position[0] - 2, candidate.position[2] - 2))!
+    const before = piece.position[1]
+    rock.strike('explosive', { x: piece.position[0], z: piece.position[2], energy: GRENADE * 40 })
+    settle(rock as ReturnType<typeof make>)
+    expect(piece.position[1]).toBeLessThan(before)
+    expect(piece.position[1]).toBeLessThan(rock.heightAt(piece.position[0], piece.position[2]) + 0.05)
+  })
+
+  it('tells where the ground changed, for what rests on it', () => {
+    const terrain = make('dirt')
+    const regions: { x: number; z: number; radius: number }[] = []
+    const stop = terrain.onDeform((region) => regions.push(region))
+    terrain.strike('explosive', { x: 3, z: -2, energy: GRENADE })
+    expect(regions[0]).toMatchObject({ x: 3, z: -2 })
+    expect(regions[0]!.radius).toBeGreaterThan(0.5)
+    stop()
+    regions.length = 0
+    terrain.strike('explosive', { x: 3, z: -2, energy: GRENADE })
+    expect(regions).toHaveLength(0)
+  })
+
+  it('beyond the terrain the ground is flat, whatever happened at its edge', () => {
+    const terrain = make('dirt')
+    terrain.strike('explosive', { x: 9.9, z: 0, energy: GRENADE * 4 })
+    expect(terrain.heightAt(9.9, 0)).toBeLessThan(0)
+    expect(terrain.heightAt(10.5, 0)).toBe(0)
+  })
+})
+
 describe('fire', () => {
   it('chars turf and wood and only soots concrete', () => {
     for (const [surface, least, most] of [['lawn', 0.9, 1], ['wood_floor', 0.9, 1], ['concrete_slab', 0.3, 0.45]] as const) {

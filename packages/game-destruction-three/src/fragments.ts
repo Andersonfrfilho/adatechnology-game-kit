@@ -197,6 +197,15 @@ export class FragmentSystem {
     }
   }
 
+  /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
+  wakeRegion(x: number, z: number, radius: number): void {
+    for (const f of this.list) {
+      if (!f.asleep || Math.hypot(f.mesh.position.x - x, f.mesh.position.z - z) > radius) continue
+      f.asleep = false
+      f.rest = 0
+    }
+  }
+
   update(dt: number): void {
     this.tick++
     const g = this.o.gravity

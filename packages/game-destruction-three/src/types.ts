@@ -133,6 +133,8 @@ export interface DestructionRenderer {
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: { mass?: number; velocity?: Vec3 }): Piece
   pieces(): Piece[]
+  /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
+  wakeRegion(x: number, z: number, radius: number): void
   piece(objectId: string): Piece | null
   /** Push a piece (throws, blasts). */
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void

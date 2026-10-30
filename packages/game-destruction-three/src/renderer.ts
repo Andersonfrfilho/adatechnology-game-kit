@@ -1299,6 +1299,11 @@ class Renderer implements DestructionRenderer {
     this.ownVfx?.world.clear()
   }
 
+  wakeRegion(x: number, z: number, radius: number): void {
+    this.fragments.wakeRegion(x, z, radius)
+    this.pieceSys.wakeRegion(x, z, radius)
+  }
+
   stats(): { fragments: number; particles: number; pieces: number; decals: number } {
     return { fragments: this.fragments.count, particles: this.vfx.sprites().live + this.ownedVfxParticles(), pieces: this.pieceSys.list.length, decals: this.visuals.decalCount + this.ground.count }
   }
