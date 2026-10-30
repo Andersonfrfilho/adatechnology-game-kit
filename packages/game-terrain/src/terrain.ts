@@ -3,7 +3,7 @@ import { DEFAULT_BAR_YIELD_JOULES, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_P
 import { createDebrisStore } from './debris'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainSnapshot, TerrainStratum } from './types'
+import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -112,6 +112,11 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const random = createRandom(options.seed ?? 1)
   let currentLayout: GroundLayout = options.layout ?? { surface: DEFAULT_PROFILE }
 
+  const deformListeners = new Set<(region: TerrainRegion) => void>()
+  const emitDeform = (x: number, z: number, radius: number): void => {
+    for (const listener of deformListeners) listener({ x, z, radius })
+  }
+
   const chunkOfVertex = (column: number, row: number): number => Math.min(chunksZ - 1, Math.floor(row / chunkCells)) * chunksX + Math.min(chunksX - 1, Math.floor(column / chunkCells))
   /** A vertex on a chunk's edge belongs to its neighbours as well. */
   function touchVertex(column: number, row: number): void {
@@ -169,6 +174,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const contains = (x: number, z: number): boolean => x >= x0 && x <= x1 && z >= z0 && z <= z1
 
   function heightAt(x: number, z: number): number {
+    // beyond the terrain the ground is untouched: no blow can dig it and a piece thrown out lands on it
+    if (!contains(x, z)) return options.baseHeight?.(x, z) ?? 0
     const fx = Math.max(0, Math.min(columns - 1e-6, (x - x0) / cellSize))
     const fz = Math.max(0, Math.min(rows - 1e-6, (z - z0) / cellSize))
     const column = fx | 0
@@ -255,6 +262,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       }
     }
     marks.removeInside(x, z, radius)
+    emitDeform(x, z, reach)
   }
 
   function throwPieces(spec: { x: number; y: number; z: number; volume: number; material: TerrainMaterial; energy: number; direction?: readonly number[]; quota: number; bowlRadius: number; blow: TerrainBlow }): void {
@@ -391,6 +399,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
         }
       }
     }
+    if (collapsed) emitDeform(x, z, reach)
     // what gave way takes down what was already bending around it
     if (collapsed && profile.drop !== undefined) {
       for (let row = row0; row <= row1; row++) {
@@ -494,6 +503,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
   function updateSlides(): void {
     if (sliding.size === 0) return
     let budgetLeft = budget.maxSlideCellsPerFrame
+    let minX = Infinity
+    let minZ = Infinity
+    let maxX = -Infinity
+    let maxZ = -Infinity
     for (const index of sliding) {
       if (budgetLeft-- <= 0) break
       sliding.delete(index)
@@ -516,8 +529,15 @@ export function createTerrain(options: TerrainOptions): Terrain {
         sliding.add(next)
         touchVertex(column, row)
         touchVertex(nextColumn, nextRow)
+        const px = x0 + column * cellSize
+        const pz = z0 + row * cellSize
+        minX = Math.min(minX, px)
+        maxX = Math.max(maxX, px)
+        minZ = Math.min(minZ, pz)
+        maxZ = Math.max(maxZ, pz)
       }
     }
+    if (minX <= maxX) emitDeform((minX + maxX) / 2, (minZ + maxZ) / 2, Math.hypot(maxX - minX, maxZ - minZ) / 2 + cellSize * 2)
   }
 
   /** A piece of soft ground joins the height where it stops, so that what is thrown out piles up and can be walked on. */
@@ -643,6 +663,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
     strike,
     burn,
     applyHit,
+    onDeform(listener) {
+      deformListeners.add(listener)
+      return () => deformListeners.delete(listener)
+    },
     update(dt) {
       debrisStore.update(dt, { heightAt, gravity, settle })
       updateSlides()

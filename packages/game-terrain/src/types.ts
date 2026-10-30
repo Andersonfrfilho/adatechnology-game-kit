@@ -164,6 +164,12 @@ export interface TerrainBlowResult {
   readonly fine: boolean
 }
 
+export interface TerrainRegion {
+  readonly x: number
+  readonly z: number
+  readonly radius: number
+}
+
 export interface TerrainColumn {
   readonly profile: string
   readonly material: string
@@ -235,6 +241,8 @@ export interface Terrain {
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */
   applyHit(hit: Hit): TerrainBlowResult | null
+  /** Follow the ground changing: `region` is the disc it changed in. What rests there has lost its support and must look again. Returns the unsubscribe function. */
+  onDeform(listener: (region: TerrainRegion) => void): () => void
   /** Moves the pieces, the sliding ground and the fire. */
   update(dt: number): void
   /** Takes up to the budget's chunks that changed since the last call. */

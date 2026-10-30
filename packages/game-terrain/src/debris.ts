@@ -4,6 +4,7 @@ const REST_SPEED = 0.6
 const RESTITUTION = 0.25
 const FRICTION = 0.55
 const MAX_BOUNCES = 2
+const REST_GAP = 0.01
 
 export interface DebrisWorld {
   heightAt(x: number, z: number): number
@@ -52,7 +53,13 @@ export function createDebrisStore(max: () => number): DebrisStore {
     update(dt, world) {
       for (let i = list.length - 1; i >= 0; i--) {
         const piece = list[i]!
-        if (piece.atRest) continue
+        if (piece.atRest) {
+          // what it lay on was dug away or heaped over: it falls again, or rides up
+          const under = world.heightAt(piece.position[0], piece.position[2]) + piece.radius * 0.6
+          if (piece.position[1] > under + REST_GAP) piece.atRest = false
+          else if (piece.position[1] < under - REST_GAP) piece.position[1] = under
+          if (piece.atRest) continue
+        }
         const { position, velocity } = piece
         velocity[1] -= world.gravity * dt
         position[0] += velocity[0] * dt

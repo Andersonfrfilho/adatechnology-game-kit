@@ -10,6 +10,7 @@ const MIN_DEPTH_LIGHT = 0.55
 const LOOSE_VISIBLE = 0.004
 /** A skin thinner than this (turf, asphalt) is not what comes out of a hole: what is under it is. */
 const THIN_SKIN = 0.1
+const SKIRT_QUADS = 4
 const BROKEN_DEPTH = 0.004
 const BROKEN_TONE = 0.62
 
@@ -101,16 +102,21 @@ export function buildChunkGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
   return geometry
 }
 
-/** Every chunk nothing touched, as one flat quad each in one geometry: the whole floor of an arena is a single draw call until someone digs it. */
-export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks: readonly TerrainChunk[]): THREE_NS.BufferGeometry {
+/**
+ * Every chunk nothing touched, as one flat quad each in one geometry: the whole floor of an arena is a single draw call until someone digs it. Around them, out to `skirt` metres, the
+ * ground goes on as the same surface: what is thrown past the edge lands on something, not on the sky.
+ */
+export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks: readonly TerrainChunk[], skirt: number): THREE_NS.BufferGeometry {
   const [x0, z0] = terrain.bounds
   const { cellSize, columns, rows } = terrain
-  const positions = new Float32Array(chunks.length * 12)
-  const normals = new Float32Array(chunks.length * 12)
-  const bases = new Float32Array(chunks.length * 12)
-  const shades = new Float32Array(chunks.length * 8)
-  const patterns = new Float32Array(chunks.length * 4)
-  const indices = new Uint32Array(chunks.length * 6)
+  const [, , x1, z1] = terrain.bounds
+  const quads = chunks.length + SKIRT_QUADS
+  const positions = new Float32Array(quads * 12)
+  const normals = new Float32Array(quads * 12)
+  const bases = new Float32Array(quads * 12)
+  const shades = new Float32Array(quads * 8)
+  const patterns = new Float32Array(quads * 4)
+  const indices = new Uint32Array(quads * 6)
   const base: [number, number, number] = [0, 0, 0]
   const shade: [number, number] = [1, 0]
   chunks.forEach((chunk, n) => {
@@ -127,6 +133,28 @@ export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks:
       bases.set(base, at * 3)
       shades.set(shade, at * 2)
       patterns[at] = pattern
+    })
+    const first = n * 4
+    indices.set([first, first + 2, first + 1, first + 2, first + 3, first + 1], n * 6)
+  })
+  const surface = terrain.material(terrain.profileList.find((profile) => profile.id === terrain.layout().surface)?.strata[0]?.material ?? terrain.profileList[terrain.profileIndex[0]!]!.strata[0]!.material)
+  const rects = [
+    [x0 - skirt, z0 - skirt, x1 + skirt, z0],
+    [x0 - skirt, z1, x1 + skirt, z1 + skirt],
+    [x0 - skirt, z0, x0, z1],
+    [x1, z0, x1 + skirt, z1],
+  ] as const
+  rects.forEach(([ax, az, bx, bz], r) => {
+    const n = chunks.length + r
+    const corners = [[ax, az], [bx, az], [ax, bz], [bx, bz]] as const
+    corners.forEach(([x, z], corner) => {
+      const at = n * 4 + corner
+      positions[at * 3] = x
+      positions[at * 3 + 2] = z
+      normals[at * 3 + 1] = 1
+      bases.set(surface.color, at * 3)
+      shades[at * 2] = 1
+      patterns[at] = patternIndex(surface.pattern)
     })
     const first = n * 4
     indices.set([first, first + 2, first + 1, first + 2, first + 3, first + 1], n * 6)

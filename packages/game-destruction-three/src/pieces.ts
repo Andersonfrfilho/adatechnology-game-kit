@@ -197,6 +197,15 @@ export class PieceSystem {
     return [e[0] * lx + e[4] * ly + e[8] * lz, e[1] * lx + e[5] * ly + e[9] * lz, e[2] * lx + e[6] * ly + e[10] * lz]
   }
 
+  /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
+  wakeRegion(x: number, z: number, radius: number): void {
+    for (const b of this.list) {
+      if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
+      b.sleeping = false
+      b.still = 0
+    }
+  }
+
   update(dt: number): void {
     this.time += dt
     this.solids = this.list.map((body) => {

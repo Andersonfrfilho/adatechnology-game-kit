@@ -305,6 +305,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
     playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
   }
+  terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
   const registerGround = (): void => {
     if (!world.has(GROUND_ID)) world.register(groundImpl, { id: GROUND_ID })
