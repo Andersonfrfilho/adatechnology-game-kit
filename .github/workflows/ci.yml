@@ -137,7 +137,8 @@ jobs:
       fail-fast: false
       matrix:
         areas:
-          - test-room interactables-test-area
+          - test-room
+          - interactables-test-area
           - floorplan-test-area vfx-test-area weapons-test-area characters-test-area
           - animals-test-area vehicles-test-area vegetation-test-area urban-test-area
           - audio-test-area weather-test-area player-test-area crowd-test-area stories-test-area
