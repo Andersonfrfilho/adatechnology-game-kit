@@ -16,6 +16,8 @@ interface Live {
   /** 1 while alive; counts down to 0 while shrinking away. */
   fade: number
   dying: boolean
+  /** Air drag per second: a loose sheet (a page) glides and flutters down instead of dropping. */
+  air: number
 }
 
 export interface FragmentSystemOptions {
@@ -25,6 +27,11 @@ export interface FragmentSystemOptions {
   max: number
   life: number
 }
+
+/** Thickest scrap that flies as a sheet (m), its air drag (1/s) and how hard it sways (m/s²). */
+const SHEET_MAX = 0.004
+const SHEET_AIR = 2.5
+const SHEET_SWAY = 3
 
 /** Light physics for fracture debris: gravity, ground bounce and friction, spin damping, settling flat, sleep, shrink-away and removal. */
 export class FragmentSystem {
@@ -145,6 +152,7 @@ export class FragmentSystem {
       rest: 0,
       fade: 1,
       dying: false,
+      air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
     }
     this.list.push(live)
     let alive = this.list.reduce((n, l) => n + (l.dying ? 0 : 1), 0)
@@ -233,6 +241,7 @@ export class FragmentSystem {
       }
     } else {
       f.ang.multiplyScalar(Math.exp(-0.15 * dt))
+      if (f.air > 0) this.flutter(f, dt)
     }
     if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
     const slow = f.vel.lengthSq() < 0.012 && f.ang.lengthSq() < 0.2
@@ -246,6 +255,15 @@ export class FragmentSystem {
     } else {
       f.still = 0
     }
+  }
+
+  /** A sheet in the air: drag slows it to a slow fall, and it sways and turns over as it goes. */
+  private flutter(f: Live, dt: number): void {
+    f.vel.multiplyScalar(Math.exp(-f.air * dt))
+    f.vel.x += (this.rng() - 0.5) * SHEET_SWAY * dt
+    f.vel.z += (this.rng() - 0.5) * SHEET_SWAY * dt
+    f.ang.x += (this.rng() - 0.5) * SHEET_SWAY * 4 * dt
+    f.ang.z += (this.rng() - 0.5) * SHEET_SWAY * 4 * dt
   }
 
   /** Tip the fragment towards lying on its flattest face. */

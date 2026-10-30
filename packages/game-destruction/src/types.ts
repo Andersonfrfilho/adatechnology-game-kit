@@ -142,6 +142,11 @@ export interface MaterialDef {
   fracture: FractureStyle
   /** Fragment size range in metres (default `[0.04, 0.2]`). */
   fragmentSize?: [number, number]
+  /**
+   * Thickness of one sheet, in metres, for a material that comes in sheets (paper). A `tear` part much thicker than a sheet is a stack of them (a book,
+   * a ream, a magazine) and comes apart as thin loose scraps (`Fragment.inner` for the pages) instead of slabs as thick as the part.
+   */
+  sheet?: number
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
@@ -159,6 +164,8 @@ export interface MaterialDef {
     glows?: boolean
     /** Transparent (glass): cracks are drawn as a star on the surface. */
     transparent?: boolean
+    /** Colour of the inside, for the inner fragments and the hit debris (the pages of a book under its cover); default the colour of the part. */
+    innerColor?: number
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]
