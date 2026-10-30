@@ -148,10 +148,14 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'sand', strata: [{ material: 'sand', thickness: 2.5 }] },
   { id: 'road', strata: [{ material: 'asphalt', thickness: 0.05 }, { material: 'gravel', thickness: 0.25 }, { material: 'soil', thickness: 1.5 }] },
   { id: 'concrete_slab', strata: [{ material: 'concrete', thickness: 0.12, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
+  { id: 'suspended_slab', drop: 3, strata: [{ material: 'concrete', thickness: 0.12, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'tile_floor', strata: [{ material: 'ceramic', thickness: 0.008 }, { material: 'mortar', thickness: 0.03 }, { material: 'concrete', thickness: 0.1, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'wood_floor', strata: [{ material: 'wood_hard', thickness: 0.022 }, { material: 'mortar', thickness: 0.03 }, { material: 'concrete', thickness: 0.1, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'stone_paving', strata: [{ material: 'stone', thickness: 0.08 }, { material: 'gravel', thickness: 0.2 }, { material: 'soil', thickness: 1.2 }] },
 ]
+
+/** About twelve grenades (200 kJ) on the same spot of bare bars. */
+export const DEFAULT_BAR_YIELD_JOULES = 2_400_000
 
 /** The profile of a floor with nothing else said: a plain slab. */
 export const DEFAULT_PROFILE = 'concrete_slab'

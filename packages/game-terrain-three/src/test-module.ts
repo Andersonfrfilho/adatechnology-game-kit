@@ -6,7 +6,7 @@ import { locale as localeTable } from './locale'
 type ThreeLib = typeof THREE_NS
 
 /** The strips of the area, side by side, one of each ground. */
-export const TERRAIN_STRIPS = ['dirt', 'lawn', 'sand', 'road', 'concrete_slab', 'wood_floor', 'tile_floor', 'stone_paving'] as const
+export const TERRAIN_STRIPS = ['dirt', 'lawn', 'sand', 'road', 'concrete_slab', 'suspended_slab', 'wood_floor', 'tile_floor', 'stone_paving'] as const
 const STRIP_WIDTH = 3
 const STRIP_Z0 = 4
 const STRIP_Z1 = 13

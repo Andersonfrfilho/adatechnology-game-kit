@@ -50,9 +50,13 @@ describe('the ground on the screen', () => {
     expect(view.stats().debrisDrawn).toBeGreaterThan(0)
     const bars = (): number => view.group.children.filter((child) => child instanceof THREE.Mesh && (child.material as THREE.MeshStandardMaterial).metalness > 0).length
     expect(bars()).toBe(0)
-    for (let i = 0; i < 40; i++) terrain.strike('explosive', { x: 0, z: 0, energy: 8e6 })
+    terrain.dug.fill(0.1)
+    terrain.strike('explosive', { x: 0, z: 0, energy: 1e5 })
     view.sync(CAMERA)
     expect(bars()).toBeGreaterThan(0)
+    for (let i = 0; i < 40; i++) terrain.strike('explosive', { x: 0, z: 0, energy: 8e6 })
+    view.sync(CAMERA)
+    expect(terrain.barBend.some((bend) => bend >= 1)).toBe(true)
   })
 
   it('laying a new floor goes back to one flat geometry', () => {
