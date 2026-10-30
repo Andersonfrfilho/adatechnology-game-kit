@@ -23,6 +23,7 @@ export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
 export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, ThirdPersonOptions } from './avatar'
 import type { CameraMode, KickLeg, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
+import type { TestTable, TestTableOptions } from './test-table'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -215,6 +216,11 @@ export interface TestRoomOptions {
    * `onChange` gets the encoded state of a module whenever it changes (a page keeps it in its URL). The room never touches `location`.
    */
   bench?: { readonly state?: Readonly<Record<string, string>>; readonly onChange?: (moduleId: string, encoded: string) => void }
+  /**
+   * The test table (`room.testTable`): a `scenery` piece with a `top` (default id `test_table`) the room lays a group of the catalogue on, a page at a time, to try each item with a
+   * shot, a punch, a knife, a flame or a blast. Without that piece the table lays nothing; `false` leaves the panel out too.
+   */
+  testTable?: TestTableOptions | false
 }
 
 /** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
@@ -258,6 +264,8 @@ export interface TestRoom {
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.PerspectiveCamera
+  /** The test table: lays the catalogue on the `test_table` piece a page at a time and runs the trials (shot, punch, knife, fire, blast) on one item. */
+  readonly testTable: TestTable
   /** Spawn a catalogue item at a world position (default in front of the player). */
   spawn(itemId: string, position?: Vec3, rotationY?: number): SpawnedObject
   /** Remove every spawned object, fragment and particle. */
