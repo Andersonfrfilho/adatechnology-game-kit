@@ -130,10 +130,11 @@ jobs:
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
   # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; on main it now takes 13 to 22 min, and every room page
-  # builds a fleet car for the weather's lamp rig (about 10% more per page load), so 40 min leaves room for the Chromium download and a slow runner.
+  # builds a fleet car for the weather's lamp rig (about 10% more per page load). On main it reached 37 min of the old 40 (2026-10-30), and the rig car is now the fleet's
+  # full sedan with its damage (a real object of the room, not the light drawing), so 60 min leaves room for the Chromium download and a slow runner.
   examples:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
