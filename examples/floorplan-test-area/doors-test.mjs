@@ -62,6 +62,15 @@ for (const mode of modes) {
   await page.waitForFunction(() => !window.__testRoom.avatarState().door, null, { timeout: 60000 })
   check((await doorsOpen()) === before + 1, 'the door is open', { before, after: await doorsOpen() })
   await shot(`${mode}-open`)
+  // look at the doorway again from where the player stands now (the player went beside the handle)
+  await page.evaluate(() => {
+    const room = window.__testRoom
+    const { house, plan } = window.__floorplanReport.area.houses[0]
+    const d = plan.doors.find((x) => x.exterior && x.floor === 0)
+    const dw = house.group.localToWorld(new (room.camera.position.constructor)(d.u, 1.1, d.v))
+    const [x, , z] = room.playerPosition
+    room.look([x, 1.7, z], [dw.x, 1.1, dw.z])
+  })
   await tapE()
   await page.waitForFunction(() => window.__testRoom.avatarState().door?.phase === 'swing', null, { timeout: 60000, polling: 30 })
   await page.waitForFunction(() => !window.__testRoom.avatarState().door, null, { timeout: 60000 })

@@ -718,10 +718,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     arena: { limit: arenaSize, colliders: standingColliders, ids: standingIds },
     ...(options.doors ? { rules: options.doors } : {}),
     pick: () => {
-      if (heldPiece) return null
+      if (heldPiece) return []
       aim()
+      const hits: Array<{ objectId: string; part: string; point: Vec3 }> = []
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], DOOR_REACH)
-      return r ? { objectId: r.object, part: r.part, point: r.point as Vec3 } : null
+      if (r) hits.push({ objectId: r.object, part: r.part, point: r.point as Vec3 })
+      // over the shoulder the crosshair can pass by a handle the body hides: what the eye itself faces comes next
+      if (thirdActive()) {
+        camera.getWorldDirection(tmpV2)
+        const e = rayWorld([aimO[0], aimO[1], aimO[2]], [tmpV2.x, tmpV2.y, tmpV2.z], DOOR_REACH)
+        if (e) hits.push({ objectId: e.object, part: e.part, point: e.point as Vec3 })
+      }
+      return hits
     },
     leaves: leavesOf,
     objectOf: (objectId, part) => entries.get(objectId)?.so.root.getObjectByName(part) ?? null,

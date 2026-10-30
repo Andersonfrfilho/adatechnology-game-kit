@@ -32,6 +32,8 @@ const CLEAR_OF_ARC = 0.3
 const OUT_IN_FRONT = 0.42
 /** Close enough to the place, metres; the longest walk to it before the hand goes anyway, seconds. */
 const ARRIVED = 0.05
+/** How fast the head turns to the handle (share per second). */
+const TURN_RATE = 8
 const MAX_WALK_SECONDS = 1.5
 const APPROACH_SPEED = 3
 /** How far over the floor a leaf swings (the gap under a door). */
@@ -47,8 +49,8 @@ export type RoomDoorOptions = {
   readonly camera: THREE_NS.Object3D
   readonly arena: { readonly limit: number; readonly colliders: ReadonlyArray<readonly [number, number, number, number]>; readonly ids: ReadonlyArray<string | null> }
   readonly rules?: Partial<DoorUseRules>
-  /** What the eye rests on within reach, or null. */
-  pick(): { readonly objectId: string; readonly part: string; readonly point: Vec3 } | null
+  /** What the eye rests on within reach, best first (the crosshair, then what the eye faces over the shoulder). */
+  pick(): ReadonlyArray<{ readonly objectId: string; readonly part: string; readonly point: Vec3 }>
   /** The leaves of an object (none when it has nothing to open). */
   leaves(objectId: string): readonly RoomLeaf[]
   /** The drawn part of a leaf. */
@@ -175,6 +177,21 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     // something stands there (the next cabinet, a nightstand): in front of the handle, and the leaf will make the player step back
     return player.canStand(x, z) ? [x, z] : standFor(handle, null, false)
   }
+  /** The head turns to the handle as the player goes for it. */
+  const face = (handle: THREE_NS.Vector3, dt: number): void => {
+    camera.updateMatrixWorld(true)
+    const eye = camera.getWorldPosition(new THREE.Vector3())
+    const dx = handle.x - player.x
+    const dz = handle.z - player.z
+    const flat = Math.hypot(dx, dz)
+    if (flat < 0.05) return
+    const yaw = Math.atan2(-dx, -dz)
+    const pitch = Math.atan2(handle.y - eye.y, flat)
+    let dYaw = yaw - player.yaw
+    dYaw = Math.atan2(Math.sin(dYaw), Math.cos(dYaw))
+    const k = Math.min(1, dt * TURN_RATE)
+    player.setPose([player.x, eye.y, player.z], player.yaw + dYaw * k, player.pitch + (pitch - player.pitch) * k)
+  }
   /** The player steps toward where the handle is taken from. Answers true once there, or when nothing more can be gained (in the way, or walking too long). */
   const approach = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null, slide: boolean, dt: number, walked: number): boolean => {
     const [x, z] = standFor(handle, hinge, slide)
@@ -218,6 +235,15 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       }
     }
     return best ?? open
+  }
+
+  /** The first thing the eye rests on that has a leaf there. */
+  const picked = (): { hit: { objectId: string; part: string; point: Vec3 }; leaf: RoomLeaf } | null => {
+    for (const hit of options.pick()) {
+      const leaf = leafAt(hit.objectId, hit.part, hit.point)
+      if (leaf) return { hit, leaf }
+    }
+    return null
   }
 
   const massOf = (objectId: string, part: string): number => world.part(objectId, part)?.mass ?? 10
@@ -392,17 +418,14 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       return h ? { phase: h.phase, progress: h.progress, height: h.at.y - player.feet, pull: h.pull } : null
     },
     aimed() {
-      const hit = options.pick()
-      if (!hit) return null
-      const leaf = leafAt(hit.objectId, hit.part, hit.point)
-      if (!leaf) return null
+      const found = picked()
+      if (!found) return null
+      const { hit, leaf } = found
       return { objectId: hit.objectId, part: leaf.part, open: openingOf(hit.objectId, leaf.part) > 0.5, locked: options.isLocked(hit.objectId, leaf.part) }
     },
     use() {
-      const hit = options.pick()
-      if (!hit) return false
-      const leaf = leafAt(hit.objectId, hit.part, hit.point)
-      return leaf ? start(hit.objectId, leaf, hit.point) : false
+      const found = picked()
+      return found ? start(found.hit.objectId, found.leaf, found.hit.point) : false
     },
     useLeaf(objectId, part) {
       const leaves = options.leaves(objectId)
@@ -418,7 +441,9 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
           const h = r.reach.handle()
           const hinge = r.reach.hinge?.()
           r.walked += dt
-          r.there = approach(tmp.set(h[0], h[1], h[2]), hinge ? new THREE.Vector3(hinge[0], hinge[1], hinge[2]) : null, false, dt, r.walked)
+          const g = new THREE.Vector3(h[0], h[1], h[2])
+          r.there = approach(g, hinge ? new THREE.Vector3(hinge[0], hinge[1], hinge[2]) : null, false, dt, r.walked)
+          face(g, dt)
           if (r.there) r.time = 0
         } else if (r.phase === 'reach') {
           r.progress = Math.min(1, r.time / rules.reachSeconds)
@@ -449,7 +474,9 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       if (wasPhase === 'reach' && !u.there) {
         u.obj.updateMatrixWorld(true)
         u.walked += dt
-        u.there = approach(u.obj.localToWorld(tmp.copy(u.grip)), u.obj.getWorldPosition(new THREE.Vector3()), slides(u.leaf.clip, u.leaf.part), dt, u.walked)
+        const g = u.obj.localToWorld(new THREE.Vector3().copy(u.grip))
+        u.there = approach(g, u.obj.getWorldPosition(new THREE.Vector3()), slides(u.leaf.clip, u.leaf.part), dt, u.walked)
+        face(g, dt)
         if (!u.there) return
       }
       const s = control.step(dt, (from, to) => isFree(u, from, to))

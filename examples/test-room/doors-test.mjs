@@ -30,6 +30,8 @@ const shot = (name) => page.screenshot({ path: join(shots, `doors-${name}.png`),
 const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
 /** Looks from where the player stands now (it walked to the handle) at a point. */
 const lookFromHere = (target) => page.evaluate((t) => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], t) }, target)
+/** The world box of a spawned object: [min, max]. */
+const boxOf = (objectId) => page.evaluate((o) => { const r = window.__testRoom; const s = r.spawned().find((x) => x.objectId === o); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.toArray(), b.max.toArray()] }, objectId)
 const camera = (mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
 const ids = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z] })))
 const idOf = (item, n = 0) => ids.filter((s) => s.item === item)[n]
@@ -115,12 +117,14 @@ for (const mode of modes) {
 
   // the microwave on the table
   const mw = idOf('microwave')
-  await look([mw.at[0] - 0.05, 1.7, mw.at[2] + 0.9], [mw.at[0] - 0.05, mw.at[1] + 0.15, mw.at[2] + 0.15])
+  const [mwMin, mwMax] = await boxOf(mw.id)
+  const mwFront = [(mwMin[0] + mwMax[0]) / 2 - 0.08, (mwMin[1] + mwMax[1]) / 2, mwMax[2]]
+  await look([mwFront[0], 1.6, mwFront[2] + 0.8], mwFront)
   await tapE()
   await waitIdle()
   check((await opening(mw.id, 'door')) > 0.95, 'E opens the microwave')
   await shot(`${mode}-microwave-open`)
-  await lookFromHere([mw.at[0], mw.at[1] + 0.15, mw.at[2]])
+  await lookFromHere([mwFront[0], mwFront[1], mwFront[2] - 0.15])
   await tapE()
   await waitIdle()
 
