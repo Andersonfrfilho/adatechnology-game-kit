@@ -1148,6 +1148,48 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.impulse(objectId, [dir[0] * momentum, dir[1] * momentum, dir[2] * momentum], point)
   }
 
+  const shotRay = new THREE.Raycaster()
+  /** Metres of water a pistol round crosses to lose 1/e of its speed (a full can takes about a fifth of it in its 6 cm). */
+  const LIQUID_SLOWING = 0.25
+  /** Share of the momentum along the surface a round leaves in a wall it meets at a slant (the rest goes on with it). */
+  const SHOT_GRIP = 0.3
+  /**
+   * The push a round gives what it hits, at the point of the drawn surface it meets (not the box the world sees): the momentum the round lost there (all of it when
+   * it stopped; through a thin shell, only what the wall and the liquid inside took), along the inward normal of that surface plus a little along it. So a round on the
+   * right of a can pushes it away and to the left and spins it, as a real one does.
+   */
+  const shotPush = (s: Shot, objectId: string, results: readonly { readonly object: string; readonly penetrated: boolean; readonly exitEnergy: number }[], fallback: Vec3): { impulse: Vec3; point: Vec3 } => {
+    const e = entries.get(objectId)
+    const speed = Math.max(80, s.speed)
+    const onIt = results.filter((r) => r.object === objectId)
+    const last = onIt[onIt.length - 1]
+    let kept = last && last.penetrated ? Math.sqrt(Math.max(0, Math.min(1, last.exitEnergy / Math.max(s.energy, 1e-6)))) : 0
+    let point = fallback
+    let inward: Vec3 = [s.direction[0], s.direction[1], s.direction[2]]
+    if (e) {
+      shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
+      shotRay.far = 60
+      const hit = shotRay.intersectObject(e.so.root, true).find((h) => (h.object as THREE_NS.Mesh).isMesh && !h.object.userData.destructionDebris && h.face)
+      if (hit?.face) {
+        point = [hit.point.x, hit.point.y, hit.point.z]
+        const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
+        if (n.x * s.direction[0] + n.y * s.direction[1] + n.z * s.direction[2] > 0) n.negate()
+        inward = [-n.x, -n.y, -n.z]
+      }
+      // the liquid inside slows the round down along the chord it crosses
+      const c = kept > 0 && e.containerId ? fluids.container(e.containerId) : null
+      if (c && c.liters > 1e-4) {
+        const size = new THREE.Box3().setFromObject(e.so.root).getSize(new THREE.Vector3())
+        kept *= Math.exp(-(Math.min(size.x, size.z) * 0.9) / LIQUID_SLOWING)
+      }
+    }
+    const momentum = ((2 * s.energy) / speed) * (1 - kept)
+    // the momentum of the round, split along the inward normal (all of it) and along the surface (a share)
+    const along = s.direction[0] * inward[0] + s.direction[1] * inward[1] + s.direction[2] * inward[2]
+    const impulse: Vec3 = [0, 1, 2].map((k) => momentum * (along * inward[k]! + SHOT_GRIP * (s.direction[k]! - along * inward[k]!))) as unknown as Vec3
+    return { impulse, point }
+  }
+
   /**
    * The push of one trigger pull on what stands free (`free`) and is not a piece yet: when the momentum of every round that hit it is enough to move
    * its mass (`SHOVE_SPEED`: a shotgun's load into a bookcase, not a pistol round), it becomes a piece and takes the push.
@@ -1186,11 +1228,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           hits++
           end = r0.point
           if (!first) first = { object: r0.object, part: r0.part, point: r0.point, normal: [0, 1, 0], distance: dist3(s.origin, r0.point) }
-          const speed = Math.max(80, s.speed)
-          const momentum = (2 * s.energy) / speed
-          pushPiece(r0.object, s.direction, momentum, r0.point)
-          const push = pushes.get(r0.object) ?? { impulse: [0, 0, 0] as Vec3, point: r0.point }
-          for (let k = 0; k < 3; k++) push.impulse[k] += s.direction[k] * momentum
+          const blow = shotPush(s, r0.object, results, r0.point)
+          if (rendererPieces.has(r0.object)) renderer.impulse(r0.object, blow.impulse, blow.point)
+          const push = pushes.get(r0.object) ?? { impulse: [0, 0, 0] as Vec3, point: blow.point }
+          for (let k = 0; k < 3; k++) push.impulse[k] += blow.impulse[k]!
           pushes.set(r0.object, push)
         }
         if (shots.length <= 3 || rnd() < 0.34) tracer(m, end)
