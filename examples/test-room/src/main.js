@@ -10,7 +10,7 @@
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
-//   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table; ?table=1 lays the first group
+//   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
@@ -92,10 +92,12 @@ async function start() {
     // an area with hundreds of items takes a second: the room's loading indicator says which one is opening
     if (params.get('area')) await room.openAreaAsync(params.get('area'))
   }
-  const table = params.get('table')
-  if (table) {
+  // the test table starts with the goods catalogue on it (the first page; the panel pages through the rest), unless the page asked for an area, items or another group (?table=0: empty)
+  const table = params.get('table') ?? (params.get('area') || items || params.get('scenario') ? '0' : '')
+  if (table !== '0') {
     const groups = room.testTable.groups()
-    room.testTable.open(groups.includes(table) ? table : groups[0])
+    const goods = room.testTable.items().find((item) => item.id === 'item_canned_beans')?.group
+    room.testTable.open(groups.includes(table) ? table : (goods ?? groups[0]))
   }
   const wanted = params.get('scenario')
   if (wanted) {

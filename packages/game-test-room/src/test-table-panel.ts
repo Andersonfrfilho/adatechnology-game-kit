@@ -56,7 +56,8 @@ export function createTestTablePanel(table: TestTable, t: (key: string, vars?: R
   relay.type = 'button'
   relay.onclick = () => table.relay()
   trials.appendChild(relay)
-  element.append(head, search, found, sub, list, trials)
+  // the trial buttons stay over the list: a page of small things is a long list, and the buttons must not scroll away under it
+  element.append(head, search, found, sub, trials, list)
 
   const groups = (): void => {
     const keep = select.value
