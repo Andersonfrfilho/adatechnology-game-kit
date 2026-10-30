@@ -1,5 +1,12 @@
 # @adatechnology/game-interactables
 
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+
 ## 0.2.7
 
 ### Patch Changes

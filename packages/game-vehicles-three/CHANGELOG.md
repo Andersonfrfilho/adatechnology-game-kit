@@ -1,5 +1,17 @@
 # @adatechnology/game-vehicles-three
 
+## 0.3.2
+
+### Patch Changes
+
+- 2e89152: The vehicles test area keeps the walking player out of every vehicle on the floor (and the car on the lane): each vehicle blocks by its own footprint, turned with it, and the parts above head height (a helicopter rotor) are walked under.
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-audio@0.3.1
+  - @adatechnology/game-vehicles@0.4.2
+  - @adatechnology/game-vehicles-driving@0.2.3
+  - @adatechnology/game-vehicles-fleet@4.0.0
+
 ## 0.3.1
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @adatechnology/game-weapons-three
 
+## 0.10.0
+
+### Minor Changes
+
+- 04d7e14: Safety animation (destravar): every weapon model now plays `safety_on` / `safety_off` with the weapon canting toward the eye, the shooting hand's thumb going to the lever (the support hand on the right-side lever of AK-style rifles) and the lever flicking, instead of a 0.12 s turn of the lever on the few models that drew one.
+
+### Patch Changes
+
+- Updated dependencies [bf68a04]
+  - @adatechnology/game-contracts@0.16.0
+  - @adatechnology/game-items-three@0.3.1
+  - @adatechnology/game-audio@0.3.1
+  - @adatechnology/game-floorplan-three@0.4.2
+  - @adatechnology/game-interactables-three@0.1.10
+  - @adatechnology/game-vfx@0.4.2
+  - @adatechnology/game-vfx-three@0.3.2
+  - @adatechnology/game-weapons@0.5.2
+
 ## 0.9.0
 
 ### Minor Changes
