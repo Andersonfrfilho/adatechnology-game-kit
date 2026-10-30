@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import type { RendererOptions } from '../src/types'
@@ -40,7 +41,7 @@ describe('destruction events play their effect', () => {
     renderer.update(0.016)
     const afterExpose = alive(vfx)
     expect(afterExpose).toBeGreaterThan(0)
-    world.emit({ type: 'collapse', object: 'o1', parts: ['wall'], mass: 100 })
+    world.emit({ type: 'collapse', object: 'o1', parts: ['wall'], mass: 2400 })
     renderer.update(0.016)
     expect(alive(vfx)).toBeGreaterThan(afterExpose)
 
@@ -49,6 +50,17 @@ describe('destruction events play their effect', () => {
     staged.renderer.update(0.016)
     expect(alive(staged.vfx)).toBeGreaterThan(0)
     expect(staged.vfx.sprites().live).toBe(0)
+  })
+
+  it('a light collapse of furniture (a shelf and its books) raises a puff of dust, not the cloud of a storey', () => {
+    const { world, renderer, vfx } = setup()
+    const shelf = new THREE.Group()
+    markKitOrigin(shelf, { owner: 'game-floorplan-three', kind: 'furniture', id: 'bookcase' })
+    renderer.bind('o1', shelf)
+    world.emit({ type: 'collapse', object: 'o1', parts: ['wall'], mass: 40 })
+    renderer.update(0.016)
+    expect(alive(vfx)).toBe(0)
+    expect(vfx.sprites().live).toBeGreaterThan(0)
   })
 
   it('falls back to its own dust when no effect is mapped, and takes a map of its own', () => {

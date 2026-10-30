@@ -592,6 +592,10 @@ export interface PartRuntime {
   chips?: Record<number, number>
   /** Mass in kg that left the part in a breach. */
   removed?: number
+  /** Damage taken by each band across a long wooden part (`splinter`), by band index from its negative end: the band that runs out breaks it there. */
+  cuts?: Record<number, number>
+  /** Where along its long axis (part space) the part broke across (`cuts`). */
+  cutAt?: number
   /** Plastic rotation in radians a reinforced beam or slab took in bending (blasts add it up; `flexure.failRotationDeg` breaks it). */
   hinge?: number
 }

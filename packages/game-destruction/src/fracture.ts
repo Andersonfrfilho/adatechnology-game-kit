@@ -27,6 +27,11 @@ export interface PlanInput {
   rnd: () => number
   /** Thickness of one sheet of the material (`MaterialDef.sheet`): a `tear` part thicker than a few sheets comes apart as loose sheets. */
   sheet?: number
+  /**
+   * The part broke across at this point of its long axis (part space), not everywhere at once (`sever`): two stubs either side of a band `gap`
+   * wide that comes apart in splinters. Used by `splinter` (a board, a batten, a beam).
+   */
+  cut?: { at: number; gap: number }
 }
 
 interface Box {
@@ -79,6 +84,50 @@ const frame = (ax: number, ay: number, az: number, angle = 0): Quat => {
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
+/** Long splinters along the grain (`grain`, default the longest axis) out of `box`. */
+const splinterBox = (inp: PlanInput, box: Box, limit = inp.maxFragments): PlannedFragment[] => {
+  const { rnd } = inp
+  const dims = box.s
+  const [fmin, fmax] = inp.fragmentSize
+  const g = inp.grain ?? [0, 1, 2].sort((a, b) => dims[b] - dims[a])[0]
+  const [a, b] = [0, 1, 2].filter((i) => i !== g)
+  const w = Math.max(fmin * 1.5, 0.01)
+  const c = clamp(Math.round((dims[a] * dims[b]) / (w * w)), 3, Math.max(3, Math.floor(limit / 2)))
+  const maxLen = fmax * 4
+  const cells = bsp(box, c, [a, b], rnd)
+  const pieces: Box[] = []
+  for (const cell of cells) {
+    const extra = rnd() < 0.4 ? 1 : 0
+    const k = Math.max(1, Math.ceil(dims[g] / maxLen)) + extra
+    for (const p of bsp(cell, k, [g], rnd)) pieces.push(p)
+  }
+  return pieces.slice(0, limit).map((p) => ({ center: p.c, size: [p.s[g], p.s[a], p.s[b]] as Vec3, q: frame(g, a, b), shape: 'splinter' as const, weight: p.s[0] * p.s[1] * p.s[2] }))
+}
+
+/** Broken across at `at` along the longest axis: a stub each side and splinters out of the band `gap` wide between them. */
+const severAt = (inp: PlanInput, root: Box, at: number, gap: number): PlannedFragment[] => {
+  const dims = root.s
+  const L = [0, 1, 2].sort((x, y) => dims[y] - dims[x])[0]
+  const half = dims[L] / 2
+  const lo = clamp(at - gap / 2, -half, half), hi = clamp(at + gap / 2, -half, half)
+  const out: PlannedFragment[] = []
+  const stub = (from: number, to: number) => {
+    if (to - from < 0.02) return
+    const c: Vec3 = [root.c[0], root.c[1], root.c[2]], sz: Vec3 = [dims[0], dims[1], dims[2]]
+    c[L] = (from + to) / 2
+    sz[L] = to - from
+    out.push({ center: c, size: sz, q: quat.identity(), shape: 'slab', weight: sz[0] * sz[1] * sz[2] })
+  }
+  stub(-half, lo)
+  stub(hi, half)
+  const band: Box = { c: [root.c[0], root.c[1], root.c[2]], s: [dims[0], dims[1], dims[2]] }
+  band.c[L] = (lo + hi) / 2
+  band.s[L] = Math.max(hi - lo, 0.01)
+  // the splinters of the break lie along the grain when it runs across the cut, else they are short slivers of the band
+  for (const p of splinterBox(inp, band, Math.max(3, inp.maxFragments - out.length))) out.push(p)
+  return out
+}
+
 /** Leaves of a stack torn apart (a book, a ream): `layers` of thin scraps through the thickness, a little askew; one scrap in four is cover, the rest pages. */
 const tearStack = (inp: PlanInput, root: Box, t: number, u: number, v: number, n: number, sheet: number): PlannedFragment[] => {
   const { dims, rnd, maxFragments } = inp
@@ -123,23 +172,8 @@ export const planFragments = (inp: PlanInput): PlannedFragment[] => {
     return out
   }
   if (style === 'splinter') {
-    const g = inp.grain ?? [0, 1, 2].sort((a, b) => dims[b] - dims[a])[0]
-    const [a, b] = [0, 1, 2].filter((i) => i !== g)
-    const w = Math.max(fmin * 1.5, 0.01)
-    const c = clamp(Math.round((dims[a] * dims[b]) / (w * w)), 3, Math.max(3, Math.floor(maxFragments / 2)))
-    const maxLen = fmax * 4
-    const cells = bsp(root, c, [a, b], rnd)
-    const pieces: Box[] = []
-    for (const cell of cells) {
-      let list = [cell]
-      const extra = rnd() < 0.4 ? 1 : 0
-      const k = Math.max(1, Math.ceil(dims[g] / maxLen)) + extra
-      list = bsp(cell, k, [g], rnd)
-      for (const p of list) pieces.push(p)
-    }
-    for (const p of pieces.slice(0, maxFragments)) {
-      out.push({ center: p.c, size: [p.s[g], p.s[a], p.s[b]], q: frame(g, a, b), shape: 'splinter', weight: p.s[0] * p.s[1] * p.s[2] })
-    }
+    if (inp.cut) return severAt(inp, root, inp.cut.at, inp.cut.gap)
+    for (const p of splinterBox(inp, root)) out.push(p)
     return out
   }
   if (style === 'tear') {

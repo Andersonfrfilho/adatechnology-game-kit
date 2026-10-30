@@ -112,7 +112,18 @@ export interface PartSpec {
    * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
    * or furniture is not part of the structure. Objects without any structural part behave as before.
    */
-  structure?: { role: StructureRole; capacity?: number; rebar?: TensionRebar; pile?: PileSpec }
+  structure?: {
+    role: StructureRole
+    capacity?: number
+    rebar?: TensionRebar
+    pile?: PileSpec
+    /**
+     * Longest free span, in metres, the part holds on the parts it stands on: a shelf on the sides of a bookcase, a plank across two trestles. When
+     * a support goes and the ones left give it a longer span (one end hangs: the span of a cantilever is twice its overhang), the part falls with
+     * what rests on it. Without it the part stays as long as any support is left.
+     */
+    maxSpan?: number
+  }
   /**
    * Coats over the core, outermost first (plaster, tile, the paper of a drywall board). `thickness` of the part is the core only; each coat adds
    * `material.penetration x thickness` to what a bullet must get through, and a hit spalls the outer coat at the impact (`spall` event) before it
