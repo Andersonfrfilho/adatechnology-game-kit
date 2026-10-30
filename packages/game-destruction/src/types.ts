@@ -115,6 +115,17 @@ export interface MaterialThermal {
   smoke?: 'white' | 'grey' | 'black'
 }
 
+/** What one kind of blow does to a material where it lands (`MaterialDef.hits`). */
+export interface MaterialHit {
+  /**
+   * Pieces torn out at the point hit: `splinters` (solid wood, plywood: long thin pieces along the grain), `lumps` (pressed fibre such as MDF:
+   * short crumbly pieces) or `none`. A round tears them out of the exit (and one in three out of the entry), a blow out of the face it lands on.
+   */
+  tear?: 'splinters' | 'lumps' | 'none'
+  /** Joules per torn piece (default 150). A blow weaker than one piece's worth tears nothing; a round always tears at least one. */
+  tearJoules?: number
+}
+
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
@@ -147,6 +158,11 @@ export interface MaterialDef {
    * a ream, a magazine) and comes apart as thin loose scraps (`Fragment.inner` for the pages) instead of slabs as thick as the part.
    */
   sheet?: number
+  /**
+   * How the material answers each kind of blow at the point it lands (a shot and a punch do not break wood the same way). Missing entries take
+   * the defaults: a round into wood (`penetrationClass` wood) tears `splinters` at `TEAR_JOULES`; nothing else tears.
+   */
+  hits?: Partial<Record<DamageType, MaterialHit>>
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */

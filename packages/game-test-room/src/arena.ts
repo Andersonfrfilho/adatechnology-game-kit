@@ -39,6 +39,8 @@ export interface Arena {
   surfaces: SurfaceSpec[]
   /** `[minX, minZ, maxX, maxZ]` boxes the player cannot walk into. */
   colliders: Array<[number, number, number, number]>
+  /** The object of each collider (`colliders[i]`), `null` for what is not an object of the world (the tap's post). */
+  colliderIds: Array<string | null>
   playerStart: Vec3
   wallZ: number
   /** Tops of the scenery (pieces rest on them while their part stands). */
@@ -235,9 +237,11 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
 
   // colliders: the footprint of every object (what lies flat on the floor is walked over); the wall also closes the arena behind it
   const colliders: Array<[number, number, number, number]> = []
+  const colliderIds: Array<string | null> = []
   for (const o of sceneryObjects) {
     const b = specBounds(THREE, o.spec, o.position, o.rotationY, { minHeight: 0.1 })
     if (!b) continue
+    colliderIds.push(o.id)
     colliders.push(o.id === WALL_ID ? [-size, b.minZ - 1, size, b.maxZ + 0.1] : [b.minX, b.minZ, b.maxX, b.maxZ])
   }
 
@@ -281,6 +285,7 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
       }
       tapSpout = [cx + 0.3, y + 0.5, cz]
       colliders.push([postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1])
+      colliderIds.push(null)
     }
   }
 
@@ -289,6 +294,7 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     objects: sceneryObjects,
     surfaces,
     colliders,
+    colliderIds,
     playerStart,
     wallZ,
     tops,

@@ -14,6 +14,7 @@ export type {
   MeshRange,
   Object3D,
   Piece,
+  SolidBox,
   Quality,
   Quat,
   RendererOptions,

@@ -126,6 +126,15 @@ export interface ExplodeOptions {
   readonly report?: readonly HitResult[]
 }
 
+/** One box of `DestructionRenderer.solidsNear`. */
+export interface SolidBox {
+  readonly objectId: string
+  readonly min: Vec3
+  readonly max: Vec3
+  /** The piece the box belongs to; null for a fixed object. */
+  readonly piece: Piece | null
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
@@ -134,6 +143,12 @@ export interface DestructionRenderer {
   makePiece(objectId: string, options?: { mass?: number; velocity?: Vec3 }): Piece
   pieces(): Piece[]
   piece(objectId: string): Piece | null
+  /**
+   * World boxes of what is drawn around (x, z) within `radius`: each drawn mesh of a fixed object (meshes wider than 3 m and parts inside a merged
+   * mesh are left out: walls, floors, roofs) and of every piece, with the object's id and its piece, if it is one. A walking body uses it to step
+   * onto low debris, stop at what is taller and kick what is light.
+   */
+  solidsNear(x: number, z: number, radius: number): SolidBox[]
   /** Push a piece (throws, blasts). */
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */

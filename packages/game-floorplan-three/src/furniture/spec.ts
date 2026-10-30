@@ -174,7 +174,9 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
   const parts: PartSpec[] = drawn.map((p) => {
     const thin = Math.min(...(p.shape.kind === 'box' ? p.shape.size : p.shape.kind === 'cylinder' ? [p.shape.radius * 2, p.shape.height] : [p.shape.radius * 2]))
     let material = materialOf[p.key] ?? 'plastic'
-    if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
+    // a case with shelves is MDF (as bought); elsewhere thin boards are pine and thick ones hardwood
+    if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
+    else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
     if (p.rotation) part.rotation = p.rotation
     if (!LOOSE.has(material) && p.min[1] <= FLOOR_TOUCH) part.anchored = true

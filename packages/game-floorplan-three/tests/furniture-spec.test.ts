@@ -16,7 +16,7 @@ describe('furnitureSpec', () => {
     expect(new Set(ids).size).toBe(ids.length)
     const books = f.spec.parts.filter((p) => p.material === 'paper')
     expect(books.length).toBeGreaterThan(20)
-    expect(f.spec.parts.filter((p) => p.material === 'wood_soft').length).toBeGreaterThanOrEqual(5)
+    expect(f.spec.parts.filter((p) => p.material === 'mdf').length).toBeGreaterThanOrEqual(5)
     // the uprights touch the floor and stand; the books are loose and rest on a board
     expect(f.spec.parts.filter((p) => p.anchored).length).toBeGreaterThanOrEqual(2)
     expect(books.every((b) => !b.anchored)).toBe(true)

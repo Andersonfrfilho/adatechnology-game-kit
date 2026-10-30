@@ -377,3 +377,40 @@ describe('grenade blast', () => {
     expect(lit).toBe(true)
   })
 })
+
+describe('walking over what lies on the floor', () => {
+  it('steps onto a low heavy block, is stopped by a tall heavy one and kicks a light cup away', () => {
+    const room = makeRoom()
+    const block = room.spawn('concrete_block', [0, 0, 2], 0)
+    run(room, 1)
+    expect(block.root.position.y).toBeLessThan(0.05)
+    room.look([0, 1.7, 4], [0, 1.7, 0])
+    room.walk([0, 0, 0.5], 1.5)
+    run(room, 1.6)
+    // on top of the 40 cm block
+    expect(room.camera.position.z).toBeCloseTo(0.5, 1)
+    let top = 0
+    room.walk([0, 0, 2], 0.2)
+    for (let t = 0; t < 0.3; t += 1 / 60) {
+      room.update(1 / 60)
+      top = Math.max(top, room.camera.position.y)
+    }
+    expect(top).toBeGreaterThan(1.7 + 0.3)
+
+    const sofa = room.spawn('sofa', [3, 0, 2], 0)
+    run(room, 1)
+    room.look([3, 1.7, 4.2], [3, 1.7, 0])
+    room.walk([3, 0, 0], 2)
+    run(room, 2.2)
+    expect(room.camera.position.z).toBeGreaterThan(2.3)
+    expect(sofa.root.position.z).toBeCloseTo(2, 1)
+
+    const cup = room.spawn('coffee_cup', [-1.5, 0, 2.5], 0)
+    run(room, 1)
+    room.look([-1.5, 1.7, 4], [-1.5, 1.7, 0])
+    room.walk([-1.5, 0, 1], 2)
+    run(room, 2.2)
+    expect(room.camera.position.z).toBeCloseTo(1, 1)
+    expect(Math.hypot(cup.root.position.x + 1.5, cup.root.position.z - 2.5)).toBeGreaterThan(0.3)
+  })
+})
