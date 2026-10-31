@@ -21,6 +21,8 @@ const BUDGET = {
   hitchMs: 33.4,
   p99Ms: 20,
   maxLongTaskMs: 50,
+  // the deferred queues: no unit of work may wait longer than the 250 ms the sound queue tolerates (15 frames at 60 Hz)
+  maxFramesWaiting: 15,
   programsAfterLoad: 0,
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
@@ -82,6 +84,7 @@ for (const p of phases) {
   if (p.hitches > 0) fail(`${p.name}: ${p.hitches} frames over ${BUDGET.hitchMs} ms (worst ${p.max} ms)`)
   if (p.p99 > BUDGET.p99Ms) fail(`${p.name}: p99 ${p.p99} ms (budget ${BUDGET.p99Ms} ms)`)
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
+  if (p.maxFramesWaiting >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
 }
 const warmBuffers = warm.buffers / EXPLOSIVES.length
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
@@ -129,6 +132,10 @@ async function phase(name, run) {
   await run()
   if (profiler) writeFileSync(join(outDir, `perf-${name}.cpuprofile`), JSON.stringify((await profiler.send('Profiler.stop')).profile))
   const result = await page.evaluate(([label, start]) => window.__perf.read(label, start), [name, before])
+  // the most frames any deferred queue had work waiting so far (the frame scheduler keeps it per queue), and each queue's forced runs
+  const queues = await page.evaluate(() => window.__testRoom.frameStats?.().budget.queues ?? [])
+  result.maxFramesWaiting = Math.max(0, ...queues.map((queue) => queue.maxFramesWaiting))
+  result.queues = Object.fromEntries(queues.map((queue) => [queue.id, { maxFramesWaiting: queue.maxFramesWaiting, forced: queue.forced, ranUnits: queue.ranUnits }]))
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
   return result

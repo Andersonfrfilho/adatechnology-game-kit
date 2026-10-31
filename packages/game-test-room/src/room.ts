@@ -2654,7 +2654,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
   // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: 8 })
+  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8 })
   // the deferred queues share the scheduler's budget: the voices of the sound engine and the events of the destruction renderer
   const audioQueue = audio?.deferredQueue()
   if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY['audio.voices'])
@@ -3698,6 +3698,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     metrics() {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
+    frameStats: () => scheduler.stats(),
     dispose() {
       destructionSound?.dispose()
       if (ownAudio) audio?.dispose()

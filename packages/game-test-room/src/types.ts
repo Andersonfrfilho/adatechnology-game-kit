@@ -20,6 +20,7 @@ import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapon
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { GroundLayout } from '@adatechnology/game-contracts'
+import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
@@ -258,6 +259,11 @@ export interface TestRoomOptions {
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
   thirdPerson?: ThirdPersonOptions
+  /**
+   * Milliseconds of every frame the deferred queues (sound voices, destruction events, breach paint, vehicle crease) share. Default 8, the biggest budget the loose
+   * queues had; 4 is the library default of `@adatechnology/game-runtime`, for a room whose `maxFramesWaiting` stays under 15 (see `frameStats()`).
+   */
+  frameBudgetMs?: number
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**
@@ -497,6 +503,8 @@ export interface TestRoom {
    */
   applyCamera(): () => void
   metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
+  /** What the frame scheduler measured: ms per phase of the last frame, substeps, and per deferred queue the work waiting, run, forced and the most frames anything waited. */
+  frameStats(): SchedulerStats
   dispose(): void
 }
 

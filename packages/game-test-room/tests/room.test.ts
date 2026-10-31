@@ -395,6 +395,18 @@ describe('slow motion', () => {
   })
 })
 
+describe('frame budget', () => {
+  it('shares 8 ms by default, takes frameBudgetMs, and reports the queues of the room', () => {
+    const room = makeRoom()
+    run(room, 0.1)
+    const stats = room.frameStats()
+    expect(stats.budget.ms).toBe(8)
+    expect(stats.budget.queues.map((queue) => queue.id).sort()).toEqual(['audio.voices', 'destruction.events'])
+    expect(stats.frame).toBeGreaterThan(0)
+    expect(makeRoom({ frameBudgetMs: 4 }).frameStats().budget.ms).toBe(4)
+  })
+})
+
 describe('grenade blast', () => {
   it('draws fire, flash and smoke: live puffs, sparks and glows of the effects layer, and a blast light, are in the scene', () => {
     const room = makeRoom()
