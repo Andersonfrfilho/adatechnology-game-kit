@@ -59,3 +59,7 @@ carries it too.
 ## Pushing furniture
 
 `createFurniturePush(rules?)` is the logic of pushing a heavy thing on foot: `begin({ massKg, material })`, then `update(dt, { walk, isFree })` every frame answers the step and says the `phase` (`grip` while the hold timer fills, `push`, `strain`), the `progress` of the timer and the `block` (`too_heavy`, `obstacle`). The host answers `isFree` by sweeping the volume of the piece and draws the rest. `gripSecondsFor`, `pushSpeedFor` and `canPush` give the numbers; the force of the legs, the friction by material, the times and the speeds are all in `FurniturePushRules` (`FURNITURE_PUSH_DEFAULTS`).
+
+## Opening doors by hand
+
+`createDoorUse(rules?)` is the logic of working a door, lid or drawer by hand: `begin({ opening, massKg, locked })` answers where the leaf goes (1 open, 0 closed; a second `begin` in the middle of a swing turns it round) or null for a locked leaf, which only rattles. `step(dt, isFree)` then goes through `reach` (the hand to the handle), `swing` (the leaf follows the hand, a little at a time so it stops at the first thing in its way, `block: 'obstacle'`) and `release`. A heavier leaf swings slower (`swingSecondsFor`); every number is in `DoorUseRules` (`DOOR_USE_DEFAULTS`).

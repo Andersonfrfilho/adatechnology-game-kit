@@ -5,6 +5,8 @@
 //   ?scenario=<id>      run one scenario
 //   &shard=i/n          with ?scenario=all, run only the i-th of n shares of the scenarios (every n-th one, starting at the i-th)
 //   ?items=a,b          spawn these catalogue ids (e.g. fridge,wardrobe) in a row on start
+//   ?scene=push        pushing furniture: a light piece, one too heavy and one against the wall
+//   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
 //   ?quality=low|medium|high
@@ -116,6 +118,18 @@ async function start() {
     room.spawn('bbq', [1.6, 0, 6], 0)
     room.spawn('wardrobe', [0, 0, -10.45], 0)
     room.look([-1.6, 1.7, 7.4], [-1.6, 0.5, 6])
+  }
+  // opening by hand (E): a fridge, a wardrobe, a microwave, a car, a locked wardrobe and one with a barbecue (too heavy to shove) in the way of its door
+  if (params.get('scene') === 'doors') {
+    room.spawn('fridge', [-4.5, 0, 6], 0)
+    room.spawn('wardrobe', [-2, 0, 6], 0)
+    room.spawn('microwave', [6.5, 0, 6], 0)
+    const locked = room.spawn('wardrobe', [1, 0, 6], 0)
+    room.lockLeaf(locked.objectId)
+    room.spawn('wardrobe', [4, 0, 6], 0)
+    room.spawn('bbq', [4, 0, 7.05], 0)
+    room.spawn('sedan', [-5, 0, 10.5], Math.PI / 2)
+    room.look([-4.5, 1.7, 7.6], [-4.5, 1.1, 6])
   }
   const wanted = params.get('scenario')
   if (wanted) {

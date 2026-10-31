@@ -270,8 +270,40 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       host?.log(text.steps.no_door as string)
       return
     }
-    p.house.interact(eyeOf(p))
+    const fo = target.target
+    const reach = fo && host?.reachFor && fo.type === 'swing' && fo.gs?.[0] && fo.handles?.[0] ? doorReach(p, fo) : null
+    if (reach && host?.reachFor) {
+      // the hand goes to the handle first; the door turns its handle and swings when the hand is on it
+      host.reachFor({ ...reach, onGrip: () => void p.house.toggleDoor(fo) })
+    } else p.house.interact(eyeOf(p))
     host?.log(fill(text.steps.door as string, { text: String(target.text) }))
+  }
+  /** The handle of a door leaf of the house in the world (on the player's side of the leaf), and whether opening brings it toward the player. */
+  const doorReach = (p: Placed, fo: any): { handle: () => [number, number, number]; hinge: () => [number, number, number]; seconds: number; pull: boolean; locked: boolean } => {
+    const g = fo.gs[0]
+    const pivot = fo.handles[0].pivot as [number, number, number]
+    const at = (angle: number): any => {
+      const c = Math.cos(angle)
+      const s = Math.sin(angle)
+      const v = new THREE.Vector3(pivot[0] * c + pivot[2] * s, pivot[1], -pivot[0] * s + pivot[2] * c).add(g.position)
+      return g.parent ? g.parent.localToWorld(v) : v
+    }
+    const camera = host?.camera as any
+    const eye = new THREE.Vector3(camera.position.x, 0, camera.position.z)
+    const flat = (v: any): number => Math.hypot(v.x - eye.x, v.z - eye.z)
+    const closed = at(0)
+    const open = at(fo.rot)
+    const opening = !fo.open
+    return {
+      handle: () => {
+        g.updateMatrixWorld(true)
+        return g.localToWorld(new THREE.Vector3(pivot[0], pivot[1], pivot[2])).toArray() as [number, number, number]
+      },
+      hinge: () => g.getWorldPosition(new THREE.Vector3()).toArray() as [number, number, number],
+      seconds: fo.locked || fo.blockedFlag ? 0.6 : 0.55,
+      pull: opening ? flat(open) <= flat(closed) : flat(closed) <= flat(open),
+      locked: !!(fo.locked || fo.blockedFlag),
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
