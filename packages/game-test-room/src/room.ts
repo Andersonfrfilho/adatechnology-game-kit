@@ -3102,14 +3102,35 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const LIGHTS_CHECK_MS = 250
 
+  const pinnedPrograms = new WeakSet<object>()
+  /** Holds one extra use on every program: three.js frees a program when the last material using it is disposed, and effects that make and dispose a material per particle would link it again on every burst. */
+  const pinPrograms = (): void => {
+    for (const program of (gl.info?.programs ?? []) as unknown as { usedTimes: number }[]) {
+      if (pinnedPrograms.has(program)) continue
+      pinnedPrograms.add(program)
+      program.usedTimes++
+    }
+  }
+
   /** Renders the scene once with throwaway meshes of the materials that decals, effects and liquids make on demand (every light count is another set of programs), so that the first shot does not build them. */
   const warmUp = (): void => {
     const probes = [renderer.warmUpProbes(), vfx.warmUpProbes(), fluidView.warmUpProbes()]
     const groups = probes.map((probe) => probe.group as THREE_NS.Object3D)
+    const spriteMap = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
+    spriteMap.needsUpdate = true
+    const spriteProbes = [true, false].map((fog) => {
+      const probe = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap, transparent: true, fog }))
+      probe.frustumCulled = false
+      return probe
+    })
+    groups.push(...spriteProbes)
     scene.add(...groups)
     gl.render(scene, camera)
+    pinPrograms()
     scene.remove(...groups)
     for (const probe of probes) probe.dispose()
+    for (const probe of spriteProbes) probe.material.dispose()
+    spriteMap.dispose()
   }
 
   /** Draws a throw-away blast and a fire (their particle materials and lights make the materials recompile the first time they appear), then clears them: nothing stays in the world, the log or the sound. */
@@ -3754,6 +3775,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!scenarioRunning) update(dt)
       const restoreCamera = room.applyCamera()
       gl.render(scene, debugView ?? camera)
+      pinPrograms()
       restoreCamera()
       roomMetrics.rendered()
     }

@@ -110,6 +110,18 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     world.setCamera([position.x, position.y, position.z])
   }
 
+  /** Draws the workshop's pools the first time it exists; its point lights are part of every lit material's program key, so they must not appear mid-game. */
+  function attachWorkshopLayers(): void {
+    const engine = world.peekWorkshop()
+    if (!engine || engine === workshopEngine) return
+    workshopLayers?.dispose()
+    if (workshopLayers) root.remove(workshopLayers.group)
+    workshopEngine = engine
+    workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1)
+    root.add(workshopLayers.group)
+    applyLayers()
+  }
+
   function syncAll(): void {
     lastDrawn.puffs = puffs.sync()
     lastDrawn.sparks = sparks.sync()
@@ -118,15 +130,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     lastDrawn.shocks = shocks.sync()
     lastDrawn.sprites = sprites.sync()
     lights.sync()
-    const engine = world.peekWorkshop()
-    if (engine && engine !== workshopEngine) {
-      workshopLayers?.dispose()
-      if (workshopLayers) root.remove(workshopLayers.group)
-      workshopEngine = engine
-      workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1)
-      root.add(workshopLayers.group)
-      applyLayers()
-    }
+    attachWorkshopLayers()
     const workshopCalls = workshopLayers?.sync() ?? 0
     const glow = pools.lights.glow
     uniforms.uGlowPos.value.set(glow.x, glow.y, glow.z)
@@ -180,6 +184,8 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     },
     warmUpProbes() {
       releaseAnchors()
+      world.workshop()
+      attachWorkshopLayers()
       const meshes = createMeshLayerProbes(THREE)
       for (const mesh of meshes) mesh.frustumCulled = false
       const group = new THREE.Group()
