@@ -70,7 +70,11 @@ const gpu = await page.evaluate(() => {
 console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  gpu=${gpu}`)
 
 const phases = []
+let lightSlotReport = { point: [], spot: [], problems: ['light_slots did not run'] }
 const idle = await phase('idle', () => pause(3000))
+const slots = await phase('light_slots', async () => {
+  lightSlotReport = await page.evaluate(readLightSlots)
+})
 for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
 const warm = await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200))
 const storm = await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120))
@@ -86,12 +90,14 @@ for (const p of phases) {
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
   if (p.maxFramesWaiting >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
 }
+for (const problem of lightSlotReport.problems) fail(`light_slots: ${problem}`)
+if (slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm.buffers / EXPLOSIVES.length
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
 if (after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, failures }, null, 1))
+writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, lightSlots: lightSlotReport, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()
@@ -142,6 +148,65 @@ async function phase(name, run) {
 }
 
 // --- in the page ---
+
+/**
+ * Lights every point and spot slot of the room's LightBudget at once, each with a colour and a position of its own, draws a frame and reads what three.js sent the shader for a lit material:
+ * `pointLights[slot]` and `spotLights[slot]` must hold the light of that slot (colour times intensity, position in view space). A slot that points at another light is the bug the budget removes.
+ */
+async function readLightSlots() {
+  const THREE = window.__THREE
+  const room = window.__testRoom
+  const { lights, webgl, scene, camera } = room
+  const problems = []
+  const near = (a, b, tolerance) => Math.abs(a - b) <= tolerance
+  const lease = (() => {
+    for (let count = lights.sizes.point; count > 0; count--) {
+      const taken = lights.lease({ owner: 'perf.light_slots', point: count })
+      if (taken) return taken
+    }
+    return null
+  })()
+  const spots = []
+  for (let index = 0; index < lights.sizes.spot; index++) {
+    const spot = lights.acquire({ owner: 'perf.light_slots', kind: 'spot', priority: 1e6, color: [1, 1, 1], intensity: 1, distance: 30, position: [0, 3, 0], angle: 0.5 })
+    if (spot) spots.push(spot)
+  }
+  const colourOf = (k, total) => [(k + 1) / (total + 1), 1 - (k + 1) / (total + 1), 0.25 + 0.5 * ((k * 7) % total) / total]
+  const worldOf = (k) => [-6 + k * 0.8, 1.2 + (k % 3) * 0.7, -4 - (k % 5) * 0.9]
+  const handles = lease ? lease.handles : []
+  handles.forEach((handle, k) => handle.update({ color: colourOf(k, handles.length), intensity: 1.5, distance: 20, position: worldOf(k) }))
+  spots.forEach((handle, k) => handle.update({ color: colourOf(k + 3, spots.length + 3), intensity: 2, distance: 30, position: worldOf(k + 20), target: [worldOf(k + 20)[0], 0, worldOf(k + 20)[2]] }))
+  camera.updateMatrixWorld(true)
+  webgl.render(scene, camera)
+  // a lit material the frame drew
+  let uniforms = null
+  scene.traverse((node) => {
+    const material = node.isMesh && node.visible ? node.material : null
+    const found = material && !Array.isArray(material) ? webgl.properties.get(material).uniforms : null
+    if (!uniforms && found?.pointLights && found?.spotLights) uniforms = found
+  })
+  if (!uniforms) problems.push('no lit material drew in the frame')
+  else {
+    const expectedView = (world) => new THREE.Vector3(...world).applyMatrix4(camera.matrixWorldInverse)
+    const check = (kind, list, shaderLights, colourFor, worldFor, intensity) => {
+      list.forEach((handle, k) => {
+        const entry = shaderLights.value[handle.slot]
+        const colour = colourFor(k)
+        const view = expectedView(worldFor(k))
+        if (!entry) problems.push(`${kind} slot ${handle.slot}: the shader has no light there`)
+        else if (![entry.color.r - colour[0] * intensity, entry.color.g - colour[1] * intensity, entry.color.b - colour[2] * intensity].every((d) => near(d, 0, 2e-3))) problems.push(`${kind} slot ${handle.slot} holds another light (colour ${entry.color.r.toFixed(3)},${entry.color.g.toFixed(3)},${entry.color.b.toFixed(3)}, wanted ${(colour[0] * intensity).toFixed(3)},${(colour[1] * intensity).toFixed(3)},${(colour[2] * intensity).toFixed(3)})`)
+        else if (!(near(entry.position.x, view.x, 1e-2) && near(entry.position.y, view.y, 1e-2) && near(entry.position.z, view.z, 1e-2))) problems.push(`${kind} slot ${handle.slot} holds a light at another place`)
+      })
+    }
+    // the colours are linear numbers the budget wrote as linear, so the uniform equals colour x intensity exactly
+    check('point', handles, uniforms.pointLights, (k) => colourOf(k, handles.length), worldOf, 1.5)
+    check('spot', spots, uniforms.spotLights, (k) => colourOf(k + 3, spots.length + 3), (k) => worldOf(k + 20), 2)
+  }
+  const report = { point: handles.map((handle) => handle.slot), spot: spots.map((handle) => handle.slot), problems }
+  lease?.release()
+  for (const handle of spots) handle.release({ fadeMs: 0 })
+  return report
+}
 
 function countWebGlCalls() {
   const counts = { programs: 0, buffers: 0, draws: 0 }

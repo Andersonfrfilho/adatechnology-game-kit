@@ -3706,6 +3706,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
     frameStats: () => scheduler.stats(),
+    lights,
+    webgl: gl,
     dispose() {
       destructionSound?.dispose()
       if (ownAudio) audio?.dispose()

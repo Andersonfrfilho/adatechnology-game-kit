@@ -8,6 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
@@ -334,6 +335,10 @@ export interface TestRoom {
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.PerspectiveCamera
+  /** The room's light budget (what `host.lights` lends): the one owner of its point and spot lights. */
+  readonly lights: LightBudget
+  /** The WebGL renderer the room draws with, for tools that read what the GPU got (the `light_slots` phase of `perf.mjs` reads the uniforms of a lit material). */
+  readonly webgl: THREE_NS.WebGLRenderer
   /** The test table: lays the catalogue on the `test_table` piece a page at a time and runs the trials (shot, punch, knife, fire, blast) on one item. */
   readonly testTable: TestTable
   /** Spawn a catalogue item at a world position (default in front of the player). */
