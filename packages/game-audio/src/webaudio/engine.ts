@@ -1,4 +1,4 @@
-import type { Vec3 } from '@adatechnology/game-contracts'
+import type { DeferredQueue, Vec3 } from '@adatechnology/game-contracts'
 
 import { createSoundRegistry } from '../bank'
 import type { SoundRegistry } from '../bank'
@@ -95,6 +95,11 @@ export type AudioEngine = {
   stats(): AudioStats
   /** RMS (0 to 1) of what a bus carries now, read from an analyser the first time you ask; sounds started before that do not reach it. 0 without a context. */
   level(bus: BusId): number
+  /**
+   * The voice start queue as a `DeferredQueue` for a shared frame budget (`budget.register` attaches it and the queue stops scheduling its own tasks), or `null`
+   * without `deferredStart`. Asking for it changes nothing.
+   */
+  deferredQueue(): DeferredQueue | null
   dispose(): void
 }
 
@@ -364,6 +369,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       for (const sample of meter.data) sum += sample * sample
       return Math.sqrt(sum / meter.data.length)
     },
+    deferredQueue: () => startQueue?.deferredQueue() ?? null,
     stats() {
       advance()
       const voiceStats = voices.stats()
