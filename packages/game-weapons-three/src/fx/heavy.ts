@@ -1,4 +1,6 @@
 import type * as THREE_NS from 'three'
+import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
+import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
 import type { ModelKit } from '../models/kit'
 import type { ModelParts } from '../models/types'
 import { buildFlyingRocket } from '../models/launcher-rounds'
@@ -22,17 +24,26 @@ export interface HeavyContext {
   /** Runs `step(progress)` every frame for `seconds`, then `done`. */
   every(seconds: number, step: (progress: number, dt: number) => void, done?: () => void): void
   groundAt(x: number, z: number): number
-  /** A point light that stays in the scene for good (intensity 0 when idle): the light count is part of every lit material's program key. */
-  rocketLight: THREE_NS.PointLight
+  /** The host's light budget: the rocket asks it for a light while it flies. */
+  lights?: LightBudget
+  /** Without a budget: a point light that stays in the scene for good (intensity 0 when idle): the light count is part of every lit material's program key. */
+  rocketLight?: THREE_NS.PointLight
 }
 
 export const ROCKET_LIGHT_NAME = 'rocket-light'
+const ROCKET_LIGHT_COLOR = 0xff9a40
+const ROCKET_LIGHT_INTENSITY = 3
+const ROCKET_LIGHT_DISTANCE = 2.5
 
 const rocketsInFlight = new WeakMap<THREE_NS.PointLight, number>()
 
-/** The light that follows rockets in flight, to be added to the scene once and never removed. */
+/**
+ * The light that follows rockets in flight, to be added to the scene once and never removed.
+ * @deprecated Pass the host's `lights` (a LightBudget) so the rocket asks for a light while it flies; this one is a light of its own. Removed in the next major.
+ */
 export function createRocketLight(THREE: ModelKit['THREE']): THREE_NS.PointLight {
-  const light = new THREE.PointLight(0xff9a40, 0, 2.5)
+  // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
+  const light = new THREE.PointLight(ROCKET_LIGHT_COLOR, 0, ROCKET_LIGHT_DISTANCE)
   light.name = ROCKET_LIGHT_NAME
   light.position.set(0, -50, 0)
   return light
@@ -69,9 +80,12 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
   exhaust.rotation.z = PI / 2
   exhaust.position.x = -0.08
   rocket.add(exhaust)
+  const flame = context.lights?.acquire({ owner: 'weapons.rocket', priority: LIGHT_PRIORITY.rocket, urgent: true, color: ROCKET_LIGHT_COLOR, intensity: ROCKET_LIGHT_INTENSITY, distance: ROCKET_LIGHT_DISTANCE, position: [muzzle.x, muzzle.y, muzzle.z] })
   const light = context.rocketLight
-  light.intensity = 3
-  rocketsInFlight.set(light, (rocketsInFlight.get(light) ?? 0) + 1)
+  if (light) {
+    light.intensity = ROCKET_LIGHT_INTENSITY
+    rocketsInFlight.set(light, (rocketsInFlight.get(light) ?? 0) + 1)
+  }
   context.every(
     1.6,
     (progress, dt) => {
@@ -79,7 +93,8 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
       const distance = 1.2 * flight + (flight > 0.25 ? 9 * (flight - 0.25) ** 2 : 0)
       rocket.position.copy(muzzle).addScaledVector(forward, distance)
       rocket.rotation.x += 0.25 * dt * 60
-      light.position.copy(rocket.position)
+      light?.position.copy(rocket.position)
+      flame?.update({ position: [rocket.position.x, rocket.position.y, rocket.position.z] })
       exhaust.scale.set(1, 0.6 + random() * 0.8, 1)
       if (random() < 0.9) context.effects.smoke(rocket.position.clone().addScaledVector(forward, -0.12), new THREE.Vector3((random() - 0.5) * 0.1, 0.05, (random() - 0.5) * 0.1), 0.02 + random() * 0.015, 2.2, 0.5)
     },
@@ -87,13 +102,19 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
       rocket.removeFromParent()
       exhaust.geometry.dispose()
       ;(exhaust.material as THREE_NS.Material).dispose()
-      const remaining = (rocketsInFlight.get(light) ?? 1) - 1
-      rocketsInFlight.set(light, remaining)
-      if (remaining > 0) return
-      light.intensity = 0
-      light.position.set(0, -50, 0)
+      releaseLight(flame, light)
     },
   )
+}
+
+function releaseLight(flame: LightHandle | null | undefined, light: THREE_NS.PointLight | undefined): void {
+  flame?.release({ fadeMs: 0 })
+  if (!light) return
+  const remaining = (rocketsInFlight.get(light) ?? 1) - 1
+  rocketsInFlight.set(light, remaining)
+  if (remaining > 0) return
+  light.intensity = 0
+  light.position.set(0, -50, 0)
 }
 
 /** A frame of flame from the nozzle: fire thrown forward and up and smoke downwind (the recipe `flame_jet` of the effect sink), and burning droplets that light the ground where they land. */

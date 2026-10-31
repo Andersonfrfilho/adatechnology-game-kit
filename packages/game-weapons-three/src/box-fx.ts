@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
@@ -48,6 +49,8 @@ export interface WeaponFxOptions {
   bodyHold?: () => HandPose | null
   /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
+  /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light; without it they create lights of their own (deprecated, removed in the next major). */
+  lights?: LightBudget
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */

@@ -188,7 +188,7 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     expect(flying(false)).toBe(0)
   })
 
-  it('a rocket in flight never changes how many lights the scene has (every lit material would recompile)', () => {
+  it('a rocket in flight takes a light of the room budget and never changes how many lights the scene has (every lit material would recompile)', () => {
     const { room } = roomWith()
     const lights = (): number => {
       let count = 0
@@ -198,18 +198,19 @@ describe('weapon in the hands: the gallery model and its clips', () => {
       return count
     }
     equip(room, 'rpg_7')
-    const rocketLight = room.scene.getObjectByName('rocket-light') as THREE.PointLight
-    expect(rocketLight).toBeDefined()
-    expect(rocketLight.intensity).toBe(0)
+    // the room lends its LightBudget: the rocket asks it for a light instead of keeping one of its own in the scene
+    expect(room.scene.getObjectByName('rocket-light')).toBeUndefined()
+    const budgetLights = room.scene.getObjectByName('light-budget')!.children.filter((light) => (light as THREE.PointLight).isPointLight) as THREE.PointLight[]
+    const rocketLit = (): boolean => budgetLights.some((light) => light.intensity === 3)
+    expect(rocketLit()).toBe(false)
     room.use()
     run(room, 0.05)
-    // the effects of the shot may bring their own lights once; from then on the count must hold
     const idle = lights()
     run(room, 0.3)
-    expect(rocketLight.intensity).toBeGreaterThan(0)
+    expect(rocketLit()).toBe(true)
     expect(lights()).toBe(idle)
     run(room, 4)
-    expect(rocketLight.intensity).toBe(0)
+    expect(rocketLit()).toBe(false)
     expect(lights()).toBe(idle)
   })
 

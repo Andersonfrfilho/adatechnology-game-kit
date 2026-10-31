@@ -5,6 +5,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
+import { isLightBudget } from '@adatechnology/game-render-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from '../audio'
@@ -386,6 +387,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
         ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         ...(lent.effects ? { effects: lent.effects } : {}),
+        ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),

@@ -25,6 +25,7 @@ import { createEffects } from './effects'
 import { createLayers } from './layers'
 import { limitSupportSpan, placeOnBody } from './body-hold'
 import type { FxLayers } from './layers'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import { createRocketLight, flameJet, launchRocket, type HeavyContext } from './heavy'
 import { createParticles } from './particles'
 import { createModelRig } from './rig'
@@ -79,6 +80,8 @@ export interface ViewmodelOptions {
   effects?: EffectSink
   /** The rocket of a launcher flies out along the barrel (default true); false leaves the round to the host. */
   flyRocket?: boolean
+  /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light. Without it they create lights of their own (deprecated, removed in the next major). */
+  lights?: LightBudget
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -144,13 +147,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const particles = createParticles(THREE, scene, groundAt)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
-  const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' } })
+  const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' }, ...(options.lights ? { lights: options.lights } : {}) })
   const effects = createEffects(THREE, options.effects ?? ownVfx, random)
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
-  const rocketLight = createRocketLight(THREE)
-  scene.add(rocketLight)
+  const rocketLight = options.lights ? undefined : createRocketLight(THREE)
+  if (rocketLight) scene.add(rocketLight)
   const holder = new THREE.Group()
   holder.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), PI / 2)
   hand.add(holder)
@@ -214,7 +217,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     orientation: () => current.model.root.getWorldQuaternion(new THREE.Quaternion()),
     every: (seconds, step, done) => void tasks.push({ delay: 0, seconds, elapsed: 0, step, done }),
     groundAt,
-    rocketLight,
+    ...(options.lights ? { lights: options.lights } : {}),
+    ...(rocketLight ? { rocketLight } : {}),
   })
 
   const equip = (weapon: string): boolean => {
@@ -263,7 +267,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       attachmentsSignature: '',
       suppressed: onTool?.suppressed ?? hasSuppressor(fitted),
     }
-    session.attachments = fitAttachmentModels(model, fitted, kit, { catalogue: arsenal.attachments, isDrawn: () => layers.attachments, areBeamsOn: () => layers.beams, ...(options.attachmentModels ? { overrides: options.attachmentModels } : {}), ...(options.raycast ? { raycast: options.raycast } : {}) })
+    session.attachments = fitAttachmentModels(model, fitted, kit, { catalogue: arsenal.attachments, isDrawn: () => layers.attachments, areBeamsOn: () => layers.beams, ...(options.attachmentModels ? { overrides: options.attachmentModels } : {}), ...(options.raycast ? { raycast: options.raycast } : {}), ...(options.lights ? { lights: options.lights } : {}) })
     session.attachmentsSignature = attachmentsKey(onTool?.attachments)
     const action = def.action
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
@@ -492,8 +496,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       particles.dispose()
       ownVfx?.dispose()
       hand.removeFromParent()
-      rocketLight.removeFromParent()
-      rocketLight.dispose()
+      rocketLight?.removeFromParent()
+      rocketLight?.dispose()
     },
   }
 }

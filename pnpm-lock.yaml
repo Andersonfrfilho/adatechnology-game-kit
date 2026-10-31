@@ -1758,6 +1758,9 @@ importers:
       '@adatechnology/game-items-three':
         specifier: workspace:^
         version: link:../game-items-three
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
