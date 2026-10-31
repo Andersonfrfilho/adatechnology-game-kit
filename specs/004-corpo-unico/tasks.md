@@ -62,6 +62,8 @@ task, evidência em `evidence.md`. PR por fase, mostrado no Chrome do dono; merg
 /oh-my-claudecode:autopilot Execute a spec specs/004-corpo-unico/ do repositório adatechnology-game-kit, num worktree novo
 ~/Documents/personal/adatechnology-game-kit-wt/spec-004 (branch spec/004-corpo-unico, a partir do origin/main). Leia CLAUDE.md,
 spec.md, plan.md e tasks.md antes de começar. Uma task por vez, na ordem do tasks.md.
+Antes de criar o worktree: confira que os PRs #121 (corpo senta e deita) e #122 (esta spec) estão no main; se o #122 ainda não
+estiver, parta de origin/docs/spec-004-corpo-unico; se o #121 não estiver, pare e avise.
 Regra principal: um corpo só; tudo o que o jogador faz aparece nas duas vistas; as restrições de vista vêm de first-person/arms.ts
 com os mesmos números (porte, nunca reescrever parecido).
 Ordem: Fases 0 e 1 podem rodar já. Antes da Fase 2, confira que o PR #110 (portas) está no main; se não estiver, pare e avise.
