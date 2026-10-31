@@ -28,7 +28,7 @@ por nenhum teste, e por isso já se furaram em pelo menos 15 dependências. Trê
 | A12 | Versões e publicação corretas | `pnpm check:packages` (three peer `^0.160.0`, deps internas `workspace:^`, `publint`, `attw`) |
 | A13 | Nada quebra para o jogo | toda API trocada fica como `@deprecated` até a próxima major; `examples/*/test.mjs` e o ZombiAdA compilam |
 | A14 | Sem travamento nas explosões | `examples/test-room/perf.mjs` passa em `PERF_MODE=gpu` e no CI |
-| A15 | Reação em cadeia de explosões e de corpos da horda, sem travar | testes determinísticos da T4b.2; fase `chain_horde` do `perf.mjs` com quedas em cadeia > 0 e dentro dos orçamentos |
+| A15 | Horda densa com contato constante e reação em cadeia de explosões e de corpos, estável e sem travar | testes de estabilidade e determinísticos da T4b.2 e da T4b.6; fases `dense_horde` e `chain_horde` do `perf.mjs` dentro dos orçamentos, com quedas em cadeia > 0 |
 
 ## Fora do escopo
 

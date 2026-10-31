@@ -110,7 +110,19 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
   - granadas, RPG, molotov e tiro no meio da horda.
   - Orçamentos: os de sempre (0 quadros acima de 33,4 ms, p99 ≤ 20 ms e 0 shaders na GPU; no CI, contadores) e mais **quedas
     em cadeia > 0**, para que o teste também prove que a reação acontece.
-- Aceite da fase: os testes da T4b.2 passam e a fase `chain_horde` passa no `perf.mjs` em `PERF_MODE=gpu` e no CI.
+- T4b.6 Horda densa sem explosão, que é o estado normal: os corpos se esbarram o tempo todo.
+  - Contato pela grade (vizinhos da célula e das 8 em volta) com amortecimento e 1 a 2 iterações por passo.
+  - Empurrão normal não derruba; a pressão acumulada empurra a porta e alimenta a pilha no muro.
+  - Testes de estabilidade:
+    - sobreposição entre corpos abaixo da tolerância;
+    - a energia da multidão parada não cresce em 60 s;
+    - zero quedas só por empurrão normal;
+    - a porta cede pela pressão.
+  - Fase `dense_horde` no `perf.mjs`: 2.000 zumbis espremidos contra um muro e uma porta por 30 s, sem explosão, dentro dos
+    orçamentos.
+  - Se não couber, a próxima etapa é a horda num Web Worker (os vetores tipados do `game-crowd` já permitem); a medição decide.
+- Aceite da fase: os testes da T4b.2 e da T4b.6 passam, e as fases `dense_horde` e `chain_horde` passam no `perf.mjs` em
+  `PERF_MODE=gpu` e no CI.
 
 ## Fase 5 — Contratos
 > 🤖 Modelo: `sonnet` (um pacote por commit)
