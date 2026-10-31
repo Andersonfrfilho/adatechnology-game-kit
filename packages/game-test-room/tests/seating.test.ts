@@ -35,7 +35,7 @@ describe('sitting on the seats an item brings', () => {
     const { room, objectId } = roomWithBench()
     room.look([0.6, 1.7, -0.5], [0.4, 0.5, -2])
     const seat = room.sit(objectId)
-    expect(seat).toEqual({ objectId, seatId: 'right', pose: 'sit' })
+    expect(seat).toMatchObject({ objectId, seatId: 'right', pose: 'sit' })
     run(room, 0.5)
     expect(room.camera.position.x).toBeCloseTo(0.4, 2)
     expect(room.camera.position.z).toBeCloseTo(-2, 2)

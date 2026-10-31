@@ -11,7 +11,7 @@ import type { THREE_NS } from '../three'
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
 export type RoomAvatarLike = {
   root: THREE_NS.Object3D
-  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null }): void
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
@@ -113,6 +113,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         ...(state.holding !== undefined ? { holding: state.holding } : {}),
         ...(state.itemUse !== undefined ? { itemUse: state.itemUse } : {}),
         ...(state.push !== undefined ? { push: state.push } : {}),
+        ...(state.seat !== undefined ? { seat: state.seat } : {}),
       })
     },
     hand: (side) => avatar.hand(side),

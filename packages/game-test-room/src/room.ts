@@ -1158,6 +1158,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
     avatarState.push = push.avatarState
+    const seat = seating.seat
+    avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
