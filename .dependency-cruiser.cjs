@@ -6,7 +6,14 @@
 const L0_CONTRACTS = ['game-contracts']
 const L1_BASE = ['game-shapes', 'game-runtime']
 const L3_CONTENT_PATTERN = '-(fleet|species|goods|household|residential|commercial|rural|post-apocalyptic|people|uniformed|undead)$'
-const L3_CONTENT_NAMES = ['game-props3d']
+const L3_CONTENT_NAMES = []
+// game-props3d is a shared builder, not content (spec 005, D1): its PropsApi vocabulary, shape recorder and node skin are what content (household), cores and adapters all draw with.
+// It sits beside L1: it imports no content and no adapter, and anything may import it.
+const SHARED_BUILDERS = ['game-props3d']
+// Imports of a shared builder that stay on purpose: 'file': 'reason'.
+const SHARED_BUILDER_COMPAT_REEXPORTS = {
+  'packages/game-props3d/src/merge-by-material.ts': 'deprecated re-export of mergeByMaterial kept by D2 until the next major of game-props3d',
+}
 const L4_ADAPTER_PATTERN = '-three$'
 const L4_ADAPTER_NAMES = ['game-render-three']
 const L4B_BRIDGES = ['game-floorplan-interactables']
@@ -39,7 +46,7 @@ const isContent = (name) => new RegExp(L3_CONTENT_PATTERN).test(name) || L3_CONT
 const isCore = (name) =>
   !isAdapter(name) &&
   !isContent(name) &&
-  ![...L0_CONTRACTS, ...L1_BASE, ...L4B_BRIDGES, ...L5_COMPOSITION].includes(name)
+  ![...L0_CONTRACTS, ...L1_BASE, ...SHARED_BUILDERS, ...L4B_BRIDGES, ...L5_COMPOSITION].includes(name)
 
 // depcruise reads tsconfig `paths`, so a generated tsconfig maps every workspace package name to its source entry.
 const workspacePaths = Object.fromEntries(
@@ -98,17 +105,17 @@ module.exports = {
     },
     {
       name: 'content-not-adapter',
-      comment: 'Content is data: no -three adapter and no game-props3d.',
+      comment: 'Content is data: no -three adapter.',
       severity: 'error',
       from: { path: `^packages/(${contents.join('|')})/src/` },
       to: { path: inPackages(adapters) },
     },
     {
-      name: 'content-not-adapter',
-      comment: 'Content is data: no -three adapter and no game-props3d (props3d itself is content, so it may import itself).',
+      name: 'shared-builder-not-content-or-adapter',
+      comment: 'A shared builder (game-props3d) imports no content and no adapter; the one re-export left is in SHARED_BUILDER_COMPAT_REEXPORTS.',
       severity: 'error',
-      from: { path: `^packages/(${contents.join('|')})/src/`, pathNot: '^packages/game-props3d/' },
-      to: { path: '^packages/game-props3d/' },
+      from: { path: `^packages/(${SHARED_BUILDERS.join('|')})/src/`, pathNot: Object.keys(SHARED_BUILDER_COMPAT_REEXPORTS).map((file) => `^${escapeDots(file)}$`) },
+      to: { path: inPackages([...contents, ...adapters]) },
     },
     {
       name: 'adapter-not-content',
