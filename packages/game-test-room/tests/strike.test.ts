@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type { HandTargets } from '@adatechnology/game-contracts'
-import type { RoomAvatar, RoomFirstPersonState } from '../src'
+import type { RoomAvatar, RoomReachView } from '../src'
 import { DEFAULT_STRIKE_CLIPS } from '../src'
 import { makeRoom, stubRenderer } from './helpers'
 
@@ -9,28 +9,40 @@ type Fake = RoomAvatar & {
   struck: string[]
   legs: Array<'left' | 'right' | undefined>
   hands: Array<'left' | 'right' | undefined>
-  states: RoomFirstPersonState[]
-  armsRoot: THREE.Group
+  /** Every `reach` the room made: the hand targets and the first-person view. */
+  reaches: Array<{ targets: HandTargets | null; view: RoomReachView | undefined }>
+  views: Array<[string, THREE.Object3D | null]>
+  /** The right hand the carried item rides. */
+  handR: THREE.Object3D
   /** Seconds to impact per clip; a clip not here cannot be played. */
   impacts: Record<string, number>
 }
 
-const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove_two_hands: 0.26, front_kick: 0.32 }): Fake => {
-  const armsRoot = new THREE.Group()
+/** `eyes`: where the body's eyes are, relative to its root (the feet); without them the room keeps the player's own eye and shows the body only in third person. */
+const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove_two_hands: 0.26, front_kick: 0.32 }, eyes?: [number, number, number]): Fake => {
+  const root = new THREE.Group()
+  const handR = new THREE.Object3D()
+  handR.position.set(-0.3, 1.0, 0.3)
+  root.add(handR)
   const struck: string[] = []
   const legs: Array<'left' | 'right' | undefined> = []
   const hands: Array<'left' | 'right' | undefined> = []
-  const states: RoomFirstPersonState[] = []
+  const reaches: Fake['reaches'] = []
+  const views: Fake['views'] = []
   return {
-    root: new THREE.Group(),
-    armsRoot,
+    root,
+    handR,
     struck,
     legs,
     hands,
-    states,
+    reaches,
+    views,
     impacts,
     update: () => undefined,
-    firstPerson: { root: armsRoot, update: (_dt, state) => void states.push({ ...state }) },
+    hand: () => handR,
+    reach: (targets, view) => void reaches.push({ targets, view }),
+    setView: (mode, camera) => void views.push([mode, camera]),
+    ...(eyes ? { eye: (out = new THREE.Vector3()) => root.localToWorld(out.set(eyes[0], eyes[1], eyes[2])) } : {}),
     strike: (clip, options) => {
       if (!(clip in impacts)) return null
       struck.push(clip)
@@ -396,35 +408,71 @@ describe('strikes wait for the impact of the clip', () => {
   })
 })
 
-describe('first-person arms in the room', () => {
-  it('shows the arms only in first person and the body only in third', () => {
-    const avatar = fakeAvatar()
+describe('one body in both views', () => {
+  it('draws a body that has eyes in both views and tells it the view; one without eyes only in third person', () => {
+    const avatar = fakeAvatar(undefined, [0, 1.7, 0.2])
     const room = makeRoom()
     room.setAvatar(avatar)
-    expect(room.scene.children).toContain(avatar.armsRoot)
-    expect(avatar.armsRoot.visible).toBe(true)
-    expect(avatar.root.visible).toBe(false)
-    room.setCameraMode('third')
-    expect(avatar.armsRoot.visible).toBe(false)
     expect(avatar.root.visible).toBe(true)
-    room.setAvatar(null)
-    expect(room.scene.children).not.toContain(avatar.armsRoot)
+    expect(avatar.views.at(-1)).toEqual(['first', room.camera])
+    room.setCameraMode('third')
+    expect(avatar.root.visible).toBe(true)
+    expect(avatar.views.at(-1)).toEqual(['third', room.camera])
+    const blind = fakeAvatar()
+    room.setAvatar(blind)
+    room.setCameraMode('first')
+    expect(blind.root.visible).toBe(false)
+    room.setCameraMode('third')
+    expect(blind.root.visible).toBe(true)
   })
 
-  it('updates the arms every frame with the camera, the speed and a stance from the tool', () => {
+  it('puts the camera at the body\'s eyes, in front of the player, in both views', () => {
+    const avatar = fakeAvatar(undefined, [0, 1.6, 0.2])
+    const room = makeRoom({ scenery: { table: null, shelf: null } })
+    room.setAvatar(avatar)
+    room.look([0, 1.7, 3], [0, 1.7, -5])
+    room.update(1 / 60)
+    // a scripted view stays exactly where it was asked until the player moves
+    expect(room.camera.position.y).toBeCloseTo(1.7, 5)
+    expect(room.camera.position.z).toBeCloseTo(3, 5)
+    room.walk([0, 0, 2.8], 0.2)
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    // the body's front is +z, turned to where the player looks (-z): the eyes are 0.2 m toward -z
+    const z = room.playerPosition[2]
+    expect(room.camera.position.y).toBeCloseTo(1.6, 5)
+    expect(room.camera.position.z).toBeCloseTo(z - 0.2, 5)
+    room.setCameraMode('third')
+    room.update(1 / 60)
+    expect(room.camera.position.z).toBeCloseTo(z - 0.2, 5)
+  })
+
+  it('pulls the eyes back toward the player out of a wall between them', () => {
+    const avatar = fakeAvatar(undefined, [0, 1.6, 0.6])
+    const room = makeRoom({ scenery: { table: null, shelf: null } })
+    room.setAvatar(avatar)
+    // walk into the target wall until it stops the body: the eyes 0.6 m ahead would be inside it
+    room.look([0, 1.7, -8], [0, 1.7, -20])
+    room.walk([0, 0, -12], 1.5)
+    for (let i = 0; i < 120; i++) room.update(1 / 60)
+    const z = room.playerPosition[2]
+    const face = z - room.world.raycast([0, 1.6, z], [0, 0, -1], 3)!.distance
+    expect(z - face).toBeLessThan(0.6)
+    expect(room.camera.position.z).toBeCloseTo(face + 0.1, 3)
+    expect(room.camera.position.z).toBeLessThan(z)
+  })
+
+  it('tells the stance of the hands from the tool in handState', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
     room.setAvatar(avatar)
     room.update(1 / 60)
-    const last = () => avatar.states.at(-1)!
-    expect(last().camera).toBe(room.camera)
-    expect(last()).toMatchObject({ targets: null, stance: 'relaxed', crouch: false })
+    expect(room.handState()).toMatchObject({ targets: null, stance: 'relaxed' })
     room.setTool('fists')
     room.update(1 / 60)
-    expect(last().stance).toBe('fists')
+    expect(room.handState().stance).toBe('fists')
     room.setTool('hand')
     room.update(1 / 60)
-    expect(last().stance).toBe('relaxed')
+    expect(room.handState().stance).toBe('relaxed')
   })
 
   it('crouches while C is held: the eye sinks, the body is told, and it stands up again', () => {
@@ -437,12 +485,11 @@ describe('first-person arms in the room', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     expect(room.camera.position.y).toBeLessThan(standing - 0.4)
-    expect(avatar.states.at(-1)!.crouch).toBe(true)
     expect(room.avatarState().crouch).toBe(true)
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyC' }))
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     expect(room.camera.position.y).toBeCloseTo(standing, 2)
-    expect(avatar.states.at(-1)!.crouch).toBe(false)
+    expect(room.avatarState().crouch).toBe(false)
 
     // Keys pressed while holding Ctrl prevent default browser shortcuts
     const ev = new KeyboardEvent('keydown', { code: 'KeyS', ctrlKey: true, cancelable: true })
@@ -486,7 +533,7 @@ describe('first-person arms in the room', () => {
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ControlLeft' }))
   })
 
-  it('reads the targets of the module after its frame hooks ran, so the weapon is placed first', () => {
+  it('reads the targets of the module after its frame hooks ran, so the weapon is placed first, and the body reaches them in both views', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
     room.setAvatar(avatar)
@@ -515,13 +562,19 @@ describe('first-person arms in the room', () => {
     room.update(1 / 60)
     expect(order.indexOf('module frame')).toBeGreaterThanOrEqual(0)
     expect(order.indexOf('targets read')).toBeGreaterThan(order.indexOf('module frame'))
-    expect(avatar.states.at(-1)).toMatchObject({ stance: 'hold', targets })
+    expect(avatar.reaches.at(-1)!.targets).toBe(targets)
+    expect(avatar.reaches.at(-1)!.view?.camera).toBe(room.camera)
+    expect(room.handState()).toMatchObject({ stance: 'hold', targets })
+    room.setCameraMode('third')
+    room.update(1 / 60)
+    expect(avatar.reaches.at(-1)!.targets).toBe(targets)
+    expect(avatar.reaches.at(-1)!.view?.camera).toBe(room.camera)
     off?.()
     room.update(1 / 60)
-    expect(avatar.states.at(-1)!.targets).toBeNull()
+    expect(avatar.reaches.at(-1)!.targets).toBeNull()
   })
 
-  it('says how far the trigger finger is curled (the index of the hand targets) in the state of the arms and in `handState`, and a debug camera leaves the player\'s own view alone', () => {
+  it('says how far the trigger finger is curled (the index of the hand targets) in `handState`, and a debug camera leaves the player\'s own view alone', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
     room.setAvatar(avatar)
@@ -536,11 +589,9 @@ describe('first-person arms in the room', () => {
     expect(loaded.problems).toEqual([])
     room.setTool('pistol_9mm')
     room.update(1 / 60)
-    expect(avatar.states.at(-1)!.triggerFinger).toBe(0)
     expect(room.handState()).toMatchObject({ stance: 'hold', triggerFinger: 0 })
     curl = 0.8
     room.update(1 / 60)
-    expect(avatar.states.at(-1)!.triggerFinger).toBe(0.8)
     expect(room.handState().triggerFinger).toBe(0.8)
     curl = undefined
     room.update(1 / 60)
@@ -549,59 +600,37 @@ describe('first-person arms in the room', () => {
     room.setDebugCamera({ position: [3, 2, 3], target: [0, 1, 0], fov: 30 })
     room.update(1 / 60)
     expect(room.camera.position.distanceTo(eye)).toBeLessThan(1e-6)
-    expect(avatar.states.at(-1)!.camera).toBe(room.camera)
+    expect(avatar.reaches.at(-1)!.view?.camera).toBe(room.camera)
     room.setDebugCamera(null)
   })
 
-  it('a carried item gives a hand under it, and none in third person', () => {
-    const avatar = fakeAvatar()
-    const room = makeRoom()
-    room.setAvatar(avatar)
-    room.look([0, 1.7, 0], [0, 0.05, -1.5])
-    room.spawn('coffee_cup', [0, 0, -1.5], 0)
-    expect(room.grab()).toBe(true)
-    run(room, 1)
-    const targets = avatar.states.at(-1)!.targets!
-    expect(avatar.states.at(-1)!.stance).toBe('hold')
-    const piece = room.spawned()[0]!.root
-    const box = new THREE.Box3().setFromObject(piece)
-    expect(targets.R!.position[1]).toBeLessThan(box.min.y + 0.001)
-    expect(targets.R!.position[1]).toBeGreaterThan(box.min.y - 0.05)
-    expect(targets.grip).toBeGreaterThan(0)
-    room.setCameraMode('third')
-    run(room, 0.2)
-    expect(avatar.states.at(-1)!.targets).toBeNull()
-  })
-
-  it('grips a bottle around its cylindrical side and follows the drink action in 1st and 3rd person', () => {
+  it('a carried item rides the body\'s right hand in both views, and the body is told while it drinks', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
     room.setAvatar(avatar)
     room.look([0, 1.7, 0], [0, 0.1, -1.5])
     room.spawn('glass_bottle', [0, 0, -1.5], 0)
     expect(room.grab()).toBe(true)
-    run(room, 0.8)
-    const restTargets = avatar.states.at(-1)!.targets!
-    const bottle = room.spawned()[0]!.root
-    const box = new THREE.Box3().setFromObject(bottle)
-    // Side grip sits alongside the bottle body (between min.y and max.y) with a closed cylinder grip
-    expect(restTargets.R!.position[1]).toBeGreaterThan(box.min.y)
-    expect(restTargets.R!.position[1]).toBeLessThan(box.max.y)
-    expect(restTargets.grip).toBeCloseTo(0.85, 2)
-
+    for (const mode of ['third'] as const) {
+      room.setCameraMode(mode)
+      run(room, 0.8)
+      const bottle = new THREE.Box3().setFromObject(room.spawned()[0]!.root)
+      const hand = avatar.handR.getWorldPosition(new THREE.Vector3())
+      expect(bottle.distanceToPoint(hand)).toBeLessThan(0.12)
+      expect(avatar.reaches.at(-1)!.targets).toBeNull()
+    }
     expect(room.useItem('drink')).toBe(true)
-    run(room, 1.0)
-    const drinkTargets = avatar.states.at(-1)!.targets!
-    expect(drinkTargets.R!.position[1]).toBeGreaterThan(restTargets.R!.position[1] + 0.08)
+    run(room, 0.3)
+    expect(room.avatarState().itemUse?.id).toBe('drink')
   })
 })
 
-describe('the arms can probe the room', () => {
-  it('gives the first-person arms a contact probe that sees the chair ahead and nothing behind', () => {
+describe('the hands can probe the room', () => {
+  it('gives the body\'s first-person reach a contact probe that sees the chair ahead and nothing behind', () => {
     const avatar = fakeAvatar()
     const room = setup(avatar)
     wait(room, 0.2)
-    const probe = avatar.states.at(-1)!.contact
+    const probe = avatar.reaches.at(-1)!.view!.keepOutside!.contact
     const toward = probe([-0.6, 0.2, -4.18], [1, 0, 0], 3)
     expect(toward).not.toBeNull()
     expect(toward!).toBeGreaterThan(0.1)

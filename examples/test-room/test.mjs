@@ -133,7 +133,7 @@ if (runs('views')) {
     r.look([0.4, 1.2, -2.2], [0, 0.3, -4])
   })
 
-  // the player's body: hidden in first person (the default), shown after V, with the startup hint in the log and the V hint on the HUD
+  // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
   await page.goto(`${url}?ui=1`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
   const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
@@ -147,8 +147,8 @@ if (runs('views')) {
   await page.waitForTimeout(400)
   await page.screenshot({ path: join(shotsDir, 'third-person.png'), ...SHOT })
   const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
-  bodyOk = before.mode === 'first' && before.visible === false && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
-  console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: hidden in first person, shown after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
+  bodyOk = before.mode === 'first' && before.visible === true && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
+  console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: drawn in first person and after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
 
   // the test table: the goods and the weapons laid on the long dining table of the furniture catalogue a page at a time, and each trial (shot, punch, knife, fire, blast) reaches the item picked
@@ -221,16 +221,18 @@ if (runs('hands')) {
     })
     lap(`first-person steps, ${lang}`)
     for (const [name, act] of fpSteps) {
-      const seen = await page.evaluate(`(() => { (${act.toString()})(); const a = window.__testRoom.avatar; return { stance: a.arms?.stance ?? null, playing: a.arms?.playing ?? null, visible: a.firstPerson?.root.visible ?? null, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`)
+      const seen = await page.evaluate(`(() => { (${act.toString()})(); const r = window.__testRoom; const a = r.avatar; return { stance: r.handState().stance, playing: a.avatar?.playing ?? null, visible: a.root.visible, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`)
       if (!CI) {
         await page.waitForTimeout(150)
         await page.screenshot({ path: join(shotsDir, `fp-${name}-${lang}.png`), ...SHOT })
       }
       const stanceOk = fpExpect[name] === undefined || seen.stance === fpExpect[name]
-      const playOk = fpPlaying[name] === undefined || seen.playing === fpPlaying[name]
-      const visibleOk = name === 'punch-third' ? seen.visible === false : seen.visible === true
+      // the body plays the clip; a left kick or punch plays its mirror (`front_kick_left`)
+      const playOk = fpPlaying[name] === undefined || (typeof seen.playing === 'string' && seen.playing.startsWith(fpPlaying[name]))
+      // one body for both views: drawn in first person as in third
+      const visibleOk = seen.visible === true
       if (!(stanceOk && playOk && visibleOk)) fpOk = false
-      console.log(`${stanceOk && playOk && visibleOk ? 'PASS' : 'FAIL'}  [${lang}] first-person arms: ${name}`, JSON.stringify(seen))
+      console.log(`${stanceOk && playOk && visibleOk ? 'PASS' : 'FAIL'}  [${lang}] first-person body: ${name}`, JSON.stringify(seen))
     }
   }
   lap('first-person steps done')
@@ -376,19 +378,28 @@ if (runs('hands')) {
     // the support hand at rest under a handguard: a palm-up cup, the forearm from below
     const cup = (id) => {
       const r = window.C.r
+      // until the gun rides the body in first person too (spec 004 T3.1) it floats in front of the eye there: the support hand is checked where the gun sits on the body
+      r.setCameraMode('third')
       window.C.armed(id)
       r.pause()
-      const j = r.avatar.arms.joints('L')
+      // the body's support arm (arms[0], at +x): elbow and hand in the world
+      const T = window.__THREE
+      const elbow = r.avatar.avatar.rig.arms[0].el.getWorldPosition(new T.Vector3())
+      const wrist = r.avatar.avatar.hand('L').getWorldPosition(new T.Vector3())
+      const j = { elbow, wrist }
       const fore = j.wrist.clone().sub(j.elbow)
       const left = r.handState().targets.L
       window.C.view([left.position[0] + 0.55, left.position[1], left.position[2] + 0.1], left.position, 40)
       return { underWrist: +(j.wrist.y - j.elbow.y).toFixed(3), offForward: +((Math.atan2(fore.x, -fore.z) * 180) / Math.PI).toFixed(0), rising: +((Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * 180) / Math.PI).toFixed(0) }
     }
+    // the body's support shoulder is 0.3 m to the side (the separate arms had it near the middle, 25 degrees): the forearm meets the handguard at about 60. Owner, 2026-10-31: accept
+    // the anatomy now and tighten it in spec 004 T3.1, when the gun rides the body in first person too
+    const BODY_SUPPORT_OFF_FORWARD = 65
     for (const [name, id] of [['m4', 'colt_m4a1'], ['ak', 'ak_47']]) {
       const geometry = await closeShot(`${name}-rest-side`, cup, id)
-      verdict(`${id} at rest: forearm from below, the hand a cup under the handguard`, geometry.underWrist > 0.1 && geometry.offForward < 25 && geometry.rising > 20, geometry)
-      // the same moment from the player's own camera
-      await page.evaluate(() => window.__testRoom.setDebugCamera(null))
+      verdict(`${id} at rest: forearm from below, the hand a cup under the handguard`, geometry.underWrist > 0.1 && geometry.offForward < BODY_SUPPORT_OFF_FORWARD && geometry.rising > 20, geometry)
+      // the same moment from the player's own camera, back in first person
+      await page.evaluate(() => { window.__testRoom.setDebugCamera(null); window.__testRoom.setCameraMode('first') })
       if (!CI) {
         await page.waitForTimeout(250)
         await page.screenshot({ path: join(shotsDir, `closeup-${name}-rest-player.png`), ...SHOT })

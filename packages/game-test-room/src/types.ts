@@ -35,7 +35,7 @@ export type StrikeComboOption = {
   readonly steps: ReadonlyArray<{ readonly clip: string; readonly hand?: 'left' | 'right' }>
   readonly reset: number
 }
-export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, PunchHand, ThirdPersonOptions } from './avatar'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, RoomReachView, CameraMode, KickLeg, PunchHand, ThirdPersonOptions } from './avatar'
 import type { CameraMode, KickLeg, PunchHand, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 import type { TestTable, TestTableOptions } from './test-table'
 

@@ -5,7 +5,9 @@ import type { HandTargets } from '@adatechnology/game-contracts'
 
 import { createFirstPersonArms } from '../first-person/arms'
 import type { FirstPersonArms, FirstPersonArmsOptions } from '../first-person/types'
+import type { ReachView } from './arm-reach'
 import type { AvatarItemUsePose, PlayerAvatar } from './avatar'
+import type { AvatarViewMode } from './head-hiding'
 import type { THREE_NS } from '../three'
 
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
@@ -14,20 +16,22 @@ export type RoomAvatarLike = {
   update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
-  /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
-  firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean; contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }): void }
-  /** Brings the body's hands to the tool in them, in third person (`RoomAvatar.reach`). */
-  reach(targets: HandTargets | null): void
+  /** Where the body's eyes are after its pose (`RoomAvatar.eye`): the room draws the body in both views and puts the first-person camera there. */
+  eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
+  /** Hides the head and neck from `camera` in first person (`RoomAvatar.setView`). */
+  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null): void
+  /** Brings the body's hands to the tool in them, in both views; `view` keeps them in the first-person view (`RoomAvatar.reach`). */
+  reach(targets: HandTargets | null, view?: ReachView | null): void
   /** Plays a strike on the body and the arms and answers the seconds to its impact (`RoomAvatar.strike`). */
   strike(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
   /** The avatar it wraps. */
   readonly avatar: PlayerAvatar
-  /** The first-person arms, for whoever wants more of them than the room asks (`play`, `on('event')`). */
+  /** Separate first-person arms, only when `toRoomAvatar` was asked for them (`firstPerson`); the room draws the body in both views and does not use them. */
   readonly arms: FirstPersonArms | null
 }
 
 export type ToRoomAvatarOptions = {
-  /** The first-person arms: `false` for none, else the options of `createFirstPersonArms` (merged over the colours of the body and `firstPersonClips`). */
+  /** Separate first-person arms (the options of `createFirstPersonArms`, merged over the colours of the body and `firstPersonClips`); default none: the body is the first-person view. */
   firstPerson?: false | FirstPersonArmsOptions
   /** The third-person strike clips `strike` finds by id. Default `ATTACK_CLIPS` of game-characters-people. */
   strikeClips?: readonly PoseClip[]
@@ -50,14 +54,14 @@ const GUARD_SPEED = 0.3
 
 /**
  * Fits the player's body to the test room's `RoomAvatar` (`room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))`). It changes the sign of the pitch: the room
- * counts a look up as positive, the team game's `view.pitch` (what `AvatarUpdate.pitch` reads) counts a look down as positive. It also gives the room the first-person arms, dressed in the
- * colours of the body (`firstPerson: false` for none), and `strike(clipId)`: the strike plays on the body (the attack clips) and on the arms (the first-person clips), and answers the seconds to its
+ * counts a look up as positive, the team game's `view.pitch` (what `AvatarUpdate.pitch` reads) counts a look down as positive. The same body is the first-person view (`eye`, `setView`;
+ * separate arms only with `firstPerson`), and `strike(clipId)` plays the strike on the body (the attack clips) and answers the seconds to its
  * impact, which are the same in both views. A kick with the left leg (`leg: 'left'`) or a punch with the left hand (`hand: 'left'`) plays the mirror of the clip written for the right.
  * After a punch the body holds the guard (`guardClip`) for `guardHold` seconds while it stands, so the next punch leaves from the guard.
  */
 export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions = {}): RoomAvatarLike => {
   const arms =
-    options.firstPerson === false
+    options.firstPerson === false || options.firstPerson === undefined
       ? null
       : createFirstPersonArms(avatar.three, {
           colors: { skin: avatar.colors.skin, sleeve: avatar.colors.longSleeves ? avatar.colors.shirt : avatar.colors.skin, trouser: avatar.colors.trousers, shoe: avatar.colors.shoes, ...options.firstPerson?.colors },
@@ -100,7 +104,8 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     root: avatar.root,
     avatar,
     arms,
-    ...(arms ? { firstPerson: { root: arms.root, update: (dt: number, state: Parameters<NonNullable<RoomAvatarLike['firstPerson']>['update']>[1]) => arms.update(dt, state) } } : {}),
+    eye: (out) => avatar.eye(out),
+    setView: (mode, camera) => avatar.setView(mode, camera),
     update: (dt, state) => {
       stepGuard(dt, state)
       avatar.update(dt, {
@@ -119,7 +124,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     },
     hand: (side) => avatar.hand(side),
     shoulder: (side) => avatar.shoulder(side),
-    reach: (targets) => avatar.reach(targets),
+    reach: (targets, view) => avatar.reach(targets, view),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)
       if (!clip) return null

@@ -37,3 +37,4 @@ da câmera fica a **0,215 m** (o peito), em qualquer pitch entre −1,4 e 1,2 ra
 1. `eyeOffset` padrão `(0, −0,068, 0)` no referencial da cabeça: em pé dá 1,700 m, como hoje, e vale igual em todas as poses.
 2. Esconder a cabeça **por material**, não por camada, para manter a sombra (R3). Espelhos ficam sem a cabeça em 1ª pessoa.
 3. Plano próximo de 0,05 m em 1ª pessoa.
+| T2.1 | 2026-10-31 | build ok · typecheck ok · test-room 252 testes · characters-three 501 testes · lint ok · e2e test-room 125 cenários + 169 verificações | (este commit) | corpo nas duas vistas, câmera no olho com recuo da parede, `reach` com a mesma vista nas duas, braços separados fora da sala; `room.look` de script mantém a vista até o jogador andar; testes da 1ª pessoa reescritos para o corpo; mão de apoio da M4/AK aceita até 65° (dono), reavaliar na T3.1 |
