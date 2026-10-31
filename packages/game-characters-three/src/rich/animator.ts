@@ -16,6 +16,8 @@ export type RichRig = {
   readonly fig: Node3
   readonly upper: Node3
   readonly headG: Node3
+  /** The neck cylinder, taken by identity; absent when the head is cut off. */
+  readonly neck?: Node3
   readonly arms: RigArm[]
   readonly legs: RigLeg[]
   readonly dangles: { g: Node3; el: Node3 }[]
