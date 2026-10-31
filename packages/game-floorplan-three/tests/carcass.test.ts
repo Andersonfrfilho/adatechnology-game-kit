@@ -1,3 +1,4 @@
+import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import * as THREE from 'three'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
@@ -5,7 +6,7 @@ import { furnitureSpec } from '../src'
 import { fakeDocument } from './helpers/fake-document'
 
 describe('a bookcase stands as a carcass', () => {
-  const made = () => furnitureSpec(THREE, 'bookcase', { document: fakeDocument })
+  const made = () => furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
 
   it('the sides carry, the shelves need both ends, the back carries nothing', () => {
     const { spec } = made()

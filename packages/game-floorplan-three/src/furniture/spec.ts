@@ -1,7 +1,6 @@
 import { inferJoints } from '@adatechnology/game-destruction'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
-import { residentialItems } from '@adatechnology/game-floorplan-residential'
 
 import { create } from '../create.js'
 
@@ -29,7 +28,7 @@ export interface FurnitureSpecOptions {
     /** Colour roles of the builder (`wood`, `fabric_main`, `fabric_accent`, `metal`...) as `0xRRGGBB`. */
     palette?: Record<string, number>
   }
-  /** Catalogue the default size is read from (default `residentialItems`). */
+  /** Catalogue the default size is read from (`residentialItems` of `game-floorplan-residential`, or `defaultFurnitureCatalog()` of `game-kit-defaults`); without it give `w`, `d` and `h`. */
   catalog?: readonly FurnitureCatalogEntry[]
   /** The `document` the house renderer makes its textures with (default the global one). */
   document?: unknown
@@ -321,11 +320,11 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
   const renderer = rendererOf(THREE, opts.document)
   const ent = renderer.types[type]
   if (!ent) throw new Error(`game-floorplan-three: no builder for the furniture type "${type}"`)
-  const entry = (opts.catalog ?? (residentialItems as unknown as readonly FurnitureCatalogEntry[])).find((i) => i.type === type)
+  const entry = opts.catalog?.find((i) => i.type === type)
   const w = opts.w ?? entry?.w
   const d = opts.d ?? entry?.d
   const h = opts.h ?? entry?.h
-  if (w === undefined || d === undefined || h === undefined) throw new Error(`game-floorplan-three: furniture type "${type}" is not in the catalogue, so give w, d and h`)
+  if (w === undefined || d === undefined || h === undefined) throw new Error(`game-floorplan-three: furniture type "${type}" is not in the catalogue (pass catalog), so give w, d and h`)
   const o = opts.options ?? {}
   const seed = Math.round(opts.seed ?? 1)
   const plain = SHELVING.test(type) ? 'paper' : 'plastic'

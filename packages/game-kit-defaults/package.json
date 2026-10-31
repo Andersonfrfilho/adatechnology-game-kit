@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@adatechnology/game-characters-people": "workspace:^",
+    "@adatechnology/game-floorplan-residential": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-vehicles-fleet": "workspace:^"

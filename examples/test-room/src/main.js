@@ -21,7 +21,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
-import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
+import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -42,9 +42,9 @@ const items = params.get('items')
 // the strip footing with the bond beam on it, drawn by the house renderer with its plaster, baseboard and sidewalk), and the team's table and bookcase.
 const wall = wallPiece(THREE, { w: 10, h: 3 })
 const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
-const shelf = furnitureSpec(THREE, 'bookcase')
+const shelf = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog() })
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
-const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
+const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCatalog(), options: { materials: { plain: 'ceramic' } } })
 // the test table is a long wooden table of the furniture catalogue (the gourmet table, without the dining table's cloth: a shot at the cloth moved it as a loose white sheet
 // over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.

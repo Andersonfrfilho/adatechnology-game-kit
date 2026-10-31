@@ -705,9 +705,6 @@ importers:
       '@adatechnology/game-floorplan-interactables':
         specifier: workspace:^
         version: link:../game-floorplan-interactables
-      '@adatechnology/game-floorplan-residential':
-        specifier: workspace:^
-        version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:^
         version: link:../game-floorplan-structure
@@ -730,6 +727,9 @@ importers:
       '@adatechnology/game-floorplan-post-apocalyptic':
         specifier: workspace:^
         version: link:../game-floorplan-post-apocalyptic
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:^
+        version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-rural':
         specifier: workspace:^
         version: link:../game-floorplan-rural
@@ -742,6 +742,9 @@ importers:
       '@adatechnology/game-interactables-three':
         specifier: workspace:^
         version: link:../game-interactables-three
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:^
+        version: link:../game-kit-defaults
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation
@@ -1044,6 +1047,9 @@ importers:
       '@adatechnology/game-characters-people':
         specifier: workspace:^
         version: link:../game-characters-people
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:^
+        version: link:../game-floorplan-residential
       '@adatechnology/game-urban':
         specifier: workspace:^
         version: link:../game-urban

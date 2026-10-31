@@ -18,6 +18,7 @@ toRoomAvatar(avatar, { ...defaultCharacterClips() })
 | `createVehicleProvider(options?)`, `createPlantProvider(options?)` | the providers of `game-urban` with the kit's fleet (`PARKED_VEHICLE_IDS`) and the regional table (`region`, Brazil's) as default | same | same |
 | `defaultPlantPicker(region?)` | `(context, key) => speciesId` | `pickSpecies` of `createPlantProvider` | `game-vegetation-species` |
 | `defaultStoryContent(locale?)`, `defaultProfessionName(id, locale)` | `{ names, ruleset, professionName }` | `createStoryWorld`, `simulateStories`, `createSheet`, `drawSheet` and `createStoriesTestModule` of `game-stories` | `game-characters-people` |
+| `defaultFurnitureCatalog()` | `residentialItems` | `catalog` of `furnitureSpec` of `game-floorplan-three` | `game-floorplan-residential` |
 | `defaultCharacterClips()` | `{ strikeClips, firstPersonClips }` | `toRoomAvatar` of `game-characters-three` | `game-characters-people` |
 
 More presets are added by the tasks of phase 3 (vehicle palettes, furniture).

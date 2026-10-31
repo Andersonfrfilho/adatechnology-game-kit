@@ -1,3 +1,4 @@
+import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import * as THREE from 'three'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
@@ -8,7 +9,7 @@ import { fakeDocument } from './helpers/fake-document'
 
 describe('a toppled bookcase spills its books', () => {
   it('pushed over, the books leave the case as pieces of their own and land apart from it', () => {
-    const made = furnitureSpec(THREE, 'bookcase', { document: fakeDocument })
+    const made = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
     const books = made.spec.parts.filter((part) => part.material === 'paper').map((part) => part.id)
     const scene = new THREE.Scene()
     const world = createDestruction()
@@ -32,7 +33,7 @@ describe('a toppled bookcase spills its books', () => {
   })
 
   it('once on the floor, every book and the case come to rest instead of trembling where they lie', () => {
-    const made = furnitureSpec(THREE, 'bookcase', { document: fakeDocument })
+    const made = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
     const scene = new THREE.Scene()
     const world = createDestruction()
     const renderer = createDestructionRenderer(THREE, { scene, world })

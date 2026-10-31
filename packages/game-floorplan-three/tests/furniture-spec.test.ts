@@ -1,3 +1,4 @@
+import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { checkSpec } from '@adatechnology/game-contracts'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
@@ -6,7 +7,7 @@ import { furnitureSpec, tapSpec } from '../src'
 import { THREE } from './helpers/houses'
 import { fakeDocument } from './helpers/fake-document'
 
-const make = (type: string, o: Parameters<typeof furnitureSpec>[2] = {}) => furnitureSpec(THREE, type, { document: fakeDocument, ...o })
+const make = (type: string, o: Parameters<typeof furnitureSpec>[2] = {}) => furnitureSpec(THREE, type, { catalog: defaultFurnitureCatalog(), document: fakeDocument, ...o })
 
 describe('furnitureSpec', () => {
   it('turns the bookcase into boards, uprights and books at the size of the catalogue', () => {
@@ -120,7 +121,7 @@ describe('tapSpec', () => {
 
 describe('furnitureSpec of a piece with a tap', () => {
   it('the laundry tub gives its basin, its tap and the spout over the basin', () => {
-    const tub = furnitureSpec(THREE, 'laundry_tub', { document: fakeDocument, options: { materials: { plain: 'ceramic' } } })
+    const tub = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCatalog(), document: fakeDocument, options: { materials: { plain: 'ceramic' } } })
     expect(tub.size).toEqual({ w: 0.6, d: 0.55, h: 0.9 })
     expect(tub.spouts).toHaveLength(1)
     const [x, y, z] = tub.spouts[0]!
@@ -131,6 +132,6 @@ describe('furnitureSpec of a piece with a tap', () => {
     expect(y).toBeLessThan(1.1)
     expect(tub.spec.parts.some((p) => p.material === 'steel')).toBe(true)
     expect(tub.spec.parts.some((p) => p.material === 'ceramic')).toBe(true)
-    expect(furnitureSpec(THREE, 'bookcase', { document: fakeDocument }).spouts).toEqual([])
+    expect(furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument }).spouts).toEqual([])
   })
 })
