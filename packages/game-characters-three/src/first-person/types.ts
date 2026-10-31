@@ -28,6 +28,12 @@ export type FirstPersonRig = {
    * elbow and the wrist read on screen. Leave it out to stretch the arm to its full length first.
    */
   reachBend?: readonly [number, number]
+  /**
+   * Holding a tool, the way from the wrist to the elbow (camera space, right arm then left; x right, y up, -z ahead): the elbow is put there, kept inside the view, and the shoulder
+   * behind it out of the view, so the bend of the arm shows on screen (a trigger elbow out to the side, a support elbow out under the forend). Leave it out to keep the
+   * shoulders fixed and bend the elbows toward `elbowPole`.
+   */
+  elbowView?: readonly [Triple, Triple]
   /** From the wrist (where the sleeve ends) to the middle of the palm. */
   wrist: number
   /** The way the elbow bends, for the right arm; mirrored for the left. */
