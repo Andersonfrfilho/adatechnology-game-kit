@@ -13,8 +13,8 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
@@ -126,6 +126,8 @@ const METRICS_INTERVAL_S = 0.25
 /** The carried item in first person: how far the nearest of a small item is held (m), how far the palm sits under it and how closed the fingers are. */
 const CARRY_NEAR = 0.62
 const CARRY_PALM = 0.012
+/** Metres a screw cap rises off its thread at the end of an opening use, which the hand on it follows. */
+const CAP_RISE = 0.03
 const CARRY_GRIP = 0.45
 /** Faster than this (m/s) a change of the player's position is a teleport, not walking: the avatar does not stride for it. The player runs at 6.2. */
 const MAX_STRIDE_SPEED = 10
@@ -1263,7 +1265,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
     avatarState.door = doors.avatarState
     avatarState.itemUse = useItemPlayer
-      ? { id: useItemName, ...useItemPlayer.pose() }
+      ? { id: useItemName, ...useItemPlayer.pose(), ...(twistHand?.gripL !== undefined ? { gripL: twistHand.gripL } : {}) }
       : heldPiece && heldTilt > 0.01
         ? { id: 'tilt', position: [0.2, -0.1, -0.38], rotation: [-heldTilt, 0, 0] }
         : null
@@ -1317,7 +1319,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     if (!avatar?.reach || !thirdActive()) return
-    avatar.reach(push.active || heldPiece ? null : (handSource?.() ?? null))
+    avatar.reach(push.active ? null : heldPiece ? twistHand : (handSource?.() ?? null))
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -2046,6 +2048,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const heldVel: Vec3 = [0, 0, 0]
   let useItemPlayer: ItemUsePlayer | null = null
   let useItemName = ''
+  /** The use asked for while the seal's opening use (`ModuleItemSeal.openUse`) plays: it starts once the item is open. */
+  let afterOpening: string | null = null
+  /** The other hand turning the seal's part during the opening use: the stroke and how far the part is off (0..1). */
+  let twisting: { stroke: TwistStroke; lift: number } | null = null
+  /** The left hand on the part being turned, world space, set by `followHeld` while `twisting`. */
+  let twistHand: HandTargets | null = null
 
   const releaseHeld = (): void => {
     if (heldPiece) {
@@ -2055,6 +2063,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     useItemPlayer?.cancel()
     useItemPlayer = null
+    afterOpening = null
+    twisting = null
+    twistHand = null
     heldEntry = null
     heldPiece = null
     heldTilt = 0
@@ -2179,10 +2190,34 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return { R: { position: [center.x, box.min.y - CARRY_PALM, center.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: CARRY_GRIP }
   }
 
+  /**
+   * The left hand on the top of the held item while `twisting`: palm down on the part, the fingers round it, the wrist turned by the stroke about the item's
+   * axis and lifted with the part as it comes off. The same pose for the first-person arms and the body.
+   */
+  const twistTargets = (root: THREE_NS.Object3D, gripQ: THREE_NS.Quaternion): HandTargets | null => {
+    if (!twisting) return null
+    const { stroke, lift } = twisting
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(root.quaternion)
+    const top = heldLocal
+      .clone()
+      .applyQuaternion(root.quaternion)
+      .add(root.position)
+      .addScaledVector(up, heldSize.y * 0.5 + lift * CAP_RISE + stroke.lift * TWIST_LIFT + CARRY_PALM)
+    // the fingers point to the right and away from the body (the forearm comes in from the left, not in front of the item), then the wrist turns with the stroke (a cap comes off turning to the left seen from above)
+    const knuckles = new THREE.Vector3(0.85, 0, -0.5).normalize().applyQuaternion(gripQ)
+    knuckles.addScaledVector(up, -knuckles.dot(up)).normalize().applyAxisAngle(up, stroke.angle)
+    const side = new THREE.Vector3().crossVectors(knuckles, up).normalize()
+    // the palm sits over the middle of the part, so the middle of the hand is a little back toward the wrist
+    const palm = top.addScaledVector(knuckles, -0.025)
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(knuckles, up, side))
+    return { L: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, gripL: 0.35 + 0.5 * stroke.grip }
+  }
+
   const gripQuat = new THREE.Quaternion()
   const followHeld = (dt: number): void => {
     const piece = heldPiece
     carriedHand = null
+    twistHand = null
     if (!piece) return
     camera.updateMatrixWorld(true)
     const root = piece.root
@@ -2247,7 +2282,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldVel[2] = (root.position.z - pz) / dt
     }
     root.updateMatrixWorld(true)
-    if (avatar?.firstPerson && cameraMode === 'first') carriedHand = carriedTargets(root, gripQuat)
+    twistHand = twistTargets(root, gripQuat)
+    if (avatar?.firstPerson && cameraMode === 'first') {
+      const carried = carriedTargets(root, gripQuat)
+      carriedHand = twistHand ? { ...carried, L: twistHand.L ?? null, gripL: twistHand.gripL ?? 0.8 } : carried
+    }
   }
 
   /** How far (m) from the player an item on the table still counts as at hand (a can opener next to the tin). */
@@ -2319,6 +2358,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         return false
       }
       if (!e.opened) {
+        const opening = seal.byHand && seal.openUse ? itemUseDefs.find((u) => u.id === seal.openUse) : undefined
+        if (opening) {
+          // the other hand turns it open first; what was asked for follows once it is open
+          useItemPlayer = createItemUse(fluids, e.containerId, opening)
+          useItemName = opening.id
+          afterOpening = useId === 'open' ? null : useId
+          return true
+        }
         if (!openSeal(e)) return false
         // a tool opens the tin and that is the whole use; a pull tab opens on the way to the mouth
         if (!seal.byHand || useId === 'open') {
@@ -2348,6 +2395,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
     const before = c?.liters
     useItemPlayer.update(dt)
+    const seal = e?.item?.seal
+    twisting = null
+    if (e && seal?.openUse === useItemName && !e.opened) {
+      twisting = openingProgress(useItemPlayer.def, useItemPlayer.time)
+      seal.turn?.(wrapped.get(e.so.root) ?? e.so.root, { turned: twisting.stroke.turned, lift: twisting.lift })
+      if (twisting.lift >= 1 || useItemPlayer.done) {
+        openSeal(e)
+        twisting = null
+      }
+    }
     if (e && useLiters !== null && before !== undefined) {
       const after = (e.containerId ? fluids.container(e.containerId)?.liters : undefined) ?? before
       e.fluidUsed = (e.fluidUsed ?? 0) + Math.max(0, before - after)
@@ -2361,7 +2418,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       useLiters = null
       useItemPlayer = null
       useItemName = ''
+      const next = afterOpening
+      afterOpening = null
+      if (next && e?.opened) useItem(next)
     }
+  }
+
+  /**
+   * Where the opening use (`ModuleItemSeal.openUse`) is at `time`: the hand's stroke over its `turn` keys (`twistStroke`), then the part rising off until its
+   * `open` key (or its end).
+   */
+  const openingProgress = (def: ItemUseDef, time: number): { stroke: TwistStroke; lift: number } => {
+    const keys = [...def.keys].sort((a, b) => a.t - b.t)
+    const turning = keys.findIndex((k) => k.action === 'turn')
+    const lastTurn = keys.map((k) => k.action).lastIndexOf('turn')
+    const start = turning >= 0 ? keys[turning]!.t : 0
+    const end = lastTurn >= 0 ? (keys[lastTurn + 1]?.t ?? def.duration) : start
+    const openAt = keys.find((k) => k.action === 'open')?.t ?? def.duration
+    const share = end > start ? (time - start) / (end - start) : 1
+    const lift = time <= end ? 0 : openAt > end ? Math.min(1, (time - end) / (openAt - end)) : 1
+    return { stroke: twistStroke(share), lift }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------

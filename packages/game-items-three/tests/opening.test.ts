@@ -1,10 +1,11 @@
 import { createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { TestRoom } from '@adatechnology/game-test-room'
+import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import type { HandTargets } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { buildItem, createItemsTestModule, ITEM_PREFIX, itemOpening, openItem, OPENING_NAME, setOpeningContents } from '../src'
+import { buildItem, createItemsTestModule, ITEM_PREFIX, itemOpening, openItem, OPENING_NAME, setOpeningContents, turnItem } from '../src'
 
 const boxOf = (root: THREE.Object3D, only?: (o: THREE.Object3D) => boolean): THREE.Box3 => {
   root.updateMatrixWorld(true)
@@ -81,6 +82,21 @@ describe('an opened jar or bottle', () => {
     expect(food).toHaveLength(1)
   })
 
+  it('turns the cap round its axis and lifts it off its thread before it is taken off', () => {
+    const { root } = buildItem(THREE, { id: 'water_bottle', category: 'drink', size: [0.07, 0.25, 0.07], model: 'water_bottle' })
+    const lids: THREE.Object3D[] = []
+    root.traverse((o) => o.userData.itemLid && lids.push(o))
+    const lid = lids[0]!
+    const rest = { y: lid.position.y, turn: lid.rotation.y }
+    expect(turnItem(root, 'water_bottle', { turned: 2, lift: 0 })).toBe(true)
+    expect(lid.rotation.y).toBeCloseTo(rest.turn + 2, 9)
+    expect(lid.position.y).toBeCloseTo(rest.y, 9)
+    turnItem(root, 'water_bottle', { turned: 4.8, lift: 1 })
+    expect(lid.rotation.y).toBeCloseTo(rest.turn + 4.8, 9)
+    expect(lid.position.y).toBeGreaterThan(rest.y)
+    expect(turnItem(root, 'canned_beans', { turned: 1, lift: 0 })).toBe(false)
+  })
+
   it('every model drawn with a screw cap marks the cap it takes off', () => {
     for (const id of ['honey_jar', 'home_preserves', 'cooking_oil', 'water_bottle', 'water_jug_5l', 'dirty_water', 'sports_drink', 'coconut_water', 'cachaca', 'communion_wine']) {
       expect(itemOpening(id)?.style, id).toBe('screw_cap')
@@ -147,15 +163,94 @@ describe('opening and eating a can in the room', () => {
     expect(food.every((o) => !o.visible)).toBe(true)
   })
 
-  it('a jar of honey is opened by hand before the first spoonful, then eaten', () => {
+  it('a jar of honey has its cap turned off by the other hand before the first spoonful, then is eaten', () => {
     const r = room()
     const jar = hold(r, 'honey_jar')
+    const lids: THREE.Object3D[] = []
+    jar.root.traverse((o) => o.userData.itemLid && lids.push(o))
+    expect(lids).toHaveLength(1)
+    const lid = lids[0]!
+    const restY = lid.position.y
     expect(r.useItem('eat')).toBe(true)
-    run(r, 1.5)
+    // mid-way through the strokes the cap is turned round, still on the jar, and nothing is open yet
+    run(r, 1.2)
+    expect(lid.rotation.y).toBeGreaterThan(1)
+    expect(lid.visible).toBe(true)
+    expect(jar.root.getObjectByName(OPENING_NAME)).toBeUndefined()
+    expect(texts(r)).not.toMatch(/Abriu Pote de mel/)
+    // the last part of the use lifts it off its thread
+    run(r, 0.85)
+    expect(lid.position.y).toBeGreaterThan(restY)
+    run(r, 0.6)
     expect(texts(r)).toMatch(/Abriu Pote de mel com a mão/)
+    expect(lid.visible).toBe(false)
     expect(jar.root.getObjectByName(OPENING_NAME)).toBeDefined()
-    // the cap comes off first, then the spoonful
+    // what was asked for follows by itself once it is open
+    run(r, 0.5)
     expect(texts(r)).toMatch(/Abriu Pote de mel com a mão[\s\S]*Pote de mel: comer/)
+  })
+
+  it('the other hand turns the cap in strokes on top of the jar, the same in first and third person', () => {
+    const states: RoomFirstPersonState[] = []
+    const reached: (HandTargets | null)[] = []
+    const handR = new THREE.Group()
+    const body: RoomAvatar = {
+      root: new THREE.Group(),
+      update: () => undefined,
+      hand: () => handR,
+      reach: (targets) => void reached.push(targets),
+      firstPerson: { root: new THREE.Group(), update: (_dt, state) => void states.push({ ...state }) },
+    }
+    body.root.add(handR)
+    const r = room()
+    r.setAvatar(body)
+    const jar = hold(r, 'honey_jar')
+    let lid: THREE.Mesh | undefined
+    jar.root.traverse((o) => o.userData.itemLid && (lid = o as THREE.Mesh))
+    expect(r.useItem('eat')).toBe(true)
+    const angles: number[] = []
+    const grips: number[] = []
+    for (let i = 0; i < 100; i++) {
+      r.update(1 / 60)
+      const targets = states.at(-1)!.targets
+      if (i < 25 || !targets?.L) continue
+      // the palm over the cap, measured along the jar's own axis (it tilts with the view): a few centimetres off its middle at most, just above its top
+      const cap = new THREE.Box3().setFromObject(lid!)
+      const middle = cap.getCenter(new THREE.Vector3())
+      const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(jar.root.getWorldQuaternion(new THREE.Quaternion()))
+      lid!.geometry.computeBoundingBox()
+      const capHalf = ((lid!.geometry.boundingBox!.max.y - lid!.geometry.boundingBox!.min.y) * lid!.getWorldScale(new THREE.Vector3()).y) / 2
+      const offset = new THREE.Vector3(...targets.L.position).sub(middle)
+      const along = offset.dot(axis)
+      expect(offset.clone().addScaledVector(axis, -along).length()).toBeLessThan(0.04)
+      expect(along).toBeGreaterThan(capHalf - 0.003)
+      expect(along).toBeLessThan(capHalf + 0.04)
+      // the back of the hand up
+      const back = new THREE.Vector3(0, 1, 0).applyQuaternion(new THREE.Quaternion(...targets.L.quaternion))
+      expect(back.dot(axis)).toBeGreaterThan(0.9)
+      const knuckles = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion(...targets.L.quaternion))
+      angles.push(Math.atan2(knuckles.x, knuckles.z))
+      grips.push(targets.gripL!)
+    }
+    // the wrist goes to and fro (three strokes), closing on the cap and opening between strokes
+    const swing = Math.max(...angles) - Math.min(...angles)
+    expect(swing).toBeGreaterThan(1.2)
+    expect(Math.max(...grips)).toBeGreaterThan(0.8)
+    expect(Math.min(...grips)).toBeLessThan(0.6)
+
+    const third = room()
+    const reachedThird: (HandTargets | null)[] = []
+    const thirdBody: RoomAvatar = { root: new THREE.Group(), update: () => undefined, hand: () => handR, reach: (targets) => void reachedThird.push(targets) }
+    thirdBody.root.add(handR)
+    third.setAvatar(thirdBody)
+    hold(third, 'honey_jar')
+    third.setCameraMode('third')
+    expect(third.useItem('eat')).toBe(true)
+    run(third, 1)
+    const held = reachedThird.filter((targets) => targets?.L)
+    expect(held.length).toBeGreaterThan(20)
+    expect(held.at(-1)!.R).toBeUndefined()
+    expect(held.at(-1)!.gripL).toBeGreaterThan(0)
   })
 
   it('a soda opens by its tab on the way to the mouth; shot through, neither it nor a tin is eaten or drunk', () => {

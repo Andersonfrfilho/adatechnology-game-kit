@@ -11,7 +11,7 @@ import type { ShelfPlan } from './area-layout'
 import { buildItem } from './build-item'
 import type { DrawableItem } from './build-item'
 import { itemContents, SHELL_PART_ID } from './destruction'
-import { itemOpening, openItem, setOpeningContents } from './opening'
+import { itemOpening, openItem, setOpeningContents, turnItem } from './opening'
 import type { ContentsSubject } from './destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from './budgets'
 import { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
@@ -345,6 +345,10 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       ...(openWith ? { openWith } : {}),
       open: (root: unknown) => void (latestTHREE && openItem(latestTHREE, root as THREE_NS.Object3D, model)),
       contents: (root: unknown, share: number) => setOpeningContents(root as THREE_NS.Object3D, share),
+      // a screw cap is turned off by the other hand before the first bite or sip
+      ...(itemOpening(model)?.style === 'screw_cap'
+        ? { openUse: 'unscrew', turn: (root: unknown, state: { readonly turned: number; readonly lift: number }) => void turnItem(root as THREE_NS.Object3D, model, state) }
+        : {}),
     }
     const eaten = def.category === 'food' && fluid.fluid ? { fluid: { ...fluid.fluid, uses: ['eat', 'pour_out'] } } : fluid
     return { ...eaten, seal }

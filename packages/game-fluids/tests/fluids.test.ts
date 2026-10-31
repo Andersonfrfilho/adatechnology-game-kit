@@ -28,7 +28,7 @@ describe('data', () => {
     expect(LIQUIDS.find((l) => l.id === 'beer')!.drink!.effects).toContain('alcohol')
     expect(LIQUIDS.find((l) => l.id === 'fuel')!.drink!.effects).toContain('poison')
     expect(LIQUIDS.find((l) => l.id === 'blood')!.drink!.effects).toContain('disgust')
-    expect(ITEM_USES.map((u) => u.id).sort()).toEqual(['chug', 'close', 'drink', 'eat', 'open', 'pour', 'pour_out', 'sip'])
+    expect(ITEM_USES.map((u) => u.id).sort()).toEqual(['chug', 'close', 'drink', 'eat', 'open', 'pour', 'pour_out', 'sip', 'unscrew'])
     expect(ITEM_USES.find((u) => u.id === 'sip')!.duration).toBe(1.2)
   })
 
@@ -440,5 +440,23 @@ describe('the team defaults', () => {
     const restored = createFluids({ seed: 3 })
     restored.load(world.serialize())
     expect(restored.stains()[0]!.tint).toEqual({ fresh: 1, dry: 2 })
+  })
+})
+
+describe('unscrewing', () => {
+  it('turns the cap during its turn keys and opens the container at its open key, after the turning', () => {
+    const unscrew = ITEM_USES.find((u) => u.id === 'unscrew')!
+    const turn = unscrew.keys.filter((k) => k.action === 'turn')
+    const open = unscrew.keys.find((k) => k.action === 'open')!
+    expect(turn.length).toBeGreaterThan(0)
+    expect(open.t).toBeGreaterThan(Math.max(...turn.map((k) => k.t)))
+    const world = createFluids()
+    world.addContainer({ capacity: 0.3, liquid: 'water', liters: 0.3, shape: { kind: 'cylinder', radius: 0.04, height: 0.1 }, opening: 0.03, closed: true }, { id: 'jar' })
+    const player = createItemUse(world, 'jar', unscrew)
+    while (player.time < open.t - 0.05) player.update(1 / 60)
+    expect(world.container('jar')!.closed).toBe(true)
+    while (!player.done) player.update(1 / 60)
+    expect(world.container('jar')!.closed).toBe(false)
+    expect(world.container('jar')!.liters).toBeCloseTo(0.3, 6)
   })
 })

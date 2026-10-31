@@ -26,6 +26,13 @@ export interface ModuleItemSeal extends SealSpec {
   open?: (root: unknown) => void
   /** Shows what is left in it once open: `share` of what it held (0 eaten up), after each bite or sip. */
   contents?: (root: unknown, share: number) => void
+  /**
+   * The use (an `ItemUseDef` id, such as `unscrew`) a by-hand seal is opened with: it plays before the first bite or sip, the other hand turning the part
+   * during its `turn` keys, and the item opens at its `open` key. Without it a by-hand seal opens at once on the way to the mouth (a pull tab).
+   */
+  openUse?: string
+  /** Draws the part being opened mid-way: `turned` radians round its axis, `lift` 0..1 of the way off (a screw cap leaving its thread). */
+  turn?: (root: unknown, state: { readonly turned: number; readonly lift: number }) => void
 }
 
 /** A place on an item where a body sits or lies (a chair, a sofa cushion, a bed), in the item's own frame, the same shape as a `game-interactables` seat. */
