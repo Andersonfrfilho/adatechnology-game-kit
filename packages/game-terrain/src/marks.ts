@@ -114,6 +114,8 @@ export function createMarkStore(budget: TerrainBudget): MarkStore {
     clear() {
       list.length = 0
       areas.clear()
+      // the numbering starts again with the ground (a loaded snapshot takes it on from its own marks); `version` only grows, the renderers follow it
+      serial = 0
       version++
     },
     load(marks) {

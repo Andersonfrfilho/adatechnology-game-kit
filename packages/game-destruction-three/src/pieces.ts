@@ -172,6 +172,12 @@ export class PieceSystem {
     this.list.length = 0
   }
 
+  /** `clear` and the clock back to 0. */
+  reset(): void {
+    this.clear()
+    this.time = 0
+  }
+
   /** World position of the centre of mass. */
   centerOf(b: PieceBody, out: THREE_NS.Vector3): THREE_NS.Vector3 {
     return out.copy(b.centerV).applyQuaternion(b.root.quaternion).add(b.root.position)

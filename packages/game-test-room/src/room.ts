@@ -1123,6 +1123,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const clearListeners = new Set<() => void>()
+  const resetListeners = new Set<() => void>()
   const clear = (): void => {
     clearEverything()
     for (const listener of [...clearListeners]) listener()
@@ -1153,6 +1154,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     push.end()
     clearEverything()
     for (const id of [...entries.keys()]) removeEntry(id)
+    renderer.reset()
+    for (const listener of [...resetListeners]) listener()
     tools.clear()
     tool = toolState(toolId)
     if (pristineWorld) {
@@ -1167,6 +1170,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pending = []
     strikes = []
     rng = 12345
+    filmRandom.seed = 1
+    groundFireClock = 0
     counter = 0
     slot = 0
     prevVy.clear()
@@ -3063,6 +3068,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     onClear(listener) {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
+    },
+    onReset(listener) {
+      resetListeners.add(listener)
+      return () => resetListeners.delete(listener)
     },
     addObject(itemId, place) {
       return addScenery(itemId, place.position, place.rotationY)
