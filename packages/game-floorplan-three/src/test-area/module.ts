@@ -1,3 +1,4 @@
+import { DEFERRED_PRIORITY } from '@adatechnology/game-contracts'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 
 import { create } from '../create.js'
@@ -68,6 +69,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   let THREE: any = null
   let houseRenderer: any = null
   let houseRendererKey = ''
+  // the breach paint of the current house renderer, run by the host's frame budget when it has one
+  let stopPaintQueue: (() => void) | undefined
   const placed: Placed[] = []
   let time = 0
   let dirty = false
@@ -100,6 +103,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   const rendererFor = (): any => {
     const key = `${settings.quality}|${locale}`
     if (!houseRenderer || houseRendererKey !== key) {
+      stopPaintQueue?.()
       houseRenderer?.dispose?.()
       houseRenderer = create(THREE, {
         locale,
@@ -111,6 +115,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         ...(options.renderer ? { destructionRenderer: options.renderer } : {}),
       })
       houseRendererKey = key
+      stopPaintQueue = host?.defer?.(houseRenderer.deferredQueue(), DEFERRED_PRIORITY['floorplan.breach-paint'])
     }
     return houseRenderer
   }
@@ -565,6 +570,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         globalThis.removeEventListener?.('keydown', onKey)
         for (const remove of removers.splice(0)) remove()
         clearHouses()
+        stopPaintQueue?.()
+        stopPaintQueue = undefined
         houseRenderer?.dispose?.()
         houseRenderer = null
         host = null

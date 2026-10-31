@@ -13,7 +13,7 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -275,7 +275,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
-    eventBudgetMs: 8,
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -2656,6 +2655,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let ownsLoop = false
   // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
   const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: 8 })
+  // the deferred queues share the scheduler's budget: the voices of the sound engine and the events of the destruction renderer
+  const audioQueue = audio?.deferredQueue()
+  if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY['audio.voices'])
+  scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY['destruction.events'])
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   let qualityName: 'low' | 'medium' | 'high' = quality
@@ -3109,6 +3112,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hostListeners.add(listener)
       return () => hostListeners.delete(listener)
     },
+    defer: (queue, queueOptions) => scheduler.budget.register(queue, queueOptions),
     onFrame(update, frameOptions) {
       return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: 'module.frame' })
     },

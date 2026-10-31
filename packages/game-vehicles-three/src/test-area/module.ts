@@ -1,6 +1,6 @@
-import { footprintBlocker } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, footprintBlocker } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
-import { buildVehicleItem, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
+import { buildVehicleItem, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
 
@@ -132,7 +132,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     impl: (root: unknown, id: string) => {
       const r = root as { userData: Record<string, unknown> }
       const kit = r.userData.kit as VehicleKit
-      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key })
+      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
       r.userData.destructible = d
       return d
@@ -379,6 +379,9 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     }
   }
 
+  // one crease queue for every vehicle of the area; a host with a frame budget runs it, any other leaves each vehicle smoothing in its own update
+  const creaseQueue = createCreaseQueue()
+
   const frame = (dt: number): void => {
     for (const [id, entry] of placed) {
       if (!entry.root.parent) {
@@ -487,12 +490,14 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       const stopBlocker = lent.addBlocker?.(blocked)
+      const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY['vehicles.crease'])
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       return () => {
         stopChange?.()
         stopFrame()
         stopBlocker?.()
+        stopCrease?.()
         clearHelpers()
         clearLane()
         host = null
