@@ -53,6 +53,26 @@ contrário, com braços de CPU à parte porque o corpo não tinha dedos. Isso de
   correr passa para a câmera pela metade (`eyeBob` padrão 0,5, por opção).
 - **D5 — A spec 002 é substituída** na parte de braços separados (R1, R3, D2 dela). O resto dela (câmera de ombro, agachar) segue.
 
+## Como a indústria faz (dono, 2026-10-31: "seguir o que as grandes empresas de games fazem")
+
+Há dois caminhos. **Braços separados** (Call of Duty, Battlefield, Halo): um modelo só de braços e arma preso à câmera e outro
+corpo para os outros jogadores e a sombra; dá controle total da arma na tela, mas toda ação é feita duas vezes e o corpo não bate
+com a vista. **Corpo único**, a "true first person" (Escape from Tarkov, ARMA, Mirror's Edge, Cyberpunk 2077, Starfield): a câmera
+fica na cabeça do mesmo corpo que os outros veem. É o caminho desta spec, porque o jogo depende de sentar, deitar, cair, empurrar e
+abrir porta aparecerem na vista.
+
+| Técnica dos estúdios de corpo único | Aqui |
+|---|---|
+| Cabeça escondida só para o dono, com a sombra mantida ("owner no see" + "cast hidden shadow" no Unreal) | D2 |
+| Câmera presa à cabeça, com colisão: recua para não atravessar a parede | D1 |
+| Câmera estabilizada: recebe só parte do balanço da cabeça | D6 (`eyeBob` 0,5) |
+| Mão e arma empurradas para trás contra a parede, sem atravessar (Tarkov, ARMA) | R4 (`keepOutside`) |
+| Agachar e deitar mudam a vista porque mudam o corpo | D1, D6 |
+
+Ponto a decidir na Fase 3: parte desses jogos desenha a arma numa passagem própria, com campo de visão separado, para ela não
+entrar na parede nem deformar na borda da tela. A spec põe a arma na mão do corpo com o empurrão contra a parede (como Tarkov e
+ARMA). As duas opções vão ao dono antes da T3.1.
+
 ## Fora do escopo
 
 - Mira pelas miras da arma (ADS), recarga animada no corpo e câmera de ombro: ficam como estão ou na spec 002.
