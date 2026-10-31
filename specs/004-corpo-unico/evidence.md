@@ -4,6 +4,7 @@
 |---|---|---|---|---|
 | T0.1 | 2026-10-31 | protótipo rodado na sala (Chromium headless), sem erros na página | (este commit) | ver "Medidas da T0.1" abaixo |
 | T1.1 | 2026-10-31 | build ok · typecheck ok · 494 testes · lint ok | 5bd4ecea | `eye()` (soquete sob a cabeça, lido antes do `reach()`), `eyeOffset`, `eyeBob`, `setView` por hooks de render; `rig.neck` não enumerável para não mexer nos goldens; lente medida por vértice, não por caixa |
+| T1.2 | 2026-10-31 | build ok · typecheck ok · 499 testes · lint ok | (este commit) | `reach(targets, view?)` por chamada: `reachBend` (1,35/0,95) limita peito, escápula e esticada pelo ângulo do cotovelo, e `keepOutside` (0,005 m, 0,12 m) recua a mão ao longo do `forward` da câmera antes do IK; sem `view` idêntico; `elbowView` não portado |
 
 ## Medidas da T0.1
 

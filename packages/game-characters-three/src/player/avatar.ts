@@ -18,7 +18,7 @@ import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
-import { createArmReach } from './arm-reach'
+import { createArmReach, type ReachView } from './arm-reach'
 import { createHeadHider } from './head-hiding'
 import type { AvatarViewMode } from './head-hiding'
 
@@ -139,8 +139,9 @@ export type PlayerAvatar = {
   /**
    * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
    * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   * `view` (given on each call, as the camera moves) is for the body seen from its own eyes: the elbows keep their bend and the hands stay out of walls; without it nothing changes.
    */
-  reach(targets: HandTargets | null): void
+  reach(targets: HandTargets | null, view?: ReachView | null): void
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -633,10 +634,10 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     },
     hand: (side) => sockets[side],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
-    reach(targets) {
+    reach(targets, view) {
       if (run || fall > 0) return
       root.updateMatrixWorld(true)
-      armReach.apply(targets)
+      armReach.apply(targets, view)
     },
     on(_type, listener) {
       listeners.add(listener)

@@ -27,14 +27,44 @@ export const ARM_REACH = {
   elbowPole: [0.55, -1, -0.25] as const,
   /** From the wrist joint to the middle of the palm, metres of the body. */
   palm: 0.042,
+  /** In a view the elbow keeps at least this interior bend where a hand is out of reach, right then left (the first-person arms' numbers). */
+  viewBend: [1.35, 0.95] as const,
+  /** In a view a hand stays this far before a surface, metres. */
+  contactMargin: 0.005,
+  /** In a view a hand is never nearer than this to the eye, metres. */
+  contactNearest: 0.12,
+  /** How far in front of the eye a surface is looked for, metres. */
+  contactProbe: 1.4,
+  /** How far a hand reaches forward of its middle at least (the thickness of the palm), and per metre of fingers pointing ahead. */
+  contactPalm: 0.03,
+  /** From the middle of the palm to the fingertips. */
+  contactFingers: 0.085,
 } as const
 
 type Side = 'R' | 'L'
 type ReachArm = { readonly g: THREE_NS.Object3D; readonly el: THREE_NS.Object3D; readonly hand: THREE_NS.Object3D; readonly outward: 1 | -1 }
 
+/**
+ * The eye the hands are seen from, given per call to `apply` (null or none is the body seen from outside: nothing changes). `reachBend` keeps the elbow bent where a hand is out of reach, the hand stopping
+ * short instead of the arm locking; `keepOutside` pulls a hand back so it stays in front of the surface `contact` finds along the camera's forward.
+ */
+export type ReachView = {
+  readonly camera: THREE_NS.Object3D
+  /** The least interior bend of the elbow, radians, right then left. Default `ARM_REACH.viewBend`. */
+  readonly reachBend?: readonly [number, number]
+  readonly keepOutside?: {
+    /** The distance to the surface from `origin` along `direction` within `maxDistance`, or null. */
+    contact(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null
+    /** Default `ARM_REACH.contactMargin`. */
+    readonly margin?: number
+    /** Default `ARM_REACH.contactNearest`. */
+    readonly nearest?: number
+  }
+}
+
 export type ArmReach = {
-  /** Brings the hands to `targets` (world space) over the pose the body already has; null leaves the arms as the pose put them. */
-  apply(targets: HandTargets | null): void
+  /** Brings the hands to `targets` (world space) over the pose the body already has; null leaves the arms as the pose put them. A `view` keeps the elbows bent and the hands out of walls. */
+  apply(targets: HandTargets | null, view?: ReachView | null): void
   /** Puts back what the last `apply` changed, so the pose and its smoothing see only their own numbers next frame. */
   restore(): void
 }
@@ -64,11 +94,19 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   const v = { shoulder: new THREE.Vector3(), elbow: new THREE.Vector3(), wrist: new THREE.Vector3(), palm: new THREE.Vector3(), target: new THREE.Vector3(), pole: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3() }
   const q = { hand: new THREE.Quaternion(), parent: new THREE.Quaternion(), body: new THREE.Quaternion(), local: new THREE.Quaternion(), swing: new THREE.Quaternion(), twist: new THREE.Quaternion(), rest: new THREE.Quaternion() }
   const basis = new THREE.Matrix4()
+  const camera = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion(), inverse: new THREE.Quaternion(), probe: new THREE.Vector3(), forward: new THREE.Vector3(), fingers: new THREE.Vector3(), hand: new THREE.Quaternion() }
+  let bendLimit: readonly [number, number] | null = null
   const yAxis = new THREE.Vector3(0, 1, 0)
 
   const lengthsOf = (arm: ReachArm): { upper: number; fore: number; palm: number } => {
     const scale = arm.g.getWorldScale(v.a).y
     return { upper: arm.el.position.length() * scale, fore: arm.hand.position.length() * scale, palm: ARM_REACH.palm * scale }
+  }
+
+  /** The wrist-to-shoulder distance past which the chest and the shoulder blade move: the arm nearly straight, or with the elbow at the view's bend (law of cosines). */
+  const limitOf = (side: Side, upperLength: number, fore: number): number => {
+    if (!bendLimit) return (upperLength + fore) * ARM_REACH.slack
+    return Math.sqrt(upperLength * upperLength + fore * fore + 2 * upperLength * fore * Math.cos(bendLimit[side === 'R' ? 0 : 1]))
   }
 
   /** The wrist joint and the world orientation of the hand group for a hand pose. */
@@ -82,7 +120,7 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   const turnChest = (pose: HandPose): void => {
     const { upper: up, fore, palm } = lengthsOf(arms.L)
     wristOf('L', pose, palm)
-    const excess = arms.L.g.getWorldPosition(v.shoulder).distanceTo(v.wrist) - (up + fore) * ARM_REACH.slack
+    const excess = arms.L.g.getWorldPosition(v.shoulder).distanceTo(v.wrist) - limitOf('L', up, fore)
     if (excess <= 0) return
     // the support shoulder is at +x of the chest, the front is +z: a turn of -a about y brings it forward
     const chestRadius = Math.hypot(arms.L.g.position.x, arms.L.g.position.z) * arms.L.g.getWorldScale(v.a).y
@@ -91,8 +129,8 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   }
 
   /** Slides the shoulder blade toward a hand still out of reach. */
-  const protract = (arm: ReachArm, length: number): void => {
-    const excess = arm.g.getWorldPosition(v.shoulder).distanceTo(v.wrist) - length * ARM_REACH.slack
+  const protract = (arm: ReachArm, limit: number): void => {
+    const excess = arm.g.getWorldPosition(v.shoulder).distanceTo(v.wrist) - limit
     if (excess <= 0) return
     const parent = arm.g.parent!
     v.b.copy(v.wrist).sub(v.shoulder).normalize().multiplyScalar(Math.min(excess, ARM_REACH.protraction)).add(v.shoulder)
@@ -117,13 +155,14 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     const arm = arms[side]
     const { upper: up, fore, palm } = lengthsOf(arm)
     wristOf(side, pose, palm)
-    protract(arm, up + fore)
+    protract(arm, limitOf(side, up, fore))
     arm.g.getWorldPosition(v.shoulder)
     // the elbow points down and out of the body, whichever way the body faces
     upper.getWorldQuaternion(q.body)
     v.pole.set(ARM_REACH.elbowPole[0] * arm.outward, ARM_REACH.elbowPole[1], ARM_REACH.elbowPole[2]).applyQuaternion(q.body)
     // the elbow keeps a little bend: shorten the line to the wrist rather than lock it
-    const most = Math.sqrt(up * up + fore * fore + 2 * up * fore * Math.cos(ARM_REACH.elbowMin))
+    const lockLimit = Math.sqrt(up * up + fore * fore + 2 * up * fore * Math.cos(ARM_REACH.elbowMin))
+    const most = bendLimit ? Math.min(lockLimit, limitOf(side, up, fore)) : lockLimit
     const least = Math.sqrt(up * up + fore * fore + 2 * up * fore * Math.cos(ARM_REACH.elbowMax))
     const line = v.c.copy(v.wrist).sub(v.shoulder)
     const distance = Math.min(most, Math.max(least, line.length()))
@@ -152,6 +191,23 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     arm.hand.quaternion.copy(limitWrist(q.local.copy(q.parent.invert()).multiply(q.hand)))
   }
 
+  /** Pulls a hand back, along the camera's forward, to the surface in front of it minus what the hand reaches forward and a margin; never nearer than `nearest` to the eye. */
+  const keepOutside = (pose: HandPose, outside: NonNullable<ReachView['keepOutside']>): HandPose => {
+    // the hand in the camera's space: x right, y up, the view looks down -z
+    const place = v.a.set(...pose.position).sub(camera.position).applyQuaternion(camera.inverse)
+    camera.probe.set(place.x, place.y, 0).applyQuaternion(camera.quaternion).add(camera.position)
+    camera.forward.set(0, 0, -1).applyQuaternion(camera.quaternion)
+    const distance = outside.contact([camera.probe.x, camera.probe.y, camera.probe.z], [camera.forward.x, camera.forward.y, camera.forward.z], ARM_REACH.contactProbe)
+    if (distance === null) return pose
+    camera.hand.set(...pose.quaternion).premultiply(camera.inverse)
+    const ahead = Math.max(ARM_REACH.contactPalm, -camera.fingers.set(1, 0, 0).applyQuaternion(camera.hand).z * ARM_REACH.contactFingers)
+    const limit = Math.max(outside.nearest ?? ARM_REACH.contactNearest, distance - ahead - (outside.margin ?? ARM_REACH.contactMargin))
+    if (-place.z <= limit) return pose
+    place.z = -limit
+    place.applyQuaternion(camera.quaternion).add(camera.position)
+    return { ...pose, position: [place.x, place.y, place.z] }
+  }
+
   const save = (): void => {
     saved.twist = upper.rotation.y
     for (const side of ['R', 'L'] as const) {
@@ -165,14 +221,24 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   }
 
   return {
-    apply(targets) {
+    apply(targets, view) {
       if (!targets || (!targets.R && !targets.L)) return
       save()
       applied = true
       upper.updateWorldMatrix(true, true)
-      if (targets.L && targets.R) turnChest(targets.L)
-      if (targets.R) reach('R', targets.R)
-      if (targets.L) reach('L', targets.L)
+      let { R, L } = targets
+      bendLimit = view ? (view.reachBend ?? ARM_REACH.viewBend) : null
+      if (view?.keepOutside) {
+        view.camera.updateWorldMatrix(true, false)
+        view.camera.matrixWorld.decompose(camera.position, camera.quaternion, v.a)
+        camera.inverse.copy(camera.quaternion).invert()
+        if (R) R = keepOutside(R, view.keepOutside)
+        if (L) L = keepOutside(L, view.keepOutside)
+      }
+      if (L && R) turnChest(L)
+      if (R) reach('R', R)
+      if (L) reach('L', L)
+      bendLimit = null
     },
     restore() {
       if (!applied) return

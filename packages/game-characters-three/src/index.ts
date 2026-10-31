@@ -56,6 +56,7 @@ export type { BodySoundRule, CharacterSound, CharacterSoundOptions, CharacterSou
 export { createPlayerAvatar } from './player/avatar'
 export type { AvatarEvent, AvatarItemUsePose, AvatarUpdate, PlayPoseOptions, PlayerAvatar, PlayerAvatarColors, PlayerAvatarOptions, PlayerAvatarSpec } from './player/avatar'
 export type { AvatarViewMode } from './player/head-hiding'
+export type { ReachView } from './player/arm-reach'
 export { toRoomAvatar } from './player/room-avatar'
 export type { RoomAvatarLike, ToRoomAvatarOptions } from './player/room-avatar'
 export { AVATAR_AREA_ID, createAvatarTestModule } from './player/test-module'
