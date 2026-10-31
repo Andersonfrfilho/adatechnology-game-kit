@@ -380,6 +380,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
         // the weapon against a wall asks as often as the laser, on the clock of the simulation (so a fast-forwarded room measures as often per frame)
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
+        ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),

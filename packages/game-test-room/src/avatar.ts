@@ -55,6 +55,8 @@ export interface RoomAvatar {
   update(dt: number, state: RoomAvatarState): void
   /** A socket at a hand: the carried item follows `hand('R')` in third person. */
   hand?(side: 'R' | 'L'): THREE_NS.Object3D
+  /** The joint of a shoulder: in third person the room rests a long gun's stock in the pocket just inside the right one (`ModuleHost.holdFrame`). */
+  shoulder?(side: 'R' | 'L'): THREE_NS.Object3D
   /**
    * The arms of the first-person view. The room shows `root` only in first person (the body only in third), updates it every frame after the modules'
    * frame hooks (so the tool in the hands is already placed) and before the render.

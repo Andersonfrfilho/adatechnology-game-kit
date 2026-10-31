@@ -377,3 +377,27 @@ describe('the support arm under a rifle', () => {
     expect(Math.abs(shoulder.x)).toBeLessThan(0.1)
   })
 })
+
+describe('first-person elbows on a long gun', () => {
+  // the hand targets of the weapons module (game-weapons-three) for a 12-gauge pump, in the space of the eye
+  const shotgun: HandTargets = {
+    R: { position: [0.214, -0.2366, -0.4806], quaternion: [0.4197, 0.4197, -0.5691, 0.5691] },
+    L: { position: [0.2, -0.23, -0.666], quaternion: [1, 0, 0, 0] },
+  }
+  const bendOf = (arms: ReturnType<typeof createFirstPersonArms>, side: 'R' | 'L'): number => {
+    const { shoulder, elbow, wrist } = arms.joints(side)
+    const up = shoulder.clone().sub(elbow).normalize()
+    const down = wrist.clone().sub(elbow).normalize()
+    return Math.PI - Math.acos(Math.max(-1, Math.min(1, up.dot(down))))
+  }
+
+  it('bends both elbows (not a stretched arm) and keeps each palm on its grip', () => {
+    const arms = createFirstPersonArms(THREE)
+    step(arms, 1, { camera: camera(), targets: shotgun, stance: 'hold' })
+    expect(bendOf(arms, 'R')).toBeGreaterThan(1.1)
+    expect(bendOf(arms, 'L')).toBeGreaterThan(0.8)
+    for (const side of ['R', 'L'] as const) {
+      expect(arms.handPose(side).position.distanceTo(new THREE.Vector3(...shotgun[side]!.position))).toBeLessThan(0.02)
+    }
+  })
+})

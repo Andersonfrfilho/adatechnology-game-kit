@@ -1,5 +1,12 @@
 # @adatechnology/game-weapons-three
 
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [3df0096]
+  - @adatechnology/game-items-three@0.5.0
+
 ## 0.10.3
 
 ### Patch Changes

@@ -236,6 +236,12 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const shoulderOf = (sign: 1 | -1, out: THREE_NS.Vector3): THREE_NS.Vector3 => (sign === -1 && rig.shoulderLeft ? out.set(...rig.shoulderLeft) : out.set(rig.shoulder[0] * sign, rig.shoulder[1], rig.shoulder[2]))
   const poleOf = (sign: 1 | -1): THREE_NS.Vector3 => (sign === -1 && rig.elbowPoleLeft ? new THREE.Vector3(...rig.elbowPoleLeft) : new THREE.Vector3(rig.elbowPole[0] * sign, rig.elbowPole[1], rig.elbowPole[2]))
   const kneePole = new THREE.Vector3(...rig.kneePole)
+  /** The shoulder-to-wrist distance past which the shoulder comes forward: the arm with its elbow at `reachBend` (law of cosines), else nearly straight. */
+  const reachOf = (sign: 1 | -1): number => {
+    const bend = rig.reachBend?.[sign === 1 ? 0 : 1]
+    if (bend === undefined) return (rig.upper + rig.fore) * REACH_SLACK
+    return Math.sqrt(rig.upper * rig.upper + rig.fore * rig.fore + 2 * rig.upper * rig.fore * Math.cos(bend))
+  }
   const hip = new THREE.Vector3(...rig.hip)
 
   const euler = new THREE.Euler(0, 0, 0, 'YZX')
@@ -347,8 +353,9 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     fingers.set(1, 0, 0).applyQuaternion(pose.q)
     wristAt.copy(pose.p).addScaledVector(fingers, -rig.wrist * scale)
     shoulderOf(arm.sign, shoulder).add(bobOffset)
-    // an arm that cannot reach brings its shoulder forward, toward the hand, up to `reachShift`: the shoulders are never on screen, so a weapon held out at the length of a rifle stays in the hands
-    const excess = shoulder.distanceTo(wristAt) - (rig.upper + rig.fore) * REACH_SLACK
+    // an arm that cannot reach brings its shoulder forward, toward the hand, up to `reachShift`: the shoulders are never on screen, so a weapon held out at the length of a rifle stays in the
+    // hands, with the elbow still bent by `reachBend`
+    const excess = shoulder.distanceTo(wristAt) - reachOf(arm.sign)
     if (excess > 0 && rig.reachShift > 0) shoulder.addScaledVector(towards.subVectors(wristAt, shoulder).normalize(), Math.min(excess, rig.reachShift))
     solveTwoBone(shoulder, wristAt, rig.upper, rig.fore, poleOf(arm.sign), bone)
     // out of reach, the hand stays on the end of the forearm
