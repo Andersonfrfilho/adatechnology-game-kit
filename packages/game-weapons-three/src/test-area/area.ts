@@ -5,7 +5,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
-import { isLightBudget } from '@adatechnology/game-render-three'
+import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from '../audio'
@@ -388,6 +388,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),
+        ...(isRenderPools(lent.pools) ? { pools: lent.pools } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),

@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
-import type { LightBudget } from '@adatechnology/game-render-three'
+import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
@@ -51,6 +51,8 @@ export interface WeaponFxOptions {
   effects?: EffectSink
   /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light; without it they create lights of their own (deprecated, removed in the next major). */
   lights?: LightBudget
+  /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them; without them each makes its own (deprecated, removed in the next major). */
+  pools?: RenderPools
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */

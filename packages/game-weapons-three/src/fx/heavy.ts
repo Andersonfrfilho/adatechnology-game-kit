@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
-import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
-import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
+import { LIGHT_PRIORITY, geometryKey, materialKey } from '@adatechnology/game-render-three'
+import type { LightBudget, LightHandle, RenderPools } from '@adatechnology/game-render-three'
 import type { ModelKit } from '../models/kit'
 import type { ModelParts } from '../models/types'
 import { buildFlyingRocket } from '../models/launcher-rounds'
@@ -26,6 +26,8 @@ export interface HeavyContext {
   groundAt(x: number, z: number): number
   /** The host's light budget: the rocket asks it for a light while it flies. */
   lights?: LightBudget
+  /** The host's pools: the burning droplets and the ground flames take their geometry and material from them and give them back, so no program is freed and relinked. Without them each makes its own. */
+  pools?: RenderPools
   /** Without a budget: a point light that stays in the scene for good (intensity 0 when idle): the light count is part of every lit material's program key. */
   rocketLight?: THREE_NS.PointLight
 }
@@ -34,6 +36,14 @@ export const ROCKET_LIGHT_NAME = 'rocket-light'
 const ROCKET_LIGHT_COLOR = 0xff9a40
 const ROCKET_LIGHT_INTENSITY = 3
 const ROCKET_LIGHT_DISTANCE = 2.5
+const DROPLET_SPHERE = [0.006, 6, 4] as const
+const DROPLET_COLOR = 0xff7a22
+const FLAME_CONE = [0.02, 0.07, 6] as const
+/** The first two of `flameMaterials`: the ones a ground flame uses. */
+const FLAME_MATERIALS = [
+  { color: 0xff7a22, transparent: true, opacity: 0.9, depthWrite: false },
+  { color: 0xffc040, transparent: true, opacity: 0.9, depthWrite: false },
+] as const
 
 const rocketsInFlight = new WeakMap<THREE_NS.PointLight, number>()
 
@@ -125,22 +135,30 @@ export function flameJet(context: HeavyContext, dt: number, scale: number): void
   const muzzle = context.positionOf(parts.muzzle as THREE_NS.Object3D)
   context.effects.flameJet(muzzle, context.orientation(), dt, scale)
   if (random() < 0.18) {
-    const droplet = new THREE.Mesh(new THREE.SphereGeometry(0.006, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff7a22 }))
+    const pools = context.pools
+    const geometry = pools?.geometries.acquire(geometryKey('sphere', DROPLET_SPHERE), () => new THREE.SphereGeometry(...DROPLET_SPHERE))
+    const material = pools?.materials.acquire(materialKey('MeshBasicMaterial', { color: DROPLET_COLOR }), () => new THREE.MeshBasicMaterial({ color: DROPLET_COLOR }))
+    const droplet = new THREE.Mesh(geometry ?? new THREE.SphereGeometry(...DROPLET_SPHERE), material ?? new THREE.MeshBasicMaterial({ color: DROPLET_COLOR }))
     droplet.position.copy(muzzle).addScaledVector(forward, 0.3 + random() * 0.5)
-    particles.spawn(droplet, forward.clone().multiplyScalar(1.2 * scale).add(new THREE.Vector3(0, 0.2, 0)), { life: 3, radius: 0.003, ownsGeometry: true, onGround: (position) => groundFire(context, position) })
+    const onRemove = pools && geometry && material ? () => { pools.geometries.release(geometry); pools.materials.release(material) } : undefined
+    particles.spawn(droplet, forward.clone().multiplyScalar(1.2 * scale).add(new THREE.Vector3(0, 0.2, 0)), { life: 3, radius: 0.003, ownsGeometry: onRemove === undefined, ...(onRemove ? { onRemove } : {}), onGround: (position) => groundFire(context, position) })
   }
 }
 
 /** Three small flames where a burning droplet landed, flickering for four seconds and smoking. */
 function groundFire(context: HeavyContext, position: THREE_NS.Vector3): void {
-  const { kit, scene, random } = context
+  const { kit, scene, random, pools } = context
   const { THREE } = kit
   const fire = new THREE.Group()
   fire.position.set(position.x, context.groundAt(position.x, position.z) + 0.005, position.z)
   scene.add(fire)
-  const materials = flameMaterials(kit)
+  const materials = pools ? [] : flameMaterials(kit)
+  const pooled: Array<{ geometry: THREE_NS.BufferGeometry; material: THREE_NS.Material }> = []
   const flames = [0, 1, 2].map((index) => {
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 6), (materials[index % 2] as THREE_NS.Material).clone())
+    const own = pools ? undefined : (materials[index % 2] as THREE_NS.Material).clone()
+    const part = pools ? pooledFlame(kit, pools, index) : undefined
+    if (part) pooled.push(part)
+    const flame = new THREE.Mesh(part?.geometry ?? new THREE.ConeGeometry(...FLAME_CONE), part?.material ?? own)
     flame.position.set((random() - 0.5) * 0.04, 0.035, (random() - 0.5) * 0.04)
     fire.add(flame)
     return flame
@@ -155,6 +173,13 @@ function groundFire(context: HeavyContext, position: THREE_NS.Vector3): void {
     },
     () => {
       fire.removeFromParent()
+      if (pools) {
+        for (const { geometry, material } of pooled) {
+          pools.geometries.release(geometry)
+          pools.materials.release(material)
+        }
+        return
+      }
       flames.forEach((flame) => {
         flame.geometry.dispose()
         ;(flame.material as THREE_NS.Material).dispose()
@@ -162,4 +187,13 @@ function groundFire(context: HeavyContext, position: THREE_NS.Vector3): void {
       materials.forEach((material) => material.dispose())
     },
   )
+}
+
+/** The geometry and the material one ground flame shares with every other (the flame only changes its scale). */
+function pooledFlame(kit: ModelKit, pools: RenderPools, index: number): { geometry: THREE_NS.BufferGeometry; material: THREE_NS.Material } {
+  const { THREE } = kit
+  const geometry = pools.geometries.acquire(geometryKey('cone', FLAME_CONE), () => new THREE.ConeGeometry(...FLAME_CONE))
+  const flame = FLAME_MATERIALS[index % 2] as (typeof FLAME_MATERIALS)[number]
+  const material = pools.materials.acquire(materialKey('MeshBasicMaterial', flame), () => new THREE.MeshBasicMaterial(flame))
+  return { geometry, material }
 }

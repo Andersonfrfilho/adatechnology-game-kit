@@ -25,7 +25,7 @@ import { createEffects } from './effects'
 import { createLayers } from './layers'
 import { limitSupportSpan, placeOnBody } from './body-hold'
 import type { FxLayers } from './layers'
-import type { LightBudget } from '@adatechnology/game-render-three'
+import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRocketLight, flameJet, launchRocket, type HeavyContext } from './heavy'
 import { createParticles } from './particles'
 import { createModelRig } from './rig'
@@ -82,6 +82,8 @@ export interface ViewmodelOptions {
   flyRocket?: boolean
   /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light. Without it they create lights of their own (deprecated, removed in the next major). */
   lights?: LightBudget
+  /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them. Without them each makes its own (deprecated, removed in the next major). */
+  pools?: RenderPools
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -218,6 +220,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     every: (seconds, step, done) => void tasks.push({ delay: 0, seconds, elapsed: 0, step, done }),
     groundAt,
     ...(options.lights ? { lights: options.lights } : {}),
+    ...(options.pools ? { pools: options.pools } : {}),
     ...(rocketLight ? { rocketLight } : {}),
   })
 
