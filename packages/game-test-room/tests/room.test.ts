@@ -274,8 +274,8 @@ describe('ui', () => {
     const chairButton = [...container.querySelectorAll('button')].find((b) => b.textContent === 'Wooden chair')!
     chairButton.click()
     expect(room.spawned().map((s) => s.itemId)).toEqual(['chair'])
-    expect(container.querySelector('.tr-logbody')!.textContent).toContain('Spawned Wooden chair')
     room.update(0.2)
+    expect(container.querySelector('.tr-logbody')!.textContent).toContain('Spawned Wooden chair')
     expect(container.querySelector('.tr-tool')!.textContent).toContain('Hand')
     room.dispose()
   })
@@ -286,9 +286,13 @@ describe('ui', () => {
     const room = createTestRoom({ THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
     for (let i = 0; i < 260; i++) room.log.add({ channel: 'action', type: 'x', text: `line ${i}` })
     const body = container.querySelector('.tr-logbody')!
+    room.update(0.016)
     expect(body.childElementCount).toBe(200)
+    expect(body.textContent).toContain('line 259')
+    expect(body.textContent).not.toContain('line 59')
     room.log.coalesce('k', { channel: 'event', type: 'melt', text: 'melting 10%' })
     room.log.coalesce('k', { channel: 'event', type: 'melt', text: 'melting 20%' })
+    room.update(0.016)
     expect(body.textContent).toContain('melting 20%')
     expect(body.textContent).not.toContain('melting 10%')
     room.dispose()
@@ -472,5 +476,18 @@ describe('how long what breaks off stays on screen (debris)', () => {
 
   it('tunes the dust and the other sprites by kind', () => {
     expect(() => makeRoom({ debris: { particles: { dust: { life: [10, 30] } } } })).not.toThrow()
+  })
+
+  it('a burst of log lines waits for the frame and shows only the last ones', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
+    const body = container.querySelector('.tr-logbody')!
+    for (let i = 0; i < 1000; i++) room.log.add({ channel: 'event', type: 'boom', text: `boom ${i}` })
+    expect(body.childElementCount).toBe(0)
+    room.update(0.016)
+    expect(body.childElementCount).toBe(200)
+    expect(body.lastElementChild!.textContent).toContain('boom 999')
+    room.dispose()
   })
 })

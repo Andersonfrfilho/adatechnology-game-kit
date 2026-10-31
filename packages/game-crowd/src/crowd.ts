@@ -10,7 +10,7 @@ import { createRng } from './rng'
 import { AGENT_FIELDS, createStore } from './store'
 import type { CrowdStore } from './store'
 import { STATE } from './types'
-import type { CrowdDamageResult, CrowdEventMap, CrowdEventName, CrowdHit, CrowdPack, CrowdTarget, CrowdType } from './types'
+import type { CrowdDamageResult, CrowdEventMap, CrowdEventName, CrowdHit, CrowdPack, CrowdTraits, CrowdTarget, CrowdType } from './types'
 
 export type CrowdNumbers = typeof defaults.numbers
 export type CrowdBand = { readonly max: number; readonly dt: number }
@@ -140,6 +140,8 @@ export type PlayerCrowdLike = {
 }
 
 const clamp = (v: number, a: number, b: number): number => (v < a ? a : v > b ? b : v)
+// one shared empty set: the update loop reads the traits of every agent every frame
+const NO_TRAITS: CrowdTraits = {}
 const TAU_APPROX = 6.2832
 const TURN = 6.28
 
@@ -238,7 +240,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     return list[0]!
   }
   const T = (i: number): CrowdType => types[Z.type[i]!]!
-  const traits = (i: number) => T(i).traits ?? {}
+  const traits = (i: number): CrowdTraits => T(i).traits ?? NO_TRAITS
 
   // ----- spawn and removal -----
   const special = (i: number): void => {
@@ -545,7 +547,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     if (Z.attackTimer[i]! > 0) return
     Z.attackTimer[i] = N.attackEvery
     const C = T(i)
-    const tr = C.traits ?? {}
+    const tr = C.traits ?? NO_TRAITS
     if (tr.heavySwing && R() < tr.heavySwing.chance) {
       Z.state[i] = STATE.SWING
       Z.stateTimer[i] = tr.heavySwing.windUp
@@ -688,7 +690,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   // ----- abilities (G 67265 zAbility). true: it took care of the movement -----
   const ability = (i: number, d: number, dx: number, dz: number, tdt: number, b: number, alive: boolean): boolean => {
     const C = T(i)
-    const tr = C.traits ?? {}
+    const tr = C.traits ?? NO_TRAITS
     const st = Z.state[i]
     const P = target
     // dormant: the stalker wakes under 3 m or with the target's back turned within 10 m; the drowned rises at 5 m
@@ -1011,7 +1013,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
       Z.band[i] = b
       B[b as 0 | 1 | 2 | 3]++
       const C = T(i)
-      const tr = C.traits ?? {}
+      const tr = C.traits ?? NO_TRAITS
       if (Z.state[i] === STATE.STUNNED) {
         Z.stateTimer[i]! -= dt
         if (Z.stateTimer[i]! <= 0) Z.state[i] = STATE.CHASE
