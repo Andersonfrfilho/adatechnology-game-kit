@@ -89,7 +89,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf(), onFrame: () => breach.flush() });
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
-        D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; };
+        D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; breach.release(); };
         // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world, id, spec) => {
@@ -108,7 +108,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
             // a host that never calls `update` still gets the damage painted
             if (!fallback && typeof setTimeout === 'function') fallback = setTimeout(() => { fallback = null; breach.flush(Infinity); }, FOLLOW_FLUSH_FALLBACK_MS);
           });
-          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); }, update: () => { breach.flush(); } };
+          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); breach.release(); }, update: () => { breach.flush(); } };
         };
         D.piece = id => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);

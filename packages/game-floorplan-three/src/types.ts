@@ -1,3 +1,4 @@
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { Messages } from './locale.js'
 
 /** A part of the house a hit can damage (door, window, glass, tank...): the game reads `hp`. */
@@ -134,6 +135,8 @@ export interface HouseRenderer {
   roomLightMask(material: any): void
   lighting(options?: any): any
   setNight(night: boolean): void
+  /** The painting of the damaged walls of every house as a `DeferredQueue` for a shared frame budget; `budget.register` attaches it and `flush()` stops painting from `onFrame`. */
+  deferredQueue(): DeferredQueue
   cars: { model(kind: string, seed?: number): any; group(...args: any[]): any; info(kind: string, seed?: number): any }
   dispose(): void
 }

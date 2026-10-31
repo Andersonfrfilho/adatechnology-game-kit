@@ -1,3 +1,4 @@
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { Kernel, Shared } from '../kernel-types.js'
 
 /** The pieces of a house the destruction renderer draws; the breach view reads them from the structure the house assembled. */
@@ -68,6 +69,26 @@ const MAX_FLAKES = 64
  */
 export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   const { THREE, fragmentMaterial, invalidate, invalidateShadow } = K
+
+  /** The painting of every house of this renderer, as one queue for a frame budget; `attached` is set by the budget and read by every view's `flush()`. */
+  const paintState = { attached: false }
+  const paintQueues = new Set<DeferredQueue>()
+  const paintQueue: DeferredQueue = {
+    id: 'floorplan.breach-paint',
+    pending: () => { let n = 0; for (const q of paintQueues) n += q.pending(); return n },
+    run(deadline, clock) {
+      let ran = 0
+      for (const q of [...paintQueues]) {
+        if (q.pending() === 0) continue
+        if (ran > 0 && clock() >= deadline) break
+        ran += q.run(deadline, clock)
+      }
+      return ran
+    },
+    flush() { for (const q of [...paintQueues]) q.flush() },
+    attach() { paintState.attached = true },
+    detach() { paintState.attached = false },
+  }
 
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
@@ -410,8 +431,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** Repaints the walls whose damage changed since the last call, until the budget is spent; the rest wait for the next call. Returns how many walls wait. */
-    function flush(budgetMs: number = paintBudgetMs): number {
+    function flush(budgetMs?: number): number {
       if (dirty.size === 0) return 0
+      // a frame budget owns the painting: only an explicit budget (the emergency flush, LOD, statistics) paints from here
+      if (budgetMs === undefined && paintState.attached) return dirty.size
+      budgetMs ??= paintBudgetMs
       const deadline = performance.now() + budgetMs
       for (const view of dirty) {
         dirty.delete(view)
@@ -421,6 +445,26 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       invalidate(); invalidateShadow()
       return dirty.size
     }
+
+    const queue: DeferredQueue = {
+      id: 'floorplan.breach-paint',
+      pending: () => dirty.size,
+      run(deadline, clock) {
+        let ran = 0
+        for (const view of dirty) {
+          dirty.delete(view)
+          paint(view)
+          ran++
+          if (clock() >= deadline) break
+        }
+        if (ran > 0) { invalidate(); invalidateShadow() }
+        return ran
+      },
+      flush() { flush(Infinity) },
+      attach() { paintState.attached = true },
+      detach() { paintState.attached = false },
+    }
+    paintQueues.add(queue)
 
     function dispose(view: any) {
       dirty.delete(view)
@@ -446,6 +490,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
        * throws the bits and leaves its patch out. Call it once the spec is known.
        */
       claim(): void {
+        paintQueues.add(queue)
         for (const q of opts.spec()?.parts ?? []) {
           if (!q.units) continue
           const host = hostOf(q.id)
@@ -496,6 +541,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         dropped.length = 0
       },
       flush,
+      /** Takes this house's painting out of the renderer's queue (the house goes away); `claim` puts it back. */
+      release(): void { paintQueues.delete(queue) },
+      /** The painting of this house alone. */
+      deferredQueue: (): DeferredQueue => queue,
       /** The wall has damage drawn. */
       has(partId: string): boolean { return views.has(partId) },
       /** Walls with damage drawn, units out of them, craters shots broke through units that stay, and units laid bare at the edge of the cuts. */
@@ -509,5 +558,5 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
   }
 
-  Object.assign(K, { createBreachView })
+  Object.assign(K, { createBreachView, breachPaintQueue: paintQueue })
 }
