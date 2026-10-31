@@ -88,7 +88,7 @@ A regra de base é que a cadeia nasce de regras locais e nunca de um cálculo gl
 
 - **Corpos:**
   - cápsulas 2D com impulso, contato pela grade espacial e estados de equilíbrio (em pé, cambaleando, caído, levantando);
-  - o caído vira obstáculo de tropeço;
+  - a pressão acumulada derruba alguns, e os caídos viram degrau: os de trás sobem por cima (monte em qualquer lugar, não só no muro);
   - a onda anda um salto por passo fixo.
 - **Explosões:** cada elo da cadeia (`chain`, `leak`) tem atraso físico e passa pelo orçamento por quadro.
 - **Física rígida de verdade:** se um dia vier (Rapier/WASM), entra só no pool limitado de corpos arremessados perto do jogador.

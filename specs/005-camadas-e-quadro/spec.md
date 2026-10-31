@@ -34,4 +34,6 @@ por nenhum teste, e por isso já se furaram em pelo menos 15 dependências. Trê
 
 - Trocar three.js de versão. Só se fecha a faixa em `^0.160.0`.
 - Reescrever conteúdo dos times. Só muda por onde ele entra.
-- Mudar o comportamento de qualquer simulação. Toda mudança aqui é estrutural, e os goldens ficam iguais.
+- Mudar o comportamento de qualquer simulação que já existe. Toda mudança fora da Fase 4b é estrutural, e os goldens ficam iguais.
+  A Fase 4b é a exceção: ela acrescenta um comportamento novo (contato, quedas, monte e reação em cadeia) atrás de uma opção, e os
+  goldens de hoje continuam valendo com ela desligada.

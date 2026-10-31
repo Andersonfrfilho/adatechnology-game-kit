@@ -110,16 +110,25 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
   - granadas, RPG, molotov e tiro no meio da horda.
   - Orçamentos: os de sempre (0 quadros acima de 33,4 ms, p99 ≤ 20 ms e 0 shaders na GPU; no CI, contadores) e mais **quedas
     em cadeia > 0**, para que o teste também prove que a reação acontece.
-- T4b.6 Horda densa sem explosão, que é o estado normal: os corpos se esbarram o tempo todo.
+- T4b.6 Horda densa sem explosão, que é o estado normal: os corpos se esbarram o tempo todo, derrubam alguns e sobem em cima deles.
   - Contato pela grade (vizinhos da célula e das 8 em volta) com amortecimento e 1 a 2 iterações por passo.
-  - Empurrão normal não derruba; a pressão acumulada empurra a porta e alimenta a pilha no muro.
-  - Testes de estabilidade:
+  - **Queda por pressão:** a chance de cair cresce com a pressão acumulada em volta e depende do tipo (peso, força) e do
+    equilíbrio. Empurrão leve quase não derruba; a horda espremida derruba alguns.
+  - **Monte em qualquer lugar:** a pilha deixa de ser só do muro. Os corpos caídos viram uma altura por célula; os de trás andam
+    e sobem por cima, e quem está embaixo leva dano de pisoteio.
+  - **O monte se desfaz:** os caídos levantam quando a pressão alivia, o monte desaba se a base cai, e a explosão espalha o
+    monte (o `pileBlast` passa a valer em qualquer lugar). A altura do monte tem teto, configurável.
+  - A pressão acumulada empurra a porta e alimenta o monte no muro.
+  - Testes de estabilidade e comportamento:
     - sobreposição entre corpos abaixo da tolerância;
     - a energia da multidão parada não cresce em 60 s;
-    - zero quedas só por empurrão normal;
-    - a porta cede pela pressão.
+    - sem pressão, zero quedas;
+    - com a horda espremida contra o muro, uma fração cai e outros ficam acima do chão (subiram no monte);
+    - a altura do monte respeita o teto;
+    - a porta cede pela pressão;
+    - a mesma semente dá o mesmo resultado.
   - Fase `dense_horde` no `perf.mjs`: 2.000 zumbis espremidos contra um muro e uma porta por 30 s, sem explosão, dentro dos
-    orçamentos.
+    orçamentos, com quedas por pressão > 0 e agentes no monte > 0.
   - Se não couber, a próxima etapa é a horda num Web Worker (os vetores tipados do `game-crowd` já permitem); a medição decide.
 - Aceite da fase: os testes da T4b.2 e da T4b.6 passam, e as fases `dense_horde` e `chain_horde` passam no `perf.mjs` em
   `PERF_MODE=gpu` e no CI.
