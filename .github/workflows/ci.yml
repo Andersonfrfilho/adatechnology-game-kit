@@ -246,10 +246,28 @@ jobs:
           path: shapes-bench-run.json
           if-no-files-found: ignore
 
+  # Layer rules and package.json policy (spec 005). Both read sources only, so no build is needed.
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # fails on a layer violation that is not in .dependency-cruiser-known-violations.json
+      - run: pnpm check:layers
+
+      - run: pnpm check:packages
+
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench]
+    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench, architecture]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
