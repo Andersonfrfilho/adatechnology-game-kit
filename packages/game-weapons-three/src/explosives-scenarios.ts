@@ -136,7 +136,7 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         expect(near.outward > far.outward, fillText(text.push_falloff, { what: things[kind] ?? kind, near: near.outward.toFixed(2), nearDistance: near.distance.toFixed(1), far: far.outward.toFixed(2), farDistance: far.distance.toFixed(1) }), { near: near.outward, far: far.outward })
       }
       for (const row of reached.filter((entry) => entry.kind === 'zombie' || entry.kind === 'survivor')) {
-        expect(row.outward >= MOVED, fillText(text.push_person, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: row.outward.toFixed(2) }), { row })
+        expect(row.outward >= MOVED, fillText(text.push_person, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: row.outward.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward } })
       }
       const table = reached.find((row) => HEAVY_ITEMS.includes(row.kind))
       if (table) expect(table.moved >= MOVED, fillText(text.push_heavy, { what: things[table.itemId] ?? table.itemId, moved: table.moved.toFixed(2) }), { table })

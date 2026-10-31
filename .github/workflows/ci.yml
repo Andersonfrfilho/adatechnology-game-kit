@@ -130,6 +130,7 @@ jobs:
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
   # In shards, each a job of its own: one job with every area reached the 40 min limit. A new area goes in the shard with the least time.
+  # An entry `area:part` runs one part of that area's check (TEST_ROOM_PART in examples/test-room/test.mjs: the scenarios in two halves, the views, the hands).
   examples:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -137,7 +138,10 @@ jobs:
       fail-fast: false
       matrix:
         areas:
-          - test-room
+          - test-room:scenarios:1/2
+          - test-room:scenarios:2/2
+          - test-room:views
+          - test-room:hands
           - interactables-test-area
           - floorplan-test-area vfx-test-area weapons-test-area characters-test-area
           - animals-test-area vehicles-test-area vegetation-test-area urban-test-area
@@ -165,15 +169,19 @@ jobs:
       - name: Build the examples
         run: |
           node examples/test-room/build.mjs
-          for area in ${{ matrix.areas }}; do
+          for entry in ${{ matrix.areas }}; do
+            area="${entry%%:*}"
             if [ "$area" != test-room ]; then node "examples/$area/build.mjs"; fi
           done
 
       - name: Check the examples
         run: |
-          for area in ${{ matrix.areas }}; do
-            echo "::group::$area"
-            node "examples/$area/test.mjs"
+          for entry in ${{ matrix.areas }}; do
+            area="${entry%%:*}"
+            part=""
+            if [ "$entry" != "$area" ]; then part="${entry#*:}"; fi
+            echo "::group::$entry"
+            TEST_ROOM_PART="$part" node "examples/$area/test.mjs"
             echo "::endgroup::"
           done
 
