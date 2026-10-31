@@ -1,5 +1,6 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
 import type { Kit } from './types'
+import { TRI_BLOCK, triIndexOf } from './tri-index'
 
 export function installZoneDecals(kit: Kit): void {
   const THREE = kit.THREE
@@ -187,6 +188,9 @@ export function installZoneDecals(kit: Kit): void {
       (g.index ? g.index.count : pos.count) / 3 >= PROXY_MIN_TRIANGLES
     )
   }
+  /* scratch of `proxyIn`, grown to the biggest mesh seen */
+  let _keep = new Uint32Array(0)
+  let _box = new Float32Array(0)
   function proxyIn(o: any, Mw: any, R: any) {
     /* the region (vehicle frame) as a box in the frame of the mesh */
     _pm.copy(o.matrixWorld).invert().multiply(Mw)
@@ -200,40 +204,50 @@ export function installZoneDecals(kit: Kit): void {
       }
     }
     const g = o.geometry
-    const P = g.attributes.position.array
+    const ti = triIndexOf(g)
+    if (!ti) return null
     const ix = g.index ? g.index.array : null
-    const n = ix ? ix.length : P.length / 3
-    const keep = new Uint32Array(n - (n % 3))
+    const boxes = ti.boxes
+    const blocks = ti.blocks
+    if (_keep.length < ti.triangles * 3) {
+      _keep = new Uint32Array(ti.triangles * 3)
+      _box = new Float32Array(ti.triangles * 6)
+    }
+    const keep = _keep
+    const box = _box
     let nk = 0
-    for (let t = 0; t + 2 < n; t += 3) {
-      const a = (ix ? ix[t] : t) * 3
-      const b = (ix ? ix[t + 1] : t + 1) * 3
-      const d = (ix ? ix[t + 2] : t + 2) * 3
-      let out = false
-      for (let k = 0; k < 3 && !out; k++) {
-        const u = P[a + k]
-        const v = P[b + k]
-        const w = P[d + k]
-        out = Math.max(u, v, w) < lo[k] || Math.min(u, v, w) > hi[k]
-      }
-      if (!out) {
-        keep[nk++] = ix ? ix[t] : t
-        keep[nk++] = ix ? ix[t + 1] : t + 1
-        keep[nk++] = ix ? ix[t + 2] : t + 2
+    let nt = 0
+    for (let blk = 0, t0 = 0; t0 < ti.triangles; blk++, t0 += TRI_BLOCK) {
+      const j = blk * 6
+      if (blocks[j + 3]! < lo[0]! || blocks[j]! > hi[0]! || blocks[j + 4]! < lo[1]! || blocks[j + 1]! > hi[1]! || blocks[j + 5]! < lo[2]! || blocks[j + 2]! > hi[2]!) continue
+      const t1 = Math.min(ti.triangles, t0 + TRI_BLOCK)
+      for (let t = t0; t < t1; t++) {
+        const q = t * 6
+        if (boxes[q + 3]! < lo[0]! || boxes[q]! > hi[0]! || boxes[q + 4]! < lo[1]! || boxes[q + 1]! > hi[1]! || boxes[q + 5]! < lo[2]! || boxes[q + 2]! > hi[2]!) continue
+        keep[nk++] = ix ? ix[t * 3]! : t * 3
+        keep[nk++] = ix ? ix[t * 3 + 1]! : t * 3 + 1
+        keep[nk++] = ix ? ix[t * 3 + 2]! : t * 3 + 2
+        for (let k = 0; k < 6; k++) box[nt * 6 + k] = boxes[q + k]!
+        nt++
       }
     }
     if (!nk) return null
     /* the triangles of the region (kept) and the ones a single ray needs (scratch, narrowed again in castAt) share one index buffer */
     const kept = keep.slice(0, nk)
-    const box = new Float32Array((kept.length / 3) * 6)
-    for (let t = 0, j = 0; t < kept.length; t += 3, j += 6) {
-      const a = kept[t] * 3
-      const b = kept[t + 1] * 3
-      const d = kept[t + 2] * 3
+    const keptBox = box.slice(0, nt * 6)
+    /* the kept triangles keep the order of the mesh, so blocks of them stay compact: a ray skips whole blocks */
+    const keptBlocks = new Float32Array(Math.ceil(nt / TRI_BLOCK) * 6)
+    for (let blk = 0; blk * TRI_BLOCK < nt; blk++) {
+      const b = blk * 6
       for (let k = 0; k < 3; k++) {
-        box[j + k] = Math.min(P[a + k], P[b + k], P[d + k])
-        box[j + 3 + k] = Math.max(P[a + k], P[b + k], P[d + k])
+        keptBlocks[b + k] = Infinity
+        keptBlocks[b + 3 + k] = -Infinity
       }
+      for (let t = blk * TRI_BLOCK, t1 = Math.min(nt, t + TRI_BLOCK); t < t1; t++)
+        for (let k = 0; k < 3; k++) {
+          if (keptBox[t * 6 + k]! < keptBlocks[b + k]!) keptBlocks[b + k] = keptBox[t * 6 + k]!
+          if (keptBox[t * 6 + 3 + k]! > keptBlocks[b + 3 + k]!) keptBlocks[b + 3 + k] = keptBox[t * 6 + 3 + k]!
+        }
     }
     const pg = new THREE.BufferGeometry()
     pg.setAttribute('position', g.attributes.position)
@@ -245,7 +259,8 @@ export function installZoneDecals(kit: Kit): void {
     proxy.layers.mask = o.layers.mask
     proxy.proxyOf = o
     proxy.kept = kept
-    proxy.keptBox = box
+    proxy.keptBox = keptBox
+    proxy.keptBlocks = keptBlocks
     return proxy
   }
   /* the triangles of a proxy whose box meets the box of the ray (in the frame of the mesh): the rest cannot be hit by it */
@@ -266,13 +281,21 @@ export function installZoneDecals(kit: Kit): void {
     const hi2 = Math.max(z0, _pv.z) + 1e-4
     const K = proxy.kept
     const X = proxy.keptBox
+    const KB = proxy.keptBlocks
+    const nt = K.length / 3
     const dst = proxy.geometry.index.array
     let m = 0
-    for (let t = 0, j = 0; t < K.length; t += 3, j += 6) {
-      if (X[j + 3] < lo0 || X[j] > hi0 || X[j + 4] < lo1 || X[j + 1] > hi1 || X[j + 5] < lo2 || X[j + 2] > hi2) continue
-      dst[m++] = K[t]
-      dst[m++] = K[t + 1]
-      dst[m++] = K[t + 2]
+    for (let blk = 0, t0 = 0; t0 < nt; blk++, t0 += TRI_BLOCK) {
+      const b = blk * 6
+      if (KB[b + 3] < lo0 || KB[b] > hi0 || KB[b + 4] < lo1 || KB[b + 1] > hi1 || KB[b + 5] < lo2 || KB[b + 2] > hi2) continue
+      const t1 = Math.min(nt, t0 + TRI_BLOCK)
+      for (let t = t0; t < t1; t++) {
+        const j = t * 6
+        if (X[j + 3] < lo0 || X[j] > hi0 || X[j + 4] < lo1 || X[j + 1] > hi1 || X[j + 5] < lo2 || X[j + 2] > hi2) continue
+        dst[m++] = K[t * 3]
+        dst[m++] = K[t * 3 + 1]
+        dst[m++] = K[t * 3 + 2]
+      }
     }
     proxy.geometry.setDrawRange(0, m)
   }

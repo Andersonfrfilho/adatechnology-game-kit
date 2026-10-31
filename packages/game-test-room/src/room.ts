@@ -61,7 +61,7 @@ type Vars = Record<string, string | number>
 interface Entry {
   so: SpawnedObject
   /** What draws the object's own damage on it (`SceneryObject.follow`). */
-  follower?: { restore?(): void; dispose?(): void } | null
+  follower?: { restore?(): void; dispose?(): void; update?(): void } | null
   item?: TestRoomItem
   name: string
   arena: boolean
@@ -245,7 +245,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
   const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine())
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
   const playSound = (key: string, point: Vec3, volume: number): void => {
     destructionSound?.onSound(key, point, volume)
@@ -274,6 +274,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
+    eventBudgetMs: 8,
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -2712,6 +2713,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
     vfx.update(dt)
@@ -2773,6 +2775,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hudAcc = 0
       ui.hud(hudState())
     }
+    ui?.flushLog()
     metricsAcc += dt
     if (metricsAcc >= METRICS_INTERVAL_S && ui) {
       metricsAcc = 0
@@ -3162,14 +3165,35 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const LIGHTS_CHECK_MS = 250
 
+  const pinnedPrograms = new WeakSet<object>()
+  /** Holds one extra use on every program: three.js frees a program when the last material using it is disposed, and effects that make and dispose a material per particle would link it again on every burst. */
+  const pinPrograms = (): void => {
+    for (const program of (gl.info?.programs ?? []) as unknown as { usedTimes: number }[]) {
+      if (pinnedPrograms.has(program)) continue
+      pinnedPrograms.add(program)
+      program.usedTimes++
+    }
+  }
+
   /** Renders the scene once with throwaway meshes of the materials that decals, effects and liquids make on demand (every light count is another set of programs), so that the first shot does not build them. */
   const warmUp = (): void => {
     const probes = [renderer.warmUpProbes(), vfx.warmUpProbes(), fluidView.warmUpProbes()]
     const groups = probes.map((probe) => probe.group as THREE_NS.Object3D)
+    const spriteMap = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
+    spriteMap.needsUpdate = true
+    const spriteProbes = [true, false].map((fog) => {
+      const probe = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap, transparent: true, fog }))
+      probe.frustumCulled = false
+      return probe
+    })
+    groups.push(...spriteProbes)
     scene.add(...groups)
     gl.render(scene, camera)
+    pinPrograms()
     scene.remove(...groups)
     for (const probe of probes) probe.dispose()
+    for (const probe of spriteProbes) probe.material.dispose()
+    spriteMap.dispose()
   }
 
   /** Draws a throw-away blast and a fire (their particle materials and lights make the materials recompile the first time they appear), then clears them: nothing stays in the world, the log or the sound. */
@@ -3277,8 +3301,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const restored = kept ?? (typeof seed === 'string' ? seed : undefined)
       if (restored !== undefined) bench.restore(restored)
       benches.set(mod.id, bench)
+      let reportedState = bench.encode()
       bench.watch(() => {
-        options.bench?.onChange?.(mod.id, bench.encode())
+        const encoded = bench.encode()
+        if (encoded !== reportedState) {
+          reportedState = encoded
+          options.bench?.onChange?.(mod.id, encoded)
+        }
         if (activeBench === mod.id) ui?.bench(benchView())
       })
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
@@ -3593,6 +3622,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
     warmUp: () => {
+      audio?.warmUp()
       warmUp()
       warmUpEffects()
     },
@@ -3814,6 +3844,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!scenarioRunning) update(dt)
       const restoreCamera = room.applyCamera()
       gl.render(scene, debugView ?? camera)
+      pinPrograms()
       restoreCamera()
       roomMetrics.rendered()
     }

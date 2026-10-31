@@ -81,7 +81,7 @@ const room = createTestRoom({
     onChange: (moduleId, encoded) => {
       const url = new URL(location.href)
       url.searchParams.set(BENCH_PARAM_PREFIX + moduleId, encoded)
-      history.replaceState(null, '', url)
+      if (url.href !== location.href) history.replaceState(null, '', url)
     },
   },
 })

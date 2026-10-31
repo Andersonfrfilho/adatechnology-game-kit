@@ -66,3 +66,55 @@ describe('the audio engine', () => {
     expect(engine.stats().loops).toBe(0)
   })
 })
+
+describe('warming the engine', () => {
+  const countOf = (recorder: ReturnType<typeof createAudioRecorder>, name: string): number => JSON.stringify(recorder.trace().entries).split(`"${name}"`).length - 1
+
+  it('makes the context, the reverb impulse and the noise buffer up front, and the first sound makes none of them', () => {
+    const { recorder, engine } = engineOn({ mix: 'art_scene' })
+    expect(engine.warmUp()).toBe(true)
+    const buffers = countOf(recorder, 'createBuffer')
+    expect(buffers).toBeGreaterThan(0)
+    engine.play('sfx_pistol', { distance: 0 })
+    engine.play('sfx_pistol', { distance: 0 })
+    expect(countOf(recorder, 'createBuffer')).toBe(buffers)
+  })
+
+  it('reports false without a context', () => {
+    expect(createAudioEngine({ createContext: () => null }).warmUp()).toBe(false)
+  })
+})
+
+describe('deferred start', () => {
+  const sourcesOf = (recorder: ReturnType<typeof createAudioRecorder>): number => JSON.stringify(recorder.trace().entries).split('"op":"start"').length - 1
+  const nextTask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 20))
+
+  it('builds nothing inside play, then every queued voice in later tasks', async () => {
+    const { recorder, engine } = engineOn({ mix: 'game', deferredStart: { budgetMs: 0 } })
+    engine.warmUp()
+    const before = sourcesOf(recorder)
+    for (let index = 0; index < 5; index++) expect(engine.play('sfx_pistol', { distance: 0 })).not.toBeNull()
+    expect(sourcesOf(recorder)).toBe(before)
+    await nextTask()
+    expect(sourcesOf(recorder)).toBeGreaterThan(before)
+  })
+
+  it('a voice stopped while queued is never built', async () => {
+    const { recorder, engine } = engineOn({ mix: 'game', deferredStart: {} })
+    engine.warmUp()
+    const before = sourcesOf(recorder)
+    engine.play('sfx_pistol', { distance: 0 })?.stop()
+    await nextTask()
+    expect(sourcesOf(recorder)).toBe(before)
+  })
+
+  it('drops a voice that waited past the latency limit', async () => {
+    const { recorder, engine } = engineOn({ mix: 'game', deferredStart: { maxLatencyMs: -1 } })
+    engine.warmUp()
+    const before = sourcesOf(recorder)
+    engine.play('sfx_pistol', { distance: 0 })
+    await nextTask()
+    expect(sourcesOf(recorder)).toBe(before)
+    expect(engine.stats().voices).toBe(0)
+  })
+})

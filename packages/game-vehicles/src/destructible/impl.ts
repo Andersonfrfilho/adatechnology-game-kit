@@ -884,7 +884,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return specCache
   }
 
-  const state = (): ObjectState => {
+  const buildState = (): ObjectState => {
     const parts: PartState[] = model.parts.map((d) => {
       const p = ps.get(d.id)!
       const marked = p.dents.length > 0 || p.holes.length > 0 || p.cracks.length > 0
@@ -922,7 +922,17 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return { id, name: options.name ?? (c.spec as any).name ?? c.key, position: [0, 0, 0], rotation: [0, 0, 0, 1], parts, joints, groups: groupsCache.map((g) => [...g]), destroyed: parts.every((p) => p.status === 'broken' || p.status === 'melted' || p.status === 'ashes') }
   }
 
+  // the host reads state() per part per frame; it only changes when a hit, a tool, a fire, a leak or a blast/roll happened
+  let stateCache: ObjectState | undefined
+  const state = (): ObjectState => (stateCache ??= buildState())
+  const isSimulating = (): boolean => {
+    if (leaks.size > 0) return true
+    for (const p of ps.values()) if (!p.lost && (p.burning || p.temp > AMBIENT)) return true
+    return false
+  }
+
   const hit = (h: Hit): DestructionEvent[] => {
+    stateCache = undefined
     const out: DestructionEvent[] = []
     const hh: Hit = h.space === 'local' ? { ...h, space: 'world', point: toWorld(h.point as Vec3) } : h
     if (hh.space === 'local' || !hh.point) return out
@@ -950,6 +960,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     clock += dt
     const out: DestructionEvent[] = queue
     queue = []
+    const wasSimulating = isSimulating()
+    const handledBefore = (blastHandled ? 1 : 0) + (rollHandled ? 2 : 0)
     // a clip that turns the hood drives it: the kit keeps what it is told
     const hood = (c as any).hood
     if (hood) {
@@ -971,6 +983,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     afterBlast(out)
     afterRoll(out)
     applyEffects()
+    vis?.pump()
+    if (wasSimulating || out.length > 0 || handledBefore !== (blastHandled ? 1 : 0) + (rollHandled ? 2 : 0)) stateCache = undefined
     return out
   }
 
@@ -978,6 +992,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const j = js.find((x) => x.def.id === jointId)
     if (!j || !j.def.tools.includes(tool)) return -1
     if (j.open) return 1
+    stateCache = undefined
     j.progress = Math.min(1, j.progress + dt / j.def.seconds)
     const step = Math.floor(j.progress * 4) / 4
     if (step > j.reported && j.progress < 1) {
@@ -994,6 +1009,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   const extinguish = (partId?: string): void => {
+    stateCache = undefined
     for (const p of ps.values()) {
       if (partId && p.def.id !== partId) continue
       if (p.burning) {
@@ -1008,6 +1024,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   const reset = (): void => {
+    stateCache = undefined
     const old = c
     const parent = old.root.parent
     const next = kit.build(old.key, old.state, old.scenario != null ? { scenario: old.scenario } : undefined)
@@ -1026,6 +1043,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   const rollover = (side = 1): void => {
+    stateCache = undefined
     if (kit.roll(c, side)) rolled = true
     void rolled
   }

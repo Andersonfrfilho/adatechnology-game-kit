@@ -7,6 +7,7 @@
  */
 import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
+import { warmTriIndex } from '../tri-index'
 
 type Obj = any
 
@@ -34,6 +35,12 @@ export class VehicleVisuals {
   /** Doors and lids whose own skin was cut from the body and hung on the hinge (true), or that had none to take and keep the plate (false). */
   private readonly skins = new Map<string, boolean>()
   private lightsOn = true
+  /** Heavy body meshes whose triangle index is still to build (null once done). */
+  private warming: Obj[] | null
+  /** A panel was torn off since the last `pump`: that frame already paid for the cut, the smoothing starts on the next one. */
+  private tornThisFrame = false
+  /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
+  private readonly smoothing = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
@@ -45,6 +52,8 @@ export class VehicleVisuals {
     for (const p of model.parts) this.byId.set(p.id, p)
     c.root.updateMatrixWorld(true)
     this.hood = this.nameHood()
+    this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
+    if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
       if (p.role === 'door' || p.role === 'lid') this.makePlate(p)
       else if (p.role === 'mirror' && !this.mirrorObjects(p).length) this.makeMirror(p)
@@ -408,6 +417,31 @@ export class VehicleVisuals {
       this.I.flattenTire(w, Math.min(0.5, 0.12 + 0.38 * melt))
     }
   }
+  /** Smooths the normals of a cut mesh a slice per frame (see `pump`); until then it draws with flat face normals. */
+  private smoothLater(msh: Obj): void {
+    this.smoothing.set(msh, this.I.creaseTask(msh.geometry, 42))
+    this.tornThisFrame = true
+  }
+  /** Spends at most `budgetMs` finishing the pending normal smoothing. Call once per frame. */
+  pump(budgetMs = 2.5): void {
+    if (this.tornThisFrame) {
+      this.tornThisFrame = false
+      return
+    }
+    if (!this.smoothing.size && !this.warming) return
+    const deadline = performance.now() + budgetMs
+    for (const [msh, task] of this.smoothing) {
+      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
+      if (performance.now() >= deadline) return
+    }
+    this.warmIndexes(deadline)
+  }
+  /** Measures the triangles of the heavy body meshes once, a slice per frame, so the first panel torn off finds them ready (see `triIndexOf`). */
+  private warmIndexes(deadline: number): void {
+    if (!this.warming) return
+    this.warming = this.warming.filter((msh) => !warmTriIndex(msh.geometry, deadline))
+    if (!this.warming.length) this.warming = null
+  }
   /** Moves the panel of a lost zone out of the body (the kit's torn-off look). */
   tearOff(p: PartDef): void {
     const z = this.zone(p)
@@ -421,10 +455,9 @@ export class VehicleVisuals {
     }
     dirty.forEach((msh) => {
       const g = msh.geometry
-      if (g.userData.crease || !g.index) this.I.crease(g, 42)
+      if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
-      g.computeBoundingSphere()
-      g.computeBoundingBox()
+      this.I.refreshBounds(g)
     })
     this.gone.add(p.id)
   }
@@ -570,17 +603,19 @@ export class VehicleVisuals {
     const mg = Math.min(0.05, (u1 - u0) * 0.08, (v1 - v0) * 0.08)
     const dirty = new Set<Obj>()
     let pcs: Array<{ mesh?: Obj }> = []
+    const pieceTasks = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
     try {
-      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty)
+      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks })
     } catch {
       pcs = []
     }
+    pieceTasks.forEach((task, mesh) => this.smoothing.set(mesh, task))
+    this.tornThisFrame = true
     dirty.forEach((msh) => {
       const g = msh.geometry
-      if (g.userData.crease || !g.index) I.crease(g, 42)
+      if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
-      g.computeBoundingSphere()
-      g.computeBoundingBox()
+      I.refreshBounds(g)
     })
     return pcs.map((q) => q.mesh).filter((m): m is Obj => !!m)
   }
