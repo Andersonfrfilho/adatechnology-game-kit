@@ -10,7 +10,8 @@
 // else `window.__THREE`): the bundle never carries a second copy.
 import { POSE_CLIPS } from '@adatechnology/game-characters'
 import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '@adatechnology/game-characters-people'
-import { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule } from '@adatechnology/game-player'
+import { PLAYER_DEFAULTS, createPlayer } from '@adatechnology/game-player'
+import { createPlayerTestModule } from '@adatechnology/game-player/testing'
 import { AVATAR_AREA_ID, createAvatarTestModule, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
 export { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule, AVATAR_AREA_ID }

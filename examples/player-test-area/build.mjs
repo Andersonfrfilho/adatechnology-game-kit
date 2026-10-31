@@ -36,7 +36,10 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
-  alias: Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+  alias: {
+    ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    '@adatechnology/game-player/testing': join(pkg('game-player'), 'dist/testing.js'),
+  },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
 const bundle = result.outputFiles[0].text
