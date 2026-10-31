@@ -34,19 +34,42 @@ function vertexLook(terrain: Terrain, column: number, row: number, base: [number
   return patternIndex(broken ? 'soil' : material.pattern)
 }
 
-/** The chunk as a grid with one vertex every `step` cells; the normals come from the height field, so that neighbouring chunks meet without a seam. */
-export function buildChunkGeometry(THREE: ThreeLib, terrain: Terrain, chunk: TerrainChunk, step: number): THREE_NS.BufferGeometry {
+/** How many vertices `buildChunkGeometry` gives the chunk at this step: a geometry of that many can be refilled for it. */
+export function chunkVertexCount(terrain: Terrain, chunk: TerrainChunk, step: number): number {
+  const lastColumn = Math.min(terrain.columns, chunk.column + chunk.cells)
+  const lastRow = Math.min(terrain.rows, chunk.row + chunk.cells)
+  return (Math.ceil((lastColumn - chunk.column) / step) + 1) * (Math.ceil((lastRow - chunk.row) / step) + 1)
+}
+
+function attributeArray(geometry: THREE_NS.BufferGeometry, name: string): Float32Array {
+  return geometry.getAttribute(name).array as Float32Array
+}
+
+function refreshAttributes(geometry: THREE_NS.BufferGeometry, names: readonly string[]): void {
+  for (const name of names) geometry.getAttribute(name).needsUpdate = true
+  geometry.boundingSphere = null
+  geometry.boundingBox = null
+}
+
+const LOOK_ATTRIBUTES = ['position', 'normal', 'aBase', 'aShade', 'aPattern'] as const
+
+/**
+ * The chunk as a grid with one vertex every `step` cells; the normals come from the height field, so that neighbouring chunks meet without a seam. Given a `reuse` geometry
+ * with the right vertex count (`chunkVertexCount`) it writes into that one's buffers instead of making new ones, so a crater costs no GPU allocation.
+ */
+export function buildChunkGeometry(THREE: ThreeLib, terrain: Terrain, chunk: TerrainChunk, step: number, reuse?: THREE_NS.BufferGeometry): THREE_NS.BufferGeometry {
   const [x0, z0] = terrain.bounds
   const { cellSize, columns, rows } = terrain
   const lastColumn = Math.min(columns, chunk.column + chunk.cells)
   const lastRow = Math.min(rows, chunk.row + chunk.cells)
   const across = Math.ceil((lastColumn - chunk.column) / step) + 1
   const down = Math.ceil((lastRow - chunk.row) / step) + 1
-  const positions = new Float32Array(across * down * 3)
-  const normals = new Float32Array(across * down * 3)
-  const bases = new Float32Array(across * down * 3)
-  const shades = new Float32Array(across * down * 2)
-  const patterns = new Float32Array(across * down)
+  const target = reuse && reuse.getAttribute('position').count === across * down ? reuse : undefined
+  const positions = target ? attributeArray(target, 'position') : new Float32Array(across * down * 3)
+  const normals = target ? attributeArray(target, 'normal') : new Float32Array(across * down * 3)
+  const bases = target ? attributeArray(target, 'aBase') : new Float32Array(across * down * 3)
+  const shades = target ? attributeArray(target, 'aShade') : new Float32Array(across * down * 2)
+  const patterns = target ? attributeArray(target, 'aPattern') : new Float32Array(across * down)
   const base: [number, number, number] = [0, 0, 0]
   const shade: [number, number] = [1, 0]
   let at = 0
@@ -74,6 +97,10 @@ export function buildChunkGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
       shades.set(shade, at * 2)
       at++
     }
+  }
+  if (target) {
+    refreshAttributes(target, LOOK_ATTRIBUTES)
+    return target
   }
   const indices = new Uint32Array((across - 1) * (down - 1) * 6)
   let cursor = 0
@@ -106,17 +133,20 @@ export function buildChunkGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
  * Every chunk nothing touched, as one flat quad each in one geometry: the whole floor of an arena is a single draw call until someone digs it. Around them, out to `skirt` metres, the
  * ground goes on as the same surface: what is thrown past the edge lands on something, not on the sky.
  */
-export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks: readonly TerrainChunk[], skirt: number): THREE_NS.BufferGeometry {
+export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks: readonly TerrainChunk[], skirt: number, reuse?: THREE_NS.BufferGeometry): THREE_NS.BufferGeometry {
   const [x0, z0] = terrain.bounds
   const { cellSize, columns, rows } = terrain
   const [, , x1, z1] = terrain.bounds
   const quads = chunks.length + SKIRT_QUADS
-  const positions = new Float32Array(quads * 12)
-  const normals = new Float32Array(quads * 12)
-  const bases = new Float32Array(quads * 12)
-  const shades = new Float32Array(quads * 8)
-  const patterns = new Float32Array(quads * 4)
-  const indices = new Uint32Array(quads * 6)
+  // room for every chunk, so the same buffers serve however many are still untouched
+  const capacity = terrain.chunksX * terrain.chunksZ + SKIRT_QUADS
+  const target = reuse && reuse.getAttribute('position').count === capacity * 4 ? reuse : undefined
+  const positions = target ? attributeArray(target, 'position') : new Float32Array(capacity * 12)
+  const normals = target ? attributeArray(target, 'normal') : new Float32Array(capacity * 12)
+  const bases = target ? attributeArray(target, 'aBase') : new Float32Array(capacity * 12)
+  const shades = target ? attributeArray(target, 'aShade') : new Float32Array(capacity * 8)
+  const patterns = target ? attributeArray(target, 'aPattern') : new Float32Array(capacity * 4)
+  const indices = target ? (target.getIndex()!.array as Uint32Array) : new Uint32Array(capacity * 6)
   const base: [number, number, number] = [0, 0, 0]
   const shade: [number, number] = [1, 0]
   chunks.forEach((chunk, n) => {
@@ -150,6 +180,7 @@ export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks:
     corners.forEach(([x, z], corner) => {
       const at = n * 4 + corner
       positions[at * 3] = x
+      positions[at * 3 + 1] = 0
       positions[at * 3 + 2] = z
       normals[at * 3 + 1] = 1
       bases.set(surface.color, at * 3)
@@ -159,12 +190,18 @@ export function buildPristineGeometry(THREE: ThreeLib, terrain: Terrain, chunks:
     const first = n * 4
     indices.set([first, first + 2, first + 1, first + 2, first + 3, first + 1], n * 6)
   })
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
-  geometry.setAttribute('aBase', new THREE.BufferAttribute(bases, 3))
-  geometry.setAttribute('aShade', new THREE.BufferAttribute(shades, 2))
-  geometry.setAttribute('aPattern', new THREE.BufferAttribute(patterns, 1))
-  geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  const geometry = target ?? new THREE.BufferGeometry()
+  if (target) {
+    refreshAttributes(target, LOOK_ATTRIBUTES)
+    target.getIndex()!.needsUpdate = true
+  } else {
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
+    geometry.setAttribute('aBase', new THREE.BufferAttribute(bases, 3))
+    geometry.setAttribute('aShade', new THREE.BufferAttribute(shades, 2))
+    geometry.setAttribute('aPattern', new THREE.BufferAttribute(patterns, 1))
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  }
+  geometry.setDrawRange(0, quads * 6)
   return geometry
 }

@@ -7,9 +7,22 @@ import type { CanvasLike, ThreeLib } from './types'
 const MAX_CONFORM_STEPS = 48
 const MIN_CONFORM_STEPS = 16
 const BLOOD_GROW_RATE = 1.2
+const BLOOD_START_GROWTH = 0.05
+
+const DEFAULT_MAX_GROUND_MARKS = 64
+const DEFAULT_MAX_ROCKS = 512
+const DEFAULT_MAX_BLOOD = 256
+/** Geometries of evicted ground marks kept to be refilled; past this the extra ones are freed. */
+const MAX_SPARE_GROUND_GEOMETRIES = 16
+
+interface GroundDrawn {
+  readonly mesh: THREE_NS.Mesh
+  steps: number
+}
 
 interface BloodDrawn {
-  readonly mesh: THREE_NS.Mesh
+  readonly position: readonly [number, number, number]
+  readonly rotation: number
   readonly scaleX: number
   readonly scaleZ: number
   age: number
@@ -20,7 +33,9 @@ export interface MarkLayer {
   /** The shared rock and plate shapes, so the debris and the rim rocks use the same geometry. */
   handle(event: MarkEvent): void
   update(dt: number): void
-  /** The meshes in the group right now. */
+  /** Puts the instanced meshes in the scene now, so their shader programs link while loading instead of at the first mark. */
+  prepare(): void
+  /** The draw calls the marks cost right now. */
   count(): number
   dispose(): void
 }
@@ -30,6 +45,12 @@ export interface MarkLayerOptions {
   readonly createCanvas: (() => CanvasLike) | undefined
   readonly rockGeometry: THREE_NS.BufferGeometry
   readonly plateGeometry: THREE_NS.BufferGeometry
+  /** Scorch and dirt meshes alive at once; the oldest is reused for the next. Default 64. */
+  readonly maxGroundMarks?: number
+  /** Rim rocks and plates alive at once (each shape has its own instanced mesh of this size); the oldest is overwritten. Default 512. */
+  readonly maxRocks?: number
+  /** Blood pools alive at once; the oldest is overwritten. Default 256. */
+  readonly maxBlood?: number
 }
 
 /**
@@ -52,99 +73,158 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   const bloodMaterial = new THREE.MeshStandardMaterial({ color: 0x5c0a0a, roughness: 0.15, metalness: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
   const bloodGeometry = new THREE.CircleGeometry(0.5, 9).rotateX(-Math.PI / 2)
   owned.push(bloodMaterial, bloodGeometry)
-  const rockMaterials = new Map<number, THREE_NS.MeshStandardMaterial>()
-  const blood: BloodDrawn[] = []
-  let meshCount = 0
-
-  function rockMaterial(color: number): THREE_NS.MeshStandardMaterial {
-    let material = rockMaterials.get(color)
-    if (!material) {
-      material = new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, flatShading: true })
-      rockMaterials.set(color, material)
-      owned.push(material)
+  const maxGroundMarks = options.maxGroundMarks ?? DEFAULT_MAX_GROUND_MARKS
+  /* the instanced meshes join the scene with the first mark of their kind, so a world that drew no marks has the same scene it always had */
+  const instanced: { blood?: THREE_NS.InstancedMesh; rock?: THREE_NS.InstancedMesh; plate?: THREE_NS.InstancedMesh; rockMaterial?: THREE_NS.MeshStandardMaterial } = {}
+  function rockMaterial(): THREE_NS.MeshStandardMaterial {
+    if (!instanced.rockMaterial) {
+      instanced.rockMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, flatShading: true })
+      owned.push(instanced.rockMaterial)
     }
-    return material
+    return instanced.rockMaterial
+  }
+  function bloodMesh(): THREE_NS.InstancedMesh {
+    return (instanced.blood ??= attach(createInstanced(bloodGeometry, bloodMaterial, options.maxBlood ?? DEFAULT_MAX_BLOOD)))
+  }
+  function rockMesh(): THREE_NS.InstancedMesh {
+    return (instanced.rock ??= attach(createInstanced(options.rockGeometry, rockMaterial(), options.maxRocks ?? DEFAULT_MAX_ROCKS), true))
+  }
+  function plateMesh(): THREE_NS.InstancedMesh {
+    return (instanced.plate ??= attach(createInstanced(options.plateGeometry, rockMaterial(), options.maxRocks ?? DEFAULT_MAX_ROCKS), true))
+  }
+  function attach(mesh: THREE_NS.InstancedMesh, castShadow = false): THREE_NS.InstancedMesh {
+    mesh.castShadow = castShadow
+    group.add(mesh)
+    return mesh
+  }
+  const groundMarks: GroundDrawn[] = []
+  const spareGeometries: THREE_NS.BufferGeometry[] = []
+  const blood: BloodDrawn[] = []
+  const placed = { blood: 0, rock: 0, plate: 0 }
+  const matrix = new THREE.Matrix4()
+  const position = new THREE.Vector3()
+  const quaternion = new THREE.Quaternion()
+  const euler = new THREE.Euler()
+  const scale = new THREE.Vector3()
+  const color = new THREE.Color()
+  const up = new THREE.Vector3(0, 1, 0)
+
+  function createInstanced(geometry: THREE_NS.BufferGeometry, material: THREE_NS.Material, capacity: number): THREE_NS.InstancedMesh {
+    const mesh = new THREE.InstancedMesh(geometry, material, capacity)
+    mesh.count = 0
+    mesh.frustumCulled = false
+    mesh.receiveShadow = true
+    return mesh
   }
 
-  function conform(mark: ScorchMark | DirtMark, material: THREE_NS.Material): THREE_NS.Mesh {
+  function takeSpare(vertexCount: number): THREE_NS.BufferGeometry | undefined {
+    const found = spareGeometries.findIndex((geometry) => geometry.getAttribute('position').count === vertexCount)
+    return found < 0 ? undefined : spareGeometries.splice(found, 1)[0]
+  }
+
+  function evictOldestGroundMark(): void {
+    const oldest = groundMarks.shift()!
+    group.remove(oldest.mesh)
+    spareGeometries.push(oldest.mesh.geometry)
+    if (spareGeometries.length > MAX_SPARE_GROUND_GEOMETRIES) spareGeometries.shift()!.dispose()
+  }
+
+  function conform(mark: ScorchMark | DirtMark, material: THREE_NS.Material): void {
     const radius = mark.radius
     const steps = Math.max(MIN_CONFORM_STEPS, Math.min(MAX_CONFORM_STEPS, Math.round(radius * 8)))
-    const geometry = new THREE.PlaneGeometry(2, 2, steps, steps).rotateX(-Math.PI / 2)
-    const position = geometry.attributes.position!
+    if (groundMarks.length >= maxGroundMarks) evictOldestGroundMark()
+    const geometry = takeSpare((steps + 1) * (steps + 1)) ?? new THREE.PlaneGeometry(2, 2, steps, steps).rotateX(-Math.PI / 2)
+    const grid = geometry.attributes.position!
+    const cell = 2 / steps
     const cos = Math.cos(mark.rotation)
     const sin = Math.sin(mark.rotation)
-    for (let index = 0; index < position.count; index++) {
-      const localX = position.getX(index) * radius
-      const localZ = position.getZ(index) * radius
+    for (let index = 0; index < grid.count; index++) {
+      // the unit grid of `PlaneGeometry(2, 2)` turned flat, in float32 like the buffer it would be read back from, so a reused geometry lands where a fresh one does
+      const localX = Math.fround((index % (steps + 1)) * cell - 1) * radius
+      const localZ = Math.fround(Math.floor(index / (steps + 1)) * cell - 1) * radius
       const worldX = mark.x + localX * cos - localZ * sin
       const worldZ = mark.z + localX * sin + localZ * cos
-      position.setXYZ(index, worldX, (options.ground?.heightAt(worldX, worldZ) ?? 0) + mark.lift, worldZ)
+      grid.setXYZ(index, worldX, (options.ground?.heightAt(worldX, worldZ) ?? 0) + mark.lift, worldZ)
     }
+    grid.needsUpdate = true
     geometry.computeVertexNormals()
+    geometry.attributes.normal!.needsUpdate = true
+    geometry.boundingSphere = null
+    geometry.boundingBox = null
     const mesh = new THREE.Mesh(geometry, material as THREE_NS.MeshStandardMaterial)
     mesh.receiveShadow = true
-    return mesh
+    group.add(mesh)
+    groundMarks.push({ mesh, steps })
   }
 
-  function addRock(mark: RockMark): THREE_NS.Mesh {
-    const mesh = new THREE.Mesh(mark.plate ? options.plateGeometry : options.rockGeometry, rockMaterial(mark.color))
-    mesh.position.set(mark.x, mark.y, mark.z)
-    mesh.scale.set(mark.scale[0], mark.scale[1], mark.scale[2])
-    mesh.rotation.set(mark.rotation[0], mark.rotation[1], mark.rotation[2])
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    return mesh
+  function addRock(mark: RockMark): void {
+    const mesh = mark.plate ? plateMesh() : rockMesh()
+    const slot = mark.plate ? 'plate' : 'rock'
+    const index = placed[slot]++ % mesh.instanceMatrix.count
+    quaternion.setFromEuler(euler.set(mark.rotation[0], mark.rotation[1], mark.rotation[2]))
+    mesh.setMatrixAt(index, matrix.compose(position.set(mark.x, mark.y, mark.z), quaternion, scale.set(mark.scale[0], mark.scale[1], mark.scale[2])))
+    mesh.setColorAt(index, color.set(mark.color))
+    mesh.count = Math.min(placed[slot], mesh.instanceMatrix.count)
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.instanceColor!.needsUpdate = true
   }
 
-  function addBlood(mark: BloodMark): THREE_NS.Mesh {
-    const mesh = new THREE.Mesh(bloodGeometry, bloodMaterial)
-    mesh.position.set(mark.x, mark.y, mark.z)
-    mesh.scale.set(mark.scaleX, 1, mark.scaleZ)
-    mesh.rotation.y = mark.rotation
-    mesh.receiveShadow = true
-    mesh.scale.multiplyScalar(0.05)
-    blood.push({ mesh, scaleX: mark.scaleX, scaleZ: mark.scaleZ, age: 0 })
-    return mesh
+  function writeBlood(index: number, drawn: BloodDrawn, growth: number): void {
+    quaternion.setFromAxisAngle(up, drawn.rotation)
+    const mesh = bloodMesh()
+    mesh.setMatrixAt(index, matrix.compose(position.set(drawn.position[0], drawn.position[1], drawn.position[2]), quaternion, scale.set(drawn.scaleX * growth, 1, drawn.scaleZ * growth)))
+    mesh.instanceMatrix.needsUpdate = true
   }
 
-  function build(mark: Mark): THREE_NS.Mesh {
-    if (mark.kind === 'scorch') return conform(mark, scorchMaterials[mark.variant]!)
-    if (mark.kind === 'dirt') return conform(mark, dirtMaterial)
-    if (mark.kind === 'rock') return addRock(mark)
-    return addBlood(mark)
+  function addBlood(mark: BloodMark): void {
+    const index = placed.blood++ % bloodMesh().instanceMatrix.count
+    const drawn: BloodDrawn = { position: [mark.x, mark.y, mark.z], rotation: mark.rotation, scaleX: mark.scaleX, scaleZ: mark.scaleZ, age: 0 }
+    blood[index] = drawn
+    writeBlood(index, drawn, BLOOD_START_GROWTH)
+    bloodMesh().count = Math.min(placed.blood, bloodMesh().instanceMatrix.count)
   }
 
-  function clearMeshes(): void {
-    for (const child of [...group.children]) {
-      group.remove(child)
-      const geometry = (child as THREE_NS.Mesh).geometry
-      if (geometry !== options.rockGeometry && geometry !== options.plateGeometry && geometry !== bloodGeometry) geometry.dispose()
-    }
+  function build(mark: Mark): void {
+    if (mark.kind === 'scorch') conform(mark, scorchMaterials[mark.variant]!)
+    else if (mark.kind === 'dirt') conform(mark, dirtMaterial)
+    else if (mark.kind === 'rock') addRock(mark)
+    else addBlood(mark)
+  }
+
+  function clearMarks(): void {
+    for (const drawn of groundMarks) group.remove(drawn.mesh)
+    for (const drawn of groundMarks) drawn.mesh.geometry.dispose()
+    groundMarks.length = 0
+    for (const geometry of spareGeometries) geometry.dispose()
+    spareGeometries.length = 0
     blood.length = 0
-    meshCount = 0
+    placed.blood = placed.rock = placed.plate = 0
+    for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) if (mesh) mesh.count = 0
   }
 
   return {
     group,
     handle(event) {
-      if (event.type === 'clear') {
-        clearMeshes()
-        return
-      }
-      group.add(build(event.mark))
-      meshCount++
+      if (event.type === 'clear') clearMarks()
+      else build(event.mark)
+    },
+    prepare() {
+      bloodMesh()
+      rockMesh()
+      plateMesh()
     },
     update(dt) {
-      for (const drawn of blood) {
-        if (drawn.age > 1) continue
+      for (let index = 0; index < blood.length; index++) {
+        const drawn = blood[index]
+        if (!drawn || drawn.age > 1) continue
         drawn.age += dt * BLOOD_GROW_RATE
-        const ease = 1 - Math.pow(1 - Math.min(1, drawn.age), 2.5)
-        drawn.mesh.scale.set(drawn.scaleX * Math.max(0.05, ease), 1, drawn.scaleZ * Math.max(0.05, ease))
+        writeBlood(index, drawn, Math.max(BLOOD_START_GROWTH, 1 - Math.pow(1 - Math.min(1, drawn.age), 2.5)))
       }
     },
-    count: () => meshCount,
+    count: () => groundMarks.length + [instanced.blood, instanced.rock, instanced.plate].filter((mesh) => mesh && mesh.count > 0).length,
     dispose() {
-      clearMeshes()
+      clearMarks()
+      for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) mesh?.dispose()
       for (const item of owned) item.dispose()
     },
   }

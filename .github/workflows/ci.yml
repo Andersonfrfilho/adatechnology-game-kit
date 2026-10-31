@@ -217,6 +217,42 @@ jobs:
       - name: Check where every drawn piece comes from
         run: node tools/kit-audit/scene.mjs --check
 
+  # Explosion frame budget (examples/test-room/perf.mjs, docs/desempenho-explosoes.md): every explosive cold, warm and all at once in the room's own loop. Software GL
+  # has no real frame times, so CI checks what does not depend on the machine: no shader compiled during play, GPU buffers per warm explosion, draws back to idle.
+  # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu).
+  perf-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
+          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
+
+      - name: Build the test room
+        run: node examples/test-room/build.mjs
+
+      - name: Check the explosion budget
+        run: node examples/test-room/perf.mjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-budget
+          path: examples/test-room/dist/perf.json
+
   # Timing of the kit's 3D builders (tools/shapes-bench): medians as ratios to a calibration loop, against baseline.json.
   # Fails when a builder is twice as slow as its baseline, or a group (props3d, household, items, weapons, animals...) 1.5 times, after
   # re-timing the suspects; the table goes to the job summary and the run to an artifact (bench --baseline-from turns it into a baseline).

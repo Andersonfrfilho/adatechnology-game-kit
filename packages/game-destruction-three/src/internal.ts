@@ -110,6 +110,8 @@ export interface Bound {
   piece: PieceBody | null
   /** Created by a `detach` (the root is a group the renderer made and owns). */
   isSplit: boolean
+  /** The host's per-frame work for this object (`BindOptions.onFrame`). */
+  onFrame?: (dt: number) => void
   /** Node between the root and its children that carries the settlement and tilt of the soil (`settle` events), made on the first one. */
   soilNode?: THREE_NS.Object3D
 }

@@ -7,6 +7,7 @@
  */
 import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
+import { warmTriIndex } from '../tri-index'
 
 type Obj = any
 
@@ -31,7 +32,15 @@ export class VehicleVisuals {
   private readonly gone = new Set<string>()
   /** Shows or hides the plate and the recess of a door or lid by its state (see `showWhenOpen`). */
   private readonly syncPlates = new Map<string, () => void>()
+  /** Doors and lids whose own skin was cut from the body and hung on the hinge (true), or that had none to take and keep the plate (false). */
+  private readonly skins = new Map<string, boolean>()
   private lightsOn = true
+  /** Heavy body meshes whose triangle index is still to build (null once done). */
+  private warming: Obj[] | null
+  /** A panel was torn off since the last `pump`: that frame already paid for the cut, the smoothing starts on the next one. */
+  private tornThisFrame = false
+  /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
+  private readonly smoothing = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
@@ -43,6 +52,8 @@ export class VehicleVisuals {
     for (const p of model.parts) this.byId.set(p.id, p)
     c.root.updateMatrixWorld(true)
     this.hood = this.nameHood()
+    this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
+    if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
       if (p.role === 'door' || p.role === 'lid') this.makePlate(p)
       else if (p.role === 'mirror' && !this.mirrorObjects(p).length) this.makeMirror(p)
@@ -183,11 +194,23 @@ export class VehicleVisuals {
    * keeps the shape of its model instead of flat panels over its curved sides. Follows the hinge's rotation, whoever turns it (the clips of a host, `detach`).
    */
   private showWhenOpen(id: string, piv: Obj, panel: Obj, recess: Obj): void {
+    let busy = false
     const sync = (): void => {
+      if (busy) return
       const r = piv.rotation
       const open = Math.abs(r.x) + Math.abs(r.y) + Math.abs(r.z) > 1e-3 || this.gone.has(id) || piv.parent !== this.c.vehicle
-      panel.visible = open
-      recess.visible = open
+      // the first time it swings, the door takes its own skin, window and trim off the body: what opens is the door the model draws
+      if (open && !this.gone.has(id) && piv.parent === this.c.vehicle && !this.skins.has(id)) {
+        busy = true
+        try {
+          this.skins.set(id, this.takeSkin(id, piv))
+        } finally {
+          busy = false
+        }
+      }
+      // with its own skin hung on the hinge the opening shows the cabin; the flat plate and its dark recess stay for a model with no skin to take
+      panel.visible = open && !this.skins.get(id)
+      recess.visible = open && !this.skins.get(id)
     }
     const euler = piv.rotation
     const quaternion = piv.quaternion
@@ -203,6 +226,58 @@ export class VehicleVisuals {
     })
     this.syncPlates.set(id, sync)
     sync()
+  }
+  /**
+   * Cuts the skin of a door or lid zone out of the body (as the damage's hanging door does) and hangs it, with the thin parts on it (trim, handle) and, for a door, the side
+   * window over it, on the hinge. Done with the hinge closed, so every piece keeps its place; answers whether there was skin to take.
+   */
+  private takeSkin(id: string, piv: Obj): boolean {
+    const p = this.byId.get(id)
+    const z = p && this.zone(p)
+    if (!p || !z) return false
+    const I = this.I
+    const B = z.box
+    const q = piv.quaternion.clone()
+    piv.quaternion.identity()
+    this.c.root.updateMatrixWorld(true)
+    const inv = I.worldInverseOf(this.c)
+    let objs: Obj[] = []
+    try {
+      if (p.role === 'door') {
+        const dirty = new Set<Obj>()
+        const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
+        const pcs = (I.cutPanel(this.c, z, rect, true, dirty) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
+        this.mend(dirty)
+        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...(I.windowsOver(this.c, z, inv) as Obj[])]
+      } else {
+        const pcs = this.cutZone(z)
+        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[])]
+      }
+    } catch {
+      objs = []
+    }
+    const deform: Obj[] = (this.c as any).deform ?? []
+    for (const o of objs) {
+      if (!o.parent || o === piv) continue
+      piv.attach(o)
+      o.traverse((x: Obj) => {
+        x.userData.noFollow = true
+      })
+      const di = deform.indexOf(o)
+      if (di >= 0) deform.splice(di, 1)
+    }
+    piv.quaternion.copy(q)
+    this.c.root.updateMatrixWorld(true)
+    return objs.length > 0
+  }
+  private mend(dirty: Set<Obj>): void {
+    dirty.forEach((msh) => {
+      const g = msh.geometry
+      if (g.userData.crease || !g.index) this.I.crease(g, 42)
+      else g.computeVertexNormals()
+      g.computeBoundingSphere()
+      g.computeBoundingBox()
+    })
   }
   private makeMirror(p: PartDef): void {
     const [cx, cy, cz] = p.box.center
@@ -342,6 +417,31 @@ export class VehicleVisuals {
       this.I.flattenTire(w, Math.min(0.5, 0.12 + 0.38 * melt))
     }
   }
+  /** Smooths the normals of a cut mesh a slice per frame (see `pump`); until then it draws with flat face normals. */
+  private smoothLater(msh: Obj): void {
+    this.smoothing.set(msh, this.I.creaseTask(msh.geometry, 42))
+    this.tornThisFrame = true
+  }
+  /** Spends at most `budgetMs` finishing the pending normal smoothing. Call once per frame. */
+  pump(budgetMs = 2.5): void {
+    if (this.tornThisFrame) {
+      this.tornThisFrame = false
+      return
+    }
+    if (!this.smoothing.size && !this.warming) return
+    const deadline = performance.now() + budgetMs
+    for (const [msh, task] of this.smoothing) {
+      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
+      if (performance.now() >= deadline) return
+    }
+    this.warmIndexes(deadline)
+  }
+  /** Measures the triangles of the heavy body meshes once, a slice per frame, so the first panel torn off finds them ready (see `triIndexOf`). */
+  private warmIndexes(deadline: number): void {
+    if (!this.warming) return
+    this.warming = this.warming.filter((msh) => !warmTriIndex(msh.geometry, deadline))
+    if (!this.warming.length) this.warming = null
+  }
   /** Moves the panel of a lost zone out of the body (the kit's torn-off look). */
   tearOff(p: PartDef): void {
     const z = this.zone(p)
@@ -355,10 +455,9 @@ export class VehicleVisuals {
     }
     dirty.forEach((msh) => {
       const g = msh.geometry
-      if (g.userData.crease || !g.index) this.I.crease(g, 42)
+      if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
-      g.computeBoundingSphere()
-      g.computeBoundingBox()
+      this.I.refreshBounds(g)
     })
     this.gone.add(p.id)
   }
@@ -504,17 +603,19 @@ export class VehicleVisuals {
     const mg = Math.min(0.05, (u1 - u0) * 0.08, (v1 - v0) * 0.08)
     const dirty = new Set<Obj>()
     let pcs: Array<{ mesh?: Obj }> = []
+    const pieceTasks = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
     try {
-      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty)
+      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks })
     } catch {
       pcs = []
     }
+    pieceTasks.forEach((task, mesh) => this.smoothing.set(mesh, task))
+    this.tornThisFrame = true
     dirty.forEach((msh) => {
       const g = msh.geometry
-      if (g.userData.crease || !g.index) I.crease(g, 42)
+      if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
-      g.computeBoundingSphere()
-      g.computeBoundingBox()
+      I.refreshBounds(g)
     })
     return pcs.map((q) => q.mesh).filter((m): m is Obj => !!m)
   }

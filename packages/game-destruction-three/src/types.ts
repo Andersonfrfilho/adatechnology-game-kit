@@ -26,6 +26,12 @@ export interface RendererOptions {
   quality?: Quality
   /** Upper bound of live fragment meshes (default 160; oldest fade first). */
   maxFragments?: number
+  /**
+   * Milliseconds of one `update` spent applying queued world events (default `Infinity`: every event is drawn
+   * in the `update` that receives it, so what a caller reads right after is final). A game loop sets a finite budget (the test room uses 8): what is left waits for the
+   * next frame, in order; at least one event is applied per frame, so 0 means one at a time.
+   */
+  eventBudgetMs?: number
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
   /**
@@ -96,6 +102,8 @@ export interface BindOptions {
   parts?: Record<string, Object3D | MeshRange | Array<Object3D | MeshRange>>
   /** Keep the world transform in sync from the root's matrixWorld every update (default true). */
   syncTransform?: boolean
+  /** Called from every `update`, after the queued events were applied: where the host finishes the drawing of this object that it deferred (a wall repainted once per frame). */
+  onFrame?: (dt: number) => void
 }
 
 /** A body the renderer moves with its light physics: a loose piece of an object after a detach (or a whole object handed to it). */

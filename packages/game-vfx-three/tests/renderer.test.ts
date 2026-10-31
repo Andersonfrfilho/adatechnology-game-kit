@@ -97,9 +97,10 @@ describe('createVfxRenderer', () => {
     renderer.update(0.5)
     expect(world.time()).toBe(0.5)
     const marksGroup = scene.children[0]!.children.at(-1)!
-    expect(marksGroup.children.length).toBeGreaterThan(0)
+    const drawing = (): number => marksGroup.children.filter((child) => !(child as THREE.InstancedMesh).isInstancedMesh || (child as THREE.InstancedMesh).count > 0).length
+    expect(drawing()).toBeGreaterThan(0)
     world.clear()
-    expect(marksGroup.children.length).toBe(0)
+    expect(drawing()).toBe(0)
   })
 
   it('dispose takes everything out of the scene', () => {

@@ -25,8 +25,7 @@ import { createEffects } from './effects'
 import { createLayers } from './layers'
 import { limitSupportSpan, placeOnBody } from './body-hold'
 import type { FxLayers } from './layers'
-import { flameJet, launchRocket } from './heavy'
-import type { HeavyContext } from './heavy'
+import { createRocketLight, flameJet, launchRocket, type HeavyContext } from './heavy'
 import { createParticles } from './particles'
 import { createModelRig } from './rig'
 import type { FxWorld, Session } from './session'
@@ -150,6 +149,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
+  const rocketLight = createRocketLight(THREE)
+  scene.add(rocketLight)
   const holder = new THREE.Group()
   holder.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), PI / 2)
   hand.add(holder)
@@ -213,6 +214,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     orientation: () => current.model.root.getWorldQuaternion(new THREE.Quaternion()),
     every: (seconds, step, done) => void tasks.push({ delay: 0, seconds, elapsed: 0, step, done }),
     groundAt,
+    rocketLight,
   })
 
   const equip = (weapon: string): boolean => {
@@ -490,6 +492,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       particles.dispose()
       ownVfx?.dispose()
       hand.removeFromParent()
+      rocketLight.removeFromParent()
+      rocketLight.dispose()
     },
   }
 }
