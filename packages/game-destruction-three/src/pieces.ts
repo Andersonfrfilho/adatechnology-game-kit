@@ -20,6 +20,13 @@ export interface PieceSystemOptions {
 const SUB_DT = 1 / 120
 const MU = 0.7
 const SLEEP_AFTER = 0.5
+/**
+ * A piece on the ground that neither moves farther than `CALM_DRIFT` (m) nor turns more than `CALM_TURN` (rad) in `CALM_SLEEP_AFTER` seconds sleeps, however
+ * its speed flickers: a book propped on another, or trembling where its corners rest on two pieces, stays in place; a fall or a slide leaves the window sooner.
+ */
+const CALM_DRIFT = 0.01
+const CALM_TURN = 0.05
+const CALM_SLEEP_AFTER = 1.5
 const HARD_LANDING = 3
 /** Contact tolerance in metres: corners this close to the ground count as touching, which keeps the contact set (and a resting box) stable. */
 const SLOP = 0.002
@@ -128,6 +135,8 @@ export class PieceSystem {
       localCenter: [localCenter.x, localCenter.y, localCenter.z],
       centerV: localCenter.clone(),
       still: 0,
+      calmAt: null,
+      calm: 0,
       lastHit: -1,
       onGround: false,
     }
@@ -176,6 +185,7 @@ export class PieceSystem {
     }
     b.sleeping = false
     b.still = 0
+    b.calmAt = null
   }
 
   /** I^-1 * (x, y, z) in world space for a box with the body's half extents and mass (needs `this.m` to hold the body's rotation). */
@@ -203,6 +213,7 @@ export class PieceSystem {
       if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
       b.sleeping = false
       b.still = 0
+      b.calmAt = null
     }
   }
 
@@ -219,6 +230,7 @@ export class PieceSystem {
         b.angularVelocity = [0, 0, 0]
         b.sleeping = false
         b.still = 0
+        b.calmAt = null
         continue
       }
       if (b.sleeping) continue
@@ -404,16 +416,27 @@ export class PieceSystem {
     }
 
     const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < 0.12 && Math.hypot(w[0], w[1], w[2]) < 0.45
-    if (still) {
-      b.still += dt
-      if (b.still >= SLEEP_AFTER) {
-        b.sleeping = true
-        v[0] = v[1] = v[2] = 0
-        w[0] = w[1] = w[2] = 0
-      }
-    } else {
-      b.still = 0
+    if (still) b.still += dt
+    else b.still = 0
+    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, touched, pos, q, dt)) {
+      b.sleeping = true
+      b.calmAt = null
+      v[0] = v[1] = v[2] = 0
+      w[0] = w[1] = w[2] = 0
     }
+  }
+
+  /** Whether the piece has kept to the same spot on the ground for `CALM_SLEEP_AFTER` (see `CALM_DRIFT`). */
+  private staysInPlace(b: PieceBody, touched: boolean, center: Vec3, q: THREE_NS.Quaternion, dt: number): boolean {
+    const at = b.calmAt
+    const turned = at ? 2 * Math.acos(Math.min(1, Math.abs(at.quaternion[0] * q.x + at.quaternion[1] * q.y + at.quaternion[2] * q.z + at.quaternion[3] * q.w))) : Infinity
+    if (!touched || !at || Math.hypot(center[0] - at.center[0], center[1] - at.center[1], center[2] - at.center[2]) > CALM_DRIFT || turned > CALM_TURN) {
+      b.calmAt = touched ? { center: [center[0], center[1], center[2]], quaternion: [q.x, q.y, q.z, q.w] } : null
+      b.calm = 0
+      return false
+    }
+    b.calm += dt
+    return b.calm >= CALM_SLEEP_AFTER
   }
 
   /** Half the height of the box of a piece as it is turned now. */
@@ -433,8 +456,9 @@ export class PieceSystem {
       const a = this.list[i]
       for (let j = i + 1; j < n; j++) {
         const b = this.list[j]
-        if (a.held && b.held) continue
-        if (a.sleeping && b.sleeping) continue
+        const fixedA = a.held || a.sleeping
+        const fixedB = b.held || b.sleeping
+        if (fixedA && fixedB) continue
         const ra = Math.hypot(a.halfExtents[0], a.halfExtents[1], a.halfExtents[2])
         const rb = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
         this.centerOf(a, ca)
@@ -453,19 +477,17 @@ export class PieceSystem {
           d = 1
         }
         const push = Math.min(maxMove, (rh - d) * 0.5)
-        const wa = a.held ? 0 : b.held ? 1 : b.mass / (a.mass + b.mass)
-        const wb = b.held ? 0 : a.held ? 1 : a.mass / (a.mass + b.mass)
+        const wa = fixedA ? 0 : fixedB ? 1 : b.mass / (a.mass + b.mass)
+        const wb = fixedB ? 0 : fixedA ? 1 : a.mass / (a.mass + b.mass)
         const ux = dx / (d || 1)
         const uz = dz / (d || 1)
-        if (!a.held) {
+        if (!fixedA) {
           a.root.position.x -= ux * push * 2 * wa
           a.root.position.z -= uz * push * 2 * wa
-          a.sleeping = false
         }
-        if (!b.held) {
+        if (!fixedB) {
           b.root.position.x += ux * push * 2 * wb
           b.root.position.z += uz * push * 2 * wb
-          b.sleeping = false
         }
       }
     }
