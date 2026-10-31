@@ -1,4 +1,5 @@
 import type { Motion, World } from '@adatechnology/game-interactables'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import { createEffects, type Effects, type EffectsOptions } from './effects'
 import { createCord, catenary } from '@adatechnology/game-shapes-three'
 import { createMeshApi, type MeshApi, type MeshApiOptions } from './mesh'
@@ -16,6 +17,8 @@ export interface ThreeAdapterOptions {
   /** `Reflector` and env map for `createMirrors`. */
   Reflector?: MirrorOptions['Reflector']
   envMap?: MirrorOptions['envMap']
+  /** The host's light budget: the lamps of every mesh api this adapter makes become sources of it (see `MeshApiOptions.lights`). */
+  lights?: LightBudget
 }
 
 /** The package functions with `THREE` and the common options already bound. */
@@ -39,7 +42,7 @@ export interface ThreeAdapter {
 export function createThreeAdapter(THREE: ThreeLib, options: ThreeAdapterOptions = {}): ThreeAdapter {
   return {
     THREE,
-    createMeshApi: (o = {}) => createMeshApi(THREE, { quality: options.quality, materials: options.materials, ...o }),
+    createMeshApi: (o = {}) => createMeshApi(THREE, { quality: options.quality, materials: options.materials, ...(options.lights ? { lights: options.lights } : {}), ...o }),
     applyPose: (group, motion, t) => applyPose(THREE, group, motion, t),
     syncObject: (world, objectId, parts, o) => syncObject(THREE, world, objectId, parts, o),
     swayMaterial: (base, o) => swayMaterial(THREE, base, o),

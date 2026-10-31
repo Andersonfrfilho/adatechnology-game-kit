@@ -1,4 +1,6 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
+import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
+import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 import type { ObjectSpec } from '@adatechnology/game-interactables'
 import { createShapeRecorder } from '@adatechnology/game-props3d'
 import { colorChannels, generate } from '@adatechnology/game-shapes'
@@ -32,6 +34,11 @@ export interface MeshApiOptions {
    * clothes) keep what you return, including its `onBeforeCompile`, `customProgramCacheKey`, `defines` and `userData`.
    */
   materialFor?: (key: MaterialKey, partId: string | null) => ThreeNS.Material | undefined
+  /**
+   * The host's light budget: each `api.light` becomes a source of it (it competes for a slot by distance, and following its bulb) instead of a `PointLight` of its own, so lamps coming and going
+   * never change the lit materials' program key. Without it the lamps are real lights (deprecated, removed in the next major).
+   */
+  lights?: LightBudget
 }
 
 export interface MeshResult {
@@ -39,8 +46,10 @@ export interface MeshResult {
   group: ThreeNS.Group
   /** Part groups by id. Origin at the pivot, rotated by the part's `ry`; `userData.rest` holds the rest pose. A merged part maps to the shared group (`userData.merged`). */
   parts: Record<string, ThreeNS.Group>
-  /** Real lights requested by the builders (already children of their group). */
+  /** Real lights requested by the builders (already children of their group). Empty with `MeshApiOptions.lights`. */
   lights: ThreeNS.Light[]
+  /** With `MeshApiOptions.lights`: the lamps as sources of the budget (`remove()` one when its lamp breaks or the object goes). Empty without it. */
+  sources: SourceHandle[]
 }
 
 export interface FinishOptions {
@@ -130,6 +139,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
   }
 
   const lightsOut: ThreeNS.Light[] = []
+  const sourcesOut: SourceHandle[] = []
 
   const build = (batches: readonly ShapeBatch[], points: readonly ShapePoint[], id: string | null, into: ThreeNS.Group, materialFor: MeshApiOptions['materialFor']): void => {
     for (const batch of batches) {
@@ -152,6 +162,15 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
     }
     for (const point of points) {
       const l = point.data as { color: number; range: number }
+      if (options.lights) {
+        const bulb = new THREE.Object3D()
+        bulb.name = 'lamp'
+        bulb.position.set(point.position[0], point.position[1], point.position[2])
+        into.add(bulb)
+        sourcesOut.push(options.lights.addSource({ owner: 'interactables.lamp', priority: LIGHT_PRIORITY.lamp, color: l.color, intensity: 1, distance: l.range, position: [0, 0, 0], follow: bulb }))
+        continue
+      }
+      // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
       const light = new THREE.PointLight(l.color, 1, l.range)
       light.position.set(point.position[0], point.position[1], point.position[2])
       into.add(light)
@@ -196,7 +215,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       }
       if (spec && (options.mergeParts ?? quality === 'game')) mergeParts(THREE, group, parts, spec, { swayAmplitude: options.swayAmplitude })
       if (spec) tagDestruction(group, parts, spec)
-      return { group, parts, lights: lightsOut }
+      return { group, parts, lights: lightsOut, sources: sourcesOut }
     },
   }
 }

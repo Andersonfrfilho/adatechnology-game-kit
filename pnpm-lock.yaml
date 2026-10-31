@@ -905,6 +905,9 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:^
         version: link:../game-props3d
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
       '@adatechnology/game-shapes':
         specifier: workspace:^
         version: link:../game-shapes
