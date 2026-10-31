@@ -2741,6 +2741,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hudAcc = 0
       ui.hud(hudState())
     }
+    ui?.flushLog()
     metricsAcc += dt
     if (metricsAcc >= METRICS_INTERVAL_S && ui) {
       metricsAcc = 0
@@ -3223,8 +3224,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const restored = kept ?? (typeof seed === 'string' ? seed : undefined)
       if (restored !== undefined) bench.restore(restored)
       benches.set(mod.id, bench)
+      let reportedState = bench.encode()
       bench.watch(() => {
-        options.bench?.onChange?.(mod.id, bench.encode())
+        const encoded = bench.encode()
+        if (encoded !== reportedState) {
+          reportedState = encoded
+          options.bench?.onChange?.(mod.id, encoded)
+        }
         if (activeBench === mod.id) ui?.bench(benchView())
       })
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id

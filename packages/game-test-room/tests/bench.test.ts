@@ -131,6 +131,18 @@ describe('module bench', () => {
     expect(probe.changes.at(-1)).toEqual({ kind: 'layer', id: 'flash', on: true })
   })
 
+  it('tells the host only when the encoded state really changed', () => {
+    const encoded: string[] = []
+    const room = makeRoom({ bench: { onChange: (_moduleId, state) => encoded.push(state) } })
+    room.loadModule(benchedModule(newProbe()))
+    const bench = room.bench()!
+    bench.set('size', 2)
+    bench.set('size', 2)
+    bench.set('size', 3)
+    expect(encoded).toHaveLength(2)
+    expect(new Set(encoded).size).toBe(2)
+  })
+
   it('two modules sharing a control id keep their values apart, and each restores only its own state across a reload', () => {
     const second = (probe: Probe): TestableModule<ScenarioContext> => benchedModule(probe, { id: 'other', name: 'Other' })
     const changes: Array<[string, string]> = []
