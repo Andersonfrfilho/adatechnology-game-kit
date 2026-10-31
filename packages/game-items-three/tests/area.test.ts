@@ -89,9 +89,24 @@ describe('items test area', () => {
   it('passes the contract checks of the host and opens with every item, the 24 models, the references and the finds table', () => {
     const { room } = roomWithItems()
     const placed = room.openArea('items_area')
-    expect(placed.filter((o) => o.itemId.startsWith(ITEM_PREFIX))).toHaveLength(catalog.list().length)
+    const sealed = catalog.list().filter((item) => item.seal?.openWith?.some((tool) => catalog.has(tool)))
+    expect(placed.filter((o) => o.itemId.startsWith(ITEM_PREFIX))).toHaveLength(catalog.list().length + sealed.length)
+    expect(new Set(placed.filter((o) => o.itemId.startsWith(ITEM_PREFIX)).map((o) => o.itemId)).size).toBe(catalog.list().length)
     expect(placed.filter((o) => o.itemId.startsWith(SHOWCASE_PREFIX))).toHaveLength(listItemModels().length)
     for (const id of [SHOWCASE_STAND_ID, RULER_ID, HUMAN_ID, FINDS_TABLE_ID]) expect(placed.some((o) => o.itemId === id), id).toBe(true)
+  })
+
+  it('lays an opening tool beside each sealed tin, within reach of whoever picks the tin up', () => {
+    const { room } = roomWithItems()
+    const placed = room.openArea('items_area')
+    const sealed = catalog.list().filter((item) => item.seal?.openWith?.some((tool) => catalog.has(tool)))
+    expect(sealed.length).toBeGreaterThan(0)
+    for (const item of sealed) {
+      const tin = placed.find((o) => o.itemId === `${ITEM_PREFIX}${item.id}`)!
+      const tools = new Set(item.seal!.openWith!.map((tool) => `${ITEM_PREFIX}${tool}`))
+      const near = placed.filter((o) => tools.has(o.itemId)).map((o) => Math.hypot(o.root.position.x - tin.root.position.x, o.root.position.z - tin.root.position.z))
+      expect(Math.min(...near), item.id).toBeLessThan(0.4)
+    }
   })
 
   it('draws the shelves and the finds table with the furniture catalogue, and the person the host gives at 1.80 m (none without one)', () => {

@@ -36,12 +36,12 @@
   ]
  },
  "model/water_bottle": {
-  "hash": "157d264c",
+  "hash": "9247b6ad",
   "nodes": [
    "0 Group 447aefc2",
    "0/0 Group f6893837",
    "0/0/0 Mesh b1ade163",
-   "0/0/1 Mesh c31c844d",
+   "0/0/1 Mesh 7c68b624",
    "0/0/2 Mesh bd19cabe",
    "0/0/3 Mesh 212a45f4"
   ]
@@ -147,12 +147,12 @@
   ]
  },
  "model/cachaca": {
-  "hash": "f99f375f",
+  "hash": "c6c77360",
   "nodes": [
    "0 Group fe911d61",
    "0/0 Group af924b15",
    "0/0/0 Mesh 8616b7a4",
-   "0/0/1 Mesh 39cdf731",
+   "0/0/1 Mesh 260581ba",
    "0/0/2 Mesh a655c9c7",
    "0/0/3 Mesh db358d56"
   ]
@@ -1284,7 +1284,7 @@
   ]
  },
  "model/home_preserves": {
-  "hash": "4fad7b82",
+  "hash": "706f8259",
   "nodes": [
    "0 Group a23cb793",
    "0/0 Group ffc3f3c9",
@@ -1292,7 +1292,7 @@
    "0/0/1 Mesh c1d700c4",
    "0/0/2 Mesh 72dbd293",
    "0/0/3 Mesh 76d3c4c5",
-   "0/0/4 Mesh 851ae184",
+   "0/0/4 Mesh 6675743f",
    "0/0/5 Mesh fe710e20",
    "0/0/6 Mesh f4024f07"
   ]
@@ -1931,14 +1931,14 @@
   ]
  },
  "model/honey_jar": {
-  "hash": "7d3c103e",
+  "hash": "80bde78b",
   "nodes": [
    "0 Group 144cf6d",
    "0/0 Group 4f9fdc6a",
    "0/0/0 Mesh 7017ba6f",
    "0/0/1 Mesh e3fe4e76",
    "0/0/2 Mesh 659d7d02",
-   "0/0/3 Mesh 37719b07",
+   "0/0/3 Mesh e4c05c4c",
    "0/0/4 Mesh 246d2b2d",
    "0/0/5 Mesh bf10ddb3",
    "0/0/6 Mesh e5dd9953"
@@ -2314,14 +2314,14 @@
   ]
  },
  "model/cooking_oil": {
-  "hash": "1490c8b",
+  "hash": "92b7d0a0",
   "nodes": [
    "0 Group b52a3902",
    "0/0 Group 758f65ed",
    "0/0/0 Mesh c03f188b",
    "0/0/1 Mesh 4e6b2c37",
    "0/0/2 Mesh 8abd3209",
-   "0/0/3 Mesh 95bff029",
+   "0/0/3 Mesh a8628186",
    "0/0/4 Mesh 319f6c3e",
    "0/0/5 Mesh 4c50fdc1"
   ]
@@ -2444,14 +2444,14 @@
   ]
  },
  "model/water_jug_5l": {
-  "hash": "bb38d6dd",
+  "hash": "732466fc",
   "nodes": [
    "0 Group fad210f4",
    "0/0 Group d530cfb0",
    "0/0/0 Mesh 6ecfacd4",
    "0/0/1 Mesh 45dc8d8e",
    "0/0/2 Mesh b2308b73",
-   "0/0/3 Mesh d7bc267c",
+   "0/0/3 Mesh 936023b3",
    "0/0/4 Mesh 7a0ec35e",
    "0/0/5 Mesh 13b511e7",
    "0/0/6 Mesh 55af6721",
@@ -2488,7 +2488,7 @@
   ]
  },
  "model/sports_drink": {
-  "hash": "8327daf8",
+  "hash": "4d4476b5",
   "nodes": [
    "0 Group ca484a62",
    "0/0 Group 255a8b8d",
@@ -2496,7 +2496,7 @@
    "0/0/1 Mesh c6c5c33e",
    "0/0/2 Mesh 1c6de362",
    "0/0/3 Mesh aac13a88",
-   "0/0/4 Mesh 4ae13165"
+   "0/0/4 Mesh 47c657b0"
   ]
  },
  "model/sports_drink:merged": {
@@ -2654,7 +2654,7 @@
   ]
  },
  "model/communion_wine": {
-  "hash": "6cd295b8",
+  "hash": "795d5a3f",
   "nodes": [
    "0 Group c42dd207",
    "0/0 Group e6e69a9c",
@@ -2663,7 +2663,7 @@
    "0/0/2 Mesh ca95e332",
    "0/0/3 Mesh 4b0586f0",
    "0/0/4 Mesh e228c0a0",
-   "0/0/5 Mesh 631b3061"
+   "0/0/5 Mesh a589c66a"
   ]
  },
  "model/communion_wine:merged": {
@@ -2697,7 +2697,7 @@
   ]
  },
  "model/coconut_water": {
-  "hash": "f582283c",
+  "hash": "c0e5155",
   "nodes": [
    "0 Group 33b16df4",
    "0/0 Group 67822565",
@@ -2706,7 +2706,7 @@
    "0/0/2 Mesh 40f19174",
    "0/0/3 Mesh e37caeb2",
    "0/0/4 Mesh a2692a16",
-   "0/0/5 Mesh 350d14b8"
+   "0/0/5 Mesh 599384d9"
   ]
  },
  "model/coconut_water:merged": {
@@ -2740,7 +2740,7 @@
   ]
  },
  "model/dirty_water": {
-  "hash": "1088477",
+  "hash": "d5b9bc94",
   "nodes": [
    "0 Group 911dad3c",
    "0/0 Group cbb75842",
@@ -2748,7 +2748,7 @@
    "0/0/1 Mesh f39162b8",
    "0/0/2 Mesh c812c686",
    "0/0/3 Mesh 32587c68",
-   "0/0/4 Mesh 54131aba"
+   "0/0/4 Mesh 8b1963f5"
   ]
  },
  "model/dirty_water:merged": {

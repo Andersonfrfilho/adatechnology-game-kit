@@ -5,9 +5,10 @@ import { itemFamily } from './destruction'
 
 /**
  * How a sealed model looks once open: `cut_lid` (a tin opened with a can opener: the lid cut along the rim and bent up on a hinge, the food showing),
- * `peel_lid` (a flat tin with a ring pull: the lid rolled back along its length) and `pull_tab` (a drink can: the scored mouth pushed in under the tab).
+ * `peel_lid` (a flat tin with a ring pull: the lid rolled back along its length), `pull_tab` (a drink can: the scored mouth pushed in under the tab) and `screw_cap`
+ * (a jar or a bottle: the meshes its model marks `userData.itemLid` taken off, the mouth under them showing).
  */
-export type ItemOpeningStyle = 'cut_lid' | 'peel_lid' | 'pull_tab'
+export type ItemOpeningStyle = 'cut_lid' | 'peel_lid' | 'pull_tab' | 'screw_cap'
 
 export interface ItemOpening {
   readonly style: ItemOpeningStyle
@@ -34,8 +35,16 @@ const INSIDE = 0x14110e
 const CUT_EDGE = 0xd9dde2
 const LID = 0xb9bec4
 
-/** Box of the drawn meshes in the root's own space (its units, whatever its pose), decals and debris left out. */
-const localBox = (T: typeof THREE_NS, root: THREE_NS.Object3D): THREE_NS.Box3 => {
+const isLid = (o: THREE_NS.Object3D): boolean => o.userData.itemLid === true
+
+/** Marks the cap of a model (`userData.itemLid`), the part a `screw_cap` opening takes off; wraps the mesh where the model makes it, so nothing is reordered. */
+export const asLid = <TMesh extends THREE_NS.Object3D>(mesh: TMesh): TMesh => {
+  mesh.userData.itemLid = true
+  return mesh
+}
+
+/** Box of the drawn meshes in the root's own space (its units, whatever its pose), decals and debris left out; `only` keeps just the meshes it accepts. */
+const localBox = (T: typeof THREE_NS, root: THREE_NS.Object3D, only?: (o: THREE_NS.Object3D) => boolean): THREE_NS.Box3 => {
   root.updateMatrixWorld(true)
   const toRoot = new T.Matrix4().copy(root.matrixWorld).invert()
   const box = new T.Box3()
@@ -44,6 +53,7 @@ const localBox = (T: typeof THREE_NS, root: THREE_NS.Object3D): THREE_NS.Box3 =>
   root.traverse((o) => {
     const mesh = o as THREE_NS.Mesh
     if (!mesh.isMesh || mesh.userData.destructionDebris || mesh.name === OPENING_NAME || mesh.parent?.name === OPENING_NAME) return
+    if (only && !only(mesh)) return
     if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
     part.copy(mesh.geometry.boundingBox!).applyMatrix4(m.multiplyMatrices(toRoot, mesh.matrixWorld))
     box.union(part)
@@ -59,11 +69,11 @@ export function openItem(T: typeof THREE_NS, root: THREE_NS.Object3D, modelId: s
   const look = itemOpening(modelId)
   if (!look) return false
   if (root.userData.itemOpened) return true
-  const box = localBox(T, root)
+  const box = look.style === 'screw_cap' ? localBox(T, root, isLid) : localBox(T, root)
   if (box.isEmpty()) return false
   const size = box.getSize(new T.Vector3())
   const centre = box.getCenter(new T.Vector3())
-  const top = box.max.y
+  const top = look.style === 'screw_cap' ? box.min.y : box.max.y
   const lift = size.y * 0.003
   const sheet = Math.max(size.y * 0.006, 1e-4)
   const group = new T.Group()
@@ -83,7 +93,13 @@ export function openItem(T: typeof THREE_NS, root: THREE_NS.Object3D, modelId: s
   const flat = (geometry: THREE_NS.BufferGeometry): THREE_NS.BufferGeometry => geometry.rotateX(-Math.PI / 2)
   const food = look.food ?? INSIDE
 
-  if (look.style === 'pull_tab') {
+  if (look.style === 'screw_cap') {
+    // the cap is off (in the hand or the pocket): the open mouth where it sat, and what is inside a little below the rim
+    const r = Math.min(size.x, size.z) / 2
+    root.traverse((o) => isLid(o) && (o.visible = false))
+    add(flat(new T.CircleGeometry(r * 0.85, 24)), material(INSIDE), lift)
+    if (look.food !== undefined) add(flat(new T.CircleGeometry(r * 0.7, 24)), material(look.food), lift * 2).userData.itemFood = true
+  } else if (look.style === 'pull_tab') {
     // the scored mouth in front of the rivet, pushed in under the tab: a dark opening about a fifth of the lid wide
     const r = Math.min(size.x, size.z) / 2
     const mouth = add(flat(new T.CircleGeometry(r * 0.2, 24)), material(INSIDE), lift)
@@ -125,6 +141,27 @@ export function openItem(T: typeof THREE_NS, root: THREE_NS.Object3D, modelId: s
   }
   root.add(group)
   root.userData.itemOpened = true
+  return true
+}
+
+/** How high (in cap heights) a screw cap is lifted when it is fully off its thread. */
+const CAP_OFF = 1.6
+
+/**
+ * Turns the cap of a `screw_cap` model `turned` radians round its axis and lifts it `lift` (0..1) of the way off its thread, from where the model drew it. Before
+ * `openItem`, which takes it off. False for a model that does not open with a screw cap.
+ */
+export function turnItem(root: THREE_NS.Object3D, modelId: string, state: { readonly turned: number; readonly lift: number }): boolean {
+  if (itemOpening(modelId)?.style !== 'screw_cap') return false
+  root.traverse((o) => {
+    if (!isLid(o)) return
+    const mesh = o as THREE_NS.Mesh
+    const base = (mesh.userData.lidBase ??= { y: mesh.position.y, turn: mesh.rotation.y }) as { y: number; turn: number }
+    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+    const height = (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y) * mesh.scale.y
+    mesh.rotation.y = base.turn + state.turned
+    mesh.position.y = base.y + Math.min(1, Math.max(0, state.lift)) * height * CAP_OFF
+  })
   return true
 }
 

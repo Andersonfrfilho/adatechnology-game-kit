@@ -11,7 +11,7 @@ import type { ShelfPlan } from './area-layout'
 import { buildItem } from './build-item'
 import type { DrawableItem } from './build-item'
 import { itemContents, SHELL_PART_ID } from './destruction'
-import { itemOpening, openItem, setOpeningContents } from './opening'
+import { itemOpening, openItem, setOpeningContents, turnItem } from './opening'
 import type { ContentsSubject } from './destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from './budgets'
 import { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
@@ -258,7 +258,16 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
 
   const items = catalog.list()
   const categories = [...ITEM_CATEGORIES.map((c) => c.id), ...[...catalog.categories.keys()].filter((id) => !ITEM_CATEGORIES.some((c) => c.id === id))].filter((id) => items.some((item) => item.category === id))
-  const shelves = shelvesLayout(items, categories)
+  // a sealed item lies next to the first of its opening tools the catalogue has (a can opener beside each tin), so the tool is at hand where the item is picked up
+  const openerOf = (item: ItemDef): ItemDef | undefined => {
+    const id = item.seal?.openWith?.find((tool) => catalog.has(tool))
+    return id === undefined ? undefined : catalog.get(id)
+  }
+  const laid = items.flatMap((item) => {
+    const opener = openerOf(item)
+    return opener ? [item, { id: opener.id, category: item.category, size: opener.size }] : [item]
+  })
+  const shelves = shelvesLayout(laid, categories)
   const showcase = listItemModels().map((id) => ({ id, size: sizeOfModel(id) as [number, number, number], def: catalog.has(id) ? catalog.get(id) : undefined }))
 
   const state: { -readonly [K in keyof ItemsAreaState]: ItemsAreaState[K] } = {
@@ -345,6 +354,10 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       ...(openWith ? { openWith } : {}),
       open: (root: unknown) => void (latestTHREE && openItem(latestTHREE, root as THREE_NS.Object3D, model)),
       contents: (root: unknown, share: number) => setOpeningContents(root as THREE_NS.Object3D, share),
+      // a screw cap is turned off by the other hand before the first bite or sip
+      ...(itemOpening(model)?.style === 'screw_cap'
+        ? { openUse: 'unscrew', turn: (root: unknown, state: { readonly turned: number; readonly lift: number }) => void turnItem(root as THREE_NS.Object3D, model, state) }
+        : {}),
     }
     const eaten = def.category === 'food' && fluid.fluid ? { fluid: { ...fluid.fluid, uses: ['eat', 'pour_out'] } } : fluid
     return { ...eaten, seal }
@@ -737,7 +750,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
         id: 'modeled',
         name: text.metrics.modeled,
         read: () => {
-          const shown = visibleEntries().filter((entry) => entry.group === 'shelf')
+          // per catalogue item: the can openers laid beside the tins are the same item
+          const shown = [...new Map(visibleEntries().filter((entry) => entry.group === 'shelf').map((entry) => [entry.itemId, entry])).values()]
           return `${shown.filter((entry) => entry.kind === 'model').length}/${shown.length}`
         },
       },

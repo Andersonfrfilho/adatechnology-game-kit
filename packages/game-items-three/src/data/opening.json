@@ -9,6 +9,17 @@
     "canned_corn_and_peas": { "food": "#c7b03c" },
     "canned_sausages": { "food": "#c98d5c" },
     "canned_sardines": { "style": "peel_lid", "food": "#8e979c" },
-    "condensed_milk": { "food": "#e3cf9c" }
+    "condensed_milk": { "food": "#e3cf9c" },
+    "energy_drink": { "style": "pull_tab" },
+    "honey_jar": { "style": "screw_cap", "food": "#d99a1c" },
+    "home_preserves": { "style": "screw_cap", "food": "#8e1f3a" },
+    "cooking_oil": { "style": "screw_cap", "food": "#e3b830" },
+    "water_bottle": { "style": "screw_cap" },
+    "water_jug_5l": { "style": "screw_cap" },
+    "dirty_water": { "style": "screw_cap" },
+    "sports_drink": { "style": "screw_cap" },
+    "coconut_water": { "style": "screw_cap" },
+    "cachaca": { "style": "screw_cap" },
+    "communion_wine": { "style": "screw_cap" }
   }
 }

@@ -3,7 +3,11 @@
     "kind": "canned_food"
   },
   "canned_sardines": {
-    "kind": "canned_food"
+    "kind": "canned_food",
+    "seal": {
+      "byHand": true,
+      "spoilsWhenBreached": true
+    }
   },
   "canned_corn_and_peas": {
     "kind": "canned_food"
@@ -59,7 +63,10 @@
     "nonPerishable": true,
     "estimated": [
       "nonPerishable"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "bread": {
     "kind": "food_improves_cooked"
@@ -104,7 +111,10 @@
     "kind": "food_needs_prep"
   },
   "home_preserves": {
-    "kind": "food_ready"
+    "kind": "food_ready",
+    "seal": {
+      "byHand": true
+    }
   },
   "dog_food": {
     "kind": "food_ready"
@@ -132,7 +142,10 @@
     ]
   },
   "cooking_oil": {
-    "kind": "ingredient"
+    "kind": "ingredient",
+    "seal": {
+      "byHand": true
+    }
   },
   "coffee": {
     "kind": "ingredient",
@@ -153,7 +166,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "water_jug_5l": {
     "kind": "drink_ready",
@@ -165,7 +181,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "dirty_water": {
     "kind": "drink_untreated",
@@ -177,7 +196,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "soda_can": {
     "kind": "canned_drink",
@@ -253,7 +275,10 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "energy_drink": {
     "kind": "drink_ready",
@@ -263,7 +288,11 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true,
+      "spoilsWhenBreached": true
+    }
   },
   "coconut_water": {
     "kind": "drink_ready",
@@ -273,7 +302,10 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "beer_can": {
     "kind": "canned_drink",
@@ -314,7 +346,10 @@
       "parts",
       "impact",
       "leftover"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "communion_wine": {
     "kind": "drink_ready",
@@ -345,7 +380,10 @@
       "parts",
       "impact",
       "leftover"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   "bandage": {
     "kind": "first_aid"
