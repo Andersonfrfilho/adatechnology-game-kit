@@ -72,7 +72,9 @@ task fecha com os gates do fim deste arquivo e com um commit isolado.
   - Fim da task: o lint de luz vira `error`.
 - T4.5 Partículas de `game-vehicles` e de `game-weapons-three/src/fx` passam pelo `host.effects` e pelo pool de material. Sai o
   `pinPrograms` da sala.
-- T4.6 Os pré-aquecimentos (`warmUpProbes`) dos adaptadores se registram no `ProgramWarmup`.
+- T4.6 Os pré-aquecimentos (`warmUpProbes`) dos adaptadores se registram no `ProgramWarmup`, que também envia à GPU os buffers dos
+  efeitos de cada explosivo no carregamento. O alvo são os 2 quadros de 36 ms que sobraram na primeira granada e no primeiro molotov
+  (lado da GPU, ver `docs/desempenho-explosoes.md`).
 - Aceite da fase: `perf.mjs` (GPU e CI) com 0 programas em todas as fases e nenhum orçamento a mais estourado do que antes.
 
 ## Fase 4b — Reação em cadeia: explosões e corpos (depois da T4.1)
