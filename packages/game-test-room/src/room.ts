@@ -1177,7 +1177,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     lastImpact.clear()
     addArena()
     standFootprints()
-    timeScale = 1
+    scheduler.timeScale = 1
     fastForward = false
     walkPlan = null
   }
@@ -2649,14 +2649,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Frame
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  let timeScale = 1
   let fastForward = false
   let hudAcc = 1
   let metricsAcc = 0
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
-  // the room's frame: one lateSimulate system holds `update` for now (the phases come in the next commits); 8 ms is the biggest budget of the loose queues of today
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: 8, snapMs: 0 })
+  // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
+  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: 8 })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   let qualityName: 'low' | 'medium' | 'high' = quality
@@ -2688,7 +2687,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  let paused = false
   let walkPlan: { x: number; z: number; remaining: number } | null = null
   const stepWalk = (dt: number): void => {
     if (!walkPlan) return
@@ -2699,7 +2697,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const stepSim = (dt: number): void => {
-    if (paused) return
+    if (scheduler.paused) return
     // `dt` is simulated seconds; real time only drives input
     simTime += dt
     stepWalk(dt)
@@ -2743,7 +2741,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     flush()
   }
 
-  const update = (dt: number): void => {
+  // input: real time, what the player does (the world is paused or slowed without touching it)
+  const updateInput = (dt: number, isPaused: boolean): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
     seating.update()
@@ -2753,24 +2752,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       pushByKey = false
       push.end()
     }
-    push.step(paused ? 0 : dt)
-    doors.step(paused ? 0 : dt)
-    if (!paused) kickLight(dt)
-    if (!paused) pushByPlayer(dt)
+    push.step(isPaused ? 0 : dt)
+    doors.step(isPaused ? 0 : dt)
+    if (!isPaused) kickLight(dt)
+    if (!isPaused) pushByPlayer(dt)
     else player.takeWish()
-    stepAvatar(paused ? 0 : dt)
+    stepAvatar(isPaused ? 0 : dt)
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
     // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
-    if ((useHeld || useFirst) && !paused && !push.active) {
+    if ((useHeld || useFirst) && !isPaused && !push.active) {
       if (tool.def.category === 'hand') {
         if (useFirst) handUse()
       } else if (useHeld) useTool(dt, !useFirst)
       useFirst = false
     }
-    if (!paused) followHeld(dt)
-    stepSim(dt * timeScale)
+    if (!isPaused) followHeld(dt)
+  }
+
+  // present: what the player reads (HUD, progress, log, bench metrics), by real time
+  const updatePresent = (dt: number): void => {
     reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
@@ -2804,7 +2806,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       inspect: inspectInfo(),
       animations: animationsOf(),
       locked: player.locked,
-      timeScale,
+      timeScale: scheduler.timeScale,
       fast: fastForward,
       tap: isTapOn(),
       combo: combo ? comboOn : null,
@@ -3347,8 +3349,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const all = list ?? allScenarios()
     const report: ScenarioReport = { passed: 0, failed: 0, results: [] }
     scenarioRunning = true
-    const wasPaused = paused
-    paused = false
+    const wasPaused = scheduler.paused
+    scheduler.resume()
     try {
       for (const sc of all) {
         hardReset()
@@ -3380,7 +3382,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     } finally {
       scenarioRunning = false
-      paused = wasPaused
+      if (wasPaused) scheduler.pause()
       restoreScenery()
     }
     return report
@@ -3593,20 +3595,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       blastOptions = { ...blastOptions, ...next }
     },
     pause() {
-      paused = true
+      scheduler.pause()
     },
     resume() {
-      paused = false
+      scheduler.resume()
     },
     get paused() {
-      return paused
+      return scheduler.paused
     },
     walk(to, seconds) {
       walkPlan = seconds > 0 ? { x: to[0], z: to[2], remaining: seconds } : null
       if (!walkPlan) player.moveBy(to[0] - camera.position.x, to[2] - camera.position.z)
     },
     setSlowMotion(on) {
-      timeScale = on ? 0.25 : 1
+      scheduler.timeScale = on ? 0.25 : 1
     },
     setFastForward(on) {
       fastForward = on
@@ -3817,7 +3819,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     showBench()
   }
 
-  scheduler.add((ctx) => update(ctx.dt), { phase: 'lateSimulate', id: 'room.update' })
+  scheduler.add((ctx) => updateInput(ctx.dt, ctx.paused), { phase: 'input', id: 'room.input' })
+  scheduler.add((ctx) => stepSim(ctx.dt), { phase: 'lateSimulate', id: 'room.simulate' })
+  scheduler.add(
+    (ctx) => {
+      if (ctx.simulated) updatePresent(ctx.realDt)
+    },
+    { phase: 'present', id: 'room.present' },
+  )
   let stopLoop: (() => void) | undefined
   if (ownRenderer && typeof requestAnimationFrame === 'function') {
     ownsLoop = true

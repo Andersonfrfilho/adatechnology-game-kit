@@ -376,6 +376,25 @@ describe('pause and walk', () => {
   })
 })
 
+describe('slow motion', () => {
+  it('runs the world and the module frames at a quarter while the input phase keeps real time', () => {
+    const room = makeRoom()
+    const so = room.spawn('chair', [0, 3, -4], 0)
+    const y0 = so.root.position.y
+    const moduleDts: number[] = []
+    room.setSlowMotion(true)
+    room.loadModule({ id: 'probe', name: 'Probe', group: 'Probe', items: () => [], attach: (host) => host.onFrame((dt) => moduleDts.push(dt)) })
+    run(room, 1)
+    const slowDrop = y0 - so.root.position.y
+    expect(moduleDts.at(-1)).toBeCloseTo(1 / 240, 6)
+
+    const normal = makeRoom()
+    const other = normal.spawn('chair', [0, 3, -4], 0)
+    run(normal, 0.25)
+    expect(slowDrop).toBeCloseTo(3 - other.root.position.y, 1)
+  })
+})
+
 describe('grenade blast', () => {
   it('draws fire, flash and smoke: live puffs, sparks and glows of the effects layer, and a blast light, are in the scene', () => {
     const room = makeRoom()
