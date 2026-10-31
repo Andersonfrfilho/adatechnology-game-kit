@@ -1,3 +1,5 @@
+import { asLid } from '../opening'
+
 import type { ItemModelBuilder } from './registry'
 
 /**
@@ -9,6 +11,6 @@ export const dirtyWater: ItemModelBuilder = ({ mesh, cyl, lathe, G, plastic, pap
   const murk = mesh(lathe([[0, -0.89], [0.27, -0.89], [0.315, -0.84], [0.315, 0.1], [0, 0.1]], 12), food(0x6b5a34))
   const sediment = mesh(cyl(0.31, 0.27, 0.12, 8), food(0x4a3d22), [0, -0.82, 0])
   const label = mesh(cyl(0.332, 0.332, 0.22, 12), paper(0xcfc9b4), [0, 0.38, 0])
-  const cap = mesh(cyl(0.19, 0.19, 0.2, 8), plastic(0x5a6068), [0, 0.815, 0])
+  const cap = asLid(mesh(cyl(0.19, 0.19, 0.2, 8), plastic(0x5a6068), [0, 0.815, 0]))
   return G(bottle, murk, sediment, label, cap)
 }

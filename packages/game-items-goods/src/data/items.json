@@ -602,7 +602,10 @@
     "nonPerishable": true,
     "estimated": [
       "nonPerishable"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "bread",
@@ -1144,7 +1147,10 @@
         "lodge"
       ]
     },
-    "model": "home_preserves"
+    "model": "home_preserves",
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "dog_food",
@@ -1302,7 +1308,10 @@
         "supermarket"
       ]
     },
-    "model": "cooking_oil"
+    "model": "cooking_oil",
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "coffee",
@@ -1390,7 +1399,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "water_jug_5l",
@@ -1430,7 +1442,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "dirty_water",
@@ -1467,7 +1482,10 @@
     "estimated": [
       "nonPerishable",
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "soda_can",
@@ -1675,7 +1693,10 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "energy_drink",
@@ -1716,7 +1737,11 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true,
+      "spoilsWhenBreached": true
+    }
   },
   {
     "id": "coconut_water",
@@ -1756,7 +1781,10 @@
     },
     "estimated": [
       "fluid"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "beer_can",
@@ -1856,7 +1884,10 @@
       "parts",
       "impact",
       "leftover"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "communion_wine",
@@ -1912,7 +1943,10 @@
       "parts",
       "impact",
       "leftover"
-    ]
+    ],
+    "seal": {
+      "byHand": true
+    }
   },
   {
     "id": "bandage",

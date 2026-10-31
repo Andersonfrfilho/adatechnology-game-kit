@@ -1,3 +1,5 @@
+import { asLid } from '../opening'
+
 import type { ItemModelBuilder } from './registry'
 
 /**
@@ -10,6 +12,6 @@ export const communionWine: ItemModelBuilder = ({ mesh, bx, cyl, lathe, G, glass
   const goldBand = mesh(cyl(0.382, 0.382, 0.05, 12), metal(0xb58830), [0, 0.075, 0])
   const crossUpright = mesh(bx(0.06, 0.26, 0.02), paper(0x7a1f2b), [0, -0.35, 0.375])
   const crossArm = mesh(bx(0.18, 0.06, 0.02), paper(0x7a1f2b), [0, -0.3, 0.375])
-  const foil = mesh(cyl(0.15, 0.15, 0.46, 12), metal(0xb58830), [0, 1.27, 0])
+  const foil = asLid(mesh(cyl(0.15, 0.15, 0.46, 12), metal(0xb58830), [0, 1.27, 0]))
   return G(bottle, label, goldBand, crossUpright, crossArm, foil)
 }
