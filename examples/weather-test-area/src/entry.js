@@ -7,7 +7,7 @@
 // Metrics: weather, hour, blend, rain, visibility, sight and hearing scale, wind, temperature, heat index, wet ground, strikes.
 import { CLIMATES, WEATHER_STATES, createWeather } from '@adatechnology/game-weather'
 import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
-import { createWeatherVisual } from '@adatechnology/game-weather-three'
+import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
