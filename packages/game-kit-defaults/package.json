@@ -1,0 +1,48 @@
+{
+  "name": "@adatechnology/game-kit-defaults",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "The default preset of the game kit (L5 composition): imports the content packs and returns the ready options the cores and adapters take by option, like Bevy's DefaultPlugins. A game that wants other content leaves it out.",
+  "keywords": [
+    "game",
+    "defaults",
+    "preset",
+    "composition"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-kit-defaults"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-characters-people": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
