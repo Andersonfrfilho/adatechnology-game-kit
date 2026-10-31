@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { createFog as createStableFog } from '@adatechnology/game-render-three'
 import type { WeatherSample } from '@adatechnology/game-weather'
 import type { WorkshopEngine } from '@adatechnology/game-vfx'
 import { ZONE_FOG_DEFAULTS } from './sky'
@@ -29,7 +30,17 @@ export type Fog = {
   clear(): void
 }
 
-export function createFog(THREE: ThreeLib, scene: { fog: unknown }, options: { readonly expFrom?: number } = {}): Fog {
+export type FogOptions = {
+  readonly expFrom?: number
+  /**
+   * The scene's fog never goes back to `null` (the layer switched off leaves the host's own linear fog or a neutral one that fogs nothing), so its presence and type, which are part of every
+   * lit material's program key, never change. Needs a real `Scene`. Default false: the host's fog (or none) comes back, as before.
+   */
+  readonly stable?: boolean
+}
+
+export function createFog(THREE: ThreeLib, scene: { fog: unknown }, options: FogOptions = {}): Fog {
+  if (options.stable) return stableFog(THREE, scene as THREE_NS.Scene, options)
   // the fog the host had before: it comes back when the layer is switched off (the first update changes it in place, so a copy is kept)
   const original = scene.fog
   const kept = original && (original as { isFog?: boolean }).isFog ? (original as THREE_NS.Fog).clone() : original
@@ -53,6 +64,19 @@ export function createFog(THREE: ThreeLib, scene: { fog: unknown }, options: { r
     clear() {
       scene.fog = kept && (kept as { isFog?: boolean }).isFog ? (kept as THREE_NS.Fog).clone() : (kept ?? null)
     },
+  }
+}
+
+function stableFog(THREE: ThreeLib, scene: THREE_NS.Scene, options: FogOptions): Fog {
+  const controller = createStableFog(THREE, scene, { stable: true })
+  return {
+    update(sample, sky, zone) {
+      const values = fogOf(sample, zone, options.expFrom)
+      if (values.mode === 'linear') controller.useLinear(sky.getHex(), values.near, values.far)
+      else controller.useExp2(sky.getHex(), values.density)
+      ;(scene.fog as { color: THREE_NS.Color }).color.copy(sky)
+    },
+    clear: () => controller.clear(),
   }
 }
 

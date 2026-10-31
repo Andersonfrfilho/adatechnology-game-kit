@@ -102,8 +102,8 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
-/** Slots of the room's LightBudget: vfx blast, fire and Workshop (4 + 2 + 4 + 2), the rocket (1) and the weapon light (spot). Raised by what each client of T4.4 stops creating. */
-const ROOM_LIGHT_SIZES = { point: 13, spot: 1, pointShadows: 0, hemisphere: 0 } as const
+/** Slots of the room's LightBudget: vfx blast, fire and Workshop (4 + 2 + 4 + 2), the rocket (1), the weapon light and the two headlights (spot) and the lightning (hemisphere). Raised by what each client of T4.4 stops creating. */
+const ROOM_LIGHT_SIZES = { point: 13, spot: 3, pointShadows: 0, hemisphere: 1 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */

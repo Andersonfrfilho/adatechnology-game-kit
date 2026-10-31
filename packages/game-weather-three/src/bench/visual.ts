@@ -1,3 +1,4 @@
+import { isLightBudget } from '@adatechnology/game-render-three'
 import { footprintBlocker } from '@adatechnology/game-contracts'
 import type { Footprint, ModuleHost, ModuleLayer } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -86,6 +87,7 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
         ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}),
         ...(options.headlights ? { headlights: options.headlights } : {}),
         ...(options.layers ? { layers: options.layers } : {}),
+        ...(isLightBudget(host.lights) ? { lights: host.lights } : {}),
       })
       const item = options.rigItem && host.addObject ? options.rigItem : undefined
       return attachRig(THREE, host, renderer, options.rig === undefined ? RIG_DEFAULT : options.rig, item ? undefined : options.vehicles?.(THREE), options.rigVehicle ?? RIG_VEHICLE, item)
