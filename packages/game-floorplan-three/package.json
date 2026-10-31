@@ -52,8 +52,7 @@
     "@adatechnology/game-floorplan-residential": "workspace:^"
   },
   "peerDependencies": {
-    "three": "^0.160.0",
-    "@adatechnology/game-floorplan": "workspace:^"
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

@@ -56,7 +56,6 @@
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
-    "@adatechnology/game-items": "workspace:^",
     "@adatechnology/game-items-goods": "workspace:^"
   }
 }

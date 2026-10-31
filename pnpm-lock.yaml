@@ -263,9 +263,6 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:^
         version: link:../game-characters
-      '@adatechnology/game-contracts':
-        specifier: workspace:^
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-animals-species':
         specifier: workspace:^
@@ -322,9 +319,6 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:^
         version: link:../game-characters
-      '@adatechnology/game-contracts':
-        specifier: workspace:^
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-animals':
         specifier: workspace:^
@@ -578,9 +572,6 @@ importers:
       '@adatechnology/game-interactables-household':
         specifier: workspace:^
         version: link:../game-interactables-household
-      '@adatechnology/game-items':
-        specifier: workspace:^
-        version: link:../game-items
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods
@@ -681,9 +672,6 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:^
         version: link:../game-floorplan
-      '@adatechnology/game-items':
-        specifier: workspace:^
-        version: link:../game-items
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods
@@ -977,9 +965,6 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
-      '@adatechnology/game-interactables':
-        specifier: workspace:^
-        version: link:../game-interactables
       '@adatechnology/game-weapons':
         specifier: workspace:^
         version: link:../game-weapons
@@ -1180,10 +1165,10 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+    devDependencies:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
-    devDependencies:
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1307,9 +1292,6 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:^
         version: link:../game-floorplan-residential
-      '@adatechnology/game-floorplan-structure':
-        specifier: workspace:^
-        version: link:../game-floorplan-structure
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1331,9 +1313,6 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
-      '@adatechnology/game-floorplan':
-        specifier: workspace:^
-        version: link:../game-floorplan
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -1571,9 +1550,6 @@ importers:
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
-      '@adatechnology/game-vfx':
-        specifier: workspace:^
-        version: link:../game-vfx
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1600,10 +1576,6 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-vfx:
-    dependencies:
-      '@adatechnology/game-contracts':
-        specifier: workspace:^
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:^
@@ -1704,9 +1676,6 @@ importers:
         specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
-      '@adatechnology/game-destruction':
-        specifier: workspace:^
-        version: link:../game-destruction
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -1768,13 +1737,13 @@ importers:
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
-      '@adatechnology/game-vfx-three':
-        specifier: workspace:^
-        version: link:../game-vfx-three
       '@adatechnology/game-weather':
         specifier: workspace:^
         version: link:../game-weather
     devDependencies:
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:^
+        version: link:../game-vfx-three
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
