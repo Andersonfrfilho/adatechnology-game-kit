@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ContainerSpec, ObjectSpec, SlotSpec } from '@adatechnology/game-interactables'
-import { cornersOf, motionPoint } from '../src'
+import { cornersOf, createHousehold, motionPoint } from '../src'
 import { REGIONS, SEEDS, bbox, boxes, build, closedPoints, localPrims, pack, partPoints } from './helpers'
 
 const hh = pack()
@@ -640,4 +640,11 @@ describe('slot layout is robust to size overrides', () => {
     }
     expect((build('dresser').spec.parts ?? []).filter((p) => p.id.startsWith('drawer')).length).toBe(4)
   })
+})
+
+describe('what can be pushed', () => {
+  const pushable = (id: string): boolean => createHousehold().types.find((type) => type.id === id)?.pushable === true
+
+  it.each(['sofa', 'wardrobe', 'fridge', 'bbq', 'nightstand'])('%s stands on the floor and is pushed', (id) => expect(pushable(id)).toBe(true))
+  it.each(['microwave', 'gas_canister', 'lantern_lamp', 'toilet', 'dining_chair', 'wall_socket'])('%s is not', (id) => expect(pushable(id)).toBe(false))
 })

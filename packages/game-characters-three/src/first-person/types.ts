@@ -23,6 +23,17 @@ export type FirstPersonRig = {
   fore: number
   /** How far (m) a shoulder may move toward a hand it cannot reach, so long tools stay in the hands. 0 keeps the shoulders where they are. */
   reachShift: number
+  /**
+   * The elbow bend (radians, 0 straight) an arm keeps when its shoulder comes forward to a far hand, right then left: the shoulder stops short of a straight arm, so the
+   * elbow and the wrist read on screen. Leave it out to stretch the arm to its full length first.
+   */
+  reachBend?: readonly [number, number]
+  /**
+   * Holding a tool, the way from the wrist to the elbow (camera space, right arm then left; x right, y up, -z ahead): the elbow is put there, kept inside the view, and the shoulder
+   * behind it out of the view, so the bend of the arm shows on screen (a trigger elbow out to the side, a support elbow out under the forend). Leave it out to keep the
+   * shoulders fixed and bend the elbows toward `elbowPole`; null for one arm keeps that arm so (a support hand cups a handguard from below, its elbow under the view).
+   */
+  elbowView?: readonly [Triple | null, Triple | null]
   /** From the wrist (where the sleeve ends) to the middle of the palm. */
   wrist: number
   /** The way the elbow bends, for the right arm; mirrored for the left. */

@@ -7,6 +7,7 @@
     "h": 1.8,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 70
   },
   {
@@ -17,6 +18,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 30
   },
   {
@@ -27,6 +29,7 @@
     "h": 0.9,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 35
   },
   {
@@ -47,6 +50,7 @@
     "h": 2,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 50
   },
   {
@@ -57,6 +61,7 @@
     "h": 2.1,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 90
   },
   {
@@ -67,6 +72,7 @@
     "h": 0.9,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 45
   },
   {
@@ -77,6 +83,7 @@
     "h": 0.55,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 12
   },
   {
@@ -97,6 +104,7 @@
     "h": 0.9,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 45
   },
   {
@@ -247,6 +255,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 70
   },
   {
@@ -257,6 +266,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 45
   },
   {
@@ -267,6 +277,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 25
   },
   {
@@ -287,6 +298,7 @@
     "h": 0.95,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 60
   },
   {
@@ -297,6 +309,7 @@
     "h": 0.9,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 30
   },
   {
@@ -307,6 +320,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 15
   },
   {
@@ -347,6 +361,7 @@
     "h": 1.05,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 12
   },
   {
@@ -367,6 +382,7 @@
     "h": 0.85,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 20
   },
   {
@@ -377,6 +393,7 @@
     "h": 1.9,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 400
   },
   {
@@ -397,6 +414,7 @@
     "h": 1.75,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 75
   },
   {
@@ -407,6 +425,7 @@
     "h": 2.3,
     "y": 0,
     "solid": true,
+    "pushable": true,
     "massKg": 120
   },
   {

@@ -18,6 +18,8 @@ export interface DrawableItem extends ShapeSubject {
   model?: string
   /** Real weight in kg; with `destructible` it becomes the mass of the destruction body. */
   weight?: number
+  /** Loose dry contents in their colour (0xRRGGBB); with `destructible` a hole through the item puffs them out (`PartSpec.powder`). */
+  powder?: { color: number }
 }
 
 export interface BuildItemOptions {
@@ -84,7 +86,7 @@ export function buildItem(T: typeof THREE_NS, item: DrawableItem, options: Build
   const materials = kit.materials.slice(first)
   if (options.wear) setWear(materials, options.wear)
   root.userData.wear = options.wear ?? 0
-  if (options.destructible) tagForDestruction(root, { ...(kind === 'model' && item.model !== undefined ? { modelId: item.model } : {}), ...(item.weight === undefined ? {} : { weight: item.weight }), size: item.size, three: T })
+  if (options.destructible) tagForDestruction(root, { ...(kind === 'model' && item.model !== undefined ? { modelId: item.model } : {}), ...(shape === undefined ? {} : { shapeId: shape }), ...(item.weight === undefined ? {} : { weight: item.weight }), size: item.size, ...(item.powder ? { powder: item.powder } : {}), three: T })
   markKitOrigin(root, { owner: 'game-items-three', kind: 'item', id: item.id, ...(kind === 'shape' ? { standIn: true } : {}) })
   return { root, kind, ...(shape ? { shape } : {}), size: item.size, materials }
 }

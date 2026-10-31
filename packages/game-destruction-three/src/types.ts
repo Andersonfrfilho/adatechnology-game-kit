@@ -10,6 +10,7 @@ import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, Materia
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
+import type { FragmentLifeRule } from './fragments'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -27,8 +28,11 @@ export interface RendererOptions {
   maxFragments?: number
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
-  /** Seconds a resting fragment stays before it fades (default 12; 0 = forever). */
-  fragmentLife?: number
+  /**
+   * Seconds a resting fragment stays before it fades (default 12; 0 = forever). A rule gives it per fragment from its material, size and object, e.g. a brick chunk
+   * that stays as rubble and a chip that goes: `(f) => (Math.max(...f.size) > 0.1 ? 0 : f.material === 'glass' ? 30 : 12)`. Loose pieces (what breaks off whole) never fade.
+   */
+  fragmentLife?: number | FragmentLifeRule
   /** Ground height at (x, z) for fragments, pieces and drips (default 0). */
   groundAt?: (x: number, z: number) => number
   gravity?: number
@@ -46,8 +50,8 @@ export interface RendererOptions {
    * reaches with enough speed, the renderer makes it a piece (`makePiece`) and shoves it, and tells `onLoosened`. Without it only the pieces move. Never answer true for a wall or a fixture.
    */
   shoveable?: (objectId: string) => boolean
-  /** Called when a blast made a bound object a piece (see `shoveable`). */
-  onLoosened?: (objectId: string, piece: Piece) => void
+  /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
+  onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
   /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
   /**

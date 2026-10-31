@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-stories",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "MIT",
   "description": "Pure, seeded story generator for games: roles cast from people or name pools at world creation, stories as data that cross each other through flags and the player's actions, a chronicle, a character sheet that keeps the decisions and stories each person lived, and a life simulation (risk, bonds, couples, births, rivalries, fights, betrayal, food, caravans, raids, arrivals) ported literally from the team's design. Knows nothing about any game.",
   "keywords": [

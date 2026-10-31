@@ -7,7 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
-import type { HandTargetSource } from './hands'
+import type { HandPose, HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
 import type { SealSpec } from './seal'
 
@@ -26,6 +26,20 @@ export interface ModuleItemSeal extends SealSpec {
   open?: (root: unknown) => void
   /** Shows what is left in it once open: `share` of what it held (0 eaten up), after each bite or sip. */
   contents?: (root: unknown, share: number) => void
+}
+
+/** A place on an item where a body sits or lies (a chair, a sofa cushion, a bed), in the item's own frame, the same shape as a `game-interactables` seat. */
+export interface ItemSeat {
+  id: string
+  pose: 'sit' | 'lie'
+  /** Hips (sit) or pelvis (lie). */
+  pos: Vec3
+  /** Facing of the body, relative to the item. */
+  ry: number
+  /** Eye height above `pos`. Default 0.62 sitting, 0.18 lying. */
+  eye?: number
+  /** Where the body stands when it gets up. */
+  exit: Vec3
 }
 
 /** A picture of an item for catalogues and inventories: a hand-made `svg`, or `render` to have the host draw the 3D model (camera angles in radians, `wear` 0 new, 1 worn, 2 ruined). */
@@ -58,6 +72,10 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** A big piece that stands on the floor (a sofa, a wardrobe, a fridge) and can be pushed by leaning on it. Default false: what goes in the hand is grabbed, never pushed. */
+  pushable?: boolean
+  /** Where a body sits or lies on it: the host can seat the player there. */
+  seats?: readonly ItemSeat[]
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
   slow?: boolean | string
   /**
@@ -281,6 +299,12 @@ export interface ModuleHost {
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */
   setHandTargets?(source: HandTargetSource | null): () => void
+  /**
+   * Where the player's body holds a tool now (world space), for a view that shows the body (third person): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
+   * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size, instead of in front of the eye. Null while the view draws the tool in front of
+   * the eye (first person); a host without a body leaves it out.
+   */
+  holdFrame?(): HandPose | null
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */

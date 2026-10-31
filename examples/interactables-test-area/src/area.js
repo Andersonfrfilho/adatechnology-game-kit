@@ -527,9 +527,11 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
           spec: a.destructible,
         }
         if (a.animations.length) item.animations = a.animations
+        if (a.spec.seats?.length) item.seats = a.spec.seats
         const fluid = fluidOf(loc, t.id, a)
         if (fluid) item.fluid = fluid
         if (!t.solid || t.group === 'window') item.movable = false
+        if (t.pushable) item.pushable = true
         return item
       })
     },

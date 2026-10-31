@@ -73,3 +73,23 @@ multidão; a arma usa a destruição, os efeitos e o som. Antes de reimplementar
 - O que é específico de um domínio (balcão de armas, arma na mão, cápsulas, sons) fica no pacote da lib e num
   `examples/<lib>-test-area` que carrega o módulo na sala com `room.loadModule`.
 - Cada área da página do kit abre o seu ambiente de teste já montado (`?area=`).
+
+## 5. Animação e bug: validar em todas as câmeras — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-10-30, depois de uma correção dos braços com arma feita só na terceira pessoa: a primeira pessoa continuou com o
+braço esticado, e na terceira a mira para cima enfiava os braços no corpo.
+
+- Toda mudança em animação, pose, IK, arma na mão ou correção de bug visual é validada em **todas as câmeras** da sala
+  (primeira e terceira pessoa, e qualquer outra que exista), **antes** de dizer que está pronta.
+- Em cada câmera: parado e andando, mirando para cima, reto e para baixo, e pelo menos uma arma de cada família (pistola, espingarda,
+  fuzil, lançador, corpo a corpo, arremesso). Medir na sala real (`examples/test-room`) os números que provam o comportamento
+  (ângulo de cotovelo, distância da palma à pega, mão à frente do peito) e tirar um print por câmera como prova final.
+- Proporção: o que o corpo segura em terceira pessoa aparece no **tamanho real** (a arma da primeira pessoa é reduzida para caber na tela;
+  essa redução não vale para o corpo).
+- O relatório da tarefa diz em quais câmeras foi validado. Câmera não validada é tarefa não terminada.
+
+## 6. Física de cada objeto: os vinte e um critérios
+
+Nenhum objeto (móvel, item, veículo, parede, estrutura, planta) é dado como pronto sem passar nos vinte e um critérios de
+[`docs/criterios-fisica-objetos.md`](docs/criterios-fisica-objetos.md) (material e massa, tiro, golpes, explosão e fogo, destruição no padrão da latinha, pegar,
+usar, entre outros objetos, personagem esbarrando, ser empurrado, persistência, animações com o item inteiro e quebrado, som, peso, queda, líquidos, reação em cadeia, desgaste visual, desempenho, NPCs e zumbis, inventário), testado na sala de testes com print.

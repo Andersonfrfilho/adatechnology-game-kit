@@ -100,6 +100,26 @@ describe('furniture that came apart', () => {
     expect(new THREE.Box3().setFromObject(leg).max.y).toBeLessThan(0.2)
   })
 
+  it('tells the host that what stayed is a piece now, so it stops keeping the footprint where it stood', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const loosened: string[] = []
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onLoosened: (objectId) => loosened.push(objectId) })
+    world.addObject('table', [partState('leg', 'wood', { mass: 1.4 }), partState('board', 'wood', { mass: 4 })], [['leg'], ['board']])
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
+    const board = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.16))
+    board.position.y = 0.76
+    const root = new THREE.Group()
+    root.add(leg, board)
+    markKitOrigin(root, { owner: 'test', kind: 'furniture', id: 'table' })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('table', root, { parts: { leg, board } })
+    world.emit({ type: 'detach', object: 'table', joint: 'j', parts: ['leg', 'board'] })
+    renderer.update(1 / 60)
+    expect(loosened).toEqual(['table'])
+  })
+
   it('a board on two legs in a line falls over too', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()

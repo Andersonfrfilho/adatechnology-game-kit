@@ -10,11 +10,11 @@ import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechn
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { createVfx } from '@adatechnology/game-vfx'
+import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
@@ -33,6 +33,8 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
+import { createSeating } from './seating'
+import type { SeatHolder } from './seating'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -78,6 +80,8 @@ interface Entry {
   fluidUsed?: number
   /** Litres a sealed item had lost when it was opened (`sealLoss`). */
   sealLoss?: number
+  /** Leaning on it pushes it. */
+  pushable?: boolean
 }
 
 interface FireZone {
@@ -256,6 +260,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     vfx: createVfx({
       profile: quality,
+      ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
       groundAt,
     }),
   })
@@ -266,6 +271,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     groundAt,
     pointScale,
+    ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
+    ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -273,13 +280,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       return e?.free === true && !e.piece
     },
-    onLoosened: (objectId, piece) => {
+    onLoosened: (objectId, piece, cause) => {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
       leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
-      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+      action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
@@ -612,7 +619,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let best: Entry | null = null
     let bestDistance = PUSH_REACH
     for (const e of entries.values()) {
-      if (e.arena || (!e.piece && !e.free)) continue
+      if (!e.pushable || (!e.piece && !e.free)) continue
       const b = bodyBox(e)
       if (!b) continue
       const dx = Math.max(b.minX, Math.min(b.maxX, player.x)) - player.x
@@ -636,7 +643,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       aim()
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
       const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
-      if (r && aimed) return { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null }
+      // the eye on something that is not pushed (a can on the floor) is the eye on what the hand takes, even against a sofa
+      if (r && aimed) return entries.get(r.object)?.pushable ? { objectId: r.object, root: aimed, name: nameOf(r.object), piece: rendererPieces.get(r.object) ?? null } : null
       return leanedOn()
     },
     massOf: (objectId) => massOfObject(objectId),
@@ -660,6 +668,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
     },
     ring: (value) => ui?.holdRing(value),
+  })
+  const seatHolder = (objectId: string): SeatHolder | null => {
+    const e = entries.get(objectId)
+    const seats = e?.item?.seats
+    if (!e || !seats?.length || !world.has(objectId)) return null
+    return { objectId, root: rendererPieces.get(objectId)?.root ?? e.so.root, seats }
+  }
+  const seating = createSeating({
+    THREE,
+    player,
+    pick: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      return r ? seatHolder(r.object) : null
+    },
+    find: seatHolder,
+    groundAt: (x, z) => groundAt(x, z),
+    onSit: (seat) => action('sit', t(seat.pose === 'lie' ? 'act.lie' : 'act.sit', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId, pose: seat.pose } }),
+    onStand: (seat) => action('stand', t('act.stand', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId } }),
   })
   /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
   let pushByKey = false
@@ -724,6 +751,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
       const e = registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
       if (o.free) e.free = true
+      if (o.pushable) e.pushable = true
       e.follower = o.follow?.(root, world, o.id) || null
     }
   }
@@ -832,9 +860,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const movable = own ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
+      // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
       const box = new THREE.Box3().setFromObject(root)
       const base = Math.max(pos[1], groundAt(pos[0], pos[2]))
-      pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
+      if (!box.isEmpty()) pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
       root.position.set(pos[0], pos[1], pos[2])
       root.updateMatrixWorld(true)
     }
@@ -844,6 +873,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
     // heavy by its mass and not said to be fixed: a blast can still push it
     if (!own && !movable && item.movable === undefined) e.free = true
+    if (item.pushable) e.pushable = true
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
     return e.so
@@ -1040,6 +1070,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** Reset the worlds to their seeded start: used by scenarios so that each one is deterministic. */
   const hardReset = (): void => {
+    seating.release()
     pushByKey = false
     push.end()
     clearEverything()
@@ -1145,6 +1176,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
     avatarState.push = push.avatarState
+    const seat = seating.seat
+    avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
@@ -1179,6 +1212,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     lastHand = { stance: state.stance, triggerFinger: state.triggerFinger, targets }
     arms.update(dt, state)
+  }
+  /** Third person: the body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push poses the hands itself). */
+  /** How far inside the right shoulder joint, toward the middle of the chest, the pocket a stock rests in sits (m). */
+  const SHOULDER_POCKET_IN = 0.1
+  const pocketAt = new THREE.Vector3()
+  const aimTurn = new THREE.Quaternion()
+  const aimEuler = new THREE.Euler(0, 0, 0, 'YXZ')
+  /** Third person: the pocket of the body's right shoulder, turned to the aim (`ModuleHost.holdFrame`); null in first person or for a body that names no shoulder. */
+  const bodyHoldFrame = (): HandPose | null => {
+    const shoulder = thirdActive() ? avatar?.shoulder?.('R') : undefined
+    if (!shoulder) return null
+    shoulder.getWorldPosition(pocketAt)
+    // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint
+    pocketAt.x -= Math.cos(player.yaw) * SHOULDER_POCKET_IN
+    pocketAt.z += Math.sin(player.yaw) * SHOULDER_POCKET_IN
+    aimTurn.setFromEuler(aimEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
+    return { position: [pocketAt.x, pocketAt.y, pocketAt.z], quaternion: [aimTurn.x, aimTurn.y, aimTurn.z, aimTurn.w] }
+  }
+  const reachAvatar = (): void => {
+    if (!avatar?.reach || !thirdActive()) return
+    avatar.reach(push.active || heldPiece ? null : (handSource?.() ?? null))
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -2554,6 +2608,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const update = (dt: number): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
+    seating.update()
     player.update(dt)
     if (pushByKey && !player.keys.has('KeyE')) {
       // the window lost the key without a key up
@@ -2578,6 +2633,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     stepFirstPerson(paused ? 0 : dt)
+    reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
@@ -2893,6 +2949,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       frameListeners.add(update)
       return () => frameListeners.delete(update)
     },
+    holdFrame: () => bodyHoldFrame(),
     setHandTargets(source) {
       handSource = source
       return () => {
@@ -2980,12 +3037,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         build: (T) => ti.build(T) as THREE_NS.Object3D,
         spec: ti.spec as TestRoomItem['spec'],
         movable: ti.movable,
+        pushable: ti.pushable,
         slow: ti.slow,
         fluid: ti.fluid,
         seal: ti.seal,
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
+        seats: ti.seats,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }
@@ -3077,6 +3136,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const dt = seconds > 6 ? 1 / 30 : FIXED_DT
     const n = Math.max(1, Math.round(seconds / dt))
     for (let i = 0; i < n; i++) {
+      seating.update()
       player.update(0)
       push.step(dt)
       followHeld(dt)
@@ -3412,6 +3472,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    sit: (objectId, seatId) => seating.sit(objectId, seatId),
+    stand: () => seating.stand(),
+    get seat() {
+      return seating.seat
     },
     push: { begin: () => push.begin(), end: () => push.end(), setWalk: (walk) => push.setWalk(walk), get state() { return push.state } },
     setCameraMode,

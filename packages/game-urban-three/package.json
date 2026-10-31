@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-urban-three",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "MIT",
   "description": "Draws the urban pattern of game-urban with three.js: parts as meshes with the team's rounded boxes, instanced road dashes and windows (lit and dark), canvas signs and labels, point and spot lights from the light budget, and the animations (flickering lamps, sweeping searchlights).",
   "keywords": [

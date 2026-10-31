@@ -86,11 +86,18 @@ export interface PieceBody extends Piece {
   centerV: THREE_NS.Vector3
   /** Seconds the piece has been nearly still (sleeps after 0.5). */
   still: number
+  /** Where the piece was when it last started to stay in place on the ground (centre and rotation), and for how many seconds since: see `CALM_SLEEP_AFTER`. */
+  calmAt: { center: Vec3; quaternion: [number, number, number, number] } | null
+  calm: number
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean
   /** Falling over (`tip`): the spin it is given per second on the ground, about x and z, and the seconds it may still take; null when it lies or never had to fall. */
   tipping: { x: number; z: number; seconds: number } | null
+  /** The contact impulses each point of the box gave in the last substep (normal, friction x, friction z per point), to start the next one from. */
+  warm?: Float64Array
+  /** Height of the lowest support the piece last stood on: the floor under a top it was put beneath. */
+  floor?: number
 }
 
 export interface Bound {

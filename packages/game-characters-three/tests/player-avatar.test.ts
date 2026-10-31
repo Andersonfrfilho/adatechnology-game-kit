@@ -58,6 +58,37 @@ describe('createPlayerAvatar', () => {
     expect(kicking.rig.legs[0]!.kn.rotation.x).not.toBeCloseTo(1.9, 1)
   })
 
+  it('sits: the hips at the seat height, the thighs forward, the feet on the floor', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
+    const standing = new THREE.Box3().setFromObject(avatar.root)
+    run(avatar, 0.2, { seat: { pose: 'sit', hip: 0.48 } })
+    const box = new THREE.Box3().setFromObject(avatar.root)
+    expect(avatar.rig.legs[0]!.g.rotation.x).toBeCloseTo(-1.5, 5)
+    expect(avatar.rig.legs[0]!.kn.rotation.x).toBeGreaterThan(0.5)
+    expect(avatar.rig.legs[0]!.kn.rotation.x).toBeLessThan(1.5)
+    expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeCloseTo(0.48 - 0.95, 5)
+    expect(box.min.y).toBeGreaterThan(-0.06)
+    expect(box.min.y).toBeLessThan(0.1)
+    expect(box.max.y).toBeLessThan(standing.max.y - 0.35)
+    // the knees reach out in front (+z) of where the standing body ends
+    expect(box.max.z).toBeGreaterThan(standing.max.z + 0.25)
+  })
+
+  it('lies face up with the pelvis at the seat height and the head behind (-z), and gets up again', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
+    const standing = new THREE.Box3().setFromObject(avatar.root)
+    run(avatar, 0.2, { seat: { pose: 'lie', hip: 0.6 } })
+    const box = new THREE.Box3().setFromObject(avatar.root)
+    expect(box.max.y - box.min.y).toBeLessThan(0.5)
+    expect(box.min.y).toBeGreaterThan(0.6 - 0.35)
+    expect(box.min.z).toBeLessThan(-1)
+    expect(box.max.z - box.min.z).toBeGreaterThan(1.5)
+    run(avatar, 0.2, { seat: null })
+    const up = new THREE.Box3().setFromObject(avatar.root)
+    expect(up.max.y).toBeCloseTo(standing.max.y, 1)
+    expect(avatar.root.children[0]!.rotation.x).toBeCloseTo(0, 5)
+  })
+
   it('down turns the body about the hip and lays it on the ground', () => {
     const avatar = createPlayerAvatar(THREE, { cascade: false })
     avatar.update(1 / 60, { down: true })

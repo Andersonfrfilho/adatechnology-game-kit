@@ -1,5 +1,11 @@
 # @adatechnology/game-characters-people
 
+## 0.4.1
+
+### Patch Changes
+
+- @adatechnology/game-characters@0.2.5
+
 ## 0.4.0
 
 ### Minor Changes

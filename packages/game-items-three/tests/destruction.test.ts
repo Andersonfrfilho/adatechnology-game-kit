@@ -36,6 +36,13 @@ describe('destruction tags of a drawn item', () => {
     expect(roots).toHaveLength(1)
     for (const m of shell) if (m !== roots[0]) expect(m.userData.destructionPart).toMatchObject({ parent: 'shell', kind: 'weld' })
   })
+
+  it('writes the loose contents of a carton of cereal on its shell', () => {
+    const { root } = buildItem(THREE, { id: 'cereal_box', category: 'food', size: [0.2, 0.3, 0.08], shape: 'box', powder: { color: 0xd8b46a } }, { destructible: true })
+    const shell = meshesOf(root).filter((m) => !m.userData.destructionSkin)
+    expect(shell.length).toBeGreaterThan(0)
+    for (const m of shell) expect(m.userData.destructionPowder).toEqual({ color: 0xd8b46a })
+  })
 })
 
 describe('families of models', () => {
@@ -67,8 +74,8 @@ describe('families of models', () => {
     }
   })
 
-  it('rebuilds the cylinders of every can as ringed lathes, so the side, the lid and the bottom all have vertices for a dent, only when destructible', () => {
-    for (const model of Object.values(ITEM_FAMILIES).flatMap((entry) => entry.models)) {
+  it('rebuilds the cylinders of every can (a family with a tessellation rule) as ringed lathes, so the side, the lid and the bottom all have vertices for a dent, only when destructible', () => {
+    for (const model of Object.values(ITEM_FAMILIES).filter((entry) => entry.rule.tessellate?.cylinder).flatMap((entry) => entry.models)) {
       const item = { id: model, category: 'food', size: [0.07, 0.12, 0.07] as [number, number, number], model }
       const plain = meshesOf(buildItem(THREE, item).root)
       const cylinders = plain.filter((m) => m.geometry.type === 'CylinderGeometry')

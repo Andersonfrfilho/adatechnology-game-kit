@@ -146,3 +146,17 @@ describe('chunks', () => {
     expect([frozen.outX, frozen.outY, frozen.outZ]).toEqual([5, 1, 2])
   })
 })
+
+describe('Workshop decals inside a box', () => {
+  it('takes away the marks inside the box and keeps the others, with the box turned', async () => {
+    const { createVfx } = await import('../src')
+    const decals = createVfx().workshop().decals
+    decals.add(0.05, 1, 0, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    decals.add(0.6, 1, 0, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    decals.add(0, 1.3, 0, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    // a brick 0.23 x 0.075 x 0.13 turned a quarter turn about y: its long side runs along z
+    const s = Math.SQRT1_2
+    expect(decals.clearInside([0, 1, 0], [0.115, 0.04, 0.07], [0, s, 0, s])).toBe(1)
+    expect(decals.decals.filter((d) => d.on).map((d) => [d.x, d.y])).toEqual([[0.6, 1], [0, 1.3]])
+  })
+})

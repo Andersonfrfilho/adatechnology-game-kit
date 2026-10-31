@@ -20,6 +20,8 @@ export const MATS: MaterialDef[] = [
   mat('glass', { fracture: 'shatter', visual: { transparent: true }, thermal: { conductivity: 0.1 } }),
   mat('steel', { fracture: 'none', tags: ['metal'], ductility: 0.9, visual: { glows: true }, thermal: { conductivity: 0.5, meltC: 1400 } }),
   mat('concrete', { fracture: 'crumble' }),
+  mat('brick', { fracture: 'crumble', visual: { innerColor: 0xb8693f } }),
+  mat('plaster', { fracture: 'crumble', hitDebris: 'dust', visual: { innerColor: 0xe4dfd3 } }),
 ]
 
 export function partState(id: string, material: string, extra: Partial<PartState> = {}): PartState {

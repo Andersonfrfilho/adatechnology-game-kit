@@ -30,6 +30,8 @@ export interface RoomAvatarState {
   itemUse?: RoomAvatarItemUse | null
   /** Hands on a piece of furniture: `grip` while the hold timer fills (`progress`), `push` walking with it, `strain` straining against what does not give. */
   push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
+  /** On a seat: the pose and how high the hips (or the pelvis) are above the feet. */
+  seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
 }
 
 /** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */
@@ -55,6 +57,8 @@ export interface RoomAvatar {
   update(dt: number, state: RoomAvatarState): void
   /** A socket at a hand: the carried item follows `hand('R')` in third person. */
   hand?(side: 'R' | 'L'): THREE_NS.Object3D
+  /** The joint of a shoulder: in third person the room rests a long gun's stock in the pocket just inside the right one (`ModuleHost.holdFrame`). */
+  shoulder?(side: 'R' | 'L'): THREE_NS.Object3D
   /**
    * The arms of the first-person view. The room shows `root` only in first person (the body only in third), updates it every frame after the modules'
    * frame hooks (so the tool in the hands is already placed) and before the render.
@@ -65,6 +69,11 @@ export interface RoomAvatar {
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
    */
   strike?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
+  /**
+   * Brings the body's hands to the tool in them (`HandTargets`, world space: the module's, as the first-person arms get them). The room calls it in third person every frame, after the
+   * modules have placed the tool and before the render; an avatar without it keeps the hands where its own pose puts them.
+   */
+  reach?(targets: HandTargets | null): void
 }
 
 /** Which leg a kick uses: `alternate` swaps at each kick (right first). */

@@ -9,6 +9,7 @@ import {
   walkGait,
 } from '@adatechnology/game-characters'
 import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@adatechnology/game-characters'
+import type { HandTargets } from '@adatechnology/game-contracts'
 
 import preset from '../presets/player-avatar.json'
 import { buildHand } from '../rich/accessories/hands'
@@ -16,6 +17,7 @@ import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
+import { createArmReach } from './arm-reach'
 
 const TWO_PI = Math.PI * 2
 const MAX_GAIT = 1.4
@@ -33,6 +35,8 @@ const RUN_BOB = 0.05
 const REST_ARM_Z = 0.18 // outward carrying angle: clears hips and pelvis comfortably
 const CROUCH = { thigh: -0.95, thighWalk: 0.3, shin: 1.9, lean: 0.25, drop: -0.35 } // :29, :66, :71
 const AIMED = { shoulder: -1.42, perAim: 0.85, swing: 0.02, zRight: -0.54, zLeft: 0.36, elbowRight: -0.04, elbowLeft: -0.12 } // :45, :47
+const SIT = { thigh: -1.5, lean: -0.08, arm: -0.45, armZ: 0.12, elbow: -0.75 }
+const LIE = { knee: 0.08, armZ: 0.12, elbow: -0.1 }
 const DOWN = { thighWalk: 0.5, shinSwing: 0.85, shinBend: 1.3, armHigh: -2.8, armLow: -0.35, armWave: 0.3, armZ: 0.5, armZWave: 0.3, tilt: 1.5, roll: 0.3, hipY: 0.16, hipZ: 0.6, hipZFlip: 1.2 } // :29-:47, :74
 /** `playerHand()`: the elbow-to-hand offset of the weapon hand (the weapon hand is the puppet's right, at -x). */
 const HAND_OFFSET = { x: 0, y: -0.33, z: 0.04 }
@@ -86,6 +90,8 @@ export type AvatarUpdate = {
   itemUse?: AvatarItemUsePose | null
   /** Hands on a piece of furniture: `grip` closes on it with `progress`, `push` walks with it, `strain` strains against what does not give. */
   push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
+  /** On a seat: `sit` folds the legs under hips `hip` metres above the feet, `lie` lays the body face up with the pelvis there, the head behind the facing. */
+  seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
 }
 
 export type PlayPoseOptions = {
@@ -110,6 +116,13 @@ export type PlayerAvatar = {
   readonly playing: string | null
   /** A socket at the hand: 'R' is the weapon hand (the puppet's right, at -x), 'L' the other one. */
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  /** The joint of a shoulder ('R' the weapon side, at -x): where a long gun's stock rests, just inside it. */
+  shoulder(side: 'R' | 'L'): THREE_NS.Object3D
+  /**
+   * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
+   * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   */
+  reach(targets: HandTargets | null): void
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -208,6 +221,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     const built = buildHand({ THREE, add: addMesh, hg, handM: handMaterial, s: side, detailed: true })
     hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
   })
+  const armReach = createArmReach(THREE, rig, { R: hands.find((hand) => hand.side < 0)!.hg, L: hands.find((hand) => hand.side > 0)!.hg })
   const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
@@ -217,6 +231,15 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   }
 
   const legRestX = rig.legs.map((leg) => leg.g.position.x)
+  /** Measured once with the leg straight: how far below the trunk pivot the leg hangs from, the thigh, and the knee to the sole. */
+  const legLengths = (() => {
+    const thigh = rig.legs[0]!.g as unknown as THREE_NS.Object3D
+    const shin = rig.legs[0]!.kn as unknown as THREE_NS.Object3D
+    root.updateMatrixWorld(true)
+    const hipY = thigh.getWorldPosition(new THREE.Vector3()).y
+    const kneeY = shin.getWorldPosition(new THREE.Vector3()).y
+    return { hipBelowTrunk: HIP_HEIGHT - hipY, thigh: hipY - kneeY, shin: kneeY - new THREE.Box3().setFromObject(shin).min.y }
+  })()
   const legSide = (index: number): number => (index === 0 ? 1 : -1) // the shader's `legS`: +1 for the leg at -x (legs[0])
   let cycles = 0 // the game's `player.ph`: gait cycles
   let time = 0
@@ -406,6 +429,34 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     }
   }
 
+  /** The knee opens until the sole reaches the floor: a low seat sends the shins forward, a high one lets them hang straight down. */
+  const sitPose = (hip: number): PoseTargets => {
+    const knee = hip - legLengths.hipBelowTrunk - legLengths.thigh * Math.cos(SIT.thigh)
+    const shinFromVertical = Math.acos(clamp(knee / legLengths.shin, 0, 1))
+    const bend = -SIT.thigh - shinFromVertical
+    return {
+    legL: SIT.thigh,
+    legR: SIT.thigh,
+    kneeL: bend,
+    kneeR: bend,
+    lean: SIT.lean,
+    drop: hip - HIP_HEIGHT,
+    armR: SIT.arm,
+    armL: SIT.arm,
+    armRz: SIT.armZ,
+    armLz: -SIT.armZ,
+    elbR: SIT.elbow,
+    elbL: SIT.elbow,
+    }
+  }
+  const liePose = (): PoseTargets => ({ legL: 0, legR: 0, kneeL: LIE.knee, kneeR: LIE.knee, lean: 0, drop: 0, armR: 0, armL: 0, armRz: LIE.armZ, armLz: -LIE.armZ, elbR: LIE.elbow, elbL: LIE.elbow })
+  /** Face up, the pelvis `hip` metres above the feet: a quarter turn about the hip, head toward -z. */
+  const layBody = (hip: number): void => {
+    tilt.rotation.set(-Math.PI / 2, 0, 0, 'XYZ')
+    const pivot = new THREE.Vector3(0, HIP_HEIGHT, 0).applyEuler(tilt.rotation)
+    tilt.position.set(0, hip, 0).sub(pivot)
+  }
+
   const placeBody = (progress: number): void => {
     // `:74`: the whole body turns about the hip (face down or face up by the phase) and the hip drops to the ground
     const fk = progress * progress * (3 - 2 * progress)
@@ -460,6 +511,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return run ? run.clip.id : null
     },
     update(dt, state = {}) {
+      armReach.restore()
       const speed = state.speed ?? 0
       const moving = speed >= 0.05 // the game: `spd < 0.05 ? 0 : walkCad(spd)`
       const down = !!state.down
@@ -472,7 +524,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       animator.animate(body, time, { speed })
       fall = fallSeconds <= 0 ? (down ? 1 : 0) : clamp(fall + (down ? dt : -dt) / fallSeconds, 0, 1)
       resetLegYaw()
+      const seat = down ? null : (state.seat ?? null)
       if (down) animator.setPose(rig, downPose())
+      else if (seat) animator.setPose(rig, seat.pose === 'lie' ? liePose() : sitPose(seat.hip))
       else {
         if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
@@ -488,8 +542,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
           })
         }
       }
-      placeBody(fall)
-      stepClip(dt, down, Boolean(state.crouch))
+      if (seat?.pose === 'lie') layBody(seat.hip)
+      else placeBody(fall)
+      stepClip(dt, down, Boolean(state.crouch || seat))
       if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
       // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut); a clip with no impact,
       // such as the fighting guard, closes them with a `grip` event
@@ -524,6 +579,12 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run) run.target = 0
     },
     hand: (side) => sockets[side],
+    shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
+    reach(targets) {
+      if (run || fall > 0) return
+      root.updateMatrixWorld(true)
+      armReach.apply(targets)
+    },
     on(_type, listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)

@@ -258,7 +258,13 @@
         "school"
       ]
     },
-    "model": "rice"
+    "model": "rice",
+    "powder": {
+      "color": 15722710
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   {
     "id": "beans",
@@ -1211,8 +1217,12 @@
     },
     "model": "sugar",
     "nonPerishable": true,
+    "powder": {
+      "color": 16184558
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   {
@@ -1250,8 +1260,12 @@
     },
     "model": "salt",
     "nonPerishable": true,
+    "powder": {
+      "color": 15921902
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   {
@@ -1326,7 +1340,13 @@
         "police_station"
       ]
     },
-    "model": "coffee"
+    "model": "coffee",
+    "powder": {
+      "color": 4861984
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   {
     "id": "water_bottle",
@@ -8438,9 +8458,13 @@
       "hydration": -8
     },
     "shelfLife": 365,
+    "powder": {
+      "color": 15986662
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   {
@@ -8465,9 +8489,13 @@
       "hydration": -5
     },
     "shelfLife": 270,
+    "powder": {
+      "color": 14201962
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   {
