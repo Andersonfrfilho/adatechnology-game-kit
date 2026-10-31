@@ -331,3 +331,37 @@ describe('scenery objects of a module', () => {
   })
 })
 
+
+describe('onFrame phases', () => {
+  it('runs a callback without options where it always ran, and puts the others in the phase and order asked for', async () => {
+    const order: string[] = []
+    const room = makeRoom()
+    room.loadModule({
+      id: 'phases',
+      name: 'Phases',
+      group: 'Phases',
+      items: () => [],
+      attach: (host) => {
+        const offs = [
+          host.onFrame(() => order.push('default')),
+          host.onFrame(() => order.push('present'), { phase: 'present' }),
+          host.onFrame(() => order.push('input'), { phase: 'input' }),
+          host.onFrame(() => order.push('early'), { order: -1 }),
+          host.onFrame(() => order.push('late-last'), { order: 2000 }),
+          host.onFrame(() => order.push('idle'), { phase: 'idle' }),
+        ]
+        return () => offs.forEach((off) => off())
+      },
+    })
+    room.update(1 / 60)
+    expect(order).toEqual(['input', 'early', 'default', 'late-last', 'present', 'idle'])
+    room.pause()
+    order.length = 0
+    room.update(1 / 60)
+    expect(order).toEqual(['input', 'present', 'idle'])
+    room.resume()
+    order.length = 0
+    await room.runScenarios([{ id: 's', name: 's', run: ({ step }: ScenarioContext) => step(1 / 60) }] as never)
+    expect(order).toContain('default')
+  })
+})

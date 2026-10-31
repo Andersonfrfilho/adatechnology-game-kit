@@ -2696,9 +2696,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (walkPlan.remaining <= 1e-9) walkPlan = null
   }
 
-  const stepSim = (dt: number): void => {
-    if (scheduler.paused) return
-    // `dt` is simulated seconds; real time only drives input
+  // lateSimulate, before the modules' frame callbacks: `dt` is simulated seconds; real time only drives input
+  const simulateBeforeModules = (dt: number): void => {
     simTime += dt
     stepWalk(dt)
     stepStrikes(dt)
@@ -2731,7 +2730,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const look = camera.getWorldDirection(listenerDirection)
       audio.setListener({ position: [camera.position.x, camera.position.y, camera.position.z], yaw: Math.atan2(-look.x, -look.z) })
     }
-    for (const update of frameListeners) update(dt)
+  }
+
+  // lateSimulate, after the modules' frame callbacks
+  const simulateAfterModules = (dt: number): void => {
     for (const tr of tracers) {
       if (tr.life > 0) {
         tr.life -= dt
@@ -2999,7 +3001,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ui.metrics(metricRows())
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
-  const frameListeners = new Set<(dt: number) => void>()
   const listenerDirection = new THREE.Vector3()
   const environment = options.environment ?? createEnvironmentBus()
   const audioSink = audio ? createAudioSink(audio) : undefined
@@ -3108,9 +3109,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hostListeners.add(listener)
       return () => hostListeners.delete(listener)
     },
-    onFrame(update) {
-      frameListeners.add(update)
-      return () => frameListeners.delete(update)
+    onFrame(update, frameOptions) {
+      return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: 'module.frame' })
     },
     holdFrame: () => bodyHoldFrame(),
     reachFor(reach) {
@@ -3541,7 +3541,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       let t0 = 0
       while (t0 < hold) {
         useTool(FIXED_DT, true)
-        stepSim(FIXED_DT)
+        directStep = true
+        try {
+          scheduler.advance(FIXED_DT)
+        } finally {
+          directStep = false
+        }
         t0 += FIXED_DT
       }
       releaseTrigger()
@@ -3809,8 +3814,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     showBench()
   }
 
+  let directStep = false
   scheduler.add(
     (ctx) => {
+      if (directStep) return
       if (!ctx.scripted) return updateInput(ctx.dt, ctx.paused)
       seating.update()
       player.update(0)
@@ -3820,7 +3827,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  scheduler.add((ctx) => stepSim(ctx.dt), { phase: 'lateSimulate', id: 'room.simulate' })
+  scheduler.add((ctx) => simulateBeforeModules(ctx.dt), { phase: 'lateSimulate', order: -1000, id: 'room.simulate' })
+  scheduler.add((ctx) => simulateAfterModules(ctx.dt), { phase: 'lateSimulate', order: 1000, id: 'room.simulate-end' })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
