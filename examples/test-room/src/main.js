@@ -3,6 +3,7 @@
 //   ?lang=en            English (default pt-BR)
 //   ?scenario=all       run every scenario on load; the report lands in window.__testRoomReport
 //   ?scenario=<id>      run one scenario
+//   &shard=i/n          with ?scenario=all, run only the i-th of n shares of the scenarios (every n-th one, starting at the i-th)
 //   ?items=a,b          spawn these catalogue ids (e.g. fridge,wardrobe) in a row on start
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
@@ -118,7 +119,8 @@ async function start() {
   }
   const wanted = params.get('scenario')
   if (wanted) {
-    const list = wanted === 'all' ? undefined : room.scenarios.filter((s) => s.id === wanted)
+    const [share, shares] = (params.get('shard') ?? '1/1').split('/').map(Number)
+    const list = wanted === 'all' ? room.scenarios.filter((_, i) => i % shares === share - 1) : room.scenarios.filter((s) => s.id === wanted)
     room.runScenarios(list).then((report) => {
       window.__testRoomReport = report
     })
