@@ -23,6 +23,7 @@ import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionR
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, rng, strHash } from '../util'
 import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, type VehicleModel } from './model'
+import type { CreaseQueue } from './crease-queue'
 import { VehicleVisuals } from './visual'
 import { createVehicleClips } from './clips'
 
@@ -48,6 +49,11 @@ export interface VehicleDestructibleOptions {
    * Defaults and meaning of every number: `IgnitionRules` of `@adatechnology/game-contracts`.
    */
   ignition?: Partial<IgnitionRules>
+  /**
+   * One queue that smooths the normals of cut panels for every vehicle that shares it (`createCreaseQueue()`), run by a frame budget. Without it, or while
+   * nobody registered the queue with a budget, each vehicle smooths in its own `update` (2.5 ms a frame), as always.
+   */
+  creaseQueue?: CreaseQueue
 }
 
 /** What the vehicle can do now, from the state of its hidden mechanics. */
@@ -168,6 +174,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
 
   let model: VehicleModel
   let vis: VehicleVisuals | null = null
+  let releaseCrease: (() => void) | undefined
   const ps = new Map<string, PState>()
   let js: JState[] = []
   let leaks = new Map<string, Leak>()
@@ -255,7 +262,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     rand = rng(seedBase)
     igniteRand = rng(strHash(`${c.key}|${id}|ignition|${options.seed ?? 0}`))
     steerSign = rand() < 0.5 ? -1 : 1
+    releaseCrease?.()
     vis = headless ? null : new VehicleVisuals(kit, c, model)
+    releaseCrease = vis && options.creaseQueue ? options.creaseQueue.track(vis) : undefined
     recomputeGroups()
   }
 

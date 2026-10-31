@@ -47,8 +47,10 @@ export type {
   BuildZoneState,
   ZoneState,
 } from './api'
-export { createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export { createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
 export type {
+  CreaseQueue,
+  CreaseWork,
   JointDef,
   LocalBox,
   PartDef,

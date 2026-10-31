@@ -8,6 +8,7 @@
 import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
 import { warmTriIndex } from '../tri-index'
+import type { CreaseWork } from './crease-queue'
 
 type Obj = any
 
@@ -18,7 +19,7 @@ export interface DetachOptions {
   away?: [number, number, number]
 }
 
-export class VehicleVisuals {
+export class VehicleVisuals implements CreaseWork {
   readonly kit: VehicleKit
   readonly c: VehicleContext
   readonly model: VehicleModel
@@ -39,6 +40,11 @@ export class VehicleVisuals {
   private warming: Obj[] | null
   /** A panel was torn off since the last `pump`: that frame already paid for the cut, the smoothing starts on the next one. */
   private tornThisFrame = false
+  /** A shared crease queue owns the smoothing: `pump` only closes the frame of the cut. */
+  private queued = false
+  /** A panel was torn and the queue has not asked yet: the first `pendingUnits(frame)` after it holds the work for that frame. */
+  private holdArmed = false
+  private holdFrame = -1
   /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
   private readonly smoothing = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
   readonly hood: { id: string; open: number; sign: number } | null
@@ -421,6 +427,7 @@ export class VehicleVisuals {
   private smoothLater(msh: Obj): void {
     this.smoothing.set(msh, this.I.creaseTask(msh.geometry, 42))
     this.tornThisFrame = true
+    this.holdArmed = true
   }
   /** Spends at most `budgetMs` finishing the pending normal smoothing. Call once per frame. */
   pump(budgetMs = 2.5): void {
@@ -428,6 +435,7 @@ export class VehicleVisuals {
       this.tornThisFrame = false
       return
     }
+    if (this.queued) return
     if (!this.smoothing.size && !this.warming) return
     const deadline = performance.now() + budgetMs
     for (const [msh, task] of this.smoothing) {
@@ -435,6 +443,34 @@ export class VehicleVisuals {
       if (performance.now() >= deadline) return
     }
     this.warmIndexes(deadline)
+  }
+  setQueued(isQueued: boolean): void {
+    this.queued = isQueued
+  }
+  /** Units the shared queue may run now: 0 in the frame of the cut (the first ask after it holds the work for that frame, or `pump` closes it when there is no frame). */
+  pendingUnits(frame?: number): number {
+    if (this.holdArmed && frame !== undefined) {
+      this.holdArmed = false
+      this.holdFrame = frame
+    }
+    if (frame !== undefined && frame === this.holdFrame) return 0
+    if (frame === undefined && this.tornThisFrame) return 0
+    return this.smoothing.size + (this.warming ? 1 : 0)
+  }
+  /** One slice of the pending work, for the shared queue. */
+  runStep(deadline: number): boolean {
+    const next = this.smoothing.entries().next()
+    if (!next.done) {
+      const [msh, task] = next.value
+      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
+      return true
+    }
+    if (!this.warming) return false
+    this.warmIndexes(deadline)
+    return true
+  }
+  finishAll(): void {
+    while (this.runStep(Infinity));
   }
   /** Measures the triangles of the heavy body meshes once, a slice per frame, so the first panel torn off finds them ready (see `triIndexOf`). */
   private warmIndexes(deadline: number): void {
@@ -611,6 +647,7 @@ export class VehicleVisuals {
     }
     pieceTasks.forEach((task, mesh) => this.smoothing.set(mesh, task))
     this.tornThisFrame = true
+    this.holdArmed = true
     dirty.forEach((msh) => {
       const g = msh.geometry
       if (g.userData.crease || !g.index) this.smoothLater(msh)
