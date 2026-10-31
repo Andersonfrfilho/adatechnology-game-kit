@@ -1778,7 +1778,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** Strikes that have begun and whose blow has not landed yet: the tool they belong to, the simulated seconds left and what lands. */
   let strikes: Array<{ key: string; remaining: number; land: () => void }> = []
   /**
-   * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip, on the arms and on the body, and the blow lands when the clip reaches its
+   * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip on the body, in both views, and the blow lands when the clip reaches its
    * impact, with the aim read again then; any other blow lands now.
    */
   const kickLeg = options.kickLeg ?? 'alternate'
@@ -2097,7 +2097,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /**
-   * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the arms and on the body and the blow lands at its impact). With something in the hands the
+   * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the body and the blow lands at its impact). With something in the hands the
    * click lets it go; E grabs and drops, the right button grabs or throws.
    */
   const handUse = (): void => {

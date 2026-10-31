@@ -238,45 +238,30 @@ describe('createFirstPersonArms', () => {
   })
 })
 
-describe('toRoomAvatar with the first-person arms', () => {
-  it('makes no arms by default (the body is the first-person view) and gives them only when asked', () => {
+describe('toRoomAvatar strikes, on the body in both views', () => {
+  it('has no separate arms: the body is the first-person view, and a strike plays only on it', () => {
     const body = toRoomAvatar(createPlayerAvatar(THREE))
-    expect(body.arms).toBeNull()
+    expect('arms' in body).toBe(false)
     body.update(1 / 60, { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 })
     expect(body.eye().y).toBeGreaterThan(1.5)
     expect(body.strike('punch_right')).not.toBeNull()
-    const withArms = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: {} })
-    expect(withArms.arms).not.toBeNull()
-  })
-
-  it('dresses the arms in the colours of the body', () => {
-    const avatar = createPlayerAvatar(THREE)
-    const room = toRoomAvatar(avatar, { firstPerson: {} })
-    const colors = new Set<number>()
-    room.arms!.root.traverse((object) => {
-      const material = (object as THREE.Mesh).material as THREE.MeshLambertMaterial | undefined
-      if (material?.color) colors.add(material.color.getHex())
-    })
-    expect(colors.has(avatar.colors.skin)).toBe(true)
-    expect(colors.has(avatar.colors.shirt) || colors.has(avatar.colors.skin)).toBe(true)
   })
 
   it.each([
     ['punch_right', 0.14],
     ['shove_two_hands', 0.26],
     ['front_kick', 0.32],
-  ])('strike(%s) plays on the body and the arms and answers the attack clip impact second (%f)', (id, seconds) => {
-    const room = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: {} })
+  ])('strike(%s) plays on the body and answers the attack clip impact second (%f)', (id, seconds) => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
     const clip = ATTACK_CLIPS.find((candidate) => candidate.id === id)!
     expect(clip.events!.find((event) => event.type === 'impact')!.t).toBe(seconds)
     expect(room.strike(id)).toBe(seconds)
-    expect(room.arms!.playing).toBe(id)
     expect(room.avatar.playing).not.toBeNull()
     expect(room.strike('unknown')).toBeNull()
   })
 
   it('a kick with the left leg plays the mirrored body clip, with the same impact second as the right', () => {
-    const room = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: {} })
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
     const right = room.strike('front_kick', { leg: 'right' })
     const rightClip = room.avatar.playing
     const left = room.strike('front_kick', { leg: 'left' })
@@ -285,14 +270,13 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(room.avatar.playing).toBe('front_kick_left')
   })
 
-  it('a punch with the left hand plays the mirrored body clip and the left fist on the arms, with the same impact second', () => {
-    const room = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: {} })
+  it('a punch with the left hand plays the mirrored body clip, with the same impact second', () => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
     const right = room.strike('punch_right', { hand: 'right' })
     expect(room.avatar.playing).toBe('punch_right')
     const left = room.strike('punch_right', { hand: 'left' })
     expect(left).toBe(right)
     expect(room.avatar.playing).toBe('punch_right_left')
-    expect(room.arms!.playing).toBe('punch_right')
   })
 
   const standing = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
@@ -301,7 +285,7 @@ describe('toRoomAvatar with the first-person arms', () => {
   }
 
   it('holds the guard after a punch while the body stands, then drops it', () => {
-    const room = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
     run(room, 0.2)
     room.strike('jab', { hand: 'left' })
     run(room, 0.5)
@@ -316,15 +300,15 @@ describe('toRoomAvatar with the first-person arms', () => {
   })
 
   it('gives the legs back to the walk: no guard while it moves, and none after a kick', () => {
-    const walking = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    const walking = toRoomAvatar(createPlayerAvatar(THREE))
     walking.strike('punch_right')
     run(walking, 0.6, { ...standing, speed: 1.4 })
     expect(walking.avatar.playing).not.toBe('fight_guard')
-    const kick = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false })
+    const kick = toRoomAvatar(createPlayerAvatar(THREE))
     kick.strike('front_kick')
     run(kick, 0.9)
     expect(kick.avatar.playing).not.toBe('fight_guard')
-    const none = toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: false, guardClip: false })
+    const none = toRoomAvatar(createPlayerAvatar(THREE), { guardClip: false })
     none.strike('punch_right')
     run(none, 0.5)
     expect(none.avatar.playing).not.toBe('fight_guard')
