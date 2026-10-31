@@ -227,7 +227,7 @@ class Renderer implements DestructionRenderer {
     this.gravity = o.gravity ?? 9.81
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
-    this.eventBudgetMs = o.eventBudgetMs ?? 8
+    this.eventBudgetMs = o.eventBudgetMs ?? Infinity
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()

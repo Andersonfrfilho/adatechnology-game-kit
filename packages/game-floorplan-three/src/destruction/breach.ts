@@ -8,7 +8,7 @@ export interface BreachViewOptions {
   spec: () => any
   /** Repaint damaged walls from `flush` (once per wall per frame, within a time budget) instead of on every event. */
   deferPaint?: boolean
-  /** Milliseconds `flush` may spend repainting walls (at least one wall is always repainted). Default 4. */
+  /** Milliseconds `flush` may spend repainting walls (at least one wall is always repainted). Default `Infinity`: every damaged wall is painted at the flush. */
   paintBudgetMs?: number
 }
 
@@ -74,7 +74,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     const views = new Map<string, any>()
     /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
     const dirty = new Set<any>()
-    const paintBudgetMs = opts.paintBudgetMs ?? 4
+    const paintBudgetMs = opts.paintBudgetMs ?? Infinity
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
     const dropped: any[] = []
     let lod = 0

@@ -27,8 +27,9 @@ export interface RendererOptions {
   /** Upper bound of live fragment meshes (default 160; oldest fade first). */
   maxFragments?: number
   /**
-   * Milliseconds of one `update` spent applying queued world events (default 8). What is left waits for the next frame, in order; at least one event is applied per
-   * frame, so 0 means one at a time and `Infinity` drains everything at once.
+   * Milliseconds of one `update` spent applying queued world events (default `Infinity`: every event is drawn
+   * in the `update` that receives it, so what a caller reads right after is final). A game loop sets a finite budget (the test room uses 8): what is left waits for the
+   * next frame, in order; at least one event is applied per frame, so 0 means one at a time.
    */
   eventBudgetMs?: number
   /** Upper bound of live particles (default 2500). */
