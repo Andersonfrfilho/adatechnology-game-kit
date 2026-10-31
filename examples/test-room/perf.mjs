@@ -3,6 +3,7 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
+//   PERF_SHARD=cold | warm             one half: the nine first uses, or warm_all + storm + after_storm (CI runs both in parallel)
 //   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
@@ -16,6 +17,9 @@ const require = createRequire(import.meta.url)
 
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
+// PERF_SHARD=cold|warm runs one half (CI runs both in parallel); unset runs everything
+const SHARD = process.env.PERF_SHARD ?? 'all'
+const runs = (part) => SHARD === 'all' || SHARD === part
 // A hitch is a frame that misses two 60 Hz refreshes; a long task blocks input for more than 50 ms.
 const BUDGET = {
   hitchMs: 33.4,
@@ -71,10 +75,12 @@ console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  gpu=${gpu}`)
 
 const phases = []
 const idle = await phase('idle', () => pause(3000))
-for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
-const warm = await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200))
-const storm = await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120))
-const after = await phase('after_storm', () => pause(3000))
+if (runs('cold')) for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
+// the warm shard alone first uses every explosive once, unmeasured, so warm_all measures second uses as in a full run
+if (!runs('cold')) await fireAndSettle(EXPLOSIVES, 300)
+const warm = runs('warm') ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200)) : undefined
+const storm = runs('warm') ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120)) : undefined
+const after = runs('warm') ? await phase('after_storm', () => pause(3000)) : undefined
 
 const failures = []
 const fail = (text) => failures.push(text)
@@ -85,12 +91,12 @@ for (const p of phases) {
   if (p.p99 > BUDGET.p99Ms) fail(`${p.name}: p99 ${p.p99} ms (budget ${BUDGET.p99Ms} ms)`)
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
 }
-const warmBuffers = warm.buffers / EXPLOSIVES.length
+const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, failures }, null, 1))
+writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()
