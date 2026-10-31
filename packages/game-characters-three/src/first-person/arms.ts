@@ -24,6 +24,11 @@ const DEFAULT_BLEND = 0.18
 const ELBOW_SEGMENTS = 8
 /** An arm is stretched to this fraction of its length before the shoulder moves toward the target. */
 const REACH_SLACK = 0.97
+/** An elbow put in the view stays this fraction inside its edges, and is pulled in this many times (each pull keeps the forearm's length). */
+const ELBOW_VIEW_MARGIN = 0.86
+const ELBOW_VIEW_PASSES = 4
+
+type View = { tanV: number; tanH: number }
 /** A foot is shown while a clip holds it by at least this much. */
 /** How far (m) the world is probed in front of the camera, the closest a hand may come to the eye, and the gap left in front of a surface. */
 const CONTACT_PROBE = 1.4
@@ -346,19 +351,52 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     return out
   }
 
-  const drawArm = (arm: Arm, pose: Pose): void => {
+  /** Where the elbow goes when it is put in the view (`elbowView`); the shoulder follows it, out of the view. */
+  const elbowAt = new THREE.Vector3()
+  const viewOf = (camera: THREE_NS.Object3D): View | null => {
+    const lens = camera as THREE_NS.PerspectiveCamera
+    if (!lens.isPerspectiveCamera) return null
+    const tanV = Math.tan((lens.fov * Math.PI) / 360)
+    return { tanV, tanH: tanV * lens.aspect }
+  }
+  /** Sets `elbowAt` a forearm from the wrist along `elbowView`, pulled inside the view, and `shoulder` an upper arm behind it toward the body's shoulder; false when the rig has no `elbowView`. */
+  const placeElbowInView = (sign: 1 | -1, view: View): boolean => {
+    const way = rig.elbowView?.[sign === 1 ? 0 : 1]
+    if (!way) return false
+    elbowAt.set(way[0], way[1], way[2]).setLength(rig.fore).add(wristAt)
+    for (let pass = 0; pass < ELBOW_VIEW_PASSES; pass++) {
+      const depth = Math.max(0.05, -elbowAt.z)
+      const high = view.tanV * ELBOW_VIEW_MARGIN * depth
+      const wide = view.tanH * ELBOW_VIEW_MARGIN * depth
+      elbowAt.y = Math.max(elbowAt.y, -high)
+      elbowAt.x = Math.min(wide, Math.max(-wide, elbowAt.x))
+      elbowAt.sub(wristAt).setLength(rig.fore).add(wristAt)
+    }
+    shoulder.sub(elbowAt).setLength(rig.upper).add(elbowAt)
+    return true
+  }
+  const drawArm = (arm: Arm, pose: Pose, view: View | null): void => {
     copyPose(arm.drawn, pose)
     const scale = pose.scale
     // the wrist is where the forearm ends: behind the palm along the fingers
     fingers.set(1, 0, 0).applyQuaternion(pose.q)
     wristAt.copy(pose.p).addScaledVector(fingers, -rig.wrist * scale)
     shoulderOf(arm.sign, shoulder).add(bobOffset)
+    if (view && placeElbowInView(arm.sign, view)) {
+      solveTwoBone(shoulder, wristAt, rig.upper, rig.fore, towards.copy(elbowAt).sub(shoulder).add(elbowAt).sub(wristAt), bone)
+      finishArm(arm, pose, scale)
+      return
+    }
     // an arm that cannot reach brings its shoulder forward, toward the hand, up to `reachShift`: the shoulders are never on screen, so a weapon held out at the length of a rifle stays in the
     // hands, with the elbow still bent by `reachBend`
     const excess = shoulder.distanceTo(wristAt) - reachOf(arm.sign)
     if (excess > 0 && rig.reachShift > 0) shoulder.addScaledVector(towards.subVectors(wristAt, shoulder).normalize(), Math.min(excess, rig.reachShift))
     solveTwoBone(shoulder, wristAt, rig.upper, rig.fore, poleOf(arm.sign), bone)
-    // out of reach, the hand stays on the end of the forearm
+    finishArm(arm, pose, scale)
+  }
+
+  /** Puts the hand on the end of the forearm (out of reach, short of the target) and the sleeve on the bones `bone` holds. */
+  const finishArm = (arm: Arm, pose: Pose, scale: number): void => {
     palmAt.copy(bone.end).addScaledVector(fingers, rig.wrist * scale)
     arm.drawn.p.copy(palmAt)
     arm.anchor.position.copy(palmAt)
@@ -481,7 +519,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           dropped.p.y -= AWAY_DROP * ease(arm.away)
           pose = dropped
         }
-        drawArm(arm, pose)
+        drawArm(arm, pose, mode === 'target' ? viewOf(state.camera) : null)
         const shown = arm.away < AWAY_HIDDEN
         for (const part of [arm.anchor, arm.upper, arm.fore, arm.cuff, arm.elbow]) part.visible = shown
       }
