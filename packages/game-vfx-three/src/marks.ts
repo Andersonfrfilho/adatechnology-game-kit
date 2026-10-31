@@ -33,6 +33,8 @@ export interface MarkLayer {
   /** The shared rock and plate shapes, so the debris and the rim rocks use the same geometry. */
   handle(event: MarkEvent): void
   update(dt: number): void
+  /** Puts the instanced meshes in the scene now, so their shader programs link while loading instead of at the first mark. */
+  prepare(): void
   /** The draw calls the marks cost right now. */
   count(): number
   dispose(): void
@@ -70,15 +72,31 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   owned.push(dirtMaterial)
   const bloodMaterial = new THREE.MeshStandardMaterial({ color: 0x5c0a0a, roughness: 0.15, metalness: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
   const bloodGeometry = new THREE.CircleGeometry(0.5, 9).rotateX(-Math.PI / 2)
-  const rockMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, flatShading: true })
-  owned.push(bloodMaterial, bloodGeometry, rockMaterial)
+  owned.push(bloodMaterial, bloodGeometry)
   const maxGroundMarks = options.maxGroundMarks ?? DEFAULT_MAX_GROUND_MARKS
-  const bloodMesh = createInstanced(bloodGeometry, bloodMaterial, options.maxBlood ?? DEFAULT_MAX_BLOOD)
-  const rockMesh = createInstanced(options.rockGeometry, rockMaterial, options.maxRocks ?? DEFAULT_MAX_ROCKS)
-  const plateMesh = createInstanced(options.plateGeometry, rockMaterial, options.maxRocks ?? DEFAULT_MAX_ROCKS)
-  rockMesh.castShadow = true
-  plateMesh.castShadow = true
-  group.add(bloodMesh, rockMesh, plateMesh)
+  /* the instanced meshes join the scene with the first mark of their kind, so a world that drew no marks has the same scene it always had */
+  const instanced: { blood?: THREE_NS.InstancedMesh; rock?: THREE_NS.InstancedMesh; plate?: THREE_NS.InstancedMesh; rockMaterial?: THREE_NS.MeshStandardMaterial } = {}
+  function rockMaterial(): THREE_NS.MeshStandardMaterial {
+    if (!instanced.rockMaterial) {
+      instanced.rockMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, flatShading: true })
+      owned.push(instanced.rockMaterial)
+    }
+    return instanced.rockMaterial
+  }
+  function bloodMesh(): THREE_NS.InstancedMesh {
+    return (instanced.blood ??= attach(createInstanced(bloodGeometry, bloodMaterial, options.maxBlood ?? DEFAULT_MAX_BLOOD)))
+  }
+  function rockMesh(): THREE_NS.InstancedMesh {
+    return (instanced.rock ??= attach(createInstanced(options.rockGeometry, rockMaterial(), options.maxRocks ?? DEFAULT_MAX_ROCKS), true))
+  }
+  function plateMesh(): THREE_NS.InstancedMesh {
+    return (instanced.plate ??= attach(createInstanced(options.plateGeometry, rockMaterial(), options.maxRocks ?? DEFAULT_MAX_ROCKS), true))
+  }
+  function attach(mesh: THREE_NS.InstancedMesh, castShadow = false): THREE_NS.InstancedMesh {
+    mesh.castShadow = castShadow
+    group.add(mesh)
+    return mesh
+  }
   const groundMarks: GroundDrawn[] = []
   const spareGeometries: THREE_NS.BufferGeometry[] = []
   const blood: BloodDrawn[] = []
@@ -140,7 +158,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   }
 
   function addRock(mark: RockMark): void {
-    const mesh = mark.plate ? plateMesh : rockMesh
+    const mesh = mark.plate ? plateMesh() : rockMesh()
     const slot = mark.plate ? 'plate' : 'rock'
     const index = placed[slot]++ % mesh.instanceMatrix.count
     quaternion.setFromEuler(euler.set(mark.rotation[0], mark.rotation[1], mark.rotation[2]))
@@ -153,16 +171,17 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
 
   function writeBlood(index: number, drawn: BloodDrawn, growth: number): void {
     quaternion.setFromAxisAngle(up, drawn.rotation)
-    bloodMesh.setMatrixAt(index, matrix.compose(position.set(drawn.position[0], drawn.position[1], drawn.position[2]), quaternion, scale.set(drawn.scaleX * growth, 1, drawn.scaleZ * growth)))
-    bloodMesh.instanceMatrix.needsUpdate = true
+    const mesh = bloodMesh()
+    mesh.setMatrixAt(index, matrix.compose(position.set(drawn.position[0], drawn.position[1], drawn.position[2]), quaternion, scale.set(drawn.scaleX * growth, 1, drawn.scaleZ * growth)))
+    mesh.instanceMatrix.needsUpdate = true
   }
 
   function addBlood(mark: BloodMark): void {
-    const index = placed.blood++ % bloodMesh.instanceMatrix.count
+    const index = placed.blood++ % bloodMesh().instanceMatrix.count
     const drawn: BloodDrawn = { position: [mark.x, mark.y, mark.z], rotation: mark.rotation, scaleX: mark.scaleX, scaleZ: mark.scaleZ, age: 0 }
     blood[index] = drawn
     writeBlood(index, drawn, BLOOD_START_GROWTH)
-    bloodMesh.count = Math.min(placed.blood, bloodMesh.instanceMatrix.count)
+    bloodMesh().count = Math.min(placed.blood, bloodMesh().instanceMatrix.count)
   }
 
   function build(mark: Mark): void {
@@ -180,7 +199,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     spareGeometries.length = 0
     blood.length = 0
     placed.blood = placed.rock = placed.plate = 0
-    bloodMesh.count = rockMesh.count = plateMesh.count = 0
+    for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) if (mesh) mesh.count = 0
   }
 
   return {
@@ -188,6 +207,11 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     handle(event) {
       if (event.type === 'clear') clearMarks()
       else build(event.mark)
+    },
+    prepare() {
+      bloodMesh()
+      rockMesh()
+      plateMesh()
     },
     update(dt) {
       for (let index = 0; index < blood.length; index++) {
@@ -197,10 +221,10 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
         writeBlood(index, drawn, Math.max(BLOOD_START_GROWTH, 1 - Math.pow(1 - Math.min(1, drawn.age), 2.5)))
       }
     },
-    count: () => groundMarks.length + Number(bloodMesh.count > 0) + Number(rockMesh.count > 0) + Number(plateMesh.count > 0),
+    count: () => groundMarks.length + [instanced.blood, instanced.rock, instanced.plate].filter((mesh) => mesh && mesh.count > 0).length,
     dispose() {
       clearMarks()
-      for (const mesh of [bloodMesh, rockMesh, plateMesh]) mesh.dispose()
+      for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) mesh?.dispose()
       for (const item of owned) item.dispose()
     },
   }

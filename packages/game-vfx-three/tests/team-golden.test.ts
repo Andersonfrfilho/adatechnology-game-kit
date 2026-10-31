@@ -37,8 +37,12 @@ type MarkNode = Parameters<typeof snapshotScene>[0]
 
 /** The marks as the page lays them out, a mesh each in the order they were made: the layer draws rocks and blood as instances, so every instance is read back as the mesh it replaces. */
 function marksAsMeshes(group: THREE.Group, entries: readonly { readonly kind: string; readonly plate?: boolean; readonly rotation?: number | readonly number[] }[]): MarkNode {
-  const [bloodMesh, rockMesh, plateMesh] = group.children as THREE.InstancedMesh[]
-  const ground = group.children.slice(3) as THREE.Mesh[]
+  // the instanced meshes join the group with the first mark of their kind: find each by its shape
+  const instanced = group.children.filter((child) => (child as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
+  const bloodMesh = instanced.find((mesh) => mesh.geometry.type === 'CircleGeometry')
+  const plateMesh = instanced.find((mesh) => mesh.geometry.type === 'BoxGeometry')
+  const rockMesh = instanced.find((mesh) => mesh !== bloodMesh && mesh !== plateMesh)
+  const ground = group.children.filter((child) => !(child as THREE.InstancedMesh).isInstancedMesh) as THREE.Mesh[]
   const used = { ground: 0, blood: 0, rock: 0, plate: 0 }
   const matrix = new THREE.Matrix4()
   const instanceNode = (mesh: THREE.InstancedMesh, index: number, rotation: number | readonly number[] | undefined): MarkNode => {

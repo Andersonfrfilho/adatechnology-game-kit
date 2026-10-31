@@ -184,6 +184,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     },
     warmUpProbes() {
       releaseAnchors()
+      marks.prepare()
       world.workshop()
       attachWorkshopLayers()
       const meshes = createMeshLayerProbes(THREE)
