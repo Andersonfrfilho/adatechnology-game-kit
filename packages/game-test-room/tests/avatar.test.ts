@@ -191,7 +191,7 @@ describe('room avatar', () => {
     expect(r.log.entries({ type: 'hole' }).length + r.log.entries({ type: 'dent' }).length).toBeGreaterThan(0)
   })
 
-  it('a carried item follows the avatar hand in third person', () => {
+  it('a carried item follows the avatar hand in both views', () => {
     const r = room({ catalog: [wideCrate] })
     const a = fakeAvatar()
     r.setAvatar(a)
@@ -205,6 +205,6 @@ describe('room avatar', () => {
     expect(crateRoot.position.distanceTo(hand)).toBeLessThan(0.6)
     r.setCameraMode('first')
     for (let i = 0; i < 120; i++) r.update(1 / 60)
-    expect(crateRoot.position.distanceTo(hand)).toBeGreaterThan(0.6)
+    expect(crateRoot.position.distanceTo(hand)).toBeLessThan(0.6)
   })
 })

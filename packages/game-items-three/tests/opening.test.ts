@@ -1,6 +1,6 @@
 import { createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
 import type { HandTargets } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
@@ -191,7 +191,6 @@ describe('opening and eating a can in the room', () => {
   })
 
   it('the other hand turns the cap in strokes on top of the jar, the same in first and third person', () => {
-    const states: RoomFirstPersonState[] = []
     const reached: (HandTargets | null)[] = []
     const handR = new THREE.Group()
     const body: RoomAvatar = {
@@ -199,7 +198,6 @@ describe('opening and eating a can in the room', () => {
       update: () => undefined,
       hand: () => handR,
       reach: (targets) => void reached.push(targets),
-      firstPerson: { root: new THREE.Group(), update: (_dt, state) => void states.push({ ...state }) },
     }
     body.root.add(handR)
     const r = room()
@@ -212,7 +210,7 @@ describe('opening and eating a can in the room', () => {
     const grips: number[] = []
     for (let i = 0; i < 100; i++) {
       r.update(1 / 60)
-      const targets = states.at(-1)!.targets
+      const targets = reached.at(-1)
       if (i < 25 || !targets?.L) continue
       // the palm over the cap, measured along the jar's own axis (it tilts with the view): a few centimetres off its middle at most, just above its top
       const cap = new THREE.Box3().setFromObject(lid!)

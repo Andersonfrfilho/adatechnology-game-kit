@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
+
+type HandState = ReturnType<TestRoom['handState']>
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../../src'
 import { TRIGGER_FINGER } from '../../src/fx/viewmodel'
@@ -124,14 +126,13 @@ export const checkWeapons = (): WeaponChecks[] => {
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   const module = createWeaponsTestModule({ locale: 'en', sound: false, arsenal })
   if (room.loadModule(module).problems.length > 0) throw new Error('the weapons module did not load')
-  let state: RoomFirstPersonState | null = null
-  const current = (): RoomFirstPersonState | null => state
-  const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, firstPerson: { root: new THREE.Group(), update: (_dt, next) => void (state = { ...next }) }, strike: () => null }
+  const current = (): HandState | null => room.handState()
+  const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }
   room.setAvatar(avatar)
   room.look([0, 1.7, 5], [0, 1.2, -11])
   const wall = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 0.1), new THREE.MeshStandardMaterial())
-  const eye = (): THREE.Vector3 => state!.camera.getWorldPosition(new THREE.Vector3())
-  const forward = (): THREE.Vector3 => new THREE.Vector3(0, 0, -1).applyQuaternion(state!.camera.getWorldQuaternion(new THREE.Quaternion()))
+  const eye = (): THREE.Vector3 => room.camera.getWorldPosition(new THREE.Vector3())
+  const forward = (): THREE.Vector3 => new THREE.Vector3(0, 0, -1).applyQuaternion(room.camera.getWorldQuaternion(new THREE.Quaternion()))
 
   const results: WeaponChecks[] = []
   for (const row of audit) {
@@ -158,7 +159,7 @@ export const checkWeapons = (): WeaponChecks[] => {
     }
 
     // the hands: both there, in front of the eye, in view, and on or near the weapon
-    const camera = state!.camera as THREE.PerspectiveCamera
+    const camera = room.camera as THREE.PerspectiveCamera
     camera.updateMatrixWorld(true)
     const box = new THREE.Box3().setFromObject(held)
     const problems: string[] = []
@@ -196,7 +197,7 @@ export const checkWeapons = (): WeaponChecks[] => {
 
     // the trigger finger
     const model = buildWeaponModelById(THREE, row.id)
-    const finger = (): number | undefined => state!.targets?.fingers?.index
+    const finger = (): number | undefined => current()!.targets?.fingers?.index
     if (model?.parts.trigger) {
       const rest = finger()
       // a minigun spins up and a flamethrower burns while the trigger is held

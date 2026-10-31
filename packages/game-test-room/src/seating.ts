@@ -39,6 +39,8 @@ export type SeatingOptions = {
   groundAt(x: number, z: number): number
   onSit?(seat: RoomSeat): void
   onStand?(seat: RoomSeat): void
+  /** The room draws a body that sits by its pose: the player's own eye does not drop to the seat (without a body the eye is the camera). */
+  hasBody?(): boolean
 }
 
 export type Seating = {
@@ -102,7 +104,7 @@ export function createSeating(o: SeatingOptions): Seating {
       const seat = seatId ? holder.seats.find((s) => s.id === seatId) : nearest(holder)
       if (!seat) return null
       const [x, y, z] = toWorld(holder.root, seat.pos)
-      const eye = seat.eye ?? (seat.pose === 'lie' ? LIE_EYE : SIT_EYE)
+      const eye = o.hasBody?.() ? STANDING_EYE : (seat.eye ?? (seat.pose === 'lie' ? LIE_EYE : SIT_EYE))
       // a seat faces the front of its item (+z); the player looks down -z at yaw 0
       facing = yawOf(holder.root) + seat.ry + Math.PI
       player.setPose([x, y + eye, z], facing, 0)
