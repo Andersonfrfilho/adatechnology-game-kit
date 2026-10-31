@@ -72,11 +72,11 @@
         "road"
       ]
     },
+    "model": "canned_sardines",
     "seal": {
       "byHand": true,
       "spoilsWhenBreached": true
-    },
-    "model": "canned_sardines"
+    }
   },
   {
     "id": "canned_corn_and_peas",

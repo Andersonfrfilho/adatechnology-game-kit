@@ -3,7 +3,11 @@
     "kind": "canned_food"
   },
   "canned_sardines": {
-    "kind": "canned_food"
+    "kind": "canned_food",
+    "seal": {
+      "byHand": true,
+      "spoilsWhenBreached": true
+    }
   },
   "canned_corn_and_peas": {
     "kind": "canned_food"
