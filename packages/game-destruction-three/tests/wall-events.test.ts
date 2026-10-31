@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
@@ -161,6 +162,18 @@ describe('chip and the impact marks of the effects', () => {
     world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
     renderer.update(0.016)
     expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.02])
+  })
+
+  it('marks the fragments it throws as pieces drawn by the kit', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    world.addObject('o1', [partState('board', 'mdf')])
+    world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
+    renderer.update(0.016)
+    const fragments = scene.children.filter((child) => child.name === 'fragment')
+    expect(fragments.length).toBe(1)
+    expect(kitOriginOf(fragments[0])).toMatchObject({ owner: 'game-destruction-three', kind: 'fragment' })
   })
 })
 
