@@ -2,7 +2,7 @@ import { visualStateOf } from '@adatechnology/game-animals'
 import type { AnimalSpecies } from '@adatechnology/game-animals'
 import type { ModuleScenario } from '@adatechnology/game-contracts'
 
-import type { AnimalsThree } from '../index'
+import type { AnimalsThree } from '../animals-three'
 import type { OutbreakLike } from './types'
 
 /** What a scenario needs of the room: the pass/fail line and time. The test room's `ScenarioContext` has both. */

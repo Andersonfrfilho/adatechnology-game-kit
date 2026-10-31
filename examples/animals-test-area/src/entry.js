@@ -3,7 +3,7 @@
 // The bench changes the look of every animal (alive, infected, dead), the gait and its speed, shows the joints, the split view, the sound range and the carcass lure radius,
 // bites every animal (the outbreak rule decides who turns, who dies and who shrugs it off) on a clock that runs accelerated, and adds 40 animals as node skins.
 import { SPECIES } from '@adatechnology/game-animals-species'
-import { ANIMALS_AREA_ID, createAnimalsTestModule } from '@adatechnology/game-animals-three'
+import { ANIMALS_AREA_ID, createAnimalsTestModule } from '@adatechnology/game-animals-three/testing'
 import { createAnimalOutbreak } from '@adatechnology/game-characters-undead'
 
 export { createAnimalsTestModule }

@@ -1,7 +1,7 @@
 [
   {
     "type": "dependency",
-    "from": "packages/game-animals-three/src/index.ts",
+    "from": "packages/game-animals-three/src/animals-three.ts",
     "to": "packages/game-props3d/src/index.ts",
     "unresolvedTo": "@adatechnology/game-props3d",
     "dependencyTypes": [
