@@ -29,6 +29,8 @@ por nenhum teste, e por isso já se furaram em pelo menos 15 dependências. Trê
 | A13 | Nada quebra para o jogo | toda API trocada fica como `@deprecated` até a próxima major; `examples/*/test.mjs` e o ZombiAdA compilam |
 | A14 | Sem travamento nas explosões | `examples/test-room/perf.mjs` passa em `PERF_MODE=gpu` e no CI |
 | A15 | Horda densa com contato constante e reação em cadeia de explosões e de corpos, estável e sem travar | testes de estabilidade e determinísticos da T4b.2 e da T4b.6; fases `dense_horde` e `chain_horde` do `perf.mjs` dentro dos orçamentos, com quedas em cadeia > 0 |
+| A16 | A horda não é repetitiva, nem perto nem longe, e a economia não cria clones | teste de variedade da T4b.9 (assinaturas, fase da animação, identidade igual em todo LOD) e prints perto e longe |
+| A17 | Roda nas máquinas-alvo | `dense_horde` e `chain_horde` dentro do orçamento com 1.000 zumbis na Intel integrada e 2.000 na RTX (D12) |
 
 ## Fora do escopo
 

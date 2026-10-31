@@ -97,6 +97,55 @@ A regra de base é que a cadeia nasce de regras locais e nunca de um cálculo gl
 
 O desenho detalhado (limiares, atrito, teto de quedas, tamanho do pool) é a T4b.1.
 
+## D11 — Economizar no custo, nunca na variedade
+
+O diferencial do jogo é não ser repetitivo: zumbis aleatórios. As técnicas de horda (instanciar, simplificar de longe, gravar
+animação em textura) costumam gerar clones andando no mesmo passo, e aqui isso é proibido.
+
+- **Identidade por semente:** cada agente tem uma identidade gerada pela sua semente: tipo, variante, idade da infecção, roupa,
+  paleta, proporções, ferimentos, membros faltando, acessórios, jeito de andar e personalidade. A identidade é a mesma em todos os
+  níveis de detalhe: o zumbi sem o braço esquerdo continua sem o braço esquerdo de longe.
+- **Variedade sem chamada de desenho a mais:** os atributos são por instância no lote assado.
+  - tom de pele e paleta da roupa;
+  - escala de altura e de largura;
+  - máscara de ferimentos, sangue e membros faltando;
+  - deslocamento de fase e velocidade da animação;
+  - acessórios (cabelo, boné, capacete, mochila) como instâncias à parte.
+  - As variantes assadas por tipo continuam (o porte dos times); os atributos multiplicam a variedade em cima delas.
+- **Animação sem passo sincronizado:**
+  - cada agente tem fase, velocidade e mistura de dois clipes próprias;
+  - o jeito de andar (mancar, arrastar a perna, cambalear) vem da identidade e dos ferimentos;
+  - nas poses gravadas em textura (VAT) a fase e a velocidade também são por instância.
+- **Longe também varia:** os impostores são assados por tipo de corpo e silhueta, com tinta por instância e quadro de animação
+  defasado.
+- **Comportamento também varia:** a personalidade por semente define:
+  - multiplicador de velocidade e tempo de reação;
+  - limiar de equilíbrio e chance de tropeço;
+  - agressividade e o que faz parado.
+  - Por isso a reação em cadeia nunca é uniforme: uns caem, outros seguram, outros sobem no monte.
+- **Som:** variante e tom de voz por identidade (o `game-audio` já sorteia por semente).
+- **Modelo:** a variação por instância de Days Gone e de World War Z (atributos por instância, animação defasada e várias variantes
+  de malha por tipo).
+
+## D12 — Máquinas-alvo e escada de economia
+
+| Máquina | Placa | Horda na tela | Orçamento |
+|---|---|---|---|
+| Mínima | integrada Intel (Arc/ARL deste notebook) | 1.000 zumbis | 0 quadros acima de 33,4 ms |
+| Recomendada | RTX 5070 Laptop | 2.000 zumbis | 0 quadros acima de 33,4 ms e p99 ≤ 20 ms |
+
+Se a medição não couber, sobe-se a escada, do mais barato ao mais caro:
+
+1. sombra real só perto e mancha simples no resto;
+2. LOD em três níveis mais impostor de longe;
+3. poses gravadas em textura (VAT);
+4. horda num Web Worker;
+5. solver de contato em WASM;
+6. three.js com WebGPU, com simulação em *compute shader* (spec à parte).
+
+Os degraus 1 a 3 entram já na Fase 4b, porque enxertá-los depois é caro. Os degraus 4 a 6 só sobem quando o teste mandar. Todo
+degrau respeita a D11.
+
 ## Ordem e dependências
 
 - A **Fase 1** (cercas em modo aviso, versões, deps) começa já, a partir de `main`.

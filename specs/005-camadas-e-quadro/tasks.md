@@ -130,8 +130,30 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
   - Fase `dense_horde` no `perf.mjs`: 2.000 zumbis espremidos contra um muro e uma porta por 30 s, sem explosão, dentro dos
     orçamentos, com quedas por pressão > 0 e agentes no monte > 0.
   - Se não couber, a próxima etapa é a horda num Web Worker (os vetores tipados do `game-crowd` já permitem); a medição decide.
-- Aceite da fase: os testes da T4b.2 e da T4b.6 passam, e as fases `dense_horde` e `chain_horde` passam no `perf.mjs` em
-  `PERF_MODE=gpu` e no CI.
+- T4b.7 Escada de desenho com variedade (D11 e D12, degraus 1 a 3):
+  - Sombra real só perto, mancha simples no resto.
+  - Impostor de longe, por tipo de corpo e silhueta, com tinta por instância e quadro defasado.
+  - Poses em textura (VAT) com fase, velocidade e mistura por instância.
+  - Atributos por instância no lote assado: pele, paleta, escala, máscara de ferimentos e membros, acessórios.
+  - Reaproveita as variantes de `game-characters-undead` e do `game-crowd-three`; nada de corpo novo desenhado à mão.
+- T4b.8 Personalidade por semente no `game-crowd`:
+  - velocidade, reação, limiar de equilíbrio, tropeço, agressividade, jeito de andar e o que faz parado;
+  - os limiares de queda e de subida no monte vêm dela.
+- T4b.9 Teste de variedade (A16):
+  - Numa horda de 2.000:
+    - no máximo 1% dos pares a menos de 3 m com a mesma assinatura de aparência (tipo, variante, paleta, escala, ferimentos,
+      acessórios);
+    - nenhum grupo de vizinhos andando em fase: a fase da animação dos 8 vizinhos mais próximos espalhada (desvio mínimo
+      configurável);
+    - a assinatura é igual em todos os níveis de detalhe, inclusive o impostor;
+    - a mesma semente dá a mesma horda.
+  - Prova visual: um print da horda perto e um de longe.
+- T4b.10 Máquinas-alvo (D12):
+  - O `perf.mjs` ganha `PERF_GPU=intel|nvidia` e a contagem da horda por máquina.
+  - As fases `dense_horde` e `chain_horde` passam nas duas máquinas, com os números registrados em `docs/desempenho-explosoes.md`.
+  - Se não couber, sobe-se a escada da D12 e o degrau usado fica registrado.
+- Aceite da fase: os testes da T4b.2, T4b.6 e T4b.9 passam, e as fases `dense_horde` e `chain_horde` passam no `perf.mjs` nas duas
+  máquinas da D12 e no CI.
 
 ## Fase 5 — Contratos
 > 🤖 Modelo: `sonnet` (um pacote por commit)
