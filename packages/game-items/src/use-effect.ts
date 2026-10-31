@@ -1,3 +1,6 @@
+import { sealBlock } from '@adatechnology/game-contracts'
+import type { SealBlock, SealState } from '@adatechnology/game-contracts'
+
 import type { Freshness } from './decay'
 import { DEFAULT_RULES } from './rules'
 import type { ItemRules } from './rules-types'
@@ -9,6 +12,8 @@ export interface UseContext {
   freshness?: Freshness
   /** The food was cooked: it keeps only `cookedPoisonFactor` of its poison chance. */
   isCooked?: boolean
+  /** State of a sealed item (`ItemDef.seal`): opened, holed, leaking. Given, a closed or spoiled container is not eaten (`UseResult.blocked`). */
+  seal?: SealState
 }
 
 export interface NutritionResult {
@@ -27,6 +32,8 @@ export interface UseResult {
   consumes: boolean
   /** Only for `consume_nutrition`. */
   nutrition?: NutritionResult
+  /** Why it cannot be eaten or drunk now: still `sealed`, or spoiled by a hole (`breached`) or a leak (`leaked`). Only with `UseContext.seal`. */
+  blocked?: SealBlock
 }
 
 const FRESH_NUTRITION = { satietyFactor: 1, poisonChance: 0, morale: 0, isEdible: true }
@@ -57,5 +64,7 @@ export const resolveUse = (item: ItemDef, effects: readonly UseEffectDef[], cont
   const base = { useId: def.id, effect: def.effect, params: def.params ?? {}, consumes: def.consumes }
   if (def.effect !== 'consume_nutrition') return base
   const nutrition = nutritionOf(item, context, rules)
+  const blocked = item.seal && context.seal ? sealBlock(item.seal, context.seal) : undefined
+  if (blocked) return { ...base, consumes: false, nutrition: { ...nutrition, isEdible: false }, blocked }
   return { ...base, consumes: def.consumes && nutrition.isEdible, nutrition }
 }

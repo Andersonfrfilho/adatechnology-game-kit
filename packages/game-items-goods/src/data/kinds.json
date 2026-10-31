@@ -78,6 +78,15 @@
           "chew"
         ]
       },
+      "seal": {
+        "openWith": [
+          "can_opener",
+          "pocket_knife",
+          "knife",
+          "tactical_knife"
+        ],
+        "spoilsWhenBreached": true
+      },
       "leftover": {
         "item": "empty_can",
         "despawnSeconds": 600
@@ -238,6 +247,10 @@
           "can_open",
           "gulp"
         ]
+      },
+      "seal": {
+        "byHand": true,
+        "spoilsWhenBreached": true
       },
       "leftover": {
         "item": "empty_can",

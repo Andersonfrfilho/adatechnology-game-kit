@@ -52,9 +52,9 @@ page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
 
 const url = pathToFileURL(dist).href
 
-// TEST_ROOM_PART splits the run across CI jobs, each part opening its own pages: `scenarios` or `scenarios:i/n` (every scenario, or the i-th of n
+// EXAMPLE_PART splits the run across CI jobs, each part opening its own pages: `scenarios` or `scenarios:i/n` (every scenario, or the i-th of n
 // shares of them), `views` (the SDK content, the screenshots, the player's body, the test table), `hands` (first person, close-ups, contact sheets); unset runs all
-const [PART, SHARD] = (process.env.TEST_ROOM_PART || 'all').split(':')
+const [PART, SHARD] = (process.env.EXAMPLE_PART || 'all').split(':')
 const runs = (part) => PART === 'all' || PART === part
 const report = { passed: 0, failed: 0, results: [] }
 let bodyOk = true

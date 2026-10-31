@@ -95,12 +95,37 @@ const SKIN_SLACK = 0.0005
 const SKIN_LAYER_SLACK = 4
 /** And at least this many times the distance to the nearest vertex, so even the nearest one is pushed visibly. */
 const NEAREST_MARGIN = 1.5
+/**
+ * The first positions of a merged mesh: `userData._p0` when another drawing keeps them there (the house renderer, which collapses the ranges of what it
+ * draws itself, `userData.collapsedRanges`), else those of the geometry it was bound with.
+ */
+const basePositions = (host: { mesh: Mesh; origGeometry: THREE_NS.BufferGeometry }): Float32Array | null => {
+  const p0 = host.mesh.userData._p0 as Float32Array | undefined
+  if (p0) return p0
+  const op = positionAttr(host.origGeometry)
+  return op ? (op.array as unknown as Float32Array) : null
+}
+
+/** Collapses in `arr` the ranges another drawing hides on the mesh (`userData.collapsedRanges`, each to its first vertex). */
+const collapseForeign = (mesh: Mesh, arr: Float32Array): void => {
+  for (const [v0, v1] of (mesh.userData.collapsedRanges as Array<[number, number]> | undefined) ?? []) {
+    for (let k = v0 + 1; k < v1; k++) {
+      arr[k * 3] = arr[v0 * 3]!
+      arr[k * 3 + 1] = arr[v0 * 3 + 1]!
+      arr[k * 3 + 2] = arr[v0 * 3 + 2]!
+    }
+  }
+}
+
+/** Metres along its normal a mark looks for the drawn face under it (`onFace`). */
+const DECAL_SNAP = 0.03
 
 export class Visuals {
   readonly kit: DecalKit
   private readonly a: THREE_NS.Vector3
   private readonly b: THREE_NS.Vector3
   private readonly m4: THREE_NS.Matrix4
+  private readonly ray: THREE_NS.Raycaster
   private readonly box: THREE_NS.Box3
   private readonly t: THREE_NS.Vector3
   private readonly lbox: THREE_NS.Box3
@@ -116,6 +141,7 @@ export class Visuals {
     this.a = tmpV(THREE)
     this.b = tmpV(THREE)
     this.m4 = new THREE.Matrix4()
+    this.ray = new THREE.Raycaster()
     this.box = new THREE.Box3()
     this.t = tmpV(THREE)
     this.lbox = new THREE.Box3()
@@ -284,7 +310,7 @@ export class Visuals {
     host.ownGeo = true
     const g = host.mesh.geometry.clone()
     host.mesh.geometry = g
-    host.work = new Float32Array((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>)
+    host.work = new Float32Array(basePositions(host) ?? ((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>))
     return true
   }
 
@@ -464,12 +490,41 @@ export class Visuals {
   // Decals
   // ------------------------------------------------------------------------------------------------------------------------------------
 
+  /**
+   * The point on the drawn face of `mesh` under a world point, within `DECAL_SNAP` metres along the normal: the world's box of a part and the face
+   * the renderer drew (a coat of plaster, a merged house mesh) can be a few millimetres apart, and a mark behind the drawn face does not show.
+   */
+  private onFace(mesh: Mesh, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3): THREE_NS.Vector3 {
+    if (!(mesh as { isMesh?: boolean }).isMesh || !mesh.geometry?.attributes?.position) return worldPoint
+    const n = worldNormal.clone().normalize()
+    this.ray.set(worldPoint.clone().addScaledVector(n, DECAL_SNAP), n.clone().negate())
+    this.ray.near = 0
+    this.ray.far = 2 * DECAL_SNAP
+    const hits: THREE_NS.Intersection[] = []
+    mesh.raycast(this.ray, hits)
+    // a wall the house cut where it was shot is drawn by a mesh of its own next to the merged one (`breach-shell` of the house renderer); where it is
+    // cut (`userData.cutAt`), the mark goes on what shows through (`userData.behind`: the bricks)
+    for (const c of mesh.parent?.children ?? []) {
+      if (c === mesh || c.name !== 'breach-shell') continue
+      c.raycast(this.ray, hits)
+      const behind = (c.userData.behind as (() => THREE_NS.Object3D | null) | undefined)?.()
+      if (behind) behind.raycast(this.ray, hits)
+    }
+    let best: THREE_NS.Intersection | null = null
+    for (const h of hits) {
+      if ((h.object.userData.cutAt as ((p: THREE_NS.Vector3) => boolean) | undefined)?.(h.point)) continue
+      if (h.face && h.face.normal.clone().transformDirection(h.object.matrixWorld).dot(n) <= 0.3) continue
+      if (!best || Math.abs(h.distance - DECAL_SNAP) < Math.abs(best.distance - DECAL_SNAP)) best = h
+    }
+    return best ? best.point : worldPoint
+  }
+
   /** Decal pose in mesh space: position and a rotation taking +Z to the surface normal. */
   private decalPose(mesh: Mesh, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, lift: number): { s: number; pos: THREE_NS.Vector3; quat: THREE_NS.Quaternion } {
     mesh.updateWorldMatrix(true, false)
     const s = mesh.matrixWorld.getMaxScaleOnAxis() || 1
     const ln = worldNormal.clone().transformDirection(this.m4.copy(mesh.matrixWorld).invert()).normalize()
-    const pos = mesh.worldToLocal(worldPoint.clone()).addScaledVector(ln, lift / s)
+    const pos = mesh.worldToLocal(this.onFace(mesh, worldPoint, worldNormal).clone()).addScaledVector(ln, lift / s)
     const quat = new this.THREE.Quaternion().setFromUnitVectors(new this.THREE.Vector3(0, 0, 1), ln)
     return { s, pos, quat }
   }
@@ -727,6 +782,7 @@ export class Visuals {
     if (!pos || !work) return
     const arr = pos.array as unknown as Float32Array
     arr.set(work)
+    collapseForeign(host.mesh, arr)
     for (const s of host.sharers) {
       if (s.merged && s.merged.host === host) {
         if (s.collapsed) this.collapseRange(arr, s.merged.range)
@@ -938,9 +994,9 @@ export class Visuals {
     if (!host.ownGeo) return
     // positions and colours of the range go back to the original ones
     const work = host.work as Float32Array
-    const op = positionAttr(host.origGeometry)
+    const op = basePositions(host)
     const [v0, v1] = merged.range
-    if (op) work.set((op.array as unknown as Float32Array).subarray(v0 * 3, v1 * 3), v0 * 3)
+    if (op) work.set(op.subarray(v0 * 3, v1 * 3), v0 * 3)
     const attr = host.mesh.geometry.getAttribute('color') as THREE_NS.BufferAttribute | undefined
     if (attr) {
       const orig = host.origGeometry.getAttribute('color') as THREE_NS.BufferAttribute | undefined
@@ -954,6 +1010,14 @@ export class Visuals {
     if (host.sharers.every((s) => !s.touched)) {
       host.mesh.geometry.dispose()
       host.mesh.geometry = host.origGeometry
+      // the original geometry as it is now: its first positions, with what another drawing keeps collapsed
+      const base = basePositions(host), back = positionAttr(host.origGeometry)
+      if (base && back) {
+        const arr = back.array as unknown as Float32Array
+        arr.set(base)
+        collapseForeign(host.mesh, arr)
+        back.needsUpdate = true
+      }
       host.work = null
       host.ownGeo = false
       if (host.ownMat) {

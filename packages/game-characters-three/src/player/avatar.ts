@@ -6,6 +6,7 @@ import {
   filterPoseChannels,
   samplePoseClip,
   walkCadence,
+  stepCascade,
   walkGait,
 } from '@adatechnology/game-characters'
 import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@adatechnology/game-characters'
@@ -17,13 +18,19 @@ import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
-import { createArmReach } from './arm-reach'
+import { createArmReach, type ReachView } from './arm-reach'
+import { createHeadHider } from './head-hiding'
+import type { AvatarViewMode } from './head-hiding'
 
 const TWO_PI = Math.PI * 2
 const MAX_GAIT = 1.4
 const CLIP_BLEND = 0.12
 const CLIP_CASCADE = 5
 const FALL_SECONDS = 0.3
+/** The builder's eyes in the head's own frame (best-builder: eyes at y 1.815, z about 0.16). */
+const BUILDER_EYE = [0, 1.815, 0.16] as const
+const EYE_OFFSET = [0, -0.068, 0] as const // brings the measured standing eye (1.768 m) to about 1.70 m
+const EYE_BOB = 0.5
 
 // Constants carried from the team game's GPU pose code, `BODY_CHUNK` (src/instanced/body-chunk.ts), whose line numbers are quoted below.
 const HIP_HEIGHT = 0.95 // :68, :74 the trunk pivot
@@ -64,6 +71,10 @@ export type PlayerAvatarOptions = {
    * still be on their way when it ends (a punch that never reaches the shoulder). 1 keeps the walk's pace. Default 5.
    */
   readonly clipCascade?: number
+  /** Where the eye sits against the builder's eye point, in the head's frame (so it follows the head's scale and turn). Default [0, -0.068, 0]: about 1.70 m standing. */
+  readonly eyeOffset?: readonly [number, number, number]
+  /** How much of the walking and running bob of the body reaches the eye: 0 none, 1 all of it. Default 0.5. */
+  readonly eyeBob?: number
 }
 
 export type AvatarEvent = PoseClipEvent & { clip: string }
@@ -119,6 +130,13 @@ export type PlayerAvatar = {
   /** The three.js namespace the body was made with, so what is made to fit it (the first-person arms) uses the same one. */
   readonly three: Three
   update(dt: number, state?: AvatarUpdate): void
+  /**
+   * The world position of the eyes, as `update` left them: sampled at its end, before any `reach()` (which turns the chest and would swing the head), and kept in the
+   * body's own frame so it stays right when the host moves `root` afterwards. With `out` it fills that vector instead of making one.
+   */
+  eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
+  /** In 'first' with a camera, the head and neck are not drawn for that camera only (shadows, mirrors and every other camera still see them); 'third' draws them. */
+  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null): void
   play(clip: string | PoseClip, options?: PlayPoseOptions): void
   stop(): void
   readonly playing: string | null
@@ -129,8 +147,9 @@ export type PlayerAvatar = {
   /**
    * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
    * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   * `view` (given on each call, as the camera moves) is for the body seen from its own eyes: the elbows keep their bend and the hands stay out of walls; without it nothing changes.
    */
-  reach(targets: HandTargets | null): void
+  reach(targets: HandTargets | null, view?: ReachView | null): void
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -172,6 +191,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const fallSeconds = options.fallSeconds ?? FALL_SECONDS
   const smooth = options.cascade ?? true
   const clipCascade = options.clipCascade ?? CLIP_CASCADE
+  const eyeBob = options.eyeBob ?? EYE_BOB
+  const eyeOffset = options.eyeOffset ?? EYE_OFFSET
 
   const root = new THREE.Group()
   const tilt = new THREE.Group()
@@ -237,6 +258,15 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     if (hand.th) hand.th.rotation.z = -hand.side * (0.32 + grip * 0.25)
     hand.hg.rotation.x = wristX
   }
+
+  const eyeSocket = new THREE.Object3D()
+  eyeSocket.name = 'eye'
+  eyeSocket.position.set(BUILDER_EYE[0] + eyeOffset[0], BUILDER_EYE[1] + eyeOffset[1], BUILDER_EYE[2] + eyeOffset[2])
+  ;(rig.headG as unknown as THREE_NS.Object3D).children[0]!.add(eyeSocket)
+  const headHider = createHeadHider([rig.headG as unknown as THREE_NS.Object3D, ...(rig.neck ? [rig.neck as unknown as THREE_NS.Object3D] : [])])
+  const eyeLocal = new THREE.Vector3()
+  let bob = 0 // the vertical bob the gait adds to the hips target, taken off the eye by `1 - eyeBob`
+  let hipWithoutBob: number | null = null // the hips' cascade run again on the target with no bob, so the bob left after smoothing can be told apart
 
   const legRestX = rig.legs.map((leg) => leg.g.position.x)
   /** Measured once with the leg straight: how far below the trunk pivot the leg hangs from, the thigh, and the knee to the sole. */
@@ -555,14 +585,26 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       profile.bob = (running ? RUN_BOB : WALK_BOB) * gait
       time = cycles / (walkCadence(Math.max(speed, 0)) * (running ? 1.3 : 1))
       animator.animate(body, time, { speed })
+      bob = rig.fig.position.y - rig.dropBase
       fall = fallSeconds <= 0 ? (down ? 1 : 0) : clamp(fall + (down ? dt : -dt) / fallSeconds, 0, 1)
       resetLegYaw()
       const seat = down ? null : (state.seat ?? null)
-      if (down) animator.setPose(rig, downPose())
-      else if (seat) animator.setPose(rig, seat.pose === 'lie' ? liePose() : sitPose(seat.hip))
+      if (down) {
+        animator.setPose(rig, downPose())
+        bob = rig.fig.position.y - rig.dropBase
+      } else if (seat) {
+        animator.setPose(rig, seat.pose === 'lie' ? liePose() : sitPose(seat.hip))
+        bob = 0
+      }
       else {
-        if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
-        if (state.crouch) animator.setPose(rig, crouchPose(gait))
+        if (running) {
+          animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
+          bob = rig.fig.position.y - rig.dropBase
+        }
+        if (state.crouch) {
+          animator.setPose(rig, crouchPose(gait))
+          bob = rig.fig.position.y - rig.dropBase - CROUCH.drop
+        }
         if (state.push) animator.setPose(rig, pushingPose(state.push))
         else if (state.door) animator.setPose(rig, doorPose(state.door))
         else if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
@@ -579,7 +621,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (seat?.pose === 'lie') layBody(seat.hip)
       else placeBody(fall)
       stepClip(dt, down, Boolean(state.crouch || seat))
-      if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
+      const cascadeDt = run && !run.clip.loop ? dt * clipCascade : dt
+      const targetWithoutBob = rig.fig.position.y - bob
+      if (smooth) animator.cascade(rig, cascadeDt)
+      hipWithoutBob = smooth && hipWithoutBob !== null ? stepCascade(hipWithoutBob, targetWithoutBob, cascadeDt, 'hip') : targetWithoutBob
+      bob = rig.fig.position.y - hipWithoutBob
       // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut); a clip with no impact,
       // such as the fighting guard, closes them with a `grip` event
       const blow = run?.clip.events?.find((event) => (event.type === 'impact' || event.type === 'grip') && event.data?.kind)?.data?.kind
@@ -601,7 +647,15 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         const wristSwing = holdRight || state.armed || running ? 0 : -Math.min(1, gait) * Math.sin(ph - 0.6) * 0.12 * hand.side
         setHandGrip(hand, grip, wristSwing)
       })
+      root.updateMatrixWorld(true)
+      root.worldToLocal(eyeSocket.getWorldPosition(eyeLocal))
+      eyeLocal.y -= (1 - eyeBob) * bob
     },
+    eye(out = new THREE.Vector3()) {
+      root.updateWorldMatrix(true, false)
+      return root.localToWorld(out.copy(eyeLocal))
+    },
+    setView: (mode, camera) => headHider.setView(mode, camera),
     play(clip, playOptions = {}) {
       const found = typeof clip === 'string' ? clips.get(clip) : clip
       if (!found) throw new Error(`Unknown pose clip: ${String(clip)}`)
@@ -614,10 +668,10 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     },
     hand: (side) => sockets[side],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
-    reach(targets) {
+    reach(targets, view) {
       if (run || fall > 0) return
       root.updateMatrixWorld(true)
-      armReach.apply(targets)
+      armReach.apply(targets, view)
     },
     on(_type, listener) {
       listeners.add(listener)

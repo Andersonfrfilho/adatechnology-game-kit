@@ -35,20 +35,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     -0.4,
-     0.8,
-     0.065
-    ],
-    "rays": 6,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -102,20 +88,6 @@
     "part": "wall",
     "kind": "dust",
     "count": 5
-   }
-  },
-  {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     -0.2,
-     0.95,
-     0.065
-    ],
-    "rays": 8,
-    "length": 0.1004
    }
   },
   {
@@ -175,20 +147,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0,
-     1.1,
-     0.065
-    ],
-    "rays": 5,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -242,20 +200,6 @@
     "part": "wall",
     "kind": "dust",
     "count": 5
-   }
-  },
-  {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0.2,
-     1.25,
-     0.065
-    ],
-    "rays": 8,
-    "length": 0.1004
    }
   },
   {
@@ -315,20 +259,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0.4,
-     0.8,
-     0.065
-    ],
-    "rays": 6,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -359,20 +289,6 @@
     "amount": 9.72,
     "hp": 12349.8,
     "damageType": "ballistic"
-   }
-  },
-  {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     -0.4,
-     0.8,
-     0.065
-    ],
-    "rays": 7,
-    "length": 0.1036
    }
   },
   {
@@ -448,20 +364,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     -0.2,
-     1.1,
-     0.065
-    ],
-    "rays": 9,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -518,20 +420,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0,
-     1.25,
-     0.065
-    ],
-    "rays": 5,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -585,20 +473,6 @@
     "part": "wall",
     "kind": "dust",
     "count": 5
-   }
-  },
-  {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0.2,
-     0.8,
-     0.065
-    ],
-    "rays": 7,
-    "length": 0.1004
    }
   },
   {
@@ -674,20 +548,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     0.4,
-     0.95,
-     0.065
-    ],
-    "rays": 8,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -744,20 +604,6 @@
    }
   },
   {
-   "type": "crack",
-   "data": {
-    "time": 0,
-    "part": "wall",
-    "at": [
-     -0.2,
-     1.25,
-     0.065
-    ],
-    "rays": 5,
-    "length": 0.1004
-   }
-  },
-  {
    "type": "hole",
    "data": {
     "time": 0,
@@ -800,7 +646,7 @@
      1,
      0.065
     ],
-    "rays": 7,
+    "rays": 5,
     "length": 0.6
    }
   },
@@ -854,8 +700,8 @@
     "style": "crumble",
     "fragments": {
      "count": 84,
-     "mass": 1024.6785,
-     "marks": 7,
+     "mass": 1031.6724,
+     "marks": 8,
      "first": {
       "center": [
        -0.97,

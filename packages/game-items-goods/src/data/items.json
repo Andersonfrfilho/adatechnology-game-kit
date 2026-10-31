@@ -72,6 +72,10 @@
         "road"
       ]
     },
+    "seal": {
+      "byHand": true,
+      "spoilsWhenBreached": true
+    },
     "model": "canned_sardines"
   },
   {

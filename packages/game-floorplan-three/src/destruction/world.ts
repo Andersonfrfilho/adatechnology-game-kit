@@ -62,6 +62,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
               fragments(e); break; }
             case 'stage': breach.stage(e); break;
             case 'chip': breach.chip(e); break;
+            case 'spall': breach.spall(e); break;
             case 'collapse': for (const id of e.parts) { breach.drop(id); if (!R && structure.meshesOf(id).length) D.dropPiece(id); } break;
             case 'leak': if (e.part === 'water_tank') { flow += e.rate; if (water.leak) water.leak(flow); } break;
             default: break;
@@ -82,19 +83,20 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           if (world) D.world = world; if (D.active || !D.world) return D; house.updateMatrixWorld(true);
           const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(); house.matrixWorld.decompose(p, q, sc);
           D.specOptions = specOptions || null; D.spec = structure.spec(specOptions); D.id = D.world.add(D.spec, { id: 'house3d:' + (++shared.destructionSeq), position: [p.x, p.y, p.z], rotation: [q.x, q.y, q.z, q.w] });
-          if (R) R.bind(D.id, house, { parts: rangesOf() });
+          breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf() });
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
         D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; };
         // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world, id, spec) => {
-          D.spec = spec;
+          D.spec = spec; breach.claim();
           const offFollow = world.on('*', e => {
             if (e.object !== id) return;
             switch (e.type) {
               case 'stage': breach.stage(e); break;
               case 'chip': breach.chip(e); break;
+              case 'spall': breach.spall(e); break;
               case 'fracture': breach.drop(e.part); break;
               case 'collapse': for (const p of e.parts) breach.drop(p); break;
               default: break;
