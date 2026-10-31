@@ -1316,6 +1316,9 @@ importers:
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
       '@adatechnology/game-runtime':
         specifier: workspace:^
         version: link:../game-runtime
@@ -1687,6 +1690,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx

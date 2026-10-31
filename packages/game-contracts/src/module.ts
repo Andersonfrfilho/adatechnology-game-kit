@@ -359,6 +359,8 @@ export interface ModuleHost {
   environment?: EnvironmentBus
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
+  /** The host's light budget (`LightBudget` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): the one owner of point and spot lights. Read it with `isLightBudget`. Absent when the host has none. */
+  lights?: unknown
   /**
    * The numbers of the shove a blast gives to a body. A module that moves bodies of its own (people, vehicles) answers the `explosion` host event with `blastShove(event, body, host.blastShove)`
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.

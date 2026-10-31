@@ -22,7 +22,7 @@ export default tseslint.config(
   },  {
     // lights have one owner (spec 005 D4): every other package asks the LightBudget instead of creating a light; warn until phase 4
     files: ['packages/*/src/**/*.{ts,tsx}'],
-    ignores: ['packages/game-render-three/**', 'packages/game-vfx-three/**'],
+    ignores: ['packages/game-render-three/**'],
     rules: {
       'no-restricted-syntax': [
         'warn',

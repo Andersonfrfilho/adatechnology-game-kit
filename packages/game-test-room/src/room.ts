@@ -12,6 +12,7 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
+import { createLightBudget } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -101,6 +102,8 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Slots of the room's LightBudget: the vfx blast, fire and Workshop lights (4 + 2 + 4 + 2). Raised by what each client of T4.4 stops creating. */
+const ROOM_LIGHT_SIZES = { point: 12, spot: 0, pointShadows: 0, hemisphere: 0 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
@@ -253,9 +256,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     options.onSound?.(key, point, volume)
   }
 
+  // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
+  const lights = createLightBudget(THREE, scene, ROOM_LIGHT_SIZES)
   // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
   const vfx = createVfxRenderer(THREE, {
     scene,
+    lights,
     camera,
     overlay: container,
     quality,
@@ -3061,6 +3067,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     environment,
     groundAt,
     effects: vfx,
+    lights,
     loading,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
@@ -3714,6 +3721,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       loading.dispose()
       renderer.dispose()
       vfx.dispose()
+      lights.dispose()
       fluidView.dispose()
       filmBridge.dispose()
       film.dispose()
@@ -3840,6 +3848,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'present', id: 'room.present' },
   )
+  scheduler.add((ctx) => lights.present([camera.position.x, camera.position.y, camera.position.z], ctx.realDt), { phase: 'present', order: 10, id: 'room.lights' })
   let stopLoop: (() => void) | undefined
   if (ownRenderer) {
     let nextLightsCheck = 0

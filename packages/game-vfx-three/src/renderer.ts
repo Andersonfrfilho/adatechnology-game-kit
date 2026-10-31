@@ -81,7 +81,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   const chunks = createChunkLayer(THREE, pools.chunks, { rock: rockGeometry, plate: plateGeometry }, colorOfChunk)
   const shocks = createShockLayer(THREE, pools.shocks)
   const sprites = createSpriteLayer(THREE, world.sprites(), options.pointScale ?? 700)
-  const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI)
+  const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI, options.lights)
   const marks = createMarkLayer(THREE, { ground: pools.ground, createCanvas: options.createCanvas, rockGeometry, plateGeometry, ...options.markLimits })
   root.add(puffs.mesh, sparks.mesh, glows.mesh, chunks.rocks, chunks.plates, shocks.group, lights.group, sprites.additive, sprites.normal, marks.group)
   const stopMarks = world.onMarks((event) => marks.handle(event))
@@ -117,7 +117,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     workshopLayers?.dispose()
     if (workshopLayers) root.remove(workshopLayers.group)
     workshopEngine = engine
-    workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1)
+    workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1, options.lights)
     root.add(workshopLayers.group)
     applyLayers()
   }
