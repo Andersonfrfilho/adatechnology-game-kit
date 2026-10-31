@@ -123,7 +123,10 @@ export interface ThumbnailRenderer {
   domElement: { toDataURL(type?: string): string }
 }
 
-/** Draws the item with the host's renderer and returns the PNG as a data URL (transparent background). */
+/**
+ * Draws the item with the host's renderer and returns the PNG as a data URL (transparent background). The scene has lights of its own (the one allowlisted place for them, see `eslint.config.mjs`),
+ * so pass a renderer made for thumbnails, never the game's: its lights would link programs on the game's renderer, which `ProgramWarmup.linkedSince` shows.
+ */
 export function renderItemThumbnail(T: typeof THREE_NS, renderer: ThumbnailRenderer, item: DrawableItem, options: ThumbnailRenderOptions = {}): string {
   const { scene, camera } = composeThumbnailScene(T, item, options)
   const size = options.size ?? 128

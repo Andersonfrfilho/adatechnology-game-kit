@@ -2687,7 +2687,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           c.cylinder(0.03, 0.04, 0.08, MT.chrome, sx + 2.35, fl + 0.99, -0.75)
           c.part('fuel_tank', trl('labels.oxygen_cylinder'), null, new V3(sx + 2.35, fl + 0.5, -0.75), 0.5)
           c.roundBox(0.04, 0.26, 0.34, 0.02, MT.screen, 0.1, 1.7, 0.5)
-          const light = c.roundBox(
+          const lightPanel = c.roundBox(
             2.3,
             0.02,
             W - 0.3,
@@ -2697,7 +2697,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
             m.top - 0.06,
             0,
           )
-          light.castShadow = false
+          lightPanel.castShadow = false
           m.roofItems = beaconBar
         },
       })
