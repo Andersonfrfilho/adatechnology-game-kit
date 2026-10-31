@@ -15,7 +15,8 @@ export type { ConditionContext } from './conditions'
 export type { BeatContext } from './story/beat'
 export type { CharacterSheet, Memory, SheetEntry, SheetInput, SheetNumbers, SheetOptions } from './sheet/sheet'
 export type { StoryWorld, StoryWorldOptions } from './world'
-export type { StoriesContent, StoriesTestModule, StoriesTestModuleOptions } from './bench/module'
+/** @deprecated import from '@adatechnology/game-stories/testing' */
+export type { StoriesContent, StoriesTestModule, StoriesTestModuleOptions } from './testing'
 
 export { castStories } from './casting'
 export { createChronicle } from './chronicle'
@@ -26,8 +27,10 @@ export { runBeat } from './story/beat'
 export { createSheet, drawSheet } from './sheet/sheet'
 export { fillText, shortName } from './text'
 export { createStoryWorld, lifeNumbersOf, lifeTextOf, simulateStories } from './world'
-export { createStoriesTestModule, STORIES_AREA_ID } from './bench/module'
-export { STORIES_EXAMPLE } from './bench/example'
+/** @deprecated import from '@adatechnology/game-stories/testing' */
+export { createStoriesTestModule, STORIES_AREA_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-stories/testing' */
+export { STORIES_EXAMPLE } from './testing'
 
 /** The life simulation's numbers, each with its source line (`data/life.json`). */
 export const LIFE_DEFAULTS = lifeNumbersData

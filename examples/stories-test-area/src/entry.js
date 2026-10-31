@@ -3,7 +3,8 @@
 // the seed and the day slider run a world of stories; the chronicle and one person's character sheet go to the room's sheet panel.
 // It runs the kit's two example stories. A game's content (a JSON with people, stories, life and actions, such as the zombiada slice put together) loads
 // through `StoriesArea.loadContent(json)` or the file button this page adds.
-import { STORIES_EXAMPLE, createStoriesTestModule, createStoryWorld } from '@adatechnology/game-stories'
+import { createStoryWorld } from '@adatechnology/game-stories'
+import { STORIES_EXAMPLE, createStoriesTestModule } from '@adatechnology/game-stories/testing'
 
 export { STORIES_EXAMPLE, createStoriesTestModule, createStoryWorld }
 
