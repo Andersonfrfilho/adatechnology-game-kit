@@ -16,7 +16,11 @@ const L5_COMPOSITION = ['game-test-room', 'game-kit-defaults']
 const SHARED_ADAPTERS = ['game-shapes-three', 'game-render-three']
 
 // Composition between domain adapters that is declared on purpose: 'from': { 'to': 'reason' }.
+const FALLBACK_EFFECTS_WORLD = 'fallback effects world when the host passes none; item 12 removes it in Phase 5'
 const ADAPTER_COMPOSITION_ALLOWLIST = {
+  'game-destruction-three': { 'game-vfx-three': FALLBACK_EFFECTS_WORLD },
+  'game-fluids-three': { 'game-vfx-three': FALLBACK_EFFECTS_WORLD },
+  'game-weapons-three': { 'game-vfx-three': FALLBACK_EFFECTS_WORLD },
   'game-crowd-three': {
     'game-characters-three': 'the crowd renderer draws its bodies with the character rig (review item 4: stays, declared)',
   },
