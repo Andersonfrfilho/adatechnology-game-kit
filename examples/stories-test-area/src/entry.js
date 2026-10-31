@@ -3,17 +3,18 @@
 // the seed and the day slider run a world of stories; the chronicle and one person's character sheet go to the room's sheet panel.
 // It runs the kit's two example stories. A game's content (a JSON with people, stories, life and actions, such as the zombiada slice put together) loads
 // through `StoriesArea.loadContent(json)` or the file button this page adds.
+import { defaultStoryContent } from '@adatechnology/game-kit-defaults'
 import { createStoryWorld } from '@adatechnology/game-stories'
 import { STORIES_EXAMPLE, createStoriesTestModule } from '@adatechnology/game-stories/testing'
 
-export { STORIES_EXAMPLE, createStoriesTestModule, createStoryWorld }
+export { STORIES_EXAMPLE, createStoriesTestModule, createStoryWorld, defaultStoryContent }
 
 let current = null
 
 /** The module for the room's locale (`?lang=en` or pt-BR); other pages (the furniture area) load it next to their own. */
 export function createModule(options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  current = createStoriesTestModule({ ...options, locale })
+  current = createStoriesTestModule({ ...defaultStoryContent(locale), ...options, locale })
   return current
 }
 

@@ -1,7 +1,6 @@
-import { SHEET_RULESET } from '@adatechnology/game-characters-people'
-import type { SheetAttributeId, SheetRuleset } from '@adatechnology/game-characters-people'
-
 import sheetNumbers from '../data/sheet.json'
+
+import type { SheetAttributeId, SheetRuleset } from './ruleset'
 
 export type SheetNumbers = Omit<typeof sheetNumbers, 'sources'>
 
@@ -51,11 +50,12 @@ export type CharacterSheet = {
   stance(about: string): 'joins' | 'hostile' | 'neutral'
 }
 
-export type SheetOptions = SheetInput & { readonly ruleset?: SheetRuleset; readonly numbers?: Partial<SheetNumbers> }
+/** `ruleset` is content: `SHEET_RULESET` of `game-characters-people`, or `defaultStoryContent().ruleset` of `game-kit-defaults`. */
+export type SheetOptions = SheetInput & { readonly ruleset: SheetRuleset; readonly numbers?: Partial<SheetNumbers> }
 
-/** A character sheet on the Personagens ruleset (`game-characters-people` `SHEET_RULESET`), with the memory and opinion rules of the document. */
-export function createSheet(options: SheetOptions = {}): CharacterSheet {
-  const rules = options.ruleset ?? SHEET_RULESET
+/** A character sheet on a ruleset (the Personagens one is `SHEET_RULESET` of `game-characters-people`), with the memory and opinion rules of the document. */
+export function createSheet(options: SheetOptions): CharacterSheet {
+  const rules = options.ruleset
   const N = { ...sheetNumbers, ...options.numbers }
   const professionId = options.profession ?? rules.professions[rules.professions.length - 1]!.id
   const profession = rules.professions.find((p) => p.id === professionId)
@@ -128,8 +128,8 @@ export function createSheet(options: SheetOptions = {}): CharacterSheet {
  * A sheet drawn at a person's creation (P13: drawn on creation): the person's profession or one drawn, the pool spent one point at a time on an
  * attribute drawn among those under the maximum. No traits unless given.
  */
-export function drawSheet(random: () => number, input: SheetInput & { readonly ruleset?: SheetRuleset } = {}): CharacterSheet {
-  const rules = input.ruleset ?? SHEET_RULESET
+export function drawSheet(random: () => number, input: SheetInput & { readonly ruleset: SheetRuleset }): CharacterSheet {
+  const rules = input.ruleset
   const profession = input.profession && rules.professions.some((p) => p.id === input.profession) ? input.profession : rules.professions[Math.floor(random() * rules.professions.length)]!.id
   const sheet = createSheet({ ...input, profession })
   const attributes = sheet.attributes as Record<SheetAttributeId, number>

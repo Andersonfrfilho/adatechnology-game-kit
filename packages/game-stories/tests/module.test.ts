@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createStoriesTestModule } from '../src/bench/module'
 import type { StoriesContent } from '../src/bench/module'
+import { contentOf, professionNameOf } from './content'
 
 const SLICE = join(__dirname, '../../../specs/001-migracao-entregas-dos-times/game-slice/stories')
 const slice = <T>(file: string): T => JSON.parse(readFileSync(join(SLICE, file), 'utf8')) as T
@@ -24,7 +25,7 @@ const fakeHost = () => {
 describe('the stories test module', () => {
   for (const locale of ['pt-BR', 'en']) {
     it(`[${locale}] follows the contract and its six scenarios pass on the example content`, async () => {
-      const module = createStoriesTestModule({ locale })
+      const module = createStoriesTestModule({ ...contentOf(locale), professionName: professionNameOf, locale })
       const report = checkBench({ controls: module.controls?.(locale), metrics: module.metrics?.(locale) })
       expect(report.problems).toEqual([])
       for (const scenario of module.scenarios!(locale)) {
@@ -36,7 +37,7 @@ describe('the stories test module', () => {
   }
 
   it('shows a sheet on the panel and follows the day, the seed and the actions', () => {
-    const module = createStoriesTestModule()
+    const module = createStoriesTestModule({ ...contentOf(), professionName: professionNameOf })
     const { host, sheets, send } = fakeHost()
     module.attach!(host)
     send({ kind: 'control', id: 'day', value: 20 })
@@ -50,7 +51,7 @@ describe('the stories test module', () => {
   })
 
   it('loads a game’s content: the zombiada slice runs its 90 days', () => {
-    const module = createStoriesTestModule()
+    const module = createStoriesTestModule({ ...contentOf(), professionName: professionNameOf })
     const content: StoriesContent = { people: slice('cast.json'), stories: [...slice<StoriesContent['stories']>('stories.json'), slice('roles.json')], life: slice('life.json'), playerBase: 'jogador', days: 90 }
     module.load(content)
     const { host, send } = fakeHost()

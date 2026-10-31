@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-stories', 'game-characters', 'game-characters-people', 'game-contracts']) {
+for (const p of ['game-kit-defaults', 'game-stories', 'game-characters', 'game-characters-people', 'game-contracts']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -36,6 +36,7 @@ const result = await esbuild.build({
   minify: true,
   legalComments: 'none',
   alias: {
+    '@adatechnology/game-kit-defaults': join(pkg('game-kit-defaults'), 'dist/index.js'),
     '@adatechnology/game-stories': join(pkg('game-stories'), 'dist/index.js'),
     '@adatechnology/game-stories/testing': join(pkg('game-stories'), 'dist/testing.js'),
     '@adatechnology/game-characters': join(pkg('game-characters'), 'dist/index.js'),

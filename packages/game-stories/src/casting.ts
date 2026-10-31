@@ -1,6 +1,5 @@
-import type { NamePools } from '@adatechnology/game-characters-people'
-
 import lifeNumbers from './data/life.json'
+import type { NamePools } from './sheet/ruleset'
 import type { Person, Role, Story } from './types'
 
 /** Who plays each role, and everyone in the world after the casting (the people given, then the people it made). */

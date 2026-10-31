@@ -9,6 +9,7 @@ import { createSheet } from '../src/sheet/sheet'
 import type { LifeOptions } from '../src/life/types'
 import type { ChronicleEntry, Person, Story } from '../src/types'
 import { createStoryWorld } from '../src/world'
+import { contentOf } from './content'
 
 const SLICE = join(__dirname, '../../../specs/001-migracao-entregas-dos-times/game-slice/stories')
 const slice = <T>(file: string): T => JSON.parse(readFileSync(join(SLICE, file), 'utf8')) as T
@@ -24,7 +25,7 @@ const TEAM_STAT: Record<string, string> = { births: 'nasc', arrivals: 'cheg', de
 
 const rows = (entry: ChronicleEntry) => entry.changes.map((c) => [c.id, TEAM_STATE[c.state]!, c.note, ...(c.base ? [c.base] : [])])
 const world = (days: number, seed: number | undefined, actions: readonly string[], fill?: number) => {
-  const made = createStoryWorld({ people: cast, stories, playerBase: life.playerBase!, ...(seed === undefined ? {} : { life, seed }), actions: Object.fromEntries(actions.map((id) => [id, 1])), ...(fill ? { fill } : {}) })
+  const made = createStoryWorld({ ...contentOf(), people: cast, stories, playerBase: life.playerBase!, ...(seed === undefined ? {} : { life, seed }), actions: Object.fromEntries(actions.map((id) => [id, 1])), ...(fill ? { fill } : {}) })
   made.runTo(days)
   return made
 }
@@ -92,7 +93,7 @@ describe('the Personagens golden: point buy and derived values', () => {
   it('gives the creator page pool and the nine derived values on 48 drawn sheets', () => {
     for (const item of of('sheet')) {
       const [strength, vigor, agility, perception, intellect, presence] = item.attributes as number[]
-      const sheet = createSheet({ profession: PROFESSION[item.profession]!, attributes: { strength, vigor, agility, perception, intellect, presence }, traits: (item.traits as string[]).map((t) => TRAIT[t]!) })
+      const sheet = createSheet({ ...contentOf(), profession: PROFESSION[item.profession]!, attributes: { strength, vigor, agility, perception, intellect, presence }, traits: (item.traits as string[]).map((t) => TRAIT[t]!) })
       const derived = sheet.derived()
       const mine = round('sheet', { pool: sheet.pool(), derived: (item.derived as [string, number][]).map(([key]) => [key, derived[DERIVED[key]!]!]) })
       expect(mine).toEqual({ pool: item.pool, derived: item.derived })

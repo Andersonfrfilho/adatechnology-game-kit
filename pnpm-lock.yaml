@@ -1051,6 +1051,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-fleet
     devDependencies:
+      '@adatechnology/game-stories':
+        specifier: workspace:^
+        version: link:../game-stories
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1168,13 +1171,13 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:^
         version: link:../game-characters
-      '@adatechnology/game-characters-people':
-        specifier: workspace:^
-        version: link:../game-characters-people
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-characters-people':
+        specifier: workspace:^
+        version: link:../game-characters-people
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden

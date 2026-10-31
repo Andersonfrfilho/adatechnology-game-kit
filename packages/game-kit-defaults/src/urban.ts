@@ -5,7 +5,7 @@ import { createPlantProvider as createUrbanPlantProvider, createVehicleProvider 
 import type { PlantProvider, PlantProviderOptions, VehicleProvider, VehicleProviderOptions } from '@adatechnology/game-urban'
 
 /** The vehicles of the fleet that park on a street: cars, SUVs, pickups and vans. */
-export const PARKED_VEHICLE_IDS: readonly string[] = [...cars, ...suvs, ...pickups.filter((id) => id !== 'monster_truck'), ...vans]
+export const PARKED_VEHICLE_IDS: readonly string[] = /* @__PURE__ */ (() => [...cars, ...suvs, ...pickups.filter((id) => id !== 'monster_truck'), ...vans])()
 
 export type DefaultVehicleProviderOptions = Partial<VehicleProviderOptions>
 export type DefaultPlantProviderOptions = Partial<Omit<PlantProviderOptions, 'pickSpecies'>> & {

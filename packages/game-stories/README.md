@@ -10,7 +10,7 @@ It is a literal port of two team deliveries:
 - **Os Vivos do Vale** (`site/pages/sobreviventes/os-vivos-do-vale.html`): `life()`, `simulate()` and the event engine (`EV`, `ACTS`, `fill`), made
   generic. The valley's people and its 47 events are not here: they are the zombiada slice (`specs/001-migracao-entregas-dos-times/game-slice/stories/`).
 - **Personagens** (`site/pages/zumbis-personagens/personagens.html`): the sheet (point buy, derived values, skills and milestones, memory and opinion).
-  The ruleset itself (attributes, skills, professions, traits, formulas) and the name pools are content in `@adatechnology/game-characters-people`.
+  The ruleset itself (attributes, skills, professions, traits, formulas) and the name pools are content in `@adatechnology/game-characters-people`; the core does not import it, the game passes `names` and `ruleset` (`defaultStoryContent()` of `@adatechnology/game-kit-defaults` has the pack's).
 
 The golden `game-stories-life.json` (7 full lives line by line, 40 more by hash, 96 sets of player actions without the life simulation and 48 sheets,
 all recorded by running the team code in `node:vm` with `tools/characters-catalog`) is replayed by the tests.
@@ -40,8 +40,9 @@ Browser without a bundler (the global is `GameStories`):
 
 ```ts
 import { createStoryWorld, createSheet } from '@adatechnology/game-stories'
+import { getNamePools, SHEET_RULESET } from '@adatechnology/game-characters-people'   // or defaultStoryContent() of @adatechnology/game-kit-defaults
 
-const world = createStoryWorld({ people, stories, life: { groups, relations, couples }, fill: 80, seed: 7, locale: 'pt-BR' })
+const world = createStoryWorld({ names: getNamePools('pt-BR'), ruleset: SHEET_RULESET, people, stories, life: { groups, relations, couples }, fill: 80, seed: 7, locale: 'pt-BR' })
 world.act('fix_well') // a player action: the stories read it from today on
 world.runTo(30)
 world.chronicle.entries // every line, by day
@@ -50,7 +51,7 @@ const sheet = world.sheet(world.cast('keeper')) // the same world, the same shee
 sheet.history // the stories and events the person lived
 sheet.derived() // max health, stamina, load, running speed... from the ruleset
 
-const mine = createSheet({ profession: 'nurse', attributes: { agility: 6 }, traits: ['athlete'] })
+const mine = createSheet({ ruleset: SHEET_RULESET, profession: 'nurse', attributes: { agility: 6 }, traits: ['athlete'] })
 mine.pool() // points left of the 14
 ```
 
@@ -75,7 +76,7 @@ A story:
 
 ## Test area
 
-`createStoriesTestModule()` (`stories_area`, only the generic contracts) puts the seed, the day, the life simulation, the infection layer, the player
+`createStoriesTestModule({ names, ruleset, professionName? })` (`stories_area`, only the generic contracts) puts the seed, the day, the life simulation, the infection layer, the player
 actions and a person's sheet on the bench, with six scenarios (determinism, casting, the normal world, the sheet keeps what was lived, the point buy and
 two stories crossing). It runs the kit's example content (two small stories on a farm and a town, marked `example`) until a game loads its own
 (`module.load(content)`). `examples/stories-test-area` loads it into the shared test room (`sala-historias.html`, with a button for a JSON file such as the
