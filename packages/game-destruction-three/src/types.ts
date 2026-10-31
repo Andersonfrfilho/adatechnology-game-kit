@@ -26,6 +26,11 @@ export interface RendererOptions {
   quality?: Quality
   /** Upper bound of live fragment meshes (default 160; oldest fade first). */
   maxFragments?: number
+  /**
+   * Milliseconds of one `update` spent applying queued world events (default 8). What is left waits for the next frame, in order; at least one event is applied per
+   * frame, so 0 means one at a time and `Infinity` drains everything at once.
+   */
+  eventBudgetMs?: number
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
   /**
