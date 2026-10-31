@@ -9,6 +9,7 @@ import type { Eyes } from '../eyes'
 import { createRigAnimator } from '../rich/animator'
 import { createBestBuilder } from '../rich/best-builder'
 import type { BestBuilder } from '../rich/best-builder'
+import { isLightBudget } from '@adatechnology/game-render-three'
 import { createPersonBuilder } from '../rich/person-builder'
 import type { PersonBuilder } from '../rich/person-builder'
 import type { Three, THREE_NS } from '../three'
@@ -96,7 +97,14 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
   const ensureBuilders = (THREE: Three): void => {
     three = THREE
     best ??= createBestBuilder(THREE, { types: undeadTypes.map((card) => ({ name: typeName(card), eye: eyeOf(card) })), random })
-    people ??= createPersonBuilder(THREE, { random, createCanvas: () => document.createElement('canvas') })
+    people ??= createPersonBuilder(THREE, {
+      random,
+      createCanvas: () => document.createElement('canvas'),
+      // read at each build: the host may attach after the first one
+      get lights() {
+        return isLightBudget(host?.lights) ? host.lights : undefined
+      },
+    })
   }
   const nextSeed = (): number => (seedCounter += 1)
   const protectionList = (): string[] => (settings.protection === 'none' ? [] : settings.protection === 'vest_helmet' ? ['vest_police', 'helmet_combat'] : [settings.protection])

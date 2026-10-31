@@ -51,6 +51,7 @@
     "@adatechnology/game-characters": "workspace:^",
     "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^"
   },
   "peerDependencies": {
