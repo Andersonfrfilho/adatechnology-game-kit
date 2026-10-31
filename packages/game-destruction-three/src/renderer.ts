@@ -931,6 +931,12 @@ class Renderer implements DestructionRenderer {
     draw(ev.worldPoint, n)
     if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
+    if (ev.powder) {
+      // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
+      const puff = { color: ev.powder.color, size: 0.6, life: 1.6, alpha: 1.3 }
+      this.vfx.burst('dust', ev.worldPoint, [n.x, n.y, n.z], this.low ? 5 : 10, 0.7, puff)
+      if (ev.hole.through && ev.exitPoint) this.vfx.burst('dust', ev.exitPoint, [-n.x, -n.y, -n.z], this.low ? 10 : 20, 1.3, puff)
+    }
     this.sound(impactKey(def), ev.worldPoint, 0.6)
   }
 
@@ -1033,6 +1039,11 @@ class Renderer implements DestructionRenderer {
       const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
+    // what a blow tore off a face leaves the hole it made where it is
+    if (ev.torn) {
+      this.sound(impactKey(def), ev.center, 0.5)
+      return
+    }
     // the holes and spalls drawn on the unit leave with it (also those on the wall a beam is drawn inside), and on the ragged edge of plaster around it
     const T = this.THREE
     const center = new T.Vector3(ev.center[0], ev.center[1], ev.center[2])
@@ -1127,8 +1138,10 @@ class Renderer implements DestructionRenderer {
       old.sleeping = false
     } else if (kitOriginOf(b.root)?.kind === 'furniture') {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
-      this.makePiece(objectId)
+      const piece = this.makePiece(objectId)
       this.tipIfTopHeavy(b)
+      // the host stops keeping the footprint it had where it stood: it is a body that moves now
+      this.o.onLoosened?.(objectId, piece, 'apart')
     }
   }
 
@@ -1246,7 +1259,7 @@ class Renderer implements DestructionRenderer {
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
       if (!body) continue
-      this.o.onLoosened?.(b.id, piece)
+      this.o.onLoosened?.(b.id, piece, 'blast')
       const spread = half[0]
       const momentum = hit.speed * mass
       this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])

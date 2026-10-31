@@ -19,6 +19,20 @@ export interface ModuleItemFluid {
   offset?: Vec3
 }
 
+/** A place on an item where a body sits or lies (a chair, a sofa cushion, a bed), in the item's own frame, the same shape as a `game-interactables` seat. */
+export interface ItemSeat {
+  id: string
+  pose: 'sit' | 'lie'
+  /** Hips (sit) or pelvis (lie). */
+  pos: Vec3
+  /** Facing of the body, relative to the item. */
+  ry: number
+  /** Eye height above `pos`. Default 0.62 sitting, 0.18 lying. */
+  eye?: number
+  /** Where the body stands when it gets up. */
+  exit: Vec3
+}
+
 /** A picture of an item for catalogues and inventories: a hand-made `svg`, or `render` to have the host draw the 3D model (camera angles in radians, `wear` 0 new, 1 worn, 2 ruined). */
 export interface Thumbnail {
   svg?: string
@@ -47,6 +61,8 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** Where a body sits or lies on it: the host can seat the player there. */
+  seats?: readonly ItemSeat[]
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
   slow?: boolean | string
   /**

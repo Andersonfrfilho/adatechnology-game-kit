@@ -23,6 +23,8 @@ export interface KindedItem extends Omit<ItemDef, 'category' | 'rarity'> {
   readonly rawEffect?: { readonly sickChance?: number }
   /** True when the item never spoils: the explicit form of a missing `shelfLife`. */
   readonly nonPerishable?: boolean
+  /** Loose dry contents (the flakes of a cereal box, flour, coffee) in their colour (0xRRGGBB): a hole through the item lets out a puff of them. */
+  readonly powder?: { readonly color: number }
   /** A container's capacity (an empty bucket); `fluid` is what it holds now. */
   readonly container?: { readonly capacityLiters?: number }
   /** Names of the fields whose value was estimated from the real world, not given by a team: the teams may adjust them. */

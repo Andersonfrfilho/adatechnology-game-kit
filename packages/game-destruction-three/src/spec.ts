@@ -16,6 +16,8 @@ interface Entry {
   tags?: string[]
   /** `userData.destructionContains`: the fluid the part holds (a hole in it makes it leak). */
   contains?: { fluid: string; liters: number }
+  /** `userData.destructionPowder`: the loose dry contents the part holds (`PartSpec.powder`). */
+  powder?: { color: number }
   /** `userData.destructionThickness`: the real wall thickness in metres (a can is a tenth of a millimetre, far less than its box says). */
   thickness?: number
   /** Part id wished by the host (`userData.destructionPart`). */
@@ -86,7 +88,7 @@ export function specFrameInverse(THREE: ThreeNamespace, root: Object3D): THREE_N
  * axis-aligned box in metres in the root's frame (its position and rotation removed, its world scale kept; rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
  * or a guess from the names. Tiny meshes are merged into the part they overlap most; joints are inferred from touching parts.
  *
- * `userData.destructionContains` (`{ fluid, liters }`) makes the part a container: a hole through it leaks. `root.userData.destructionMass` (kg) fixes the total mass, split between the parts in proportion to their volume, density and fill.
+ * `userData.destructionContains` (`{ fluid, liters }`) makes the part a container: a hole through it leaks. `userData.destructionPowder` (`{ color }`) fills it with a dry powder or flakes that puff out of a hole. `root.userData.destructionMass` (kg) fixes the total mass, split between the parts in proportion to their volume, density and fill.
  * A mesh with `userData.destructionSkin` (a label, a coat) joins the part it overlaps most instead of becoming a part: it stays drawn and bound to that part (decals, dents) but never breaks off.
  * Meshes that are invisible or have `userData.destructionIgnore` (or sit under such an object) are skipped. The result also tells which meshes
  * became which part, ready to be passed to `bind`.
@@ -122,6 +124,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
         const fill = options.fillOf?.(o, material)
         const tags = Array.isArray(ud.destructionTags) ? (ud.destructionTags as string[]) : undefined
         const contains = containsOf(ud.destructionContains)
+        const powder = typeof (ud.destructionPowder as { color?: unknown } | undefined)?.color === 'number' ? { color: (ud.destructionPowder as { color: number }).color } : undefined
         const thickness = typeof ud.destructionThickness === 'number' && ud.destructionThickness > 0 ? (ud.destructionThickness as number) : undefined
         const existing = explicit ? byKey.get(explicit) : undefined
         if (existing) {
@@ -135,9 +138,10 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           existing.skin = existing.skin && skin
           if (fill !== undefined) existing.fill = fill
           if (contains) existing.contains = contains
+          if (powder) existing.powder = powder
           if (thickness !== undefined) existing.thickness = Math.min(existing.thickness ?? thickness, thickness)
         } else {
-          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), ...(thickness !== undefined ? { thickness } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
+          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), ...(powder ? { powder } : {}), ...(thickness !== undefined ? { thickness } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
           entries.push(e)
           if (explicit) byKey.set(explicit, e)
         }
@@ -217,6 +221,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
     }
     if (e.tags) part.tags = [...e.tags]
     if (e.contains) part.contains = { ...e.contains }
+    if (e.powder) part.powder = { ...e.powder }
     const ao = options.anchorBelow ?? -1
     if (ao >= 0 && e.box.min.y <= ao) part.anchored = true
     parts.push(part)

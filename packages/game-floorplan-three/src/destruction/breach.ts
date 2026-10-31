@@ -434,8 +434,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           }
         }
       },
-      /** Handles a `chip` event: what came out (a unit, or a crater a shot broke through one) leaves a hole in the wall where it was. Returns true when the wall was cut. */
-      chip(event: any): boolean { return draw(event.part, { chip: { center: event.center, size: event.size ?? [0, 0, 0], rotation: event.rotation ?? [0, 0, 0, 1] } }) },
+      /**
+       * Handles a `chip` event: what came out (a unit, or a crater a shot broke through one) leaves a hole in the wall where it was; a `torn` chip (what a blow
+       * tore off a face) leaves the marks the renderer drew. Returns true when the wall was cut.
+       */
+      chip(event: any): boolean {
+        if (event.torn) return false
+        return draw(event.part, { chip: { center: event.center, size: event.size ?? [0, 0, 0], rotation: event.rotation ?? [0, 0, 0, 1] } })
+      },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
         const v = views.get(partId)

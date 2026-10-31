@@ -18,7 +18,13 @@
     "kind": "food_improves_cooked"
   },
   "rice": {
-    "kind": "food_needs_prep"
+    "kind": "food_needs_prep",
+    "powder": {
+      "color": 15722710
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   "beans": {
     "kind": "food_needs_prep"
@@ -106,22 +112,36 @@
   "sugar": {
     "kind": "ingredient",
     "nonPerishable": true,
+    "powder": {
+      "color": 16184558
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   "salt": {
     "kind": "ingredient",
     "nonPerishable": true,
+    "powder": {
+      "color": 15921902
+    },
     "estimated": [
-      "nonPerishable"
+      "nonPerishable",
+      "powder"
     ]
   },
   "cooking_oil": {
     "kind": "ingredient"
   },
   "coffee": {
-    "kind": "ingredient"
+    "kind": "ingredient",
+    "powder": {
+      "color": 4861984
+    },
+    "estimated": [
+      "powder"
+    ]
   },
   "water_bottle": {
     "kind": "drink_ready",
@@ -1888,9 +1908,13 @@
       "hydration": -8
     },
     "shelfLife": 365,
+    "powder": {
+      "color": 15986662
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   "cereal_box": {
@@ -1900,9 +1924,13 @@
       "hydration": -5
     },
     "shelfLife": 270,
+    "powder": {
+      "color": 14201962
+    },
     "estimated": [
       "nutrition",
-      "shelfLife"
+      "shelfLife",
+      "powder"
     ]
   },
   "butter": {

@@ -63,6 +63,8 @@ export interface Player {
   canStand(x: number, z: number): boolean
   /** While held the keys do not walk or jump: whoever holds it moves the player with `moveBy` (pushing a piece of furniture). */
   setWalkHeld(held: boolean): void
+  /** Seated, the body stays at the height its pose set: what it sits on is not a step to climb and it does not fall. */
+  setSeated(seated: boolean): void
   /** Lowers the eye by this many metres, eased (bending over something low); 0 stands up. */
   setBend(metres: number): void
   /** Keeps the view within `range` radians of `yaw`; null frees it. */
@@ -191,6 +193,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let holdTimer: ReturnType<typeof setTimeout> | null = null
 
   let walkHeld = false
+  let seated = false
   let lookLimit: { readonly yaw: number; readonly range: number } | null = null
   const look = (dx: number, dy: number): void => {
     yaw -= dx * LOOK
@@ -336,6 +339,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     setWalkHeld(held) {
       walkHeld = held
     },
+    setSeated(value) {
+      seated = value
+      y = 0
+      vy = 0
+    },
     setBend(metres) {
       bendTarget = metres
     },
@@ -388,6 +396,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       if ((walkX || walkZ) && !walkHeld) move(walkX * speed * dt, walkZ * speed * dt)
       walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
       running = run && walked > 0
+      if (seated) {
+        followFloor(dt)
+        apply()
+        return
+      }
       // the floor under the feet: a step up is taken at once, a drop is a fall
       const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
       if (y < floor && vy <= 0) y = floor

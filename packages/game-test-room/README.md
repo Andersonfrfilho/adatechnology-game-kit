@@ -130,6 +130,12 @@ Anything slow shows a spinner or a bar with a line of text over the room, so the
 
 A module declares what is slow and the room does the rest: `ModuleControl.slow` (an action or a control that takes a third of a second or more) and `TestableItem.slow` (a vehicle) make the room's own panel and catalogue run the press or the spawn behind the indicator (`bench().act/set` and `spawn` stay synchronous for scenarios). A module with a job of its own (a house rebuilt after a seed change) calls `host.loading.busy(...)`. `LOADING_CSS` and `loadingMarkup` are the same card as static HTML, for a page that must show it before its scripts run (the default test room's first frame does).
 
+## How long debris stays on screen
+
+`debris: { fragmentLife, maxFragments, particles }` sets it for the whole room. `fragmentLife` is in seconds (default 12, `0` = forever) or a rule per fragment
+(`(fragment, objectId) => seconds`, from its material, size and object). `maxFragments` is the live budget (default 160). `particles` tunes the sprites by kind, for
+example `{ dust: { life: [10, 30] }, chips: { life: [60, 120] } }`. Loose pieces stay in the map with collision.
+
 ## Blasts shove what is around them
 
 An `explosion` moves the loose items, the heavy furniture that is not fixed, and the bodies of the modules that answer it. One rule, `blastShove` of `@adatechnology/game-contracts`: `min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - d / r)^2` away from the centre with some lift, and nothing under `minSpeed`. The room's `blastShove` option sets the numbers (`coupling` 0.02, `maxSpeed` 20 m/s, `lift` 0.3, `minSpeed` 0.3, `falloffPower` 2) for the renderer's pieces and, as `host.blastShove`, for modules such as the characters area, which slide and knock their people down.

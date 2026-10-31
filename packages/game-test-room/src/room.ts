@@ -10,7 +10,7 @@ import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechn
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { createVfx } from '@adatechnology/game-vfx'
+import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
@@ -33,6 +33,8 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
+import { createSeating } from './seating'
+import type { SeatHolder } from './seating'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -249,6 +251,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     vfx: createVfx({
       profile: quality,
+      ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
       groundAt,
     }),
   })
@@ -259,6 +262,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     groundAt,
     pointScale,
+    ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
+    ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -266,13 +271,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       return e?.free === true && !e.piece
     },
-    onLoosened: (objectId, piece) => {
+    onLoosened: (objectId, piece, cause) => {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
       leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
-      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+      action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
@@ -654,6 +659,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     ring: (value) => ui?.holdRing(value),
   })
+  const seatHolder = (objectId: string): SeatHolder | null => {
+    const e = entries.get(objectId)
+    const seats = e?.item?.seats
+    if (!e || !seats?.length || !world.has(objectId)) return null
+    return { objectId, root: rendererPieces.get(objectId)?.root ?? e.so.root, seats }
+  }
+  const seating = createSeating({
+    THREE,
+    player,
+    pick: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      return r ? seatHolder(r.object) : null
+    },
+    find: seatHolder,
+    groundAt: (x, z) => groundAt(x, z),
+    onSit: (seat) => action('sit', t(seat.pose === 'lie' ? 'act.lie' : 'act.sit', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId, pose: seat.pose } }),
+    onStand: (seat) => action('stand', t('act.stand', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId } }),
+  })
   /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
   let pushByKey = false
 
@@ -823,9 +847,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const movable = own ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
+      // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
       const box = new THREE.Box3().setFromObject(root)
       const base = Math.max(pos[1], groundAt(pos[0], pos[2]))
-      pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
+      if (!box.isEmpty()) pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
       root.position.set(pos[0], pos[1], pos[2])
       root.updateMatrixWorld(true)
     }
@@ -1031,6 +1056,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** Reset the worlds to their seeded start: used by scenarios so that each one is deterministic. */
   const hardReset = (): void => {
+    seating.release()
     pushByKey = false
     push.end()
     clearEverything()
@@ -1136,6 +1162,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
     avatarState.push = push.avatarState
+    const seat = seating.seat
+    avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
     avatarState.itemUse = useItemPlayer
       ? { id: useItemName, ...useItemPlayer.pose() }
       : heldPiece && heldTilt > 0.01
@@ -2482,6 +2510,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const update = (dt: number): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
+    seating.update()
     player.update(dt)
     if (pushByKey && !player.keys.has('KeyE')) {
       // the window lost the key without a key up
@@ -2915,6 +2944,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
+        seats: ti.seats,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }
@@ -3006,6 +3036,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const dt = seconds > 6 ? 1 / 30 : FIXED_DT
     const n = Math.max(1, Math.round(seconds / dt))
     for (let i = 0; i < n; i++) {
+      seating.update()
       player.update(0)
       push.step(dt)
       followHeld(dt)
@@ -3341,6 +3372,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    sit: (objectId, seatId) => seating.sit(objectId, seatId),
+    stand: () => seating.stand(),
+    get seat() {
+      return seating.seat
     },
     push: { begin: () => push.begin(), end: () => push.end(), setWalk: (walk) => push.setWalk(walk), get state() { return push.state } },
     setCameraMode,

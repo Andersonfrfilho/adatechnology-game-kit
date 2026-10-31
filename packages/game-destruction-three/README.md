@@ -157,6 +157,12 @@ heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~5
 `RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
 `vfx` (shared effects world), `camera` (of the own world, when `vfx` is not given), `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
+How long debris stays: `fragmentLife` is the seconds a resting fragment stays before it shrinks away (default 12, `0` = forever), or a `FragmentLifeRule`
+`(fragment, objectId) => seconds` that decides per fragment from its `material`, `size` and `shape` and the object it came from, e.g. rubble that stays and chips that go:
+`fragmentLife: (f) => (Math.max(...f.size) > 0.1 ? 0 : f.material === 'glass' ? 30 : 12)`. `maxFragments` caps how many live at once (the oldest fades first).
+Loose pieces (a door, a leg, a slab that breaks off whole) never fade: they stay in the map with collision. Dust, smoke and chip sprites have the life of their kind
+in `@adatechnology/game-vfx` (`patchSpriteKinds(SPRITE_KINDS, { dust: { life: [10, 30] } })` on the effects world).
+
 `DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `explode(point, energy, radius, { effect?, direction?, visual? })` (`visual: false` keeps only the shove and the sound, for a host that played the effect itself), `clear`, `restore`, `stats`, `dispose`.
 `clear()` removes fragments, decals, puddles and particles from the scene and restores every bound mesh; `dispose()` also unsubscribes from the world.
 

@@ -79,6 +79,8 @@ const FLAMMABLE_FLUIDS = ['gas', 'fuel']
 const VENT_DIAMETER = 0.008
 /** A flame lights a flammable leak when it reaches this temperature (the auto-ignition of propane in air is about 470 °C; a lighter flame is above 1000 °C). */
 const FLAME_LIGHTS_LEAK_C = 470
+/** Cosine of the tilt past which a `resting` joint lets go: what only lies on a part (a book on a shelf) slides off once it leans past about 30°. */
+const RESTING_HOLD_COS = Math.cos(Math.PI / 6)
 /** Staged parts: default breach radius (m), blast multiplier on the breach area, area a part must lose to open (m²), and the share of capacity the bare cage keeps. */
 const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
@@ -1446,7 +1448,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.holes.push(hole)
     if (p.st.holes.length > maxHoles) p.st.holes.shift()
     markDamaged(p)
-    emit({ ...base(o, src), type: 'hole', part: p.spec.id, hole, worldPoint: wp, ...(exit ? { exitPoint: exit } : {}) })
+    emit({ ...base(o, src), type: 'hole', part: p.spec.id, hole, worldPoint: wp, ...(exit ? { exitPoint: exit } : {}), ...(p.spec.powder ? { powder: { ...p.spec.powder } } : {}) })
     setStage(o, p, 1, {}, src)
     return hole
   }
@@ -1471,6 +1473,24 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const detachEvents = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
     for (const j of opened) emit({ ...base(o, src), type: 'detach', joint: j.spec.id, parts: [j.spec.a, j.spec.b], by, groups: o.st.groups.map((g) => [...g]) })
+  }
+
+  /** Gravity is all that holds a `resting` joint: tipped past `RESTING_HOLD_COS` (the object's up axis leaning away from the world's), what lay on a part falls off. */
+  const slideOffResting = (o: ObjRT, rotation: Quat) => {
+    const upY = 1 - 2 * (rotation[0] * rotation[0] + rotation[2] * rotation[2])
+    if (upY >= RESTING_HOLD_COS) return
+    const opened = o.joints.filter((j) => j.spec.kind === 'resting' && !j.st.open)
+    if (opened.length === 0) return
+    run(() => {
+      for (const j of opened) {
+        j.st.open = true
+        j.st.openedBy = 'break'
+      }
+      solveStructure(o)
+      recomputeGroups(o)
+      detachEvents(o, opened, 'break')
+      collapseCheck(o)
+    })
   }
 
   const checkDestroyed = (o: ObjRT, src?: string) => {
@@ -2125,7 +2145,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       })
     }
     const patch: Vec3 = [scale * 4, scale * 4, scale * 4]
-    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments })
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments, torn: true })
   }
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
@@ -2200,8 +2220,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // the stretch of each joint it shakes
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true, BULLET_JOINT_SPAN)
     // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
-    // 3 mm plastic bin leaves 24 of its 500 J. Brittle, fibrous and layered materials (glass, wood, paper, masonry) take the whole shock of the impact, as before.
-    const absorbed = penetrated && mat.ductility >= 0.5 && mat.fracture !== 'tear' ? Math.min(E, thr) : E
+    // 3 mm plastic bin leaves 24 of its 500 J. So does a hollow shell of a material that tears (a cardboard box, a carton): the round punches through its thin wall and
+    // leaves a hole, it does not shred the box. Brittle, fibrous and layered materials (glass, wood, a solid stack of paper, masonry) take the whole shock, as before.
+    const hollowTear = mat.fracture === 'tear' && p.spec.fill !== undefined && p.spec.fill < 0.5
+    const absorbed = penetrated && ((mat.ductility >= 0.5 && mat.fracture !== 'tear') || hollowTear) ? Math.min(E, thr) : E
     const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
     if (!isLost(p)) tearAt(o, p, 'ballistic', entry, penetrated ? exitPoint : undefined, d, E, caliber / 1000, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
@@ -3073,6 +3095,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const o = getObj(id)
       o.base = { pos: [position[0], position[1], position[2]], rot: [rotation[0], rotation[1], rotation[2], rotation[3]] }
       applySoilPose(o)
+      slideOffResting(o, rotation)
     },
     splitGroup(id, group, newId) {
       if (impls.has(id)) throw new Error(`object "${id}" is a registered DestructibleImpl and cannot be split; its module owns its pieces`)

@@ -14,14 +14,15 @@ import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptio
 import type { FurniturePushRules } from '@adatechnology/game-player'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
-import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { GroundLayout } from '@adatechnology/game-contracts'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { RoomSeat } from './seating'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -72,6 +73,8 @@ export interface TestRoomItem {
   impl?: (root: THREE_NS.Object3D, id: string) => DestructibleImpl
   /** Use animations the item brings (see `TestRoom.playAnimation`). Part poses move the child of the built object named after the part id. */
   animations?: AnimationClipSpec[]
+  /** Where the player can sit or lie on it (see `TestRoom.sit`). */
+  seats?: readonly ItemSeat[]
   /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
   thumbnail?: string
   /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector. */
@@ -245,6 +248,13 @@ export interface TestRoomOptions {
   thirdPerson?: ThirdPersonOptions
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
+  /**
+   * How long what breaks off stays on screen. `fragmentLife`: seconds a resting fragment (a chip, a shard, a chunk) stays before it fades, 0 = forever, or a rule per
+   * fragment from its material, size and object (default 12 s); `maxFragments`: how many live at once, the oldest fades first (default 160). `particles` tunes the
+   * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
+   * a slab) stay as part of the map, with collision.
+   */
+  debris?: { fragmentLife?: number | FragmentLifeRule; maxFragments?: number; particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>> }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
   /**
@@ -331,6 +341,15 @@ export interface TestRoom {
   readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
+  /**
+   * Sits the player on a seat an item brings (`TestRoomItem.seats`): on `objectId` (default: what the camera looks at, within 3.2 m), on `seatId` (default: the seat nearest the
+   * player). Seated, the keys do not walk and the view stays near the seat's facing; a walk key or a jump gets up. Null when there is no seat there.
+   */
+  sit(objectId?: string, seatId?: string): RoomSeat | null
+  /** Gets up at the seat's exit; false when not seated or something stands on the exit. */
+  stand(): boolean
+  /** The seat the player is on, or null. */
+  readonly seat: RoomSeat | null
   /**
    * Pushing furniture, as holding E against it does: `begin` leans on what the camera looks at (false: nothing within reach to lean on), `setWalk` walks by script (world `[x, z]`, unit; null: the keys), `end`
    * lets go, and `state` says the phase (`grip` while the hold timer fills, `push`, `strain`), the timer and what stops it (`too_heavy`, `obstacle`).
@@ -566,3 +585,5 @@ export type {
   TestableItem,
   ModuleScenario,
 } from '@adatechnology/game-contracts'
+
+export type { RoomSeat } from './seating'
