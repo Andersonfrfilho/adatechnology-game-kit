@@ -19,7 +19,7 @@ import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechn
 import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
 import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
 import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
-import { createVfxTestModule } from '@adatechnology/game-vfx-three'
+import { createVfxTestModule } from '@adatechnology/game-vfx-three/testing'
 import { createTerrainTestModule } from '@adatechnology/game-terrain-three'
 import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { createPersonBuilder } from '@adatechnology/game-characters-three'
