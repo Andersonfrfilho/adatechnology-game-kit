@@ -1,3 +1,4 @@
+import { ATTACK_CLIPS, FIRST_PERSON_CLIPS } from '@adatechnology/game-characters-people'
 import { mirrorPoseClip } from '@adatechnology/game-characters'
 import type { FirstPersonClip, PoseClip } from '@adatechnology/game-characters'
 import type { HandTargets } from '@adatechnology/game-contracts'
@@ -32,9 +33,9 @@ export type RoomAvatarLike = {
 export type ToRoomAvatarOptions = {
   /** Separate first-person arms (the options of `createFirstPersonArms`, merged over the colours of the body and `firstPersonClips`); default none: the body is the first-person view. */
   firstPerson?: false | FirstPersonArmsOptions
-  /** The third-person strike clips `strike` finds by id (`ATTACK_CLIPS` of game-characters-people; `defaultCharacterClips()` of game-kit-defaults has both sets). */
-  strikeClips: readonly PoseClip[]
-  /** The first-person clips the arms play (`FIRST_PERSON_CLIPS` of game-characters-people). Default none. */
+  /** The third-person strike clips `strike` finds by id (`defaultCharacterClips()` of game-kit-defaults, or the game's own). Default `ATTACK_CLIPS` of game-characters-people, which is deprecated: pass them. */
+  strikeClips?: readonly PoseClip[]
+  /** The first-person clips the arms play. Default `FIRST_PERSON_CLIPS` of game-characters-people, which is deprecated: pass them. */
   firstPersonClips?: readonly FirstPersonClip[]
   /** The looping clip the body holds between punches (a clip of `strikeClips`), so a combo goes guard, punch, guard instead of dropping the hands each time; `false` for none. Default `'fight_guard'`. */
   guardClip?: string | false
@@ -58,17 +59,17 @@ const GUARD_SPEED = 0.3
  * impact, which are the same in both views. A kick with the left leg (`leg: 'left'`) or a punch with the left hand (`hand: 'left'`) plays the mirror of the clip written for the right.
  * After a punch the body holds the guard (`guardClip`) for `guardHold` seconds while it stands, so the next punch leaves from the guard.
  */
-export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions): RoomAvatarLike => {
+export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions = {}): RoomAvatarLike => {
   const arms =
     options.firstPerson === false || options.firstPerson === undefined
       ? null
       : createFirstPersonArms(avatar.three, {
           colors: { skin: avatar.colors.skin, sleeve: avatar.colors.longSleeves ? avatar.colors.shirt : avatar.colors.skin, trouser: avatar.colors.trousers, shoe: avatar.colors.shoes, ...options.firstPerson?.colors },
-          clips: options.firstPersonClips ?? [],
+          clips: options.firstPersonClips ?? FIRST_PERSON_CLIPS,
           hideWhenIdle: true,
           ...options.firstPerson,
         })
-  const strikes = new Map(options.strikeClips.map((clip) => [clip.id, clip]))
+  const strikes = new Map((options.strikeClips ?? ATTACK_CLIPS).map((clip) => [clip.id, clip]))
   const mirrored = new Map<string, PoseClip>()
   /** The clip for a kick with the left leg or a punch with the left hand: the mirror of the one that is written for the right. */
   const leftOf = (clip: PoseClip): PoseClip => {

@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { BenchChange, ChoiceOption, HostTool, HostToolAttachment, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ToolCommand } from '@adatechnology/game-contracts'
 import type { Arsenal, FittedAttachment, MountKind } from '@adatechnology/game-weapons'
-import { attachmentsKey } from './attachments-key'
+import { attachmentsKey } from '../attachments-key'
 import type { AccessoryText } from './accessory-text'
 
 /** The places of a weapon the bench offers accessories for, in the order the panel lists them. */

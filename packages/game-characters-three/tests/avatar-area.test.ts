@@ -6,7 +6,8 @@ import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '@adatechnology/game-character
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
-import { AVATAR_AREA_ID, createAvatarTestModule, createPlayerAvatar, toRoomAvatar } from '../src'
+import { createPlayerAvatar, toRoomAvatar } from '../src'
+import { AVATAR_AREA_ID, createAvatarTestModule } from '../src/testing'
 import type { AvatarTestOptions } from '../src'
 
 const stubRenderer = (): THREE.WebGLRenderer => {

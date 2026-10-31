@@ -1,6 +1,8 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Damageable, VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
 
+import { colorFromSeed as defaultColorFromSeed, fleetDims as defaultFleetDims, paintPalettes as defaultPaintPalettes, paletteOf as defaultPaletteOf } from '@adatechnology/game-vehicles-fleet'
+
 import { fuse, liteMaterials, liteMeshes } from './lite'
 
 export type VehicleQuality = 'high' | 'lite'
@@ -67,8 +69,11 @@ export interface VehiclesThree {
 
 export interface VehiclesThreeOptions {
   kit: VehicleKit
-  /** The fleet's palettes and measured sizes (`defaultVehicleFleet()` of `game-kit-defaults`, or the game's own). */
-  fleet: VehicleFleetContent
+  /**
+   * The fleet's palettes and measured sizes (`defaultVehicleFleet()` of `game-kit-defaults`, or the game's own). Default the ones of `game-vehicles-fleet`.
+   * @deprecated pass `fleet`; the default is removed in the next major.
+   */
+  fleet?: VehicleFleetContent
   /** Vehicle id to the group id whose palette paints it. Defaults to the fleet group of the vehicle (`military` for the military ones). */
   groupOf?: (key: string) => string
 }
@@ -116,7 +121,8 @@ export function primaryPaint(c: any): any {
  */
 export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): VehiclesThree {
   const kit = options.kit
-  const { colorFromSeed, fleetDims, paintPalettes, paletteOf } = options.fleet
+  const fleet: VehicleFleetContent = options.fleet ?? { colorFromSeed: defaultColorFromSeed, fleetDims: defaultFleetDims, paintPalettes: defaultPaintPalettes, paletteOf: defaultPaletteOf }
+  const { colorFromSeed, fleetDims, paintPalettes, paletteOf } = fleet
   const groupOf = options.groupOf || ((key: string) => (kit.find(key)?.group === kit.config.defaultGroup ? 'cars' : String(kit.find(key)?.group)))
   const militaryKeys = new Set<string>()
   const isMilitary = (key: string): boolean => militaryKeys.has(key) || paletteOf(groupOf(key)) === paintPalettes.military

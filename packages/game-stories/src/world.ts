@@ -1,4 +1,5 @@
 import { createRng } from '@adatechnology/game-characters'
+import { getNamePools, SHEET_RULESET } from '@adatechnology/game-characters-people'
 import { castStories } from './casting'
 import type { Casting } from './casting'
 import { createChronicle } from './chronicle'
@@ -19,10 +20,10 @@ export type StoryWorldOptions = {
   readonly stories?: readonly Story[]
   /** The people the game wrote, in order (named people first; `extra` ones are left out of the newcomers' bonds). */
   readonly people?: readonly Person[]
-  /** The name pools of the language (`getNamePools` of `game-characters-people`, or `defaultStoryContent(locale).names` of `game-kit-defaults`). */
-  readonly names: NamePools
-  /** The character sheet ruleset (`SHEET_RULESET` of `game-characters-people`, or `defaultStoryContent().ruleset`). */
-  readonly ruleset: SheetRuleset
+  /** The name pools of the language (`getNamePools` of `game-characters-people`, or `defaultStoryContent(locale).names` of `game-kit-defaults`). Default `getNamePools(locale)`; the default is deprecated and removed in the next major. */
+  readonly names?: NamePools
+  /** The character sheet ruleset (`SHEET_RULESET` of `game-characters-people`, or `defaultStoryContent().ruleset`). Default `SHEET_RULESET`; the default is deprecated and removed in the next major. */
+  readonly ruleset?: SheetRuleset
   /** The seed of the world's stream (default 1). The life simulation draws from it as the team's page draws from `rng(seed)`. */
   readonly seed?: number
   /** The life simulation's own stream, instead of `createRng(seed)` (a game with one stream for everything passes it). */
@@ -104,10 +105,11 @@ export const lifeNumbersOf = (patch?: LifeOptions['numbers']): LifeNumbers => {
  * that day in order (each beat's changes applied, its flags raised, its line in the chronicle) and a day of the life simulation. What each person
  * lived goes into their sheet, so the next stories can read it.
  */
-export function createStoryWorld(options: StoryWorldOptions): StoryWorld {
+export function createStoryWorld(options: StoryWorldOptions = {}): StoryWorld {
   const seed = options.seed ?? 1
   const locale = options.locale ?? 'pt-BR'
-  const names = options.names
+  const names = options.names ?? getNamePools(locale)
+  const ruleset = options.ruleset ?? SHEET_RULESET
   const stories = options.stories ?? []
   const castRandom = createRng((seed ^ 0x9e3779b9) >>> 0)
   const casting = castStories({ stories, ...(options.people ? { people: options.people } : {}), names, random: castRandom, ...(options.life?.nomadBase ? { defaultBase: options.life.nomadBase } : {}) })
@@ -136,7 +138,7 @@ export function createStoryWorld(options: StoryWorldOptions): StoryWorld {
     let made = sheets.get(id)
     if (!made) {
       const p = person(id)
-      made = drawSheet(createRng((seed ^ hashId(id)) >>> 0), { ruleset: options.ruleset, ...(p?.profession ? { profession: p.profession } : {}), ...(p?.personality ? { personality: p.personality } : {}) })
+      made = drawSheet(createRng((seed ^ hashId(id)) >>> 0), { ruleset, ...(p?.profession ? { profession: p.profession } : {}), ...(p?.personality ? { personality: p.personality } : {}) })
       sheets.set(id, made)
     }
     return made
@@ -193,7 +195,7 @@ export function createStoryWorld(options: StoryWorldOptions): StoryWorld {
 }
 
 /** Runs a world `days` days (the team's `simulate(day, A, O)`). */
-export function simulateStories(days: number, options: StoryWorldOptions): StoryWorld {
+export function simulateStories(days: number, options: StoryWorldOptions = {}): StoryWorld {
   const world = createStoryWorld(options)
   world.runTo(days)
   return world

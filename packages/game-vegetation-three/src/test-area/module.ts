@@ -2,6 +2,7 @@ import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, M
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import * as GameVegetationMain from '@adatechnology/game-vegetation'
 import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
+import * as GameVegetationSpeciesMain from '@adatechnology/game-vegetation-species'
 import type { Condition, Lod, Season } from '@adatechnology/game-vegetation'
 
 import { createNursery } from './nursery'
@@ -46,11 +47,11 @@ const AXIS_COLOURS: Record<string, number> = { trunk: 0xd9822b, branch: 0xe5c07b
  * scenarios of that page (literal). The bench plants the nursery lot (12 x 20 m, with house, walls and path, by `scatterRulesFor`) with its seed, quality, detail, condition and season, sets
  * the wind and starts the walker that bends the plants; its layers show the colliders, the boxes of the pieces and the axes of the wood; its metrics read triangles, pieces and draw calls.
  */
-export function createVegetationTestModule(options: VegetationTestOptions): TestableModule<VegetationContext> & { readonly placed: ReadonlyMap<string, unknown>; materials(THREE?: unknown): MaterialsLike; tick(t: number): void; readonly itemIds: readonly string[] } {
+export function createVegetationTestModule(options: VegetationTestOptions = {}): TestableModule<VegetationContext> & { readonly placed: ReadonlyMap<string, unknown>; materials(THREE?: unknown): MaterialsLike; tick(t: number): void; readonly itemIds: readonly string[] } {
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale.toLowerCase().startsWith('en') ? 'en' : 'pt-BR'] as (typeof TEXT)[string]
   const sdk: VegetationSdk = options.GameVegetation ?? defaultSdk()
-  const species: SpeciesSdk = options.GameVegetationSpecies
+  const species: SpeciesSdk = options.GameVegetationSpecies ?? (GameVegetationSpeciesMain as SpeciesSdk)
   let mats: MaterialsLike | null = options.materials ?? null
   let three: Three = null
   let host: ModuleHost | null = null
@@ -296,6 +297,6 @@ export function createVegetationTestModule(options: VegetationTestOptions): Test
 export type ModuleRoomLike = { loadModule(module: never): unknown }
 
 /** Loads the vegetation module into a room. */
-export function loadVegetationTestModule<Room extends ModuleRoomLike>(room: Room, options: VegetationTestOptions): ReturnType<Room['loadModule']> {
+export function loadVegetationTestModule<Room extends ModuleRoomLike>(room: Room, options: VegetationTestOptions = {}): ReturnType<Room['loadModule']> {
   return room.loadModule(createVegetationTestModule(options) as never) as ReturnType<Room['loadModule']>
 }

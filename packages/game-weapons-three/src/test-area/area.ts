@@ -5,8 +5,8 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
-import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from '../accessory-bench'
-import { accessoryTextOf } from '../accessory-text'
+import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
+import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from '../audio'
 import type { WeaponAudio } from '../audio'
 import { createWeaponFx } from '../fx'
@@ -20,7 +20,7 @@ import type { WeaponProp } from '../props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from '../thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from '../world-explosives'
 import { createWorldEffects } from '../world-effects'
-import { weaponsScenarios } from '../scenarios'
+import { weaponsScenarios } from './scenarios'
 
 export interface WeaponsTestModuleOptions {
   /** `en` or `pt-BR` (default). */
@@ -39,7 +39,7 @@ export interface WeaponsTestModuleOptions {
   thumbnailBase?: string | false
   /** The rocket of a launcher flies out of the weapon in the hands (default true). A host that draws the projectile (the test room's `projectileModel`) passes false: one round flies. */
   flyRocket?: boolean
-  /** The item models of game-items-three (`itemModels` there): the weapons the gallery did not draw get the team's model instead of the low-poly prop. */
+  /** The item models of game-items-three (`itemModels` there): the weapons the gallery did not draw get the team's model instead of the low-poly prop; default `itemModels` there (deprecated: pass it). */
   items?: ItemModels
 }
 
@@ -223,10 +223,10 @@ const weaponItem = (def: WeaponDef, name: string, items?: ItemModels): TestableI
 }
 
 /** The M134 standing on a tripod: the support the `tripod` accessory gives, as a prop of its own (aim at it and press H to take the gun). */
-const mountedM134Item = (def: WeaponDef, name: string): TestableItem => ({
+const mountedM134Item = (def: WeaponDef, name: string, items?: ItemModels): TestableItem => ({
   id: MOUNTED_M134_ITEM_ID,
   name,
-  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name) as THREE_NS.Group,
+  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name, items) as THREE_NS.Group,
   spec: (root: unknown) => modeledPropSpec(root, def, name),
   weapon: def.id,
   movable: false,
@@ -302,7 +302,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   })
   const worldExplosiveIds = new Set(worldExplosives.map((item) => item.id))
   const mountedM134Def = arsenal.weapons.get(MOUNTED_M134.weaponId)
-  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134)] : []
+  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134, options.items)] : []
   let fx: WeaponFx | null = null
   let host: ModuleHost | null = null
   let soundDistance = 0

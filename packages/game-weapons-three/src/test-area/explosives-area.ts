@@ -3,11 +3,11 @@ import { EXPLOSIONS } from '@adatechnology/game-vfx'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, ExplosiveDef } from '@adatechnology/game-weapons'
 import { EXPLOSIVES_AREA_ID, createExplosivesBench } from './explosives-bench'
-import type { ItemModels } from './item-models'
+import type { ItemModels } from '../item-models'
 import type { ExplosivesRoom } from './explosives-bench'
 import { explosivesScenarios } from './explosives-scenarios'
 import { explosivesTextOf } from './explosives-text'
-import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
+import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from '../world-explosives'
 
 export { EXPLOSIVES_AREA_ID }
 export type { ExplosivesRoom }
@@ -50,7 +50,7 @@ export interface ExplosivesTestModuleOptions {
   scene?: Partial<ExplosivesScene>
   /** Strength multiplier the bench starts at (default 1: the arsenal's numbers; a game value, see the README). */
   blastScale?: number
-  /** The item models of game-items-three (`itemModels` there): the P13 is drawn with the team's model when given. */
+  /** The item models of game-items-three (`itemModels` there): the P13 is drawn with the team's model (default `itemModels` there, deprecated: pass it). */
   items?: ItemModels
 }
 

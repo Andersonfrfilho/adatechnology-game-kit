@@ -2,8 +2,8 @@ import { POSE_CLIPS, POSE_CLIP_LOCALES } from '@adatechnology/game-characters'
 import type { PoseClip } from '@adatechnology/game-characters'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleMetric, TestableModule } from '@adatechnology/game-contracts'
 
-import type { PlayerAvatar } from './avatar'
-import { AVATAR_TEXT } from './test-text'
+import type { PlayerAvatar } from '../player/avatar'
+import { AVATAR_TEXT } from './avatar-text'
 
 export const AVATAR_AREA_ID = 'avatar_area'
 

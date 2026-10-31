@@ -49,10 +49,10 @@
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
-    "@adatechnology/game-vegetation": "workspace:^"
+    "@adatechnology/game-vegetation": "workspace:^",
+    "@adatechnology/game-vegetation-species": "workspace:^"
   },
   "devDependencies": {
-    "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

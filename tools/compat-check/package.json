@@ -1,0 +1,35 @@
+{
+  "name": "@adatechnology/compat-check",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Spec 005, D2: calls every API changed in phases 2 and 3 exactly as the consumers wrote it before (base e600f1f6) and compares with the by-option path the preset takes. Typechecks the old call shapes and runs them.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@adatechnology/game-characters-people": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-floorplan-three": "workspace:*",
+    "@adatechnology/game-items-three": "workspace:*",
+    "@adatechnology/game-kit-defaults": "workspace:*",
+    "@adatechnology/game-stories": "workspace:*",
+    "@adatechnology/game-urban": "workspace:*",
+    "@adatechnology/game-urban-three": "workspace:*",
+    "@adatechnology/game-vegetation-species": "workspace:*",
+    "@adatechnology/game-vegetation-three": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

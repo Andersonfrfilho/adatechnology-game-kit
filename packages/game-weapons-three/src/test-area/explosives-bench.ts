@@ -2,10 +2,10 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import type { BenchChange, BenchSheet, DestructionEvent, Hit, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, Vec3 } from '@adatechnology/game-contracts'
 import type { ExplosiveDef } from '@adatechnology/game-weapons'
-import type { ItemModels } from './item-models'
+import type { ItemModels } from '../item-models'
 import { fillText } from './explosives-text'
 import type { ExplosivesText } from './explosives-text'
-import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
+import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveShell, worldExplosiveValve } from '../world-explosives'
 
 /** Id of the explosives module (`?area=explosives_area` opens it). */
 export const EXPLOSIVES_AREA_ID = 'explosives_area'

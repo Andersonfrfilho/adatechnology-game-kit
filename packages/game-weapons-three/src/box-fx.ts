@@ -14,7 +14,7 @@ import type { ItemModels } from './item-models'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
-  /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; without it they keep their low-poly prop. */
+  /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; default `itemModels` there (deprecated: pass it). */
   items?: ItemModels
   THREE: typeof THREE_NS
   scene: THREE_NS.Scene

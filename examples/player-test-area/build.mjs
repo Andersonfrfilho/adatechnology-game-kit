@@ -38,6 +38,7 @@ const result = await esbuild.build({
   legalComments: 'none',
   alias: {
     ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    '@adatechnology/game-characters-three/testing': join(pkg('game-characters-three'), 'dist/testing.js'),
     '@adatechnology/game-player/testing': join(pkg('game-player'), 'dist/testing.js'),
   },
 })

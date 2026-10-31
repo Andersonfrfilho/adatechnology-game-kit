@@ -49,10 +49,10 @@
   },
   "dependencies": {
     "@adatechnology/game-characters": "workspace:^",
+    "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^"
   },
   "devDependencies": {
-    "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",

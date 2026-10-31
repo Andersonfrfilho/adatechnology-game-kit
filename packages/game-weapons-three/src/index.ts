@@ -9,10 +9,14 @@ export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITE
 export type { WeaponsTestModuleOptions } from './testing'
 export { WEAPON_THUMBNAILS, DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl, weaponThumbnailCredit } from './thumbnails'
 export type { WeaponThumbnailEntry } from './thumbnails'
-export { createExplosivesTestModule, DEFAULT_EXPLOSIVES_SCENE, EXPLOSIVES_AREA_ID } from './explosives-area'
-export type { ExplosivesRoom, ExplosivesScene, ExplosivesTestModuleOptions } from './explosives-area'
-export { EXPLOSIVES_TEXT, explosivesTextOf } from './explosives-text'
-export type { ExplosivesText } from './explosives-text'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { createExplosivesTestModule, DEFAULT_EXPLOSIVES_SCENE, EXPLOSIVES_AREA_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { ExplosivesRoom, ExplosivesScene, ExplosivesTestModuleOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { EXPLOSIVES_TEXT, explosivesTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { ExplosivesText } from './testing'
 export { P13_VALVE_MESH, WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
 export type { WorldExplosiveOptions } from './world-explosives'
 export type { ItemModelRequest, ItemModels } from './item-models'

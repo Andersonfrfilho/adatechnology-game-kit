@@ -9751,8 +9751,8 @@
   },
   {
     "type": "cycle",
-    "from": "packages/game-terrain-three/src/test-module.ts",
-    "to": "packages/game-terrain-three/src/locale.ts",
+    "from": "packages/game-terrain-three/src/test-area/test-module.ts",
+    "to": "packages/game-terrain-three/src/test-area/locale.ts",
     "unresolvedTo": "./locale",
     "dependencyTypes": [
       "local",
@@ -9764,14 +9764,14 @@
     },
     "cycle": [
       {
-        "name": "packages/game-terrain-three/src/locale.ts",
+        "name": "packages/game-terrain-three/src/test-area/locale.ts",
         "dependencyTypes": [
           "local",
           "import"
         ]
       },
       {
-        "name": "packages/game-terrain-three/src/test-module.ts",
+        "name": "packages/game-terrain-three/src/test-area/test-module.ts",
         "dependencyTypes": [
           "local",
           "type-only",
@@ -10234,5 +10234,229 @@
         ]
       }
     ]
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-animals-three/src/index.ts",
+    "to": "packages/game-animals-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-audio/src/index.ts",
+    "to": "packages/game-audio/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-characters-three/src/index.ts",
+    "to": "packages/game-characters-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-crowd-three/src/index.ts",
+    "to": "packages/game-crowd-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-floorplan-three/src/index.ts",
+    "to": "packages/game-floorplan-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-items-three/src/index.ts",
+    "to": "packages/game-items-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-player/src/index.ts",
+    "to": "packages/game-player/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-stories/src/index.ts",
+    "to": "packages/game-stories/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-terrain-three/src/index.ts",
+    "to": "packages/game-terrain-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-urban-three/src/index.ts",
+    "to": "packages/game-urban-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-vegetation-three/src/index.ts",
+    "to": "packages/game-vegetation-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-vehicles-three/src/index.ts",
+    "to": "packages/game-vehicles-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-vfx-three/src/index.ts",
+    "to": "packages/game-vfx-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-weapons-three/src/index.ts",
+    "to": "packages/game-weapons-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-weather-three/src/index.ts",
+    "to": "packages/game-weather-three/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-weather/src/index.ts",
+    "to": "packages/game-weather/src/testing.ts",
+    "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
   }
 ]

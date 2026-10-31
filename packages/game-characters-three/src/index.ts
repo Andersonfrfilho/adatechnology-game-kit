@@ -66,8 +66,10 @@ export type { AvatarViewMode } from './player/head-hiding'
 export type { ReachView } from './player/arm-reach'
 export { toRoomAvatar } from './player/room-avatar'
 export type { RoomAvatarLike, ToRoomAvatarOptions } from './player/room-avatar'
-export { AVATAR_AREA_ID, createAvatarTestModule } from './player/test-module'
-export type { AvatarTestOptions } from './player/test-module'
+/** @deprecated import from '@adatechnology/game-characters-three/testing' */
+export { AVATAR_AREA_ID, createAvatarTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-characters-three/testing' */
+export type { AvatarTestOptions } from './testing'
 export { createFirstPersonArms, FIRST_PERSON_BOB, FIRST_PERSON_COLORS, FIRST_PERSON_RIG, FIRST_PERSON_STANCES } from './first-person/arms'
 export { solveTwoBone } from './first-person/ik'
 export type { TwoBone } from './first-person/ik'

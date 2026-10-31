@@ -67,6 +67,7 @@ const result = await esbuild.build({
     '@adatechnology/game-vfx-three': join(pkg('game-vfx-three'), 'dist/index.js'),
     '@adatechnology/game-terrain': join(pkg('game-terrain'), 'dist/index.js'),
     '@adatechnology/game-terrain-three': join(pkg('game-terrain-three'), 'dist/index.js'),
+    '@adatechnology/game-terrain-three/testing': join(pkg('game-terrain-three'), 'dist/testing.js'),
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),

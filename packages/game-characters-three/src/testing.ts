@@ -8,3 +8,5 @@ export type { CharactersTestOptions, ProfessionCard, UndeadCard, UndeadLike } fr
 export type { AreaContext } from './test-area/scenarios'
 export { BODY_MATERIAL_DEF, registerBodyMaterial } from './test-area/material'
 export { personSpecOf } from './test-area/person-spec'
+export { AVATAR_AREA_ID, createAvatarTestModule } from './test-area/avatar-module'
+export type { AvatarTestOptions } from './test-area/avatar-module'

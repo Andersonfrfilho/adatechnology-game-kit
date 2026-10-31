@@ -48,8 +48,11 @@ export const DEFAULT_TEST_WRECKS: readonly VehicleWreck[] = [
 ]
 
 export type VehiclesTestOptions = {
-  /** The fleet content: paint palettes, measured sizes and the install into the default kit. */
-  readonly fleet: VehiclesTestFleet
+  /**
+   * The fleet content: paint palettes, measured sizes and the install into the default kit (`defaultVehicleFleet()` of `game-kit-defaults`). Default the ones of `game-vehicles-fleet`.
+   * @deprecated pass `fleet`; the default is removed in the next major.
+   */
+  readonly fleet?: VehiclesTestFleet
   /** `en` or `pt-BR` (default). */
   readonly locale?: string
   /** The kit the vehicles are built with, per three.js namespace. Default: `createVehicleKit` with the fleet installed (`fleet.installFleet`). */

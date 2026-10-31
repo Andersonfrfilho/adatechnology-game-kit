@@ -12,7 +12,8 @@ import { POSE_CLIPS } from '@adatechnology/game-characters'
 import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '@adatechnology/game-characters-people'
 import { PLAYER_DEFAULTS, createPlayer } from '@adatechnology/game-player'
 import { createPlayerTestModule } from '@adatechnology/game-player/testing'
-import { AVATAR_AREA_ID, createAvatarTestModule, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { AVATAR_AREA_ID, createAvatarTestModule } from '@adatechnology/game-characters-three/testing'
 import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 
 export { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule, AVATAR_AREA_ID }

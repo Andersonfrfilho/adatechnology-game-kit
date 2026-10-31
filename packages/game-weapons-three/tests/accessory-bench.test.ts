@@ -5,8 +5,8 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { ModuleHost } from '@adatechnology/game-contracts'
 import { createWeaponsTestModule } from '../src'
-import { createAccessoryBench } from '../src/accessory-bench'
-import { ACCESSORY_TEXT } from '../src/accessory-text'
+import { createAccessoryBench } from '../src/test-area/accessory-bench'
+import { ACCESSORY_TEXT } from '../src/test-area/accessory-text'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')

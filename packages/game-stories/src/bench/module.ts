@@ -1,3 +1,4 @@
+import { getProfession, getNamePools, SHEET_RULESET } from '@adatechnology/game-characters-people'
 import type { BenchChange, BenchSheet, ModuleControl, ModuleHost, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 
 import type { LifeOptions } from '../life/types'
@@ -23,10 +24,12 @@ export type StoriesContent = {
   readonly example?: boolean
 }
 
+const defaultProfessionName = (professionId: string, language: string): string | undefined => getProfession(professionId)?.name[language === 'en' ? 'en' : 'pt-BR']
+
 /** The content packs the bench runs on: the name pools and the sheet ruleset, and how a profession is called (`defaultStoryContent` of `game-kit-defaults` has the kit's own). */
 export type StoriesTestModuleOptions = {
-  readonly names: NamePools
-  readonly ruleset: SheetRuleset
+  readonly names?: NamePools
+  readonly ruleset?: SheetRuleset
   /** The name of a profession in the language; default its id. */
   readonly professionName?: (professionId: string, locale: string) => string | undefined
   readonly content?: StoriesContent
@@ -56,8 +59,10 @@ const actionControl = (id: string): string => `act_${id.toLowerCase().replace(/[
  * of the day and one person's character sheet go to the host's sheet panel. The player's actions are switches. The kit ships two tiny example stories
  * (marked `example`); `load` takes a game's own content.
  */
-export function createStoriesTestModule(options: StoriesTestModuleOptions): StoriesTestModule {
+export function createStoriesTestModule(options: StoriesTestModuleOptions = {}): StoriesTestModule {
   const locale = options.locale ?? 'pt-BR'
+  const ruleset = options.ruleset ?? SHEET_RULESET
+  const names = options.names ?? getNamePools(locale)
   const text = storiesBenchTextOf(locale)
   let content: StoriesContent = options.content ?? STORIES_EXAMPLE[locale === 'en' ? 'en' : 'pt-BR']
   const settings = { seed: options.seed ?? 1, day: Math.min(30, content.days ?? 90), life: true, infection: false, person: '' }
@@ -67,8 +72,8 @@ export function createStoriesTestModule(options: StoriesTestModuleOptions): Stor
   const worldOptions = (seed: number, withLife: boolean, infection: boolean, acts: Record<string, number>): StoryWorldOptions => {
     const life = withLife && content.life ? { ...content.life, numbers: { ...content.life.numbers, infection } } : undefined
     return {
-      names: options.names,
-      ruleset: options.ruleset,
+      names,
+      ruleset,
       stories: content.stories,
       ...(content.people ? { people: content.people } : {}),
       seed,
@@ -113,7 +118,7 @@ export function createStoriesTestModule(options: StoriesTestModuleOptions): Stor
         { label: text.sheet.state, value: state ? text.states[state.state as StateId] : '' },
         { label: text.sheet.base, value: state ? groupName(state.base) : '' },
         ...(person.age !== undefined ? [{ label: text.sheet.age, value: String(person.age) }] : []),
-        { label: text.sheet.profession, value: options.professionName?.(sheet.profession, locale === 'en' ? 'en' : 'pt-BR') ?? sheet.profession },
+        { label: text.sheet.profession, value: (options.professionName ?? defaultProfessionName)(sheet.profession, locale === 'en' ? 'en' : 'pt-BR') ?? sheet.profession },
         { label: text.sheet.pool, value: String(sheet.pool()) },
         ...Object.entries(derived).map(([key, value]) => ({ label: text.derived[key as keyof typeof text.derived] ?? key, value: String(Math.round(value * 100) / 100) })),
       ],
@@ -229,11 +234,11 @@ export function createStoriesTestModule(options: StoriesTestModuleOptions): Stor
       id: 'stories_point_buy',
       name: text.scenarios.point_buy,
       run: ({ expect }) => {
-        const nurse = createSheet({ ruleset: options.ruleset, profession: 'nurse' })
+        const nurse = createSheet({ ruleset, profession: 'nurse' })
         expect(nurse.pool() === 12, 'a nurse starts with 14 − 2 = 12 points', { pool: nurse.pool() })
-        const spent = createSheet({ ruleset: options.ruleset, profession: 'nurse', attributes: { agility: 8 }, traits: ['athlete', 'smoker'] })
+        const spent = createSheet({ ruleset, profession: 'nurse', attributes: { agility: 8 }, traits: ['athlete', 'smoker'] })
         expect(spent.pool() === 6 && spent.valid(), 'agility 8 (−5), athlete (−4), smoker (+3): 6 left', { pool: spent.pool() })
-        const clash = createSheet({ ruleset: options.ruleset, traits: ['athlete', 'asthmatic'] })
+        const clash = createSheet({ ruleset, traits: ['athlete', 'asthmatic'] })
         expect(!clash.valid(), 'athlete and asthmatic exclude each other')
       },
     },

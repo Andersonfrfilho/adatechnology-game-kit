@@ -1,8 +1,8 @@
 # @adatechnology/game-kit-defaults
 
-The default preset of the kit, the equivalent of Bevy's `DefaultPlugins`. It sits in the composition layer (L5 of `specs/005-camadas-e-quadro/plan.md`, D1 and D7): it imports the content packs and returns the options that the cores and the adapters take by option, so the cores and adapters never import content themselves.
+The default preset of the kit, the equivalent of Bevy's `DefaultPlugins`. It sits in the composition layer (L5 of `specs/005-camadas-e-quadro/plan.md`, D1 and D7): it imports the content packs and returns the options that the cores and the adapters take by option. The cores and adapters import content only through the named D2 exceptions of `.dependency-cruiser.cjs`.
 
-A game that wants the full kit calls the preset. A game that wants another fleet, other plants or other furniture does not call it and does not ship the default content.
+A game that wants the full kit calls the preset. The cores and adapters still work without it, with the same content as before as a deprecated default (spec 005, D2), removed in the next major; the by-option path is the recommended one. A game that wants another fleet, other plants or other furniture does not call it and does not ship the default content.
 
 ```ts
 import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
@@ -24,4 +24,4 @@ toRoomAvatar(avatar, { ...defaultCharacterClips() })
 | `defaultVegetationSpecies()` | the species pack | `GameVegetationSpecies` of `createVegetationTestModule` of `game-vegetation-three` | `game-vegetation-species` |
 | `defaultCharacterClips()` | `{ strikeClips, firstPersonClips }` | `toRoomAvatar` of `game-characters-three` | `game-characters-people` |
 
-More presets are added by the tasks of phase 3 (vehicle palettes, furniture).
+

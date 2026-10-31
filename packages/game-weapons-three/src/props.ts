@@ -3,6 +3,7 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
 import { mergeByMaterial, shapeGeometries } from '@adatechnology/game-shapes-three'
+import { DEFAULT_ITEM_MODELS } from './item-models'
 import type { ItemModels } from './item-models'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
@@ -127,18 +128,18 @@ export function registerWeaponItemModel(weaponId: string, model: WeaponItemModel
 /** The item model of game-items-three that draws a weapon (`baseball_bat`, `axe`, `fire_extinguisher`...), or undefined when there is none. */
 export function itemModelOfWeapon(weaponId: string, items?: ItemModels): string | undefined {
   const id = WEAPON_ITEM_MODELS.get(weaponId)?.item ?? weaponId
-  return id && items?.has(id) ? id : undefined
+  return id && (items ?? DEFAULT_ITEM_MODELS).has(id) ? id : undefined
 }
 
 /**
  * A weapon the gallery did not draw, with the team's item model (Itens do Vale Cinzento: the bat, the axe, the machete, the extinguisher...): its long axis turned
  * along +x and laid flat, the wider end (the head) at +x unless `registerWeaponItemModel` says otherwise, the origin at the bottom centre, an empty `handle` at the narrow end where the hand closes. Undefined
- * when `items` (the item models of game-items-three, lent by the host) has none of it.
+ * when `items` (the item models of game-items-three, lent by the host; default `itemModels` there) has none of it.
  */
 export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined {
   const itemId = itemModelOfWeapon(def.id, items)
-  if (!items || !itemId) return undefined
-  const { root } = items.build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
+  if (!itemId) return undefined
+  const { root } = (items ?? DEFAULT_ITEM_MODELS).build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = def.id
   group.add(root)
@@ -234,11 +235,17 @@ export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
 const TRIPOD_HEAD = { x: 0.4, y: -0.1 }
 
 /** A modeled weapon on a tripod of three steel legs under its middle (the same legs the `tripod` accessory draws in the hands). */
-export function buildTripodMountedProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string): THREE_NS.Group | undefined {
-  return buildModeledProp(THREE, def, name, (root) => {
-    const kit = modelKit(THREE)
-    buildTripodLegs(kit, kit.pivot(root, TRIPOD_HEAD.x, TRIPOD_HEAD.y, 0))
-  })
+export function buildTripodMountedProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, items?: ItemModels): THREE_NS.Group | undefined {
+  return buildModeledProp(
+    THREE,
+    def,
+    name,
+    (root) => {
+      const kit = modelKit(THREE)
+      buildTripodLegs(kit, kit.pivot(root, TRIPOD_HEAD.x, TRIPOD_HEAD.y, 0))
+    },
+    items,
+  )
 }
 
 /** The destruction spec of a modeled prop: one steel box of its measures, with the real mass of the weapon. */

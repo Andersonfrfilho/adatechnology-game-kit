@@ -2,7 +2,7 @@ import type { DestructionEvent, ModuleScenario, Vec3 } from '@adatechnology/game
 import { EXPLOSIVES_AREA_ID } from './explosives-bench'
 import type { ExplosivesBench, ExplosivesRoom } from './explosives-bench'
 import { explosivesTextOf, fillText } from './explosives-text'
-import { WORLD_EXPLOSIVE_PREFIX } from './world-explosives'
+import { WORLD_EXPLOSIVE_PREFIX } from '../world-explosives'
 
 /** The members of the test room's `ScenarioContext` these scenarios use (structural: this package does not depend on the room). */
 interface ScenarioContext {
