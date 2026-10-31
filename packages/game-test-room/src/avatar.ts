@@ -10,6 +10,8 @@ export interface RoomAvatarItemUse {
   readonly id: string
   readonly position: readonly [number, number, number]
   readonly rotation: readonly [number, number, number]
+  /** How closed the other hand is when it works on the item (turning a cap off); the room brings it there with `reach`. */
+  readonly gripL?: number
 }
 
 /** What the room tells the avatar every frame. */

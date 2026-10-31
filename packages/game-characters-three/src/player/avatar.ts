@@ -83,6 +83,8 @@ export type AvatarItemUsePose = {
   readonly id: string
   readonly position: readonly [number, number, number]
   readonly rotation: readonly [number, number, number]
+  /** How closed the other hand is (0 open to 1 closed) when it works on the item, as a hand turning a cap off opens between strokes; the room brings it there with `reach`. */
+  readonly gripL?: number
 }
 
 export type AvatarUpdate = {
@@ -386,7 +388,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         headX: -0.26 * tilt,
       }
     }
-    if (id === 'open' || id === 'close') {
+    if (id === 'open' || id === 'close' || itemUse.gripL !== undefined) {
       const reach = clamp((0.22 - position[0]) / 0.12, 0, 1)
       return {
         armL: -0.45 - 0.35 * reach,
@@ -633,9 +635,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       hands.forEach((hand) => {
         const isRight = hand.side < 0
         const holdRight = isRight && (!!state.holding || !!state.itemUse)
-        const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close')
+        const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close' || state.itemUse?.gripL !== undefined)
         const grip =
-          blow === 'punch'
+          !isRight && state.itemUse?.gripL !== undefined
+            ? 1.22 * state.itemUse.gripL
+            : blow === 'punch'
             ? 1.4
             : blow === 'shove'
               ? 0.15
