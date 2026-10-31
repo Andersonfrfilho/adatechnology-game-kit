@@ -3,6 +3,7 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
+//   PERF_PROFILE=cold_molotov          also saves shots/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes shots/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -24,6 +25,7 @@ const BUDGET = {
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
 }
+const DRAW_MS = 1500
 const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 120000
 
 function loadPlaywright() {
@@ -98,10 +100,11 @@ function pause(ms) {
 
 async function fireAndSettle(ids, gapMs = 0) {
   for (const id of ids) {
+    // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
+    await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
+    await pause(DRAW_MS)
     const fired = await page.evaluate((weapon) => {
       const room = window.__testRoom
-      room.equip(weapon)
-      room.waitUntilReady(3)
       room.look([0, 1.6, 4], [0, 0.5, -4])
       room.use()
       return room.tool?.id ?? weapon
@@ -120,7 +123,10 @@ async function fireAndSettle(ids, gapMs = 0) {
 
 async function phase(name, run) {
   const before = await page.evaluate(() => window.__perf.mark())
+  const profiler = process.env.PERF_PROFILE === name ? await page.context().newCDPSession(page) : undefined
+  if (profiler) await profiler.send('Profiler.enable').then(() => profiler.send('Profiler.setSamplingInterval', { interval: 100 })).then(() => profiler.send('Profiler.start'))
   await run()
+  if (profiler) writeFileSync(join(shotsDir, `perf-${name}.cpuprofile`), JSON.stringify((await profiler.send('Profiler.stop')).profile))
   const result = await page.evaluate(([label, start]) => window.__perf.read(label, start), [name, before])
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
@@ -158,11 +164,20 @@ function installFrameRecorder() {
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
+  const slowFrames = []
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) longTasks.push(entry.duration)
   }).observe({ type: 'longtask' })
+  // what ran in each frame over budget, so a failure names its culprit
+  new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if (entry.duration <= 33.4) continue
+      const scripts = (entry.scripts ?? []).map((script) => `${script.sourceFunctionName || script.invoker}@${script.sourceCharPosition} ${Math.round(script.duration)}ms`)
+      slowFrames.push({ at: frames.length, ms: Math.round(entry.duration), render: Math.round(entry.renderStart ? entry.startTime + entry.duration - entry.renderStart : 0), scripts })
+    }
+  }).observe({ type: 'long-animation-frame' })
   window.__perf = {
-    mark: () => ({ ...window.__glCounts, frame: frames.length, longTask: longTasks.length }),
+    mark: () => ({ ...window.__glCounts, frame: frames.length, longTask: longTasks.length, slowFrame: slowFrames.length }),
     read(name, start) {
       const counts = window.__glCounts
       const slice = frames.slice(start.frame + 2).sort((a, b) => a - b)
@@ -181,6 +196,7 @@ function installFrameRecorder() {
         programs: counts.programs - start.programs,
         buffers: counts.buffers - start.buffers,
         drawsPerFrame: Math.round((counts.draws - start.draws) / frameCount),
+        slowFrames: slowFrames.slice(start.slowFrame).slice(0, 5),
       }
     },
   }
