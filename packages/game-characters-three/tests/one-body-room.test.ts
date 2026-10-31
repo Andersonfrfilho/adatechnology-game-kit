@@ -80,6 +80,11 @@ const sameInBothViews = (room: TestRoom, avatar: ReturnType<typeof createPlayerA
 }
 
 describe('one body for both views (spec 004, R7)', () => {
+  it('the body holds the tool, as the first-person arms do: the weapon\'s wall probe and a laser pass through it (userData.viewmodel)', () => {
+    // the wall probe hitting the player's own fingers pulled a real-size rifle behind the eye
+    expect(toRoomAvatar(createPlayerAvatar(THREE)).root.userData.viewmodel).toBe(true)
+  })
+
   it('the first-person camera is the body\'s eye, about 1.70 m standing, and the body is drawn', () => {
     const { room, avatar } = setup()
     room.look([0, 1.7, 3], [0, 1.7, -5])

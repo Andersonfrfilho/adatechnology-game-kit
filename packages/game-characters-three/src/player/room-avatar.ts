@@ -60,6 +60,8 @@ const GUARD_SPEED = 0.3
  * After a punch the body holds the guard (`guardClip`) for `guardHold` seconds while it stands, so the next punch leaves from the guard.
  */
 export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions = {}): RoomAvatarLike => {
+  // the player's own body holds the tool, as the first-person arms do: the wall probe and a laser never land on it
+  avatar.root.userData.viewmodel = true
   const arms =
     options.firstPerson === false || options.firstPerson === undefined
       ? null

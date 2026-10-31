@@ -7,6 +7,7 @@ type HandState = ReturnType<TestRoom['handState']>
 import type { HandTargets } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
+import { VIEWMODEL_NODE_NAME } from '../src/laser-raycast'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -178,5 +179,21 @@ describe('hand targets of the weapon in the hands', () => {
     const axis = heights.reduce((a, b) => a + b, 0) / heights.length
     const centre = new THREE.Vector3(...pose.position).applyMatrix4(inverse)
     expect(centre.y).toBeLessThan(axis - 0.015)
+  })
+})
+
+describe('the hands and the weapon in first person are drawn at one scale', () => {
+  // a pistol, a submachine gun, rifles and a shotgun: the reduction used to grow with the length of the weapon
+  const weapons = ['glock_17', 'hk_mp5a3', 'ak_47', 'colt_m4a1', 'remington_870']
+  it.each(weapons)('%s: the hands are as big as the weapon they hold, both at real size like the arms', (weapon) => {
+    const { room, last } = roomWithRecorder()
+    equip(room, weapon)
+    const viewmodel = room.scene.getObjectByName(VIEWMODEL_NODE_NAME)
+    const holder = viewmodel?.children[0]
+    expect(holder).toBeDefined()
+    const weaponScale = holder!.getWorldScale(new THREE.Vector3()).x
+    const handScale = last()?.targets?.scale ?? 1
+    expect(handScale).toBeCloseTo(weaponScale, 3)
+    expect(weaponScale).toBeCloseTo(1, 3)
   })
 })
