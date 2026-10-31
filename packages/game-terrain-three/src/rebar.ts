@@ -8,8 +8,20 @@ const EXPOSED_MARGIN = 0.002
 /** Metres a bar hangs just before it gives way. */
 const MAX_SAG = 0.07
 
-/** The bars of a reinforced layer where the digging passed their cover: a mesh of the chunk, or null when none is showing. */
-export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: TerrainChunk): THREE_NS.BufferGeometry | null {
+/** Bars a fresh geometry has room for at least, so that a chunk whose bars grow a little keeps its buffers. */
+const MIN_BAR_CAPACITY = 32
+
+function barCapacity(count: number): number {
+  let capacity = MIN_BAR_CAPACITY
+  while (capacity < count) capacity *= 2
+  return capacity
+}
+
+/**
+ * The bars of a reinforced layer where the digging passed their cover: a mesh of the chunk, or null when none is showing. A `reuse` geometry with room for them is written into
+ * (and only its draw range changes) instead of making new buffers.
+ */
+export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: TerrainChunk, reuse?: THREE_NS.BufferGeometry): THREE_NS.BufferGeometry | null {
   const [x0, z0] = terrain.bounds
   const { cellSize, columns, rows, stride } = terrain
   const lastColumn = Math.min(columns, chunk.column + chunk.cells)
@@ -47,9 +59,11 @@ export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
   }
   if (boxes.length === 0) return null
   const count = boxes.length / 6
-  const positions = new Float32Array(count * 24 * 3)
-  const normals = new Float32Array(count * 24 * 3)
-  const indices = new Uint32Array(count * 36)
+  const target = reuse && reuse.getAttribute('position').count >= count * 24 ? reuse : undefined
+  const capacity = target ? target.getAttribute('position').count / 24 : barCapacity(count)
+  const positions = target ? (target.getAttribute('position').array as Float32Array) : new Float32Array(capacity * 24 * 3)
+  const normals = target ? (target.getAttribute('normal').array as Float32Array) : new Float32Array(capacity * 24 * 3)
+  const indices = target ? (target.getIndex()!.array as Uint32Array) : new Uint32Array(capacity * 36)
   const FACES: readonly (readonly [readonly number[], readonly [number, number, number]])[] = [
     [[0, 4, 2, 0, 4, 5, 3, 4, 5, 3, 4, 2], [0, 1, 0]],
     [[0, 1, 5, 0, 1, 2, 3, 1, 2, 3, 1, 5], [0, -1, 0]],
@@ -75,9 +89,19 @@ export function buildRebarGeometry(THREE: ThreeLib, terrain: Terrain, chunk: Ter
       cursor += 6
     }
   }
+  if (target) {
+    target.getAttribute('position').needsUpdate = true
+    target.getAttribute('normal').needsUpdate = true
+    target.getIndex()!.needsUpdate = true
+    target.boundingSphere = null
+    target.boundingBox = null
+    target.setDrawRange(0, count * 36)
+    return target
+  }
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
   geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  geometry.setDrawRange(0, count * 36)
   return geometry
 }

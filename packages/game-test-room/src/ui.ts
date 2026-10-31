@@ -98,6 +98,8 @@ export interface UiOptions {
 }
 
 export interface RoomUi {
+  /** Writes the log lines queued since the last frame (the room calls it every frame; a burst costs one DOM write). */
+  flushLog(): void
   hud(state: HudState): void
   /** The hold timer around the crosshair, 0 to 1; null hides it. Called every frame while it runs. */
   holdRing(value: number | null): void
@@ -351,8 +353,7 @@ export function createUi(o: UiOptions): RoomUi {
   logBtn(t('ui.download_txt'), () => o.log.download('txt'))
   logBtn(t('ui.clear_log'), () => {
     o.log.clear()
-    logBody.textContent = ''
-    nodes.clear()
+    rebuildLog()
   })
   logPanel.append(logTitle, logBar, logBody)
 
@@ -368,29 +369,60 @@ export function createUi(o: UiOptions): RoomUi {
     const tm = mk('time', undefined, fmtTime(e.t))
     n.append(tm, document.createTextNode(e.text))
   }
-  const addNode = (e: LogEntry): void => {
-    if (!filters[e.channel]) return
+  // a blast storm logs hundreds of lines in one frame: they queue and the DOM is touched once per frame, for the last MAX_LINES only
+  let pendingAdds: LogEntry[] = []
+  const pendingUpdates = new Map<number, LogEntry>()
+  let isLogStale = false
+  const isLogVisible = (): boolean => !window.matchMedia?.('(max-width:980px)').matches || root.classList.contains('open')
+  const buildNode = (e: LogEntry): HTMLElement => {
     const n = mk('div')
     fill(n, e)
     nodes.set(e.seq, n)
-    logBody.appendChild(n)
+    return n
+  }
+  function rebuildLog(): void {
+    pendingAdds = []
+    pendingUpdates.clear()
+    isLogStale = false
+    logBody.textContent = ''
+    nodes.clear()
+    const fragment = document.createDocumentFragment()
+    for (const e of o.log.entries().slice(-MAX_LINES * 3)) if (filters[e.channel]) fragment.appendChild(buildNode(e))
+    logBody.appendChild(fragment)
+    trimLog()
+  }
+  function trimLog(): void {
     while (logBody.childElementCount > MAX_LINES) {
-      const first = logBody.firstElementChild as HTMLElement
-      for (const [k, v] of nodes) if (v === first) nodes.delete(k)
-      first.remove()
+      const oldest = nodes.keys().next()
+      if (oldest.done) break
+      nodes.delete(oldest.value)
+      logBody.firstElementChild?.remove()
     }
     if (autoscroll) logBody.scrollTop = logBody.scrollHeight
   }
-  function rebuildLog(): void {
-    logBody.textContent = ''
-    nodes.clear()
-    for (const e of o.log.entries().slice(-MAX_LINES * 3)) addNode(e)
+  const flushLog = (): void => {
+    if (pendingAdds.length === 0 && pendingUpdates.size === 0) return
+    if (!isLogVisible()) {
+      isLogStale = true
+      pendingAdds = []
+      pendingUpdates.clear()
+      return
+    }
+    if (isLogStale) return rebuildLog()
+    const fragment = document.createDocumentFragment()
+    for (const e of pendingAdds.slice(-MAX_LINES)) if (filters[e.channel]) fragment.appendChild(buildNode(e))
+    pendingAdds = []
+    logBody.appendChild(fragment)
+    for (const [seq, e] of pendingUpdates) {
+      const n = nodes.get(seq)
+      if (n) fill(n, e)
+    }
+    pendingUpdates.clear()
+    trimLog()
   }
   const offLog = o.log.on((e, updated) => {
-    if (updated) {
-      const n = nodes.get(e.seq)
-      if (n) fill(n, e)
-    } else addNode(e)
+    if (updated) pendingUpdates.set(e.seq, e)
+    else pendingAdds.push(e)
   })
 
   // right: catalogue and tests
@@ -566,6 +598,7 @@ export function createUi(o: UiOptions): RoomUi {
   toggle.type = 'button'
   const togglePanels = (): void => {
     root.classList.toggle('open')
+    if (isLogStale && isLogVisible()) rebuildLog()
     o.onResize()
   }
   toggle.onclick = togglePanels
@@ -660,6 +693,7 @@ export function createUi(o: UiOptions): RoomUi {
       ring.style.display = value === null ? 'none' : 'block'
       if (value !== null) ringFill.style.strokeDashoffset = String(RING_LENGTH * (1 - value))
     },
+    flushLog,
     hud(s) {
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))

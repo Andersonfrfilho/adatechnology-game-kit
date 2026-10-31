@@ -33,6 +33,38 @@ const ORDER = Object.keys(SCENES)
 const INSTANT_FRAMES = new Map([0.08, 0.25, 0.5, 1, 2, 4].map((seconds) => [Math.round(seconds * 60), seconds]))
 const TOLERANCE = 2e-3
 
+type MarkNode = Parameters<typeof snapshotScene>[0]
+
+/** The marks as the page lays them out, a mesh each in the order they were made: the layer draws rocks and blood as instances, so every instance is read back as the mesh it replaces. */
+function marksAsMeshes(group: THREE.Group, entries: readonly { readonly kind: string; readonly plate?: boolean; readonly rotation?: number | readonly number[] }[]): MarkNode {
+  // the instanced meshes join the group with the first mark of their kind: find each by its shape
+  const instanced = group.children.filter((child) => (child as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh[]
+  const bloodMesh = instanced.find((mesh) => mesh.geometry.type === 'CircleGeometry')
+  const plateMesh = instanced.find((mesh) => mesh.geometry.type === 'BoxGeometry')
+  const rockMesh = instanced.find((mesh) => mesh !== bloodMesh && mesh !== plateMesh)
+  const ground = group.children.filter((child) => !(child as THREE.InstancedMesh).isInstancedMesh) as THREE.Mesh[]
+  const used = { ground: 0, blood: 0, rock: 0, plate: 0 }
+  const matrix = new THREE.Matrix4()
+  const instanceNode = (mesh: THREE.InstancedMesh, index: number, rotation: number | readonly number[] | undefined): MarkNode => {
+    const node = new THREE.Mesh(mesh.geometry)
+    mesh.getMatrixAt(index, matrix)
+    matrix.decompose(node.position, node.quaternion, node.scale)
+    // a matrix gives the quaternion with w >= 0, the page's Euler turn may give its negative: the same turn
+    const turn = new THREE.Quaternion().setFromEuler(typeof rotation === 'number' ? new THREE.Euler(0, rotation, 0) : new THREE.Euler(...(rotation as [number, number, number])))
+    if (node.quaternion.dot(turn) < 0) node.quaternion.set(-node.quaternion.x, -node.quaternion.y, -node.quaternion.z, -node.quaternion.w)
+    const color = mesh.instanceColor ? new THREE.Color().fromArray(mesh.instanceColor.array, index * 3) : (mesh.material as THREE.MeshStandardMaterial).color
+    node.material = Object.assign(Object.create(mesh.material) as THREE.MeshStandardMaterial, { color })
+    return node as unknown as MarkNode
+  }
+  const nodes: MarkNode[] = entries.map((entry) => {
+    if (entry.kind === 'blood') return instanceNode(bloodMesh!, used.blood++, entry.rotation)
+    if (entry.kind === 'rock') return entry.plate ? instanceNode(plateMesh!, used.plate++, entry.rotation) : instanceNode(rockMesh!, used.rock++, entry.rotation)
+    return ground[used.ground++] as unknown as MarkNode
+  })
+  const root = new THREE.Group()
+  return Object.assign(root, { traverse: (visitor: (node: MarkNode) => void) => { visitor(root as unknown as MarkNode); nodes.forEach(visitor) } }) as unknown as MarkNode
+}
+
 function bufferRow(mesh: THREE.Mesh, index: number): number[] {
   const geometry = mesh.geometry as THREE.InstancedBufferGeometry
   const row: number[] = []
@@ -84,7 +116,7 @@ describe('the Explosion Lab drawn by game-vfx-three, against the page', () => {
         void shocks
         const count = (puffMesh.geometry as THREE.InstancedBufferGeometry).instanceCount
         seen.set(seconds, {
-          stage: snapshotScene(marksGroup as never, { ignoreNames: true }).hash,
+          stage: snapshotScene(marksAsMeshes(marksGroup as THREE.Group, renderer.world.pools().marks.entries), { ignoreNames: true }).hash,
           shocks: states,
           rows: count > 0 ? Array.from({ length: Math.min(6, count) }, (_, index) => bufferRow(puffMesh, index)) : undefined,
         })
@@ -94,7 +126,7 @@ describe('the Explosion Lab drawn by game-vfx-three, against the page', () => {
         for (const instant of eventsOf('instant', key)) {
           expect(seen.get(instant.seconds as number)?.stage, `${instant.seconds} s`).toBe(instant.stage)
         }
-        expect(snapshotScene(marksGroup as never, { ignoreNames: true }).hash).toBe((eventsOf('end', key)[0] as { stage: string }).stage)
+        expect(snapshotScene(marksAsMeshes(marksGroup as THREE.Group, renderer.world.pools().marks.entries), { ignoreNames: true }).hash).toBe((eventsOf('end', key)[0] as { stage: string }).stage)
       })
 
       it('draws the shock shell and ring at the same size and fade', () => {

@@ -33,6 +33,8 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
+const MIN_FRAGMENTS_PER_SLICE = 8
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
 const STATIC_REFRESH = 0.5
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
@@ -170,6 +172,7 @@ class Renderer implements DestructionRenderer {
   private readonly gravity: number
   private readonly autoSplit: boolean
   private readonly maxFragments: number
+  private readonly eventBudgetMs: number
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
@@ -180,6 +183,10 @@ class Renderer implements DestructionRenderer {
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   private staticAt = 0
   private readonly queue: DestructionEvent[] = []
+  /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
+  private readonly slices: Array<() => void> = []
+  /** When the work of this frame must stop; `Infinity` outside `drainQueue`, where a call finishes what it started. */
+  private sliceDeadline = Infinity
   private readonly unsubscribe: () => void
   private readonly visuals: Visuals
   private readonly fragments: FragmentSystem
@@ -220,6 +227,7 @@ class Renderer implements DestructionRenderer {
     this.gravity = o.gravity ?? 9.81
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
+    this.eventBudgetMs = o.eventBudgetMs ?? Infinity
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
@@ -307,6 +315,7 @@ class Renderer implements DestructionRenderer {
       if (leftovers.length) this.matchByBox(objectId, root, leftovers, add)
     }
     const bound: Bound = { id: objectId, root, sync: options.syncTransform !== false, parts: new Map(), lastPos: null, lastQuat: null, piece: null, isSplit: false }
+    if (options.onFrame) bound.onFrame = options.onFrame
     const hosts = new Map<Mesh, HostVis>()
     for (const pid of partIds) bound.parts.set(pid, this.makePartVis(objectId, pid, state?.parts.find((p) => p.id === pid)?.material ?? '', byPart.get(pid) ?? [], hosts))
     for (const [pid, meshes] of byPart) {
@@ -484,6 +493,7 @@ class Renderer implements DestructionRenderer {
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     this.drainQueue()
+    for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.updateActive(dt)
@@ -498,11 +508,33 @@ class Renderer implements DestructionRenderer {
   private drainQueue(): void {
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.queue.splice(0, this.queue.length)
-    for (const ev of batch) {
+    const deadline = performance.now() + this.eventBudgetMs
+    this.sliceDeadline = deadline
+    try {
+      this.runSlices(deadline)
+      for (let i = 0; i < batch.length; i++) {
+        if (i > 0 && performance.now() >= deadline) {
+          this.queue.unshift(...batch.slice(i))
+          return
+        }
+        try {
+          this.apply(batch[i]!)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
+        }
+      }
+    } finally {
+      this.sliceDeadline = Infinity
+    }
+  }
+
+  /** Runs the work left by earlier frames until the deadline; at least one piece per frame, so it always finishes. */
+  private runSlices(deadline: number): void {
+    for (let ran = 0; this.slices.length > 0 && (ran === 0 || performance.now() < deadline); ran++) {
       try {
-        this.apply(ev)
+        this.slices.shift()!()
       } catch (err) {
-        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ev.type, err)
+        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to run deferred work', err)
       }
     }
   }
@@ -1074,15 +1106,7 @@ class Renderer implements DestructionRenderer {
       if (m && m.transparent) opacity = clamp(m.opacity, 0.2, 0.8)
       this.visuals.hide(pv, 'broken')
     }
-    const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
-    const step = this.low ? 2 : 1
-    for (let i = 0; i < ev.fragments.length; i += step) {
-      const fr = ev.fragments[i]
-      const fdef = this.world.materials.get(fr.material)
-      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def || !fdef ? color : fallbackColor(fr.material, fdef)
-      const mat = this.fragments.materialFor(fr.material, tone, transparent || fdef?.visual?.transparent === true, opacity)
-      this.fragments.spawn(fr, mat, ev.object, maxAlive)
-    }
+    this.spawnFragments(ev, 0, { def, color, opacity, transparent })
     const up: Vec3 = [0, 1, 0]
     const sizeK = clamp(ev.fragments.length / 10, 0.5, 2)
     switch (ev.style) {
@@ -1109,6 +1133,23 @@ class Renderer implements DestructionRenderer {
     this.sound(fractureKey(def, ev.style), ev.point, clamp(0.4 + ev.fragments.length * 0.03, 0.4, 1))
   }
 
+  /** Spawns the fragments of a fracture from index `from`; what does not fit in this frame's budget is spawned by the next frames. */
+  private spawnFragments(ev: Ev<'fracture'>, from: number, look: { def: MaterialDef | undefined; color: number; opacity: number; transparent: boolean }): void {
+    const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
+    const step = this.low ? 2 : 1
+    for (let i = from; i < ev.fragments.length; i += step) {
+      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && performance.now() >= this.sliceDeadline) {
+        this.slices.push(() => this.spawnFragments(ev, i, look))
+        return
+      }
+      const fr = ev.fragments[i]
+      const fdef = this.world.materials.get(fr.material)
+      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === look.def || !fdef ? look.color : fallbackColor(fr.material, fdef)
+      const mat = this.fragments.materialFor(fr.material, tone, look.transparent || fdef?.visual?.transparent === true, look.opacity)
+      this.fragments.spawn(fr, mat, ev.object, maxAlive)
+    }
+  }
+
   private onDetach(ev: Ev<'detach'>): void {
     this.sound('detach', this.rootPoint(ev.object), 0.5)
     this.splitLoose(ev.object)
@@ -1123,6 +1164,13 @@ class Renderer implements DestructionRenderer {
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     for (let i = 0; i < loose; i++) {
+      if (i > 0 && performance.now() >= this.sliceDeadline) {
+        this.slices.push(() => {
+          this.staticDirty.add(objectId)
+          this.splitLoose(objectId)
+        })
+        return
+      }
       // the loose groups are always read from index 1: each split renumbers the rest
       let newId: string
       try {
@@ -1482,6 +1530,7 @@ class Renderer implements DestructionRenderer {
 
   clear(): void {
     this.queue.length = 0
+    this.slices.length = 0
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     this.leaks.length = 0

@@ -32,6 +32,14 @@ const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e
 const lookFromHere = (target) => page.evaluate((t) => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], t) }, target)
 /** The world box of a spawned object: [min, max]. */
 const boxOf = (objectId) => page.evaluate((o) => { const r = window.__testRoom; const s = r.spawned().find((x) => x.objectId === o); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.toArray(), b.max.toArray()] }, objectId)
+/** A shot from a step back, the whole leaf in the frame (the shots from the handle are too close to judge its line), then the player goes back where it stood. */
+const overview = async (name, eye, target) => {
+  const at = await page.evaluate(() => window.__testRoom.playerPosition)
+  await look(eye, target)
+  await page.waitForTimeout(300)
+  await shot(name)
+  await look([at[0], 1.7, at[2]], target)
+}
 const camera = (mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
 const ids = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z] })))
 const idOf = (item, n = 0) => ids.filter((s) => s.item === item)[n]
@@ -70,6 +78,7 @@ for (const mode of modes) {
   const fridgePart = st?.part ?? 'door_fridge'
   check((await opening(fridge.id, fridgePart)) > 0.95, `the fridge door ends open (${(await opening(fridge.id, fridgePart)).toFixed(2)})`)
   await shot(`${mode}-fridge-open`)
+  await overview(`${mode}-fridge-open-overview`, [fridge.at[0] + 1.6, 1.9, fridge.at[2] + 3], [fridge.at[0] - 0.2, 0.9, fridge.at[2] + 0.3])
   // low into the open fridge, away from the freezer door above: over the shoulder the crosshair lands higher than the eye's target, next to the freezer
   await lookFromHere([fridge.at[0], 0.75, fridge.at[2] + 0.1])
   await tapE()
@@ -85,6 +94,7 @@ for (const mode of modes) {
   await waitIdle()
   check(wst?.objectId === wr.id && (await opening(wr.id, wst.part)) > 0.95, `E opens the wardrobe's ${wst?.part}`)
   await shot(`${mode}-wardrobe-open`)
+  await overview(`${mode}-wardrobe-open-overview`, [wr.at[0] + 1.4, 2.0, wr.at[2] + 3.2], [wr.at[0] - 0.3, 1.0, wr.at[2] + 0.3])
   await lookFromHere([wr.at[0], 1.2, wr.at[2] + 0.1])
   await tapE()
   await waitIdle()
@@ -111,6 +121,7 @@ for (const mode of modes) {
   const moved = bst.filter(([, v]) => v > 0)
   check((await lastAction('door_blocked')) > blockedBefore && moved.length === 1 && moved[0][1] < 0.9, `the door hits the barbecue and stops at ${moved.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-blocked`)
+  await overview(`${mode}-blocked-overview`, [bl.at[0] + 1.6, 2.2, bl.at[2] + 3.2], [bl.at[0] - 0.2, 0.9, bl.at[2] + 0.6])
   // close it again for the next run, from where it was opened: from beside the handle the eye falls on the barbecue in front of it
   await look([bl.at[0] + 0.3, 1.7, bl.at[2] + 1.5], [bl.at[0] - 0.3, 1.2, bl.at[2]])
   await tapE()
@@ -143,6 +154,7 @@ for (const mode of modes) {
   const carOpen = await page.evaluate(([o, list]) => list.map((p) => [p, window.__testRoom.leafOpening(o, p)]).filter(([, v]) => v > 0), [car.id, carLeaves])
   check(cst?.objectId === car.id && carOpen.length === 1, `E opens one door of the car (aimed ${carAim}): ${carOpen.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-car-open`)
+  await overview(`${mode}-car-open-overview`, [car.at[0] - 2.5, 1.8, car.at[2] - 4.2], [car.at[0], 0.8, car.at[2] - 0.6])
   await lookFromHere([car.at[0] - 0.5, 0.95, car.at[2] - 0.8])
   await tapE()
   await waitIdle()

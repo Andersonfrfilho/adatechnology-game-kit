@@ -45,6 +45,8 @@ export function createMarkLayer(THREE: ThreeLib, terrain: Terrain, drawDistance:
   mesh.frustumCulled = false
   mesh.receiveShadow = true
   mesh.renderOrder = 1
+  // the colour attribute is part of the program key: made on the first mark it would link the program in the middle of the game
+  mesh.setColorAt(0, new THREE.Color(1, 1, 1))
   const matrix = new THREE.Matrix4()
   const rotation = new THREE.Matrix4()
   const scale = new THREE.Matrix4()
@@ -98,6 +100,7 @@ export function createDebrisLayer(THREE: ThreeLib, terrain: Terrain): { mesh: TH
   mesh.count = 0
   mesh.castShadow = true
   mesh.frustumCulled = false
+  mesh.setColorAt(0, new THREE.Color(1, 1, 1))
   const matrix = new THREE.Matrix4()
   const position = new THREE.Vector3()
   const scale = new THREE.Vector3()

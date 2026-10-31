@@ -188,6 +188,31 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     expect(flying(false)).toBe(0)
   })
 
+  it('a rocket in flight never changes how many lights the scene has (every lit material would recompile)', () => {
+    const { room } = roomWith()
+    const lights = (): number => {
+      let count = 0
+      room.scene.traverse((object) => {
+        if ((object as THREE.Light).isLight) count++
+      })
+      return count
+    }
+    equip(room, 'rpg_7')
+    const rocketLight = room.scene.getObjectByName('rocket-light') as THREE.PointLight
+    expect(rocketLight).toBeDefined()
+    expect(rocketLight.intensity).toBe(0)
+    room.use()
+    run(room, 0.05)
+    // the effects of the shot may bring their own lights once; from then on the count must hold
+    const idle = lights()
+    run(room, 0.3)
+    expect(rocketLight.intensity).toBeGreaterThan(0)
+    expect(lights()).toBe(idle)
+    run(room, 4)
+    expect(rocketLight.intensity).toBe(0)
+    expect(lights()).toBe(idle)
+  })
+
   it('wear paints the metal: a rusty weapon swaps its materials and a new one gets them back', () => {
     const { room, module } = roomWith()
     equip(room, 'ak_47')

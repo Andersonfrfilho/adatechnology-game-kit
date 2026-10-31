@@ -104,6 +104,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       houseRenderer = create(THREE, {
         locale,
         lod: { interior: 10, hide: 40 },
+        breachPaintBudgetMs: 4,
         ...options.house,
         quality: settings.quality as 'game',
         ...(options.world ? { destruction: options.world } : {}),

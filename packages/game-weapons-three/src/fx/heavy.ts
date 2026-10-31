@@ -22,6 +22,20 @@ export interface HeavyContext {
   /** Runs `step(progress)` every frame for `seconds`, then `done`. */
   every(seconds: number, step: (progress: number, dt: number) => void, done?: () => void): void
   groundAt(x: number, z: number): number
+  /** A point light that stays in the scene for good (intensity 0 when idle): the light count is part of every lit material's program key. */
+  rocketLight: THREE_NS.PointLight
+}
+
+export const ROCKET_LIGHT_NAME = 'rocket-light'
+
+const rocketsInFlight = new WeakMap<THREE_NS.PointLight, number>()
+
+/** The light that follows rockets in flight, to be added to the scene once and never removed. */
+export function createRocketLight(THREE: ModelKit['THREE']): THREE_NS.PointLight {
+  const light = new THREE.PointLight(0xff9a40, 0, 2.5)
+  light.name = ROCKET_LIGHT_NAME
+  light.position.set(0, -50, 0)
+  return light
 }
 
 const flameMaterials = (kit: ModelKit): THREE_NS.MeshBasicMaterial[] => {
@@ -55,8 +69,9 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
   exhaust.rotation.z = PI / 2
   exhaust.position.x = -0.08
   rocket.add(exhaust)
-  const light = new THREE.PointLight(0xff9a40, 3, 2.5)
-  rocket.add(light)
+  const light = context.rocketLight
+  light.intensity = 3
+  rocketsInFlight.set(light, (rocketsInFlight.get(light) ?? 0) + 1)
   context.every(
     1.6,
     (progress, dt) => {
@@ -64,6 +79,7 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
       const distance = 1.2 * flight + (flight > 0.25 ? 9 * (flight - 0.25) ** 2 : 0)
       rocket.position.copy(muzzle).addScaledVector(forward, distance)
       rocket.rotation.x += 0.25 * dt * 60
+      light.position.copy(rocket.position)
       exhaust.scale.set(1, 0.6 + random() * 0.8, 1)
       if (random() < 0.9) context.effects.smoke(rocket.position.clone().addScaledVector(forward, -0.12), new THREE.Vector3((random() - 0.5) * 0.1, 0.05, (random() - 0.5) * 0.1), 0.02 + random() * 0.015, 2.2, 0.5)
     },
@@ -71,7 +87,11 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
       rocket.removeFromParent()
       exhaust.geometry.dispose()
       ;(exhaust.material as THREE_NS.Material).dispose()
-      light.dispose()
+      const remaining = (rocketsInFlight.get(light) ?? 1) - 1
+      rocketsInFlight.set(light, remaining)
+      if (remaining > 0) return
+      light.intensity = 0
+      light.position.set(0, -50, 0)
     },
   )
 }

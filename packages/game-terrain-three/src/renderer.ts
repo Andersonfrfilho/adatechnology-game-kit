@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Terrain, TerrainChunk } from '@adatechnology/game-terrain'
-import { buildChunkGeometry, buildPristineGeometry } from './chunk-geometry'
+import { buildChunkGeometry, buildPristineGeometry, chunkVertexCount } from './chunk-geometry'
 import { createDebrisLayer, createMarkLayer } from './layers'
 import { buildRebarGeometry } from './rebar'
 import { createSurfaceMaterial } from './surface-material'
@@ -32,6 +32,8 @@ const DEFAULT_MARK_DISTANCE = 45
 const DEFAULT_SKIRT = 300
 const LOD_CHECK_METRES = 4
 const REBAR_COLOUR = 0x4a3528
+/** Geometries of chunks that went back to pristine or changed detail, kept to be refilled for the next dug chunk. */
+const MAX_SPARE_GEOMETRIES = 24
 
 interface DrawnChunk {
   mesh: THREE_NS.Mesh
@@ -58,6 +60,7 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
   const debris = createDebrisLayer(THREE, terrain)
   group.add(marks.mesh, debris.mesh)
   let pristineStale = true
+  let pristineBuilt = false
   let pristineCount = 0
   let lodX = Infinity
   let lodZ = Infinity
@@ -71,11 +74,24 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
   }
   const stepFor = (distance: number): number => (distance > lodDistance * 2 ? 4 : distance > lodDistance ? 2 : 1)
 
+  const spareGeometries: THREE_NS.BufferGeometry[] = []
+
+  function keepSpare(geometry: THREE_NS.BufferGeometry): void {
+    if (spareGeometries.length < MAX_SPARE_GEOMETRIES) spareGeometries.push(geometry)
+    else geometry.dispose()
+  }
+
+  function takeSpare(chunk: TerrainChunk, step: number): THREE_NS.BufferGeometry | undefined {
+    const count = chunkVertexCount(terrain, chunk, step)
+    const found = spareGeometries.findIndex((geometry) => geometry.getAttribute('position').count === count)
+    return found < 0 ? undefined : spareGeometries.splice(found, 1)[0]
+  }
+
   function drop(index: number): void {
     const entry = drawn.get(index)
     if (!entry) return
     group.remove(entry.mesh)
-    entry.mesh.geometry.dispose()
+    keepSpare(entry.mesh.geometry)
     if (entry.rebar) {
       group.remove(entry.rebar)
       entry.rebar.geometry.dispose()
@@ -83,20 +99,42 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
     drawn.delete(index)
   }
 
-  function draw(chunk: TerrainChunk, camera: { x: number; z: number }): void {
-    drop(chunk.index)
-    const step = stepFor(distanceTo(chunk, camera))
-    const mesh = new THREE.Mesh(buildChunkGeometry(THREE, terrain, chunk, step), surface)
-    mesh.receiveShadow = true
-    group.add(mesh)
-    const bars = buildRebarGeometry(THREE, terrain, chunk)
-    let rebar: THREE_NS.Mesh | null = null
-    if (bars) {
-      rebar = new THREE.Mesh(bars, rebarMaterial)
-      rebar.castShadow = true
-      group.add(rebar)
+  function drawRebar(chunk: TerrainChunk, entry: DrawnChunk): void {
+    const bars = buildRebarGeometry(THREE, terrain, chunk, entry.rebar?.geometry)
+    if (!bars) {
+      if (entry.rebar) entry.rebar.visible = false
+      return
     }
-    drawn.set(chunk.index, { mesh, rebar, step })
+    if (entry.rebar && entry.rebar.geometry === bars) {
+      entry.rebar.visible = true
+      return
+    }
+    if (entry.rebar) {
+      group.remove(entry.rebar)
+      entry.rebar.geometry.dispose()
+    }
+    entry.rebar = new THREE.Mesh(bars, rebarMaterial)
+    entry.rebar.castShadow = true
+    group.add(entry.rebar)
+  }
+
+  function draw(chunk: TerrainChunk, camera: { x: number; z: number }): void {
+    const step = stepFor(distanceTo(chunk, camera))
+    let entry = drawn.get(chunk.index)
+    if (!entry) {
+      const mesh = new THREE.Mesh(buildChunkGeometry(THREE, terrain, chunk, step, takeSpare(chunk, step)), surface)
+      mesh.receiveShadow = true
+      group.add(mesh)
+      entry = { mesh, rebar: null, step }
+      drawn.set(chunk.index, entry)
+    } else {
+      const previous = entry.mesh.geometry
+      const sameDetail = previous.getAttribute('position').count === chunkVertexCount(terrain, chunk, step)
+      entry.mesh.geometry = buildChunkGeometry(THREE, terrain, chunk, step, sameDetail ? previous : takeSpare(chunk, step))
+      if (entry.mesh.geometry !== previous) keepSpare(previous)
+      entry.step = step
+    }
+    drawRebar(chunk, entry)
   }
 
   function rebuildPristine(): void {
@@ -105,8 +143,9 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
       const chunk = terrain.chunk(index)
       if (chunk.pristine) chunks.push(chunk)
     }
-    pristineMesh.geometry.dispose()
-    pristineMesh.geometry = buildPristineGeometry(THREE, terrain, chunks, skirt)
+    if (!pristineBuilt) pristineMesh.geometry.dispose()
+    pristineMesh.geometry = buildPristineGeometry(THREE, terrain, chunks, skirt, pristineBuilt ? pristineMesh.geometry : undefined)
+    pristineBuilt = true
     pristineCount = chunks.length
     pristineStale = false
   }
@@ -141,6 +180,7 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
     stats: () => ({ chunkMeshes: drawn.size, pristineChunks: pristineCount, marksDrawn: marks.mesh.count, debrisDrawn: debris.mesh.count }),
     dispose() {
       for (const index of [...drawn.keys()]) drop(index)
+      for (const geometry of spareGeometries) geometry.dispose()
       pristineMesh.geometry.dispose()
       surface.dispose()
       rebarMaterial.dispose()

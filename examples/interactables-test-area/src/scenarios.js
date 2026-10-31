@@ -26,6 +26,13 @@ export function buildScenarios(locale, analysisOf) {
    * Where a joint sits: the destruction world puts it at the middle of the overlap of its two parts' boxes, and a hit wears only the joints within
    * 6 cm of where it lands. So hitting a hinge, screw or clip means aiming at it (not at the middle of the door). Returns a pseudo part to shoot at.
    */
+  /** Where a hinged part turns now (the origin of its drawn group), as a target like `specPart`'s: an opened door's hinge, not the middle of the door at rest. */
+  const hingeNow = (room, id, partId, at = AT) => {
+    const so = room.spawned().find((s) => s.objectId === id)
+    so.root.updateMatrixWorld(true)
+    const e = so.root.getObjectByName(partId).matrixWorld.elements
+    return { id: `${partId}~hinge`, position: [e[12] - at[0], e[13] - at[1], e[14] - at[2]], shape: { size: [0, 0, 0] } }
+  }
   const jointTarget = (type, partId) => {
     const d = analysisOf(type).destructible
     const a = d.parts.find((p) => p.id === partId)
@@ -43,9 +50,10 @@ export function buildScenarios(locale, analysisOf) {
     sc('fridge_door_hinge', T('Geladeira: abre a porta, atira na dobradiça e acerta com uma marreta, a dobradiça quebra e a porta cai', 'Fridge: open the door, shoot the hinge and hit it with a sledge, the hinge breaks and the door falls'), ({ room, step, expect }) => {
       const id = spawn(room, 'fridge')
       const so = room.spawned().find((s) => s.objectId === id)
-      const hinge = jointTarget('fridge', 'door_fridge')
       expect(room.playAnimation('open_door_fridge', id), T('Clipe "open_door_fridge" tocou', 'Clip "open_door_fridge" played'))
       step(1.3)
+      // the open door turned on its hinge: the hinge is where the door meets the body now
+      const hinge = hingeNow(room, id, 'door_fridge')
       const turned = Math.abs(so.root.getObjectByName('door_fridge').rotation.y)
       expect(turned > 1, T(`Porta aberta pelo clipe: girou ${n1(turned)} rad (esperado: mais que 1,0)`, `Door opened by the clip: turned ${n1(turned)} rad (expected: more than 1.0)`), { turned })
       // a bullet only wears a joint within 6 cm of where it lands and a pistol round has little left after a steel door (about 3 of the hinge's
@@ -346,10 +354,10 @@ export function buildScenarios(locale, analysisOf) {
 
     sc('mailbox_flap_off', T('Caixa de correio: a aba sai da dobradiça com pancadas', 'Mailbox: the flap comes off its hinge with blows'), ({ room, step, expect }) => {
       const id = spawn(room, 'mailbox')
-      const flap = specPart('mailbox', 'flap')
-      const c = world(flap)
       expect(room.playAnimation('open_flap', id), T('Clipe "open_flap" tocou', 'Clip "open_flap" played'))
       step(1.2)
+      // blows on the hinge of the open flap
+      const c = world(hingeNow(room, id, 'flap'))
       let blows = 0
       for (; blows < 14 && !gone(room, id, 'flap'); blows++) {
         room.world.hitPart(id, 'flap', { type: 'blunt', point: c, direction: [0, -0.3, -1], energy: 160, radius: 0.05, source: 'test' })
