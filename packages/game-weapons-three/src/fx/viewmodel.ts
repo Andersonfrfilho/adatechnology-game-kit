@@ -23,7 +23,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
-import { limitSupportSpan, placeOnBody } from './body-hold'
+import { createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
 import type { FxLayers } from './layers'
 import { flameJet, launchRocket } from './heavy'
 import type { HeavyContext } from './heavy'
@@ -37,15 +37,11 @@ import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
 import type { Hold } from './hand-hold'
 
 const PI = Math.PI
-// where the weapon sits against the camera: right, down and ahead; long guns are drawn smaller so they do not fill the view
-const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
-/** A handgun is held in both hands, so it rides higher and nearer the middle than a long gun: both hands stay in the view. */
-const HANDGUN_OFFSET: [number, number, number] = [0.1, -0.12, -0.44]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
 /** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres, at `rate` per second; the world is probed `probe` metres ahead. */
-export const WALL_PULL = { margin: 0.03, max: 0.7, rate: 14, probe: 3 }
-/** The shooting hand stays above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
-export const HAND_IN_VIEW = { floor: -0.88, max: 0.18, rate: 10 }
+export const WALL_PULL = { margin: 0.03, max: 1.2, rate: 14, probe: 3 }
+/** The grips of the hands stay above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
+export const HAND_IN_VIEW = { floor: -0.88, max: 0.3, rate: 10 }
 // the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
 const LAUNCH_VOLUME = 0.6
 
@@ -68,7 +64,7 @@ export interface ViewmodelOptions {
   soundDistance?: () => number
   /** Where the world is: the distance from a point along a direction to the first surface (not the weapon in the hands), or null. The weapon in the hands comes back from a wall it would go through. */
   contact?: LaserRaycast
-  /** Where the body holds the tool now (`ModuleHost.holdFrame`): with a frame, the tool is drawn there at its real size (third person); null or absent, in front of the eye. */
+  /** Where the body holds the tool now (`ModuleHost.holdFrame`): the tool is drawn there at its real size in every view; null or absent (no body), the frame of a body's right shoulder under the camera's eye. */
   bodyHold?: () => HandPose | null
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
@@ -226,18 +222,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     reach = 0
     pull = 0
     lift = 0
-    handHeight = 0
-    handDepth = 0
     rigStock(THREE, model, def)
     rigUnderbarrel(THREE, model, def)
     const modelBox = new THREE.Box3().setFromObject(model.root)
     const length = modelBox.getSize(new THREE.Vector3()).x
-    const scale = length > 0.8 ? 0.55 : length > 0.4 ? 0.75 : 1
-    eyeHolder.scale = scale
-    eyeHolder.z = Math.min(0.25, 0.25 * length * scale)
     modelRear = modelBox.min.x
-    holder.scale.setScalar(scale)
-    holder.position.set(0, 0, eyeHolder.z)
     holder.add(model.root)
     const caliber = caliberOf(arsenal, def)
     const dims = caliber?.cartridge
@@ -249,7 +238,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       def,
       caliber,
       model,
-      holderScale: scale,
+      holderScale: 1,
       lengthMetres: length,
       caseType: caliber?.caseType ?? 'rifle',
       soundProfile: soundProfileOf(weapon, model.parts.family),
@@ -279,7 +268,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     applyCondition(kit, model, condition)
     lastAmmo = options.tool?.().ammo ?? 0
     hand.updateMatrixWorld(true)
-    hold = holdOfModel(THREE, model, scale)
+    hold = holdOfModel(THREE, model, 1)
     hold = { ...hold, works: handWorkOf(THREE, model, weapon, hold.right) }
     triggerRest = model.parts.trigger?.rotation.z ?? 0
     lastShot = -Infinity
@@ -301,10 +290,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   // the weapon against a wall: how far it reaches in front of the eye (measured once, with no pull) and how far it is pulled back now
   let reach = 0
   let pull = 0
-  // how far the weapon is raised to keep the shooting hand in view, and where that hand was seen last (the height in the view and the depth in front of the eye)
+  // how far the weapon is raised to keep the hands on it in view
   let lift = 0
-  let handHeight = 0
-  let handDepth = 0
   const ahead = new THREE.Vector3()
   const up = new THREE.Vector3()
   const seen = new THREE.Vector3()
@@ -318,35 +305,33 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     return farthest
   }
 
-  // in front of the eye the tool is drawn smaller than real so it fits the view; on the body (third person) at its real size
-  const eyeHolder = { scale: 1, z: 0 }
+  // the tool is the body's own, at its real size, in every view
   let modelRear = 0
-  let onBody = false
+  const eyeFrame = createEyeFrame(THREE, camera)
+  /** How far the weapon, as placed, has to rise for the grips of both hands to stay above `HAND_IN_VIEW.floor` of the view (the grips fixed on the model, not the hands, which move to the port and the magazine, nor a hand on a part that slides). */
+  const liftToKeepInView = (): number => {
+    if (!hold || !session || !('fov' in camera)) return 0
+    const tanHalf = Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360)
+    eyeTurn.copy(camera.quaternion).invert()
+    const rest = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), 0)
+    let needed = 0
+    for (const [anchor, pose] of [[hold.right, rest.R], [hold.left, rest.L]] as const) {
+      if (!anchor || !pose || anchor.part !== session.model.root) continue
+      seen.set(...pose.position).sub(camera.position).applyQuaternion(eyeTurn)
+      if (-seen.z > 0.05) needed = Math.max(needed, HAND_IN_VIEW.floor * -seen.z * tanHalf - seen.y)
+    }
+    return Math.max(0, Math.min(HAND_IN_VIEW.max, needed))
+  }
   const place = (dt = 0): void => {
-    const family = session?.model.parts.family
-    const frame = session ? (options.bodyHold?.() ?? null) : null
-    onBody = !!(session && frame)
-    if (session && frame) {
-      session.holderScale = 1
-      placeOnBody({ THREE, hand, holder, frame, rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
-      return
-    }
-    if (session) {
-      session.holderScale = eyeHolder.scale
-      holder.scale.setScalar(eyeHolder.scale)
-      holder.position.set(0, 0, eyeHolder.z)
-    }
-    const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
-    hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
-    hand.quaternion.copy(camera.quaternion)
-    if (session && handDepth > 0.05 && 'fov' in camera) {
-      const tanHalf = Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360)
-      const want = Math.max(0, Math.min(HAND_IN_VIEW.max, lift + (HAND_IN_VIEW.floor - handHeight) * tanHalf * handDepth))
-      lift += (want - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
-      if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
-    }
+    if (!session) return
+    const family = session.model.parts.family
+    session.holderScale = 1
+    placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
     hand.updateMatrixWorld(true)
-    if (!options.contact || !session) return
+    lift += (liftToKeepInView() - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
+    if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
+    hand.updateMatrixWorld(true)
+    if (!options.contact) return
     ahead.set(0, 0, -1).applyQuaternion(camera.quaternion)
     if (reach === 0) reach = Math.max(0.01, measureReach(session))
     const free = options.contact(camera.position, ahead, WALL_PULL.probe)
@@ -466,12 +451,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
       const trigger = session.model.parts.trigger
       if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
-      if (targets.R && 'fov' in camera) {
-        seen.set(...targets.R.position).sub(camera.position).applyQuaternion(eyeTurn.copy(camera.quaternion).invert())
-        handDepth = -seen.z
-        handHeight = handDepth > 0.05 ? seen.y / handDepth / Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360) : 0
-      }
-      return onBody ? limitSupportSpan(targets) : targets
+      return limitSupportSpan(targets)
     },
     get inHand() {
       return session?.id ?? null
