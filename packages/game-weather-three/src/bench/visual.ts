@@ -1,7 +1,7 @@
 import { footprintBlocker } from '@adatechnology/game-contracts'
 import type { Footprint, ModuleHost, ModuleLayer } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
-import type { WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from '@adatechnology/game-weather'
+import type { WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from '@adatechnology/game-weather/testing'
 import type * as THREE_NS from 'three'
 import { HEADLIGHTS } from '../headlights'
 import { createWeatherRenderer } from '../renderer'

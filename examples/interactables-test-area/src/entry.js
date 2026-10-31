@@ -17,7 +17,7 @@ import * as GameInteractablesThree from '@adatechnology/game-interactables-three
 import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
-import { createWeatherTestModule } from '@adatechnology/game-weather'
+import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
 import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
 import { createTerrainTestModule } from '@adatechnology/game-terrain-three'

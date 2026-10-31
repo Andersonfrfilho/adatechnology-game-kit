@@ -39,7 +39,11 @@ export { RAIN_HISS_GAME, RAIN_LOOP, THUNDER, WEATHER_BANK, WEATHER_LOOPS, WEATHE
 export { DEFAULT_RAIN_SOUND, DEFAULT_WIND_SOUND, createWeatherSound, rainVolume, strikePosition, windVolume } from './audio/sound'
 export type { WeatherSound, WeatherSoundOptions, WeatherSoundStyle } from './audio/sound'
 
-export { createWeatherTestModule } from './bench/module'
-export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions, WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from './bench/module'
-export { weatherBenchTextOf } from './bench/locale'
-export type { WeatherBenchText } from './bench/locale'
+/** @deprecated import from '@adatechnology/game-weather/testing' */
+export { createWeatherTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-weather/testing' */
+export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions, WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from './testing'
+/** @deprecated import from '@adatechnology/game-weather/testing' */
+export { weatherBenchTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-weather/testing' */
+export type { WeatherBenchText } from './testing'
