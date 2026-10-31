@@ -2325,10 +2325,28 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return reach
   }
 
+  const blastProbe = { partsTested: 0, partsNear: 0 }
+
+  /** Broad phase: the blast centre in object space against each part's bounding sphere, so a part out of reach costs three subtractions and no allocation. */
+  const blastCandidates = (o: ObjRT, point: Vec3, radius: number): PartRT[] => {
+    const local = toLocal(o.st.position, o.st.rotation, point)
+    const near: PartRT[] = []
+    for (const p of o.parts) {
+      const reach = radius + p.bound
+      const dx = local[0] - p.pos[0]
+      const dy = local[1] - p.pos[1]
+      const dz = local[2] - p.pos[2]
+      if (dx * dx + dy * dy + dz * dz < reach * reach) near.push(p)
+    }
+    blastProbe.partsTested += o.parts.length
+    blastProbe.partsNear += near.length
+    return near
+  }
+
   const blastObject = (o: ObjRT, point: Vec3, energy: number, radius: number, src?: string): HitResult => {
     const start = cur.length
     const res: HitResult = { object: o.id, damage: 0, penetrated: false, exitEnergy: 0, events: [] }
-    for (const p of o.parts) blastPart(o, p, point, energy, radius, src, res)
+    for (const p of blastCandidates(o, point, radius)) blastPart(o, p, point, energy, radius, src, res)
     res.events = cur.slice(start)
     return res
   }
@@ -2479,7 +2497,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     let order = 0
     for (const o of inRange) {
       if (only && only !== o) continue
-      for (const p of o.parts) {
+      for (const p of blastCandidates(o, point, radius)) {
         if (isLost(p)) continue
         const dist = distToPart(o, p, point)
         if (dist < radius) items.push({ dist, order: order++, o, p })
@@ -3120,7 +3138,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (o.spec.name !== undefined) s.name = o.spec.name
         if (o.spec.tags) s.tags = [...o.spec.tags]
         if (o.spec.soil !== undefined) s.soil = o.spec.soil
-        return clone(s)
+        // the part and joint specs are never written after `add`, so the halves share them instead of deep-copying a whole house twice
+        return s
       }
       const inNew = (pid: string) => moved.has(pid)
       const inOld = (pid: string) => !moved.has(pid)
@@ -3147,7 +3166,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p = getPart(o, partId)
       return whole(() => doHit(o, h, p))
     },
+    blastProbe() {
+      return { ...blastProbe }
+    },
     explode(point, energy, radius, source, blast) {
+      blastProbe.partsTested = 0
+      blastProbe.partsNear = 0
       return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
     },
     raycast(origin, direction, maxDistance = Infinity) {

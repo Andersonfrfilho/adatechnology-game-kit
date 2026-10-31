@@ -170,6 +170,7 @@ class Renderer implements DestructionRenderer {
   private readonly gravity: number
   private readonly autoSplit: boolean
   private readonly maxFragments: number
+  private readonly eventBudgetMs: number
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
@@ -220,6 +221,7 @@ class Renderer implements DestructionRenderer {
     this.gravity = o.gravity ?? 9.81
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
+    this.eventBudgetMs = o.eventBudgetMs ?? 8
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
@@ -498,11 +500,16 @@ class Renderer implements DestructionRenderer {
   private drainQueue(): void {
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.queue.splice(0, this.queue.length)
-    for (const ev of batch) {
+    const deadline = performance.now() + this.eventBudgetMs
+    for (let i = 0; i < batch.length; i++) {
+      if (i > 0 && performance.now() >= deadline) {
+        this.queue.unshift(...batch.slice(i))
+        return
+      }
       try {
-        this.apply(ev)
+        this.apply(batch[i]!)
       } catch (err) {
-        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ev.type, err)
+        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
       }
     }
   }

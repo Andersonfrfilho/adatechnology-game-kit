@@ -537,6 +537,8 @@ export interface DestructionWorld {
    * that target, and a `blast` event sums it up.
    */
   explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
+  /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
+  blastProbe(): { partsTested: number; partsNear: number }
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /**
