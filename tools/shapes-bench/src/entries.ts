@@ -28,7 +28,7 @@ import { createUrbanThree } from '@adatechnology/game-urban-three'
 import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
-import { createNursery, createVegetationTestModule } from '@adatechnology/game-vegetation-three'
+import { createNursery, createVegetationTestModule } from '@adatechnology/game-vegetation-three/testing'
 import { buildWeaponModelById, MODEL_ENTRIES } from '@adatechnology/game-weapons-three'
 import * as THREE from 'three'
 

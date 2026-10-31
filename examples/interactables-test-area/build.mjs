@@ -46,6 +46,7 @@ const result = await esbuild.build({
   minify: true,
   legalComments: 'none',
   alias: {
+    '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
     '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),
     '@adatechnology/game-vehicles-three/testing': join(pkg('game-vehicles-three'), 'dist/testing.js'),
     '@adatechnology/game-vfx-three/testing': join(pkg('game-vfx-three'), 'dist/testing.js'),

@@ -3,7 +3,7 @@
 // The area lays the 18 plants of the Viveiro as items of the room's default destruction world (a mesh per piece, joints, anchors, wind sway); the bench plants the nursery lot with its seed,
 // quality, detail, condition and season, sets the wind and starts the walker that bends the plants; its layers show the colliders, the boxes of the pieces and the axes of the wood.
 // Thirteen scenarios check it.
-import { VEGETATION_AREA_ID, createVegetationTestModule, loadVegetationTestModule } from '@adatechnology/game-vegetation-three'
+import { VEGETATION_AREA_ID, createVegetationTestModule, loadVegetationTestModule } from '@adatechnology/game-vegetation-three/testing'
 
 export { createVegetationTestModule, loadVegetationTestModule }
 
