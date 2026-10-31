@@ -56,6 +56,8 @@ export interface HouseholdTypeDef {
   y: number
   /** false = no collider for the host (wall items, wires). */
   solid: boolean
+  /** A big piece standing free on the floor: a person leans on it and pushes it instead of picking it up. Absent for what is carried by hand or fixed to the house. */
+  pushable?: boolean
   /**
    * Real mass of the whole object, empty, in kg (a fridge 70, a camping table 4.5). The drawing is solid blocks, so a mass from its volume would be far off (a fridge of
    * two tonnes): a host that builds a physical body splits this mass over the pieces. Absent for what is built into the ground (a fireplace, a well).

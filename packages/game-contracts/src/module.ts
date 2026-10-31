@@ -61,6 +61,8 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** A big piece that stands on the floor (a sofa, a wardrobe, a fridge) and can be pushed by leaning on it. Default false: what goes in the hand is grabbed, never pushed. */
+  pushable?: boolean
   /** Where a body sits or lies on it: the host can seat the player there. */
   seats?: readonly ItemSeat[]
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */

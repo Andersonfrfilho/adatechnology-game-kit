@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
+import type { TestRoomItem } from '../src'
+import { buildFromSpec } from '../src/build-from-spec'
 import { makeRoom } from './helpers'
 
 const CRATE_AT = -2
@@ -17,7 +19,7 @@ const run = (room: ReturnType<typeof makeRoom>, seconds: number): void => {
 
 /** A free-standing crate of the scenery, pushed 2 m away from where the room put it. */
 function pushedCrate(width = 1) {
-  const room = makeRoom({ scenery: { crate: { spec: crate(width), position: [0, 0, CRATE_AT], free: true }, table: null, shelf: null } })
+  const room = makeRoom({ scenery: { crate: { spec: crate(width), position: [0, 0, CRATE_AT], free: true, pushable: true }, table: null, shelf: null } })
   room.setTool('hand')
   room.look([0, 1.7, CRATE_AT + 0.9], [0, 1, CRATE_AT])
   expect(room.push.begin()).toBe(true)
@@ -76,5 +78,50 @@ describe('pushing what stands free in the scenery', () => {
     room.walk([0, 0, now - 2], 2)
     run(room, 2.2)
     expect(room.playerPosition[2]).toBeGreaterThan(now)
+  })
+})
+
+describe('only what its definition says is pushed', () => {
+  const can = (): DestructibleSpec => ({ name: 'can', parts: [{ id: 'body', material: 'steel', mass: 0.4, shape: { kind: 'box', size: [0.07, 0.12, 0.07] }, position: [0, 0.06, 0] }], joints: [] })
+  const sofa = (): DestructibleSpec => crate(2)
+  const item = (id: string, spec: DestructibleSpec, pushable?: true): TestRoomItem => ({ id, name: id, group: 'test', build: (T) => buildFromSpec(T, spec), spec, ...(pushable ? { pushable } : {}) })
+  const room = (): ReturnType<typeof makeRoom> => {
+    const r = makeRoom({ catalog: [item('can', can()), item('sofa', sofa(), true)], scenery: { table: null, shelf: null } })
+    r.setTool('hand')
+    return r
+  }
+
+  it('a can aimed at is not leaned on: no ring, E grabs it', () => {
+    const r = room()
+    r.spawn('can', [0, 0, -2], 0)
+    r.look([0, 1.7, -1.2], [0, 0.06, -2])
+    expect(r.push.begin()).toBe(false)
+    expect(r.push.state).toBeNull()
+  })
+
+  it('a can right ahead does not answer the fallback of the closest thing', () => {
+    const r = room()
+    r.spawn('can', [0, 0, -2], 0)
+    r.look([0, 1.7, -1.2], [0, 1.7, -10])
+    expect(r.push.begin()).toBe(false)
+  })
+
+  it('a can on the floor by a sofa wins the aim, and the sofa is still pushed when aimed at', () => {
+    const r = room()
+    const sofaObject = r.spawn('sofa', [0, 0, -2], 0)
+    r.spawn('can', [0, 0, -1.4], 0)
+    r.look([0, 1.7, -0.9], [0, 0.06, -1.4])
+    expect(r.push.begin()).toBe(false)
+    r.look([0, 1.7, -0.9], [0, 1.2, -2])
+    expect(r.push.begin()).toBe(true)
+    expect(r.push.state?.objectId).toBe(sofaObject.objectId)
+  })
+
+  it('a pushable piece answers the fallback when the aim falls beside it', () => {
+    const r = room()
+    const sofaObject = r.spawn('sofa', [0, 0, -2], 0)
+    r.look([0, 1.7, -1.1], [0, 1.7, -10])
+    expect(r.push.begin()).toBe(true)
+    expect(r.push.state?.objectId).toBe(sofaObject.objectId)
   })
 })
