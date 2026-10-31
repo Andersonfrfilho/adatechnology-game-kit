@@ -3332,18 +3332,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const allScenarios = (): TestRoomScenario[] => [...extraScenarios]
   let scenarioRunning = false
 
-  const step = (seconds: number): void => {
-    const dt = seconds > 6 ? 1 / 30 : FIXED_DT
-    const n = Math.max(1, Math.round(seconds / dt))
-    for (let i = 0; i < n; i++) {
-      seating.update()
-      player.update(0)
-      push.step(dt)
-      doors.step(dt)
-      followHeld(dt)
-      stepSim(dt)
-    }
-  }
+  // a scenario steps the world through the scheduler: input and present know they are scripted (ctx.scripted) and keep to what the step always did
+  const step = (seconds: number): void => scheduler.advance(seconds, { dt: seconds > 6 ? 1 / 30 : FIXED_DT })
 
   const runScenarios = async (list?: TestRoomScenario[]): Promise<ScenarioReport> => {
     const all = list ?? allScenarios()
@@ -3819,11 +3809,21 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     showBench()
   }
 
-  scheduler.add((ctx) => updateInput(ctx.dt, ctx.paused), { phase: 'input', id: 'room.input' })
+  scheduler.add(
+    (ctx) => {
+      if (!ctx.scripted) return updateInput(ctx.dt, ctx.paused)
+      seating.update()
+      player.update(0)
+      push.step(ctx.dt)
+      doors.step(ctx.dt)
+      followHeld(ctx.dt)
+    },
+    { phase: 'input', id: 'room.input' },
+  )
   scheduler.add((ctx) => stepSim(ctx.dt), { phase: 'lateSimulate', id: 'room.simulate' })
   scheduler.add(
     (ctx) => {
-      if (ctx.simulated) updatePresent(ctx.realDt)
+      if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
     },
     { phase: 'present', id: 'room.present' },
   )
