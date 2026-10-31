@@ -1638,6 +1638,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
       '@adatechnology/game-vehicles':
         specifier: workspace:^
         version: link:../game-vehicles

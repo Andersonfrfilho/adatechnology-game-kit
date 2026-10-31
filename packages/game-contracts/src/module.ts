@@ -361,6 +361,8 @@ export interface ModuleHost {
   effects?: EffectSink
   /** The host's light budget (`LightBudget` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): the one owner of point and spot lights. Read it with `isLightBudget`. Absent when the host has none. */
   lights?: unknown
+  /** The host's pools of geometries and materials (`RenderPools` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): what an effect asks for instead of making its own, so its shader programs stay linked. Read it with `isRenderPools`. Absent when the host has none. */
+  pools?: unknown
   /**
    * The numbers of the shove a blast gives to a body. A module that moves bodies of its own (people, vehicles) answers the `explosion` host event with `blastShove(event, body, host.blastShove)`
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.

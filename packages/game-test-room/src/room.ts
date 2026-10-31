@@ -12,7 +12,8 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
-import { createLightBudget } from '@adatechnology/game-render-three'
+import { createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup } from '@adatechnology/game-render-three'
+import type { RenderPools } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -258,6 +259,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
   const lights = createLightBudget(THREE, scene, ROOM_LIGHT_SIZES)
+  // what the effects of the room and of its modules ask for instead of making their own; the warmup's anchors keep the programs of the materials that are given back
+  const warmup = createProgramWarmup(THREE)
+  const pools: RenderPools = { geometries: createGeometryPool(), materials: createMaterialPool({ anchors: warmup.anchors, renderer: gl }) }
   // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
   const vfx = createVfxRenderer(THREE, {
     scene,
@@ -3068,6 +3072,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     effects: vfx,
     lights,
+    pools,
     loading,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
@@ -3724,6 +3729,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       renderer.dispose()
       vfx.dispose()
       lights.dispose()
+      pools.materials.dispose()
+      pools.geometries.dispose()
       fluidView.dispose()
       filmBridge.dispose()
       film.dispose()

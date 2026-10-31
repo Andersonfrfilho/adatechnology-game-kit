@@ -290,7 +290,20 @@ export interface VehicleKitOptions extends KitConfiguration {
   locale?: string | PartialLocaleStrings
   /** Document used for canvas textures and the UI. Defaults to the global `document`. */
   document?: Document
+  /**
+   * Where the material of every smoke, fire and dust puff comes from and goes back to: puffs change their own material every frame (opacity, rotation, dissolve), so each keeps one, but
+   * handing them to the host's pool keeps the shader program linked when the last puff dies. Without it each puff makes and disposes its own (deprecated, removed in the next major).
+   */
+  particleMaterials?: ParticleMaterials
   plugins?: Plugin[]
+}
+
+/** What the host's material pool (`MaterialPool` of `@adatechnology/game-render-three`) lends the particles: a structural type, because this package does not depend on the render layer. */
+export interface ParticleMaterials {
+  /** Makes (with `build`) a material the caller owns and changes per frame. */
+  own<TMaterial>(build: () => TMaterial): TMaterial
+  /** Gives it back: the first of its program family is kept alive, the others are disposed. */
+  release(material: unknown): void
 }
 
 export interface ImpactOptions {

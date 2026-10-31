@@ -95,14 +95,16 @@ export function installParticles(kit: Kit): void {
       })
     }
     const list = fire ? FIRE_TEXTURES : SMOKE_TEXTURES
-    const mat = new THREE.SpriteMaterial({
-      map: list[Math.floor(Math.random() * list.length)],
-      color: new THREE.Color(col),
-      transparent: true,
-      depthWrite: false,
-      opacity: op,
-      blending: fire ? THREE.AdditiveBlending : THREE.NormalBlending,
-    })
+    const build = () =>
+      new THREE.SpriteMaterial({
+        map: list[Math.floor(Math.random() * list.length)],
+        color: new THREE.Color(col),
+        transparent: true,
+        depthWrite: false,
+        opacity: op,
+        blending: fire ? THREE.AdditiveBlending : THREE.NormalBlending,
+      })
+    const mat = kit.particleMaterials ? kit.particleMaterials.own(build) : build()
     const dis = { value: 0 }
     mat.userData.dis = dis
     mat.onBeforeCompile = function (sh: any) {
@@ -133,7 +135,10 @@ export function installParticles(kit: Kit): void {
   function killParticle(c: any, i: any) {
     const P = c.particles[i]
     c.effects.remove(P.m)
-    if (P.own) P.m.material.dispose()
+    if (P.own) {
+      if (kit.particleMaterials) kit.particleMaterials.release(P.m.material)
+      else P.m.material.dispose()
+    }
     c.particles.splice(i, 1)
   }
   /* Particle in the sibling group c.effects (vehicle world coordinates). type: spark|shard|cube|lens|scrap|plastic|dust|smoke|fire|water|droplet */

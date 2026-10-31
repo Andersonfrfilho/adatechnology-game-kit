@@ -1,7 +1,8 @@
 import { DEFERRED_PRIORITY, footprintBlocker } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
-import type { VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
+import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
+import { isRenderPools } from '@adatechnology/game-render-three'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
 
 import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
@@ -80,13 +81,19 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     engineLoop = undefined
   }
 
+  /** The puffs' materials come from the host's pool when it lends one (read at each puff: the host attaches after the first build). */
+  const particleMaterials: ParticleMaterials = {
+    own: <TMaterial>(build: () => TMaterial): TMaterial => (isRenderPools(host?.pools) ? (host.pools.materials.own(build as never) as unknown as TMaterial) : build()),
+    release: (material) => (isRenderPools(host?.pools) ? host.pools.materials.release(material as never) : (material as { dispose?(): void }).dispose?.()),
+  }
+
   const kitFor = (THREE: Three): VehicleKit => {
     three = THREE
     let kit = kits.get(THREE)
     if (!kit) {
       if (options.createKit) kit = options.createKit(THREE)
       else {
-        kit = createVehicleKit({ THREE, locale, ...(options.document ? { document: options.document as never } : {}) })
+        kit = createVehicleKit({ THREE, locale, particleMaterials, ...(options.document ? { document: options.document as never } : {}) })
         fleet.installFleet(kit)
       }
       kits.set(THREE, kit)

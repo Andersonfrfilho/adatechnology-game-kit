@@ -38,6 +38,7 @@ export type {
   UiHelpers,
   VehicleContext,
   VehicleKit,
+  ParticleMaterials,
   VehicleKitOptions,
   VehicleMeta,
   VehiclePart,
