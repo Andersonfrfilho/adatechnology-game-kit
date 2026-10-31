@@ -179,6 +179,11 @@ export interface DestructionRenderer {
   explode(point: Vec3, energy: number, radius: number, options?: ExplodeOptions): void
   /** Remove every fragment, decal and particle, restore every bound mesh to its original geometry and colours. */
   clear(): void
+  /**
+   * `clear` and back to the start: the random streams (the scatter of the shove points of a blast, the spin of the fragments) return to their seed and the clock to 0,
+   * so a run after it does what the same run does on a new renderer (a host that replays a scene, as the test room before each scenario).
+   */
+  reset(): void
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }

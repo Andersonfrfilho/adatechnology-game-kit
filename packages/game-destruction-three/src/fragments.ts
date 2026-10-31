@@ -49,6 +49,8 @@ const SHEET_SWAY = 3
 /** A fragment at least this long (m) and this wide is a piece of the thing (half a board), not a splinter; a shard of glass never is. */
 const BIG_LENGTH = 0.2
 const BIG_WIDTH = 0.03
+/** The seed of the fragments' random stream (their spin and sway); `reset` takes it back here. */
+const FRAGMENT_SEED = 0x51ed270b
 
 const isBig = (size: readonly number[]): boolean => {
   const [, middle, longest] = [...size].sort((a, b) => a - b)
@@ -68,7 +70,7 @@ export class FragmentSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly v: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
-  private readonly rng = createRng(0x51ed270b)
+  private rng = createRng(FRAGMENT_SEED)
   /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
   private tick = 0
 
@@ -386,6 +388,13 @@ export class FragmentSystem {
   clear(): void {
     for (const f of this.list) this.o.scene.remove(f.mesh)
     this.list.length = 0
+  }
+
+  /** `clear`, the random stream back to its seed and the tick to 0: what comes next flies as on a new system. */
+  reset(): void {
+    this.clear()
+    this.rng = createRng(FRAGMENT_SEED)
+    this.tick = 0
   }
 
   dispose(): void {

@@ -70,7 +70,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       : createCharacters({ ...(options.packs ? { packs: options.packs } : {}), penetration: settings.penetration as 'physical', damage: { deathRule: settings.deathRule as 'vitality-or-head' } })
   let kit = makeKit()
   let undead: UndeadLike | null = options.createUndead ? options.createUndead(kit) : null
-  const random = createRng(options.seed ?? 1)
+  // one stream for the builders, the wounds and the crowd; `onReset` of the host starts it again from the seed
+  let stream = createRng(options.seed ?? 1)
+  const random = (): number => stream()
   let seedCounter = 100
   let host: ModuleHost | null = null
   let three: Three | null = null
@@ -442,6 +444,15 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       wounds = createWounds(lent.THREE as Three, { random, scene, groundAt: (x, z) => lent.groundAt(x, z), ...(bridge ? { bridge } : {}), ...(sound ? { sound } : {}) })
       for (const entry of entries.values()) trackEntry(entry)
       const stopChange = lent.bench?.onChange(onChange)
+      // back to the seeded start: the same bodies, drawn and animated the same way, whatever the host ran before
+      const stopReset = lent.onReset?.(() => {
+        stream = createRng(options.seed ?? 1)
+        seedCounter = 100
+        time = 0
+        selected = null
+        lastCrossed = 0
+        lastEnergy = 1
+      })
       // a blast shoves the bodies the way the host shoves its loose items, and knocks them down when it is strong enough (the damage itself is the world's)
       const stopEvents = lent.on((event) => {
         if (event.type !== 'explosion') return
@@ -468,6 +479,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       })
       return () => {
         stopChange?.()
+        stopReset?.()
         stopEvents()
         stopFrame()
         clearOverlays()

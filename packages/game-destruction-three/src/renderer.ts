@@ -154,6 +154,9 @@ function isMeshRange(v: Object3D | MeshRange): v is MeshRange {
 }
 
 /** Create the renderer. See `DestructionRenderer`. */
+/** The seed of the renderer's random stream; `reset` takes it back here. */
+const RNG_SEED = 0xc0ffee
+
 export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer {
   return new Renderer(THREE, options)
 }
@@ -190,7 +193,7 @@ class Renderer implements DestructionRenderer {
   private readonly leaks: Leak[] = []
   private readonly homeTags: string[] = []
   private readonly throttles = new Map<string, number>()
-  private readonly rng = createRng(0xc0ffee)
+  private rng = createRng(RNG_SEED)
   private readonly vfx: VfxWorld
   /** Names this renderer to the world's drips, so a shared world tells each renderer where its own landed. */
   private readonly owner = `destruction-${++rendererCount}`
@@ -1498,6 +1501,16 @@ class Renderer implements DestructionRenderer {
     this.primedBurning.clear()
     this.vfx.sprites().clear()
     this.ownVfx?.world.clear()
+  }
+
+  reset(): void {
+    this.clear()
+    this.rng = createRng(RNG_SEED)
+    this.time = 0
+    this.staticAt = 0
+    this.throttles.clear()
+    this.fragments.reset()
+    this.pieceSys.reset()
   }
 
   wakeRegion(x: number, z: number, radius: number): void {
