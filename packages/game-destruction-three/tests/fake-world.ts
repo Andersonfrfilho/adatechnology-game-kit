@@ -16,7 +16,8 @@ export function mat(id: string, extra: Partial<MaterialDef> = {}): MaterialDef {
 }
 
 export const MATS: MaterialDef[] = [
-  mat('wood', { fracture: 'splinter', tags: ['wood'], visual: { charColor: 0x111111 }, thermal: { conductivity: 0.05, ignitionC: 300, smoke: 'grey' } }),
+  mat('wood', { fracture: 'splinter', tags: ['wood'], penetrationClass: 'wood', visual: { charColor: 0x111111, innerColor: 0xc99e6a }, thermal: { conductivity: 0.05, ignitionC: 300, smoke: 'grey' } }),
+  mat('ceramic', { fracture: 'shatter' }),
   mat('glass', { fracture: 'shatter', visual: { transparent: true }, thermal: { conductivity: 0.1 } }),
   mat('steel', { fracture: 'none', tags: ['metal'], ductility: 0.9, visual: { glows: true }, thermal: { conductivity: 0.5, meltC: 1400 } }),
   mat('concrete', { fracture: 'crumble' }),

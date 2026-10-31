@@ -148,6 +148,32 @@ describe('fracture and reset', () => {
     expect(renderer.stats().decals).toBeGreaterThan(decals)
   })
 
+  it('takes the plaster off a 9 mm hit in a ragged patch with the brick under it, and no flat patch or star of cracks', () => {
+    const { d, house, world, centre, run, events } = setup()
+    const at = centre('wall_0_0')
+    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 500, caliber: 9 })
+    run(0.2)
+    const spall = events.find((e: any) => e.type === 'spall' && e.part === 'wall_0_0') as any
+    expect(spall).toBeDefined()
+    expect(events.some((e: any) => e.type === 'crack' && e.part === 'wall_0_0')).toBe(false)
+    const statistics = d.statistics().breached
+    expect(statistics.flakes).toBe(1)
+    expect(statistics.gone).toBe(0)
+    expect(statistics.craters).toBe(0)
+    const shell = house.group.getObjectByName('breach-shell') as any
+    expect(shell.userData.cutAt(new THREE.Vector3(...(spall.point as [number, number, number])))).toBe(true)
+    const units = house.group.getObjectByName('breach:wall_0_0') as any
+    expect(units.count).toBeGreaterThan(0)
+    expect(units.material.userData.breachCore.data.some((x: number) => x > 0)).toBe(false)
+    // the destruction renderer drew no patch of its own on the wall (a patch is a disc in the brick's colour)
+    const item = house.structure.meshesOf('wall_0_0').find((it: any) => it.mesh)
+    expect(item.mesh.userData.drawnSpalls).toContain('wall_0_0')
+    expect(item.mesh.children.filter((c: any) => c.renderOrder === 1)).toHaveLength(0)
+    // the hole sits on the brick laid bare, behind the face of the plaster
+    const hole = item.mesh.children.find((c: any) => c.renderOrder === 2)
+    expect(hole).toBeDefined()
+  })
+
   it('takes the marks of a brick that comes out away with it', () => {
     const { d, world, renderer, centre, run, events } = setup()
     const decals = renderer.stats().decals
@@ -229,6 +255,37 @@ describe('a wall cut where its units came out, at full detail', () => {
     s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
     expect(checked).toBe(true)
+  })
+
+  it('breaks a brick where a rifle round goes through it: a crater cut through the brick, the rest of the brick and the wall around it stay', () => {
+    const s = setup()
+    const at = s.centre('wall_0_0')
+    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 2100, caliber: 7.62, source: 'test' })
+    s.run(0.2)
+    const chip = s.events.find((e: any) => e.type === 'chip' && e.part === 'wall_0_0') as any
+    expect(chip).toBeDefined()
+    expect(Math.max(chip.size[0], chip.size[2])).toBeLessThan(0.15)
+    const statistics = s.d.statistics().breached
+    expect(statistics.gone).toBe(0)
+    expect(statistics.craters).toBe(1)
+    const shell = s.house.group.getObjectByName('breach-shell') as any
+    const mask = shell.userData.breachMask
+    const units = s.house.group.getObjectByName('breach:wall_0_0') as any
+    expect(units.count).toBeGreaterThan(0)
+    expect(units.material.side).toBe(THREE.DoubleSide)
+    const texel = (m: any, p: number[]) => {
+      const v = s.house.group.worldToLocal(new THREE.Vector3(p[0], p[1], p[2]))
+      return m.data[Math.floor((v.y - m.y0) / m.height * m.h) * m.w + Math.floor(((m.alongU ? v.x : v.z) - m.start) / m.len * m.w)]
+    }
+    // the plaster is off around the crater and the brick is cut through at its centre, a hand away it is whole
+    expect(texel(mask, chip.center)).toBe(255)
+    const core = units.material.userData.breachCore ?? null
+    expect(core).not.toBeNull()
+    expect(texel(core, chip.center)).toBe(255)
+    const aside = [chip.center[0] + (mask.alongU ? 0.2 : 0), chip.center[1], chip.center[2] + (mask.alongU ? 0 : 0.2)]
+    expect(texel(core, aside)).toBe(0)
+    expect(texel(mask, aside)).toBe(0)
+    expect(core.data.filter((x: number) => x > 0).length).toBeLessThan(mask.data.filter((x: number) => x > 0).length)
   })
 
   it('leaves no unit inside the opening', () => {

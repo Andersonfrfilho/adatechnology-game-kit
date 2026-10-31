@@ -55,12 +55,22 @@ describe('layered penetration and spall', () => {
     expect(w.world.part(w.objectId, 'wall')!.stage).toBe(1)
   })
 
-  it('a 7.62 burst goes through brick (entry and exit coats spall), knocks the bricks out and opens the patch: stage 2, the wall stands', () => {
+  it('a 7.62 burst goes through brick (entry and exit coats spall) and breaks the bricks where the rounds land, not whole: the wall stands', () => {
     const w = wallWorld('brick_wall_plastered')
     burst(w, RIFLE_762, 40)
     expect(ofType(w.events, 'hole').every((e) => e.hole.through)).toBe(true)
     expect(ofType(w.events, 'spall').length).toBeGreaterThan(ofType(w.events, 'hole').length / 2)
-    expect(ofType(w.events, 'chip').length).toBeGreaterThan(5)
+    const chips = ofType(w.events, 'chip')
+    expect(chips.length).toBeGreaterThan(5)
+    // craters of about 10 cm through the bricks
+    expect(chips.filter((c) => c.size[0] < 0.15).length).toBeGreaterThan(chips.length / 2)
+    expect(maxStage(w.events)).toBe(1)
+    expect(w.world.part(w.objectId, 'wall')!.status).not.toBe('broken')
+  })
+
+  it('a long 7.62 burst on one patch of brick opens it: stage 2, the wall stands', () => {
+    const w = wallWorld('brick_wall_plastered')
+    for (let i = 0; i < 200 && maxStage(w.events) < 2; i++) w.world.shoot([-0.3 + 0.03 * (i % 21), 0.75 + 0.03 * ((i * 7) % 17), 3], [0, 0, -1], RIFLE_762.energy, RIFLE_762.caliber)
     expect(maxStage(w.events)).toBe(2)
     expect(w.world.part(w.objectId, 'wall')!.status).not.toBe('broken')
   })

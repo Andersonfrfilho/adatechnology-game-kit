@@ -106,6 +106,8 @@ const BREACH_GRID_CAP = 4096
 const CHIP_ENERGY = 200
 /** Share of a hit's energy the units next to the one hit take, at the edge of the unit hit (falls to 0 at the hit's radius). */
 const CHIP_SPLASH = 0.5
+/** Share of a unit's face the craters of shots take before the rest of the unit comes out. */
+const CRATER_SPENT = 0.6
 /** Metres a bar of an exposed cage bows out of the part's plane at full overload (stress 1.5 and up), per metre of bar. */
 const BAR_BOW = 0.08
 /** Metres of a joint one bullet shakes loose: a joint longer than this takes only its share of the wear. */
@@ -288,19 +290,30 @@ const capacityScale = (p: PartRT): number => {
 }
 /**
  * Largest share of the cross-section the units knocked out of a part took at one place along its length (`PartState.chipped`): a column with half its
- * width shot away at one height carries half. The length runs along the longer of the two axes of its face.
+ * width shot away at one height carries half. A wall, a partition or a column carries its load down, so its section is across at one height (a wall
+ * with a slot shot along its base stands on what is left of it); any other part's length runs along the longer of the two axes of its face.
  */
 const sectionLoss = (p: PartRT): number => {
   const cells = p.st.chipped
   if (!cells?.length) return 0
   const [u, v] = planeAxes(p.thin)
-  const along = p.dims[u] >= p.dims[v] ? u : v
+  const role = p.spec.structure?.role
+  const up = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === v ? 1 : 0)) as Vec3)
+  const upright = Math.abs(up[1]) > 0.7 ? v : Math.abs(rotateVec(p.q, [0, 0, 0].map((_, k) => (k === u ? 1 : 0)) as Vec3)[1]) > 0.7 ? u : -1
+  const along = (role === 'wall' || role === 'partition' || role === 'column') && upright >= 0 ? upright : p.dims[u] >= p.dims[v] ? u : v
   const across = along === u ? v : u
   let worst = 0
   for (const c of cells) {
-    // the cells whose span along the length overlaps this one's centre: what is gone across the section there
-    let gone = 0
-    for (const d of cells) if (Math.abs(d.center[along] - c.center[along]) < d.size[along] / 2 + 1e-6) gone += d.size[across]
+    // the pieces whose span along the length overlaps this one's centre: what is gone across the section there (overlapping pieces count once)
+    const spans: Array<[number, number]> = []
+    for (const d of cells) if (Math.abs(d.center[along] - c.center[along]) < d.size[along] / 2 + 1e-6) spans.push([d.center[across] - d.size[across] / 2, d.center[across] + d.size[across] / 2])
+    spans.sort((a, b) => a[0] - b[0])
+    let gone = 0, end = -Infinity
+    for (const [a, b] of spans) {
+      if (b <= end) continue
+      gone += b - Math.max(a, end)
+      end = b
+    }
     worst = Math.max(worst, gone / Math.max(p.dims[across], 1e-6))
   }
   return Math.min(1, worst)
@@ -1615,8 +1628,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const FRAGMENT_SHAPE = { shatter: 'shard', splinter: 'splinter', tear: 'scrap' } as const
 
-  /** Unit-sized fragments of `cells` (part-local), thrown from `hitW`; the holes that fell on a unit stay on it as `marks`. */
-  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string): Fragment[] => {
+  /**
+   * Unit-sized fragments of `cells` (part-local), thrown from `hitW`; the holes that fell on a unit stay on it as `marks`. `inner`: drawn in the colour of
+   * the inside of the material (a brick knocked out of its plaster), not the part's paint.
+   */
+  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string, inner = false): Fragment[] => {
     const { c, q } = partXf(o, p)
     const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
     const [u, v] = planeAxes(p.thin)
@@ -1632,7 +1648,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return {
         id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: p.spec.material, shape, center: cw, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q,
         velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k], angularVelocity: [(rnd() - 0.5) * 8, (rnd() - 0.5) * 8, (rnd() - 0.5) * 8],
-        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}),
+        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner ? { inner } : {}),
       }
     })
   }
@@ -1680,10 +1696,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
-   * A shot or a blow on a wall of units (`PartSpec.units`) wears the unit it lands on, and a little the ones around it within `radius`: a unit that took
-   * `chipEnergy` joules per kilogram of its mass comes out (a `chip` event with the fragment, `PartState.chipped`), and what goes through it passes. The
-   * face area that came out adds up like through damage (`addBreach`), so enough units knocked out close together open the part. A reinforced part
-   * keeps its units (the cage holds them: it crumbles in a breach).
+   * A shot or a blow on a wall of units (`PartSpec.units`) wears the unit it lands on, and a little the ones around it within `radius`, until it gives
+   * way at `chipEnergy` joules per kilogram of its mass. A blow knocks the whole unit out; a shot breaks it where it lands: a crater a few centimetres across
+   * (`craterAcross`) goes through the unit, the rest of it stays in the wall, and its bits fly out of both faces (most out of the far one, along the shot). A unit whose
+   * craters took most of its face (`CRATER_SPENT`) lets its rest go. Each gives a `chip` event with the piece that came out and its fragments
+   * (`PartState.chipped`), and what goes through it passes. The face area that came out adds up like through damage (`addBreach`), so enough of it
+   * close together opens the part. A reinforced part keeps its units (the cage holds them: it crumbles in a breach).
    */
   const chipUnits = (o: ObjRT, p: PartRT, kind: 'ballistic' | 'blunt', wp: Vec3, hitEnergy: number, dir: Vec3 | null, radius: number, src?: string) => {
     if (!p.spec.units || !p.staged || chipEnergy <= 0 || p.st.stripped || isLost(p) || (p.st.stage ?? 0) >= 2) return
@@ -1696,7 +1714,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const lp = toLocal(p.pos, p.q, objLocal(o, wp))
     const grid = gridOf(p)
     const worn = (p.rt.chips ??= {})
+    const cut = (p.rt.craters ??= {})
     const out: UnitCell[] = []
+    const shot = kind === 'ballistic'
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
       if (worn[i] === -1) continue
@@ -1709,8 +1729,31 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         worn[i] = total
         continue
       }
-      worn[i] = -1
-      out.push(cell)
+      if (!shot) {
+        // a blow knocks the unit out
+        worn[i] = -1
+        out.push(cell)
+        continue
+      }
+      // the shot breaks the unit where it lands (the point nearest to it on the unit): a crater through it, the rest stays
+      const size: Vec3 = [cell.size[0], cell.size[1], cell.size[2]]
+      const center: Vec3 = [cell.center[0], cell.center[1], cell.center[2]]
+      for (const a of [u, v]) {
+        const w = Math.min(cell.size[a], craterAcross(hitEnergy) * (0.85 + 0.3 * rnd()))
+        const lo = cell.center[a] - cell.size[a] / 2 + w / 2, hi = cell.center[a] + cell.size[a] / 2 - w / 2
+        size[a] = w
+        center[a] = clamp(lp[a], lo, hi)
+      }
+      const taken = (cut[i] ?? 0) + size[u] * size[v]
+      if (taken >= cell.size[u] * cell.size[v] * CRATER_SPENT) {
+        // a shot that would leave little of it takes the rest too, broken in pieces
+        worn[i] = -1
+        out.push({ ...cell, crater: true } as UnitCell)
+        continue
+      }
+      worn[i] = 0
+      cut[i] = taken
+      out.push({ center, size, crater: true } as UnitCell)
     }
     if (out.length === 0) return
     const { c, q } = partXf(o, p)
@@ -1720,7 +1763,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const mass = Math.min(p.st.mass, p.mat.density * cell.size[0] * cell.size[1] * cell.size[2])
       const center = toWorld(c, q, cell.center)
       const speed = clamp(Math.sqrt((2 * energy * 0.05) / Math.max(mass, 0.05)), 0.5, 6)
-      const fragments = cellFragments(o, p, [cell], wp, dir, speed, mass, `c${chipped.length}_`)
+      const tag = `c${chipped.length}_`
+      const fragments = (cell as { crater?: boolean }).crater ? craterFragments(o, p, cell, dir, speed, mass, tag) : cellFragments(o, p, [cell], wp, dir, speed, mass, tag, true)
       p.st.holes = p.st.holes.filter((_, k) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length === 0)
       chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
       p.st.mass = Math.max(0, p.st.mass - mass)
@@ -1736,6 +1780,44 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       solveStructure(o)
       collapseCheck(o, src)
     }
+  }
+
+  /** Metres across the crater a round of `energy` joules breaks through a unit: 6 cm for a pistol round, 10 for a rifle round. */
+  const craterAcross = (energy: number): number => clamp(0.03 + 0.0012 * Math.sqrt(Math.max(0, energy)), 0.03, 0.14)
+
+  /**
+   * The bits of a unit a shot broke through (`cell`, part-local: the crater, or the rest of a unit the craters spent): small irregular pieces of the
+   * inside of the material, two in three thrown out of the far face along the shot, the rest back out of the face it hit.
+   */
+  const craterFragments = (o: ObjRT, p: PartRT, cell: UnitCell, dir: Vec3 | null, speed: number, mass: number, tag: string): Fragment[] => {
+    const { c, q } = partXf(o, p)
+    const [u, v] = planeAxes(p.thin)
+    const d = dir ?? rotateVec(q, [p.thin === 0 ? 1 : 0, p.thin === 1 ? 1 : 0, p.thin === 2 ? 1 : 0])
+    // which face of the part the shot leaves by, in part axes
+    const exitSign = Math.sign(rotateVec(quat.conjugate(q), d)[p.thin]) || 1
+    const bit = Math.max(0.01, Math.min(cell.size[u], cell.size[v]) / 3)
+    const n = clamp(Math.round((cell.size[u] * cell.size[v]) / (bit * bit * 3)), 4, 10) + Math.floor(rnd() * 3)
+    const out: Fragment[] = []
+    for (let i = 0; i < n; i++) {
+      const back = i % 3 === 2
+      const lc: Vec3 = [cell.center[0], cell.center[1], cell.center[2]]
+      lc[u] += (rnd() - 0.5) * cell.size[u] * 0.7
+      lc[v] += (rnd() - 0.5) * cell.size[v] * 0.7
+      lc[p.thin] += (back ? -exitSign : exitSign) * (p.thickness / 2 + 0.01)
+      const size: Vec3 = [0, 0, 0]
+      size[u] = bit * (0.6 + 0.8 * rnd())
+      size[v] = bit * (0.5 + 0.7 * rnd())
+      size[p.thin] = bit * (0.4 + 0.6 * rnd())
+      const spread: Vec3 = [(rnd() - 0.5) * 0.9, (rnd() - 0.3) * 0.9, (rnd() - 0.5) * 0.9]
+      const k = speed * (back ? 0.4 + 0.4 * rnd() : 0.7 + 0.8 * rnd())
+      const vdir = vec.normalize(vec.add(back ? vec.scale(d, -1) : d, spread))
+      out.push({
+        id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: p.spec.material, shape: 'chunk', center: toWorld(c, q, lc), size, rotation: q,
+        velocity: [vdir[0] * k, vdir[1] * k + 0.5 * rnd(), vdir[2] * k], angularVelocity: [(rnd() - 0.5) * 20, (rnd() - 0.5) * 20, (rnd() - 0.5) * 20],
+        mass: mass / n, inner: true,
+      })
+    }
+    return out
   }
 
   /**
@@ -2129,7 +2211,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } else if (mat.ductility >= 0.5) {
       addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(Math.min(Math.max(p.thickness * 3, 0.003), ratio * 0.01), 0.001, 0.05), src)
     } else if (brittle) {
-      addCrack(o, p, entry, n, crackLen, src)
+      // a wall of units (brick, block) takes a round in a crater, not a star of cracks: those are glass's and a slab's
+      if (!p.spec.units) addCrack(o, p, entry, n, crackLen, src)
       if (mat.fracture !== 'shatter') addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     } else addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
