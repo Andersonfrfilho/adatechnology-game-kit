@@ -3,8 +3,8 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
-//   PERF_PROFILE=cold_molotov          also saves shots/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
-// Writes shots/perf.json with every phase. Exit code 1 when any budget fails.
+//   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
+// Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -41,8 +41,8 @@ function loadPlaywright() {
 
 const dist = join(here, 'dist/test-room.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
-const shotsDir = join(here, 'shots')
-mkdirSync(shotsDir, { recursive: true })
+const outDir = join(here, 'dist')
+mkdirSync(outDir, { recursive: true })
 
 const SOFTWARE_GL = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox']
 const REAL_GL = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--disable-frame-rate-limit', '--no-sandbox']
@@ -88,7 +88,7 @@ if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.
 if (after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(join(shotsDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, failures }, null, 1))
+writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()
@@ -126,7 +126,7 @@ async function phase(name, run) {
   const profiler = process.env.PERF_PROFILE === name ? await page.context().newCDPSession(page) : undefined
   if (profiler) await profiler.send('Profiler.enable').then(() => profiler.send('Profiler.setSamplingInterval', { interval: 100 })).then(() => profiler.send('Profiler.start'))
   await run()
-  if (profiler) writeFileSync(join(shotsDir, `perf-${name}.cpuprofile`), JSON.stringify((await profiler.send('Profiler.stop')).profile))
+  if (profiler) writeFileSync(join(outDir, `perf-${name}.cpuprofile`), JSON.stringify((await profiler.send('Profiler.stop')).profile))
   const result = await page.evaluate(([label, start]) => window.__perf.read(label, start), [name, before])
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
