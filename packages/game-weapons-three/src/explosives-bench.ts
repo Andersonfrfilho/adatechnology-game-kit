@@ -2,6 +2,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import type { BenchChange, BenchSheet, DestructionEvent, Hit, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, Vec3 } from '@adatechnology/game-contracts'
 import type { ExplosiveDef } from '@adatechnology/game-weapons'
+import type { ItemModels } from './item-models'
 import { fillText } from './explosives-text'
 import type { ExplosivesText } from './explosives-text'
 import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
@@ -158,6 +159,7 @@ export interface ExplosivesBenchOptions {
   readonly scene: { readonly cylinder: Vec3 }
   readonly room: ExplosivesRoom | undefined
   readonly blastScale: number
+  readonly items?: ItemModels
   readonly profile: { readonly visualRadius?: number; readonly residualFires?: ReadonlyArray<{ readonly radius: number; readonly life: number }> } | undefined
 }
 
@@ -303,7 +305,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   const launchShell = (vessel: Vessel, point: Vec3): void => {
     const config = def.shell
     if (!config || !host) return
-    const mesh = worldExplosiveShell(T(), def.id)
+    const mesh = worldExplosiveShell(T(), def.id, options.items)
     if (!mesh) return
     mesh.position.set(point[0], Math.max(point[1], 0.3), point[2])
     ;(host.scene as THREE_NS.Scene).add(mesh)

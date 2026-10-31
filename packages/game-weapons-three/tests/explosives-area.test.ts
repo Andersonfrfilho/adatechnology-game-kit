@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { EXPLOSIVES_AREA_ID, EXPLOSIVES_TEXT, createExplosivesTestModule, createWeaponsTestModule, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from '../src'
+import { itemModels } from '@adatechnology/game-items-three'
 import { createArsenal } from '@adatechnology/game-weapons'
 
 vi.setConfig({ testTimeout: 60_000 })
@@ -39,8 +40,8 @@ function roomWithExplosives(locale = 'pt-BR', catalog: typeof LOOSE_THINGS = [])
   const container = document.createElement('div')
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale, catalog: catalog as never, renderer: stubRenderer(), ui: false })
-  room.loadModule(createWeaponsTestModule({ locale, sound: false }))
-  const module = createExplosivesTestModule({ locale, room: room as never })
+  room.loadModule(createWeaponsTestModule({ locale, sound: false, items: itemModels }))
+  const module = createExplosivesTestModule({ locale, room: room as never, items: itemModels })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])
   return { room, module }
@@ -56,7 +57,7 @@ describe('world P13', () => {
   const def = createArsenal({ locale: 'en' }).explosives.get('propane_p13')!
 
   it('is the team model, one part "tank", with a real mass and its gas', () => {
-    const item = worldExplosiveItem(def, 'P13')!
+    const item = worldExplosiveItem(def, 'P13', { items: itemModels })!
     const spec = (item.spec as unknown as (root: unknown) => { parts: Array<{ id: string; mass?: number; contains?: { liters: number; pressurized: boolean } }> })(undefined)
     expect(spec.parts).toHaveLength(1)
     expect(spec.parts[0]).toMatchObject({ id: 'tank', mass: 28, contains: { liters: 24, pressurized: true } })
@@ -67,7 +68,7 @@ describe('world P13', () => {
     let mapped = 0
     root.traverse((node) => { if ((node as THREE.Mesh).isMesh && node.userData.destructionPart === 'tank') mapped++ })
     expect(mapped).toBeGreaterThan(0)
-    expect(worldExplosiveShell(THREE, 'propane_p13')).toBeDefined()
+    expect(worldExplosiveShell(THREE, 'propane_p13', itemModels)).toBeDefined()
   })
 
   it('scales the blast with the multiplier', () => {

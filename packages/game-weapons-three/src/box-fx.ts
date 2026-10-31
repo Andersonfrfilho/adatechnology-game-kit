@@ -10,9 +10,12 @@ import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments
 import { IN_HAND_NODE_NAME } from './laser-raycast'
 import { holdOfProp, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
+import type { ItemModels } from './item-models'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
+  /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; without it they keep their low-poly prop. */
+  items?: ItemModels
   THREE: typeof THREE_NS
   scene: THREE_NS.Scene
   camera: THREE_NS.Camera
@@ -120,7 +123,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     inHand = null
     def = arsenal.weapons.get(weapon) ?? null
     if (!def || BODY_ACTIONS.has(def.id)) return
-    model = buildWeaponModel(THREE, def)
+    model = buildWeaponModel(THREE, def, options.items)
     const length = new THREE.Box3().setFromObject(model).getSize(v).x
     // long guns are drawn smaller so they do not fill the view
     model.scale.setScalar(length > 0.8 ? 0.55 : length > 0.4 ? 0.75 : 1)

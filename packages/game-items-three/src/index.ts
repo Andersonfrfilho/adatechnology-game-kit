@@ -10,6 +10,7 @@ export { DESTRUCTION_MATERIAL_BY_TAG, ITEM_FAMILIES, itemContents, itemDestructi
 export type { ContentsSubject, DestructionTagOptions, ItemContents, ItemDestruction, ItemFamily } from './destruction'
 export { asLid, itemOpening, openItem, OPENING_NAME, setOpeningContents, turnItem } from './opening'
 export type { ItemOpening, ItemOpeningStyle } from './opening'
+export { itemModels } from './item-models'
 export { mergeItem } from './merge'
 export { buildItemLod } from './lod'
 export type { ItemLod, ItemLodOptions } from './lod'

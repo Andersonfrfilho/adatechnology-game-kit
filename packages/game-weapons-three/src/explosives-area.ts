@@ -3,6 +3,7 @@ import { EXPLOSIONS } from '@adatechnology/game-vfx'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, ExplosiveDef } from '@adatechnology/game-weapons'
 import { EXPLOSIVES_AREA_ID, createExplosivesBench } from './explosives-bench'
+import type { ItemModels } from './item-models'
 import type { ExplosivesRoom } from './explosives-bench'
 import { explosivesScenarios } from './explosives-scenarios'
 import { explosivesTextOf } from './explosives-text'
@@ -49,6 +50,8 @@ export interface ExplosivesTestModuleOptions {
   scene?: Partial<ExplosivesScene>
   /** Strength multiplier the bench starts at (default 1: the arsenal's numbers; a game value, see the README). */
   blastScale?: number
+  /** The item models of game-items-three (`itemModels` there): the P13 is drawn with the team's model when given. */
+  items?: ItemModels
 }
 
 const EXPLOSIVE_ID = 'propane_p13'
@@ -67,7 +70,7 @@ export function createExplosivesTestModule(options: ExplosivesTestModuleOptions 
   const scene: ExplosivesScene = { ...DEFAULT_EXPLOSIVES_SCENE, ...options.scene }
   const def = arsenal.explosives.get(EXPLOSIVE_ID) as ExplosiveDef | undefined
   if (!def) throw new Error(`explosives area: the arsenal has no "${EXPLOSIVE_ID}"`)
-  const bench = createExplosivesBench({ locale, text, def, scene, room: options.room, blastScale: options.blastScale ?? 1, profile: EXPLOSIONS[EXPLOSIVE_ID] })
+  const bench = createExplosivesBench({ locale, text, def, scene, room: options.room, blastScale: options.blastScale ?? 1, ...(options.items ? { items: options.items } : {}), profile: EXPLOSIONS[EXPLOSIVE_ID] })
   return {
     id: EXPLOSIVES_AREA_ID,
     name: text.name,
@@ -76,7 +79,7 @@ export function createExplosivesTestModule(options: ExplosivesTestModuleOptions 
     bench,
     // the cylinder of this area is the world explosive of the weapons module with the bench's strength: the same id, the same model, the same part
     items: (): TestableItem[] => {
-      const item = worldExplosiveItem(def, text.cylinder, { scale: () => bench.blastScale() })
+      const item = worldExplosiveItem(def, text.cylinder, { scale: () => bench.blastScale(), ...(options.items ? { items: options.items } : {}) })
       return item ? [item] : []
     },
     area: (): ModuleArea => {

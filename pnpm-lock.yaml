@@ -1660,9 +1660,6 @@ importers:
       '@adatechnology/game-floorplan-three':
         specifier: workspace:^
         version: link:../game-floorplan-three
-      '@adatechnology/game-items-three':
-        specifier: workspace:^
-        version: link:../game-items-three
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -1676,6 +1673,9 @@ importers:
         specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
+      '@adatechnology/game-items-three':
+        specifier: workspace:^
+        version: link:../game-items-three
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -1981,6 +1981,9 @@ importers:
 
   tools/weapon-thumbnails:
     dependencies:
+      '@adatechnology/game-items-three':
+        specifier: workspace:*
+        version: link:../../packages/game-items-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../../packages/game-weapons

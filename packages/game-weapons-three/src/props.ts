@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
-import { buildItem, hasItemModel } from '@adatechnology/game-items-three'
 import { mergeByMaterial, shapeGeometries } from '@adatechnology/game-shapes-three'
+import type { ItemModels } from './item-models'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
 import { modelKit } from './models/kit'
@@ -125,20 +125,20 @@ export function registerWeaponItemModel(weaponId: string, model: WeaponItemModel
 }
 
 /** The item model of game-items-three that draws a weapon (`baseball_bat`, `axe`, `fire_extinguisher`...), or undefined when there is none. */
-export function itemModelOfWeapon(weaponId: string): string | undefined {
+export function itemModelOfWeapon(weaponId: string, items?: ItemModels): string | undefined {
   const id = WEAPON_ITEM_MODELS.get(weaponId)?.item ?? weaponId
-  return id && hasItemModel(id) ? id : undefined
+  return id && items?.has(id) ? id : undefined
 }
 
 /**
  * A weapon the gallery did not draw, with the team's item model (Itens do Vale Cinzento: the bat, the axe, the machete, the extinguisher...): its long axis turned
  * along +x and laid flat, the wider end (the head) at +x unless `registerWeaponItemModel` says otherwise, the origin at the bottom centre, an empty `handle` at the narrow end where the hand closes. Undefined
- * when game-items-three has no model of it.
+ * when `items` (the item models of game-items-three, lent by the host) has none of it.
  */
-export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>): THREE_NS.Group | undefined {
-  const itemId = itemModelOfWeapon(def.id)
-  if (!itemId) return undefined
-  const { root } = buildItem(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
+export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined {
+  const itemId = itemModelOfWeapon(def.id, items)
+  if (!items || !itemId) return undefined
+  const { root } = items.build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = def.id
   group.add(root)
@@ -195,8 +195,8 @@ export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef
 }
 
 /** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the low-poly prop the counters show otherwise. */
-export function buildWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>): THREE_NS.Group {
-  return buildItemWeaponModel(THREE, def) ?? buildProp(THREE, weaponProp(def))
+export function buildWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group {
+  return buildItemWeaponModel(THREE, def, items) ?? buildProp(THREE, weaponProp(def))
 }
 
 const MODEL_BODY = 'body'
@@ -206,9 +206,9 @@ const MODEL_BODY = 'body'
  * material (the hands keep the model with its pivots, `buildWeaponModelById`), every mesh naming the one rigid part (`body`) that moves it. The size of that part is left in
  * `userData.footprint` for `modeledPropSpec`.
  */
-export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, decorate?: (root: THREE_NS.Object3D) => void): THREE_NS.Group | undefined {
+export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, decorate?: (root: THREE_NS.Object3D) => void, items?: ItemModels): THREE_NS.Group | undefined {
   const model = buildWeaponModelById(THREE, def.id) ?? (() => {
-    const root = buildItemWeaponModel(THREE, def)
+    const root = buildItemWeaponModel(THREE, def, items)
     return root ? { root } : undefined
   })()
   if (!model) return undefined

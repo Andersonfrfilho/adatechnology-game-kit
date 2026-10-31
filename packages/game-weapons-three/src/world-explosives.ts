@@ -1,8 +1,7 @@
 import type * as THREE_NS from 'three'
-import { buildItem } from '@adatechnology/game-items-three'
-import type { DrawableItem } from '@adatechnology/game-items-three'
 import type { DestructibleSpec, PartShape, PartSpec, TestableItem, Vec3 } from '@adatechnology/game-contracts'
 import type { ExplosiveDef } from '@adatechnology/game-weapons'
+import type { ItemModelRequest, ItemModels } from './item-models'
 
 /** Prefix of the item ids of the explosives that sit in the world (`world_fuel_barrel`). */
 export const WORLD_EXPLOSIVE_PREFIX = 'world_'
@@ -12,7 +11,7 @@ interface WorldShape {
   readonly position: Vec3
   readonly color: number
   /** The team's model of the thing (an item of `game-items-three`): when set it is drawn instead of the plain `shape`, which stays what the destruction world hits. */
-  readonly model?: DrawableItem
+  readonly model?: ItemModelRequest
   /** Wall thickness in metres when it is not the thin sheet of the others (a P13 shell is 2.5 mm of steel). */
   readonly wall?: number
 }
@@ -46,6 +45,8 @@ const SHELL = { thickness: 0.001, fill: 0.03 }
 export interface WorldExplosiveOptions {
   /** Multiplies `energy`, `lethalRadius` and `injuryRadius` of the explosive (default 1: the arsenal's numbers). It is a game value, not a physical table; the arsenal's own place for it is `ArsenalOptions.patch.explosives`. */
   readonly scale?: () => number
+  /** The item models of game-items-three (`itemModels` there): the P13 is drawn with the team's model when given, as a plain cylinder when not. */
+  readonly items?: ItemModels
 }
 
 /** The part of a world explosive: the energy, the reach, the chain and the effect (the explosive's id in the host's catalogue) of the explosive def, which is what `explosivePart` of game-destruction builds. */
@@ -73,9 +74,9 @@ const meshOf = (THREE: typeof THREE_NS, shape: WorldShape): THREE_NS.Mesh => {
 }
 
 /** The team's model of a world explosive (a group, base at the origin), every mesh mapped to the part `tank`; the brass valve is named `valve`. Undefined for the ones that have no model of the team. */
-const modelOf = (THREE: typeof THREE_NS, shape: WorldShape, wear: 0 | 2 = 0): THREE_NS.Group | undefined => {
-  if (!shape.model) return undefined
-  const { root, kind } = buildItem(THREE, shape.model, { wear })
+const modelOf = (THREE: typeof THREE_NS, shape: WorldShape, items: ItemModels | undefined, wear: 0 | 2 = 0): THREE_NS.Group | undefined => {
+  if (!shape.model || !items) return undefined
+  const { root, kind } = items.build(THREE, shape.model, { wear })
   if (kind !== 'model') return undefined
   root.traverse((node) => {
     const mesh = node as THREE_NS.Mesh
@@ -102,9 +103,9 @@ export const worldExplosiveValve = (THREE: typeof THREE_NS, root: THREE_NS.Objec
  * What is left of a world explosive after the blast, as an object to fly: the same model, worn and darkened (the torn shell of the P13 in the Laboratório de Explosões, `SC.p13`),
  * with no part mapped. Undefined for the explosives that have no model of the team.
  */
-export const worldExplosiveShell = (THREE: typeof THREE_NS, defId: string): THREE_NS.Group | undefined => {
+export const worldExplosiveShell = (THREE: typeof THREE_NS, defId: string, items?: ItemModels): THREE_NS.Group | undefined => {
   const shape = SHAPES[defId]
-  const model = shape ? modelOf(THREE, shape, 2) : undefined
+  const model = shape ? modelOf(THREE, shape, items, 2) : undefined
   if (!model) return undefined
   model.traverse((node) => {
     const mesh = node as THREE_NS.Mesh
@@ -127,7 +128,7 @@ export const worldExplosiveItem = (def: ExplosiveDef, name: string, options: Wor
     name,
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
-      const model = modelOf(T, shape)
+      const model = modelOf(T, shape, options.items)
       if (model) return model
       const group = new T.Group()
       group.add(meshOf(T, shape))

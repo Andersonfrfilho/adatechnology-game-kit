@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type * as THREE_NS from 'three'
+import { itemModels } from '@adatechnology/game-items-three'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { BODY_ACTIONS, buildProp, buildWeaponModelById, hasWeaponModel, weaponProp, worldExplosiveItem, WORLD_EXPLOSIVE_IDS } from '@adatechnology/game-weapons-three'
 
@@ -27,7 +28,7 @@ export function thumbnailSubjects(): ThumbnailSubject[] {
     )
   const explosives = WORLD_EXPLOSIVE_IDS.flatMap((id) => {
     const def = arsenal.explosives.get(id)
-    const item = def ? worldExplosiveItem(def, id) : undefined
+    const item = def ? worldExplosiveItem(def, id, { items: itemModels }) : undefined
     return item ? [{ id, view: 'side' as const, build: () => item.build(THREE) as THREE_NS.Object3D }] : []
   })
   return [...weapons, ...explosives].sort((a, b) => (a.id < b.id ? -1 : 1))

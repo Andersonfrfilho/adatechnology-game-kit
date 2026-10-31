@@ -15,6 +15,7 @@ import { createLaserRaycast } from './laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
 import type { AttachmentModelRegistry } from './models/attachments/types'
 import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, itemModelOfWeapon, modeledPropSpec, weaponProp } from './props'
+import type { ItemModels } from './item-models'
 import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
@@ -38,6 +39,8 @@ export interface WeaponsTestModuleOptions {
   thumbnailBase?: string | false
   /** The rocket of a launcher flies out of the weapon in the hands (default true). A host that draws the projectile (the test room's `projectileModel`) passes false: one round flies. */
   flyRocket?: boolean
+  /** The item models of game-items-three (`itemModels` there): the weapons the gallery did not draw get the team's model instead of the low-poly prop. */
+  items?: ItemModels
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -206,13 +209,13 @@ const targetProp = (id: string, name: string): WeaponProp => {
 }
 
 /** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
-const weaponItem = (def: WeaponDef, name: string): TestableItem => {
+const weaponItem = (def: WeaponDef, name: string, items?: ItemModels): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id) && !itemModelOfWeapon(def.id)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !itemModelOfWeapon(def.id, items)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
-    build: (THREE: unknown) => buildModeledProp(THREE as typeof THREE_NS, def, name) as THREE_NS.Group,
+    build: (THREE: unknown) => buildModeledProp(THREE as typeof THREE_NS, def, name, undefined, items) as THREE_NS.Group,
     spec: (root: unknown) => modeledPropSpec(root, def, name),
     weapon: def.id,
     movable: true,
@@ -294,7 +297,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const pitchOf = (itemId: string): number => PITCH_BY_ID[itemId.slice(WEAPON_ITEM_PREFIX.length)] ?? DEFAULT_PITCH
   const worldExplosives = WORLD_EXPLOSIVE_IDS.flatMap((id) => {
     const def = arsenal.explosives.get(id)
-    const item = def ? worldExplosiveItem(def, text.worldExplosives[id] ?? id) : undefined
+    const item = def ? worldExplosiveItem(def, text.worldExplosives[id] ?? id, options.items === undefined ? {} : { items: options.items }) : undefined
     return item ? [item] : []
   })
   const worldExplosiveIds = new Set(worldExplosives.map((item) => item.id))
@@ -316,7 +319,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       return fx
     },
     items: () => [
-      ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id)), def.id)),
+      ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id), options.items), def.id)),
       counterItem(text.counter),
       ...TARGETS.map((target) => targetItem(target.id, text.targets[target.id] ?? target.id)),
       ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
@@ -373,6 +376,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         scene: lent.scene as THREE_NS.Scene,
         camera: lent.camera as THREE_NS.Camera,
         arsenal,
+        ...(options.items ? { items: options.items } : {}),
         groundAt: lent.groundAt,
         audio,
         tool: lent.tool,

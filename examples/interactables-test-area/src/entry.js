@@ -16,7 +16,7 @@ import * as GameInteractablesHousehold from '@adatechnology/game-interactables-h
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
-import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
+import { buildItem, createItemsTestModule, itemModels } from '@adatechnology/game-items-three'
 import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
 import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three/testing'
@@ -124,9 +124,9 @@ function loadSteps(room, options, lang) {
   const custom = (key, load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
-  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false }))
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
-  mod('explosives', () => createExplosivesTestModule({ locale: lang, room }))
+  mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
   const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
   mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))

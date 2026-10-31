@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-weapons', 'game-weapons-three', 'game-interactables', 'game-props3d', 'game-interactables-three']) {
+for (const p of ['game-weapons', 'game-weapons-three', 'game-interactables', 'game-props3d', 'game-interactables-three', 'game-items-three']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -42,6 +42,8 @@ const result = await esbuild.build({
     '@adatechnology/game-interactables': join(pkg('game-interactables'), 'dist/index.js'),
     '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),
     '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
+    // the weapons the gallery did not draw take the team's item models
+    '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
