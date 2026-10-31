@@ -101,6 +101,8 @@ export interface BindOptions {
   parts?: Record<string, Object3D | MeshRange | Array<Object3D | MeshRange>>
   /** Keep the world transform in sync from the root's matrixWorld every update (default true). */
   syncTransform?: boolean
+  /** Called from every `update`, after the queued events were applied: where the host finishes the drawing of this object that it deferred (a wall repainted once per frame). */
+  onFrame?: (dt: number) => void
 }
 
 /** A body the renderer moves with its light physics: a loose piece of an object after a detach (or a whole object handed to it). */
