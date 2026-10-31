@@ -3841,8 +3841,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     { phase: 'present', id: 'room.present' },
   )
   let stopLoop: (() => void) | undefined
-  if (ownRenderer && typeof requestAnimationFrame === 'function') {
-    ownsLoop = true
+  if (ownRenderer) {
     let nextLightsCheck = 0
     let warmedLights = ''
     // modules add lights after the first frame, and each light count is another set of programs: warm again when the lights change
@@ -3876,7 +3875,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       { phase: 'render', id: 'room.render' },
     )
-    stopLoop = startLoop(scheduler, { onFrame: (realSeconds) => roomMetrics.frame(realSeconds), skipSimulation: () => scenarioRunning })
+    try {
+      stopLoop = startLoop(scheduler, { onFrame: (realSeconds) => roomMetrics.frame(realSeconds), skipSimulation: () => scenarioRunning })
+      ownsLoop = true
+    } catch {
+      // no display frames here (a worker): the host calls room.update
+    }
   }
 
   if (options.initial) {
