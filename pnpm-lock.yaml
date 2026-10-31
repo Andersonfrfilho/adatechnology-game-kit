@@ -1328,9 +1328,6 @@ importers:
       '@adatechnology/game-vegetation-species':
         specifier: workspace:^
         version: link:../game-vegetation-species
-      '@adatechnology/game-vehicles-three':
-        specifier: workspace:^
-        version: link:../game-vehicles-three
     devDependencies:
       '@adatechnology/game-test-room':
         specifier: workspace:^

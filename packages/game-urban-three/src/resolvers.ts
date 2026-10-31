@@ -2,7 +2,6 @@ import { generate } from '@adatechnology/game-vegetation'
 import type { Condition, Lod, Season } from '@adatechnology/game-vegetation'
 import { createPlantObject, createVegetationMaterials } from '@adatechnology/game-vegetation/three'
 import { toSpec } from '@adatechnology/game-vegetation-species'
-import type { BuildVehicleOptions } from '@adatechnology/game-vehicles-three'
 import type { PlacementPart } from '@adatechnology/game-urban'
 
 type Three = any
@@ -12,13 +11,16 @@ export type PlacementResolver = ((part: PlacementPart) => any | null) & { dispos
 
 const cssColor = (value: number): string => `#${value.toString(16).padStart(6, '0')}`
 
+/** The options of `createVehiclesThree().build` that the resolver passes (structural, so this package does not import game-vehicles-three). */
+export type VehicleBuildOptions = { quality?: 'high' | 'lite'; color?: string; seed?: number | string }
+
 export type VehicleResolverOptions = {
   /** `lite` fuses a vehicle into six meshes, the right cost for a street of parked cars. Default `lite`. */
-  quality?: BuildVehicleOptions['quality']
+  quality?: VehicleBuildOptions['quality']
 }
 
 /** What the vehicle resolver needs of `createVehiclesThree`. */
-export type VehicleBuilder = { build(key: string, options?: BuildVehicleOptions): { group: any; dispose(): void } }
+export type VehicleBuilder = { build(key: string, options?: VehicleBuildOptions): { group: any; dispose(): void } }
 
 /**
  * Resolves vehicle placements with the vehicles of `game-vehicles-three`. A vehicle is built once for each id and paint and cloned

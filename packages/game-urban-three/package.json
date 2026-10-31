@@ -51,8 +51,7 @@
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation": "workspace:^",
-    "@adatechnology/game-vegetation-species": "workspace:^",
-    "@adatechnology/game-vehicles-three": "workspace:^"
+    "@adatechnology/game-vegetation-species": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-test-room": "workspace:^",
