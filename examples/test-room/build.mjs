@@ -20,7 +20,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-audio', 'game-player', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes-three', 'game-weapons-three', 'game-test-room']
+const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes-three', 'game-weapons-three', 'game-test-room']
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm build at the root first`)
 }

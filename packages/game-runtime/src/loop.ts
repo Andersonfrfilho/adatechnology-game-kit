@@ -5,14 +5,14 @@ export function startLoop(scheduler: Scheduler, options: LoopOptions = {}): () =
   const requestFrame = options.requestFrame ?? globalThis.requestAnimationFrame?.bind(globalThis)
   const cancelFrame = options.cancelFrame ?? globalThis.cancelAnimationFrame?.bind(globalThis)
   if (!requestFrame) throw new Error('startLoop: no requestAnimationFrame here, pass requestFrame')
-  let last: number | undefined = options.startMs ?? (typeof performance !== 'undefined' ? performance.now() : 0)
+  let last: number = options.startMs ?? (typeof performance !== 'undefined' ? performance.now() : 0)
   let handle = 0
   let stopped = false
 
   const onFrame = (nowMs: number): void => {
     if (stopped) return
     handle = requestFrame(onFrame)
-    const realSeconds = last === undefined ? 0 : (nowMs - last) / 1000
+    const realSeconds = (nowMs - last) / 1000
     last = nowMs
     options.onFrame?.(realSeconds)
     scheduler.frame(realSeconds, options.skipSimulation?.() ? { simulate: false } : undefined)
@@ -21,7 +21,6 @@ export function startLoop(scheduler: Scheduler, options: LoopOptions = {}): () =
   const onVisibility = (): void => {
     if (document.visibilityState !== 'visible') return
     scheduler.resetClock()
-    last = undefined
   }
   const hasDocument = typeof document !== 'undefined' && typeof document.addEventListener === 'function'
   if (hasDocument) document.addEventListener('visibilitychange', onVisibility)

@@ -15,6 +15,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
@@ -2654,6 +2655,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let metricsAcc = 0
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
+  // the room's frame: one lateSimulate system holds `update` for now (the phases come in the next commits); 8 ms is the biggest budget of the loose queues of today
+  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: 8, snapMs: 0 })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   let qualityName: 'low' | 'medium' | 'high' = quality
@@ -3565,15 +3568,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update,
+    update: (dt: number): void => scheduler.frame(dt, { render: false, exact: true }),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
-        update(FIXED_DT)
+        room.update(FIXED_DT)
         waited += FIXED_DT
       }
       // the trigger judges a frame by where it starts: one more frame, or the first pull of a fresh draw still answers `drawing`
-      update(FIXED_DT)
+      room.update(FIXED_DT)
       return waited + FIXED_DT
     },
     on(type, fn) {
@@ -3701,7 +3704,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       detachers.clear()
       for (const store of benches.values()) store.dispose()
       benches.clear()
-      cancelAnimationFrame?.(raf)
+      stopLoop?.()
+      scheduler.dispose()
       window.removeEventListener('resize', onResize)
       player.dispose()
       ui?.dispose()
@@ -3813,9 +3817,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     showBench()
   }
 
-  let raf = 0
+  scheduler.add((ctx) => update(ctx.dt), { phase: 'lateSimulate', id: 'room.update' })
+  let stopLoop: (() => void) | undefined
   if (ownRenderer && typeof requestAnimationFrame === 'function') {
-    let last = performance.now()
     ownsLoop = true
     let nextLightsCheck = 0
     let warmedLights = ''
@@ -3827,28 +3831,30 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       })
       return key
     }
-    const loop = (now: number): void => {
-      raf = requestAnimationFrame(loop)
-      if (now >= nextLightsCheck) {
+    scheduler.add(
+      (ctx) => {
+        if (ctx.scripted) return
+        const now = performance.now()
+        if (now < nextLightsCheck) return
         nextLightsCheck = now + LIGHTS_CHECK_MS
         const key = lightsKey()
-        if (key !== warmedLights) {
-          warmedLights = key
-          warmUp()
-        }
-      }
-      const realDelta = (now - last) / 1000
-      roomMetrics.frame(realDelta)
-      const dt = Math.min(0.05, realDelta)
-      last = now
-      if (!scenarioRunning) update(dt)
-      const restoreCamera = room.applyCamera()
-      gl.render(scene, debugView ?? camera)
-      pinPrograms()
-      restoreCamera()
-      roomMetrics.rendered()
-    }
-    raf = requestAnimationFrame(loop)
+        if (key === warmedLights) return
+        warmedLights = key
+        warmUp()
+      },
+      { phase: 'render', order: -1000, id: 'room.lights-check' },
+    )
+    scheduler.add(
+      () => {
+        const restoreCamera = room.applyCamera()
+        gl.render(scene, debugView ?? camera)
+        pinPrograms()
+        restoreCamera()
+        roomMetrics.rendered()
+      },
+      { phase: 'render', id: 'room.render' },
+    )
+    stopLoop = startLoop(scheduler, { onFrame: (realSeconds) => roomMetrics.frame(realSeconds), skipSimulation: () => scenarioRunning })
   }
 
   if (options.initial) {

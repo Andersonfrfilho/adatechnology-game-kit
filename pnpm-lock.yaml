@@ -1295,6 +1295,9 @@ importers:
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
+      '@adatechnology/game-runtime':
+        specifier: workspace:^
+        version: link:../game-runtime
       '@adatechnology/game-terrain':
         specifier: workspace:^
         version: link:../game-terrain
