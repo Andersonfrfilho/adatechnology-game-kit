@@ -7,7 +7,7 @@ export { navigationDefOf } from './navigation/from-house.js'
 export type { NavigableHouse, NavigationDefOptions } from './navigation/from-house.js'
 export { bindNavigator } from './navigation/bind.js'
 export type { DestructibleHouse, NavigatorBinding } from './navigation/bind.js'
-export type { BuildOptions, Damageable, House, HouseRenderer, HouseRendererOptions } from './types.js'
+export type { BuildOptions, Damageable, House, HouseRenderer, HouseRendererOptions, LightingOptions } from './types.js'
 /** @deprecated import from '@adatechnology/game-floorplan-three/testing' */
 export { createFloorplanTestModule, FLOORPLAN_AREA_ID } from './testing'
 /** @deprecated import from '@adatechnology/game-floorplan-three/testing' */

@@ -63,8 +63,8 @@ export function createLightBudget(THREE: ThreeForLights, scene: Object3D, option
   const core: ArbiterCore = {
     THREE,
     slots: {
-      point: createSlots(THREE, group, 'point', opts.point, pointShadows, opts.shadowMapSize),
-      spot: createSlots(THREE, group, 'spot', opts.spot, spotShadows, opts.shadowMapSize),
+      point: createSlots(THREE, group, 'point', opts.point, pointShadows, opts.shadowMapSize, options.shadowSettings),
+      spot: createSlots(THREE, group, 'spot', opts.spot, spotShadows, opts.shadowMapSize, options.shadowSettings),
     },
     urgentReserve: opts.urgentReserve,
     fadeMs: opts.fadeMs,
@@ -196,6 +196,9 @@ export function createLightBudget(THREE: ThreeForLights, scene: Object3D, option
       const handles = holders.map((holder) => makeHandle(holder, null))
       return {
         handles,
+        invalidateShadow(index) {
+          for (const [at, holder] of holders.entries()) if ((index === undefined || index === at) && holder.slot !== null) markShadow(holder.slot)
+        },
         release() {
           for (const holder of holders) {
             const slot = holder.slot

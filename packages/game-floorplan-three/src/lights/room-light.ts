@@ -36,16 +36,27 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
   function lighting(o) {
         o = o || {}; const scene = o.scene, N = Math.max(1, Math.min(MAX_LIGHTS, o.n || 6)), NS = Math.max(0, Math.min(N, o.shadows != null ? o.shadows : 2)), size = o.shadowSize || 512, MAX_EXTERNAL = o.external != null ? o.external : 2;
         for (const k of Object.keys(shared.mats)) roomLightMask(shared.mats[k]);
+        // with a LightBudget the house leases its slots for good: the shader index of a light is its slot, so the masks are written at handle.slot (and sized to the budget)
+        const budget = o.budget, lease = budget ? budget.lease({ owner: 'floorplan.rooms', point: N, shadows: NS }) : null;
+        if (budget && !lease) throw new Error('lighting: the LightBudget has no ' + N + ' free point slots (' + NS + ' with shadow) for the rooms');
+        if (budget) for (const [key, width] of [['uRB0', 4], ['uRB1', 4], ['uRB2', 4], ['uRBY', 2], ['uREx', 4]] as const) { const next = new Float32Array(budget.sizes.point * width); if (width === 4) for (let i = 0; i < budget.sizes.point; i++) next.set(EMPTY, i * 4); LZU[key].value = next; }
         const PL = [], sig = new Array(N).fill(''), seg = { n: 0 };
-        for (let i = 0; i < N; i++) {
+        if (!lease) for (let i = 0; i < N; i++) {
+          // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
           const l = new THREE.PointLight(0xffc880, 0, 8, 1.6); l.visible = true; l.castShadow = i < NS; l.name = 'room_light_' + i;
           if (i < NS) { l.shadow.mapSize.set(size, size); l.shadow.bias = -0.0012; l.shadow.normalBias = 0.05; l.shadow.camera.near = 0.12; l.shadow.autoUpdate = false; l.shadow.needsUpdate = true; }
           if (scene) scene.add(l); PL.push(l);
         }
-        const A: any = { lights: PL, crates: new Array(N).fill(null), n: N, shadows: NS, stats: { rooms: 0, external: 0, shadows: 0, shadowChanged: false }, indirect: v => { LZU.uIndK.value = v; } };
+        const slotOf = i => lease ? lease.handles[i].slot : i;
+        const put = (i, v) => {
+          if (lease) { lease.handles[i].update(v.color === undefined || typeof v.color === 'number' ? v : { ...v, color: new THREE.Color(v.color).getHex() }); return; }
+          const pl = PL[i]; if (v.position) pl.position.set(v.position[0], v.position[1], v.position[2]); if (v.color !== undefined) pl.color.set(v.color);
+          if (v.intensity !== undefined) pl.intensity = v.intensity; if (v.distance !== undefined) pl.distance = v.distance; if (v.decay !== undefined) pl.decay = v.decay;
+        };
+        const A: any = { lights: lease ? lease.handles : PL, crates: new Array(N).fill(null), n: N, shadows: NS, stats: { rooms: 0, external: 0, shadows: 0, shadowChanged: false }, indirect: v => { LZU.uIndK.value = v; } };
         const _p = new THREE.Vector3(), _f = new THREE.Vector3();
         const lim = (v, a, b) => Math.max(a, Math.min(b, v));
-        A.invalidate = () => { for (let i = 0; i < NS; i++) PL[i].shadow.needsUpdate = true; };
+        A.invalidate = () => { if (lease) { lease.invalidateShadow(); return; } for (let i = 0; i < NS; i++) PL[i].shadow.needsUpdate = true; };
         // houses: [house] (or one house); focus: world THREE.Vector3 (first-person camera or orbit target); op: {maxFloor: -1 all, focusHouse, focusRoom: id of the room the camera is in}
         A.update = function (houses, focus, op) {
           op = op || {}; houses = (Array.isArray(houses) ? houses : [houses]).filter(Boolean); _f.set(focus.x, focus.y, focus.z);
@@ -77,18 +88,17 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
           const Ne = Math.min(MAX_EXTERNAL, exterior.length, Math.max(0, N - 1)), Ni = Math.min(rooms.length, N - Ne), asg = rooms.slice(0, Ni).concat(exterior.slice(0, Ne));
           A.stats.rooms = Ni; A.stats.external = Ne; let shadows = 0;
           for (let i = 0; i < N; i++) {
-            const pl = PL[i], g = asg[i], b0 = LZU.uRB0.value, b1 = LZU.uRB1.value, b2 = LZU.uRB2.value, by = LZU.uRBY.value, ex = LZU.uREx.value;
+            const g = asg[i], at = slotOf(i), b0 = LZU.uRB0.value, b1 = LZU.uRB1.value, b2 = LZU.uRB2.value, by = LZU.uRBY.value, ex = LZU.uREx.value;
             A.crates[i] = g ? { k: g.k, rects: g.rects, y: g.y, exterior: !!g.exterior, exclusion: g.exclusion || null, d: g.d } : null;
-            if (!g) { pl.intensity = 0; for (const a of [b0, b1, b2, ex]) a.set(EMPTY, i * 4); by.set([0, 0], i * 2); continue; }
-            pl.position.set(g.pos[0], g.pos[1], g.pos[2]); pl.color.set(g.color);
-            if (g.exterior) { pl.intensity = g.lumens; pl.distance = g.dist; pl.decay = g.decay; }
-            else { pl.intensity = (7 + g.range * 0.8) * lim(1 + 0.4 * (Math.sqrt(g.n) - 1), 1, 2.2); pl.distance = Math.max(3, g.dm * 1.3 + 0.5); pl.decay = 1.6; }
-            const rs = g.rects; b0.set(rs[0] || EMPTY, i * 4); b1.set(rs[1] || EMPTY, i * 4); b2.set(rs[2] || EMPTY, i * 4); by.set(g.y, i * 2); ex.set(g.exclusion || EMPTY, i * 4);
-            if (i < NS) { shadows++; const s2 = g.house.group.uuid + '|' + g.k + '|' + g.pos.map(v => v.toFixed(2)).join(','); if (sig[i] !== s2) { sig[i] = s2; pl.shadow.needsUpdate = true; seg.n++; A.stats.shadowChanged = true; } pl.shadow.camera.far = Math.max(4, pl.distance); }
+            if (!g) { put(i, { intensity: 0 }); for (const a of [b0, b1, b2, ex]) a.set(EMPTY, at * 4); by.set([0, 0], at * 2); continue; }
+            const lamp = g.exterior ? { intensity: g.lumens, distance: g.dist, decay: g.decay } : { intensity: (7 + g.range * 0.8) * lim(1 + 0.4 * (Math.sqrt(g.n) - 1), 1, 2.2), distance: Math.max(3, g.dm * 1.3 + 0.5), decay: 1.6 };
+            put(i, { position: g.pos, color: g.color, ...lamp });
+            const rs = g.rects; b0.set(rs[0] || EMPTY, at * 4); b1.set(rs[1] || EMPTY, at * 4); b2.set(rs[2] || EMPTY, at * 4); by.set(g.y, at * 2); ex.set(g.exclusion || EMPTY, at * 4);
+            if (i < NS) { shadows++; const s2 = g.house.group.uuid + '|' + g.k + '|' + g.pos.map(v => v.toFixed(2)).join(','); if (sig[i] !== s2) { sig[i] = s2; if (lease) lease.invalidateShadow(i); else PL[i].shadow.needsUpdate = true; seg.n++; A.stats.shadowChanged = true; } if (!lease) PL[i].shadow.camera.far = Math.max(4, lamp.distance); }
           }
           A.stats.shadows = shadows; return A.stats;
         };
-        A.dispose = () => { for (const l of PL) { if (l.shadow && l.shadow.map) l.shadow.map.dispose(); l.removeFromParent(); } };
+        A.dispose = () => { if (lease) { lease.release(); return; } for (const l of PL) { if (l.shadow && l.shadow.map) l.shadow.map.dispose(); l.removeFromParent(); } };
         return A;
       }
   Object.assign(K, { MAX_LIGHTS, EMPTY, LZU, roomLightMask, lighting });

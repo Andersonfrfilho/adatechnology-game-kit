@@ -78,7 +78,9 @@ export function mergeValues(values: LightValues, patch: LightPatch): void {
   if (patch.penumbra !== undefined) values.penumbra = patch.penumbra
 }
 
-export function createSlots(THREE: ThreeForLights, group: Group, kind: LightKind, count: number, shadows: number, mapSize: number): Slot[] {
+export type ShadowSettings = { readonly bias?: number; readonly normalBias?: number; readonly near?: number }
+
+export function createSlots(THREE: ThreeForLights, group: Group, kind: LightKind, count: number, shadows: number, mapSize: number, settings: ShadowSettings = {}): Slot[] {
   const slots: Slot[] = []
   for (let index = 0; index < count; index++) {
     const light = kind === 'point' ? new THREE.PointLight(0xffffff, 0, 0, DEFAULT_DECAY) : new THREE.SpotLight(0xffffff, 0, 0, DEFAULT_ANGLE, 0, DEFAULT_DECAY)
@@ -89,6 +91,9 @@ export function createSlots(THREE: ThreeForLights, group: Group, kind: LightKind
       light.castShadow = true
       light.shadow.autoUpdate = false
       light.shadow.mapSize.set(mapSize, mapSize)
+      if (settings.bias !== undefined) light.shadow.bias = settings.bias
+      if (settings.normalBias !== undefined) light.shadow.normalBias = settings.normalBias
+      if (settings.near !== undefined) light.shadow.camera.near = settings.near
     }
     group.add(light)
     if ('target' in light) group.add(light.target)

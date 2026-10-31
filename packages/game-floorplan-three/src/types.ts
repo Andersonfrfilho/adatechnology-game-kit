@@ -1,4 +1,5 @@
 import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 
 /** A part of the house a hit can damage (door, window, glass, tank...): the game reads `hp`. */
@@ -123,6 +124,23 @@ export interface House {
   [extra: string]: any
 }
 
+/** What `HouseRenderer.lighting` reads. */
+export interface LightingOptions {
+  scene?: any
+  /** Room lights, 1 to 12 (6). */
+  n?: number
+  /** How many of them cast shadows (2). */
+  shadows?: number
+  shadowSize?: number
+  /** Outside lamps that may take a light (2). */
+  external?: number
+  /**
+   * The host's LightBudget: the house leases `n` point slots (`shadows` with shadow) for good instead of creating lights, and the room masks are written at the slot of each light (what the shader
+   * indexes by). Without it the lights are created here, which changes every lit material's program key (deprecated, removed in the next major).
+   */
+  budget?: LightBudget
+}
+
 /** The renderer `create(THREE, options)` returns. */
 export interface HouseRenderer {
   version: string
@@ -133,7 +151,7 @@ export interface HouseRenderer {
   applyPart(group: any, t: number): void
   materials: Record<string, any>
   roomLightMask(material: any): void
-  lighting(options?: any): any
+  lighting(options?: LightingOptions): any
   setNight(night: boolean): void
   /** The painting of the damaged walls of every house as a `DeferredQueue` for a shared frame budget; `budget.register` attaches it and `flush()` stops painting from `onFrame`. */
   deferredQueue(): DeferredQueue

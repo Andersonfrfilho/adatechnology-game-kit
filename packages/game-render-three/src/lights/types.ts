@@ -27,6 +27,8 @@ export interface LightBudgetOptions {
   readonly spotShadows?: number
   /** Shadow map size of the shadow slots. Default 512. */
   readonly shadowMapSize?: number
+  /** Bias, normal bias and camera near plane of the shadow slots. Defaults: three.js's (0, 0, 0.5). The house's room lights use -0.0012, 0.05 and 0.12. */
+  readonly shadowSettings?: { readonly bias?: number; readonly normalBias?: number; readonly near?: number }
   /** Point slots only `urgent` requests may take while others are free. Default 2. */
   readonly urgentReserve?: number
   /** Milliseconds a light fades out when a source loses its slot, and fades in when it gets one. Default 120. */
@@ -92,6 +94,8 @@ export interface SourceHandle {
 /** Slots a client keeps for itself for good: the room lights of a house (their masks are indexed by slot). */
 export interface LightLease {
   readonly handles: readonly LightHandle[]
+  /** Redraws the shadow map of one leased slot (`handles[index]`), or of all of them, on the next render: the walls it shades changed. */
+  invalidateShadow(index?: number): void
   release(): void
 }
 
