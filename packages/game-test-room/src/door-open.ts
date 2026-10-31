@@ -209,6 +209,9 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
 
   const openingOf = (objectId: string, part: string): number => openings.get(key(objectId, part)) ?? 0
 
+  /** Where the last use sent each leaf (`objectId|part`), for the next use to turn it round. */
+  const lastGoals = new Map<string, 0 | 1>()
+
   const leafAt = (objectId: string, part: string, point: Vec3): RoomLeaf | null => {
     const leaves = options.leaves(objectId)
     if (leaves.length === 0) return null
@@ -381,7 +384,10 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     // the hand goes where the eye was, else to the middle of the free edge of the leaf at the height of a handle
     const grip = handleOf(obj, leaf, point)
     const opening = openingOf(objectId, leaf.part)
-    const goal = control.begin({ opening, massKg: massOf(objectId, leaf.part), locked: options.isLocked(objectId, leaf.part) })
+    const key = `${objectId}|${leaf.part}`
+    const lastGoal = lastGoals.get(key)
+    const goal = control.begin({ opening, massKg: massOf(objectId, leaf.part), locked: options.isLocked(objectId, leaf.part), ...(lastGoal !== undefined ? { lastGoal } : {}) })
+    if (goal !== null) lastGoals.set(key, goal)
     // a leaf that comes toward the body is pulled, one that goes away is pushed: compare the leaf open and closed with where the player stands
     let pull = true
     if (goal !== null) {

@@ -49,6 +49,23 @@ describe('door use', () => {
     expect(use.opening).toBe(0)
   })
 
+  it('a leaf left half open goes the other way from the last use: a door blocked while opening closes', () => {
+    const use = createDoorUse()
+    expect(use.begin({ opening: 0.17, massKg: 20, lastGoal: 1 })).toBe(0)
+    use.cancel()
+    expect(use.begin({ opening: 0.6, massKg: 20, lastGoal: 0 })).toBe(1)
+    use.cancel()
+    // with no last use, a half-open leaf opens as before
+    expect(use.begin({ opening: 0.17, massKg: 20 })).toBe(1)
+  })
+
+  it('at an end the last use does not count: a leaf put back closed (a reset) opens', () => {
+    const use = createDoorUse()
+    expect(use.begin({ opening: 0, massKg: 20, lastGoal: 1 })).toBe(1)
+    use.cancel()
+    expect(use.begin({ opening: 1, massKg: 20, lastGoal: 0 })).toBe(0)
+  })
+
   it('a second use in the middle of the swing turns it round', () => {
     const use = createDoorUse()
     use.begin({ opening: 0, massKg: 10 })

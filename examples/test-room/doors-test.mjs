@@ -70,7 +70,8 @@ for (const mode of modes) {
   const fridgePart = st?.part ?? 'door_fridge'
   check((await opening(fridge.id, fridgePart)) > 0.95, `the fridge door ends open (${(await opening(fridge.id, fridgePart)).toFixed(2)})`)
   await shot(`${mode}-fridge-open`)
-  await lookFromHere([fridge.at[0], 1.0, fridge.at[2] + 0.1])
+  // low into the open fridge, away from the freezer door above: over the shoulder the crosshair lands higher than the eye's target, next to the freezer
+  await lookFromHere([fridge.at[0], 0.75, fridge.at[2] + 0.1])
   await tapE()
   await waitIdle()
   check((await opening(fridge.id, fridgePart)) < 0.05, 'a second E closes it')
@@ -110,8 +111,8 @@ for (const mode of modes) {
   const moved = bst.filter(([, v]) => v > 0)
   check((await lastAction('door_blocked')) > blockedBefore && moved.length === 1 && moved[0][1] < 0.9, `the door hits the barbecue and stops at ${moved.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-blocked`)
-  // close it again for the next run
-  await lookFromHere([bl.at[0] - 0.3, 1.2, bl.at[2] + 0.3])
+  // close it again for the next run, from where it was opened: from beside the handle the eye falls on the barbecue in front of it
+  await look([bl.at[0] + 0.3, 1.7, bl.at[2] + 1.5], [bl.at[0] - 0.3, 1.2, bl.at[2]])
   await tapE()
   await waitIdle()
 

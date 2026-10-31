@@ -19,6 +19,8 @@ export interface DoorUseRules {
   readonly rattleSeconds: number
   /** The part of the swing tested at a time against what is around (smaller is finer and costs more). */
   readonly stepFraction: number
+  /** Within this of closed or open a leaf counts as there: the last use's way no longer turns it round. */
+  readonly endTolerance: number
 }
 
 export const DOOR_USE_DEFAULTS: DoorUseRules = {
@@ -27,6 +29,7 @@ export const DOOR_USE_DEFAULTS: DoorUseRules = {
   releaseSeconds: 0.22,
   rattleSeconds: 0.6,
   stepFraction: 0.04,
+  endTolerance: 0.02,
 }
 
 export type DoorUseTarget = {
@@ -34,6 +37,8 @@ export type DoorUseTarget = {
   readonly opening: number
   readonly massKg: number
   readonly locked?: boolean
+  /** Where the last use sent this leaf: a leaf stopped between closed and open goes the other way (a door blocked half open closes). */
+  readonly lastGoal?: 0 | 1
 }
 
 export type DoorUseStep = {
@@ -58,7 +63,8 @@ export interface DoorUse {
   readonly goal: 0 | 1
   readonly opening: number
   /**
-   * Starts using a leaf: a closed or half-open leaf opens, an open one closes. A use in the middle of a swing turns it round.
+   * Starts using a leaf: the other way from where the last use sent it (`lastGoal`), else a closed or half-open leaf opens and an open
+   * one closes. A use in the middle of a swing turns it round.
    * Answers the goal (1 open, 0 closed), or null when the leaf is locked (it rattles instead).
    */
   begin(target: DoorUseTarget): 0 | 1 | null
@@ -98,6 +104,7 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
       }
       // in the middle of a swing the hand is already on the handle: the leaf turns round at once
       if (phase === 'swing' || phase === 'reach') goal = goal === 1 ? 0 : 1
+      else if (target.lastGoal !== undefined && opening > r.endTolerance && opening < 1 - r.endTolerance) goal = target.lastGoal === 1 ? 0 : 1
       else goal = opening > 0.5 ? 0 : 1
       swing = swingSecondsFor(target.massKg, r)
       start = opening
