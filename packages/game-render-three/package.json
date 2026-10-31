@@ -1,0 +1,53 @@
+{
+  "name": "@adatechnology/game-render-three",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Owner of the GPU-facing state of a three.js game: the one ThreeLib type, a LightBudget with a fixed number of lights (slots, priority, fades), a ProgramWarmup that links every shader program at load and keeps it linked, and geometry and material pools.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "lights",
+    "shader",
+    "warmup",
+    "pool"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-render-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

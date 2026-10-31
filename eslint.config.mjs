@@ -27,8 +27,8 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'warn',
         {
-          selector: "NewExpression[callee.type='MemberExpression'][callee.property.name=/^(PointLight|SpotLight)$/]",
-          message: 'Do not create PointLight/SpotLight here: ask the LightBudget of game-render-three (spec 005 D4).',
+          selector: "NewExpression[callee.type='MemberExpression'][callee.property.name=/^(PointLight|SpotLight|HemisphereLight)$/]",
+          message: 'Do not create PointLight/SpotLight/HemisphereLight here: ask the LightBudget of game-render-three (spec 005 D4).',
         },
       ],
     },
