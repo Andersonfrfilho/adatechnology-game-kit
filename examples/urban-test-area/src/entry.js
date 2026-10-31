@@ -6,7 +6,7 @@
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
-import { URBAN_AREA_ID, createUrbanTestModule, loadUrbanTestModule } from '@adatechnology/game-urban-three'
+import { URBAN_AREA_ID, createUrbanTestModule, loadUrbanTestModule } from '@adatechnology/game-urban-three/testing'
 
 import { drawLayout, fillDowntown, openCityPlans } from './cities-map.js'
 
