@@ -28,9 +28,10 @@ export interface WallPiece {
   /**
    * Once a drawing from `build` is in a destruction world as `objectId` (with this `spec`), the house renderer follows its events and draws on it what
    * a generic destruction renderer cannot: the bricks that shots and blows knock out (`chip`) and the opening of a breach, as gaps in the wall's
-   * courses. `restore` puts the wall back (after `world.reset`), `dispose` stops following.
+   * courses. `restore` puts the wall back (after `world.reset`), `dispose` stops following. `update` paints the damage of the events since the last call, once
+   * per wall (call it every frame; without it the damage is painted 100 ms after the event).
    */
-  follow(root: any, world: any, objectId: string): { restore(): void; dispose(): void } | null
+  follow(root: any, world: any, objectId: string): { restore(): void; dispose(): void; update(): void } | null
 }
 
 const PLASTER = 0xe8e2d4

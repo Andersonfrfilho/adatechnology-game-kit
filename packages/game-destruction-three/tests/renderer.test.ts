@@ -11,7 +11,7 @@ function setup(opts: Partial<RendererOptions> = {}) {
   scene.add(hostMesh)
   const world = new FakeWorld()
   const sounds: string[] = []
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k), ...opts })
+  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k), eventBudgetMs: Infinity, ...opts })
   return { scene, world, renderer, hostMesh, sounds }
 }
 

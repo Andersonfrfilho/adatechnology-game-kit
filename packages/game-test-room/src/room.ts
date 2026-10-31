@@ -62,7 +62,7 @@ type Vars = Record<string, string | number>
 interface Entry {
   so: SpawnedObject
   /** What draws the object's own damage on it (`SceneryObject.follow`). */
-  follower?: { restore?(): void; dispose?(): void } | null
+  follower?: { restore?(): void; dispose?(): void; update?(): void } | null
   item?: TestRoomItem
   name: string
   arena: boolean
@@ -2679,6 +2679,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
     vfx.update(dt)

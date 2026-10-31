@@ -18,7 +18,7 @@ const meshesOf = (o: THREE.Object3D): THREE.Mesh[] => {
 function chair() {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
   world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1 })], [['seat'], ['leg']])
   const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.5))
   seat.position.y = 2
@@ -118,7 +118,7 @@ describe('visual debris is marked', () => {
   it('fracture fragments, decals and ground stains carry destructionDebris', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
     world.addObject('o', [partState('top', 'glass'), partState('plate', 'wood')])
     const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1))
     const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1))

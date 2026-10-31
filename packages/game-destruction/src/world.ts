@@ -589,8 +589,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Bending (`structure.flexure`): span from the supports, moment at rest, blast impulse on the span
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
-  /** Where `p` touches `support`, as a box in `p`'s own axes. */
+  /** Bumped when a part is posed again, which is what makes a remembered contact box stale. */
+  let poseVersion = 0
+  const contactMemo = new WeakMap<PartRT, Map<PartRT, { version: number; box: [Vec3, Vec3] }>>()
+
+  /** Where `p` touches `support`, as a box in `p`'s own axes (remembered per pair: the solver asks for the same pairs again at every joint that breaks). */
   const contactBox = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
+    let byTouching = contactMemo.get(p)
+    if (!byTouching) contactMemo.set(p, (byTouching = new Map()))
+    const known = byTouching.get(support)
+    if (known && known.version === poseVersion) return known.box
+    const box = measureContact(p, support)
+    byTouching.set(support, { version: poseVersion, box })
+    return box
+  }
+
+  const measureContact = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
     const A = aabbOf(p.spec.shape, p.pos, p.q), B = aabbOf(support.spec.shape, support.pos, support.q)
     const lo: Vec3 = [0, 0, 0], hi: Vec3 = [0, 0, 0]
     for (let k = 0; k < 3; k++) {
@@ -3095,6 +3109,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p = getPart(o, partId)
       p.pos = [position[0], position[1], position[2]]
       p.q = q
+      poseVersion++
       updateBound(o)
     },
     remove(id) {
