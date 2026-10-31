@@ -72,7 +72,8 @@ if (!playwright || !existsSync(page)) {
     check(`[${lang}] the room has the player body and starts in third person with it shown`, first.has && first.mode === 'third' && first.visible && first.parent, first)
     await tab.keyboard.press('KeyV')
     const toggled = await bodyAt()
-    check(`[${lang}] V goes to first person and hides the body`, toggled.mode === 'first' && toggled.visible === false, toggled)
+    // one body for both views (spec 004): first person keeps the body drawn, only its head is hidden from the player's camera
+    check(`[${lang}] V goes to first person and keeps the body`, toggled.mode === 'first' && toggled.visible === true && toggled.parent, toggled)
     await tab.keyboard.press('KeyV')
     const back = await bodyAt()
     check(`[${lang}] V again: third person, body shown`, back.mode === 'third' && back.visible === true, back)
