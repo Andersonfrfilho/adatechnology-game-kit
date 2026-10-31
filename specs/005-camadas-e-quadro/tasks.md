@@ -75,6 +75,43 @@ task fecha com os gates do fim deste arquivo e com um commit isolado.
 - T4.6 Os pré-aquecimentos (`warmUpProbes`) dos adaptadores se registram no `ProgramWarmup`.
 - Aceite da fase: `perf.mjs` (GPU e CI) com 0 programas em todas as fases e nenhum orçamento a mais estourado do que antes.
 
+## Fase 4b — Reação em cadeia: explosões e corpos (depois da T4.1)
+> 🤖 Modelo: `sonnet` (T4b.1 é 🧠 → `opus` desenha e `architect` valida antes)
+
+Reação em cadeia é o critério 17 de `docs/criterios-fisica-objetos.md`. Aqui ela vale para explosões e para os corpos da horda,
+ligadas entre si: carro explode → botijão → zumbis arremessados → caem sobre outros → onda de quedas. Nada roda com motor de física
+rígida na horda. A cadeia surge de regras locais pela grade espacial que o `game-crowd` já tem.
+
+- T4b.1 🧠 Desenho (D10 no `plan.md`), com estes pontos:
+  - **impulso por agente:** velocidade de empurrão que decai com o atrito; o contato troca impulso pela grade de 1 m (física de
+    posição em 2D, O(n));
+  - **estados de equilíbrio:** em pé → cambaleando → caído → levantando. Os limiares vêm do tipo (peso, força) por opção;
+  - **corpo caído:** é obstáculo e causa tropeço;
+  - **a cadeia avança um salto por passo fixo:** é uma onda, não um cálculo grande num quadro;
+  - **faixas:** cadeia completa só na faixa perto do jogador, versão resumida nas de longe;
+  - **teto de quedas simultâneas;**
+  - **corpos arremessados:** pool de N (padrão 32) perto do jogador; os demais vão direto para a pose de morte instanciada;
+  - **elos das explosões:** cada elo tem atraso (pressão subindo, pavio) e passa pelo `scheduler.budget`, para que duas
+    detonações da mesma cadeia nunca caiam no mesmo quadro sem orçamento.
+- T4b.2 `game-crowd`: impulso, estados de equilíbrio, tropeço no caído e a API `crowd.blast({ point, energy, radius })`, que é uma
+  consulta na grade, dano e impulso pela distância e mais nada.
+  - Testes determinísticos:
+    - a granada na frente de uma fila derruba uma onda que avança com o tempo;
+    - há queda além do raio da explosão (prova da cadeia);
+    - um brutamonte no caminho segura a onda;
+    - a mesma semente dá o mesmo resultado a 30, 60 e 144 fps (prova do passo fixo).
+- T4b.3 `game-crowd-three`/`game-characters-three`: o pool de corpos arremessados (arco, queda e pose final), a pose de cambalear e
+  de caído instanciada, e o membro arrancado e o sangue pela fila com orçamento.
+- T4b.4 Ligação na composição: a explosão do `game-destruction`/`game-weapons` chama `crowd.blast`; o veículo e os objetos
+  pressurizados armam a cadeia de explosões pelo `chain` existente, com o atraso por elo.
+- T4b.5 `examples/test-room/perf.mjs`, fase `chain_horde`:
+  - 2.000 zumbis vindo;
+  - uma fileira de botijões e um carro no caminho;
+  - granadas, RPG, molotov e tiro no meio da horda.
+  - Orçamentos: os de sempre (0 quadros acima de 33,4 ms, p99 ≤ 20 ms e 0 shaders na GPU; no CI, contadores) e mais **quedas
+    em cadeia > 0**, para que o teste também prove que a reação acontece.
+- Aceite da fase: os testes da T4b.2 passam e a fase `chain_horde` passa no `perf.mjs` em `PERF_MODE=gpu` e no CI.
+
 ## Fase 5 — Contratos
 > 🤖 Modelo: `sonnet` (um pacote por commit)
 
@@ -127,6 +164,7 @@ Uma task por vez, na ordem do tasks.md, num worktree próprio (a pasta principal
 de branch nela). Fase 1 pode começar já; Fases 4 e 6 só depois do merge de perf/explosion-frame-budget.
 Modelos: Fase 1 → executor model=sonnet (T1.2–T1.4 haiku) · Fase 2 → executor model=haiku (T2.2 sonnet) ·
 Fase 3 → executor model=sonnet · Fase 4 → executor model=sonnet, T4.1 e T4.3 🧠 → opus desenha e architect valida antes ·
+Fase 4b (reação em cadeia) → executor model=sonnet, T4b.1 🧠 → opus desenha e architect valida antes ·
 Fase 5 → executor model=sonnet · Fase 6 → sonnet, T6.1 🧠 → architect (opus) antes · Fase 7 → sonnet, um subsistema por PR ·
 Fase 8 → sonnet (T8.3 haiku, T8.4 🧠 opus) · revisão final de cada fase → code-reviewer model=sonnet.
 Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
