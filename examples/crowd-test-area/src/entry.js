@@ -9,7 +9,7 @@ import { createAnimalsThree } from '@adatechnology/game-animals-three'
 import { createBestBuilder } from '@adatechnology/game-characters-three'
 import { UNDEAD_TYPES, undeadCrowdPack } from '@adatechnology/game-characters-undead'
 import { createRng } from '@adatechnology/game-crowd'
-import { CROWD_AREA_ID, createCrowdTestModule } from '@adatechnology/game-crowd-three'
+import { CROWD_AREA_ID, createCrowdTestModule } from '@adatechnology/game-crowd-three/testing'
 import { create } from '@adatechnology/game-infection'
 
 export { createCrowdTestModule }

@@ -10,7 +10,11 @@ export type { CrowdRenderer, CrowdRendererOptions } from './renderer'
 export { createHerdView } from './herd-view'
 export type { AnimalDrawer, DrawnAnimal, HerdView, HerdViewOptions } from './herd-view'
 export { CROWD_SOUND_BANK, HERD_SOUND_IDS } from './audio/bank'
-export { CROWD_AREA_ID, CROWD_EFFECTS, createCrowdTestModule } from './bench/module'
-export type { CrowdBenchSpecies, CrowdEffectMap, CrowdScenarioLike, CrowdTestModule, CrowdTestModuleOptions } from './bench/module'
-export { crowdBenchTextOf } from './bench/locale'
-export type { CrowdBenchText } from './bench/locale'
+/** @deprecated import from '@adatechnology/game-crowd-three/testing' */
+export { CROWD_AREA_ID, CROWD_EFFECTS, createCrowdTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-crowd-three/testing' */
+export type { CrowdBenchSpecies, CrowdEffectMap, CrowdScenarioLike, CrowdTestModule, CrowdTestModuleOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-crowd-three/testing' */
+export { crowdBenchTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-crowd-three/testing' */
+export type { CrowdBenchText } from './testing'
