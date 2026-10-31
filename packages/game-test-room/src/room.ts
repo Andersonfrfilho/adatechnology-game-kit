@@ -274,7 +274,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
-    eventBudgetMs: 8,
+    eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -1234,6 +1234,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatar = next
     feetPrev = null
     if (avatar) {
+      // the weapon's contact and laser rays leave from the eye, inside the body: they must not stop at the chest
+      avatar.root.userData.viewmodel = true
       scene.add(avatar.root)
       syncAvatarVisible()
       stepAvatar(0)
@@ -1322,9 +1324,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const pocketAt = new THREE.Vector3()
   const aimTurn = new THREE.Quaternion()
   const aimEuler = new THREE.Euler(0, 0, 0, 'YXZ')
-  /** Third person: the pocket of the body's right shoulder, turned to the aim (`ModuleHost.holdFrame`); null in first person or for a body that names no shoulder. */
+  /** The pocket of the body's right shoulder, turned to the aim, in both views (`ModuleHost.holdFrame`); null for no body or a body that names no shoulder. */
   const bodyHoldFrame = (): HandPose | null => {
-    const shoulder = thirdActive() ? avatar?.shoulder?.('R') : undefined
+    const shoulder = avatar?.shoulder?.('R')
     if (!shoulder) return null
     shoulder.getWorldPosition(pocketAt)
     // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint

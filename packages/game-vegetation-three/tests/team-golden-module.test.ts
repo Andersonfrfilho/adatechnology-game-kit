@@ -32,7 +32,7 @@ const stubRenderer = (): never => {
 const makeRoom = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, debris: { eventBudgetMs: Infinity } })
 }
 
 /** The artifact's module, evaluated as the page does: a classic script that sets a global. */
