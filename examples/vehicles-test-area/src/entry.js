@@ -3,7 +3,7 @@
 // The area lays the eight vehicles of the Frota test, each with its own destruction (glass, doors, hood, bumper, tyres, the tank, the battery, fire, a rollover) and its door, hood and trunk
 // clips; the bench sets the quality (full or light mode), paints by seed and palette, shows the damageable boxes by material, the zones by type and the axes of the output frame, and drives
 // a car down a lane with the arcade or the semi-simulation driver on the chosen surface. Thirteen scenarios check it.
-import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule } from '@adatechnology/game-vehicles-three'
+import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule } from '@adatechnology/game-vehicles-three/testing'
 
 export { createVehiclesTestModule, loadVehiclesTestModule }
 
