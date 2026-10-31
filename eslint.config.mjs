@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   {
     // specs/ guarda o código dos times como referência de porte (artefatos e fontes extraídas), não é código do SDK
-    ignores: ['**/dist/**', '**/node_modules/**', '**/*.mjs', 'specs/**', '**/tests/fixtures/team-golden/**'],
+    ignores: ['.claude/**', '**/dist/**', '**/node_modules/**', '**/*.mjs', 'specs/**', '**/tests/fixtures/team-golden/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
