@@ -3,6 +3,7 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
+//   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
 //   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
@@ -41,7 +42,7 @@ function loadPlaywright() {
   throw new Error('playwright not found (set NODE_PATH or install it)')
 }
 
-const dist = join(here, 'dist/test-room.html')
+const dist = process.env.PERF_PAGE ?? join(here, 'dist/test-room.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
 const outDir = join(here, 'dist')
 mkdirSync(outDir, { recursive: true })

@@ -12,8 +12,8 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
-import { createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup } from '@adatechnology/game-render-three'
-import type { RenderPools } from '@adatechnology/game-render-three'
+import { createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
+import type { EffectWarmup, RenderPools, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -104,6 +104,10 @@ interface BurningStain {
 
 const FIXED_DT = 1 / 60
 /** Slots of the room's LightBudget: vfx blast, fire and Workshop (4 + 2 + 4 + 2), the rocket (1), the weapon light and the two headlights (spot) and the lightning (hemisphere). Raised by what each client of T4.4 stops creating. */
+/** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
+const EXPLOSIVE_EFFECT_IDS = ['m67', 'molotov', 'pipe_bomb', 'm79_40mm', 'm72_66mm', 'at4_84mm', 'dynamite', 'c4', 'claymore'] as const
+/** The fog the scene may be in while the room runs: none, the weather's linear fog and its exponential one (the weather module comes in after the load). */
+const WARMED_FOG_STATES = ['none', 'linear', 'exp2'] as const
 const ROOM_LIGHT_SIZES = { point: 13, spot: 3, pointShadows: 0, hemisphere: 1 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
@@ -3196,41 +3200,51 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  /** Renders the scene once with throwaway meshes of the materials that decals, effects and liquids make on demand (every light count is another set of programs), so that the first shot does not build them. */
-  const warmUp = (): void => {
-    const probes = [renderer.warmUpProbes(), vfx.warmUpProbes(), fluidView.warmUpProbes()]
-    const groups = probes.map((probe) => probe.group as THREE_NS.Object3D)
-    const spriteMap = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
-    spriteMap.needsUpdate = true
-    const spriteProbes = [true, false].map((fog) => {
-      const probe = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap, transparent: true, fog }))
-      probe.frustumCulled = false
-      return probe
+  /** Every material a probe group draws: they go to the warmup's anchors, which keep them alive (a program is freed when the last material that uses it is disposed). */
+  const materialsOf = (group: THREE_NS.Object3D): THREE_NS.Material[] => {
+    const found = new Set<THREE_NS.Material>()
+    group.traverse((object) => {
+      const material = (object as THREE_NS.Mesh).material as THREE_NS.Material | THREE_NS.Material[] | undefined
+      for (const each of Array.isArray(material) ? material : material ? [material] : []) found.add(each)
     })
-    groups.push(...spriteProbes)
-    scene.add(...groups)
-    gl.render(scene, camera)
-    pinPrograms()
-    scene.remove(...groups)
-    for (const probe of probes) probe.dispose()
-    for (const probe of spriteProbes) probe.material.dispose()
-    spriteMap.dispose()
+    return [...found]
   }
-
-  /** Draws a throw-away blast and a fire (their particle materials and lights make the materials recompile the first time they appear), then clears them: nothing stays in the world, the log or the sound. */
-  const warmUpEffects = (): void => {
-    const ids = vfx.catalog?.() ?? []
-    const flames = ids.filter((id) => /fire|flame/i.test(id)).slice(0, 1)
-    gl.compile(scene, camera)
-    const handles = ['m67', ...flames].filter((id) => ids.includes(id)).map((effect) => vfx.play({ effect, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] }))
-    for (let i = 0; i < 3; i++) {
-      vfx.update(0.02)
-      gl.render(scene, camera)
+  // the materials that decals, effects and liquids make on demand: each adapter's probes are drawn once at load (every light count is another set of programs), and their materials stay as anchors
+  const probeOf = (id: string, adapter: { warmUpProbes(): { readonly group: unknown; dispose(): void } }): WarmupProbe => ({
+    id,
+    build() {
+      const probe = adapter.warmUpProbes()
+      const group = probe.group as THREE_NS.Object3D
+      return { group, materials: materialsOf(group), dispose: () => probe.dispose() }
+    },
+  })
+  warmup.register(probeOf('destruction', renderer))
+  warmup.register(probeOf('vfx', vfx))
+  warmup.register(probeOf('fluids', fluidView))
+  warmup.register(spriteProbes(THREE))
+  // a blast of every explosive and a flame, drawn a few frames at load: their programs link and their buffers reach the GPU before the first one goes off; nothing stays in the world, the log or the sound
+  const warmedEffect = (id: string): EffectWarmup => {
+    let handle: number | null = null
+    return {
+      id: `vfx:${id}`,
+      play() {
+        handle = vfx.play({ effect: id, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] })
+      },
+      step: (dt) => vfx.update(dt),
+      stop() {
+        if (handle !== null) vfx.stop(handle)
+        vfx.world.clear()
+        vfx.update(0)
+      },
     }
-    for (const h of handles) if (h !== null) vfx.stop(h)
-    vfx.world.clear()
-    vfx.update(0)
-    gl.render(scene, camera)
+  }
+  const catalogIds = vfx.catalog?.() ?? []
+  for (const id of [...EXPLOSIVE_EFFECT_IDS, ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1)]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
+  let warmedUp = false
+  const warmUp = (): void => {
+    warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES })
+    pinPrograms()
+    warmedUp = true
   }
 
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
@@ -3640,7 +3654,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     warmUp: () => {
       audio?.warmUp()
       warmUp()
-      warmUpEffects()
     },
     animations: animationsOf,
     playAnimation,
@@ -3861,24 +3874,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let stopLoop: (() => void) | undefined
   if (ownRenderer) {
     let nextLightsCheck = 0
-    let warmedLights = ''
-    // modules add lights after the first frame, and each light count is another set of programs: warm again when the lights change
-    const lightsKey = (): string => {
-      let key = ''
-      scene.traverseVisible((object) => {
-        if ((object as THREE_NS.Light).isLight) key += `${object.type[0]}${object.castShadow ? 's' : ''}`
-      })
-      return key
-    }
+    let warnedState = ''
+    // modules that add a light of their own after the load (or change the fog, the tone mapping...) change the program key of every lit material: warm again when the sealed state breaks
     scheduler.add(
       (ctx) => {
         if (ctx.scripted) return
         const now = performance.now()
         if (now < nextLightsCheck) return
         nextLightsCheck = now + LIGHTS_CHECK_MS
-        const key = lightsKey()
-        if (key === warmedLights) return
-        warmedLights = key
+        const state = lights.check(gl, scene)
+        if (warmedUp && (state.ok || state.actual === warnedState)) return
+        warnedState = state.actual
         warmUp()
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
