@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { catenary, createCord } from '@adatechnology/game-interactables-three'
+import { catenary, createCord } from '@adatechnology/game-shapes-three'
 import type { AttachmentModel, AttachmentModelBuilder } from './types'
 
 const SAG = 0.2

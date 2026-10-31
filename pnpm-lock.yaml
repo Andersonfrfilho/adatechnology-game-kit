@@ -899,6 +899,9 @@ importers:
       '@adatechnology/game-shapes':
         specifier: workspace:^
         version: link:../game-shapes
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-interactables-household':
         specifier: workspace:^
@@ -1657,9 +1660,6 @@ importers:
       '@adatechnology/game-floorplan-three':
         specifier: workspace:^
         version: link:../game-floorplan-three
-      '@adatechnology/game-interactables-three':
-        specifier: workspace:^
-        version: link:../game-interactables-three
       '@adatechnology/game-items-three':
         specifier: workspace:^
         version: link:../game-items-three

@@ -1,6 +1,6 @@
 import type { Motion, World } from '@adatechnology/game-interactables'
 import { createEffects, type Effects, type EffectsOptions } from './effects'
-import { createCord, catenary } from './cord'
+import { createCord, catenary } from '@adatechnology/game-shapes-three'
 import { createMeshApi, type MeshApi, type MeshApiOptions } from './mesh'
 import { createMirrors, type MirrorOptions, type Mirrors } from './mirrors'
 import { applyPose, syncObject, type SyncOptions } from './pose'
