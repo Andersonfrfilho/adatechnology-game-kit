@@ -335,7 +335,9 @@ describe('the index finger on the trigger', () => {
   it('is straight along the frame at rest and curls at least 60 degrees at its first joint when pulled, the other fingers staying where the grip puts them', async () => {
     const { createHandMesh } = await import('../src/first-person/hand')
     const hand = createHandMesh(THREE, new THREE.MeshBasicMaterial())
-    const joints = (): number[][] => hand.root.children.filter((child) => child.type === 'Group' && child.children.length > 0 && child.position.z !== 0 && child !== undefined).map((finger) => {
+    // the fingers of the team's hand hang from its palm group, the thumb hangs higher up
+    const palm = hand.root.children.find((child) => child.type === 'Group')!
+    const joints = (): number[][] => palm.children.filter((child) => child.type === 'Group' && Math.abs(child.position.y + 0.078) < 1e-6).map((finger) => {
       const out: number[] = []
       let part: THREE.Object3D | undefined = finger
       while (part) {
@@ -376,4 +378,60 @@ describe('the support arm under a rifle', () => {
     // the left shoulder sits nearer the middle than the right one (the arm does not pass beside the gun)
     expect(Math.abs(shoulder.x)).toBeLessThan(0.1)
   })
+})
+
+describe('first-person elbows on a long gun', () => {
+  // the hand targets of the weapons module (game-weapons-three) for a 12-gauge pump, in the space of the eye
+  const shotgun: HandTargets = {
+    R: { position: [0.214, -0.2366, -0.4806], quaternion: [0.4197, 0.4197, -0.5691, 0.5691] },
+    L: { position: [0.2, -0.23, -0.666], quaternion: [1, 0, 0, 0] },
+  }
+  const bendOf = (arms: ReturnType<typeof createFirstPersonArms>, side: 'R' | 'L'): number => {
+    const { shoulder, elbow, wrist } = arms.joints(side)
+    const up = shoulder.clone().sub(elbow).normalize()
+    const down = wrist.clone().sub(elbow).normalize()
+    return Math.PI - Math.acos(Math.max(-1, Math.min(1, up.dot(down))))
+  }
+
+  it('bends both elbows (not a stretched arm) and keeps each palm on its grip', () => {
+    const arms = createFirstPersonArms(THREE)
+    step(arms, 1, { camera: camera(), targets: shotgun, stance: 'hold' })
+    expect(bendOf(arms, 'R')).toBeGreaterThan(1.1)
+    expect(bendOf(arms, 'L')).toBeGreaterThan(0.8)
+    for (const side of ['R', 'L'] as const) {
+      expect(arms.handPose(side).position.distanceTo(new THREE.Vector3(...shotgun[side]!.position))).toBeLessThan(0.02)
+    }
+  })
+})
+
+describe('first-person elbows in the view', () => {
+  // the test room's lens: 72 degrees high, a 16:9 window
+  const lens = (): THREE.PerspectiveCamera => {
+    const camera = new THREE.PerspectiveCamera(72, 16 / 9, 0.05, 140)
+    camera.updateMatrixWorld(true)
+    return camera
+  }
+  const holds: Record<string, HandTargets> = {
+    shotgun_pump_12: { R: { position: [0.214, -0.2366, -0.4806], quaternion: [0.4197, 0.4197, -0.5691, 0.5691] }, L: { position: [0.2, -0.23, -0.666], quaternion: [1, 0, 0, 0] } },
+    glock_17: { R: { position: [0.1255, -0.1764, -0.4301], quaternion: [0.4024, 0.4024, -0.5814, 0.5814] }, L: { position: [0.0745, -0.2157, -0.4153], quaternion: [-0.5814, 0.5814, 0.4024, 0.4024] } },
+  }
+  for (const [weapon, targets] of Object.entries(holds)) {
+    it(`${weapon}: the trigger elbow is on screen, both arms bent, each palm on its grip`, () => {
+      const camera = lens()
+      const arms = createFirstPersonArms(THREE)
+      step(arms, 1, { camera, targets, stance: 'hold' })
+      // the trigger elbow is on screen; the support arm comes from below the handguard (its elbow under the view), bent
+      for (const side of ['R', 'L'] as const) {
+        const { shoulder, elbow, wrist } = arms.joints(side)
+        const seen = elbow.clone().project(camera)
+        if (side === 'R') {
+          expect(Math.abs(seen.x)).toBeLessThan(1)
+          expect(Math.abs(seen.y)).toBeLessThan(1)
+        }
+        const bend = Math.PI - shoulder.clone().sub(elbow).angleTo(wrist.clone().sub(elbow))
+        expect(bend).toBeGreaterThan(0.5)
+        expect(arms.handPose(side).position.distanceTo(new THREE.Vector3(...targets[side]!.position))).toBeLessThan(0.02)
+      }
+    })
+  }
 })

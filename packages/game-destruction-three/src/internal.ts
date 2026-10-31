@@ -86,6 +86,9 @@ export interface PieceBody extends Piece {
   centerV: THREE_NS.Vector3
   /** Seconds the piece has been nearly still (sleeps after 0.5). */
   still: number
+  /** Where the piece was when it last started to stay in place on the ground (centre and rotation), and for how many seconds since: see `CALM_SLEEP_AFTER`. */
+  calmAt: { center: Vec3; quaternion: [number, number, number, number] } | null
+  calm: number
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean

@@ -74,8 +74,8 @@ describe('families of models', () => {
     }
   })
 
-  it('rebuilds the cylinders of every can as ringed lathes, so the side, the lid and the bottom all have vertices for a dent, only when destructible', () => {
-    for (const model of Object.values(ITEM_FAMILIES).flatMap((entry) => entry.models)) {
+  it('rebuilds the cylinders of every can (a family with a tessellation rule) as ringed lathes, so the side, the lid and the bottom all have vertices for a dent, only when destructible', () => {
+    for (const model of Object.values(ITEM_FAMILIES).filter((entry) => entry.rule.tessellate?.cylinder).flatMap((entry) => entry.models)) {
       const item = { id: model, category: 'food', size: [0.07, 0.12, 0.07] as [number, number, number], model }
       const plain = meshesOf(buildItem(THREE, item).root)
       const cylinders = plain.filter((m) => m.geometry.type === 'CylinderGeometry')

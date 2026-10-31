@@ -1,5 +1,11 @@
 # @adatechnology/game-items-three
 
+## 0.5.0
+
+### Minor Changes
+
+- 3df0096: Bottles, jugs, cartons and jerrycans join the destructible families with the liquid they hold (water, sports drink, coconut water, juice, milk, cachaça, wine, cooking oil, honey, preserves, fuel), so a hit leaks what is inside like the cans already do.
+
 ## 0.4.1
 
 ### Patch Changes
