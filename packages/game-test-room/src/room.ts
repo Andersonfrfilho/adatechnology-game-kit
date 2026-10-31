@@ -750,11 +750,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const pose = poseAt(clip, part, Math.max(0, Math.min(1, fraction)) * clip.duration)
       obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
       obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
-      const ps = specs.get(objectId)?.parts.find((q) => q.id === part)
-      if (ps) {
-        const r0 = ps.rotation ?? ZERO
-        world.setPartPose(objectId, part, [ps.position[0] + pose.position[0], ps.position[1] + pose.position[1], ps.position[2] + pose.position[2]], [r0[0] + pose.rotation[0], r0[1] + pose.rotation[1], r0[2] + pose.rotation[2]])
-      }
+      followPart(e, part, obj, rest)
     },
     isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
     nameOf,
@@ -2850,17 +2846,39 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const pose = poseAt(pl.clip, id === '' ? null : id, pl.t)
       obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
       obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
-      // animations are visual only: move the part's collision/raycast shape to the same pose (spec rest + clip offset)
-      const ps = id === '' ? undefined : specs.get(pl.entry.so.objectId)?.parts.find((p) => p.id === id)
-      if (ps) {
-        const r0 = ps.rotation ?? ZERO
-        world.setPartPose(
-          pl.entry.so.objectId, id,
-          [ps.position[0] + pose.position[0], ps.position[1] + pose.position[1], ps.position[2] + pose.position[2]],
-          [r0[0] + pose.rotation[0], r0[1] + pose.rotation[1], r0[2] + pose.rotation[2]],
-        )
-      }
+      // animations are visual only: move the part's collision/raycast shape to the same pose
+      if (id !== '') followPart(pl.entry, id, obj, rest)
     }
+  }
+  const fpRest = new THREE.Matrix4()
+  const fpNow = new THREE.Matrix4()
+  const fpRoot = new THREE.Matrix4()
+  const fpPart = new THREE.Matrix4()
+  const fpPos = new THREE.Vector3()
+  const fpQuat = new THREE.Quaternion()
+  const fpScale = new THREE.Vector3()
+  const fpEuler = new THREE.Euler()
+  /**
+   * Moves a part's collision shape the way its drawn group moved from rest: a door group turns on its hinge (its origin), so the shape goes round the hinge with it and does
+   * not spin on its own centre into the body next to it.
+   */
+  const followPart = (e: Entry, id: string, obj: THREE_NS.Object3D, rest: { p: Vec3; r: Vec3 }): void => {
+    const ps = specs.get(e.so.objectId)?.parts.find((p) => p.id === id)
+    if (!ps || !obj.parent) return
+    const root = e.so.root
+    root.updateMatrixWorld(true)
+    fpRoot.copy(root.matrixWorld).invert()
+    fpNow.multiplyMatrices(fpRoot, obj.matrixWorld)
+    fpEuler.set(rest.r[0], rest.r[1], rest.r[2])
+    fpRest.compose(fpPos.set(rest.p[0], rest.p[1], rest.p[2]), fpQuat.setFromEuler(fpEuler), obj.scale)
+    fpRest.premultiply(obj.parent.matrixWorld).premultiply(fpRoot)
+    // the move of the group since rest, in the item's frame, carried onto the spec's pose of the part
+    fpNow.multiply(fpRest.invert())
+    const r0 = ps.rotation ?? ZERO
+    fpPart.compose(fpPos.set(ps.position[0], ps.position[1], ps.position[2]), fpQuat.setFromEuler(fpEuler.set(r0[0], r0[1], r0[2])), fpScale.set(1, 1, 1))
+    fpPart.premultiply(fpNow).decompose(fpPos, fpQuat, fpScale)
+    fpEuler.setFromQuaternion(fpQuat)
+    world.setPartPose(e.so.objectId, id, [fpPos.x, fpPos.y, fpPos.z], [fpEuler.x, fpEuler.y, fpEuler.z])
   }
   const updateAnimations = (dt: number): void => {
     for (let i = playing.length - 1; i >= 0; i--) {

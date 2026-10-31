@@ -3157,7 +3157,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     sweepBox(box, direction, distance, options = {}) {
       const d = vec.normalize(direction)
       const ignored = options.ignore === undefined ? undefined : objects.get(options.ignore)
-      const ignore = ignored ? new Set(ignored.parts.map((p) => `${ignored.id}\0${p.spec.id}`)) : undefined
+      // an object hosted by an impl (a vehicle) is ignored by its own parts too
+      const hosted = options.ignore === undefined || ignored ? undefined : impls.get(options.ignore)
+      const ignore = ignored
+        ? new Set(ignored.parts.map((p) => `${ignored.id}\0${p.spec.id}`))
+        : hosted
+          ? new Set(hosted.impl.describe().parts.map((p) => `${hosted.impl.id}\0${p.id}`))
+          : undefined
       let best: RayHit | null = null
       for (const origin of sweepOrigins(box, d, options.spacing ?? 0.2)) {
         const r = raycastInternal(origin, d, distance + SWEEP_BACK, ignore)
