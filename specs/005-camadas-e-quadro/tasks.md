@@ -72,10 +72,21 @@ task fecha com os gates do fim deste arquivo e com um commit isolado.
   - Fim da task: o lint de luz vira `error`.
 - T4.5 Partículas de `game-vehicles` e de `game-weapons-three/src/fx` passam pelo `host.effects` e pelo pool de material. Sai o
   `pinPrograms` da sala.
+- Antes da T4.6: a troca do lote do corpo instanciado (`InstancedMesh` → `Mesh` + `InstancedBufferGeometry`), que é o primeiro commit da T4b.7, entra aqui, porque muda a chave do programa do corpo e o pré-aquecimento da horda precisa registrar a chave nova (`design-chain-horde.md` §10.3).
 - T4.6 Os pré-aquecimentos (`warmUpProbes`) dos adaptadores se registram no `ProgramWarmup`, que também envia à GPU os buffers dos
   efeitos de cada explosivo no carregamento. O alvo são os 2 quadros de 36 ms que sobraram na primeira granada e no primeiro molotov
   (lado da GPU, ver `docs/desempenho-explosoes.md`).
 - Aceite da fase: `perf.mjs` (GPU e CI) com 0 programas em todas as fases e nenhum orçamento a mais estourado do que antes.
+- Desenhos revisados pelo `architect` em 2026-10-31 (seção "Revisão 2026-10-31" no topo de cada um): [`design-runtime.md`](design-runtime.md)
+  (T4.1, T4.2) e [`design-render-three.md`](design-render-three.md) (T4.3 a T4.6). Pontos que mudam a execução:
+  - T4.1: migração do laço na ordem 1 → 2 → 5 → 3 → 4 → 6 → 7 (`design-runtime.md` §8); `advance` com `ctx.scripted` reproduz o
+    `step` de hoje; a fila liga no `budget.register` (`attach`/`detach`); `audio.voices` com `reserveMs: 1`; `vehicles.crease` é uma
+    fila agregada; entrada que muda a simulação vira comando do próximo tick.
+  - Regra para a Fase 4b: os elos da reação em cadeia são contados em ticks dentro de `fixedSimulate`, com teto determinístico de elos
+    por tick; só a apresentação de cada elo (efeito, luz, som, furo) passa pelo `scheduler.budget`. Uma `DeferredQueue` nunca carrega
+    simulação (`design-runtime.md` §3.4).
+  - T4.6 (âncoras do `ProgramWarmup`) entra **antes** da T4.5c (saída do `pinPrograms`); a T4.6 mede, antes e depois, se os quadros
+    de 36 ms são envio de buffer ou variante de shader do driver (`design-render-three.md` §6.2).
 
 ## Fase 4b — Reação em cadeia: explosões e corpos (depois da T4.1)
 > 🤖 Modelo: `sonnet` (T4b.1 é 🧠 → `opus` desenha e `architect` valida antes)
@@ -84,26 +95,33 @@ Reação em cadeia é o critério 17 de `docs/criterios-fisica-objetos.md`. Aqui
 ligadas entre si: carro explode → botijão → zumbis arremessados → caem sobre outros → onda de quedas. Nada roda com motor de física
 rígida na horda. A cadeia surge de regras locais pela grade espacial que o `game-crowd` já tem.
 
-- T4b.1 🧠 Desenho (D10 no `plan.md`), com estes pontos:
+- T4b.1 🧠 Desenho (D10 no `plan.md`): `design-chain-horde.md`, revisado pelo `architect` em 2026-10-31 (seção "Revisão"). Pontos:
   - **impulso por agente:** velocidade de empurrão que decai com o atrito; o contato troca impulso pela grade de 1 m (física de
-    posição em 2D, O(n));
+    posição em 2D, O(n)), com Gauss-Seidel de ida e volta e correção de posição pela média;
+  - **pressão:** campo à parte do contato, um salto por passo fixo (força de quem empurra mais a parte de quem está atrás);
   - **estados de equilíbrio:** em pé → cambaleando → caído → levantando. Os limiares vêm do tipo (peso, força) por opção;
   - **corpo caído:** é obstáculo e causa tropeço;
   - **a cadeia avança um salto por passo fixo:** é uma onda, não um cálculo grande num quadro;
   - **faixas:** cadeia completa só na faixa perto do jogador, versão resumida nas de longe;
   - **teto de quedas simultâneas;**
   - **corpos arremessados:** pool de N (padrão 32) perto do jogador; os demais vão direto para a pose de morte instanciada;
-  - **elos das explosões:** cada elo tem atraso (pressão subindo, pavio) e passa pelo `scheduler.budget`, para que duas
-    detonações da mesma cadeia nunca caiam no mesmo quadro sem orçamento.
-- T4b.2 `game-crowd`: impulso, estados de equilíbrio, tropeço no caído e a API `crowd.blast({ point, energy, radius })`, que é uma
-  consulta na grade, dano e impulso pela distância e mais nada.
-  - Testes determinísticos:
-    - a granada na frente de uma fila derruba uma onda que avança com o tempo;
-    - há queda além do raio da explosão (prova da cadeia);
-    - um brutamonte no caminho segura a onda;
+  - **elos das explosões:** cada elo tem atraso (pressão subindo, pavio), contado em passos fixos no `fixedSimulate`, com teto
+    determinístico de elos por passo (`chainLinksPerUpdate`). Só a **apresentação** (efeito, luz, decalque, som) passa pelo
+    `scheduler.budget`; nada que mude a simulação depende de tempo medido em ms.
+- T4b.2 `game-crowd`: impulso, campo de pressão, estados de equilíbrio, tropeço no caído e a API
+  `crowd.blast({ point, energy, radius })`, resolvida no passo fixo seguinte numa **passada linear sobre os agentes** (todas as
+  explosões do passo juntas; a grade de 1 m só tem a faixa R0), com dano e impulso pela distância e mais nada.
+  - Antes de qualquer código: a linha de base do `crowd.update` de hoje com 1000 e 2000 agentes na R0, nas duas máquinas
+    (`design-chain-horde.md` §14).
+  - Testes determinísticos (`design-chain-horde.md` §13.1):
+    - a granada numa fila comprimida contra um muro derruba direto até ~8,6 m e, além do cambaleio direto (9,9 m), de 2 a 15
+      quedas em cadeia, pelo menos 30 passos depois da explosão;
+    - um brutamonte na fileira a 6,5–7 m não cai (os walkers da mesma fileira caem);
+    - a mesma fila nascida em ordem inversa dá o mesmo número de quedas (±10%);
     - a mesma semente dá o mesmo resultado a 30, 60 e 144 fps (prova do passo fixo).
-- T4b.3 `game-crowd-three`/`game-characters-three`: o pool de corpos arremessados (arco, queda e pose final), a pose de cambalear e
-  de caído instanciada, e o membro arrancado e o sangue pela fila com orçamento.
+- T4b.3 O pool de corpos arremessados é **simulado no `game-crowd`** (arco, varredura de parede, pouso que derruba outros,
+  remapeado na remoção); o `game-crowd-three`/`game-characters-three` **só desenha**: o arremessado como instância comum (pose,
+  tombo e interpolação), a pose de cambalear e de caído instanciada, e o membro arrancado e o sangue pela fila com orçamento.
 - T4b.4 Ligação na composição: a explosão do `game-destruction`/`game-weapons` chama `crowd.blast`; o veículo e os objetos
   pressurizados armam a cadeia de explosões pelo `chain` existente, com o atraso por elo.
 - T4b.5 `examples/test-room/perf.mjs`, fase `chain_horde`:
@@ -125,7 +143,8 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
     - sobreposição entre corpos abaixo da tolerância;
     - a energia da multidão parada não cresce em 60 s;
     - sem pressão, zero quedas;
-    - com a horda espremida contra o muro, uma fração cai e outros ficam acima do chão (subiram no monte);
+    - uma fila de N empurrando contra o muro dá `N·driveForce` na frente (±25%) e só derruba acima do limiar do tipo;
+    - com a horda espremida contra o muro, de 2% a 25% caem em 30 s e outros ficam acima do chão (subiram no monte);
     - a altura do monte respeita o teto;
     - a porta cede pela pressão;
     - a mesma semente dá o mesmo resultado.
@@ -136,7 +155,9 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
   - Sombra real só perto, mancha simples no resto.
   - Impostor de longe, por tipo de corpo e silhueta, com tinta por instância e quadro defasado.
   - Poses em textura (VAT) com fase, velocidade e mistura por instância.
-  - Atributos por instância no lote assado: pele, paleta, escala, máscara de ferimentos e membros, acessórios.
+  - Atributos por instância no lote assado: pele, paleta, escala, máscara de ferimentos e membros, acessórios. O lote vira
+    `Mesh` + `InstancedBufferGeometry` (libera as 4 vagas da `instanceMatrix`), com teste de `MAX_VERTEX_ATTRIBS`; o
+    `BODY_CHUNK` do jogo fica igual byte a byte e o código novo vai num segundo trecho do shader.
   - Reaproveita as variantes de `game-characters-undead` e do `game-crowd-three`; nada de corpo novo desenhado à mão.
 - T4b.8 Personalidade por semente no `game-crowd`:
   - velocidade, reação, limiar de equilíbrio, tropeço, agressividade, jeito de andar e o que faz parado;
