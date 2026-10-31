@@ -242,7 +242,8 @@ export function installGeometry(kit: Kit): void {
       }
       if (phase === 1) {
         const done = smoothSlice(deadline)
-        normal.needsUpdate = true
+        /* a one-shot crease replaces the normals before anything could draw them; only sliced work follows an upload of the flat ones */
+        if (deadline !== Infinity) normal.needsUpdate = true
         if (!done) return false
         phase = 2
         geo.userData.crease = true

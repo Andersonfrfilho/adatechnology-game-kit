@@ -17,4 +17,20 @@ describe('crease', () => {
       }
     }
   })
+
+  it('a one-shot crease leaves the normal attribute as untouched as the old one did (its version is part of the exact goldens)', () => {
+    const kit: any = makeKit()
+    const geometry = new kit.THREE.SphereGeometry(1, 12, 8)
+    kit._.crease(geometry, 42)
+    expect(geometry.attributes.normal.version).toBe(0)
+  })
+
+  it('a sliced crease marks the normals for upload, since the flat ones may already be on the GPU', () => {
+    const kit: any = makeKit()
+    const geometry = new kit.THREE.SphereGeometry(1, 12, 8)
+    const task = kit._.creaseTask(geometry, 42)
+    let finished = false
+    while (!finished) finished = task.step(performance.now() + 1)
+    expect(geometry.attributes.normal.version).toBeGreaterThan(0)
+  })
 })
