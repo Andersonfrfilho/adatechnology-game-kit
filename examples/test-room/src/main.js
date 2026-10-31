@@ -21,6 +21,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -88,7 +89,7 @@ const room = createTestRoom({
 
 // the player's body (the team game's player, @adatechnology/game-characters-three): seen in third person, hidden in first. V toggles.
 // The first person stays the default; pages that load an area (`window.__THREE` is for them) may start in third.
-room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))
+room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE), defaultCharacterClips()))
 if (params.get('cam') === 'third') room.setCameraMode('third')
 // V is the camera; say it once, in the room's language
 room.log.add({ channel: 'action', type: 'hint', text: locale === 'en' ? 'Press V for 1st/3rd person (your body shows in the 3rd).' : 'Aperte V para 1ª/3ª pessoa (seu corpo aparece na 3ª).' })

@@ -13,6 +13,7 @@ import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '@adatechnology/game-character
 import { PLAYER_DEFAULTS, createPlayer } from '@adatechnology/game-player'
 import { createPlayerTestModule } from '@adatechnology/game-player/testing'
 import { AVATAR_AREA_ID, createAvatarTestModule, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 
 export { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule, AVATAR_AREA_ID }
 
@@ -64,7 +65,7 @@ export function loadInto(room, options = {}) {
   const locale = localeOf(options)
   const previous = room.avatar
   const avatar = createPlayerAvatar(THREE, options.avatar)
-  room.setAvatar(toRoomAvatar(avatar))
+  room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   previous?.avatar?.dispose?.()
   const playerModule = createModule(options)
   const report = room.loadModule(playerModule)

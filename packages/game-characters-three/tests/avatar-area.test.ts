@@ -1,3 +1,4 @@
+import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { POSE_CLIPS } from '@adatechnology/game-characters'
@@ -19,7 +20,7 @@ const setupWith = (extra: Partial<AvatarTestOptions>, locale = 'pt-BR') => {
   document.body.appendChild(container)
   const room: TestRoom = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const avatar = createPlayerAvatar(THREE)
-  room.setAvatar(toRoomAvatar(avatar))
+  room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   const module = createAvatarTestModule({ ...extra, avatar, locale, camera: { mode: () => room.cameraMode, set: (mode) => room.setCameraMode(mode) }, state: { set: (state) => room.setAvatarState(state) } })
   const report = room.loadModule(module)
   room.openArea(AVATAR_AREA_ID)

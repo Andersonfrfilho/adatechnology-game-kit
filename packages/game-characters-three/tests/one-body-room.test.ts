@@ -1,3 +1,4 @@
+import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
@@ -41,7 +42,7 @@ const setup = (scenery: TestRoomOptions['scenery'] = { table: null, shelf: null 
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [bench, cup], renderer: stubRenderer(), ui: false, scenery })
   const avatar = createPlayerAvatar(THREE)
-  room.setAvatar(toRoomAvatar(avatar))
+  room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   return { room, avatar }
 }
 

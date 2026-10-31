@@ -49,7 +49,6 @@
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",
     "@adatechnology/game-characters": "workspace:^",
-    "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^"
   },
@@ -57,7 +56,9 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
+    "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-characters-undead": "workspace:^",
+    "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

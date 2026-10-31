@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-player', 'game-contracts', 'game-characters', 'game-characters-people', 'game-characters-three']
+const names = ['game-kit-defaults', 'game-player', 'game-contracts', 'game-characters', 'game-characters-people', 'game-characters-three']
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
