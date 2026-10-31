@@ -128,26 +128,6 @@ describe('reach seen from the body\'s own eyes (view)', () => {
   const handDepth = (avatar: ReturnType<typeof createPlayerAvatar>, side: 'R' | 'L'): number =>
     -handGroup(avatar, side).localToWorld(new THREE.Vector3(0, -0.042, 0)).z
 
-  for (const weapon of ['glock_17', 'shotgun_pump_12'] as const) {
-    it(`${weapon}: aimed up or down, each palm stays as near its grip as with the aim level (the chest turns with the look about the eye)`, () => {
-      const missAt = (pitch: number): { R: number; L: number } => {
-        const camera = eyes()
-        camera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch)
-        camera.updateMatrixWorld(true)
-        const targets = pitched(HOLDS[weapon]!, pitch)
-        const avatar = reached(targets, { camera })
-        return { R: palmMiss(avatar, 'R', targets.R!), L: palmMiss(avatar, 'L', targets.L!) }
-      }
-      const level = missAt(0)
-      for (const pitch of [-1, -0.5, 0.5, 0.8, 1]) {
-        const miss = missAt(pitch)
-        // aimed high, the hands used to fall 20 to 40 cm short of the forend: the shoulders stayed where the level aim had them
-        expect(miss.R, `right palm at pitch ${pitch}`).toBeLessThan(level.R + 0.02)
-        expect(miss.L, `left palm at pitch ${pitch}`).toBeLessThan(level.L + 0.02)
-      }
-    })
-  }
-
   it('a hand far out in front keeps the elbow bent past the reach bend instead of straightening', () => {
     const targets = far(0.15, -1.1)
     const free = reached(targets)

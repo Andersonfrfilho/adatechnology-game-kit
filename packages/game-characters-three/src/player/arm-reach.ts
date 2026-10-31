@@ -19,8 +19,6 @@ export const ARM_REACH = {
   wristTwist: 1.6,
   /** The most the chest turns to bring the support shoulder toward a far hand. */
   chestTurn: 0.6,
-  /** In a view, the most the chest follows the aim up or down (radians from level), turning about the eye so the shoulders keep their place under it, as a shooter's cheek stays on the stock. */
-  chestFollow: 1.2,
   /** The most a shoulder blade slides toward a far hand (protraction and elevation together). */
   protraction: 0.11,
   /** A hand is within reach below this fraction of the arm's length. */
@@ -91,7 +89,6 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   }
   const saved = {
     twist: 0,
-    chest: { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() },
     arms: { R: { position: new THREE.Vector3(), g: new THREE.Quaternion(), el: new THREE.Quaternion(), hand: new THREE.Quaternion() }, L: { position: new THREE.Vector3(), g: new THREE.Quaternion(), el: new THREE.Quaternion(), hand: new THREE.Quaternion() } },
   }
   let applied = false
@@ -130,27 +127,6 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     // the support shoulder is at +x of the chest, the front is +z: a turn of -a about y brings it forward
     const chestRadius = Math.hypot(arms.L.g.position.x, arms.L.g.position.z) * arms.L.g.getWorldScale(v.a).y
     upper.rotation.y -= Math.min(ARM_REACH.chestTurn, excess / Math.max(0.05, chestRadius))
-    upper.updateMatrixWorld(true)
-  }
-
-  /**
-   * Turns the chest about the eye by the aim's pitch: a tool held before the eye rises and falls with the view, and the shoulders come with it instead of staying where a level aim
-   * had them (aimed high, the hands fell short of a forend 90 cm from the shoulder).
-   */
-  const followView = (eye: THREE_NS.Vector3, look: THREE_NS.Quaternion): void => {
-    const forward = v.a.set(0, 0, -1).applyQuaternion(look)
-    const pitch = Math.max(-ARM_REACH.chestFollow, Math.min(ARM_REACH.chestFollow, Math.asin(Math.max(-1, Math.min(1, forward.y)))))
-    if (Math.abs(pitch) < 1e-4) return
-    const right = v.b.set(1, 0, 0).applyQuaternion(look)
-    right.y = 0
-    if (right.lengthSq() < 1e-8) return
-    q.swing.setFromAxisAngle(right.normalize(), pitch)
-    const parent = upper.parent!
-    upper.getWorldPosition(v.c).sub(eye).applyQuaternion(q.swing).add(eye)
-    upper.getWorldQuaternion(q.local).premultiply(q.swing)
-    parent.updateWorldMatrix(true, false)
-    upper.position.copy(parent.worldToLocal(v.c))
-    upper.quaternion.copy(q.local.premultiply(parent.getWorldQuaternion(q.parent).invert()))
     upper.updateMatrixWorld(true)
   }
 
@@ -237,8 +213,6 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
 
   const save = (): void => {
     saved.twist = upper.rotation.y
-    saved.chest.position.copy(upper.position)
-    saved.chest.quaternion.copy(upper.quaternion)
     for (const side of ['R', 'L'] as const) {
       const arm = arms[side]
       const into = saved.arms[side]
@@ -257,14 +231,10 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
       upper.updateWorldMatrix(true, true)
       let { R, L } = targets
       bendLimit = view ? (view.reachBend ?? ARM_REACH.viewBend) : null
-      if (view) {
+      if (view?.keepOutside) {
         view.camera.updateWorldMatrix(true, false)
         view.camera.matrixWorld.decompose(camera.position, camera.quaternion, v.a)
         camera.inverse.copy(camera.quaternion).invert()
-        // seen from the eye the tool follows the aim: aimed high or low the chest turns with it about the eye, as a shooter's does
-        followView(camera.position, camera.quaternion)
-      }
-      if (view?.keepOutside) {
         if (R) R = keepOutside(R, view.keepOutside)
         if (L) L = keepOutside(L, view.keepOutside)
       }
@@ -276,8 +246,6 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     restore() {
       if (!applied) return
       applied = false
-      upper.position.copy(saved.chest.position)
-      upper.quaternion.copy(saved.chest.quaternion)
       upper.rotation.y = saved.twist
       for (const side of ['R', 'L'] as const) {
         const arm = arms[side]

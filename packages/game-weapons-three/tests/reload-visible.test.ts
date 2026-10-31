@@ -72,8 +72,7 @@ describe('an empty reload of a weapon that loads round by round', () => {
       if (!away && d > 0.02) {
         away = true
         visits++
-      // back home within 1.2 cm: the hand returns to about 1 cm of the grip of a real-size weapon between rounds
-      } else if (away && d < 0.012) away = false
+      } else if (away && d < 0.008) away = false
     })
     expect(ammo.map((entry) => entry.ammo)).toEqual(Array.from({ length: capacity }, (_, i) => i + 1))
     // one round at a time at the rule's seconds, not the whole tube in a moment

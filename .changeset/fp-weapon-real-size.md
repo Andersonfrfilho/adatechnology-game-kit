@@ -1,8 +1,5 @@
 ---
-'@adatechnology/game-weapons-three': minor
-'@adatechnology/game-characters-three': patch
+'@adatechnology/game-weapons-three': patch
 ---
 
-First person draws the weapon at real size, at the scale of the hands and arms that hold it (it was 55 % for long guns and 75 % for mid-length ones, with the hands at 72 % and 85 %). The hands always take the tool's scale. The player's body is flagged as holding the tool (`userData.viewmodel`), so the weapon's wall probe and a laser no longer land on its own fingers.
-
-Seen from the body's own eye, the chest turns with the aim about the eye (`ARM_REACH.chestFollow`), so the shoulders keep their place under a tool that rises and falls with the view: aimed up, the hands no longer fall 20 to 40 cm short of the grip and the forend.
+The hands always take the tool's scale (they shrank only to `scale ** 0.55`, so a weapon drawn smaller looked like a toy in them), and the wall pull reaches the weapon's own length when it is longer than `WALL_PULL.max`. A test fails when the hands and the weapon in first person are drawn at different scales.
