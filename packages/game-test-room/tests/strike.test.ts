@@ -461,6 +461,26 @@ describe('one body in both views', () => {
     expect(room.camera.position.z).toBeLessThan(z)
   })
 
+  it.each(['first', 'third'] as const)('a shot leaves the body\'s eyes, not the player\'s middle, in %s person', (mode) => {
+    const avatar = fakeAvatar(undefined, [0, 1.1, 0.5])
+    const room = makeRoom({ scenery: { table: null, shelf: null } })
+    room.setAvatar(avatar)
+    room.spawn('steel_sheet', [0, 0, -4], 0)
+    room.setTool('pistol_9mm')
+    room.setCameraMode(mode)
+    room.update(0.4)
+    room.look([0, 1.1, -1.5], [0, 1.1, -4])
+    room.walk([0, 0, -1.4], 0.2)
+    run(room, 1)
+    const eye = avatar.eye!()
+    const middle = room.playerPosition[2]
+    expect(eye.z).toBeCloseTo(middle - 0.5, 5)
+    room.use()
+    const hit = room.log.entries({ type: 'shoot' })[0]!.data as { distanceM: number }
+    const fromEye = room.world.raycast([eye.x, eye.y, eye.z], [0, 0, -1], 20)!.distance
+    expect(hit.distanceM).toBeCloseTo(fromEye, 1)
+  })
+
   it('tells the stance of the hands from the tool in handState', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()

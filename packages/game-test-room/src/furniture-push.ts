@@ -60,6 +60,8 @@ export type RoomPushOptions = {
   hitSound(objectId: string, point: Vec3): void
   onEvent(event: RoomPushEvent): void
   ring(value: number | null): void
+  /** The room draws a body whose pose bends over a low piece: the player's own eye is not lowered (without a body the eye is the camera and bends). */
+  hasBody?(): boolean
 }
 
 export type RoomPushEvent =
@@ -163,7 +165,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
     }
     control.release()
     player.setWalkHeld(false)
-    player.setBend(0)
+    if (!options.hasBody?.()) player.setBend(0)
     player.setLookLimit(null)
     options.ring(null)
     event('release', lean)
@@ -229,7 +231,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       control.begin(material === undefined ? { massKg } : { massKg, material })
       dragged = 0
       player.setWalkHeld(true)
-      if (isLow) player.setBend(Math.min(MAX_BEND, Math.max(0, STANDING_EYE - (max[1] - player.feet + LOW_EYE_OVER_TOP))))
+      if (isLow && !options.hasBody?.()) player.setBend(Math.min(MAX_BEND, Math.max(0, STANDING_EYE - (max[1] - player.feet + LOW_EYE_OVER_TOP))))
       player.setLookLimit({ yaw: Math.atan2(-into[0], -into[1]), range: LOOK_RANGE })
       event('grip', leaning)
       return true

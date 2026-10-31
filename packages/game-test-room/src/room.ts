@@ -665,6 +665,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
     },
     ring: (value) => ui?.holdRing(value),
+    hasBody: () => !!avatar?.eye,
   })
   const seatHolder = (objectId: string): SeatHolder | null => {
     const e = entries.get(objectId)
@@ -681,6 +682,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return r ? seatHolder(r.object) : null
     },
     find: seatHolder,
+    hasBody: () => !!avatar?.eye,
     groundAt: (x, z) => groundAt(x, z),
     onSit: (seat) => action('sit', t(seat.pose === 'lie' ? 'act.lie' : 'act.sit', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId, pose: seat.pose } }),
     onStand: (seat) => action('stand', t('act.stand', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId } }),

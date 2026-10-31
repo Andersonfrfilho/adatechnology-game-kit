@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { TestRoom, TestRoomItem } from '@adatechnology/game-test-room'
+import type { TestRoom, TestRoomItem, TestRoomOptions } from '@adatechnology/game-test-room'
 
 import { createPlayerAvatar, toRoomAvatar } from '../src'
 
@@ -35,10 +35,10 @@ const cup: TestRoomItem = {
   movable: true,
 }
 
-const setup = (): { room: TestRoom; avatar: ReturnType<typeof createPlayerAvatar> } => {
+const setup = (scenery: TestRoomOptions['scenery'] = { table: null, shelf: null }): { room: TestRoom; avatar: ReturnType<typeof createPlayerAvatar> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [bench, cup], renderer: stubRenderer(), ui: false, scenery: { table: null, shelf: null } })
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [bench, cup], renderer: stubRenderer(), ui: false, scenery })
   const avatar = createPlayerAvatar(THREE)
   room.setAvatar(toRoomAvatar(avatar))
   return { room, avatar }
@@ -130,5 +130,37 @@ describe('one body for both views (spec 004, R7)', () => {
     room.walk([0, 0, -2], 1.4)
     frames(room, 20)
     sameInBothViews(room, avatar, () => room.walk([0, 0, -2], 1.4))
+  })
+
+  it('crouched, the camera is the body\'s crouched eye (about 1.3 to 1.4 m), not the player\'s own crouch drop', () => {
+    const { room, avatar } = setup()
+    room.look([0, 1.7, 3], [0, 1.7, -5])
+    room.walk([0, 0, 2.6], 0.3)
+    frames(room, 30)
+    room.setAvatarState({ crouch: true })
+    frames(room, 60)
+    expect(room.camera.position.distanceTo(avatar.eye())).toBeLessThan(1e-6)
+    expect(room.camera.position.y).toBeGreaterThan(1.25)
+    expect(room.camera.position.y).toBeLessThan(1.45)
+    room.setAvatarState({ crouch: false })
+    frames(room, 60)
+    expect(room.camera.position.y).toBeCloseTo(1.7, 1)
+  })
+
+  it('pushing a low piece, the camera follows the body\'s bend and the player\'s own eye is not lowered', () => {
+    const crate = { name: 'crate', parts: [{ id: 'body', material: 'wood_soft', mass: 20, shape: { kind: 'box' as const, size: [0.8, 0.5, 0.6] as [number, number, number] }, position: [0, 0.25, 0] as [number, number, number] }], joints: [] }
+    const { room, avatar } = setup({ crate: { spec: crate, position: [0, 0, -2], free: true, pushable: true }, table: null, shelf: null })
+    room.look([0, 1.7, -1.1], [0, 0.3, -2])
+    room.walk([0, 0, -1.1], 0.3)
+    frames(room, 30)
+    const standing = room.camera.position.y
+    expect(room.push.begin()).toBe(true)
+    frames(room, 120)
+    expect(room.push.state).not.toBeNull()
+    expect(room.camera.position.distanceTo(avatar.eye())).toBeLessThan(1e-6)
+    expect(room.camera.position.y).toBeLessThan(standing - 0.2)
+    // the body bends like a crouch: no further drop on top of its pose
+    expect(room.camera.position.y).toBeGreaterThan(1.0)
+    room.push.end()
   })
 })
