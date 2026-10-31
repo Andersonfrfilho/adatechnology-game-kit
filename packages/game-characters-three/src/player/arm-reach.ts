@@ -27,6 +27,8 @@ export const ARM_REACH = {
   slack: 0.96,
   /** Where the elbow points: down and out from the body, a little back (body space, x outward). */
   elbowPole: [0.55, -1, -0.25] as const,
+  /** The support arm's elbow: under the gun, hardly out of the body (the first-person arms' `elbowPoleLeft`), so the forearm meets the handguard nearer the aim's line. */
+  elbowPoleSupport: [0.1, -1, -0.2] as const,
   /** From the wrist joint to the middle of the palm, metres of the body. */
   palm: 0.042,
   /** In a view the elbow keeps at least this interior bend where a hand is out of reach, right then left (the first-person arms' numbers). */
@@ -183,7 +185,8 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     arm.g.getWorldPosition(v.shoulder)
     // the elbow points down and out of the body, whichever way the body faces
     upper.getWorldQuaternion(q.body)
-    v.pole.set(ARM_REACH.elbowPole[0] * arm.outward, ARM_REACH.elbowPole[1], ARM_REACH.elbowPole[2]).applyQuaternion(q.body)
+    const pole = side === 'L' ? ARM_REACH.elbowPoleSupport : ARM_REACH.elbowPole
+    v.pole.set(pole[0] * arm.outward, pole[1], pole[2]).applyQuaternion(q.body)
     // the elbow keeps a little bend: shorten the line to the wrist rather than lock it
     const lockLimit = Math.sqrt(up * up + fore * fore + 2 * up * fore * Math.cos(ARM_REACH.elbowMin))
     const most = bendLimit ? Math.min(lockLimit, limitOf(side, up, fore)) : lockLimit
