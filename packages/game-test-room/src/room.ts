@@ -14,7 +14,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
@@ -33,6 +33,8 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
+import { createSeating } from './seating'
+import type { SeatHolder } from './seating'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -268,13 +270,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const e = entries.get(objectId)
       return e?.free === true && !e.piece
     },
-    onLoosened: (objectId, piece) => {
+    onLoosened: (objectId, piece, cause) => {
       const e = entries.get(objectId)
       if (!e) return
       e.piece = piece
       leaveFootprint(objectId)
       rendererPieces.set(objectId, piece)
-      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+      action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
@@ -657,6 +659,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     ring: (value) => ui?.holdRing(value),
   })
+  const seatHolder = (objectId: string): SeatHolder | null => {
+    const e = entries.get(objectId)
+    const seats = e?.item?.seats
+    if (!e || !seats?.length || !world.has(objectId)) return null
+    return { objectId, root: rendererPieces.get(objectId)?.root ?? e.so.root, seats }
+  }
+  const seating = createSeating({
+    THREE,
+    player,
+    pick: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      return r ? seatHolder(r.object) : null
+    },
+    find: seatHolder,
+    groundAt: (x, z) => groundAt(x, z),
+    onSit: (seat) => action('sit', t(seat.pose === 'lie' ? 'act.lie' : 'act.sit', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId, pose: seat.pose } }),
+    onStand: (seat) => action('stand', t('act.stand', { name: nameOf(seat.objectId) }), { objectId: seat.objectId, itemId: entryOf(seat.objectId)?.so.itemId, data: { seat: seat.seatId } }),
+  })
   /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
   let pushByKey = false
 
@@ -1036,6 +1057,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** Reset the worlds to their seeded start: used by scenarios so that each one is deterministic. */
   const hardReset = (): void => {
+    seating.release()
     pushByKey = false
     push.end()
     clearEverything()
@@ -1175,6 +1197,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     lastHand = { stance: state.stance, triggerFinger: state.triggerFinger, targets }
     arms.update(dt, state)
+  }
+  /** Third person: the body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push poses the hands itself). */
+  /** How far inside the right shoulder joint, toward the middle of the chest, the pocket a stock rests in sits (m). */
+  const SHOULDER_POCKET_IN = 0.1
+  const pocketAt = new THREE.Vector3()
+  const aimTurn = new THREE.Quaternion()
+  const aimEuler = new THREE.Euler(0, 0, 0, 'YXZ')
+  /** Third person: the pocket of the body's right shoulder, turned to the aim (`ModuleHost.holdFrame`); null in first person or for a body that names no shoulder. */
+  const bodyHoldFrame = (): HandPose | null => {
+    const shoulder = thirdActive() ? avatar?.shoulder?.('R') : undefined
+    if (!shoulder) return null
+    shoulder.getWorldPosition(pocketAt)
+    // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint
+    pocketAt.x -= Math.cos(player.yaw) * SHOULDER_POCKET_IN
+    pocketAt.z += Math.sin(player.yaw) * SHOULDER_POCKET_IN
+    aimTurn.setFromEuler(aimEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
+    return { position: [pocketAt.x, pocketAt.y, pocketAt.z], quaternion: [aimTurn.x, aimTurn.y, aimTurn.z, aimTurn.w] }
+  }
+  const reachAvatar = (): void => {
+    if (!avatar?.reach || !thirdActive()) return
+    avatar.reach(push.active || heldPiece ? null : (handSource?.() ?? null))
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -2466,6 +2509,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const update = (dt: number): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
+    seating.update()
     player.update(dt)
     if (pushByKey && !player.keys.has('KeyE')) {
       // the window lost the key without a key up
@@ -2490,6 +2534,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     stepFirstPerson(paused ? 0 : dt)
+    reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
@@ -2805,6 +2850,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       frameListeners.add(update)
       return () => frameListeners.delete(update)
     },
+    holdFrame: () => bodyHoldFrame(),
     setHandTargets(source) {
       handSource = source
       return () => {
@@ -2898,6 +2944,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
+        seats: ti.seats,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }
@@ -2989,6 +3036,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const dt = seconds > 6 ? 1 / 30 : FIXED_DT
     const n = Math.max(1, Math.round(seconds / dt))
     for (let i = 0; i < n; i++) {
+      seating.update()
       player.update(0)
       push.step(dt)
       followHeld(dt)
@@ -3324,6 +3372,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    sit: (objectId, seatId) => seating.sit(objectId, seatId),
+    stand: () => seating.stand(),
+    get seat() {
+      return seating.seat
     },
     push: { begin: () => push.begin(), end: () => push.end(), setWalk: (walk) => push.setWalk(walk), get state() { return push.state } },
     setCameraMode,

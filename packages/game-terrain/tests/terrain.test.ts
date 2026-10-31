@@ -339,6 +339,19 @@ describe('layout, ray and snapshot', () => {
     expect(hit.point[1]).toBeLessThan(-0.1)
   })
 
+  it('a reset ground digs the same crater and throws the same clods as a new one', () => {
+    const dig = (terrain: ReturnType<typeof make>): unknown => {
+      terrain.strike('explosive', { x: 1, z: 1, energy: GRENADE })
+      terrain.strike('blunt', { x: -2, z: 3, energy: 20_000 })
+      settle(terrain, 2)
+      return terrain.serialize()
+    }
+    const used = make('dirt')
+    dig(used)
+    used.reset()
+    expect(dig(used)).toEqual(dig(make('dirt')))
+  })
+
   it('a snapshot brings the same ground back', () => {
     const terrain = make('lawn')
     terrain.strike('explosive', { x: 1, z: 1, energy: GRENADE })

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vfx",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "Renderer-free visual effects, deterministic and testable in Node: the Explosion Lab's layer compositor (flash, fireball that cools into smoke, shock wave, dust, shrapnel, glowing debris, marks, mushroom, lingering fire) with its 16 profiles, seeded random streams, ordered pools, lights, screen shake and flash, distance LOD and the area cap of the game.",
   "keywords": [

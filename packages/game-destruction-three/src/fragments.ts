@@ -1,5 +1,7 @@
 import type * as THREE_NS from 'three'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Fragment } from '@adatechnology/game-destruction'
+
 import { pushFittedBoxes } from './fitted-boxes'
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
@@ -177,6 +179,8 @@ export class FragmentSystem {
     mesh.castShadow = true
     // pure visual debris: a host that picks with a raycast can skip it
     mesh.userData.destructionDebris = true
+    mesh.name = 'fragment'
+    markKitOrigin(mesh, { owner: 'game-destruction-three', kind: 'fragment', id: f.material })
     this.o.scene.add(mesh)
     const live: Live = {
       mesh,

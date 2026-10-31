@@ -53,6 +53,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
     ...(options.contact ? { contact: options.contact } : {}),
+    ...(options.bodyHold ? { bodyHold: options.bodyHold } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
     ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
   })

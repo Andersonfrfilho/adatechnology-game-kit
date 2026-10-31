@@ -109,7 +109,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const debrisStore = createDebrisStore(() => budget.maxDebris)
   const sliding = new Set<number>()
   const burning = new Map<number, number>()
-  const random = createRandom(options.seed ?? 1)
+  const seed = options.seed ?? 1
+  let random = createRandom(seed)
   let currentLayout: GroundLayout = options.layout ?? { surface: DEFAULT_PROFILE }
 
   const deformListeners = new Set<(region: TerrainRegion) => void>()
@@ -623,6 +624,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
     debrisStore.clear()
     sliding.clear()
     burning.clear()
+    // the craters and clods draw from here: a reset ground digs the same as a new one
+    random = createRandom(seed)
     applyLayout(currentLayout)
   }
 

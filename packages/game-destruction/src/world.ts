@@ -79,6 +79,8 @@ const FLAMMABLE_FLUIDS = ['gas', 'fuel']
 const VENT_DIAMETER = 0.008
 /** A flame lights a flammable leak when it reaches this temperature (the auto-ignition of propane in air is about 470 °C; a lighter flame is above 1000 °C). */
 const FLAME_LIGHTS_LEAK_C = 470
+/** Cosine of the tilt past which a `resting` joint lets go: what only lies on a part (a book on a shelf) slides off once it leans past about 30°. */
+const RESTING_HOLD_COS = Math.cos(Math.PI / 6)
 /** Staged parts: default breach radius (m), blast multiplier on the breach area, area a part must lose to open (m²), and the share of capacity the bare cage keeps. */
 const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
@@ -106,6 +108,8 @@ const CHIP_ENERGY = 200
 const CHIP_SPLASH = 0.5
 /** Metres a bar of an exposed cage bows out of the part's plane at full overload (stress 1.5 and up), per metre of bar. */
 const BAR_BOW = 0.08
+/** Metres of a joint one bullet shakes loose: a joint longer than this takes only its share of the wear. */
+const BULLET_JOINT_SPAN = 0.3
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -1445,8 +1449,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     setStage(o, p, 1, {}, src)
   }
 
-  const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string) =>
-    emit({ ...base(o, src), type: 'debris', part: p.spec.id, kind, point, normal, count, speed })
+  const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string, material?: MaterialId) =>
+    emit({ ...base(o, src), type: 'debris', part: p.spec.id, kind, point, normal, count, speed, ...(material && material !== p.spec.material ? { material } : {}) })
 
   const holeRate = (hole: Hole, pressurized: boolean) => (pressurized ? 0.5 : 0.1) * (hole.diameter / 0.009)
 
@@ -1456,6 +1460,24 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const detachEvents = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
     for (const j of opened) emit({ ...base(o, src), type: 'detach', joint: j.spec.id, parts: [j.spec.a, j.spec.b], by, groups: o.st.groups.map((g) => [...g]) })
+  }
+
+  /** Gravity is all that holds a `resting` joint: tipped past `RESTING_HOLD_COS` (the object's up axis leaning away from the world's), what lay on a part falls off. */
+  const slideOffResting = (o: ObjRT, rotation: Quat) => {
+    const upY = 1 - 2 * (rotation[0] * rotation[0] + rotation[2] * rotation[2])
+    if (upY >= RESTING_HOLD_COS) return
+    const opened = o.joints.filter((j) => j.spec.kind === 'resting' && !j.st.open)
+    if (opened.length === 0) return
+    run(() => {
+      for (const j of opened) {
+        j.st.open = true
+        j.st.openedBy = 'break'
+      }
+      solveStructure(o)
+      recomputeGroups(o)
+      detachEvents(o, opened, 'break')
+      collapseCheck(o)
+    })
   }
 
   const checkDestroyed = (o: ObjRT, src?: string) => {
@@ -1503,7 +1525,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return Math.max(0.06, 0.5 * Math.min(small.dims[0], small.dims[1], small.dims[2]))
   }
 
-  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false) => {
+  /** Length of the joint's contact region: the longest side of the overlap box of the two parts' bounds (a wall's bed runs the whole wall). */
+  const jointLength = (o: ObjRT, j: JointRT): number => {
+    const A = partWorldAabb(o, o.parts[j.ia]), B = partWorldAabb(o, o.parts[j.ib])
+    let len = 0
+    for (let k = 0; k < 3; k++) len = Math.max(len, Math.min(A.max[k], B.max[k]) - Math.max(A.min[k], B.min[k]))
+    return len
+  }
+
+  /**
+   * Wears the joints of `p` by `amount`. `span` (metres) is how much of a joint's length the blow reaches: a joint longer than that takes only its share
+   * (a bullet loosens the mortar bed under it, not the whole bed of a ten-metre wall), so a row of shots does not bring a wall down.
+   */
+  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number) => {
     if (amount <= 0) return
     const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
     if (split && mine.length) amount /= mine.length
@@ -1513,7 +1547,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // or a saw cuts it (or the part itself giving way)
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
-      j.st.hp -= amount
+      j.st.hp -= span === undefined ? amount : amount * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
       if (j.st.hp <= 0) {
         j.st.hp = 0
         j.st.open = true
@@ -1549,7 +1583,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (spalls.length > MAX_SPALLS) spalls.shift()
     markDamaged(p)
     emit({ ...base(o, src), type: 'spall', part: p.spec.id, layer: layer.index, point: wp, area: Math.PI * radius * radius })
-    debris(o, p, layer.mat.hitDebris, wp, normal, 5, 2, src)
+    debris(o, p, layer.mat.hitDebris, wp, normal, 5, 2, src, layer.mat.id)
     setStage(o, p, 1, {}, src)
   }
 
@@ -2029,7 +2063,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       })
     }
     const patch: Vec3 = [scale * 4, scale * 4, scale * 4]
-    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments })
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center: exit ?? entry, size: patch, rotation: q, fragments, torn: true })
   }
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
@@ -2099,8 +2133,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (mat.fracture !== 'shatter') addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     } else addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
-    // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
-    wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
+    // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little), and only along
+    // the stretch of each joint it shakes
+    wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true, BULLET_JOINT_SPAN)
     // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
     // 3 mm plastic bin leaves 24 of its 500 J. Brittle, fibrous and layered materials (glass, wood, paper, masonry) take the whole shock of the impact, as before.
     const absorbed = penetrated && mat.ductility >= 0.5 && mat.fracture !== 'tear' ? Math.min(E, thr) : E
@@ -2975,6 +3010,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const o = getObj(id)
       o.base = { pos: [position[0], position[1], position[2]], rot: [rotation[0], rotation[1], rotation[2], rotation[3]] }
       applySoilPose(o)
+      slideOffResting(o, rotation)
     },
     splitGroup(id, group, newId) {
       if (impls.has(id)) throw new Error(`object "${id}" is a registered DestructibleImpl and cannot be split; its module owns its pieces`)

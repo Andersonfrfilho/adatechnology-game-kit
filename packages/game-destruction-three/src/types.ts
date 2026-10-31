@@ -46,8 +46,8 @@ export interface RendererOptions {
    * reaches with enough speed, the renderer makes it a piece (`makePiece`) and shoves it, and tells `onLoosened`. Without it only the pieces move. Never answer true for a wall or a fixture.
    */
   shoveable?: (objectId: string) => boolean
-  /** Called when a blast made a bound object a piece (see `shoveable`). */
-  onLoosened?: (objectId: string, piece: Piece) => void
+  /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
+  onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
   /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
   /**
