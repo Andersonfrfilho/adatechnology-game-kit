@@ -14,7 +14,7 @@ import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
-import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
@@ -185,8 +185,26 @@ class Renderer implements DestructionRenderer {
   private readonly queue: DestructionEvent[] = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
-  /** When the work of this frame must stop; `Infinity` outside `drainQueue`, where a call finishes what it started. */
+  /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
   private sliceDeadline = Infinity
+  /** The clock the drain reads; a budget lends its own while it runs the queue. */
+  private drainClock: () => number = () => performance.now()
+  /** true once a frame budget owns the draining: `update` no longer drains by itself. */
+  private attached = false
+  private readonly eventQueue: DeferredQueue = {
+    id: 'destruction.events',
+    pending: () => this.queue.length + this.slices.length,
+    run: (deadline, clock) => this.runBudgeted(deadline, clock),
+    flush: () => {
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length > 0; guard++) this.runBudgeted(Infinity, () => 0)
+    },
+    attach: () => {
+      this.attached = true
+    },
+    detach: () => {
+      this.attached = false
+    },
+  }
   private readonly unsubscribe: () => void
   private readonly visuals: Visuals
   private readonly fragments: FragmentSystem
@@ -492,7 +510,7 @@ class Renderer implements DestructionRenderer {
     if (this.disposed) return
     dt = clamp(dt, 0, 0.1)
     this.time += dt
-    this.drainQueue()
+    if (!this.attached) this.drainQueue()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
@@ -505,38 +523,54 @@ class Renderer implements DestructionRenderer {
     this.syncTransforms()
   }
 
+  deferredQueue(): DeferredQueue {
+    return this.eventQueue
+  }
+
   private drainQueue(): void {
+    this.runBudgeted(performance.now() + this.eventBudgetMs, () => performance.now())
+  }
+
+  /** Applies the waiting events in order until the deadline, after the slices earlier events left; always at least one unit when something waits. Returns the units run. */
+  private runBudgeted(deadline: number, clock: () => number): number {
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.queue.splice(0, this.queue.length)
-    const deadline = performance.now() + this.eventBudgetMs
+    const outerClock = this.drainClock
+    this.drainClock = clock
     this.sliceDeadline = deadline
+    let ran = 0
     try {
-      this.runSlices(deadline)
+      ran = this.runSlices(deadline)
       for (let i = 0; i < batch.length; i++) {
-        if (i > 0 && performance.now() >= deadline) {
+        if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
           this.queue.unshift(...batch.slice(i))
-          return
+          return ran
         }
         try {
           this.apply(batch[i]!)
         } catch (err) {
           if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
         }
+        ran++
       }
     } finally {
       this.sliceDeadline = Infinity
+      this.drainClock = outerClock
     }
+    return ran
   }
 
   /** Runs the work left by earlier frames until the deadline; at least one piece per frame, so it always finishes. */
-  private runSlices(deadline: number): void {
-    for (let ran = 0; this.slices.length > 0 && (ran === 0 || performance.now() < deadline); ran++) {
+  private runSlices(deadline: number): number {
+    let ran = 0
+    for (; this.slices.length > 0 && (ran === 0 || this.drainClock() < deadline); ran++) {
       try {
         this.slices.shift()!()
       } catch (err) {
         if (typeof console !== 'undefined') console.error('game-destruction-three: failed to run deferred work', err)
       }
     }
+    return ran
   }
 
   /**
@@ -1138,7 +1172,7 @@ class Renderer implements DestructionRenderer {
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     const step = this.low ? 2 : 1
     for (let i = from; i < ev.fragments.length; i += step) {
-      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && performance.now() >= this.sliceDeadline) {
+      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => this.spawnFragments(ev, i, look))
         return
       }
@@ -1164,7 +1198,7 @@ class Renderer implements DestructionRenderer {
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     for (let i = 0; i < loose; i++) {
-      if (i > 0 && performance.now() >= this.sliceDeadline) {
+      if (i > 0 && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => {
           this.staticDirty.add(objectId)
           this.splitLoose(objectId)

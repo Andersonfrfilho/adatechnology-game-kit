@@ -6,6 +6,7 @@
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
 import type * as THREE_NS from 'three'
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -177,6 +178,11 @@ export interface DestructionRenderer {
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */
   update(dt: number): void
+  /**
+   * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
+   * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
+   */
+  deferredQueue(): DeferredQueue
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
   /**
