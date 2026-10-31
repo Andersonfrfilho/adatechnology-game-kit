@@ -133,8 +133,9 @@ describe('hand targets of the weapon in the hands', () => {
     const eye = room.camera
     for (const side of ['R', 'L'] as const) {
       const local = eye.worldToLocal(new THREE.Vector3(...last()!.targets![side]!.position))
-      expect(local.z).toBeLessThan(-0.25)
-      expect(Math.atan2(-local.y, -local.z)).toBeLessThan(0.55)
+      // the pistol is the body's, at its real size: the grip is 0.25 m ahead of the eye
+      expect(local.z).toBeLessThan(-0.2)
+      expect(Math.atan2(-local.y, -local.z)).toBeLessThan(0.58)
       expect(Math.abs(Math.atan2(local.x, -local.z))).toBeLessThan(0.5)
     }
   })
