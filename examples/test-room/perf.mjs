@@ -26,7 +26,8 @@ const BUDGET = {
   drawGrowthAfterStorm: 1.1,
 }
 const DRAW_MS = 300
-const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 120000
+// software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
+const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
 
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {

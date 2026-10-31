@@ -14,6 +14,9 @@ importers:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.5
+      dependency-cruiser:
+        specifier: ^18.7.0
+        version: 18.7.0
       eslint:
         specifier: ^9.18.0
         version: 9.39.5
@@ -45,7 +48,7 @@ importers:
   packages/game-animals-species:
     dependencies:
       '@adatechnology/game-animals':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals
     devDependencies:
       '@types/node':
@@ -64,32 +67,32 @@ importers:
   packages/game-animals-three:
     dependencies:
       '@adatechnology/game-animals':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-props3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-props3d
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-animals-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals-species
       '@adatechnology/game-characters-undead':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-undead
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -116,11 +119,11 @@ importers:
   packages/game-audio:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -138,7 +141,7 @@ importers:
   packages/game-camera:
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -162,14 +165,14 @@ importers:
   packages/game-characters:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
       '@types/node':
         specifier: ^22.10.7
@@ -187,11 +190,11 @@ importers:
   packages/game-characters-people:
     dependencies:
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
     devDependencies:
       '@adatechnology/game-player':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-player
       '@types/node':
         specifier: ^22.10.7
@@ -209,29 +212,29 @@ importers:
   packages/game-characters-three:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
       '@adatechnology/game-characters-people':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-people
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-characters-undead':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-undead
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -258,14 +261,11 @@ importers:
   packages/game-characters-undead:
     dependencies:
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
-      '@adatechnology/game-contracts':
-        specifier: workspace:*
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-animals-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals-species
       '@types/node':
         specifier: ^22.10.7
@@ -283,7 +283,7 @@ importers:
   packages/game-characters-uniformed:
     dependencies:
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
     devDependencies:
       '@types/node':
@@ -317,26 +317,23 @@ importers:
   packages/game-crowd:
     dependencies:
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
-      '@adatechnology/game-contracts':
-        specifier: workspace:*
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-animals':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals
       '@adatechnology/game-animals-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals-species
       '@adatechnology/game-characters-undead':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-undead
       '@adatechnology/game-infection':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-infection
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -354,41 +351,41 @@ importers:
   packages/game-crowd-three:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
       '@adatechnology/game-characters-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-three
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-crowd':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-crowd
       '@adatechnology/game-player':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-player
     devDependencies:
       '@adatechnology/game-animals':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals
       '@adatechnology/game-animals-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals-species
       '@adatechnology/game-animals-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-animals-three
       '@adatechnology/game-characters-undead':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-undead
       '@adatechnology/game-infection':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-infection
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -415,14 +412,14 @@ importers:
   packages/game-destruction:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -440,23 +437,23 @@ importers:
   packages/game-destruction-three:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
       '@adatechnology/game-vfx-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -504,7 +501,7 @@ importers:
   packages/game-floorplan:
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -528,13 +525,13 @@ importers:
   packages/game-floorplan-commercial:
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-structure':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-structure
       '@types/node':
         specifier: ^22.10.7
@@ -552,34 +549,31 @@ importers:
   packages/game-floorplan-interactables:
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-commercial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-commercial
       '@adatechnology/game-floorplan-post-apocalyptic':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-post-apocalyptic
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-rural':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-rural
       '@adatechnology/game-floorplan-structure':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-structure
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
       '@adatechnology/game-interactables-household':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables-household
-      '@adatechnology/game-items':
-        specifier: workspace:*
-        version: link:../game-items
       '@adatechnology/game-items-goods':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items-goods
       '@types/node':
         specifier: ^22.10.7
@@ -597,19 +591,19 @@ importers:
   packages/game-floorplan-post-apocalyptic:
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-commercial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-commercial
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-rural':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-rural
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -627,10 +621,10 @@ importers:
   packages/game-floorplan-residential:
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-structure':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-structure
       '@types/node':
         specifier: ^22.10.7
@@ -648,10 +642,10 @@ importers:
   packages/game-floorplan-rural:
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
       '@types/node':
         specifier: ^22.10.7
@@ -669,23 +663,20 @@ importers:
   packages/game-floorplan-structure:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
     devDependencies:
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
-      '@adatechnology/game-items':
-        specifier: workspace:*
-        version: link:../game-items
       '@adatechnology/game-items-goods':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items-goods
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -703,59 +694,59 @@ importers:
   packages/game-floorplan-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
       '@adatechnology/game-floorplan-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-interactables
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-structure':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-structure
       '@adatechnology/game-props3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-props3d
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-destruction-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction-three
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-floorplan-commercial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-commercial
       '@adatechnology/game-floorplan-post-apocalyptic':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-post-apocalyptic
       '@adatechnology/game-floorplan-rural':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-rural
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
       '@adatechnology/game-interactables-household':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables-household
       '@adatechnology/game-interactables-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables-three
       '@adatechnology/game-vegetation':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation
       '@adatechnology/game-vegetation-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation-species
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -779,11 +770,11 @@ importers:
   packages/game-fluids:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -801,16 +792,16 @@ importers:
   packages/game-fluids-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-fluids':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-fluids
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
       '@adatechnology/game-vfx-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
       '@types/node':
@@ -850,7 +841,7 @@ importers:
   packages/game-interactables:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@types/node':
@@ -869,17 +860,17 @@ importers:
   packages/game-interactables-household:
     dependencies:
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
       '@adatechnology/game-items-goods':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items-goods
       '@adatechnology/game-props3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-props3d
     devDependencies:
       '@adatechnology/game-items':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items
       '@types/node':
         specifier: ^22.10.7
@@ -897,23 +888,23 @@ importers:
   packages/game-interactables-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
       '@adatechnology/game-props3d':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-props3d
       '@adatechnology/game-shapes':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes
     devDependencies:
       '@adatechnology/game-interactables-household':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables-household
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -937,17 +928,17 @@ importers:
   packages/game-items:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
     devDependencies:
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -965,20 +956,17 @@ importers:
   packages/game-items-goods:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-items':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items
     devDependencies:
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
-      '@adatechnology/game-interactables':
-        specifier: workspace:*
-        version: link:../game-interactables
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
       '@types/node':
         specifier: ^22.10.7
@@ -996,32 +984,32 @@ importers:
   packages/game-items-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-floorplan-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-three
       '@adatechnology/game-fluids':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-fluids
       '@adatechnology/game-interactables':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables
       '@adatechnology/game-items':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-items-goods':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items-goods
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1048,11 +1036,11 @@ importers:
   packages/game-player:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1070,10 +1058,10 @@ importers:
   packages/game-props3d:
     dependencies:
       '@adatechnology/game-shapes':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@types/node':
@@ -1119,11 +1107,11 @@ importers:
   packages/game-shapes-three:
     dependencies:
       '@adatechnology/game-shapes':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1147,17 +1135,17 @@ importers:
   packages/game-stories:
     dependencies:
       '@adatechnology/game-characters':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters
       '@adatechnology/game-characters-people':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-characters-people
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1175,12 +1163,12 @@ importers:
   packages/game-terrain:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
-      '@adatechnology/game-destruction':
-        specifier: workspace:*
-        version: link:../game-destruction
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1197,10 +1185,10 @@ importers:
   packages/game-terrain-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-terrain':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-terrain
     devDependencies:
       '@types/node':
@@ -1225,40 +1213,40 @@ importers:
   packages/game-test-room:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-destruction':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction
       '@adatechnology/game-destruction-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-destruction-three
       '@adatechnology/game-fluids':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-fluids
       '@adatechnology/game-fluids-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-fluids-three
       '@adatechnology/game-player':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-player
       '@adatechnology/game-terrain':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-terrain
       '@adatechnology/game-terrain-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-terrain-three
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
       '@adatechnology/game-vfx-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx-three
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
       '@types/node':
@@ -1286,29 +1274,26 @@ importers:
   packages/game-urban:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-floorplan':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan
       '@adatechnology/game-vegetation-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation-species
       '@adatechnology/game-vehicles-fleet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles-fleet
     devDependencies:
       '@adatechnology/game-floorplan-commercial':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-commercial
       '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-residential
-      '@adatechnology/game-floorplan-structure':
-        specifier: workspace:*
-        version: link:../game-floorplan-structure
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1326,32 +1311,29 @@ importers:
   packages/game-urban-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
-      '@adatechnology/game-floorplan':
-        specifier: workspace:*
-        version: link:../game-floorplan
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
       '@adatechnology/game-urban':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-urban
       '@adatechnology/game-vegetation':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation
       '@adatechnology/game-vegetation-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation-species
       '@adatechnology/game-vehicles-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles-three
     devDependencies:
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1418,23 +1400,23 @@ importers:
   packages/game-vegetation-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
       '@adatechnology/game-vegetation':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation
       '@adatechnology/game-vegetation-species':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vegetation-species
     devDependencies:
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1461,17 +1443,17 @@ importers:
   packages/game-vehicles:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1498,11 +1480,11 @@ importers:
   packages/game-vehicles-driving:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1520,13 +1502,13 @@ importers:
   packages/game-vehicles-fleet:
     devDependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-vehicles':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1550,29 +1532,26 @@ importers:
   packages/game-vehicles-three:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-vehicles':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles
       '@adatechnology/game-vehicles-driving':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles-driving
       '@adatechnology/game-vehicles-fleet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vehicles-fleet
     devDependencies:
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
-      '@adatechnology/game-vfx':
-        specifier: workspace:*
-        version: link:../game-vfx
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1597,13 +1576,9 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-vfx:
-    dependencies:
-      '@adatechnology/game-contracts':
-        specifier: workspace:*
-        version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1621,14 +1596,14 @@ importers:
   packages/game-vfx-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1655,7 +1630,7 @@ importers:
   packages/game-weapons:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@types/node':
@@ -1674,41 +1649,38 @@ importers:
   packages/game-weapons-three:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-floorplan-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-floorplan-three
       '@adatechnology/game-interactables-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-interactables-three
       '@adatechnology/game-items-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-items-three
       '@adatechnology/game-shapes-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-shapes-three
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
       '@adatechnology/game-vfx-three':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx-three
       '@adatechnology/game-weapons':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
-      '@adatechnology/game-destruction':
-        specifier: workspace:*
-        version: link:../game-destruction
       '@adatechnology/game-test-room':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-test-room
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1735,14 +1707,14 @@ importers:
   packages/game-weather:
     dependencies:
       '@adatechnology/game-audio':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-audio
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -1760,20 +1732,20 @@ importers:
   packages/game-weather-three:
     dependencies:
       '@adatechnology/game-contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-contracts
       '@adatechnology/game-vfx':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-vfx
-      '@adatechnology/game-vfx-three':
-        specifier: workspace:*
-        version: link:../game-vfx-three
       '@adatechnology/game-weather':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../game-weather
     devDependencies:
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:^
+        version: link:../game-vfx-three
       '@adatechnology/golden-tool':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
@@ -2793,10 +2765,21 @@ packages:
   '@vitest/utils@3.2.7':
     resolution: {integrity: sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw==}
 
+  acorn-jsx-walk@2.0.0:
+    resolution: {integrity: sha512-uuo6iJj4D4ygkdzd6jPtcxs8vZgDX9YFIkqczGImoypX2fQ4dVImmu3UzA4ynixCIMTrEOWW+95M2HuBaCEOVA==}
+
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
+
+  acorn-loose@8.5.2:
+    resolution: {integrity: sha512-PPvV6g8UGMGgjrMu+n/f9E/tCSkNQ2Y97eFvuVdJfG11+xdIeDcLyNdC8SHcrHbRqkfwLASdplyR6B6sKM1U4A==}
+    engines: {node: '>=0.4.0'}
+
+  acorn-walk@8.3.5:
+    resolution: {integrity: sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==}
+    engines: {node: '>=0.4.0'}
 
   acorn@8.19.0:
     resolution: {integrity: sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw==}
@@ -2897,6 +2880,10 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  commander@15.0.0:
+    resolution: {integrity: sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg==}
+    engines: {node: '>=22.12.0'}
+
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
@@ -2931,6 +2918,11 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
+  dependency-cruiser@18.7.0:
+    resolution: {integrity: sha512-WexT4OswA6Gy86ms2J7SJ4FJscN43dyS+i5skpbtXlPTFQW4yWbontjFip1TOBAVnc+U+9zdH0a56YTRZX/IGw==}
+    engines: {node: ^22||^24||>=26}
+    hasBin: true
+
   detect-indent@6.1.0:
     resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
     engines: {node: '>=8'}
@@ -2939,9 +2931,17 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
+  enhanced-resolve@5.26.0:
+    resolution: {integrity: sha512-9vhedylFonb2YGogzUKX6+Ja72gOJbN1QHAqdrvqLwhdl/QWbKopzoUC9EbQNVsAns/bx/4uyqalrQAoy1IByw==}
+    engines: {node: '>=10.13.0'}
+
   enquirer@2.4.1:
     resolution: {integrity: sha512-rRqJg/6gd538VHvR3PSrdRBb/1Vy2YfzHqzvbhGIQpDRKIa4FgV/54b5Q1xYSxOOwKvjXweS26E0Q+nAMwp2pQ==}
     engines: {node: '>=8.6'}
+
+  es-errors@1.3.0:
+    resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
+    engines: {node: '>= 0.4'}
 
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
@@ -3089,6 +3089,9 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
+  function-bind@1.1.2:
+    resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -3096,6 +3099,10 @@ packages:
   glob-parent@6.0.2:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
     engines: {node: '>=10.13.0'}
+
+  global-directory@4.0.1:
+    resolution: {integrity: sha512-wHTUcDUoZ1H5/0iVqEudYW4/kAlN5cZ3j/bXn0Dpbizl9iaUVeWSHqiOjsgk6OW2bkLclbBjzewBz6weQ1zA2Q==}
+    engines: {node: '>=18'}
 
   globals@14.0.0:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
@@ -3120,6 +3127,10 @@ packages:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
 
+  hasown@2.0.4:
+    resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
+    engines: {node: '>= 0.4'}
+
   human-id@4.2.2:
     resolution: {integrity: sha512-Z+8unD6em/MJwyrkWQ2M3wygRGI1+MztbutiNwk1DCuEPXOZRWGjtcMPZYP1exY9iNZMhd7ZOSMQSo9WYtiQRw==}
     hasBin: true
@@ -3130,6 +3141,10 @@ packages:
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
+    engines: {node: '>= 4'}
+
+  ignore@7.0.12:
+    resolution: {integrity: sha512-/8UvqAPU9DGTI9k4mxtf49U37Isfwr8Uts96+SBHIkFxPJnHS0Ew4f00sM4Scd8V8EjM0jUNtVDdv1kPdt35lg==}
     engines: {node: '>= 4'}
 
   ignore@7.0.13:
@@ -3144,6 +3159,18 @@ packages:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
     engines: {node: '>=0.8.19'}
 
+  ini@4.1.1:
+    resolution: {integrity: sha512-QQnnxNyfvmHFIsj7gkPcYymR8Jdw/o7mp5ZFihxn6h8Ci6fh3Dx4E1gPjpQEpIuPo9XVNY/ZUwh4BPMjGyL01g==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  interpret@3.1.1:
+    resolution: {integrity: sha512-6xwYfHbajpoF0xLW+iwLkhwgvLoZDfjYfoFNu8ftMoXINzwuymNLd9u/KmwtdT2GbR+/Cz66otEGEVVUHX9QLQ==}
+    engines: {node: '>=10.13.0'}
+
+  is-core-module@2.17.0:
+    resolution: {integrity: sha512-J/vG0zBCbIKOQFfufSwyXdMrsohyJIUNkrnmo6WZGzoM7tr/lsbfW5b2BvisL6zsyMzK9UxV9L6c7AoFbyXHOA==}
+    engines: {node: '>= 0.4'}
+
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -3152,9 +3179,17 @@ packages:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
 
+  is-installed-globally@1.0.1:
+    resolution: {integrity: sha512-li88H4QGRoNMX27jEmY8nR515oJVspAgC/WFMlhHfFV8RJ4QyGpHhXnwAe9gH5RIgKmdYRUmrOhQobcgEjIdSw==}
+    engines: {node: '>=18'}
+
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
+
+  is-path-inside@4.0.0:
+    resolution: {integrity: sha512-lJJV/5dYS+RcL8uQdBDW9c9uWFLLBNRyFhnAKXw5tVqLlKZ4RMGZKv+YQ/IA3OhD+RpbJa1LLFM1FQPGyIXvOA==}
+    engines: {node: '>=12'}
 
   is-subdir@1.2.0:
     resolution: {integrity: sha512-2AT6j+gXe/1ueqbW6fLZJiIw3F8iXGJtt0yDrZaBhAZEG1raiTxKWU+IPqMCzQAXOUCKdA4UDMgacKH25XG2Cw==}
@@ -3191,11 +3226,20 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
+  json5@2.2.3:
+    resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
+    engines: {node: '>=6'}
+    hasBin: true
+
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  kleur@3.0.3:
+    resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
+    engines: {node: '>=6'}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -3249,6 +3293,9 @@ packages:
 
   minimatch@3.1.5:
     resolution: {integrity: sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w==}
+
+  minimist@1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
   mlly@1.8.2:
     resolution: {integrity: sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA==}
@@ -3325,6 +3372,9 @@ packages:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
 
+  path-parse@1.0.7:
+    resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
+
   path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
@@ -3394,6 +3444,10 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
+  prompts@2.4.2:
+    resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
+    engines: {node: '>= 6'}
+
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -3412,6 +3466,14 @@ packages:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
 
+  rechoir@0.8.0:
+    resolution: {integrity: sha512-/vxpCXddiX8NGfGO/mTafwjq4aFa/71pvamip0++IQk3zG8cbCj0fifNPrjjF1XMXUne91jL9OoxmdykoEtifQ==}
+    engines: {node: '>= 10.13.0'}
+
+  regexp-tree@0.1.27:
+    resolution: {integrity: sha512-iETxpjK6YoRWJG5o6hXLwvjYAoW+FEZn9os0PD/b6AP6xQwsa/Y7lCVgIixBbUPMfhu+i2LtdeAqVTgGlQarfA==}
+    hasBin: true
+
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
     engines: {node: '>=4'}
@@ -3419,6 +3481,11 @@ packages:
   resolve-from@5.0.0:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
     engines: {node: '>=8'}
+
+  resolve@1.22.13:
+    resolution: {integrity: sha512-Dj/cW9zBV2aRj6XzCxuGIs3ESZKv02jixne3q6jFZYZ3/Tg09gHHviSMDL4kObh9pqSahdRHEnDoaP2gn8YLhA==}
+    engines: {node: '>= 0.4'}
+    hasBin: true
 
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
@@ -3431,6 +3498,9 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
+
+  safe-regex@2.1.1:
+    resolution: {integrity: sha512-rx+x8AMzKb5Q5lQ95Zoi6ZbJqwCLkqi3XuJXp5P3rT8OEc6sZCJG5AE5dU3lsgRr/F4Bs31jSlVN+j5KrsGu9A==}
 
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
@@ -3454,6 +3524,9 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  sisteransi@1.0.5:
+    resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -3502,6 +3575,14 @@ packages:
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
+
+  supports-preserve-symlinks-flag@1.0.0:
+    resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
+    engines: {node: '>= 0.4'}
+
+  tapable@2.3.3:
+    resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
+    engines: {node: '>=6'}
 
   term-size@2.2.1:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
@@ -3558,6 +3639,14 @@ packages:
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
+
+  tsconfig-paths-webpack-plugin@4.2.0:
+    resolution: {integrity: sha512-zbem3rfRS8BgeNK50Zz5SIQgXzLafiHjOwUAvk/38/o1jHn/V5QAgVUcz884or7WYcPaH3N2CIfUc2u0ul7UcA==}
+    engines: {node: '>=10.13.0'}
+
+  tsconfig-paths@4.2.0:
+    resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
+    engines: {node: '>=6'}
 
   tsup@8.5.1:
     resolution: {integrity: sha512-xtgkqwdhpKWr3tKPmCkvYmS9xnQK3m3XgxZHwSUjvfTjp7YfXe5tT3GgWi0F2N+ZSMsOeWeZFh7ZZFg5iPhing==}
@@ -3679,6 +3768,11 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  watskeburt@6.0.0:
+    resolution: {integrity: sha512-jfiuDABaxSkC71T6oZ3vCS99roYkSHm/+As+G0Dz8taAHQb+SJBvLEm5RlsgG71XdfAj3rv7eudUBTgwcQUPlQ==}
+    engines: {node: ^22.13||^24||>=26}
+    hasBin: true
 
   webidl-conversions@7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
@@ -4361,7 +4455,17 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
+  acorn-jsx-walk@2.0.0: {}
+
   acorn-jsx@5.3.2(acorn@8.19.0):
+    dependencies:
+      acorn: 8.19.0
+
+  acorn-loose@8.5.2:
+    dependencies:
+      acorn: 8.19.0
+
+  acorn-walk@8.3.5:
     dependencies:
       acorn: 8.19.0
 
@@ -4451,6 +4555,8 @@ snapshots:
 
   color-name@1.1.4: {}
 
+  commander@15.0.0: {}
+
   commander@4.1.1: {}
 
   concat-map@0.0.1: {}
@@ -4473,16 +4579,44 @@ snapshots:
 
   deep-is@0.1.4: {}
 
+  dependency-cruiser@18.7.0:
+    dependencies:
+      acorn: 8.19.0
+      acorn-jsx: 5.3.2(acorn@8.19.0)
+      acorn-jsx-walk: 2.0.0
+      acorn-loose: 8.5.2
+      acorn-walk: 8.3.5
+      commander: 15.0.0
+      enhanced-resolve: 5.26.0
+      ignore: 7.0.12
+      interpret: 3.1.1
+      is-installed-globally: 1.0.1
+      json5: 2.2.3
+      picomatch: 4.0.7
+      prompts: 2.4.2
+      rechoir: 0.8.0
+      safe-regex: 2.1.1
+      semver: 7.8.5
+      tsconfig-paths-webpack-plugin: 4.2.0
+      watskeburt: 6.0.0
+
   detect-indent@6.1.0: {}
 
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
 
+  enhanced-resolve@5.26.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.3.3
+
   enquirer@2.4.1:
     dependencies:
       ansi-colors: 4.1.3
       strip-ansi: 6.0.1
+
+  es-errors@1.3.0: {}
 
   es-module-lexer@1.7.0: {}
 
@@ -4694,6 +4828,8 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
+  function-bind@1.1.2: {}
+
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -4701,6 +4837,10 @@ snapshots:
   glob-parent@6.0.2:
     dependencies:
       is-glob: 4.0.3
+
+  global-directory@4.0.1:
+    dependencies:
+      ini: 4.1.1
 
   globals@14.0.0: {}
 
@@ -4724,6 +4864,10 @@ snapshots:
 
   has-flag@4.0.0: {}
 
+  hasown@2.0.4:
+    dependencies:
+      function-bind: 1.1.2
+
   human-id@4.2.2: {}
 
   iconv-lite@0.7.3:
@@ -4731,6 +4875,8 @@ snapshots:
       safer-buffer: 2.1.2
 
   ignore@5.3.2: {}
+
+  ignore@7.0.12: {}
 
   ignore@7.0.13: {}
 
@@ -4741,13 +4887,28 @@ snapshots:
 
   imurmurhash@0.1.4: {}
 
+  ini@4.1.1: {}
+
+  interpret@3.1.1: {}
+
+  is-core-module@2.17.0:
+    dependencies:
+      hasown: 2.0.4
+
   is-extglob@2.1.1: {}
 
   is-glob@4.0.3:
     dependencies:
       is-extglob: 2.1.1
 
+  is-installed-globally@1.0.1:
+    dependencies:
+      global-directory: 4.0.1
+      is-path-inside: 4.0.0
+
   is-number@7.0.0: {}
+
+  is-path-inside@4.0.0: {}
 
   is-subdir@1.2.0:
     dependencies:
@@ -4776,6 +4937,8 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
+  json5@2.2.3: {}
+
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
@@ -4783,6 +4946,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kleur@3.0.3: {}
 
   levn@0.4.1:
     dependencies:
@@ -4829,6 +4994,8 @@ snapshots:
   minimatch@3.1.5:
     dependencies:
       brace-expansion: 1.1.21
+
+  minimist@1.2.8: {}
 
   mlly@1.8.2:
     dependencies:
@@ -4900,6 +5067,8 @@ snapshots:
 
   path-key@3.1.1: {}
 
+  path-parse@1.0.7: {}
+
   path-type@4.0.0: {}
 
   pathe@2.0.3: {}
@@ -4940,6 +5109,11 @@ snapshots:
 
   prettier@2.8.8: {}
 
+  prompts@2.4.2:
+    dependencies:
+      kleur: 3.0.3
+      sisteransi: 1.0.5
+
   punycode@2.3.1: {}
 
   quansync@0.2.11: {}
@@ -4955,9 +5129,22 @@ snapshots:
 
   readdirp@4.1.2: {}
 
+  rechoir@0.8.0:
+    dependencies:
+      resolve: 1.22.13
+
+  regexp-tree@0.1.27: {}
+
   resolve-from@4.0.0: {}
 
   resolve-from@5.0.0: {}
+
+  resolve@1.22.13:
+    dependencies:
+      es-errors: 1.3.0
+      is-core-module: 2.17.0
+      path-parse: 1.0.7
+      supports-preserve-symlinks-flag: 1.0.0
 
   reusify@1.1.0: {}
 
@@ -4997,6 +5184,10 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
+  safe-regex@2.1.1:
+    dependencies:
+      regexp-tree: 0.1.27
+
   safer-buffer@2.1.2: {}
 
   semver@7.8.5: {}
@@ -5010,6 +5201,8 @@ snapshots:
   siginfo@2.0.0: {}
 
   signal-exit@4.1.0: {}
+
+  sisteransi@1.0.5: {}
 
   slash@3.0.0: {}
 
@@ -5054,6 +5247,10 @@ snapshots:
     dependencies:
       has-flag: 4.0.0
 
+  supports-preserve-symlinks-flag@1.0.0: {}
+
+  tapable@2.3.3: {}
+
   term-size@2.2.1: {}
 
   thenify-all@1.6.0:
@@ -5094,6 +5291,19 @@ snapshots:
       typescript: 5.9.3
 
   ts-interface-checker@0.1.13: {}
+
+  tsconfig-paths-webpack-plugin@4.2.0:
+    dependencies:
+      chalk: 4.1.2
+      enhanced-resolve: 5.26.0
+      tapable: 2.3.3
+      tsconfig-paths: 4.2.0
+
+  tsconfig-paths@4.2.0:
+    dependencies:
+      json5: 2.2.3
+      minimist: 1.2.8
+      strip-bom: 3.0.0
 
   tsup@8.5.1(postcss@8.5.31)(typescript@5.9.3):
     dependencies:
@@ -5224,6 +5434,8 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  watskeburt@6.0.0: {}
 
   webidl-conversions@7.0.0: {}
 
