@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-player",
-  "version": "0.2.4",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Pure, seeded player body for games: vitals from an attribute sheet, stamina, wounds and bleeding, an optional individual infection, being grabbed and breaking free, knock-downs, low-wall vaults, footstep noise, panic, shove and melee against any crowd. A literal port of the team game's player. Knows nothing about any game.",
   "keywords": [

@@ -173,8 +173,11 @@ describe('room avatar', () => {
     restore()
   })
 
+  // wide: the shoulder camera's ray is off to one side, and now it has a floor to land on if it misses
+  const wideCrate = { ...crateItem, spec: { ...crate, parts: [{ ...crate.parts[0]!, mass: 5, shape: { kind: 'box' as const, size: [4, 3, 0.4] as [number, number, number] }, position: [0, 1.5, 0] as [number, number, number] }] } }
+
   it('shots keep leaving the eye toward what the camera sees', () => {
-    const r = room({ catalog: [crateItem] })
+    const r = room({ catalog: [wideCrate] })
     r.setAvatar(fakeAvatar())
     r.spawn('crate', [0, 0, -4], 0)
     r.look([0, 1.7, 0], [0, 0.2, -4])
@@ -189,7 +192,7 @@ describe('room avatar', () => {
   })
 
   it('a carried item follows the avatar hand in third person', () => {
-    const r = room({ catalog: [crateItem] })
+    const r = room({ catalog: [wideCrate] })
     const a = fakeAvatar()
     r.setAvatar(a)
     r.look([0, 1.7, 0], [0, 0.2, -1.5])

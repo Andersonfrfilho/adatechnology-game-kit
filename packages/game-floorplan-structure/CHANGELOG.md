@@ -1,5 +1,32 @@
 # @adatechnology/game-floorplan-structure
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-destruction@0.12.0
+
+## 1.3.0
+
+### Minor Changes
+
+- 2c9c963: Concrete answers each kind of blow its own way. `MaterialDef.hits` says, per damage type, what a blow takes out of a material: `unitJoules` (joules per kg of a unit to knock it out), `floor` (joules of each blow that only scar the surface) and `crater` (a crater in the bare surface, a `spall` with `layer` -1). Concrete: a 9 mm round only craters it with dust and chips; rifle rounds knock its blocks out (about three 5.56 or two 7.62x39 per block); a fist takes nothing. A reinforced part now loses blocks too: the bars inside each block that came out show (`expose` carries every bar that shows), the cross-section shot away at one place lowers what the part carries (down to its cage), and the bars of an overloaded part bow more at each `stress` until it gives way. The houses' concrete beams and pillars are made of 0.1 m blocks around their cage (`MEMBER_CAGE`), and the house renderer opens the gaps in a bond beam it draws inside the wall's plaster.
+
+### Patch Changes
+
+- Updated dependencies [f68acce]
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [e5ac121]
+- Updated dependencies [31fc87d]
+- Updated dependencies [eaedd22]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-destruction@0.11.0
+  - @adatechnology/game-contracts@0.18.0
+
 ## 1.2.3
 
 ### Patch Changes

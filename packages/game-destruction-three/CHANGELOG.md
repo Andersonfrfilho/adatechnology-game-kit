@@ -1,5 +1,65 @@
 # @adatechnology/game-destruction-three
 
+## 0.11.1
+
+### Patch Changes
+
+- 73f3cf2: Crushed masonry takes the colour of its material: brick, concrete, plaster and stone get `visual.innerColor`, the `debris` event names the material of
+  the bits when it is not the part's own (`material`, the plaster coat over a brick wall), and the renderer throws chips and dust and draws spalls in that
+  colour (brick orange, plaster light, concrete grey) instead of the dark grey of the generic concrete impact.
+- 2a1bb17: Wall damage stays where the shot lands. The house no longer redraws a whole wall as plain white blocks on the first brick that comes out: the wall keeps
+  its geometry, plaster and paint, and is cut by a mask only where units came out, with a ragged edge of plaster and the bricks (in their mortar) or the
+  rough concrete of a beam showing around the hole. Bullet holes, spalls and the impact marks of the effects go with the brick that comes out
+  (`DecalPool.clearInside` in game-vfx). A bullet now wears only its stretch of a joint (`BULLET_JOINT_SPAN`), so a row of shots along a ten-metre wall no
+  longer opens the whole mortar bed and brings the wall down.
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-destruction@0.12.0
+  - @adatechnology/game-vfx@0.5.0
+  - @adatechnology/game-audio@0.3.4
+  - @adatechnology/game-vfx-three@0.3.5
+
+## 0.11.0
+
+### Minor Changes
+
+- f68acce: Cans dent where they are hit and are holed on the lid, the bottom and the rim as on the side. An item family can give its shell the real wall thickness (`rule.wall`: a drink can is 0.1 mm on the body and 0.25 mm on the ends, a food tin a bit more); `tagForDestruction` writes it as `userData.destructionThickness` and `specFromObject3D` uses it for the part, so a 9 mm goes through a lid even at a slant. With `tessellate.cylinder.capRings` (and `three` passed to `tagForDestruction`, as `buildItem` does) each cylinder of the model becomes one lathe with rings on its ends and rows as fine as its columns, and a model drawn as a lathe gets the same columns, so the lid and the bottom have vertices to dent. In the world a ductile sheet 0.5 mm thin or less folds deeper than a plate for the same blow (up to 4 times), on a patch no wider than 2.5 cm and never past near its middle, and the slit a blade cuts in it is pushed in around. A skin follows its shell past the degenerate triangles of a lathe. The liquid of an opaque container is not drawn through a narrow mouth (a can's tab) nor through the bullet holes drawn on it.
+
+  The test room pushes what a round hits at the point of the drawn surface it meets, along that surface's inward normal (plus a share along it), with the momentum the round lost there: all of it when it stopped, through a thin shell only what the wall and the liquid inside took. A round on the right of a can pushes it away and to the left and spins it; before, it got the whole momentum of the round along the shot at the box the world sees.
+
+- 2961d53: Deformable ground: new `game-terrain` and `game-terrain-three` (height field with strata per column, digging by material and blow, marks under a budget, clods, fire). The test room's floor is now a terrain, and each area lays its own ground through `TestableModule.ground`. The room's `craters` option is gone: the floor always digs. Adds the catalogue materials `asphalt`, `sand`, `gravel`, `turf` and `mortar`.
+- e5ac121: Pushing furniture: holding the interaction button against a piece fills a ring by its mass, then the player walks with it, slower with the load; `world.sweepBox` tests the volume of the piece before each step, an obstacle or too much mass locks it and the player strains; poses in first and third person, and a drag sound by material.
+- 31fc87d: Each material answers each kind of blow its own way. New `MaterialDef.hits` (material × damage type): what a blow tears out where it lands (`tear`: `splinters`, `lumps`, `none`) and the joules per piece. A round into wood tears splinters of fresh wood out of the exit (and back out of the entry), MDF crumbles lumps, plywood splinters; a punch crumbles MDF, a kick splinters pine, hardwood and steel tear nothing. Snapping boards (MDF, plastic) also break where they are shot. `innerColor` for wood, plywood and MDF. Cases with shelves (`furnitureSpec`) are MDF.
+
+  Loose pieces land on what is under them: on other pieces and on the drawn meshes of fixed objects (`PieceSystemOptions.staticTopAt`), so a falling shelf rests on the books below and a tipping panel on the chair in front. New `DestructionRenderer.solidsNear` gives the drawn boxes around a point. The test room's player walks by them: steps onto low debris (up to 45 cm), stops at taller things and kicks light pieces (books, boards) out of the way, instead of the scenery's old footprints.
+
+- 31fc87d: A solid wooden top (`furnitureSpec`: 3.5 to 7 cm thick and at least 50 cm wide) is boards glued edge to edge: it breaks board by board at the point hit, in stubs and splinters, instead of falling whole. `top` gains `parts` with every board. Part ids of those tops change: `wood_0` becomes `wood_0_b0`, `wood_0_b1`...
+
+  `DestructionRenderer.solidsNear` follows what is drawn: a turned mesh gives several boxes along its length instead of one axis box of mostly air, and big fragments (half a board) are solids with a `loose` body. They stay where they lie instead of shrinking away and are the last to go over the fragment limit.
+
+  The test room rests loose things on the board under them (`SceneryObject.top.parts`), and its player steps on or kicks big fragments.
+
+  Furniture that comes apart no longer leaves anything fixed: what stayed standing becomes a piece too, and a piece whose feet are too close for its height (a lone leg, a board on two legs in a line) falls over until it lies.
+
+- 1821647: Nothing stays hanging when the ground changes: `Terrain.onDeform` says where it changed, `DestructionRenderer.wakeRegion` wakes what slept there, thrown pieces at rest fall again. The ground goes on beyond the terrain, so what is thrown past the edge lands on something.
+
+### Patch Changes
+
+- eaedd22: Physics of the objects in the room (first object audited: the trash bin). The player no longer walks through spawned objects: what stands taller than a step blocks the walk, and the walk pushes what is light enough with the force of a person against the floor's grip (a 3 kg bin slides or tips, a 70 kg fridge only blocks); the walk moves in short steps so a long step cannot jump over a thin obstacle. A kick leaves the hip instead of the eye, so it reaches what is in front of the feet. A round through a ductile shell (plastic, sheet metal) leaves in it only the energy it took to cross it (two holes, the part does not burst); a blade with more energy than a thin wall takes goes through it (a knife into a plastic bin or a can). A burst of fragments over the live budget no longer builds the excess meshes only to fade them.
+- Updated dependencies [f68acce]
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [e5ac121]
+- Updated dependencies [31fc87d]
+- Updated dependencies [eaedd22]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-destruction@0.11.0
+  - @adatechnology/game-contracts@0.18.0
+  - @adatechnology/game-audio@0.3.3
+  - @adatechnology/game-vfx-three@0.3.4
+  - @adatechnology/game-vfx@0.4.4
+
 ## 0.10.0
 
 ### Minor Changes

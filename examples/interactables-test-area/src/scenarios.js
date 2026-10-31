@@ -110,12 +110,17 @@ export function buildScenarios(locale, analysisOf) {
       const shell = analysisOf('gas_canister').destructible.parts.find((p) => p.explodes)
       const c0 = room.spawned().find((q) => q.objectId === stove).root.position.clone()
       room.setTool('pistol_9mm')
+      // a 0.4 kg can is knocked about by each hit: the shots and the flame follow it where it went
+      const here = () => {
+        const q = room.spawned().find((o) => o.objectId === id)?.root.position
+        return q ? [q.x, q.y, q.z] : AT
+      }
       let shots = 0
-      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8)
+      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8, here())
       let seconds = 0
       // a pierced can leaks gas: a flame at the hole lights it and the rest goes up
       for (; seconds < 60 && count(room, 'explode', id) === 0; seconds++) {
-        room.world.hit(id, { type: 'fire', point: world(shell), temperature: 1000, radius: 0.3, duration: 1 })
+        room.world.hit(id, { type: 'fire', point: world(shell, here()), temperature: 1000, radius: 0.3, duration: 1 })
         step(1)
       }
       step(1.5)
@@ -234,6 +239,66 @@ export function buildScenarios(locale, analysisOf) {
       const hurt = (room.world.state(chair)?.parts ?? []).filter((p) => p.status !== 'intact').length
       expect(count(room, 'explode', id) > 0, T(`Botijão explodiu após ${seconds} s de calor (${shell.explodes.energy} J, limite ${shell.explodes.atC} °C)`, `Bottle exploded after ${seconds} s of heat (${shell.explodes.energy} J, limit ${shell.explodes.atC} °C)`), { seconds })
       expect(moved > 0.2 || hurt > 0, T(`A cadeira ao lado: moveu ${n1(moved)} m, ${hurt} parte(s) danificada(s)`, `The chair next to it: moved ${n1(moved)} m, ${hurt} part(s) damaged`), { moved, hurt })
+    }),
+
+    sc('furniture_push', T('Empurrar móvel: o leve anda, o pesado demais não se mexe e o móvel na parede trava', 'Pushing furniture: the light piece walks, the one too heavy does not budge and the one at the wall locks'), ({ room, step, expect }) => {
+      // the hands are free for this: a scenario before it may have left a weapon in them
+      room.setTool('hand')
+      const hold = (id, eye, target, seconds) => {
+        room.look(eye, target)
+        const leaned = room.push.begin()
+        expect(leaned && room.push.state?.objectId === id && room.push.state.phase === 'grip', T(`Encostou em ${id}: o anel começa`, `Leaned on ${id}: the ring starts`))
+        step(seconds)
+      }
+      const rootOf = (id) => room.spawned().find((s) => s.objectId === id).root
+      // light: it follows the player, and the player keeps its distance
+      const light = spawn(room, 'nightstand', [-2, 0, 3])
+      hold(light, [-2, 1.7, 4.2], [-2, 0.4, 3], 0.2)
+      expect(room.push.state.progress < 1, T('O anel não enche na hora', 'The ring does not fill at once'))
+      step(0.5)
+      expect(room.push.state.phase === 'push', T('12 kg: em menos de 1 s o jogador empurra', '12 kg: under 1 s the player pushes'), { phase: room.push.state.phase })
+      const lightZ = rootOf(light).position.z
+      const playerZ = room.playerPosition[2]
+      room.push.setWalk([0, -1])
+      step(1)
+      const went = lightZ - rootOf(light).position.z
+      expect(went > 1 && went < 2, T(`O móvel andou ${n1(went)} m em 1 s, mais devagar que andar`, `The piece went ${n1(went)} m in 1 s, slower than walking`))
+      expect(Math.abs(playerZ - room.playerPosition[2] - went) < 0.01, T('O jogador foi junto', 'The player went with it'))
+      room.push.setWalk([0, 1])
+      step(0.5)
+      expect(rootOf(light).position.z > lightZ - went + 0.5, T('Puxar traz o móvel de volta', 'Pulling brings it back'))
+      room.push.setWalk(null)
+      room.push.end()
+      step(0.3)
+      expect(room.push.state === null, T('Soltar sai do modo', 'Letting go ends it'))
+      // too heavy: the ring fills and nothing moves
+      const heavy = spawn(room, 'bbq', [2, 0, 3])
+      const heavyZ = rootOf(heavy).position.z
+      hold(heavy, [2, 1.7, 4.4], [2, 0.6, 3], 3)
+      room.push.setWalk([0, -1])
+      step(1)
+      expect(room.push.state.phase === 'strain' && room.push.state.block === 'too_heavy', T('400 kg: faz força e não vai', '400 kg: strains and it does not go'), room.push.state)
+      expect(rootOf(heavy).position.z === heavyZ, T('A churrasqueira não saiu do lugar', 'The grill did not move'))
+      room.push.setWalk(null)
+      room.push.end()
+      // against a wall: the volume of the piece stops at it, and it can still be pulled away
+      const wall = spawn(room, 'wardrobe', [0, 0, -9])
+      const wardrobeBack = () => new window.__THREE.Box3().setFromObject(rootOf(wall)).min.z
+      hold(wall, [0, 1.7, -7.9], [0, 1.2, -9], 2.5)
+      expect(room.push.state.phase === 'push', T('90 kg de madeira dá para empurrar', '90 kg of wood can be pushed'), room.push.state)
+      room.push.setWalk([0, -1])
+      step(4)
+      const stoppedAt = wardrobeBack()
+      expect(room.push.state.phase === 'strain' && room.push.state.block === 'obstacle', T('Bateu na parede e travou', 'It hit the wall and locked'), room.push.state)
+      expect(stoppedAt > -11.1, T(`Parou antes de atravessar a parede (fundos em z=${stoppedAt.toFixed(2)})`, `Stopped short of the wall (back at z=${stoppedAt.toFixed(2)})`))
+      const stuckPlayer = room.playerPosition[2]
+      step(0.5)
+      expect(room.playerPosition[2] === stuckPlayer && wardrobeBack() === stoppedAt, T('Nem o móvel nem o jogador avançam', 'Neither the piece nor the player advance'))
+      room.push.setWalk([0, 1])
+      step(0.5)
+      expect(wardrobeBack() > stoppedAt + 0.1 && room.push.state.block === null, T('Puxado para trás, solta da parede', 'Pulled back, it comes off the wall'), room.push.state)
+      room.push.setWalk(null)
+      room.push.end()
     }),
 
     sc('shower_glass_shatters', T('Box do chuveiro: o vidro temperado quebra em pedaços pequenos', 'Shower: the tempered glass shatters into small pieces'), ({ room, step, expect }) => {

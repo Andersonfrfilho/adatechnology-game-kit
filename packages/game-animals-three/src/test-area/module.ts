@@ -225,6 +225,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   return {
     id: ANIMALS_AREA_ID,
     name: text.name,
+    ground: { surface: 'lawn' },
     group: text.group,
     get placed() {
       return placed

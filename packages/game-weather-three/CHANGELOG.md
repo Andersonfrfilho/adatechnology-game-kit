@@ -1,5 +1,32 @@
 # @adatechnology/game-weather-three
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-vfx@0.5.0
+  - @adatechnology/game-vfx-three@0.3.5
+  - @adatechnology/game-weather@0.2.6
+
+## 0.4.0
+
+### Minor Changes
+
+- 3aec7f3: `ModuleHost.addObject` (game-contracts, implemented by game-test-room): a module puts an item of the host's catalogue in the world as scenery; it stays through clears and area openings, takes shots, blows, blasts and fire like any item, and the scenarios run without it. The weather visual's `rigItem` uses it: in the test room the headlights car is the fleet's real sedan (holes, glass, sparks, tyres, doors), no longer a drawing the shots went through.
+
+### Patch Changes
+
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+  - @adatechnology/game-vfx-three@0.3.4
+  - @adatechnology/game-weather@0.2.5
+  - @adatechnology/game-vfx@0.4.4
+
 ## 0.3.3
 
 ### Patch Changes

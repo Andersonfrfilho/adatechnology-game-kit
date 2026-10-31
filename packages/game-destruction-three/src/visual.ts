@@ -4,6 +4,7 @@ import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
 import { shellDisplacementAt, type ShellSnapshot } from './skin-dent'
+import { pushFittedBoxes } from './fitted-boxes'
 
 type Mesh = THREE_NS.Mesh
 
@@ -191,6 +192,21 @@ export class Visuals {
   }
 
   /** Box of the part in world space. */
+  /** Appends the boxes that follow the mesh in the world (`pushFittedBoxes`) to `out`. */
+  fittedBoxes(mv: MeshVis, out: number[]): void {
+    const box = new this.THREE.Box3()
+    if (mv.host) this.localBox(mv, box)
+    else {
+      const geometry = mv.mesh.geometry
+      if (!geometry.boundingBox) geometry.computeBoundingBox()
+      if (geometry.boundingBox) box.copy(geometry.boundingBox)
+      else box.makeEmpty()
+    }
+    if (box.isEmpty()) return
+    mv.mesh.updateWorldMatrix(true, false)
+    pushFittedBoxes(box, mv.mesh.matrixWorld, out)
+  }
+
   worldBox(mv: MeshVis, out: THREE_NS.Box3): THREE_NS.Box3 {
     if (!mv.host) return out.setFromObject(mv.mesh)
     this.localBox(mv, out)
@@ -474,6 +490,22 @@ export class Visuals {
     d.obj.parent?.remove(d.obj)
     d.geometry?.dispose()
     this.decalCount = Math.max(0, this.decalCount - 1)
+  }
+
+  /**
+   * Takes away the decals of a mesh that sit inside a box (world `center`, `half` extents along the axes of the world `rotation`): the surface they
+   * marked is gone (a unit came out of the wall with its bullet holes and spalls).
+   */
+  clearDecals(mv: MeshVis, center: THREE_NS.Vector3, half: THREE_NS.Vector3, rotation: THREE_NS.Quaternion): void {
+    const inv = rotation.clone().invert()
+    const p = new this.THREE.Vector3()
+    for (let i = mv.decals.length - 1; i >= 0; i--) {
+      const d = mv.decals[i]!
+      d.obj.getWorldPosition(p).sub(center).applyQuaternion(inv)
+      if (Math.abs(p.x) > half.x || Math.abs(p.y) > half.y || Math.abs(p.z) > half.z) continue
+      this.disposeDecal(d)
+      mv.decals.splice(i, 1)
+    }
   }
 
   addHole(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, diameter: number): void {

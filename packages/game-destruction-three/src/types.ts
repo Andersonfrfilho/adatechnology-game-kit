@@ -50,8 +50,8 @@ export interface RendererOptions {
    * reaches with enough speed, the renderer makes it a piece (`makePiece`) and shoves it, and tells `onLoosened`. Without it only the pieces move. Never answer true for a wall or a fixture.
    */
   shoveable?: (objectId: string) => boolean
-  /** Called when a blast made a bound object a piece (see `shoveable`). */
-  onLoosened?: (objectId: string, piece: Piece) => void
+  /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
+  onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
   /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
   /**
@@ -130,6 +130,24 @@ export interface ExplodeOptions {
   readonly report?: readonly HitResult[]
 }
 
+/** One box of `DestructionRenderer.solidsNear`. */
+export interface SolidBox {
+  readonly objectId: string
+  readonly min: Vec3
+  readonly max: Vec3
+  /** The piece the box belongs to; null for a fixed object and a loose body. */
+  readonly piece: Piece | null
+  /** A big fragment (a broken board): not a piece, but it lies there and is kicked along. */
+  readonly loose?: LooseBody
+}
+
+/** A fragment big enough to be walked on (`DestructionRenderer.solidsNear`). */
+export interface LooseBody {
+  readonly mass: number
+  /** Gives it this speed on the floor (m/s). */
+  push(velocityX: number, velocityZ: number): void
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
@@ -137,7 +155,16 @@ export interface DestructionRenderer {
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: { mass?: number; velocity?: Vec3 }): Piece
   pieces(): Piece[]
+  /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
+  wakeRegion(x: number, z: number, radius: number): void
   piece(objectId: string): Piece | null
+  /**
+   * World boxes of what is drawn around (x, z) within `radius`: each drawn mesh of a fixed object (meshes wider than 3 m and parts inside a merged
+   * mesh are left out: walls, floors, roofs), of every piece and of the big fragments, with the object's id and its piece, if it is one. A turned mesh
+   * gives several boxes along its length, so that they follow it instead of its axis box. A walking body uses it to step onto low debris, stop at what is
+   * taller and kick what is light.
+   */
+  solidsNear(x: number, z: number, radius: number): SolidBox[]
   /** Push a piece (throws, blasts). */
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
 import { createPlayerAvatar } from '../src'
+import { ATTACK_CLIPS } from '@adatechnology/game-characters-people'
 import type { PoseClip } from '@adatechnology/game-characters'
 
 const legs = (avatar: ReturnType<typeof createPlayerAvatar>): number[] => avatar.rig.legs.flatMap((leg) => [leg.g.rotation.x, leg.kn.rotation.x])
@@ -40,6 +41,21 @@ describe('createPlayerAvatar', () => {
     expect(avatar.rig.legs[0]!.g.rotation.x).toBeCloseTo(-0.95, 5)
     expect(avatar.rig.upper.rotation.x).toBeCloseTo(0.25, 5)
     expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeCloseTo(-0.35, 5)
+  })
+
+  it('a punch and the guard leave the crouched legs bent; a kick takes them', () => {
+    const clipOf = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
+    for (const id of ['punch_right', 'jab', 'fight_guard']) {
+      const avatar = createPlayerAvatar(THREE, { cascade: false })
+      avatar.play(clipOf(id))
+      run(avatar, 0.2, { speed: 0, crouch: true })
+      expect(avatar.rig.legs[0]!.kn.rotation.x).toBeCloseTo(1.9, 5)
+      expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeCloseTo(-0.35, 5)
+    }
+    const kicking = createPlayerAvatar(THREE, { cascade: false })
+    kicking.play(clipOf('front_kick'))
+    run(kicking, 0.3, { speed: 0, crouch: true })
+    expect(kicking.rig.legs[0]!.kn.rotation.x).not.toBeCloseTo(1.9, 1)
   })
 
   it('down turns the body about the hip and lays it on the ground', () => {

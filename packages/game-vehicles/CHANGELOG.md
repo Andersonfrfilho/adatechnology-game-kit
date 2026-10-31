@@ -1,5 +1,22 @@
 # @adatechnology/game-vehicles
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+  - @adatechnology/game-contracts@0.19.0
+
+## 0.4.4
+
+### Patch Changes
+
+- 30133d3: A closed door or lid is the body's own surface: the flat hinged plate over it and the dark recess under it show only while it swings open or once it has come off, so closed vehicles no longer wear flat grey panels over their curved sides.
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+
 ## 0.4.3
 
 ### Patch Changes

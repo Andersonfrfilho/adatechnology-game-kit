@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-characters-uniformed",
-  "version": "0.1.10",
+  "version": "0.1.12",
   "license": "MIT",
   "description": "Content pack for @adatechnology/game-characters: 7 generic uniformed forces with real Brazilian names (army, military police, civil police, highway police, prison police, special forces, tactical units), rank ladders with the command rule (highest rank alive takes command; opinion below -20 allows disobedience), loadouts as item and weapon ids and loot pools shaped like a FindsProvider. The valley, its 7th BIS and named people stay in the game.",
   "keywords": [

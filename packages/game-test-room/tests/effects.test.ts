@@ -94,22 +94,21 @@ describe('the room lends one effects world', () => {
   })
 })
 
-describe('craters', () => {
-  it('replace the floor with a patch that a big explosion digs into', () => {
-    const room = makeRoom({ craters: true })
-    const floor = room.scene.getObjectByName('floor')
-    expect(floor?.visible).toBe(false)
-    spy(room).effects?.play({ effect: 'm67', point: [0, 0.2, -3] })
-    run(room, 0.1)
-    const patch = room.scene.children.find((child) => child.type === 'Mesh' && (child as import('three').Mesh).geometry.type === 'PlaneGeometry')
-    const heights = (patch as import('three').Mesh).geometry.attributes.position!
-    let lowest = 0
-    for (let index = 0; index < heights.count; index++) lowest = Math.min(lowest, heights.getY(index))
-    expect(lowest).toBeLessThan(-0.05)
+describe('the floor', () => {
+  it('is there by default', () => {
+    expect(makeRoom().scene.getObjectByName('floor')).toBeTruthy()
   })
 
-  it('leave the floor alone by default', () => {
-    expect(makeRoom().scene.getObjectByName('floor')?.visible).toBe(true)
+  it('is a terrain a blast digs: the ground under the point goes down and the player walks into it', () => {
+    const room = makeRoom({ ground: { surface: 'dirt' } })
+    expect(room.scene.getObjectByName('floor')).toBeTruthy()
+    room.world.explode([0, 0.2, -3], 800_000, 8, 'test')
+    run(room, 0.1)
+    expect(room.terrain.heightAt(0, -3)).toBeLessThan(-0.1)
+    room.look([0, 1.7, -3], [0, 1.7, -6])
+    const level = room.camera.position.y
+    run(room, 0.1)
+    expect(room.camera.position.y).toBeLessThanOrEqual(level)
   })
 })
 

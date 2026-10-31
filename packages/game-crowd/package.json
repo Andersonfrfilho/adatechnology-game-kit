@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-crowd",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "license": "MIT",
   "description": "Any crowd as a struct of arrays, pure and seeded: relevance bands, perception by sight, hearing and smell, a sliced flow field, separation, attack slots, chain alerts, doors, piles against walls, abilities as type traits, corpses, population and migration; civilians, herds and flocks; a bridge to game-infection. A literal port of the team game horde. Knows nothing about any game.",
   "keywords": [
