@@ -32,6 +32,8 @@ export class VehicleVisuals {
   /** Shows or hides the plate and the recess of a door or lid by its state (see `showWhenOpen`). */
   private readonly syncPlates = new Map<string, () => void>()
   private lightsOn = true
+  /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
+  private readonly smoothing = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
@@ -342,6 +344,19 @@ export class VehicleVisuals {
       this.I.flattenTire(w, Math.min(0.5, 0.12 + 0.38 * melt))
     }
   }
+  /** Smooths the normals of a cut mesh a slice per frame (see `pump`); until then it draws with flat face normals. */
+  private smoothLater(msh: Obj): void {
+    this.smoothing.set(msh, this.I.creaseTask(msh.geometry, 42))
+  }
+  /** Spends at most `budgetMs` finishing the pending normal smoothing. Call once per frame. */
+  pump(budgetMs = 2.5): void {
+    if (!this.smoothing.size) return
+    const deadline = performance.now() + budgetMs
+    for (const [msh, task] of this.smoothing) {
+      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
+      if (performance.now() >= deadline) return
+    }
+  }
   /** Moves the panel of a lost zone out of the body (the kit's torn-off look). */
   tearOff(p: PartDef): void {
     const z = this.zone(p)
@@ -355,7 +370,7 @@ export class VehicleVisuals {
     }
     dirty.forEach((msh) => {
       const g = msh.geometry
-      if (g.userData.crease || !g.index) this.I.crease(g, 42)
+      if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
       g.computeBoundingSphere()
       g.computeBoundingBox()

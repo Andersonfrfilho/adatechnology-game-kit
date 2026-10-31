@@ -98,7 +98,10 @@ export function installGeometry(kit: Kit): void {
     g.userData.crease = true
     return g
   }
-  function crease(geo: any, deg: any) {
+  const latestCrease = new WeakMap<object, object>()
+  /* The smoothing of `crease` as slices: `step(deadline)` works until the clock passes it and returns whether it finished.
+     The normals start as flat face normals, so the mesh draws right between the slices; the end result is the same as one call. */
+  function creaseTask(geo: any, deg: any) {
     if (geo.index) {
       const ni = geo.toNonIndexed()
       Object.keys(ni.attributes).forEach(function (k) {
@@ -106,32 +109,23 @@ export function installGeometry(kit: Kit): void {
       })
       geo.setIndex(null)
     }
-    const p = geo.attributes.position
-    const n = p.count
-    /* face normals in one array (x, y, z per face): the same arithmetic as the vector operations, without an object per face */
+    const P: ArrayLike<number> = geo.attributes.position.array
+    const n = geo.attributes.position.count
     const faces = n / 3
+    /* face normals in one array (x, y, z per face): the same arithmetic as the vector operations, without an object per face */
     const FN = new Float64Array(faces * 3)
-    const map = new Map<number | string, number[]>()
-    /* vertices closer than 1/2000 share a key; the three rounded coordinates pack into one number (17 bits each) so the lookup hashes no string */
-    const RANGE = 65536
-    function key(i: any): number | string {
-      const x = Math.round(p.getX(i) * 2000)
-      const y = Math.round(p.getY(i) * 2000)
-      const z = Math.round(p.getZ(i) * 2000)
-      if (Math.abs(x) < RANGE && Math.abs(y) < RANGE && Math.abs(z) < RANGE) return ((x + RANGE) * 131072 + (y + RANGE)) * 131072 + (z + RANGE)
-      return x + ',' + y + ',' + z
-    }
-    const keys = new Array(n)
+    const out = new Float32Array(n * 3)
     for (let f = 0; f < faces; f++) {
-      const ax = p.getX(3 * f)
-      const ay = p.getY(3 * f)
-      const az = p.getZ(3 * f)
-      const bx = p.getX(3 * f + 1)
-      const by = p.getY(3 * f + 1)
-      const bz = p.getZ(3 * f + 1)
-      const cx = p.getX(3 * f + 2)
-      const cy = p.getY(3 * f + 2)
-      const cz = p.getZ(3 * f + 2)
+      const o = 9 * f
+      const ax = P[o]
+      const ay = P[o + 1]
+      const az = P[o + 2]
+      const bx = P[o + 3]
+      const by = P[o + 4]
+      const bz = P[o + 5]
+      const cx = P[o + 6]
+      const cy = P[o + 7]
+      const cz = P[o + 8]
       /* cross(C - B, A - B) */
       const e1x = cx - bx
       const e1y = cy - by
@@ -152,41 +146,112 @@ export function installGeometry(kit: Kit): void {
       FN[3 * f + 1] = ny
       FN[3 * f + 2] = nz
       for (let k = 0; k < 3; k++) {
-        const kk = key(3 * f + k)
-        keys[3 * f + k] = kk
-        const list = map.get(kk)
-        if (list) list.push(f)
-        else map.set(kk, [f])
+        out[9 * f + 3 * k] = nx
+        out[9 * f + 3 * k + 1] = ny
+        out[9 * f + 3 * k + 2] = nz
       }
     }
+    const normal = new THREE.BufferAttribute(out, 3)
+    geo.setAttribute('normal', normal)
+    /* a later crease of the same geometry replaces this task: its normals are the ones that stand */
+    const token = {}
+    latestCrease.set(geo, token)
+    /* vertices closer than 1/2000 share a group: open-addressing hash over the three rounded coordinates, no object or string per vertex */
+    let size = 16
+    while (size < n * 2) size *= 2
+    const mask = size - 1
+    const slot = new Int32Array(size).fill(-1)
+    const gx = new Int32Array(n)
+    const gy = new Int32Array(n)
+    const gz = new Int32Array(n)
+    const groupOf = new Int32Array(n)
+    let groups = 0
+    let start: Int32Array
+    let members: Int32Array
     const cs = Math.cos((deg * PI) / 180)
-    const out = new Float32Array(n * 3)
-    for (let i = 0; i < n; i++) {
-      const fi = ((i / 3) | 0) * 3
-      const list = map.get(keys[i]) as number[]
-      let sx = 0
-      let sy = 0
-      let sz = 0
-      for (let j = 0; j < list.length; j++) {
-        const g = list[j] * 3
-        if (FN[g] * FN[fi] + FN[g + 1] * FN[fi + 1] + FN[g + 2] * FN[fi + 2] >= cs) {
-          sx += FN[g]
-          sy += FN[g + 1]
-          sz += FN[g + 2]
+    let phase = 0
+    let at = 0
+    function hashSlice(deadline: number) {
+      for (; at < n; at++) {
+        if ((at & 1023) === 0 && performance.now() > deadline) return false
+        const x = Math.round(P[3 * at] * 2000) | 0
+        const y = Math.round(P[3 * at + 1] * 2000) | 0
+        const z = Math.round(P[3 * at + 2] * 2000) | 0
+        let h = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663) ^ Math.imul(z, 83492791)) & mask
+        let g = slot[h]
+        while (g >= 0 && (gx[g] !== x || gy[g] !== y || gz[g] !== z)) {
+          h = (h + 1) & mask
+          g = slot[h]
         }
+        if (g < 0) {
+          g = groups++
+          slot[h] = g
+          gx[g] = x
+          gy[g] = y
+          gz[g] = z
+        }
+        groupOf[at] = g
       }
-      if (sx * sx + sy * sy + sz * sz < 1e-20) {
-        sx = FN[fi]
-        sy = FN[fi + 1]
-        sz = FN[fi + 2]
-      }
-      const inv = 1 / (Math.sqrt(sx * sx + sy * sy + sz * sz) || 1)
-      out[3 * i] = sx * inv
-      out[3 * i + 1] = sy * inv
-      out[3 * i + 2] = sz * inv
+      return true
     }
-    geo.setAttribute('normal', new THREE.BufferAttribute(out, 3))
-    geo.userData.crease = true
+    function gather() {
+      /* faces of each group, in ascending face order so the sums add in the same order as ever */
+      start = new Int32Array(groups + 1)
+      for (let i = 0; i < n; i++) start[groupOf[i] + 1]++
+      for (let g = 0; g < groups; g++) start[g + 1] += start[g]
+      const fill = start.slice(0, groups)
+      members = new Int32Array(n)
+      for (let i = 0; i < n; i++) members[fill[groupOf[i]]++] = (i / 3) | 0
+    }
+    function smoothSlice(deadline: number) {
+      for (; at < n; at++) {
+        if ((at & 1023) === 0 && performance.now() > deadline) return false
+        const fi = ((at / 3) | 0) * 3
+        const g = groupOf[at]
+        let sx = 0
+        let sy = 0
+        let sz = 0
+        for (let j = start[g], end = start[g + 1]; j < end; j++) {
+          const o = members[j] * 3
+          if (FN[o] * FN[fi] + FN[o + 1] * FN[fi + 1] + FN[o + 2] * FN[fi + 2] >= cs) {
+            sx += FN[o]
+            sy += FN[o + 1]
+            sz += FN[o + 2]
+          }
+        }
+        if (sx * sx + sy * sy + sz * sz < 1e-20) {
+          sx = FN[fi]
+          sy = FN[fi + 1]
+          sz = FN[fi + 2]
+        }
+        const inv = 1 / (Math.sqrt(sx * sx + sy * sy + sz * sz) || 1)
+        out[3 * at] = sx * inv
+        out[3 * at + 1] = sy * inv
+        out[3 * at + 2] = sz * inv
+      }
+      return true
+    }
+    function step(deadline: number) {
+      if (latestCrease.get(geo) !== token) return true
+      if (phase === 0) {
+        if (!hashSlice(deadline)) return false
+        gather()
+        phase = 1
+        at = 0
+      }
+      if (phase === 1) {
+        const done = smoothSlice(deadline)
+        normal.needsUpdate = true
+        if (!done) return false
+        phase = 2
+        geo.userData.crease = true
+      }
+      return true
+    }
+    return { geo: geo, step: step }
+  }
+  function crease(geo: any, deg: any) {
+    creaseTask(geo, deg).step(Infinity)
     return geo
   }
   function pathShape(items: any) {
@@ -574,5 +639,5 @@ export function installGeometry(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
+  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, creaseTask, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
 }

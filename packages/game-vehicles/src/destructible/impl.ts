@@ -983,6 +983,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     afterBlast(out)
     afterRoll(out)
     applyEffects()
+    vis?.pump()
     if (wasSimulating || out.length > 0 || handledBefore !== (blastHandled ? 1 : 0) + (rollHandled ? 2 : 0)) stateCache = undefined
     return out
   }
