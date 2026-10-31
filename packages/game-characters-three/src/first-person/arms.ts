@@ -519,7 +519,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           dropped.p.y -= AWAY_DROP * ease(arm.away)
           pose = dropped
         }
-        drawArm(arm, pose, mode === 'target' ? viewOf(state.camera) : null)
+        drawArm(arm, pose, mode === 'target' && targets?.elbows !== 'body' ? viewOf(state.camera) : null)
         const shown = arm.away < AWAY_HIDDEN
         for (const part of [arm.anchor, arm.upper, arm.fore, arm.cuff, arm.elbow]) part.visible = shown
       }

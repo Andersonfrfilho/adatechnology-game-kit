@@ -189,6 +189,27 @@ describe('carrying and drinking', () => {
     expect(room.useItem('nope')).toBe(false)
   })
 
+  it('C crouches and leaves the held item alone; Shift+F is its second use, F the first', () => {
+    const room = makeRoom()
+    room.spawn('coffee_cup', [0, 0, -3], 0)
+    room.look([0, 1.0, -1.8], [0, 0.05, -3])
+    room.grab()
+    const uses = (): string[] => room.log.entries({ type: 'use_item' }).map((entry) => String(entry.data?.use))
+    const press = (code: string, shiftKey = false): void => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code, shiftKey }))
+      for (let i = 0; i < 100; i++) room.update(1 / 60)
+      window.dispatchEvent(new KeyboardEvent('keyup', { code, shiftKey }))
+      for (let i = 0; i < 10; i++) room.update(1 / 60)
+    }
+    press('KeyC')
+    expect(uses()).toHaveLength(0)
+    press('KeyC')
+    press('KeyF', true)
+    press('KeyF')
+    expect(uses()).toHaveLength(2)
+    expect(uses()[0]).not.toBe(uses()[1])
+  })
+
   it('nothing to use without a held item', () => {
     expect(makeRoom().useItem('drink')).toBe(false)
   })
