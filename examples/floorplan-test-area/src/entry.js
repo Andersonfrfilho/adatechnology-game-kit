@@ -11,7 +11,7 @@ import { register as registerStructure } from '@adatechnology/game-floorplan-str
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
-import { FLOORPLAN_AREA_ID, createFloorplanTestModule } from '@adatechnology/game-floorplan-three'
+import { FLOORPLAN_AREA_ID, createFloorplanTestModule } from '@adatechnology/game-floorplan-three/testing'
 
 export { FLOORPLAN_AREA_ID, createFloorplanTestModule }
 
