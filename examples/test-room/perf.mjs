@@ -25,7 +25,7 @@ const BUDGET = {
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
 }
-const DRAW_MS = 1500
+const DRAW_MS = 300
 const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 120000
 
 function loadPlaywright() {
@@ -102,6 +102,7 @@ async function fireAndSettle(ids, gapMs = 0) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
     await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
+    await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push(`${id} never got ready`))
     await pause(DRAW_MS)
     const fired = await page.evaluate((weapon) => {
       const room = window.__testRoom

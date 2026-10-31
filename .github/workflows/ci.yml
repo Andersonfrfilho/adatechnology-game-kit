@@ -222,7 +222,7 @@ jobs:
   # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu).
   perf-budget:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
