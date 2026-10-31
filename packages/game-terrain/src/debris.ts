@@ -82,6 +82,7 @@ export function createDebrisStore(max: () => number): DebrisStore {
     },
     clear() {
       list.length = 0
+      serial = 0
     },
   }
 }
