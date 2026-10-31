@@ -2,9 +2,9 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { createArsenal } from '@adatechnology/game-weapons'
-import { exactSnapshot } from '@adatechnology/golden-tool'
+import { exactSnapshot, installPortableMath } from '@adatechnology/golden-tool'
 import * as THREE from 'three'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { ARCHETYPE_MODELS, ATTACHMENT_MODELS, MODEL_ENTRIES, buildProp, buildWeaponModelById, fitAttachmentModels, mountFrame, weaponProp } from '../src'
 import { buildCartridge, cartridgeShape } from '../src/models/cartridge'
@@ -17,6 +17,12 @@ import { modelKit } from '../src/models/kit'
  */
 // happy-dom: import.meta.url is not a file, the fixture is found from the package folder
 const FIXTURE = join(process.cwd(), 'tests/fixtures/exact-weapons.json')
+// Math.pow changed its last bit between Node 22 and 24: the hashes here use the portable one, so both give the same bytes
+let restoreMath: () => void = () => undefined
+beforeAll(() => {
+  restoreMath = installPortableMath()
+})
+afterAll(() => restoreMath())
 
 const arsenal = createArsenal({ rules: { faults: false } })
 const catalogue = arsenal.attachments

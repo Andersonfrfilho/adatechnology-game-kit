@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { exactSnapshot } from '@adatechnology/golden-tool'
-import { afterEach, describe, expect, it } from 'vitest'
+import { exactSnapshot, installPortableMath } from '@adatechnology/golden-tool'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { OPERATIONS, registerCaseScenario } from './helpers/cases'
 import { makeKit } from './helpers/kit'
@@ -15,6 +15,13 @@ import { SAMPLE_KEYS } from './helpers/sample-fleet'
 const FIXTURE = join(process.cwd(), 'tests/fixtures/exact-vehicles.json')
 const TITLE = 'the sample vehicles, bit for bit'
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
+// Math.pow changed its last bit between Node 22 and 24: the hashes here use the portable one, so both give the same bytes. Only this file:
+// tests/fixtures/golden.json holds the team's digests of the original SDK, which match the native pow.
+let restoreMath: () => void = () => undefined
+beforeAll(() => {
+  restoreMath = installPortableMath()
+})
+afterAll(() => restoreMath())
 
 type Root = { traverse(f: (o: unknown) => void): void }
 const kit = makeKit()
