@@ -52,7 +52,8 @@ const browser = await chromium.launch({
   args: GPU_MODE ? REAL_GL : SOFTWARE_GL,
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
-const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height: 900 } : { width: 960, height: 540 } })
+// software GL pays per pixel and the counters do not depend on the size, so CI draws a small window
+const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height: 900 } : { width: 320, height: 180 }, deviceScaleFactor: 1 })
 const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
