@@ -32,6 +32,26 @@ describe('the ground on the screen', () => {
     expect(lowest).toBeLessThan(-0.2)
   })
 
+  it('digging a chunk again refills the buffers it has instead of making new ones', () => {
+    const { view, terrain } = make('dirt', { maxDirtyChunksPerFrame: 100 })
+    view.sync(CAMERA)
+    terrain.strike('explosive', { x: 0, z: 0, energy: 800_000 })
+    view.sync(CAMERA)
+    const drawn = (): THREE.BufferGeometry[] => view.group.children.filter((child): child is THREE.Mesh => child instanceof THREE.Mesh && child.name === '').map((mesh) => mesh.geometry)
+    const pristineOf = (): THREE.BufferGeometry => (view.group.children.find((child) => child.name === 'terrain-pristine') as THREE.Mesh).geometry
+    const first = drawn()
+    const pristine = pristineOf()
+    expect(first.length).toBeGreaterThan(0)
+    for (let strike = 0; strike < 5; strike++) {
+      terrain.strike('explosive', { x: 0, z: 0, energy: 800_000 })
+      view.sync(CAMERA)
+    }
+    const after = drawn()
+    expect(after.length).toBe(first.length)
+    after.forEach((geometry, index) => expect(geometry).toBe(first[index]))
+    expect(pristineOf()).toBe(pristine)
+  })
+
   it('a far chunk draws fewer vertices', () => {
     const { view, terrain } = make('dirt', { maxDirtyChunksPerFrame: 100 })
     terrain.strike('explosive', { x: 0, z: 0, energy: 800_000 })
