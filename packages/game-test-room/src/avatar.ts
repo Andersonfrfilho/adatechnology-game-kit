@@ -10,6 +10,8 @@ export interface RoomAvatarItemUse {
   readonly id: string
   readonly position: readonly [number, number, number]
   readonly rotation: readonly [number, number, number]
+  /** How closed the other hand is when it works on the item (turning a cap off); the room brings it there with `reach`. */
+  readonly gripL?: number
 }
 
 /** What the room tells the avatar every frame. */
@@ -62,20 +64,28 @@ export interface RoomAvatar {
   /** The joint of a shoulder: in third person the room rests a long gun's stock in the pocket just inside the right one (`ModuleHost.holdFrame`). */
   shoulder?(side: 'R' | 'L'): THREE_NS.Object3D
   /**
-   * The arms of the first-person view. The room shows `root` only in first person (the body only in third), updates it every frame after the modules'
-   * frame hooks (so the tool in the hands is already placed) and before the render.
+   * Where the body's eyes are after its pose (world space), sampled before `reach`: with it the room draws the body in both views, puts the first-person camera there (pulled back out of
+   * walls) and shoots, aims and reaches from there in both views. Without it the room keeps the player's own eye.
    */
-  firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: RoomFirstPersonState): void }
+  eye?(out?: THREE_NS.Vector3): THREE_NS.Vector3
+  /** Hides the head and neck from `camera` while the view is `first` (shadows, mirrors and other cameras keep seeing them). */
+  setView?(mode: CameraMode, camera: THREE_NS.Object3D | null): void
   /**
    * Plays the strike `clipId` (on the body and on the arms) and answers the seconds until its impact, or null when this avatar has no such clip. The room then waits that long
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
    */
   strike?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
   /**
-   * Brings the body's hands to the tool in them (`HandTargets`, world space: the module's, as the first-person arms get them). The room calls it in third person every frame, after the
-   * modules have placed the tool and before the render; an avatar without it keeps the hands where its own pose puts them.
+   * Brings the body's hands to the tool in them (`HandTargets`, world space: the module's). The room calls it in both views every frame, after the modules have placed the tool and
+   * before the render, with `view` (the eye's camera, and `contact` to keep the hands out of walls) in both views. An avatar without it keeps the hands where its own pose puts them.
    */
-  reach?(targets: HandTargets | null): void
+  reach?(targets: HandTargets | null, view?: RoomReachView): void
+}
+
+/** The first-person view the body's hands keep to: the camera, and the room's ray (`contact`) so a hand stops before a wall. */
+export interface RoomReachView {
+  camera: THREE_NS.Object3D
+  keepOutside?: { contact(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }
 }
 
 /** Which leg a kick uses: `alternate` swaps at each kick (right first). */

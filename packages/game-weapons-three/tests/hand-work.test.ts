@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
+
+type HandState = ReturnType<TestRoom['handState']>
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
 import { MODEL_ENTRIES, buildWeaponModelById } from '../src/models'
@@ -12,17 +14,16 @@ function stubRenderer(): THREE.WebGLRenderer {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-function setup(): { room: TestRoom; last: () => RoomFirstPersonState } {
+function setup(): { room: TestRoom; last: () => HandState } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
-  let state: RoomFirstPersonState | null = null
-  const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, firstPerson: { root: new THREE.Group(), update: (_dt, next) => void (state = { ...next }) }, strike: () => null }
+  const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }
   room.setAvatar(avatar)
   room.look([0, 1.7, 5], [0, 1.2, -11])
-  return { room, last: () => state! }
+  return { room, last: () => room.handState() }
 }
 const step = (room: TestRoom, frames: number, each?: () => void): void => {
   for (let i = 0; i < frames; i++) {

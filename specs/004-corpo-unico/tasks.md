@@ -39,6 +39,8 @@ mudança de estado do jogador aparece nas duas vistas, no mesmo commit.
 
 - T3.1 `game-weapons-three`: `place()` sempre com `placeOnBody`; `HAND_OFFSET`, `HANDGUN_OFFSET` e a escala de 1ª pessoa saem;
   `HAND_IN_VIEW` e `WALL_PULL` passam a valer pela restrição de vista do IK. Goldens e e2e da área de armas nas duas vistas.
+  A mão de apoio sob o guarda-mão chega a ~60° do eixo no corpo (ombro 0,3 m ao lado); o e2e aceita até 65° (dono, 2026-10-31): reavaliar
+  a pose (giro do peito e da escápula do lado de apoio) e apertar o limite, e voltar o close-up para a 1ª pessoa.
 
 ## Fase 4 — Golpes e porta
 > 🤖 Modelo: `sonnet`

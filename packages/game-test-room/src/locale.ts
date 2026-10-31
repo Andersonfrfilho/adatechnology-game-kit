@@ -212,6 +212,7 @@ const en: RoomStrings = {
     'use.pour': 'pour',
     'use.pour_out': 'pour out',
     'use.open': 'open',
+    'use.unscrew': 'unscrew',
     'use.close': 'close',
 
     'hud.reloading': 'Reloading...',
@@ -568,6 +569,7 @@ const ptBR: RoomStrings = {
     'use.pour': 'despejar',
     'use.pour_out': 'esvaziar',
     'use.open': 'abrir',
+    'use.unscrew': 'desenroscar',
     'use.close': 'fechar',
 
     'hud.reloading': 'Recarregando...',

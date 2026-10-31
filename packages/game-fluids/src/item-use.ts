@@ -2,7 +2,8 @@ import itemUsesData from './data/item-uses.json'
 import { lerp3, quatFromEuler, quatMultiply, quatRotate, add } from './math'
 import type { FluidEvent, FluidWorld, ItemUseDef, ItemUsePlayer, Quat, Vec3 } from './types'
 
-/** Built-in scripted uses of a held item (data in `data/item-uses.json`): `sip`, `drink`, `chug`, `eat` (spoonfuls from an open tin), `pour`, `pour_out`, `open`, `close`. */
+/** Built-in scripted uses of a held item (data in `data/item-uses.json`): `sip`, `drink`, `chug`, `eat` (spoonfuls from an open tin), `pour`, `pour_out`, `open`, `close`,
+ * `unscrew` (the other hand turns a screw cap off, `turn` keys, before the `open` key). */
 export const ITEM_USES: ItemUseDef[] = itemUsesData as unknown as ItemUseDef[]
 
 /** World transform of the hand (or any holder) the item pose is relative to. */

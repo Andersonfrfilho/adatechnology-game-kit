@@ -126,3 +126,5 @@ A sala cria um motor de `@adatechnology/game-audio` (opção `audio`, `false` pa
 ## O que vem pela migração (spec 001)
 Decisão E5: o contrato do módulo já tem bancada (T0.2); a Oficina de efeitos é o módulo `vfx` do `game-vfx-three` (`examples/vfx-test-area`, T5.2). V5: módulos de veículos e vegetação viram `examples/vehicles-test-area` e `vegetation-test-area`. Cada área da página do kit abre o seu
 ambiente via `?area=`. Nada disso existe ainda no pacote.
+
+**Um corpo só (spec 004).** Um `RoomAvatar` com `eye()` é desenhado nas duas vistas: em 1ª pessoa a câmera fica nos olhos do corpo (recuados para fora de parede) e a mira, o tiro e o `reach` das mãos saem desse ponto nas duas vistas; `setView` esconde só a cabeça da câmera do jogador. Não há mais braços separados (`RoomAvatar.firstPerson` saiu). `room.look(olho, alvo)` de script mantém a vista exata até o jogador se mexer. Com corpo, agachar, curvar-se sobre peça baixa e sentar só mudam a pose: o olho do jogador (`CROUCH_DROP`, `setBend`, olho do assento) não mexe na câmera, que segue só o `eye()` do corpo (agachado ≈ 1,3 m); sem corpo nada muda.

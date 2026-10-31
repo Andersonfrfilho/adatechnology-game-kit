@@ -144,6 +144,27 @@ export function openItem(T: typeof THREE_NS, root: THREE_NS.Object3D, modelId: s
   return true
 }
 
+/** How high (in cap heights) a screw cap is lifted when it is fully off its thread. */
+const CAP_OFF = 1.6
+
+/**
+ * Turns the cap of a `screw_cap` model `turned` radians round its axis and lifts it `lift` (0..1) of the way off its thread, from where the model drew it. Before
+ * `openItem`, which takes it off. False for a model that does not open with a screw cap.
+ */
+export function turnItem(root: THREE_NS.Object3D, modelId: string, state: { readonly turned: number; readonly lift: number }): boolean {
+  if (itemOpening(modelId)?.style !== 'screw_cap') return false
+  root.traverse((o) => {
+    if (!isLid(o)) return
+    const mesh = o as THREE_NS.Mesh
+    const base = (mesh.userData.lidBase ??= { y: mesh.position.y, turn: mesh.rotation.y }) as { y: number; turn: number }
+    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+    const height = (mesh.geometry.boundingBox!.max.y - mesh.geometry.boundingBox!.min.y) * mesh.scale.y
+    mesh.rotation.y = base.turn + state.turned
+    mesh.position.y = base.y + Math.min(1, Math.max(0, state.lift)) * height * CAP_OFF
+  })
+  return true
+}
+
 /** Shows how much is left in an opened item: the food inside the rim shrinks with `share` (0..1 of what it held) and is gone when it is eaten up. */
 export function setOpeningContents(root: THREE_NS.Object3D, share: number): void {
   const opening = root.getObjectByName(OPENING_NAME)

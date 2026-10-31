@@ -32,6 +32,8 @@ export class VehicleVisuals {
   private readonly gone = new Set<string>()
   /** Shows or hides the plate and the recess of a door or lid by its state (see `showWhenOpen`). */
   private readonly syncPlates = new Map<string, () => void>()
+  /** Doors and lids whose own skin was cut from the body and hung on the hinge (true), or that had none to take and keep the plate (false). */
+  private readonly skins = new Map<string, boolean>()
   private lightsOn = true
   /** Heavy body meshes whose triangle index is still to build (null once done). */
   private warming: Obj[] | null
@@ -192,11 +194,23 @@ export class VehicleVisuals {
    * keeps the shape of its model instead of flat panels over its curved sides. Follows the hinge's rotation, whoever turns it (the clips of a host, `detach`).
    */
   private showWhenOpen(id: string, piv: Obj, panel: Obj, recess: Obj): void {
+    let busy = false
     const sync = (): void => {
+      if (busy) return
       const r = piv.rotation
       const open = Math.abs(r.x) + Math.abs(r.y) + Math.abs(r.z) > 1e-3 || this.gone.has(id) || piv.parent !== this.c.vehicle
-      panel.visible = open
-      recess.visible = open
+      // the first time it swings, the door takes its own skin, window and trim off the body: what opens is the door the model draws
+      if (open && !this.gone.has(id) && piv.parent === this.c.vehicle && !this.skins.has(id)) {
+        busy = true
+        try {
+          this.skins.set(id, this.takeSkin(id, piv))
+        } finally {
+          busy = false
+        }
+      }
+      // with its own skin hung on the hinge the opening shows the cabin; the flat plate and its dark recess stay for a model with no skin to take
+      panel.visible = open && !this.skins.get(id)
+      recess.visible = open && !this.skins.get(id)
     }
     const euler = piv.rotation
     const quaternion = piv.quaternion
@@ -212,6 +226,58 @@ export class VehicleVisuals {
     })
     this.syncPlates.set(id, sync)
     sync()
+  }
+  /**
+   * Cuts the skin of a door or lid zone out of the body (as the damage's hanging door does) and hangs it, with the thin parts on it (trim, handle) and, for a door, the side
+   * window over it, on the hinge. Done with the hinge closed, so every piece keeps its place; answers whether there was skin to take.
+   */
+  private takeSkin(id: string, piv: Obj): boolean {
+    const p = this.byId.get(id)
+    const z = p && this.zone(p)
+    if (!p || !z) return false
+    const I = this.I
+    const B = z.box
+    const q = piv.quaternion.clone()
+    piv.quaternion.identity()
+    this.c.root.updateMatrixWorld(true)
+    const inv = I.worldInverseOf(this.c)
+    let objs: Obj[] = []
+    try {
+      if (p.role === 'door') {
+        const dirty = new Set<Obj>()
+        const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
+        const pcs = (I.cutPanel(this.c, z, rect, true, dirty) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
+        this.mend(dirty)
+        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...(I.windowsOver(this.c, z, inv) as Obj[])]
+      } else {
+        const pcs = this.cutZone(z)
+        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[])]
+      }
+    } catch {
+      objs = []
+    }
+    const deform: Obj[] = (this.c as any).deform ?? []
+    for (const o of objs) {
+      if (!o.parent || o === piv) continue
+      piv.attach(o)
+      o.traverse((x: Obj) => {
+        x.userData.noFollow = true
+      })
+      const di = deform.indexOf(o)
+      if (di >= 0) deform.splice(di, 1)
+    }
+    piv.quaternion.copy(q)
+    this.c.root.updateMatrixWorld(true)
+    return objs.length > 0
+  }
+  private mend(dirty: Set<Obj>): void {
+    dirty.forEach((msh) => {
+      const g = msh.geometry
+      if (g.userData.crease || !g.index) this.I.crease(g, 42)
+      else g.computeVertexNormals()
+      g.computeBoundingSphere()
+      g.computeBoundingBox()
+    })
   }
   private makeMirror(p: PartDef): void {
     const [cx, cy, cz] = p.box.center

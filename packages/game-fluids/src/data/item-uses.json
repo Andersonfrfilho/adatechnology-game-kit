@@ -629,5 +629,81 @@
         "action": "none"
       }
     ]
+  },
+  {
+    "id": "unscrew",
+    "duration": 2.6,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.35,
+        "position": [
+          0.06,
+          -0.09,
+          -0.34
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "turn"
+      },
+      {
+        "t": 1.95,
+        "position": [
+          0.06,
+          -0.09,
+          -0.34
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 2.2,
+        "position": [
+          0.06,
+          -0.09,
+          -0.34
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "open"
+      },
+      {
+        "t": 2.6,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
   }
 ]

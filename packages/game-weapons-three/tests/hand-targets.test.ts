@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
+
+type HandState = ReturnType<TestRoom['handState']>
 import type { HandTargets } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
@@ -12,22 +14,20 @@ function stubRenderer(): THREE.WebGLRenderer {
 }
 
 /** A room whose first-person arms are a recorder: it keeps the last hand targets the room lent it. */
-function roomWithRecorder(): { room: TestRoom; last: () => RoomFirstPersonState | null } {
+function roomWithRecorder(): { room: TestRoom; last: () => HandState | null } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
-  let state: RoomFirstPersonState | null = null
   const avatar: RoomAvatar = {
     root: new THREE.Group(),
     update: () => undefined,
-    firstPerson: { root: new THREE.Group(), update: (_dt, next) => void (state = { ...next }) },
     strike: () => null,
   }
   room.setAvatar(avatar)
   room.look([0, 1.7, 5], [0, 1.2, -11])
-  return { room, last: () => state }
+  return { room, last: () => room.handState() }
 }
 const run = (room: TestRoom, seconds: number): void => {
   for (let elapsed = 0; elapsed < seconds; elapsed += 0.02) room.update(0.02)

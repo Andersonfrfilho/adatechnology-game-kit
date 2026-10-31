@@ -317,17 +317,23 @@ describe('detaching and mechanics', () => {
 })
 
 describe('door and lid plates', () => {
-  it('a closed door is the body itself: its flat plate and recess show only while it swings open or once it has come off', () => {
+  it('a closed door is the body itself, and the first swing hangs the skin and window of the door itself on the hinge in place of the flat plate', () => {
     const { item, d } = make('proto')
     const piv = item.root.getObjectByName('door_front_left') ?? item.root.getObjectByName(d.describe().parts.find((p) => /door/.test(p.id))!.id)
     expect(piv).toBeTruthy()
     const panel = piv!.children[0]!
     expect(panel.visible).toBe(false)
+    expect(piv!.children.length).toBe(1)
     piv!.rotation.set(0, 0.6, 0)
-    expect(panel.visible).toBe(true)
+    // the skin cut from the body, its trim and the side window now turn with the hinge
+    expect(piv!.children.length).toBeGreaterThan(1)
+    expect(panel.visible).toBe(false)
+    const pieces = piv!.children.length
     piv!.rotation.set(0, 0, 0)
+    // closed again, the pieces stay on the hinge (no second cut)
+    expect(piv!.children.length).toBe(pieces)
     expect(panel.visible).toBe(false)
     piv!.quaternion.set(0, Math.sin(0.3), 0, Math.cos(0.3))
-    expect(panel.visible).toBe(true)
+    expect(panel.visible).toBe(false)
   })
 })
