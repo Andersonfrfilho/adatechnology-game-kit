@@ -36,7 +36,7 @@ cases.push(['house/apartamento:1:floor2', () => house('apartamento', 1, { buildi
 const destroyed = (hit: (s: { world: any; d: any; centre: (id: string) => number[] }) => void): Root => {
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { scene, world, eventBudgetMs: Infinity })
   const { house: built } = houseOf(planOf('sobrado', 3), { destruction: world, destructionRenderer: renderer })
   scene.add(built.group)
   const d = built.destruction

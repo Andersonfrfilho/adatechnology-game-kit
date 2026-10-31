@@ -6,6 +6,10 @@ export interface BreachViewOptions {
   structure: any
   /** The destructible spec the world was given (units and layers per part). */
   spec: () => any
+  /** Repaint damaged walls from `flush` (once per wall per frame, within a time budget) instead of on every event. */
+  deferPaint?: boolean
+  /** Milliseconds `flush` may spend repainting walls (at least one wall is always repainted). Default 4. */
+  paintBudgetMs?: number
 }
 
 /**
@@ -68,6 +72,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
     const views = new Map<string, any>()
+    /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
+    const dirty = new Set<any>()
+    const paintBudgetMs = opts.paintBudgetMs ?? 4
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
     const dropped: any[] = []
     let lod = 0
@@ -388,9 +395,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         for (const m of view.shells) m.userData.behind = () => view.units
         view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
       }
-      paint(view)
       views.set(hostId, view)
-      invalidate(); invalidateShadow()
+      // the hole a wall gets (an opening, a unit knocked out) shows at once; the plaster chipping around it fills in with the next flush
+      if (opts.deferPaint && change.spall) dirty.add(view)
+      else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
     }
 
@@ -401,8 +409,23 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       }
     }
 
+    /** Repaints the walls whose damage changed since the last call, until the budget is spent; the rest wait for the next call. Returns how many walls wait. */
+    function flush(budgetMs: number = paintBudgetMs): number {
+      if (dirty.size === 0) return 0
+      const deadline = performance.now() + budgetMs
+      for (const view of dirty) {
+        dirty.delete(view)
+        paint(view)
+        if (performance.now() >= deadline) break
+      }
+      invalidate(); invalidateShadow()
+      return dirty.size
+    }
+
     function dispose(view: any) {
-      view.units.removeFromParent(); view.units.dispose(); view.unitMaterial.dispose()
+      dirty.delete(view)
+      if (view.units) { view.units.removeFromParent(); view.units.dispose() }
+      view.unitMaterial.dispose()
       for (const m of view.shells) { m.removeFromParent(); m.geometry.dispose(); m.material.dispose() }
       view.mask.texture.dispose(); view.core.texture.dispose()
     }
@@ -452,6 +475,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       },
       /** LOD 0 draws the cut wall; LOD 1 and 2 give the wall its box back. */
       setLod(level: number): void {
+        flush(Infinity)
         const was = lod; lod = level
         if ((was === 0) === (level === 0)) return
         for (const v of views.values()) {
@@ -471,10 +495,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         for (const v of dropped) plain(v, true)
         dropped.length = 0
       },
+      flush,
       /** The wall has damage drawn. */
       has(partId: string): boolean { return views.has(partId) },
       /** Walls with damage drawn, units out of them, craters shots broke through units that stay, and units laid bare at the edge of the cuts. */
-      statistics: () => ({
+      statistics: () => (flush(Infinity), {
         walls: views.size,
         gone: [...views.values()].reduce((n, v) => n + v.gone, 0),
         craters: [...views.values()].reduce((n, v) => n + v.pits, 0),

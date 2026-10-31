@@ -1,5 +1,8 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
+/** How long damage waits for the host's `update` of a followed object before it is painted anyway. */
+const FOLLOW_FLUSH_FALLBACK_MS = 100;
+
 export function installDestructionWorld(K: Kernel, shared: Shared): void {
   const { THREE, cfg, invalidateShadow, invalidate, rngString, FRAGMENT_GEO, fragmentMaterial, createBreachView } = K;
   function createHouseDestruction(root, house, structure, parts, colliders, water) {
@@ -7,7 +10,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         // cfg.destructionRenderer = createDestructionRenderer(THREE, { scene, world }) of @adatechnology/game-destruction-three: it draws fracture, collapse, fragments, spalls and the rebar cage on the vertex ranges this house binds. Without it the house draws its own (hide, fall, shards).
         const R = cfg.destructionRenderer || null, listeners = new Set<(e: any) => void>();
         D.renderer = R; D.spec = null;
-        const breach = createBreachView({ house, structure, spec: () => D.spec }); D.breach = breach;
+        const breach = createBreachView({ house, structure, spec: () => D.spec, deferPaint: true, ...(cfg.breachPaintBudgetMs !== undefined ? { paintBudgetMs: cfg.breachPaintBudgetMs } : {}) }); D.breach = breach;
         D.onEvent = fn => { listeners.add(fn); return () => listeners.delete(fn); };
         const pieceId = p => (structure.byId.has(p.id) ? p.id : p.type === 'water_tank' && structure.byId.has('water_tank') ? 'water_tank' : null);
         for (const p of Object.values<any>(parts)) if (p.damageable) { const id = pieceId(p); if (id) { if (!facets.has(id)) facets.set(id, []); facets.get(id).push(p.damageable); } }
@@ -83,7 +86,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           if (world) D.world = world; if (D.active || !D.world) return D; house.updateMatrixWorld(true);
           const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(); house.matrixWorld.decompose(p, q, sc);
           D.specOptions = specOptions || null; D.spec = structure.spec(specOptions); D.id = D.world.add(D.spec, { id: 'house3d:' + (++shared.destructionSeq), position: [p.x, p.y, p.z], rotation: [q.x, q.y, q.z, q.w] });
-          breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf() });
+          breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf(), onFrame: () => breach.flush() });
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
         D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; };
@@ -91,6 +94,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world, id, spec) => {
           D.spec = spec; breach.claim();
+          let fallback: ReturnType<typeof setTimeout> | null = null;
           const offFollow = world.on('*', e => {
             if (e.object !== id) return;
             switch (e.type) {
@@ -101,8 +105,10 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
               case 'collapse': for (const p of e.parts) breach.drop(p); break;
               default: break;
             }
+            // a host that never calls `update` still gets the damage painted
+            if (!fallback && typeof setTimeout === 'function') fallback = setTimeout(() => { fallback = null; breach.flush(Infinity); }, FOLLOW_FLUSH_FALLBACK_MS);
           });
-          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); } };
+          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); }, update: () => { breach.flush(); } };
         };
         D.piece = id => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);
@@ -123,6 +129,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           return r;
         };
         D.animate = dt => {
+          breach.flush(); // the damage of this frame's events is painted once, here, instead of once per event
           if (R) return; // the renderer steps fragments and loose pieces in its own update
           let moved = false;
           for (const [id, list] of bodies) {
