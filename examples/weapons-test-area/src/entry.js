@@ -4,7 +4,7 @@
 // Y detonates the charges set down for the remote detonator (C4); the Claymore goes off by itself when a body crosses its trip wire, E grabs, G throws what is held. The fuel barrels, the propane cylinder and the car tank stand in the east corner.
 // Accessories: the bench has a choice per mount of the weapon in hand (only what fits it), L turns the light on and off, K the laser, V folds or opens the stock (on a weapon with no stock that moves, V is the kick),
 // U switches between the weapon and the launcher under its barrel, and the right mouse button aims (zoom by the optic that is fitted; on a weapon that does not fire it still grabs).
-import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
+import { createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
 import { itemModels } from '@adatechnology/game-items-three'
 
 export { createWeaponsTestModule }

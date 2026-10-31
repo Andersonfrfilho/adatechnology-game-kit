@@ -38,6 +38,7 @@ const result = await esbuild.build({
   alias: {
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    '@adatechnology/game-weapons-three/testing': join(pkg('game-weapons-three'), 'dist/testing.js'),
     // the sling and the ammunition belt of the accessories are drawn with the cord of the interactables
     '@adatechnology/game-interactables': join(pkg('game-interactables'), 'dist/index.js'),
     '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),

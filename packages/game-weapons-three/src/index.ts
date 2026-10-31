@@ -3,8 +3,10 @@
  * fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area as a `TestableModule`
  * (any host of @adatechnology/game-contracts, like the test room, loads it with `loadModule`).
  */
-export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './area'
-export type { WeaponsTestModuleOptions } from './area'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { WeaponsTestModuleOptions } from './testing'
 export { WEAPON_THUMBNAILS, DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl, weaponThumbnailCredit } from './thumbnails'
 export type { WeaponThumbnailEntry } from './thumbnails'
 export { createExplosivesTestModule, DEFAULT_EXPLOSIVES_SCENE, EXPLOSIVES_AREA_ID } from './explosives-area'

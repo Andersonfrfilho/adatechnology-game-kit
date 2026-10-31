@@ -65,9 +65,10 @@ const domainAdapterRules = adapters.map((adapterName) => {
   const allowed = [...SHARED_ADAPTERS, ...Object.keys(ADAPTER_COMPOSITION_ALLOWLIST[adapterName] ?? {})]
   return {
     name: 'no-domain-adapter-to-adapter',
-    comment: 'A domain adapter only imports game-shapes-three and game-render-three; composition is listed in ADAPTER_COMPOSITION_ALLOWLIST.',
+    comment: 'A domain adapter only imports game-shapes-three and game-render-three; composition is listed in ADAPTER_COMPOSITION_ALLOWLIST (test-area/ and bench/ excepted).',
     severity: 'error',
-    from: { path: `^packages/${escapeDots(adapterName)}/src/` },
+    // test-area/ and bench/ are the code behind ./testing: a test area composes the other adapters on purpose (D6)
+    from: { path: `^packages/${escapeDots(adapterName)}/src/`, pathNot: `^packages/${escapeDots(adapterName)}/src/(test-area|bench)/` },
     to: {
       path: inPackages(adapters),
       pathNot: [`^packages/${escapeDots(adapterName)}/`, ...allowed.map((name) => `^packages/${escapeDots(name)}/`)],
