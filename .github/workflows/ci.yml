@@ -130,7 +130,8 @@ jobs:
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
   # In shards, each a job of its own: one job with every area reached the 40 min limit. A new area goes in the shard with the least time.
-  # An entry `area:part` runs one part of that area's check (TEST_ROOM_PART in examples/test-room/test.mjs: the scenarios in two halves, the views, the hands).
+  # An entry `area:part` runs one part of that area's check (EXAMPLE_PART in its test.mjs): the test room's scenarios in two halves, views and hands; the
+  # furniture area's checks in each language and its screenshots.
   examples:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -142,7 +143,9 @@ jobs:
           - test-room:scenarios:2/2
           - test-room:views
           - test-room:hands
-          - interactables-test-area
+          - interactables-test-area:pt-BR
+          - interactables-test-area:en
+          - interactables-test-area:shots
           - floorplan-test-area vfx-test-area weapons-test-area characters-test-area
           - animals-test-area vehicles-test-area vegetation-test-area urban-test-area
           - audio-test-area weather-test-area player-test-area crowd-test-area stories-test-area
@@ -181,7 +184,7 @@ jobs:
             part=""
             if [ "$entry" != "$area" ]; then part="${entry#*:}"; fi
             echo "::group::$entry"
-            TEST_ROOM_PART="$part" node "examples/$area/test.mjs"
+            EXAMPLE_PART="$part" node "examples/$area/test.mjs"
             echo "::endgroup::"
           done
 

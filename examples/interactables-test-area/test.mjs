@@ -43,7 +43,10 @@ async function open(query = '') {
   return page
 }
 
-for (const lang of ['pt-BR', 'en']) {
+// EXAMPLE_PART runs one part of the check in its own CI job: `pt-BR` or `en` (every check in that language), `shots` (the screenshots); unset runs all
+const PART = process.env.EXAMPLE_PART || 'all'
+const languages = ['pt-BR', 'en'].filter((lang) => PART === 'all' || PART === lang)
+for (const lang of languages) {
   const page = await open(`?lang=${lang}`)
   const rep = await page.evaluate(() => {
     const r = window.__furnitureReport
@@ -263,75 +266,76 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the stories module is loaded too (6 scenarios pass)`, tales.module === 'stories_area' && tales.ok && tales.problems.length === 0 && tales.scenarios === 6 && tales.failed === 0, tales)
 
-  if (lang === 'pt-BR') {
-    await page.close()
-    const p = await open('?lang=pt-BR&ui=0')
-    const shot = async (name, setup) => {
-      await p.evaluate(setup)
-      await p.waitForTimeout(500)
-      // software GL: the first picture of a fresh page also compiles every material in view (the weather rig's fleet car among them), so the 30 s default is too tight; the test-room test uses the same 180 s
-      await p.screenshot({ path: join(shots, name), timeout: 180000 })
+  await page.close()
+}
+
+if (PART === 'all' || PART === 'shots') {
+  const p = await open('?lang=pt-BR&ui=0')
+  const shot = async (name, setup) => {
+    await p.evaluate(setup)
+    await p.waitForTimeout(500)
+    // software GL: the first picture of a fresh page also compiles every material in view (the weather rig's fleet car among them), so the 30 s default is too tight; the test-room test uses the same 180 s
+    await p.screenshot({ path: join(shots, name), timeout: 180000 })
+  }
+  const run = (f) => `(${f.toString()})()`
+  await shot('01-kitchen-doors-open.png', run(() => {
+    const room = window.__testRoom
+    room.clear()
+    const ids = ['fridge', 'kitchen_cabinet_base', 'stove', 'microwave'].map((t, i) => room.spawn(t, [(i - 1.5) * 1.5, 0, -5], 0).objectId)
+    room.playAnimation('open_all', ids[0]); room.playAnimation('open_all', ids[1]); room.playAnimation('open_all', ids[2]); room.playAnimation('open_all', ids[3])
+    for (let i = 0; i < 80; i++) room.update(0.02)
+    room.look([0, 1.8, -1.4], [0, 0.9, -5])
+    room.update(0.02)
+  }))
+  await shot('02-fridge-door-shot-off.png', run(() => {
+    const room = window.__testRoom
+    room.clear()
+    const id = room.spawn('fridge', [0, 0, -5], 0).objectId
+    room.playAnimation('open_door_fridge', id)
+    for (let i = 0; i < 80; i++) room.update(0.02)
+    room.setTool('pistol_9mm')
+    room.update(0.4)
+    for (let n = 0; n < 6 && room.world.state(id).parts.some((p) => p.id === 'door_fridge'); n++) {
+      room.look([0, 1.1, -3.4], [0, 1.1, -4.7]); room.use()
+      for (let i = 0; i < 25; i++) room.update(0.02)
     }
-    const run = (f) => `(${f.toString()})()`
-    await shot('01-kitchen-doors-open.png', run(() => {
-      const room = window.__testRoom
-      room.clear()
-      const ids = ['fridge', 'kitchen_cabinet_base', 'stove', 'microwave'].map((t, i) => room.spawn(t, [(i - 1.5) * 1.5, 0, -5], 0).objectId)
-      room.playAnimation('open_all', ids[0]); room.playAnimation('open_all', ids[1]); room.playAnimation('open_all', ids[2]); room.playAnimation('open_all', ids[3])
-      for (let i = 0; i < 80; i++) room.update(0.02)
-      room.look([0, 1.8, -1.4], [0, 0.9, -5])
-      room.update(0.02)
-    }))
-    await shot('02-fridge-door-shot-off.png', run(() => {
-      const room = window.__testRoom
-      room.clear()
-      const id = room.spawn('fridge', [0, 0, -5], 0).objectId
-      room.playAnimation('open_door_fridge', id)
-      for (let i = 0; i < 80; i++) room.update(0.02)
-      room.setTool('pistol_9mm')
-      room.update(0.4)
-      for (let n = 0; n < 6 && room.world.state(id).parts.some((p) => p.id === 'door_fridge'); n++) {
-        room.look([0, 1.1, -3.4], [0, 1.1, -4.7]); room.use()
-        for (let i = 0; i < 25; i++) room.update(0.02)
-      }
-      for (let i = 0; i < 200; i++) room.update(0.02)
-      room.look([1.2, 1.2, -2.6], [0, 0.5, -5])
-      room.update(0.02)
-    }))
-    await shot('03-sofa-burning-tv-shattered.png', run(() => {
-      const room = window.__testRoom
-      room.clear()
-      const sofa = room.spawn('sofa', [-1.5, 0, -5], 0).objectId
-      const tv = room.spawn('tv', [1.5, 0, -5], 0).objectId
-      room.world.hit(sofa, { type: 'fire', point: [-1.5, 0.4, -5], temperature: 900, radius: 0.9, duration: 6 })
-      for (let i = 0; i < 160; i++) room.update(0.05)
-      room.setTool('pistol_9mm')
-      room.update(0.4)
-      for (let n = 0; n < 6 && room.world.part(tv, 'screen')?.status !== 'broken'; n++) {
-        room.look([1.5, 0.4, -3.4], [1.5, 0.4, -5]); room.use()
-        for (let i = 0; i < 25; i++) room.update(0.02)
-      }
-      for (let i = 0; i < 20; i++) room.update(0.02)
-      room.look([0, 1.6, -2], [0, 0.5, -5])
-      room.update(0.02)
-      void sofa
-    }))
-    await shot('04-gas-bottle-bbq-blast.png', run(() => {
-      const room = window.__testRoom
-      room.clear()
-      const bbq = room.spawn('bbq', [2, 0, -6], 0).objectId
-      const gas = room.spawn('gas_bottle', [-1.2, 0, -5], 0).objectId
-      room.world.hit(bbq, { type: 'explosive', point: [2, 0.5, -5.1], energy: 400000, radius: 3, source: 'test' })
-      for (let s = 0; s < 40 && room.log.entries({ type: 'explode', objectId: gas }).length === 0; s++) {
-        room.world.hit(gas, { type: 'fire', point: [-1.2, 0.3, -5], temperature: 1000, radius: 0.5, duration: 1 })
-        for (let i = 0; i < 50; i++) room.update(0.02)
-      }
-      for (let i = 0; i < 12; i++) room.update(0.02)
-      room.look([0, 2.2, -0.5], [0.4, 0.5, -5.5])
-      room.update(0.02)
-    }))
-    await p.close()
-  } else await page.close()
+    for (let i = 0; i < 200; i++) room.update(0.02)
+    room.look([1.2, 1.2, -2.6], [0, 0.5, -5])
+    room.update(0.02)
+  }))
+  await shot('03-sofa-burning-tv-shattered.png', run(() => {
+    const room = window.__testRoom
+    room.clear()
+    const sofa = room.spawn('sofa', [-1.5, 0, -5], 0).objectId
+    const tv = room.spawn('tv', [1.5, 0, -5], 0).objectId
+    room.world.hit(sofa, { type: 'fire', point: [-1.5, 0.4, -5], temperature: 900, radius: 0.9, duration: 6 })
+    for (let i = 0; i < 160; i++) room.update(0.05)
+    room.setTool('pistol_9mm')
+    room.update(0.4)
+    for (let n = 0; n < 6 && room.world.part(tv, 'screen')?.status !== 'broken'; n++) {
+      room.look([1.5, 0.4, -3.4], [1.5, 0.4, -5]); room.use()
+      for (let i = 0; i < 25; i++) room.update(0.02)
+    }
+    for (let i = 0; i < 20; i++) room.update(0.02)
+    room.look([0, 1.6, -2], [0, 0.5, -5])
+    room.update(0.02)
+    void sofa
+  }))
+  await shot('04-gas-bottle-bbq-blast.png', run(() => {
+    const room = window.__testRoom
+    room.clear()
+    const bbq = room.spawn('bbq', [2, 0, -6], 0).objectId
+    const gas = room.spawn('gas_bottle', [-1.2, 0, -5], 0).objectId
+    room.world.hit(bbq, { type: 'explosive', point: [2, 0.5, -5.1], energy: 400000, radius: 3, source: 'test' })
+    for (let s = 0; s < 40 && room.log.entries({ type: 'explode', objectId: gas }).length === 0; s++) {
+      room.world.hit(gas, { type: 'fire', point: [-1.2, 0.3, -5], temperature: 1000, radius: 0.5, duration: 1 })
+      for (let i = 0; i < 50; i++) room.update(0.02)
+    }
+    for (let i = 0; i < 12; i++) room.update(0.02)
+    room.look([0, 2.2, -0.5], [0.4, 0.5, -5.5])
+    room.update(0.02)
+  }))
+  await p.close()
 }
 
 check('no console errors', errors.length === 0, errors.slice(0, 3))
