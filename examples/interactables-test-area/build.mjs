@@ -62,6 +62,7 @@ const result = await esbuild.build({
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
     // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
     '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
+    '@adatechnology/game-audio/testing': join(pkg('game-audio'), 'dist/testing.js'),
     '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
     // the player area rides along: the room's camera is the player body
     '@adatechnology/game-player': join(pkg('game-player'), 'dist/index.js'),
