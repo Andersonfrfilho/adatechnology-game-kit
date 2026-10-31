@@ -4,7 +4,7 @@ import type { HandPose, HandTargets } from '@adatechnology/game-contracts'
 
 import { ATTACK_CLIPS } from '@adatechnology/game-characters-people'
 
-import { createPlayerAvatar } from '../src'
+import { createPlayerAvatar, type ReachView } from '../src'
 
 // Hand targets the weapons module of game-weapons-three gives the room (world space), taken with the eye at 1.70 m over the feet at the origin, looking down -z.
 const EYE = new THREE.Vector3(0, 1.7, 0)
@@ -104,5 +104,79 @@ describe('third-person reach: shoulder, elbow and wrist to the tool in the hands
     const striking = avatar.rig.arms.map((arm) => arm.el.rotation.x)
     avatar.reach(HOLDS.shotgun_pump_12!)
     expect(avatar.rig.arms.map((arm) => arm.el.rotation.x)).toEqual(striking)
+  })
+})
+
+describe('reach seen from the body\'s own eyes (view)', () => {
+  const eyes = (): THREE.PerspectiveCamera => {
+    const camera = new THREE.PerspectiveCamera()
+    camera.position.copy(EYE)
+    camera.updateMatrixWorld(true)
+    return camera
+  }
+  const far = (x: number, z: number): HandTargets => ({
+    R: { position: [-x, 1.45, z], quaternion: [0.4024, 0.4024, -0.5814, 0.5814] },
+    L: { position: [x, 1.45, z], quaternion: [-0.5814, 0.5814, 0.4024, 0.4024] },
+  })
+  const reached = (targets: HandTargets, view?: ReachView | null): ReturnType<typeof createPlayerAvatar> => {
+    const avatar = standing()
+    avatar.update(1 / 60, { armed: true, pitch: 0 })
+    avatar.reach(targets, view)
+    avatar.root.updateMatrixWorld(true)
+    return avatar
+  }
+  const handDepth = (avatar: ReturnType<typeof createPlayerAvatar>, side: 'R' | 'L'): number =>
+    -handGroup(avatar, side).localToWorld(new THREE.Vector3(0, -0.042, 0)).z
+
+  it('a hand far out in front keeps the elbow bent past the reach bend instead of straightening', () => {
+    const targets = far(0.15, -1.1)
+    const free = reached(targets)
+    const viewed = reached(targets, { camera: eyes() })
+    for (const [side, bend] of [['R', 1.35], ['L', 0.95]] as const) {
+      expect(elbowBend(free, side)).toBeLessThan(bend - 0.1)
+      expect(elbowBend(viewed, side)).toBeGreaterThanOrEqual(bend - 0.02)
+    }
+    expect(handDepth(viewed, 'R')).toBeLessThan(handDepth(free, 'R') + 1e-9) // the hand stops short of the target
+  })
+
+  it('the bend is configurable', () => {
+    const avatar = reached(far(0.15, -1.1), { camera: eyes(), reachBend: [0.6, 0.6] })
+    expect(elbowBend(avatar, 'R')).toBeGreaterThanOrEqual(0.58)
+    expect(elbowBend(avatar, 'R')).toBeLessThan(1.2)
+  })
+
+  it('a hand behind a wall stays its reach and a margin in front of it', () => {
+    const wall = 0.3
+    const contact = (_o: number[], _d: number[], max: number): number | null => (wall <= max ? wall : null)
+    const targets = far(0.15, -0.8)
+    const free = reached(targets, { camera: eyes() })
+    const kept = reached(targets, { camera: eyes(), keepOutside: { contact: contact as never } })
+    expect(handDepth(free, 'R')).toBeGreaterThan(wall + 0.05)
+    expect(handDepth(kept, 'R')).toBeLessThan(wall - 0.005 + 0.01)
+    expect(handDepth(kept, 'R')).toBeGreaterThan(0.2)
+    const wider = reached(targets, { camera: eyes(), keepOutside: { contact: contact as never, margin: 0.05 } })
+    expect(handDepth(wider, 'R')).toBeLessThan(handDepth(kept, 'R') - 0.03)
+  })
+
+  it('a hand pulled back by a wall at 0.1 m stops at 0.12 m from the eye, never nearer', () => {
+    const targets: HandTargets = { R: { position: [-0.15, 1.45, -0.6], quaternion: [0.4024, 0.4024, -0.5814, 0.5814] }, L: null }
+    const contact = (): number | null => 0.1
+    const loose = reached(targets, { camera: eyes() })
+    const kept = reached(targets, { camera: eyes(), keepOutside: { contact: contact as never } })
+    expect(handDepth(loose, 'R')).toBeGreaterThan(0.4)
+    expect(handDepth(kept, 'R')).toBeGreaterThan(0.1)
+    expect(handDepth(kept, 'R')).toBeLessThan(0.16)
+    const nearest = reached(targets, { camera: eyes(), keepOutside: { contact: contact as never, nearest: 0.3 } })
+    expect(handDepth(nearest, 'R')).toBeGreaterThan(0.27)
+  })
+
+  it('without a view nothing changes', () => {
+    const targets = far(0.15, -1.1)
+    const plain = reached(targets)
+    for (const view of [undefined, null]) {
+      const same = reached(targets, view)
+      expect(same.rig.arms.map((arm) => [(arm.g as unknown as THREE.Object3D).quaternion.toArray(), arm.el.rotation.x])).toEqual(plain.rig.arms.map((arm) => [(arm.g as unknown as THREE.Object3D).quaternion.toArray(), arm.el.rotation.x]))
+      expect(same.rig.upper.rotation.y).toBe(plain.rig.upper.rotation.y)
+    }
   })
 })

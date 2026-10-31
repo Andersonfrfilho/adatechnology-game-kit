@@ -38,7 +38,7 @@ empurrar, porta, sentar, deitar) ficam como estão: elas passam a valer nas duas
 
 ## Riscos
 
-- **O olho do corpo (1,795 m, 0,16 m à frente) não é o EYE da sala (1,7 m).** Mudar a altura da vista muda as medidas que os testes
+- **O olho do corpo (1,768 m, 0,196 m à frente, medido na T0.1) não é o EYE da sala (1,7 m).** Mudar a altura da vista muda as medidas que os testes
   e2e conferem (régua, mira). Mitigação: `eyeOffset` por opção, com padrão que reproduz 1,7 m em pé; os testes de mira continuam
   partindo da câmera.
 - **Braços entrando na lente.** Plano próximo de 0,05 m em 1ª pessoa e as restrições de vista do R4; teste de que nenhuma malha do

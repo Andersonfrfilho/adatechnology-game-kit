@@ -183,7 +183,7 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
     if(cut.flaps){[[.12,1.2],[-.1,1.35],[.02,.98]].forEach(([x,y],k)=>{const f=add(U,geoBox(.07,.12,.012),k%2?skinM:M(0x9a2a2a),x,y,frontZ+.03);f.geometry.translate(0,-.06,0);f.userData.flap=true;drip(U,x,y-.12,frontZ+.03,null,1.5)})}
     // pescoço e cabeça
     const neckLen=.14+Math.max(0,P.neck);
-    if(!cut.head)add(U,CYL(.058,.068,neckLen,SEG),skinM,0,1.63+Math.max(0,P.neck)/2,0);
+    const neck=cut.head?undefined:add(U,CYL(.058,.068,neckLen,SEG),skinM,0,1.63+Math.max(0,P.neck)/2,0);
     const headG=new THREE.Group();headG.position.set(0,1.64+P.neck,P.headFwd||0);headG.rotation.x=P.headX;headG.rotation.z=P.headZ;U.add(headG);
     const Hd=new THREE.Group();Hd.position.y=-1.64;headG.add(Hd);
     if(cut.head){
@@ -251,6 +251,7 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
     });
     const flaps=[];root.traverse(o=>{if(o.userData.flap)flaps.push(o)});
     const rig={flaps,dangles:arms.filter(a=>a.el.userData.dangle),type:spec.type||"Lento",fig,upper,headG,arms,legs,P,ph:(spec.phase??options.random()*6),dropBase:fig.position.y,leanBase:P.lean,hxBase:P.headX};
+    if(neck)Object.defineProperty(rig,"neck",{value:neck}); // not enumerable: the rig is part of what the goldens hash, and the neck is a handle, not a drawing
     if(spec.lying){root.rotation.x=-PI/2;root.position.set(0,.16*P.s,.9*P.s);const w=new THREE.Group();w.add(root);return w}
     root.userData.rig=rig;return root;
   }

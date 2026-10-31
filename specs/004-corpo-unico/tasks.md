@@ -13,11 +13,15 @@ mudança de estado do jogador aparece nas duas vistas, no mesmo commit.
 ## Fase 1 — O corpo sabe ser visto de dentro (aditiva, pode rodar antes do #110)
 > 🤖 Modelo: `sonnet`
 
-- T1.1 `game-characters-three`: `eye()`, `setView(mode, camera)` e `HEAD_LAYER` no avatar. Testes: `eye()` acompanha agachar,
-  sentar, deitar e cair; em 1ª pessoa a câmera não vê cabeça nem pescoço e a sombra continua.
-- T1.2 `game-characters-three`: opção `view` no `createArmReach` com `elbowView`, `reachBend` e `keepOutside`, portados de
-  `arms.ts` com os mesmos números. Testes portados de `first-person-arms.test.ts` (cotovelo na vista, dobra mínima, mão fora da
-  parede).
+- T1.1 `game-characters-three`: soquete do olho sob a cabeça (`eyeOffset`), `eye()` lido depois da pose e antes do `reach()`,
+  `eyeBob` (0,5) e `setView(mode, camera)` que esconde cabeça e pescoço só para essa câmera (D2: `onBeforeRender`/`onAfterRender`,
+  pescoço por identidade, também sprites e pontos sob `headG`). Testes: `eye()` acompanha agachar, sentar, deitar, cair e a
+  cabeça inclinada; com a câmera do jogador em 1ª pessoa a cabeça não é desenhada, a sombra continua e outra câmera vê a cabeça;
+  nenhuma malha fora mãos e antebraços a menos de 0,1 m do olho em pé, agachado, caído, sentado, deitado, empurrando, armado e
+  com item na boca.
+- T1.2 `game-characters-three`: opção `view` no `createArmReach` com `reachBend` e `keepOutside` (com a câmera recebida),
+  portados de `arms.ts` com os mesmos números; `elbowView` não vem (R4). Testes portados de `first-person-arms.test.ts` (dobra
+  mínima, mão fora da parede e a 0,12 m do olho).
 
 ## Fase 2 — A sala usa só o corpo (depois do merge do #110)
 > 🤖 Modelo: `sonnet` (T2.1 é 🧠 → `opus`)
@@ -25,7 +29,8 @@ mudança de estado do jogador aparece nas duas vistas, no mesmo commit.
 - T2.1 🧠 `game-test-room`: corpo sempre na cena; câmera da 1ª pessoa no `eye()`; `reachAvatar` nas duas vistas com a opção
   `view` em 1ª pessoa; `stepFirstPerson` e `RoomAvatar.firstPerson` saem. Teste R7: trocar de vista no meio de andar, agachar,
   sentar, empurrar, segurar e abrir porta não muda mãos, pés nem cabeça.
-- T2.2 `game-test-room`: `CROUCH_DROP`, `setBend` e o olho por assento deixam de mexer na câmera; `furniture-push` e `seating`
+- T2.2 `game-test-room`: o olho recua para fora das paredes (D1) e vale para o tiro nas duas vistas; `CROUCH_DROP`, `setBend` e
+  o olho por assento deixam de mexer na câmera (agachado passa a 1,38 m, D6); `furniture-push` e `seating`
   passam a depender só da pose. Testes existentes de agachar, empurrar e sentar ajustados para medir pelo `eye()`.
 - T2.3 `game-test-room`: `followHeld` sem o ramo de espaço de câmera; o item vai na mão do corpo nas duas vistas.
 
