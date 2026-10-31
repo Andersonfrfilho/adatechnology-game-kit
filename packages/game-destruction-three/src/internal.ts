@@ -94,6 +94,10 @@ export interface PieceBody extends Piece {
   onGround: boolean
   /** Falling over (`tip`): the spin it is given per second on the ground, about x and z, and the seconds it may still take; null when it lies or never had to fall. */
   tipping: { x: number; z: number; seconds: number } | null
+  /** The contact impulses each point of the box gave in the last substep (normal, friction x, friction z per point), to start the next one from. */
+  warm?: Float64Array
+  /** Height of the lowest support the piece last stood on: the floor under a top it was put beneath. */
+  floor?: number
 }
 
 export interface Bound {

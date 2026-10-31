@@ -36,6 +36,13 @@ describe('destruction tags of a drawn item', () => {
     expect(roots).toHaveLength(1)
     for (const m of shell) if (m !== roots[0]) expect(m.userData.destructionPart).toMatchObject({ parent: 'shell', kind: 'weld' })
   })
+
+  it('writes the loose contents of a carton of cereal on its shell', () => {
+    const { root } = buildItem(THREE, { id: 'cereal_box', category: 'food', size: [0.2, 0.3, 0.08], shape: 'box', powder: { color: 0xd8b46a } }, { destructible: true })
+    const shell = meshesOf(root).filter((m) => !m.userData.destructionSkin)
+    expect(shell.length).toBeGreaterThan(0)
+    for (const m of shell) expect(m.userData.destructionPowder).toEqual({ color: 0xd8b46a })
+  })
 })
 
 describe('families of models', () => {

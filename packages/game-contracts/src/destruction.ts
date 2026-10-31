@@ -87,6 +87,11 @@ export interface PartSpec {
      */
     outflow?: Vec3
   }
+  /**
+   * Loose dry contents of a hollow part (the flakes of a cereal box, flour, sugar, coffee): a hole through it lets out a puff of them, in `color`
+   * (0xRRGGBB). The renderer draws the puff; nothing is lost from the part's mass.
+   */
+  powder?: { color: number }
   /** The part explodes when destroyed, or when its temperature passes `atC` (gas bottle, fuel tank, aerosol). */
   explodes?: {
     energy: number
@@ -694,7 +699,8 @@ interface EventBase {
 export type DestructionEvent =
   | (EventBase & { type: 'damage'; part: string; amount: number; hp: number; damageType: DamageType })
   | (EventBase & { type: 'dent'; part: string; dent: Dent; worldPoint: Vec3 })
-  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3 })
+  /** `powder`: the part's loose dry contents (`PartSpec.powder`), which puff out of the hole. */
+  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number } })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
   | (EventBase & { type: 'ricochet'; part: string; point: Vec3; direction: Vec3; energy: number })
   /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */

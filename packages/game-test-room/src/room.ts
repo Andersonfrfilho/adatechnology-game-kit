@@ -847,9 +847,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const movable = own ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
+      // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
       const box = new THREE.Box3().setFromObject(root)
       const base = Math.max(pos[1], groundAt(pos[0], pos[2]))
-      pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
+      if (!box.isEmpty()) pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
       root.position.set(pos[0], pos[1], pos[2])
       root.updateMatrixWorld(true)
     }
