@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-three",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-floorplan: walls, doors, windows, floors, stairs, roofs, lot, furniture, lights, mirrors and cars of a plan, bound to the destruction of its structure, plus the floor navigator.",
   "keywords": [

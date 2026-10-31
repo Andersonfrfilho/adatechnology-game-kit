@@ -1,5 +1,21 @@
 # @adatechnology/game-characters-three
 
+## 0.6.0
+
+### Minor Changes
+
+- f44dbbc: Third person: the body's hands go to the grip and the forend of the tool in hand. Shoulder, elbow and wrist bend inside the human range (the elbow never locks), the chest turns and the shoulder blade slides toward a far support hand. New `PlayerAvatar.reach(targets)` and optional `RoomAvatar.reach`, called by the room every frame in third person.
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-audio@0.3.4
+  - @adatechnology/game-characters@0.2.5
+  - @adatechnology/game-characters-people@0.4.1
+
 ## 0.5.0
 
 ### Minor Changes

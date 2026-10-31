@@ -14,7 +14,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
@@ -1170,6 +1170,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     lastHand = { stance: state.stance, triggerFinger: state.triggerFinger, targets }
     arms.update(dt, state)
+  }
+  /** Third person: the body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push poses the hands itself). */
+  /** How far inside the right shoulder joint, toward the middle of the chest, the pocket a stock rests in sits (m). */
+  const SHOULDER_POCKET_IN = 0.1
+  const pocketAt = new THREE.Vector3()
+  const aimTurn = new THREE.Quaternion()
+  const aimEuler = new THREE.Euler(0, 0, 0, 'YXZ')
+  /** Third person: the pocket of the body's right shoulder, turned to the aim (`ModuleHost.holdFrame`); null in first person or for a body that names no shoulder. */
+  const bodyHoldFrame = (): HandPose | null => {
+    const shoulder = thirdActive() ? avatar?.shoulder?.('R') : undefined
+    if (!shoulder) return null
+    shoulder.getWorldPosition(pocketAt)
+    // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint
+    pocketAt.x -= Math.cos(player.yaw) * SHOULDER_POCKET_IN
+    pocketAt.z += Math.sin(player.yaw) * SHOULDER_POCKET_IN
+    aimTurn.setFromEuler(aimEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
+    return { position: [pocketAt.x, pocketAt.y, pocketAt.z], quaternion: [aimTurn.x, aimTurn.y, aimTurn.z, aimTurn.w] }
+  }
+  const reachAvatar = (): void => {
+    if (!avatar?.reach || !thirdActive()) return
+    avatar.reach(push.active || heldPiece ? null : (handSource?.() ?? null))
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -2485,6 +2506,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     stepFirstPerson(paused ? 0 : dt)
+    reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
@@ -2800,6 +2822,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       frameListeners.add(update)
       return () => frameListeners.delete(update)
     },
+    holdFrame: () => bodyHoldFrame(),
     setHandTargets(source) {
       handSource = source
       return () => {

@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
-import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -23,6 +23,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
+import { limitSupportSpan, placeOnBody } from './body-hold'
 import type { FxLayers } from './layers'
 import { flameJet, launchRocket } from './heavy'
 import type { HeavyContext } from './heavy'
@@ -67,6 +68,8 @@ export interface ViewmodelOptions {
   soundDistance?: () => number
   /** Where the world is: the distance from a point along a direction to the first surface (not the weapon in the hands), or null. The weapon in the hands comes back from a wall it would go through. */
   contact?: LaserRaycast
+  /** Where the body holds the tool now (`ModuleHost.holdFrame`): with a frame, the tool is drawn there at its real size (third person); null or absent, in front of the eye. */
+  bodyHold?: () => HandPose | null
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
@@ -227,10 +230,14 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     handDepth = 0
     rigStock(THREE, model, def)
     rigUnderbarrel(THREE, model, def)
-    const length = new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).x
+    const modelBox = new THREE.Box3().setFromObject(model.root)
+    const length = modelBox.getSize(new THREE.Vector3()).x
     const scale = length > 0.8 ? 0.55 : length > 0.4 ? 0.75 : 1
+    eyeHolder.scale = scale
+    eyeHolder.z = Math.min(0.25, 0.25 * length * scale)
+    modelRear = modelBox.min.x
     holder.scale.setScalar(scale)
-    holder.position.set(0, 0, Math.min(0.25, 0.25 * length * scale))
+    holder.position.set(0, 0, eyeHolder.z)
     holder.add(model.root)
     const caliber = caliberOf(arsenal, def)
     const dims = caliber?.cartridge
@@ -311,8 +318,24 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     return farthest
   }
 
+  // in front of the eye the tool is drawn smaller than real so it fits the view; on the body (third person) at its real size
+  const eyeHolder = { scale: 1, z: 0 }
+  let modelRear = 0
+  let onBody = false
   const place = (dt = 0): void => {
     const family = session?.model.parts.family
+    const frame = session ? (options.bodyHold?.() ?? null) : null
+    onBody = !!(session && frame)
+    if (session && frame) {
+      session.holderScale = 1
+      placeOnBody({ THREE, hand, holder, frame, rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
+      return
+    }
+    if (session) {
+      session.holderScale = eyeHolder.scale
+      holder.scale.setScalar(eyeHolder.scale)
+      holder.position.set(0, 0, eyeHolder.z)
+    }
     const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
     hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     hand.quaternion.copy(camera.quaternion)
@@ -448,7 +471,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         handDepth = -seen.z
         handHeight = handDepth > 0.05 ? seen.y / handDepth / Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360) : 0
       }
-      return targets
+      return onBody ? limitSupportSpan(targets) : targets
     },
     get inHand() {
       return session?.id ?? null

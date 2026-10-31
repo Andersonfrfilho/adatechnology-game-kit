@@ -1,5 +1,13 @@
 # @adatechnology/game-characters-undead
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-characters@0.2.5
+
 ## 0.2.5
 
 ### Patch Changes

@@ -1,5 +1,30 @@
 # @adatechnology/game-test-room
 
+## 0.18.0
+
+### Minor Changes
+
+- f44dbbc: Third person: the body's hands go to the grip and the forend of the tool in hand. Shoulder, elbow and wrist bend inside the human range (the elbow never locks), the chest turns and the shoulder blade slides toward a far support hand. New `PlayerAvatar.reach(targets)` and optional `RoomAvatar.reach`, called by the room every frame in third person.
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-destruction@0.12.0
+  - @adatechnology/game-destruction-three@0.11.1
+  - @adatechnology/game-vfx@0.5.0
+  - @adatechnology/game-audio@0.3.4
+  - @adatechnology/game-fluids@0.3.6
+  - @adatechnology/game-fluids-three@0.4.5
+  - @adatechnology/game-player@0.3.1
+  - @adatechnology/game-terrain@0.1.1
+  - @adatechnology/game-terrain-three@0.1.1
+  - @adatechnology/game-vfx-three@0.3.5
+  - @adatechnology/game-weapons@0.5.5
+
 ## 0.17.0
 
 ### Minor Changes
