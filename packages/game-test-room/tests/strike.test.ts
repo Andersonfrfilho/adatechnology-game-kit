@@ -631,7 +631,7 @@ describe('one body in both views', () => {
     room.look([0, 1.7, 0], [0, 0.1, -1.5])
     room.spawn('glass_bottle', [0, 0, -1.5], 0)
     expect(room.grab()).toBe(true)
-    for (const mode of ['third'] as const) {
+    for (const mode of ['first', 'third'] as const) {
       room.setCameraMode(mode)
       run(room, 0.8)
       const bottle = new THREE.Box3().setFromObject(room.spawned()[0]!.root)

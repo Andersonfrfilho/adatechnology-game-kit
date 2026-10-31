@@ -2161,10 +2161,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const root = piece.root
     let pos: THREE_NS.Vector3
     const targetQ = tmpQ
-    const hand = thirdActive() ? avatar?.hand?.('R') : undefined
+    const hand = avatar?.hand?.('R')
     const isDrink = useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug'
     if (hand) {
-      // shoulder view: the item rides the avatar's weapon hand, and tilts with `useItemPlayer` or `heldTilt`
+      // with a body the item rides its weapon hand in both views, and tilts with `useItemPlayer` or `heldTilt`
       const handWorld = hand.getWorldPosition(tmpHand)
       const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
       const pose = useItemPlayer?.pose()

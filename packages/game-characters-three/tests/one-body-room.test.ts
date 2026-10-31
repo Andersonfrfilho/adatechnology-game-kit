@@ -33,6 +33,7 @@ const cup: TestRoomItem = {
   build: (T) => new T.Mesh(new T.CylinderGeometry(0.04, 0.035, 0.1, 12), new T.MeshStandardMaterial()),
   spec: { name: 'cup', parts: [{ id: 'body', material: 'ceramic', mass: 0.3, shape: { kind: 'cylinder', radius: 0.04, height: 0.1 }, position: [0, 0.05, 0] }], joints: [] },
   movable: true,
+  fluid: { container: { capacity: 0.4, liquid: 'water', liters: 0.3, temperature: 18, shape: { kind: 'cylinder', radius: 0.04, height: 0.1 }, opening: 0.04 }, part: 'body', uses: ['drink', 'sip', 'pour'], offset: [0, 0.01, 0] },
 }
 
 const setup = (scenery: TestRoomOptions['scenery'] = { table: null, shelf: null }): { room: TestRoom; avatar: ReturnType<typeof createPlayerAvatar> } => {
@@ -162,5 +163,25 @@ describe('one body for both views (spec 004, R7)', () => {
     // the body bends like a crouch: no further drop on top of its pose
     expect(room.camera.position.y).toBeGreaterThan(1.0)
     room.push.end()
+  })
+
+  it.each(['first', 'third'] as const)('a carried item is at the body\'s right hand in %s person and the body\'s arm raises it to drink', (mode) => {
+    const { room, avatar } = setup()
+    room.look([0, 1.7, 3], [0, 0.05, 2])
+    room.spawn('cup', [0, 0, 2], 0)
+    expect(room.grab()).toBe(true)
+    room.setCameraMode(mode)
+    frames(room, 60)
+    const itemAt = (): THREE.Vector3 => new THREE.Box3().setFromObject(room.spawned()[0]!.root).getCenter(new THREE.Vector3())
+    const hand = avatar.hand('R').getWorldPosition(new THREE.Vector3())
+    const rest = itemAt()
+    expect(new THREE.Box3().setFromObject(room.spawned()[0]!.root).distanceToPoint(hand)).toBeLessThan(0.12)
+    expect(room.useItem('drink')).toBe(true)
+    let top = rest.y
+    for (let i = 0; i < 60; i++) {
+      room.update(1 / 60)
+      top = Math.max(top, itemAt().y)
+    }
+    expect(top - rest.y).toBeGreaterThan(0.2)
   })
 })
