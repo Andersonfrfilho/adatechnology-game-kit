@@ -26,7 +26,7 @@ const people = ['game-characters', 'game-characters-three', 'game-characters-peo
 const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-interactables', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
 const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three', 'game-vehicles-driving']
 const vegetation = ['game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
-const urban = ['game-urban', 'game-urban-three']
+const urban = ['game-kit-defaults', 'game-urban', 'game-urban-three']
   // the crowd: the horde, its drawing on the baked variants and the region model it comes from
   const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
   // the stories: casting, beats, the life simulation and the character sheet (no 3D)

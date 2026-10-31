@@ -1041,6 +1041,15 @@ importers:
       '@adatechnology/game-characters-people':
         specifier: workspace:^
         version: link:../game-characters-people
+      '@adatechnology/game-urban':
+        specifier: workspace:^
+        version: link:../game-urban
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:^
+        version: link:../game-vegetation-species
+      '@adatechnology/game-vehicles-fleet':
+        specifier: workspace:^
+        version: link:../game-vehicles-fleet
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -1301,12 +1310,6 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:^
         version: link:../game-floorplan
-      '@adatechnology/game-vegetation-species':
-        specifier: workspace:^
-        version: link:../game-vegetation-species
-      '@adatechnology/game-vehicles-fleet':
-        specifier: workspace:^
-        version: link:../game-vehicles-fleet
     devDependencies:
       '@adatechnology/game-floorplan-commercial':
         specifier: workspace:^
@@ -1348,6 +1351,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vegetation-species
     devDependencies:
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:^
+        version: link:../game-kit-defaults
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room

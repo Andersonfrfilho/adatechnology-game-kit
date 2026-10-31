@@ -1,4 +1,5 @@
-import { createPlantProvider, createUrban, createVehicleProvider } from '@adatechnology/game-urban'
+import { createUrban } from '@adatechnology/game-urban'
+import { createPlantProvider, createVehicleProvider } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 

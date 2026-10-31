@@ -75,8 +75,8 @@ const plan = urban.neighbourhoods.get('suburb').compose(b, { x: 0, z: 0 }, {
   locale: 'en',
   providers: {
     house: (typology, request, b) => myHouse(typology, request, b),   // default: the far-away silhouettes of game-floorplan
-    vehicle: createVehicleProvider(),                                // default: none (the page's box car is not shipped)
-    plant: createPlantProvider(),                                    // default: the cone pine and the ball tree of the props
+    vehicle: createVehicleProvider({ ids: myFleetIds }),            // default: none (the page's box car is not shipped)
+    plant: createPlantProvider({ pickSpecies: myPicker }),          // default: the cone pine and the ball tree of the props
   },
 })
 // plan: { id, origin, houses, buildings, poles, vehicles, plants }  (what was put where)
@@ -85,7 +85,7 @@ urban.neighbourhoods.composeSampleSheet(b)   // the ground and the ten cells, in
 
 ### Vehicles and plants from the other packages
 
-`createVehicleProvider({ ids?, pick?, paint? })` parks a vehicle of `game-vehicles-fleet` (cars, SUVs, pickups and vans by default) where a pattern parks one, and `createPlantProvider({ region?, contexts?, seed?, pick? })` plants a species of `game-vegetation-species` where a pattern plants (a tree from the region's `sidewalk_tree` table, a pine from `square`). They do not draw: they add a `placement` part (`b.place(kind, id, x, z, { ry, scale, color, seed })`) that says what to put and where. The choice depends on the spot and not on `b.random`, so the scene around it keeps the same draw order. The drawer (`game-urban-three`) asks a resolver for each kind and leaves the spot empty when it has none.
+`createVehicleProvider({ ids, pick?, paint? })` parks a vehicle of the fleet the game names in `ids` where a pattern parks one, and `createPlantProvider({ pickSpecies, contexts?, seed?, pick? })` plants the species `pickSpecies(context, key)` returns where a pattern plants (a tree from the `sidewalk_tree` context, a pine from `square`). The core imports no content pack: the fleet and the species come by option. `@adatechnology/game-kit-defaults` has the kit's own (`defaultUrbanProviders()`, `PARKED_VEHICLE_IDS`, and `createVehicleProvider`/`createPlantProvider` with the old defaults: `game-vehicles-fleet` and the regional tables of `game-vegetation-species`). They do not draw: they add a `placement` part (`b.place(kind, id, x, z, { ry, scale, color, seed })`) that says what to put and where. The choice depends on the spot and not on `b.random`, so the scene around it keeps the same draw order. The drawer (`game-urban-three`) asks a resolver for each kind and leaves the spot empty when it has none.
 
 ## City plans (zoning)
 

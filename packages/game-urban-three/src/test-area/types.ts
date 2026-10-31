@@ -1,4 +1,4 @@
-import type { TerrainOptions, UrbanOptions } from '@adatechnology/game-urban'
+import type { Providers, TerrainOptions, UrbanOptions } from '@adatechnology/game-urban'
 
 import type { CanvasFactory } from '../text'
 import type { VehicleBuilder } from '../resolvers'
@@ -16,6 +16,8 @@ export type UrbanTestOptions = {
   readonly document?: CanvasFactory
   /** Builds the vehicles of the fleet for the `vehicle` provider of the bench (`createVehiclesThree` of `game-vehicles-three`). Without it the bench parks no cars. */
   readonly vehicles?: (THREE: unknown) => VehicleBuilder
+  /** The vehicle and plant providers of the bench's `providers` setting (`defaultUrbanProviders` of `game-kit-defaults`, or the game's own). Without one, that choice draws nothing. */
+  readonly providers?: Pick<Providers, 'vehicle' | 'plant'>
   /** Where the bench draws its neighbourhood in the room, `[x, z]` (default `[0, -60]`). */
   readonly benchOrigin?: readonly [number, number]
 }

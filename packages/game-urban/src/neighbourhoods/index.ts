@@ -14,7 +14,7 @@ export type {
 export { composePattern, patternMarker } from './compose'
 export type { Origin, SampleSheetOptions } from './compose'
 export { createSilhouetteHouses, SILHOUETTE_TYPOLOGIES } from './houses'
-export { createPlantProvider, createVehicleProvider, DEFAULT_PLANT_CONTEXTS, PARKED_VEHICLE_IDS } from './providers'
+export { createPlantProvider, createVehicleProvider, DEFAULT_PLANT_CONTEXTS } from './providers'
 export type { PlantProviderOptions, VehicleProviderOptions } from './providers'
 export { DEFAULT_PATTERNS, SAMPLE_CELLS } from './patterns'
 export { TOWER_PATTERNS, TOWER_SAMPLE_CELLS } from './towers'

@@ -1,5 +1,5 @@
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
-import { createPlantProvider, createUrban, createVehicleProvider, SAMPLE_CELLS } from '@adatechnology/game-urban'
+import { createUrban, SAMPLE_CELLS } from '@adatechnology/game-urban'
 import type { Locale, Providers, TerrainOptions, UrbanBuilder, UrbanKit, UrbanOptions } from '@adatechnology/game-urban'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
@@ -88,8 +88,8 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   }
   const providersOf = (choice: string): Providers => {
     const providers: Providers = {}
-    if (choice === 'plants' || choice === 'both') providers.plant = createPlantProvider()
-    if ((choice === 'vehicles' || choice === 'both') && options.vehicles) providers.vehicle = createVehicleProvider()
+    if ((choice === 'plants' || choice === 'both') && options.providers?.plant) providers.plant = options.providers.plant
+    if ((choice === 'vehicles' || choice === 'both') && options.vehicles && options.providers?.vehicle) providers.vehicle = options.providers.vehicle
     return providers
   }
 

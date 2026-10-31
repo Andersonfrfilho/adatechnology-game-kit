@@ -14,6 +14,9 @@ toRoomAvatar(avatar, { ...defaultCharacterClips() })
 
 | Preset | Returns | Feeds | Content pack |
 |---|---|---|---|
+| `defaultUrbanProviders(options?)` | `{ vehicle, plant }` | `compose(b, origin, { providers })` of the neighbourhoods of `game-urban`; `providers` of `createUrbanTestModule` | `game-vehicles-fleet`, `game-vegetation-species` |
+| `createVehicleProvider(options?)`, `createPlantProvider(options?)` | the providers of `game-urban` with the kit's fleet (`PARKED_VEHICLE_IDS`) and the regional table (`region`, Brazil's) as default | same | same |
+| `defaultPlantPicker(region?)` | `(context, key) => speciesId` | `pickSpecies` of `createPlantProvider` | `game-vegetation-species` |
 | `defaultCharacterClips()` | `{ strikeClips, firstPersonClips }` | `toRoomAvatar` of `game-characters-three` | `game-characters-people` |
 
-More presets are added by the tasks of phase 3 (urban providers, vehicle palettes, furniture).
+More presets are added by the tasks of phase 3 (vehicle palettes, furniture).

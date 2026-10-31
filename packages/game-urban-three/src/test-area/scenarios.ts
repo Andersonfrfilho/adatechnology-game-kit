@@ -1,4 +1,4 @@
-import { createPlantProvider, createUrban, createVehicleProvider, PARKED_VEHICLE_IDS } from '@adatechnology/game-urban'
+import { createPlantProvider, createUrban, createVehicleProvider } from '@adatechnology/game-urban'
 import type { PlacementPart, TerrainOptions, UrbanOptions, UrbanPart } from '@adatechnology/game-urban'
 import type { ModuleScenario } from '@adatechnology/game-contracts'
 
@@ -8,6 +8,10 @@ import type { UrbanContext } from './types'
 
 /** The heights of the five poles of the Galeria (m), the tops measured on the page's scenes. A game's own poles are not checked. */
 export const POLE_TOPS: Readonly<Record<string, number>> = { led_double: 9, concrete_arm: 8, cast_iron: 4.8, wood_crossarm: 7, flood_tower: 12.55 }
+
+// the scenario checks the mechanics of the providers, so it hands them its own small fleet and species instead of a content pack
+const STAND_IN_VEHICLE_IDS: readonly string[] = ['stand_in_car_a', 'stand_in_car_b', 'stand_in_van']
+const standInSpecies = (context: string, key: string): string => `stand_in_${context}_${key.length % 3}`
 
 export type ScenarioDeps = {
   readonly text: UrbanText
@@ -106,12 +110,12 @@ export const createScenarios = (deps: ScenarioDeps): ModuleScenario<UrbanContext
     scenario('urban_providers', ({ expect }) => {
       const urban = kit()
       const cars = urban.builder()
-      const downtown = urban.neighbourhoods.get('downtown').compose(cars, { x: 0, z: 0 }, { providers: { vehicle: createVehicleProvider() } })
+      const downtown = urban.neighbourhoods.get('downtown').compose(cars, { x: 0, z: 0 }, { providers: { vehicle: createVehicleProvider({ ids: STAND_IN_VEHICLE_IDS }) } })
       const spots = placements(cars.parts, 'vehicle')
       expect(spots.length === downtown.vehicles.length && spots.length > 0, say('vehicles_placed', downtown.vehicles.length, spots.length))
-      expect(spots.every((spot) => PARKED_VEHICLE_IDS.includes(spot.id)), say('vehicle_ids', [...new Set(spots.map((spot) => spot.id))].join(', ')))
+      expect(spots.every((spot) => STAND_IN_VEHICLE_IDS.includes(spot.id)), say('vehicle_ids', [...new Set(spots.map((spot) => spot.id))].join(', ')))
       const trees = urban.builder()
-      const mountain = urban.neighbourhoods.get('mountain_resort').compose(trees, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
+      const mountain = urban.neighbourhoods.get('mountain_resort').compose(trees, { x: 0, z: 0 }, { providers: { plant: createPlantProvider({ pickSpecies: standInSpecies }) } })
       const planted = placements(trees.parts, 'plant')
       expect(planted.length === mountain.plants.length && planted.length > 0, say('plants_placed', mountain.plants.length, planted.length))
     }),
