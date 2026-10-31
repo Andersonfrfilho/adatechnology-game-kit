@@ -1,3 +1,5 @@
+import { isLightBudget } from '@adatechnology/game-render-three'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createPlantProvider, createUrban, createVehicleProvider, SAMPLE_CELLS } from '@adatechnology/game-urban'
 import type { Locale, Providers, TerrainOptions, UrbanBuilder, UrbanKit, UrbanOptions } from '@adatechnology/game-urban'
@@ -93,11 +95,14 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     return providers
   }
 
+  /** The room's light budget, when it lends one: the lights of what is drawn become its sources. */
+  const lightsOption = (): { lights?: LightBudget } => (isLightBudget(host?.lights) ? { lights: host.lights } : {})
+
   const draw = (THREE: Three, build: (b: UrbanBuilder, kit: UrbanKit) => void, kit: UrbanKit, buildSeed: number): Placed => {
     const b = kit.builder({ seed: buildSeed })
     build(b, kit)
     const document = options.document ?? (globalThis as unknown as { document?: CanvasFactory }).document
-    const drawn = createUrbanThree(THREE, { ...(document ? { document } : {}), resolvers: resolversFor(THREE) }).draw(b.scene())
+    const drawn = createUrbanThree(THREE, { ...(document ? { document } : {}), resolvers: resolversFor(THREE), ...lightsOption() }).draw(b.scene())
     return { root: drawn.root, drawn }
   }
 
@@ -155,7 +160,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     const b = kit.builder({ seed: settings.seed })
     const made = kit.neighbourhoods.get(settings.pattern).compose(b, { x: 0, z: 0 }, { locale, providers: providersOf(settings.providers) })
     const document = options.document ?? (globalThis as unknown as { document?: CanvasFactory }).document
-    const drawn = createUrbanThree(three, { ...(document ? { document } : {}), resolvers: resolversFor(three) }).draw(b.scene())
+    const drawn = createUrbanThree(three, { ...(document ? { document } : {}), resolvers: resolversFor(three), ...lightsOption() }).draw(b.scene())
     drawn.root.position.set(benchOrigin[0], FLOOR_Y, benchOrigin[1])
     ;(host.scene as any).add(drawn.root)
     bench = { root: drawn.root, drawn, plan: made }
@@ -211,11 +216,13 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
         mark(entry.root, new three.Box3Helper(box, 0x66ccff))
       }
       if (host.bench.layer('light_radius')) {
-        for (const light of entry.drawn.lights) {
-          if (!light.isPointLight && !light.isSpotLight) continue
+        for (const lamp of entry.drawn.lights) {
+          // a lamp drawn through the budget is its bulb; one drawn as a real light is the light
+          const light = lamp.bulb ? { node: lamp.bulb, distance: lamp.part.distance, color: lamp.part.color } : lamp.isPointLight || lamp.isSpotLight ? { node: lamp, distance: lamp.distance, color: lamp.color } : null
+          if (!light) continue
           const reach = new three.Mesh(new (shapeGeometries(three) as any).SphereGeometry(Math.min(light.distance || 10, 60), 14, 8), new three.MeshBasicMaterial({ color: light.color ?? 0xffcc66, wireframe: true, transparent: true, opacity: 0.25 }))
-          reach.position.copy(light.position)
-          mark(light.parent ?? entry.root, reach)
+          reach.position.copy(light.node.position)
+          mark(light.node.parent ?? entry.root, reach)
         }
       }
     }
@@ -245,6 +252,8 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
         const perInstance = (g.index ? g.index.count : g.attributes.position.count) / 3
         triangles += perInstance * (o.isInstancedMesh ? o.count : 1)
       })
+      // lamps drawn through the budget are no lights of the scene: they count as the lights they stand for
+      lights += entry.drawn.lights.filter((lamp: any) => lamp.source).length
     }
     return { drawCalls, triangles: Math.round(triangles), lights, instances }
   }

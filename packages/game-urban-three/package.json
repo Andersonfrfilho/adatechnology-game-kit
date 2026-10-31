@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation": "workspace:^",

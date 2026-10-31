@@ -1,5 +1,7 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import type { ItemBox, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
+import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
+import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
+import type { ItemBox, LightPart, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import { createPrism, createRoundedBox } from './rounded-box'
@@ -22,6 +24,11 @@ export type UrbanThreeOptions = {
   document?: CanvasFactory
   /** Who makes the objects of the vehicles and plants a scene places. A kind without a resolver is left empty. */
   resolvers?: { vehicle?: PlacementResolver; plant?: PlacementResolver }
+  /**
+   * The host's light budget: each `light` part becomes a source of it (it competes for a slot by distance; a flickering lamp and a sweeping searchlight update their source) instead of a real
+   * light of the scene. `DrawnUrban.lights` then lists the sources. Without it the lights are created here (deprecated, removed in the next major).
+   */
+  lights?: LightBudget
 }
 
 /** What a drawn scene gives back: the group to add to a scene, the per-frame animation and the cleanup. */
@@ -29,10 +36,13 @@ export type DrawnUrban = {
   root: any
   /** Moves the animated parts to time `t` (seconds): flickering lamps and sweeping searchlights. */
   animate(t: number): void
-  /** Lights drawn, for a budget meter. */
+  /** Lights drawn, for a budget meter: the lights of the scene, or (with `UrbanThreeOptions.lights`) a `BudgetedLamp` for each: its bulb in the scene and its source of the budget. */
   readonly lights: any[]
   dispose(): void
 }
+
+/** A light part drawn through the budget: the node it hangs from, the part that describes it (distance, colour...) and the source that competes for a slot. */
+export type BudgetedLamp = { readonly bulb: any; readonly part: LightPart; readonly source: SourceHandle }
 
 export type DrawOptions = {
   /** Group the parts go into. Default a new `THREE.Group`. */
@@ -97,6 +107,32 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     if (part.ry) mesh.rotation.y = part.ry
     disposables.push(mesh.geometry, mesh.material)
     return mesh
+  }
+
+  const forward = new THREE.Vector3(0, 0, -1)
+  const aimAt = (node: any, from: { x: number; y: number; z: number }, to: { x: number; y: number; z: number }): void => {
+    node.quaternion.setFromUnitVectors(forward, new THREE.Vector3(to.x - from.x, to.y - from.y, to.z - from.z).normalize())
+  }
+
+  /** The bulb of a light part as a node of the scene, and its source of the budget. */
+  const sourceOf = (part: LightPart, bulb: any, extra: Record<string, unknown>): SourceHandle =>
+    options.lights!.addSource({ owner: 'urban.light', priority: LIGHT_PRIORITY.street, color: part.color, intensity: part.intensity, distance: part.distance, decay: part.decay, position: [0, 0, 0], follow: bulb, ...extra })
+
+  const drawBudgetedLight = (part: LightPart, animators: ((t: number) => void)[], lights: any[]): any[] => {
+    const bulb = new THREE.Object3D()
+    bulb.position.set(part.x, part.y, part.z)
+    if (part.kind === 'point') {
+      const source = sourceOf(part, bulb, {})
+      lights.push({ bulb, part, source } satisfies BudgetedLamp)
+      if (part.flicker) animators.push((t) => source.update({ intensity: part.intensity * (Math.sin(t * 23 + part.x) > 0.3 || Math.sin(t * 3.1) > 0.85 ? 0.15 : 1) }))
+      return [bulb]
+    }
+    aimAt(bulb, part, part.target)
+    const source = sourceOf(part, bulb, { kind: 'spot', angle: part.angle, penumbra: part.penumbra })
+    lights.push({ bulb, part, source } satisfies BudgetedLamp)
+    const { sweep } = part
+    if (sweep) animators.push((t) => aimAt(bulb, part, { x: part.x + Math.sin(t * sweep.speed + part.x) * sweep.radius, y: 0, z: part.z + Math.cos(t * sweep.speed + part.x) * sweep.radius }))
+    return [bulb]
   }
 
   const drawPart = (part: UrbanPart, animators: ((t: number) => void)[], lights: any[]): any[] => {
@@ -212,7 +248,9 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [holder]
       }
       case 'light': {
+        if (options.lights) return drawBudgetedLight(part, animators, lights)
         if (part.kind === 'point') {
+          // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
           const light = new THREE.PointLight(part.color, part.intensity, part.distance, part.decay)
           light.position.set(part.x, part.y, part.z)
           lights.push(light)
@@ -223,6 +261,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
           }
           return [light]
         }
+        // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
         const light = new THREE.SpotLight(part.color, part.intensity, part.distance, part.angle, part.penumbra, part.decay)
         light.position.set(part.x, part.y, part.z)
         const target = new THREE.Object3D()
@@ -296,6 +335,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
       lights,
       animate: (t) => animators.forEach((step) => step(t)),
       dispose: () => {
+        if (options.lights) for (const lamp of lights) lamp.source.remove()
         root.parent?.remove(root)
         for (const item of disposables.splice(0)) item.dispose?.()
         for (const geometry of geometries.values()) geometry.dispose()

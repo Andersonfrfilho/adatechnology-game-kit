@@ -111,10 +111,16 @@ export type UrbanScene = {
   windows: { lit: SilhouetteWindow[]; dark: SilhouetteWindow[] }
 }
 
-/** The lights a scene may spend. Every lamp that is on takes one, and the first ones win; the rest keep only their glowing lens. */
-export type LightBudget = {
+/**
+ * How many lights a scene may spend (a counter, not the render budget of `@adatechnology/game-render-three`). Every lamp that is on takes one, and the first ones win; the rest keep only their
+ * glowing lens.
+ */
+export type LightAllowance = {
   /** Lights left. It goes below zero when more lamps ask than the budget had, as the team's counter does. */
   left: number
   /** True while the budget lasts (spends one either way). */
   take(): boolean
 }
+
+/** @deprecated Renamed `LightAllowance`: `LightBudget` is the name of the render budget of `@adatechnology/game-render-three`. Removed in the next major. */
+export type LightBudget = LightAllowance
