@@ -88,6 +88,8 @@ export interface VfxRendererOptions {
   pointScale?: number
   /** Multiplies the blast and fire lights. Default `Math.PI`: three.js r155+ lights are physical, the Lab's were not (r128). */
   lightScale?: number
+  /** Caps on the marks kept on the ground; once one is full the oldest is reused for the next, so nothing grows and nothing is allocated. Defaults: 64 scorch and dirt, 512 rocks, 256 blood. */
+  markLimits?: { readonly maxGroundMarks?: number; readonly maxRocks?: number; readonly maxBlood?: number }
 }
 
 /** The world's counters flattened (`lastBlast` becomes `last_puffs`, `last_sparks`, `last_chunks`, `last_lights`), plus `drawCalls`. */
