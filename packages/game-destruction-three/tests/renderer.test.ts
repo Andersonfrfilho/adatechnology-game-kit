@@ -164,6 +164,20 @@ describe('fracture', () => {
     for (let i = 0; i < 400; i++) renderer.update(1 / 60)
     expect(renderer.stats().fragments).toBe(0)
   })
+
+  it('gives each fragment its own resting time by a rule: big chunks stay as rubble, chips go', () => {
+    const seen: string[] = []
+    const { world, renderer } = setup({ fragmentLife: (f, objectId) => (seen.push(`${objectId}:${f.material}`), Math.max(...f.size) > 0.1 ? 0 : 1) })
+    world.addObject('o1', [partState('top', 'glass')])
+    const fragments = [frag('chunk', { velocity: [0, 0, 0], size: [0.3, 0.2, 0.2] }), frag('chip', { velocity: [0, 0, 0], size: [0.02, 0.02, 0.01] })]
+    world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'shatter', fragments, point: [0, 1, 0] })
+    renderer.update(0.016)
+    expect(renderer.stats().fragments).toBe(2)
+    expect(seen).toEqual(['o1:glass', 'o1:glass'])
+    for (let i = 0; i < 600; i++) renderer.update(1 / 60)
+    // the chip faded after a second at rest, the chunk (0 = forever) is still there
+    expect(renderer.stats().fragments).toBe(1)
+  })
 })
 
 describe('detach and pieces', () => {

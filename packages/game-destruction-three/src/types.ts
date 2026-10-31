@@ -10,6 +10,7 @@ import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, Materia
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
+import type { FragmentLifeRule } from './fragments'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -27,8 +28,11 @@ export interface RendererOptions {
   maxFragments?: number
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
-  /** Seconds a resting fragment stays before it fades (default 12; 0 = forever). */
-  fragmentLife?: number
+  /**
+   * Seconds a resting fragment stays before it fades (default 12; 0 = forever). A rule gives it per fragment from its material, size and object, e.g. a brick chunk
+   * that stays as rubble and a chip that goes: `(f) => (Math.max(...f.size) > 0.1 ? 0 : f.material === 'glass' ? 30 : 12)`. Loose pieces (what breaks off whole) never fade.
+   */
+  fragmentLife?: number | FragmentLifeRule
   /** Ground height at (x, z) for fragments, pieces and drips (default 0). */
   groundAt?: (x: number, z: number) => number
   gravity?: number
