@@ -215,8 +215,7 @@ export class FragmentSystem {
           live.vel.x = x
           live.vel.z = z
           live.vel.y = Math.max(live.vel.y, 0.3)
-          live.asleep = false
-          live.rest = 0
+          this.rouse(live)
         },
       }
     }
@@ -253,17 +252,22 @@ export class FragmentSystem {
       d.y += k * 0.4
       f.vel.add(d)
       f.ang.add(this.w.set(this.rng() - 0.5, this.rng() - 0.5, this.rng() - 0.5).multiplyScalar(k))
-      f.asleep = false
-      f.rest = 0
+      this.rouse(f)
     }
+  }
+
+  /** A fragment that came to rest stops having its matrix recomputed on every frame; whatever moves it again calls this first. */
+  private rouse(f: Live): void {
+    f.asleep = false
+    f.rest = 0
+    f.mesh.matrixAutoUpdate = true
   }
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
   wakeRegion(x: number, z: number, radius: number): void {
     for (const f of this.list) {
       if (!f.asleep || Math.hypot(f.mesh.position.x - x, f.mesh.position.z - z) > radius) continue
-      f.asleep = false
-      f.rest = 0
+      this.rouse(f)
     }
   }
 
@@ -273,6 +277,7 @@ export class FragmentSystem {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const f = this.list[i]
       if (f.dying) {
+        f.mesh.matrixAutoUpdate = true
         f.fade -= dt / 0.6
         if (f.fade <= 0) {
           this.o.scene.remove(f.mesh)
@@ -283,7 +288,10 @@ export class FragmentSystem {
       }
       if (f.asleep) {
         f.rest += dt
-        if (f.life > 0 && f.rest > f.life && !f.body) f.dying = true
+        if (f.life > 0 && f.rest > f.life && !f.body) {
+          f.dying = true
+          f.mesh.matrixAutoUpdate = true
+        }
         continue
       }
       this.step(f, dt, g)
@@ -335,6 +343,8 @@ export class FragmentSystem {
       f.still += dt
       if (f.still > 0.4) {
         f.asleep = true
+        f.mesh.updateMatrix()
+        f.mesh.matrixAutoUpdate = false
         f.vel.set(0, 0, 0)
         f.ang.set(0, 0, 0)
       }

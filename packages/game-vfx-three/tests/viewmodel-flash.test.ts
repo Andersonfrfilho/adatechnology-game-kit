@@ -5,7 +5,7 @@ import { createVfxRenderer } from '../src'
 
 // The first-person muzzle flash and its smoke as the weapons package drew them before they became the recipe `viewmodel_muzzle_flash`: fx/effects.ts and fx/particles.ts of
 // game-weapons-three at commit d15e990, run unchanged on three.js (tools/golden/bin/record-viewmodel-flash.mjs). The recipe must draw the same solids at the same places.
-type Solid = { geometry: string; parameters: Record<string, unknown>; material: { type: string; color: number; opacity: number; additive: boolean; transparent: boolean; depthWrite: boolean }; position: number[]; turn: number[]; scale: number }
+type Solid = { geometry: string; parameters: Record<string, unknown>; scaleY?: number; material: { type: string; color: number; opacity: number; additive: boolean; transparent: boolean; depthWrite: boolean }; position: number[]; turn: number[]; scale: number }
 type Sample = { frame: number; flash: Solid[]; light: { intensity: number; distance: number; decay: number; color: number; position: number[] }; puffs: Solid[] }
 type Run = { name: string; seed: number; size: number; point: [number, number, number]; dt: number; orientation: [number, number, number, number]; frames: Sample[] }
 type Fixture = { source: { commit: string }; frames: number; runs: Run[] }
@@ -39,12 +39,17 @@ function solidOf(mesh: THREE.Mesh): Solid {
     position: position.toArray(),
     turn: rotation.toArray(),
     scale: scale.x,
+    scaleY: scale.y,
   }
 }
 
 function compare(actual: Solid, expected: Solid, label: string): void {
   expect(actual.geometry, label).toBe(expected.geometry)
+  // the layer draws a unit shape and scales it, the page builds each at its size: what is drawn is the parameter times the scale
+  const drawn = (solid: Solid, key: 'radius' | 'height'): number => (solid.parameters[key] as number) * (key === 'height' ? solid.scaleY ?? solid.scale : solid.scale)
+  for (const key of ['radius', 'height'] as const) if (typeof expected.parameters[key] === 'number') expect(drawn(actual, key), `${label}.${key}`).toBeCloseTo(drawn(expected, key), DIGITS)
   for (const [key, value] of Object.entries(expected.parameters)) {
+    if (key === 'radius' || key === 'height') continue
     if (typeof value === 'number') expect(actual.parameters[key] as number, `${label}.${key}`).toBeCloseTo(value, DIGITS)
     else expect(actual.parameters[key], `${label}.${key}`).toBe(value)
   }
@@ -56,7 +61,6 @@ function compare(actual: Solid, expected: Solid, label: string): void {
   expect(actual.material.depthWrite, label).toBe(expected.material.depthWrite)
   near(actual.position, expected.position, `${label} position`)
   sameTurn(actual.turn, expected.turn, `${label} turn`)
-  expect(actual.scale, `${label} scale`).toBeCloseTo(expected.scale, DIGITS)
 }
 
 describe(`the muzzle flash of the weapon in the hands, against fx/effects.ts at ${fixture.source.commit}`, () => {
