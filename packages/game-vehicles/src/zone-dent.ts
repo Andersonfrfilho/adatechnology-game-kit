@@ -1,6 +1,7 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
 import type { Kit } from './types'
 import { smooth } from './util'
+import { liveTriIndex, touchTriIndex } from './tri-index'
 
 export function installZoneDent(kit: Kit): void {
   const THREE = kit.THREE
@@ -190,6 +191,8 @@ export function installZoneDent(kit: Kit): void {
       irel.copy(rel).invert()
       const pos = g.attributes.position
       let changed = false
+      const liveIndex = liveTriIndex(g)
+      const movedVertices: number[] = []
       /* the box of the zone in the frame of the mesh: a vertex outside it is outside the field (it returns 0 there), so it skips the transform */
       const near = boxInFrame(B, irel, v)
       for (let i = 0; i < pos.count; i++) {
@@ -202,6 +205,7 @@ export function installZoneDent(kit: Kit): void {
         if (opt.extra) opt.extra(v, f)
         v.applyMatrix4(irel)
         pos.setXYZ(i, v.x, v.y, v.z)
+        movedVertices.push(i)
         changed = true
       }
       if (opt.extraAll) {
@@ -210,12 +214,14 @@ export function installZoneDent(kit: Kit): void {
           if (opt.extraAll(v)) {
             v.applyMatrix4(irel)
             pos.setXYZ(j, v.x, v.y, v.z)
+            movedVertices.push(j)
             changed = true
           }
         }
       }
       if (changed) {
         pos.needsUpdate = true
+        if (liveIndex) touchTriIndex(g, liveIndex, movedVertices)
         dirty.add(msh)
       }
       if (changed || boundsDue) {
@@ -249,7 +255,29 @@ export function installZoneDent(kit: Kit): void {
     })
     return { field: field, moved: moved, ax: ax, a: a, cu: cu, cv: cv, hu: hu, hv: hv, outer: outer }
   }
-  /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute */
+  /* the box, in the frame of a mesh (rel maps it to the vehicle frame), that holds the panel cut: every point with sdf < 0 of the cut test lies in it;
+     undefined when rel cannot be inverted. The pad swallows the rounding of the inverse. */
+  function panelBoundsIn(rel: any, rect: any, B: any, a: any, ax: any) {
+    const det = rel.determinant()
+    if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return undefined
+    const back = rel.clone().invert()
+    const lo = [Infinity, Infinity, Infinity]
+    const hi = [-Infinity, -Infinity, -Infinity]
+    const q = new V3()
+    for (let i = 0; i < 8; i++) {
+      q.setComponent(ax[0], i & 1 ? rect[1] : rect[0])
+      q.setComponent(ax[1], i & 2 ? rect[3] : rect[2])
+      q.setComponent(a, i & 4 ? I.boxHi(B, a) : I.boxLo(B, a))
+      q.applyMatrix4(back)
+      for (let k = 0; k < 3; k++) {
+        lo[k] = Math.min(lo[k], q.getComponent(k))
+        hi[k] = Math.max(hi[k], q.getComponent(k))
+      }
+    }
+    const pad = 1e-3
+    return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
+  }
+  /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
   function cutPanel(c: any, z: any, rect: any, keep: any, dirty: any, o: any) {
     o = o || {}
     const B = z.box
@@ -288,6 +316,7 @@ export function installZoneDent(kit: Kit): void {
       }
       const test = {
         tag: 'part',
+        pieces: keep ? (o.pieceTasks ? 'later' : 'crease') : 'none',
         sel:
           o.anyN || z.cutAll
             ? null
@@ -309,13 +338,12 @@ export function installZoneDent(kit: Kit): void {
           return q
         },
       }
-      const r = cutGeometry(g, [test])
+      const r = cutGeometry(g, [{ ...test, bounds: panelBoundsIn(rel, rect, B, a, ax) }])
       const cg = r.cut.part
       if (!cg || !cg.attributes.position.count) return
       g.dispose()
       msh.geometry = r.geo
-      r.geo.computeBoundingSphere()
-      r.geo.computeBoundingBox()
+      I.refreshBounds(r.geo)
       dirty.add(msh)
       if (!keep) {
         cg.dispose()
@@ -328,6 +356,7 @@ export function installZoneDent(kit: Kit): void {
       rel.decompose(pm.position, pm.quaternion, pm.scale)
       c.vehicle.add(pm)
       pm.updateMatrixWorld(true)
+      if (o.pieceTasks) o.pieceTasks.set(pm, r.tasks.part)
       pieces.push({ mesh: pm, cut: true })
     })
     return pieces

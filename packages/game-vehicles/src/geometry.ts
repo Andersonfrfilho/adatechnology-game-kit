@@ -1,6 +1,7 @@
 /** Geometry helpers: rounded boxes, lofts, creasing, subdivision, merging and convex hulls. */
 import type { Kit } from './types'
 import { clamp } from './util'
+import { TRI_BLOCK, boundsFromIndex, storeTriIndex, triIndexOf } from './tri-index'
 
 export function installGeometry(kit: Kit): void {
   const THREE = kit.THREE
@@ -397,30 +398,32 @@ export function installGeometry(kit: Kit): void {
     return g
   }
   /* Cuts triangles: each test { sel(normal, centre) -> bool, sdf(x,y,z) -> number (negative = remove), tag }.
-     Triangles crossing the edge are cut along the line sdf = 0. Removed pieces with a tag come back in .cut[tag]. */
+     Triangles crossing the edge are cut along the line sdf = 0. Removed pieces with a tag come back in .cut[tag].
+     A lone test may carry `bounds` { lo, hi } (a box in the frame of the geometry that holds every point with sdf < 0): triangles outside it are
+     copied as they are, with no per-triangle work, and the result is the same as testing them. */
   function cutGeometry(geo: any, tests: any) {
-    const src = geo.index ? geo.toNonIndexed() : geo
+    const idx = geo.index ? geo.index.array : null
     const names = ['position'].concat(
       ['color', 'uv'].filter(function (n) {
-        return !!src.attributes[n]
+        return !!geo.attributes[n]
       }),
     )
     const sizes = names.map(function (n) {
-      return src.attributes[n].itemSize
+      return geo.attributes[n].itemSize
     })
     const arrs = names.map(function (n) {
-      return src.attributes[n].array
+      return geo.attributes[n].array
     })
-    const nv = src.attributes.position.count
-    let tris: any = []
-    for (let f = 0; f < nv; f += 3) {
+    const nv = idx ? idx.length : geo.attributes.position.count
+    function readTri(f: number) {
       const t = []
       for (let k = 0; k < 3; k++) {
+        const vi = idx ? idx[f + k] : f + k
         const v = []
-        for (let a = 0; a < names.length; a++) for (let q = 0; q < sizes[a]; q++) v.push(arrs[a][(f + k) * sizes[a] + q])
+        for (let a = 0; a < names.length; a++) for (let q = 0; q < sizes[a]; q++) v.push(arrs[a][vi * sizes[a] + q])
         t.push(v)
       }
-      tris.push(t)
+      return t
     }
     const cut: any = {}
     const n = new V3()
@@ -446,60 +449,180 @@ export function installGeometry(kit: Kit): void {
     function fan(poly: any, arr: any) {
       for (let i = 1; i < poly.length - 1; i++) arr.push([poly[0], poly[i], poly[i + 1]])
     }
-    tests.forEach(function (T: any) {
-      const next: any = []
+    function testTri(T: any, t: any, next: any, rem: any) {
+      const A = t[0]
+      const B = t[1]
+      const C = t[2]
+      e1.set(B[0] - A[0], B[1] - A[1], B[2] - A[2])
+      e2.set(C[0] - A[0], C[1] - A[1], C[2] - A[2])
+      n.crossVectors(e1, e2)
+      const len = n.length()
+      if (len < 1e-12) {
+        next.push(t)
+        return
+      }
+      n.multiplyScalar(1 / len)
+      ce.set((A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3, (A[2] + B[2] + C[2]) / 3)
+      if (T.sel && !T.sel(n, ce)) {
+        next.push(t)
+        return
+      }
+      const d = [T.sdf(A[0], A[1], A[2]), T.sdf(B[0], B[1], B[2]), T.sdf(C[0], C[1], C[2])]
+      const ins = (d[0] < 0 ? 1 : 0) + (d[1] < 0 ? 1 : 0) + (d[2] < 0 ? 1 : 0)
+      if (ins === 0) next.push(t)
+      else if (ins === 3) {
+        if (rem) rem.push(t)
+      } else {
+        fan(clip(t, d, 1), next)
+        if (rem) fan(clip(t, d, -1), rem)
+      }
+    }
+    /* what the result is made of, in order: [first, end) triangle ranges copied as they are, and lists of triangles that went through the test */
+    const segments: any = []
+    let total = 0
+    const ti = tests.length === 1 && tests[0].bounds ? triIndexOf(geo) : undefined
+    if (ti) {
+      const T = tests[0]
+      const lo = T.bounds.lo
+      const hi = T.bounds.hi
       const rem = T.tag ? (cut[T.tag] = cut[T.tag] || []) : null
-      tris.forEach(function (t: any) {
-        const A = t[0]
-        const B = t[1]
-        const C = t[2]
-        e1.set(B[0] - A[0], B[1] - A[1], B[2] - A[2])
-        e2.set(C[0] - A[0], C[1] - A[1], C[2] - A[2])
-        n.crossVectors(e1, e2)
-        const len = n.length()
-        if (len < 1e-12) {
-          next.push(t)
-          return
+      const boxes = ti.boxes
+      const blocks = ti.blocks
+      let runFrom = -1
+      const closeRun = function (end: number) {
+        if (runFrom < 0) return
+        segments.push([runFrom, end])
+        total += end - runFrom
+        runFrom = -1
+      }
+      for (let blk = 0, t0 = 0; t0 < ti.triangles; blk++, t0 += TRI_BLOCK) {
+        const j = blk * 6
+        if (blocks[j + 3]! < lo[0] || blocks[j]! > hi[0] || blocks[j + 4]! < lo[1] || blocks[j + 1]! > hi[1] || blocks[j + 5]! < lo[2] || blocks[j + 2]! > hi[2]) {
+          if (runFrom < 0) runFrom = t0
+          continue
         }
-        n.multiplyScalar(1 / len)
-        ce.set((A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3, (A[2] + B[2] + C[2]) / 3)
-        if (T.sel && !T.sel(n, ce)) {
-          next.push(t)
-          return
+        const t1 = Math.min(ti.triangles, t0 + TRI_BLOCK)
+        for (let t = t0; t < t1; t++) {
+          const q = t * 6
+          if (boxes[q + 3]! < lo[0] || boxes[q]! > hi[0] || boxes[q + 4]! < lo[1] || boxes[q + 1]! > hi[1] || boxes[q + 5]! < lo[2] || boxes[q + 2]! > hi[2]) {
+            if (runFrom < 0) runFrom = t
+            continue
+          }
+          closeRun(t)
+          const next: any = []
+          testTri(T, readTri(t * 3), next, rem)
+          if (next.length) {
+            segments.push(next)
+            total += next.length
+          }
         }
-        const d = [T.sdf(A[0], A[1], A[2]), T.sdf(B[0], B[1], B[2]), T.sdf(C[0], C[1], C[2])]
-        const ins = (d[0] < 0 ? 1 : 0) + (d[1] < 0 ? 1 : 0) + (d[2] < 0 ? 1 : 0)
-        if (ins === 0) next.push(t)
-        else if (ins === 3) {
-          if (rem) rem.push(t)
-        } else {
-          fan(clip(t, d, 1), next)
-          if (rem) fan(clip(t, d, -1), rem)
-        }
-      })
-      tris = next
-    })
-    function build(list: any) {
-      const g = new THREE.BufferGeometry()
-      let off = 0
-      names.forEach(function (nm, a) {
-        const arr = new Float32Array(list.length * 3 * sizes[a])
-        let w = 0
-        list.forEach(function (t: any) {
-          for (let k = 0; k < 3; k++) for (let q = 0; q < sizes[a]; q++) arr[w++] = t[k][off + q]
+      }
+      closeRun(ti.triangles)
+    } else {
+      let tris: any = []
+      for (let f = 0; f < nv; f += 3) tris.push(readTri(f))
+      tests.forEach(function (T: any) {
+        const next: any = []
+        const rem = T.tag ? (cut[T.tag] = cut[T.tag] || []) : null
+        tris.forEach(function (t: any) {
+          testTri(T, t, next, rem)
         })
-        g.setAttribute(nm, new THREE.BufferAttribute(arr, sizes[a]))
-        off += sizes[a]
+        tris = next
+      })
+      segments.push(tris)
+      total = tris.length
+    }
+    function fill(segs: any, count: number, boxesOut?: Float64Array) {
+      const g = new THREE.BufferGeometry()
+      const dst = names.map(function (_nm, a) {
+        return new Float32Array(count * 3 * sizes[a])
+      })
+      const w = names.map(function () {
+        return 0
+      })
+      let wb = 0
+      segs.forEach(function (seg: any) {
+        if (typeof seg[0] === 'number') {
+          for (let a = 0; a < names.length; a++) {
+            const size = sizes[a]
+            if (!idx) {
+              dst[a].set(arrs[a].subarray(seg[0] * 3 * size, seg[1] * 3 * size), w[a])
+              w[a] += (seg[1] - seg[0]) * 3 * size
+              continue
+            }
+            for (let f = seg[0] * 3; f < seg[1] * 3; f++) for (let q = 0; q < size; q++) dst[a][w[a]++] = arrs[a][idx[f] * size + q]
+          }
+          if (boxesOut && ti) {
+            boxesOut.set(ti.boxes.subarray(seg[0] * 6, seg[1] * 6), wb)
+            wb += (seg[1] - seg[0]) * 6
+          }
+          return
+        }
+        seg.forEach(function (t: any) {
+          if (boxesOut) {
+            for (let k = 0; k < 3; k++) {
+              boxesOut[wb + k] = Math.fround(Math.min(t[0][k], t[1][k], t[2][k]))
+              boxesOut[wb + 3 + k] = Math.fround(Math.max(t[0][k], t[1][k], t[2][k]))
+            }
+            wb += 6
+          }
+          let off = 0
+          for (let a = 0; a < names.length; a++) {
+            for (let k = 0; k < 3; k++) for (let q = 0; q < sizes[a]; q++) dst[a][w[a]++] = t[k][off + q]
+            off += sizes[a]
+          }
+        })
+      })
+      names.forEach(function (nm, a) {
+        g.setAttribute(nm, new THREE.BufferAttribute(dst[a], sizes[a]))
       })
       g.userData.crease = true
       return g
     }
-    const out: any = { geo: build(tris), cut: {} }
+    const boxesOut = ti ? new Float64Array(total * 6) : undefined
+    const out: any = { geo: fill(segments, total, boxesOut), cut: {}, tasks: {} }
+    if (boxesOut) storeTriIndex(out.geo, boxesOut)
     Object.keys(cut).forEach(function (k) {
-      out.cut[k] = crease(build(cut[k]), 42)
+      const piece = fill([cut[k]], cut[k].length)
+      const mode = tests.find(function (T: any) {
+        return T.tag === k
+      }).pieces
+      if (mode === 'none') out.cut[k] = piece
+      else if (mode === 'later') {
+        out.cut[k] = piece
+        out.tasks[k] = creaseTask(piece, 42)
+      } else out.cut[k] = crease(piece, 42)
     })
     return out
   }
+  /* The bounding box and sphere of a geometry, the same numbers as computeBoundingBox and computeBoundingSphere; for a non-indexed geometry with a
+     complete triangle index the box comes from the blocks and the vertices are read once, and nothing is redone while the positions stand. */
+  function refreshBounds(geo: any) {
+    const found = boundsFromIndex(geo)
+    if (!found) {
+      geo.computeBoundingSphere()
+      geo.computeBoundingBox()
+      return
+    }
+    if (geo.boundingBox && geo.boundingSphere && boundsDone.get(geo) === found.version) return
+    const b = found.box
+    if (!geo.boundingBox) geo.boundingBox = new THREE.Box3()
+    geo.boundingBox.min.set(b[0], b[1], b[2])
+    geo.boundingBox.max.set(b[3], b[4], b[5])
+    if (!geo.boundingSphere) geo.boundingSphere = new THREE.Sphere()
+    const center = geo.boundingBox.getCenter(geo.boundingSphere.center)
+    const P = geo.attributes.position.array
+    let maxRadiusSq = 0
+    for (let i = 0; i < P.length; i += 3) {
+      const dx = center.x - P[i]
+      const dy = center.y - P[i + 1]
+      const dz = center.z - P[i + 2]
+      maxRadiusSq = Math.max(maxRadiusSq, dx * dx + dy * dy + dz * dz)
+    }
+    geo.boundingSphere.radius = Math.sqrt(maxRadiusSq)
+    boundsDone.set(geo, found.version)
+  }
+  const boundsDone = new WeakMap<object, number>()
   /* Merges geometries (already transformed) into one, for repeated parts such as track links and honeycomb. */
   function mergeGeometries(list: any) {
     const pos: any = []
@@ -639,5 +762,5 @@ export function installGeometry(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, creaseTask, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
+  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, creaseTask, refreshBounds, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
 }
