@@ -22,7 +22,9 @@ export { SHIPPED_MODELS } from './models/shipped'
 export { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
 export { composeThumbnailScene, itemThumbnail, itemThumbnailSvg, renderItemThumbnail, shapeThumbnailSvg, thumbnailPatch } from './thumbnails'
 export type { ThumbnailRenderer, ThumbnailRenderOptions, ThumbnailScene } from './thumbnails'
-export { createItemsTestModule, FINDS_TABLE_ID, HUMAN_HEIGHT, HUMAN_ID, RULER_HEIGHT, RULER_ID, SHOWCASE_STAND_ID } from './area'
-export type { ItemsAreaState, ItemsTestModule, ItemsTestModuleOptions, ScenarioLike } from './area'
+/** @deprecated import from '@adatechnology/game-items-three/testing' */
+export { createItemsTestModule, FINDS_TABLE_ID, HUMAN_HEIGHT, HUMAN_ID, RULER_HEIGHT, RULER_ID, SHOWCASE_STAND_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-items-three/testing' */
+export type { ItemsAreaState, ItemsTestModule, ItemsTestModuleOptions, ScenarioLike } from './testing'
 export { ITEM_PREFIX, ROW_LIMIT, SHELF_HEIGHT, SHELF_PREFIX, SHOWCASE_PREFIX, shelvesLayout } from './area-layout'
 export type { LayoutItem, ShelfPlan } from './area-layout'

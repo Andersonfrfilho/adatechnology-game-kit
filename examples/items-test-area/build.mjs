@@ -39,6 +39,7 @@ const result = await esbuild.build({
     '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
     '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
+    '@adatechnology/game-items-three/testing': join(pkg('game-items-three'), 'dist/testing.js'),
     '@adatechnology/game-interactables': join(pkg('game-interactables'), 'dist/index.js'),
     '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),

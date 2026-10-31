@@ -70,6 +70,7 @@ const result = await esbuild.build({
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    '@adatechnology/game-weapons-three/testing': join(pkg('game-weapons-three'), 'dist/testing.js'),
     // the items module and the goods catalog ride along: the containers of the furniture hold real items
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
     // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
@@ -82,6 +83,7 @@ const result = await esbuild.build({
     '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
     '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
+    '@adatechnology/game-items-three/testing': join(pkg('game-items-three'), 'dist/testing.js'),
     // the characters and the animals modules ride along too: a shot crosses a wardrobe door and reaches a zombie behind it
     ...Object.fromEntries(people.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the vehicles module rides along too: a car stands in the yard next to the furniture
