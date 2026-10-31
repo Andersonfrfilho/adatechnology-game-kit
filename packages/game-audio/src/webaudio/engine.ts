@@ -21,6 +21,8 @@ import type { AudioLoopHandle, LoopHost } from './engine-loop'
 import { createNoiseStore, noiseBuffer, prepareNoise } from './engine-noise'
 import type { NoiseStore } from './engine-noise'
 import type { RealizedVoice } from './nodes'
+import { createStartQueue } from './engine-queue'
+import type { StartQueueOptions } from './engine-queue'
 import { realize } from './realize'
 
 export type PlayOptions = {
@@ -68,6 +70,8 @@ export type AudioEngineOptions = {
   /** 0 (clear) to 1 (behind a wall) for a sound at a point; without it there is no occlusion (Q8). */
   readonly occlusion?: (point: Vec3) => number
   readonly createContext?: () => AudioContext | null
+  /** Build voices in timed slices between frames instead of inside `play` (a sound starts a few ms late; a burst never costs a frame). Off by default. */
+  readonly deferredStart?: StartQueueOptions
 }
 
 export type AudioEngine = {
@@ -86,6 +90,8 @@ export type AudioEngine = {
   setMaster(gain: number): void
   /** Creates the context and the mixing chain if needed and resumes it; call from a click or a key. */
   unlock(): void
+  /** Creates the context, the mixing chain (reverb impulse included) and the shared noise buffer now, so the first sound does not pay for them inside a frame. Returns false without a context. */
+  warmUp(): boolean
   stats(): AudioStats
   /** RMS (0 to 1) of what a bus carries now, read from an analyser the first time you ask; sounds started before that do not reach it. 0 without a context. */
   level(bus: BusId): number
@@ -179,15 +185,47 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     ...(options.occlusion && playOptions.position && recipe.falloff?.model !== 'none' ? { occlusion: options.occlusion(playOptions.position) } : {}),
   })
 
-  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0): VoiceHandle | null => {
+  const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
+
+  const build = (plan: SoundPlan, store: NoiseStore, delay: number): RealizedVoice => {
     const audio = context as AudioContext
-    const realized = realize(plan, {
+    return realize(plan, {
       context: audio,
       output: outputFor(plan.bus),
       ...(chain?.wet ? { wet: chain.wet } : {}),
       noise: () => noiseBuffer(store, audio, mix.noise.seconds),
       time: audio.currentTime + delay,
     })
+  }
+
+  // the voice a deferred sound is tracked by until it is built: `stop` cancels it or stops what was built
+  const deferVoice = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay: number): RealizedVoice => {
+    let built: RealizedVoice | null = null
+    let cancelled = false
+    const pending: RealizedVoice = {
+      get sources() {
+        return built?.sources ?? []
+      },
+      stop() {
+        cancelled = true
+        built?.stop()
+      },
+    }
+    ;(startQueue as ReturnType<typeof createStartQueue>).push({
+      run() {
+        if (!cancelled && context) built = build(plan, store, delay)
+      },
+      drop() {
+        if (voiceId === undefined) return
+        voices.release(voiceId)
+        active.delete(voiceId)
+      },
+    })
+    return pending
+  }
+
+  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0): VoiceHandle | null => {
+    const realized = startQueue ? deferVoice(plan, store, voiceId, delay) : build(plan, store, delay)
     if (voiceId === undefined) return null
     voices.setLength(voiceId, plan.length + delay)
     active.set(voiceId, realized)
@@ -310,6 +348,12 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       const audio = ready()
       if (audio) unlockContext(audio)
     },
+    warmUp() {
+      const audio = ready()
+      if (!audio) return false
+      noiseBuffer(shared, audio, mix.noise.seconds)
+      return true
+    },
     level(bus) {
       watched.add(bus)
       ensureBus(bus)
@@ -334,6 +378,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     },
     dispose() {
       // closing the context ends every voice; they only leave the limiter
+      startQueue?.clear()
       for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
       active.clear()

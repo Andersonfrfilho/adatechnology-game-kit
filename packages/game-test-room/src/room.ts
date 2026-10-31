@@ -246,7 +246,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
   const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine())
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
   const playSound = (key: string, point: Vec3, volume: number): void => {
     destructionSound?.onSound(key, point, volume)
@@ -3566,6 +3566,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
     warmUp: () => {
+      audio?.warmUp()
       warmUp()
       warmUpEffects()
     },
