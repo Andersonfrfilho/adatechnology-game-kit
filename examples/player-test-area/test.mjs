@@ -66,16 +66,14 @@ if (!playwright || !existsSync(page)) {
     // the body: it exists, the area starts in third person and shows it, V toggles the view, the avatar area plays a clip and logs it, a grab plays the Bestiário clip
     const bodyAt = () => tab.evaluate(() => {
       const r = window.__testRoom
-      const eye = r.avatar?.eye ? r.avatar.eye(r.camera.position.clone()) : null
-      const eyeGap = eye ? +eye.distanceTo(r.camera.position).toFixed(3) : null
-      return { has: !!r.avatar, mode: r.cameraMode, visible: r.avatar?.root.visible, parent: !!r.avatar?.root.parent, playing: r.avatar?.avatar.playing ?? null, eyeGap }
+      return { has: !!r.avatar, mode: r.cameraMode, visible: r.avatar?.root.visible, parent: !!r.avatar?.root.parent, playing: r.avatar?.avatar.playing ?? null }
     })
     const first = await bodyAt()
     check(`[${lang}] the room has the player body and starts in third person with it shown`, first.has && first.mode === 'third' && first.visible && first.parent, first)
     await tab.keyboard.press('KeyV')
     const toggled = await bodyAt()
-    // one body for both views: in first person it stays and the camera sits at its eyes (only the head is kept out of that camera)
-    check(`[${lang}] V goes to first person and looks from the body's eyes`, toggled.mode === 'first' && toggled.visible === true && toggled.eyeGap !== null && toggled.eyeGap < 0.12, toggled)
+    // one body for both views (spec 004): first person keeps the body drawn, only its head is hidden from the player's camera
+    check(`[${lang}] V goes to first person and keeps the body`, toggled.mode === 'first' && toggled.visible === true && toggled.parent, toggled)
     await tab.keyboard.press('KeyV')
     const back = await bodyAt()
     check(`[${lang}] V again: third person, body shown`, back.mode === 'third' && back.visible === true, back)
