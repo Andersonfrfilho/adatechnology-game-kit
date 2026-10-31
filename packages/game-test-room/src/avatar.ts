@@ -30,6 +30,8 @@ export interface RoomAvatarState {
   itemUse?: RoomAvatarItemUse | null
   /** Hands on a piece of furniture: `grip` while the hold timer fills (`progress`), `push` walking with it, `strain` straining against what does not give. */
   push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
+  /** On a seat: the pose and how high the hips (or the pelvis) are above the feet. */
+  seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
 }
 
 /** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */

@@ -24,6 +24,8 @@ export type RoomSeat = {
   readonly objectId: string
   readonly seatId: string
   readonly pose: ItemSeat['pose']
+  /** Where the hips (sit) or the pelvis (lie) are, in the world. */
+  readonly hips: Vec3
 }
 
 export type SeatingOptions = {
@@ -104,7 +106,7 @@ export function createSeating(o: SeatingOptions): Seating {
       // a seat faces the front of its item (+z); the player looks down -z at yaw 0
       facing = yawOf(holder.root) + seat.ry + Math.PI
       player.setPose([x, y + eye, z], facing, 0)
-      current = { objectId: holder.objectId, seatId: seat.id, pose: seat.pose }
+      current = { objectId: holder.objectId, seatId: seat.id, pose: seat.pose, hips: [x, y, z] }
       hold()
       o.onSit?.(current)
       return current
