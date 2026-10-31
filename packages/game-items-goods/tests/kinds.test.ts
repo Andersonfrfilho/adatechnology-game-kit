@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { MATERIALS } from '@adatechnology/game-destruction'
 import { CALIBERS, WEAPONS } from '@adatechnology/game-weapons'
 
-import { checkGoodsItems, createGoodsKinds, GOODS_ITEMS, GOODS_KINDS, GOODS_KNOWN_GAPS, GOODS_RECIPES, lootCategoriesOf } from '../src'
+import { checkGoodsItems, createGoodsItems, createGoodsKinds, GOODS_ITEMS, GOODS_KINDS, GOODS_KNOWN_GAPS, GOODS_RECIPES, lootCategoriesOf } from '../src'
 import type { CheckGoodsOptions, KindedItem } from '../src'
 
 const engines: CheckGoodsOptions = {
@@ -114,6 +114,18 @@ describe('the kinds of the goods catalog', () => {
     expect(tuned.defaults('metal_can').parts).toEqual([{ id: 'body', material: 'copper', thickness: 0.0005 }])
     expect(kinds.defaults('metal_can').parts).toEqual([{ id: 'body', material: 'steel', thickness: 0.0002 }])
     expect(kinds.defaults('canned_food')).toMatchObject({ use: { clip: 'open_can_eat' }, leftover: { item: 'empty_can', despawnSeconds: 600 } })
+  })
+
+  it('seals the tins and the drink cans: a tin opens with a tool of the catalog, a drink can and the sardines by hand, and a hole spoils them', () => {
+    const catalog = createGoodsItems()
+    const ids = new Set(catalog.items.keys())
+    const beans = catalog.items.get('canned_beans')
+    expect(beans?.seal).toMatchObject({ spoilsWhenBreached: true })
+    expect(beans?.seal?.byHand).toBeUndefined()
+    for (const tool of beans?.seal?.openWith ?? []) expect(ids.has(tool)).toBe(true)
+    expect(catalog.items.get('canned_sardines')?.seal).toMatchObject({ byHand: true, spoilsWhenBreached: true })
+    expect(catalog.items.get('soda_can')?.seal).toEqual({ byHand: true, spoilsWhenBreached: true })
+    expect(catalog.items.get('can_opener')?.seal).toBeUndefined()
   })
 
   it('inserts a parent between two kinds, and a new kind, by data alone', () => {

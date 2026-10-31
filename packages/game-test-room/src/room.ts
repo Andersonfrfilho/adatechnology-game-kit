@@ -13,7 +13,7 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
@@ -73,6 +73,13 @@ interface Entry {
   velocity: Vec3
   /** Heavy but not fixed (a fridge, a table): not grabbable, yet a blast that reaches it with enough speed makes it a piece and shoves it. */
   free?: boolean
+  /** A sealed item (`TestRoomItem.seal`) was opened. */
+  opened?: boolean
+  /** Litres the container started with, and litres the player ate or drank out of it: the rest of a loss is a leak. */
+  fluidStart?: number
+  fluidUsed?: number
+  /** Litres a sealed item had lost when it was opened (`sealLoss`). */
+  sealLoss?: number
   /** Leaning on it pushes it. */
   pushable?: boolean
 }
@@ -720,6 +727,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const q = root.getWorldQuaternion(tmpQ)
       const p = tmpV.set(e.fluidOffset[0], e.fluidOffset[1], e.fluidOffset[2]).applyMatrix4(root.matrixWorld)
       e.containerId = fluids.addContainer(f.container, { id: `${objectId}_fluid`, position: [p.x, p.y, p.z], rotation: [q.x, q.y, q.z, q.w] })
+      e.fluidStart = f.container.liters
+      e.fluidUsed = 0
       fluidView.bindContainer(e.containerId, root, { innerOffset: e.fluidOffset })
     }
     return e
@@ -2156,6 +2165,54 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (avatar?.firstPerson && cameraMode === 'first') carriedHand = carriedTargets(root, gripQuat)
   }
 
+  /** How far (m) from the player an item on the table still counts as at hand (a can opener next to the tin). */
+  const TOOL_REACH = 1.6
+  /** Ids of what the player could open a seal with: the weapons of the loadout and the items within `TOOL_REACH` (catalogue and item ids). */
+  const toolsAtHand = (): string[] => {
+    const here = player.position
+    const near: string[] = [...loadout]
+    for (const other of entries.values()) {
+      if (other === heldEntry || other.arena) continue
+      const p = other.so.root.position
+      if (Math.hypot(p.x - here[0], p.z - here[2]) <= TOOL_REACH) near.push(other.so.itemId)
+    }
+    return near
+  }
+  /** Litres a sealed item lost that nobody ate or drank; once it is open, only what it had lost before (a spill from the open mouth spoils nothing). */
+  const sealLoss = (e: Entry): number => {
+    if (e.sealLoss !== undefined) return e.sealLoss
+    const c = e.containerId ? fluids.container(e.containerId) : undefined
+    return c && e.fluidStart !== undefined ? Math.max(0, e.fluidStart - c.liters - (e.fluidUsed ?? 0)) : 0
+  }
+  /** The seal state of an item: opened, holed through (any part) or leaking (it lost contents while sealed). */
+  const sealState = (e: Entry): { opened: boolean; breached: boolean; leaked: boolean } => {
+    const breached = world.state(e.so.objectId)?.parts.some((p) => p.holes.some((h) => h.through && !h.vent)) ?? false
+    const leaked = e.fluidStart !== undefined && sealLoss(e) > Math.max(0.002, e.fluidStart * 0.02)
+    return { opened: !!e.opened, breached, leaked }
+  }
+  /** Opens a sealed item: the container opens, the model is drawn open and the room says with what. False when it needs a tool that is not at hand. */
+  const openSeal = (e: Entry): boolean => {
+    const seal = e.item?.seal
+    if (!seal || e.opened) return true
+    const opener = sealOpener(seal, toolsAtHand())
+    if (!opener.ok) {
+      // the names of the catalogue's items; the arsenal's names only when the catalogue has none of them
+      const listed = (seal.openWith ?? []).map((id) => catalogMap.get(id)?.name).filter((n): n is string => !!n)
+      const names = [...new Set(listed.length ? listed : (seal.openWith ?? []).filter((id) => arsenal.weapons.has(id)).map((id) => toolName(id)))]
+      const why = t('hud.needs_opener', { name: e.name, tools: names.join(', ') })
+      say(why)
+      action('sealed', why, { objectId: e.so.objectId, itemId: e.so.itemId, data: { openWith: [...(seal.openWith ?? [])] } })
+      return false
+    }
+    e.sealLoss = sealLoss(e)
+    e.opened = true
+    if (e.containerId) fluids.open(e.containerId)
+    seal.open?.(wrapped.get(e.so.root) ?? e.so.root)
+    const tool = opener.tool ? (catalogMap.get(opener.tool)?.name ?? (arsenal.weapons.has(opener.tool) ? toolName(opener.tool) : opener.tool)) : undefined
+    action('open_seal', tool ? t('act.open_with', { name: e.name, tool }) : t('act.open_by_hand', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { tool: opener.tool ?? 'hand' } })
+    return true
+  }
+
   const useItem = (useId: string): boolean => {
     const e = heldEntry
     if (!e?.containerId) return false
@@ -2164,23 +2221,59 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = fluids.container(e.containerId)
     if (!c) return false
     if (def.liquids && def.liquids.length > 0 && (!c.liquid || !def.liquids.includes(c.liquid))) return false
-    const consuming = useId === 'drink' || useId === 'sip' || useId === 'chug' || useId === 'pour' || useId === 'pour_out'
+    const eating = useId === 'drink' || useId === 'sip' || useId === 'chug' || useId === 'eat'
+    const consuming = eating || useId === 'pour' || useId === 'pour_out'
+    if (useItemPlayer && !useItemPlayer.done) return false
+    const seal = e.item?.seal
+    if (seal && (consuming || useId === 'open')) {
+      const state = sealState(e)
+      const spoiled = sealBlock(seal, { ...state, opened: true })
+      if (eating && spoiled) {
+        say(t(spoiled === 'leaked' ? 'hud.spoiled_leak' : 'hud.spoiled_hole', { name: e.name }))
+        action('spoiled', t(spoiled === 'leaked' ? 'hud.spoiled_leak' : 'hud.spoiled_hole', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { reason: spoiled } })
+        return false
+      }
+      if (!e.opened) {
+        if (!openSeal(e)) return false
+        // a tool opens the tin and that is the whole use; a pull tab opens on the way to the mouth
+        if (!seal.byHand || useId === 'open') {
+          useItemPlayer = createItemUse(fluids, e.containerId, itemUseDefs.find((u) => u.id === 'open') ?? def)
+          useItemName = 'open'
+          return true
+        }
+      } else if (useId === 'open') return false
+    }
     if (consuming && c.liters <= 1e-6) {
       say(t('hud.empty_container', { name: e.name }))
       return false
     }
-    if (useItemPlayer && !useItemPlayer.done) return false
     if (consuming && c.closed) fluids.open(e.containerId)
     useItemPlayer = createItemUse(fluids, e.containerId, def)
     useItemName = def.id
+    if (eating) useLiters = c.liters
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     return true
   }
+  /** Litres in the container when an eat or drink use began: what it took out is counted as eaten, not leaked. */
+  let useLiters: number | null = null
 
   const updateItemUse = (dt: number): void => {
     if (!useItemPlayer) return
+    const e = heldEntry
+    const c = e?.containerId ? fluids.container(e.containerId) : undefined
+    const before = c?.liters
     useItemPlayer.update(dt)
+    if (e && useLiters !== null && before !== undefined) {
+      const after = (e.containerId ? fluids.container(e.containerId)?.liters : undefined) ?? before
+      e.fluidUsed = (e.fluidUsed ?? 0) + Math.max(0, before - after)
+      if (e.opened && e.fluidStart) e.item?.seal?.contents?.(wrapped.get(e.so.root) ?? e.so.root, after / e.fluidStart)
+    }
     if (useItemPlayer.done) {
+      if (e && useLiters !== null && useItemName === 'eat') {
+        const left = (e.containerId ? fluids.container(e.containerId)?.liters : undefined) ?? 0
+        action('ate', t(left <= 1e-4 ? 'act.ate_all' : 'act.ate', { name: e.name, grams: Math.round((useLiters - left) * 1000) }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { liters: Math.round((useLiters - left) * 1000) / 1000 } })
+      }
+      useLiters = null
       useItemPlayer = null
       useItemName = ''
     }
@@ -2947,6 +3040,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         pushable: ti.pushable,
         slow: ti.slow,
         fluid: ti.fluid,
+        seal: ti.seal,
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,

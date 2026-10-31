@@ -28,7 +28,7 @@ describe('data', () => {
     expect(LIQUIDS.find((l) => l.id === 'beer')!.drink!.effects).toContain('alcohol')
     expect(LIQUIDS.find((l) => l.id === 'fuel')!.drink!.effects).toContain('poison')
     expect(LIQUIDS.find((l) => l.id === 'blood')!.drink!.effects).toContain('disgust')
-    expect(ITEM_USES.map((u) => u.id).sort()).toEqual(['chug', 'close', 'drink', 'open', 'pour', 'pour_out', 'sip'])
+    expect(ITEM_USES.map((u) => u.id).sort()).toEqual(['chug', 'close', 'drink', 'eat', 'open', 'pour', 'pour_out', 'sip'])
     expect(ITEM_USES.find((u) => u.id === 'sip')!.duration).toBe(1.2)
   })
 
