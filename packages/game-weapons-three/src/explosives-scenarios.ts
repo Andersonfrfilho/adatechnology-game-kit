@@ -78,7 +78,8 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
       }
       for (const { kind, item } of PUSH_KINDS) PUSH_LAYOUT[kind].forEach(([distance, degrees]) => lay(kind, item, bearing(centre, distance, degrees)))
       if (mode === 'grenade') {
-        lay('zombie', 'zombie_walker', bearing(centre, 3.4, -34))
+        // off the bearing of every loose thing: a zombie thrown outward lands on what lies behind it on its line
+        lay('zombie', 'zombie_walker', bearing(centre, 3.4, -130))
         lay('survivor', 'person_police_officer', bearing(centre, 7.5, 78))
         lay('camp_table', 'camp_table', bearing(centre, 3, 90))
       }
@@ -122,8 +123,10 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const outward = ((now[0] - from[0]) * (from[0] - blast.point[0]) + (now[2] - from[2]) * (from[2] - blast.point[2])) / away
         return { ...body, distance, outward, moved: flat(now, from) }
       })
-      // a loose item the blast tore apart (a can whose welded shell split into pieces) is no longer one body: its root is the piece that kept it, not where the item went
-      const torn = (row: { kind: string; objectId: string }): boolean => PUSH_KINDS.some((entry) => entry.kind === row.kind) && partsOf(row.objectId) < (partsBefore.get(row.objectId) ?? 0)
+      // a loose item or a heavy piece of furniture the blast tore apart (a can whose welded shell split, a camp table whose legs flew off) is no longer one body: its root is
+      // the piece that kept it, not where the thing went, and it can meet its own pieces in the air
+      const torn = (row: { kind: string; objectId: string }): boolean =>
+        (PUSH_KINDS.some((entry) => entry.kind === row.kind) || HEAVY_ITEMS.includes(row.kind)) && partsOf(row.objectId) < (partsBefore.get(row.objectId) ?? 0)
       const reached = rows.filter((row) => row.distance < blast.radius * 0.85 && !torn(row))
       const movedAway = reached.filter((row) => row.outward >= MOVED)
       const least = reached.length === 0 ? 0 : Math.min(...reached.map((row) => row.outward))
@@ -138,7 +141,8 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
       for (const row of reached.filter((entry) => entry.kind === 'zombie' || entry.kind === 'survivor')) {
         expect(row.outward >= MOVED, fillText(text.push_person, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: row.outward.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward } })
       }
-      const table = reached.find((row) => HEAVY_ITEMS.includes(row.kind))
+      // a torn table is still moved by the blast, whichever way its root went among its pieces
+      const table = rows.find((row) => HEAVY_ITEMS.includes(row.kind) && row.distance < blast.radius * 0.85)
       if (table) expect(table.moved >= MOVED, fillText(text.push_heavy, { what: things[table.itemId] ?? table.itemId, moved: table.moved.toFixed(2) }), { table })
     },
   }
