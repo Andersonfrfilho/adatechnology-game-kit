@@ -1,8 +1,7 @@
 import type { Condition, Lod, Placement, Season } from '@adatechnology/game-vegetation'
-import type { ScatterRulesOptions } from '@adatechnology/game-vegetation-species'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
-import type { MaterialsLike, SpeciesSdk, VegetationSdk } from './types'
+import type { MaterialsLike, ScatterRulesOptionsLike, SpeciesSdk, VegetationSdk } from './types'
 
 type Three = any
 
@@ -24,7 +23,7 @@ export const AREAS: Readonly<Record<'front_yard' | 'backyard' | 'sides' | 'sidew
 }
 
 /** The four plantings of the lot: the context of the regional table, where, how many of each group, and the tag of the scatter seed. */
-export type Planting = { context: string; areas: Rect[]; options: ScatterRulesOptions & { n: number }; tag: string }
+export type Planting = { context: string; areas: Rect[]; options: ScatterRulesOptionsLike; tag: string }
 export const PLANTINGS: readonly Planting[] = [
   { context: 'front_yard', areas: AREAS.front_yard, options: { n: 12, noLarge: true, maxCount: { trees: 1, hedges: 10, mid: 14, ground: 40 } }, tag: 'f' },
   { context: 'backyard', areas: AREAS.backyard, options: { n: 14, maxCount: { trees: 3, hedges: 4, mid: 12, ground: 50 } }, tag: 'b' },
@@ -50,7 +49,7 @@ export function scatterLot(sdk: VegetationSdk, species: SpeciesSdk, seedNumber: 
     planting.areas.forEach((area, i) => {
       const exclude = [EX_HOUSE, EX_PATH]
       const perArea = rules.map((rule) => ({ ...rule, maxCount: Math.max(1, Math.ceil((rule.maxCount as number) / planting.areas.length)) }))
-      placements.push(...sdk.scatter(area as never, perArea, { seed: `${seed}:${planting.tag}:${i}`, exclude: exclude as never }))
+      placements.push(...sdk.scatter(area as never, perArea as never, { seed: `${seed}:${planting.tag}:${i}`, exclude: exclude as never }))
     })
   }
   return { placements, used }

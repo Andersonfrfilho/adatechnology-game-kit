@@ -1,11 +1,27 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Damageable, VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
-import { colorFromSeed, fleetDims, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
-import type { FleetDims } from '@adatechnology/game-vehicles-fleet'
 
 import { fuse, liteMaterials, liteMeshes } from './lite'
 
 export type VehicleQuality = 'high' | 'lite'
+
+/** The measured size of a fleet vehicle in metres (the shape of `FleetDims` of `game-vehicles-fleet`). */
+export interface FleetDims {
+  length: number
+  width: number
+  height: number
+}
+
+/**
+ * The fleet content the builder reads: the paint palettes, the size the team measured and the colour a seed picks. It is the shape of what
+ * `game-vehicles-fleet` exports (`defaultVehicleFleet()` of `game-kit-defaults` hands it over), so this adapter imports no content.
+ */
+export interface VehicleFleetContent {
+  readonly paintPalettes: { readonly civil: unknown; readonly military: unknown }
+  paletteOf(group: string): unknown
+  colorFromSeed(seed: number | string, palette: unknown): string
+  fleetDims(id: string): FleetDims | undefined
+}
 
 export interface BuildVehicleOptions {
   /** `high`: the kit's vehicle at full detail. `lite`: fused into six meshes. Default `high`. */
@@ -51,6 +67,8 @@ export interface VehiclesThree {
 
 export interface VehiclesThreeOptions {
   kit: VehicleKit
+  /** The fleet's palettes and measured sizes (`defaultVehicleFleet()` of `game-kit-defaults`, or the game's own). */
+  fleet: VehicleFleetContent
   /** Vehicle id to the group id whose palette paints it. Defaults to the fleet group of the vehicle (`military` for the military ones). */
   groupOf?: (key: string) => string
 }
@@ -98,6 +116,7 @@ export function primaryPaint(c: any): any {
  */
 export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): VehiclesThree {
   const kit = options.kit
+  const { colorFromSeed, fleetDims, paintPalettes, paletteOf } = options.fleet
   const groupOf = options.groupOf || ((key: string) => (kit.find(key)?.group === kit.config.defaultGroup ? 'cars' : String(kit.find(key)?.group)))
   const militaryKeys = new Set<string>()
   const isMilitary = (key: string): boolean => militaryKeys.has(key) || paletteOf(groupOf(key)) === paintPalettes.military

@@ -1,3 +1,4 @@
+import type { generate } from '@adatechnology/game-vegetation'
 import type { Providers, TerrainOptions, UrbanOptions } from '@adatechnology/game-urban'
 
 import type { CanvasFactory } from '../text'
@@ -18,6 +19,8 @@ export type UrbanTestOptions = {
   readonly vehicles?: (THREE: unknown) => VehicleBuilder
   /** The vehicle and plant providers of the bench's `providers` setting (`defaultUrbanProviders` of `game-kit-defaults`, or the game's own). Without one, that choice draws nothing. */
   readonly providers?: Pick<Providers, 'vehicle' | 'plant'>
+  /** The generator spec of a species id, for the plants of the bench (`defaultPlantSpec` of `game-kit-defaults`). */
+  readonly plantSpec: (id: string) => Parameters<typeof generate>[0]
   /** Where the bench draws its neighbourhood in the room, `[x, z]` (default `[0, -60]`). */
   readonly benchOrigin?: readonly [number, number]
 }

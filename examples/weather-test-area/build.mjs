@@ -22,7 +22,7 @@ function findEsbuild() {
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
 const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three']
-for (const p of ['game-weather', 'game-weather-three', 'game-vfx', 'game-contracts', ...vehicles]) {
+for (const p of ['game-kit-defaults', 'game-weather', 'game-weather-three', 'game-vfx', 'game-contracts', ...vehicles]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -37,6 +37,7 @@ const result = await esbuild.build({
   minify: true,
   legalComments: 'none',
   alias: {
+    '@adatechnology/game-kit-defaults': join(pkg('game-kit-defaults'), 'dist/index.js'),
     '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
     '@adatechnology/game-weather/testing': join(pkg('game-weather'), 'dist/testing.js'),
     '@adatechnology/game-weather-three': join(pkg('game-weather-three'), 'dist/index.js'),

@@ -22,6 +22,7 @@ import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
+import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { createUrban } from '@adatechnology/game-urban'
 import type { UrbanBuilder } from '@adatechnology/game-urban'
 import { createUrbanThree } from '@adatechnology/game-urban-three'
@@ -136,7 +137,7 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
   // vehicles: a few, light quality
   const vehicleKit = createVehicleKit({ THREE, document, locale: 'en' })
   installFleet(vehicleKit)
-  const vehicles = createVehiclesThree(THREE, { kit: vehicleKit })
+  const vehicles = createVehiclesThree(THREE, { kit: vehicleKit, fleet: defaultVehicleFleet() })
   for (const key of BENCH_VEHICLES) entries.push({ id: `vehicles/${key}:lite`, run: () => vehicles.build(key, { quality: 'lite', seed: 7 }) })
 
   // characters: the first 12 people of the Retratos, the 13 Bestiário bodies (decay 1, full detail), three bakes and the instanced body
@@ -163,7 +164,7 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
   entries.push({ id: 'characters/instanced:8', run: () => buildInstancedBody(THREE, { segments: 8 }) })
 
   // vegetation: the 18 plants of the module and the nursery planted (scenery, lot, colliders, walker)
-  const vegetation = createVegetationTestModule({ locale: 'en' })
+  const vegetation = createVegetationTestModule({ GameVegetationSpecies, locale: 'en' })
   for (const item of vegetation.items('en')) entries.push({ id: `vegetation/${item.id}`, run: () => item.build(THREE) })
   const vegetationSdk = { ...GameVegetation, ...GameVegetationAdapter }
   entries.push({

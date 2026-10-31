@@ -1,5 +1,5 @@
 import { createUrban } from '@adatechnology/game-urban'
-import { createPlantProvider, createVehicleProvider } from '@adatechnology/game-kit-defaults'
+import { createPlantProvider, createVehicleProvider, defaultPlantSpec } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
@@ -78,7 +78,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
   it('puts the species of the pack where the pattern plants, scaled as asked', () => {
     const b = kit.builder({ seed: 7 })
     const plan = kit.neighbourhoods.get('mountain_resort').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
-    const resolver = createPlantResolver(THREE, { lod: 2 })
+    const resolver = createPlantResolver(THREE, { lod: 2, toSpec: defaultPlantSpec })
     const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: resolver } }).draw(b.scene())
     const plants = placed(drawn.root, 'plant')
     expect(plants).toHaveLength(plan.plants.length)
@@ -92,7 +92,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
     const run = () => {
       const b = kit.builder({ seed: 7 })
       kit.neighbourhoods.get('rural').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
-      const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: createPlantResolver(THREE, { lod: 2 }) } }).draw(b.scene())
+      const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: createPlantResolver(THREE, { lod: 2, toSpec: defaultPlantSpec }) } }).draw(b.scene())
       return placed(drawn.root, 'plant').map((plant) => [plant.userData.placement.id, plant.position.x, plant.children[0]?.children[0]?.geometry.attributes.position.count])
     }
     expect(run()).toEqual(run())

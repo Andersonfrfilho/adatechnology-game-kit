@@ -1,7 +1,6 @@
 import { generate } from '@adatechnology/game-vegetation'
 import type { Condition, Lod, Season } from '@adatechnology/game-vegetation'
 import { createPlantObject, createVegetationMaterials } from '@adatechnology/game-vegetation/three'
-import { toSpec } from '@adatechnology/game-vegetation-species'
 import type { PlacementPart } from '@adatechnology/game-urban'
 
 type Three = any
@@ -48,6 +47,8 @@ export function createVehicleResolver(vehicles: VehicleBuilder, options: Vehicle
 }
 
 export type PlantResolverOptions = {
+  /** The generator spec of a species id (`toSpec` of `game-vegetation-species`; `defaultPlantSpec` of `game-kit-defaults`). */
+  toSpec: (id: string) => Parameters<typeof generate>[0]
   /** Level of detail of the plants of a street. Default 1. */
   lod?: Lod
   condition?: Condition
@@ -56,15 +57,15 @@ export type PlantResolverOptions = {
   materials?: ReturnType<typeof createVegetationMaterials>
 }
 
-/** Resolves plant placements with the species of `game-vegetation-species`, built with `game-vegetation`. One plant for each species and seed, cloned for each spot. */
-export function createPlantResolver(THREE: Three, options: PlantResolverOptions = {}): PlacementResolver {
+/** Resolves plant placements with the species `toSpec` knows, built with `game-vegetation`. One plant for each species and seed, cloned for each spot. */
+export function createPlantResolver(THREE: Three, options: PlantResolverOptions): PlacementResolver {
   const materials = options.materials ?? createVegetationMaterials(THREE)
   const made = new Map<string, any | null>()
   const resolve: PlacementResolver = (part) => {
     const key = `${part.id}|${part.seed}`
     if (!made.has(key)) {
       try {
-        const mesh = generate(toSpec(part.id), { seed: part.seed, lod: options.lod ?? 1, condition: options.condition ?? 'healthy', season: options.season ?? 'spring', species: part.id })
+        const mesh = generate(options.toSpec(part.id), { seed: part.seed, lod: options.lod ?? 1, condition: options.condition ?? 'healthy', season: options.season ?? 'spring', species: part.id })
         made.set(key, createPlantObject(THREE, mesh, materials))
       } catch {
         made.set(key, null)

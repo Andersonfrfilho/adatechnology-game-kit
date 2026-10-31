@@ -1,12 +1,18 @@
 import type * as GameVegetationMain from '@adatechnology/game-vegetation'
 import type * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
-import type * as GameVegetationSpeciesMain from '@adatechnology/game-vegetation-species'
 import type { Vec3 } from '@adatechnology/game-contracts'
 
 /** The vegetation engine with its three.js adapter, as the `GameVegetation` global of the IIFE build has it. */
 export type VegetationSdk = typeof GameVegetationMain & typeof GameVegetationAdapter
-/** The species pack. */
-export type SpeciesSdk = typeof GameVegetationSpeciesMain
+/** The options of the scatter rules of a planting (`ScatterRulesOptions` of `game-vegetation-species`), the keys the area reads. */
+export type ScatterRulesOptionsLike = { n: number } & Record<string, unknown>
+/** The species pack, by the shape of `game-vegetation-species` (the area imports no content; `defaultVegetationSpecies()` of `game-kit-defaults` hands it over). */
+export type SpeciesSdk = {
+  readonly regions: { readonly br: unknown }
+  scatterRulesFor(region: any, context: string, seed: number | string, options?: any): { rules: ReadonlyArray<{ maxCount?: number }>; picks: ReadonlyArray<{ id: string }> }
+  toSpec(id: string): any
+  name(id: string, locale: string): string
+}
 
 /** The shared materials of the plants (wind and the actors that bend them). */
 export type MaterialsLike = GameVegetationAdapter.VegetationMaterials
@@ -16,8 +22,8 @@ export type VegetationTestOptions = {
   readonly locale?: string
   /** The vegetation engine (default: `@adatechnology/game-vegetation` with its three adapter). A game that brings its own build of it passes it here. */
   readonly GameVegetation?: VegetationSdk
-  /** The species pack (default: `@adatechnology/game-vegetation-species`). */
-  readonly GameVegetationSpecies?: SpeciesSdk
+  /** The species pack (`game-vegetation-species`, or `defaultVegetationSpecies()` of `game-kit-defaults`). */
+  readonly GameVegetationSpecies: SpeciesSdk
   /** The materials of the plants, when the game already has them (default: made from the first three.js namespace the module is built with). */
   readonly materials?: MaterialsLike
   /** Seed of the plants (the Viveiro's module uses 3, so the items are the same in every run). */

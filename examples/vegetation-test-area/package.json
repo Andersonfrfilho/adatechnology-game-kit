@@ -12,6 +12,7 @@
   "devDependencies": {
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-vegetation-species": "workspace:*",
     "@adatechnology/game-vegetation-three": "workspace:*"
   }

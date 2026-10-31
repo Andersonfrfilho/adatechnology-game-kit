@@ -3,7 +3,6 @@ import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleContr
 import { buildVehicleItem, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
-import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createScenarios } from './scenarios'
@@ -49,7 +48,7 @@ type Placed = {
  * by seed and palette, the driving mode and the surface, and shows the damageable boxes by material, the zones by type and the axes of the output frame. Effects (fire, glass, sparks,
  * exhaust) are requested by id through `host.effects` when the host has it; this module draws none.
  */
-export function createVehiclesTestModule(options: VehiclesTestOptions = {}): TestableModule<VehiclesContext> & { readonly placed: ReadonlyMap<string, unknown> } {
+export function createVehiclesTestModule(options: VehiclesTestOptions): TestableModule<VehiclesContext> & { readonly placed: ReadonlyMap<string, unknown> } {
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale] ?? (TEXT['pt-BR'] as (typeof TEXT)[string])
   const keys = options.vehicles ?? DEFAULT_TEST_VEHICLES
@@ -85,17 +84,17 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       if (options.createKit) kit = options.createKit(THREE)
       else {
         kit = createVehicleKit({ THREE, locale, ...(options.document ? { document: options.document as never } : {}) })
-        installFleet(kit)
+        options.fleet.installFleet(kit)
       }
       kits.set(THREE, kit)
     }
     return kit
   }
 
-  const paletteFor = (key: string) => (settings.palette === 'civil' ? paintPalettes.civil : settings.palette === 'military' ? paintPalettes.military : paletteOf(key))
+  const paletteFor = (key: string) => (settings.palette === 'civil' ? options.fleet.paintPalettes.civil : settings.palette === 'military' ? options.fleet.paintPalettes.military : options.fleet.paletteOf(key))
   const paintOf = (entry: Placed): void => {
     if (!settings.paint) return
-    const color = colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
+    const color = options.fleet.colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
     if (!entry.paint) {
       const vehicle = entry.item.vehicle as unknown as { vehicle: any }
       const primary = primaryPaint(entry.item.vehicle)
@@ -282,7 +281,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     if (!host || !three) return
     clearLane()
     const kit = kitFor(three)
-    const vehicles = createVehiclesThree(three, { kit })
+    const vehicles = createVehiclesThree(three, { kit, fleet: options.fleet })
     const built = vehicles.build('compact_hatch', { quality: 'lite', seed: settings.seed })
     const wall = new three.Mesh(new three.BoxGeometry(0.6, 2, 6), new three.MeshStandardMaterial({ color: 0x777777 }))
     wall.position.set(LANE.wall + 0.3, 1, LANE.z)
@@ -414,7 +413,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const sizeError = (): number => {
     let worst = 0
     for (const entry of placed.values()) {
-      const want = fleetDims(entry.key)
+      const want = options.fleet.fleetDims(entry.key)
       const got = entry.size
       if (!want || !got || entry.scenario) continue
       worst = Math.max(worst, Math.abs(got.length - want.length), Math.abs(got.width - want.width), Math.abs(got.height - want.height))
@@ -438,15 +437,15 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const rowOf = (list: readonly Entry[], z: number) => {
         let cursor = 0
         const spots = list.map((entry) => {
-          const width = fleetDims(entry.key)?.width ?? 2
+          const width = options.fleet.fleetDims(entry.key)?.width ?? 2
           const x = cursor + width / 2
           cursor += width + gap
           return { id: entry.id, x }
         })
         return { spots, z, width: Math.max(0, cursor - gap) }
       }
-      const front = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) <= WIDE), 0)
-      const back = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) > WIDE), -16)
+      const front = rowOf(entries.filter((e) => (options.fleet.fleetDims(e.key)?.width ?? 2) <= WIDE), 0)
+      const back = rowOf(entries.filter((e) => (options.fleet.fleetDims(e.key)?.width ?? 2) > WIDE), -16)
       const placements = [front, back].flatMap((row) => row.spots.map(({ id, x }) => ({ item: id, position: [x - row.width / 2, 0, row.z] as Vec3, rotationY: 0 })))
       return { placements, view: { eye: [0, 5, Math.max(14, front.width * 0.6)], target: [0, 1, -2] } }
     },
@@ -506,7 +505,7 @@ export type ModuleRoomLike = { loadModule(module: never): unknown }
  * Loads the vehicles module into a room. The door, hood and trunk clips of the items are computed when the room reads the items, before the module is lent the room's three.js
  * (`attach`), so this first lends an empty module to learn the namespace and then loads the real one with it. Pass `three` to skip that.
  */
-export function loadVehiclesTestModule<Room extends ModuleRoomLike>(room: Room, options: VehiclesTestOptions = {}): ReturnType<Room['loadModule']> {
+export function loadVehiclesTestModule<Room extends ModuleRoomLike>(room: Room, options: VehiclesTestOptions): ReturnType<Room['loadModule']> {
   let three = options.three
   if (!three) {
     room.loadModule({ id: 'vehicles_probe', name: 'Vehicles probe', group: 'Vehicles', items: () => [], attach: (lent: ModuleHost) => { three = lent.THREE; return () => undefined } } as never)

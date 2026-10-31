@@ -27,7 +27,7 @@ const makeRoom = (locale = 'pt-BR'): TestRoom => {
 describe('vegetation test area', () => {
   it('leaves, splinters and flames of the plants are drawn by the room effects world, with no particle code in the module', async () => {
     const room = makeRoom('en')
-    room.loadModule(createVegetationTestModule({ locale: 'en' }) as never)
+    room.loadModule(createVegetationTestModule({ GameVegetationSpecies, locale: 'en' }) as never)
     const seen: Record<string, number> = {}
     const burst = room.vfx.burst.bind(room.vfx)
     room.vfx.burst = (kind, ...rest) => ((seen[kind as string] = (seen[kind as string] ?? 0) + 1), burst(kind, ...rest))
@@ -39,7 +39,7 @@ describe('vegetation test area', () => {
 
   it('passes the contract checks of the host and lays the 18 plants', () => {
     const room = makeRoom()
-    const module = createVegetationTestModule({ locale: 'pt-BR' })
+    const module = createVegetationTestModule({ GameVegetationSpecies, locale: 'pt-BR' })
     const report = room.loadModule(module as never)
     expect(report.problems).toEqual([])
     expect(report.ok).toBe(true)
@@ -53,7 +53,7 @@ describe('vegetation test area', () => {
 
   it('loads through loadVegetationTestModule and names the plants in the room language', () => {
     const room = makeRoom('en')
-    const report = loadVegetationTestModule(room, { locale: 'en' }) as { problems: string[]; items: string[] }
+    const report = loadVegetationTestModule(room, { GameVegetationSpecies, locale: 'en' }) as { problems: string[]; items: string[] }
     expect(report.problems).toEqual([])
     const mango = room.spawn('mango_young_15', [0, 0, -6], 0)
     expect(mango.itemId).toBe('mango_young_15')
@@ -62,7 +62,7 @@ describe('vegetation test area', () => {
 
   it('plants the nursery lot from the bench, bends plants with the walker, shows the layers and reads the metrics', () => {
     const room = makeRoom()
-    room.loadModule(createVegetationTestModule({ locale: 'en' }) as never)
+    room.loadModule(createVegetationTestModule({ GameVegetationSpecies, locale: 'en' }) as never)
     room.openArea(VEGETATION_AREA_ID)
     const bench = room.bench(VEGETATION_AREA_ID)!
     for (let i = 0; i < 3; i++) room.update(1 / 60)
@@ -119,7 +119,7 @@ describe('vegetation test area', () => {
 
   it('shows the wood axes with the radius, length and axis of the SDK', () => {
     const room = makeRoom()
-    room.loadModule(createVegetationTestModule({ locale: 'en' }) as never)
+    room.loadModule(createVegetationTestModule({ GameVegetationSpecies, locale: 'en' }) as never)
     const tree = room.spawn('mango_tree', [0, 0, -6], 0)
     const bench = room.bench(VEGETATION_AREA_ID)!
     expect(bench.setLayer('wood_axes', true)).toBe(true)

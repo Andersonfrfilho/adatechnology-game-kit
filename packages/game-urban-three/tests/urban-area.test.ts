@@ -5,7 +5,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { createUrbanTestModule, loadUrbanTestModule, URBAN_AREA_ID } from '../src'
-import { defaultUrbanProviders } from '@adatechnology/game-kit-defaults'
+import { defaultPlantSpec, defaultUrbanProviders } from '@adatechnology/game-kit-defaults'
 import { fakeDocument } from './fake-dom'
 
 vi.setConfig({ testTimeout: 600_000 })
@@ -20,7 +20,7 @@ const makeRoom = (locale = 'pt-BR'): TestRoom => {
   document.body.appendChild(container)
   return createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
 }
-const options = (locale = 'pt-BR') => ({ locale, document: fakeDocument, providers: defaultUrbanProviders() })
+const options = (locale = 'pt-BR') => ({ locale, document: fakeDocument, providers: defaultUrbanProviders(), plantSpec: defaultPlantSpec })
 
 describe('urban test area', () => {
   it('passes the contract checks of the host and lays the poles, the grid, the terrain and the ten neighbourhoods', () => {

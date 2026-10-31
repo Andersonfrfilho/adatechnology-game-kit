@@ -50,8 +50,7 @@
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
-    "@adatechnology/game-vegetation": "workspace:^",
-    "@adatechnology/game-vegetation-species": "workspace:^"
+    "@adatechnology/game-vegetation": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-kit-defaults": "workspace:^",

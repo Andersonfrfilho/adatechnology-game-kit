@@ -1,3 +1,4 @@
+import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
@@ -21,7 +22,7 @@ const roomWithVehicles = (locale = 'pt-BR'): { room: TestRoom; module: ReturnTyp
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const played: string[] = []
-  const module = createVehiclesTestModule({ locale, document: fakeDocument as never, three: THREE })
+  const module = createVehiclesTestModule({ fleet: defaultVehicleFleet(), locale, document: fakeDocument as never, three: THREE })
   const report = room.loadModule(module as never)
   expect(report.problems).toEqual([])
   return { room, module, played }
@@ -60,7 +61,7 @@ describe('vehicles test area', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
-    const report = loadVehiclesTestModule(room, { locale: 'en', document: fakeDocument as never }) as { problems: string[]; items: string[] }
+    const report = loadVehiclesTestModule(room, { fleet: defaultVehicleFleet(), locale: 'en', document: fakeDocument as never }) as { problems: string[]; items: string[] }
     expect(report.problems).toEqual([])
     expect(report.items).toHaveLength(10)
     room.openArea(VEHICLES_AREA_ID)
@@ -137,11 +138,11 @@ describe('vehicles test area', () => {
 
   it('names the burnt wrecks in both languages and lays none when the wrecks option is empty', () => {
     for (const [locale, names] of [['en', ['Burnt sedan', 'Burnt hatch']], ['pt-BR', ['Sedã queimado', 'Hatch queimado']]] as const) {
-      const module = createVehiclesTestModule({ locale, document: fakeDocument as never, three: THREE })
+      const module = createVehiclesTestModule({ fleet: defaultVehicleFleet(), locale, document: fakeDocument as never, three: THREE })
       const wrecks = module.items(locale).filter((item) => item.id === 'sedan_burnt' || item.id === 'hatch_burnt')
       expect(wrecks.map((item) => item.name)).toEqual([...names])
     }
-    const module = createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE, wrecks: [] })
+    const module = createVehiclesTestModule({ fleet: defaultVehicleFleet(), locale: 'en', document: fakeDocument as never, three: THREE, wrecks: [] })
     expect(module.items('en').map((item) => item.id)).toHaveLength(8)
   })
 

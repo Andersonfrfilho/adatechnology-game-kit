@@ -8,6 +8,7 @@
 import { CLIMATES, WEATHER_STATES, createWeather } from '@adatechnology/game-weather'
 import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
 import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
+import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
@@ -18,7 +19,7 @@ export { CLIMATES, WEATHER_STATES, createWeather, createWeatherTestModule, creat
 export function createRigVehicles(THREE, locale = 'pt-BR') {
   const kit = createVehicleKit({ THREE, locale })
   installFleet(kit)
-  return createVehiclesThree(THREE, { kit })
+  return createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weather area. Returns the room's module report. */

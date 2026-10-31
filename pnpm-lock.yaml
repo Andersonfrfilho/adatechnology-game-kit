@@ -1359,9 +1359,6 @@ importers:
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation
-      '@adatechnology/game-vegetation-species':
-        specifier: workspace:^
-        version: link:../game-vegetation-species
     devDependencies:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
@@ -1445,13 +1442,13 @@ importers:
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation
-      '@adatechnology/game-vegetation-species':
-        specifier: workspace:^
-        version: link:../game-vegetation-species
     devDependencies:
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:^
+        version: link:../game-vegetation-species
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1580,13 +1577,16 @@ importers:
       '@adatechnology/game-vehicles-driving':
         specifier: workspace:^
         version: link:../game-vehicles-driving
-      '@adatechnology/game-vehicles-fleet':
-        specifier: workspace:^
-        version: link:../game-vehicles-fleet
     devDependencies:
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:^
+        version: link:../game-kit-defaults
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
+      '@adatechnology/game-vehicles-fleet':
+        specifier: workspace:^
+        version: link:../game-vehicles-fleet
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1928,6 +1928,9 @@ importers:
       '@adatechnology/game-items-three':
         specifier: workspace:*
         version: link:../../packages/game-items-three
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:*
+        version: link:../../packages/game-kit-defaults
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../../packages/game-props3d

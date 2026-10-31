@@ -53,7 +53,7 @@ type Placed = { root: any; drawn: DrawnUrban }
  * sample sheet in its cells, each drawn by the kit and `game-urban-three` (so a game that patches the catalogues sees its own). The bench draws any neighbourhood in front of the player with
  * a seed, a share of lamps on, a light budget and, when asked, the vehicles of the fleet and the species of the region; its layers show the reach of the real lights and the box of each sample.
  */
-export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableModule<UrbanContext> & { readonly placed: ReadonlyMap<string, unknown>; tick(t: number): void; readonly itemIds: readonly string[] } {
+export function createUrbanTestModule(options: UrbanTestOptions): TestableModule<UrbanContext> & { readonly placed: ReadonlyMap<string, unknown>; tick(t: number): void; readonly itemIds: readonly string[] } {
   const locale: Locale = (options.locale ?? 'pt-BR').toLowerCase().startsWith('en') ? 'en' : 'pt-BR'
   const text = TEXT[locale] as (typeof TEXT)[string]
   const terrain = options.terrain ?? DEFAULT_TEST_TERRAIN
@@ -82,7 +82,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   }
 
   const resolversFor = (THREE: Three): { plant?: PlacementResolver; vehicle?: PlacementResolver } => {
-    if (!resolvers.plant) resolvers.plant = createPlantResolver(THREE, { lod: 1 })
+    if (!resolvers.plant) resolvers.plant = createPlantResolver(THREE, { lod: 1, toSpec: options.plantSpec })
     if (!resolvers.vehicle && options.vehicles) resolvers.vehicle = createVehicleResolver(options.vehicles(THREE), { quality: 'lite' })
     return resolvers
   }
@@ -331,6 +331,6 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
 export type ModuleRoomLike = { loadModule(module: never): unknown }
 
 /** Loads the urban module into a room. */
-export function loadUrbanTestModule<Room extends ModuleRoomLike>(room: Room, options: UrbanTestOptions = {}): ReturnType<Room['loadModule']> {
+export function loadUrbanTestModule<Room extends ModuleRoomLike>(room: Room, options: UrbanTestOptions): ReturnType<Room['loadModule']> {
   return room.loadModule(createUrbanTestModule(options) as never) as ReturnType<Room['loadModule']>
 }

@@ -1,6 +1,11 @@
 import type { EffectSink, Vec3 } from '@adatechnology/game-contracts'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
 
+import type { VehicleFleetContent } from '../build'
+
+/** The fleet the area runs on: its palettes and sizes, and how it is installed in a kit (`defaultVehicleFleet()` of `game-kit-defaults`). */
+export type VehiclesTestFleet = VehicleFleetContent & { installFleet(kit: VehicleKit): void }
+
 /** What the module needs of a document (canvas textures of the kit): a real `document`, or a stub in Node. */
 export type DocumentLike = { createElement(tag: string): unknown }
 
@@ -43,9 +48,11 @@ export const DEFAULT_TEST_WRECKS: readonly VehicleWreck[] = [
 ]
 
 export type VehiclesTestOptions = {
+  /** The fleet content: paint palettes, measured sizes and the install into the default kit. */
+  readonly fleet: VehiclesTestFleet
   /** `en` or `pt-BR` (default). */
   readonly locale?: string
-  /** The kit the vehicles are built with, per three.js namespace. Default: `createVehicleKit` with the fleet installed (`installFleet`). */
+  /** The kit the vehicles are built with, per three.js namespace. Default: `createVehicleKit` with the fleet installed (`fleet.installFleet`). */
   readonly createKit?: (THREE: unknown) => VehicleKit
   readonly document?: DocumentLike
   /** The three.js namespace the door, hood and trunk clips are computed with (they are plain numbers, so any copy works). Default: the global `THREE`; without either the items bring no clips. */
