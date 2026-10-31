@@ -1,3 +1,5 @@
+import { asLid } from '../opening'
+
 import type { ItemModelBuilder } from './registry'
 
 /**
@@ -10,6 +12,6 @@ export const coconutWater: ItemModelBuilder = ({ mesh, bx, cyl, lathe, G, plasti
   const nut = mesh(cyl(0.11, 0.11, 0.03, 10), paper(0x6b4a2b), [0, -0.12, 0.285], [Math.PI / 2, 0, 0])
   const leafLeft = mesh(bx(0.2, 0.05, 0.01), paper(0xe6f2d8), [-0.12, 0.08, 0.292], [0, 0, 0.5])
   const leafRight = mesh(bx(0.2, 0.05, 0.01), paper(0xe6f2d8), [0.12, 0.08, 0.292], [0, 0, -0.5])
-  const cap = mesh(cyl(0.14, 0.14, 0.2, 12), plastic(0x3f8f4a), [0, 0.75, 0])
+  const cap = asLid(mesh(cyl(0.14, 0.14, 0.2, 12), plastic(0x3f8f4a), [0, 0.75, 0]))
   return G(bottle, label, nut, leafLeft, leafRight, cap)
 }

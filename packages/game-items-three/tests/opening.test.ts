@@ -61,6 +61,39 @@ describe('an opened can', () => {
   })
 })
 
+describe('an opened jar or bottle', () => {
+  it('takes the cap off a jar of honey and shows the honey in its mouth, where the cap sat', () => {
+    expect(itemOpening('honey_jar')).toEqual({ style: 'screw_cap', food: '#d99a1c' })
+    expect(itemOpening('water_bottle')?.style).toBe('screw_cap')
+    const { root } = buildItem(THREE, { id: 'honey_jar', category: 'food', size: [0.08, 0.1, 0.08], model: 'honey_jar' }, { destructible: true })
+    const lids: THREE.Object3D[] = []
+    root.traverse((o) => o.userData.itemLid && lids.push(o))
+    expect(lids).toHaveLength(1)
+    const cap = boxOf(root, (o) => o.userData.itemLid === true)
+    expect(openItem(THREE, root, 'honey_jar')).toBe(true)
+    expect(lids[0]!.visible).toBe(false)
+    const mouth = boxOf(root, inOpening)
+    expect(mouth.min.y).toBeGreaterThan(cap.min.y - 0.002)
+    expect(mouth.max.y).toBeLessThan(cap.min.y + 0.002)
+    expect(mouth.getSize(new THREE.Vector3()).x).toBeLessThan(cap.getSize(new THREE.Vector3()).x)
+    const food: THREE.Object3D[] = []
+    root.getObjectByName(OPENING_NAME)!.traverse((o) => o.userData.itemFood && food.push(o))
+    expect(food).toHaveLength(1)
+  })
+
+  it('every model drawn with a screw cap marks the cap it takes off', () => {
+    for (const id of ['honey_jar', 'home_preserves', 'cooking_oil', 'water_bottle', 'water_jug_5l', 'dirty_water', 'sports_drink', 'coconut_water', 'cachaca', 'communion_wine']) {
+      expect(itemOpening(id)?.style, id).toBe('screw_cap')
+      const { root } = buildItem(THREE, { id, category: 'food', size: [0.08, 0.2, 0.08], model: id })
+      expect(openItem(THREE, root, id), id).toBe(true)
+      const lids: THREE.Object3D[] = []
+      root.traverse((o) => o.userData.itemLid && lids.push(o))
+      expect(lids.length, id).toBeGreaterThan(0)
+      expect(lids.every((o) => !o.visible), id).toBe(true)
+    }
+  })
+})
+
 describe('opening and eating a can in the room', () => {
   const catalog = createGoodsItems()
   const stubRenderer = (): THREE.WebGLRenderer =>
@@ -112,6 +145,17 @@ describe('opening and eating a can in the room', () => {
     const food: THREE.Object3D[] = []
     tin.root.getObjectByName(OPENING_NAME)!.traverse((o) => o.userData.itemFood && food.push(o))
     expect(food.every((o) => !o.visible)).toBe(true)
+  })
+
+  it('a jar of honey is opened by hand before the first spoonful, then eaten', () => {
+    const r = room()
+    const jar = hold(r, 'honey_jar')
+    expect(r.useItem('eat')).toBe(true)
+    run(r, 1.5)
+    expect(texts(r)).toMatch(/Abriu Pote de mel com a mão/)
+    expect(jar.root.getObjectByName(OPENING_NAME)).toBeDefined()
+    // the cap comes off first, then the spoonful
+    expect(texts(r)).toMatch(/Abriu Pote de mel com a mão[\s\S]*Pote de mel: comer/)
   })
 
   it('a soda opens by its tab on the way to the mouth; shot through, neither it nor a tin is eaten or drunk', () => {
