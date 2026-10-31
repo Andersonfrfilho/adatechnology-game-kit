@@ -274,7 +274,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
-    eventBudgetMs: 8,
+    eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
