@@ -1,5 +1,11 @@
 # @adatechnology/game-floorplan-rural
 
+## 4.0.0
+
+### Patch Changes
+
+- @adatechnology/game-floorplan-residential@5.0.0
+
 ## 3.0.0
 
 ### Patch Changes

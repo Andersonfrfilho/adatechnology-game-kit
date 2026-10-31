@@ -697,7 +697,8 @@ export type DestructionEvent =
   | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3 })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
   | (EventBase & { type: 'ricochet'; part: string; point: Vec3; direction: Vec3; energy: number })
-  | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number })
+  /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */
+  | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number; material?: MaterialId })
   | (EventBase & { type: 'fracture'; part: string; style: FractureStyle; fragments: Fragment[]; point: Vec3 })
   | (EventBase & { type: 'detach'; joint: string; parts: [string, string]; by: 'break' | 'tool' | 'part_lost'; groups: string[][] })
   | (EventBase & { type: 'disassemble_progress'; joint: string; tool: ToolKind; progress: number })
@@ -724,7 +725,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
-  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */
+  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²); `layer` -1 is a crater in the bare core (`MaterialHit.crater`). */
   | (EventBase & { type: 'spall'; part: string; layer: number; point: Vec3; area: number })
   /**
    * A staged part changed stage. At stage 2 `opening` is where the breach is and `fragments` the unit-sized pieces that came out (the part is not
@@ -734,8 +735,9 @@ export type DestructionEvent =
   /**
    * One unit of a wall of units (`PartSpec.units`: a brick, a block) came out under shots or blows: `center` in world space, `size` in the part's own
    * axes and `rotation` the part's world rotation (the box of the unit that left), `fragments` the unit itself. The part stays: draw the gap, do not hide it.
+   * With `torn`, nothing left the part but what a blow tore off its face (splinters of wood, lumps of MDF): the hole and the marks around it stay drawn.
    */
-  | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[] })
+  | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[]; torn?: true })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
   /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */

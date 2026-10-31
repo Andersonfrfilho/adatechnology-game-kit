@@ -1,6 +1,10 @@
 import type * as THREE_NS from 'three'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Fragment } from '@adatechnology/game-destruction'
+
+import { pushFittedBoxes } from './fitted-boxes'
 import { clamp, createRng, hashString } from './math'
+import type { LooseBody } from './types'
 
 interface Live {
   mesh: THREE_NS.Mesh
@@ -18,6 +22,10 @@ interface Live {
   dying: boolean
   /** Air drag per second: a loose sheet (a page) glides and flutters down instead of dropping. */
   air: number
+  /** A big one (`isBig`): it stays where it lies, and what walks steps on it or kicks it. */
+  body: LooseBody | null
+  /** The `update` count when it was made. */
+  born: number
 }
 
 export interface FragmentSystemOptions {
@@ -32,11 +40,21 @@ export interface FragmentSystemOptions {
 const SHEET_MAX = 0.004
 const SHEET_AIR = 2.5
 const SHEET_SWAY = 3
+/** A fragment at least this long (m) and this wide is a piece of the thing (half a board), not a splinter; a shard of glass never is. */
+const BIG_LENGTH = 0.2
+const BIG_WIDTH = 0.03
+
+const isBig = (size: readonly number[]): boolean => {
+  const [, middle, longest] = [...size].sort((a, b) => a - b)
+  return longest >= BIG_LENGTH && middle >= BIG_WIDTH
+}
 
 /** Light physics for fracture debris: gravity, ground bounce and friction, spin damping, settling flat, sleep, shrink-away and removal. */
 export class FragmentSystem {
   private readonly list: Live[] = []
   private readonly box: THREE_NS.BoxGeometry
+  /** The mesh box of a fragment before its scale. */
+  private readonly unitBox = { min: { x: -0.5, y: -0.5, z: -0.5 }, max: { x: 0.5, y: 0.5, z: 0.5 } }
   private shardGeos: THREE_NS.BufferGeometry[] = []
   private readonly materials = new Map<string, THREE_NS.Material>()
   private readonly q: THREE_NS.Quaternion
@@ -45,6 +63,8 @@ export class FragmentSystem {
   private readonly v: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
   private readonly rng = createRng(0x51ed270b)
+  /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
+  private tick = 0
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -126,8 +146,29 @@ export class FragmentSystem {
     }
   }
 
-  /** Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget. */
-  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh {
+  /**
+   * Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget: over it the oldest fragment still showing fades out to make room, and a burst
+   * bigger than the budget (every live fragment was made in this same frame) does not make the rest at all, so a blast never builds a thousand meshes only to fade them
+   * out. Returns null when the fragment was not made.
+   */
+  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh | null {
+    if (this.list.length >= maxAllowed) {
+      let alive = 0
+      let oldest: Live | undefined
+      let oldestSmall: Live | undefined
+      for (const l of this.list) {
+        if (l.dying) continue
+        alive++
+        oldest ??= l
+        if (!l.body) oldestSmall ??= l
+      }
+      // the splinters go first; the big ones only when nothing else is left
+      oldest = oldestSmall ?? oldest
+      if (alive >= maxAllowed) {
+        if (!oldest || oldest.born === this.tick) return null
+        oldest.dying = true
+      }
+    }
     const geo = f.shape === 'shard' ? this.shardGeometry(hashString(f.id)) : this.box
     const mesh = new this.THREE.Mesh(geo, material)
     mesh.position.set(f.center[0], f.center[1], f.center[2])
@@ -138,6 +179,8 @@ export class FragmentSystem {
     mesh.castShadow = true
     // pure visual debris: a host that picks with a raycast can skip it
     mesh.userData.destructionDebris = true
+    mesh.name = 'fragment'
+    markKitOrigin(mesh, { owner: 'game-destruction-three', kind: 'fragment', id: f.material })
     this.o.scene.add(mesh)
     const live: Live = {
       mesh,
@@ -153,17 +196,41 @@ export class FragmentSystem {
       fade: 1,
       dying: false,
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
+      body: null,
+      born: this.tick,
     }
-    this.list.push(live)
-    let alive = this.list.reduce((n, l) => n + (l.dying ? 0 : 1), 0)
-    for (let i = 0; i < this.list.length && alive > maxAllowed; i++) {
-      if (!this.list[i].dying) {
-        this.list[i].dying = true
-        alive--
+    if (f.shape !== 'shard' && isBig(f.size)) {
+      live.body = {
+        mass: f.mass,
+        push: (x, z) => {
+          live.vel.x = x
+          live.vel.z = z
+          live.vel.y = Math.max(live.vel.y, 0.3)
+          live.asleep = false
+          live.rest = 0
+        },
       }
     }
+    this.list.push(live)
     this.addMarks(mesh, f)
     return mesh
+  }
+
+  /** The boxes of the big fragments around (x, z). */
+  solidsNear(x: number, z: number, radius: number, found: (home: string, min: [number, number, number], max: [number, number, number], body: LooseBody) => void): void {
+    const boxes: number[] = []
+    for (const f of this.list) {
+      if (!f.body || f.dying) continue
+      const reach = f.half.length() + radius
+      if (Math.abs(f.mesh.position.x - x) > reach || Math.abs(f.mesh.position.z - z) > reach) continue
+      f.mesh.updateMatrixWorld()
+      boxes.length = 0
+      pushFittedBoxes(this.unitBox, f.mesh.matrixWorld, boxes)
+      for (let i = 0; i < boxes.length; i += 6) {
+        if (x < boxes[i] - radius || x > boxes[i + 3] + radius || z < boxes[i + 2] - radius || z > boxes[i + 5] + radius) continue
+        found(f.home, [boxes[i], boxes[i + 1], boxes[i + 2]], [boxes[i + 3], boxes[i + 4], boxes[i + 5]], f.body)
+      }
+    }
   }
 
   /** Add velocity to every fragment within `radius` of a point (blasts). */
@@ -182,7 +249,17 @@ export class FragmentSystem {
     }
   }
 
+  /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
+  wakeRegion(x: number, z: number, radius: number): void {
+    for (const f of this.list) {
+      if (!f.asleep || Math.hypot(f.mesh.position.x - x, f.mesh.position.z - z) > radius) continue
+      f.asleep = false
+      f.rest = 0
+    }
+  }
+
   update(dt: number): void {
+    this.tick++
     const g = this.o.gravity
     for (let i = this.list.length - 1; i >= 0; i--) {
       const f = this.list[i]
@@ -197,7 +274,7 @@ export class FragmentSystem {
       }
       if (f.asleep) {
         f.rest += dt
-        if (this.o.life > 0 && f.rest > this.o.life) f.dying = true
+        if (this.o.life > 0 && f.rest > this.o.life && !f.body) f.dying = true
         continue
       }
       this.step(f, dt, g)
@@ -276,7 +353,8 @@ export class FragmentSystem {
     let small = 0
     for (let i = 1; i < 3; i++) if (half[i] < half[small]) small = i
     let axis = small
-    if (Math.abs(up[small]) < 0.35) {
+    // a broken board does not stand on its end
+    if (Math.abs(up[small]) < 0.35 && !f.body) {
       axis = 0
       for (let i = 1; i < 3; i++) if (Math.abs(up[i]) > Math.abs(up[axis])) axis = i
     }

@@ -1,5 +1,85 @@
 # @adatechnology/game-test-room
 
+## 0.18.0
+
+### Minor Changes
+
+- f44dbbc: Third person: the body's hands go to the grip and the forend of the tool in hand. Shoulder, elbow and wrist bend inside the human range (the elbow never locks), the chest turns and the shoulder blade slides toward a far support hand. New `PlayerAvatar.reach(targets)` and optional `RoomAvatar.reach`, called by the room every frame in third person.
+
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+- Updated dependencies [2a1bb17]
+  - @adatechnology/game-contracts@0.19.0
+  - @adatechnology/game-destruction@0.12.0
+  - @adatechnology/game-destruction-three@0.11.1
+  - @adatechnology/game-vfx@0.5.0
+  - @adatechnology/game-audio@0.3.4
+  - @adatechnology/game-fluids@0.3.6
+  - @adatechnology/game-fluids-three@0.4.5
+  - @adatechnology/game-player@0.3.1
+  - @adatechnology/game-terrain@0.1.1
+  - @adatechnology/game-terrain-three@0.1.1
+  - @adatechnology/game-vfx-three@0.3.5
+  - @adatechnology/game-weapons@0.5.5
+
+## 0.17.0
+
+### Minor Changes
+
+- f68acce: Cans dent where they are hit and are holed on the lid, the bottom and the rim as on the side. An item family can give its shell the real wall thickness (`rule.wall`: a drink can is 0.1 mm on the body and 0.25 mm on the ends, a food tin a bit more); `tagForDestruction` writes it as `userData.destructionThickness` and `specFromObject3D` uses it for the part, so a 9 mm goes through a lid even at a slant. With `tessellate.cylinder.capRings` (and `three` passed to `tagForDestruction`, as `buildItem` does) each cylinder of the model becomes one lathe with rings on its ends and rows as fine as its columns, and a model drawn as a lathe gets the same columns, so the lid and the bottom have vertices to dent. In the world a ductile sheet 0.5 mm thin or less folds deeper than a plate for the same blow (up to 4 times), on a patch no wider than 2.5 cm and never past near its middle, and the slit a blade cuts in it is pushed in around. A skin follows its shell past the degenerate triangles of a lathe. The liquid of an opaque container is not drawn through a narrow mouth (a can's tab) nor through the bullet holes drawn on it.
+
+  The test room pushes what a round hits at the point of the drawn surface it meets, along that surface's inward normal (plus a share along it), with the momentum the round lost there: all of it when it stopped, through a thin shell only what the wall and the liquid inside took. A round on the right of a can pushes it away and to the left and spins it; before, it got the whole momentum of the round along the shot at the box the world sees.
+
+- 2961d53: Deformable ground: new `game-terrain` and `game-terrain-three` (height field with strata per column, digging by material and blow, marks under a budget, clods, fire). The test room's floor is now a terrain, and each area lays its own ground through `TestableModule.ground`. The room's `craters` option is gone: the floor always digs. Adds the catalogue materials `asphalt`, `sand`, `gravel`, `turf` and `mortar`.
+- e5ac121: Pushing furniture: holding the interaction button against a piece fills a ring by its mass, then the player walks with it, slower with the load; `world.sweepBox` tests the volume of the piece before each step, an obstacle or too much mass locks it and the player strains; poses in first and third person, and a drag sound by material.
+- df6572b: The kick has a key of its own: K (option `kick.keys`) kicks with the arsenal's `kick` tool whatever is in hand, as Shift+V did, plus a Kick button and `room.kick()`. The kick now lands from the leg (`kickHeights`: shin, knee, hip) on what stands low in front instead of along the eye's ray, which went over a chair at the feet.
+- 31fc87d: Each material answers each kind of blow its own way. New `MaterialDef.hits` (material × damage type): what a blow tears out where it lands (`tear`: `splinters`, `lumps`, `none`) and the joules per piece. A round into wood tears splinters of fresh wood out of the exit (and back out of the entry), MDF crumbles lumps, plywood splinters; a punch crumbles MDF, a kick splinters pine, hardwood and steel tear nothing. Snapping boards (MDF, plastic) also break where they are shot. `innerColor` for wood, plywood and MDF. Cases with shelves (`furnitureSpec`) are MDF.
+
+  Loose pieces land on what is under them: on other pieces and on the drawn meshes of fixed objects (`PieceSystemOptions.staticTopAt`), so a falling shelf rests on the books below and a tipping panel on the chair in front. New `DestructionRenderer.solidsNear` gives the drawn boxes around a point. The test room's player walks by them: steps onto low debris (up to 45 cm), stops at taller things and kicks light pieces (books, boards) out of the way, instead of the scenery's old footprints.
+
+- eaedd22: Physics of the objects in the room (first object audited: the trash bin). The player no longer walks through spawned objects: what stands taller than a step blocks the walk, and the walk pushes what is light enough with the force of a person against the floor's grip (a 3 kg bin slides or tips, a 70 kg fridge only blocks); the walk moves in short steps so a long step cannot jump over a thin obstacle. A kick leaves the hip instead of the eye, so it reaches what is in front of the feet. A round through a ductile shell (plastic, sheet metal) leaves in it only the energy it took to cross it (two holes, the part does not burst); a blade with more energy than a thin wall takes goes through it (a knife into a plastic bin or a can). A burst of fragments over the live budget no longer builds the excess meshes only to fade them.
+- 8aa480b: A punch combo as an ability. `ATTACK_CLIPS` and `FIRST_PERSON_CLIPS` gain `jab`, `hook` and `uppercut` (written for the right hand, the left plays the mirror), and `PUNCH_COMBO` (`StrikeCombo`) chains jab (left), cross (right), hook (left), uppercut (right). The test room takes it as `strikeCombo`: while it is on (N, its button, `setStrikeCombo`, `strikeComboOn`) each punch is the next step and a pause longer than `reset` starts over; off, the punch is the usual one. The player body closes the hands for any clip whose impact is a punch.
+- 3aec7f3: `ModuleHost.addObject` (game-contracts, implemented by game-test-room): a module puts an item of the host's catalogue in the world as scenery; it stays through clears and area openings, takes shots, blows, blasts and fire like any item, and the scenarios run without it. The weather visual's `rigItem` uses it: in the test room the headlights car is the fleet's real sedan (holes, glass, sparks, tyres, doors), no longer a drawing the shots went through.
+- 31fc87d: A solid wooden top (`furnitureSpec`: 3.5 to 7 cm thick and at least 50 cm wide) is boards glued edge to edge: it breaks board by board at the point hit, in stubs and splinters, instead of falling whole. `top` gains `parts` with every board. Part ids of those tops change: `wood_0` becomes `wood_0_b0`, `wood_0_b1`...
+
+  `DestructionRenderer.solidsNear` follows what is drawn: a turned mesh gives several boxes along its length instead of one axis box of mostly air, and big fragments (half a board) are solids with a `loose` body. They stay where they lie instead of shrinking away and are the last to go over the fragment limit.
+
+  The test room rests loose things on the board under them (`SceneryObject.top.parts`), and its player steps on or kicks big fragments.
+
+  Furniture that comes apart no longer leaves anything fixed: what stayed standing becomes a piece too, and a piece whose feet are too close for its height (a lone leg, a board on two legs in a line) falls over until it lies.
+
+### Patch Changes
+
+- ae81390: Crouching in the test room. A tap of C stays crouched until the next tap and a longer press crouches while held; before, a tap only dipped the view for a moment. A crouched body keeps its legs bent under a punch and the fighting guard, which used to stand it up while the camera stayed low; only a kick takes the legs.
+- 7d7e9dc: A piece of the scenery that comes loose leaves its fixed footprint behind: the push no longer stops at it, and what is too wide for the renderer's boxes stops the player by its body wherever it goes. A player touching something by a hair no longer loses every collision: caught in something, the player walks out of it and never deeper.
+- 1821647: Nothing stays hanging when the ground changes: `Terrain.onDeform` says where it changed, `DestructionRenderer.wakeRegion` wakes what slept there, thrown pieces at rest fall again. The ground goes on beyond the terrain, so what is thrown past the edge lands on something.
+- Updated dependencies [f68acce]
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [e5ac121]
+- Updated dependencies [31fc87d]
+- Updated dependencies [eaedd22]
+- Updated dependencies [3aec7f3]
+- Updated dependencies [31fc87d]
+- Updated dependencies [1821647]
+- Updated dependencies [6d15aad]
+- Updated dependencies [ffe17e5]
+  - @adatechnology/game-destruction@0.11.0
+  - @adatechnology/game-destruction-three@0.11.0
+  - @adatechnology/game-fluids-three@0.4.4
+  - @adatechnology/game-contracts@0.18.0
+  - @adatechnology/game-terrain@0.1.0
+  - @adatechnology/game-terrain-three@0.1.0
+  - @adatechnology/game-audio@0.3.3
+  - @adatechnology/game-player@0.3.0
+  - @adatechnology/game-vfx-three@0.3.4
+  - @adatechnology/game-fluids@0.3.5
+  - @adatechnology/game-vfx@0.4.4
+  - @adatechnology/game-weapons@0.5.4
+
 ## 0.16.0
 
 ### Minor Changes

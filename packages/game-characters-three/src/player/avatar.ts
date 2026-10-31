@@ -9,6 +9,7 @@ import {
   walkGait,
 } from '@adatechnology/game-characters'
 import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@adatechnology/game-characters'
+import type { HandTargets } from '@adatechnology/game-contracts'
 
 import preset from '../presets/player-avatar.json'
 import { buildHand } from '../rich/accessories/hands'
@@ -16,6 +17,7 @@ import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
+import { createArmReach } from './arm-reach'
 
 const TWO_PI = Math.PI * 2
 const MAX_GAIT = 1.4
@@ -84,6 +86,8 @@ export type AvatarUpdate = {
   holding?: boolean
   /** Active scripted item use (`drink`, `sip`, `chug`, `pour`, `open`, `close`, `tilt`). */
   itemUse?: AvatarItemUsePose | null
+  /** Hands on a piece of furniture: `grip` closes on it with `progress`, `push` walks with it, `strain` strains against what does not give. */
+  push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
 }
 
 export type PlayPoseOptions = {
@@ -108,6 +112,13 @@ export type PlayerAvatar = {
   readonly playing: string | null
   /** A socket at the hand: 'R' is the weapon hand (the puppet's right, at -x), 'L' the other one. */
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  /** The joint of a shoulder ('R' the weapon side, at -x): where a long gun's stock rests, just inside it. */
+  shoulder(side: 'R' | 'L'): THREE_NS.Object3D
+  /**
+   * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
+   * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   */
+  reach(targets: HandTargets | null): void
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -206,6 +217,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     const built = buildHand({ THREE, add: addMesh, hg, handM: handMaterial, s: side, detailed: true })
     hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
   })
+  const armReach = createArmReach(THREE, rig, { R: hands.find((hand) => hand.side < 0)!.hg, L: hands.find((hand) => hand.side > 0)!.hg })
   const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
@@ -259,6 +271,26 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     })
     // arms[0] is the support hand (+x), arms[1] the weapon hand (-x)
     return { armR: shoulder, armL: shoulder, armRz: AIMED.zRight, armLz: AIMED.zLeft, elbR: AIMED.elbowRight, elbL: AIMED.elbowLeft }
+  }
+
+  /** The stretched arms of `shove_two_hands` (attack clips) held on the piece, the body leaning into it; straining, the legs brace and the arms shake. */
+  const pushingPose = (push: NonNullable<AvatarUpdate['push']>): PoseTargets => {
+    const on = push.phase === 'grip' ? Math.min(1, push.progress * 2.2) : 1
+    const strain = push.phase === 'strain' ? 1 : 0
+    const shake = strain * Math.sin(time * 40) * 0.025
+    const raise = -1.5 * on
+    const elbow = -0.9 + 0.72 * (push.phase === 'grip' ? push.progress : 1) + strain * 0.12
+    return {
+      lean: (0.2 + 0.2 * strain) * on,
+      headX: (0.05 + 0.08 * strain) * on,
+      armR: raise + shake,
+      armL: raise - shake,
+      armRz: -0.08 * on,
+      armLz: 0.08 * on,
+      elbR: elbow,
+      elbL: elbow,
+      ...(strain ? { legL: -0.5, legR: 0.4, kneeL: 0.55, kneeR: 0.08, drop: -0.05 } : {}),
+    }
   }
 
   /** Right-hand carry and item-use poses in third person (`arms[1]` is the puppet's right arm at `-x`, `arms[0]` is the left arm at `+x`). */
@@ -399,7 +431,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     for (const event of clipEventsBetween(r.clip, from, to)) emit({ ...event, clip: r.clip.id }, r.onEvent)
   }
 
-  const stepClip = (dt: number, down: boolean): void => {
+  const stepClip = (dt: number, down: boolean, crouch: boolean): void => {
     if (!run) return
     const r = run
     const from = r.time
@@ -419,7 +451,10 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return
     }
     if (down) return
-    const sampled = filterPoseChannels(samplePoseClip(r.clip, Math.min(r.time, duration)), r.clip.channels ?? 'full')
+    // a crouched body keeps its legs bent under a punch or the guard: only a kick needs them
+    const keepsCrouch = crouch && !r.clip.events?.some((event) => event.data?.kind === 'kick')
+    const channels = r.clip.channels ?? 'full'
+    const sampled = filterPoseChannels(filterPoseChannels(samplePoseClip(r.clip, Math.min(r.time, duration)), channels), keepsCrouch ? 'upper' : 'full')
     const current = readPose()
     const blended: Record<string, number> = {}
     for (const [name, value] of Object.entries(sampled)) if (name in current) blended[name] = current[name]! + (value - current[name]!) * r.weight
@@ -435,6 +470,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return run ? run.clip.id : null
     },
     update(dt, state = {}) {
+      armReach.restore()
       const speed = state.speed ?? 0
       const moving = speed >= 0.05 // the game: `spd < 0.05 ? 0 : walkCad(spd)`
       const down = !!state.down
@@ -451,7 +487,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       else {
         if (running) animator.setPose(rig, runningPose(gait, Boolean(state.armed || state.holding || state.itemUse)))
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
-        if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
+        if (state.push) animator.setPose(rig, pushingPose(state.push))
+        else if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
         else if (state.holding || state.itemUse) animator.setPose(rig, holdingPose(gait, state.itemUse))
         else if (!running) {
           animator.setPose(rig, {
@@ -463,7 +500,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         }
       }
       placeBody(fall)
-      stepClip(dt, down)
+      stepClip(dt, down, Boolean(state.crouch))
       if (smooth) animator.cascade(rig, run && !run.clip.loop ? dt * clipCascade : dt)
       // the hands close for a punch and open for a shove, whatever the clip is called (a combo has a jab, a cross, a hook, an uppercut); a clip with no impact,
       // such as the fighting guard, closes them with a `grip` event
@@ -498,6 +535,12 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run) run.target = 0
     },
     hand: (side) => sockets[side],
+    shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
+    reach(targets) {
+      if (run || fall > 0) return
+      root.updateMatrixWorld(true)
+      armReach.apply(targets)
+    },
     on(_type, listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)

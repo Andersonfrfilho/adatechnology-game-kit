@@ -1,5 +1,21 @@
 # @adatechnology/game-weapons
 
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies [73f3cf2]
+  - @adatechnology/game-contracts@0.19.0
+
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [2c9c963]
+- Updated dependencies [2961d53]
+- Updated dependencies [3aec7f3]
+  - @adatechnology/game-contracts@0.18.0
+
 ## 0.5.3
 
 ### Patch Changes

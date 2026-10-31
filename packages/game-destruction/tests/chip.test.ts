@@ -68,3 +68,107 @@ describe('chipping a wall of units', () => {
     expect(world.part('w', 'wall')!.chipped ?? []).toHaveLength(0)
   })
 })
+
+/** A bond beam of the houses: concrete with a cage of four bars and its concrete as 0.1 m blocks (`MEMBER_CAGE` of game-floorplan-structure). */
+const beam: PartSpec = {
+  id: 'beam', material: 'concrete', shape: { kind: 'box', size: [4, 0.2, 0.15] }, position: [0, 2.9, 0], mass: 276,
+  reinforcement: { material: 'steel', spacing: 0.1, diameter: 0.008 }, units: { size: [0.1, 0.1, 0.15], bond: 'stack', mortar: 'concrete' },
+}
+
+const beamWorld = () => {
+  const world = createDestruction({ seed: 3 })
+  world.add({ parts: [beam] }, { id: 'b' })
+  const events: DestructionEvent[] = []
+  world.on('*', (e) => events.push(e))
+  const fire = (energy: number, caliber: number, n: number) => {
+    for (let i = 0; i < n; i++) world.shoot([0.05, 2.95, 5], [0, 0, -1], energy, caliber, 'test')
+  }
+  const of = <T extends DestructionEvent['type']>(type: T) => events.filter((e) => e.type === type) as Array<Extract<DestructionEvent, { type: T }>>
+  return { world, fire, of }
+}
+
+describe('concrete under fire: a material answers each kind of blow its own way', () => {
+  it('9 mm rounds only crater it: dust and chips, no block comes out', () => {
+    const b = beamWorld()
+    b.fire(500, 9, 10)
+    expect(b.of('spall').length).toBe(10)
+    expect(b.of('spall').every((e) => e.layer === -1)).toBe(true)
+    expect(b.of('chip')).toHaveLength(0)
+    expect(b.of('expose')).toHaveLength(0)
+  })
+
+  it('a 7.62 round knocks the block it hits out and the bars inside it show', () => {
+    const b = beamWorld()
+    b.fire(3300, 7.62, 1)
+    expect(b.of('chip').length).toBeGreaterThanOrEqual(1)
+    const bars = b.of('expose').at(-1)!.bars
+    expect(bars.length).toBeGreaterThan(0)
+    // the bars that show are the ones inside the block that came out: no longer than it
+    for (const [a, c] of bars) expect(Math.hypot(c[0] - a[0], c[1] - a[1], c[2] - a[2])).toBeLessThanOrEqual(0.1 + 1e-9)
+    expect(b.world.part('b', 'beam')!.status).not.toBe('broken')
+  })
+
+  it('5.56 rounds take three or so to the block; a fist takes nothing, however many', () => {
+    const b = beamWorld()
+    b.fire(1750, 5.56, 2)
+    expect(b.of('chip')).toHaveLength(0)
+    b.fire(1750, 5.56, 2)
+    expect(b.of('chip').length).toBeGreaterThanOrEqual(1)
+    const p = beamWorld()
+    for (let i = 0; i < 40; i++) p.world.hit('b', { type: 'blunt', point: [0.05, 2.95, 0.075], direction: [0, 0, -1], energy: 25, radius: 0.05 })
+    expect(p.of('chip')).toHaveLength(0)
+  })
+
+  it('with its section shot away at one place the beam carries what its cage does', () => {
+    const b = beamWorld()
+    for (const y of [2.85, 2.95]) for (let i = 0; i < 2; i++) b.world.shoot([0.05, y, 5], [0, 0, -1], 3300, 7.62, 'test')
+    const st = b.world.part('b', 'beam')!
+    expect(st.chipped!.length).toBeGreaterThanOrEqual(2)
+    const rows = new Set(st.chipped!.filter((c) => Math.abs(c.center[0] - 0.05) < 0.05).map((c) => Math.round(c.center[1] * 100)))
+    expect(rows.size).toBe(2)
+  })
+})
+
+describe('a row of shots along a wall', () => {
+  /** A free-standing brick wall ten metres long with a concrete bond beam on top, on a slab of ground (the wall of the test room). */
+  const longWall = () => {
+    const world = createDestruction()
+    world.add({
+      parts: [
+        { id: 'wall', material: 'brick', shape: { kind: 'box', size: [10.15, 2.8, 0.13] }, position: [0, 1.4, 0], structure: { role: 'wall' } },
+        { id: 'beam', material: 'concrete', shape: { kind: 'box', size: [10.15, 0.2, 0.15] }, position: [0, 2.9, 0], structure: { role: 'beam' } },
+        { id: 'ground', material: 'concrete', shape: { kind: 'box', size: [16, 0.5, 6] }, position: [0, -0.25, 0], anchored: true, tags: ['terrain'] },
+      ],
+      joints: [
+        { a: 'wall', b: 'ground', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+        { a: 'beam', b: 'wall', kind: 'mortar', strength: 400, bears: 'a_on_b' },
+      ],
+    } as any, { id: 'W', position: [0, 0, -11] })
+    return world
+  }
+  const row = (world: ReturnType<typeof createDestruction>, y: number, shots: number) => {
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    for (let k = 0; k < shots; k++) {
+      const x = -2.4 + (k % 24) * 0.2
+      const d = [0, y - 1.6, -4], len = Math.hypot(d[0], d[1], d[2])
+      world.shoot([x, 1.6, -7], [d[0] / len, d[1] / len, d[2] / len], 2102.5, 7.9, 'player', { penetration: { steel: 6.5, concrete: 110, brick: 220, wood: 300 } })
+      for (let t = 0; t < 7; t++) world.update(0.1)
+    }
+    return events
+  }
+
+  it('leaves the wall standing after two passes of 7.62 across its middle', () => {
+    const world = longWall()
+    const events = row(world, 1.3, 48)
+    expect(events.filter((e) => e.type === 'detach' || e.type === 'collapse')).toEqual([])
+    expect(world.part('W', 'wall')!.status).not.toBe('collapsed')
+  })
+
+  it('does not shake the bond beam off the wall with a row of 7.62 along it', () => {
+    const world = longWall()
+    const events = row(world, 2.9, 48)
+    expect(events.filter((e) => e.type === 'detach' || e.type === 'collapse')).toEqual([])
+    expect(world.part('W', 'beam')!.status).not.toBe('collapsed')
+  })
+})

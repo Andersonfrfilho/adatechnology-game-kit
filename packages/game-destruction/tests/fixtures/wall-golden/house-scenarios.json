@@ -108,7 +108,7 @@
     "scenario": "one_pillar",
     "time": 0,
     "part": "c0",
-    "bars": 4,
+    "bars": 8,
     "first": [
      [
       -2.49,
@@ -116,8 +116,8 @@
       -1.89
      ],
      [
-      -2.49,
-      2.98,
+      -2.2532,
+      1.5,
       -1.89
      ]
     ]
@@ -131,6 +131,27 @@
     "part": "c0",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -249,6 +270,27 @@
    }
   },
   {
+   "type": "expose",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.7,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "one_pillar",
@@ -352,6 +394,27 @@
     "part": "c0",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.3,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -672,7 +735,7 @@
     "scenario": "two_pillars",
     "time": 0,
     "part": "c0",
-    "bars": 4,
+    "bars": 8,
     "first": [
      [
       -2.49,
@@ -680,8 +743,8 @@
       -1.89
      ],
      [
-      -2.49,
-      2.98,
+      -2.2532,
+      1.5,
       -1.89
      ]
     ]
@@ -792,7 +855,7 @@
     "scenario": "two_pillars",
     "time": 0,
     "part": "c1",
-    "bars": 4,
+    "bars": 8,
     "first": [
      [
       2.31,
@@ -800,8 +863,8 @@
       -1.89
      ],
      [
-      2.31,
-      2.98,
+      2.5468,
+      1.5,
       -1.89
      ]
     ]
@@ -838,6 +901,27 @@
    }
   },
   {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -856,6 +940,27 @@
     "part": "c1",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c1",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      -1.89
+     ],
+     [
+      2.5468,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -987,6 +1092,27 @@
     "part": "c0",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -1008,6 +1134,27 @@
     "part": "c1",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c1",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      -1.89
+     ],
+     [
+      2.5468,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -1139,6 +1286,27 @@
     "part": "c0",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c0",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.2532,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -1160,6 +1328,27 @@
     "part": "c1",
     "stress": 2.6212,
     "load": 2920.8719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c1",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      -1.89
+     ],
+     [
+      2.5468,
+      1.5,
+      -1.89
+     ]
+    ]
    }
   },
   {
@@ -4666,7 +4855,7 @@
     "scenario": "two_pillars",
     "time": 8.1,
     "part": "c2",
-    "bars": 4,
+    "bars": 8,
     "first": [
      [
       -2.49,
@@ -4674,8 +4863,8 @@
       1.71
      ],
      [
-      -2.49,
-      2.98,
+      -2.2532,
+      1.5,
       1.71
      ]
     ]
@@ -4754,7 +4943,7 @@
     "scenario": "two_pillars",
     "time": 8.1,
     "part": "c3",
-    "bars": 4,
+    "bars": 8,
     "first": [
      [
       2.31,
@@ -4762,8 +4951,8 @@
       1.71
      ],
      [
-      2.31,
-      2.98,
+      2.5468,
+      1.5,
       1.71
      ]
     ]
@@ -4817,6 +5006,27 @@
    }
   },
   {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c2",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      1.71
+     ],
+     [
+      -2.2532,
+      1.5,
+      1.71
+     ]
+    ]
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -4850,6 +5060,27 @@
     "part": "c3",
     "stress": 6.3973,
     "load": 7128.5719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c3",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      1.71
+     ],
+     [
+      2.5468,
+      1.5,
+      1.71
+     ]
+    ]
    }
   },
   {
@@ -4999,6 +5230,27 @@
    }
   },
   {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c2",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      1.71
+     ],
+     [
+      -2.2532,
+      1.5,
+      1.71
+     ]
+    ]
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -5032,6 +5284,27 @@
     "part": "c3",
     "stress": 6.3973,
     "load": 7128.5719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c3",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      1.71
+     ],
+     [
+      2.5468,
+      1.5,
+      1.71
+     ]
+    ]
    }
   },
   {
@@ -5181,6 +5454,27 @@
    }
   },
   {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c2",
+    "bars": 8,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      1.71
+     ],
+     [
+      -2.2532,
+      1.5,
+      1.71
+     ]
+    ]
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -5214,6 +5508,27 @@
     "part": "c3",
     "stress": 6.3973,
     "load": 7128.5719
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c3",
+    "bars": 8,
+    "first": [
+     [
+      2.31,
+      0.02,
+      1.71
+     ],
+     [
+      2.5468,
+      1.5,
+      1.71
+     ]
+    ]
    }
   },
   {
@@ -5724,8 +6039,8 @@
     "scenario": "tank_leak",
     "time": 0,
     "part": "tank",
-    "amount": 12,
-    "hp": 62191.5345,
+    "amount": 0.8,
+    "hp": 62202.7345,
     "damageType": "ballistic"
    }
   },

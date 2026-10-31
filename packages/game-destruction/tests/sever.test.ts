@@ -50,3 +50,19 @@ describe('a long wooden part breaks where it is hit', () => {
     expect(broke).toBe(false)
   })
 })
+
+describe('an MDF board also breaks where it is hit', () => {
+  it('shots in one place snap it across there: a stub each side and crumbs between', () => {
+    const w = createDestruction()
+    const id = w.add(board([0.3, 2, 0.018], 'mdf'))
+    let f: ReturnType<typeof fracture>
+    for (let n = 0; !f && n < 200; n++) f = fracture(w.hit(id, shot(-0.5)).events)
+    expect(f).toBeDefined()
+    const slabs = f!.fragments.filter((x) => x.shape === 'slab')
+    expect(slabs).toHaveLength(2)
+    const ends = slabs.map((s) => [s.center[1] - s.size[1] / 2, s.center[1] + s.size[1] / 2]).sort((a, b) => a[0] - b[0])
+    expect(ends[0][1]).toBeLessThanOrEqual(-0.5)
+    expect(ends[1][0]).toBeGreaterThanOrEqual(-0.5)
+    expect(f!.fragments.some((x) => x.shape === 'chunk' && Math.abs(x.center[1] + 0.5) < 0.1)).toBe(true)
+  })
+})

@@ -1,19 +1,13 @@
+import { buildHand } from '../rich/accessories/hands'
 import type { THREE_NS } from '../three'
 
 type Three = typeof THREE_NS
 
-/** Lengths of the three segments and the width of each finger, from the thumb side to the little finger (a right hand: the thumb is at -z). Metres; a finger is about 8 cm long. */
-const FINGERS = [
-  { z: -0.03, lengths: [0.034, 0.024, 0.02], width: 0.016 },
-  { z: -0.0105, lengths: [0.038, 0.027, 0.022], width: 0.0165 },
-  { z: 0.009, lengths: [0.035, 0.025, 0.02], width: 0.0155 },
-  { z: 0.027, lengths: [0.029, 0.02, 0.018], width: 0.0135 },
-] as const
-const PALM = { length: 0.09, thick: 0.026, width: 0.09, wristWidth: 0.066 }
-const FINGER_THICK = 0.0135
-/** The curl at a full grip, radians: the three segments, and the difference between the fingers (the little finger curls more). */
-const CURL = { near: 1.05, mid: 1.25, far: 0.85, spread: 0.06 }
-const THUMB = { base: [0.005, -0.006, -0.044] as const, near: 0.034, far: 0.028, width: 0.019 }
+/** The palm of the Retratos do Vale hand (the same one the player's body wears in third person): a flattened ball this far down the hand from the wrist. */
+const PALM = { radius: 0.048, scale: [0.6, 1.05, 1] as const, down: 0.035 }
+/** How far the fingers curl at a full grip (radians), the near and the far joint, as the body's hand (`avatar.ts`) closes them. */
+const CURL = { closed: 1.25, near: 0.9, far: 1.1 }
+const THUMB = { open: 0.32, closed: 0.25 }
 
 export type HandMesh = {
   /** The hand with its origin at the middle of the palm: x to the knuckles, y the back of the hand, z the little-finger side (the thumb at -z). */
@@ -25,13 +19,15 @@ export type HandMesh = {
   dispose(): void
 }
 
-/** A low-poly hand in the kit's style: a palm, four fingers of three segments that curl, and a thumb that folds over them. A left hand is made by mirroring the group (`scale.z = -1`). */
+/**
+ * The first-person hand: the Retratos do Vale hand (a rounded palm, four fingers of two joints and a thumb, `buildHand`), the one the player's body wears in third person, turned
+ * to the hand frame of `HandPose`. A left hand is made by mirroring the group (`scale.z = -1`).
+ */
 export const createHandMesh = (THREE: Three, skin: THREE_NS.Material, wristSkin: THREE_NS.Material = skin): HandMesh => {
   const root = new THREE.Group()
   root.name = 'first-person-hand'
   const geometries: THREE_NS.BufferGeometry[] = []
-  const box = (parent: THREE_NS.Object3D, sx: number, sy: number, sz: number, x: number, y: number, z: number, material = skin): THREE_NS.Mesh => {
-    const geometry = new THREE.BoxGeometry(sx, sy, sz)
+  const add = (parent: THREE_NS.Object3D, geometry: THREE_NS.BufferGeometry, material: THREE_NS.Material, x = 0, y = 0, z = 0): THREE_NS.Mesh => {
     geometries.push(geometry)
     const mesh = new THREE.Mesh(geometry, material)
     mesh.position.set(x, y, z)
@@ -39,70 +35,29 @@ export const createHandMesh = (THREE: Three, skin: THREE_NS.Material, wristSkin:
     parent.add(mesh)
     return mesh
   }
-  // the palm narrows toward the wrist: a box whose wrist end is pulled in
-  const palmGeometry = new THREE.BoxGeometry(PALM.length, PALM.thick, PALM.width)
-  const palmPosition = palmGeometry.getAttribute('position')
-  for (let i = 0; i < palmPosition.count; i++) {
-    if (palmPosition.getX(i) < 0) palmPosition.setZ(i, (palmPosition.getZ(i) * PALM.wristWidth) / PALM.width)
-  }
-  palmGeometry.computeVertexNormals()
-  geometries.push(palmGeometry)
-  const palm = new THREE.Mesh(palmGeometry, skin)
-  palm.frustumCulled = false
-  root.add(palm)
-  // the wrist the hand grows from
-  const wristGeometry = new THREE.CylinderGeometry(0.03, 0.033, 0.05, 8)
+  // the team's hand hangs its fingers down -y with the palm toward +x (a right hand) and the thumb in front (+z): as the hand frame, its -y is x, its -x is y and its -z is z
+  const group = new THREE.Group()
+  group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, -1, 0), new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, -1)))
+  group.position.set(-PALM.down, 0, 0)
+  root.add(group)
+  add(group, new THREE.SphereGeometry(PALM.radius, 14, 10), skin, 0, -PALM.down, 0).scale.set(...PALM.scale)
+  const built = buildHand({ THREE, add, hg: group, handM: skin, s: -1, detailed: true }) as { fingers: THREE_NS.Object3D[]; th: THREE_NS.Object3D | null }
+  // the wrist the hand grows from, where the sleeve ends
+  const wristGeometry = new THREE.CylinderGeometry(0.03, 0.033, 0.05, 10)
   wristGeometry.rotateZ(Math.PI / 2)
-  geometries.push(wristGeometry)
-  const wrist = new THREE.Mesh(wristGeometry, wristSkin)
-  wrist.position.set(-PALM.length / 2 - 0.018, 0, 0)
-  wrist.frustumCulled = false
-  root.add(wrist)
-
-  const joints: Array<{ segments: THREE_NS.Group[]; weight: number }> = []
-  FINGERS.forEach((finger, index) => {
-    const segments: THREE_NS.Group[] = []
-    let parent: THREE_NS.Object3D = root
-    let at = PALM.length / 2
-    finger.lengths.forEach((length, k) => {
-      const group = new THREE.Group()
-      group.position.set(at, k === 0 ? 0.002 : 0, k === 0 ? finger.z : 0)
-      const taper = 1 - k * 0.07
-      box(group, length, FINGER_THICK * taper, finger.width * taper, length / 2, 0, 0)
-      parent.add(group)
-      segments.push(group)
-      parent = group
-      at = length
-    })
-    joints.push({ segments, weight: 1 + index * (CURL.spread / CURL.near) })
-  })
-
-  // the thumb: it points forward and out when open, and folds across the fingers, toward the palm, when closed
-  const thumbNear = new THREE.Group()
-  thumbNear.rotation.order = 'YZX'
-  thumbNear.position.set(...THUMB.base)
-  box(thumbNear, THUMB.near, FINGER_THICK * 1.1, THUMB.width, THUMB.near / 2, 0, 0)
-  const thumbFar = new THREE.Group()
-  thumbFar.position.set(THUMB.near, 0, 0)
-  box(thumbFar, THUMB.far, FINGER_THICK, THUMB.width * 0.9, THUMB.far / 2, 0, 0)
-  thumbNear.add(thumbFar)
-  root.add(thumbNear)
+  add(root, wristGeometry, wristSkin, -PALM.down - 0.03, 0, 0)
 
   let lastGrip = 0
   let indexCurl: number | undefined
-  const curl = [CURL.near, CURL.mid, CURL.far]
-  const applyIndex = (): void => {
-    const finger = joints[0]
-    if (!finger) return
-    const k = indexCurl === undefined ? lastGrip : Math.min(1, Math.max(0, indexCurl))
-    finger.segments.forEach((segment, i) => (segment.rotation.z = -curl[i]! * k * finger.weight))
+  const curlFinger = (finger: number, k: number): void => {
+    built.fingers[finger * 2]!.rotation.z = k * CURL.closed * CURL.near
+    built.fingers[finger * 2 + 1]!.rotation.z = k * CURL.closed * CURL.far
   }
+  const applyIndex = (): void => curlFinger(0, indexCurl === undefined ? lastGrip : Math.min(1, Math.max(0, indexCurl)))
   const setGrip = (grip: number): void => {
-    const k = Math.min(1, Math.max(0, grip))
-    lastGrip = k
-    for (const joint of joints) joint.segments.forEach((segment, i) => (segment.rotation.z = -curl[i]! * k * joint.weight))
-    thumbNear.rotation.set(0, 0.55 - 1.45 * k, -0.1 - 0.75 * k)
-    thumbFar.rotation.z = -0.1 - 0.7 * k
+    lastGrip = Math.min(1, Math.max(0, grip))
+    for (let finger = 1; finger < 4; finger++) curlFinger(finger, lastGrip)
+    if (built.th) built.th.rotation.z = THUMB.open + lastGrip * THUMB.closed
     applyIndex()
   }
   const setIndex = (value: number | undefined): void => {

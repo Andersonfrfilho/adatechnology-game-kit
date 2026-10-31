@@ -79,4 +79,15 @@ export const BURN_LOOP: LoopRecipe = {
   sources: ['cena:L1316 fire loop (silent in the page: its gain is never raised)', 'sdk: the level while burning'],
 }
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }
+const drag = (id: string, layers: readonly Layer[]): SoundRecipe => ({ ...sceneRecipe(id, layers, ''), sources: ['sdk: a base dragged on a floor, one grain per stretch'] })
+
+/** Something heavy dragged on a floor, by what its base is made of. */
+export const DRAG_SOUNDS: readonly SoundRecipe[] = [
+  drag('drag_wood', [noise({ type: 'bandpass', f: 380, q: 1.4, d: 0.28, vol: 0.5 }), noise({ type: 'bandpass', f: [900, 1300], q: 3, d: 0.08, vol: 0.14 })]),
+  drag('drag_metal', [noise({ type: 'bandpass', f: 1500, q: 4, d: 0.26, vol: 0.32 }), tone({ f: [880, 1240], f2: 760, d: 0.18, vol: 0.05 })]),
+  drag('drag_glass', [noise({ type: 'bandpass', f: 2600, q: 5, d: 0.2, vol: 0.22 })]),
+  drag('drag_masonry', [noise({ type: 'bandpass', f: 260, q: 0.9, d: 0.3, vol: 0.62 }), ...many(3, () => noise({ type: 'bandpass', f: [600, 1200], q: 2, d: 0.04, vol: 0.14, delay: [0, 0.2] }))]),
+  drag('drag_soft', [noise({ type: 'lowpass', f: 420, d: 0.28, vol: 0.3 })]),
+]
+
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }

@@ -315,3 +315,19 @@ describe('detaching and mechanics', () => {
     expect(h.hit({ type: 'ballistic', point: h.partWorldCenter('windshield'), direction: [0, 0, -1], energy: 500, caliber: 9 }).length).toBeGreaterThan(0)
   })
 })
+
+describe('door and lid plates', () => {
+  it('a closed door is the body itself: its flat plate and recess show only while it swings open or once it has come off', () => {
+    const { item, d } = make('proto')
+    const piv = item.root.getObjectByName('door_front_left') ?? item.root.getObjectByName(d.describe().parts.find((p) => /door/.test(p.id))!.id)
+    expect(piv).toBeTruthy()
+    const panel = piv!.children[0]!
+    expect(panel.visible).toBe(false)
+    piv!.rotation.set(0, 0.6, 0)
+    expect(panel.visible).toBe(true)
+    piv!.rotation.set(0, 0, 0)
+    expect(panel.visible).toBe(false)
+    piv!.quaternion.set(0, Math.sin(0.3), 0, Math.cos(0.3))
+    expect(panel.visible).toBe(true)
+  })
+})

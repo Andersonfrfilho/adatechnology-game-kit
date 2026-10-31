@@ -1,5 +1,7 @@
 import * as THREE from 'three'
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
+import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
 
@@ -117,5 +119,103 @@ describe('exposed rebar', () => {
     renderer.restore('o1')
     expect(renderer.rebarCount()).toBe(0)
     expect(scene.children.some((c) => c instanceof THREE.InstancedMesh)).toBe(false)
+  })
+})
+
+describe('chip', () => {
+  it('takes away the holes and spalls on the unit that came out and keeps those elsewhere on the wall', () => {
+    const { world, renderer, wall } = setup()
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.02, 1.01, 0.1], area: 0.01 })
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.8, 1.6, 0.1], area: 0.01 })
+    renderer.update(0.016)
+    expect(renderer.stats().decals).toBe(2)
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0')] })
+    renderer.update(0.016)
+    expect(renderer.stats().decals).toBe(1)
+    expect((wall.children[0] as THREE.Mesh).position.x).toBeCloseTo(0.8, 3)
+  })
+})
+
+describe('chip and the impact marks of the effects', () => {
+  it('takes away the bullet marks the impact effect left on the unit that came out', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const vfx = createVfx()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    world.addObject('o1', [partState('wall', 'concrete')])
+    const decals = vfx.workshop().decals
+    decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    decals.add(0.8, 1.6, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0')] })
+    renderer.update(0.016)
+    expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.8])
+  })
+
+  it('keeps the bullet hole where a shot only tore lumps off the face of a board', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const vfx = createVfx()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    world.addObject('o1', [partState('board', 'mdf')])
+    const decals = vfx.workshop().decals
+    decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
+    world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
+    renderer.update(0.016)
+    expect(decals.decals.filter((d) => d.on).map((d) => d.x)).toEqual([0.02])
+  })
+
+  it('marks the fragments it throws as pieces drawn by the kit', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    world.addObject('o1', [partState('board', 'mdf')])
+    world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
+    renderer.update(0.016)
+    const fragments = scene.children.filter((child) => child.name === 'fragment')
+    expect(fragments.length).toBe(1)
+    expect(kitOriginOf(fragments[0])).toMatchObject({ owner: 'game-destruction-three', kind: 'fragment' })
+  })
+})
+
+describe('the colour of crushed masonry', () => {
+  /** A brick wall facing +z with the bursts the renderer asks of the effects recorded. */
+  function brickWall() {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const vfx = createVfx()
+    const bursts: { kind: string; color?: number }[] = []
+    const burst = vfx.burst.bind(vfx)
+    vfx.burst = (kind, point, normal, count, speed, options) => { bursts.push({ kind: String(kind), color: options?.color }); burst(kind, point, normal, count, speed, options) }
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    world.addObject('o1', [partState('wall', 'brick')])
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.1, 0.2), new THREE.MeshStandardMaterial({ color: 0xffffff }))
+    wall.position.set(0, 1.05, 0)
+    const root = new THREE.Group()
+    root.add(wall)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('o1', root, { parts: { wall } })
+    return { world, renderer, bursts }
+  }
+
+  it('throws brick chips orange, not the white of the paint over them', () => {
+    const { world, renderer, bursts } = brickWall()
+    world.emit({ type: 'debris', object: 'o1', part: 'wall', kind: 'chips', point: [0, 1, 0.1], normal: [0, 0, 1], count: 4, speed: 2 })
+    renderer.update(0.016)
+    expect(bursts).toContainEqual({ kind: 'chips', color: 0xb8693f })
+  })
+
+  it('throws the dust of the plaster coat light', () => {
+    const { world, renderer, bursts } = brickWall()
+    world.emit({ type: 'debris', object: 'o1', part: 'wall', kind: 'dust', point: [0, 1, 0.1], normal: [0, 0, 1], count: 4, speed: 2, material: 'plaster' })
+    renderer.update(0.016)
+    expect(bursts).toContainEqual({ kind: 'dust', color: 0xe4dfd3 })
+  })
+
+  it('draws the spall in the brick colour and crumbles it orange instead of the grey concrete impact', () => {
+    const { world, renderer, bursts } = brickWall()
+    world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.3, 1.2, 0.1], area: 0.0113 })
+    renderer.update(0.016)
+    expect(bursts).toContainEqual({ kind: 'chips', color: 0xb8693f })
   })
 })

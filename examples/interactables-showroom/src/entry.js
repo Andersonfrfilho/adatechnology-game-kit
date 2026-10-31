@@ -5,5 +5,8 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
+import * as GameTerrain from '@adatechnology/game-terrain'
+import * as GameTerrainThree from '@adatechnology/game-terrain-three'
 
 Object.assign(window, { THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree })
+Object.assign(window, { GameTerrain, GameTerrainThree })

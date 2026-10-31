@@ -19,14 +19,19 @@
         },
         "tessellate": {
           "cylinder": {
-            "heightSegments": 6,
-            "radialSegments": 20
+            "heightSegments": 24,
+            "radialSegments": 40,
+            "capRings": 6
           },
           "box": {
             "widthSegments": 6,
             "heightSegments": 1,
             "depthSegments": 4
           }
+        },
+        "wall": {
+          "body": 0.0001,
+          "ends": 0.00025
         }
       }
     },
@@ -50,15 +55,69 @@
         },
         "tessellate": {
           "cylinder": {
-            "heightSegments": 6,
-            "radialSegments": 20
+            "heightSegments": 24,
+            "radialSegments": 40,
+            "capRings": 6
           },
           "box": {
             "widthSegments": 6,
             "heightSegments": 1,
             "depthSegments": 4
           }
+        },
+        "wall": {
+          "body": 0.00018,
+          "ends": 0.00022
         }
+      }
+    },
+    "plastic_bottle": {
+      "models": [
+        "water_bottle",
+        "water_jug_5l",
+        "dirty_water",
+        "sports_drink",
+        "coconut_water",
+        "cooking_oil",
+        "alcohol_70",
+        "fuel_jerrycan"
+      ],
+      "rule": {
+        "hollow": true,
+        "welded": true,
+        "skinTags": [
+          "paper",
+          "food"
+        ],
+        "materials": {
+          "glass": "plastic"
+        }
+      }
+    },
+    "glass_bottle": {
+      "models": [
+        "cachaca",
+        "communion_wine",
+        "honey_jar",
+        "home_preserves"
+      ],
+      "rule": {
+        "hollow": true,
+        "welded": true,
+        "skinTags": [
+          "paper",
+          "food"
+        ]
+      }
+    },
+    "drink_carton": {
+      "models": [
+        "juice_box",
+        "milk_carton"
+      ],
+      "rule": {
+        "hollow": true,
+        "welded": true
       }
     }
   },
@@ -74,6 +133,67 @@
     "energy_drink": {
       "liquid": "soda",
       "fill": 0.95
+    },
+    "water_bottle": {
+      "liquid": "water",
+      "fill": 0.95
+    },
+    "water_jug_5l": {
+      "liquid": "water",
+      "fill": 0.95,
+      "box": true
+    },
+    "dirty_water": {
+      "liquid": "water",
+      "fill": 0.9
+    },
+    "sports_drink": {
+      "liquid": "juice",
+      "fill": 0.95
+    },
+    "coconut_water": {
+      "liquid": "water",
+      "fill": 0.9,
+      "box": true
+    },
+    "juice_box": {
+      "liquid": "juice",
+      "fill": 0.95,
+      "box": true
+    },
+    "milk_carton": {
+      "liquid": "milk",
+      "fill": 0.95,
+      "box": true
+    },
+    "cachaca": {
+      "liquid": "spirits",
+      "fill": 0.9
+    },
+    "communion_wine": {
+      "liquid": "wine",
+      "fill": 0.9
+    },
+    "cooking_oil": {
+      "liquid": "cooking_oil",
+      "fill": 0.9
+    },
+    "alcohol_70": {
+      "liquid": "spirits",
+      "fill": 0.9
+    },
+    "honey_jar": {
+      "liquid": "honey",
+      "fill": 0.85
+    },
+    "home_preserves": {
+      "liquid": "water",
+      "fill": 0.5
+    },
+    "fuel_jerrycan": {
+      "liquid": "fuel",
+      "fill": 0.85,
+      "box": true
     },
     "canned_beans": {
       "liquid": "juice",

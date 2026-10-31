@@ -129,11 +129,19 @@ jobs:
         run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
-  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; on main it now takes 13 to 22 min, and every room page
-  # builds a fleet car for the weather's lamp rig (about 10% more per page load), so 40 min leaves room for the Chromium download and a slow runner.
+  # In shards, each a job of its own: one job with every area reached the 40 min limit. A new area goes in the shard with the least time.
   examples:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        areas:
+          - test-room
+          - interactables-test-area
+          - floorplan-test-area vfx-test-area weapons-test-area characters-test-area
+          - animals-test-area vehicles-test-area vegetation-test-area urban-test-area
+          - audio-test-area weather-test-area player-test-area crowd-test-area stories-test-area
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -153,46 +161,24 @@ jobs:
           "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
 
-      # the test room goes first: the furniture and weapons pages are built over its page
+      # the test room goes first: the other pages are built over its page
       - name: Build the examples
         run: |
           node examples/test-room/build.mjs
-          node examples/interactables-test-area/build.mjs
-          node examples/floorplan-test-area/build.mjs
-          node examples/vfx-test-area/build.mjs
-          node examples/weapons-test-area/build.mjs
-          node examples/characters-test-area/build.mjs
-          node examples/animals-test-area/build.mjs
-          node examples/vehicles-test-area/build.mjs
-          node examples/vegetation-test-area/build.mjs
-          node examples/urban-test-area/build.mjs
-          node examples/audio-test-area/build.mjs
-          node examples/weather-test-area/build.mjs
-          node examples/player-test-area/build.mjs
-          node examples/crowd-test-area/build.mjs
-          node examples/stories-test-area/build.mjs
+          for area in ${{ matrix.areas }}; do
+            if [ "$area" != test-room ]; then node "examples/$area/build.mjs"; fi
+          done
 
       - name: Check the examples
         run: |
-          node examples/test-room/test.mjs
-          node examples/interactables-test-area/test.mjs
-          node examples/floorplan-test-area/test.mjs
-          node examples/vfx-test-area/test.mjs
-          node examples/weapons-test-area/test.mjs
-          node examples/characters-test-area/test.mjs
-          node examples/animals-test-area/test.mjs
-          node examples/vehicles-test-area/test.mjs
-          node examples/vegetation-test-area/test.mjs
-          node examples/urban-test-area/test.mjs
-          node examples/audio-test-area/test.mjs
-          node examples/weather-test-area/test.mjs
-          node examples/player-test-area/test.mjs
-          node examples/crowd-test-area/test.mjs
-          node examples/stories-test-area/test.mjs
+          for area in ${{ matrix.areas }}; do
+            echo "::group::$area"
+            node "examples/$area/test.mjs"
+            echo "::endgroup::"
+          done
 
   # Every drawn thing of every area of the test room comes from the SDK that owns it (CLAUDE.md, "Nada desenhado à mão"): tools/kit-audit/scene.mjs opens
   # each area and fails on anything with no origin mark of a kit builder (markKitOrigin) that is not pending in tools/kit-audit/allowlist.json (`drawn`).
-  # A job of its own: the examples job is already close to its limit.
   scene-origin:
     runs-on: ubuntu-latest
     timeout-minutes: 45

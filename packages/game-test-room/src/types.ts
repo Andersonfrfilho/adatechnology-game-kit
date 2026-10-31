@@ -11,13 +11,18 @@
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { FurniturePushRules } from '@adatechnology/game-player'
+import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
+import type { GroundLayout } from '@adatechnology/game-contracts'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { RoomSeat } from './seating'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -68,6 +73,8 @@ export interface TestRoomItem {
   impl?: (root: THREE_NS.Object3D, id: string) => DestructibleImpl
   /** Use animations the item brings (see `TestRoom.playAnimation`). Part poses move the child of the built object named after the part id. */
   animations?: AnimationClipSpec[]
+  /** Where the player can sit or lie on it (see `TestRoom.sit`). */
+  seats?: readonly ItemSeat[]
   /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
   thumbnail?: string
   /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector. */
@@ -104,7 +111,7 @@ export interface SceneryObject {
    * A top that loose things rest on (and liquids pool on) while that part stands: the part id and the height of its upper face in the spec's space.
    * The rectangle is the part's footprint. Without it nothing rests on the object.
    */
-  top?: { part: string; y: number }
+  top?: { part: string; y: number; parts?: readonly string[] }
   /**
    * Where a water tap of the piece pours (a sink, a tub), in the spec's space: the room's tap (its stream and its HUD button) pours there, and the piece's own model is the tap. The first piece with a `spout` wins over the table tap.
    */
@@ -168,8 +175,10 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
-  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
-  craters?: boolean
+  /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
+  ground?: GroundLayout
+  /** Limits of the floor's marks, thrown pieces and redraws per frame. */
+  terrainBudget?: Partial<TerrainBudget>
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
@@ -187,7 +196,7 @@ export interface TestRoomOptions {
    * supplies the real model; where it answers nothing the room draws a plain primitive (a sphere, a cylinder, a box).
    */
   projectileModel?: (query: ProjectileQuery) => ProjectileModel | null | undefined
-  /** Keys (`KeyboardEvent.code`) that crouch while held; default `['KeyC']`. Ctrl is left out on purpose: Ctrl+W closes the tab. */
+  /** Keys (`KeyboardEvent.code`) that crouch (a tap stays crouched until the next tap, a longer press crouches while held); default `['KeyC']`. Ctrl is left out on purpose: Ctrl+W closes the tab. */
   crouch?: { keys?: string[] }
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
@@ -214,8 +223,14 @@ export interface TestRoomOptions {
    * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
    */
   strikeClips?: Readonly<Record<string, string>>
+  /** The numbers of pushing furniture (`FurniturePushRules` of game-player): the player's force, the friction by material, the hold time, the speed. */
+  push?: Partial<FurniturePushRules>
   /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
   kickLeg?: KickLeg
+  /** Metres above the feet the kick looks for a target from (level, the way the player faces; the nearest hit wins), so it finds what stands low in front; default every 10 cm from 0.25 to 0.85 m (shin to hip). */
+  kickHeights?: readonly number[]
+  /** Keys (`KeyboardEvent.code`) that kick with the arsenal's `kick` tool, whatever tool is in hand; default `['KeyK']` (Shift+V kicks too). */
+  kick?: { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
@@ -315,8 +330,29 @@ export interface TestRoom {
   useItem(useId: string): boolean
   /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
   use(hold?: number): void
+  /** Where the player's feet are. */
+  readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
+  /**
+   * Sits the player on a seat an item brings (`TestRoomItem.seats`): on `objectId` (default: what the camera looks at, within 3.2 m), on `seatId` (default: the seat nearest the
+   * player). Seated, the keys do not walk and the view stays near the seat's facing; a walk key or a jump gets up. Null when there is no seat there.
+   */
+  sit(objectId?: string, seatId?: string): RoomSeat | null
+  /** Gets up at the seat's exit; false when not seated or something stands on the exit. */
+  stand(): boolean
+  /** The seat the player is on, or null. */
+  readonly seat: RoomSeat | null
+  /**
+   * Pushing furniture, as holding E against it does: `begin` leans on what the camera looks at (false: nothing within reach to lean on), `setWalk` walks by script (world `[x, z]`, unit; null: the keys), `end`
+   * lets go, and `state` says the phase (`grip` while the hold timer fills, `push`, `strain`), the timer and what stops it (`too_heavy`, `obstacle`).
+   */
+  readonly push: {
+    begin(): boolean
+    end(): boolean
+    setWalk(walk: readonly [number, number] | null): void
+    readonly state: RoomPushState | null
+  }
   /** Throw what is held at `speed` m/s (default 9). */
   throwHeld(speed?: number): boolean
   /** Point the camera (scripted demos and tests). */
@@ -352,12 +388,16 @@ export interface TestRoom {
   setStrikeCombo(on: boolean): void
   /** Whether the strike combo is on; null when the room has none. */
   readonly strikeCombo: boolean | null
+  /** Kick with the arsenal's `kick` tool, whatever tool is in hand (K, Shift+V and the kick button do the same); false when there is none or it is not ready yet. */
+  kick(): boolean
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
   /**
    * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
    */
+  /** The floor: what it is made of, how deep it was dug, its marks and thrown pieces. */
+  readonly terrain: Terrain
   openArea(group: string): SpawnedObject[]
   /** The loaded modules (`loadModule`): id, name, catalogue group and whether it lays an area of its own. */
   modules(): Array<{ id: string; name: string; group?: string; hasArea: boolean }>
@@ -529,6 +569,7 @@ export interface ScenarioReport {
 }
 
 export type { DestructionEvent, Vec3 }
+export type { RoomPushEvent, RoomPushState } from './furniture-push'
 export type {
   AnimationClipSpec,
   ItemAnimationContract,
@@ -537,3 +578,5 @@ export type {
   TestableItem,
   ModuleScenario,
 } from '@adatechnology/game-contracts'
+
+export type { RoomSeat } from './seating'

@@ -41,7 +41,8 @@ export interface FurnitureSpecResult {
   /** Draws the piece: one mesh per part, named by the part id, coloured as the builder coloured it. */
   build(THREE: any): any
   /** The widest high horizontal part and the height of its upper face (what loose things rest on), or null when the piece has none. */
-  top: { part: string; y: number } | null
+  /** What loose things rest on. A solid top is boards: `parts` are all of them, `part` the one in the middle. */
+  top: { part: string; y: number; parts?: string[] } | null
   /** Size the piece was drawn at. */
   size: { w: number; d: number; h: number }
   /** Where the water leaves the taps the builder drew (a sink, a tub), in the space of the spec; empty for furniture without a tap. */
@@ -60,6 +61,10 @@ interface Drawn {
 }
 
 const WOOD_THIN = 0.035
+/** A solid wooden top is boards glued edge to edge: thicker than this it is a block and stays whole; narrower than `BOARD_TOP_WIDTH` it is one board. */
+const BOARD_TOP_THICK = 0.07
+const BOARD_TOP_WIDTH = 0.5
+const BOARD_WIDTH = 0.16
 /** A shelf falls when what holds it leaves it this many times its own length of span (one side gone: twice its length). */
 const SHELF_SPAN = 1.5
 /** Types that are cases with shelves: their `plain` boxes are books and boxes, and they stand as a carcass. */
@@ -82,6 +87,43 @@ function carcass(parts: PartSpec[], drawn: Map<string, Drawn>): void {
     } else if (y <= x && y <= z) part.structure = { role: 'beam', maxSpan: SHELF_SPAN * Math.max(x, z) }
   }
 }
+/** Each solid top of the drawing becomes its boards (`<id>_b<n>`), along its length, so that it breaks board by board where it is hit. Returns the boards of each top. */
+function splitTopsIntoBoards(drawn: Drawn[], materialOf: Record<string, string>, carcassed: boolean): Map<string, Drawn[]> {
+  const tops = new Map<string, Drawn[]>()
+  if (carcassed) return tops
+  for (let i = drawn.length - 1; i >= 0; i--) {
+    const p = drawn[i]
+    if (p.key !== 'wood' || materialOf.wood !== 'wood_hard' || p.shape.kind !== 'box' || p.rotation) continue
+    const [sx, sy, sz] = p.shape.size
+    const across = sx < sz ? 0 : 2
+    const width = Math.min(sx, sz)
+    if (sy < WOOD_THIN || sy > BOARD_TOP_THICK || sy >= width || width < BOARD_TOP_WIDTH) continue
+    const count = Math.round(width / BOARD_WIDTH)
+    const boards: Drawn[] = []
+    for (let b = 0; b < count; b++) {
+      const size: [number, number, number] = [sx, sy, sz]
+      size[across] = width / count
+      const position: [number, number, number] = [...p.position]
+      position[across] += (b + 0.5) * size[across] - width / 2
+      const min: [number, number, number] = [...p.min]
+      const max: [number, number, number] = [...p.max]
+      min[across] = position[across] - size[across] / 2
+      max[across] = position[across] + size[across] / 2
+      boards.push({ ...p, id: `${p.id}_b${b}`, shape: { kind: 'box', size }, position, min, max, color: shadeBoard(p.color, b) })
+    }
+    drawn.splice(i, 1, ...boards)
+    tops.set(p.id, boards)
+  }
+  return tops
+}
+
+/** Boards of one top are not cut from the same tree: each has its own tone. */
+function shadeBoard(color: number, board: number): number {
+  const k = [1, 0.94, 1.05, 0.97, 1.03][board % 5]
+  const channel = (shift: number): number => Math.min(255, Math.round(((color >> shift) & 255) * k)) << shift
+  return channel(16) | channel(8) | channel(0)
+}
+
 const FLOOR_TOUCH = 0.005
 const LOOSE = new Set(['paper'])
 const BASE_MATERIAL: Record<string, string> = {
@@ -171,10 +213,13 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
   run(A)
   if (!drawn.length) throw new Error(`game-floorplan-three: the builder of "${name}" drew no box or cylinder`)
 
+  const boardsOf = splitTopsIntoBoards(drawn, materialOf, Boolean(opts.carcass))
   const parts: PartSpec[] = drawn.map((p) => {
     const thin = Math.min(...(p.shape.kind === 'box' ? p.shape.size : p.shape.kind === 'cylinder' ? [p.shape.radius * 2, p.shape.height] : [p.shape.radius * 2]))
     let material = materialOf[p.key] ?? 'plastic'
-    if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
+    // a case with shelves is MDF (as bought); elsewhere thin boards are pine and thick ones hardwood
+    if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
+    else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
     if (p.rotation) part.rotation = p.rotation
     if (!LOOSE.has(material) && p.min[1] <= FLOOR_TOUCH) part.anchored = true
@@ -212,6 +257,13 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
     const area = (p.max[0] - p.min[0]) * (p.max[2] - p.min[2])
     if (area < 0.6 * footprint || p.max[1] < 0.2) continue
     if (!top || p.max[1] > top.y + 1e-6) top = { part: p.id, y: p.max[1] }
+  }
+  for (const boards of boardsOf.values()) {
+    if (top && boards[0].max[1] <= top.y - 1e-6) continue
+    const mid = boards[boards.length >> 1]
+    const min = [Math.min(...boards.map((b) => b.min[0])), Math.min(...boards.map((b) => b.min[2]))]
+    const max = [Math.max(...boards.map((b) => b.max[0])), Math.max(...boards.map((b) => b.max[2]))]
+    if ((max[0] - min[0]) * (max[1] - min[1]) >= 0.6 * footprint && mid.max[1] >= 0.2) top = { part: mid.id, y: mid.max[1], parts: boards.map((b) => b.id) }
   }
 
   if (opts.carcass) carcass(parts, byId)

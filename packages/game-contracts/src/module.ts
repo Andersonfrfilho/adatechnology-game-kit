@@ -7,7 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
-import type { HandTargetSource } from './hands'
+import type { HandPose, HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -17,6 +17,20 @@ export interface ModuleItemFluid {
   /** Item uses offered while held (`drink`, `pour`...). */
   uses?: string[]
   offset?: Vec3
+}
+
+/** A place on an item where a body sits or lies (a chair, a sofa cushion, a bed), in the item's own frame, the same shape as a `game-interactables` seat. */
+export interface ItemSeat {
+  id: string
+  pose: 'sit' | 'lie'
+  /** Hips (sit) or pelvis (lie). */
+  pos: Vec3
+  /** Facing of the body, relative to the item. */
+  ry: number
+  /** Eye height above `pos`. Default 0.62 sitting, 0.18 lying. */
+  eye?: number
+  /** Where the body stands when it gets up. */
+  exit: Vec3
 }
 
 /** A picture of an item for catalogues and inventories: a hand-made `svg`, or `render` to have the host draw the 3D model (camera angles in radians, `wear` 0 new, 1 worn, 2 ruined). */
@@ -47,6 +61,8 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** Where a body sits or lies on it: the host can seat the player there. */
+  seats?: readonly ItemSeat[]
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
   slow?: boolean | string
   /**
@@ -77,6 +93,19 @@ export interface AreaPlacement {
   surface?: { halfSize: [number, number]; height: number }
   /** Starts still: no physics until it is grabbed, hit or pushed. For props laid side by side that would otherwise nudge each other off. */
   asleep?: boolean
+}
+
+/** A rectangle of the floor made of something else: `rect` is `[x0, z0, x1, z1]` in world metres, `surface` a ground profile id of the host. */
+export interface GroundZone {
+  readonly rect: readonly [number, number, number, number]
+  readonly surface: string
+}
+
+/** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */
+export interface GroundLayout {
+  readonly surface: string
+  /** Later zones over earlier ones. */
+  readonly zones?: readonly GroundZone[]
 }
 
 /** How the host sets the module's area up: what goes where, and where the camera starts. */
@@ -247,10 +276,22 @@ export interface ModuleHost {
    */
   addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
   /**
+   * Puts an item of the host's catalogue (from any loaded module, by its id) in the world as part of the scenery: it stays through the clears and the openings of areas, and shots, blows, blasts
+   * and fire hit it like any item (a module's lamp rig standing on a real car of the fleet). Scenarios that start from a seeded world run without it, and it comes back after them. `rotationY` turns it about the vertical axis. Returns null while no loaded module has the item; `remove`
+   * takes it away. A host without a catalogue leaves it out.
+   */
+  addObject?(itemId: string, place: { readonly position: Vec3; readonly rotationY?: number }): { readonly objectId: string; readonly root: unknown; remove(): void } | null
+  /**
    * Lends the host the place of the hands for the tool in the module's hands (a weapon's grip and handguard): the host that draws the player's arms reads `source` every frame, after the
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */
   setHandTargets?(source: HandTargetSource | null): () => void
+  /**
+   * Where the player's body holds a tool now (world space), for a view that shows the body (third person): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
+   * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size, instead of in front of the eye. Null while the view draws the tool in front of
+   * the eye (first person); a host without a body leaves it out.
+   */
+  holdFrame?(): HandPose | null
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
@@ -285,6 +326,8 @@ export interface TestableModule<Context = unknown> {
   controls?(locale: string): ModuleControl[]
   layers?(locale: string): ModuleLayer[]
   metrics?(locale: string): ModuleMetric[]
+  /** The floor of the module's area, laid when the host opens it. Without it the host keeps its default floor. */
+  ground?: GroundLayout
   /** Called once when the module is loaded, with what the host lends. Returns the function that undoes it. */
   attach?(host: ModuleHost): () => void
 }

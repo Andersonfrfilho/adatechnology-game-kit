@@ -55,3 +55,7 @@ player.knock(1.5)
 `createPlayerTestModule()` (`player_area`, only the generic contracts) makes the room's camera the player body and puts the vitals on the bench;
 `examples/player-test-area` loads it into the shared test room (`PlayerArea.loadInto(room)`, `sala-jogador.html`), and `examples/interactables-test-area`
 carries it too.
+
+## Pushing furniture
+
+`createFurniturePush(rules?)` is the logic of pushing a heavy thing on foot: `begin({ massKg, material })`, then `update(dt, { walk, isFree })` every frame answers the step and says the `phase` (`grip` while the hold timer fills, `push`, `strain`), the `progress` of the timer and the `block` (`too_heavy`, `obstacle`). The host answers `isFree` by sweeping the volume of the piece and draws the rest. `gripSecondsFor`, `pushSpeedFor` and `canPush` give the numbers; the force of the legs, the friction by material, the times and the speeds are all in `FurniturePushRules` (`FURNITURE_PUSH_DEFAULTS`).

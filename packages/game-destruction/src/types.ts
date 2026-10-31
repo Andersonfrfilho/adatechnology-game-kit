@@ -115,6 +115,29 @@ export interface MaterialThermal {
   smoke?: 'white' | 'grey' | 'black'
 }
 
+/** What one kind of blow does to a material where it lands (`MaterialDef.hits`). */
+export interface MaterialHit {
+  /**
+   * Pieces torn out at the point hit: `splinters` (solid wood, plywood: long thin pieces along the grain), `lumps` (pressed fibre such as MDF:
+   * short crumbly pieces) or `none`. A round tears them out of the exit (and one in three out of the entry), a blow out of the face it lands on.
+   */
+  tear?: 'splinters' | 'lumps' | 'none'
+  /** Joules per torn piece (default 150). A blow weaker than one piece's worth tears nothing; a round always tears at least one. */
+  tearJoules?: number
+  /**
+   * Joules per kilogram of a unit (`PartSpec.units`: a brick, a block of concrete) that knock it out of its part; blows of this kind wear the unit they
+   * land on (and a little the ones around it) until one comes out (`chip`). Default `breach.chipEnergy` of the world.
+   */
+  unitJoules?: number
+  /**
+   * Joules of each blow that only scar the surface and wear no unit: a small round or a fist leaves a crater in concrete and takes nothing out, a heavy
+   * round takes what it carries above this (default 0).
+   */
+  floor?: number
+  /** The blow leaves a crater in the bare surface of the material (a `spall` with `layer` -1) where it lands, with its dust and chips. */
+  crater?: boolean
+}
+
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
@@ -147,6 +170,11 @@ export interface MaterialDef {
    * a ream, a magazine) and comes apart as thin loose scraps (`Fragment.inner` for the pages) instead of slabs as thick as the part.
    */
   sheet?: number
+  /**
+   * What a blow of each damage type takes out of the material where it lands (the same blow does different things to different materials, and a shot
+   * is not a punch). See `MaterialHit`.
+   */
+  hits?: Partial<Record<DamageType, MaterialHit>>
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
@@ -511,6 +539,11 @@ export interface DestructionWorld {
   explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
+  /**
+   * The first thing a world-axis box meets moving `distance` metres along `direction`, or null: a grid of rays leaves its leading faces, no gap wider than `spacing`
+   * (default 0.2 m). `ignore` is the object that is moving. What the box already overlaps does not stop it, so it can always back out.
+   */
+  sweepBox(box: { readonly min: Vec3; readonly max: Vec3 }, direction: Vec3, distance: number, options?: { readonly ignore?: string; readonly spacing?: number }): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
   shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**
