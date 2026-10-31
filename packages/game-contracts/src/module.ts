@@ -9,6 +9,7 @@ import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
+import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
 import type { SealSpec } from './seal'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -276,6 +277,13 @@ export interface HostReach {
   onGrip?(): void
 }
 
+export interface FrameOptions {
+  /** Default `lateSimulate`, which is where every `onFrame` runs without options. */
+  readonly phase?: Exclude<FramePhase, 'render'>
+  /** Lower runs first inside the phase; ties keep the order of registration. Default 0. */
+  readonly order?: number
+}
+
 /**
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
@@ -292,8 +300,10 @@ export interface ModuleHost {
   player(): PlayerState
   /** Follow the player's tool events. Returns the unsubscribe function. */
   on(listener: (event: HostEvent) => void): () => void
-  /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
-  onFrame(update: (dt: number) => void): () => void
+  /** Run every simulated frame with the frame's seconds (in the given phase, `lateSimulate` by default). Returns the unsubscribe function. */
+  onFrame(update: (dt: number) => void, options?: FrameOptions): () => void
+  /** Registers a deferred queue with the host's frame budget. Returns the function that takes it out. A host without a budget leaves it out. */
+  defer?(queue: DeferredQueue, options: DeferredQueueOptions): () => void
   /**
    * Follow the host clearing its area (`clear()`, opening an area, running scenarios): everything the module put in the world on its own (not as items) is to be taken away or put back. Returns the
    * unsubscribe function. A host that never clears leaves it out.
