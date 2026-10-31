@@ -43,20 +43,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-floorplan-three": "workspace:*",
-    "@adatechnology/game-fluids": "workspace:*",
-    "@adatechnology/game-interactables": "workspace:*",
-    "@adatechnology/game-items": "workspace:*",
-    "@adatechnology/game-shapes-three": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-floorplan-three": "workspace:^",
+    "@adatechnology/game-fluids": "workspace:^",
+    "@adatechnology/game-interactables": "workspace:^",
+    "@adatechnology/game-items": "workspace:^",
+    "@adatechnology/game-shapes-three": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-items-goods": "workspace:*",
-    "@adatechnology/game-test-room": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:^",
+    "@adatechnology/game-test-room": "workspace:^",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",

@@ -43,13 +43,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-destruction": "workspace:*",
-    "@adatechnology/game-floorplan-interactables": "workspace:*",
-    "@adatechnology/game-floorplan-structure": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*",
-    "@adatechnology/game-shapes-three": "workspace:*",
-    "@adatechnology/game-floorplan-residential": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-destruction": "workspace:^",
+    "@adatechnology/game-floorplan-interactables": "workspace:^",
+    "@adatechnology/game-floorplan-structure": "workspace:^",
+    "@adatechnology/game-props3d": "workspace:^",
+    "@adatechnology/game-shapes-three": "workspace:^",
+    "@adatechnology/game-floorplan-residential": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0",
@@ -62,16 +62,16 @@
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
-    "@adatechnology/game-floorplan": "workspace:*",
-    "@adatechnology/game-interactables": "workspace:*",
-    "@adatechnology/game-interactables-household": "workspace:*",
-    "@adatechnology/game-interactables-three": "workspace:*",
-    "@adatechnology/game-floorplan-commercial": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*",
-    "@adatechnology/game-destruction-three": "workspace:*",
-    "@adatechnology/game-vegetation": "workspace:*",
-    "@adatechnology/game-vegetation-species": "workspace:*",
-    "@adatechnology/game-floorplan-rural": "workspace:*",
-    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*"
+    "@adatechnology/game-floorplan": "workspace:^",
+    "@adatechnology/game-interactables": "workspace:^",
+    "@adatechnology/game-interactables-household": "workspace:^",
+    "@adatechnology/game-interactables-three": "workspace:^",
+    "@adatechnology/game-floorplan-commercial": "workspace:^",
+    "@adatechnology/golden-tool": "workspace:^",
+    "@adatechnology/game-destruction-three": "workspace:^",
+    "@adatechnology/game-vegetation": "workspace:^",
+    "@adatechnology/game-vegetation-species": "workspace:^",
+    "@adatechnology/game-floorplan-rural": "workspace:^",
+    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:^"
   }
 }

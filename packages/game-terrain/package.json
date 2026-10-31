@@ -40,8 +40,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-destruction": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-destruction": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

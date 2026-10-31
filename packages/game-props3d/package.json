@@ -44,8 +44,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-shapes": "workspace:*",
-    "@adatechnology/game-shapes-three": "workspace:*"
+    "@adatechnology/game-shapes": "workspace:^",
+    "@adatechnology/game-shapes-three": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

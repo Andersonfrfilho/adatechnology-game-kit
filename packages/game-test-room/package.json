@@ -44,18 +44,18 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-audio": "workspace:*",
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-destruction": "workspace:*",
-    "@adatechnology/game-destruction-three": "workspace:*",
-    "@adatechnology/game-fluids": "workspace:*",
-    "@adatechnology/game-fluids-three": "workspace:*",
-    "@adatechnology/game-player": "workspace:*",
-    "@adatechnology/game-terrain": "workspace:*",
-    "@adatechnology/game-terrain-three": "workspace:*",
-    "@adatechnology/game-vfx": "workspace:*",
-    "@adatechnology/game-vfx-three": "workspace:*",
-    "@adatechnology/game-weapons": "workspace:*"
+    "@adatechnology/game-audio": "workspace:^",
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-destruction": "workspace:^",
+    "@adatechnology/game-destruction-three": "workspace:^",
+    "@adatechnology/game-fluids": "workspace:^",
+    "@adatechnology/game-fluids-three": "workspace:^",
+    "@adatechnology/game-player": "workspace:^",
+    "@adatechnology/game-terrain": "workspace:^",
+    "@adatechnology/game-terrain-three": "workspace:^",
+    "@adatechnology/game-vfx": "workspace:^",
+    "@adatechnology/game-vfx-three": "workspace:^",
+    "@adatechnology/game-weapons": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"

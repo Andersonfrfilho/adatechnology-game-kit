@@ -43,16 +43,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-vfx": "workspace:*",
-    "@adatechnology/game-vfx-three": "workspace:*",
-    "@adatechnology/game-weather": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-vfx": "workspace:^",
+    "@adatechnology/game-vfx-three": "workspace:^",
+    "@adatechnology/game-weather": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",
