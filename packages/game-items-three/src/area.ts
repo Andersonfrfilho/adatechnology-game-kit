@@ -258,7 +258,16 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
 
   const items = catalog.list()
   const categories = [...ITEM_CATEGORIES.map((c) => c.id), ...[...catalog.categories.keys()].filter((id) => !ITEM_CATEGORIES.some((c) => c.id === id))].filter((id) => items.some((item) => item.category === id))
-  const shelves = shelvesLayout(items, categories)
+  // a sealed item lies next to the first of its opening tools the catalogue has (a can opener beside each tin), so the tool is at hand where the item is picked up
+  const openerOf = (item: ItemDef): ItemDef | undefined => {
+    const id = item.seal?.openWith?.find((tool) => catalog.has(tool))
+    return id === undefined ? undefined : catalog.get(id)
+  }
+  const laid = items.flatMap((item) => {
+    const opener = openerOf(item)
+    return opener ? [item, { id: opener.id, category: item.category, size: opener.size }] : [item]
+  })
+  const shelves = shelvesLayout(laid, categories)
   const showcase = listItemModels().map((id) => ({ id, size: sizeOfModel(id) as [number, number, number], def: catalog.has(id) ? catalog.get(id) : undefined }))
 
   const state: { -readonly [K in keyof ItemsAreaState]: ItemsAreaState[K] } = {
@@ -741,7 +750,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
         id: 'modeled',
         name: text.metrics.modeled,
         read: () => {
-          const shown = visibleEntries().filter((entry) => entry.group === 'shelf')
+          // per catalogue item: the can openers laid beside the tins are the same item
+          const shown = [...new Map(visibleEntries().filter((entry) => entry.group === 'shelf').map((entry) => [entry.itemId, entry])).values()]
           return `${shown.filter((entry) => entry.kind === 'model').length}/${shown.length}`
         },
       },

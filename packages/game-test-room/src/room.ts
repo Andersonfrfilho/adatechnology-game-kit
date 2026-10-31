@@ -2176,9 +2176,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           L: { position: [leftPalm.x, leftPalm.y, leftPalm.z], quaternion: [lq.x, lq.y, lq.z, lq.w] },
           grip: 0.85,
           gripL: 0.8,
+          elbows: 'body',
         }
       }
-      return { R: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: 0.85 }
+      return { R: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: 0.85, elbows: 'body' }
     }
     const box = new THREE.Box3().setFromObject(root)
     const center = box.getCenter(new THREE.Vector3())
@@ -2187,7 +2188,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const z = new THREE.Vector3().crossVectors(forward, back).normalize()
     const y = new THREE.Vector3().crossVectors(z, forward).normalize()
     const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(forward, y, z))
-    return { R: { position: [center.x, box.min.y - CARRY_PALM, center.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: CARRY_GRIP }
+    return { R: { position: [center.x, box.min.y - CARRY_PALM, center.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: CARRY_GRIP, elbows: 'body' }
   }
 
   /**
@@ -2336,6 +2337,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     action('open_seal', tool ? t('act.open_with', { name: e.name, tool }) : t('act.open_by_hand', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { tool: opener.tool ?? 'hand' } })
     return true
   }
+
+  /** C crouches unless the page moved the crouch to other keys; while it does, an item's second use is on Shift+F instead of C. */
+  const crouchOnC = (options.crouch?.keys ?? ['KeyC']).includes('KeyC')
 
   const useItem = (useId: string): boolean => {
     const e = heldEntry
@@ -2573,12 +2577,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyZ':
         tiltKey = 1
         break
-      case 'KeyF':
-        if (heldEntry?.uses[0]) useItem(heldEntry.uses[0])
+      case 'KeyF': {
+        // Shift+F is the second use while C crouches
+        const use = heldEntry?.uses[e.shiftKey && crouchOnC ? 1 : 0]
+        if (use) useItem(use)
         break
+      }
       case 'KeyC':
-        // C crouches by default: the item's second use takes it only when the page moved the crouch to other keys
-        if (heldEntry?.uses[1] && !(options.crouch?.keys ?? ['KeyC']).includes('KeyC')) useItem(heldEntry.uses[1])
+        if (heldEntry?.uses[1] && !crouchOnC) useItem(heldEntry.uses[1])
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
@@ -2832,7 +2838,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       pages: Math.max(1, Math.ceil(loadout.length / 10)),
       status: simTime - statusAt < 2 ? statusLine : '',
       progress: progress ? { label: progress.label, value: progress.value } : null,
-      held: heldEntry || heldPiece ? { name: heldName, uses: (heldEntry?.uses ?? []).map((u, i) => ({ key: ['F', 'C', 'V'][i] ?? '', label: S.text[`use.${u}`] ?? u })), weapon: heldEntry?.item?.weapon ? arsenal.name(heldEntry.item.weapon) : undefined, using: useItemName } : null,
+      held: heldEntry || heldPiece ? { name: heldName, uses: (heldEntry?.uses ?? []).map((u, i) => ({ key: ['F', crouchOnC ? 'Shift+F' : 'C', 'V'][i] ?? '', label: S.text[`use.${u}`] ?? u })), weapon: heldEntry?.item?.weapon ? arsenal.name(heldEntry.item.weapon) : undefined, using: useItemName } : null,
       inspect: inspectInfo(),
       animations: animationsOf(),
       locked: player.locked,
