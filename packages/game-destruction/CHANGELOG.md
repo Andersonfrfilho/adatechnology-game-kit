@@ -1,5 +1,37 @@
 # @adatechnology/game-destruction
 
+## 0.13.0
+
+### Minor Changes
+
+- b818f6a: A box on the edge of a table rests or falls as it should, and a round through a cardboard box punches holes instead of throwing it. Loose pieces take the side of a step of the ground (the edge of a table, a counter) as a wall: a corner that comes at a higher top from the side stops there instead of being lifted onto the top every frame, which made a box shot near the edge hop on it without end. Over a step the points along the box's edges touch too, so the table's edge under a box is a support between its corners (a box with 2 cm over the edge and its centre of mass on the table stays), and the contacts are solved together, warm started from the last substep. A hollow shell of a material that tears (a printed carton, `shapeDestruction('box')` of game-items-three) is holed by a round that goes through it, not shredded. The test room no longer sends a spawned item with no mesh to minus infinity. The points along the edges stand only on the fixed ground (things spawned together no longer ratchet up onto each other), and what the contacts' friction takes from a piece is taken from that substep's move too, so a push the floor's grip holds no longer creeps a sofa along.
+
+  A part can hold loose dry contents (`PartSpec.powder`, `{ color }`; `userData.destructionPowder` for `specFromObject3D`; the `powder` of an item of game-items-goods, written on its shell by `tagForDestruction`): the `hole` event carries it and the renderer puffs it out of the entry and, more, out of the exit. The cereal box, flour, sugar, salt, coffee and rice of the catalogue have theirs.
+
+- 4eb330f: A shot breaks a brick or a concrete block where it lands instead of knocking the whole unit out: a crater a few centimetres across goes through the unit (about 6 cm for a pistol round, 10 for a rifle round), the rest of the unit stays, and small bits of the inside of the material fly out of both faces, most out of the far one. The rest of a unit comes out, in pieces, only once its craters took most of it. A wall, a partition or a column now loses its section across one height, so a slot shot along the base of a wall brings it down while the same rounds spread over its face leave it standing. The house renderer draws each crater as an irregular hole through the unit with the plaster broken off around it, and the marks of a shot (bullet holes, spalls) now sit on the face as drawn, not a few millimetres behind it.
+
+  A pistol round on a plastered brick wall no longer draws a star of cracks and a flat orange disc: the plaster comes off in a ragged patch drawn by the house renderer, with the brick and its mortar under it and the bullet hole on the brick (the destruction renderer leaves its patch out on meshes marked `userData.drawnSpalls`). The destruction renderer also keeps ranges another drawing collapsed (`userData.collapsedRanges`) when it rewrites a merged mesh, so a broken wall comes back after a reset.
+
+  The other materials take a round the same way: the concrete laid bare in a wall is one face with no joints, an opaque brittle body (a ceramic tub) cracks a hand around the hit in a dark shade of its own colour instead of black lines across the piece (glass keeps its long white cracks), and a hole in wood has a rim of torn fresh wood under it.
+
+### Patch Changes
+
+- 5a2f8e7: A car door that opens is the door itself: the first swing cuts the door's own skin out of the body and hangs it on the hinge, with its trim and side window, in place of the flat plate (the lid takes its skin too). The room moves a part's collision shape round the hinge its drawn group turns on, not round the shape's own centre, so a car door no longer stops against its own body. `sweepBox` with `ignore` also ignores the parts of an object hosted by an impl (a vehicle).
+- b58423f: A `resting` joint is held by gravity only: when an object leans past about 30° (`setTransform`), what lay on its parts lets go. A toppled bookcase spills its books as pieces of their own instead of carrying them stuck to the shelves.
+- 9c63053: A shot into MDF or wood left no hole: the lumps it tore off came as a `chip`, and the renderer cleared every mark inside it as if a brick had left the wall. The `chip` of what a blow tore off a face now carries `torn: true`, and the renderer and the house breach keep the hole and its marks.
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+
 ## 0.12.0
 
 ### Minor Changes
