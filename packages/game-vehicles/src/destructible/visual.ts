@@ -61,6 +61,7 @@ const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
 const DRAWN_MIRROR_MOUNT = 0.2
 const MIRROR_GLASS_FIT = 0.76
+const MIRROR_GLASS_PROUD = 0.0015
 /** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
 const MIRROR_GLASS_THIN = 0.04
 const MIRROR_GLASS_MIN = 0.05
@@ -730,7 +731,7 @@ export class VehicleVisuals implements CreaseWork {
     c.root.updateMatrixWorld(true)
   }
   /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
-  private seatMirrorGlass(glass: Obj): void {
+  private seatMirrorGlass(glass: Obj, drawn: Obj[]): void {
     const g = glass.geometry.clone()
     g.computeBoundingBox()
     const mid = g.boundingBox.getCenter(new this.THREE.Vector3())
@@ -738,6 +739,23 @@ export class VehicleVisuals implements CreaseWork {
     g.scale(MIRROR_GLASS_FIT, MIRROR_GLASS_FIT, MIRROR_GLASS_FIT)
     g.translate(mid.x, mid.y, mid.z)
     glass.geometry = g
+    // set into the housing's face, barely proud of it: the largest thing beside it is the housing
+    const THREE = this.THREE
+    const volumeOf = (o: Obj): number => {
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return size.x * size.y * size.z
+    }
+    const housing = drawn.filter((o) => o !== glass).sort((a, b) => volumeOf(b) - volumeOf(a))[0]
+    if (housing) {
+      this.c.root.updateMatrixWorld(true)
+      const inv = this.I.worldInverseOf(this.c)
+      glass.updateMatrixWorld(true)
+      const gb = this.I.localBox(this.c, glass, inv)
+      const hb = this.I.localBox(this.c, housing, inv)
+      const toFront = hb.getCenter(new THREE.Vector3()).x > gb.getCenter(new THREE.Vector3()).x
+      if (toFront) glass.position.x += hb.min.x - MIRROR_GLASS_PROUD - gb.min.x
+      else glass.position.x += hb.max.x + MIRROR_GLASS_PROUD - gb.max.x
+    }
     glass.material = this.I.makeMaterial(MIRROR_GLASS_COLOR, { metalness: 0.95, roughness: 0.12 })
   }
   /** The mirror the model already draws around where the part says, if it draws one. */
@@ -763,7 +781,7 @@ export class VehicleVisuals implements CreaseWork {
       for (const o of drawn) {
         if (!o.isMesh || o.material !== this.I.MATERIALS.chrome) continue
         const size = new this.THREE.Box3().setFromObject(o).getSize(new this.THREE.Vector3())
-        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o)
+        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o, drawn)
       }
       this.extra.set(p.id, drawn)
       return
