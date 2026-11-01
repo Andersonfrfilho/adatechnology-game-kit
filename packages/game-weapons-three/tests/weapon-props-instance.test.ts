@@ -2,7 +2,7 @@ import { itemModels } from '@adatechnology/game-items-three'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { buildItemWeaponModel, buildWeaponModel, createWeaponProps, defaultWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from '../src'
+import { buildItemWeaponModel, buildModeledProp, buildTripodMountedProp, buildWeaponModel, createWeaponProps, defaultWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from '../src'
 
 const box = (object: THREE.Object3D): number[] => new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3()).toArray()
 
@@ -34,5 +34,17 @@ describe('weapon props by instance', () => {
     registerWeaponItemModel('compat_only', { turn: 3 })
     expect(first.get('compat_only')).toBeUndefined()
     expect(createWeaponProps().get('compat_only')).toBeUndefined()
+  })
+})
+
+describe('weapon props by instance: the modeled props', () => {
+  it('buildModeledProp and the tripod prop read the props they are given, not the global set', () => {
+    const without = createWeaponProps({ packs: [{ baseball_bat: null }] })
+    const withShipped = createWeaponProps()
+    expect(buildModeledProp(THREE, { id: 'baseball_bat' }, 'bat', undefined, itemModels, without)).toBeUndefined()
+    expect(buildModeledProp(THREE, { id: 'baseball_bat' }, 'bat', undefined, itemModels, withShipped)).toBeDefined()
+    expect(buildModeledProp(THREE, { id: 'baseball_bat' }, 'bat', undefined, itemModels)).toBeDefined()
+    expect(buildTripodMountedProp(THREE, { id: 'baseball_bat' }, 'bat', itemModels, without)).toBeUndefined()
+    expect(buildTripodMountedProp(THREE, { id: 'baseball_bat' }, 'bat', itemModels, withShipped)).toBeDefined()
   })
 })

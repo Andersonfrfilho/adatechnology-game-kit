@@ -1,8 +1,8 @@
 import { applyPatches, mergeById, removeIds } from '@adatechnology/game-contracts'
 import type { DeepPartial } from '@adatechnology/game-contracts'
 
-import { SHIPPED_WEAPON_ITEM_MODELS, weaponPropsOver } from './props'
-import type { WeaponItemModel, WeaponProps } from './props'
+import { SHIPPED_WEAPON_ITEM_MODELS, weaponPropsOver } from './weapon-item-model'
+import type { WeaponItemModel, WeaponProps } from './weapon-item-model'
 
 export interface WeaponPropsOptions {
   /** Item model overrides by weapon id, added to the shipped ones (`null` keeps the low-poly prop); later packs replace earlier ones. */

@@ -13,7 +13,8 @@ import { createEyeFrame, placeOnBody } from './fx/body-hold'
 import { holdOfProp, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
 import type { ItemModels } from './item-models'
-import { BODY_ACTIONS, buildWeaponModel } from './props'
+import { BODY_ACTIONS } from './props'
+import { buildWeaponModel } from './weapon-item-model'
 
 export interface WeaponFxOptions {
   /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; default `itemModels` there (deprecated: pass it). */
