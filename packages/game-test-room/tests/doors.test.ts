@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandTargets, TestableModule } from '@adatechnology/game-contracts'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { ScenarioContext } from '../src'
 import { makeRoom } from './helpers'
@@ -103,6 +103,25 @@ describe('opening by hand', () => {
     const [x, , z] = room.playerPosition
     expect(Math.hypot(x - -0.4, z - (-4 + 0.26))).toBeGreaterThan(0.8 + 0.25)
     expect(z).toBeGreaterThan(-4 + 0.26)
+  })
+
+  it.each(['first', 'third'] as const)('the hand on the handle goes through the body reach (same path as a held tool), in %s person, and the door pose is given in both', (mode) => {
+    const { room, so } = setup()
+    const reaches: Array<{ targets: HandTargets | null; view: unknown }> = []
+    const poses: Array<unknown> = []
+    room.setAvatar({ root: new THREE.Group(), update: (_dt, state) => void poses.push(state.door), reach: (targets, view) => void reaches.push({ targets, view }) })
+    room.setCameraMode(mode)
+    room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.74])
+    expect(room.useLeaf(so.objectId)).toBe(true)
+    run(room, 0.5)
+    const doorHand = room.handState().targets
+    expect(doorHand?.R).toBeTruthy()
+    const last = reaches.at(-1)!
+    expect(last.targets).toBe(doorHand)
+    expect((last.view as { camera?: unknown; keepOutside?: unknown }).camera).toBe(room.camera)
+    expect((last.view as { keepOutside?: unknown }).keepOutside).toBeTruthy()
+    expect(room.handState().stance).toBe('hold')
+    expect(poses.some((pose) => pose !== null && pose !== undefined)).toBe(true)
   })
 
   it('a locked door rattles and does not move', () => {

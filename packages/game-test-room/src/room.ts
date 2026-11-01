@@ -1318,7 +1318,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let lastHand: { stance: string; triggerFinger: number | null; targets: HandTargets | null } = { stance: 'relaxed', triggerFinger: null, targets: null }
   const strikeClips: Readonly<Record<string, string>> = options.strikeClips ?? DEFAULT_STRIKE_CLIPS
   const handStances: Readonly<Record<string, string>> = options.handStances ?? DEFAULT_HAND_STANCES
-  /** The body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push or a door poses the hands itself). */
+  /** The body's hands go to the tool the module placed (a carried piece follows the hand instead, a push poses the hands itself, and a door's hand goes to the handle through the same reach). */
   /** How far inside the right shoulder joint, toward the middle of the chest, the pocket a stock rests in sits (m). */
   const SHOULDER_POCKET_IN = 0.1
   const pocketAt = new THREE.Vector3()
@@ -1337,11 +1337,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const targets = push.active ? null : heldPiece ? twistHand : (handSource?.() ?? null)
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? twistHand : (handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
-      targets: push.handTargets() ?? doorHand ?? targets,
+      targets: push.handTargets() ?? targets,
     }
     if (!avatar?.reach) return
     // the camera is the eye here in both views (the shoulder view only moves it for the render): the same reach in both, so switching views moves no hand
