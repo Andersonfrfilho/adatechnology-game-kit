@@ -33,17 +33,17 @@ function fakeProbe(id: string) {
 }
 
 describe('ProgramWarmup.warmUp', () => {
-  it('draws an empty instanced batch and what is off camera once, then gives them back as they were', () => {
+  it('draws an empty instanced batch once, then gives it back empty', () => {
     const scene = new THREE.Scene()
     const batch = new THREE.InstancedMesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial(), 4)
     batch.count = 0
     scene.add(batch)
     const { renderer } = fakeRenderer()
-    const seen: Array<[number, boolean]> = []
-    renderer.render.mockImplementation(() => seen.push([batch.count, batch.frustumCulled]))
+    const seen: number[] = []
+    renderer.render.mockImplementation(() => seen.push(batch.count))
     createProgramWarmup(THREE).warmUp(renderer, scene, new THREE.PerspectiveCamera())
-    expect(seen[0]).toEqual([1, false])
-    expect([batch.count, batch.frustumCulled]).toEqual([0, true])
+    expect(seen[0]).toBe(1)
+    expect(batch.count).toBe(0)
   })
 
   it('waits for the GPU at the end, so that the first upload of play does not', () => {

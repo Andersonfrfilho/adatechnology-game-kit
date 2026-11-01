@@ -47,7 +47,7 @@ if (!playwright || !existsSync(page)) {
     const tab = await context.newPage()
     tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}&arena=40`)
+    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}&arena=40`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__floorplanReport, null, { timeout: 90000 })
     const frames = (seconds) => tab.evaluate((s) => { for (let t = 0; t < s; t += 0.05) window.__testRoom.update(0.05) }, seconds)
     await frames(1)

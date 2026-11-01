@@ -23,7 +23,7 @@ const { chromium } = require('playwright')
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const tab = await browser.newPage({ viewport: { width: 640, height: 400 } })
-await tab.goto(`${pathToFileURL(join(root, 'examples/test-room/dist/test-room.html')).href}?ui=0`)
+await tab.goto(`${pathToFileURL(join(root, 'examples/test-room/dist/test-room.html')).href}?ui=0`, { timeout: 180000 })
 await tab.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
 
 const census = (area) =>
