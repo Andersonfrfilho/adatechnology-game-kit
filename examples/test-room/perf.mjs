@@ -5,7 +5,9 @@
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
 //   PERF_SHARD=cold | warm | horde     one share: the nine first uses, warm_all + storm + after_storm, or the two horde phases (CI runs the three in parallel)
 //   PERF_HORDE=2000                    agents of the horde phases (default 2000 in gpu mode, 300 in counters mode, where software GL pays per agent)
-//   PERF_GPU=intel | nvidia            the machine of the plan's D12 (budget of the crowd step: 6 ms on intel, 4 ms on nvidia); default nvidia
+//   PERF_TIER=integrated | discrete    the GPU tier of the plan's D12 (crowd step budget); PERF_GPU=intel|nvidia is its deprecated alias
+//   PERF_PIXEL_RATIO=0.5               the resolution scale of the run: separates pixel cost from vertex cost
+//   PERF_CALIBRATE=1                   also draws a fixed scene for the machine's score and reports each subsystem as a multiple of it
 //   PERF_PHASES=dense_horde,chain_horde   which horde phases run (default both)
 //   PERF_QUERY='&framesInFlight=2'     extra page parameters
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
@@ -42,11 +44,20 @@ const BUDGET = {
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
 const HORDE_SEED = 21
+const TIER = process.env.PERF_TIER ?? { intel: 'integrated', nvidia: 'discrete' }[process.env.PERF_GPU]
+if (process.env.PERF_GPU) console.log('PERF_GPU is deprecated: use PERF_TIER=integrated|discrete')
+const PIXEL_RATIO = Number(process.env.PERF_PIXEL_RATIO ?? 0)
+// a run without vsync draws far faster than the display, so "twice the median" only means something from a 60 Hz frame up
+const SIXTY_HZ_MS = 16.7
+const CONVERGE_SECONDS = 2
+const SETTLED_SHARE = 0.05
+const MAX_SWING = 0.1
+const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
 let chainSetupBuffers = 0
 const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
 // the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
 const HORDE_BUDGET = {
-  crowdMsP99: process.env.PERF_GPU === 'intel' ? 6 : 4,
+  crowdMsP99: TIER === 'integrated' ? 6 : 4,
   drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
   drawGrowth: 1.5,
   buffersDense: 50,
@@ -95,6 +106,7 @@ if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
 await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`)
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
+await applyPixelRatio()
 await pause(2000)
 
 const gpu = await page.evaluate(() => {
@@ -102,7 +114,10 @@ const gpu = await page.evaluate(() => {
   const info = gl?.getExtension('WEBGL_debug_renderer_info')
   return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : 'unknown'
 })
-console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  gpu=${gpu}`)
+console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  tier=${TIER ?? 'none'}  pixelRatio=${PIXEL_RATIO || 'default'}  gpu=${gpu}`)
+const calibration = process.env.PERF_CALIBRATE ? await page.evaluate(measureCalibration) : undefined
+const subsystems = calibration ? await page.evaluate(measureRoomCost) : undefined
+if (calibration) console.log(`CALIBRATION ${calibration.toFixed(2)} ms; room ${(subsystems.room / calibration).toFixed(2)}x, shadows ${(subsystems.shadows / calibration).toFixed(2)}x`)
 
 const phases = []
 let lightSlotReport = { point: [], spot: [], problems: ['light_slots did not run'] }
@@ -133,6 +148,7 @@ for (const p of phases) {
   const programBudget = p.name === 'chain_horde' ? HORDE_BUDGET.chainPrograms : BUDGET.programsAfterLoad
   if (p.programs > programBudget) fail(`${p.name}: ${p.programs} shader programs compiled during play (budget ${programBudget}): ${p.programNames.join(' | ')}`)
   if (!GPU_MODE) continue
+  if (p.overTwiceMedian > 0) fail(`${p.name}: ${p.overTwiceMedian} frames over twice the median (${p.p50} ms, from ${SIXTY_HZ_MS} ms up)`)
   if (p.hitches > 0) fail(`${p.name}: ${p.hitches} frames over ${BUDGET.hitchMs} ms (worst ${p.max} ms)`)
   if (p.p99 > BUDGET.p99Ms) fail(`${p.name}: p99 ${p.p99} ms (budget ${BUDGET.p99Ms} ms)`)
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
@@ -146,7 +162,7 @@ if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterSt
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()
@@ -191,12 +207,16 @@ async function hordePhase(id) {
   await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}${process.env.PERF_QUERY ?? ''}`, { timeout: 0 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   await page.evaluate(installFrameRecorder)
+  await applyPixelRatio()
+  await page.evaluate(sampleDetailScale)
   const buffersAtStart = await page.evaluate(() => window.__glCounts.buffers)
   await phase(id, id === 'dense_horde' ? playDenseHorde : playChainHorde)
   const found = await readHorde()
   if (id === 'chain_horde') console.log(`CHAIN buffers created before the first blast: ${chainSetupBuffers - buffersAtStart}, after: ${(await page.evaluate(() => window.__glCounts.buffers)) - chainSetupBuffers}`)
   console.log(`HORDE ${id} ${JSON.stringify(found)}`)
-  return { ...found, name: id }
+  const adaptation = adaptationOf(await page.evaluate(() => window.__detailSamples))
+  console.log(`ADAPT ${id} ${JSON.stringify(adaptation)}${calibration ? ` horde ${((found.crowd_gpu_ms ?? 0) / calibration).toFixed(2)}x` : ''}`)
+  return { ...found, name: id, adaptation }
 }
 
 async function waitForHorde(condition, seconds) {
@@ -244,6 +264,8 @@ function checkHorde(id, found) {
   if (id === 'chain_horde') {
     if (!(crowd.falls_chain > 0)) fail(`chain_horde: no chain fall beyond the blasts (${crowd.falls_chain})`)
   }
+  if (GPU_MODE && crowd.adaptation.settleSeconds > CONVERGE_SECONDS) fail(`${id}: the detail took ${crowd.adaptation.settleSeconds} s to settle (budget ${CONVERGE_SECONDS} s)`)
+  if (GPU_MODE && crowd.adaptation.swing > MAX_SWING) fail(`${id}: the detail keeps swinging by ${crowd.adaptation.swing} after settling (budget ${MAX_SWING})`)
   if (GPU_MODE && crowd.crowd_ms_p99 > HORDE_BUDGET.crowdMsP99) fail(`${id}: crowd step p99 ${crowd.crowd_ms_p99} ms (budget ${HORDE_BUDGET.crowdMsP99} ms)`)
 }
 
@@ -265,7 +287,100 @@ async function phase(name, run) {
   return result
 }
 
+/** When the detail settled (the last time it was off its final value by more than the share) and how much it still moves after that. */
+function adaptationOf(samples) {
+  const final = samples.at(-1)?.scale ?? 1
+  const lastOff = samples.findLast((sample) => Math.abs(sample.scale - final) > final * SETTLED_SHARE)
+  const settled = lastOff ? samples.filter((sample) => sample.seconds > lastOff.seconds) : samples
+  const scales = settled.map((sample) => sample.scale)
+  return {
+    finalDetailScale: Math.round(final * 100) / 100,
+    settleSeconds: lastOff ? Math.round(lastOff.seconds * 10) / 10 : 0,
+    swing: scales.length ? Math.round((Math.max(...scales) - Math.min(...scales)) * 100) / 100 : 0,
+  }
+}
+
 // --- in the page ---
+
+function sampleDetailScale() {
+  const samples = (window.__detailSamples = [])
+  let started
+  setInterval(() => {
+    const { agents, detail_scale: scale } = window.__testRoom.metrics().module
+    if (!(agents > 0) || scale === undefined) return
+    started ??= performance.now()
+    samples.push({ seconds: (performance.now() - started) / 1000, scale })
+  }, 250)
+}
+
+/** The machine's score: the median ms of a fixed lit scene (a pixel loop over the lights the room pays, drawn as 200 instanced quads), on a canvas of its own, waited for with readPixels so it works without the timer extension. */
+function measureCalibration() {
+  const canvas = document.createElement('canvas')
+  canvas.width = innerWidth
+  canvas.height = innerHeight
+  const gl = canvas.getContext('webgl2')
+  const compile = (type, source) => {
+    const shader = gl.createShader(type)
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
+    return shader
+  }
+  const program = gl.createProgram()
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, `#version 300 es
+    out vec2 uv;
+    void main() {
+      vec2 corner = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1));
+      vec2 offset = vec2(float(gl_InstanceID % 20), float(gl_InstanceID / 20)) * 0.1 - 1.0;
+      uv = corner;
+      gl_Position = vec4(offset + corner * 0.1, 0.0, 1.0);
+    }`))
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, `#version 300 es
+    precision highp float;
+    in vec2 uv;
+    out vec4 color;
+    void main() {
+      vec3 light = vec3(0.0);
+      for (int i = 0; i < 20; i++) {
+        vec3 toLight = vec3(float(i) * 0.1 - uv.x, uv.y, 1.0);
+        light += vec3(max(dot(normalize(toLight), vec3(0.0, 0.0, 1.0)), 0.0) / (1.0 + dot(toLight, toLight)));
+      }
+      color = vec4(light, 1.0);
+    }`))
+  gl.linkProgram(program)
+  gl.useProgram(program)
+  const pixel = new Uint8Array(4)
+  const times = []
+  for (let frame = 0; frame < 40; frame++) {
+    const started = performance.now()
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 200)
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+    if (frame >= 10) times.push(performance.now() - started)
+  }
+  gl.getExtension('WEBGL_lose_context')?.loseContext()
+  return times.sort((a, b) => a - b)[times.length >> 1]
+}
+
+/** What the room costs in the machine's own frame, with and without the shadow pass, waited for with readPixels. */
+function measureRoomCost() {
+  const { webgl, scene, camera } = window.__testRoom
+  const context = webgl.getContext()
+  const pixel = new Uint8Array(4)
+  const median = () => {
+    const times = []
+    for (let frame = 0; frame < 20; frame++) {
+      const started = performance.now()
+      webgl.render(scene, camera)
+      context.readPixels(0, 0, 1, 1, context.RGBA, context.UNSIGNED_BYTE, pixel)
+      if (frame >= 5) times.push(performance.now() - started)
+    }
+    return times.sort((a, b) => a - b)[times.length >> 1]
+  }
+  const room = median()
+  webgl.shadowMap.autoUpdate = false
+  const withoutShadows = median()
+  webgl.shadowMap.autoUpdate = true
+  return { room, shadows: Math.max(0, room - withoutShadows) }
+}
 
 /**
  * Lights every point and spot slot of the room's LightBudget at once, each with a colour and a position of its own, draws a frame and reads what three.js sent the shader for a lit material:
@@ -423,6 +538,7 @@ function installFrameRecorder() {
       return {
         name,
         frames: slice.length,
+        overTwiceMedian: slice.filter((frame) => frame > 2 * Math.max(at(0.5), 16.7)).length,
         p50: round(at(0.5)),
         p95: round(at(0.95)),
         p99: round(at(0.99)),

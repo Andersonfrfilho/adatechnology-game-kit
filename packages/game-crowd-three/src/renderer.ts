@@ -87,7 +87,7 @@ const IMPOSTOR_CAPACITY = 4000
 const NEAR_SHADOWS = [true, false, false] as const
 const NEAR_PREPASS = [true, false, false] as const
 const BUDGET_LEVELS = [160, 320, 600] as const
-const ADAPT = { gpuHighMs: 3.5, gpuLowMs: 2.2, highMs: 24, lowMs: 19, minScale: 0.1, shrinkPerSecond: 0.6, growPerSecond: 0.15, smoothing: 0.1 } as const
+const ADAPT = { gpuHighMs: 3.5, gpuLowMs: 2.2, highMs: 24, lowMs: 19, minScale: 0.1, shrinkPerSecond: 1.2, growPerSecond: 0.15, smoothing: 0.1 } as const
 
 const now = (): number => (typeof performance === 'undefined' ? Date.now() : performance.now())
 
