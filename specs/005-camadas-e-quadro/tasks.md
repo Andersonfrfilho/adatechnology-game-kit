@@ -178,6 +178,11 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
 - Aceite da fase: os testes da T4b.2, T4b.6 e T4b.9 passam, e as fases `dense_horde` e `chain_horde` passam no `perf.mjs` nas duas
   máquinas da D12 e no CI.
 
+### Decisões do dono (D13) que entram na execução
+- T4.7 Luz da explosão dentro do cômodo (D13.1): opção `effectLightsIndoors` no `game-floorplan-three`, ligada por padrão. A máscara usa o `handle.slot` do `LightBudget`. Goldens antigos com a opção desligada; print de antes e depois.
+- T4b.11 Pressão da horda no jogador (D13.2): ponte `game-crowd` → `game-player` configurável (`playerPressure`), ligada na sala e desligada no padrão do pacote. Testes: pressão abaixo do limiar não derruba; acima derruba; esmagamento causa dano por segundo; desligado não muda nada.
+- T4b.3 (complemento, D13.3): `thrown.priority` `'mixed'` como padrão, com `mixedRatio`; teste de que metade das vagas vai para cada critério e de que é determinístico.
+
 ## Fase 5 — Contratos
 > 🤖 Modelo: `sonnet` (um pacote por commit)
 

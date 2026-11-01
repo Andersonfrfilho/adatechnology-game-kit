@@ -166,6 +166,21 @@ Se a medição não couber, sobe-se a escada, do mais barato ao mais caro:
 Os degraus 1 a 3 entram já na Fase 4b, porque enxertá-los depois é caro. Os degraus 4 a 6 só sobem quando o teste mandar. Todo
 degrau respeita a D11.
 
+## D13 — Decisões do dono (2026-10-31)
+
+1. **A luz da explosão ilumina o interior do cômodo onde ela acontece.**
+   - A máscara de luz por cômodo do `game-floorplan-three` deixa passar as vagas do `LightBudget` que vêm de efeitos (explosão, fogo, foguete) quando o ponto delas está dentro do cômodo, ou atravessa uma abertura.
+   - A opção `effectLightsIndoors` fica ligada por padrão.
+   - Os goldens que dependem do comportamento antigo rodam com a opção desligada.
+   - O print de antes e depois vai na evidência.
+2. **A pressão da horda pode derrubar e esmagar o jogador, configurável.**
+   - A horda entrega a pressão no jogador ao `game-player` (`knock`, dano de esmagamento).
+   - As opções são `crowd.physics.playerPressure: { enabled, knockThreshold, crushDamagePerSecond }`. A sala liga; o padrão do pacote é desligado (D2).
+   - Os limiares vêm da ficha do jogador (força, vigor).
+3. **O pool de corpos arremessados é misto, configurável.**
+   - `thrown.priority: 'mixed'` é o padrão: metade das vagas para os mais rápidos (alimentam a reação em cadeia) e metade para os mais perto do jogador (o que ele vê).
+   - Também valem `'fastest'` e `'nearest'`, e `thrown.mixedRatio` (padrão 0,5) muda a divisão.
+
 ## Ordem e dependências
 
 - A **Fase 1** (cercas em modo aviso, versões, deps) começa já, a partir de `main`.
