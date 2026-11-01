@@ -68,7 +68,7 @@ const SORT_BINS = 130
 const sortBin = (distance: number): number => (distance < 0 ? 0 : Math.min(SORT_BINS - 1, 1 + Math.floor(distance * 2)))
 /** The distance out to which the bodies on the ground are counted when a budget fits their levels. */
 const CORPSE_REACH = 60
-const EDGE_SHRINK = 1
+const EDGE_SHRINK = 0.3
 const EDGE_GROW = 0.15
 
 const poseIndex = (pose: InstancePose): number => INSTANCE_POSES.indexOf(pose)
