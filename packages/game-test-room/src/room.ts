@@ -1318,7 +1318,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let lastHand: { stance: string; triggerFinger: number | null; targets: HandTargets | null } = { stance: 'relaxed', triggerFinger: null, targets: null }
   const strikeClips: Readonly<Record<string, string>> = options.strikeClips ?? DEFAULT_STRIKE_CLIPS
   const handStances: Readonly<Record<string, string>> = options.handStances ?? DEFAULT_HAND_STANCES
-  /** The body's hands go to the tool the module placed (a carried piece follows the hand instead, and a push or a door poses the hands itself). */
+  /** The body's hands go to the tool the module placed (a carried piece follows the hand instead, a push poses the hands itself, and a door's hand goes to the handle through the same reach). */
   /** How far inside the right shoulder joint, toward the middle of the chest, the pocket a stock rests in sits (m). */
   const SHOULDER_POCKET_IN = 0.1
   const pocketAt = new THREE.Vector3()
@@ -1337,11 +1337,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const targets = push.active ? null : heldPiece ? twistHand : (handSource?.() ?? null)
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? twistHand : (handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
-      targets: push.handTargets() ?? doorHand ?? targets,
+      targets: push.handTargets() ?? targets,
     }
     if (!avatar?.reach) return
     // the camera is the eye here in both views (the shoulder view only moves it for the render): the same reach in both, so switching views moves no hand
@@ -1778,7 +1778,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** Strikes that have begun and whose blow has not landed yet: the tool they belong to, the simulated seconds left and what lands. */
   let strikes: Array<{ key: string; remaining: number; land: () => void }> = []
   /**
-   * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip, on the arms and on the body, and the blow lands when the clip reaches its
+   * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip on the body, in both views, and the blow lands when the clip reaches its
    * impact, with the aim read again then; any other blow lands now.
    */
   const kickLeg = options.kickLeg ?? 'alternate'
@@ -2097,7 +2097,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /**
-   * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the arms and on the body and the blow lands at its impact). With something in the hands the
+   * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the body and the blow lands at its impact). With something in the hands the
    * click lets it go; E grabs and drops, the right button grabs or throws.
    */
   const handUse = (): void => {
