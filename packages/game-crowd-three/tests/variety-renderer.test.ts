@@ -61,7 +61,35 @@ describe('createCrowdRenderer with variety', () => {
     for (const mesh of accessories) {
       const placement = mesh.geometry.attributes.iAcc!.array as Float32Array
       const used = (mesh as unknown as { count: number }).count
-      for (let index = 0; index < used; index++) expect(placement[index * 4 + 3]!).toBeGreaterThan(0.05) // the head or torso height of the variant
+      for (let index = 0; index < used; index++) {
+        const [x, y, z, size] = Array.from(placement.slice(index * 4, index * 4 + 4))
+        // on the body, not at its feet and not scaled up: a head or a torso of a person 1.7 m tall
+        expect(size!, 'size').toBeGreaterThan(0.2)
+        expect(size!, 'size').toBeLessThan(1.1)
+        expect(y!, 'height').toBeGreaterThan(0.9)
+        expect(y!, 'height').toBeLessThan(2.1)
+        expect(Math.hypot(x!, z!), 'offset').toBeLessThan(0.25)
+      }
+    }
+  })
+})
+
+describe('the blob shadows', () => {
+  it('are soft, dark and transparent, no wider than the body they lie under, flat on the ground', () => {
+    const { renderer } = horde(true)
+    const blobs = (renderer.group.children as THREE.Mesh[]).find((mesh) => mesh.name === 'blob-shadows')!
+    const material = blobs.material as THREE.ShaderMaterial
+    expect(material.transparent).toBe(true)
+    expect(material.depthWrite).toBe(false)
+    expect(material.uniforms.uOpacity!.value).toBeLessThanOrEqual(0.5)
+    expect(material.fragmentShader).toContain('gl_FragColor = vec4(0., 0., 0.')
+    const placement = blobs.geometry.attributes.iBlob!.array as Float32Array
+    const used = (blobs as unknown as { count: number }).count
+    expect(used).toBeGreaterThan(0)
+    for (let index = 0; index < used; index++) {
+      expect(placement[index * 4 + 1]!, 'on the ground').toBeLessThan(0.5)
+      expect(placement[index * 4 + 3]!, 'radius').toBeGreaterThan(0.3)
+      expect(placement[index * 4 + 3]!, 'radius').toBeLessThan(1.2)
     }
   })
 })

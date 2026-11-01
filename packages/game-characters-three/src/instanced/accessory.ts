@@ -28,8 +28,6 @@ export const KIT_ACCESSORIES: readonly KitAccessory[] = [
   { id: 'hood', bit: ACCESSORY_BIT.EXTRA, attach: 'head', extra: 'hood', color: 0x3a3a40 },
 ]
 
-const HEAD_MATERIAL_SKIN = 0
-const TORSO_MATERIAL_SHIRT = 1
 /** Where the survivor builder puts the head and the torso (its own frame): the accessory is normalised against these. */
 const HEAD_REFERENCE = { center: [0, 1.8, 0], height: 0.363, pivot: [0, 1.64, 0] } as const
 const TORSO_REFERENCE = { center: [0, 1.23, 0], height: 0.74, pivot: [0, 0.9, 0] } as const
@@ -107,26 +105,30 @@ const merge = (host: Three, parts: readonly THREE_NS.BufferGeometry[]): THREE_NS
   return merged
 }
 
+/** Materials of the bone's vertices that count for the placement: a baked body marks skin, hair and trousers as one own-colour material (6), only the eyes and the shirt apart. */
+const EYE_MATERIAL = 3
+const HIDDEN_PLACEMENT = [0, 0, 0, 0] as const
+
 /**
- * The `iAcc` of a baked body for an accessory: where the accessory goes (the centre of the head's skin, or of the torso's shirt) and how big (its height), read from
- * the variant's own geometry, so the same accessory sits right on every one of the 20 variants.
+ * The `iAcc` of a baked body for an accessory: where the accessory goes (the centre of the head, or of the torso) and how big (its height), read from the variant's
+ * own geometry, so the same accessory sits right on every one of the 20 variants. The head is the bone-1 vertices without the eyes, the torso the bone-0 ones;
+ * a body without them gets a zero scale, so the accessory is not drawn instead of showing up unscaled at the feet.
  */
 export const accessoryPlacement = (body: THREE_NS.BufferGeometry, attach: AccessoryAttach): readonly [number, number, number, number] => {
   const position = body.attributes.position as THREE_NS.BufferAttribute
   const bone = body.attributes.bone as THREE_NS.BufferAttribute
   const paint = body.attributes.vcol as THREE_NS.BufferAttribute
   const wanted = ATTACH_BONE[attach]
-  const material = attach === 'head' ? HEAD_MATERIAL_SKIN : TORSO_MATERIAL_SHIRT
   const min = [Infinity, Infinity, Infinity]
   const max = [-Infinity, -Infinity, -Infinity]
   for (let index = 0; index < position.count; index++) {
-    if (bone.getX(index) !== wanted || paint.getW(index) !== material) continue
+    if (bone.getX(index) !== wanted || paint.getW(index) === EYE_MATERIAL) continue
     for (let axis = 0; axis < 3; axis++) {
       const value = axis === 0 ? position.getX(index) : axis === 1 ? position.getY(index) : position.getZ(index)
       if (value < min[axis]!) min[axis] = value
       if (value > max[axis]!) max[axis] = value
     }
   }
-  if (!Number.isFinite(min[0])) return [0, 0, 0, 1]
+  if (!Number.isFinite(min[0])) return HIDDEN_PLACEMENT
   return [(min[0]! + max[0]!) / 2, (min[1]! + max[1]!) / 2, (min[2]! + max[2]!) / 2, max[1]! - min[1]!]
 }

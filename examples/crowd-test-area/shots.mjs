@@ -20,7 +20,7 @@ const open = async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } })
   page.on('pageerror', (error) => errors.push(error.message))
   page.on('console', (message) => message.type() === 'error' && errors.push(message.text()))
-  await page.goto(`${pathToFileURL(join(here, 'dist/sala-multidao.html')).href}?variety=1&lang=en${process.env.CLIPS === '1' ? '&clips=1' : ''}`)
+  await page.goto(`${pathToFileURL(join(here, 'dist/sala-multidao.html')).href}?${process.env.VARIETY === "0" ? "" : "variety=1"}&lang=en${process.env.CLIPS === '1' ? '&clips=1' : ''}`)
   await page.waitForFunction(() => window.__crowdReport, null, { timeout: 120000 })
   // the room's panels float over the canvas: leave only the canvas on the picture
   await page.evaluate(() => {
