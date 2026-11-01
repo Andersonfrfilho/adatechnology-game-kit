@@ -2,6 +2,7 @@ import type { Three, THREE_NS } from '../three'
 
 import { createBodyChunk } from './body-chunk'
 import type { BodyChunkOptions } from './body-chunk'
+import { SHOE_HEIGHT } from './impostor-atlas'
 import { ACCESSORY_PIVOT_DECLARATION, FRAGMENT_EXT, createBodyChunkExt } from './body-chunk-ext'
 
 export type BodyMaterialParams = {
@@ -23,6 +24,7 @@ export type BodyMaterialParams = {
 
 const PIVOT_DECLARATION = 'attribute vec3 pivot;'
 const PANTS_LINE = 'vec3 pants = iCol*0.45 + vec3(0.08,0.09,0.12);'
+const EYE_LINE = 'if (mat==3. && vGlow < 0.5) vTint = vec3(0.08);'
 const VERTEX_INSTANCE_POSITION = 'bodyAnim(position, _n)'
 
 /**
@@ -83,6 +85,7 @@ const extendShader = (shader: ShaderSource, { shadowPass, accessory }: { readonl
     .replace('vec3 _n = normal;', `vec3 _n = normal;\n${accessoryHead}`)
     .replace('{ vec3 _nn = objectNormal; bodyAnim(position, _nn);', `{ ${accessoryHead.replace('vec3 _p', 'vec3 _pn')} vec3 _nn = objectNormal; bodyAnimX(${accessory ? '_pn' : 'position'}, _nn);`)
     .replace(PANTS_LINE, 'vec3 pants = trousersOf(iD.y);')
+    .replace(EYE_LINE, `${EYE_LINE}\n        if (mat==6. && (bone==4.||bone==5.||bone==9.||bone==10.) && position.y > ${SHOE_HEIGHT}) vTint = mix(vTint, trousersOf(iD.y), 0.75);`)
   if (!shadowPass) {
     shader.vertexShader = shader.vertexShader.replace('vGlow = mat==3.', `vWound = vec4(${accessory ? '0.' : 'woundLevel()'}, idField(iD.x, 4096., 16.)/15., fract(iCol.r*7.31 + iCol.g*3.17 + iCol.b*5.93 + iD.x*0.0013), 0.); vLocal = position; vGlow = mat==3.`)
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\n' + FRAGMENT_EXT).replace('diffuseColor.rgb = vTint;', 'diffuseColor.rgb = woundTint(vTint);')

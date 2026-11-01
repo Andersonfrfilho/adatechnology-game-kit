@@ -56,6 +56,9 @@ export type CrowdInstanceSink = (variant: number, level: number, instance: Crowd
 /** Takes one body on the ground that was not an agent (a civilian killed outright): the plain body batch. */
 export type PlainCorpseSink = (instance: CrowdInstance) => void
 
+/** The level of detail after the three meshes: the impostor (with `variety.impostorFrom`). */
+export const IMPOSTOR_LEVEL = 3
+
 const poseIndex = (pose: InstancePose): number => INSTANCE_POSES.indexOf(pose)
 
 const lookFields = (store: CrowdStore, i: number, numbers: CrowdVarietyNumbers): Pick<CrowdInstance, 'd' | 'accessories' | 'type'> => {
@@ -164,7 +167,9 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
         const bb = st === STATE.SWELLING ? Z.build[i]! * (1 + (N.swellPivot - Z.stateTimer[i]!) * N.swell) : Z.build[i]!
         const eyeOn = !(Z.missing[i]! & MISSING.SKULL)
         const V = variants[Z.variant[i]!]!
-        sink(Z.variant[i]!, l, {
+        // the impostor only draws a body that walks (the atlas holds the walk); any other pose stays on the far mesh
+        const level = l === IMPOSTOR_LEVEL && p !== pose.walk ? IMPOSTOR_LEVEL - 1 : l
+        sink(Z.variant[i]!, level, {
           a: [Z.x[i]!, Z.z[i]!, Z.renderYaw[i]!, Z.phase[i]!],
           b: [Z.height[i]! / V.s, bb / V.bulk, gait, staggering ? STAGGER_POSE : p],
           c: [Z.missing[i]!, N.ageBase + Z.age[i]! * N.agePer, N.armBase + N.armPer * Z.arms[i]!, Z.skin[i]!],

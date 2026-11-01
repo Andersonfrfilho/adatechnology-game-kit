@@ -65,3 +65,39 @@ describe('createCrowdRenderer with variety', () => {
     }
   })
 })
+
+describe('the impostor tier', () => {
+  const farHorde = (impostor?: false) => {
+    const crowd = createCrowd({ pack, seed: 5, capacity: 400, physics: { personality: true } })
+    for (let k = 0; k < 120; k++) crowd.spawn((k % 12) * 6 - 33, -100 - Math.floor(k / 12) * 8, k % 5)
+    for (let k = 0; k < 20; k++) crowd.spawn(k * 2 - 20, -8, 0)
+    const renderer = createCrowdRenderer(THREE, { crowd, builders: builders(), typeName: (type) => names.get(type.id) ?? type.id, variety: impostor === false ? { impostor: false } : {} })
+    renderer.update(1 / 30, frame)
+    return { crowd, renderer }
+  }
+
+  it('draws the bodies past 90 m that walk as one impostor draw call, with the atlas of every type', () => {
+    const { renderer } = farHorde()
+    const impostors = (renderer.group.children as THREE.Mesh[]).find((mesh) => mesh.name === 'impostors') as unknown as THREE.Mesh & { count: number }
+    expect(impostors).toBeDefined()
+    expect(renderer.impostorCount).toBeGreaterThan(80)
+    expect(impostors.count).toBe(renderer.impostorCount)
+    expect(renderer.lodCounts[0]).toBeGreaterThan(0)
+    expect(renderer.variants.filter(Boolean).length).toBeGreaterThanOrEqual(pack.types.length)
+  })
+
+  it('keeps the far mesh when the impostor is off', () => {
+    const { renderer } = farHorde(false)
+    expect(renderer.impostorCount).toBe(0)
+    expect((renderer.group.children as THREE.Mesh[]).some((mesh) => mesh.name === 'impostors')).toBe(false)
+    expect(renderer.lodCounts[2]).toBeGreaterThan(80)
+  })
+
+  it('leaves a body that does not walk on the far mesh', () => {
+    const { crowd, renderer } = farHorde()
+    crowd.store.crawl[0] = 1
+    renderer.update(1 / 30, frame)
+    expect(renderer.impostorCount).toBeLessThan(120)
+    expect(renderer.lodCounts[2]).toBeGreaterThan(0)
+  })
+})
