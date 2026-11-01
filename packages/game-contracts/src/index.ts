@@ -84,7 +84,11 @@ export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePha
 export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
-export { resetWarnOnce, warnOnce } from './warn'
+import { resetWarnOnce as resetWarnOnceForTests } from './warn'
+
+export { warnOnce } from './warn'
+/** @deprecated Import it from `@adatechnology/game-contracts/testing`. */
+export const resetWarnOnce = resetWarnOnceForTests
 export { checkBench } from './bench'
 export type {
   ActionControl,
