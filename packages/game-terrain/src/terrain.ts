@@ -70,6 +70,18 @@ function stratumAtDepth(profile: TerrainProfile, depth: number): { index: number
   const stratum = profile.strata[index]!
   return { index, stratum, top: top - stratum.thickness }
 }
+
+/** Same stratum as `stratumAtDepth`, without allocating: per-read paths (state(), fire per vertex) must not create garbage. */
+function stratumMaterialAtDepth(profile: TerrainProfile, depth: number): string {
+  const strata = profile.strata
+  let top = 0
+  for (let index = 0; index < strata.length; index++) {
+    const stratum = strata[index]!
+    if (depth < top + stratum.thickness - 1e-6) return stratum.material
+    top += stratum.thickness
+  }
+  return strata[strata.length - 1]!.material
+}
 const totalThickness = (profile: TerrainProfile): number => profile.strata.reduce((sum, stratum) => sum + stratum.thickness, 0)
 
 export function createTerrain(options: TerrainOptions): Terrain {
@@ -196,7 +208,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
 
   function vertexMaterial(column: number, row: number): TerrainMaterial {
     const index = row * stride + column
-    return materials.get(stratumAtDepth(profileList[profileIndex[index]!]!, dug[index]!).stratum.material)!
+    return materials.get(stratumMaterialAtDepth(profileList[profileIndex[index]!]!, dug[index]!))!
   }
 
   function columnAt(x: number, z: number): TerrainColumn {
