@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type WarmupContext, type WarmupRenderer, createLightBudget, createProgramWarmup } from '../src'
+import { type WarmupContext, type WarmupRenderer, createLightBudget, createMaterialPool, createProgramWarmup } from '../src'
 import { THREE } from './helpers'
 
 function fakeRenderer() {
@@ -139,5 +139,77 @@ describe('ProgramWarmup.linkedSince', () => {
     expect(original).toHaveBeenCalledTimes(3)
     warmup.warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())
     expect(warmup.linkedSince(renderer)).toBe(0)
+  })
+})
+
+describe('ProgramWarmup.warmUp when something throws', () => {
+  it('puts the fog back, takes the probes out of the scene, disposes them and stops the effect', () => {
+    const scene = new THREE.Scene()
+    const fog = new THREE.Fog(0x888888, 1, 100)
+    scene.fog = fog
+    const { renderer } = fakeRenderer()
+    const warmup = createProgramWarmup(THREE)
+    const probe = fakeProbe('a')
+    warmup.register(probe.probe)
+    const stop = vi.fn()
+    warmup.registerEffect({ id: 'boom', frames: 1, play: vi.fn(), step: () => { throw new Error('effect broke') }, stop } as never)
+    expect(() => warmup.warmUp(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['exp2'] })).toThrow('effect broke')
+    expect(scene.fog).toBe(fog)
+    expect(scene.children.some((child) => child.children.some((mesh) => (mesh as InstanceType<typeof THREE.Mesh>).material === probe.material))).toBe(false)
+    expect(probe.geometryDispose).toHaveBeenCalledTimes(1)
+    expect(stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('cleans up when a draw throws too', () => {
+    const scene = new THREE.Scene()
+    const { renderer } = fakeRenderer()
+    renderer.render.mockImplementation(() => {
+      throw new Error('gl lost')
+    })
+    const warmup = createProgramWarmup(THREE)
+    const probe = fakeProbe('a')
+    warmup.register(probe.probe)
+    expect(() => warmup.warmUp(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['linear'] })).toThrow('gl lost')
+    expect(scene.fog).toBeNull()
+    expect(scene.children).toHaveLength(0)
+    expect(probe.geometryDispose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('ProgramWarmup.warmUp with materials', () => {
+  it('draws every material it is given once, as the kind of object its program is for, and takes them out again without disposing them', () => {
+    const scene = new THREE.Scene()
+    const { renderer } = fakeRenderer()
+    const seen: Array<Array<{ type: string; material: unknown }>> = []
+    renderer.render.mockImplementation((drawn: InstanceType<typeof THREE.Scene>) => {
+      const drawables: Array<{ type: string; material: unknown }> = []
+      drawn.traverse((object) => {
+        const material = (object as InstanceType<typeof THREE.Mesh>).material
+        if (material) drawables.push({ type: object.type, material })
+      })
+      seen.push(drawables)
+    })
+    const mesh = new THREE.MeshBasicMaterial()
+    const sprite = new THREE.SpriteMaterial()
+    const points = new THREE.PointsMaterial()
+    const line = new THREE.LineBasicMaterial()
+    const dispose = vi.spyOn(mesh, 'dispose')
+    createProgramWarmup(THREE).warmUp(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['none'], materials: [mesh, sprite, points, line] })
+    expect(seen).toHaveLength(1)
+    expect(seen[0]).toEqual([
+      { type: 'Mesh', material: mesh },
+      { type: 'Sprite', material: sprite },
+      { type: 'Points', material: points },
+      { type: 'LineSegments', material: line },
+    ])
+    expect(scene.children).toHaveLength(0)
+    expect(dispose).not.toHaveBeenCalled()
+  })
+
+  it('a pool lists the materials it was told to register, and only those', () => {
+    const pool = createMaterialPool()
+    const kept = pool.register('kept', () => new THREE.MeshBasicMaterial())
+    pool.acquire('shared', () => new THREE.MeshBasicMaterial())
+    expect(pool.registeredMaterials?.()).toEqual([kept])
   })
 })

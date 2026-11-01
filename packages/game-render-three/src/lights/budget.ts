@@ -235,7 +235,9 @@ export function createLightBudget(THREE: ThreeForLights, scene: Object3D, option
     check(renderer: RendererState, checkedScene: Scene) {
       const result = checkSealed(sealed, renderer, checkedScene, group)
       const layersIntact = allSlots().every((slot) => slot.light.visible && slot.light.layers.mask === ALL_LAYERS_MASK)
-      return layersIntact ? result : { ...result, ok: false, actual: `${result.actual} | budget lights hidden or off a layer` }
+      const isFirst = checkedScene.children[0] === group
+      if (!layersIntact) return { ...result, ok: false, actual: `${result.actual} | budget lights hidden or off a layer` }
+      return isFirst ? result : { ...result, ok: false, actual: `${result.actual} | budget group is not the first child of the scene` }
     },
     stats() {
       const slots = allSlots()

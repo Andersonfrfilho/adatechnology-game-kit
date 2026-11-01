@@ -1,4 +1,4 @@
-import type { Camera, Scene } from 'three'
+import type { BufferGeometry, Camera, Material, Object3D, Scene } from 'three'
 
 import { fogStateOf, lightSignature } from './lights/scene-state'
 import type { FogState } from './lights/types'
@@ -13,6 +13,7 @@ const WARM_FOG_DENSITY = 0.01
 const WARM_FOG_FAR = 100
 
 type LinkCounter = { count: number }
+type BuiltProbe = { readonly probe: WarmupProbe; readonly built: ReturnType<WarmupProbe['build']> }
 
 function register<TItem>(items: Set<TItem>, item: TItem): () => void {
   items.add(item)
@@ -42,7 +43,7 @@ function failedProgram(renderer: WarmupRenderer): string | undefined {
   return undefined
 }
 
-export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | 'SpriteMaterial' | 'DataTexture' | 'Fog' | 'FogExp2'>): ProgramWarmup {
+export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | 'SpriteMaterial' | 'DataTexture' | 'Fog' | 'FogExp2' | 'Mesh' | 'Points' | 'LineSegments' | 'BufferGeometry' | 'BufferAttribute'>): ProgramWarmup {
   const probes = new Set<WarmupProbe>()
   const effects = new Set<EffectWarmup>()
   const textures = new Set<Parameters<WarmupRenderer['initTexture']>[0]>()
@@ -64,12 +65,64 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
 
   function playEffect(renderer: WarmupRenderer, scene: Scene, camera: Camera, effect: EffectWarmup, target: WarmupOptions['target']): void {
     effect.play()
-    for (let frame = 0; frame < (effect.frames ?? DEFAULT_EFFECT_FRAMES); frame++) {
-      effect.step(EFFECT_STEP_SECONDS)
-      renderer.setRenderTarget(target ?? null)
-      renderer.render(scene, camera)
+    try {
+      for (let frame = 0; frame < (effect.frames ?? DEFAULT_EFFECT_FRAMES); frame++) {
+        effect.step(EFFECT_STEP_SECONDS)
+        renderer.setRenderTarget(target ?? null)
+        renderer.render(scene, camera)
+      }
+    } finally {
+      effect.stop()
     }
-    effect.stop()
+  }
+
+  /** One object per material, of the kind its program is for, each a single triangle: drawn once so that the program is used, not only linked. */
+  function materialsProbe(materials: readonly Material[]): BuiltProbe {
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.001, 0, 0, 0, 0.001, 0]), 3))
+    const group = new THREE.Group()
+    for (const material of materials) group.add(drawableOf(material, geometry))
+    return { probe: { id: 'materials', build: () => ({ group, materials: [], dispose: () => geometry.dispose() }) }, built: { group, materials: [], dispose: () => geometry.dispose() } }
+  }
+
+  function drawableOf(material: Material, geometry: BufferGeometry): Object3D {
+    const flags = material as { isSpriteMaterial?: boolean; isPointsMaterial?: boolean; isLineBasicMaterial?: boolean }
+    const object: Object3D =
+      flags.isSpriteMaterial === true ? new THREE.Sprite(material as never)
+      : flags.isPointsMaterial === true ? new THREE.Points(geometry, material)
+      : flags.isLineBasicMaterial === true ? new THREE.LineSegments(geometry, material)
+      : new THREE.Mesh(geometry, material)
+    object.frustumCulled = false
+    return object
+  }
+
+  function buildProbes(materials: readonly Material[] | undefined): BuiltProbe[] {
+    const built = [...probes].map((probe) => ({ probe, built: probe.build() }))
+    if (materials !== undefined && materials.length > 0) built.push(materialsProbe(materials))
+    return built
+  }
+
+  function addProbes(scene: Scene, built: readonly BuiltProbe[]): void {
+    for (const { probe, built: item } of built) {
+      const missing = hasMissingDistanceMaterial(item.group)
+      if (missing !== undefined) throw new Error(`warmup probe "${probe.id}": instanced mesh "${missing}" casts shadows with a customDepthMaterial but no customDistanceMaterial`)
+      scene.add(item.group)
+    }
+  }
+
+  function removeProbes(scene: Scene, built: readonly BuiltProbe[]): void {
+    for (const { built: item } of built) {
+      scene.remove(item.group)
+      item.dispose()
+      for (const material of item.materials) anchors.offer(material)
+    }
+  }
+
+  function drawStates(renderer: WarmupRenderer, scene: Scene, camera: Camera, states: readonly FogState[], target: WarmupOptions['target']): void {
+    for (const state of states) {
+      setFog(scene, state)
+      draw(renderer, scene, camera, target)
+    }
   }
 
   return {
@@ -88,23 +141,16 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
         const light = object as { castShadow?: boolean; shadow?: { needsUpdate: boolean } }
         if (light.castShadow === true && light.shadow !== undefined) light.shadow.needsUpdate = true
       })
-      const built = [...probes].map((probe) => ({ probe, built: probe.build() }))
-      for (const { probe, built: item } of built) {
-        const missing = hasMissingDistanceMaterial(item.group)
-        if (missing !== undefined) throw new Error(`warmup probe "${probe.id}": instanced mesh "${missing}" casts shadows with a customDepthMaterial but no customDistanceMaterial`)
-        scene.add(item.group)
-      }
-      for (const state of states) {
-        setFog(scene, state)
-        draw(renderer, scene, camera, target)
-      }
-      scene.fog = originalFog
-      for (const effect of effects) playEffect(renderer, scene, camera, effect, target)
-      for (const texture of textures) renderer.initTexture(texture)
-      for (const { built: item } of built) {
-        scene.remove(item.group)
-        item.dispose()
-        for (const material of item.materials) anchors.offer(material)
+      const built = buildProbes(options.materials)
+      try {
+        addProbes(scene, built)
+        drawStates(renderer, scene, camera, states, target)
+        scene.fog = originalFog
+        for (const effect of effects) playEffect(renderer, scene, camera, effect, target)
+        for (const texture of textures) renderer.initTexture(texture)
+      } finally {
+        scene.fog = originalFog
+        removeProbes(scene, built)
       }
       const context = renderer.getContext()
       const uniformVectors = Number(context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS))

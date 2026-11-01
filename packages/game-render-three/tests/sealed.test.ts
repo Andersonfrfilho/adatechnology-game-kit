@@ -13,6 +13,17 @@ function sealedScene(options: Parameters<ReturnType<typeof createLightBudget>['s
 }
 
 describe('sealed scene state', () => {
+  it('reports the budget group when it is no longer the first child of the scene', () => {
+    const state = sealedScene({ fogStates: ['linear'] })
+    state.scene.add(new THREE.Group())
+    expect(state.budget.check(state.renderer, state.scene).ok).toBe(true)
+    state.scene.children.unshift(new THREE.Group())
+    const result = state.budget.check(state.renderer, state.scene)
+    expect(result.ok).toBe(false)
+    expect(result.actual).toContain('not the first child')
+  })
+
+
   it('reports a fog type change unless both types were declared', () => {
     const only = sealedScene({ fogStates: ['linear'] })
     expect(only.budget.check(only.renderer, only.scene).ok).toBe(true)
