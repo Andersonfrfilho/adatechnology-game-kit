@@ -113,7 +113,7 @@ export type CrowdPersonalityOptions = {
   readonly trip?: readonly [number, number]
   /** Pushing will (default [0.7, 1.3]). */
   readonly drive?: readonly [number, number]
-  /** Walk cadence factor (default [0.88, 1.12]). */
+  /** Walk cadence factor (default [0.85, 1.15]). */
   readonly cadence?: readonly [number, number]
   /** Attack will (default [0.8, 1.2]): divides `attackEvery`, multiplies the bite chance and decides who gets the last attack slots. */
   readonly aggression?: readonly [number, number]
@@ -198,7 +198,7 @@ export const PERSONALITY_DEFAULTS: Required<CrowdPersonalityOptions> = {
   stability: [0.75, 1.25],
   trip: [0.5, 1.5],
   drive: [0.7, 1.3],
-  cadence: [0.88, 1.12],
+  cadence: [0.85, 1.15],
   aggression: [0.8, 1.2],
   idle: [3, 2, 2, 1],
 }

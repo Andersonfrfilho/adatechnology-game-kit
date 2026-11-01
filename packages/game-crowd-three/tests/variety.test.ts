@@ -18,6 +18,7 @@ const NEAR_PAIR = 3
 const MAX_SHARED = 0.01
 const MIN_PHASE_SPREAD = 0.25
 const MIN_AGENTS_SPREAD = 0.99
+const MIN_CADENCE_VARIATION = 0.05
 const CALL_CEILING = 95
 
 const pack = undeadCrowdPack() as unknown as CrowdPack
@@ -116,7 +117,7 @@ describe('the variety of a horde of 2000 (T4b.9)', () => {
   it('the animation phase of the 8 nearest neighbours is spread (1 - R of the phases at least 0.25) for 99% of the agents, now and 600 steps on', () => {
     const start = phaseSpread(crowd)
     expect(start.share, 'step 0').toBeGreaterThanOrEqual(MIN_AGENTS_SPREAD)
-    expect(start.cadenceVariation).toBeGreaterThan(0.04)
+    expect(start.cadenceVariation).toBeGreaterThanOrEqual(MIN_CADENCE_VARIATION)
     const later = horde(SEED)
     for (let step = 0; step < 600; step++) later.update(1 / 30, { viewYaw: 0, nightFactor: 0 })
     expect(phaseSpread(later).share, 'step 600').toBeGreaterThanOrEqual(MIN_AGENTS_SPREAD)
