@@ -17,7 +17,7 @@ const packed = (count: number, reach: number) => {
   return crowd
 }
 
-const levelsOf = (budget: readonly number[] | undefined, count: number, detailScale = 1, frames = 60): number[] => {
+const levelsOf = (budget: readonly number[] | undefined, count: number, detailScale = 1, frames = 300): number[] => {
   const crowd = packed(count, 60)
   const instances = createCrowdInstances({ eyes, variety: { impostorFrom: 90, ...(budget ? { budget } : {}) } })
   let counts: number[] = []

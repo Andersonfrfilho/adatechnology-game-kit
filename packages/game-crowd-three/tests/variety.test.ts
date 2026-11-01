@@ -128,7 +128,7 @@ describe('the variety of a horde of 2000 (T4b.9)', () => {
     // the edges move a little a frame: let them settle
     const instances = createCrowdInstances({ eyes, variety: { impostorFrom: 90, budget: [120, 240, 480] } })
     let budgeted: typeof plain = []
-    for (let settle = 0; settle < 80; settle++) {
+    for (let settle = 0; settle < 300; settle++) {
       budgeted = []
       instances.agents(crowd.store, sizes, frame, (variant, level, instance) => budgeted.push({ index: budgeted.length, level, instance, variant }))
     }
