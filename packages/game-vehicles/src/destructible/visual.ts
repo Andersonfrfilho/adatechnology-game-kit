@@ -28,6 +28,14 @@ const DOOR_EDGE_PIECES = 16
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
 const HOLE_TEXTURE_SIZE = 64
+/** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
+const PANE_SEAT_OUT = 0.05
+const PANE_SEAT_IN = -0.05
+const PANE_SEAT_REACH = 0.14
+const PANE_SEAT_SAMPLES = 24
+const PANE_SEAT_LIFT = 0.004
+const PANE_FRAME_NEAR = 0.07
+type PaneSeat = { readonly normal: any; readonly samples: Array<{ readonly at: any; readonly by: number }> }
 /** A mirror the model draws: small, and this near where the part stands, metres. */
 const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
@@ -118,6 +126,7 @@ export class VehicleVisuals implements CreaseWork {
     for (const p of model.parts) this.byId.set(p.id, p)
     c.root.updateMatrixWorld(true)
     this.hood = this.nameHood()
+    this.seatPanes()
     this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
     if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
@@ -445,6 +454,126 @@ export class VehicleVisuals implements CreaseWork {
       g.computeBoundingSphere()
       g.computeBoundingBox()
     })
+  }
+  /**
+   * A windshield or rear window is drawn as a flat quad, and the body under its edge is curved: the pane and its frame stand off the shell or rise past the roof. Each one
+   * comes to the shell along its own normal, by how far the shell is just outside each of its vertices.
+   */
+  private seatPanes(): void {
+    const THREE = this.THREE
+    const c = this.c as any
+    c.root.updateMatrixWorld(true)
+    const shell = (c.deform as Obj[]).filter((o) => o.isMesh && !o.userData.glass && c.paints?.has(o.material))
+    if (!shell.length) return
+    const ray = new THREE.Raycaster()
+    for (const pane of c.glass as Obj[]) {
+      if (pane.userData.glass?.outline) continue
+      const seat = this.paneSeat(pane, shell, ray)
+      if (!seat) continue
+      const near = (c.vehicle.children as Obj[]).filter((o) => o.isMesh && o !== pane && !o.userData.glass && !shell.includes(o) && this.onPane(o, pane, seat))
+      for (const m of [pane, ...near]) this.movePane(m, seat)
+      const past = this.shellPast(pane, shell, ray, seat.normal)
+      if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
+    }
+  }
+  /** The outward normal of a pane and how far the shell is at each sampled point (world). */
+  private paneSeat(pane: Obj, shell: Obj[], ray: any): PaneSeat | null {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const box = new THREE.Box3().setFromObject(pane)
+    const centre = box.getCenter(new THREE.Vector3())
+    const vehicleCentre = new THREE.Box3().setFromObject(this.c.root).getCenter(new THREE.Vector3())
+    const tri = new THREE.Triangle()
+    const normal = new THREE.Vector3()
+    let largest = 0
+    const idx = pane.geometry.index
+    const count = idx ? idx.count : pos.count
+    for (let f = 0; f + 2 < count; f += 3) {
+      tri.a.fromBufferAttribute(pos, idx ? idx.getX(f) : f)
+      tri.b.fromBufferAttribute(pos, idx ? idx.getX(f + 1) : f + 1)
+      tri.c.fromBufferAttribute(pos, idx ? idx.getX(f + 2) : f + 2)
+      if (tri.getArea() > largest) {
+        largest = tri.getArea()
+        tri.getNormal(normal)
+      }
+    }
+    normal.transformDirection(pane.matrixWorld)
+    if (normal.dot(centre.clone().sub(vehicleCentre)) < 0) normal.negate()
+    const samples: PaneSeat['samples'] = []
+    const seen = new Set<string>()
+    const v = new THREE.Vector3()
+    const step = Math.max(1, Math.floor(pos.count / PANE_SEAT_SAMPLES))
+    for (let i = 0; i < pos.count; i += step) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      const key = `${Math.round(v.x * 100)},${Math.round(v.y * 100)},${Math.round(v.z * 100)}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      const away = v.clone().sub(centre)
+      away.addScaledVector(normal, -away.dot(normal)).normalize()
+      // the shell just outside the edge says where it lands; any shell still under the pane keeps it from sinking through
+      let by = -Infinity
+      for (const off of [PANE_SEAT_OUT, PANE_SEAT_IN, PANE_SEAT_IN * 3]) {
+        const at = v.clone().addScaledVector(away, off)
+        ray.set(at.addScaledVector(normal, PANE_SEAT_REACH), normal.clone().negate())
+        ray.far = PANE_SEAT_REACH * 2
+        const hit = ray.intersectObjects(shell, false)[0]
+        if (hit) by = Math.max(by, PANE_SEAT_REACH - hit.distance)
+      }
+      if (by > -Infinity) samples.push({ at: v.clone(), by })
+    }
+    return samples.length >= 3 ? { normal, samples } : null
+  }
+  /** How far the shell still stands past a seated pane, over its triangles. */
+  private shellPast(pane: Obj, shell: Obj[], ray: any, normal: any): number {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const idx = pane.geometry.index
+    const count = idx ? idx.count : pos.count
+    const tri = new THREE.Triangle()
+    const step = Math.max(1, Math.floor(count / 3 / PANE_SEAT_SAMPLES)) * 3
+    let past = 0
+    for (let f = 0; f + 2 < count; f += step) {
+      tri.a.fromBufferAttribute(pos, idx ? idx.getX(f) : f)
+      tri.b.fromBufferAttribute(pos, idx ? idx.getX(f + 1) : f + 1)
+      tri.c.fromBufferAttribute(pos, idx ? idx.getX(f + 2) : f + 2)
+      const mid = tri.getMidpoint(new THREE.Vector3()).applyMatrix4(pane.matrixWorld)
+      ray.set(mid.addScaledVector(normal, PANE_SEAT_REACH), normal.clone().negate())
+      ray.far = PANE_SEAT_REACH
+      const hit = ray.intersectObjects(shell, false)[0]
+      if (hit) past = Math.max(past, PANE_SEAT_REACH - hit.distance + PANE_SEAT_LIFT)
+    }
+    return past
+  }
+  /** A frame or a seal drawn on the pane: small, and close to its plane. */
+  private onPane(o: Obj, pane: Obj, seat: PaneSeat): boolean {
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(o)
+    if (box.isEmpty() || !new THREE.Box3().setFromObject(pane).expandByScalar(PANE_FRAME_NEAR).containsBox(box)) return false
+    const at = box.getCenter(new THREE.Vector3())
+    return Math.abs(at.clone().sub(seat.samples[0]!.at).dot(seat.normal)) < PANE_SEAT_REACH
+  }
+  private movePane(mesh: Obj, seat: PaneSeat): void {
+    const THREE = this.THREE
+    const g = mesh.geometry.clone()
+    const pos = g.attributes.position
+    const inverse = mesh.matrixWorld.clone().invert()
+    const v = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld)
+      let weight = 0
+      let by = 0
+      for (const s of seat.samples) {
+        const w = 1 / (s.at.distanceToSquared(v) + 1e-4)
+        weight += w
+        by += s.by * w
+      }
+      v.addScaledVector(seat.normal, by / weight + PANE_SEAT_LIFT).applyMatrix4(inverse)
+      pos.setXYZ(i, v.x, v.y, v.z)
+    }
+    pos.needsUpdate = true
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    mesh.geometry = g
   }
   /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
   private seatMirrorGlass(glass: Obj): void {

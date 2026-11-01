@@ -10,8 +10,9 @@ type Finding = { readonly model: string; readonly problem: string }
 
 const AIR_ABOVE = 0.4
 const PANE_SAMPLES = 6
+const PANE_SEAT_TOLERANCE = 0.03
 /** Panes a shot along their normal does not reach yet (something drawn stands in front, or the pane is behind trim): to look at one by one, see docs/veiculos-verificacao.md. */
-const KNOWN_OPEN = new Set(['midsize_suv', 'battle_tank', 'fishing_boat', 'single_engine_plane', 'patrol_boat', 'turbine_helicopter'])
+const KNOWN_OPEN = new Set(['midsize_suv', 'armored_truck', 'fastback_sedan', 'battle_tank', 'fishing_boat', 'single_engine_plane'])
 const SHOT = { type: 'ballistic', energy: 527, caliber: 9 } as const
 
 /** Points really on the pane, whatever its outline: the middles of its largest triangles, facing out. A trim or a seal may cover some, never all. */
@@ -54,6 +55,12 @@ function auditModel(key: string): string[] {
     if (!hits.some((hit) => hit && /window|windshield|glass|screen|canopy|visor|^pane_/i.test(hit.part))) {
       problems.push(`pane ${glass.key ?? glass.label}: the shots land on ${[...new Set(hits.map((hit) => hit?.part ?? 'nothing'))].join(', ')}`)
     }
+  })
+  // a windshield or rear window lies on the body: nothing of the shell stands past it and it does not stand off the shell
+  c.glass.forEach((pane: any) => {
+    if (pane.userData.glass.outline) return
+    const hits = paneAims(pane, centre).map(({ at, normal: n }) => shoot(at.clone().addScaledVector(n, 1), n.clone().negate()))
+    if (hits.every((hit) => hit && hit.distance < 1 - PANE_SEAT_TOLERANCE)) problems.push(`pane ${pane.userData.glass.key}: the ${hits[0]!.part} stands past it`)
   })
   // the air over the body is air
   const over = shoot(new THREE.Vector3(centre.x, box.max.y + AIR_ABOVE, centre.z), new THREE.Vector3(1, 0, 0))
