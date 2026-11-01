@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createShapes, defaultShapeGenerators, generate, getGenerator, registerGenerator, unregisterGenerator } from '../src'
+import { createShapePool, createShapes, defaultShapeGenerators, generate, getGenerator, registerGenerator, unregisterGenerator } from '../src'
 import type { ShapeGenerator, ShapeNode, ShapeSchema } from '../src'
 
 const box = (x: number): ShapeNode => ({ kind: 'box', size: [1, 1, 1], position: [x, 0, 0] })
@@ -46,5 +46,23 @@ describe('shape generators by instance', () => {
     const patched = createShapes({ packs: [{ 'test.stones': stones, 'test.drop': stones }], patch: { 'test.stones': calm }, remove: ['test.drop'] })
     expect(patched.get('test.stones')).toBe(calm)
     expect(patched.get('test.drop')).toBeUndefined()
+  })
+})
+
+describe('shape pool by instance', () => {
+  it('an isolated pool sees its own generators only, never the global registry', async () => {
+    const first = createShapes({ packs: [{ 'test.stones': stones }] })
+    const second = createShapes({ packs: [{ 'test.other': stones }] })
+    const firstPool = createShapePool({ generators: first.record(), isolatedGenerators: true })
+    const secondPool = createShapePool({ generators: second.record(), isolatedGenerators: true })
+    registerGenerator('test.global', stones)
+    try {
+      await expect(firstPool.generate(schemaOf('test.stones'))).resolves.toBeDefined()
+      await expect(secondPool.generate(schemaOf('test.stones'))).rejects.toThrow(/no generator "test.stones"/)
+      await expect(firstPool.generate(schemaOf('test.global'))).rejects.toThrow(/no generator "test.global"/)
+      await expect(createShapePool().generate(schemaOf('test.global'))).resolves.toBeDefined()
+    } finally {
+      unregisterGenerator('test.global')
+    }
   })
 })
