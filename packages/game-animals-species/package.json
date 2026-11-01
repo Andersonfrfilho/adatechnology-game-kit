@@ -46,6 +46,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@adatechnology/game-animals": "workspace:*"
+    "@adatechnology/game-animals": "workspace:^"
   }
 }

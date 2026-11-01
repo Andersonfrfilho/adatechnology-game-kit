@@ -42,11 +42,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^"
   },
   "devDependencies": {
-    "@adatechnology/game-destruction": "workspace:*",
-    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/game-destruction": "workspace:^",
+    "@adatechnology/game-weapons": "workspace:^",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",

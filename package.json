@@ -21,11 +21,15 @@
     "publish:changesets": "pnpm build && changeset publish",
     "site:dev": "docker compose -p adatechnology-game-kit watch",
     "site:thumbs": "node site/capture-thumbs.mjs",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "check:layers": "depcruise --config .dependency-cruiser.cjs --ignore-known .dependency-cruiser-known-violations.json packages/*/src",
+    "check:layers:baseline": "depcruise --config .dependency-cruiser.cjs --output-type baseline --output-to .dependency-cruiser-known-violations.json packages/*/src",
+    "check:packages": "node tools/check-packages.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
     "@eslint/js": "^9.18.0",
+    "dependency-cruiser": "^18.7.0",
     "eslint": "^9.18.0",
     "globals": "^16.0.0",
     "typescript": "^5.7.3",

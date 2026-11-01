@@ -43,23 +43,23 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-audio": "workspace:*",
-    "@adatechnology/game-characters": "workspace:*",
-    "@adatechnology/game-characters-three": "workspace:*",
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-crowd": "workspace:*",
-    "@adatechnology/game-player": "workspace:*"
+    "@adatechnology/game-audio": "workspace:^",
+    "@adatechnology/game-characters": "workspace:^",
+    "@adatechnology/game-characters-three": "workspace:^",
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-crowd": "workspace:^",
+    "@adatechnology/game-player": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-animals": "workspace:*",
-    "@adatechnology/game-animals-species": "workspace:*",
-    "@adatechnology/game-animals-three": "workspace:*",
-    "@adatechnology/game-characters-undead": "workspace:*",
-    "@adatechnology/game-infection": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-animals": "workspace:^",
+    "@adatechnology/game-animals-species": "workspace:^",
+    "@adatechnology/game-animals-three": "workspace:^",
+    "@adatechnology/game-characters-undead": "workspace:^",
+    "@adatechnology/game-infection": "workspace:^",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",

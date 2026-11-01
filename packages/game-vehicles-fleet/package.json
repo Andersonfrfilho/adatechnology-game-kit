@@ -47,9 +47,9 @@
     "@adatechnology/game-vehicles": "workspace:^"
   },
   "devDependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-vehicles": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-vehicles": "workspace:^",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",
