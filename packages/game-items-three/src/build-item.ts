@@ -4,7 +4,8 @@ import type * as THREE_NS from 'three'
 import { tagForDestruction } from './destruction'
 import { createItemKit } from './kit'
 import type { ItemKit, Vec3Tuple } from './kit'
-import { itemModelBuilder, itemModelEntry } from './models/registry'
+import { defaultItemModels } from './models/registry'
+import type { ItemModelRegistry } from './models/registry'
 import { drawShape, shapeOf } from './shapes'
 import type { ShapeId, ShapeSubject } from './shapes'
 import { setWear } from './wear'
@@ -33,6 +34,8 @@ export interface BuildItemOptions {
   destructible?: boolean
   /** A kit to draw with (and to collect the materials in); default a new one. */
   kit?: ItemKit
+  /** The models to draw with; default the shared set behind `registerItemModel` (`createItemModels` makes one of your own). */
+  models?: ItemModelRegistry
 }
 
 /** What `buildItem` returns. */
@@ -65,8 +68,9 @@ export function buildItem(T: typeof THREE_NS, item: DrawableItem, options: Build
   const first = kit.materials.length
   const root = new T.Group()
   root.name = item.id
-  const entry = item.model === undefined ? undefined : itemModelEntry(item.model)
-  const builder = item.model === undefined ? undefined : itemModelBuilder(item.model)
+  const models = options.models ?? defaultItemModels()
+  const entry = item.model === undefined ? undefined : models.entry(item.model)
+  const builder = item.model === undefined ? undefined : models.builder(item.model)
   let kind: ItemModel['kind'] = 'shape'
   let shape: ShapeId | undefined
   if (entry && builder && !options.simple) {
