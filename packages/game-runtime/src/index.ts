@@ -5,6 +5,7 @@
 export { DEFERRED_PRIORITY, FRAME_PHASES } from '@adatechnology/game-contracts'
 export type { DeferredQueue, DeferredQueueOptions, FramePhase } from '@adatechnology/game-contracts'
 export { createFrameBudget } from './budget'
+export type { FrameBudgetOptions } from './budget'
 export { COMMAND_SYSTEM_ORDER, createCommandBuffer } from './commands'
 export { startLoop } from './loop'
 export { createScheduler } from './scheduler'

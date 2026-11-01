@@ -1,29 +1,22 @@
-import type { DeferredQueue, DeferredQueueOptions } from '@adatechnology/game-contracts'
+import type { DeferredQueueOptions } from '@adatechnology/game-contracts'
+import { createQueueEntry, insertByPriority, queueStats, type QueueEntry } from './budget-entry'
 import { defaultClock } from './clock'
 import type { BudgetStats, FrameBudget } from './types'
 
 const DEFAULT_MS = 4
-const DEFAULT_MIN_EVERY_FRAMES = 4
 const MAX_RESERVE_SHARE = 0.5
 
-interface QueueEntry {
-  readonly queue: DeferredQueue
-  readonly phase: 'present' | 'idle'
-  readonly priority: number
-  readonly minEveryFrames: number
-  readonly reserveMs: number
-  reserveLeft: number
-  waitingFrames: number
-  maxWaitingFrames: number
-  ranUnits: number
-  spentMs: number
-  forced: number
-  lastPending: number
+export interface FrameBudgetOptions {
+  readonly ms?: number
+  readonly clock?: () => number
+  /** A queue that throws in `run`: default logs once per queue id. The frame goes on and the queue counts 0 units. */
+  readonly onError?: (error: unknown, queue: { readonly id: string; readonly phase: 'present' | 'idle' }) => void
 }
 
-export function createFrameBudget(options: { readonly ms?: number; readonly clock?: () => number } = {}): FrameBudget {
+export function createFrameBudget(options: FrameBudgetOptions = {}): FrameBudget {
   const clock = options.clock ?? defaultClock()
   const entries: QueueEntry[] = []
+  const reportedQueues = new Set<string>()
   let frame = 0
   let frameOpen = false
   let debt = 0
@@ -48,9 +41,25 @@ export function createFrameBudget(options: { readonly ms?: number; readonly cloc
     debt = 0
   }
 
+  const reportError = (error: unknown, entry: QueueEntry): void => {
+    if (options.onError) return options.onError(error, { id: entry.queue.id, phase: entry.phase })
+    if (reportedQueues.has(entry.queue.id)) return
+    reportedQueues.add(entry.queue.id)
+    console.error(`game-runtime: queue ${entry.queue.id} threw`, error)
+  }
+
+  const runQueue = (entry: QueueEntry, deadline: number): number => {
+    try {
+      return entry.queue.run(deadline, clock)
+    } catch (error) {
+      reportError(error, entry)
+      return 0
+    }
+  }
+
   const runEntry = (entry: QueueEntry, deadline: number): void => {
     const started = clock()
-    const ran = entry.queue.run(deadline, clock)
+    const ran = runQueue(entry, deadline)
     const spent = Math.max(0, clock() - started)
     entry.ranUnits += ran
     entry.spentMs += spent
@@ -85,27 +94,13 @@ export function createFrameBudget(options: { readonly ms?: number; readonly cloc
   const budget: FrameBudget = {
     ms: options.ms ?? DEFAULT_MS,
     register(queue, queueOptions: DeferredQueueOptions) {
+      if (entries.some((candidate) => candidate.queue === queue)) throw new Error(`budget.register(${queue.id}): this queue is already registered`)
       const reserveMs = queueOptions.reserveMs ?? 0
       if (reservedTotal() + reserveMs > budget.ms * MAX_RESERVE_SHARE) {
         throw new Error(`budget.register(${queue.id}): the reserves would pass half of the ${budget.ms} ms budget`)
       }
-      const entry: QueueEntry = {
-        queue,
-        phase: queueOptions.phase ?? 'idle',
-        priority: queueOptions.priority,
-        minEveryFrames: queueOptions.minEveryFrames ?? DEFAULT_MIN_EVERY_FRAMES,
-        reserveMs,
-        reserveLeft: 0,
-        waitingFrames: 0,
-        maxWaitingFrames: 0,
-        ranUnits: 0,
-        spentMs: 0,
-        forced: 0,
-        lastPending: 0,
-      }
-      let index = entries.length
-      while (index > 0 && (entries[index - 1] as QueueEntry).priority < entry.priority) index--
-      entries.splice(index, 0, entry)
+      const entry = createQueueEntry(queue, queueOptions)
+      insertByPriority(entries, entry)
       queue.attach?.()
       return () => {
         const at = entries.indexOf(entry)
@@ -134,15 +129,7 @@ export function createFrameBudget(options: { readonly ms?: number; readonly cloc
         ms: budget.ms,
         spentMs: spentThisFrame,
         debtMs: debt,
-        queues: entries.map((entry) => ({
-          id: entry.queue.id,
-          pending: entry.lastPending,
-          ranUnits: entry.ranUnits,
-          spentMs: entry.spentMs,
-          framesWaiting: entry.waitingFrames,
-          maxFramesWaiting: entry.maxWaitingFrames,
-          forced: entry.forced,
-        })),
+        queues: entries.map(queueStats),
       }
     },
     dispose() {
