@@ -140,6 +140,11 @@ A `lod` rule `{ distance, detail, minSize?, minSegments? }` regenerates the tree
 static body. Instance a node when the same geometry repeats tens of times or is placed at run time; merge when copies are few or coloured per
 vertex.
 
+## Generators by instance
+
+`createShapes({ packs, patch, remove })` makes a set of generators of its own. `packs` is a list of objects `{ [name]: ShapeGenerator }` (`[{ 'my.stones': stones }]`); later packs replace earlier ones with the same name.
+`patch` replaces a generator by name, `remove` lists names to take out. `shapes.generate` looks custom nodes up in that set only. For a pool use `createShapePool({ generators: shapes.record(), isolatedGenerators: true })`: its jobs then run in the calling thread and never see the global registry.
+
 ## Português
 
 Gerador único de 3D do kit: forma em JSON vira buffers por material, puro, por semente, pronto para worker e cache. Os geradores são portes linha a

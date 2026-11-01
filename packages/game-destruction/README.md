@@ -383,6 +383,11 @@ helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the l
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
 `resolveStrings('pt-BR').materialNames.glass === 'vidro'`. Unknown locales fall back to `en`.
 
+## Assemblies by instance
+
+`createAssemblies({ packs, patch, remove })` makes a set of assemblies of its own: the built-in ones plus `packs`. `packs` is a list of lists of `AssemblyDef` (`[[wallDef, doorDef], [extraDef]]`); a def with the id of a built-in replaces it.
+`patch` merges fields by assembly id, `remove` lists ids to take out. The global `ASSEMBLIES`, `registerAssembly` and the rest are deprecated delegates of `defaultAssemblies()`.
+
 ## Português
 
 Modelo de destruição independente de engine. Um objeto é um conjunto de peças (caixa, cilindro ou esfera com um material) unidas por juntas. O

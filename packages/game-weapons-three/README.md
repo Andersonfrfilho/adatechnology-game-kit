@@ -54,3 +54,9 @@ Cada fase conta no registro da sala, em pt-BR e en, e vira JSON no registro de c
 **Onde ajustar a força:** o multiplicador da bancada é só do teste. No jogo, energia, raios, tempos e gás ficam no arsenal: `createArsenal({ patch: { explosives: { propane_p13: { energy, lethalRadius, injuryRadius, chain: { shot, fire, explosion }, leak: { igniteDelay, liters, hissSeconds }, shell: { launchSpeed, trailSeconds } } } } })` (`ArsenalOptions.patch.explosives`). `createExplosivesTestModule({ blastScale })` muda o ponto de partida da bancada.
 
 Cenários: `explosives_p13_shot`, `explosives_p13_valve`, `explosives_p13_fire`, `explosives_p13_chain`.
+
+## Weapon props by instance
+
+`createWeaponProps({ packs, patch, remove })` makes the weapon item model overrides of its own: the shipped ones plus `packs`. `packs` is a list of objects `{ [weaponId]: WeaponItemModel | null }` (`[{ axe: { item: 'hammer' }, baseball_bat: null }]`; `null` keeps the low-poly prop).
+`patch` merges fields by weapon id (`item`, `turn`, `flip`), `remove` lists weapon ids whose override is taken out. `props.buildModel`, `props.buildItemModel` and `props.itemModelOf` read that set; `buildModeledProp`, `buildTripodMountedProp` and `createWeaponsTestModule` take it as `props`.
+The global `registerWeaponItemModel` and the rest are deprecated delegates of `defaultWeaponProps()`.
