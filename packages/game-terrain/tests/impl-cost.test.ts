@@ -61,9 +61,10 @@ describe('the terrain as a DestructibleImpl', () => {
     expect(seen.every((spec) => spec === impl.describe())).toBe(true)
   })
 
-  // Gap recorded as T5-review G1 in specs/005-camadas-e-quadro/evidence.md: state().parts is [] while describe() has the one ground part.
-  it.fails('state() lists the same part ids as describe()', () => {
+  it('state() lists the same part ids as describe()', () => {
     const { impl } = make()
     expect(impl.state().parts.map((part) => part.id)).toEqual(impl.describe().parts.map((part) => part.id))
+    expect(impl.state().parts[0]?.material).toBe(impl.describe().parts[0]?.material)
+    expect(impl.state()).toBe(impl.state())
   })
 })

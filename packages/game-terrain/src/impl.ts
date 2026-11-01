@@ -4,6 +4,7 @@ import type { Terrain, TerrainBlowResult } from './types'
 const PART_ID = 'ground'
 const PART_DEPTH = 3
 const RAY_BACKOFF = 1
+const GROUND_HP = 1e12
 
 export interface TerrainImplOptions {
   readonly id: string
@@ -30,7 +31,7 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
         material,
         shape: { kind: 'box', size: [x1 - x0, PART_DEPTH, z1 - z0] },
         position: [(x0 + x1) / 2, -PART_DEPTH / 2, (z0 + z1) / 2],
-        hp: 1e12,
+        hp: GROUND_HP,
         anchored: true,
         tags: ['terrain'],
       },
@@ -43,14 +44,20 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     if (cachedSpec?.parts[0]?.material !== material) cachedSpec = buildSpec(material)
     return cachedSpec
   }
-  const state: ObjectState = {
+  const buildState = (material: string): ObjectState => ({
     id,
     position: [0, 0, 0],
     rotation: [0, 0, 0, 1],
-    parts: [],
+    parts: [{ id: PART_ID, material, status: 'intact', hp: GROUND_HP, maxHp: GROUND_HP, mass: 0, temperature: 0, burning: false, fuel: 0, char: 0, melt: 0, dents: [], holes: [], cracks: [], group: 0 }],
     joints: [],
     groups: [[PART_ID]],
     destroyed: false,
+  })
+  let cachedState: ObjectState | undefined
+  const state = (): ObjectState => {
+    const material = centerMaterial()
+    if (cachedState?.parts[0]?.material !== material) cachedState = buildState(material)
+    return cachedState
   }
   const resolve = (hit: Hit): Hit => {
     if (hit.type !== 'ballistic' && hit.type !== 'blunt' && hit.type !== 'slash') return hit
@@ -69,13 +76,13 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
       const result = terrain.applyHit(landed)
       if (!result || result.radius <= 0) return []
       options.onBlow?.(result, landed)
-      return [{ type: 'damage', object: id, time: 0, part: PART_ID, amount: 0, hp: 1e12, damageType: hit.type, ...(hit.source ? { source: hit.source } : {}) }]
+      return [{ type: 'damage', object: id, time: 0, part: PART_ID, amount: 0, hp: GROUND_HP, damageType: hit.type, ...(hit.source ? { source: hit.source } : {}) }]
     },
     update(dt) {
       terrain.update(dt)
       return []
     },
-    state: () => state,
+    state,
     reset() {
       terrain.reset()
     },
