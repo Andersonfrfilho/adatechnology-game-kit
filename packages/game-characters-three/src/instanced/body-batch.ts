@@ -1,6 +1,7 @@
 import type { Three, THREE_NS } from '../three'
 
 import { createBodyMaterial } from './body-material'
+import type { SegmentClipUniforms } from './segment-clips'
 
 const ATTRIBUTES: readonly (readonly [string, number])[] = [['iA', 4], ['iB', 4], ['iC', 4], ['iCol', 3], ['iEye', 3]]
 const IDENTITY_ATTRIBUTES: readonly (readonly [string, number])[] = [['iD', 4]]
@@ -21,6 +22,8 @@ export type BodyBatchOptions = {
   readonly identity?: boolean
   /** A batch of an accessory (baked once, moved per variant by `iAcc`): implies `identity`. */
   readonly accessory?: boolean
+  /** Walk bodies from the clip texture (`createSegmentClipUniforms`): needs `identity` and a look with `clips`. */
+  readonly segmentClips?: SegmentClipUniforms
 }
 
 /** One instance: the 12 numbers of the shader's `iA`, `iB` and `iC`, the shirt colour and the eye colour (G 65509 `push`). */
@@ -52,7 +55,7 @@ export type BodyBatch = {
 
 /** A batch of bodies drawn in one call (zombies, survivors, corpses). `begin`, `push` per body each frame, then `end` (G 65509 `BodyBatch`). */
 export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry, options: BodyBatchOptions): BodyBatch => {
-  const { max, castShadow = true, time, accessory = false } = options
+  const { max, castShadow = true, time, accessory = false, segmentClips } = options
   const identity = options.identity === true || accessory
   const layout = [...ATTRIBUTES, ...(identity ? IDENTITY_ATTRIBUTES : []), ...(accessory ? ACCESSORY_ATTRIBUTES : [])]
   const copy = new three.InstancedBufferGeometry().copy(geometry as THREE_NS.InstancedBufferGeometry)
@@ -64,15 +67,15 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
     copy.setAttribute(name, attribute)
     attributes[name] = attribute
   }
-  const mesh = new three.Mesh(copy, createBodyMaterial(three, { time, identity, accessory })) as unknown as BodyBatchMesh
+  const mesh = new three.Mesh(copy, createBodyMaterial(three, { time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) })) as unknown as BodyBatchMesh
   Object.defineProperty(mesh, 'count', {
     get: () => copy.instanceCount,
     set: (value: number) => {
       copy.instanceCount = value
     },
   })
-  mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time, identity, accessory }) as THREE_NS.MeshDepthMaterial
-  if (identity) mesh.customDistanceMaterial = createBodyMaterial(three, { distance: true, time, identity, accessory }) as THREE_NS.MeshDistanceMaterial
+  mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDepthMaterial
+  if (identity) mesh.customDistanceMaterial = createBodyMaterial(three, { distance: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDistanceMaterial
   mesh.frustumCulled = false
   mesh.castShadow = castShadow
   mesh.receiveShadow = true

@@ -28,11 +28,15 @@ export type IdentityLook = {
   readonly clipB?: number
   readonly clipBlend?: number
   readonly clipSpeed?: number
+  /** Draw a walking body from the clip texture (needs the material's `segmentClips`); off, the shader's own walk. */
+  readonly clips?: boolean
   /** Lean toward a direction (radians) by an amount 0..1 (a shove, a thrown body's tumble). */
   readonly leanAngle?: number
   readonly leanAmount?: number
 }
 
+/** The bit of `iD.z` that turns the clip texture on for a body. */
+export const CLIPS_BIT = 1048576
 export const CLIP_SPEED_MIN = 0.75
 export const CLIP_SPEED_SPAN = 0.5
 const TWO_PI = Math.PI * 2
@@ -42,7 +46,7 @@ export const packIdentity = (look: IdentityLook): readonly [number, number, numb
   const x = (look.wounds & 0xfff) + 4096 * (look.freshness & 15)
   const y = (look.trousers & 15) + 16 * (look.gaitStyle & 7) + 128 * (look.accessories & 15)
   const blend = Math.round(Math.min(1, Math.max(0, look.clipBlend ?? 0)) * 255)
-  const z = ((look.clipA ?? 0) & 15) + 16 * ((look.clipB ?? 0) & 15) + 256 * blend + 65536 * ((look.clipSpeed ?? 7) & 15)
+  const z = ((look.clipA ?? 0) & 15) + 16 * ((look.clipB ?? 0) & 15) + 256 * blend + 65536 * ((look.clipSpeed ?? 7) & 15) + (look.clips ? CLIPS_BIT : 0)
   const turns = (((look.leanAngle ?? 0) % TWO_PI) + TWO_PI) % TWO_PI
   const w = (Math.round((turns / TWO_PI) * 256) & 255) + 256 * Math.round(Math.min(1, Math.max(0, look.leanAmount ?? 0)) * 255)
   return [x, y, z, w]
@@ -59,6 +63,7 @@ export const unpackIdentity = ([x, y, z, w]: readonly [number, number, number, n
   clipB: Math.floor(z / 16) % 16,
   clipBlend: (Math.floor(z / 256) % 256) / 255,
   clipSpeed: Math.floor(z / 65536) % 16,
+  clips: Math.floor(z / CLIPS_BIT) % 2 === 1,
   leanAngle: ((w % 256) / 256) * TWO_PI,
   leanAmount: (Math.floor(w / 256) % 256) / 255,
 })

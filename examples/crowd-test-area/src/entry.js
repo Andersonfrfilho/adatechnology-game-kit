@@ -71,8 +71,8 @@ export function createModule(options = {}) {
 export function loadInto(room, options = {}) {
   const query = new URLSearchParams(globalThis.location?.search ?? '')
   const lang = options.locale ?? (query.get('lang') === 'en' ? 'en' : 'pt-BR')
-  // ?variety=1 draws the horde with identity, accessories and the economy ladder (and gives every agent a personality): the horde of the variety proof
-  const variety = query.get('variety') === '1' ? { variety: {}, crowdPhysics: { personality: true } } : {}
+  // ?variety=1 draws the horde with identity, accessories and the economy ladder (and gives every agent a personality), ?clips=1 walks the bodies from the clip texture
+  const variety = query.get('variety') === '1' ? { variety: { segmentClips: query.get('clips') === '1' }, crowdPhysics: { personality: true } } : {}
   const report = room.loadModule(createModule({ startCount: 300, ...variety, ...options, locale: lang }))
   room.openArea(CROWD_AREA_ID)
   return report

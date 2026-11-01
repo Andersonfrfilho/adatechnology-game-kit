@@ -3,6 +3,7 @@ import type { Three, THREE_NS } from '../three'
 import { createBodyChunk } from './body-chunk'
 import type { BodyChunkOptions } from './body-chunk'
 import { SHOE_HEIGHT } from './impostor-atlas'
+import type { SegmentClipUniforms } from './segment-clips'
 import { ACCESSORY_PIVOT_DECLARATION, FRAGMENT_EXT, createBodyChunkExt } from './body-chunk-ext'
 
 export type BodyMaterialParams = {
@@ -20,6 +21,8 @@ export type BodyMaterialParams = {
   readonly identity?: boolean
   /** The material of an accessory batch: baked once at a reference pivot, moved and scaled per variant by `iAcc` (`vec4`: offset xyz, scale w). Implies `identity`. */
   readonly accessory?: boolean
+  /** The clip texture (`createSegmentClipUniforms`), shared by every material that reads it: a body flagged `clips` in its `iD` walks from the clips (T4b.7, step 3). */
+  readonly segmentClips?: SegmentClipUniforms
 }
 
 const PIVOT_DECLARATION = 'attribute vec3 pivot;'
@@ -31,14 +34,15 @@ const VERTEX_INSTANCE_POSITION = 'bodyAnim(position, _n)'
  * The instanced body's material: the pose chunk in the vertex shader and the per-instance tints (skin by tone and infection, shirt, pants, hair,
  * glowing eyes) in the fragment shader (G 65473 `bodyMaterial`).
  */
-export const createBodyMaterial = (three: Three, { depth = false, distance = false, time, chunk, identity = false, accessory = false }: BodyMaterialParams): THREE_NS.Material => {
+export const createBodyMaterial = (three: Three, { depth = false, distance = false, time, chunk, identity = false, accessory = false, segmentClips }: BodyMaterialParams): THREE_NS.Material => {
   const extended = identity || accessory
   const baseChunk = createBodyChunk(chunk)
-  const bodyChunk = (accessory ? baseChunk.replace(PIVOT_DECLARATION, ACCESSORY_PIVOT_DECLARATION) : baseChunk) + (extended ? createBodyChunkExt(chunk) : '')
+  const bodyChunk = (accessory ? baseChunk.replace(PIVOT_DECLARATION, ACCESSORY_PIVOT_DECLARATION) : baseChunk) + (extended ? createBodyChunkExt({ ...chunk, segmentClips: segmentClips !== undefined }) : '')
   const shadowPass = depth || distance
   const material = distance ? new three.MeshDistanceMaterial() : depth ? new three.MeshDepthMaterial({ depthPacking: three.RGBADepthPacking }) : new three.MeshLambertMaterial({ color: 0xffffff })
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = time
+    if (segmentClips) Object.assign(shader.uniforms, segmentClips)
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\n' + bodyChunk)
       .replace(
@@ -69,7 +73,7 @@ export const createBodyMaterial = (three: Three, { depth = false, distance = fal
     }
     if (extended) extendShader(shader, { shadowPass, accessory })
   }
-  if (extended) material.customProgramCacheKey = () => `|body-ext:${accessory ? 'a' : 'i'}`
+  if (extended) material.customProgramCacheKey = () => `|body-ext:${accessory ? 'a' : 'i'}${segmentClips ? 's' : ''}`
   return material
 }
 

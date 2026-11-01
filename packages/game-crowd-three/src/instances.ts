@@ -61,8 +61,17 @@ export const IMPOSTOR_LEVEL = 3
 
 const poseIndex = (pose: InstancePose): number => INSTANCE_POSES.indexOf(pose)
 
-const lookFields = (store: CrowdStore, i: number, numbers: CrowdVarietyNumbers): Pick<CrowdInstance, 'd' | 'accessories' | 'type'> => {
-  const look = lookOfAgent(store, i, numbers)
+/** The clip family of a gait style (the order of `SEGMENT_CLIPS`: walk, limp left, limp right, drag, lurch, shamble) and the stagger after them. */
+const STAGGER_FAMILY = 6
+
+/** The clips of an agent: its family's arms-down and arms-up clips, blended by how far it has raised its arms. */
+const clipsOf = (store: CrowdStore, i: number, staggering: boolean): { readonly clips: true; readonly clipA: number; readonly clipB: number; readonly clipBlend: number } => {
+  const family = staggering ? STAGGER_FAMILY : Math.min(store.gaitStyle[i]!, STAGGER_FAMILY - 1)
+  return { clips: true, clipA: family * 2, clipB: family * 2 + 1, clipBlend: Math.min(1, Math.max(0, store.arms[i]!)) }
+}
+
+const lookFields = (store: CrowdStore, i: number, numbers: CrowdVarietyNumbers, clips: boolean, staggering: boolean): Pick<CrowdInstance, 'd' | 'accessories' | 'type'> => {
+  const look = lookOfAgent(store, i, numbers, clips ? clipsOf(store, i, staggering) : {})
   return { d: packLook(look), accessories: look.accessories, type: store.type[i]! }
 }
 
@@ -72,7 +81,7 @@ export type CrowdInstancesOptions = {
   /** The eye colour of each crowd type, by type index (G `_eye`); null for a type that has none. */
   readonly eyes: readonly (number | null)[]
   /** Identity for every agent (T4b.7), default off: each instance carries `d`, `accessories` and `type`, and the stagger pose; the game's numbers do not change. */
-  readonly variety?: { readonly numbers?: Partial<CrowdVarietyNumbers>; readonly impostorFrom?: number }
+  readonly variety?: { readonly numbers?: Partial<CrowdVarietyNumbers>; readonly impostorFrom?: number; readonly segmentClips?: boolean }
 }
 
 export type CrowdInstances = {
@@ -108,6 +117,7 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
   const [near, middle] = N.lodDistances as unknown as [number, number]
   const variety = options.variety ? { ...VARIETY_DEFAULTS, ...options.variety.numbers } : null
   const impostorFrom = options.variety?.impostorFrom
+  const segmentClips = options.variety?.segmentClips === true
   const lodEdges = impostorFrom === undefined ? [near, middle] : [near, middle, impostorFrom]
   const lastLevel = lodEdges.length
   const behindFrom = N.behindFrom
@@ -177,7 +187,7 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
           shade: 1,
           eye: eyeOn && st !== STATE.DORMANT ? (options.eyes[Z.type[i]!] ?? null) : null,
           y: Z.y[i]!,
-          ...(variety ? lookFields(Z, i, variety) : {}),
+          ...(variety ? lookFields(Z, i, variety, segmentClips, staggering) : {}),
         })
         written++
       }

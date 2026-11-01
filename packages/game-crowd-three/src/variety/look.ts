@@ -64,7 +64,7 @@ const leanOf = (store: CrowdStore, i: number, N: CrowdVarietyNumbers): { readonl
 }
 
 /** The whole look of an agent, all of it from its identity and its state in the store: it never changes with the level of detail. */
-export const lookOfAgent = (store: CrowdStore, i: number, N: CrowdVarietyNumbers, extra: Pick<IdentityLook, 'clipA' | 'clipB' | 'clipBlend' | 'clipSpeed'> = {}): IdentityLook => {
+export const lookOfAgent = (store: CrowdStore, i: number, N: CrowdVarietyNumbers, extra: Pick<IdentityLook, 'clipA' | 'clipB' | 'clipBlend' | 'clipSpeed' | 'clips'> = {}): IdentityLook => {
   const identity = store.identity[i]!
   const ageNorm = Math.min(1, store.age[i]! / N.ageSteps)
   const wounds = woundsOf(store, i, identity, ageNorm, N)

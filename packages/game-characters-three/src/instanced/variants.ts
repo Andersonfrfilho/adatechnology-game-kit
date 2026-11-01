@@ -6,6 +6,7 @@ import { bakeBody } from './bake'
 import type { BakeBuilders, BakedBody } from './bake'
 import { createBodyBatch } from './body-batch'
 import type { BodyBatch } from './body-batch'
+import type { SegmentClipUniforms } from './segment-clips'
 import { LOD_BAKE, LOD_BATCH_CAPACITY, LOD_CASTS_SHADOW } from './lod'
 
 export type VariantType = {
@@ -51,6 +52,7 @@ export const bakeVariants = (three: Three, builders: BakeBuilders, types: readon
 export type VariantBatchesOptions = {
   /** Identity on every batch (T4b.7). */
   readonly identity?: boolean
+  readonly segmentClips?: SegmentClipUniforms
   /** Which of the three levels cast a real shadow (default `LOD_CASTS_SHADOW`; `[true, false, false]` is the economy ladder's step 1). */
   readonly castsShadow?: readonly [boolean, boolean, boolean]
 }
@@ -58,5 +60,5 @@ export type VariantBatchesOptions = {
 /** The three batches of a variant (one per level of detail), sized for a horde. */
 export const createVariantBatches = (three: Three, variant: BodyVariant, time: { value: number }, options: VariantBatchesOptions = {}): readonly BodyBatch[] =>
   variant.geometries.map((geometry, level) =>
-    createBodyBatch(three, geometry, { max: LOD_BATCH_CAPACITY[level] as number, castShadow: (options.castsShadow ?? LOD_CASTS_SHADOW)[level] as boolean, time, ...(options.identity ? { identity: true } : {}) }),
+    createBodyBatch(three, geometry, { max: LOD_BATCH_CAPACITY[level] as number, castShadow: (options.castsShadow ?? LOD_CASTS_SHADOW)[level] as boolean, time, ...(options.identity ? { identity: true } : {}), ...(options.segmentClips ? { segmentClips: options.segmentClips } : {}) }),
   )

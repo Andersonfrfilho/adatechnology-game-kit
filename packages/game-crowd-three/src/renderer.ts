@@ -1,8 +1,8 @@
 import { variantDecay, variantSeed } from '@adatechnology/game-characters'
 import type { Civilian, Crowd, CrowdType } from '@adatechnology/game-crowd'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { KIT_ACCESSORIES, LOD_BAKE, LOD_SEGMENTS, accessoryPlacement, bakeBody, bakeImpostorAtlas, buildInstancedBody, buildKitAccessory, createBlobShadowBatch, createBodyBatch, createImpostorBatch, createVariantBatches } from '@adatechnology/game-characters-three'
-import type { BakeBuilders, BakeSpec, BakedBody, BlobShadowBatch, BodyBatch, BodyVariant, ImpostorAtlas, ImpostorBatch, KitAccessory, Three } from '@adatechnology/game-characters-three'
+import { KIT_ACCESSORIES, createSegmentClipUniforms, LOD_BAKE, LOD_SEGMENTS, accessoryPlacement, bakeBody, bakeImpostorAtlas, buildInstancedBody, buildKitAccessory, createBlobShadowBatch, createBodyBatch, createImpostorBatch, createVariantBatches } from '@adatechnology/game-characters-three'
+import type { BakeBuilders, BakeSpec, BakedBody, BlobShadowBatch, BodyBatch, BodyVariant, ImpostorAtlas, ImpostorBatch, KitAccessory, SegmentClipUniforms, Three } from '@adatechnology/game-characters-three'
 import type * as THREE_NS from 'three'
 
 import { IMPOSTOR_LEVEL, createCrowdInstances } from './instances'
@@ -20,6 +20,8 @@ export type CrowdRendererVariety = {
   readonly nearShadows?: boolean
   /** One dark disc under each body beyond the nearest level (default true). */
   readonly blobShadows?: boolean
+  /** Walk the bodies of the near and middle levels from the clip texture (12 bones, 24 texels, nearest filtered; step 3 of the ladder). Default off: the shader's own walk. */
+  readonly segmentClips?: boolean
   /** The far tier (default on, from 90 m): one atlas for every type, one draw call; `false` keeps the far mesh to the cull distance. */
   readonly impostor?: false | { readonly from?: number; readonly capacity?: number; readonly light?: { readonly r: number; readonly g: number; readonly b: number } }
 }
@@ -88,7 +90,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
     eyes,
     ...(options.numbers ? { numbers: options.numbers } : {}),
     ...(options.poses ? { poses: options.poses } : {}),
-    ...(variety ? { variety: { ...(variety.numbers ? { numbers: variety.numbers } : {}), ...(impostorOptions ? { impostorFrom: impostorOptions.from ?? IMPOSTOR_FROM } : {}) } } : {}),
+    ...(variety ? { variety: { ...(variety.numbers ? { numbers: variety.numbers } : {}), ...(impostorOptions ? { impostorFrom: impostorOptions.from ?? IMPOSTOR_FROM } : {}), ...(variety.segmentClips ? { segmentClips: true } : {}) } } : {}),
   })
   const N = instances.numbers
   const variants: BodyVariant[] = []
@@ -102,6 +104,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   let atlas: ImpostorAtlas | null = null
   let impostors: ImpostorBatch | null = null
   let impostorCount = 0
+  const clipUniforms: SegmentClipUniforms | null = variety?.segmentClips ? createSegmentClipUniforms(three) : null
   let bakeMs = 0
   const lodCounts: [number, number, number] = [0, 0, 0]
   const shirt = new three.Color()
@@ -132,7 +135,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
     if (made) return made
     let geometry = accessoryGeometry.get(accessory.id)
     if (!geometry) accessoryGeometry.set(accessory.id, (geometry = buildKitAccessory(three, accessory)))
-    const batch = createBodyBatch(three, geometry, { max: accessoryCapacity[level] ?? ACCESSORY_CAPACITY[1], castShadow: level === 0, time, accessory: true })
+    const batch = createBodyBatch(three, geometry, { max: accessoryCapacity[level] ?? ACCESSORY_CAPACITY[1], castShadow: level === 0, time, accessory: true, ...(clipUniforms ? { segmentClips: clipUniforms } : {}) })
     accessoryBatches.set(key, batch)
     group.add(batch.mesh)
     return batch
@@ -193,7 +196,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       const bodies: BakedBody[] = LOD_BAKE.map((lod) => bakeBody(three, options.builders, { type: name, decay, seed }, lod))
       const variant: BodyVariant = { typeId: type.id, variant: v, seed, decay, s: bodies[0]!.s, bulk: bodies[0]!.bulk, verts: bodies.map((body) => body.verts), geometries: bodies.map((body) => body.geo) }
       variants[g] = variant
-      batches[g] = createVariantBatches(three, variant, time, variety ? { identity: true, ...(nearShadows ? { castsShadow: NEAR_SHADOWS } : {}) } : {})
+      batches[g] = createVariantBatches(three, variant, time, variety ? { identity: true, ...(clipUniforms ? { segmentClips: clipUniforms } : {}), ...(nearShadows ? { castsShadow: NEAR_SHADOWS } : {}) } : {})
       for (const batch of batches[g]!) group.add(batch.mesh)
     })
     bakeMs += now() - started
@@ -280,6 +283,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       impostors?.mesh.geometry.dispose()
       if (impostors) group.remove(impostors.mesh)
       atlas?.dispose()
+      clipUniforms?.uClips.value.dispose()
       impostors = null
       atlas = null
     },
