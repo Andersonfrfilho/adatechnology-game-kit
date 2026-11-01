@@ -27,6 +27,15 @@ const DOOR_DEPTH = 0.07
 const DOOR_EDGE_PIECES = 16
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
+const DOOR_LINER_COLOR = '#5a5e64'
+const DOOR_LINER_DARK = 0.15
+/** A strip that crosses a door opening: this thin, within this of the door's height, and cut in pieces this long. */
+const DOOR_STRIP_THIN = 0.05
+const DOOR_STRIP_NEAR = 0.04
+const DOOR_STRIP_OVER = 0.3
+/** A door's cut goes this far past the lower edge of its pane, metres. */
+const DOOR_TOP_OVER_PANE = 0.03
+const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
 /** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
 const PANE_SEAT_OUT = 0.05
@@ -103,6 +112,8 @@ export class VehicleVisuals implements CreaseWork {
   private readonly syncPlates = new Map<string, () => void>()
   /** Doors and lids whose own skin was cut from the body and hung on the hinge (true), or that had none to take and keep the plate (false). */
   private readonly skins = new Map<string, boolean>()
+  /** How high each door's cut reaches. */
+  private readonly doorTops = new Map<string, number>()
   private lightsOn = true
   /** Heavy body meshes whose triangle index is still to build (null once done). */
   private warming: Obj[] | null
@@ -323,7 +334,12 @@ export class VehicleVisuals implements CreaseWork {
     try {
       if (p.role === 'door') {
         const dirty = new Set<Obj>()
-        const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
+        // up to the pane it carries: no strip of shell stays across the opening over the door
+        const glassBox = new this.THREE.Box3()
+        for (const g of I.windowsOver(this.c, z, inv) as Obj[]) glassBox.union(I.localBox(this.c, g, inv))
+        const top = glassBox.isEmpty() ? B.y1 - 0.02 : Math.max(B.y1 - 0.02, glassBox.min.y + DOOR_TOP_OVER_PANE)
+        this.doorTops.set(id, top)
+        const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), top]
         const pcs = (I.cutPanel(this.c, z, rect, true, dirty, { anyN: true }) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
         this.mend(dirty)
         if (pcs.length) {
@@ -350,15 +366,16 @@ export class VehicleVisuals implements CreaseWork {
       if (di >= 0) deform.splice(di, 1)
     }
     if (p.role === 'door' && objs.length > 0) {
-      this.doorEdges(piv, z)
-      this.doorSill(piv, z, inv, objs)
+      this.doorEdges(piv, z, this.doorTops.get(id) ?? B.y1 - 0.02)
+      this.liftDoorTrim(objs, z)
+      this.cutStripsAcross(piv, z, inv)
     }
     piv.quaternion.copy(q)
     this.c.root.updateMatrixWorld(true)
     return objs.length > 0
   }
   /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, in the same paint as on a real car, lines the opening. */
-  private doorEdges(piv: Obj, z: any): void {
+  private doorEdges(piv: Obj, z: any, y1: number): void {
     const THREE = this.THREE
     const B = z.box
     const side = z.side < 0 ? -1 : 1
@@ -366,7 +383,6 @@ export class VehicleVisuals implements CreaseWork {
     const x0 = B.x0 + 0.03
     const x1 = B.x1 - 0.03
     const y0 = B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1)
-    const y1 = B.y1 - 0.02
     const loop: Array<[number, number]> = []
     const run = (ax: number, ay: number, bx: number, by: number): void => {
       for (let i = 0; i < DOOR_EDGE_PIECES; i++) loop.push([ax + ((bx - ax) * i) / DOOR_EDGE_PIECES, ay + ((by - ay) * i) / DOOR_EDGE_PIECES])
@@ -410,24 +426,45 @@ export class VehicleVisuals implements CreaseWork {
     const part = this.model.parts.find((q) => q.role === 'mirror' && Math.sign(q.box.center[2]) === Math.sign(z.side))
     return part ? (this.extra.get(part.id) ?? []).filter((o) => o.parent) : []
   }
-  /** The top of a door, from the skin in to its pane: the glass comes out of the door and does not float over it. */
-  private doorSill(piv: Obj, z: any, inv: any, objs: Obj[]): void {
-    const panes = objs.filter((o) => o.userData.glass)
-    if (!panes.length) return
+  /** The panel drawn inside the door is lit like the rest of a cabin, not a black slab from end to end. */
+  private liftDoorTrim(objs: Obj[], z: any): void {
+    const card = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
+    const inv = this.I.worldInverseOf(this.c)
+    for (const o of objs) {
+      if (!o.isMesh || o.userData.glass) continue
+      const box = this.I.localBox(this.c, o, inv)
+      const size = box.getSize(new this.THREE.Vector3())
+      if (size.x > (z.box.x1 - z.box.x0) * 0.4 && size.y > (z.box.y1 - z.box.y0) * 0.3 && size.z < DOOR_DEPTH * 1.5 && o.material?.color?.getHSL({ h: 0, s: 0, l: 0 }).l < DOOR_LINER_DARK) o.material = card
+    }
+  }
+  /** A long strip drawn along the side of the car (the chrome of the belt): the part over the door goes with the door, and nothing stays across the opening. */
+  private cutStripsAcross(piv: Obj, z: any, inv: any): void {
     const THREE = this.THREE
     const B = z.box
-    const side = z.side < 0 ? -1 : 1
-    const box = new THREE.Box3()
-    for (const g of panes) box.union(this.I.localBox(this.c, g, inv))
-    const top = B.y1 - 0.02
-    const skin = this.surface('z', side, B, [[(B.x0 + B.x1) / 2, top]]) ?? piv.position.z - side * 0.016
-    const paneZ = side > 0 ? box.min.z : box.max.z
-    const height = Math.max(0.02, box.min.y - top + 0.015)
-    const depth = Math.max(0.02, Math.abs(skin - paneZ) + 0.012)
-    const sill = this.box(B.x1 - B.x0 - 0.06, height, depth, this.I.MATERIALS.trim ?? this.I.MATERIALS.dark, (B.x0 + B.x1) / 2, top + height / 2, (skin + paneZ) / 2)
-    sill.userData.noFollow = true
-    sill.castShadow = false
-    piv.attach(sill)
+    const x0 = B.x0 + 0.03
+    const x1 = B.x1 - 0.03
+    const y0 = B.y0 - DOOR_STRIP_NEAR
+    const y1 = B.y1 + DOOR_STRIP_NEAR
+    const deform: Obj[] = (this.c as any).deform ?? []
+    for (const o of [...(this.c.vehicle.children as Obj[])]) {
+      if (!o.isMesh || o === piv || deform.includes(o) || o.userData.glass || o.userData.decal || !o.visible) continue
+      const box = this.I.localBox(this.c, o, inv)
+      const size = box.getSize(new THREE.Vector3())
+      const mid = box.getCenter(new THREE.Vector3())
+      if (Math.sign(mid.z) !== Math.sign(z.side) || size.z > DOOR_STRIP_THIN || size.y > DOOR_STRIP_THIN || Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < (x1 - x0) * DOOR_STRIP_OVER || mid.y < y0 || mid.y > y1) continue
+      const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)
+      const v = new THREE.Vector3()
+      const sdf = (x: number, y: number, zz: number): number => {
+        v.set(x, y, zz).applyMatrix4(toVehicle)
+        return Math.max(x0 - v.x, v.x - x1)
+      }
+      this.kit.cutMesh(o, [{ sdf }], 42, { sub: DOOR_STRIP_SUB })
+      const from = Math.max(box.min.x, x0)
+      const to = Math.min(box.max.x, x1)
+      const piece = this.box(to - from, size.y, size.z, o.material, (from + to) / 2, mid.y, mid.z)
+      piece.userData.noFollow = true
+      piv.attach(piece)
+    }
   }
   /** The inside of a door: its skin brought in by the depth of the door, in the trim's dark plastic, so the open door is a door and not one sheet of paint. */
   private doorCards(skins: Obj[], z: any): Obj[] {
