@@ -183,6 +183,12 @@ rígida na horda. A cadeia surge de regras locais pela grade espacial que o `gam
 - T4b.11 Pressão da horda no jogador (D13.2): ponte `game-crowd` → `game-player` configurável (`playerPressure`), ligada na sala e desligada no padrão do pacote. Testes: pressão abaixo do limiar não derruba; acima derruba; esmagamento causa dano por segundo; desligado não muda nada.
 - T4b.3 (complemento, D13.3): `thrown.priority` `'mixed'` como padrão, com `mixedRatio`; teste de que metade das vagas vai para cada critério e de que é determinístico.
 
+
+### Medição por faixa de placa (dono, 2026-11-01) — ver `medicao-por-faixa.md`
+- T4b.12 `perf.mjs` por faixa: `PERF_TIER=integrated|discrete` (`PERF_GPU` vira alias depreciado), `PERF_CALIBRATE=1` (cena de calibração e nota da máquina), `PERF_PIXEL_RATIO`, relatório por subsistema em múltiplos da calibração, `UNMASKED_RENDERER` só como informação. Nenhum código de jogo lê o fabricante.
+- T4b.13 Caminho sem `EXT_disjoint_timer_query_webgl2`: teste forçando a extensão ausente; a adaptação por tempo de quadro chega ao mesmo comportamento.
+- T4b.14 Critério da camada 3 no `perf.mjs`: 0 quadros > 2× a mediana e > 33,4 ms, convergência em até 2 s sem oscilar, `detail_scale` gravado; rodar em 3 ou 4 degraus de relógio da RTX (`nvidia-smi -lgc`, pedir root ao dono), na Intel e numa placa AMD (máquina de outra pessoa).
+
 ## Fase 5 — Contratos
 > 🤖 Modelo: `sonnet` (um pacote por commit)
 

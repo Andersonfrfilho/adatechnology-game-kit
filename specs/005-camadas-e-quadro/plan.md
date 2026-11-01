@@ -149,10 +149,15 @@ animação em textura) costumam gerar clones andando no mesmo passo, e aqui isso
 
 ## D12 — Máquinas-alvo e escada de economia
 
-| Máquina | Placa | Horda na tela | Orçamento |
+| Faixa | Placas (exemplos) | Horda na tela | Orçamento |
 |---|---|---|---|
-| Mínima | integrada Intel (Arc/ARL deste notebook) | 1.000 zumbis | 0 quadros acima de 33,4 ms |
-| Recomendada | RTX 5070 Laptop | 2.000 zumbis | 0 quadros acima de 33,4 ms e p99 ≤ 20 ms |
+| Integrada | Intel Iris/UHD/Arc integrada, AMD Radeon Graphics de APU Ryzen | 1.000 zumbis | 0 quadros acima de 33,4 ms |
+| Dedicada | NVIDIA RTX, AMD Radeon RX | 2.000 zumbis | 0 quadros acima de 33,4 ms e p99 ≤ 20 ms |
+
+**Atualizado em 2026-11-01 (dono):** a meta é por **faixa de placa, nunca por marca**: temos jogadores com AMD. Nenhuma adaptação lê o
+fabricante (`UNMASKED_RENDERER`); tudo decide pelo custo medido ou pela capacidade. As máquinas de medição desta spec (Intel integrada e
+RTX 5070 Laptop deste notebook) são só amostras das duas faixas. O método que faz a medição valer para placas mais fortes e mais fracas
+está em [`medicao-por-faixa.md`](medicao-por-faixa.md).
 
 Se a medição não couber, sobe-se a escada, do mais barato ao mais caro:
 
