@@ -1,4 +1,5 @@
-import { DEFERRED_PRIORITY } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
+import { isLightBudget } from '@adatechnology/game-render-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 
 import { create } from '../create.js'
@@ -71,6 +72,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   let houseRendererKey = ''
   // the breach paint of the current house renderer, run by the host's frame budget when it has one
   let stopPaintQueue: (() => void) | undefined
+  // the room lights of the `room_lights` layer: the house's own lamps, masked by the walls, leased from the host's light budget
+  let roomLights: any = null
   const placed: Placed[] = []
   let time = 0
   let dirty = false
@@ -104,6 +107,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     const key = `${settings.quality}|${locale}`
     if (!houseRenderer || houseRendererKey !== key) {
       stopPaintQueue?.()
+      dropRoomLights()
       houseRenderer?.dispose?.()
       houseRenderer = create(THREE, {
         locale,
@@ -115,9 +119,15 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         ...(options.renderer ? { destructionRenderer: options.renderer } : {}),
       })
       houseRendererKey = key
-      stopPaintQueue = host?.defer?.(houseRenderer.deferredQueue(), DEFERRED_PRIORITY['floorplan.breach-paint'])
+      const paintQueue = houseRenderer.deferredQueue?.()
+      stopPaintQueue = paintQueue ? host?.defer?.(paintQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT]) : undefined
     }
     return houseRenderer
+  }
+
+  const dropRoomLights = (): void => {
+    roomLights?.dispose()
+    roomLights = null
   }
 
   const clearHouses = (): void => {
@@ -359,6 +369,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     }
     if (change.kind === 'layer') {
       if (change.id === 'roof') showAll()
+      else if (change.id === 'room_lights') dropRoomLights()
       else if (placed.length > 0) {
         dirty = true
         dirtyAt = time
@@ -513,6 +524,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       { id: 'roof', name: text.layers.roof, default: true },
       { id: 'lot', name: text.layers.lot, default: false },
       { id: 'night', name: text.layers.night, default: false },
+      { id: 'room_lights', name: text.layers.room_lights, default: false },
     ],
     metrics: (): ModuleMetric[] => [
       { id: 'houses_built', name: text.metrics.houses, read: () => placed.length },
@@ -559,6 +571,22 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
           updateSheet()
         }
       })
+      // after the host's light budget placed this frame's lights: a blast in a room lights that room, not the walls of the next one
+      const stopEffectLights = lent.onFrame(
+        () => {
+          const budget = lent.lights
+          if (!isLightBudget(budget) || placed.length === 0 || !houseRenderer) return
+          const houses = placed.map((p) => p.house)
+          if (lent.bench?.layer('room_lights') ?? false) {
+            roomLights ??= houseRenderer.lighting({ scene: lent.scene, n: 3, shadows: 0, budget })
+            roomLights.update(houses, cameraWorld(), {})
+            return
+          }
+          dropRoomLights()
+          houseRenderer.effectLights?.({ budget })?.update(houses)
+        },
+        { phase: 'present', order: 20 },
+      )
       // E uses the door or the fixture in reach, like the game
       const onKey = (event: KeyboardEvent): void => {
         if (event.code === 'KeyE' && !event.repeat && placed.length > 0) useNearest()
@@ -567,6 +595,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       return () => {
         stopChange?.()
         stopFrame()
+        stopEffectLights()
+        dropRoomLights()
         globalThis.removeEventListener?.('keydown', onKey)
         for (const remove of removers.splice(0)) remove()
         clearHouses()

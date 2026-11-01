@@ -1,7 +1,7 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installLightsRoomLight(K: Kernel, shared: Shared): void {
-  const { THREE, rectsOf } = K;
+  const { THREE, rectsOf, cfg } = K;
       // ====================== R62: per-room lighting ======================
       // A room's light does not cross walls or slabs: each PointLight carries a "box" (x/z rectangles of the room, a y band, and optionally an exclusion box for the outside lamp) and the material shader
       // multiplies the light by 1 inside the box and 0 outside. Only the 1 or 2 rooms closest to the camera cast shadows (512 cube); in the others the mask does the job. A "fake indirect" (weak ambient light limited to the box) lights the faces turned away from the lamp.
@@ -53,6 +53,7 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
           const pl = PL[i]; if (v.position) pl.position.set(v.position[0], v.position[1], v.position[2]); if (v.color !== undefined) pl.color.set(v.color);
           if (v.intensity !== undefined) pl.intensity = v.intensity; if (v.distance !== undefined) pl.distance = v.distance; if (v.decay !== undefined) pl.decay = v.decay;
         };
+        const effects = lease ? effectLights({ budget, ours: lease.handles.map(h => h.slot) }) : null;
         const A: any = { lights: lease ? lease.handles : PL, crates: new Array(N).fill(null), n: N, shadows: NS, stats: { rooms: 0, external: 0, shadows: 0, shadowChanged: false }, indirect: v => { LZU.uIndK.value = v; } };
         const _p = new THREE.Vector3(), _f = new THREE.Vector3();
         const lim = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -96,10 +97,69 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
             const rs = g.rects; b0.set(rs[0] || EMPTY, at * 4); b1.set(rs[1] || EMPTY, at * 4); b2.set(rs[2] || EMPTY, at * 4); by.set(g.y, at * 2); ex.set(g.exclusion || EMPTY, at * 4);
             if (i < NS) { shadows++; const s2 = g.house.group.uuid + '|' + g.k + '|' + g.pos.map(v => v.toFixed(2)).join(','); if (sig[i] !== s2) { sig[i] = s2; if (lease) lease.invalidateShadow(i); else PL[i].shadow.needsUpdate = true; seg.n++; A.stats.shadowChanged = true; } if (!lease) PL[i].shadow.camera.far = Math.max(4, lamp.distance); }
           }
+          if (effects) effects.update(houses);
           A.stats.shadows = shadows; return A.stats;
         };
         A.dispose = () => { if (lease) { lease.release(); return; } for (const l of PL) { if (l.shadow && l.shadow.map) l.shadow.map.dispose(); l.removeFromParent(); } };
         return A;
       }
-  Object.assign(K, { MAX_LIGHTS, EMPTY, LZU, roomLightMask, lighting });
+  // effect lights (a blast, a fire, a flare) hold budget slots that are not the house's: their mask lets the light into the room where the light point is, and into the rooms either side of an open door or a
+  // window the point is next to; with `effectLightsIndoors: false` they light no house surface at all (empty box). Works without `lighting()`: a game that lights its rooms some other way still gets the blast.
+  const effectsByBudget = new WeakMap();
+  const OPENING_REACH = 2.5, OPENING_SIDE = 0.6;
+  function effectLights(o) {
+    o = o || {}; const budget = o.budget; if (!budget) throw new Error('effectLights: a LightBudget is required');
+    const known = effectsByBudget.get(budget); if (known && !o.ours) return known;
+    const ours = new Set(o.ours || []), size = budget.sizes.point, _p = new THREE.Vector3(), P0 = new THREE.Vector3();
+    for (const [key, width] of [['uRB0', 4], ['uRB1', 4], ['uRB2', 4], ['uRBY', 2], ['uREx', 4]] as const) { const had = LZU[key].value; if (had.length >= size * width) continue; const next = new Float32Array(size * width); if (width === 4) for (let i = 0; i < size; i++) next.set(EMPTY, i * 4); next.set(had); LZU[key].value = next; }
+    const roomBoxes = (house, M) => {
+      const list = [];
+      for (const c of house.r.rooms) {
+        if (c.type === 'void') continue; const rs = [];
+        for (const [a, b, c2, d] of rectsOf(c)) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const [u, v] of [[a, b], [c2, b], [a, d], [c2, d]]) { _p.set(u, 0, v).applyMatrix4(M); x0 = Math.min(x0, _p.x); x1 = Math.max(x1, _p.x); z0 = Math.min(z0, _p.z); z1 = Math.max(z1, _p.z); } rs.push([x0 - 0.08, z0 - 0.08, x1 + 0.08, z1 + 0.08]); }
+        _p.set(0, house.y0(c.floor), 0).applyMatrix4(M); list.push({ c, rs, y: [_p.y - 0.06, _p.y + (c.ceiling || 2.8) + 0.3] });
+      }
+      return list;
+    };
+    const boxAt = (boxes, x, y, z) => boxes.find(q => y >= q.y[0] && y <= q.y[1] && q.rs.some(r => x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3]));
+    const openingSides = (house, M, boxes, into) => {
+      const open = (house.internal && house.internal.doorState) || new Map();
+      const reach = (list, isDoor) => {
+        for (const p of list || []) {
+          if (isDoor && !(open.has(p.id) ? open.get(p.id) : !!p.open)) continue;
+          const alongU = p.axis === 'u', y = house.y0(p.floor) + (isDoor ? 1 : ((p.y0 != null ? p.y0 : 0.9) + (p.y1 != null ? p.y1 : 2)) / 2);
+          const at = (side) => _p.set(alongU ? p.at : p.pos + side, y, alongU ? p.pos + side : p.at).applyMatrix4(M).clone();
+          if (at(0).distanceTo(P0) > OPENING_REACH) continue;
+          for (const side of [-OPENING_SIDE, OPENING_SIDE]) { const w = at(side), hit = boxAt(boxes, w.x, w.y, w.z); if (hit) into.set(hit.c, hit); }
+        }
+      };
+      reach(house.r.doors, true); reach(house.r.windows, false);
+    };
+    const clear = (at) => { for (const key of ['uRB0', 'uRB1', 'uRB2', 'uREx']) LZU[key].value.set(EMPTY, at * 4); LZU.uRBY.value.set([0, 0], at * 2); };
+    const write = (at, into) => {
+      const rs = []; let lo = 1e9, hi = -1e9; for (const q of into.values()) { rs.push(...q.rs); lo = Math.min(lo, q.y[0]); hi = Math.max(hi, q.y[1]); }
+      while (rs.length > 3) { const r2 = rs.pop(), r1 = rs[rs.length - 1]; rs[rs.length - 1] = [Math.min(r1[0], r2[0]), Math.min(r1[1], r2[1]), Math.max(r1[2], r2[2]), Math.max(r1[3], r2[3])]; }
+      LZU.uRB0.value.set(rs[0] || EMPTY, at * 4); LZU.uRB1.value.set(rs[1] || EMPTY, at * 4); LZU.uRB2.value.set(rs[2] || EMPTY, at * 4); LZU.uRBY.value.set([lo, hi], at * 2); LZU.uREx.value.set(EMPTY, at * 4);
+    };
+    const A: any = {
+      /** Once per frame, after the budget's `present`: points the mask of every lit slot that is not the house's at the rooms its light reaches. */
+      update(houses) {
+        const indoors = cfg.effectLightsIndoors !== false, list = (Array.isArray(houses) ? houses : [houses]).filter(Boolean), cache = new Map();
+        for (let at = 0; at < size; at++) {
+          if (ours.has(at)) continue; const light: any = budget.group.children[at];
+          if (!indoors || !light || !light.isPointLight || !(light.intensity > 0) || !light.visible) { clear(at); continue; }
+          const into = new Map(); P0.set(light.position.x, light.position.y, light.position.z);
+          for (const house of list) {
+            if (house.group && !house.group.visible) continue; house.house.updateMatrixWorld(true); const M = house.house.matrixWorld;
+            let boxes = cache.get(house); if (!boxes) cache.set(house, boxes = roomBoxes(house, M));
+            const here = boxAt(boxes, P0.x, P0.y, P0.z); if (here) into.set(here.c, here); openingSides(house, M, boxes, into);
+          }
+          if (into.size) write(at, into); else clear(at);
+        }
+      },
+    };
+    if (!o.ours) effectsByBudget.set(budget, A);
+    return A;
+  }
+  Object.assign(K, { MAX_LIGHTS, EMPTY, LZU, roomLightMask, lighting, effectLights });
 }

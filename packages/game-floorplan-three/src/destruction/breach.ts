@@ -1,3 +1,4 @@
+import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { Kernel, Shared } from '../kernel-types.js'
 
@@ -74,7 +75,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   const paintState = { attached: false }
   const paintQueues = new Set<DeferredQueue>()
   const paintQueue: DeferredQueue = {
-    id: 'floorplan.breach-paint',
+    id: DEFERRED_QUEUE_ID.BREACH_PAINT,
     pending: () => { let n = 0; for (const q of paintQueues) n += q.pending(); return n },
     run(deadline, clock) {
       let ran = 0
@@ -447,7 +448,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     const queue: DeferredQueue = {
-      id: 'floorplan.breach-paint',
+      id: DEFERRED_QUEUE_ID.BREACH_PAINT,
       pending: () => dirty.size,
       run(deadline, clock) {
         let ran = 0

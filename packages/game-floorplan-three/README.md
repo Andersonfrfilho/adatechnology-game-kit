@@ -138,3 +138,7 @@ Desenho em three.js das plantas do `game-floorplan`: porte literal do `Casa3DSDK
 pisos, lajes, escadas, telhado, calhas, lote, móveis, luzes, espelhos e carros; cada peça sabe a faixa de vértices que ocupa na malha fundida para a destruição
 (fratura, colapso, fileiras de tijolo no LOD 0, decalque de lascamento e armadura aparente). Os pacotes (frota, interativos, vegetação, espelho) são injetados. Os
 textos vêm de `locales` (`en`, `pt-BR`).
+
+## Effect lights in the rooms
+
+With a `LightBudget` (`host.lights`), the room lights of `lighting({ budget })` keep their slots and their masks. The lights of effects (a blast, a fire, a flare) hold the other slots: `renderer.effectLights({ budget }).update(houses)`, once a frame after the budget's `present`, points the mask of each lit one at the room where its point is, and at the rooms either side of an open door or window within 2.5 m of it, so a grenade lights the room it goes off in and not the next one. `lighting()` does this by itself for the slots it does not lease. The renderer option `effectLightsIndoors: false` brings back the old behaviour (an effect light reaches no house surface). The houses area has a layer `room_lights` that turns the house's own lamps on with these masks.

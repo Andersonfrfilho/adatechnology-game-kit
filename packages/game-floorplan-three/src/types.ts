@@ -36,6 +36,8 @@ export interface HouseRendererOptions {
   destruction?: any
   /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
   destructionRenderer?: any
+  /** The lights of effects (a blast, a fire, a flare) light the room where their point is, and the rooms either side of an open door or window next to it (see `effectLights` and `lighting`). Default true; false keeps them off every house surface. */
+  effectLightsIndoors?: boolean
   /** Milliseconds per frame the house may spend repainting damaged walls (chipped plaster, holes); events of one frame are painted together. Default `Infinity` (all of them at the frame's flush); a game loop sets a few ms. */
   breachPaintBudgetMs?: number
   /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, camera, onEvent, onSeat }`. */
@@ -152,9 +154,14 @@ export interface HouseRenderer {
   materials: Record<string, any>
   roomLightMask(material: any): void
   lighting(options?: LightingOptions): any
+  /**
+   * Lets the lights of effects (a blast, a fire, a flare) that hold slots of `budget` light the room their point is in, and the rooms either side of an open door or window next to it.
+   * Call `update(houses)` every frame after the budget's `present`. Works without `lighting()`. Off for every house with `effectLightsIndoors: false`.
+   */
+  effectLights?(options: { budget: any }): { update(houses: unknown): void }
   setNight(night: boolean): void
   /** The painting of the damaged walls of every house as a `DeferredQueue` for a shared frame budget; `budget.register` attaches it and `flush()` stops painting from `onFrame`. */
-  deferredQueue(): DeferredQueue
+  deferredQueue?(): DeferredQueue
   cars: { model(kind: string, seed?: number): any; group(...args: any[]): any; info(kind: string, seed?: number): any }
   dispose(): void
 }

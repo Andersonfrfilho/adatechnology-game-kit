@@ -51,7 +51,9 @@ export function loadInto(room, options = {}) {
   const params = new URLSearchParams(globalThis.location?.search ?? '')
   const lang = options.locale ?? (params.get('lang') === 'en' ? 'en' : 'pt-BR')
   const arena = Number(params.get('arena'))
-  const area = createModule({ world: room.world, renderer: room.renderer, arenaSize: arena >= 14 ? arena : 14, ...options, locale: lang })
+  // ?effectlights=0: a blast lights no house surface (what the houses did before `effectLightsIndoors`), to compare with the default
+  const house = params.get('effectlights') === '0' ? { effectLightsIndoors: false, ...options.house } : options.house
+  const area = createModule({ world: room.world, renderer: room.renderer, arenaSize: arena >= 14 ? arena : 14, ...options, ...(house ? { house } : {}), locale: lang })
   const report = room.loadModule(area)
   room.openArea(FLOORPLAN_AREA_ID)
   area.build()
