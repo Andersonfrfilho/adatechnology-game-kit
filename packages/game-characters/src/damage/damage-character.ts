@@ -90,7 +90,9 @@ export const createDamageCharacter = (core: CharacterCore, setup: DamageSetup): 
       hitCounter += 1
       const random = core.spec.random ?? createRng((core.spec.seed ^ hitCounter) >>> 0)
       const ops = opsFor(random, hit.source)
+      core.invalidateState()
       lastHit = applyBlow({ ops, hit, setup, worn, localPoint: toLocal(transform(), hit.point), jointOf, describe: core.describe })
+      core.invalidateState()
       return ops.events
     },
     update(dt) {
@@ -98,6 +100,7 @@ export const createDamageCharacter = (core: CharacterCore, setup: DamageSetup): 
       core.body.stunSeconds = Math.max(0, core.body.stunSeconds - dt)
       const ops = opsFor(() => 0)
       stepBleeding({ bleeders, dt, emit: ops.emit, pointOf })
+      if (bleeders.length > 0 || ops.events.length > 0) core.invalidateState()
       return ops.events
     },
     bleeders: () => bleeders.map((bleeder) => ({ ...bleeder })),
@@ -125,6 +128,7 @@ export const createDamageCharacter = (core: CharacterCore, setup: DamageSetup): 
       bleeders = structuredClone(saved.bleeders)
       hitCounter = saved.hitCounter
       clock = saved.clock
+      core.invalidateState()
     },
   }
   return character

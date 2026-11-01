@@ -8,8 +8,26 @@ const kit = createCharacters()
 
 describe('the character as a DestructibleImpl', () => {
   it('passes the contract check of the test room', () => {
-    const report = checkDestructible(kit.create({ seed: 1, kind: 'person' }))
+    const report = checkDestructible(kit.create({ seed: 1, kind: 'person' }), { cost: true })
     expect(report.problems).toEqual([])
+  })
+
+  it('state() is cached between changes and a change builds the same state a fresh read would', () => {
+    const character = kit.create({ seed: 3, kind: 'person', id: 'c1' })
+    const before = character.state()
+    expect(character.state()).toBe(before)
+    character.hit({ type: 'slash', point: [0, 1, 0], part: 'upperArmL', points: 80 })
+    const after = character.state()
+    expect(after).not.toBe(before)
+    expect(character.state()).toBe(after)
+    const twin = kit.create({ seed: 3, kind: 'person', id: 'c1' })
+    twin.hit({ type: 'slash', point: [0, 1, 0], part: 'upperArmL', points: 80 })
+    expect(twin.state()).toEqual(after)
+    character.setTransform([1, 2, 3])
+    expect(character.state().position).toEqual([1, 2, 3])
+    character.reset()
+    character.setTransform([0, 0, 0])
+    expect(character.state()).toEqual(before)
   })
 
   it('every event names the character and parts it describes, and survives JSON', () => {

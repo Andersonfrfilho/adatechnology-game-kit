@@ -12,12 +12,17 @@ import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, Ob
 export interface DestructibleImpl {
   readonly id: string
   readonly name?: string
-  /** Parts, joints and structure in the impl's local space, for raycast, inspector and log. Called often: keep it cheap. */
+  /**
+   * Parts, joints and structure in the impl's local space, for raycast, inspector and log.
+   * COST CONTRACT (D8): called per frame by the renderer, so it is O(1), allocation-free and cached between changes: the same object comes
+   * back until a hit, tool, fire or pose change alters it. `checkDestructible(impl, { cost: true })` measures it.
+   */
   describe(): DestructibleSpec
   /** Apply one hit (see `IMPACT_CONTRACT` for the fields per type) and return the events it caused. */
   hit(hit: Hit): DestructionEvent[]
   /** Advance fire, melting, collapse and other timed behaviour. */
   update?(dt: number): DestructionEvent[]
+  /** COST CONTRACT (D8): the host reads it per part per frame, so it is O(1), allocation-free and cached between changes (see `describe()`). */
   state(): ObjectState
   reset?(): void
   /** The world took the object out (`DestructionWorld.remove`): the impl lets go of what it joined (shared queues, listeners). */
@@ -66,6 +71,41 @@ export interface CheckOptions {
    * `world.materials`, or the built-in plus your own). When omitted, the material check is skipped.
    */
   materials?: Iterable<string>
+  /** Opt-in cost measurement (D8): `true` for the defaults, or the limits to use. */
+  cost?: boolean | CostOptions
+}
+
+export interface CostOptions {
+  /** Reads of `state()` and of `describe()` to time. Default 10 000. */
+  reads?: number
+  /** Ceiling, in milliseconds, for all the reads of one method. Default 50 (5 microseconds per read). */
+  ceilingMs?: number
+  /** Ceiling of heap growth, in bytes, over all the reads of one method (only where `process.memoryUsage` exists). Default 1 MiB. */
+  allocationBytes?: number
+}
+
+const DEFAULT_COST_READS = 10_000
+const DEFAULT_COST_CEILING_MS = 50
+const DEFAULT_COST_ALLOCATION_BYTES = 1024 * 1024
+
+const heapUsedBytes = (): number | undefined => {
+  const nodeProcess = (globalThis as { process?: { memoryUsage?: () => { heapUsed: number } } }).process
+  return nodeProcess?.memoryUsage?.().heapUsed
+}
+
+const checkReadCost = (name: string, read: () => unknown, options: CostOptions, problems: string[]): void => {
+  const reads = options.reads ?? DEFAULT_COST_READS
+  const ceilingMs = options.ceilingMs ?? DEFAULT_COST_CEILING_MS
+  const allocationBytes = options.allocationBytes ?? DEFAULT_COST_ALLOCATION_BYTES
+  if (read() !== read()) problems.push(`${name}() returns a new object on each read: cache it between changes (cost contract)`)
+  const heapBefore = heapUsedBytes()
+  const started = performance.now()
+  for (let i = 0; i < reads; i++) read()
+  const elapsedMs = performance.now() - started
+  const heapAfter = heapUsedBytes()
+  if (elapsedMs > ceilingMs) problems.push(`${name}() took ${elapsedMs.toFixed(1)} ms for ${reads} reads, over the ${ceilingMs} ms ceiling (cost contract)`)
+  if (heapBefore !== undefined && heapAfter !== undefined && heapAfter - heapBefore > allocationBytes)
+    problems.push(`${name}() grew the heap by ${heapAfter - heapBefore} bytes over ${reads} reads, over the ${allocationBytes} byte ceiling (cost contract)`)
 }
 
 const finiteJson = (v: unknown, path: string, out: string[]) => {
@@ -79,7 +119,7 @@ const finiteJson = (v: unknown, path: string, out: string[]) => {
 /**
  * Contract checker for the test room (it needs no world): `describe()` is valid, a 500 J ballistic hit at a part centre returns well-formed events of this impl, `state()`
  * matches `describe()`, hit points never go negative, `update(0.016)` returns an array and every event is JSON-serializable. It hits the impl
- * (and calls `reset()` afterwards when there is one).
+ * (and calls `reset()` afterwards when there is one). With `options.cost` it also times `state()` and `describe()` (the cost contract of D8).
  */
 export const checkDestructible = (impl: DestructibleImpl, options: CheckOptions = {}): { ok: boolean; problems: string[] } => {
   const problems: string[] = []
@@ -160,6 +200,15 @@ export const checkDestructible = (impl: DestructibleImpl, options: CheckOptions 
     impl.reset?.()
   } catch (e) {
     problems.push(`reset() threw: ${String(e)}`)
+  }
+  if (options.cost) {
+    const cost = options.cost === true ? {} : options.cost
+    try {
+      checkReadCost('state', () => impl.state(), cost, problems)
+      checkReadCost('describe', () => impl.describe(), cost, problems)
+    } catch (e) {
+      problems.push(`cost measurement threw: ${String(e)}`)
+    }
   }
   return { ok: problems.length === 0, problems }
 }

@@ -71,6 +71,10 @@ export type CharacterCore = {
   readonly describe: () => DestructibleSpec
   /** Back to the state at creation (full health, every segment attached). */
   readonly resetBody: () => void
+  /** The `ObjectState` of the body, built again only after `invalidateState` (cost contract: O(1) between changes). */
+  readonly readState: () => ObjectState
+  /** Call after anything that changes the body or the transform. */
+  readonly invalidateState: () => void
 }
 
 export type CreateCharacterCoreParams = { readonly spec: ResolvedCharacterSpec; readonly bodySpec: BodySpec; readonly hitPointsOf?: (kind: SegmentState['kind']) => number }
@@ -81,7 +85,24 @@ export const createCharacterCore = ({ spec, bodySpec, hitPointsOf }: CreateChara
   const parts = describeBody({ rig, body: bodySpec, build: spec.build, name: spec.kind })
   const fresh = (): BodyState => createBodyState({ vitality: spec.vitality, detail: spec.detail, crawling: spec.crawling ?? false, hitPointsOf: hitPointsOf ?? ((kind) => SEGMENT_NUMBERS[kind].hitPoints) })
   const body = fresh()
-  return { spec, rig, body, position: [0, 0, 0], rotation: [0, 0, 0, 1], describe: () => parts, resetBody: () => void Object.assign(body, fresh()) }
+  let cachedState: ObjectState | undefined
+  const core: CharacterCore = {
+    spec,
+    rig,
+    body,
+    position: [0, 0, 0],
+    rotation: [0, 0, 0, 1],
+    describe: () => parts,
+    resetBody: () => {
+      Object.assign(body, fresh())
+      cachedState = undefined
+    },
+    readState: () => (cachedState ??= toObjectState({ id: spec.id, name: spec.kind, position: core.position, rotation: core.rotation, body, spec: parts })),
+    invalidateState: () => {
+      cachedState = undefined
+    },
+  }
+  return core
 }
 
 /** The plain-data part of a character (state, detail and transform); the damage model is added on top of it. */
@@ -101,12 +122,14 @@ export const characterView = (core: CharacterCore): Character => ({
     if (detail === 'regions') regionsFromSegments(core.body)
     else segmentsFromRegions(core.body)
     core.body.detail = detail
+    core.invalidateState()
   },
   setTransform(position, rotation) {
     core.position = [...position]
     if (rotation) core.rotation = [...rotation]
+    core.invalidateState()
   },
   describe: core.describe,
-  state: () => toObjectState({ id: core.spec.id, name: core.spec.kind, position: core.position, rotation: core.rotation, body: core.body, spec: core.describe() }),
+  state: core.readState,
   reset: core.resetBody,
 })

@@ -19,7 +19,7 @@ export interface TerrainImplOptions {
 export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions): DestructibleImpl {
   const { id } = options
   const [x0, z0, x1, z1] = terrain.bounds
-  const spec = (): DestructibleSpec => ({
+  const buildSpec = (): DestructibleSpec => ({
     name: options.name ?? 'Ground',
     parts: [
       {
@@ -34,6 +34,20 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     ],
     joints: [],
   })
+  let cachedSpec: DestructibleSpec | undefined
+  const spec = (): DestructibleSpec => (cachedSpec ??= buildSpec())
+  const invalidateSpec = (): void => {
+    cachedSpec = undefined
+  }
+  const state: ObjectState = {
+    id,
+    position: [0, 0, 0],
+    rotation: [0, 0, 0, 1],
+    parts: [],
+    joints: [],
+    groups: [[PART_ID]],
+    destroyed: false,
+  }
   const resolve = (hit: Hit): Hit => {
     if (hit.type !== 'ballistic' && hit.type !== 'blunt' && hit.type !== 'slash') return hit
     if (!hit.direction) return { ...hit, point: [hit.point[0], terrain.heightAt(hit.point[0], hit.point[2]), hit.point[2]] }
@@ -47,6 +61,7 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     ...(options.name ? { name: options.name } : {}),
     describe: spec,
     hit(hit): DestructionEvent[] {
+      invalidateSpec()
       const landed = resolve(hit)
       const result = terrain.applyHit(landed)
       if (!result || result.radius <= 0) return []
@@ -55,21 +70,18 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     },
     update(dt) {
       terrain.update(dt)
+      invalidateSpec()
       return []
     },
-    state(): ObjectState {
-      return {
-        id,
-        position: [0, 0, 0],
-        rotation: [0, 0, 0, 1],
-        parts: [],
-        joints: [],
-        groups: [[PART_ID]],
-        destroyed: false,
-      }
+    state: () => state,
+    reset() {
+      terrain.reset()
+      invalidateSpec()
     },
-    reset: () => terrain.reset(),
     serialize: () => terrain.serialize(),
-    load: (data) => terrain.load(data as ReturnType<Terrain['serialize']>),
+    load(data) {
+      terrain.load(data as ReturnType<Terrain['serialize']>)
+      invalidateSpec()
+    },
   }
 }
