@@ -1180,6 +1180,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-shapes:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -1954,6 +1958,9 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:*
         version: link:../../packages/game-kit-defaults
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../../packages/game-shapes
       '@adatechnology/game-stories':
         specifier: workspace:*
         version: link:../../packages/game-stories

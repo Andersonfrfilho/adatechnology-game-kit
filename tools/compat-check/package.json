@@ -19,6 +19,7 @@
     "@adatechnology/game-floorplan-three": "workspace:*",
     "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-kit-defaults": "workspace:*",
+    "@adatechnology/game-shapes": "workspace:*",
     "@adatechnology/game-stories": "workspace:*",
     "@adatechnology/game-urban": "workspace:*",
     "@adatechnology/game-urban-three": "workspace:*",

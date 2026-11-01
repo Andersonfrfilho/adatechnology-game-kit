@@ -1,3 +1,4 @@
+import { createShapes, generate, getGenerator, registerGenerator, unregisterGenerator } from '@adatechnology/game-shapes'
 import { buildItem, createItemModels, hasItemModel, listItemModels, registerItemModel, SHIPPED_MODELS, unregisterItemModel } from '@adatechnology/game-items-three'
 import * as THREE from 'three'
 import { ASSEMBLIES, assemblyPart, createAssemblies, getAssembly, registerAssembly } from '@adatechnology/game-destruction'
@@ -58,5 +59,25 @@ describe('T5.2 items-three: the old global model registry matches a set made by 
     expect(before.has('compat_model')).toBe(false)
     unregisterItemModel('compat_model')
     expect(createItemModels().has('compat_model')).toBe(false)
+  })
+})
+
+describe('T5.2 shapes: the old global generator registry matches a set made by instance', () => {
+  const stones = (params: { count: number }, context: { random: () => number }) => ({
+    kind: 'group' as const,
+    children: Array.from({ length: params.count }, () => ({ kind: 'box' as const, size: [1, 1, 1] as [number, number, number], position: [context.random(), 0, 0] as [number, number, number] })),
+  })
+  const schema = { version: 1 as const, root: { kind: 'custom' as const, generator: 'compat.stones', params: { count: 3 } } }
+
+  it('gives the same bytes through registerGenerator and through a set, and does not share the registration', () => {
+    registerGenerator('compat.stones', stones)
+    try {
+      const made = createShapes({ packs: [{ 'compat.stones': stones }] })
+      expect(made.generate(schema, { seed: 3 })).toEqual(generate(schema, { seed: 3 }))
+      expect(createShapes().get('compat.stones')).toBeUndefined()
+    } finally {
+      unregisterGenerator('compat.stones')
+    }
+    expect(getGenerator('compat.stones')).toBeUndefined()
   })
 })
