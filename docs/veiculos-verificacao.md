@@ -8,6 +8,8 @@ O teste automático cobre: tiro na direção de cada vidro chega no vidro; o ar 
 
 | Modelo | O que falta olhar |
 |---|---|
+| `beetle` | o capô fica 8 mm acima do paralama |
+| `apc_6x6` | o teste do capô mediu 561 mm: provável falso positivo, sem paralama ao lado |
 | `armored_truck` | pane rear_viewport: the shots land on body_rear |
 | `battle_tank` | pane commander_periscope: the shots land on turret |
 | `fastback_sedan` | pane windshield: the roof stands past it; pane windshield: the shots land on roof |

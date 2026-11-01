@@ -24,7 +24,7 @@ const HOLE_DECAL_SCALE = 2.4
 /** From a door's skin to its inner card, metres. */
 const DOOR_DEPTH = 0.07
 /** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
-const DOOR_EDGE_PIECES = 16
+const DOOR_EDGE_PIECES = 8
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
 const DOOR_LINER_COLOR = '#5a5e64'
@@ -42,7 +42,7 @@ const DOOR_HANDLE_INSET = 0.12
 const DOOR_HANDLE_MIN = 0.07
 const DOOR_HANDLE_MAX = 0.24
 const DOOR_HANDLE_THIN = 0.07
-const DOOR_HANDLE_OUTSIDE = 0.1
+const DOOR_HANDLE_OUTSIDE = 0.15
 /** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
 const PANE_SEAT_OUT = 0.05
 const PANE_SEAT_IN = -0.05
@@ -50,12 +50,18 @@ const PANE_SEAT_REACH = 0.14
 const PANE_SEAT_SAMPLES = 24
 const PANE_SEAT_LIFT = 0.004
 const PANE_FRAME_NEAR = 0.07
+/** The bars of a frame: few vertices and long; the band that takes their place. */
+const PANE_BAR_VERTICES = 48
+const PANE_BAR_LENGTH = 0.3
+const PANE_BORDER = 0.03
+const PANE_BORDER_LIFT = 0.003
 type PaneSeat = { readonly normal: any; readonly samples: Array<{ readonly at: any; readonly by: number }> }
 /** A mirror the model draws: small, and this near where the part stands, metres. */
 const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
 const DRAWN_MIRROR_MOUNT = 0.2
 const MIRROR_GLASS_FIT = 0.76
+const MIRROR_GLASS_PROUD = 0.0015
 /** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
 const MIRROR_GLASS_THIN = 0.04
 const MIRROR_GLASS_MIN = 0.05
@@ -148,6 +154,7 @@ export class VehicleVisuals implements CreaseWork {
     this.hood = this.nameHood()
     this.seatPanes()
     this.seatDoorHandles()
+    this.seatHood()
     this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
     if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
@@ -515,13 +522,51 @@ export class VehicleVisuals implements CreaseWork {
     const ray = new THREE.Raycaster()
     for (const pane of c.glass as Obj[]) {
       if (pane.userData.glass?.outline) continue
-      const seat = this.paneSeat(pane, shell, ray)
+      const local = this.shellAround(pane, shell)
+      if (!local) continue
+      const seat = this.paneSeat(pane, [local], ray)
       if (!seat) continue
       const near = (c.vehicle.children as Obj[]).filter((o) => o.isMesh && o !== pane && !o.userData.glass && !shell.includes(o) && this.onPane(o, pane, seat))
       for (const m of [pane, ...near]) this.movePane(m, seat)
-      const past = this.shellPast(pane, shell, ray, seat.normal)
+      const past = this.shellPast(pane, [local], ray, seat.normal)
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
+      this.paneBorder(pane, near, seat)
     }
+  }
+  /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
+  private shellAround(pane: Obj, shell: Obj[]): Obj | null {
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(pane).expandByScalar(PANE_SEAT_REACH + PANE_SEAT_OUT)
+    const out: number[] = []
+    const a = new THREE.Vector3()
+    const b = new THREE.Vector3()
+    const d = new THREE.Vector3()
+    const tri = new THREE.Box3()
+    for (const mesh of shell) {
+      const pos = mesh.geometry.attributes.position
+      const idx = mesh.geometry.index
+      const count = idx ? idx.count : pos.count
+      const e = mesh.matrixWorld.elements
+      const world = (v: any, i: number): void => {
+        const x = pos.getX(i)
+        const y = pos.getY(i)
+        const z = pos.getZ(i)
+        v.set(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14])
+      }
+      for (let f = 0; f + 2 < count; f += 3) {
+        world(a, idx ? idx.getX(f) : f)
+        world(b, idx ? idx.getX(f + 1) : f + 1)
+        world(d, idx ? idx.getX(f + 2) : f + 2)
+        tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(d)
+        if (tri.intersectsBox(box)) out.push(a.x, a.y, a.z, b.x, b.y, b.z, d.x, d.y, d.z)
+      }
+    }
+    if (!out.length) return null
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3))
+    const proxy = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    proxy.updateMatrixWorld(true)
+    return proxy
   }
   /** The outward normal of a pane and how far the shell is at each sampled point (world). */
   private paneSeat(pane: Obj, shell: Obj[], ray: any): PaneSeat | null {
@@ -569,6 +614,72 @@ export class VehicleVisuals implements CreaseWork {
       if (by > -Infinity) samples.push({ at: v.clone(), by })
     }
     return samples.length >= 3 ? { normal, samples } : null
+  }
+  /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
+  private paneBorder(pane: Obj, near: Obj[], seat: PaneSeat): void {
+    const THREE = this.THREE
+    const bars = near.filter((o) => {
+      if (o.geometry.attributes.position.count > PANE_BAR_VERTICES) return false
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return Math.max(size.x, size.y, size.z) > PANE_BAR_LENGTH
+    })
+    if (!bars.length) return
+    const outline = this.paneOutline(pane, seat.normal)
+    if (outline.length < 3) return
+    const centre = new THREE.Vector3()
+    for (const p of outline) centre.add(p)
+    centre.divideScalar(outline.length)
+    const position: number[] = []
+    const toVehicle = this.I.worldInverseOf(this.c)
+    const put = (p: any): void => {
+      const q = p.clone().addScaledVector(seat.normal, PANE_BORDER_LIFT).applyMatrix4(toVehicle)
+      position.push(q.x, q.y, q.z)
+    }
+    const inward = (p: any): any => p.clone().add(centre.clone().sub(p).normalize().multiplyScalar(PANE_BORDER))
+    outline.forEach((a, i) => {
+      const b = outline[(i + 1) % outline.length]!
+      const c = inward(b)
+      const d = inward(a)
+      for (const p of [a, b, c, a, c, d]) put(p)
+    })
+    if (!position.length) return
+    for (const o of bars) o.visible = false
+    const band = new THREE.BufferGeometry()
+    band.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+    band.computeVertexNormals()
+    const material = this.I.MATERIALS.dark.clone()
+    material.side = THREE.DoubleSide
+    const mesh = new THREE.Mesh(band, material)
+    mesh.userData.noFollow = true
+    mesh.castShadow = false
+    mesh.raycast = () => {}
+    this.c.vehicle.add(mesh)
+  }
+  /** The outline of a pane, the convex hull of its vertices seen along its normal, in world space. */
+  private paneOutline(pane: Obj, normal: any): any[] {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const u = new THREE.Vector3(0, 1, 0).cross(normal)
+    if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
+    u.normalize()
+    const w = normal.clone().cross(u)
+    const points: Array<{ x: number; y: number; p: any }> = []
+    for (let i = 0; i < pos.count; i++) {
+      const p = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      points.push({ x: p.dot(u), y: p.dot(w), p })
+    }
+    points.sort((a, b) => a.x - b.x || a.y - b.y)
+    const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+    const half = (list: typeof points): typeof points => {
+      const out: typeof points = []
+      for (const q of list) {
+        while (out.length >= 2 && cross(out[out.length - 2]!, out[out.length - 1]!, q) <= 0) out.pop()
+        out.push(q)
+      }
+      out.pop()
+      return out
+    }
+    return [...half(points), ...half([...points].reverse())].map((q) => q.p)
   }
   /** How far the shell still stands past a seated pane, over its triangles. */
   private shellPast(pane: Obj, shell: Obj[], ray: any, normal: any): number {
@@ -622,6 +733,12 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingSphere()
     mesh.geometry = g
   }
+  /** A closed hood is flush with the fenders beside it: the height it was drawn with to keep clear of the hull goes, the hull has its hole. */
+  private seatHood(): void {
+    const hood = (this.c as any).hood
+    if (!hood?.lift) return
+    for (const part of hood.piv.children as Obj[]) part.position.y -= hood.lift
+  }
   /** A handle is at the free edge of its door, the end away from the hinge. */
   private seatDoorHandles(): void {
     const THREE = this.THREE
@@ -640,9 +757,8 @@ export class VehicleVisuals implements CreaseWork {
         const at = box.getCenter(new THREE.Vector3())
         const isHandle = size.x > DOOR_HANDLE_MIN && size.x < DOOR_HANDLE_MAX && size.y < DOOR_HANDLE_THIN && size.z < DOOR_HANDLE_THIN
         if (!isHandle || Math.sign(at.z) !== Math.sign(z.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
-        // the pull inside the cabin stays where it is: only what stands on the outer skin is the outer handle
-        const here = this.surface('z', z.side < 0 ? -1 : 1, B, [[at.x, at.y]])
-        if (here != null && Math.abs(here - at.z) > DOOR_HANDLE_OUTSIDE) continue
+        // the pull inside the cabin stays where it is: only what stands at the outer side is the outer handle
+        if (Math.abs(at.z) < Math.max(Math.abs(B.z0), Math.abs(B.z1)) - DOOR_HANDLE_OUTSIDE) continue
         const skin = this.surface('z', z.side < 0 ? -1 : 1, B, [[free, at.y]])
         o.position.x += free - at.x
         if (skin != null) o.position.z += skin + (z.side < 0 ? -1 : 1) * (size.z / 2) - at.z
@@ -651,7 +767,7 @@ export class VehicleVisuals implements CreaseWork {
     c.root.updateMatrixWorld(true)
   }
   /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
-  private seatMirrorGlass(glass: Obj): void {
+  private seatMirrorGlass(glass: Obj, drawn: Obj[]): void {
     const g = glass.geometry.clone()
     g.computeBoundingBox()
     const mid = g.boundingBox.getCenter(new this.THREE.Vector3())
@@ -659,6 +775,23 @@ export class VehicleVisuals implements CreaseWork {
     g.scale(MIRROR_GLASS_FIT, MIRROR_GLASS_FIT, MIRROR_GLASS_FIT)
     g.translate(mid.x, mid.y, mid.z)
     glass.geometry = g
+    // set into the housing's face, barely proud of it: the largest thing beside it is the housing
+    const THREE = this.THREE
+    const volumeOf = (o: Obj): number => {
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return size.x * size.y * size.z
+    }
+    const housing = drawn.filter((o) => o !== glass).sort((a, b) => volumeOf(b) - volumeOf(a))[0]
+    if (housing) {
+      this.c.root.updateMatrixWorld(true)
+      const inv = this.I.worldInverseOf(this.c)
+      glass.updateMatrixWorld(true)
+      const gb = this.I.localBox(this.c, glass, inv)
+      const hb = this.I.localBox(this.c, housing, inv)
+      const toFront = hb.getCenter(new THREE.Vector3()).x > gb.getCenter(new THREE.Vector3()).x
+      if (toFront) glass.position.x += hb.min.x - MIRROR_GLASS_PROUD - gb.min.x
+      else glass.position.x += hb.max.x + MIRROR_GLASS_PROUD - gb.max.x
+    }
     glass.material = this.I.makeMaterial(MIRROR_GLASS_COLOR, { metalness: 0.95, roughness: 0.12 })
   }
   /** The mirror the model already draws around where the part says, if it draws one. */
@@ -684,7 +817,7 @@ export class VehicleVisuals implements CreaseWork {
       for (const o of drawn) {
         if (!o.isMesh || o.material !== this.I.MATERIALS.chrome) continue
         const size = new this.THREE.Box3().setFromObject(o).getSize(new this.THREE.Vector3())
-        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o)
+        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o, drawn)
       }
       this.extra.set(p.id, drawn)
       return

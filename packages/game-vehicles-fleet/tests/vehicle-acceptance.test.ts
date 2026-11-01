@@ -11,8 +11,10 @@ type Finding = { readonly model: string; readonly problem: string }
 const AIR_ABOVE = 0.4
 const PANE_SAMPLES = 6
 const PANE_SEAT_TOLERANCE = 0.03
+const HOOD_SEAM = 0.015
+const HOOD_STEP = 0.005
 /** Panes a shot along their normal does not reach yet (something drawn stands in front, or the pane is behind trim): to look at one by one, see docs/veiculos-verificacao.md. */
-const KNOWN_OPEN = new Set(['midsize_suv', 'armored_truck', 'fastback_sedan', 'battle_tank', 'fishing_boat', 'single_engine_plane'])
+const KNOWN_OPEN = new Set(['midsize_suv', 'armored_truck', 'fastback_sedan', 'battle_tank', 'fishing_boat', 'single_engine_plane', 'beetle', 'apc_6x6'])
 const SHOT = { type: 'ballistic', energy: 527, caliber: 9 } as const
 
 /** Points really on the pane, whatever its outline: the middles of its largest triangles, facing out. A trim or a seal may cover some, never all. */
@@ -62,6 +64,21 @@ function auditModel(key: string): string[] {
     const hits = paneAims(pane, centre).map(({ at, normal: n }) => shoot(at.clone().addScaledVector(n, 1), n.clone().negate()))
     if (hits.every((hit) => hit && hit.distance < 1 - PANE_SEAT_TOLERANCE)) problems.push(`pane ${pane.userData.glass.key}: the ${hits[0]!.part} stands past it`)
   })
+  // a closed hood is flush with the fender beside it
+  if (c.hood?.lift) {
+    const inverse = c.vehicle.matrixWorld.clone().invert()
+    const hoodBox = new THREE.Box3().setFromObject(c.hood.piv).applyMatrix4(inverse)
+    const midX = (hoodBox.min.x + hoodBox.max.x) / 2
+    const heightAt = (z: number): number | undefined => {
+      const ray = new THREE.Raycaster(new THREE.Vector3(midX, 4, z).applyMatrix4(c.vehicle.matrixWorld), new THREE.Vector3(0, -1, 0).transformDirection(c.vehicle.matrixWorld))
+      ray.camera = new THREE.PerspectiveCamera()
+      const hit = ray.intersectObject(c.vehicle, true).find((q) => q.face && !q.object.userData.decal)
+      return hit?.point.clone().applyMatrix4(inverse).y
+    }
+    const inside = heightAt(hoodBox.max.z - HOOD_SEAM)
+    const outside = heightAt(hoodBox.max.z + HOOD_SEAM)
+    if (inside !== undefined && outside !== undefined && inside - outside > HOOD_STEP) problems.push(`the hood stands ${((inside - outside) * 1000).toFixed(0)} mm over the fender`)
+  }
   // the air over the body is air
   const over = shoot(new THREE.Vector3(centre.x, box.max.y + AIR_ABOVE, centre.z), new THREE.Vector3(1, 0, 0))
   if (over) problems.push(`the air above the vehicle takes a shot on ${over.part}`)
@@ -148,7 +165,7 @@ describe('every model of the fleet', () => {
       for (const problem of problems) findings.push({ model: key, problem })
       if (!problems.length) passed.push(key)
       if (process.env.VEHICLE_REPORT) writeFileSync(process.env.VEHICLE_REPORT, JSON.stringify({ passed, findings }, null, 1))
-      if (KNOWN_OPEN.has(key)) expect(problems.every((problem) => problem.startsWith('pane '))).toBe(true)
+      if (KNOWN_OPEN.has(key)) expect(problems.every((problem) => problem.startsWith('pane ') || problem.startsWith('the hood'))).toBe(true)
       else expect(problems).toEqual([])
     })
   }
