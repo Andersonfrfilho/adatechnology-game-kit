@@ -58,7 +58,7 @@ function auditModel(key: string): string[] {
   })
   // a windshield or rear window lies on the body: nothing of the shell stands past it and it does not stand off the shell
   c.glass.forEach((pane: any) => {
-    if (pane.userData.glass.outline) return
+    if (!pane.userData.glass || pane.userData.glass.outline) return
     const hits = paneAims(pane, centre).map(({ at, normal: n }) => shoot(at.clone().addScaledVector(n, 1), n.clone().negate()))
     if (hits.every((hit) => hit && hit.distance < 1 - PANE_SEAT_TOLERANCE)) problems.push(`pane ${pane.userData.glass.key}: the ${hits[0]!.part} stands past it`)
   })
