@@ -356,6 +356,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const chipEnergy = options.breach?.chipEnergy ?? CHIP_ENERGY
+  const chainLinkCap = options.chainLinksPerUpdate !== undefined && options.chainLinksPerUpdate >= 1 ? Math.floor(options.chainLinksPerUpdate) : Infinity
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
 
@@ -3035,7 +3036,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    */
   const detonatePrimed = (until: number) => {
     const end = time
-    for (let next = nextPrimed(until); next; next = nextPrimed(until)) {
+    let fired = 0
+    for (let next = nextPrimed(until); next && fired < chainLinkCap; next = nextPrimed(until)) {
+      fired++
       primed.delete(next.p)
       time = Math.max(0, Math.min(end, next.p.rt.chainDue as number))
       next.p.rt.chainDue = undefined

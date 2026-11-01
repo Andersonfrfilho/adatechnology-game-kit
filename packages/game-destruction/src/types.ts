@@ -398,6 +398,11 @@ export interface DestructionOptions {
   maxDents?: number
   /** Maximum holes kept per part (default 32). */
   maxHoles?: number
+  /**
+   * Most primed explosives that go off in one `update` (default: no cap). The rest wait, ordered by due time, then older object, then part
+   * order, and go off in the next updates, so a long chain spreads over steps by count and not by the speed of the machine.
+   */
+  chainLinksPerUpdate?: number
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
   /**
