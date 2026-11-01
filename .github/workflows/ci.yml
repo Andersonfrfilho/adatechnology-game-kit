@@ -217,6 +217,9 @@ jobs:
       - name: Check where every drawn piece comes from
         run: node tools/kit-audit/scene.mjs --check
 
+      - name: Check what every piece costs to draw
+        run: node tools/kit-audit/cost.mjs --check
+
   # Explosion frame budget (examples/test-room/perf.mjs, docs/desempenho-explosoes.md): every explosive cold, warm and all at once in the room's own loop. Software GL
   # has no real frame times, so CI checks what does not depend on the machine: no shader compiled during play, GPU buffers per warm explosion, draws back to idle.
   # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu). The `horde` shard runs the dense_horde and chain_horde phases (PERF_HORDE agents, 300
