@@ -12,7 +12,7 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
-import { createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
@@ -3758,6 +3758,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       for (const store of benches.values()) store.dispose()
       benches.clear()
       stopLoop?.()
+      disposePacer?.()
       scheduler.dispose()
       window.removeEventListener('resize', onResize)
       player.dispose()
@@ -3896,6 +3897,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   )
   scheduler.add((ctx) => lights.present([camera.position.x, camera.position.y, camera.position.z], ctx.realDt), { phase: 'present', order: 10, id: 'room.lights' })
   let stopLoop: (() => void) | undefined
+  let disposePacer: (() => void) | undefined
   if (ownRenderer) {
     let nextLightsCheck = 0
     let warnedState = ''
@@ -3913,11 +3915,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
     )
+    // a GPU slower than the CPU fills the driver queue and stalls the compositor for the whole queue: keep it at most one frame behind
+    const pacer = createFramePacer(typeof gl.getContext === 'function' ? (gl.getContext() as unknown as WebGL2RenderingContext) : null)
+    disposePacer = () => pacer.dispose()
     scheduler.add(
-      () => {
+      (ctx) => {
+        if (!ctx.scripted && !pacer.ready()) return
         const restoreCamera = room.applyCamera()
         gl.render(scene, debugView ?? camera)
         restoreCamera()
+        pacer.submitted()
         roomMetrics.rendered()
       },
       { phase: 'render', id: 'room.render' },
