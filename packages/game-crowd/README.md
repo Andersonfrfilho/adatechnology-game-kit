@@ -127,7 +127,7 @@ crowd.dispose() // stops the worker
 - `workerFactory`: the default makes a module worker from `physics-worker.js`, which sits next to `index.js` in `dist`, with `new Worker(new URL('./physics-worker.js', import.meta.url), { type: 'module' })` (Vite, webpack 5 and esbuild resolve it); the `index.global.js` build has no `import.meta`, so there give a `workerFactory`. A host that bundles its own worker (or runs node `worker_threads`) gives the factory and calls `attachPhysicsWorker(port)` inside the worker; `tests/fixtures/node-physics-worker.mjs` is a node example.
 - The frame copies the grid occupancy every step (1 byte per cell, 2.4 MB for the default 768 m grid): a `NavGrid` no bigger than the playable area keeps that copy small.
 
-Measured with `bench/dense-update.mjs` (node, 2000 agents pressed against a wall, all in band R0, `WORKER=shared LATENCY=2`): `crowd.update` on the main thread goes from 3.0 ms to 1.7 to 1.9 ms mean; with one step of latency the main thread waits for the worker for a third of its step, so it gains little. See `specs/005-camadas-e-quadro/evidence.md`, row T4b.perf.
+Measured with `bench/dense-update.mjs` (node, 2000 agents pressed against a wall, all in band R0, `WORKER=shared LATENCY=2`): `crowd.update` on the main thread goes from 3.0 to 3.8 ms to 1.6 to 2.1 ms mean (the machine was loaded); with one step of latency the main thread waits for the worker for a third of its step, so it gains little. See `specs/005-camadas-e-quadro/evidence.md`, row T4b.perf.
 
 `bench/dense-update.mjs` measures `crowd.update` with 1000 and 2000 agents pressed against a wall, with and without the physics.
 
