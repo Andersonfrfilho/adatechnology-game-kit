@@ -56,6 +56,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.bodyHold ? { bodyHold: options.bodyHold } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
     ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
+    ...(options.particleLimit ? { particleLimit: options.particleLimit } : {}),
     ...(options.lights ? { lights: options.lights } : {}),
     ...(options.pools ? { pools: options.pools } : {}),
   })

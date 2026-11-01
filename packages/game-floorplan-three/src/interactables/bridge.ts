@@ -189,7 +189,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     for (const S of IV.roomStates.values()) { const ef = ivRoomEffective(IV, S); if (ef !== S.ef) { S.ef = ef; applyLight(S.id); if (cfg.onLight) cfg.onLight(S.id, ef); } }
     for (const [id, sc] of IV.screens) { const on = w.power.isOn(id, 'tv') && w.power.isPowered(id, 'tv'); if (sc.on !== on) { sc.setOn(on); invalidate(); } if (on) { const ch = w.power.channel(id, 'tv'); if (sc.channel !== ch) sc.setChannel(ch); sc.update(dt); invalidate(); } }
     const em = w.emitters();
-    if (em.length && !IV.efx && K.IVK.effects) { const g = h.houseGroup; IV.efx = ik.gfx.createEffects(g, { maxParticles: 1400, seed: 11, document: DOC }); }
+    if (em.length && !IV.efx && K.IVK.effects) { const g = h.houseGroup; IV.efx = ik.gfx.createEffects(g, { maxParticles: 1400, seed: 11, document: DOC, ...(K.IVK.effectSink ? { effects: K.IVK.effectSink } : {}) }); }
     if (IV.efx) { const alive = IV.efx.stats().alive; if (em.length || alive) { IV.efx.update(dt, em, K.IVK.camera ? (typeof K.IVK.camera === 'function' ? K.IVK.camera() : K.IVK.camera) : undefined); invalidate(); } }
     if (K.IVK.items && IV.itemsDirty && IV.t - IV.itemsT > 0.1 && !IV.anim.size) ivItems(IV, h);
   }

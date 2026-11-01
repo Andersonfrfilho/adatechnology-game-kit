@@ -51,6 +51,8 @@ export interface WeaponFxOptions {
   bodyHold?: () => HandPose | null
   /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
+  /** The most casings and magazines alive at once (`host.particleLimit`), read at each spawn; without it the viewmodel keeps a cap of its own. */
+  particleLimit?: () => number | undefined
   /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light; without it they create lights of their own (deprecated, removed in the next major). */
   lights?: LightBudget
   /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them; without them each makes its own (deprecated, removed in the next major). */

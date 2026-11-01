@@ -114,6 +114,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         lod: { interior: 10, hide: 40 },
         breachPaintBudgetMs: 4,
         ...options.house,
+        ...(options.house?.interactives ? { interactives: { effectSink: () => host?.effects, ...options.house.interactives } } : {}),
         quality: settings.quality as 'game',
         ...(options.world ? { destruction: options.world } : {}),
         ...(options.renderer ? { destructionRenderer: options.renderer } : {}),

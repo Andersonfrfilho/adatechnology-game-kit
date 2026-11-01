@@ -40,7 +40,7 @@ export interface HouseRendererOptions {
   effectLightsIndoors?: boolean
   /** Milliseconds per frame the house may spend repainting damaged walls (chipped plaster, holes); events of one frame are painted together. Default `Infinity` (all of them at the frame's flush); a game loop sets a few ms. */
   breachPaintBudgetMs?: number
-  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, camera, onEvent, onSeat }`. */
+  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, effectSink, camera, onEvent, onSeat }`. */
   interactives?: any
   /** The vegetation packages, injected: `{ GameVegetation, GameVegetationSpecies }`. */
   vegetation?: any
