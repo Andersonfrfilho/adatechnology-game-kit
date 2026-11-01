@@ -52,6 +52,9 @@ const BIG_WIDTH = 0.03
 /** The seed of the fragments' random stream (their spin and sway); `reset` takes it back here. */
 const FRAGMENT_SEED = 0x51ed270b
 
+/** How many shard shapes there are; a fragment takes one by the hash of its id. */
+const SHARD_SHAPES = 6
+
 const isBig = (size: readonly number[]): boolean => {
   const [, middle, longest] = [...size].sort((a, b) => a - b)
   return longest >= BIG_LENGTH && middle >= BIG_WIDTH
@@ -109,7 +112,7 @@ export class FragmentSystem {
   }
 
   private shardGeometry(seed: number): THREE_NS.BufferGeometry {
-    const idx = seed % 6
+    const idx = seed % SHARD_SHAPES
     let g = this.shardGeos[idx]
     if (!g) {
       const r = createRng(1000 + idx)
@@ -134,17 +137,34 @@ export class FragmentSystem {
   private markGeometry: THREE_NS.CircleGeometry | null = null
   private markMaterial: THREE_NS.MeshBasicMaterial | null = null
 
+  private markParts(): { geometry: THREE_NS.CircleGeometry; material: THREE_NS.MeshBasicMaterial } {
+    this.markGeometry ??= new this.THREE.CircleGeometry(1, 10)
+    this.markMaterial ??= new this.THREE.MeshBasicMaterial({ color: 0x0b0a09, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })
+    return { geometry: this.markGeometry, material: this.markMaterial }
+  }
+
+  /**
+   * Meshes, never put in a scene by this class, that draw every shared piece of a fragment once: the box, the six shards, the bullet-hole disc, and the opaque and
+   * glass materials. A host draws them at load so the first blast does not upload these buffers in the middle of a frame.
+   */
+  warmMeshes(): THREE_NS.Mesh[] {
+    const opaque = this.materialFor('warm', 0x808080, false)
+    const glass = this.materialFor('warm', 0x808080, true)
+    const geometries = [this.box, ...Array.from({ length: SHARD_SHAPES }, (_, index) => this.shardGeometry(index))]
+    const { geometry, material } = this.markParts()
+    return [...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]), new this.THREE.Mesh(geometry, material)]
+  }
+
   /**
    * Bullet holes that stay on a fragment (`Fragment.marks`): dark discs that are children of its mesh, so they fall, spin and settle with it. The mesh is
    * a unit box scaled to the fragment, so each disc is scaled back; exact for a mark on a face, which is where a bullet hole is.
    */
   addMarks(mesh: THREE_NS.Mesh, f: Fragment): void {
     if (!f.marks?.length) return
-    this.markGeometry ??= new this.THREE.CircleGeometry(1, 10)
-    this.markMaterial ??= new this.THREE.MeshBasicMaterial({ color: 0x0b0a09, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })
+    const { geometry, material } = this.markParts()
     const sc = mesh.scale
     for (const mark of f.marks) {
-      const disc = new this.THREE.Mesh(this.markGeometry, this.markMaterial)
+      const disc = new this.THREE.Mesh(geometry, material)
       const radius = Math.max(0.004, mark.diameter) * 0.6
       const n = this.v.set(mark.normal[0], mark.normal[1], mark.normal[2]).normalize()
       disc.position.set(mark.point[0] / sc.x + (n.x * 0.002) / sc.x, mark.point[1] / sc.y + (n.y * 0.002) / sc.y, mark.point[2] / sc.z + (n.z * 0.002) / sc.z)

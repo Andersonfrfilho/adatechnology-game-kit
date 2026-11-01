@@ -8,9 +8,11 @@ import type { HandAnchor } from './hand-hold'
  * Metres of a grown body; the tool is drawn at its real size.
  */
 export const BODY_HOLD = {
+  /** With no body to lend the frame: the pocket of the right shoulder from the eye, in the eye's yaw frame (right, up, back). */
+  eyeToPocket: [0.2, -0.275, 0.17],
   /** A shouldered gun's bore runs this far above the shoulder pocket (the cheek on the comb). */
   boreAbove: 0.05,
-  /** A handgun's grip: toward the middle of the chest, a little low, at the reach of bent arms. */
+  /** A handgun's (or a short two-hand gun's) grip: toward the middle of the chest, a little low, at the reach of bent arms. */
   handgunGrip: [-0.15, -0.04, -0.42],
   /** A one-hand tool's grip: low in front of the body, the elbow bent. */
   toolGrip: [0.02, -0.34, -0.3],
@@ -18,6 +20,8 @@ export const BODY_HOLD = {
   shoulderedFrom: 0.55,
   /** The farthest a shouldered gun's grip sits ahead of the pocket; a launcher whose grip is farther slides back, its tube behind the shoulder. */
   shoulderGripMax: 0.42,
+  /** The nearest a shouldered gun's grip sits ahead of the pocket; a gun with no stock (a pistol grip at its rear) slides forward, its grip not behind the eye. */
+  shoulderGripMin: 0.25,
   /** Where such a grip is brought to, ahead of the pocket. */
   shoulderGripTo: 0.34,
   /** The farthest apart two hands hold a long gun (a support hand past it slides back along the gun, toward the grip). */
@@ -57,7 +61,7 @@ export const placeOnBody = (placement: BodyHoldPlacement): void => {
     hand.updateMatrixWorld(true)
     if (!placement.right) return
     const grip = hand.worldToLocal(placement.right.part.localToWorld(scratch.a.copy(placement.right.offset)))
-    if (-grip.z <= BODY_HOLD.shoulderGripMax) return
+    if (-grip.z <= BODY_HOLD.shoulderGripMax && -grip.z >= BODY_HOLD.shoulderGripMin) return
     holder.position.z += -grip.z - BODY_HOLD.shoulderGripTo
     hand.updateMatrixWorld(true)
     return
@@ -69,7 +73,8 @@ export const placeOnBody = (placement: BodyHoldPlacement): void => {
   holder.position.set(0, 0, 0)
   hand.updateMatrixWorld(true)
   if (!placement.right) return
-  const grip = placement.handgun ? BODY_HOLD.handgunGrip : BODY_HOLD.toolGrip
+  // a short gun with a support hand is held like a handgun, in the middle of the chest, not low like a one-hand tool
+  const grip = placement.handgun || placement.left ? BODY_HOLD.handgunGrip : BODY_HOLD.toolGrip
   const want = scratch.a.set(grip[0], grip[1], grip[2]).applyQuaternion(hand.quaternion).add(hand.position)
   const now = placement.right.part.localToWorld(scratch.b.copy(placement.right.offset))
   hand.position.add(want.sub(now))
@@ -86,4 +91,18 @@ export const limitSupportSpan = (targets: HandTargets): HandTargets => {
   const k = BODY_HOLD.supportSpan / span
   const position: [number, number, number] = [right[0] + (left[0] - right[0]) * k, right[1] + (left[1] - right[1]) * k, right[2] + (left[2] - right[2]) * k]
   return { ...targets, L: { ...targets.L, position } }
+}
+
+/** With no body to lend `holdFrame`: the pocket of a body's right shoulder under the camera's eye (`BODY_HOLD.eyeToPocket`, turned by the camera's yaw), the frame turned to the camera's aim. */
+export const createEyeFrame = (THREE: typeof THREE_NS, camera: THREE_NS.Camera): (() => HandPose) => {
+  const frame: { position: [number, number, number]; quaternion: [number, number, number, number] } = { position: [0, 0, 0], quaternion: [0, 0, 0, 1] }
+  const turn = new THREE.Euler(0, 0, 0, 'YXZ')
+  const pocket = new THREE.Vector3()
+  return () => {
+    turn.setFromQuaternion(camera.quaternion, 'YXZ')
+    pocket.set(...BODY_HOLD.eyeToPocket).applyEuler(turn.set(0, turn.y, 0)).add(camera.position)
+    frame.position = [pocket.x, pocket.y, pocket.z]
+    frame.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w]
+    return frame
+  }
 }

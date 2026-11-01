@@ -1073,6 +1073,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     update,
     state,
     reset,
+    dispose: () => {
+      releaseCrease?.()
+      releaseCrease = undefined
+    },
     disassemble,
     extinguish,
     serialize: () => ({

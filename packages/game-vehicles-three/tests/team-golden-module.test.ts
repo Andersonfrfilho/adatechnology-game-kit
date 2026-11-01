@@ -33,7 +33,7 @@ const stubRenderer = (): never => {
 const makeRoom = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, debris: { eventBudgetMs: Infinity } })
 }
 
 /** The page's module, evaluated as the page does: a classic script that finds the three globals on `window` (the kit gets the fake document the Node run needs). */

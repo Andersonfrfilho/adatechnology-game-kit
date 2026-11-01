@@ -17,6 +17,8 @@ export interface SystemList {
   readonly entries: readonly SystemEntry[]
   /** Called at the end of a phase: takes in the pending additions and drops the removed. */
   settle(): void
+  /** Marks every entry dead and forgets the ones waiting to come in (the scheduler was disposed). */
+  clear(): void
 }
 
 export function createSystemList(isRunning: () => boolean): SystemList {
@@ -42,6 +44,11 @@ export function createSystemList(isRunning: () => boolean): SystemList {
     settle() {
       if (entries.some((entry) => entry.dead)) entries = entries.filter((entry) => !entry.dead)
       for (const entry of waiting.splice(0)) if (!entry.dead) insert(entry)
+    },
+    clear() {
+      for (const entry of entries) entry.dead = true
+      for (const entry of waiting.splice(0)) entry.dead = true
+      entries = isRunning() ? entries : []
     },
   }
 }

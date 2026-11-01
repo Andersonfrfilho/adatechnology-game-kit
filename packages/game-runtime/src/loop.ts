@@ -20,6 +20,8 @@ export function startLoop(scheduler: Scheduler, options: LoopOptions = {}): () =
 
   const onVisibility = (): void => {
     if (document.visibilityState !== 'visible') return
+    // the first frame back measures from now, not from before the tab went away
+    if (typeof performance !== 'undefined') last = performance.now()
     scheduler.resetClock()
   }
   const hasDocument = typeof document !== 'undefined' && typeof document.addEventListener === 'function'

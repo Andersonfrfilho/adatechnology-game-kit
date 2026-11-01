@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
-import { blastShove } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, blastShove } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -159,7 +159,8 @@ function isMeshRange(v: Object3D | MeshRange): v is MeshRange {
 /** The seed of the renderer's random stream; `reset` takes it back here. */
 const RNG_SEED = 0xc0ffee
 
-export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer {
+/** The renderer this package makes always has its `deferredQueue`; a third-party `DestructionRenderer` may leave it out. */
+export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer & { deferredQueue(): DeferredQueue } {
   return new Renderer(THREE, options)
 }
 
@@ -192,7 +193,7 @@ class Renderer implements DestructionRenderer {
   /** true once a frame budget owns the draining: `update` no longer drains by itself. */
   private attached = false
   private readonly eventQueue: DeferredQueue = {
-    id: 'destruction.events',
+    id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
     pending: () => this.queue.length + this.slices.length,
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
@@ -1623,6 +1624,7 @@ class Renderer implements DestructionRenderer {
     const materials = [kit.discMaterial().clone(), kit.patchMaterial(0x808080).clone(), kit.lineMaterial(0x000000).clone()]
     const group = new T.Group()
     group.add(new T.Mesh(kit.discGeometry(), materials[0]), new T.Mesh(kit.discGeometry(), materials[1]), new T.LineSegments(geometry, materials[2] as THREE_NS.LineBasicMaterial))
+    group.add(...this.fragments.warmMeshes())
     for (const probe of group.children) probe.frustumCulled = false
     this.warmProbes = { group, geometry, materials }
     return { group, dispose: () => {} }

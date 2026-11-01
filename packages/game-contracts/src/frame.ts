@@ -6,7 +6,7 @@ export type FramePhase = (typeof FRAME_PHASES)[number]
  * Never simulation: nothing that consumes a seeded generator or decides an outcome may wait in a queue.
  */
 export interface DeferredQueue {
-  /** Stable name for stats and logs (`audio.voices`, `destruction.events`). */
+  /** Stable name for stats and logs (see `DEFERRED_QUEUE_ID`). */
   readonly id: string
   /**
    * Units waiting. 0 means idle; the budget skips the queue without calling `run`. `frame` is the budget's frame counter: a queue may
@@ -41,12 +41,20 @@ export interface DeferredQueueOptions {
   readonly reserveMs?: number
 }
 
+/** The ids of the kit's queues: what `DeferredQueue.id` says and what `DEFERRED_PRIORITY` is keyed by. */
+export const DEFERRED_QUEUE_ID = {
+  DESTRUCTION_EVENTS: 'destruction.events',
+  BREACH_PAINT: 'floorplan.breach-paint',
+  AUDIO_VOICES: 'audio.voices',
+  VEHICLE_CREASE: 'vehicles.crease',
+} as const
+
 /** Default priorities and reserves of the kit's queues; a host may override any of them. */
 export const DEFERRED_PRIORITY = {
-  'destruction.events': { priority: 300, phase: 'present' },
-  'floorplan.breach-paint': { priority: 250, phase: 'present' },
-  'audio.voices': { priority: 200, phase: 'idle', reserveMs: 1 },
-  'vehicles.crease': { priority: 100, phase: 'idle' },
+  [DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS]: { priority: 300, phase: 'present' },
+  [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present' },
+  [DEFERRED_QUEUE_ID.AUDIO_VOICES]: { priority: 200, phase: 'idle', reserveMs: 1 },
+  [DEFERRED_QUEUE_ID.VEHICLE_CREASE]: { priority: 100, phase: 'idle' },
 } as const satisfies Readonly<Record<string, DeferredQueueOptions>>
 
 export interface DeferredQueueReport {

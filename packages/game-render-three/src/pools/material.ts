@@ -18,9 +18,15 @@ export interface MaterialPool {
    * handed to the anchors, so disposing the others never frees the program.
    */
   own<TMaterial extends Material>(build: () => TMaterial): TMaterial
+  /** The materials declared with `register`: the ones that must never be disposed and whose programs the warmup draws once. */
+  registeredMaterials?(): readonly Material[]
   /** Disposes unregistered materials with no use, oldest first, keeping at most `keep` idle ones; a family's anchor is kept alive. */
   trim(keep?: number): number
   stats(): { readonly entries: number; readonly registered: number; readonly inUse: number; readonly families: number }
+  /**
+   * The end of the pool: disposes every material it made, in use or not, registered or anchored (the guarantee that a program stays linked
+   * holds while the pool lives, not after it). The anchors object itself is not touched, and the pool is empty and usable again afterwards.
+   */
   dispose(): void
 }
 
@@ -98,6 +104,9 @@ export function createMaterialPool(options: MaterialPoolOptions = {}): MaterialP
         if (retire(entry.material, entry.disposeForPool)) disposed++
       }
       return disposed
+    },
+    registeredMaterials() {
+      return [...entries.values()].filter((entry) => entry.registered).map((entry) => entry.material)
     },
     stats() {
       const all = [...entries.values()]

@@ -34,6 +34,11 @@ export interface WarmupOptions {
   readonly fogStates?: readonly FogState[]
   /** Where the game really draws: the program key carries the target's colour space and tone mapping. Default null (the canvas). */
   readonly target?: WebGLRenderTarget | null
+  /**
+   * Materials drawn once each, on a one-triangle mesh (a sprite, points or line for those materials): the registered materials of a `MaterialPool`
+   * (`registeredMaterials()`), so every program the pools were told about is drawn before play, not only linked. Never disposed or anchored here.
+   */
+  readonly materials?: readonly Material[]
 }
 
 export interface WarmupReport {

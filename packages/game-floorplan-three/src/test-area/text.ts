@@ -11,7 +11,7 @@ export type AreaText = {
     hit: Record<string, string>
     state: Record<string, string>
   }
-  layers: Record<'roof' | 'lot' | 'night', string>
+  layers: Record<'roof' | 'lot' | 'night' | 'room_lights', string>
   metrics: Record<'houses' | 'parts' | 'standing' | 'broken' | 'holes' | 'draw_calls' | 'triangles' | 'lod' | 'floor' | 'doors_open' | 'target' | 'planned', string>
   sheet: { kicker: string; title: string; template: string; seed: string; state: string; floors: string; size: string; parts: string; look: string; none: string; no_engine: string }
   specimens: Record<string, string>
@@ -41,7 +41,7 @@ export const TEXT: Record<string, AreaText> = {
       hit: { burst_9mm: '9 mm burst', burst_762: '7.62 burst', sledge: 'Sledgehammer', c4: 'C4', rpg: 'RPG warhead' },
       state: { normal: 'Normal', fortified: 'Fortified', abandoned: 'Abandoned' },
     },
-    layers: { roof: 'Roof', lot: 'Lot (ground, wall, gate)', night: 'Night (lit windows and lamps)' },
+    layers: { roof: 'Roof', lot: 'Lot (ground, wall, gate)', night: 'Night (lit windows and lamps)', room_lights: 'Room lights (one lamp per lit room, stopped by the walls)' },
     metrics: { houses: 'Houses', parts: 'Parts', standing: 'Standing', broken: 'Broken', holes: 'Holes', draw_calls: 'Draw calls', triangles: 'Triangles', lod: 'Level of detail (nearest)', floor: 'Your floor', doors_open: 'Doors open', target: 'You aim at', planned: 'Planned draw calls' },
     sheet: { kicker: 'House', title: 'House of the bench', template: 'Typology', seed: 'Seed', state: 'State', floors: 'Floors', size: 'Size', parts: 'Structure parts', look: 'You aim at', none: 'nothing to use', no_engine: 'The page gave no floorplan engine' },
     specimens: {
@@ -107,7 +107,7 @@ export const TEXT: Record<string, AreaText> = {
       hit: { burst_9mm: 'Rajada de 9 mm', burst_762: 'Rajada de 7,62', sledge: 'Marreta', c4: 'C4', rpg: 'Ogiva de RPG' },
       state: { normal: 'Normal', fortified: 'Fortificada', abandoned: 'Abandonada' },
     },
-    layers: { roof: 'Telhado', lot: 'Lote (chão, muro, portão)', night: 'Noite (janelas e lâmpadas acesas)' },
+    layers: { roof: 'Telhado', lot: 'Lote (chão, muro, portão)', night: 'Noite (janelas e lâmpadas acesas)', room_lights: 'Luz por cômodo (uma lâmpada por cômodo aceso, barrada pelas paredes)' },
     metrics: { houses: 'Casas', parts: 'Peças', standing: 'De pé', broken: 'Quebradas', holes: 'Furos', draw_calls: 'Draw calls', triangles: 'Triângulos', lod: 'Nível de detalhe (a mais perto)', floor: 'Seu andar', doors_open: 'Portas abertas', target: 'Você mira em', planned: 'Draw calls planejados' },
     sheet: { kicker: 'Casa', title: 'Casa da bancada', template: 'Tipologia', seed: 'Semente', state: 'Estado', floors: 'Andares', size: 'Tamanho', parts: 'Peças da estrutura', look: 'Você mira em', none: 'nada para usar', no_engine: 'A página não deu o motor de plantas' },
     specimens: {

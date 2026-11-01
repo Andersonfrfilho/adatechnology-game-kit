@@ -273,7 +273,13 @@ export interface TestRoomOptions {
    * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
    * a slab) stay as part of the map, with collision.
    */
-  debris?: { fragmentLife?: number | FragmentLifeRule; maxFragments?: number; particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>> }
+  debris?: {
+    fragmentLife?: number | FragmentLifeRule
+    maxFragments?: number
+    particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>>
+    /** Milliseconds of destruction events the renderer applies per frame; the rest wait for the next frames (default 8). `Infinity` applies every event in the frame it happens, which a test comparing counts needs. */
+    eventBudgetMs?: number
+  }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
   /**
@@ -336,9 +342,9 @@ export interface TestRoom {
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.PerspectiveCamera
   /** The room's light budget (what `host.lights` lends): the one owner of its point and spot lights. */
-  readonly lights: LightBudget
+  readonly lights?: LightBudget
   /** The WebGL renderer the room draws with, for tools that read what the GPU got (the `light_slots` phase of `perf.mjs` reads the uniforms of a lit material). */
-  readonly webgl: THREE_NS.WebGLRenderer
+  readonly webgl?: THREE_NS.WebGLRenderer
   /** The test table: lays the catalogue on the `test_table` piece a page at a time and runs the trials (shot, punch, knife, fire, blast) on one item. */
   readonly testTable: TestTable
   /** Spawn a catalogue item at a world position (default in front of the player). */
@@ -392,7 +398,7 @@ export interface TestRoom {
   /** Everything the inspector panel shows for the aimed part (state, joints and the tools that undo them), or null. */
   inspectInfo(): InspectInfo | null
   spawned(): SpawnedObject[]
-  /** Advance one frame (only needed when the host owns the loop). */
+  /** Advance one frame, and throw what a system threw in it. The host that owns the loop must call it every frame: the deferred queues lent to the room's budget (sound voices, destruction events) drain only inside a frame. */
   update(dt: number): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
@@ -509,7 +515,7 @@ export interface TestRoom {
   applyCamera(): () => void
   metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
   /** What the frame scheduler measured: ms per phase of the last frame, substeps, and per deferred queue the work waiting, run, forced and the most frames anything waited. */
-  frameStats(): SchedulerStats
+  frameStats?(): SchedulerStats
   dispose(): void
 }
 

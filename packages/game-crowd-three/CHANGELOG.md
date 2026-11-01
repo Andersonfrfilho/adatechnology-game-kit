@@ -1,5 +1,34 @@
 # @adatechnology/game-crowd-three
 
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [9c4ec9f]
+- Updated dependencies [28280ef]
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7f7dd06]
+- Updated dependencies [7dc60fa]
+- Updated dependencies [61bdbe1]
+- Updated dependencies [fe1f40a]
+- Updated dependencies [aa75500]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [711af5d]
+- Updated dependencies [a2ce4c5]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-characters-three@0.7.0
+  - @adatechnology/game-contracts@0.20.0
+  - @adatechnology/game-player@0.4.0
+  - @adatechnology/game-audio@0.3.5
+  - @adatechnology/game-characters@0.2.6
+
 ## 0.3.7
 
 ### Patch Changes

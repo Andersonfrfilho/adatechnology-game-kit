@@ -202,3 +202,23 @@ describe('the three internals the pools read (r160)', () => {
     expect(source('renderers/webgl/WebGLPrograms.js')).toMatch(/opaque: material\.transparent === false && material\.blending === NormalBlending/)
   })
 })
+
+describe('MaterialPool.dispose', () => {
+  it('disposes every material it made, registered and in use included, and leaves a usable empty pool', () => {
+    const pool = createMaterialPool()
+    const spied = (): { material: InstanceType<typeof THREE.MeshBasicMaterial>; spy: ReturnType<typeof vi.spyOn> } => {
+      const material = new THREE.MeshBasicMaterial()
+      return { material, spy: vi.spyOn(material, 'dispose') }
+    }
+    const [first, second, third] = [spied(), spied(), spied()] as const
+    const shared = pool.acquire('a', () => first.material)
+    pool.register('b', () => second.material)
+    pool.own(() => third.material)
+    const spies = [first.spy, second.spy, third.spy]
+    pool.dispose()
+    for (const spy of spies) expect(spy).toHaveBeenCalledTimes(1)
+    expect(pool.stats().entries).toBe(0)
+    const again = pool.acquire('a', () => new THREE.MeshBasicMaterial())
+    expect(again).not.toBe(shared)
+  })
+})

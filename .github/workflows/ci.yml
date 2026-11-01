@@ -222,7 +222,11 @@ jobs:
   # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu).
   perf-budget:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [cold, warm]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -245,12 +249,12 @@ jobs:
         run: node examples/test-room/build.mjs
 
       - name: Check the explosion budget
-        run: node examples/test-room/perf.mjs
+        run: PERF_SHARD=${{ matrix.shard }} node examples/test-room/perf.mjs
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: perf-budget
+          name: perf-budget-${{ matrix.shard }}
           path: examples/test-room/dist/perf.json
 
   # Timing of the kit's 3D builders (tools/shapes-bench): medians as ratios to a calibration loop, against baseline.json.

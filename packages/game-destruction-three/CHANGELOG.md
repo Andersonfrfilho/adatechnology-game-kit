@@ -1,5 +1,55 @@
 # @adatechnology/game-destruction-three
 
+## 0.12.0
+
+### Minor Changes
+
+- b818f6a: A box on the edge of a table rests or falls as it should, and a round through a cardboard box punches holes instead of throwing it. Loose pieces take the side of a step of the ground (the edge of a table, a counter) as a wall: a corner that comes at a higher top from the side stops there instead of being lifted onto the top every frame, which made a box shot near the edge hop on it without end. Over a step the points along the box's edges touch too, so the table's edge under a box is a support between its corners (a box with 2 cm over the edge and its centre of mass on the table stays), and the contacts are solved together, warm started from the last substep. A hollow shell of a material that tears (a printed carton, `shapeDestruction('box')` of game-items-three) is holed by a round that goes through it, not shredded. The test room no longer sends a spawned item with no mesh to minus infinity. The points along the edges stand only on the fixed ground (things spawned together no longer ratchet up onto each other), and what the contacts' friction takes from a piece is taken from that substep's move too, so a push the floor's grip holds no longer creeps a sofa along.
+
+  A part can hold loose dry contents (`PartSpec.powder`, `{ color }`; `userData.destructionPowder` for `specFromObject3D`; the `powder` of an item of game-items-goods, written on its shell by `tagForDestruction`): the `hole` event carries it and the renderer puffs it out of the entry and, more, out of the exit. The cereal box, flour, sugar, salt, coffee and rice of the catalogue have theirs.
+
+- f911ab1: How long debris stays on screen is configurable per fragment: `fragmentLife` takes a rule `(fragment, objectId) => seconds` besides a number (0 = forever), so rubble can stay and chips can go by material, size or object. The test room takes `debris: { fragmentLife, maxFragments, particles }`, where `particles` tunes the dust, smoke and chip sprites by kind.
+- 5d5e869: `onLoosened` is also called when furniture came apart and the renderer made what stayed a piece, with a new `cause` argument (`blast` or `apart`). The test room stops keeping the footprint of a table knocked over that way, so no invisible wall stays where it stood.
+- 7051d83: Opening doors by hand: a tap of E on a door, lid or drawer of furniture or a vehicle (any part an `open_*` clip moves) opens or closes it. The player steps up to the handle, the hand takes the free edge and follows it in first and third person, the leaf swings at a speed set by its mass and stops at what is in its way, a door that swings into the player makes the player step back, and a locked leaf only rattles (`createDoorUse` in game-player, `room.useLeaf`/`lockLeaf`). New sounds for the latch, the hinge, the leaf meeting the frame and the rattle. House doors use the same hand and body through the new `ModuleHost.reachFor`.
+- 53babb5: A scenario of the test room does the same whatever ran before it: the reset before each scenario puts every random stream, seed counter and clock back to its start.
+
+  - `game-destruction-three`: `DestructionRenderer.reset()` (`clear` plus the renderer's random stream, the one that scatters the shove points of a blast, the fragments' stream and the clocks back to their seed and 0). Before, a blast after other scenarios pushed the loose items from other points, and the grenade's camp table could end up moving towards the blast.
+  - `game-contracts`: `ModuleHost.onReset`, for a module to put its own streams, seed counters and clocks back when the host returns to its seeded start.
+  - `game-test-room`: the reset before each scenario calls `renderer.reset()` and the modules' `onReset`.
+  - `game-characters-three`: the test module's random stream, body seeds and animation clock start again on `onReset`.
+  - `game-terrain`: clearing the marks starts their numbering again.
+
+### Patch Changes
+
+- 385281b: Fragments (splinters, lumps, shards, a brick out of a wall) are named `fragment` and marked with the kit origin of `game-destruction-three`, so the scene audit no longer reports debris as a piece drawn outside the kit.
+- 6ef4843: Pieces on the floor come to rest instead of trembling forever: separation no longer moves or wakes a sleeping piece, and a piece that keeps to the same spot (within 1 cm and 3°) for 1.5 s sleeps however its speed flickers, as a book propped on another does.
+- 4eb330f: A shot breaks a brick or a concrete block where it lands instead of knocking the whole unit out: a crater a few centimetres across goes through the unit (about 6 cm for a pistol round, 10 for a rifle round), the rest of the unit stays, and small bits of the inside of the material fly out of both faces, most out of the far one. The rest of a unit comes out, in pieces, only once its craters took most of it. A wall, a partition or a column now loses its section across one height, so a slot shot along the base of a wall brings it down while the same rounds spread over its face leave it standing. The house renderer draws each crater as an irregular hole through the unit with the plaster broken off around it, and the marks of a shot (bullet holes, spalls) now sit on the face as drawn, not a few millimetres behind it.
+
+  A pistol round on a plastered brick wall no longer draws a star of cracks and a flat orange disc: the plaster comes off in a ragged patch drawn by the house renderer, with the brick and its mortar under it and the bullet hole on the brick (the destruction renderer leaves its patch out on meshes marked `userData.drawnSpalls`). The destruction renderer also keeps ranges another drawing collapsed (`userData.collapsedRanges`) when it rewrites a merged mesh, so a broken wall comes back after a reset.
+
+  The other materials take a round the same way: the concrete laid bare in a wall is one face with no joints, an opaque brittle body (a ceramic tub) cracks a hand around the hit in a dark shade of its own colour instead of black lines across the piece (glass keeps its long white cracks), and a hole in wood has a rim of torn fresh wood under it.
+
+- A piece that is falling over is not put to sleep for keeping its place, and whether it already lies is measured on its own box: a lone leg whose top touched the board it was joined to stayed standing.
+- 9c63053: A shot into MDF or wood left no hole: the lumps it tore off came as a `chip`, and the renderer cleared every mark inside it as if a brick had left the wall. The `chip` of what a blow tore off a face now carries `torn: true`, and the renderer and the house breach keep the hole and its marks.
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [5a2f8e7]
+- Updated dependencies [b58423f]
+- Updated dependencies [53babb5]
+- Updated dependencies [4eb330f]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+  - @adatechnology/game-destruction@0.13.0
+  - @adatechnology/game-audio@0.3.5
+  - @adatechnology/game-vfx-three@0.3.6
+
 ## 0.11.1
 
 ### Patch Changes
