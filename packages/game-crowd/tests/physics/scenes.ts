@@ -1,30 +1,17 @@
 import { undeadCrowdPack } from '@adatechnology/game-characters-undead'
 
 import { BALANCE, CELL, CROWD_PHYSICS_DEFAULTS, STATE, createCrowd, createDoors, createNavGrid, createRng, unit } from '../../src'
-import type { Crowd, CrowdBlast, Doors, CrowdPack, CrowdPhysicsOptions, CrowdTarget, CrowdType, CrowdUpdateContext, NavGrid } from '../../src'
+import type { Crowd, CrowdBlast, Doors, CrowdPack, CrowdPhysicsOptions, CrowdTarget, CrowdUpdateContext, NavGrid } from '../../src'
 
 export const STEP = 1 / 60
 
-/** The balance table of `design-chain-horde.md` §5.1: content that `game-characters-undead` will carry; the tests give it to the pack themselves. */
-const BALANCE_TABLE: Readonly<Record<string, NonNullable<CrowdType['balance']>>> = {
-  walker: { stability: 1, trip: 0.04, driveForce: 250 },
-  runner: { stability: 0.8, trip: 0.06, driveForce: 320 },
-  crawler: { trip: 0, driveForce: 150, canFall: false },
-  brute: { stability: 2.5, trip: 0.015, driveForce: 600 },
-  sniffer: { stability: 1, trip: 0.04, driveForce: 260 },
-  leaper: { stability: 0.9, trip: 0.03, driveForce: 300 },
-  bloater: { stability: 0.7, trip: 0.06, driveForce: 200 },
-  stalker: { stability: 1.1, trip: 0.03, driveForce: 280 },
-  blind: { stability: 0.8, trip: 0.07, driveForce: 260 },
-  screamer: { stability: 0.9, trip: 0.04, driveForce: 220 },
-  charred: { stability: 0.8, trip: 0.05, driveForce: 230 },
-  drowned: { stability: 0.9, trip: 0.045, driveForce: 240 },
-  devourer: { stability: 1.2, trip: 0.035, driveForce: 300 },
-}
+/** The pack of the undead types, which carries its balance table (design-chain-horde.md 5.1). */
+export const packWithBalance = (): CrowdPack => undeadCrowdPack() as unknown as CrowdPack
 
-export const packWithBalance = (): CrowdPack => {
-  const pack = undeadCrowdPack() as unknown as CrowdPack
-  return { ...pack, types: pack.types.map((type) => ({ ...type, balance: BALANCE_TABLE[type.id] })) }
+/** The same pack with the balance table taken off every type: the engine falls back to its defaults. */
+export const packWithoutBalance = (): CrowdPack => {
+  const pack = packWithBalance()
+  return { ...pack, types: pack.types.map(({ balance: _balance, ...type }) => type) }
 }
 
 export const WALKER = 0
@@ -129,11 +116,11 @@ export const countBalance = (crowd: Crowd, balance: number): number => {
 export const FALLEN_OR_UP = [BALANCE.FALLEN, BALANCE.GETTING_UP] as const
 
 /** The column scene (§13.2): `count` walkers in single file, 0.48 m apart, the first one against the wall, personality off. */
-export const createColumnScene = (count: number, options: { reversed?: boolean; typeAt?: (index: number) => number; physics?: CrowdPhysicsOptions } = {}): Scene => {
+export const createColumnScene = (count: number, options: { reversed?: boolean; typeAt?: (index: number) => number; physics?: CrowdPhysicsOptions; pack?: CrowdPack } = {}): Scene => {
   const grid = createNavGrid({ size: 512, border: true })
   grid.fillRect(-60, -21, 60, -20, CELL.SOLID, 3)
   const physics = options.physics ?? physicsOptions({ personality: false })
-  const crowd = createCrowd({ pack: packWithBalance(), seed: 5, grid, capacity: 400, flow: { cellsPerStep: 20000, clock: () => 0 }, physics })
+  const crowd = createCrowd({ pack: options.pack ?? packWithBalance(), seed: 5, grid, capacity: 400, flow: { cellsPerStep: 20000, clock: () => 0 }, physics })
   const order = Array.from({ length: count }, (_, k) => k)
   if (options.reversed) order.reverse()
   for (const k of order) {
