@@ -4,6 +4,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
+import { buildWeaponModelById } from '../src/models'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -236,5 +237,20 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     expect(colours.size).toBeGreaterThan(1)
     module.fx?.setCondition('new')
     expect((meshOf().material as THREE.MeshStandardMaterial).color.getHex()).toBe(before)
+  })
+
+  it.each(['glock_17', 'colt_m4a1', 'remington_870', 'rpg_7'])('%s is drawn at its real size, with no first-person scale-down', (id) => {
+    const { room } = roomWith()
+    equip(room, id)
+    const held = new THREE.Box3().setFromObject(room.scene.getObjectByName('weapon-viewmodel')!).getSize(new THREE.Vector3())
+    const real = new THREE.Box3().setFromObject(buildWeaponModelById(THREE, id)!.root).getSize(new THREE.Vector3())
+    expect(Math.max(held.x, held.y, held.z)).toBeCloseTo(Math.max(real.x, real.y, real.z), 2)
+  })
+
+  it('a weapon with no stock does not ride behind the eye', () => {
+    const { room } = roomWith()
+    equip(room, 'mossberg_500_cruiser')
+    const grip = room.handState().targets!.R!.position
+    expect(room.camera.worldToLocal(new THREE.Vector3(...grip)).z).toBeLessThan(0)
   })
 })

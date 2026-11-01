@@ -378,8 +378,7 @@ if (runs('hands')) {
     // the support hand at rest under a handguard: a palm-up cup, the forearm from below
     const cup = (id) => {
       const r = window.C.r
-      // until the gun rides the body in first person too (spec 004 T3.1) it floats in front of the eye there: the support hand is checked where the gun sits on the body
-      r.setCameraMode('third')
+      // the gun rides the body in both views (spec 004 T3.1): the support hand is checked from the player's own first person
       window.C.armed(id)
       r.pause()
       // the body's support arm (arms[0], at +x): elbow and hand in the world
@@ -390,16 +389,15 @@ if (runs('hands')) {
       const fore = j.wrist.clone().sub(j.elbow)
       const left = r.handState().targets.L
       window.C.view([left.position[0] + 0.55, left.position[1], left.position[2] + 0.1], left.position, 40)
-      return { underWrist: +(j.wrist.y - j.elbow.y).toFixed(3), offForward: +((Math.atan2(fore.x, -fore.z) * 180) / Math.PI).toFixed(0), rising: +((Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * 180) / Math.PI).toFixed(0) }
+      return { underWrist: +(j.wrist.y - j.elbow.y).toFixed(3), offForward: +((Math.atan2(Math.abs(fore.x), -fore.z) * 180) / Math.PI).toFixed(0), rising: +((Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * 180) / Math.PI).toFixed(0) }
     }
-    // the body's support shoulder is 0.3 m to the side (the separate arms had it near the middle, 25 degrees): the forearm meets the handguard at about 60. Owner, 2026-10-31: accept
-    // the anatomy now and tighten it in spec 004 T3.1, when the gun rides the body in first person too
-    const BODY_SUPPORT_OFF_FORWARD = 65
+    // the body's support shoulder is 0.3 m to the side: with the elbow tucked under the gun (the first-person arms' `elbowPoleLeft`) the forearm meets the handguard at 47 to 51 degrees at rest, aiming up or walking
+    const BODY_SUPPORT_OFF_FORWARD = 55
     for (const [name, id] of [['m4', 'colt_m4a1'], ['ak', 'ak_47']]) {
       const geometry = await closeShot(`${name}-rest-side`, cup, id)
       verdict(`${id} at rest: forearm from below, the hand a cup under the handguard`, geometry.underWrist > 0.1 && geometry.offForward < BODY_SUPPORT_OFF_FORWARD && geometry.rising > 20, geometry)
-      // the same moment from the player's own camera, back in first person
-      await page.evaluate(() => { window.__testRoom.setDebugCamera(null); window.__testRoom.setCameraMode('first') })
+      // the same moment from the player's own camera
+      await page.evaluate(() => window.__testRoom.setDebugCamera(null))
       if (!CI) {
         await page.waitForTimeout(250)
         await page.screenshot({ path: join(shotsDir, `closeup-${name}-rest-player.png`), ...SHOT })

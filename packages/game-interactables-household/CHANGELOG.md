@@ -1,5 +1,19 @@
 # @adatechnology/game-interactables-household
 
+## 0.4.0
+
+### Minor Changes
+
+- a1ce099: Pushing is no longer offered for everything: only a piece whose definition says `pushable` (a sofa, a wardrobe, a fridge, a grill) is leaned on. What goes in the hand is grabbed at once.
+
+### Patch Changes
+
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [b8d2a17]
+  - @adatechnology/game-items-goods@0.3.0
+  - @adatechnology/game-interactables@0.2.12
+
 ## 0.3.1
 
 ### Patch Changes

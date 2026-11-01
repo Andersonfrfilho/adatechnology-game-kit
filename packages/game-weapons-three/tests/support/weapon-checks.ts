@@ -45,6 +45,8 @@ const stubRenderer = (): THREE.WebGLRenderer => {
 
 const WALL_DISTANCE = 0.5
 const NEAR = 0.12
+/** A hand nearer than this to the eye (along the view) is beside it, not in front of it. */
+const BESIDE_THE_EYE = 0.3
 
 /** The hand work each family needs in an empty reload (the hand and the anchor kinds that may do it); null: nothing to work. */
 const EMPTY_WORK: Record<string, string[] | null> = {
@@ -146,6 +148,8 @@ export const checkWeapons = (): WeaponChecks[] => {
       contact: { ok: null, note: '' },
       ...reload,
     }
+    // the shots of the weapon before kicked the view up, and the body's hands do not follow the view's pitch as the weapon floating before the eye did
+    room.look([0, 1.7, 5], [0, 1.2, -11])
     room.setTool(row.id)
     sleep(room, 40)
     const held = room.scene.getObjectByName('weapon-viewmodel')
@@ -172,7 +176,9 @@ export const checkWeapons = (): WeaponChecks[] => {
       }
       const at = new THREE.Vector3(...target.position)
       const projected = at.clone().project(camera)
-      if (projected.z < -1 || projected.z > 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1) problems.push(`mão ${side} fora da vista (${projected.x.toFixed(2)}, ${projected.y.toFixed(2)}, ${projected.z.toFixed(2)})`)
+      // the weapon is the body's, at its real size: the grip hand of a shouldered long gun sits beside the eye, out of the view as in life, so only a hand ahead of BESIDE_THE_EYE has to be seen
+      const beside = camera.worldToLocal(at.clone()).z > -BESIDE_THE_EYE
+      if (projected.z < -1 || projected.z > 1 || (!beside && (Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1))) problems.push(`mão ${side} fora da vista (${projected.x.toFixed(2)}, ${projected.y.toFixed(2)}, ${projected.z.toFixed(2)})`)
       const away = box.distanceToPoint(at)
       distances.push(`${side} ${(away * 100).toFixed(0)} cm`)
       if (away > NEAR) problems.push(`mão ${side} a ${(away * 100).toFixed(0)} cm da arma`)

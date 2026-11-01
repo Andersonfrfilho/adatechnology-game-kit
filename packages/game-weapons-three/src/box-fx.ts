@@ -9,6 +9,7 @@ import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { IN_HAND_NODE_NAME } from './laser-raycast'
+import { createEyeFrame, placeOnBody } from './fx/body-hold'
 import { holdOfProp, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
 import type { ItemModels } from './item-models'
@@ -83,7 +84,6 @@ const FALLBACK_ENERGY = 300
 const MAX_CASINGS = 120
 const MAX_MAGAZINES = 12
 const LIFETIME_S = 25
-const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
 const GRAVITY = 9.81
 
 interface Body {
@@ -118,6 +118,10 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   let dip = 0
   let reloading = false
   const v = new THREE.Vector3()
+  const v2 = new THREE.Vector3()
+  const eyeFrame = createEyeFrame(THREE, camera)
+  let rear = 0
+  let lengthMetres = 0
   const q = new THREE.Quaternion()
   const q2 = new THREE.Quaternion()
   const pointForward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
@@ -130,17 +134,19 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     if (!def || BODY_ACTIONS.has(def.id)) return
     model = buildWeaponModel(THREE, def, options.items)
     const length = new THREE.Box3().setFromObject(model).getSize(v).x
-    // long guns are drawn smaller so they do not fill the view
-    model.scale.setScalar(length > 0.8 ? 0.55 : length > 0.4 ? 0.75 : 1)
+    rear = new THREE.Box3().setFromObject(model).min.x
+    lengthMetres = length
     model.quaternion.copy(pointForward)
     hand.add(model)
     inHand = def.id
-    hold = holdOfProp(THREE, model, def.category, model.scale.x)
+    hold = holdOfProp(THREE, model, def.category, 1)
   }
 
-  // a point on the gun in camera space, turned into the world
-  const handPoint = (x: number, y: number, z: number, out: THREE_NS.Vector3): THREE_NS.Vector3 =>
-    out.set(HAND_OFFSET[0] + x, HAND_OFFSET[1] + y, HAND_OFFSET[2] + z).applyQuaternion(camera.quaternion).add(camera.position)
+  // a point near the gun, an offset in camera space turned into the world
+  const handPoint = (x: number, y: number, z: number, out: THREE_NS.Vector3): THREE_NS.Vector3 => {
+    if (!model) return out.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
+    return out.set(x, y, z).applyQuaternion(camera.quaternion).add(model.getWorldPosition(v2))
+  }
 
   const throwBody = (kind: Body['kind'], mesh: THREE_NS.Mesh, from: THREE_NS.Vector3, velocity: THREE_NS.Vector3, radius: number): void => {
     if (!(kind === 'casing' ? layers.casings : layers.magazines)) {
@@ -263,10 +269,12 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     update(dt) {
       kick *= Math.exp(-dt * 14)
       dip += ((reloading ? 1 : 0) - dip) * Math.min(1, dt * 8)
-      if (inHand) {
-        handPoint(0, -0.12 * dip, 0.05 * kick, hand.position)
+      if (inHand && model) {
+        const handgun = def?.category === 'pistol' || def?.category === 'revolver'
+        placeOnBody({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), rear, lengthMetres, handgun, right: hold?.right ?? null, left: hold?.left ?? null })
+        hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
         q.setFromEuler(new THREE.Euler(0.14 * kick - 0.25 * dip, 0, 0.6 * dip))
-        hand.quaternion.copy(camera.quaternion).multiply(q)
+        hand.quaternion.multiply(q)
       }
       for (const body of [...bodies]) {
         stepBody(body, dt)

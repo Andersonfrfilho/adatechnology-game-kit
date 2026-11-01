@@ -338,9 +338,9 @@ export interface ModuleHost {
    */
   setHandTargets?(source: HandTargetSource | null): () => void
   /**
-   * Where the player's body holds a tool now (world space), for a view that shows the body (third person): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
-   * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size, instead of in front of the eye. Null while the view draws the tool in front of
-   * the eye (first person); a host without a body leaves it out.
+   * Where the player's body holds a tool now (world space), in every view (the weapon is the body's own): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
+   * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size. Null for a host with no body (the module puts the same pocket under the camera's eye);
+   * a host without a body leaves it out.
    */
   holdFrame?(): HandPose | null
   /**

@@ -1,5 +1,37 @@
 # @adatechnology/game-weapons-three
 
+## 0.11.0
+
+### Minor Changes
+
+- f8c2b21: Third person draws the weapon on the body at its real size: new optional `ModuleHost.holdFrame()` (the pocket of the right shoulder turned to the aim; null in first person), which the test room lends from the avatar's new `shoulder(side)`. The weapons viewmodel puts a long gun's stock in the pocket (a launcher slides back until its grip is in reach), a handgun or a one-hand tool at a ready grip, and caps the support hand's span at 0.5 m. Looking up or down no longer drives the arms into the body.
+- 3642202: The weapon in the hands is the body's own, at its real size, in first and third person: no first-person scale-down and no offset in front of the camera. `holdFrame` (the pocket of the right shoulder) now answers in both views, and a host with no body gets the same pocket under the camera's eye. A gun with no stock slides forward so its grip is never behind the eye, a short two-hand gun is held at mid-chest, the grips of both hands stay above the bottom of the view (`HAND_IN_VIEW`, up to 0.3 m) and the weapon comes back from a wall (`WALL_PULL`, up to 1.2 m). The generic props ride the body too. The player's body no longer stops the weapon's contact and laser rays. The support arm's elbow tucks under the gun, so the forearm meets the handguard at 47 to 51 degrees off the aim.
+
+### Patch Changes
+
+- 3c97ac5: The explosives push scenario logs a person's row as plain numbers (kind, distance, outward) instead of the whole placed body, whose three.js objects made the room's behaviour log fail to serialise.
+- 7d12878: The push scenarios leave a heavy piece of furniture the blast tore apart out of "every body moved outward" (its root can meet its own pieces in the air) while still checking that it moved, and the grenade's zombie lies off the line of every loose thing.
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [b8d2a17]
+- Updated dependencies [4eb330f]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+  - @adatechnology/game-items-three@0.6.0
+  - @adatechnology/game-floorplan-three@0.8.0
+  - @adatechnology/game-audio@0.3.5
+  - @adatechnology/game-interactables-three@0.1.14
+  - @adatechnology/game-vfx-three@0.3.6
+  - @adatechnology/game-weapons@0.5.6
+
 ## 0.10.4
 
 ### Patch Changes

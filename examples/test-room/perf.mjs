@@ -3,6 +3,7 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
+//   PERF_SHARD=cold | warm             one half: the nine first uses, or warm_all + storm + after_storm (CI runs both in parallel)
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
 //   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
@@ -19,6 +20,9 @@ const require = createRequire(import.meta.url)
 
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
+// PERF_SHARD=cold|warm runs one half (CI runs both in parallel); unset runs everything
+const SHARD = process.env.PERF_SHARD ?? 'all'
+const runs = (part) => SHARD === 'all' || SHARD === part
 // A hitch is a frame that misses two 60 Hz refreshes; a long task blocks input for more than 50 ms.
 const BUDGET = {
   hitchMs: 33.4,
@@ -31,7 +35,8 @@ const BUDGET = {
   drawGrowthAfterStorm: 1.1,
 }
 const DRAW_MS = 300
-const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 120000
+// software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
+const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
 
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
@@ -56,7 +61,8 @@ const browser = await chromium.launch({
   args: GPU_MODE ? REAL_GL : SOFTWARE_GL,
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
-const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height: 900 } : { width: 960, height: 540 } })
+// software GL pays per pixel and the counters do not depend on the size, so CI draws a small window
+const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height: 900 } : { width: 320, height: 180 }, deviceScaleFactor: 1 })
 const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
@@ -75,18 +81,21 @@ console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  gpu=${gpu}`)
 const phases = []
 let lightSlotReport = { point: [], spot: [], problems: ['light_slots did not run'] }
 const idle = await phase('idle', () => pause(3000))
-const slots = await phase('light_slots', async () => {
+// the light slots are a load-time property of the room: the cold shard (or the whole run) checks them, the warm shard skips them
+const slots = runs('cold') ? await phase('light_slots', async () => {
   lightSlotReport = await page.evaluate(readLightSlots)
-})
-console.log(`SLOTS ${JSON.stringify(lightSlotReport)}`)
+}) : undefined
+if (slots) console.log(`SLOTS ${JSON.stringify(lightSlotReport)}`)
 if (process.env.PERF_ONLY === 'light_slots') {
   await browser.close()
-  process.exit(lightSlotReport.problems.length === 0 && slots.programs === 0 ? 0 : 1)
+  process.exit(lightSlotReport.problems.length === 0 && slots?.programs === 0 ? 0 : 1)
 }
-for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
-const warm = await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200))
-const storm = await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120))
-const after = await phase('after_storm', () => pause(3000))
+if (runs('cold')) for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
+// the warm shard alone first uses every explosive once, unmeasured, so warm_all measures second uses as in a full run
+if (!runs('cold')) await fireAndSettle(EXPLOSIVES, 300)
+const warm = runs('warm') ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200)) : undefined
+const storm = runs('warm') ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120)) : undefined
+const after = runs('warm') ? await phase('after_storm', () => pause(3000)) : undefined
 
 const failures = []
 const fail = (text) => failures.push(text)
@@ -98,14 +107,14 @@ for (const p of phases) {
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
   if (p.maxFramesWaiting >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
 }
-for (const problem of lightSlotReport.problems) fail(`light_slots: ${problem}`)
-if (slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
-const warmBuffers = warm.buffers / EXPLOSIVES.length
+if (slots) for (const problem of lightSlotReport.problems) fail(`light_slots: ${problem}`)
+if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
+const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, lightSlots: lightSlotReport, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()

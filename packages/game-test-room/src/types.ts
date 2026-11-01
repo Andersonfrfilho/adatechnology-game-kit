@@ -273,7 +273,13 @@ export interface TestRoomOptions {
    * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
    * a slab) stay as part of the map, with collision.
    */
-  debris?: { fragmentLife?: number | FragmentLifeRule; maxFragments?: number; particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>> }
+  debris?: {
+    fragmentLife?: number | FragmentLifeRule
+    maxFragments?: number
+    particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>>
+    /** Milliseconds of destruction events the renderer applies per frame; the rest wait for the next frames (default 8). `Infinity` applies every event in the frame it happens, which a test comparing counts needs. */
+    eventBudgetMs?: number
+  }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
   /**
