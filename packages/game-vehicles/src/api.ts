@@ -3,6 +3,7 @@
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
 import type { LodSettings } from './lod'
+import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
 
@@ -295,6 +296,11 @@ export interface VehicleKitOptions extends KitConfiguration {
    * handing them to the host's pool keeps the shader program linked when the last puff dies. Without it each puff makes and disposes its own (deprecated, removed in the next major).
    */
   particleMaterials?: ParticleMaterials
+  /**
+   * The host's effects world, read at each puff (the host attaches after the first build). With one, smoke, fire and dust go through it and its one budget; without one the kit draws its own
+   * sprites with their own cap (deprecated, removed in the next major).
+   */
+  effects?: () => ParticleEffects | undefined
   plugins?: Plugin[]
 }
 

@@ -1,5 +1,7 @@
 /** Particle system: smoke, fire, sparks, shards, dust and water. */
 import type { Kit } from './types'
+import { warnOnce } from '@adatechnology/game-contracts'
+import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
 
 export function installParticles(kit: Kit): void {
@@ -142,8 +144,32 @@ export function installParticles(kit: Kit): void {
     c.particles.splice(i, 1)
   }
   /* Particle in the sibling group c.effects (vehicle world coordinates). type: spark|shard|cube|lens|scrap|plastic|dust|smoke|fire|water|droplet */
+  /* The effects world draws the puff and its budget caps it: positions and velocities go from the vehicle's effects group to the world. */
+  function routeParticle(c: any, effects: any, type: any, pos: any, vel: any, o: any) {
+    c.effects.updateWorldMatrix(true, false)
+    const at = pos.clone().applyMatrix4(c.effects.matrixWorld)
+    const to = vel.clone().transformDirection(c.effects.matrixWorld).multiplyScalar(vel.length())
+    const colour = o.col == null ? undefined : new THREE.Color(o.col).getHex()
+    effects.play(
+      routedParticleRequest({
+        type,
+        position: [at.x, at.y, at.z],
+        velocity: [to.x, to.y, to.z],
+        ...(o.variant ? { variant: o.variant } : {}),
+        ...(colour !== undefined ? { color: colour } : {}),
+        ...(o.op != null ? { alpha: o.op } : {}),
+        ...(o.s ? { size: o.s } : {}),
+        ...(o.life ? { life: o.life } : {}),
+        ...(o.grow ? { grow: o.grow } : {}),
+      }),
+    )
+    return null
+  }
   kit.spawn = function (c: any, type: any, pos: any, vel: any, o: any) {
     o = o || {}
+    const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
+    if (effects) return routeParticle(c, effects, type, pos, vel, o)
+    if (ROUTED_PARTICLE_TYPES[type]) warnOnce('game-vehicles.own-particles', 'game-vehicles drew its smoke, fire and dust with sprites of its own because the host lent no effects world (options.effects); pass the host effects so the puffs share one budget')
     if (c.particles.length >= PARTICLE_LIMIT) {
       const idx = c.particles.findIndex(function (q: any) {
         return TRANSIENT_TYPES[q.type]

@@ -93,7 +93,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     if (!kit) {
       if (options.createKit) kit = options.createKit(THREE)
       else {
-        kit = createVehicleKit({ THREE, locale, particleMaterials, ...(options.document ? { document: options.document as never } : {}) })
+        kit = createVehicleKit({ THREE, locale, particleMaterials, effects: () => host?.effects, ...(options.document ? { document: options.document as never } : {}) })
         fleet.installFleet(kit)
       }
       kits.set(THREE, kit)

@@ -38,8 +38,8 @@ describe('event effects', () => {
 
   it('keeps the Workshop recipes apart from the event ones', () => {
     expect(Object.keys(WORKSHOP_EFFECTS)).toHaveLength(39)
-    // the vehicle ones: vehicle_fire, vehicle_exhaust, vehicle_leak and vehicle_leak_ignited
-    expect(Object.keys(GAME_EFFECTS).length).toBe(39 + EVENT_EFFECTS.length + Object.keys(VIEWMODEL_EFFECTS).length + 4)
+    // the vehicle ones (vehicle_fire, vehicle_exhaust, vehicle_leak, vehicle_leak_ignited) and the three single particles the adapters hand over
+    expect(Object.keys(GAME_EFFECTS).length).toBe(39 + EVENT_EFFECTS.length + Object.keys(VIEWMODEL_EFFECTS).length + 4 + 3)
   })
 })
 

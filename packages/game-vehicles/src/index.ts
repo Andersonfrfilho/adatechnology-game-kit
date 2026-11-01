@@ -63,3 +63,4 @@ export type {
   VehicleModel,
   VehicleStatus,
 } from './destructible'
+export type { ParticleEffects, ParticleEffectRequest } from './routed-particles'
