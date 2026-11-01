@@ -19,6 +19,62 @@ export interface DetachOptions {
   away?: [number, number, number]
 }
 
+/** A hole's mark is wider than the bore: the chipped paint and bare metal around it. */
+const HOLE_DECAL_SCALE = 2.4
+/** From a door's skin to its inner card, metres. */
+const DOOR_DEPTH = 0.07
+/** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
+const DOOR_EDGE_PIECES = 16
+/** The inner face of a door, trim grey: a lit surface, not a hole. */
+const DOOR_CARD_COLOR = '#3b3e42'
+const HOLE_TEXTURE_SIZE = 64
+/** A mirror the model draws: small, and this near where the part stands, metres. */
+const DRAWN_MIRROR_SIZE = 0.3
+const DRAWN_MIRROR_REACH = 0.4
+/** Per material: the ring the round leaves around the bore. */
+const HOLE_RIM: Record<string, string> = { steel: '#b7bcc0', aluminium: '#d3d6d8', plastic: '#d9d6cc', rubber: '#141414', glass: '#eef3f5' }
+const holeMaterials = new WeakMap<object, Map<string, any>>()
+let holeDisc: any = null
+
+function holeDiscGeometry(THREE: any): any {
+  holeDisc = holeDisc ?? new THREE.CircleGeometry(1, 12)
+  return holeDisc
+}
+/** Dark bore, the bare ring and the jagged edge of the chipped finish, shared by every hole of one material. */
+function holeMaterial(kit: VehicleKit, material: string): any {
+  const key = kit as unknown as object
+  const cache = holeMaterials.get(key) ?? new Map<string, any>()
+  holeMaterials.set(key, cache)
+  const known = cache.get(material)
+  if (known) return known
+  const I = (kit as any)._
+  const THREE = (kit as any).THREE
+  const canvas = (kit as any).document?.createElement?.('canvas')
+  const x = canvas?.getContext?.('2d')
+  let made: any = I.MATERIALS.dark
+  if (x) {
+    canvas.width = canvas.height = HOLE_TEXTURE_SIZE
+    const mid = HOLE_TEXTURE_SIZE / 2
+    x.fillStyle = HOLE_RIM[material] ?? HOLE_RIM.steel
+    x.beginPath()
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2
+      const r = mid * (i % 2 ? 0.98 : 0.76)
+      x.lineTo(mid + Math.cos(a) * r, mid + Math.sin(a) * r)
+    }
+    x.closePath()
+    x.fill()
+    x.fillStyle = '#050505'
+    x.beginPath()
+    x.arc(mid, mid, mid * 0.42, 0, Math.PI * 2)
+    x.fill()
+    const map = new THREE.CanvasTexture(canvas)
+    made = new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: 0.55, metalness: material === 'steel' || material === 'aluminium' ? 0.6 : 0 })
+  }
+  cache.set(material, made)
+  return made
+}
+
 export class VehicleVisuals implements CreaseWork {
   readonly kit: VehicleKit
   readonly c: VehicleContext
@@ -79,6 +135,7 @@ export class VehicleVisuals implements CreaseWork {
     const id = z ? z.id : this.model.parts.find((p) => p.role === 'hood')?.id
     if (!id) return null
     c.hood.piv.name = id
+    c.hood.piv.userData.plateOf = id
     return { id, open: c.hood.open as number, sign: (c.hood.sign || 1) as number }
   }
   private mirrorObjects(p: PartDef): Obj[] {
@@ -169,6 +226,7 @@ export class VehicleVisuals implements CreaseWork {
       recess.userData.noFollow = true
       const piv = new THREE.Group()
       piv.name = p.id
+      piv.userData.plateOf = p.id
       piv.position.set(hx, cy, sk + s * 0.016)
       piv.userData.rigid = true
       this.c.vehicle.add(piv)
@@ -186,6 +244,7 @@ export class VehicleVisuals implements CreaseWork {
       recess.userData.noFollow = true
       const piv = new THREE.Group()
       piv.name = p.id
+      piv.userData.plateOf = p.id
       piv.position.set(sk - 0.016, B.y1 - 0.05, 0)
       piv.userData.rigid = true
       this.c.vehicle.add(piv)
@@ -252,9 +311,14 @@ export class VehicleVisuals implements CreaseWork {
       if (p.role === 'door') {
         const dirty = new Set<Obj>()
         const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
-        const pcs = (I.cutPanel(this.c, z, rect, true, dirty) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
+        const pcs = (I.cutPanel(this.c, z, rect, true, dirty, { anyN: true }) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
         this.mend(dirty)
-        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...(I.windowsOver(this.c, z, inv) as Obj[])]
+        if (pcs.length) {
+          const panes = I.windowsOver(this.c, z, inv) as Obj[]
+          const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
+          const mirrors = this.mirrorsOn(z)
+          objs = [...pcs, ...this.doorCards(pcs, z), ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
+        }
       } else {
         const pcs = this.cutZone(z)
         if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[])]
@@ -272,9 +336,104 @@ export class VehicleVisuals implements CreaseWork {
       const di = deform.indexOf(o)
       if (di >= 0) deform.splice(di, 1)
     }
+    if (p.role === 'door' && objs.length > 0) {
+      this.doorEdges(piv, z)
+      this.doorSill(piv, z, inv, objs)
+    }
     piv.quaternion.copy(q)
     this.c.root.updateMatrixWorld(true)
     return objs.length > 0
+  }
+  /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, dark, lines the opening. */
+  private doorEdges(piv: Obj, z: any): void {
+    const THREE = this.THREE
+    const B = z.box
+    const side = z.side < 0 ? -1 : 1
+    const flat = piv.position.z - side * 0.016
+    const x0 = B.x0 + 0.03
+    const x1 = B.x1 - 0.03
+    const y0 = B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1)
+    const y1 = B.y1 - 0.02
+    const loop: Array<[number, number]> = []
+    const run = (ax: number, ay: number, bx: number, by: number): void => {
+      for (let i = 0; i < DOOR_EDGE_PIECES; i++) loop.push([ax + ((bx - ax) * i) / DOOR_EDGE_PIECES, ay + ((by - ay) * i) / DOOR_EDGE_PIECES])
+    }
+    run(x0, y0, x1, y0)
+    run(x1, y0, x1, y1)
+    run(x1, y1, x0, y1)
+    run(x0, y1, x0, y0)
+    const heights = loop.map(([x, y]) => this.surface('z', side, B, [[x, y]]) ?? flat)
+    const band = (lift: number): any => {
+      const position: number[] = []
+      const index: number[] = []
+      loop.forEach(([x, y], i) => {
+        position.push(x, y, heights[i]! + side * lift, x, y, heights[i]! + side * (lift - DOOR_DEPTH))
+        const a = i * 2
+        const b = ((i + 1) % loop.length) * 2
+        index.push(a, a + 1, b, b, a + 1, b + 1)
+      })
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+      g.setIndex(index)
+      g.computeVertexNormals()
+      return g
+    }
+    const paint = this.paint().clone()
+    paint.side = THREE.DoubleSide
+    const inner = this.I.MATERIALS.dark.clone()
+    inner.side = THREE.DoubleSide
+    const edges = new THREE.Mesh(band(0.002), paint)
+    const lining = new THREE.Mesh(band(-0.012), inner)
+    for (const m of [edges, lining]) {
+      m.userData.noFollow = true
+      m.castShadow = false
+      this.c.vehicle.add(m)
+    }
+    piv.attach(edges)
+  }
+  /** A front door carries the mirror drawn at its corner. */
+  private mirrorsOn(z: any): Obj[] {
+    if (!z.mirror) return []
+    const own = ((z.mirrors ?? []) as Obj[]).filter((o) => o.parent)
+    if (own.length) return own
+    const part = this.model.parts.find((q) => q.role === 'mirror' && Math.sign(q.box.center[2]) === Math.sign(z.side))
+    return part ? (this.extra.get(part.id) ?? []).filter((o) => o.parent) : []
+  }
+  /** The top of a door, from the skin in to its pane: the glass comes out of the door and does not float over it. */
+  private doorSill(piv: Obj, z: any, inv: any, objs: Obj[]): void {
+    const panes = objs.filter((o) => o.userData.glass)
+    if (!panes.length) return
+    const THREE = this.THREE
+    const B = z.box
+    const side = z.side < 0 ? -1 : 1
+    const box = new THREE.Box3()
+    for (const g of panes) box.union(this.I.localBox(this.c, g, inv))
+    const top = B.y1 - 0.02
+    const skin = this.surface('z', side, B, [[(B.x0 + B.x1) / 2, top]]) ?? piv.position.z - side * 0.016
+    const paneZ = side > 0 ? box.min.z : box.max.z
+    const height = Math.max(0.02, box.min.y - top + 0.015)
+    const depth = Math.max(0.02, Math.abs(skin - paneZ) + 0.012)
+    const sill = this.box(B.x1 - B.x0 - 0.06, height, depth, this.I.MATERIALS.trim ?? this.I.MATERIALS.dark, (B.x0 + B.x1) / 2, top + height / 2, (skin + paneZ) / 2)
+    sill.userData.noFollow = true
+    sill.castShadow = false
+    piv.attach(sill)
+  }
+  /** The inside of a door: its skin brought in by the depth of the door, in the trim's dark plastic, so the open door is a door and not one sheet of paint. */
+  private doorCards(skins: Obj[], z: any): Obj[] {
+    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.8 })
+    return skins.map((skin) => {
+      const card = new this.THREE.Mesh(skin.geometry, cardMaterial)
+      card.position.copy(skin.position)
+      card.quaternion.copy(skin.quaternion)
+      card.scale.copy(skin.scale)
+      const side = z.side < 0 ? -1 : 1
+      const inward = -side * DOOR_DEPTH
+      card.position.z += inward
+      card.userData.noFollow = true
+      card.castShadow = false
+      this.c.vehicle.add(card)
+      return card
+    })
   }
   private mend(dirty: Set<Obj>): void {
     dirty.forEach((msh) => {
@@ -285,7 +444,27 @@ export class VehicleVisuals implements CreaseWork {
       g.computeBoundingBox()
     })
   }
+  /** The mirror the model already draws around where the part says, if it draws one. */
+  private drawnMirror(p: PartDef): Obj[] {
+    const THREE = this.THREE
+    const [cx, cy, cz] = p.box.center
+    this.c.root.updateMatrixWorld(true)
+    const inv = this.I.worldInverseOf(this.c)
+    return (this.c.vehicle.children as Obj[]).filter((o) => {
+      if (o.userData.glass || o.userData.decal || !(o.isMesh || o.isGroup) || !o.visible || (this.c as any).deform?.includes(o)) return false
+      const box = this.I.localBox(this.c, o, inv)
+      if (box.isEmpty()) return false
+      const size = box.getSize(new THREE.Vector3())
+      const at = box.getCenter(new THREE.Vector3())
+      return Math.max(size.x, size.y, size.z) < DRAWN_MIRROR_SIZE && Math.hypot(at.x - cx, at.y - cy, at.z - cz) < DRAWN_MIRROR_REACH && Math.abs(at.z) > Math.abs(cz) - DRAWN_MIRROR_REACH / 2
+    })
+  }
   private makeMirror(p: PartDef): void {
+    const drawn = this.drawnMirror(p)
+    if (drawn.length) {
+      this.extra.set(p.id, drawn)
+      return
+    }
     const [cx, cy, cz] = p.box.center
     const s = cz < 0 ? -1 : 1
     const mats = this.I.MATERIALS
@@ -327,16 +506,29 @@ export class VehicleVisuals implements CreaseWork {
 
   // ---- marks -------------------------------------------------------------------------------------------------------------------------------
   /** A bullet hole: a dark disc lying on the surface at `point` (`c.vehicle` coordinates). */
-  holeDecal(point: [number, number, number], normal: [number, number, number], diameter: number): void {
+  holeDecal(point: [number, number, number], normal: [number, number, number], diameter: number, part?: PartDef): void {
     const THREE = this.THREE
-    const m = new THREE.Mesh(new THREE.CircleGeometry(Math.max(0.006, diameter / 2), 10), this.I.MATERIALS.dark)
+    // a pane that broke has no surface left to carry the hole
+    const pane = part?.role === 'glass' ? this.panesOf(part).find((g) => g.visible) : undefined
+    if (part?.role === 'glass' && (!pane || pane.userData.glass?.broken)) return
+    const radius = Math.max(0.006, diameter / 2) * HOLE_DECAL_SCALE
+    const m = new THREE.Mesh(holeDiscGeometry(THREE), holeMaterial(this.kit, part?.material ?? 'steel'))
+    m.scale.set(radius, radius, 1)
     const n = new THREE.Vector3(...normal)
-    m.position.set(...point).addScaledVector(n, 0.004)
-    m.lookAt(m.position.clone().add(n))
+    m.position.set(...point).addScaledVector(n, 0.003)
+    this.c.vehicle.add(m)
+    m.lookAt(this.c.vehicle.localToWorld(m.position.clone().add(n)))
     m.userData.decal = true
     m.userData.noFollow = true
+    m.renderOrder = 3
     m.raycast = () => {}
-    this.c.vehicle.add(m)
+    // the mark is on the panel, so it goes where the panel goes (a door that swings, a pane on it)
+    const carrier = (part && (this.plates.get(part.id) ?? (part.id === this.hood?.id ? (this.c as any).hood?.piv : undefined))) ?? (pane && pane.parent !== this.c.vehicle ? pane.parent : null)
+    if (carrier) carrier.attach(m)
+  }
+  /** The door or lid a hinge group stands for. */
+  plateIdOf(o: Obj): string | undefined {
+    return o.userData.plateOf
   }
   spark(point: [number, number, number], dir: [number, number, number], count = 8): void {
     const V3 = this.THREE.Vector3
@@ -377,10 +569,8 @@ export class VehicleVisuals implements CreaseWork {
   }
   /** Glass: cracks (laminated) or shatters (tempered); returns whether it broke. */
   hitGlass(p: PartDef, point: [number, number, number], dir: [number, number, number], force: number): boolean {
-    const z = this.zone(p)
-    if (!z) return false
     const V3 = this.THREE.Vector3
-    const list = (z.glass as Obj[]).filter((g) => g.parent && g.visible)
+    const list = this.panesOf(p).filter((g) => g.parent && g.visible)
     if (!list.length) return false
     const pt = new V3(...point)
     let best = list[0]
@@ -397,9 +587,16 @@ export class VehicleVisuals implements CreaseWork {
     this.kit.hitGlass(this.c, best, pt, new V3(...dir), force)
     return !!best.userData.glass?.broken
   }
+  private panesOf(p: PartDef): Obj[] {
+    return p.panes ?? (this.zone(p)?.glass as Obj[] | undefined) ?? []
+  }
   glassBreak(p: PartDef): void {
     const z = this.zone(p)
-    if (!z) return
+    if (!z) {
+      for (const g of p.panes ?? []) if (g.parent && g.visible) this.kit.hitGlass(this.c, g, g.position.clone(), new this.THREE.Vector3(0, -1, 0), 0.6)
+      this.gone.add(p.id)
+      return
+    }
     for (const g of z.glass as Obj[]) if (g.parent && g.visible) this.I.glassBand(this.c, z, g, 4)
     this.gone.add(p.id)
   }

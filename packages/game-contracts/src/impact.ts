@@ -11,6 +11,23 @@ import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, Ob
  * `setTransform` is only used by the world for raycasts and blast range). Every event must carry `object === id` and name parts listed by
  * `describe()`.
  */
+/** World-space ray for `DestructibleImpl.surfaceRay`. */
+export interface SurfaceRay {
+  readonly origin: Vec3
+  readonly direction: Vec3
+  readonly maxDistance: number
+  ignored?(part: string): boolean
+}
+
+export interface SurfaceRayHit {
+  readonly part: string
+  readonly point: Vec3
+  readonly normal: Vec3
+  readonly distance: number
+  /** Thickness the ray crosses in this part, metres. */
+  readonly pathLen: number
+}
+
 export interface DestructibleImpl {
   readonly id: string
   readonly name?: string
@@ -22,6 +39,11 @@ export interface DestructibleImpl {
   describe(): DestructibleSpec
   /** Apply one hit (see `IMPACT_CONTRACT` for the fields per type) and return the events it caused. */
   hit(hit: Hit): DestructionEvent[]
+  /**
+   * The real surface a ray meets, for an impl whose drawn shape is not its boxes (a car body): the boxes of `describe()` only say where to look, and a shot that crosses
+   * them without touching the drawn surface goes on. `ignored` answers for the parts the round already went through. Null when the ray meets nothing.
+   */
+  surfaceRay?(ray: SurfaceRay): SurfaceRayHit | null
   /** Advance fire, melting, collapse and other timed behaviour. */
   update?(dt: number): DestructionEvent[]
   /**

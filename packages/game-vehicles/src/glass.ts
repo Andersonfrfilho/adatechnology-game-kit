@@ -7,6 +7,9 @@ export function installGlass(kit: Kit): void {
   const I = kit._
   const { MATERIALS, crease, cutGeometry, pathShape, subdivide, tumble, uvProject } = I
 
+  /* the rubber around a side window, by its pane: it goes where the pane goes */
+  I.paneSeals = new WeakMap()
+
   /* ================= glass ================= */
   kit.addGlass = function (c: any, geo: any, label: any, type?: any, o?: any) {
     o = o || {}
@@ -75,7 +78,7 @@ export function installGlass(kit: Kit): void {
         cy /= poly.length
         const base = I.resolveLabel(label ? label(i, polys.length) : { key: 'window' })
         const lab = { key: base.key, label: kit.t('parts.glass_side', { label: base.label, s }) }
-        kit.addGlass(c, geo, lab, o.type || 'tempered', {
+        const pane = kit.addGlass(c, geo, lab, o.type || 'tempered', {
           mat: o.mat || (o.see === false ? MATERIALS.glassDark : MATERIALS.glass),
           pos: new V3(cx, cy, s * I.halfAt(Wg, T, cy)),
           outline: shp.getSpacedPoints(56),
@@ -91,6 +94,7 @@ export function installGlass(kit: Kit): void {
         pts.pop()
         const seal = c.tube(pts, 0.011, MATERIALS.trim, { closed: true, seg: 72, rs: 5 })
         seal.castShadow = false
+        I.paneSeals.set(pane, seal)
       })
     })
   }
