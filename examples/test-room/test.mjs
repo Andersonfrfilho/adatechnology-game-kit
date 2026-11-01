@@ -29,6 +29,8 @@ mkdirSync(shotsDir, { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
 const consoleErrors = []
+// an adapter that made its own effects world or audio engine says so with `[game-kit]`: the room lends every one, so none may appear
+const fallbackWarnings = []
 // CI runs software GL, several times slower and nothing there reads the pictures: screenshots get a long timeout, and the first-person steps, the contact sheets and the close-ups keep every assertion
 // (both languages, the 100 weapons held, each number) but take no picture; the pictures in shots/ come from a run on a developer's machine
 const CI = Boolean(process.env.CI)
@@ -47,6 +49,7 @@ const page = await context.newPage()
 const isThumbnailError = (text) => /weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(text)
 page.on('console', (m) => {
   if (m.type() === 'error' && !isThumbnailError(m.text())) consoleErrors.push(m.text())
+  if (m.type() === 'warning' && m.text().startsWith('[game-kit]')) fallbackWarnings.push(m.text())
 })
 page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
 
@@ -526,6 +529,10 @@ if (external.length) {
 }
 if (consoleErrors.length) {
   console.log('console errors:', consoleErrors)
+  bad = true
+}
+if (fallbackWarnings.length) {
+  console.log('fallback warnings:', fallbackWarnings)
   bad = true
 }
 console.log(bad ? 'FAILED' : 'OK')

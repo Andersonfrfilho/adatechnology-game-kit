@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { warnOnce } from '@adatechnology/game-contracts'
 import type { FluidEvent, StainState, StreamState } from '@adatechnology/game-fluids'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
@@ -25,6 +26,7 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
   root.name = 'fluid_renderer'
   scene.add(root)
   // The droplets and steam are sprites of the effects world: the host's shared one, or one made here and stepped in `update`.
+  if (!options.vfx) warnOnce('game-fluids-three.own-effects-world', 'game-fluids-three made an effects world of its own because the host lent none (options.vfx); pass the host effects so the effects share one budget')
   const vfx = options.vfx ?? createVfx({ profile: quality, gravity: fluids.gravity, sprites: { capacity: profile.maxParticles } })
   const ownVfx = options.vfx ? undefined : createVfxRenderer(THREE, { scene, camera: options.camera ?? new THREE.PerspectiveCamera(), vfx, pointScale: options.pointScale ?? 600 })
   const particles = new FluidSprites(vfx, `fluids-${++rendererCount}`)

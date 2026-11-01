@@ -283,8 +283,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const text = textOf(locale)
   const accessoryText = accessoryTextOf(locale)
   const seedOption = options.seed === undefined ? {} : { seed: options.seed }
-  // the module's own audio (it makes no context until the first sound); when the host lends a sound engine, `attach` swaps it for one on that engine
-  let audio: WeaponAudio | null = options.sound === false ? null : createWeaponAudio(undefined, seedOption)
+  // the module's own audio, made when first needed (it makes no context until the first sound); when the host lends a sound engine, `attach` makes one on that engine instead
+  let audio: WeaponAudio | null | undefined
+  const ownAudio = (): WeaponAudio | null => (audio === undefined ? (audio = options.sound === false ? null : createWeaponAudio(undefined, seedOption)) : audio)
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
@@ -314,7 +315,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     ground: { surface: 'concrete_slab' },
     group: text.group,
     get audio() {
-      return audio
+      return ownAudio()
     },
     get fx() {
       return fx
@@ -365,8 +366,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     attach(lent) {
       host = lent
       const lentEngine = (lent.audio as EngineSink | undefined)?.engine
-      if (audio && lentEngine) {
-        audio.dispose()
+      if (lentEngine && options.sound !== false) {
+        audio?.dispose()
         audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
       }
       let simulatedMs = 0
@@ -379,7 +380,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         arsenal,
         ...(options.items ? { items: options.items } : {}),
         groundAt: lent.groundAt,
-        audio,
+        audio: ownAudio(),
         tool: lent.tool,
         soundDistance: () => soundDistance,
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
@@ -418,7 +419,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         worldEffects.handle(event, lent.effects)
         if (event.type === 'explosion') {
           const away = Math.hypot(event.point[0] - camera.position.x, event.point[1] - camera.position.y, event.point[2] - camera.position.z)
-          audio?.play('explosion', Math.min(1, EXPLOSION_VOLUME_BASE + event.radius * EXPLOSION_VOLUME_PER_METRE), away)
+          ownAudio()?.play('explosion', Math.min(1, EXPLOSION_VOLUME_BASE + event.radius * EXPLOSION_VOLUME_PER_METRE), away)
           return
         }
         const tool = lent.tool()

@@ -84,6 +84,7 @@ export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePha
 export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
+export { resetWarnOnce, warnOnce } from './warn'
 export { checkBench } from './bench'
 export type {
   ActionControl,

@@ -13,7 +13,7 @@ describe('weapon props by instance', () => {
       expect(made.itemModelOf(id, itemModels)).toBe(itemModelOfWeapon(id, itemModels))
       expect(box(made.buildItemModel(THREE, { id }, itemModels)!)).toEqual(box(buildItemWeaponModel(THREE, { id }, itemModels)!))
     }
-    expect(box(made.buildModel(THREE, { id: 'knife', category: 'melee', mass: 0.3 }, itemModels))).toEqual(box(buildWeaponModel(THREE, { id: 'knife', category: 'melee', mass: 0.3 }, itemModels)))
+    expect(box(made.buildModel(THREE, { id: 'knife', category: 'melee_blade', mass: 0.3 }, itemModels))).toEqual(box(buildWeaponModel(THREE, { id: 'knife', category: 'melee_blade', mass: 0.3 }, itemModels)))
   })
 
   it('two sets with different packs, patches and removals do not leak into each other or into the global functions', () => {

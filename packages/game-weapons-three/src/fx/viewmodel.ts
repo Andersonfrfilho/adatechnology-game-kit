@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
+import { createToolClipPlayer, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
@@ -145,6 +145,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const particles = createParticles(THREE, scene, groundAt)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
+  if (!options.effects) warnOnce('game-weapons-three.own-effects-world', 'game-weapons-three made an effects world of its own because the host lent none (options.effects); pass the host effects so the effects share one budget')
   const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' }, ...(options.lights ? { lights: options.lights } : {}) })
   const effects = createEffects(THREE, options.effects ?? ownVfx, random)
   const hand = new THREE.Group()

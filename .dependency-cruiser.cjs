@@ -23,7 +23,7 @@ const L5_COMPOSITION = ['game-test-room', 'game-kit-defaults']
 const SHARED_ADAPTERS = ['game-shapes-three', 'game-render-three']
 
 // Composition between domain adapters that is declared on purpose: 'from': { 'to': 'reason' }.
-const FALLBACK_EFFECTS_WORLD = 'fallback effects world when the host passes none; item 12 removes it in Phase 5'
+const FALLBACK_EFFECTS_WORLD = 'fallback effects world when the host passes none (D2: kept, warns once in development; removed in the next major)'
 // The packages that have a src/test-area or src/bench folder (the code behind their ./testing subpath). Only they may compose other adapters there (D6).
 const PACKAGES_WITH_TESTING_FOLDER = [
   'game-animals-three',
