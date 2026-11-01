@@ -31,7 +31,7 @@ describe('residential pack', () => {
   })
 
   it('unknown regions are rejected', () => {
-    expect(() => register(engine, { region: 'xx' as never })).toThrow()
+    expect(() => register(engine, { region: 'xx' })).toThrow()
   })
 
   it('every template is deterministic for a seed', () => {
