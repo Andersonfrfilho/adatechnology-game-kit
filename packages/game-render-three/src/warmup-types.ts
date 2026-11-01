@@ -54,6 +54,9 @@ export interface WarmupReport {
 }
 
 export type WarmupContext = {
+  readonly RGBA?: number
+  readonly UNSIGNED_BYTE?: number
+  readPixels?(x: number, y: number, width: number, height: number, format: number, type: number, pixels: Uint8Array): void
   getParameter(parameter: number): unknown
   readonly MAX_FRAGMENT_UNIFORM_VECTORS: number
   linkProgram(program: WebGLProgram): void

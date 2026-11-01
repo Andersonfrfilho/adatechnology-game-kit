@@ -124,6 +124,8 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
     },
     end() {
       mesh.count = count
+      // three uploads every attribute flagged, drawn or not: an empty batch would send one empty upload per attribute each frame
+      if (count === 0) return
       for (const attribute of Object.values(attributes)) {
         attribute.clearUpdateRanges()
         attribute.addUpdateRange(0, count * attribute.itemSize)

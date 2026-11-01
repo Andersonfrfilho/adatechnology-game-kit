@@ -65,6 +65,8 @@ export const createBlobShadowBatch = (three: Three, { max, radius = 0.55, opacit
     },
     end() {
       geometry.instanceCount = count
+      // three uploads every attribute flagged, drawn or not: an empty batch would send one empty upload per attribute each frame
+      if (count === 0) return
       placement.clearUpdateRanges()
       placement.addUpdateRange(0, count * 4)
       placement.needsUpdate = true

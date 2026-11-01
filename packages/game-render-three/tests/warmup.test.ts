@@ -33,6 +33,27 @@ function fakeProbe(id: string) {
 }
 
 describe('ProgramWarmup.warmUp', () => {
+  it('draws an empty instanced batch and what is off camera once, then gives them back as they were', () => {
+    const scene = new THREE.Scene()
+    const batch = new THREE.InstancedMesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial(), 4)
+    batch.count = 0
+    scene.add(batch)
+    const { renderer } = fakeRenderer()
+    const seen: Array<[number, boolean]> = []
+    renderer.render.mockImplementation(() => seen.push([batch.count, batch.frustumCulled]))
+    createProgramWarmup(THREE).warmUp(renderer, scene, new THREE.PerspectiveCamera())
+    expect(seen[0]).toEqual([1, false])
+    expect([batch.count, batch.frustumCulled]).toEqual([0, true])
+  })
+
+  it('waits for the GPU at the end, so that the first upload of play does not', () => {
+    const { renderer, context } = fakeRenderer()
+    const readPixels = vi.fn()
+    Object.assign(context, { RGBA: 1, UNSIGNED_BYTE: 2, readPixels })
+    createProgramWarmup(THREE).warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())
+    expect(readPixels).toHaveBeenCalledTimes(1)
+  })
+
   it('draws each probe once per fog state, on the target, seals the budget, warms shadows and never disposes probe materials', () => {
     const scene = new THREE.Scene()
     scene.fog = new THREE.Fog(0x888888, 1, 100)

@@ -125,6 +125,28 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     }
   }
 
+  /** Makes everything in the scene draw at least once: three skips an empty instanced batch and whatever is off camera, and a driver finishes a program's state on its first real draw (a 200 ms stall). Returns the undo. */
+  function forceDraws(scene: Scene): () => void {
+    const undo: Array<() => void> = []
+    scene.traverse((object) => {
+      const drawable = object as Object3D & { isInstancedMesh?: boolean; count?: number; geometry?: { isInstancedBufferGeometry?: boolean; instanceCount?: number } }
+      const { geometry } = drawable
+      if (geometry?.isInstancedBufferGeometry === true && geometry.instanceCount === 0) {
+        geometry.instanceCount = 1
+        undo.push(() => (geometry.instanceCount = 0))
+      }
+      if (drawable.frustumCulled) {
+        drawable.frustumCulled = false
+        undo.push(() => (drawable.frustumCulled = true))
+      }
+      if (drawable.isInstancedMesh === true && drawable.count === 0) {
+        drawable.count = 1
+        undo.push(() => (drawable.count = 0))
+      }
+    })
+    return () => undo.forEach((restore) => restore())
+  }
+
   return {
     anchors,
     register: (probe) => register(probes, probe),
@@ -142,13 +164,16 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
         if (light.castShadow === true && light.shadow !== undefined) light.shadow.needsUpdate = true
       })
       const built = buildProbes(options.materials)
+      let restoreDraws = (): void => undefined
       try {
         addProbes(scene, built)
+        restoreDraws = forceDraws(scene)
         drawStates(renderer, scene, camera, states, target)
         scene.fog = originalFog
         for (const effect of effects) playEffect(renderer, scene, camera, effect, target)
         for (const texture of textures) renderer.initTexture(texture)
       } finally {
+        restoreDraws()
         scene.fog = originalFog
         removeProbes(scene, built)
       }
@@ -159,6 +184,8 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
         throw new Error(`a shader program failed to link (MAX_FRAGMENT_UNIFORM_VECTORS ${uniformVectors}, lights: ${lightSignature(scene)}): ${failure}`)
       }
       countLinks(context, linkCounters)
+      // the GPU process is still working through all of the above: wait here, at load, or the first upload of play stalls on it
+      if (context.RGBA !== undefined && context.UNSIGNED_BYTE !== undefined) context.readPixels?.(0, 0, 1, 1, context.RGBA, context.UNSIGNED_BYTE, new Uint8Array(4))
       return {
         programs: renderer.info.programs?.length ?? 0,
         geometries: renderer.info.memory.geometries,
