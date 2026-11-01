@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-items-three",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "MIT",
   "description": "three.js presentation for @adatechnology/game-items: the 24 models of the Itens do Vale Cinzento showcase at real size, simple shapes at real size for every other item, wear (new, used, spoiled) on the materials, merge by material, LOD and the draw budgets of the team.",
   "keywords": [
@@ -43,20 +43,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-floorplan-three": "workspace:*",
-    "@adatechnology/game-fluids": "workspace:*",
-    "@adatechnology/game-interactables": "workspace:*",
-    "@adatechnology/game-items": "workspace:*",
-    "@adatechnology/game-shapes-three": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-floorplan-three": "workspace:^",
+    "@adatechnology/game-fluids": "workspace:^",
+    "@adatechnology/game-interactables": "workspace:^",
+    "@adatechnology/game-items": "workspace:^",
+    "@adatechnology/game-shapes-three": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-items-goods": "workspace:*",
-    "@adatechnology/game-test-room": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:^",
+    "@adatechnology/game-test-room": "workspace:^",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",

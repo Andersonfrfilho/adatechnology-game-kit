@@ -43,13 +43,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-shapes": "workspace:*"
+    "@adatechnology/game-shapes": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

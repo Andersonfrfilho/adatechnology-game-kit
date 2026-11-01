@@ -45,7 +45,7 @@
     "viewer:build": "node viewer/build-viewer.mjs"
   },
   "devDependencies": {
-    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

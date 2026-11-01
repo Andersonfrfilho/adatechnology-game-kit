@@ -43,7 +43,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-characters": "workspace:*"
+    "@adatechnology/game-characters": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

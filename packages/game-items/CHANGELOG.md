@@ -1,5 +1,34 @@
 # @adatechnology/game-items
 
+## 0.2.0
+
+### Minor Changes
+
+- 0c67a15: Cans open before they are eaten, and a holed or leaking can is no longer food.
+
+  - `game-contracts`: `SealSpec` (what opens a closed container: `openWith` tools or `byHand`; `spoilsWhenBreached`), `sealOpener` and `sealBlock`, and `TestableItem.seal` (`ModuleItemSeal`, with `open` and `contents` to draw the item open and what is left in it). `ItemUseDef` keys take the `eat` action.
+  - `game-items`: `ItemDef.seal`; `resolveUse` with `UseContext.seal` does not spend a sealed item that is still closed, holed through or leaking (`UseResult.blocked`).
+  - `game-items-goods`: the `canned_food` kind opens with a can opener, a pocket knife or a knife; `canned_drink` and the sardines open by hand; both are spoiled by a hole or a leak. The kind's seal is on every item of the catalog.
+  - `game-fluids`: the `eat` use (spoonfuls from an open tin); `drink(id, liters, { eaten })` takes the liquid packed with the food without the effects of drinking it.
+  - `game-items-three`: `openItem` draws a model open (`data/opening.json`): the cut lid of a tin bent up with the food inside the rim, the peeled lid of the sardines, the mouth of a drink can; `setOpeningContents` empties it as it is eaten. The items area gives the tins `seal` and the `eat` use.
+  - `game-test-room`: a use that empties a sealed item opens it first, by hand or with a tool of the seal within reach or in the loadout, and says what is missing; a holed or leaking item is refused for eating and drinking; eating logs what was eaten.
+
+### Patch Changes
+
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+  - @adatechnology/game-interactables@0.2.12
+
 ## 0.1.11
 
 ### Patch Changes

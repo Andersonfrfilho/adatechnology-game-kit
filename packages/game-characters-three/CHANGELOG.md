@@ -1,5 +1,47 @@
 # @adatechnology/game-characters-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 9c4ec9f: `createPlayerAvatar` gains `eye(out?)`, the world position of the body's eyes (a socket under the head moved by the new `eyeOffset` option, default `[0, -0.068, 0]`, read at the end of `update()` before any `reach()`), the `eyeBob` option (how much of the walking bob reaches the eye, default 0.5) and `setView('first' | 'third', camera)`, which stops drawing the head and neck for that camera only. The rich rig now exposes `neck`.
+- 28280ef: `PlayerAvatar.reach(targets, view?)` takes a `ReachView` (`{ camera, reachBend?, keepOutside? }`) for the body seen from its own eyes: `reachBend` (default `[1.35, 0.95]` rad, right then left) keeps the elbow bent where a hand is out of reach, the chest turn and shoulder-blade slide stopping where it still holds that bend, and `keepOutside` (`contact`, `margin` 0.005 m, `nearest` 0.12 m) pulls a hand back along the camera's forward to stay in front of a surface. Without `view` nothing changes.
+- 9e0aa58: An item carried in first person no longer lifts the elbow above the shoulder: `HandTargets.elbows` (`view`, the default, or `body`) says where the elbows go, and the first-person arms keep the elbow in the view only for `view`; the room's carried items ask for `body`, so a tin in the hand has its forearm coming from below (elbow bend 103° instead of 57°). While C crouches, an item's second use (empty a tin) is on Shift+F instead of C, and the HUD says so. The items area lays an opening tool beside each sealed tin (a can opener next to the beans), within reach when the tin is picked up.
+- 61bdbe1: First-person arms keep a visible elbow bend on a long gun: when a hand is out of reach the shoulder comes forward only until the elbow is bent by the new `FirstPersonRig.reachBend` (right 1.35 rad, left 0.95 rad by default), instead of until the arm is almost straight; `reachShift` goes from 0.35 to 0.42 m so the forend of a rifle stays in the support hand.
+- fe1f40a: First person shows the elbows: holding a tool, each elbow is put a forearm from the wrist along the new `FirstPersonRig.elbowView` and kept inside the view (the trigger elbow out to the side; the support arm still rises from below the handguard), the shoulder behind it out of view. The first-person hand is now the Retratos do Vale hand the body wears (rounded palm, fingers of two joints, thumb) instead of boxes.
+- aa75500: One body for both views. A `RoomAvatar` with `eye()` is drawn in first person too: the camera sits at the body's eyes (pulled back out of a wall), and the aim, shots and the hands' `reach` start from there in both views, so switching views moves no hand, foot or head. `setView` hides the head from the player's camera only. The separate first-person arms are gone from the room (`RoomAvatar.firstPerson` removed); `toRoomAvatar` makes them only when asked (`firstPerson`) and exposes `eye`/`setView`. A scripted `room.look` keeps its exact view until the player moves. A carried item rides the body's hand.
+- 7051d83: Opening doors by hand: a tap of E on a door, lid or drawer of furniture or a vehicle (any part an `open_*` clip moves) opens or closes it. The player steps up to the handle, the hand takes the free edge and follows it in first and third person, the leaf swings at a speed set by its mass and stops at what is in its way, a door that swings into the player makes the player step back, and a locked leaf only rattles (`createDoorUse` in game-player, `room.useLeaf`/`lockLeaf`). New sounds for the latch, the hinge, the leaf meeting the frame and the rattle. House doors use the same hand and body through the new `ModuleHost.reachFor`.
+- a2ce4c5: The body sits and lies too, not only the camera: `AvatarUpdate.seat` (`{ pose: 'sit' | 'lie', hip }`) folds the legs under hips at the seat height, the knee opening until the sole reaches the floor (a low seat sends the shins forward), with the hands on the thighs; `lie` lays the body face up with the pelvis there and the head behind. The test room passes the seat the player sits on (`RoomSeat.hips`) to the body, so sitting in first person shows in third person.
+- 7ca2f8e: A screw cap is turned off by the other hand before the first bite or sip, in first and third person. `twistStroke` (game-contracts) is the hand turning a part round in strokes, for any cap, tap or knob; `ModuleItemSeal.openUse` and `turn` let a module open its seal with a use; the `unscrew` use (game-fluids) turns during its `turn` keys and opens at its `open` key; `turnItem` (game-items-three) turns and lifts the cap a model marks with `asLid`; the body takes the other hand's grip from `AvatarItemUsePose.gripL`.
+- f8c2b21: Third person draws the weapon on the body at its real size: new optional `ModuleHost.holdFrame()` (the pocket of the right shoulder turned to the aim; null in first person), which the test room lends from the avatar's new `shoulder(side)`. The weapons viewmodel puts a long gun's stock in the pocket (a launcher slides back until its grip is in reach), a handgun or a one-hand tool at a ready grip, and caps the support hand's span at 0.5 m. Looking up or down no longer drives the arms into the body.
+
+### Patch Changes
+
+- 7dc60fa: With a body that has `eye()`, crouching, bending over a low piece to push it and sitting no longer lower the player's own eye: the camera follows only the body's eye and the pose decides the rest (crouched about 1.3 m instead of 1.15 m). A room without a body keeps the old eye math. The shot leaves the body's eye in both views.
+- 53babb5: A scenario of the test room does the same whatever ran before it: the reset before each scenario puts every random stream, seed counter and clock back to its start.
+
+  - `game-destruction-three`: `DestructionRenderer.reset()` (`clear` plus the renderer's random stream, the one that scatters the shove points of a blast, the fragments' stream and the clocks back to their seed and 0). Before, a blast after other scenarios pushed the loose items from other points, and the grenade's camp table could end up moving towards the blast.
+  - `game-contracts`: `ModuleHost.onReset`, for a module to put its own streams, seed counters and clocks back when the host returns to its seeded start.
+  - `game-test-room`: the reset before each scenario calls `renderer.reset()` and the modules' `onReset`.
+  - `game-characters-three`: the test module's random stream, body seeds and animation clock start again on `onReset`.
+  - `game-terrain`: clearing the marks starts their numbering again.
+
+- 3642202: The weapon in the hands is the body's own, at its real size, in first and third person: no first-person scale-down and no offset in front of the camera. `holdFrame` (the pocket of the right shoulder) now answers in both views, and a host with no body gets the same pocket under the camera's eye. A gun with no stock slides forward so its grip is never behind the eye, a short two-hand gun is held at mid-chest, the grips of both hands stay above the bottom of the view (`HAND_IN_VIEW`, up to 0.3 m) and the weapon comes back from a wall (`WALL_PULL`, up to 1.2 m). The generic props ride the body too. The player's body no longer stops the weapon's contact and laser rays. The support arm's elbow tucks under the gun, so the forearm meets the handguard at 47 to 51 degrees off the aim.
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+  - @adatechnology/game-audio@0.3.5
+  - @adatechnology/game-characters@0.2.6
+
 ## 0.6.0
 
 ### Minor Changes

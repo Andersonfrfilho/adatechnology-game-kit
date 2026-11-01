@@ -1,5 +1,27 @@
 # @adatechnology/game-player
 
+## 0.4.0
+
+### Minor Changes
+
+- 7051d83: Opening doors by hand: a tap of E on a door, lid or drawer of furniture or a vehicle (any part an `open_*` clip moves) opens or closes it. The player steps up to the handle, the hand takes the free edge and follows it in first and third person, the leaf swings at a speed set by its mass and stops at what is in its way, a door that swings into the player makes the player step back, and a locked leaf only rattles (`createDoorUse` in game-player, `room.useLeaf`/`lockLeaf`). New sounds for the latch, the hinge, the leaf meeting the frame and the rattle. House doors use the same hand and body through the new `ModuleHost.reachFor`.
+
+### Patch Changes
+
+- 7f7dd06: A leaf left between closed and open goes the other way from where the last use sent it: a door that hit something while opening closes on the next E instead of trying to open again forever (`DoorUseTarget.lastGoal`, `DoorUseRules.endTolerance`; the room remembers the last way of each leaf). At either end the old rule holds, so a leaf put back by a reset opens.
+- Updated dependencies [0c67a15]
+- Updated dependencies [b818f6a]
+- Updated dependencies [9e0aa58]
+- Updated dependencies [7051d83]
+- Updated dependencies [a1ce099]
+- Updated dependencies [53babb5]
+- Updated dependencies [711af5d]
+- Updated dependencies [9c63053]
+- Updated dependencies [7ca2f8e]
+- Updated dependencies [f8c2b21]
+- Updated dependencies [3642202]
+  - @adatechnology/game-contracts@0.20.0
+
 ## 0.3.1
 
 ### Patch Changes
