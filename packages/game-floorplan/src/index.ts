@@ -40,7 +40,6 @@ export type { CreateFloorplanOptions, FloorplanEngine, FloorplanPack }
  */
 export const engine: FloorplanEngine = defaultFloorplan()
 
-
 export {
   generate,
   slots,

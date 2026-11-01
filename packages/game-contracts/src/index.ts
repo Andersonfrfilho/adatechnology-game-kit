@@ -58,7 +58,8 @@ export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
 export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
-export type { CheckOptions, CostOptions, DestructibleImpl, ImpactContract } from './impact'
+export type { CheckOptions, DestructibleImpl, ImpactContract } from './impact'
+export type { CostOptions } from './impact-cost'
 export { MISSING_BITS } from './body'
 export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
@@ -84,7 +85,11 @@ export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePha
 export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
-export { resetWarnOnce, warnOnce } from './warn'
+import { resetWarnOnce as resetWarnOnceForTests } from './warn'
+
+export { warnOnce } from './warn'
+/** @deprecated Import it from `@adatechnology/game-contracts/testing`. */
+export const resetWarnOnce = resetWarnOnceForTests
 export { checkBench } from './bench'
 export type {
   ActionControl,

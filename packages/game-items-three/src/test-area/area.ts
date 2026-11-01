@@ -16,7 +16,8 @@ import type { ContentsSubject } from '../destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from '../budgets'
 import { MODEL_BUDGET_DEVIATIONS } from '../models/deviations'
 import { itemThumbnailSvg } from '../thumbnails'
-import { hasItemModel, itemModelEntry, listItemModels } from '../models/registry'
+import { defaultItemModels } from '../models/registry'
+import type { ItemModelRegistry } from '../models/registry'
 import { SHIPPED_MODELS } from '../models/shipped'
 import { setWear } from '../wear'
 import type { WearStage } from '../wear'
@@ -39,6 +40,8 @@ export interface ItemsTestModuleOptions {
    * the area shows the ruler alone.
    */
   person?: (THREE: unknown) => THREE_NS.Object3D
+  /** The models to show and draw with (`createItemModels(...)`); default the shared set behind `registerItemModel`. */
+  models?: ItemModelRegistry
 }
 
 export const SHOWCASE_STAND_ID = 'stand_models'
@@ -234,8 +237,8 @@ const stageOf = (catalog: ItemsCatalog, item: ItemDef, base: WearStage, ageDays:
   return Math.max(base, aged) as WearStage
 }
 
-const sizeOfModel = (id: string): [number, number, number] | undefined => {
-  const entry = itemModelEntry(id)
+const sizeOfModel = (modelSet: ItemModelRegistry, id: string): [number, number, number] | undefined => {
+  const entry = modelSet.entry(id)
   return entry ? [entry.teamBox[0] * entry.scale, entry.teamBox[1] * entry.scale, entry.teamBox[2] * entry.scale] : undefined
 }
 
@@ -255,6 +258,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
   const nameOf = (item: ItemDef): string => label(item.name ?? `item.${item.id}`, label(`item.${item.id}`, humanize(item.id)))
   const categoryName = (id: string): string => label(`category.${id}`, humanize(id))
   const provider = options.provider ?? createFindsProvider(catalog)
+  const modelSet = options.models ?? defaultItemModels()
 
   const items = catalog.list()
   const categories = [...ITEM_CATEGORIES.map((c) => c.id), ...[...catalog.categories.keys()].filter((id) => !ITEM_CATEGORIES.some((c) => c.id === id))].filter((id) => items.some((item) => item.category === id))
@@ -268,7 +272,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     return opener ? [item, { id: opener.id, category: item.category, size: opener.size }] : [item]
   })
   const shelves = shelvesLayout(laid, categories)
-  const showcase = listItemModels().map((id) => ({ id, size: sizeOfModel(id) as [number, number, number], def: catalog.has(id) ? catalog.get(id) : undefined }))
+  const showcase = modelSet.list().map((id) => ({ id, size: sizeOfModel(modelSet, id) as [number, number, number], def: catalog.has(id) ? catalog.get(id) : undefined }))
 
   const state: { -readonly [K in keyof ItemsAreaState]: ItemsAreaState[K] } = {
     category: CATEGORY_ALL,
@@ -372,7 +376,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T
-      const model = buildItem(T, drawable(def), { wear: stageFor(def), destructible: true })
+      const model = buildItem(T, drawable(def), { wear: stageFor(def), destructible: true, models: modelSet })
       register({ id: `${ITEM_PREFIX}${def.id}`, itemId: def.id, group: 'shelf', category: def.category, def, kind: model.kind, size: def.size, root: model.root })
       return model.root
     },
@@ -386,7 +390,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       const subject: DrawableItem = { id: model.id, category: model.def?.category ?? '', size: model.size, model: model.id, ...(model.def ? { weight: model.def.weight } : {}) }
-      const built = buildItem(T, subject, { wear: stageFor(model.def), destructible: true })
+      const built = buildItem(T, subject, { wear: stageFor(model.def), destructible: true, models: modelSet })
       register({ id: `${SHOWCASE_PREFIX}${model.id}`, itemId: model.id, group: 'showcase', category: model.def?.category ?? '', def: model.def, kind: built.kind, size: model.size, root: built.root })
       return built.root
     },
@@ -534,7 +538,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       const copies = Math.min(found.count, MAX_COPIES)
       const start = cursor
       for (let i = 0; i < copies; i++) {
-        const model = buildItem(T, drawable(def), { wear: stageFor(def) })
+        const model = buildItem(T, drawable(def), { wear: stageFor(def), models: modelSet })
         model.root.position.set(cursor + (def.size[0] * scale) / 2, 0, 0)
         group.add(model.root)
         cursor += def.size[0] + 0.03
@@ -757,7 +761,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       },
       { id: 'finds', name: text.metrics.finds, digits: 0, read: () => stack.length },
     ],
-    scenarios: (): Array<ModuleScenario<ScenarioLike>> => scenariosOf(module, catalog, text, provider),
+    scenarios: (): Array<ModuleScenario<ScenarioLike>> => scenariosOf(module, catalog, text, provider, modelSet),
     attach(lent) {
       host = lent
       latestTHREE = lent.THREE as typeof THREE_NS
@@ -786,7 +790,7 @@ export interface ScenarioLike {
 const OVER = 0.02
 const UNDER = 0.08
 
-function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text, provider: FindsProvider): Array<ModuleScenario<ScenarioLike>> {
+function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text, provider: FindsProvider, modelSet: ItemModelRegistry): Array<ModuleScenario<ScenarioLike>> {
   const names = text.scenarios
   const shelf = (): ReturnType<ItemsTestModule['placed']> => module.placed().filter((entry) => entry.group === 'shelf')
   return [
@@ -810,9 +814,9 @@ function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text,
       id: 'models',
       name: names.models,
       run: ({ expect }) => {
-        const models = listItemModels()
+        const models = modelSet.list()
         expect(models.length === SHIPPED_MODELS.length, `${SHIPPED_MODELS.length} models are shipped`, { count: models.length })
-        const withModel = catalog.list().filter((item) => item.model !== undefined && hasItemModel(item.model))
+        const withModel = catalog.list().filter((item) => item.model !== undefined && modelSet.has(item.model))
         const shippedItems = SHIPPED_MODELS.filter(({ entry }) => catalog.has(entry.id)).length
         expect(withModel.length === shippedItems, `${shippedItems} items of the catalog name a model (every shipped model that is a catalog item)`, { count: withModel.length })
         const stand = module.placed().filter((entry) => entry.group === 'showcase')

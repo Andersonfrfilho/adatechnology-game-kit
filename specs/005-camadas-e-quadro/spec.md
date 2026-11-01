@@ -18,7 +18,7 @@ por nenhum teste, e por isso já se furaram em pelo menos 15 dependências. Trê
 | A2 | Nenhum núcleo usa three; nenhum núcleo ou adaptador importa pacote de conteúdo | regras `core-no-three`, `core-not-content` e `adapter-not-content` do A1 |
 | A3 | Um `-three` de domínio só importa `game-shapes-three` e `game-render-three`, salvo composição declarada | regra `no-domain-adapter-to-adapter` do A1 |
 | A4 | Código de área de teste e bancada fica fora do `.` de produção | regra `testing-only-from-testing` do A1; `grep -E "test-area\|bench" packages/*/src/index.ts` vazio |
-| A5 | Catálogo sempre por instância (`createX({ packs, patch, remove })`); nenhum registro global mutável exportado | teste "dois mundos na mesma página" em cada pacote que tinha registro global |
+| A5 | Catálogo sempre por instância (`createX({ packs, patch, remove })`): nenhum registro global mutável é a fonte; os globais são delegados `@deprecated` de `defaultX()`, e todo consumidor aceita a instância | teste "dois mundos na mesma página" em cada pacote que tinha registro global |
 | A6 | Luz só pelo `LightBudget`; programas pré-aquecidos por registro; o número de luzes da cena nunca muda depois do boot | lint `no-runtime-light`; `perf.mjs` com 0 programas em todas as fases |
 | A7 | Um agendador com fases é dono da ordem do quadro e do orçamento de tempo das filas adiadas | teste da ordem das fases no `game-runtime`; a sala roda por ele |
 | A8 | `DestructibleImpl.part()` e `state()` têm custo cobrado | `checkDestructible` com teto por chamada; todos os `DestructibleImpl` do kit passam |

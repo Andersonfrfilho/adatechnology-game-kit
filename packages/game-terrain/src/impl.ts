@@ -4,6 +4,7 @@ import type { Terrain, TerrainBlowResult } from './types'
 const PART_ID = 'ground'
 const PART_DEPTH = 3
 const RAY_BACKOFF = 1
+const GROUND_HP = 1e12
 
 export interface TerrainImplOptions {
   readonly id: string
@@ -19,15 +20,18 @@ export interface TerrainImplOptions {
 export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions): DestructibleImpl {
   const { id } = options
   const [x0, z0, x1, z1] = terrain.bounds
-  const buildSpec = (): DestructibleSpec => ({
+  const centerColumn = Math.max(0, Math.min(terrain.columns, Math.round((x1 - x0) / 2 / terrain.cellSize)))
+  const centerRow = Math.max(0, Math.min(terrain.rows, Math.round((z1 - z0) / 2 / terrain.cellSize)))
+  const centerMaterial = (): string => terrain.vertexMaterial(centerColumn, centerRow).id
+  const buildSpec = (material: string): DestructibleSpec => ({
     name: options.name ?? 'Ground',
     parts: [
       {
         id: PART_ID,
-        material: terrain.columnAt((x0 + x1) / 2, (z0 + z1) / 2).material,
+        material,
         shape: { kind: 'box', size: [x1 - x0, PART_DEPTH, z1 - z0] },
         position: [(x0 + x1) / 2, -PART_DEPTH / 2, (z0 + z1) / 2],
-        hp: 1e12,
+        hp: GROUND_HP,
         anchored: true,
         tags: ['terrain'],
       },
@@ -35,18 +39,25 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     joints: [],
   })
   let cachedSpec: DestructibleSpec | undefined
-  const spec = (): DestructibleSpec => (cachedSpec ??= buildSpec())
-  const invalidateSpec = (): void => {
-    cachedSpec = undefined
+  const spec = (): DestructibleSpec => {
+    const material = centerMaterial()
+    if (cachedSpec?.parts[0]?.material !== material) cachedSpec = buildSpec(material)
+    return cachedSpec
   }
-  const state: ObjectState = {
+  const buildState = (material: string): ObjectState => ({
     id,
     position: [0, 0, 0],
     rotation: [0, 0, 0, 1],
-    parts: [],
+    parts: [{ id: PART_ID, material, status: 'intact', hp: GROUND_HP, maxHp: GROUND_HP, mass: 0, temperature: 0, burning: false, fuel: 0, char: 0, melt: 0, dents: [], holes: [], cracks: [], group: 0 }],
     joints: [],
     groups: [[PART_ID]],
     destroyed: false,
+  })
+  let cachedState: ObjectState | undefined
+  const state = (): ObjectState => {
+    const material = centerMaterial()
+    if (cachedState?.parts[0]?.material !== material) cachedState = buildState(material)
+    return cachedState
   }
   const resolve = (hit: Hit): Hit => {
     if (hit.type !== 'ballistic' && hit.type !== 'blunt' && hit.type !== 'slash') return hit
@@ -61,27 +72,23 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     ...(options.name ? { name: options.name } : {}),
     describe: spec,
     hit(hit): DestructionEvent[] {
-      invalidateSpec()
       const landed = resolve(hit)
       const result = terrain.applyHit(landed)
       if (!result || result.radius <= 0) return []
       options.onBlow?.(result, landed)
-      return [{ type: 'damage', object: id, time: 0, part: PART_ID, amount: 0, hp: 1e12, damageType: hit.type, ...(hit.source ? { source: hit.source } : {}) }]
+      return [{ type: 'damage', object: id, time: 0, part: PART_ID, amount: 0, hp: GROUND_HP, damageType: hit.type, ...(hit.source ? { source: hit.source } : {}) }]
     },
     update(dt) {
       terrain.update(dt)
-      invalidateSpec()
       return []
     },
-    state: () => state,
+    state,
     reset() {
       terrain.reset()
-      invalidateSpec()
     },
     serialize: () => terrain.serialize(),
     load(data) {
       terrain.load(data as ReturnType<Terrain['serialize']>)
-      invalidateSpec()
     },
   }
 }

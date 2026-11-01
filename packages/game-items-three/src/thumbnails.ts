@@ -3,7 +3,8 @@ import type * as THREE_NS from 'three'
 
 import { buildItem } from './build-item'
 import type { DrawableItem } from './build-item'
-import { hasItemModel } from './models/registry'
+import { defaultItemModels } from './models/registry'
+import type { ItemModelRegistry } from './models/registry'
 import { shade, shapeOf } from './shapes'
 import type { ShapeId } from './shapes'
 import { setWear } from './wear'
@@ -55,8 +56,8 @@ export function shapeThumbnailSvg(shape: ShapeId, color: number = DEFAULT_COLOR)
  * The picture of an item for catalogues and inventories: an item that has a 3D model asks the host to draw it (`render: true`), every other gets the SVG of its shape in
  * its colour.
  */
-export function itemThumbnail(item: DrawableItem): Thumbnail {
-  if (item.model !== undefined && hasItemModel(item.model)) return { render: true }
+export function itemThumbnail(item: DrawableItem, models: ItemModelRegistry = defaultItemModels()): Thumbnail {
+  if (item.model !== undefined && models.has(item.model)) return { render: true }
   return { svg: shapeThumbnailSvg(shapeOf(item), item.color) }
 }
 
@@ -64,9 +65,9 @@ export function itemThumbnail(item: DrawableItem): Thumbnail {
 export const itemThumbnailSvg = (item: DrawableItem): string => shapeThumbnailSvg(shapeOf(item), item.color)
 
 /** `{ id: { thumbnail } }` for `createItems({ patch })`, so that a catalog carries its pictures. */
-export function thumbnailPatch(items: Iterable<DrawableItem>): Record<string, { thumbnail: Thumbnail }> {
+export function thumbnailPatch(items: Iterable<DrawableItem>, models: ItemModelRegistry = defaultItemModels()): Record<string, { thumbnail: Thumbnail }> {
   const patch: Record<string, { thumbnail: Thumbnail }> = {}
-  for (const item of items) patch[item.id] = { thumbnail: itemThumbnail(item) }
+  for (const item of items) patch[item.id] = { thumbnail: itemThumbnail(item, models) }
   return patch
 }
 
@@ -79,6 +80,8 @@ export interface ThumbnailRenderOptions {
   /** Multiplies the distance that just fits the item (default 1). */
   distance?: number
   wear?: WearStage
+  /** The models to draw with; default the shared set behind `registerItemModel`. */
+  models?: ItemModelRegistry
 }
 
 export interface ThumbnailScene {
@@ -93,7 +96,7 @@ const FIELD_OF_VIEW = 30
 export function composeThumbnailScene(T: typeof THREE_NS, item: DrawableItem, options: ThumbnailRenderOptions = {}): ThumbnailScene {
   const { yaw = -0.6, pitch = 0.45, distance = 1, wear = 0 } = options
   const scene = new T.Scene()
-  const model = buildItem(T, item)
+  const model = buildItem(T, item, options.models === undefined ? {} : { models: options.models })
   if (wear) setWear(model.root, wear)
   scene.add(model.root)
   scene.add(new T.HemisphereLight(0xdfe6ee, 0x3a3428, 0.85))

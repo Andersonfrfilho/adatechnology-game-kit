@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { applyPatches, deepMerge, mergeById, removeIds } from '../src'
+import { resetWarnOnce } from '../src/testing'
 
 type Entry = { id: string; weight: number; box?: { width: number; depth: number }; tags?: string[] }
 
@@ -29,5 +30,20 @@ describe('registry helpers', () => {
     expect(merged).toMatchObject({ a: null, nested: { b: 2, c: 3 } })
     expect(({} as Record<string, unknown>).polluted).toBeUndefined()
     expect(deepMerge({ a: 1 }, { a: undefined })).toEqual({ a: 1 })
+  })
+
+  it('warns once in development about a patch or a remove for an id that does not exist', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    resetWarnOnce()
+    try {
+      const entries = mergeById<Entry>([{ id: 'a', weight: 1 }], undefined)
+      applyPatches(entries, { ghost: { weight: 9 } })
+      applyPatches(entries, { ghost: { weight: 9 } })
+      removeIds(entries, ['missing', 'a'])
+      expect(warn.mock.calls).toEqual([['[game-kit] patch for "ghost" ignored: no entry has that id'], ['[game-kit] remove of "missing" ignored: no entry has that id']])
+    } finally {
+      warn.mockRestore()
+      resetWarnOnce()
+    }
   })
 })

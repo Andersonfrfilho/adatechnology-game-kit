@@ -105,6 +105,12 @@ pnpm --filter @adatechnology/game-floorplan viewer:build   # writes packages/gam
 
 See [MIGRATION.md](MIGRATION.md) for the old-to-new name tables.
 
+## By instance
+
+`createFloorplan({ packs, patch, remove })` makes an engine of its own; nothing is shared with the global `engine`, which stays as a deprecated delegate of `defaultFloorplan()`.
+`packs` is a list of content packs, applied in order: each is a function `(engine) => void` or an object with `register(engine)` (for example `(target) => register(target, { region: 'br' })` of `game-floorplan-residential`).
+`patch` merges fields by id (items by `type`, templates by `id`) and `remove` lists ids to take out; an id that does not exist is ignored and warned about once in development.
+
 ## Português
 
 Gerador procedural de plantas de casas e lotes, com semente: casca da casa, lote, slots de móveis, preenchimento por semente, paleta de cores harmônica, estados da casa (plugins) e zoneamento urbano.

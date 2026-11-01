@@ -20,6 +20,8 @@ export interface ShapePoolOptions {
   readonly cache?: ShapeCache
   /** Generators of the `custom` nodes for the jobs made in the calling thread (the workers register their own). */
   readonly generators?: Readonly<Record<string, ShapeGenerator>>
+  /** Look custom nodes up in `generators` only (for example `shapes.record()` of `createShapes`), never in the global registry; the jobs then run in the calling thread, since a worker cannot receive functions. */
+  readonly isolatedGenerators?: boolean
 }
 
 export interface ShapeRequest {
@@ -96,11 +98,11 @@ export function createShapePool(options: ShapePoolOptions = {}): ShapePool {
 
   const run = (schema: ShapeSchema, generateOptions: GenerateOptions): Promise<ShapeBuffers> => {
     // custom generators passed per call are functions: they cannot reach a worker, so that job runs here
-    if (slots.length === 0 || generateOptions.generators) {
+    if (slots.length === 0 || generateOptions.generators || options.isolatedGenerators) {
       inThread++
       try {
         const generators = { ...(options.generators ?? {}), ...(generateOptions.generators ?? {}) }
-        return Promise.resolve(generate(schema, { ...generateOptions, ...(Object.keys(generators).length ? { generators } : {}) }))
+        return Promise.resolve(generate(schema, { ...generateOptions, ...(Object.keys(generators).length ? { generators } : {}), ...(options.isolatedGenerators ? { isolatedGenerators: true } : {}) }))
       } catch (error) {
         return Promise.reject(error)
       }

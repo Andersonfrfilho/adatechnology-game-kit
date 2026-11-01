@@ -2,7 +2,7 @@ import { exactSnapshot } from '@adatechnology/golden-tool'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { buildItem, createItemModels, hasItemModel, SHIPPED_MODELS } from '../src'
+import { buildItem, buildItemLod, composeThumbnailScene, createItemModels, hasItemModel, itemThumbnail, SHIPPED_MODELS } from '../src'
 
 const SIZE: [number, number, number] = [0.1, 0.12, 0.1]
 const SHIPPED_ID = SHIPPED_MODELS[0]!.entry.id
@@ -40,5 +40,19 @@ describe('item models by instance', () => {
     withCustom.register({ ...customRecord.entry, id: 'later' }, customRecord.builder)
     expect(withoutShipped.has('later')).toBe(false)
     expect(hasItemModel('later')).toBe(false)
+  })
+})
+
+describe('item models by instance: every consumer path', () => {
+  it('LOD and thumbnail read the instance, not the global registry', () => {
+    const withoutShipped = createItemModels({ remove: [SHIPPED_ID] })
+    const withShipped = createItemModels()
+    expect(withShipped.buildLod(THREE, itemOf(SHIPPED_ID)).near.kind).toBe('model')
+    expect(withoutShipped.buildLod(THREE, itemOf(SHIPPED_ID)).near.kind).toBe('shape')
+    expect(buildItemLod(THREE, itemOf(SHIPPED_ID)).near.kind).toBe('model')
+    expect(withShipped.thumbnail(itemOf(SHIPPED_ID))).toEqual({ render: true })
+    expect(withoutShipped.thumbnail(itemOf(SHIPPED_ID))).toHaveProperty('svg')
+    expect(itemThumbnail(itemOf(SHIPPED_ID))).toEqual({ render: true })
+    expect(composeThumbnailScene(THREE, itemOf(SHIPPED_ID), { models: withoutShipped }).scene.children.length).toBeGreaterThan(0)
   })
 })

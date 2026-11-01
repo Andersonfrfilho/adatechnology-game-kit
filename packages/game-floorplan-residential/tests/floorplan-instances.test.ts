@@ -34,7 +34,7 @@ describe('floorplan engines by instance', () => {
     expect(() => trimmed.generate(TEMPLATE_ID, { seed: 1 })).toThrow('Unknown template')
     expect(() => full.generate(TEMPLATE_ID, { seed: 1 })).not.toThrow()
     full.registerLocale('en', { reasons: { only_in_full: 'full' } })
-    full.defineZone({ id: 'only_in_full' } as never)
+    full.defineZone({ id: 'only_in_full', allowedUses: ['residential_single'], maxFloors: 2, maxHeight: 9, setbacks: { front: 3, side: 1, back: 2 }, maxCoverage: 0.6, maxFar: 1, minLot: 100, minFrontage: 6, permeableMin: 0.2 })
     expect(full.translate('reasons', 'only_in_full')).toBe('full')
     expect(trimmed.translate('reasons', 'only_in_full')).toBe('only_in_full')
     expect(engine.translate('reasons', 'only_in_full')).toBe('only_in_full')

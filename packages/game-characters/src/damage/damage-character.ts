@@ -100,7 +100,6 @@ export const createDamageCharacter = (core: CharacterCore, setup: DamageSetup): 
       core.body.stunSeconds = Math.max(0, core.body.stunSeconds - dt)
       const ops = opsFor(() => 0)
       stepBleeding({ bleeders, dt, emit: ops.emit, pointOf })
-      if (bleeders.length > 0 || ops.events.length > 0) core.invalidateState()
       return ops.events
     },
     bleeders: () => bleeders.map((bleeder) => ({ ...bleeder })),

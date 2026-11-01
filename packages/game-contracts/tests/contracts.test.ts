@@ -55,6 +55,16 @@ describe('impact contract', () => {
     expect(checkDestructible(slow, { cost: { reads: 200, ceilingMs: 0.1 } }).problems.join()).toMatch(/describe\(\) took/)
   })
 
+  it('the cost contract flags an impl that keeps allocating while it returns the same object', () => {
+    const cached = panelImpl()
+    const state = cached.state()
+    const spec = cached.describe()
+    const retained: number[][] = []
+    const leaking = { ...cached, state: () => state, describe: () => { retained.push(new Array<number>(4096).fill(1)); return spec } }
+    const result = checkDestructible(leaking, { cost: { reads: 2000, allocationBytes: 1000, ceilingMs: 10_000 } })
+    expect(result.problems.join()).toMatch(/describe\(\) grew the heap by/)
+  })
+
   it('checkDestructible needs no world: it hits the impl and validates the shape of everything', () => {
     expect(checkDestructible(panelImpl())).toEqual({ ok: true, problems: [] })
   })

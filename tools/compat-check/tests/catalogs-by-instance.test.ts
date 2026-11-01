@@ -1,6 +1,6 @@
-import { buildItemWeaponModel, createWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from '@adatechnology/game-weapons-three'
-import { createShapes, generate, getGenerator, registerGenerator, unregisterGenerator } from '@adatechnology/game-shapes'
-import { buildItem, createItemModels, hasItemModel, listItemModels, registerItemModel, SHIPPED_MODELS, unregisterItemModel } from '@adatechnology/game-items-three'
+import { buildItemWeaponModel, buildModeledProp, createWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from '@adatechnology/game-weapons-three'
+import { createShapePool, createShapes, generate, getGenerator, registerGenerator, unregisterGenerator } from '@adatechnology/game-shapes'
+import { buildItem, buildItemLod, createItemModels, itemThumbnail, hasItemModel, listItemModels, registerItemModel, SHIPPED_MODELS, unregisterItemModel } from '@adatechnology/game-items-three'
 import * as THREE from 'three'
 import { ASSEMBLIES, assemblyPart, createAssemblies, getAssembly, registerAssembly } from '@adatechnology/game-destruction'
 import { createFloorplan, engine } from '@adatechnology/game-floorplan'
@@ -100,5 +100,22 @@ describe('T5.2 weapons-three: the old global weapon prop calls match a set made 
     expect(itemModelOfWeapon('compat_weapon')).toBe('axe')
     expect(before.itemModelOf('compat_weapon')).toBeUndefined()
     expect(createWeaponProps().itemModelOf('compat_weapon')).toBeUndefined()
+  })
+})
+
+describe('A5 consumers: the old calls without an instance still use the global sets', () => {
+  const item = { id: SHIPPED_MODELS[0]!.entry.id, category: 'x', size: [0.1, 0.1, 0.1] as [number, number, number], model: SHIPPED_MODELS[0]!.entry.id }
+
+  it('lod, thumbnail, pool and modeled props with no instance argument', async () => {
+    expect(buildItemLod(THREE, item).near.kind).toBe('model')
+    expect(itemThumbnail(item)).toEqual({ render: true })
+    expect(createItemModels().thumbnail(item)).toEqual({ render: true })
+    registerGenerator('compat.none', () => ({ kind: 'box', size: [1, 1, 1] }))
+    try {
+      await expect(createShapePool().generate({ version: 1, root: { kind: 'custom', generator: 'compat.none', params: {} } })).resolves.toBeDefined()
+    } finally {
+      unregisterGenerator('compat.none')
+    }
+    expect(buildModeledProp(THREE, { id: 'baseball_bat' }, 'bat')).toBeDefined()
   })
 })

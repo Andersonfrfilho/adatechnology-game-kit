@@ -15,7 +15,10 @@ import type { WeaponFx } from '../fx'
 import { createLaserRaycast } from '../laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from '../models'
 import type { AttachmentModelRegistry } from '../models/attachments/types'
-import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, itemModelOfWeapon, modeledPropSpec, weaponProp } from '../props'
+import { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from '../modeled-prop'
+import { BODY_ACTIONS, buildProp, weaponProp } from '../props'
+import { defaultWeaponProps } from '../weapon-item-model'
+import type { WeaponProps } from '../weapon-item-model'
 import type { ItemModels } from '../item-models'
 import type { WeaponProp } from '../props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from '../thumbnails'
@@ -42,6 +45,8 @@ export interface WeaponsTestModuleOptions {
   flyRocket?: boolean
   /** The item models of game-items-three (`itemModels` there): the weapons the gallery did not draw get the team's model instead of the low-poly prop; default `itemModels` there (deprecated: pass it). */
   items?: ItemModels
+  /** The weapon item model overrides to draw with (`createWeaponProps(...)`); default the shared set behind `registerWeaponItemModel`. */
+  props?: WeaponProps
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -210,13 +215,13 @@ const targetProp = (id: string, name: string): WeaponProp => {
 }
 
 /** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
-const weaponItem = (def: WeaponDef, name: string, items?: ItemModels): TestableItem => {
+const weaponItem = (def: WeaponDef, name: string, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id) && !itemModelOfWeapon(def.id, items)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
-    build: (THREE: unknown) => buildModeledProp(THREE as typeof THREE_NS, def, name, undefined, items) as THREE_NS.Group,
+    build: (THREE: unknown) => buildModeledProp(THREE as typeof THREE_NS, def, name, undefined, items, props) as THREE_NS.Group,
     spec: (root: unknown) => modeledPropSpec(root, def, name),
     weapon: def.id,
     movable: true,
@@ -224,10 +229,10 @@ const weaponItem = (def: WeaponDef, name: string, items?: ItemModels): TestableI
 }
 
 /** The M134 standing on a tripod: the support the `tripod` accessory gives, as a prop of its own (aim at it and press H to take the gun). */
-const mountedM134Item = (def: WeaponDef, name: string, items?: ItemModels): TestableItem => ({
+const mountedM134Item = (def: WeaponDef, name: string, items?: ItemModels, props?: WeaponProps): TestableItem => ({
   id: MOUNTED_M134_ITEM_ID,
   name,
-  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name, items) as THREE_NS.Group,
+  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name, items, props) as THREE_NS.Group,
   spec: (root: unknown) => modeledPropSpec(root, def, name),
   weapon: def.id,
   movable: false,
@@ -304,7 +309,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   })
   const worldExplosiveIds = new Set(worldExplosives.map((item) => item.id))
   const mountedM134Def = arsenal.weapons.get(MOUNTED_M134.weaponId)
-  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134, options.items)] : []
+  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134, options.items, options.props)] : []
   let fx: WeaponFx | null = null
   let host: ModuleHost | null = null
   let soundDistance = 0
@@ -321,7 +326,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       return fx
     },
     items: () => [
-      ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id), options.items), def.id)),
+      ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id), options.items, options.props), def.id)),
       counterItem(text.counter),
       ...TARGETS.map((target) => targetItem(target.id, text.targets[target.id] ?? target.id)),
       ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
