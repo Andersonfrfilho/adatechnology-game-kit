@@ -31,6 +31,10 @@ const HOLE_TEXTURE_SIZE = 64
 /** A mirror the model draws: small, and this near where the part stands, metres. */
 const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
+const DRAWN_MIRROR_MOUNT = 0.2
+const MIRROR_GLASS_FIT = 0.76
+/** A mirror shows what is behind it: darker than chrome, or it reads as a white square against the sky. */
+const MIRROR_GLASS_COLOR = '#59636a'
 /** Per material: the ring the round leaves around the bore. */
 const HOLE_RIM: Record<string, string> = { steel: '#b7bcc0', aluminium: '#d3d6d8', plastic: '#d9d6cc', rubber: '#141414', glass: '#eef3f5' }
 const holeMaterials = new WeakMap<object, Map<string, any>>()
@@ -344,7 +348,7 @@ export class VehicleVisuals implements CreaseWork {
     this.c.root.updateMatrixWorld(true)
     return objs.length > 0
   }
-  /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, dark, lines the opening. */
+  /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, in the same paint as on a real car, lines the opening. */
   private doorEdges(piv: Obj, z: any): void {
     const THREE = this.THREE
     const B = z.box
@@ -380,10 +384,8 @@ export class VehicleVisuals implements CreaseWork {
     }
     const paint = this.paint().clone()
     paint.side = THREE.DoubleSide
-    const inner = this.I.MATERIALS.dark.clone()
-    inner.side = THREE.DoubleSide
     const edges = new THREE.Mesh(band(0.002), paint)
-    const lining = new THREE.Mesh(band(-0.012), inner)
+    const lining = new THREE.Mesh(band(0.002), paint)
     for (const m of [edges, lining]) {
       m.userData.noFollow = true
       m.castShadow = false
@@ -444,24 +446,38 @@ export class VehicleVisuals implements CreaseWork {
       g.computeBoundingBox()
     })
   }
+  /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
+  private seatMirrorGlass(glass: Obj): void {
+    const g = glass.geometry.clone()
+    g.computeBoundingBox()
+    const mid = g.boundingBox.getCenter(new this.THREE.Vector3())
+    g.translate(-mid.x, -mid.y, -mid.z)
+    g.scale(MIRROR_GLASS_FIT, MIRROR_GLASS_FIT, MIRROR_GLASS_FIT)
+    g.translate(mid.x, mid.y, mid.z)
+    glass.geometry = g
+    glass.material = this.I.makeMaterial(MIRROR_GLASS_COLOR, { metalness: 0.95, roughness: 0.12 })
+  }
   /** The mirror the model already draws around where the part says, if it draws one. */
   private drawnMirror(p: PartDef): Obj[] {
     const THREE = this.THREE
     const [cx, cy, cz] = p.box.center
     this.c.root.updateMatrixWorld(true)
     const inv = this.I.worldInverseOf(this.c)
-    return (this.c.vehicle.children as Obj[]).filter((o) => {
-      if (o.userData.glass || o.userData.decal || !(o.isMesh || o.isGroup) || !o.visible || (this.c as any).deform?.includes(o)) return false
+    const small = (this.c.vehicle.children as Obj[]).flatMap((o) => {
+      if (o.userData.glass || o.userData.decal || !(o.isMesh || o.isGroup) || !o.visible || (this.c as any).deform?.includes(o)) return []
       const box = this.I.localBox(this.c, o, inv)
-      if (box.isEmpty()) return false
+      if (box.isEmpty()) return []
       const size = box.getSize(new THREE.Vector3())
-      const at = box.getCenter(new THREE.Vector3())
-      return Math.max(size.x, size.y, size.z) < DRAWN_MIRROR_SIZE && Math.hypot(at.x - cx, at.y - cy, at.z - cz) < DRAWN_MIRROR_REACH && Math.abs(at.z) > Math.abs(cz) - DRAWN_MIRROR_REACH / 2
+      return Math.max(size.x, size.y, size.z) < DRAWN_MIRROR_SIZE ? [{ o, at: box.getCenter(new THREE.Vector3()) }] : []
     })
+    const housing = small.filter(({ at }) => Math.hypot(at.x - cx, at.y - cy, at.z - cz) < DRAWN_MIRROR_REACH && Math.abs(at.z) > Math.abs(cz) - DRAWN_MIRROR_REACH / 2)
+    // its mount and its lamp stand against it
+    return small.filter(({ at }) => housing.some((h) => h.at.distanceTo(at) < DRAWN_MIRROR_MOUNT)).map(({ o }) => o)
   }
   private makeMirror(p: PartDef): void {
     const drawn = this.drawnMirror(p)
     if (drawn.length) {
+      for (const o of drawn) if (o.isMesh && o.material === this.I.MATERIALS.chrome) this.seatMirrorGlass(o)
       this.extra.set(p.id, drawn)
       return
     }
