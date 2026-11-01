@@ -75,7 +75,7 @@ viram `devDependencies` ou `peerDependencies` opcionais.
 
 ## D8 — Contrato de custo
 
-`DestructibleImpl.part(id)` e `state()` são O(1), sem alocação, e cacheados entre mudanças. O `checkDestructible` mede 10.000
+`DestructibleImpl.describe()` e `state()` são O(1), sem alocação, e cacheados entre mudanças: o mesmo objeto volta até uma mudança que altera o que ele lê (um `update` que só sangra ou vaza não conta). O objeto em cache é compartilhado por todos os leitores: `state()` devolve `Readonly<ObjectState>` e quem precisa alterar copia antes. O `checkDestructible` mede 10.000
 leituras e falha acima do teto, que é configurável.
 
 ## D9 — Versões e publicação
