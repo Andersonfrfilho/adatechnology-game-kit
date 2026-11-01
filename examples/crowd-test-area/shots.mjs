@@ -50,12 +50,20 @@ const view = (page, camera) =>
       room.camera.updateProjectionMatrix()
       room.camera.updateMatrixWorld(true)
       room.webgl.info.autoReset = false
-      room.webgl.info.reset()
-      room.webgl.render(room.scene, room.camera)
-      const calls = room.webgl.info.render.calls
+      const crowd = room.scene.getObjectByName('crowd')
+      const callsOf = () => {
+        room.webgl.info.reset()
+        room.webgl.render(room.scene, room.camera)
+        return room.webgl.info.render.calls
+      }
+      crowd.visible = false
+      const without = callsOf()
+      crowd.visible = true
+      const calls = callsOf()
       room.webgl.info.autoReset = true
+      const crowdCalls = calls - without
       // read the canvas in the same task as the render: the room's own loop would draw its camera over it before a screenshot
-      return { metrics: room.metrics().module, calls, triangles: room.webgl.info.render.triangles, picture: room.webgl.domElement.toDataURL('image/png') }
+      return { metrics: room.metrics().module, calls, crowdCalls, triangles: room.webgl.info.render.triangles, picture: room.webgl.domElement.toDataURL('image/png') }
     },
     { camera, count },
   )
