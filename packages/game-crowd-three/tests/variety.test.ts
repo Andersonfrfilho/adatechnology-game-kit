@@ -123,6 +123,23 @@ describe('the variety of a horde of 2000 (T4b.9)', () => {
     expect(phaseSpread(later).share, 'step 600').toBeGreaterThanOrEqual(MIN_AGENTS_SPREAD)
   }, 120000)
 
+  it('a level budget moves bodies to cheaper levels and changes no appearance: the same signatures, still no clones among neighbours', () => {
+    const plain = instancesOf(crowd)
+    // the edges move a little a frame: let them settle
+    const instances = createCrowdInstances({ eyes, variety: { impostorFrom: 90, budget: [120, 240, 480] } })
+    let budgeted: typeof plain = []
+    for (let settle = 0; settle < 80; settle++) {
+      budgeted = []
+      instances.agents(crowd.store, sizes, frame, (variant, level, instance) => budgeted.push({ index: budgeted.length, level, instance, variant }))
+    }
+    const sorted = (rows: typeof plain): number[] => signaturesOf(crowd, rows).sort((a, b) => a - b)
+    expect(budgeted).toHaveLength(plain.length)
+    expect(sorted(budgeted)).toEqual(sorted(plain))
+    const levels = (rows: typeof plain): number[] => [0, 1, 2, 3].map((level) => rows.filter((row) => row.level === level).length)
+    expect(levels(budgeted)[0]).toBeLessThan(levels(plain)[0]!)
+    expect(levels(budgeted)[0]).toBeLessThanOrEqual(150)
+  })
+
   it('the signature is the same at every level of detail, the impostor included', () => {
     const forced = (edges: readonly [number, number], impostorFrom: number) => instancesOf(crowd, { eyes, numbers: { lodDistances: edges as never }, variety: { impostorFrom } })
     const levels = [forced([-1000, 1e9], 1e9 + 1), forced([-1000, -900], 1e9), forced([-1000, -900], -800)]
