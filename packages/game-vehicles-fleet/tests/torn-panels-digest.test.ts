@@ -4,7 +4,7 @@ import { makeFleetKit } from './helpers/kit'
 
 const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_front', 'lid', 'fender_front_left', 'bumper_rear', 'door_rear_left']
 /* digest of the geometry of the sedan after those panels were torn off and the smoothing finished, taken before the cut and the decals used the box of the panel */
-const GOLDEN_DIGEST = '823:393319218'
+const GOLDEN_DIGEST = '823:4253866218'
 
 function digestOf(root: any): string {
   let h = 2166136261

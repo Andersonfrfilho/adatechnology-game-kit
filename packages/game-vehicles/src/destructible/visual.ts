@@ -148,6 +148,7 @@ export class VehicleVisuals implements CreaseWork {
     this.hood = this.nameHood()
     this.seatPanes()
     this.seatDoorHandles()
+    this.seatHood()
     this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
     if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
@@ -621,6 +622,12 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingBox()
     g.computeBoundingSphere()
     mesh.geometry = g
+  }
+  /** A closed hood is flush with the fenders beside it: the height it was drawn with to keep clear of the hull goes, the hull has its hole. */
+  private seatHood(): void {
+    const hood = (this.c as any).hood
+    if (!hood?.lift) return
+    for (const part of hood.piv.children as Obj[]) part.position.y -= hood.lift
   }
   /** A handle is at the free edge of its door, the end away from the hinge. */
   private seatDoorHandles(): void {
