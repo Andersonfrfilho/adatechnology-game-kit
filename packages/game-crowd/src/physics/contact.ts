@@ -29,6 +29,16 @@ export type ContactWorkspace = {
   readonly pushBeforeZ: Float32Array
   /** |Δpush| the contact gave to each agent in the last step. */
   readonly shove: Float32Array
+  /** 1 for the agents that take part in the contact this step (`takesPartInContact`), read once. */
+  readonly takesPart: Uint8Array
+  /** The radius and the effective mass of each agent this step, in doubles: the balance does not change inside the contact step. */
+  readonly radiusOf: Float64Array
+  readonly massOf: Float64Array
+  /** Per pair, valid for the positions of the current iteration: the reach, the distance, and the normal (only meaningful when the distance is under the reach) from `j` to `i`. */
+  readonly pairReach: Float64Array
+  readonly pairDistance: Float64Array
+  readonly pairNormalX: Float64Array
+  readonly pairNormalZ: Float64Array
 }
 
 export type ContactView = { n: number; readonly store: CrowdStore; readonly grid: NavGrid; readonly workspace: ContactWorkspace }
@@ -47,6 +57,13 @@ export const createContactWorkspace = (capacity: number, grid: NavGrid): Contact
   pushBeforeX: new Float32Array(capacity),
   pushBeforeZ: new Float32Array(capacity),
   shove: new Float32Array(capacity),
+  takesPart: new Uint8Array(capacity),
+  radiusOf: new Float64Array(capacity),
+  massOf: new Float64Array(capacity),
+  pairReach: new Float64Array(capacity * PAIRS_PER_AGENT),
+  pairDistance: new Float64Array(capacity * PAIRS_PER_AGENT),
+  pairNormalX: new Float64Array(capacity * PAIRS_PER_AGENT),
+  pairNormalZ: new Float64Array(capacity * PAIRS_PER_AGENT),
 })
 
 export const createContactView = (store: CrowdStore, grid: NavGrid): ContactView => ({ n: 0, store, grid, workspace: createContactWorkspace(store.capacity, grid) })
@@ -60,14 +77,26 @@ const effectiveMass = (store: CrowdStore, i: number): number => store.mass[i]! *
 
 const bodyRadius = (store: CrowdStore, i: number, radius: number): number => radius * store.build[i]!
 
+/** What each agent is for this step: in the contact or not, its radius and its effective mass. */
+function readBodies(view: ContactView, radius: number): void {
+  const { store, workspace } = view
+  const { takesPart, radiusOf, massOf } = workspace
+  for (let i = 0; i < view.n; i++) {
+    const takes = takesPartInContact(store, i)
+    takesPart[i] = takes ? 1 : 0
+    radiusOf[i] = bodyRadius(store, i, radius)
+    massOf[i] = effectiveMass(store, i)
+  }
+}
+
 /** The agents of band R0 into the 1 m hash, clearing only the cells the last step used. */
-function rebuildHash(view: ContactView): void {
+export function rebuildHash(view: ContactView): void {
   const { store, grid, workspace } = view
   const side = Math.floor(grid.size)
   for (let k = 0; k < workspace.touchedCount; k++) workspace.head[workspace.touched[k]!] = -1
   workspace.touchedCount = 0
   for (let i = 0; i < view.n; i++) {
-    if (!takesPartInContact(store, i)) continue
+    if (!workspace.takesPart[i]) continue
     const hx = Math.floor(store.x[i]! + grid.half)
     const hz = Math.floor(store.z[i]! + grid.half)
     if (hx < 0 || hz < 0 || hx >= side || hz >= side) continue
@@ -81,89 +110,104 @@ function rebuildHash(view: ContactView): void {
 /** The cells scanned from a cell for pairs: itself (the agents after the first) and four neighbours, so that every pair of cells is looked at once, from one side. */
 const FORWARD_CELLS = [1, 0, -1, 1, 0, 1, 1, 1] as const
 
-function addPairsOfCell(view: ContactView, i: number, cell: number, sameCell: boolean, radius: number): void {
+function addPairsOfCell(view: ContactView, i: number, cell: number, sameCell: boolean): void {
   const { store, workspace } = view
-  const reachBase = bodyRadius(store, i, radius) + PAIR_MARGIN
-  for (let j = workspace.head[cell]!; j !== -1; j = workspace.next[j]!) {
-    if ((sameCell && j <= i) || Math.abs(store.y[i]! - store.y[j]!) > MAX_LEVEL_GAP) continue
-    const reach = reachBase + bodyRadius(store, j, radius)
-    const ex = store.x[j]! - store.x[i]!
-    const ez = store.z[j]! - store.z[i]!
-    if (ex * ex + ez * ez >= reach * reach || workspace.pairCount >= workspace.pairI.length) continue
-    workspace.pairI[workspace.pairCount] = i
-    workspace.pairJ[workspace.pairCount++] = j
+  const { head, next, radiusOf, pairI, pairJ } = workspace
+  const { x, z, y } = store
+  const xi = x[i]!
+  const zi = z[i]!
+  const yi = y[i]!
+  const reachBase = radiusOf[i]! + PAIR_MARGIN
+  for (let j = head[cell]!; j !== -1; j = next[j]!) {
+    if ((sameCell && j <= i) || Math.abs(yi - y[j]!) > MAX_LEVEL_GAP) continue
+    const reach = reachBase + radiusOf[j]!
+    const ex = x[j]! - xi
+    const ez = z[j]! - zi
+    if (ex * ex + ez * ez >= reach * reach || workspace.pairCount >= pairI.length) continue
+    pairI[workspace.pairCount] = i
+    pairJ[workspace.pairCount++] = j
   }
 }
 
 /** The pairs `(i, j)` near enough to touch before the step ends, in the order of the agent that found them. The solver is symmetric in the two of a pair, so which one comes first does not matter. */
-function collectPairs(view: ContactView, radius: number): void {
+function collectPairs(view: ContactView): void {
   const { store, grid, workspace } = view
   const side = Math.floor(grid.size)
   workspace.pairCount = 0
   for (let i = 0; i < view.n; i++) {
-    if (!takesPartInContact(store, i)) continue
+    if (!workspace.takesPart[i]) continue
     const hx = Math.floor(store.x[i]! + grid.half)
     const hz = Math.floor(store.z[i]! + grid.half)
     if (hx < 0 || hz < 0 || hx >= side || hz >= side) continue
-    addPairsOfCell(view, i, hz * side + hx, true, radius)
+    addPairsOfCell(view, i, hz * side + hx, true)
     for (let k = 0; k < FORWARD_CELLS.length; k += 2) {
       const qx = hx + FORWARD_CELLS[k]!
       const qz = hz + FORWARD_CELLS[k + 1]!
-      if (qx >= 0 && qz >= 0 && qx < side && qz < side) addPairsOfCell(view, i, qz * side + qx, false, radius)
+      if (qx >= 0 && qz >= 0 && qx < side && qz < side) addPairsOfCell(view, i, qz * side + qx, false)
     }
   }
 }
 
-/** The unit normal from `j` to `i` into `out`; a pair on the same spot gets a direction from the two identities. */
-function normalOf(store: CrowdStore, i: number, j: number, distance: number, out: [number, number]): void {
-  if (distance > MIN_DISTANCE) {
-    out[0] = (store.x[i]! - store.x[j]!) / distance
-    out[1] = (store.z[i]! - store.z[j]!) / distance
-    return
+/** The distance, reach and normal (from `j` to `i`) of every pair at the current positions; a pair on the same spot gets a direction from the two identities. */
+function measurePairs(view: ContactView): void {
+  const { store, workspace } = view
+  const { pairI, pairJ, radiusOf, pairReach, pairDistance, pairNormalX, pairNormalZ } = workspace
+  const { x, z, identity } = store
+  for (let p = 0; p < workspace.pairCount; p++) {
+    const i = pairI[p]!
+    const j = pairJ[p]!
+    const reach = radiusOf[i]! + radiusOf[j]!
+    const ex = x[i]! - x[j]!
+    const ez = z[i]! - z[j]!
+    const distance = Math.sqrt(ex * ex + ez * ez)
+    pairReach[p] = reach
+    pairDistance[p] = distance
+    if (distance >= reach) continue
+    if (distance > MIN_DISTANCE) {
+      pairNormalX[p] = ex / distance
+      pairNormalZ[p] = ez / distance
+      continue
+    }
+    const angle = 2 * Math.PI * unit(identity[i]! ^ identity[j]!, 0, SALT.SPIN)
+    pairNormalX[p] = Math.cos(angle)
+    pairNormalZ[p] = Math.sin(angle)
   }
-  const angle = 2 * Math.PI * unit(store.identity[i]! ^ store.identity[j]!, 0, SALT.SPIN)
-  out[0] = Math.cos(angle)
-  out[1] = Math.sin(angle)
 }
-
-const normal: [number, number] = [0, 0]
 
 /** One inelastic impulse along the normal: the closing speed of the two bodies goes to zero, never below (restitution 0). */
-function solveImpulse(store: CrowdStore, i: number, j: number, radius: number): void {
-  const reach = bodyRadius(store, i, radius) + bodyRadius(store, j, radius)
-  const ex = store.x[i]! - store.x[j]!
-  const ez = store.z[i]! - store.z[j]!
-  const distance = Math.sqrt(ex * ex + ez * ez)
-  if (distance >= reach) return
-  normalOf(store, i, j, distance, normal)
-  const closing = (store.vx[i]! + store.pushX[i]! - store.vx[j]! - store.pushX[j]!) * normal[0] + (store.vz[i]! + store.pushZ[i]! - store.vz[j]! - store.pushZ[j]!) * normal[1]
-  if (closing >= 0) return
-  const massI = effectiveMass(store, i)
-  const massJ = effectiveMass(store, j)
-  const impulse = (-closing * massI * massJ) / (massI + massJ)
-  store.pushX[i]! += (impulse * normal[0]) / massI
-  store.pushZ[i]! += (impulse * normal[1]) / massI
-  store.pushX[j]! -= (impulse * normal[0]) / massJ
-  store.pushZ[j]! -= (impulse * normal[1]) / massJ
-}
-
-function accumulateCorrection(view: ContactView, p: number, params: ContactParams): void {
-  const { store, workspace } = view
+function solveImpulse(store: CrowdStore, workspace: ContactWorkspace, p: number): void {
+  if (workspace.pairDistance[p]! >= workspace.pairReach[p]!) return
   const i = workspace.pairI[p]!
   const j = workspace.pairJ[p]!
-  const reach = bodyRadius(store, i, params.radius) + bodyRadius(store, j, params.radius)
-  const ex = store.x[i]! - store.x[j]!
-  const ez = store.z[i]! - store.z[j]!
-  const distance = Math.sqrt(ex * ex + ez * ez)
+  const nx = workspace.pairNormalX[p]!
+  const nz = workspace.pairNormalZ[p]!
+  const { vx, vz, pushX, pushZ } = store
+  const closing = (vx[i]! + pushX[i]! - vx[j]! - pushX[j]!) * nx + (vz[i]! + pushZ[i]! - vz[j]! - pushZ[j]!) * nz
+  if (closing >= 0) return
+  const massI = workspace.massOf[i]!
+  const massJ = workspace.massOf[j]!
+  const impulse = (-closing * massI * massJ) / (massI + massJ)
+  pushX[i]! += (impulse * nx) / massI
+  pushZ[i]! += (impulse * nz) / massI
+  pushX[j]! -= (impulse * nx) / massJ
+  pushZ[j]! -= (impulse * nz) / massJ
+}
+
+function accumulateCorrection(workspace: ContactWorkspace, p: number, relaxation: number): void {
+  const distance = workspace.pairDistance[p]!
+  const reach = workspace.pairReach[p]!
   if (distance >= reach) return
-  normalOf(store, i, j, distance, normal)
-  const massI = effectiveMass(store, i)
-  const massJ = effectiveMass(store, j)
-  const move = params.relaxation * (reach - distance)
-  workspace.deltaX[i]! += move * normal[0] * (massJ / (massI + massJ))
-  workspace.deltaZ[i]! += move * normal[1] * (massJ / (massI + massJ))
-  workspace.deltaX[j]! -= move * normal[0] * (massI / (massI + massJ))
-  workspace.deltaZ[j]! -= move * normal[1] * (massI / (massI + massJ))
+  const i = workspace.pairI[p]!
+  const j = workspace.pairJ[p]!
+  const massI = workspace.massOf[i]!
+  const massJ = workspace.massOf[j]!
+  const move = relaxation * (reach - distance)
+  const nx = workspace.pairNormalX[p]!
+  const nz = workspace.pairNormalZ[p]!
+  workspace.deltaX[i]! += move * nx * (massJ / (massI + massJ))
+  workspace.deltaZ[i]! += move * nz * (massJ / (massI + massJ))
+  workspace.deltaX[j]! -= move * nx * (massI / (massI + massJ))
+  workspace.deltaZ[j]! -= move * nz * (massI / (massI + massJ))
   workspace.count[i]!++
   workspace.count[j]!++
 }
@@ -198,21 +242,21 @@ function correctPositions(view: ContactView, params: ContactParams): void {
     resetCorrection(workspace, workspace.pairI[p]!)
     resetCorrection(workspace, workspace.pairJ[p]!)
   }
-  for (let p = 0; p < workspace.pairCount; p++) accumulateCorrection(view, p, params)
+  for (let p = 0; p < workspace.pairCount; p++) accumulateCorrection(workspace, p, params.relaxation)
   for (let p = 0; p < workspace.pairCount; p++) {
     applyCorrection(view, workspace.pairI[p]!, params)
     applyCorrection(view, workspace.pairJ[p]!, params)
   }
 }
 
-function measureOverlaps(view: ContactView, radius: number, out: ContactResult): void {
+function measureOverlaps(view: ContactView, out: ContactResult): void {
   const { store, workspace } = view
   for (let p = 0; p < workspace.pairCount; p++) {
     const i = workspace.pairI[p]!
     const j = workspace.pairJ[p]!
     // two bodies lying on the ground are meant to lie on one another: that is the mound, not a failure of the contact
     if (isOnGround(store, i) && isOnGround(store, j)) continue
-    const reach = bodyRadius(store, i, radius) + bodyRadius(store, j, radius)
+    const reach = workspace.radiusOf[i]! + workspace.radiusOf[j]!
     const overlap = reach - Math.hypot(store.x[i]! - store.x[j]!, store.z[i]! - store.z[j]!)
     if (overlap <= 0) continue
     out.contacts++
@@ -250,13 +294,15 @@ export function contactStep(view: ContactView, params: ContactParams, out: Conta
     workspace.pushBeforeX[i] = store.pushX[i]!
     workspace.pushBeforeZ[i] = store.pushZ[i]!
   }
+  readBodies(view, params.radius)
   rebuildHash(view)
-  collectPairs(view, params.radius)
+  collectPairs(view)
   for (let iteration = 0; iteration < params.iterations; iteration++) {
-    for (let p = 0; p < workspace.pairCount; p++) solveImpulse(store, workspace.pairI[p]!, workspace.pairJ[p]!, params.radius)
-    for (let p = workspace.pairCount - 1; p >= 0; p--) solveImpulse(store, workspace.pairI[p]!, workspace.pairJ[p]!, params.radius)
+    measurePairs(view)
+    for (let p = 0; p < workspace.pairCount; p++) solveImpulse(store, workspace, p)
+    for (let p = workspace.pairCount - 1; p >= 0; p--) solveImpulse(store, workspace, p)
     correctPositions(view, params)
   }
-  measureOverlaps(view, params.radius, out)
+  measureOverlaps(view, out)
   dampPush(view, params)
 }

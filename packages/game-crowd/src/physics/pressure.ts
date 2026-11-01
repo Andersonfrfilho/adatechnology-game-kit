@@ -26,6 +26,8 @@ export type PressureWorkspace = {
   readonly cutZ: Float32Array
   readonly pairWeightForward: Float32Array
   readonly pairWeightBackward: Float32Array
+  /** 1 for the agents that press on what is in front of them (`isPressing`), read once per step. */
+  readonly canPress: Uint8Array
 }
 
 export type PressureContext = {
@@ -52,9 +54,15 @@ export const createPressureWorkspace = (capacity: number, pairCapacity: number):
   cutZ: new Float32Array(capacity),
   pairWeightForward: new Float32Array(pairCapacity),
   pairWeightBackward: new Float32Array(pairCapacity),
+  canPress: new Uint8Array(capacity),
 })
 
 const isPressing = (store: CrowdStore, i: number): boolean => takesPartInContact(store, i) && (store.balance[i] === BALANCE.STANDING || store.balance[i] === BALANCE.STAGGERING)
+
+/** `isPressing` of every agent into `canPress`: the state does not change inside the pressure step. */
+function readPressing(view: ContactView, workspace: PressureWorkspace): void {
+  for (let i = 0; i < view.n; i++) workspace.canPress[i] = isPressing(view.store, i) ? 1 : 0
+}
 
 const frontWeight = (alignment: number, cone: number): number => (alignment > cone ? (alignment - cone) / (1 - cone) : 0)
 
@@ -77,7 +85,7 @@ function weighPairs(view: ContactView, workspace: PressureWorkspace, params: Pre
     workspace.pairWeightBackward[p] = 0
     const i = view.workspace.pairI[p]!
     const j = view.workspace.pairJ[p]!
-    if (!isPressing(store, i) || !isPressing(store, j)) continue
+    if (!workspace.canPress[i] || !workspace.canPress[j]) continue
     const ex = store.x[j]! - store.x[i]!
     const ez = store.z[j]! - store.z[i]!
     const distance = Math.sqrt(ex * ex + ez * ez)
@@ -107,7 +115,7 @@ function weighPairs(view: ContactView, workspace: PressureWorkspace, params: Pre
 function weighWalls(view: ContactView, workspace: PressureWorkspace, params: PressureParams, doorAt: PressureContext['doorAt']): void {
   const { store, grid } = view
   for (let i = 0; i < view.n; i++) {
-    if (!isPressing(store, i) || !hasAim(store, i)) continue
+    if (!workspace.canPress[i] || !hasAim(store, i)) continue
     const reach = store.build[i]! * params.radius + WALL_PROBE
     const cell = grid.cellOf(store.x[i]! + store.aimX[i]! * reach, store.z[i]! + store.aimZ[i]! * reach)
     if (cell >= 0 && (grid.occ[cell] === 0 || grid.occ[cell] === 3)) continue
@@ -122,7 +130,7 @@ function weighWalls(view: ContactView, workspace: PressureWorkspace, params: Pre
 function weighPlayer(view: ContactView, workspace: PressureWorkspace, params: PressureParams, player: { readonly x: number; readonly z: number }): void {
   const { store } = view
   for (let i = 0; i < view.n; i++) {
-    if (!isPressing(store, i)) continue
+    if (!workspace.canPress[i]) continue
     const ex = player.x - store.x[i]!
     const ez = player.z - store.z[i]!
     const squared = ex * ex + ez * ez
@@ -157,7 +165,7 @@ function ownDrive(store: CrowdStore, context: PressureContext, workspace: Pressu
 function spreadField(view: ContactView, workspace: PressureWorkspace, params: PressureParams, context: PressureContext, out: PressureResult): void {
   const { store } = view
   for (let i = 0; i < view.n; i++) {
-    if (!isPressing(store, i)) continue
+    if (!workspace.canPress[i]) continue
     store.field[i] = ownDrive(store, context, workspace, i)
     if (store.field[i]! > 0) out.drivers++
   }
@@ -170,7 +178,7 @@ function spreadField(view: ContactView, workspace: PressureWorkspace, params: Pr
     if (backward > 0) store.field[i]! += (params.transmission * store.fieldPrev[j]! * backward * backward) / workspace.weightSum[j]!
   }
   for (let i = 0; i < view.n; i++) {
-    if (!isPressing(store, i)) continue
+    if (!workspace.canPress[i]) continue
     const passed = (params.transmission * store.fieldPrev[i]!) / (workspace.weightSum[i]! || 1)
     if (workspace.wallKind[i] && workspace.wallDoor[i]! >= 0) context.doorLoad[workspace.wallDoor[i]!]! += passed * params.h
     if (workspace.playerWeight[i]! > 0) out.playerLoad += passed * workspace.playerWeight[i]! * workspace.playerWeight[i]!
@@ -196,6 +204,7 @@ export function pressureStep(view: ContactView, workspace: PressureWorkspace, pa
   out.playerLoad = 0
   out.drivers = 0
   clearWorkspace(view, workspace)
+  readPressing(view, workspace)
   weighPairs(view, workspace, params)
   weighWalls(view, workspace, params, context.doorAt)
   if (context.player) weighPlayer(view, workspace, params, context.player)
