@@ -44,7 +44,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-characters": "workspace:^"
+    "@adatechnology/game-characters": "workspace:^",
+    "@adatechnology/game-contracts": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-animals": "workspace:^",

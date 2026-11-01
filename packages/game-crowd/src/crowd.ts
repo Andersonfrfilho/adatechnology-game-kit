@@ -6,11 +6,21 @@ import { createDoors } from './doors'
 import type { Doors } from './doors'
 import { createNavGrid } from './grid'
 import type { NavGrid } from './grid'
+import { unit, SALT } from './identity'
+import { createPhysics } from './physics/engine'
+import { COLLAPSE_MARK, collapsePileColumns } from './physics/pile-column'
+import type { PileColumn } from './physics/pile-column'
+import { seatPhysics } from './physics/seat'
+import { DETERMINISTIC_FLOW_CELLS, resolvePhysics } from './physics/options'
+import type { CrowdPhysicsOptions } from './physics/options'
+import { createPhysicsStats } from './physics/context'
+import type { PhysicsStats } from './physics/context'
+import type { ThrownPool } from './physics/thrown'
 import { createRng } from './rng'
 import { AGENT_FIELDS, createStore } from './store'
 import type { CrowdStore } from './store'
-import { STATE } from './types'
-import type { CrowdDamageResult, CrowdEventMap, CrowdEventName, CrowdHit, CrowdPack, CrowdTraits, CrowdTarget, CrowdType } from './types'
+import { BALANCE, STATE } from './types'
+import type { Corpse, CrowdBlast, CrowdDamageResult, CrowdEventMap, CrowdEventName, CrowdHit, CrowdPack, CrowdTraits, CrowdTarget, CrowdType } from './types'
 
 export type CrowdNumbers = typeof defaults.numbers
 export type CrowdBand = { readonly max: number; readonly dt: number }
@@ -21,21 +31,7 @@ export const CROWD_DEFAULTS: { readonly sources: Readonly<Record<string, string>
   numbers: defaults.numbers,
 }
 
-/** A body on the ground (G 67062 `CP`). */
-export type Corpse = {
-  readonly x: number
-  readonly z: number
-  readonly yaw: number
-  readonly height: number
-  readonly build: number
-  readonly missing: number
-  readonly color: number
-  /** Body variant of the renderer, -1 for a body that was not an agent (a civilian). */
-  readonly variant: number
-  readonly skin: number
-  readonly seed: number
-  readonly named: number
-}
+export type { Corpse } from './types'
 
 /** A custom move: runs on every decision tick after the timed states and before the moves on the target; `true` means it took care of the movement. */
 export type CrowdPlugin = {
@@ -58,9 +54,11 @@ export type CrowdOptions = {
   readonly numbers?: Partial<CrowdNumbers>
   readonly bands?: readonly CrowdBand[]
   /** Flow field: half window in cells (192), and the clock its time budget reads (default `performance.now`; pass `() => 0` to finish every field in one frame). */
-  readonly flow?: { readonly radius?: number; readonly clock?: () => number }
+  readonly flow?: { readonly radius?: number; readonly clock?: () => number; /** Flow budget in cells per step instead of the clock: the same field at any frame rate (`physics.deterministic` sets 20000). */ readonly cellsPerStep?: number }
   readonly plugins?: readonly CrowdPlugin[]
   readonly target?: CrowdTarget | null
+  /** Contact, pressure, balance, mounds, thrown bodies and personality: all off by default, and then the horde is the game's, bit for bit. */
+  readonly physics?: CrowdPhysicsOptions
 }
 
 export type CrowdView = { readonly x: number; readonly z: number; readonly yaw: number; readonly far: number }
@@ -73,6 +71,8 @@ export type CrowdUpdateContext = {
   readonly flowTarget?: readonly [number, number]
   /** Where the viewer looks (yaw: forward is `(-sin, -cos)`); the stalker wakes when the target turns its back. Default: the target's view. */
   readonly viewYaw?: number
+  /** Centre of the relevance bands, for scenes without a player near the agents (tests, benches, cutscenes). Default: the target, or `flowTarget` without one. */
+  readonly bandCentre?: readonly [number, number]
 }
 
 export type Crowd = {
@@ -82,9 +82,15 @@ export type Crowd = {
   readonly doors: Doors
   readonly corpses: CorpseLedger<Corpse>
   readonly numbers: CrowdNumbers
-  readonly stats: { bands: [number, number, number, number]; slots: number; kills: number; heads: number }
+  readonly stats: { bands: [number, number, number, number]; slots: number; kills: number; heads: number; physics: PhysicsStats }
   /** Height of the bodies piled per grid cell. */
   readonly pile: Float32Array
+  /** Millimetres of lying bodies per navigation cell, recomputed every fixed step (empty with `physics.mound` off). */
+  readonly mound: Uint16Array
+  /** The thrown bodies of a blast, simulated here and only drawn by the renderer (empty with `physics.thrown` off). */
+  readonly thrown: ThrownPool
+  /** A blast: queued, and resolved at the start of the next step in one pass over the agents. Without `physics` it only hurts, kills and stuns. */
+  blast(blast: CrowdBlast): void
   /** How many agents are steps of a pile now. */
   pileCount(): number
   readonly trail: { x: number; z: number; t: number }[]
@@ -169,10 +175,26 @@ export function createCrowd(options: CrowdOptions): Crowd {
   const HALF = grid.half
   const GC = grid.cell
   const FW = grid.n
+  const physics = resolvePhysics(options.physics)
+  const flowCells = options.flow?.cellsPerStep ?? (physics.deterministic ? DETERMINISTIC_FLOW_CELLS : undefined)
+  const seed32 = (options.seed ?? 1) >>> 0
+  let serial = 0
+  const moundHeight = new Uint16Array(physics.mound ? FW * FW : 0)
+  const moundOn = physics.mound !== null
+  const balanceOn = physics.balance !== null
+  const staggerSpeed = physics.pressure?.staggerSpeed ?? 1
+  const separationMax = physics.contact?.separationMax ?? Infinity
+  const RESERVED_SLOTS = 2
+  const WALK_DOWN = 0.6
+  // the attack pose by distance with hysteresis (in at 1.6 m, out at 2.2 m), squared: the renderer drew it, the simulation reads it
+  const ATTACK_ENTER = 2.56
+  const ATTACK_LEAVE = 4.84
   const HC = N.hashCell
   const HN = Math.floor(grid.size / HC)
-  const hHead = new Int32Array(HN * HN)
+  const hHead = new Int32Array(HN * HN).fill(-1)
   const hNext = new Int32Array(Z.capacity)
+  const hashTouched = new Int32Array(Z.capacity)
+  let hashTouchedN = 0
   const pile = new Float32Array(FW * FW)
   let pileN = 0
   const flow = {
@@ -205,7 +227,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   }
   const typeIndexById = new Map(types.map((type, index) => [type.id, index]))
   const noises: { x: number; z: number; r: number }[] = []
-  const stats: Crowd['stats'] = { bands: [0, 0, 0, 0], slots: 0, kills: 0, heads: 0 }
+  const stats: Crowd['stats'] = { bands: [0, 0, 0, 0], slots: 0, kills: 0, heads: 0, physics: createPhysicsStats() }
   const corpses = createCorpseLedger<Corpse>({ max: N.corpsesMax, seconds: N.corpseSeconds })
   const trail: { x: number; z: number; t: number }[] = []
   let trailLast = { x: 1e9, z: 1e9 }
@@ -326,14 +348,19 @@ export function createCrowd(options: CrowdOptions): Crowd {
     Z.wz[i] = z
     Z.color[i] = RO.color || pack.palette[Math.floor(R() * pack.palette.length)]!
     Z.skin[i] = R()
+    seatPhysics(Z, i, { seed: seed32, serial: serial++, baseMass: physics.contact?.baseMass ?? 70, personality: physics.personality })
     special(i)
     emit('spawn', { agent: i, type: C.id })
     return i
   }
 
   const remove = (i: number): void => {
-    if (Z.state[i] === STATE.PILE_STEP) stepRelease(i)
+    if (Z.state[i] === STATE.PILE_STEP) {
+      if (engine.active) releasePileStep(i)
+      else stepRelease(i)
+    }
     const j = --Z.n
+    engine.remap(i, j)
     if (i === j) {
       emit('remove', { agent: i, moved: -1 })
       return
@@ -369,9 +396,10 @@ export function createCrowd(options: CrowdOptions): Crowd {
     flow.c = 0
     flow.t = 0
   }
-  const flowStep = (budget: number): void => {
+  const flowStep = (budget: number, cellsPerStep?: number): void => {
     if (!flow.phase) return
     const t0 = clock()
+    let cellsLeft = cellsPerStep ?? Infinity
     const D = flow.dist
     const Q = flow.q
     const F = flow.back
@@ -382,6 +410,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
         flow.phase = 2
         break
       }
+      if (--cellsLeft < 0) return
       const c = Q[flow.qh++]!
       const cx = c % FW
       const cz = (c / FW) | 0
@@ -401,13 +430,14 @@ export function createCrowd(options: CrowdOptions): Crowd {
             if (flow.qt < Q.length) Q[flow.qt++] = k
           }
         }
-      if ((++n & 2047) === 0 && clock() - t0 > budget) {
+      if (cellsPerStep === undefined && (++n & 2047) === 0 && clock() - t0 > budget) {
         flow.t += clock() - t0
         return
       }
     }
     const ww = W[2]! - W[0]! + 1
     while (flow.phase === 2) {
+      if (--cellsLeft < 0) return
       const j = flow.c++
       if (j >= ww * (W[3]! - W[1]! + 1)) {
         const tmp = flow.dir
@@ -444,7 +474,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
         }
       F[c * 2] = bx
       F[c * 2 + 1] = bz
-      if ((j & 8191) === 0 && clock() - t0 > budget) {
+      if (cellsPerStep === undefined && (j & 8191) === 0 && clock() - t0 > budget) {
         flow.t += clock() - t0
         return
       }
@@ -457,14 +487,14 @@ export function createCrowd(options: CrowdOptions): Crowd {
     if (c < 0) return 0
     const k = occ[c]
     if (k === 2 || (k === 1 && occH[c]! <= _y + 0.05)) return occH[c]!
-    return pile[c]!
+    return moundOn ? pile[c]! + moundHeight[c]! / 1000 : pile[c]!
   }
   const blockedAt = (i: number, x: number, z: number): boolean => {
     const c = cellOf(x, z)
     if (c < 0) return true
     const k = occ[c]
     const y = Z.y[i]!
-    if (k === 0 || k === 3) return pile[c]! > y + 0.5 && Z.state[i] !== STATE.AIRBORNE
+    if (k === 0 || k === 3) return (moundOn ? pile[c]! + moundHeight[c]! / 1000 : pile[c]!) > y + 0.5 && Z.state[i] !== STATE.AIRBORNE
     if (k === 2 && y + 0.5 >= occH[c]!) return false
     if (Z.state[i] === STATE.AIRBORNE && occH[c]! <= y) return false
     return true
@@ -484,6 +514,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     pileN++
     Z.state[i] = STATE.PILE_STEP
     Z.stepCell[i] = c
+    Z.stepDir[i] = dir
     Z.vx[i] = Z.vz[i] = 0
     Z.y[i] = h - N.pileStep
     Z.stateTimer[i] = 6 + R() * 6
@@ -508,6 +539,12 @@ export function createCrowd(options: CrowdOptions): Crowd {
       }
   }
 
+  // a pile step that falls, flies or dies takes the steps behind it in its column down with it (the pile is not a wall that stays up without them)
+  const pileColumns: PileColumn[] = []
+  const releasePileStep = (i: number): void => {
+    if (Z.stepCell[i]! >= 0) pileColumns.push({ cell: Z.stepCell[i]!, dir: Z.stepDir[i]! })
+    stepRelease(i)
+  }
   // ----- alerts -----
   const voice = (i: number): string => traits(i).voice ?? 'groan'
   const groan = (i: number, d: number): void => {
@@ -545,7 +582,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   const attack = (i: number, d: number, tdt: number): void => {
     Z.attackTimer[i]! -= tdt
     if (Z.attackTimer[i]! > 0) return
-    Z.attackTimer[i] = N.attackEvery
+    Z.attackTimer[i] = N.attackEvery / Z.aggression[i]!
     const C = T(i)
     const tr = C.traits ?? NO_TRAITS
     if (tr.heavySwing && R() < tr.heavySwing.chance) {
@@ -556,7 +593,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     const noJaw = Z.missing[i]! & 512
     const noArms = (Z.missing[i]! & 6) === 6
     const P = target!
-    if (P.state.grabbedBy < 0 && !noArms && !Z.crawl[i] && R() < C.bite * (P.state.crouch ? N.crouchBite : 1)) {
+    if (P.state.grabbedBy < 0 && !noArms && !Z.crawl[i] && R() < C.bite * (P.state.crouch ? N.crouchBite : 1) * Z.aggression[i]!) {
       P.grab(i, !!noJaw, !!tr.drownGrab && water(P.state.x, P.state.z))
       Z.state[i] = STATE.GRAB
     } else {
@@ -569,7 +606,8 @@ export function createCrowd(options: CrowdOptions): Crowd {
   // ----- damage (G 67010 zDamage) -----
   const effect = (payload: CrowdEventMap['effect']): void => emit('effect', payload)
   const blood = (x: number, y: number, z: number, age: number, amount: number, died: boolean, agent?: number): void => effect({ effect: 'blood', point: [x, y, z], age, amount, died, ...(agent === undefined ? {} : { agent }) })
-  const damage = (i: number, hit: CrowdHit): CrowdDamageResult => {
+  /** `draw` is the source of the jaw draw (and of the corpse seed of a death); a death waits for the end of the step when `deferDeath` is on. */
+  const damageWith = (i: number, hit: CrowdHit, draw: () => number, deferDeath = false): CrowdDamageResult => {
     const C = T(i)
     const A = pack.ages[Z.age[i]!]!
     const RO = pack.outfits[Z.outfit[i]!]!
@@ -596,7 +634,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
       } else {
         Z.hp[i]! -= dano * 3
         Z.headHp[i]! -= dano
-        if (dano > N.jawDamage && R() < N.jawChance) Z.missing[i]! |= 512
+        if (dano > N.jawDamage && draw() < N.jawChance) Z.missing[i]! |= 512
       }
     } else if (regiao === 1) {
       let m = C.multipliers.torso
@@ -626,7 +664,8 @@ export function createCrowd(options: CrowdOptions): Crowd {
     if (Z.hp[i]! <= 0) morreu = true
     blood(Z.x[i]!, regiao === 0 ? Z.height[i]! * 1.65 : regiao === 1 ? Z.height[i]! * 1.2 : Z.height[i]! * 0.7, Z.z[i]!, Z.age[i]!, regiao === 0 ? 120 : 30, morreu, i)
     if (morreu) {
-      kill(i, headshot)
+      if (deferDeath) deferKill(i)
+      else kill(i, headshot, draw)
       return { died: morreu, headshot }
     }
     const st = Z.state[i]
@@ -643,14 +682,15 @@ export function createCrowd(options: CrowdOptions): Crowd {
     }
     return { died: morreu }
   }
-  function kill(i: number, headshot = false): void {
+  const damage = (i: number, hit: CrowdHit): CrowdDamageResult => damageWith(i, hit, R)
+  function kill(i: number, headshot = false, draw: () => number = R): void {
     stats.kills++
     if (headshot) stats.heads++
     const tr = traits(i)
     if (tr.burst) burstAt(i, Z.x[i]!, Z.z[i]!)
     const C = T(i)
     emit('kill', { agent: i, type: C.id, headshot, x: Z.x[i]!, z: Z.z[i]! })
-    corpseAdd(i)
+    if (Z.balance[i] !== BALANCE.THROWN) corpseAdd(i, draw)
     if (target && target.state.grabbedBy === i) target.release()
     remove(i)
   }
@@ -671,21 +711,20 @@ export function createCrowd(options: CrowdOptions): Crowd {
   }
 
   // ----- corpses -----
-  const corpseAdd = (i: number): void => {
-    corpses.add({
-      x: Z.x[i]!,
-      z: Z.z[i]!,
-      yaw: Z.renderYaw[i]!,
-      height: Z.height[i]!,
-      build: Z.build[i]!,
-      named: Z.named[i]!,
-      missing: Z.missing[i]!,
-      color: Z.color[i]!,
-      variant: Z.variant[i]!,
-      skin: Z.skin[i]!,
-      seed: R() * 10,
-    })
-  }
+  const corpseOf = (i: number, seed: number): Corpse => ({
+    x: Z.x[i]!,
+    z: Z.z[i]!,
+    yaw: Z.renderYaw[i]!,
+    height: Z.height[i]!,
+    build: Z.build[i]!,
+    named: Z.named[i]!,
+    missing: Z.missing[i]!,
+    color: Z.color[i]!,
+    variant: Z.variant[i]!,
+    skin: Z.skin[i]!,
+    seed,
+  })
+  const corpseAdd = (i: number, draw: () => number = R): void => void corpses.add(corpseOf(i, draw() * 10))
 
   // ----- abilities (G 67265 zAbility). true: it took care of the movement -----
   const ability = (i: number, d: number, dx: number, dz: number, tdt: number, b: number, alive: boolean): boolean => {
@@ -904,6 +943,8 @@ export function createCrowd(options: CrowdOptions): Crowd {
     if (tr.submerged && water(Z.x[i]!, Z.z[i]!)) return tr.submerged.swim
     return Z.chaseSpeed[i]!
   }
+  /** The shared stream with the physics off (the game's order); a counter-based draw of the agent with it on. */
+  const physicsDraw = (i: number, salt: number): (() => number) => (engine.active ? () => unit(Z.identity[i]!, engine.ctx.step, salt) : R)
   const hurtOther = (j: number, amount: number): void => {
     Z.hp[j]! -= amount
     blood(Z.x[j]!, Z.height[j]! * 1.2, Z.z[j]!, Z.age[j]!, 30, false, j)
@@ -915,7 +956,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   const killQFlush = (): void => {
     if (!killQ.length) return
     killQ.sort((a, b) => b - a)
-    for (const j of killQ) if (j < Z.n) kill(j, false)
+    for (const j of killQ) if (j < Z.n) kill(j, false, physicsDraw(j, SALT.CORPSE))
     killQ.length = 0
   }
 
@@ -941,9 +982,15 @@ export function createCrowd(options: CrowdOptions): Crowd {
       Z.hp[i]! *= tr.waterWeak.keep
       effect({ effect: 'cloud', point: [Z.x[i]!, 0, Z.z[i]!], radius: 1.5, color: tr.waterWeak.cloud, amount: 3, agent: i })
     }
+    if (engine.active && (Z.balance[i] === BALANCE.FALLEN || Z.balance[i] === BALANCE.GETTING_UP)) return
     const c = cellOf(Z.x[i]!, Z.z[i]!)
     const gy = groundAt(c, Z.y[i]!)
     if (st === STATE.DORMANT || Z.floorLocked[i]) return
+    if (engine.active && st !== STATE.AIRBORNE && Z.vy[i] === 0 && Z.y[i]! > gy + 0.02 && Z.y[i]! - gy <= WALK_DOWN) {
+      // down a step of a mound is a walk, not a fall: only a drop above this height (a base that goes) is a fall
+      Z.y[i] = Math.max(gy, Z.y[i]! - N.climbSpeed * dt)
+      return
+    }
     if (st === STATE.AIRBORNE || Z.y[i]! > gy + 0.02 || Z.vy[i]! > 0) {
       Z.vy[i]! -= N.gravity * dt
       Z.y[i]! += Z.vy[i]! * dt
@@ -951,6 +998,9 @@ export function createCrowd(options: CrowdOptions): Crowd {
         const fall = -Z.vy[i]!
         Z.y[i] = gy
         Z.vy[i] = 0
+        const collapsed = st === STATE.AIRBORNE && Z.stateTimer[i] === COLLAPSE_MARK
+        if (collapsed) Z.stateTimer[i] = 0
+        if (engine.active && balanceOn && (st !== STATE.AIRBORNE || collapsed)) engine.balance!.landed(i, (fall * fall) / (2 * N.gravity))
         if (st === STATE.AIRBORNE) {
           Z.state[i] = STATE.CHASE
           if (tr.pounce && alive && d < tr.pounce.landRange && target) {
@@ -976,6 +1026,9 @@ export function createCrowd(options: CrowdOptions): Crowd {
     const pz = P ? P.state.z : (context.flowTarget?.[1] ?? 0)
     const alive = !!P && P.state.alive && !P.state.turned
     viewYaw = context.viewYaw ?? (P ? P.state.yaw - Math.PI : 0)
+    const bandX = context.bandCentre?.[0] ?? px
+    const bandZ = context.bandCentre?.[1] ?? pz
+    engine.beginStep(dt, { x: bandX, z: bandZ })
     const fx0 = context.flowTarget?.[0] ?? px
     const fz0 = context.flowTarget?.[1] ?? pz
     const pc = cellOf(fx0, fz0)
@@ -987,15 +1040,19 @@ export function createCrowd(options: CrowdOptions): Crowd {
       flowStart(fx0, fz0)
       flow.cell = pc
     }
-    flowStep(N.flowBudgetMs)
+    flowStep(N.flowBudgetMs, flowCells)
     // spatial hash for R0
-    hHead.fill(-1)
+    if (engine.active) {
+      for (let k = 0; k < hashTouchedN; k++) hHead[hashTouched[k]!] = -1
+      hashTouchedN = 0
+    } else hHead.fill(-1)
     for (let i = 0; i < Z.n; i++) {
-      if (Z.band[i] !== 0) continue
+      if (Z.band[i] !== 0 || (engine.active && Z.balance[i] === BALANCE.THROWN)) continue
       const hx = Math.floor(Z.x[i]! + HALF)
       const hz = Math.floor(Z.z[i]! + HALF)
       if (hx < 0 || hz < 0 || hx >= HN || hz >= HN) continue
       const h = hz * HN + hx
+      if (engine.active && hHead[h] === -1) hashTouched[hashTouchedN++] = h
       hNext[i] = hHead[h]!
       hHead[h] = i
     }
@@ -1007,11 +1064,14 @@ export function createCrowd(options: CrowdOptions): Crowd {
       const dx = Z.x[i]! - px
       const dz = Z.z[i]! - pz
       const d = Math.sqrt(dx * dx + dz * dz)
+      const bandD = context.bandCentre ? Math.hypot(Z.x[i]! - bandX, Z.z[i]! - bandZ) : d
       let b = Z.band[i]!
-      while (b > 0 && d < BANDS[b - 1]!.max - HYST) b--
-      while (b < 3 && d > BANDS[b]!.max + HYST) b++
+      while (b > 0 && bandD < BANDS[b - 1]!.max - HYST) b--
+      while (b < 3 && bandD > BANDS[b]!.max + HYST) b++
       Z.band[i] = b
       B[b as 0 | 1 | 2 | 3]++
+      if (engine.active && Z.balance[i] === BALANCE.THROWN) continue
+      const grounded = engine.active && balanceOn && (Z.balance[i] === BALANCE.FALLEN || Z.balance[i] === BALANCE.GETTING_UP)
       const C = T(i)
       const tr = C.traits ?? NO_TRAITS
       if (Z.state[i] === STATE.STUNNED) {
@@ -1037,8 +1097,12 @@ export function createCrowd(options: CrowdOptions): Crowd {
           Z.lost[i] = 0
         }
       }
-      Z.next[i]! -= dt
-      if (Z.next[i]! <= 0) {
+      if (!grounded) Z.next[i]! -= dt
+      else {
+        Z.vx[i] = Z.vz[i] = Z.dvx[i] = Z.dvz[i] = Z.aimX[i] = Z.aimZ[i] = 0
+        Z.steering[i] = 0
+      }
+      if (Z.next[i]! <= 0 && !grounded) {
         const tdt = BANDS[b]!.dt
         Z.next[i]! += tdt
         // perception (R0 and R1 only)
@@ -1087,6 +1151,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
           Z.stateTimer[i] = tr.caller.windUp
         }
         Z.steering[i] = 0
+        Z.aimX[i] = Z.aimZ[i] = 0
         if (!ability(i, d, dx, dz, tdt, b, alive)) {
           // where it wants to go
           let tx = 0
@@ -1125,7 +1190,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
             if (!alive) sp = Z.wanderSpeed[i]!
             if (d < N.attackRange && alive && Math.abs(P!.state.y - Z.y[i]!) < N.attackHeight) {
               sp = 0
-              if (slots < N.attackSlots) {
+              if (slots < N.attackSlots - (Z.aggression[i]! < 1 ? RESERVED_SLOTS : 0)) {
                 slots++
                 attack(i, d, tdt)
               }
@@ -1147,6 +1212,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
           }
           if (Z.crawl[i]) sp = Math.min(sp, N.crawlSpeed)
           else if (Z.limp[i]) sp *= N.limpSpeed
+          if (Z.balance[i] === BALANCE.STAGGERING) sp *= staggerSpeed
           // separation from the neighbours
           let sx = 0
           let sz = 0
@@ -1159,7 +1225,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
                 const qz = hz + oz
                 if (qx < 0 || qz < 0 || qx >= HN || qz >= HN) continue
                 for (let j = hHead[qz * HN + qx]!; j !== -1; j = hNext[j]!) {
-                  if (j === i || Z.state[j] === STATE.PILE_STEP || Z.state[j] === STATE.DORMANT) continue
+                  if (j === i || Z.state[j] === STATE.PILE_STEP || Z.state[j] === STATE.DORMANT || (balanceOn && (Z.balance[j] === BALANCE.FALLEN || Z.balance[j] === BALANCE.GETTING_UP))) continue
                   const ex = Z.x[i]! - Z.x[j]!
                   const ez = Z.z[i]! - Z.z[j]!
                   const e2 = ex * ex + ez * ez
@@ -1174,6 +1240,17 @@ export function createCrowd(options: CrowdOptions): Crowd {
               }
           }
           if (Z.state[i]! <= 2) {
+            if (separationMax !== Infinity) {
+              const push = Math.hypot(sx, sz) * N.separationPush
+              if (push > separationMax) {
+                sx *= separationMax / push
+                sz *= separationMax / push
+              }
+            }
+            if (engine.active && sp > 0.05) {
+              Z.aimX[i] = tx
+              Z.aimZ[i] = tz
+            }
             Z.dvx[i] = tx * sp + sx * N.separationPush
             Z.dvz[i] = tz * sp + sz * N.separationPush
             Z.steering[i] = 1
@@ -1188,17 +1265,17 @@ export function createCrowd(options: CrowdOptions): Crowd {
         Z.vx[i]! += (Z.dvx[i]! - Z.vx[i]!) * k
         Z.vz[i]! += (Z.dvz[i]! - Z.vz[i]!) * k
       }
-      const nx = Z.x[i]! + Z.vx[i]! * dt
-      const nz = Z.z[i]! + Z.vz[i]! * dt
+      const nx = Z.x[i]! + (Z.vx[i]! + Z.pushX[i]!) * dt
+      const nz = Z.z[i]! + (Z.vz[i]! + Z.pushZ[i]!) * dt
       let hitCell = -1
       if (!blockedAt(i, nx, Z.z[i]!)) Z.x[i] = nx
       else {
-        if (Z.state[i] !== STATE.AIRBORNE) Z.vx[i] = 0
+        if (Z.state[i] !== STATE.AIRBORNE) Z.vx[i] = Z.pushX[i] = 0
         hitCell = cellOf(nx, Z.z[i]!)
       }
       if (!blockedAt(i, Z.x[i]!, nz)) Z.z[i] = nz
       else {
-        if (Z.state[i] !== STATE.AIRBORNE) Z.vz[i] = 0
+        if (Z.state[i] !== STATE.AIRBORNE) Z.vz[i] = Z.pushZ[i] = 0
         hitCell = cellOf(Z.x[i]!, nz)
       }
       if (hitCell >= 0 && Z.state[i] === STATE.CHASE && b === 0) {
@@ -1212,7 +1289,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
           Z.vz[i] = Math.cos(Z.yaw[i]!) * s2
         } else if (occ[hitCell] === 2 || (occ[hitCell] === 0 && pile[hitCell]! > 0)) {
           // stuck on the wall or the pile: becomes a step of the pyramid
-          Z.stuck[i]! += dt
+          Z.stuck[i]! += engine.active && balanceOn ? dt * (1 + engine.pressureRatio(i)) : dt
           if (Z.stuck[i]! > 0.35 + 0.5 * Z.skin[i]!) {
             Z.stuck[i] = 0
             tryStep(i, hitCell)
@@ -1237,13 +1314,19 @@ export function createCrowd(options: CrowdOptions): Crowd {
         if (goal && solidAt(Z.x[i]! + Math.sin(Z.renderYaw[i]!) * 0.62, Z.z[i]! + Math.cos(Z.renderYaw[i]!) * 0.62, 1.0)) goal = 0.1
         Z.arms[i]! += (goal - Z.arms[i]!) * Math.min(1, dt * (goal > Z.arms[i]! ? 3 : 5))
       }
-      Z.phase[i]! += dt * (Z.renderSpeed[i]! < 0.05 ? 0.15 : N.cadenceBase + N.cadencePerSpeed * Z.renderSpeed[i]!)
+      Z.phase[i]! += dt * (Z.renderSpeed[i]! < 0.05 ? 0.15 : N.cadenceBase + N.cadencePerSpeed * Z.renderSpeed[i]!) * Z.cadenceFactor[i]!
+      if (physics.deterministic) {
+        const attacking = Z.state[i] === STATE.CHASE && alive
+        Z.attackPose[i] = attacking && (Z.x[i]! - P!.state.x) ** 2 + (Z.z[i]! - P!.state.z) ** 2 < (Z.attackPose[i] ? ATTACK_LEAVE : ATTACK_ENTER) ? 1 : 0
+      }
       // walking without attacking: the body points where it goes
       if (spd > 0.35 && Z.state[i]! <= 1 && !Z.attackPose[i]) Z.yaw[i] = Math.atan2(Z.vx[i]!, Z.vz[i]!)
       let dy = Z.yaw[i]! - Z.renderYaw[i]!
       dy -= Math.round(dy / TAU_APPROX) * TAU_APPROX
       Z.renderYaw[i]! += dy * Math.min(1, dt * (Z.state[i] === STATE.AIRBORNE ? 20 : 9))
     }
+    engine.endStep()
+    if (pileColumns.length) collapsePileColumns(Z, pileColumns, FW * FW, stepRelease)
     killQFlush()
     noises.length = 0
     stats.slots = slots
@@ -1312,6 +1395,32 @@ export function createCrowd(options: CrowdOptions): Crowd {
     }
   }
 
+  const engine = createPhysics(
+    {
+      store: Z,
+      grid,
+      doors,
+      gravity: N.gravity,
+      attackEvery: N.attackEvery,
+      types,
+      moundHeight,
+      corpsesMax: N.corpsesMax,
+      typeOf: T,
+      target: () => target,
+      emit,
+      damage: (i, hit, draw) => damageWith(i, hit, draw, true),
+      deferKill,
+      releasePileStep,
+      corpseOf,
+      corpseList: () => corpses.entries,
+      addCorpse: (corpse) => void corpses.add(corpse),
+      groundAt,
+      pileBlast,
+    },
+    physics,
+    stats.physics,
+  )
+
   const crowd: Crowd = {
     store: Z,
     pack,
@@ -1321,6 +1430,9 @@ export function createCrowd(options: CrowdOptions): Crowd {
     numbers: N,
     stats,
     pile,
+    mound: moundHeight,
+    thrown: engine.thrown,
+    blast: (blast) => engine.blasts.enqueue(blast),
     pileCount: () => pileN,
     trail,
     variantsOf,

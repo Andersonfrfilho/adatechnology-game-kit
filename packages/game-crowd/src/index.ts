@@ -23,3 +23,22 @@ export { carrionCenter, createFlock } from './behaviours/flock'
 export type { Flock, FlockBird, FlockMode, FlockOptions } from './behaviours/flock'
 export { bindInfection } from './behaviours/infection'
 export type { InfectionBinding, InfectionBindingOptions, InfectionModelLike } from './behaviours/infection'
+export { BALANCE, FALL_CAUSE } from './types'
+export { mix32, unit, identityOf } from './identity'
+export { CROWD_PHYSICS_DEFAULTS, resolvePhysics } from './physics/options'
+export type {
+  CrowdBalanceOptions,
+  CrowdBlastOptions,
+  CrowdContactOptions,
+  CrowdMoundOptions,
+  CrowdPersonalityOptions,
+  CrowdPhysicsOptions,
+  CrowdPlayerPressureOptions,
+  CrowdPressureOptions,
+  CrowdThrownOptions,
+  ResolvedPhysics,
+} from './physics/options'
+export { contactStep, createContactView } from './physics/contact'
+export type { ContactParams, ContactResult, ContactView } from './physics/contact'
+export type { PhysicsStats } from './physics/context'
+export type { ThrownPool } from './physics/thrown'
