@@ -36,8 +36,8 @@ export interface RoomAvatarState {
   push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null
   /** On a seat: the pose and how high the hips (or the pelvis) are above the feet. */
   seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
-  /** A hand on a door, lid or drawer: `reach` to the handle, `swing` with it (`pull` toward the body or pushed away), `release`, `rattle` on a locked one; `height` of the hand over the feet, metres. */
-  door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
+  /** A hand on a door, lid or drawer: `reach` to the handle, `swing` with it (`pull` toward the body or pushed away), `push` (the leaf going away shoved on once the handle is out of reach), `release`, `rattle` on a locked one; `height` of the hand over the feet, metres. */
+  door?: { readonly phase: 'reach' | 'swing' | 'push' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
   /** The world's time scale (slow motion): the body walks in real time, its strikes play at the world's pace, with the tools they swing and the blows they land. */
   clipRate?: number
 }

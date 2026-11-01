@@ -75,4 +75,52 @@ describe('door use', () => {
     run(use)
     expect(use.opening).toBe(0)
   })
+
+  describe('the handle leaves arm reach', () => {
+    // the handle is in reach for the first 40% of the way from where the leaf started
+    const play = (use: ReturnType<typeof createDoorUse>, pull: boolean, isFree: (from: number, to: number) => boolean = () => true) => {
+      const startedAt = use.opening
+      const steps = []
+      for (let t = 0; t < 8 && (steps.length === 0 || use.phase !== 'idle'); t += 1 / 60) {
+        steps.push(use.step(1 / 60, isFree, { pull, reaches: () => Math.abs(use.opening - startedAt) < 0.4 }))
+      }
+      return steps
+    }
+
+    it.each([1, 0] as const)('a leaf going away is shoved on, then let go, and still gets to its goal (goal %i)', (goal) => {
+      const use = createDoorUse()
+      expect(use.begin({ opening: 1 - goal, massKg: 10 })).toBe(goal)
+      const steps = play(use, false)
+      const phases = steps.map((s) => s.phase)
+      expect(phases.indexOf('swing')).toBeLessThan(phases.indexOf('push'))
+      expect(phases.indexOf('push')).toBeLessThan(phases.indexOf('release'))
+      // the hand left the handle while the leaf was short of its goal, and the leaf went on alone
+      expect(Math.abs(steps[phases.indexOf('push')]!.opening - goal)).toBeGreaterThan(0.5)
+      expect(steps.filter((s) => s.arrived)).toHaveLength(1)
+      expect(use.opening).toBe(goal)
+      expect(use.phase).toBe('idle')
+    })
+
+    it.each([1, 0] as const)('a leaf coming toward the body is held through the reach, then let go with no shove, and finishes alone (goal %i)', (goal) => {
+      const use = createDoorUse()
+      use.begin({ opening: 1 - goal, massKg: 10 })
+      const steps = play(use, true)
+      const phases = steps.map((s) => s.phase)
+      expect(phases).not.toContain('push')
+      expect(phases).toContain('swing')
+      expect(Math.abs(steps[phases.indexOf('release')]!.opening - goal)).toBeGreaterThan(0.5)
+      expect(steps.filter((s) => s.arrived)).toHaveLength(1)
+      expect(use.opening).toBe(goal)
+      expect(use.phase).toBe('idle')
+    })
+
+    it('a leaf that stops in the way during the shove stops there', () => {
+      const use = createDoorUse()
+      use.begin({ opening: 0, massKg: 10 })
+      const steps = play(use, false, (_from, to) => to < 0.7)
+      expect(steps.some((s) => s.block === 'obstacle')).toBe(true)
+      expect(use.opening).toBeLessThan(0.75)
+      expect(use.phase).toBe('idle')
+    })
+  })
 })
