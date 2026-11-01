@@ -20,9 +20,11 @@ const fakeContext = (): { context: FramePacerContext; finish: () => void } => {
 }
 
 describe('createFramePacer', () => {
-  it('draws the first frame and holds the next one back while the GPU is behind', () => {
+  it('holds a draw back only once the GPU is the whole allowance behind', () => {
     const { context, finish } = fakeContext()
-    const pacer = createFramePacer(context)
+    const pacer = createFramePacer(context, { framesInFlight: 2 })
+    expect(pacer.ready()).toBe(true)
+    pacer.submitted()
     expect(pacer.ready()).toBe(true)
     pacer.submitted()
     expect(pacer.ready()).toBe(false)
@@ -31,9 +33,20 @@ describe('createFramePacer', () => {
     expect(pacer.ready()).toBe(true)
   })
 
+  it('does not hold back a GPU that keeps up while its fences report late', () => {
+    const { context, finish } = fakeContext()
+    const pacer = createFramePacer(context)
+    for (let frame = 0; frame < 30; frame++) {
+      expect(pacer.ready()).toBe(true)
+      pacer.submitted()
+      if (frame % 2 === 1) finish()
+    }
+    expect(pacer.skipped).toBe(0)
+  })
+
   it('lets a frame through after the most skips in a row', () => {
     const { context } = fakeContext()
-    const pacer = createFramePacer(context, { maxSkips: 2 })
+    const pacer = createFramePacer(context, { maxSkips: 2, framesInFlight: 1 })
     pacer.submitted()
     expect([pacer.ready(), pacer.ready(), pacer.ready()]).toEqual([false, false, true])
   })

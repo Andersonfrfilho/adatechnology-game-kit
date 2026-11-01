@@ -7,6 +7,7 @@
 //   PERF_HORDE=2000                    agents of the horde phases (default 2000 in gpu mode, 300 in counters mode, where software GL pays per agent)
 //   PERF_GPU=intel | nvidia            the machine of the plan's D12 (budget of the crowd step: 6 ms on intel, 4 ms on nvidia); default nvidia
 //   PERF_PHASES=dense_horde,chain_horde   which horde phases run (default both)
+//   PERF_QUERY='&framesInFlight=2'     extra page parameters
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
 //   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
@@ -91,7 +92,7 @@ const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
 if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
-await page.goto(`${pathToFileURL(dist).href}?area=vfx`)
+await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`)
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
 await pause(2000)
@@ -187,7 +188,7 @@ function readHorde() {
 // the horde phases: a page of their own, the bench state in the URL, the crowd baked at load (`eager`), the measurement from the first frame the room is ready
 async function hordePhase(id) {
   const scene = id === 'dense_horde' ? 'dense_wall' : 'chain_line'
-  await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}`, { timeout: 0 })
+  await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}${process.env.PERF_QUERY ?? ''}`, { timeout: 0 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   await page.evaluate(installFrameRecorder)
   const buffersAtStart = await page.evaluate(() => window.__glCounts.buffers)

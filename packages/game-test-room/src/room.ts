@@ -264,7 +264,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
-  const lights = createLightBudget(THREE, scene, ROOM_LIGHT_SIZES)
+  const lights = createLightBudget(THREE, scene, { ...ROOM_LIGHT_SIZES, ...options.lightSizes })
   // what the effects of the room and of its modules ask for instead of making their own; the warmup's anchors keep the programs of the materials that are given back
   const warmup = createProgramWarmup(THREE)
   const pools: RenderPools = { geometries: createGeometryPool(), materials: createMaterialPool({ anchors: warmup.anchors, renderer: gl }) }
@@ -3915,8 +3915,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
     )
-    // a GPU slower than the CPU fills the driver queue and stalls the compositor for the whole queue: keep it at most one frame behind
-    const pacer = createFramePacer(typeof gl.getContext === 'function' ? (gl.getContext() as unknown as WebGL2RenderingContext) : null)
+    // a GPU slower than the CPU fills the driver queue and stalls the compositor for the whole queue: keep it a few frames behind at most
+    const pacer = createFramePacer(typeof gl.getContext === 'function' ? (gl.getContext() as unknown as WebGL2RenderingContext) : null, options.framesInFlight === undefined ? {} : { framesInFlight: options.framesInFlight })
     disposePacer = () => pacer.dispose()
     scheduler.add(
       (ctx) => {

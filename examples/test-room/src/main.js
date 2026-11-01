@@ -71,6 +71,9 @@ const room = createTestRoom({
   // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut
   // ?pushForce=2000: the legs that move the loaded bookcase (242 kg), which the default force of the kit does not
   ...(params.get('pushForce') ? { push: { forceN: Number(params.get('pushForce')) } } : {}),
+  // ?lights=8,2: point and spot slots of the room's light budget
+  ...(params.get('lights') ? { lightSizes: { point: Number(params.get('lights').split(',')[0]), spot: Number(params.get('lights').split(',')[1]) } } : {}),
+  ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   strikeCombo: PUNCH_COMBO,
   strikeComboOn: params.get('combo') === '1',
   quality,

@@ -273,6 +273,10 @@ export interface TestRoomOptions {
    * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
    * a slab) stay as part of the map, with collision.
    */
+  /** Slots of the room's light budget (default 16 point and 4 spot). Each light is paid per pixel, lit or not, so a weak GPU gets fewer; changing them recompiles every lit program, so they are fixed at load. */
+  lightSizes?: { readonly point?: number; readonly spot?: number }
+  /** Drawn frames the GPU may be behind before the room holds a draw back (`createFramePacer`, default 2). */
+  framesInFlight?: number
   debris?: {
     fragmentLife?: number | FragmentLifeRule
     maxFragments?: number
