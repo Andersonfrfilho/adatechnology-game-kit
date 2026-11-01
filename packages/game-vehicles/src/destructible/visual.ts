@@ -37,6 +37,12 @@ const DOOR_STRIP_OVER = 0.3
 const DOOR_TOP_OVER_PANE = 0.03
 const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
+/** A door handle: from its door's free edge, and its size, metres. */
+const DOOR_HANDLE_INSET = 0.12
+const DOOR_HANDLE_MIN = 0.07
+const DOOR_HANDLE_MAX = 0.24
+const DOOR_HANDLE_THIN = 0.07
+const DOOR_HANDLE_OUTSIDE = 0.1
 /** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
 const PANE_SEAT_OUT = 0.05
 const PANE_SEAT_IN = -0.05
@@ -50,6 +56,9 @@ const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
 const DRAWN_MIRROR_MOUNT = 0.2
 const MIRROR_GLASS_FIT = 0.76
+/** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
+const MIRROR_GLASS_THIN = 0.04
+const MIRROR_GLASS_MIN = 0.05
 /** A mirror shows what is behind it: darker than chrome, or it reads as a white square against the sky. */
 const MIRROR_GLASS_COLOR = '#59636a'
 /** Per material: the ring the round leaves around the bore. */
@@ -138,6 +147,7 @@ export class VehicleVisuals implements CreaseWork {
     c.root.updateMatrixWorld(true)
     this.hood = this.nameHood()
     this.seatPanes()
+    this.seatDoorHandles()
     this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
     if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
@@ -612,6 +622,34 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingSphere()
     mesh.geometry = g
   }
+  /** A handle is at the free edge of its door, the end away from the hinge. */
+  private seatDoorHandles(): void {
+    const THREE = this.THREE
+    const c = this.c as any
+    const inv = this.I.worldInverseOf(c)
+    for (const p of this.model.parts) {
+      if (p.role !== 'door') continue
+      const z = this.zone(p)
+      if (!z) continue
+      const B = z.box
+      const free = z.hinge === 'rear' ? B.x1 - DOOR_HANDLE_INSET : B.x0 + DOOR_HANDLE_INSET
+      for (const o of c.vehicle.children as Obj[]) {
+        if (!o.isMesh || o.material !== this.I.MATERIALS.chrome || o.userData.glass) continue
+        const box = this.I.localBox(c, o, inv)
+        const size = box.getSize(new THREE.Vector3())
+        const at = box.getCenter(new THREE.Vector3())
+        const isHandle = size.x > DOOR_HANDLE_MIN && size.x < DOOR_HANDLE_MAX && size.y < DOOR_HANDLE_THIN && size.z < DOOR_HANDLE_THIN
+        if (!isHandle || Math.sign(at.z) !== Math.sign(z.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
+        // the pull inside the cabin stays where it is: only what stands on the outer skin is the outer handle
+        const here = this.surface('z', z.side < 0 ? -1 : 1, B, [[at.x, at.y]])
+        if (here != null && Math.abs(here - at.z) > DOOR_HANDLE_OUTSIDE) continue
+        const skin = this.surface('z', z.side < 0 ? -1 : 1, B, [[free, at.y]])
+        o.position.x += free - at.x
+        if (skin != null) o.position.z += skin + (z.side < 0 ? -1 : 1) * (size.z / 2) - at.z
+      }
+    }
+    c.root.updateMatrixWorld(true)
+  }
   /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
   private seatMirrorGlass(glass: Obj): void {
     const g = glass.geometry.clone()
@@ -643,7 +681,11 @@ export class VehicleVisuals implements CreaseWork {
   private makeMirror(p: PartDef): void {
     const drawn = this.drawnMirror(p)
     if (drawn.length) {
-      for (const o of drawn) if (o.isMesh && o.material === this.I.MATERIALS.chrome) this.seatMirrorGlass(o)
+      for (const o of drawn) {
+        if (!o.isMesh || o.material !== this.I.MATERIALS.chrome) continue
+        const size = new this.THREE.Box3().setFromObject(o).getSize(new this.THREE.Vector3())
+        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o)
+      }
       this.extra.set(p.id, drawn)
       return
     }

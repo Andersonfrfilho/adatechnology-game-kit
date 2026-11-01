@@ -81,6 +81,22 @@ function auditModel(key: string): string[] {
       continue
     }
     const part = d.describe().parts.find((p) => p.id === id)!
+    const zone = (kit as any).zonesOf(c).find((q: any) => q.id === id)
+    if (zone) {
+      const inverse = c.vehicle.matrixWorld.clone().invert()
+      for (const o of c.vehicle.children as any[]) {
+        if (!o.isMesh || o.material !== (kit as any)._.MATERIALS.chrome) continue
+        const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
+        const at = b.getCenter(new THREE.Vector3())
+        const s = b.getSize(new THREE.Vector3())
+        const B = zone.box
+        if (s.x < 0.07 || s.x > 0.24 || s.y > 0.07 || s.z > 0.07 || Math.sign(at.z) !== Math.sign(zone.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
+        // the pull inside the cabin is not the outer handle
+        if (Math.abs(at.z) < Math.max(Math.abs(B.z0), Math.abs(B.z1)) - 0.15) continue
+        const fromFree = zone.hinge === 'rear' ? B.x1 - at.x : at.x - B.x0
+        if (fromFree > (B.x1 - B.x0) * 0.35) problems.push(`${id}: the handle is by the hinge`)
+      }
+    }
     const pos = new THREE.Vector3(...part.position).applyMatrix4(item.root.matrixWorld)
     const out = new THREE.Vector3().setComponent(across === 'x' ? 0 : 2, Math.sign(pos[across] - centre[across]) || 1)
     const low = pos.clone().add(new THREE.Vector3(0, -0.05, 0))
