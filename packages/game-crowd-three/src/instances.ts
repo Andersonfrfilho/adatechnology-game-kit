@@ -1,9 +1,12 @@
 import { INSTANCE_POSES, walkGait } from '@adatechnology/game-characters'
 import type { InstancePose } from '@adatechnology/game-characters'
+import { STAGGER_POSE } from '@adatechnology/game-characters-three'
 import { MISSING, STATE } from '@adatechnology/game-crowd'
 import type { Civilian, Corpse, CrowdStore } from '@adatechnology/game-crowd'
 
 import defaults from './data/render.json'
+import { VARIETY_DEFAULTS, isStaggering, lookOfAgent, packLook } from './variety/look'
+import type { CrowdVarietyNumbers } from './variety/look'
 
 export type CrowdRenderNumbers = typeof defaults.numbers
 export type CrowdPoseMap = { readonly [K in keyof typeof defaults.poses]: InstancePose }
@@ -28,6 +31,12 @@ export type CrowdInstance = {
   readonly shade: number
   readonly eye: number | null
   readonly y: number
+  /** The identity `iD` (with `variety`): wounds, trousers, gait style, accessories, clips, lean. See `packIdentity`. */
+  readonly d?: readonly [number, number, number, number]
+  /** The accessory bits of the look (with `variety`), so a renderer routes the instance to the accessory batches. */
+  readonly accessories?: number
+  /** The crowd type index of the agent (with `variety`). */
+  readonly type?: number
 }
 
 /** A baked variant as the drawing reads it: its own height and build (the instance scales the agent's against them). */
@@ -49,11 +58,18 @@ export type PlainCorpseSink = (instance: CrowdInstance) => void
 
 const poseIndex = (pose: InstancePose): number => INSTANCE_POSES.indexOf(pose)
 
+const lookFields = (store: CrowdStore, i: number, numbers: CrowdVarietyNumbers): Pick<CrowdInstance, 'd' | 'accessories' | 'type'> => {
+  const look = lookOfAgent(store, i, numbers)
+  return { d: packLook(look), accessories: look.accessories, type: store.type[i]! }
+}
+
 export type CrowdInstancesOptions = {
   readonly numbers?: Partial<CrowdRenderNumbers>
   readonly poses?: Partial<CrowdPoseMap>
   /** The eye colour of each crowd type, by type index (G `_eye`); null for a type that has none. */
   readonly eyes: readonly (number | null)[]
+  /** Identity for every agent (T4b.7), default off: each instance carries `d`, `accessories` and `type`, and the stagger pose; the game's numbers do not change. */
+  readonly variety?: { readonly numbers?: Partial<CrowdVarietyNumbers>; readonly impostorFrom?: number }
 }
 
 export type CrowdInstances = {
@@ -87,7 +103,10 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
     civilian: poseIndex(P.civilian),
   }
   const [near, middle] = N.lodDistances as unknown as [number, number]
-  const lodEdges = [near, middle]
+  const variety = options.variety ? { ...VARIETY_DEFAULTS, ...options.variety.numbers } : null
+  const impostorFrom = options.variety?.impostorFrom
+  const lodEdges = impostorFrom === undefined ? [near, middle] : [near, middle, impostorFrom]
+  const lastLevel = lodEdges.length
   const behindFrom = N.behindFrom
   const farSquared = N.farCull * N.farCull
 
@@ -111,7 +130,7 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
         let l = Z.lod[i]!
         const dd = Math.sqrt(d2)
         while (l > 0 && dd < lodEdges[l - 1]! - N.lodHysteresis) l--
-        while (l < 2 && dd > lodEdges[l]! + N.lodHysteresis) l++
+        while (l < lastLevel && dd > lodEdges[l]! + N.lodHysteresis) l++
         Z.lod[i] = l
         const sp = Z.renderSpeed[i]!
         const gait = Math.min(N.gaitMax, walkGait(sp, Z.height[i]!))
@@ -141,17 +160,19 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
                         : st === STATE.CALLING
                           ? pose.calling
                           : pose.walk
+        const staggering = variety !== null && p === pose.walk && isStaggering(Z, i)
         const bb = st === STATE.SWELLING ? Z.build[i]! * (1 + (N.swellPivot - Z.stateTimer[i]!) * N.swell) : Z.build[i]!
         const eyeOn = !(Z.missing[i]! & MISSING.SKULL)
         const V = variants[Z.variant[i]!]!
         sink(Z.variant[i]!, l, {
           a: [Z.x[i]!, Z.z[i]!, Z.renderYaw[i]!, Z.phase[i]!],
-          b: [Z.height[i]! / V.s, bb / V.bulk, gait, p],
+          b: [Z.height[i]! / V.s, bb / V.bulk, gait, staggering ? STAGGER_POSE : p],
           c: [Z.missing[i]!, N.ageBase + Z.age[i]! * N.agePer, N.armBase + N.armPer * Z.arms[i]!, Z.skin[i]!],
           color: Z.color[i]!,
           shade: 1,
           eye: eyeOn && st !== STATE.DORMANT ? (options.eyes[Z.type[i]!] ?? null) : null,
           y: Z.y[i]!,
+          ...(variety ? lookFields(Z, i, variety) : {}),
         })
         written++
       }

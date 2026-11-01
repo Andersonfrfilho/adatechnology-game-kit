@@ -1,5 +1,5 @@
 import { HERD_ROLES, STATE, bindInfection, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createRng } from '@adatechnology/game-crowd'
-import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdType, Flock, Herd, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
+import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdPhysicsOptions, CrowdType, Flock, Herd, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { createPlayer } from '@adatechnology/game-player'
@@ -12,7 +12,7 @@ import type { AnimalDrawer, HerdView } from '../herd-view'
 import { createCrowdInstances } from '../instances'
 import type { CrowdInstance } from '../instances'
 import { createCrowdRenderer } from '../renderer'
-import type { CrowdRenderer } from '../renderer'
+import type { CrowdRenderer, CrowdRendererVariety } from '../renderer'
 import { crowdBenchTextOf } from './locale'
 import type { CrowdBenchText } from './locale'
 
@@ -56,6 +56,10 @@ export type CrowdTestModuleOptions = {
   /** The effect ids of the host for the crowd's effects (default `CROWD_EFFECTS`; null leaves one out). */
   readonly effects?: CrowdEffectMap
   readonly seed?: number
+  /** Variety for the drawing (identity, accessories, near shadows, blobs): see `CrowdRendererVariety`. Default off. */
+  readonly variety?: CrowdRendererVariety
+  /** The physics options of the crowd (personality, contact, balance...): see `CrowdPhysicsOptions`. Default off. */
+  readonly crowdPhysics?: CrowdPhysicsOptions
   /** Agents when the area opens (default 0, so a room that only carries the module stays calm). */
   readonly startCount?: number
   /** Where the crowd is born around (default 0, -45: in front of the room's start). */
@@ -139,7 +143,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   type World = { crowd: Crowd; player: Player; civilians: Civilians; herd: Herd; flock: Flock; vultures: number; binding: InfectionBinding | null; model: InfectionModelLike | null; place: () => number }
   const build = (seed: number): World => {
     const player = createPlayer({ seed })
-    const crowd = createCrowd({ pack: options.pack, seed, capacity: CAPACITY, target: player })
+    const crowd = createCrowd({ pack: options.pack, seed, capacity: CAPACITY, target: player, ...(options.crowdPhysics ? { physics: options.crowdPhysics } : {}) })
     const civilians = createCivilians(crowd, { people: CIVILIANS.map((c) => ({ ...c })), buildings: LOTS })
     const herd = createHerd(crowd, { view: () => ({ x: player.state.x, z: player.state.z }) })
     const flock = createFlock({ count: 0, mode: 'carrion' })
@@ -232,6 +236,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
         builders: options.builders(three),
         ...(options.typeName ? { typeName: options.typeName } : {}),
         drawCorpses: () => layers.corpses,
+        ...(options.variety ? { variety: options.variety } : {}),
         ...(bodies.length ? { civilians: { list: () => (layers.civilians ? world.civilians.list : []), body: (n) => bodies[n.k % bodies.length]! } } : {}),
       })
       scene.add(renderer.group)

@@ -69,8 +69,11 @@ export function createModule(options = {}) {
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR) with a horde of 300, loads it and opens the crowd area. Returns the room's module report. */
 export function loadInto(room, options = {}) {
-  const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const report = room.loadModule(createModule({ startCount: 300, ...options, locale: lang }))
+  const query = new URLSearchParams(globalThis.location?.search ?? '')
+  const lang = options.locale ?? (query.get('lang') === 'en' ? 'en' : 'pt-BR')
+  // ?variety=1 draws the horde with identity, accessories and the economy ladder (and gives every agent a personality): the horde of the variety proof
+  const variety = query.get('variety') === '1' ? { variety: {}, crowdPhysics: { personality: true } } : {}
+  const report = room.loadModule(createModule({ startCount: 300, ...variety, ...options, locale: lang }))
   room.openArea(CROWD_AREA_ID)
   return report
 }

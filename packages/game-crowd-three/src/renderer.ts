@@ -1,12 +1,26 @@
 import { variantDecay, variantSeed } from '@adatechnology/game-characters'
 import type { Civilian, Crowd, CrowdType } from '@adatechnology/game-crowd'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { LOD_BAKE, LOD_SEGMENTS, bakeBody, buildInstancedBody, createBodyBatch, createVariantBatches } from '@adatechnology/game-characters-three'
-import type { BakeBuilders, BakeSpec, BakedBody, BodyBatch, BodyVariant, Three } from '@adatechnology/game-characters-three'
+import { KIT_ACCESSORIES, LOD_BAKE, LOD_SEGMENTS, accessoryPlacement, bakeBody, buildInstancedBody, buildKitAccessory, createBlobShadowBatch, createBodyBatch, createVariantBatches } from '@adatechnology/game-characters-three'
+import type { BakeBuilders, BakeSpec, BakedBody, BlobShadowBatch, BodyBatch, BodyVariant, KitAccessory, Three } from '@adatechnology/game-characters-three'
 import type * as THREE_NS from 'three'
 
 import { createCrowdInstances } from './instances'
 import type { CrowdFrame, CrowdInstance, CrowdInstances, CrowdPoseMap, CrowdRenderNumbers } from './instances'
+import type { CrowdVarietyNumbers } from './variety/look'
+
+/** Variety on the instanced path (T4b.7, D11 and D12): identity for every body, accessories, real shadows only near and blobs beyond. Absent, the renderer is the game's. */
+export type CrowdRendererVariety = {
+  readonly numbers?: Partial<CrowdVarietyNumbers>
+  /** The accessory batches, drawn by the kit's builders (default `KIT_ACCESSORIES`); `false` for none. */
+  readonly accessories?: readonly KitAccessory[] | false
+  /** Instances an accessory batch holds at the near and the middle level (default 480 and 1400). */
+  readonly accessoryCapacity?: readonly [number, number]
+  /** Only the nearest level casts a real shadow (default true). */
+  readonly nearShadows?: boolean
+  /** One dark disc under each body beyond the nearest level (default true). */
+  readonly blobShadows?: boolean
+}
 
 export type CrowdRendererOptions = {
   readonly crowd: Crowd
@@ -22,6 +36,7 @@ export type CrowdRendererOptions = {
   readonly drawCorpses?: () => boolean
   readonly numbers?: Partial<CrowdRenderNumbers>
   readonly poses?: Partial<CrowdPoseMap>
+  readonly variety?: CrowdRendererVariety
 }
 
 export type CrowdRenderer = {
@@ -41,6 +56,10 @@ export type CrowdRenderer = {
   dispose(): void
 }
 
+const ACCESSORY_CAPACITY = [480, 1400] as const
+const BLOB_CAPACITY = 4000
+const NEAR_SHADOWS = [true, false, false] as const
+
 const now = (): number => (typeof performance === 'undefined' ? Date.now() : performance.now())
 
 /**
@@ -54,12 +73,20 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   group.name = 'crowd'
   const time = { value: 0 }
   const eyes = crowd.pack.types.map((type) => type.eye ?? null)
-  const instances = createCrowdInstances({ eyes, ...(options.numbers ? { numbers: options.numbers } : {}), ...(options.poses ? { poses: options.poses } : {}) })
+  const variety = options.variety
+  const accessoryKinds = variety ? (variety.accessories === false ? [] : (variety.accessories ?? KIT_ACCESSORIES)) : []
+  const accessoryCapacity = variety?.accessoryCapacity ?? ACCESSORY_CAPACITY
+  const nearShadows = variety ? (variety.nearShadows ?? true) : false
+  const instances = createCrowdInstances({ eyes, ...(options.numbers ? { numbers: options.numbers } : {}), ...(options.poses ? { poses: options.poses } : {}), ...(variety ? { variety: { ...(variety.numbers ? { numbers: variety.numbers } : {}) } } : {}) })
   const N = instances.numbers
   const variants: BodyVariant[] = []
   const batches: (readonly BodyBatch[])[] = []
   let plain: BodyBatch | null = null
   const people = new Map<string, BodyBatch>()
+  const accessoryBatches = new Map<string, BodyBatch>()
+  const accessoryGeometry = new Map<string, THREE_NS.BufferGeometry>()
+  const placements = new Map<string, readonly [number, number, number, number]>()
+  let blobs: BlobShadowBatch | null = null
   let bakeMs = 0
   const lodCounts: [number, number, number] = [0, 0, 0]
   const shirt = new three.Color()
@@ -72,7 +99,41 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   const push = (batch: BodyBatch | undefined, instance: CrowdInstance): void => {
     if (!batch) return
     shirt.setHex(instance.color).multiplyScalar(instance.shade)
-    batch.push({ a: instance.a, b: instance.b, c: instance.c, color: shirt, ...(instance.eye !== null ? { eye: eyeOf(instance.eye) } : {}), y: instance.y })
+    batch.push({ a: instance.a, b: instance.b, c: instance.c, color: shirt, ...(instance.eye !== null ? { eye: eyeOf(instance.eye) } : {}), y: instance.y, ...(instance.d ? { d: instance.d } : {}) })
+  }
+  const pushAccessories = (variant: number, level: number, instance: CrowdInstance): void => {
+    const bits = instance.accessories ?? 0
+    if (!bits || level > 1) return
+    shirt.setHex(instance.color).multiplyScalar(instance.shade)
+    for (const accessory of accessoryKinds) {
+      if (!(bits & accessory.bit)) continue
+      accessoryBatch(accessory, level).push({ a: instance.a, b: instance.b, c: instance.c, color: shirt, y: instance.y, ...(instance.d ? { d: instance.d } : {}), acc: placementOf(variant, level, accessory) })
+    }
+  }
+
+  const accessoryBatch = (accessory: KitAccessory, level: number): BodyBatch => {
+    const key = `${accessory.id}|${level}`
+    const made = accessoryBatches.get(key)
+    if (made) return made
+    let geometry = accessoryGeometry.get(accessory.id)
+    if (!geometry) accessoryGeometry.set(accessory.id, (geometry = buildKitAccessory(three, accessory)))
+    const batch = createBodyBatch(three, geometry, { max: accessoryCapacity[level] ?? ACCESSORY_CAPACITY[1], castShadow: level === 0, time, accessory: true })
+    accessoryBatches.set(key, batch)
+    group.add(batch.mesh)
+    return batch
+  }
+  const placementOf = (variant: number, level: number, accessory: KitAccessory): readonly [number, number, number, number] => {
+    const key = `${variant}|${level}|${accessory.attach}`
+    let placed = placements.get(key)
+    if (!placed) placements.set(key, (placed = accessoryPlacement(variants[variant]!.geometries[level]!, accessory.attach)))
+    return placed
+  }
+  const ensureBlobs = (): BlobShadowBatch => {
+    if (!blobs) {
+      blobs = createBlobShadowBatch(three, { max: BLOB_CAPACITY })
+      group.add(blobs.mesh)
+    }
+    return blobs
   }
 
   // the type of each global variant (G `ZVAR_OF` turned around), so a body is baked the first time one of its type is drawn
@@ -99,7 +160,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       const bodies: BakedBody[] = LOD_BAKE.map((lod) => bakeBody(three, options.builders, { type: name, decay, seed }, lod))
       const variant: BodyVariant = { typeId: type.id, variant: v, seed, decay, s: bodies[0]!.s, bulk: bodies[0]!.bulk, verts: bodies.map((body) => body.verts), geometries: bodies.map((body) => body.geo) }
       variants[g] = variant
-      batches[g] = createVariantBatches(three, variant, time)
+      batches[g] = createVariantBatches(three, variant, time, variety ? { identity: true, ...(nearShadows ? { castsShadow: NEAR_SHADOWS } : {}) } : {})
       for (const batch of batches[g]!) group.add(batch.mesh)
     })
     bakeMs += now() - started
@@ -122,7 +183,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
     return batch
   }
 
-  const all = (): BodyBatch[] => [...batches.flatMap((set) => set ?? []), ...(plain ? [plain] : []), ...people.values()]
+  const all = (): BodyBatch[] => [...batches.flatMap((set) => set ?? []), ...(plain ? [plain] : []), ...people.values(), ...accessoryBatches.values()]
 
   return {
     group,
@@ -132,19 +193,27 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       bakeSeen()
       time.value += dt
       for (const batch of all()) batch.begin()
-      instances.agents(crowd.store, variants, frame, (v, l, instance) => push(batches[v]?.[l], instance))
+      blobs?.begin()
+      const drawBlobs = variety ? (variety.blobShadows ?? true) : false
+      instances.agents(crowd.store, variants, frame, (v, l, instance) => {
+        push(batches[v]?.[l], instance)
+        if (!variety) return
+        pushAccessories(v, l, instance)
+        if (drawBlobs && l > 0) ensureBlobs().push(instance.a[0], instance.y, instance.a[1], instance.b[0] * (variants[v]?.s ?? 1))
+      })
       if (options.drawCorpses?.() !== false) instances.corpses(crowd.corpses.entries, variants, frame, crowd.numbers.corpseSeconds, (v, l, instance) => push(batches[v]?.[l], instance), (instance) => push(ensurePlain(), instance))
       // as the game counts them: the variant batches after the bodies on the ground went in
       for (let l = 0; l < 3; l++) lodCounts[l] = batches.reduce((sum, set) => sum + (set?.[l]?.count ?? 0), 0)
       const list = options.civilians?.list()
       if (list) instances.civilians(list, options.civilians?.color ?? ((n) => n.spec.color ?? 0x808080), (n, instance) => push(personBatch(n), instance))
       for (const batch of all()) batch.end()
+      blobs?.end()
     },
     get lodCounts() {
       return lodCounts
     },
     get drawCalls() {
-      return all().filter((batch) => batch.count > 0).length
+      return all().filter((batch) => batch.count > 0).length + (blobs && blobs.count > 0 ? 1 : 0)
     },
     get bakeMs() {
       return bakeMs
@@ -162,6 +231,12 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       baked.clear()
       plain = null
       people.clear()
+      accessoryBatches.clear()
+      accessoryGeometry.clear()
+      placements.clear()
+      blobs?.mesh.geometry.dispose()
+      if (blobs) group.remove(blobs.mesh)
+      blobs = null
     },
   }
 }
