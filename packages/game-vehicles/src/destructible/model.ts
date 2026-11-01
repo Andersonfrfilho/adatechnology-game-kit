@@ -56,6 +56,8 @@ export interface PartDef {
   hp: number
   /** The damage zone this part is, when it is one. */
   zoneId?: string
+  /** The panes of a glass part no damage zone claims. */
+  panes?: any[]
   /** Fluid held, in litres. */
   contains?: { fluid: string; liters: number; pressurized?: boolean }
   explodes?: { energy: number; radius: number; atC: number }
@@ -202,6 +204,16 @@ const floorPan = (b: LocalBox): LocalBox => ({
 })
 
 /** Builds the part and joint model of a built vehicle. */
+/** A pane's box in the vehicle's space. */
+function paneBox(c: any, pane: any, inverse: any): LocalBox {
+  pane.geometry.computeBoundingBox()
+  const box = pane.geometry.boundingBox.clone().applyMatrix4(pane.matrixWorld)
+  box.applyMatrix4(inverse)
+  const center: [number, number, number] = [(box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2]
+  const size: [number, number, number] = [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z]
+  return { center, size }
+}
+
 export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: ModelOptions = {}): VehicleModel {
   const kind = kindOf(c)
   const m = c.meta
@@ -349,6 +361,18 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       visual: role === 'door' || role === 'hood' || role === 'lid' || role === 'fender',
       tags: [role, ...tags],
     })
+  }
+
+  // a pane the zones do not claim is still glass: it takes the round as a pane of its own
+  const claimed = new Set<unknown>(zones.filter((z) => roleOfZone(z) === 'glass').flatMap((z) => z.glass ?? []))
+  ;(c as any).root.updateMatrixWorld(true)
+  const inverse = (c as any).vehicle.matrixWorld.clone().invert()
+  for (const pane of ((c as any).glass ?? []) as any[]) {
+    if (claimed.has(pane)) continue
+    const G = pane.userData.glass
+    const bb = paneBox(c, pane, inverse)
+    const laminated = G?.type === 'laminated' || m.bullet
+    add({ id: `pane_${G?.key ?? 'glass'}`, role: 'glass', name: String(G?.label ?? G?.key ?? 'glass'), material: 'glass', box: bb, mass: 10 * areaOf(bb.size), hp: laminated ? 4000 : 450, panes: [pane], visual: false, tags: ['glass'] })
   }
 
   // the hub is a synthetic frame part when the vehicle has no underbody or chassis zone

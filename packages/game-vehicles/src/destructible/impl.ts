@@ -19,6 +19,7 @@ import type {
   ToolKind,
   Vec3,
 } from '@adatechnology/game-contracts'
+import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, rng, strHash } from '../util'
@@ -592,13 +593,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     sync()
     const M = toFrameMatrix()
     const v = toLocal(h.point)
-    const p = locate(v, 0.2)
+    const p = (h.part ? ps.get(h.part) : undefined) ?? locate(v, 0.2)
     if (!p) return
     const d = p.def
     const E = h.energy ?? 0
     const cal = h.caliber ?? 9
     const dir = dirToLocal(h.direction ?? [0, 0, -1]).normalize()
-    const n = normalOf(d, v)
+    const n = h.normal ? dirToLocal(h.normal).normalize() : normalOf(d, v)
     const res = resist(d, p)
     const through = E >= res
     const cosInc = Math.abs(dir.dot(n))
@@ -617,7 +618,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       const hp: PartState['holes'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), diameter: r2(holeDiam), through }
       p.holes.push(hp)
       out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
-      vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam)
+      vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam, d)
       startLeak(p, v, cal, out, dir)
     }
     switch (d.material) {
@@ -940,6 +941,47 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return false
   }
 
+  const surfaceRays = new THREE.Raycaster()
+  surfaceRays.camera = new THREE.PerspectiveCamera()
+  let meshParts: Map<any, string> | null = null
+  const paneParts = (): Map<any, string> => {
+    if (meshParts) return meshParts
+    meshParts = new Map()
+    for (const d of model.parts) {
+      if (d.role !== 'glass') continue
+      const z = (kit.zonesOf(c) as any[]).find((q: any) => q.id === d.zoneId)
+      for (const g of z?.glass ?? d.panes ?? []) meshParts.set(g, d.id)
+    }
+    return meshParts
+  }
+  const isDrawnSurface = (o: any): boolean => {
+    for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return false
+    return true
+  }
+  /** The part a drawn mesh belongs to: its pane, the door hanging it, else the smallest box of bodywork at the point. */
+  const partOfSurface = (o: any, v: any): PState | null => {
+    const pane = paneParts().get(o)
+    if (pane) return ps.get(pane) ?? null
+    for (let q = o; q && q !== c.vehicle; q = q.parent) {
+      if (vis?.plateIdOf(q)) return ps.get(vis.plateIdOf(q)!) ?? null
+    }
+    return locate(v, 0.08, (p) => p.def.role === 'glass')
+  }
+  const surfaceRay = (ray: SurfaceRay): SurfaceRayHit | null => {
+    sync()
+    surfaceRays.set(new V3(ray.origin[0], ray.origin[1], ray.origin[2]), new V3(ray.direction[0], ray.direction[1], ray.direction[2]))
+    surfaceRays.far = ray.maxDistance
+    for (const h of surfaceRays.intersectObject(c.vehicle, true)) {
+      if (!h.face || !isDrawnSurface(h.object)) continue
+      const p = partOfSurface(h.object, c.vehicle.worldToLocal(h.point.clone()))
+      if (!p || p.lost || ray.ignored?.(p.def.id)) continue
+      const n = h.face.normal.clone().transformDirection(h.object.matrixWorld)
+      if (n.dot(surfaceRays.ray.direction) > 0) n.negate()
+      return { part: p.def.id, point: [h.point.x, h.point.y, h.point.z], normal: [n.x, n.y, n.z], distance: h.distance, pathLen: 0.02 }
+    }
+    return null
+  }
+
   const hit = (h: Hit): DestructionEvent[] => {
     stateCache = undefined
     const out: DestructionEvent[] = []
@@ -1070,6 +1112,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     },
     describe,
     hit,
+    surfaceRay,
     update,
     state,
     reset,

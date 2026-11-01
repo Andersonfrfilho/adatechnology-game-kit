@@ -11,24 +11,36 @@ export function installGlassDamage(kit: Kit): void {
   const { DOUBLE_SIDE, MATERIALS, crease, cutGeometry, mergeGeometries, subdivide, tumble } = I
 
   /* ================= glass: cracks and shattering ================= */
-  function glassUV(msh: any, pLocal: any) {
+  /* The point of the pane nearest the hit, on the triangle under it: a pane has few vertices, the web starts where the round landed. */
+  function glassUV(c: any, msh: any, pLocal: any) {
     const pos = msh.geometry.attributes.position
     const uv = msh.geometry.attributes.uv
     if (!uv) return [0.5, 0.5]
-    const inv = new THREE.Matrix4().copy(msh.matrix).invert()
-    const q = pLocal.clone().applyMatrix4(inv)
-    let best = 1e9
-    let bi = 0
-    const v = new V3()
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i)
-      const d = v.distanceToSquared(q)
-      if (d < best) {
-        best = d
-        bi = i
-      }
+    c.root.updateMatrixWorld(true)
+    const q = msh.worldToLocal(c.vehicle.localToWorld(pLocal.clone()))
+    const idx = msh.geometry.index
+    const tri = new THREE.Triangle()
+    const near = new V3()
+    const bary = new V3()
+    let best = Infinity
+    const out = [0.5, 0.5]
+    const count = idx ? idx.count : pos.count
+    for (let f = 0; f + 2 < count; f += 3) {
+      const ia = idx ? idx.getX(f) : f
+      const ib = idx ? idx.getX(f + 1) : f + 1
+      const ic = idx ? idx.getX(f + 2) : f + 2
+      tri.a.fromBufferAttribute(pos, ia)
+      tri.b.fromBufferAttribute(pos, ib)
+      tri.c.fromBufferAttribute(pos, ic)
+      tri.closestPointToPoint(q, near)
+      const d = near.distanceToSquared(q)
+      if (d >= best) continue
+      best = d
+      tri.getBarycoord(near, bary)
+      out[0] = uv.getX(ia) * bary.x + uv.getX(ib) * bary.y + uv.getX(ic) * bary.z
+      out[1] = uv.getY(ia) * bary.x + uv.getY(ib) * bary.y + uv.getY(ic) * bary.z
     }
-    return [uv.getX(bi), uv.getY(bi)]
+    return out
   }
   /* Crack web: thick opaque lines at the centre, thinning outward, with a dark outline so it reads from afar. */
   function drawWeb(x: any, cx: any, cy: any, s: any, ax: any, rnd: any) {
@@ -110,7 +122,7 @@ export function installGlassDamage(kit: Kit): void {
         depthWrite: false,
       })
     }
-    const uv = glassUV(msh, p)
+    const uv = glassUV(c, msh, p)
     const x = G.cv.getContext('2d')
     drawWeb(x, uv[0] * 256, (1 - uv[1]) * 256, sc != null ? sc : 0.6 + force * 0.5, Math.max(0.4, G.aspect || 1), c.rand)
     G.tex.needsUpdate = true
@@ -243,6 +255,14 @@ export function installGlassDamage(kit: Kit): void {
     }
     const seatGeo: any = []
     const d = dir.clone().normalize()
+    /* a pane on an open door falls from where the door has it, not from where the door was closed */
+    if (msh.parent && msh.parent !== c.vehicle) {
+      c.root.updateMatrixWorld(true)
+      const toVehicle = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert().multiply(msh.parent.matrixWorld)
+      cubesAt.forEach(function (q) {
+        q.applyMatrix4(toVehicle)
+      })
+    }
     cubesAt.forEach(function (p, i) {
       if (i % 3 === 0 && c.seatTops.length && !c.rollState && !c.flipped) {
         let best: any = null

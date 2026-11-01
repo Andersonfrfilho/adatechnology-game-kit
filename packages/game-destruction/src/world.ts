@@ -1333,7 +1333,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return -b - Math.sqrt(disc) > maxDist
   }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false): (RayHit & { pathLen: number }) | null => {
+  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     let best: (RayHit & { pathLen: number }) | null = null
     for (const o of objects.values()) {
@@ -1348,13 +1348,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     }
     for (const im of worldOnly ? [] : impls.values()) {
+      let boxHit: (RayHit & { pathLen: number }) | null = null
       for (const ps of im.impl.describe().parts) {
         if (ignore?.has(`${im.impl.id}\0${ps.id}`)) continue
         const ov = im.poses.get(ps.id)
         const r = rayPartRaw(im.position, im.rotation, ps, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])), origin, d, ov?.pos)
-        if (!r || r.t0 < 0 || r.t0 > maxDist) continue
-        if (!best || r.t0 < best.distance) best = { object: im.impl.id, part: ps.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
+        if (!r || r.t1 < 0 || r.t0 > maxDist) continue
+        if (r.t0 < 0) {
+          // from inside a box (a round in the cabin): only the impl's own surface says what it meets
+          if (precise && im.impl.surfaceRay) boxHit = boxHit ?? { object: im.impl.id, part: ps.id, point: origin, normal: r.n, distance: 0, pathLen: r.t1 }
+          continue
+        }
+        if (!boxHit || r.t0 < boxHit.distance) boxHit = { object: im.impl.id, part: ps.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
+      if (!boxHit) continue
+      if (precise && im.impl.surfaceRay) {
+        const far = best ? Math.min(maxDist, best.distance) : maxDist
+        const implId = im.impl.id
+        const s = im.impl.surfaceRay({ origin, direction: d, maxDistance: far, ...(ignore ? { ignored: (part: string) => ignore.has(`${implId}\0${part}`) } : {}) })
+        if (s && (!best || s.distance < best.distance)) best = { object: implId, part: s.part, point: s.point, normal: s.normal, distance: s.distance, pathLen: s.pathLen }
+      } else if (!best || boxHit.distance < best.distance) best = boxHit
     }
     return best
   }
@@ -3194,7 +3207,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
     },
     raycast(origin, direction, maxDistance = Infinity) {
-      const r = raycastInternal(origin, direction, maxDistance)
+      const r = raycastInternal(origin, direction, maxDistance, undefined, false, true)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
     sweepBox(box, direction, distance, options = {}) {
@@ -3224,11 +3237,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         let org = origin
         let E = energy
         for (let i = 0; i < 4 && E > 0; i++) {
-          const rh = raycastInternal(org, d, Infinity, ignore)
+          const rh = raycastInternal(org, d, Infinity, ignore, false, true)
           if (!rh) break
           const im = impls.get(rh.object)
           if (im) {
-            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...extras, ...(source !== undefined ? { source } : {}) })
+            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...extras, ...(source !== undefined ? { source } : {}) })
             r.part = rh.part
             r.point = rh.point
             r.exitEnergy = r.penetrated ? E * 0.5 : 0
