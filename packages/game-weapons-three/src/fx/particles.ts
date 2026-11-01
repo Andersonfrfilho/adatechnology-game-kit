@@ -1,5 +1,4 @@
 import type * as THREE_NS from 'three'
-import { warnOnce } from '@adatechnology/game-contracts'
 
 type Three = typeof THREE_NS
 
@@ -65,7 +64,7 @@ const disposeOwned = (object: THREE_NS.Object3D): void => {
   })
 }
 
-/** `limit`: the most bodies the host allows at once (its one budget); without it the own cap of 900 stands (deprecated, removed in the next major). */
+/** `limit`: the most bodies the host allows at once (its one budget); without it the own cap of 900 stands (no host lends one yet, so no warning). */
 export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined): Particles {
   let list: Particle[] = []
   const remove = (particle: Particle): void => {
@@ -99,7 +98,6 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
         bounces: 0,
       })
       const hostLimit = limit?.()
-      if (hostLimit === undefined) warnOnce('game-weapons-three.own-particle-cap', 'game-weapons-three capped its casings and magazines with a limit of its own because the host lent none (options.particleLimit); pass the host budget so they share it')
       const oldest = list[0]
       if (list.length > (hostLimit ?? MAX_PARTICLES) && oldest) remove(oldest)
     },

@@ -72,7 +72,7 @@ export interface ViewmodelOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
   raycast?: LaserRaycast
-  /** The most casings and magazines alive at once, read at each spawn (the host's one budget); without it the viewmodel keeps a cap of its own (deprecated). */
+  /** The most casings and magazines alive at once, read at each spawn (the host's one budget); without it the viewmodel keeps a cap of its own. */
   particleLimit?: () => number | undefined
   /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
