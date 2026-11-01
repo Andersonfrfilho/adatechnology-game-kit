@@ -72,6 +72,8 @@ export interface ViewmodelOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
   raycast?: LaserRaycast
+  /** The most casings and magazines alive at once, read at each spawn (the host's one budget); without it the viewmodel keeps a cap of its own (deprecated). */
+  particleLimit?: () => number | undefined
   /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
   /** The rocket of a launcher flies out along the barrel (default true); false leaves the round to the host. */
@@ -142,7 +144,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const random = createRng(options.seed ?? 1)
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
-  const particles = createParticles(THREE, scene, groundAt)
+  const particles = createParticles(THREE, scene, groundAt, options.particleLimit)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
   if (!options.effects) warnOnce('game-weapons-three.own-effects-world', 'game-weapons-three made an effects world of its own because the host lent none (options.effects); pass the host effects so the effects share one budget')
