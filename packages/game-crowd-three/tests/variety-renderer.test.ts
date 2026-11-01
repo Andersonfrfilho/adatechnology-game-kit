@@ -159,3 +159,19 @@ describe('createCrowdRenderer prepare', () => {
     renderer.dispose()
   }, 120000)
 })
+
+describe('the adaptive detail without the GPU timer extension', () => {
+  it('shrinks on long frames down to the floor and grows back on short ones, from the frame time alone', () => {
+    const crowd = createCrowd({ pack, seed: 2, capacity: 8 })
+    crowd.spawn(0, -5, 0)
+    const renderer = createCrowdRenderer(THREE, { crowd, builders: builders(), typeName: (type) => names.get(type.id) ?? type.id, variety: {} })
+    const frame = { camera: { x: 0, z: 0 }, viewYaw: 0 }
+    expect(renderer.gpuMs).toBe(0)
+    for (let step = 0; step < 200; step++) renderer.update(0.05, frame)
+    expect(renderer.gpuMs).toBe(0)
+    expect(renderer.detailScale).toBeCloseTo(0.1, 5)
+    for (let step = 0; step < 6000; step++) renderer.update(1 / 60, frame)
+    expect(renderer.detailScale).toBeGreaterThan(0.9)
+    renderer.dispose()
+  })
+})
