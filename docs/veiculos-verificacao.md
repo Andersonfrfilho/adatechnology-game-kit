@@ -28,6 +28,6 @@ Só o `midsize_sedan` foi visto no jogo real até agora (sala de testes, `?scene
 | 1 | Material e massa | Parcial: peças com material; porta com 8 a 12 kg, leve para uma porta real |
 | 2 | Tiro | Testado no jogo: ponto, peça e calibre certos; impulso no carro não verificado |
 | 5 | Destruição no padrão da latinha | Parcial: furo e trinca no ponto; deformação e vazamento não revistos |
-| 7 | Usar (abrir porta) | Testado no jogo, com a borda da porta ainda em degraus |
+| 7 | Usar (abrir porta) | Testado no jogo: porta com borda, soleira, vidro, borracha e espelho; a base preta do espelho ainda fica no corpo |
 | 18 | Desgaste visual | Furo fica e acompanha a porta |
 | 3, 4, 6, 8 a 17, 19 a 21 | Demais critérios | Não verificados nesta rodada |

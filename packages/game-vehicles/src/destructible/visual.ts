@@ -23,11 +23,14 @@ export interface DetachOptions {
 const HOLE_DECAL_SCALE = 2.4
 /** From a door's skin to its inner card, metres. */
 const DOOR_DEPTH = 0.07
-/** How wide the edge of a door shows, metres. */
-const DOOR_EDGE = 0.022
-/** Pieces per edge, each at the height of the skin where it stands: the side of a car is curved. */
-const DOOR_EDGE_PIECES = 5
+/** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
+const DOOR_EDGE_PIECES = 16
+/** The inner face of a door, trim grey: a lit surface, not a hole. */
+const DOOR_CARD_COLOR = '#3b3e42'
 const HOLE_TEXTURE_SIZE = 64
+/** A mirror the model draws: small, and this near where the part stands, metres. */
+const DRAWN_MIRROR_SIZE = 0.3
+const DRAWN_MIRROR_REACH = 0.4
 /** Per material: the ring the round leaves around the bore. */
 const HOLE_RIM: Record<string, string> = { steel: '#b7bcc0', aluminium: '#d3d6d8', plastic: '#d9d6cc', rubber: '#141414', glass: '#eef3f5' }
 const holeMaterials = new WeakMap<object, Map<string, any>>()
@@ -308,12 +311,13 @@ export class VehicleVisuals implements CreaseWork {
       if (p.role === 'door') {
         const dirty = new Set<Obj>()
         const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
-        const pcs = (I.cutPanel(this.c, z, rect, true, dirty) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
+        const pcs = (I.cutPanel(this.c, z, rect, true, dirty, { anyN: true }) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
         this.mend(dirty)
         if (pcs.length) {
           const panes = I.windowsOver(this.c, z, inv) as Obj[]
           const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
-          objs = [...pcs, ...this.doorCards(pcs, z), ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals]
+          const mirrors = this.mirrorsOn(z)
+          objs = [...pcs, ...this.doorCards(pcs, z), ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
         }
       } else {
         const pcs = this.cutZone(z)
@@ -332,12 +336,15 @@ export class VehicleVisuals implements CreaseWork {
       const di = deform.indexOf(o)
       if (di >= 0) deform.splice(di, 1)
     }
-    if (p.role === 'door' && objs.length > 0) this.doorEdges(piv, z)
+    if (p.role === 'door' && objs.length > 0) {
+      this.doorEdges(piv, z)
+      this.doorSill(piv, z, inv, objs)
+    }
     piv.quaternion.copy(q)
     this.c.root.updateMatrixWorld(true)
     return objs.length > 0
   }
-  /** A door has edges: a painted strip that follows the skin closes it to its card and hides where the cut followed the triangles of the shell; the same strips, dark, line the opening. */
+  /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, dark, lines the opening. */
   private doorEdges(piv: Obj, z: any): void {
     const THREE = this.THREE
     const B = z.box
@@ -347,29 +354,36 @@ export class VehicleVisuals implements CreaseWork {
     const x1 = B.x1 - 0.03
     const y0 = B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1)
     const y1 = B.y1 - 0.02
-    const door: any[] = []
-    const jamb: any[] = []
-    const piece = (x: number, y: number, w: number, h: number): void => {
-      const skin = this.surface('z', side, B, [[x, y]]) ?? flat
-      const edge = new THREE.BoxGeometry(w, h, DOOR_DEPTH)
-      edge.translate(x, y, skin - (side * DOOR_DEPTH) / 2 + side * 0.002)
-      door.push(edge)
-      const lining = new THREE.BoxGeometry(w, h, DOOR_DEPTH)
-      lining.translate(x, y, skin - side * (DOOR_DEPTH / 2 + 0.012))
-      jamb.push(lining)
+    const loop: Array<[number, number]> = []
+    const run = (ax: number, ay: number, bx: number, by: number): void => {
+      for (let i = 0; i < DOOR_EDGE_PIECES; i++) loop.push([ax + ((bx - ax) * i) / DOOR_EDGE_PIECES, ay + ((by - ay) * i) / DOOR_EDGE_PIECES])
     }
-    for (let i = 0; i < DOOR_EDGE_PIECES; i++) {
-      const fx = (i + 0.5) / DOOR_EDGE_PIECES
-      const fy = (i + 0.5) / DOOR_EDGE_PIECES
-      const w = (x1 - x0) / DOOR_EDGE_PIECES
-      const h = (y1 - y0) / DOOR_EDGE_PIECES
-      piece(x0 + (x1 - x0) * fx, y0, w, DOOR_EDGE)
-      piece(x0 + (x1 - x0) * fx, y1, w, DOOR_EDGE)
-      piece(x0, y0 + (y1 - y0) * fy, DOOR_EDGE, h)
-      piece(x1, y0 + (y1 - y0) * fy, DOOR_EDGE, h)
+    run(x0, y0, x1, y0)
+    run(x1, y0, x1, y1)
+    run(x1, y1, x0, y1)
+    run(x0, y1, x0, y0)
+    const heights = loop.map(([x, y]) => this.surface('z', side, B, [[x, y]]) ?? flat)
+    const band = (lift: number): any => {
+      const position: number[] = []
+      const index: number[] = []
+      loop.forEach(([x, y], i) => {
+        position.push(x, y, heights[i]! + side * lift, x, y, heights[i]! + side * (lift - DOOR_DEPTH))
+        const a = i * 2
+        const b = ((i + 1) % loop.length) * 2
+        index.push(a, a + 1, b, b, a + 1, b + 1)
+      })
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+      g.setIndex(index)
+      g.computeVertexNormals()
+      return g
     }
-    const edges = new THREE.Mesh(this.I.mergeGeometries(door), this.paint())
-    const lining = new THREE.Mesh(this.I.mergeGeometries(jamb), this.I.MATERIALS.dark)
+    const paint = this.paint().clone()
+    paint.side = THREE.DoubleSide
+    const inner = this.I.MATERIALS.dark.clone()
+    inner.side = THREE.DoubleSide
+    const edges = new THREE.Mesh(band(0.002), paint)
+    const lining = new THREE.Mesh(band(-0.012), inner)
     for (const m of [edges, lining]) {
       m.userData.noFollow = true
       m.castShadow = false
@@ -377,11 +391,38 @@ export class VehicleVisuals implements CreaseWork {
     }
     piv.attach(edges)
   }
+  /** A front door carries the mirror drawn at its corner. */
+  private mirrorsOn(z: any): Obj[] {
+    if (!z.mirror) return []
+    const own = ((z.mirrors ?? []) as Obj[]).filter((o) => o.parent)
+    if (own.length) return own
+    const part = this.model.parts.find((q) => q.role === 'mirror' && Math.sign(q.box.center[2]) === Math.sign(z.side))
+    return part ? (this.extra.get(part.id) ?? []).filter((o) => o.parent) : []
+  }
+  /** The top of a door, from the skin in to its pane: the glass comes out of the door and does not float over it. */
+  private doorSill(piv: Obj, z: any, inv: any, objs: Obj[]): void {
+    const panes = objs.filter((o) => o.userData.glass)
+    if (!panes.length) return
+    const THREE = this.THREE
+    const B = z.box
+    const side = z.side < 0 ? -1 : 1
+    const box = new THREE.Box3()
+    for (const g of panes) box.union(this.I.localBox(this.c, g, inv))
+    const top = B.y1 - 0.02
+    const skin = this.surface('z', side, B, [[(B.x0 + B.x1) / 2, top]]) ?? piv.position.z - side * 0.016
+    const paneZ = side > 0 ? box.min.z : box.max.z
+    const height = Math.max(0.02, box.min.y - top + 0.015)
+    const depth = Math.max(0.02, Math.abs(skin - paneZ) + 0.012)
+    const sill = this.box(B.x1 - B.x0 - 0.06, height, depth, this.I.MATERIALS.trim ?? this.I.MATERIALS.dark, (B.x0 + B.x1) / 2, top + height / 2, (skin + paneZ) / 2)
+    sill.userData.noFollow = true
+    sill.castShadow = false
+    piv.attach(sill)
+  }
   /** The inside of a door: its skin brought in by the depth of the door, in the trim's dark plastic, so the open door is a door and not one sheet of paint. */
   private doorCards(skins: Obj[], z: any): Obj[] {
-    const mats = this.I.MATERIALS
+    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.8 })
     return skins.map((skin) => {
-      const card = new this.THREE.Mesh(skin.geometry, mats.trim ?? mats.dark)
+      const card = new this.THREE.Mesh(skin.geometry, cardMaterial)
       card.position.copy(skin.position)
       card.quaternion.copy(skin.quaternion)
       card.scale.copy(skin.scale)
@@ -403,7 +444,27 @@ export class VehicleVisuals implements CreaseWork {
       g.computeBoundingBox()
     })
   }
+  /** The mirror the model already draws around where the part says, if it draws one. */
+  private drawnMirror(p: PartDef): Obj[] {
+    const THREE = this.THREE
+    const [cx, cy, cz] = p.box.center
+    this.c.root.updateMatrixWorld(true)
+    const inv = this.I.worldInverseOf(this.c)
+    return (this.c.vehicle.children as Obj[]).filter((o) => {
+      if (o.userData.glass || o.userData.decal || !(o.isMesh || o.isGroup) || !o.visible || (this.c as any).deform?.includes(o)) return false
+      const box = this.I.localBox(this.c, o, inv)
+      if (box.isEmpty()) return false
+      const size = box.getSize(new THREE.Vector3())
+      const at = box.getCenter(new THREE.Vector3())
+      return Math.max(size.x, size.y, size.z) < DRAWN_MIRROR_SIZE && Math.hypot(at.x - cx, at.y - cy, at.z - cz) < DRAWN_MIRROR_REACH && Math.abs(at.z) > Math.abs(cz) - DRAWN_MIRROR_REACH / 2
+    })
+  }
   private makeMirror(p: PartDef): void {
+    const drawn = this.drawnMirror(p)
+    if (drawn.length) {
+      this.extra.set(p.id, drawn)
+      return
+    }
     const [cx, cy, cz] = p.box.center
     const s = cz < 0 ? -1 : 1
     const mats = this.I.MATERIALS
