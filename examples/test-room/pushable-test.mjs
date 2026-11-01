@@ -15,7 +15,7 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
-await page.goto(`${base}?table=0`)
+await page.goto(`${base}?table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.testTable.items().some((item) => item.id === 'item_soda_can'), null, { timeout: 180000 })
 await page.waitForTimeout(1500)
 

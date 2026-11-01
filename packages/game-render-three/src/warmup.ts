@@ -125,7 +125,7 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     }
   }
 
-  /** Makes everything in the scene draw at least once: three skips an empty instanced batch and whatever is off camera, and a driver finishes a program's state on its first real draw (a 200 ms stall). Returns the undo. */
+  /** Makes every instanced batch draw at least once: three skips an empty instanced batch, and a driver finishes a program's state on its first real draw (a 200 ms stall). Returns the undo. */
   function forceDraws(scene: Scene): () => void {
     const undo: Array<() => void> = []
     scene.traverse((object) => {
@@ -134,10 +134,6 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
       if (geometry?.isInstancedBufferGeometry === true && geometry.instanceCount === 0) {
         geometry.instanceCount = 1
         undo.push(() => (geometry.instanceCount = 0))
-      }
-      if (drawable.frustumCulled) {
-        drawable.frustumCulled = false
-        undo.push(() => (drawable.frustumCulled = true))
       }
       if (drawable.isInstancedMesh === true && drawable.count === 0) {
         drawable.count = 1

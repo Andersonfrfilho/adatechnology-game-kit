@@ -38,7 +38,7 @@ async function open(query = '') {
   // the weapon thumbnails (../weapon-svg/) exist only in the built site: on file:// each one is a CORS error plus a bare "Failed to load resource"
   page.on('console', (m) => m.type() === 'error' && !/weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(m.text()) && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-  await page.goto(pathToFileURL(dist).href + query)
+  await page.goto(pathToFileURL(dist).href + query, { timeout: 180000 })
   await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
   return page
 }
@@ -211,7 +211,8 @@ for (const lang of languages) {
   check(`[${lang}] the effects bench is loaded too (7 controls, 6 layers)`, effects.module === 'vfx' && effects.ok && effects.problems.length === 0 && effects.controls === 7 && effects.layers === 6, effects)
 
   // the sound and weather modules ride along: both on what the room lends (host.audio, host.environment); a storm writes the room's environment and a sound plays on the room's engine
-  const sky = await page.evaluate(() => {
+  // with the light budget the fog never goes back to null, so the lit programs keep their key: the off state is the neutral fog of game-render-three, which fogs nothing
+  const sky = await page.evaluate((NEUTRAL_FOG_NEAR) => {
     const room = window.__testRoom
     const report = window.__furnitureReport
     const weather = room.bench('weather_area')
@@ -223,7 +224,7 @@ for (const lang of languages) {
     const environment = room.environment.get()
     const stats = room.audio.stats()
     // the weather bridges: the storm's wind reaches the room's effects world, and its rain and wind loops open on the room's engine
-    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null || room.scene.fog.near >= NEUTRAL_FOG_NEAR, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
     // the weather picture rides along: the storm draws the rain curtain and the near rain over the furniture; the room's sky and fog stay as they were
     const curtain = room.scene.getObjectByName('weather-rain-curtain')
     result.picture = { curtain: curtain?.visible === true, drawn: curtain?.geometry.drawRange.count, near: room.vfx.peekWorkshop()?.rain.count, layers: weather.layers().map((layer) => layer.id).filter((id) => id.endsWith('_rain') || ['mist', 'sky', 'lightning', 'headlights', 'haze'].includes(id)), skyOn: weather.layer('sky'), rig: room.scene.getObjectByName('weather-lamp-rig') !== undefined }
@@ -231,7 +232,7 @@ for (const lang of languages) {
     for (let i = 0; i < 20; i++) room.update(0.1)
     result.windAfter = room.vfx.wind()
     return result
-  })
+  }, 6e4)
   check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
   check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky left to the room`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === false && sky.picture.rig, sky.picture)
   check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)

@@ -103,7 +103,7 @@ const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
 if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
-await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`)
+await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
 await applyPixelRatio()

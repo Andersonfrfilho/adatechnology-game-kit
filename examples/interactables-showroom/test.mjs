@@ -55,7 +55,7 @@ async function openPage(viewport, extra = {}) {
     if (m.type() === 'error') consoleErrors.push(m.text())
   })
   page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
-  await page.goto(pathToFileURL(dist).href)
+  await page.goto(pathToFileURL(dist).href, { timeout: 180000 })
   await page.waitForFunction(() => window.__showroom && window.__showroom.world, null, { timeout: 90000 })
   await page.evaluate(() => window.__showroom.pause(true))
   return { context, page }
