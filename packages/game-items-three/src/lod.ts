@@ -36,7 +36,7 @@ export function buildItemLod(T: typeof THREE_NS, item: DrawableItem, options: It
   const cullDistance = cullDistanceOf(item.size, budgets)
   const lod1Distance = options.lod1Distance ?? cullDistance / 3
   const joined = (model: ItemModel): ItemModel => (options.merge === false ? model : mergeItem(T, model))
-  const wear = options.wear === undefined ? {} : { wear: options.wear }
+  const wear = { ...(options.wear === undefined ? {} : { wear: options.wear }), ...(options.models === undefined ? {} : { models: options.models }) }
   const near = joined(buildItem(T, item, { ...wear, kit: createItemKit(T) }))
   const far = joined(buildItem(T, item, { ...wear, simple: true, detail: budgets.lod1Ratio, kit: createItemKit(T) }))
   const root = new T.LOD()
