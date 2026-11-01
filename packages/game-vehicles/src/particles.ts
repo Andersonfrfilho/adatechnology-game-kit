@@ -169,7 +169,7 @@ export function installParticles(kit: Kit): void {
     o = o || {}
     const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
     if (effects) return routeParticle(c, effects, type, pos, vel, o)
-    if (ROUTED_PARTICLE_TYPES[type]) warnOnce('game-vehicles.own-particles', 'game-vehicles drew its smoke, fire and dust with sprites of its own because the host lent no effects world (options.effects); pass the host effects so the puffs share one budget')
+    if (ROUTED_PARTICLE_TYPES[type] && !kit.effects) warnOnce('game-vehicles.own-particles', 'game-vehicles drew its smoke, fire and dust with sprites of its own because the host lent no effects world (options.effects); pass the host effects so the puffs share one budget')
     if (c.particles.length >= PARTICLE_LIMIT) {
       const idx = c.particles.findIndex(function (q: any) {
         return TRANSIENT_TYPES[q.type]

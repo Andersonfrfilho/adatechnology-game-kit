@@ -140,7 +140,7 @@ function loadSteps(room, options, lang) {
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang), rigItem: 'sedan' }) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
@@ -148,7 +148,7 @@ function loadSteps(room, options, lang) {
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
-  mod('urban', () => createUrbanModule({ locale: lang }))
+  mod('urban', () => createUrbanModule({ locale: lang, effects: room.vfx }))
   // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
   mod('player', () => createPlayerModule({ locale: lang }))
   // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body
