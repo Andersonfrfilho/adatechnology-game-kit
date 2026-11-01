@@ -108,6 +108,8 @@ const CHIP_ENERGY = 200
 const CHIP_SPLASH = 0.5
 /** Share of a unit's face the craters of shots take before the rest of the unit comes out. */
 const CRATER_SPENT = 0.6
+/** Crater widths from a free edge of a wall (its ends, its top) within which a shot tears the corner off out to the edge. */
+const EDGE_REACH = 1.5
 /** Metres a bar of an exposed cage bows out of the part's plane at full overload (stress 1.5 and up), per metre of bar. */
 const BAR_BOW = 0.08
 /** Metres of a joint one bullet shakes loose: a joint longer than this takes only its share of the wear. */
@@ -156,6 +158,19 @@ interface PartRT {
   bendLoad: number
   /** Overloaded in bending without steel that holds: when it fails it snaps in two instead of crumbling. */
   snap: boolean
+}
+
+/** A crater in the unit `cell` of `p`, along its axis `a` (`b` is the other axis of the plane), from the hit at `at` (part-local). */
+interface TornToEdgeOptions {
+  readonly p: PartRT
+  readonly cell: UnitCell
+  readonly a: number
+  readonly b: number
+  readonly at: number
+  readonly crater: [number, number]
+  readonly reach: number
+  /** The unit at this index of the part's grid was knocked out. */
+  readonly gone: (index: number) => boolean
 }
 
 interface JointRT {
@@ -1757,6 +1772,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const lo = cell.center[a] - cell.size[a] / 2 + w / 2, hi = cell.center[a] + cell.size[a] / 2 - w / 2
         size[a] = w
         center[a] = clamp(lp[a], lo, hi)
+        // at a free edge of the part (its ends, its top) nothing holds the corner: the crater tears off the piece out to the edge
+        const [from, to] = tornToEdge({ p, cell, a, b: a === u ? v : u, at: lp[a], crater: [center[a] - w / 2, center[a] + w / 2], reach: w * EDGE_REACH, gone: (k) => worn[k] === -1 })
+        size[a] = to - from
+        center[a] = (from + to) / 2
       }
       const taken = (cut[i] ?? 0) + size[u] * size[v]
       if (taken >= cell.size[u] * cell.size[v] * CRATER_SPENT) {
@@ -1794,6 +1813,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       solveStructure(o)
       collapseCheck(o, src)
     }
+  }
+
+  /**
+   * The span of a crater along axis `a` of the part (`crater`, inside the unit `cell`), carried out to the side of the unit when that side is free and the
+   * hit lands within `reach` of it: nothing holds that corner, so the shot tears the piece off. A side is free at the ends of the wall, at its top (not at
+   * its bottom, which stands on what holds it) and where the unit next to it was knocked out, so the edge a torn corner leaves tears off in turn.
+   */
+  const tornToEdge = (o: TornToEdgeOptions): [number, number] => {
+    const { p, cell, a, b, at, crater, reach, gone } = o
+    const half = p.dims[a] / 2
+    const lo = cell.center[a] - cell.size[a] / 2, hi = cell.center[a] + cell.size[a] / 2
+    const free = (side: number, sign: number): boolean => {
+      if (sign > 0 ? side >= half - 1e-6 : side <= -half + 1e-6) return sign > 0 || a !== planeAxes(p.thin)[1]
+      const probe = side + sign * 1e-3
+      return gridOf(p).some((c, k) => gone(k) && Math.abs(probe - c.center[a]) <= c.size[a] / 2 && Math.abs(cell.center[b] - c.center[b]) <= c.size[b] / 2)
+    }
+    if (at - lo <= reach && free(lo, -1)) return [lo, Math.max(crater[1], lo)]
+    if (hi - at <= reach && free(hi, 1)) return [Math.min(crater[0], hi), hi]
+    return crater
   }
 
   /** Metres across the crater a round of `energy` joules breaks through a unit: 6 cm for a pistol round, 10 for a rifle round. */

@@ -57,6 +57,17 @@ const COVER = 0.015
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
 
+/** A unit laid bare in a wall, a box in the house's space (centre and size) with its colour. */
+interface UnitBox { x: number; y: number; z: number; sx: number; sy: number; sz: number; colour: number }
+
+/** The part of `unit` inside `box` (house space, `[minX, minY, minZ, maxX, maxY, maxZ]`), or null when nothing of it is. */
+export function clipToBox(unit: UnitBox, box: readonly number[]): UnitBox | null {
+  const lo = [Math.max(unit.x - unit.sx / 2, box[0]!), Math.max(unit.y - unit.sy / 2, box[1]!), Math.max(unit.z - unit.sz / 2, box[2]!)]
+  const hi = [Math.min(unit.x + unit.sx / 2, box[3]!), Math.min(unit.y + unit.sy / 2, box[4]!), Math.min(unit.z + unit.sz / 2, box[5]!)]
+  if (hi[0]! - lo[0]! <= 1e-4 || hi[1]! - lo[1]! <= 1e-4 || hi[2]! - lo[2]! <= 1e-4) return null
+  return { x: (lo[0]! + hi[0]!) / 2, y: (lo[1]! + hi[1]!) / 2, z: (lo[2]! + hi[2]!) / 2, sx: hi[0]! - lo[0]!, sy: hi[1]! - lo[1]!, sz: hi[2]! - lo[2]!, colour: unit.colour }
+}
+
 /**
  * Damage of a masonry wall or a concrete member, drawn where it happened. At full detail (LOD 0) the first `chip` (a unit that came out, or a crater a
  * shot broke through one) or the opening of stage 2 moves the wall's range of the merged mesh to a mesh of its own with the same geometry, the same
@@ -204,6 +215,18 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return material
     }
 
+    /** The box, in the house's space, of what the merged mesh draws of a wall (its ranges, as the house built them): no unit of its damage goes past it. */
+    function drawnBounds(items: any[]): number[] {
+      house.updateMatrixWorld(true)
+      const box = new THREE.Box3(), toHouse = new THREE.Matrix4().copy(house.matrixWorld).invert()
+      for (const it of items) {
+        const a = it.mesh.userData._p0 || it.mesh.geometry.attributes.position.array
+        tmp.m.multiplyMatrices(toHouse, it.mesh.matrixWorld)
+        for (let k = it.v0; k < it.v1; k++) box.expandByPoint(tmp.p.set(a[k * 3], a[k * 3 + 1], a[k * 3 + 2]).applyMatrix4(tmp.m))
+      }
+      return [box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z]
+    }
+
     /** The mask in the plane of the host wall (along the wall × height), spanning the host and the beams it draws. */
     function maskOf(hostId: string, parts: string[]) {
       const host = structure.byId.get(hostId)
@@ -307,12 +330,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         || discs.some((d) => boxDistance(d.s, d.y, c.a, c.b, c.y0, c.y1) <= d.r + reach)
         || pits.some((p) => boxDistance(p.s, p.y, c.a, c.b, c.y0, c.y1) <= Math.max(p.rs, p.ry) + reach)
         || flakes.some((f) => boxDistance(f.s, f.y, c.a, c.b, c.y0, c.y1) <= 2 * f.r)
-      const list: { x: number; y: number; z: number; sx: number; sy: number; sz: number; colour: number }[] = []
+      const list: UnitBox[] = []
       const tone = (hex: number, k: number) => tmp.c.setHex(hex).multiplyScalar(k).getHex()
       for (const { c, part, units, thick, mid } of shown) {
         if (!near(c)) continue
         const centre = mask.start + (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2, len = c.b - c.a, h = c.y1 - c.y0
-        const at = (s: number, dy: number, d: number, colour: number) => list.push({ x: mask.alongU ? centre : mid, y, z: mask.alongU ? mid : centre, sx: mask.alongU ? s : d, sy: dy, sz: mask.alongU ? d : s, colour })
+        // the structure's part reaches past the drawn wall (half the thickness at each end, to close a corner): a unit is drawn only inside the wall drawn
+        const at = (s: number, dy: number, d: number, colour: number) => {
+          const unit = clipToBox({ x: mask.alongU ? centre : mid, y, z: mask.alongU ? mid : centre, sx: mask.alongU ? s : d, sy: dy, sz: mask.alongU ? d : s, colour }, view.bounds)
+          if (unit) list.push(unit)
+        }
         const base = fragmentMaterial(part.material).color.getHex()
         const n = noise2(centre * 3.1, y * 2.7, 0.07)
         if (units.mortar === 'concrete') {
@@ -374,7 +401,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         if (!parts.includes(partId)) return false
         const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
         view = {
-          host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0,
+          host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
           chips: new Map(parts.map((id) => [id, [] as any[]])), spalls: new Map(parts.map((id) => [id, [] as any[]])), openings: new Map(), flakes: 0,
         }
       }

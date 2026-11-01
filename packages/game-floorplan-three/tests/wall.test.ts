@@ -30,6 +30,34 @@ describe('wallPiece', () => {
     expect(report.problems).toEqual([])
   })
 
+  it('draws nothing outside the wall when shots knock the bricks out of its corners and ends', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    // the drawn wall: 10 m along x centred on the origin, 3 m high, 15 cm thick (the structure's part reaches past its ends by half the thickness)
+    const wall = new THREE.Box3(new THREE.Vector3(-5, 0, -0.075), new THREE.Vector3(5, 3, 0.075))
+    const rifle = (x: number, y: number) => world.shoot([x, y, 5], [0, 0, -1], 2100, 7.62, 'test')
+    for (const [x, y] of [[-4.97, 2.97], [-4.9, 2.85], [-4.97, 1.5], [-4.85, 1.5], [4.97, 2.97], [4.95, 0.6]]) for (let i = 0; i < 4; i++) rifle(x!, y!)
+    follower.update()
+    const units = root.getObjectByName('breach:wall_0_0') as any
+    expect(units.count).toBeGreaterThan(0)
+    root.updateMatrixWorld(true)
+    const drawn = new THREE.Box3(), cell = new THREE.Box3(), m = new THREE.Matrix4()
+    units.geometry.computeBoundingBox()
+    for (let i = 0; i < units.count; i++) {
+      units.getMatrixAt(i, m)
+      drawn.union(cell.copy(units.geometry.boundingBox).applyMatrix4(m).applyMatrix4(units.matrixWorld))
+    }
+    expect(drawn.min.x).toBeGreaterThanOrEqual(wall.min.x - 1e-6)
+    expect(drawn.max.x).toBeLessThanOrEqual(wall.max.x + 1e-6)
+    expect(drawn.max.y).toBeLessThanOrEqual(wall.max.y + 1e-6)
+    expect(drawn.min.z).toBeGreaterThanOrEqual(wall.min.z - 1e-6)
+    expect(drawn.max.z).toBeLessThanOrEqual(wall.max.z + 1e-6)
+    follower.dispose()
+  })
+
   it('is drawn by the house renderer, centred on the origin, with the wall meshes labelled by part', () => {
     const root = make().build(THREE)
     const labelled: string[] = []
