@@ -99,7 +99,7 @@ export type AudioEngine = {
    * The voice start queue as a `DeferredQueue` for a shared frame budget (`budget.register` attaches it and the queue stops scheduling its own tasks), or `null`
    * without `deferredStart`. Asking for it changes nothing.
    */
-  deferredQueue(): DeferredQueue | null
+  deferredQueue?(): DeferredQueue | null
   dispose(): void
 }
 

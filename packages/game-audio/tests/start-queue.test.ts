@@ -68,7 +68,7 @@ describe('voice start queue as a deferred queue', () => {
   })
 
   it('exposes the queue on the engine only with deferredStart', () => {
-    expect(createAudioEngine().deferredQueue()).toBeNull()
-    expect(createAudioEngine({ deferredStart: {} }).deferredQueue()?.id).toBe('audio.voices')
+    expect(createAudioEngine().deferredQueue?.()).toBeNull()
+    expect(createAudioEngine({ deferredStart: {} }).deferredQueue?.()?.id).toBe('audio.voices')
   })
 })

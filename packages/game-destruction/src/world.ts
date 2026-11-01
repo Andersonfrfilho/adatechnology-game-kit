@@ -3113,6 +3113,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       updateBound(o)
     },
     remove(id) {
+      impls.get(id)?.impl.dispose?.()
       objects.delete(id)
       impls.delete(id)
     },

@@ -1,3 +1,4 @@
+import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 
 /** What one vehicle's visuals give the shared crease queue: the normal smoothing and the triangle indexes still to finish. */
@@ -30,7 +31,7 @@ export function createCreaseQueue(): CreaseQueue {
   let attached = false
 
   const deferred: DeferredQueue = {
-    id: 'vehicles.crease',
+    id: DEFERRED_QUEUE_ID.VEHICLE_CREASE,
     pending(frame) {
       lastFrame = frame
       let units = 0

@@ -20,6 +20,8 @@ export interface DestructibleImpl {
   update?(dt: number): DestructionEvent[]
   state(): ObjectState
   reset?(): void
+  /** The world took the object out (`DestructionWorld.remove`): the impl lets go of what it joined (shared queues, listeners). */
+  dispose?(): void
   /** Same contract as `DestructionWorld.disassemble`: progress 0..1, or -1 when the tool cannot undo the joint. */
   disassemble?(jointId: string, tool: ToolKind, dt: number): number
   extinguish?(partId?: string): void

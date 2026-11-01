@@ -1,3 +1,4 @@
+import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 
 /** A sound waiting to be built: `run` builds it, `drop` gives its voice back when it waited too long to still make sense. */
@@ -15,7 +16,7 @@ export type StartQueue = {
   clear(): void
   readonly size: number
   /** The same queue as a `DeferredQueue` for a shared frame budget. Asking for it changes nothing: the queue drains by itself until a budget attaches it. */
-  deferredQueue(): DeferredQueue
+  deferredQueue?(): DeferredQueue
 }
 
 const nowMs = (): number => (typeof performance === 'undefined' ? Date.now() : performance.now())
@@ -34,7 +35,10 @@ function scheduleTask(task: () => void): void {
 }
 
 /** Builds voices in small timed slices between frames, so a burst (an explosion's debris, glass and metal) never lands inside one frame. */
-export function createStartQueue(options: StartQueueOptions = {}): StartQueue {
+/** The queue this package makes always has its `deferredQueue`; a third-party `StartQueue` may leave it out. */
+export type OwnStartQueue = StartQueue & { deferredQueue(): DeferredQueue }
+
+export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue {
   const budgetMs = options.budgetMs ?? 2
   const maxLatencyMs = options.maxLatencyMs ?? 250
   let jobs: StartJob[] = []
@@ -65,7 +69,7 @@ export function createStartQueue(options: StartQueueOptions = {}): StartQueue {
     scheduleTask(drain)
   }
 
-  const queue: StartQueue = {
+  const queue: OwnStartQueue = {
     push(job) {
       jobs.push({ ...job, queuedAt: nowMs() })
       schedule()
@@ -81,7 +85,7 @@ export function createStartQueue(options: StartQueueOptions = {}): StartQueue {
   }
 
   const deferredQueue: DeferredQueue = {
-    id: 'audio.voices',
+    id: DEFERRED_QUEUE_ID.AUDIO_VOICES,
     pending: () => jobs.length,
     run(deadline, clock) {
       let ran = 0

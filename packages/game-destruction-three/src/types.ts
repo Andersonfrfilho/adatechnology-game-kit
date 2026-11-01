@@ -182,7 +182,7 @@ export interface DestructionRenderer {
    * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
    */
-  deferredQueue(): DeferredQueue
+  deferredQueue?(): DeferredQueue
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
   /**
