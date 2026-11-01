@@ -36,6 +36,15 @@ describe('body material', () => {
 })
 
 describe('body batch', () => {
+  it('flags nothing for upload while empty, so an idle batch costs no buffer calls', () => {
+    const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 5 }), { max: 2, time })
+    const versions = (): number[] => Object.values(batch.mesh.geometry.attributes).map((attribute) => (attribute as THREE.BufferAttribute).version)
+    const before = versions()
+    batch.begin()
+    batch.end()
+    expect(versions()).toEqual(before)
+  })
+
   it('packs instances into the five attributes and counts them', () => {
     const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 5 }), { max: 2, time })
     batch.begin()
