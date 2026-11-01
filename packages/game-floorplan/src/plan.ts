@@ -2,7 +2,7 @@ import { CAR_CLEARANCE, DOOR_EDGE_CLEARANCE, MARGIN, PLAYER_RADIUS, TOL, WALL_TH
 import { buildWalls, clamp, eq, exteriorEdge, inRect, normalizeRoom, openingDepth, openingZones, r2, sharedEdge } from './geometry'
 import { STREAM } from './legacy-seeds'
 import { createRng, pickWeighted } from './rng'
-import { STYLES, WALL_TOP_HEIGHTS, resolveStyleId, styleOf } from './registry'
+import { registries, resolveStyleId, styleOf } from './registry'
 import { addExteriorDoorPaths } from './paths'
 import { clampLotToZone, enforcePermeability } from './zoning'
 import type { FloorDef, FloorplanOptions, Json, LotConfig, Plan, Rect, Room, StyleDef, TemplateDef, WindowDef, ZoneAdjustment, ZoneDef } from './types'
@@ -341,7 +341,7 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
     const type = pickWeighted(rLot, rule.type)
     const top = type === 'railing' ? 'none' : pickWeighted(rLot, rule.top)
     const wallHeight = type === 'railing' ? 1.2 : type === 'fence' ? (style.fenceHeight ?? 2.0) : style.height
-    return { type, material: type === 'wall' ? 'block' : type === 'fence' ? 'wire_mesh' : 'iron', height: wallHeight, top, totalHeight: r2(wallHeight + WALL_TOP_HEIGHTS[top]), thickness: WALL_THICKNESS }
+    return { type, material: type === 'wall' ? 'block' : type === 'fence' ? 'wire_mesh' : 'iron', height: wallHeight, top, totalHeight: r2(wallHeight + registries().WALL_TOP_HEIGHTS[top]), thickness: WALL_THICKNESS }
   }
   const A: Record<string, Json> = { front: boundary(style.front), left: boundary(style.sideYard), right: boundary(style.sideYard), back: boundary(style.back) }
   const seg = (side: string, u0: number, v0: number, u1: number, v1: number) => {
@@ -381,4 +381,4 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
   plan.lot = lot
 }
 
-export { inRect, MARGIN, STYLES }
+export { inRect, MARGIN }

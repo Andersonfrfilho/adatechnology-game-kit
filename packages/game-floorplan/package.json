@@ -44,6 +44,9 @@
     "test": "vitest run",
     "viewer:build": "node viewer/build-viewer.mjs"
   },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:^"
+  },
   "devDependencies": {
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

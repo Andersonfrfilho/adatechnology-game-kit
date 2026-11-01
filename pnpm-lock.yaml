@@ -505,6 +505,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-floorplan:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:^
@@ -1932,6 +1936,12 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../../packages/game-contracts
+      '@adatechnology/game-floorplan':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-residential
       '@adatechnology/game-floorplan-three':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-three

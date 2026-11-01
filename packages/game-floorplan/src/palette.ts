@@ -1,6 +1,6 @@
 import { clamp } from './geometry'
 import { STREAM } from './legacy-seeds'
-import { PALETTE_STYLES, ROOM_COLORS, STATE_PLUGINS, resolveStyleId } from './registry'
+import { registries, resolveStyleId } from './registry'
 import { createRng } from './rng'
 import type { Rng } from './rng'
 import type { Hsl } from './types'
@@ -102,8 +102,8 @@ export type Palette = { meta: { seed: number | string; style: string; state: str
 export function palette(o?: PaletteOptions): Palette {
   const opt = o || {}
   let style = resolveStyleId(opt.style || 'budget')
-  if (!PALETTE_STYLES[style]) style = PALETTE_STYLES.mid ? 'mid' : Object.keys(PALETTE_STYLES)[0]
-  const def = PALETTE_STYLES[style]
+  if (!registries().PALETTE_STYLES[style]) style = registries().PALETTE_STYLES.mid ? 'mid' : Object.keys(registries().PALETTE_STYLES)[0]
+  const def = registries().PALETTE_STYLES[style]
   const state = opt.state || 'normal'
   const seed = opt.seed == null ? 1 : opt.seed
   const rng = createRng(seed, STREAM.palettePrefix + (def.seedKey ?? style))
@@ -121,7 +121,7 @@ export function palette(o?: PaletteOptions): Palette {
   const { wallMode, sMax } = early
   const R: Record<string, Hsl> = Object.assign({}, early.roles)
   const ctx: PaletteContext = Object.assign({ style, sMax, wallMode, generalFloor: early.generalFloor }, draw)
-  for (const c of ROOM_COLORS) {
+  for (const c of registries().ROOM_COLORS) {
     const [wh, wl] = c.wall(ctx)
     R['wall_' + c.type] = hsl(wh, c.neutral ? Math.min(0.16, sMax) : clamp(jit(sMax * 0.75, sMax * 0.5), 0.03, sMax), jit(wl, 0.03))
     const pi = c.floor || early.generalFloor
@@ -129,7 +129,7 @@ export function palette(o?: PaletteOptions): Palette {
   }
   Object.assign(R, def.late(draw, early))
   // state hook (e.g. dirt: desaturate and darken)
-  STATE_PLUGINS[state]?.adjustPalette?.(R)
+  registries().STATE_PLUGINS[state]?.adjustPalette?.(R)
   // anti-clash rules: floor never saturated if the wall is; minimum lightness separation
   const adjust = (color: Hsl, ref: Hsl, min: number, preferredDir?: number) => {
     for (let i = 0; i < 60; i++) {
@@ -140,7 +140,7 @@ export function palette(o?: PaletteOptions): Palette {
       color.l = clamp(color.l + dir * 0.015, 0.04, 0.96)
     }
   }
-  const types = ROOM_COLORS.map((c) => c.type)
+  const types = registries().ROOM_COLORS.map((c) => c.type)
   for (const c of types) {
     const w = R['wall_' + c]
     const p = R['floor_' + c]

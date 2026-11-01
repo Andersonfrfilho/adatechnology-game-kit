@@ -3,7 +3,7 @@ import { carCandidates } from './parking'
 import { clearRect, extent, insideUnion, overlaps, r2, usableParts } from './geometry'
 import { createGrid, reachable } from './grid'
 import { blocksWindow, windowZone, windowsOfRoom, zonesOfFloor } from './queries'
-import { CATALOG, SEED_KEYS } from './registry'
+import { registries } from './registry'
 import { weightedOrder } from './rng'
 import type { Rng } from './rng'
 import type { FurnitureDef, Json, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
@@ -12,7 +12,7 @@ function candidatesOf(cats: Weights): { it: FurnitureDef; weight: number }[] {
   const out: { it: FurnitureDef; weight: number }[] = []
   for (const [cat, weight] of Object.entries(cats)) {
     const exact = cat[0] === '='
-    const its = Object.values(CATALOG).filter((i) => !i.decor && (exact ? i.type === cat.slice(1) : !i.exactOnly && (i.category === cat || i.type === cat)))
+    const its = Object.values(registries().CATALOG).filter((i) => !i.decor && (exact ? i.type === cat.slice(1) : !i.exactOnly && (i.category === cat || i.type === cat)))
     for (const it of its) out.push({ it, weight: weight / its.length })
   }
   return out
@@ -121,7 +121,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       low: it.low,
       aabb: r.map(r2),
       _r: r,
-      _seedId: SEED_KEYS.items[id] ?? id,
+      _seedId: registries().SEED_KEYS.items[id] ?? id,
     }
     if (it.overhead) m.overhead = !overheadOff
     if (it.category === 'car') {
