@@ -93,3 +93,16 @@ braço esticado, e na terceira a mira para cima enfiava os braços no corpo.
 Nenhum objeto (móvel, item, veículo, parede, estrutura, planta) é dado como pronto sem passar nos vinte e um critérios de
 [`docs/criterios-fisica-objetos.md`](docs/criterios-fisica-objetos.md) (material e massa, tiro, golpes, explosão e fogo, destruição no padrão da latinha, pegar,
 usar, entre outros objetos, personagem esbarrando, ser empurrado, persistência, animações com o item inteiro e quebrado, som, peso, queda, líquidos, reação em cadeia, desgaste visual, desempenho, NPCs e zumbis, inventário), testado na sala de testes com print.
+
+## 7. Veículos: o que deu errado e as regras para não repetir — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-11-01, depois de carros que passavam nos testes e estavam errados na tela: tiro na janela lateral furava o "teto", tiro no para-brisa furava o
+"capô", tiro no ar acima do capô acertava o carro, furo ficava parado no ar quando a porta abria, trinca nascia num canto do vidro e a borracha da janela ficava para trás.
+
+- **O tiro acerta o que está desenhado.** A caixa da peça só diz onde procurar; quem responde é a superfície (`DestructibleImpl.surfaceRay`). Ponto, peça e normal vêm dela.
+- **Toda marca pertence à peça que a recebeu** (furo, trinca, amassado, queimado): é filha da peça, e vai com ela quando a porta, o capô ou a tampa se movem. Proibido marca solta no `c.vehicle` de peça móvel.
+- **Todo vidro desenhado é uma peça de vidro**, mesmo sem zona de dano própria: nada de vidro que responde como o aço da cabine.
+- **O que o desenho já mostra junto sai junto**: ao abrir, a porta leva pele, forro, borda, vidro, borracha e maçaneta.
+- **Camada nova não substitui a antiga sem provar o mesmo comportamento**: o PR lista o que a antiga fazia e o teste mostra que continua (foi assim que o furo da camada `destructible/` perdeu o que `zone-decals` já fazia).
+- **Todo modelo passa pelo teste de aceitação** `packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts`, na frota inteira, não numa amostra: contar filhos ou eventos não prova comportamento, o teste mede posição no mundo.
+- **Modelo novo ou mudança em porta, vidro, furo ou colisão** atualiza [`docs/veiculos-verificacao.md`](docs/veiculos-verificacao.md) e traz print no jogo real com a porta aberta depois do tiro. Pendência fica escrita lá, nunca escondida.

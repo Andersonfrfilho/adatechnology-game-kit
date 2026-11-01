@@ -442,6 +442,8 @@ export interface Hit {
   duration?: number
   /** `world` (default) or `local` to the object. */
   space?: 'world' | 'local'
+  /** The normal of the surface at `point`, when the ray that found it knows it. */
+  normal?: Vec3
   /** Who caused it (passed through to events). */
   source?: string
   /** Projectile mass in grams (ballistic): the penetration of a body needs it, the energy alone does not say how much a bullet pushes. */
