@@ -6,7 +6,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { AnimationClipSpec, HandTargets, HostReach } from '@adatechnology/game-contracts'
-import { createDoorUse, DOOR_USE_DEFAULTS } from '@adatechnology/game-player'
+import { createDoorUse, DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT, DOOR_USE_DEFAULTS } from '@adatechnology/game-player'
 import type { DoorUsePhase, DoorUseRules } from '@adatechnology/game-player'
 import { PLAYER_RADIUS } from './player'
 import type { Player } from './player'
@@ -30,6 +30,10 @@ const DRAWER_TRAVEL = 0.3
 /** Standing by a turning leaf: this far past the arc of its free edge, and this far out in front of its face. */
 const CLEAR_OF_ARC = 0.3
 const OUT_IN_FRONT = 0.42
+/** The least a player stands in front of a handle, metres on the floor. */
+const MIN_IN_FRONT = PLAYER_RADIUS + 0.04
+/** The right shoulder joint is this far to the right of the body's middle, metres. */
+const SHOULDER_SIDE = 0.2
 /** Close enough to the place, metres; the longest walk to it before the hand goes anyway, seconds. */
 const ARRIVED = 0.05
 /** How fast the head turns to the handle (share per second). */
@@ -49,6 +53,8 @@ export type RoomDoorOptions = {
   readonly camera: THREE_NS.Object3D
   readonly arena: { readonly limit: number; readonly colliders: ReadonlyArray<readonly [number, number, number, number]>; readonly ids: ReadonlyArray<string | null> }
   readonly rules?: Partial<DoorUseRules>
+  /** The world position of the body's right shoulder (the arm reach is measured from it); without one the shoulder is taken at the standard height over the feet. */
+  shoulder?(): Vec3 | null
   /** What the eye rests on within reach, best first (the crosshair, then what the eye faces over the shoulder). */
   pick(): ReadonlyArray<{ readonly objectId: string; readonly part: string; readonly point: Vec3 }>
   /** The leaves of an object (none when it has nothing to open). */
@@ -108,12 +114,17 @@ type Using = {
   /** Where the hand holds the leaf, in the leaf's own space. */
   readonly grip: THREE_NS.Vector3
   readonly pull: boolean
+  /** Where the grip is with the leaf at its goal. */
+  readonly goalAt: THREE_NS.Vector3 | null
   phase: DoorUsePhase
   progress: number
   /** Seconds walked to the handle, and whether the player got there. */
   walked: number
   there: boolean
 }
+
+/** Where a leaf that goes away is pushed from: the handle's place when the leaf is at its goal (null: the side the player is on). */
+type PushStand = { readonly goalAt: THREE_NS.Vector3 | null }
 
 const key = (objectId: string, part: string): string => `${objectId}\0${part}`
 
@@ -135,23 +146,47 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
   let using: Using | null = null
   /** A module's own leaf under the hand (a house door). */
   let reaching: { readonly reach: HostReach; phase: Exclude<DoorUsePhase, 'idle'>; time: number; progress: number; walked: number; there: boolean } | null = null
+  /** Where the hand was the last frame it held or pushed (world), so letting go comes back from there and never from a handle out of reach. */
+  const lastHold = new THREE.Vector3()
+  const shoulderAt = new THREE.Vector3()
+  /** The body's shoulder now. */
+  const shoulderPoint = (): THREE_NS.Vector3 => {
+    const s = options.shoulder?.()
+    return s ? shoulderAt.set(s[0], s[1], s[2]) : shoulderAt.set(player.x + Math.cos(player.yaw) * SHOULDER_SIDE, player.feet + DOOR_SHOULDER_HEIGHT, player.z - Math.sin(player.yaw) * SHOULDER_SIDE)
+  }
+  /** Whether a point is within the arm's reach. */
+  const withinReach = (p: THREE_NS.Vector3): boolean => shoulderPoint().distanceTo(p) <= DOOR_ARM_REACH
   const rules = { ...DOOR_USE_DEFAULTS, ...options.rules }
 
   /** Where the hand is going or holding now, and how: the leaf in use or the module's leaf. */
-  const holding = (): { phase: Exclude<DoorUsePhase, 'idle'>; progress: number; at: THREE_NS.Vector3; pull: boolean } | null => {
+  const holding = (): { phase: Exclude<DoorUsePhase, 'idle'>; progress: number; at: THREE_NS.Vector3; pull: boolean; hinge: THREE_NS.Vector3 | null } | null => {
     if (reaching) {
       const h = reaching.reach.handle()
-      return { phase: reaching.phase, progress: reaching.progress, at: new THREE.Vector3(h[0], h[1], h[2]), pull: reaching.reach.pull ?? true }
+      const hinge = reaching.reach.hinge?.()
+      return { phase: reaching.phase, progress: reaching.progress, at: new THREE.Vector3(h[0], h[1], h[2]), pull: reaching.reach.pull ?? true, hinge: hinge ? new THREE.Vector3(hinge[0], hinge[1], hinge[2]) : null }
     }
     if (!using || control.phase === 'idle') return null
+    // the hand is back at rest while the leaf finishes on its own
+    if (control.phase === 'release' && using.progress >= 1) return null
     using.obj.updateMatrixWorld(true)
-    return { phase: control.phase, progress: using.progress, at: using.obj.localToWorld(new THREE.Vector3().copy(using.grip)), pull: using.pull }
+    const hinge = slides(using.leaf.clip, using.leaf.part) ? null : using.obj.getWorldPosition(new THREE.Vector3())
+    return { phase: control.phase, progress: using.progress, at: using.obj.localToWorld(new THREE.Vector3().copy(using.grip)), pull: using.pull, hinge }
+  }
+  /** The palm of a shove: the farthest point of the leaf, from the handle back toward the hinge, that the arm reaches; null when none is (the hand goes back to rest). */
+  const pushPoint = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null): THREE_NS.Vector3 | null => {
+    const steps = 12
+    for (let i = 0; i <= steps; i++) {
+      const p = hinge ? handle.clone().lerp(hinge, (i / steps) * 0.6) : handle
+      if (withinReach(p)) return p.clone()
+      if (!hinge) return null
+    }
+    return null
   }
   /**
    * Where the player takes the handle from. A turning leaf: beside its free edge, past the arc it sweeps and a little out in front, on the side the player is on, so the leaf
    * swings by and not into the body (a person opens a fridge standing by the handle side). A drawer or a leaf with no hinge known: straight in front of the handle.
    */
-  const standFor = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null, slide: boolean): [number, number] => {
+  const standFor = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null, slide: boolean, pushed: PushStand | null): [number, number] => {
     if (!hinge || slide) {
       const dx = handle.x - player.x
       const dz = handle.z - player.z
@@ -162,20 +197,30 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     let ax = handle.x - hinge.x
     let az = handle.z - hinge.z
     const width = Math.hypot(ax, az)
-    if (width < 0.05) return standFor(handle, null, false)
+    if (width < 0.05) return standFor(handle, null, false, pushed)
     ax /= width
     az /= width
     // out of the face, toward the player
     let nx = -az
     let nz = ax
-    if ((player.x - handle.x) * nx + (player.z - handle.z) * nz < 0) {
+    // a leaf that goes away is pushed from the side it leaves: the one opposite to where its handle is going; else the side the player is on
+    const side = pushed?.goalAt ? (handle.x - pushed.goalAt.x) * nx + (handle.z - pushed.goalAt.z) * nz : (player.x - handle.x) * nx + (player.z - handle.z) * nz
+    if (side < 0) {
       nx = -nx
       nz = -nz
     }
-    const x = hinge.x + ax * (width + CLEAR_OF_ARC) + nx * OUT_IN_FRONT
-    const z = hinge.z + az * (width + CLEAR_OF_ARC) + nz * OUT_IN_FRONT
+    // never farther from the handle than the arm reaches (the shoulder sits to the side of the body's middle): a leaf that goes away sweeps clear of the body, so it is pushed from
+    // right in front of the handle; one that comes toward the body is taken as near as the arc it sweeps allows
+    const dropToHandle = Math.abs(player.feet + DOOR_SHOULDER_HEIGHT - handle.y)
+    const inFront = Math.max(MIN_IN_FRONT, Math.sqrt(Math.max(0, DOOR_ARM_REACH ** 2 - dropToHandle ** 2 - SHOULDER_SIDE ** 2)) * 0.95)
+    // in front of the face as far as the arm needs, and for a leaf that comes toward the body as far along past the arc as that leaves room for
+    const out = pushed ? inFront : Math.min(OUT_IN_FRONT, inFront)
+    const along = pushed ? 0 : Math.min(CLEAR_OF_ARC, Math.sqrt(Math.max(0, inFront * inFront - out * out)))
+    // the right shoulder, not the body's middle, is the one in front of the handle: the body stands a shoulder's width to the left of it
+    const x = handle.x + ax * along + nx * out - nz * SHOULDER_SIDE
+    const z = handle.z + az * along + nz * out + nx * SHOULDER_SIDE
     // something stands there (the next cabinet, a nightstand): in front of the handle, and the leaf will make the player step back
-    return player.canStand(x, z) ? [x, z] : standFor(handle, null, false)
+    return player.canStand(x, z) ? [x, z] : standFor(handle, null, false, pushed)
   }
   /** The head turns to the handle as the player goes for it. */
   const face = (handle: THREE_NS.Vector3, dt: number): void => {
@@ -193,8 +238,8 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     player.setPose([player.x, eye.y, player.z], player.yaw + dYaw * k, player.pitch + (pitch - player.pitch) * k)
   }
   /** The player steps toward where the handle is taken from. Answers true once there, or when nothing more can be gained (in the way, or walking too long). */
-  const approach = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null, slide: boolean, dt: number, walked: number): boolean => {
-    const [x, z] = standFor(handle, hinge, slide)
+  const approach = (handle: THREE_NS.Vector3, hinge: THREE_NS.Vector3 | null, slide: boolean, pushed: PushStand | null, dt: number, walked: number): boolean => {
+    const [x, z] = standFor(handle, hinge, slide, pushed)
     const dx = x - player.x
     const dz = z - player.z
     const d = Math.hypot(dx, dz)
@@ -390,6 +435,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     if (goal !== null) lastGoals.set(key, goal)
     // a leaf that comes toward the body is pulled, one that goes away is pushed: compare the leaf open and closed with where the player stands
     let pull = true
+    let goalAt: THREE_NS.Vector3 | null = null
     if (goal !== null) {
       obj.updateMatrixWorld(true)
       options.pose(objectId, leaf.part, leaf.clip, 1)
@@ -402,8 +448,9 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       const dOpen = Math.hypot(openAt.x - player.x, openAt.z - player.z)
       const dShut = Math.hypot(shutAt.x - player.x, shutAt.z - player.z)
       pull = goal === 1 ? dOpen <= dShut : dShut <= dOpen
+      goalAt = goal === 1 ? openAt : shutAt
     }
-    using = { objectId, leaf, obj, grip, pull, phase: control.phase, progress: 0, walked: 0, there: goal === null }
+    using = { objectId, leaf, obj, grip, pull, goalAt, phase: control.phase, progress: 0, walked: 0, there: goal === null }
     const at = obj.localToWorld(grip.clone())
     if (goal === null) {
       options.sound('leaf_rattle', [at.x, at.y, at.z], 0.6)
@@ -448,7 +495,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
           const hinge = r.reach.hinge?.()
           r.walked += dt
           const g = new THREE.Vector3(h[0], h[1], h[2])
-          r.there = approach(g, hinge ? new THREE.Vector3(hinge[0], hinge[1], hinge[2]) : null, false, dt, r.walked)
+          r.there = approach(g, hinge ? new THREE.Vector3(hinge[0], hinge[1], hinge[2]) : null, false, r.reach.pull === false ? { goalAt: null } : null, dt, r.walked)
           face(g, dt)
           if (r.there) r.time = 0
         } else if (r.phase === 'reach') {
@@ -461,6 +508,18 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
           }
         } else if (r.phase === 'swing' || r.phase === 'rattle') {
           r.progress = Math.min(1, r.time / (r.phase === 'rattle' ? rules.rattleSeconds : Math.max(0.05, r.reach.seconds)))
+          const h = r.reach.handle()
+          if (r.phase === 'swing' && !withinReach(tmp.set(h[0], h[1], h[2]))) {
+            r.phase = r.reach.pull === false ? 'push' : 'release'
+            r.time = 0
+            r.progress = 0
+          } else if (r.progress >= 1) {
+            r.phase = 'release'
+            r.time = 0
+            r.progress = 0
+          }
+        } else if (r.phase === 'push') {
+          r.progress = Math.min(1, r.time / rules.pushSeconds)
           if (r.progress >= 1) {
             r.phase = 'release'
             r.time = 0
@@ -481,11 +540,17 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
         u.obj.updateMatrixWorld(true)
         u.walked += dt
         const g = u.obj.localToWorld(new THREE.Vector3().copy(u.grip))
-        u.there = approach(g, u.obj.getWorldPosition(new THREE.Vector3()), slides(u.leaf.clip, u.leaf.part), dt, u.walked)
+        u.there = approach(g, u.obj.getWorldPosition(new THREE.Vector3()), slides(u.leaf.clip, u.leaf.part), u.pull ? null : { goalAt: u.goalAt }, dt, u.walked)
         face(g, dt)
         if (!u.there) return
       }
-      const s = control.step(dt, (from, to) => isFree(u, from, to))
+      const s = control.step(dt, (from, to) => isFree(u, from, to), {
+        pull: u.pull,
+        reaches: () => {
+          u.obj.updateMatrixWorld(true)
+          return withinReach(u.obj.localToWorld(tmp.copy(u.grip)))
+        },
+      })
       u.phase = s.phase
       u.progress = s.progress
       openings.set(key(u.objectId, u.leaf.part), s.opening)
@@ -513,15 +578,24 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     handTargets() {
       const h = holding()
       if (!h || (h.phase === 'rattle' && h.progress > 0.92)) return null
-      const { at, phase, progress } = h
+      const { phase, progress } = h
+      let at = h.at
       // the rattle shakes the handle under the hand
       if (phase === 'rattle') at.y += Math.sin(progress * 60) * 0.012
+      // a shove puts the palm on the leaf, as far from the handle as the arm needs to reach it
+      const shove = phase === 'push' ? pushPoint(at, h.hinge) : null
+      if (shove) at = shove
       camera.updateMatrixWorld(true)
       const rest = camera.localToWorld(new THREE.Vector3(HAND_REST[0], HAND_REST[1], HAND_REST[2]))
-      // reach: the hand travels to the handle; release: back to the chest
-      const k = phase === 'reach' ? progress : phase === 'release' ? 1 - progress : 1
+      // reach: the hand travels to the handle; release: back to the chest from where it was (a handle out of reach is never the way back)
+      const k = phase === 'reach' ? progress : phase === 'release' ? 1 - progress : phase === 'push' && !shove ? 0 : 1
       const ease = k * k * (3 - 2 * k)
-      const pos = rest.lerp(at, ease)
+      const pos = phase === 'release' ? rest.lerp(lastHold, ease) : rest.lerp(at, ease)
+      // the palm never goes past the arm: a handle out of reach (the player could not get near it) leaves the hand at the end of the arm, not stretched after it
+      const shoulder = shoulderPoint()
+      const stretch = pos.distanceTo(shoulder)
+      if (stretch > DOOR_ARM_REACH) pos.copy(shoulder).addScaledVector(pos.clone().sub(shoulder), DOOR_ARM_REACH / stretch)
+      if (phase !== 'release') lastHold.copy(pos)
       // a hand round a vertical handle: fingers away from the player, thumb up (HandPose of game-contracts: +x to the knuckles, +z to the little finger)
       const way = new THREE.Vector3(at.x - player.x, 0, at.z - player.z)
       if (way.lengthSq() < 1e-6) way.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw))
@@ -529,7 +603,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       const down = new THREE.Vector3(0, -1, 0)
       const back = new THREE.Vector3().crossVectors(down, way)
       const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(way, back, down))
-      const grip = phase === 'reach' ? 0.15 + 0.75 * progress : phase === 'release' ? 0.9 * (1 - progress) : 0.9
+      const grip = phase === 'reach' ? 0.15 + 0.75 * progress : phase === 'release' ? 0.9 * (1 - progress) : phase === 'push' ? 0.9 - 0.6 * progress : 0.9
       return { R: { position: [pos.x, pos.y, pos.z], quaternion: [q.x, q.y, q.z, q.w] }, L: null, grip }
     },
     reachFor(reach) {

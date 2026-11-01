@@ -1,10 +1,12 @@
 /**
  * Opening and closing a hinged or sliding leaf by hand (a house door, a wardrobe or fridge door, a drawer, a car door, a hood): the hand reaches the handle, the leaf
  * follows the hand at a speed set by its mass, stops where something is in its way, and a locked leaf only rattles.
+ * The player does not follow the leaf: when the handle leaves arm reach a leaf that goes away is shoved on (`push`) and one that comes toward the body is let go (`release`),
+ * and either one finishes its swing on its own.
  * Engine-agnostic: the host says how open the leaf is (0 closed, 1 open) and answers whether it can go to a new opening; this says how far it goes each step.
  */
 
-export type DoorUsePhase = 'idle' | 'reach' | 'swing' | 'release' | 'rattle'
+export type DoorUsePhase = 'idle' | 'reach' | 'swing' | 'push' | 'release' | 'rattle'
 export type DoorUseBlock = 'locked' | 'obstacle' | null
 
 /** Every number of the use; a game overrides what it wants (`createDoorUse(rules)`). */
@@ -13,6 +15,8 @@ export interface DoorUseRules {
   readonly reachSeconds: number
   /** A full swing: `base + perKg * mass` of the leaf, between `min` and `max` seconds (a fridge door is quick, a car door slower, a steel door slower still). */
   readonly swingSeconds: { readonly base: number; readonly perKg: number; readonly min: number; readonly max: number }
+  /** The shove of a leaf that goes away once the handle is out of reach, seconds. */
+  readonly pushSeconds: number
   /** The hand letting go and coming back, seconds. */
   readonly releaseSeconds: number
   /** How long a locked leaf is shaken before the hand gives up, seconds. */
@@ -26,11 +30,17 @@ export interface DoorUseRules {
 export const DOOR_USE_DEFAULTS: DoorUseRules = {
   reachSeconds: 0.3,
   swingSeconds: { base: 0.45, perKg: 0.02, min: 0.45, max: 1.6 },
+  pushSeconds: 0.18,
   releaseSeconds: 0.22,
   rattleSeconds: 0.6,
   stepFraction: 0.04,
   endTolerance: 0.02,
 }
+
+/** The body's shoulder, metres over the feet (the avatar's door pose is drawn for it). */
+export const DOOR_SHOULDER_HEIGHT = 1.42
+/** The farthest a handle is from the shoulder joint for the palm to stay on it (measured on the body in both views: the palm is 0.06 m off up to 0.5, 0.11 at 0.55, 0.24 at 0.65). */
+export const DOOR_ARM_REACH = 0.55
 
 export type DoorUseTarget = {
   /** How open the leaf is now, 0 closed to 1 open. */
@@ -57,6 +67,8 @@ export type DoorUseStep = {
 export const swingSecondsFor = (massKg: number, rules: DoorUseRules = DOOR_USE_DEFAULTS): number =>
   Math.min(rules.swingSeconds.max, Math.max(rules.swingSeconds.min, rules.swingSeconds.base + rules.swingSeconds.perKg * Math.max(0, massKg)))
 
+export type DoorUseHand = { readonly reaches: () => boolean; readonly pull: boolean }
+
 export interface DoorUse {
   readonly phase: DoorUsePhase
   /** Where the leaf is going: 1 opening, 0 closing. */
@@ -68,8 +80,12 @@ export interface DoorUse {
    * Answers the goal (1 open, 0 closed), or null when the leaf is locked (it rattles instead).
    */
   begin(target: DoorUseTarget): 0 | 1 | null
-  /** Advances the use; `isFree(from, to)` answers whether the leaf can go from one opening to the other (nothing in the way of its sweep). */
-  step(dt: number, isFree: (from: number, to: number) => boolean): DoorUseStep
+  /**
+   * Advances the use; `isFree(from, to)` answers whether the leaf can go from one opening to the other (nothing in the way of its sweep). `hand` says whether the handle is still
+   * within arm reach after the step and whether the leaf comes toward the body (`pull`): once the handle is out of reach the swing hands over to `push` (a leaf going away is shoved
+   * on) or `release` (a leaf coming toward the body is let go) and the leaf finishes on its own. Without `hand` the hand never lets go.
+   */
+  step(dt: number, isFree: (from: number, to: number) => boolean, hand?: DoorUseHand): DoorUseStep
   /** Lets go at once. */
   cancel(): void
 }
@@ -82,8 +98,32 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
   let time = 0
   let swing = 1
   let start = 0
+  /** The hand let go and the leaf is still going to its goal on its own. */
+  let coasting = false
 
   const out = (progress: number, arrived = false, b: DoorUseBlock = null): DoorUseStep => ({ phase, opening, progress: Math.max(0, Math.min(1, progress)), block: b, arrived })
+
+  /** Moves the leaf toward its goal for `dt` seconds, a little at a time so it stops at the first thing in its way and not past it. */
+  const advance = (dt: number, isFree: (from: number, to: number) => boolean): 'moving' | 'stopped' | 'arrived' => {
+    const want = goal - opening
+    const reach = Math.min(Math.abs(want), dt / swing)
+    let moved = 0
+    while (moved < reach - 1e-9) {
+      const inc = Math.min(r.stepFraction, reach - moved)
+      const next = opening + Math.sign(want) * inc
+      if (!isFree(opening, next)) return 'stopped'
+      opening = next
+      moved += inc
+    }
+    return Math.abs(goal - opening) < 1e-6 ? 'arrived' : 'moving'
+  }
+
+  /** The hand coming back to rest; it waits there (progress 1) while the leaf still goes on its own. */
+  const releaseOut = (arrived: boolean, b: DoorUseBlock = null): DoorUseStep => {
+    const p = time / r.releaseSeconds
+    if (p >= 1 && !coasting) phase = 'idle'
+    return out(p, arrived, b)
+  }
 
   return {
     get phase() {
@@ -98,6 +138,7 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
     begin(target) {
       opening = Math.max(0, Math.min(1, target.opening))
       time = 0
+      coasting = false
       if (target.locked) {
         phase = 'rattle'
         return null
@@ -111,7 +152,7 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
       phase = phase === 'swing' ? 'swing' : 'reach'
       return goal
     },
-    step(dt, isFree) {
+    step(dt, isFree, hand) {
       if (phase === 'idle') return out(0)
       time += dt
       if (phase === 'rattle') {
@@ -129,42 +170,41 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
         time = 0
         start = opening
       }
-      if (phase === 'swing') {
-        const want = goal - opening
-        const reach = Math.min(Math.abs(want), dt / swing)
-        // the sweep is tested a little at a time, so a leaf stops at the first thing in its way and not past it
-        let moved = 0
-        let stopped = false
-        while (moved < reach - 1e-9) {
-          const inc = Math.min(r.stepFraction, reach - moved)
-          const next = opening + Math.sign(want) * inc
-          if (!isFree(opening, next)) {
-            stopped = true
-            break
-          }
-          opening = next
-          moved += inc
-        }
+      if (phase === 'swing' || phase === 'push' || coasting) {
+        const result = advance(dt, isFree)
         const travel = Math.abs(goal - start) || 1
-        if (stopped) {
-          phase = 'release'
-          time = 0
-          return out(1 - Math.abs(goal - opening) / travel, false, 'obstacle')
+        const progress = 1 - Math.abs(goal - opening) / travel
+        const inHand = phase !== 'release'
+        if (result === 'stopped' || result === 'arrived') {
+          if (result === 'arrived') opening = goal
+          coasting = false
+          if (inHand) {
+            phase = 'release'
+            time = 0
+          }
+          if (result === 'arrived') return inHand ? out(1, true) : releaseOut(true)
+          return inHand ? out(progress, false, 'obstacle') : releaseOut(false, 'obstacle')
         }
-        if (Math.abs(goal - opening) < 1e-6) {
-          opening = goal
-          phase = 'release'
+        if (inHand && hand && !hand.reaches()) {
           time = 0
-          return out(1, true)
+          if (hand.pull) {
+            phase = 'release'
+            coasting = true
+          } else phase = 'push'
+          return out(0)
         }
-        return out(1 - Math.abs(goal - opening) / travel)
+        if (phase === 'push') {
+          if (time >= r.pushSeconds) {
+            phase = 'release'
+            time = 0
+            coasting = true
+            return out(0)
+          }
+          return out(time / r.pushSeconds)
+        }
+        if (phase === 'swing') return out(progress)
       }
-      // release
-      const p = time / r.releaseSeconds
-      if (p >= 1) {
-        phase = 'idle'
-      }
-      return out(p, false, null)
+      return releaseOut(false)
     },
     cancel() {
       phase = 'idle'

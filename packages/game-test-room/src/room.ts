@@ -719,6 +719,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /** Locked leaves: `objectId\0part`, or `objectId\0*` for every leaf of the object. */
   const lockedLeaves = new Set<string>()
+  const doorShoulder = new THREE.Vector3()
   const doors = createRoomDoors({
     THREE,
     player,
@@ -726,6 +727,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     arena: { limit: arenaSize, colliders: standingColliders, ids: standingIds },
     ...(options.doors ? { rules: options.doors } : {}),
+    shoulder: () => {
+      const joint = avatar?.shoulder?.('R')
+      if (!joint) return null
+      joint.getWorldPosition(doorShoulder)
+      return [doorShoulder.x, doorShoulder.y, doorShoulder.z]
+    },
     pick: () => {
       if (heldPiece) return []
       aim()

@@ -112,7 +112,7 @@ export type AvatarUpdate = {
    * A hand on a door, lid or drawer: `reach` to the handle, `swing` with it (`pull` toward the body or pushed away), `release` back, `rattle` on a locked one.
    * `height` is the hand over the feet, metres (a fridge handle, a car door, a low drawer).
    */
-  door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
+  door?: { readonly phase: 'reach' | 'swing' | 'push' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
 }
 
 export type PlayPoseOptions = {
@@ -353,7 +353,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const doorPose = (door: NonNullable<AvatarUpdate['door']>): PoseTargets => {
     const { phase, progress } = door
     const on = phase === 'reach' ? progress : phase === 'release' ? 1 - progress : 1
-    const swing = phase === 'swing' ? progress : phase === 'release' ? 1 : 0
+    const swing = phase === 'swing' ? progress : phase === 'push' ? 0.7 + 0.3 * progress : phase === 'release' ? 1 : 0
     const shake = phase === 'rattle' ? Math.sin(time * 55) * 0.06 * (1 - progress) : 0
     // the shoulder about 1.42 m over the feet, the arm 0.62 m: the angle down from the shoulder to the handle, a low handle bends the body
     const drop = clamp((DOOR_SHOULDER - door.height) / DOOR_ARM, -0.9, 1)

@@ -50,6 +50,11 @@ mudança de estado do jogador aparece nas duas vistas, no mesmo commit.
 
 - T4.1 `room-avatar.ts`: `strike()` só no corpo (`ATTACK_CLIPS`), nas duas vistas; o guarda (`fight_guard`) também.
 - T4.2 Porta (#110): `doors.handTargets()` vai para o `reachAvatar`; a pose `door` vale nas duas vistas.
+- T4.3 Porta: a mão abre e empurra, não segue a folha (dono, 2026-11-01). A mão pega o puxador e começa a oscilação; quando o puxador sai do alcance do
+  braço (`DOOR_ARM_REACH`, medido do ombro do corpo), a folha que **vai embora** (lado de empurrar) recebe um empurrão com a palma na face da folha
+  (fase `push`) e a mão solta e volta ao repouso, e a folha termina sozinha no destino. **Exceção (dono):** a folha que **vem para o corpo** (lado de
+  puxar) não é empurrada: a mão segura o puxador e puxa enquanto ele estiver ao alcance, e solta no limite do alcance (`release`) com a folha
+  terminando sozinha. Nunca braço esticado no ar atrás de puxador fora do alcance. Testes: `door-use` (game-player) e `doors` (test-room).
 
 ## Fase 5 — Limpeza e fechamento
 > 🤖 Modelo: `haiku` (T5.3 → `sonnet`)

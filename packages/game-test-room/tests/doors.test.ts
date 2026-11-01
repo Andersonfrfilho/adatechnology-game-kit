@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { AnimationClipSpec, HandTargets, TestableModule } from '@adatechnology/game-contracts'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { ScenarioContext } from '../src'
+import { DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT } from '@adatechnology/game-player'
 import { makeRoom } from './helpers'
 
 const OPEN = 1.4
@@ -52,7 +53,7 @@ const cabinet = (): TestableModule<ScenarioContext> => ({
 const run = (room: ReturnType<typeof makeRoom>, seconds: number): void => {
   for (let i = 0; i < seconds * 60; i++) room.update(1 / 60)
 }
-const types = (room: ReturnType<typeof makeRoom>): string[] => room.log.entries().filter((e) => e.type.startsWith('door_')).map((e) => e.type)
+const types = (room: ReturnType<typeof makeRoom>): string[] => room.log.entries().filter((e) => e.type.startsWith('door_') && e.type !== 'door_stepped_back').map((e) => e.type)
 
 function setup() {
   const sounds: string[] = []
@@ -95,13 +96,14 @@ describe('opening by hand', () => {
     room.setAvatar({ root: new THREE.Group(), update: () => undefined })
     room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.74])
     expect(room.useLeaf(so.objectId)).toBe(true)
-    // the player walks first: beside the free edge, clear of the arc the door sweeps, a little out in front
+    // the player walks first: in front of the handle, as near as the arm needs (the leaf that comes toward the body steps him back)
     run(room, 0.2)
     expect(room.avatarState().door).toMatchObject({ phase: 'reach', progress: 0 })
-    for (let i = 0; i < 120 && room.avatarState().door?.phase !== 'swing'; i++) room.update(1 / 60)
-    expect(room.avatarState().door).toMatchObject({ phase: 'swing', pull: true })
+    for (let i = 0; i < 120 && room.avatarState().door?.phase === 'reach'; i++) room.update(1 / 60)
+    expect(room.avatarState().door).toMatchObject({ pull: true })
+    expect(room.avatarState().door?.phase).toMatch(/swing|release/)
     const [x, , z] = room.playerPosition
-    expect(Math.hypot(x - -0.4, z - (-4 + 0.26))).toBeGreaterThan(0.8 + 0.25)
+    expect(Math.hypot(x - 0.34, z - (-4 + 0.26))).toBeLessThan(0.9)
     expect(z).toBeGreaterThan(-4 + 0.26)
   })
 
@@ -122,6 +124,42 @@ describe('opening by hand', () => {
     expect((last.view as { keepOutside?: unknown }).keepOutside).toBeTruthy()
     expect(room.handState().stance).toBe('hold')
     expect(poses.some((pose) => pose !== null && pose !== undefined)).toBe(true)
+  })
+
+  it.each([['open', 'pull'], ['close', 'push']] as const)('the hand never stretches off the handle: %s (the leaf is %sed), it lets go or shoves at the reach limit and the leaf still gets to its goal', (way, kind) => {
+    const { room, so, door } = setup()
+    room.setAvatar({ root: new THREE.Group(), update: () => undefined, reach: () => undefined })
+    // a handle at the height of the shoulder
+    room.look([0.2, 1.7, -2.6], [0.2, 1.3, -3.74])
+    const phases = new Set<string>()
+    const reachOf = (): number => {
+      const hand = room.handState().targets?.R
+      if (!hand) return 0
+      const [px, py, pz] = room.playerPosition
+      const yaw = room.camera.rotation.y
+      return Math.hypot(hand.position[0] - (px + Math.cos(yaw) * 0.2), hand.position[1] - (py + DOOR_SHOULDER_HEIGHT), hand.position[2] - (pz - Math.sin(yaw) * 0.2))
+    }
+    let worst = 0
+    const play = (): void => {
+      for (let i = 0; i < 600 && (i === 0 || room.door); i++) {
+        room.update(1 / 60)
+        const phase = room.avatarState().door?.phase
+        if (phase) phases.add(phase)
+        worst = Math.max(worst, reachOf())
+      }
+    }
+    expect(room.useLeaf(so.objectId)).toBe(true)
+    play()
+    if (way === 'close') {
+      phases.clear()
+      expect(room.useLeaf(so.objectId)).toBe(true)
+      play()
+    }
+    // the shoulder stands where the avatar puts it; the palm target is never farther than the arm plus the width of the hand
+    expect(worst).toBeLessThanOrEqual(DOOR_ARM_REACH + 0.1)
+    expect(phases.has('push')).toBe(kind === 'push')
+    expect(room.leafOpening(so.objectId)).toBe(way === 'open' ? 1 : 0)
+    expect(door.rotation.y).toBeCloseTo(way === 'open' ? -OPEN : 0, 5)
   })
 
   it('a locked door rattles and does not move', () => {
