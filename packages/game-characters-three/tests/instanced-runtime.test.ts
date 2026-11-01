@@ -54,6 +54,36 @@ describe('body batch', () => {
   })
 })
 
+/** Vertex attribute slots a draw uses: the geometry's (a `mat4` takes 4), plus the `instanceMatrix` of an `InstancedMesh`. */
+const vertexAttributeSlots = (mesh: THREE.Mesh): number => {
+  const slots = Object.values(mesh.geometry.attributes).reduce((sum, attribute) => sum + Math.ceil(attribute.itemSize / 4), 0)
+  return slots + ((mesh as THREE.InstancedMesh).isInstancedMesh ? 4 : 0)
+}
+const WEBGL2_MAX_VERTEX_ATTRIBS = 16
+const SLOT_HEADROOM = 2
+
+describe('body batch vertex attributes (MAX_VERTEX_ATTRIBS)', () => {
+  it('draws as a plain Mesh over an instanced geometry, with no instance matrix', () => {
+    const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 5 }), { max: 2, time })
+    expect((batch.mesh as unknown as THREE.InstancedMesh).isInstancedMesh).toBeUndefined()
+    expect(batch.mesh.geometry).toBeInstanceOf(THREE.InstancedBufferGeometry)
+    expect((batch.mesh.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(0)
+    batch.begin()
+    batch.push({ a: [0, 0, 0, 0], b: [1, 1, 0, 0], c: [0, 0, 0, 0], color: { r: 1, g: 1, b: 1 } })
+    batch.end()
+    expect((batch.mesh.geometry as THREE.InstancedBufferGeometry).instanceCount).toBe(1)
+  })
+
+  it('keeps the program at 11 slots, with headroom under the WebGL2 minimum', () => {
+    const geometry = buildInstancedBody(THREE, { segments: 5 })
+    const batch = createBodyBatch(THREE, geometry, { max: 2, time })
+    expect(vertexAttributeSlots(batch.mesh)).toBe(11)
+    expect(vertexAttributeSlots(batch.mesh)).toBeLessThanOrEqual(WEBGL2_MAX_VERTEX_ATTRIBS - SLOT_HEADROOM)
+    const old = new THREE.InstancedMesh(batch.mesh.geometry, batch.mesh.material, 2)
+    expect(vertexAttributeSlots(old)).toBe(15)
+  })
+})
+
 describe('flying limbs', () => {
   const blood = { color: 0x9e1b12, dried: 0x4a0a08, bleeds: true }
 

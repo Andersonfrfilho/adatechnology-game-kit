@@ -8,7 +8,8 @@ import { getSpecies } from '@adatechnology/game-animals-species'
 import { createAnimalsThree } from '@adatechnology/game-animals-three'
 import { createBestBuilder } from '@adatechnology/game-characters-three'
 import { UNDEAD_TYPES, undeadCrowdPack } from '@adatechnology/game-characters-undead'
-import { createRng } from '@adatechnology/game-crowd'
+import { createRng, CROWD_PHYSICS_DEFAULTS } from '@adatechnology/game-crowd'
+import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { CROWD_AREA_ID, createCrowdTestModule } from '@adatechnology/game-crowd-three/testing'
 import { create } from '@adatechnology/game-infection'
 
@@ -50,6 +51,19 @@ const town = () => {
   return model
 }
 
+/** The scenes' wall is the houses' own wall piece (the kit's `wallPiece`); the cylinders, the car and its tank are items of the room's catalogue (the weapons' world explosives, the fleet's sedan). */
+const SCENE_PROPS = {
+  wall: (THREE, { length, height }) => wallPiece(THREE, { w: length, h: height }).build(THREE),
+  items: { gasCylinder: 'world_propane_p13', car: 'sedan', carTank: 'world_car_fuel_tank' },
+}
+
+/**
+ * The physics of the room's horde (D13): contact, pressure, balance, mounds, thrown bodies, blasts and personality at the package defaults, with the pressure on the player on.
+ * The contact and the pressure go to a worker only in a page that is cross-origin isolated; a `file://` page is not, and the iife bundle has no worker file beside it,
+ * so there the physics runs inline in the fixed step (the package falls back by itself).
+ */
+const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, worker: globalThis.crossOriginIsolated ? 'auto' : 'off' })
+
 const sizeOf = (species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
 
 /** The module with the kit's own content; options replace any of it (another pack, other bodies, no animals). */
@@ -63,14 +77,22 @@ export function createModule(options = {}) {
     civilianBodies: CIVILIAN_BODIES,
     animals: { species: (id) => getSpecies(id), size: sizeOf, drawer: (THREE) => createAnimalsThree(THREE, { seed: 7 }) },
     infection: { create: town, region: 'town', active: (model) => model.region('town').active },
+    props: SCENE_PROPS,
+    crowdPhysics: roomPhysics(),
+    // identity, accessories, near shadows, blobs and the impostor: the economy ladder of the horde
+    variety: {},
+    eager: true,
     ...options,
   })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR) with a horde of 300, loads it and opens the crowd area. Returns the room's module report. */
 export function loadInto(room, options = {}) {
-  const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const report = room.loadModule(createModule({ startCount: 300, ...options, locale: lang }))
+  const query = new URLSearchParams(globalThis.location?.search ?? '')
+  const lang = options.locale ?? (query.get('lang') === 'en' ? 'en' : 'pt-BR')
+  // the room's horde has the physics, the identity and the economy ladder on; ?variety=0 draws it as the game's, ?clips=1 walks the bodies from the clip texture
+  const variety = query.get('variety') === '0' ? { variety: undefined, crowdPhysics: undefined } : query.get('clips') === '1' ? { variety: { segmentClips: true } } : {}
+  const report = room.loadModule(createModule({ startCount: 300, ...variety, ...options, locale: lang }))
   room.openArea(CROWD_AREA_ID)
   return report
 }

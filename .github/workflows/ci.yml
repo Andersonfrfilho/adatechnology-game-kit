@@ -219,14 +219,15 @@ jobs:
 
   # Explosion frame budget (examples/test-room/perf.mjs, docs/desempenho-explosoes.md): every explosive cold, warm and all at once in the room's own loop. Software GL
   # has no real frame times, so CI checks what does not depend on the machine: no shader compiled during play, GPU buffers per warm explosion, draws back to idle.
-  # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu).
+  # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu). The `horde` shard runs the dense_horde and chain_horde phases (PERF_HORDE agents, 300
+  # in counters mode) in a page of their own, so the cold and warm shards stay as long as they were.
   perf-budget:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
-        shard: [cold, warm]
+        shard: [cold, warm, horde]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

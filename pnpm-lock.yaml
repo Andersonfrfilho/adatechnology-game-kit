@@ -325,6 +325,9 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:^
         version: link:../game-characters
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
     devDependencies:
       '@adatechnology/game-animals':
         specifier: workspace:^
