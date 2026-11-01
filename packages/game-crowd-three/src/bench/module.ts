@@ -452,6 +452,8 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     { id: 'lod_far', name: text.metrics.lod_far, digits: 0, read: () => renderer?.lodCounts[2] ?? 0 },
     { id: 'draw_calls', name: text.metrics.draw_calls, digits: 0, read: () => renderer?.drawCalls ?? 0 },
     { id: 'bake_ms', name: text.metrics.bake_ms, unit: 'ms', digits: 0, read: () => renderer?.bakeMs ?? 0 },
+    { id: 'detail_scale', name: text.metrics.detail_scale, digits: 2, read: () => renderer?.detailScale ?? 1 },
+    { id: 'crowd_gpu_ms', name: text.metrics.crowd_gpu_ms, unit: 'ms', digits: 1, read: () => renderer?.gpuMs ?? 0 },
     { id: 'active', name: text.metrics.active, digits: 0, read: () => world.crowd.stats.bands[0] },
     { id: 'kills', name: text.metrics.kills, digits: 0, read: () => world.crowd.stats.kills },
     { id: 'bodies', name: text.metrics.corpses, digits: 0, read: () => world.crowd.corpses.count },

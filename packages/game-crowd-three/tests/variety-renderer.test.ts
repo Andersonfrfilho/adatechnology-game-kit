@@ -42,7 +42,9 @@ describe('createCrowdRenderer with variety', () => {
   it('draws identity bodies, accessory batches and blobs, and only the near level casts a real shadow', () => {
     const { renderer } = horde(true)
     const meshes = renderer.group.children as THREE.Mesh[]
-    const bodies = meshes.filter((mesh) => mesh.geometry.attributes.iD && !mesh.geometry.attributes.iAcc)
+    const prepasses = meshes.filter((mesh) => mesh.renderOrder < 0 && mesh.geometry.attributes.iD)
+    const bodies = meshes.filter((mesh) => mesh.geometry.attributes.iD && !mesh.geometry.attributes.iAcc && mesh.renderOrder >= 0)
+    expect(prepasses).toHaveLength(bodies.length / 3)
     const accessories = meshes.filter((mesh) => mesh.geometry.attributes.iAcc)
     expect(bodies.length).toBeGreaterThan(0)
     expect(accessories.length).toBeGreaterThan(0)

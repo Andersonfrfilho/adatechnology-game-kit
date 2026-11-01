@@ -69,6 +69,11 @@ const sizeOf = (species) => (species.body.kind === 'quadruped' ? quadrupedLayout
 /** The module with the kit's own content; options replace any of it (another pack, other bodies, no animals). */
 export function createModule(options = {}) {
   const locale = options.locale ?? 'pt-BR'
+  // ?budget=160,320,600 sets the bodies each mesh level may draw, &adapt=0 keeps the budget fixed (the horde measurements)
+  const query = new URLSearchParams(globalThis.location?.search ?? '')
+  const raw = query.get('budget')
+  const levels = raw && raw !== 'off' ? raw.split(',').map(Number) : null
+  const budget = levels ? { levels, ...(query.get('adapt') === '0' ? { adapt: false } : {}) } : raw === 'off' ? false : undefined
   return createCrowdTestModule({
     pack: undeadCrowdPack(),
     builders,
@@ -80,7 +85,7 @@ export function createModule(options = {}) {
     props: SCENE_PROPS,
     crowdPhysics: roomPhysics(),
     // identity, accessories, near shadows, blobs and the impostor: the economy ladder of the horde
-    variety: {},
+    variety: { ...(budget === undefined ? {} : { budget }), ...(query.get('clips') === '1' ? { segmentClips: true } : {}) },
     eager: true,
     ...options,
   })

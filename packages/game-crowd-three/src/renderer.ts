@@ -5,6 +5,7 @@ import { KIT_ACCESSORIES, createSegmentClipUniforms, LOD_BAKE, LOD_SEGMENTS, acc
 import type { BakeBuilders, BakeSpec, BakedBody, BlobShadowBatch, BodyBatch, BodyVariant, ImpostorAtlas, ImpostorBatch, KitAccessory, SegmentClipUniforms, Three } from '@adatechnology/game-characters-three'
 import type * as THREE_NS from 'three'
 
+import { createGpuCostProbe } from './gpu-cost'
 import { IMPOSTOR_LEVEL, createCrowdInstances } from './instances'
 import type { CrowdFrame, CrowdInstance, CrowdInstances, CrowdPoseMap, CrowdRenderNumbers } from './instances'
 import type { CrowdVarietyNumbers } from './variety/look'
@@ -18,10 +19,18 @@ export type CrowdRendererVariety = {
   readonly accessoryCapacity?: readonly [number, number]
   /** Only the nearest level casts a real shadow (default true). */
   readonly nearShadows?: boolean
+  /** Draws the depth of the near level first so its lit pass shades each pixel once (default true): the room's lights make an overdrawn fragment the dearest part of a crowd close to the camera. */
+  readonly nearDepthPrepass?: boolean
   /** One dark disc under each body beyond the nearest level (default true). */
   readonly blobShadows?: boolean
   /** Walk the bodies of the near and middle levels from the clip texture (12 bones, 24 texels, nearest filtered; step 3 of the ladder). Default off: the shader's own walk. */
   readonly segmentClips?: boolean
+  /**
+   * How many bodies each mesh level may draw (default 160, 320 and 600 for the near, middle and far levels, and half of the near budget for the bodies on the ground that keep the near mesh; `false` for the nominal distances only). A crowd packed near the camera pulls the edges in,
+   * so the bodies past a level's budget draw at the next one, and the last go to the impostor. Under `adapt` the budget shrinks while the crowd takes the GPU longer than `gpuHighMs` and grows back under `gpuLowMs` (timer queries; where the
+   * GPU has none, while the frames run longer than `highMs` and back under `lowMs`).
+   */
+  readonly budget?: false | { readonly levels?: readonly number[]; readonly adapt?: false | { readonly gpuHighMs?: number; readonly gpuLowMs?: number; readonly highMs?: number; readonly lowMs?: number; readonly minScale?: number } }
   /** The far tier (default on, from 90 m): one atlas for every type, one draw call; `false` keeps the far mesh to the cull distance. */
   readonly impostor?: false | { readonly from?: number; readonly capacity?: number; readonly light?: { readonly r: number; readonly g: number; readonly b: number } }
 }
@@ -58,6 +67,10 @@ export type CrowdRenderer = {
   update(dt: number, frame: CrowdFrame): void
   /** Agents drawn at each level of detail in the last frame (G `lodCounts`). */
   readonly lodCounts: readonly [number, number, number]
+  /** The share of the level budget in use, 1 down to the adaptive floor. */
+  readonly detailScale: number
+  /** The smoothed GPU time of the crowd's draws in milliseconds (0 until the timer answers, or without one). */
+  readonly gpuMs: number
   /** Agents drawn as impostors in the last frame. */
   readonly impostorCount: number
   /** Batches with something to draw. */
@@ -72,6 +85,9 @@ const BLOB_CAPACITY = 4000
 const IMPOSTOR_FROM = 90
 const IMPOSTOR_CAPACITY = 4000
 const NEAR_SHADOWS = [true, false, false] as const
+const NEAR_PREPASS = [true, false, false] as const
+const BUDGET_LEVELS = [160, 320, 600] as const
+const ADAPT = { gpuHighMs: 3.5, gpuLowMs: 2.2, highMs: 24, lowMs: 19, minScale: 0.1, shrinkPerSecond: 0.6, growPerSecond: 0.15, smoothing: 0.1 } as const
 
 const now = (): number => (typeof performance === 'undefined' ? Date.now() : performance.now())
 
@@ -91,11 +107,23 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   const accessoryCapacity = variety?.accessoryCapacity ?? ACCESSORY_CAPACITY
   const nearShadows = variety ? (variety.nearShadows ?? true) : false
   const impostorOptions = variety && variety.impostor !== false ? (variety.impostor ?? {}) : null
+  const budgetOptions = variety && variety.budget !== false ? (variety.budget ?? {}) : null
+  const adaptOptions = budgetOptions && budgetOptions.adapt !== false ? { ...ADAPT, ...budgetOptions.adapt } : null
+  let detailScale = 1
+  let frameMs = 0
+  let gpuMs = 0
+  const probe = adaptOptions ? createGpuCostProbe() : null
+  const tracked = new WeakSet<THREE_NS.Object3D>()
+  const track = (mesh: THREE_NS.Object3D): void => {
+    if (!probe || tracked.has(mesh)) return
+    tracked.add(mesh)
+    probe.attach(mesh)
+  }
   const instances = createCrowdInstances({
     eyes,
     ...(options.numbers ? { numbers: options.numbers } : {}),
     ...(options.poses ? { poses: options.poses } : {}),
-    ...(variety ? { variety: { ...(variety.numbers ? { numbers: variety.numbers } : {}), ...(impostorOptions ? { impostorFrom: impostorOptions.from ?? IMPOSTOR_FROM } : {}), ...(variety.segmentClips ? { segmentClips: true } : {}) } } : {}),
+    ...(variety ? { variety: { ...(variety.numbers ? { numbers: variety.numbers } : {}), ...(impostorOptions ? { impostorFrom: impostorOptions.from ?? IMPOSTOR_FROM } : {}), ...(variety.segmentClips ? { segmentClips: true } : {}), ...(budgetOptions ? { budget: budgetOptions.levels ?? BUDGET_LEVELS } : {}) } } : {}),
   })
   const N = instances.numbers
   const variants: BodyVariant[] = []
@@ -201,8 +229,8 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       const bodies: BakedBody[] = LOD_BAKE.map((lod) => bakeBody(three, options.builders, { type: name, decay, seed }, lod))
       const variant: BodyVariant = { typeId: type.id, variant: v, seed, decay, s: bodies[0]!.s, bulk: bodies[0]!.bulk, verts: bodies.map((body) => body.verts), geometries: bodies.map((body) => body.geo) }
       variants[g] = variant
-      batches[g] = createVariantBatches(three, variant, time, variety ? { identity: true, ...(clipUniforms ? { segmentClips: clipUniforms } : {}), ...(nearShadows ? { castsShadow: NEAR_SHADOWS } : {}) } : {})
-      for (const batch of batches[g]!) group.add(batch.mesh)
+      batches[g] = createVariantBatches(three, variant, time, variety ? { identity: true, ...(clipUniforms ? { segmentClips: clipUniforms } : {}), ...(nearShadows ? { castsShadow: NEAR_SHADOWS } : {}), ...(variety.nearDepthPrepass ?? true ? { depthPrepass: NEAR_PREPASS } : {}) } : {})
+      for (const batch of batches[g]!) group.add(batch.mesh, ...(batch.prepass ? [batch.prepass] : []))
     })
     bakeMs += now() - started
   }
@@ -239,6 +267,15 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       for (const accessory of accessoryKinds) for (const level of [0, 1]) accessoryBatch(accessory, level)
     },
     update(dt, frame) {
+      if (adaptOptions && probe && dt > 0) {
+        const measured = probe.poll()
+        if (measured !== undefined) gpuMs += (measured - gpuMs) * (gpuMs === 0 ? 1 : adaptOptions.smoothing)
+        frameMs += (dt * 1000 - frameMs) * (frameMs === 0 ? 1 : adaptOptions.smoothing)
+        const [high, low, load] = measured === undefined ? ([adaptOptions.highMs, adaptOptions.lowMs, frameMs] as const) : ([adaptOptions.gpuHighMs, adaptOptions.gpuLowMs, gpuMs] as const)
+        if (load > high) detailScale = Math.max(adaptOptions.minScale, detailScale * (1 - adaptOptions.shrinkPerSecond * dt))
+        else if (load < low) detailScale = Math.min(1, detailScale * (1 + adaptOptions.growPerSecond * dt))
+      }
+      if (budgetOptions) frame = { ...frame, detailScale }
       bakeSeen()
       time.value += dt
       for (const batch of all()) batch.begin()
@@ -261,6 +298,20 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       for (const batch of all()) batch.end()
       blobs?.end()
       impostors?.end()
+      if (probe) {
+        for (const batch of all()) {
+          track(batch.mesh)
+          if (batch.prepass) track(batch.prepass)
+        }
+        if (blobs) track(blobs.mesh)
+        if (impostors) track(impostors.mesh)
+      }
+    },
+    get detailScale() {
+      return detailScale
+    },
+    get gpuMs() {
+      return gpuMs
     },
     get impostorCount() {
       return impostorCount
@@ -281,6 +332,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       for (const batch of all()) {
         batch.mesh.geometry.dispose()
         group.remove(batch.mesh)
+        if (batch.prepass) group.remove(batch.prepass)
       }
       variants.length = 0
       batches.length = 0

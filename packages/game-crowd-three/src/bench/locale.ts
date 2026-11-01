@@ -7,7 +7,7 @@ export type CrowdBenchText = {
   readonly controls: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'seed' | 'spawn' | 'noise' | 'hit' | 'kill_all' | 'join' | 'flee' | 'herd' | 'materialize' | 'push' | 'reset'>
   readonly hints: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'noise' | 'hit' | 'join' | 'flee' | 'herd' | 'materialize' | 'push'>
   readonly layers: Keys<'corpses' | 'civilians' | 'animals'>
-  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99'>
+  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99' | 'detail_scale' | 'crowd_gpu_ms'>
   readonly sceneNames: Keys<'open' | 'dense_wall' | 'chain_line'>
   readonly scenarios: Keys<'relevance' | 'lod' | 'attack_pose' | 'corpse_darkens' | 'civilians_flee' | 'herd_calls' | 'vultures' | 'infection' | 'determinism'>
   readonly messages: Keys<'called' | 'burst_hit' | 'swing_knock' | 'pounce_knock' | 'migration' | 'door_broken' | 'alarm' | 'bark' | 'growl' | 'bitten' | 'turned' | 'died'>
@@ -60,6 +60,8 @@ const EN: CrowdBenchText = {
     lod_far: 'Far level',
     draw_calls: 'Draw calls',
     bake_ms: 'Bake',
+    detail_scale: 'Detail budget',
+    crowd_gpu_ms: 'Crowd GPU time',
     active: 'Thinking every frame',
     kills: 'Kills',
     corpses: 'Bodies',
@@ -152,6 +154,8 @@ const PT_BR: CrowdBenchText = {
     lod_far: 'Nível longe',
     draw_calls: 'Chamadas de desenho',
     bake_ms: 'Cozimento',
+    detail_scale: 'Orçamento de detalhe',
+    crowd_gpu_ms: 'Tempo de GPU da horda',
     active: 'Pensando todo quadro',
     kills: 'Mortes',
     corpses: 'Corpos',
