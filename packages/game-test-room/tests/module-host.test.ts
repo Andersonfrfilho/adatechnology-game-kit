@@ -407,7 +407,8 @@ describe('host.defer', () => {
 
   it('registers the sound engine voice queue with the budget, so the engine stops draining by itself', () => {
     const audio = createAudioEngine({ deferredStart: {} })
-    const voices = audio.deferredQueue()!
+    const voices = audio.deferredQueue?.()
+    if (!voices) throw new Error('the engine made no voice queue')
     let attached = 0
     const attach = voices.attach?.bind(voices)
     voices.attach = () => {

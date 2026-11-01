@@ -15,7 +15,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import { createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { DEFERRED_PRIORITY, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -2670,12 +2670,41 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let metricsAcc = 0
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
+  let moduleFrameCount = 0
   // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8 })
+  // a system that throws: the display loop logs each id once and keeps going; a headless frame (room.update, a scenario step) holds the errors and throws them after the frame, as the loose loops did
+  const headlessErrors = new Map<string, unknown>()
+  const loggedErrors = new Set<string>()
+  let headlessDepth = 0
+  const reportFrameError = (error: unknown, system: { id: string; phase: string }): void => {
+    if (headlessDepth > 0) {
+      if (!headlessErrors.has(system.id)) headlessErrors.set(system.id, error)
+      return
+    }
+    if (loggedErrors.has(system.id)) return
+    loggedErrors.add(system.id)
+    console.error(`test-room: ${system.id} (${system.phase}) threw`, error)
+  }
+  const runHeadless = (run: () => void): void => {
+    headlessDepth++
+    try {
+      run()
+    } catch (error) {
+      headlessErrors.clear()
+      throw error
+    } finally {
+      headlessDepth--
+    }
+    if (headlessDepth > 0 || headlessErrors.size === 0) return
+    const errors = [...headlessErrors.values()]
+    headlessErrors.clear()
+    throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
+  }
+  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, onError: reportFrameError })
   // the deferred queues share the scheduler's budget: the voices of the sound engine and the events of the destruction renderer
-  const audioQueue = audio?.deferredQueue()
-  if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY['audio.voices'])
-  scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY['destruction.events'])
+  const audioQueue = audio?.deferredQueue?.()
+  if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.AUDIO_VOICES])
+  scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS])
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   let qualityName: 'low' | 'medium' | 'high' = quality
@@ -3133,7 +3162,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     defer: (queue, queueOptions) => scheduler.budget.register(queue, queueOptions),
     onFrame(update, frameOptions) {
-      return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: 'module.frame' })
+      return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: `module.frame#${moduleFrameCount++}` })
     },
     holdFrame: () => bodyHoldFrame(),
     reachFor(reach) {
@@ -3235,7 +3264,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   for (const id of [...EXPLOSIVE_EFFECT_IDS, ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1)]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
   let warmedUp = false
   const warmUp = (): void => {
-    warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES })
+    warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })
     warmedUp = true
   }
 
@@ -3355,7 +3384,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let scenarioRunning = false
 
   // a scenario steps the world through the scheduler: input and present know they are scripted (ctx.scripted) and keep to what the step always did
-  const step = (seconds: number): void => scheduler.advance(seconds, { dt: seconds > 6 ? 1 / 30 : FIXED_DT })
+  const step = (seconds: number): void => runHeadless(() => scheduler.advance(seconds, { dt: seconds > 6 ? 1 / 30 : FIXED_DT }))
 
   const runScenarios = async (list?: TestRoomScenario[]): Promise<ScenarioReport> => {
     const all = list ?? allScenarios()
@@ -3565,7 +3594,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         useTool(FIXED_DT, true)
         directStep = true
         try {
-          scheduler.advance(FIXED_DT)
+          runHeadless(() => scheduler.advance(FIXED_DT))
         } finally {
           directStep = false
         }
@@ -3587,7 +3616,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt: number): void => scheduler.frame(dt, { render: false, exact: true }),
+    update: (dt: number): void => runHeadless(() => scheduler.frame(dt, { render: false, exact: true })),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
