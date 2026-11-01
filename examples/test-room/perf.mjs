@@ -3,7 +3,10 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
-//   PERF_SHARD=cold | warm             one half: the nine first uses, or warm_all + storm + after_storm (CI runs both in parallel)
+//   PERF_SHARD=cold | warm | horde     one share: the nine first uses, warm_all + storm + after_storm, or the two horde phases (CI runs the three in parallel)
+//   PERF_HORDE=2000                    agents of the horde phases (default 2000 in gpu mode, 300 in counters mode, where software GL pays per agent)
+//   PERF_GPU=intel | nvidia            the machine of the plan's D12 (budget of the crowd step: 6 ms on intel, 4 ms on nvidia); default nvidia
+//   PERF_PHASES=dense_horde,chain_horde   which horde phases run (default both)
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
 //   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
@@ -34,7 +37,24 @@ const BUDGET = {
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
 }
+const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
+const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
+const HORDE_SEED = 21
+const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
+// the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
+const HORDE_BUDGET = {
+  crowdMsP99: process.env.PERF_GPU === 'intel' ? 6 : 4,
+  drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
+  drawGrowth: 1.5,
+  buffersDense: 50,
+  // OPEN: the first blasts in the crowd page link two ground-mark programs (standard + map + shadow map, flat and smooth; the vfx page warms them, this page does not) and upload ~700 buffers
+  // (decals, fragments, flying bodies); the budget is what is measured today and goes to 0 and 8 explosions' worth when the warm-up covers the crowd page
+  chainPrograms: Number(process.env.PERF_CHAIN_PROGRAMS ?? 2),
+  buffersChain: Number(process.env.PERF_CHAIN_BUFFERS ?? 1000),
+  denseSeconds: 30,
+}
 const DRAW_MS = 300
+const ROOM_AIM = { eye: [0, 1.6, 4], target: [0, 0.5, -4] }
 // software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
 const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
 
@@ -92,15 +112,20 @@ if (process.env.PERF_ONLY === 'light_slots') {
 }
 if (runs('cold')) for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
 // the warm shard alone first uses every explosive once, unmeasured, so warm_all measures second uses as in a full run
-if (!runs('cold')) await fireAndSettle(EXPLOSIVES, 300)
+if (!runs('cold') && runs('warm')) await fireAndSettle(EXPLOSIVES, 300)
 const warm = runs('warm') ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200)) : undefined
 const storm = runs('warm') ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120)) : undefined
 const after = runs('warm') ? await phase('after_storm', () => pause(3000)) : undefined
 
+// the horde phases reload the page on their own bench state (seed, scene, physics, count: applied in that order whatever the URL says)
+const hordeMetrics = {}
+if (runs('horde')) for (const id of HORDE_PHASES) hordeMetrics[id] = await hordePhase(id)
+
 const failures = []
 const fail = (text) => failures.push(text)
 for (const p of phases) {
-  if (p.programs > BUDGET.programsAfterLoad) fail(`${p.name}: ${p.programs} shader programs compiled during play (budget ${BUDGET.programsAfterLoad})`)
+  const programBudget = p.name === 'chain_horde' ? HORDE_BUDGET.chainPrograms : BUDGET.programsAfterLoad
+  if (p.programs > programBudget) fail(`${p.name}: ${p.programs} shader programs compiled during play (budget ${programBudget}): ${p.programNames.join(' | ')}`)
   if (!GPU_MODE) continue
   if (p.hitches > 0) fail(`${p.name}: ${p.hitches} frames over ${BUDGET.hitchMs} ms (worst ${p.max} ms)`)
   if (p.p99 > BUDGET.p99Ms) fail(`${p.name}: p99 ${p.p99} ms (budget ${BUDGET.p99Ms} ms)`)
@@ -112,9 +137,10 @@ if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader pro
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
 if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()
@@ -124,18 +150,18 @@ function pause(ms) {
   return page.evaluate((delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
 }
 
-async function fireAndSettle(ids, gapMs = 0) {
+async function fireAndSettle(ids, gapMs = 0, aim = ROOM_AIM) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
     await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
     await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push(`${id} never got ready`))
     await pause(DRAW_MS)
-    const fired = await page.evaluate((weapon) => {
+    const fired = await page.evaluate(([weapon, view]) => {
       const room = window.__testRoom
-      room.look([0, 1.6, 4], [0, 0.5, -4])
+      room.look(view.eye, view.target)
       room.use()
       return room.tool?.id ?? weapon
-    }, id)
+    }, [id, aim])
     if (fired !== id) pageErrors.push(`could not fire ${id} (holding ${fired})`)
     if (gapMs > 0) await pause(gapMs)
   }
@@ -146,6 +172,70 @@ async function fireAndSettle(ids, gapMs = 0) {
   await page.waitForFunction(effectsAreOn, null, { timeout: SETTLE_TIMEOUT_MS, polling: 50 }).catch(() => pageErrors.push(`no blast after ${ids.join(', ')}`))
   await page.waitForFunction(effectsAreOver, null, { timeout: SETTLE_TIMEOUT_MS, polling: 250 }).catch(() => undefined)
   await pause(500)
+}
+
+/** The metrics of the module the room shows (the crowd area is the active bench), by id. */
+function readHorde() {
+  return page.evaluate(() => window.__testRoom.metrics().module)
+}
+
+// the horde phases: a page of their own, the bench state in the URL, the crowd baked at load (`eager`), the measurement from the first frame the room is ready
+async function hordePhase(id) {
+  const scene = id === 'dense_horde' ? 'dense_wall' : 'chain_line'
+  await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}`, { timeout: 0 })
+  await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
+  await page.evaluate(installFrameRecorder)
+  await phase(id, id === 'dense_horde' ? playDenseHorde : playChainHorde)
+  const found = await readHorde()
+  console.log(`HORDE ${id} ${JSON.stringify(found)}`)
+  return { ...found, name: id }
+}
+
+async function waitForHorde(condition, seconds) {
+  const timeout = GPU_MODE ? seconds * 1000 : SETTLE_TIMEOUT_MS
+  await page.waitForFunction(condition, null, { timeout, polling: 250 }).catch(() => undefined)
+}
+
+async function playDenseHorde() {
+  await page.waitForFunction((n) => window.__testRoom.metrics().module.agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
+  // gpu mode plays the 30 s of the plan; software GL plays until the horde has done what the phase is for (falls by pressure, climbers) or the timeout
+  if (GPU_MODE) await pause(HORDE_BUDGET.denseSeconds * 1000)
+  else await waitForHorde(() => {
+    const m = window.__testRoom.metrics().module
+    return (m.falls_pressure ?? 0) > 0 && (m.climbers ?? 0) > 0
+  }, HORDE_BUDGET.denseSeconds)
+}
+
+// the horde comes down the street; grenades, a rocket, a molotov and rifle fire go into it from the end of the street
+async function playChainHorde() {
+  const aim = { eye: [0, 1.6, -31], target: [0, 0.5, -57] }
+  await waitForHorde(() => (window.__testRoom.metrics().module.agents ?? 0) > 0, 30)
+  await pause(GPU_MODE ? 6000 : 1000)
+  await fireAndSettle(CHAIN_THROWN, 300, aim)
+  await page.evaluate(([view]) => window.__testRoom.equip('rifle_5_56') && window.__testRoom.look(view.eye, view.target), [aim])
+  await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push('the rifle never got ready'))
+  for (let shot = 0; shot < 10; shot++) {
+    await page.evaluate(() => window.__testRoom.use())
+    await pause(GPU_MODE ? 120 : 400)
+  }
+  await pause(GPU_MODE ? 5000 : 1000)
+}
+
+function checkHorde(id, found) {
+  const own = phases.find((p) => p.name === id)
+  const crowd = found
+  if (crowd.agents === undefined) return fail(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
+  if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
+  if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
+  if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : HORDE_BUDGET.buffersChain)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
+  if (id === 'dense_horde') {
+    if (!(crowd.falls_pressure > 0)) fail(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)
+    if (!(crowd.climbers > 0)) fail(`dense_horde: nobody climbed the mound (${crowd.climbers})`)
+  }
+  if (id === 'chain_horde') {
+    if (!(crowd.falls_chain > 0)) fail(`chain_horde: no chain fall beyond the blasts (${crowd.falls_chain})`)
+  }
+  if (GPU_MODE && crowd.crowd_ms_p99 > HORDE_BUDGET.crowdMsP99) fail(`${id}: crowd step p99 ${crowd.crowd_ms_p99} ms (budget ${HORDE_BUDGET.crowdMsP99} ms)`)
 }
 
 async function phase(name, run) {
@@ -226,7 +316,7 @@ async function readLightSlots() {
 }
 
 function countWebGlCalls() {
-  const counts = { programs: 0, buffers: 0, draws: 0 }
+  const counts = { programs: 0, buffers: 0, draws: 0, programNames: [] }
   window.__glCounts = counts
   for (const Context of [WebGL2RenderingContext, WebGLRenderingContext]) {
     const proto = Context.prototype
@@ -239,6 +329,13 @@ function countWebGlCalls() {
       }
     }
     wrap('linkProgram', 'programs')
+    // the name three gives each shader says which material made the program
+    const link = proto.linkProgram
+    proto.linkProgram = function (program) {
+      const sources = (this.getAttachedShaders(program) ?? []).map((shader) => this.getShaderSource(shader) ?? '')
+      counts.programNames.push([...new Set(sources.join('\n').match(/#define (?:USE_\w+|NUM_\w+ \d+|DISTANCE|DEPTH_PACKING \d+|SHADOWMAP_TYPE_\w+|SHADER_NAME \w+|FLAT_SHADED|MATCAP|LAMBERT|PHONG|STANDARD|BASIC)/g) ?? [])].join(' ').replace(/#define /g, ''))
+      return link.call(this, program)
+    }
     wrap('createBuffer', 'buffers')
     for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) wrap(name, 'draws')
   }
@@ -267,7 +364,7 @@ function installFrameRecorder() {
     }
   }).observe({ type: 'long-animation-frame' })
   window.__perf = {
-    mark: () => ({ ...window.__glCounts, frame: frames.length, longTask: longTasks.length, slowFrame: slowFrames.length }),
+    mark: () => ({ ...window.__glCounts, programNames: window.__glCounts.programNames.length, frame: frames.length, longTask: longTasks.length, slowFrame: slowFrames.length }),
     read(name, start) {
       const counts = window.__glCounts
       const slice = frames.slice(start.frame + 2).sort((a, b) => a - b)
@@ -285,6 +382,7 @@ function installFrameRecorder() {
         worstLongTask: Math.round(Math.max(0, ...longTasks.slice(start.longTask))),
         programs: counts.programs - start.programs,
         buffers: counts.buffers - start.buffers,
+        programNames: counts.programNames.slice(start.programNames),
         drawsPerFrame: Math.round((counts.draws - start.draws) / frameCount),
         slowFrames: slowFrames.slice(start.slowFrame).slice(0, 5),
       }
