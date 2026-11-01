@@ -10,6 +10,7 @@
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
 //   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
+//   PERF_STACKS=1                      also lists, per phase, the attributes uploaded to the GPU during play (kind, element count, item size, array type)
 //   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
@@ -40,6 +41,7 @@ const BUDGET = {
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
 const HORDE_SEED = 21
+let chainSetupBuffers = 0
 const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
 // the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
 const HORDE_BUDGET = {
@@ -47,12 +49,14 @@ const HORDE_BUDGET = {
   drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
   drawGrowth: 1.5,
   buffersDense: 50,
-  // OPEN: the first blasts in the crowd page link two ground-mark programs (standard + map + shadow map, flat and smooth; the vfx page warms them, this page does not) and upload ~700 buffers
-  // (decals, fragments, flying bodies); the budget is what is measured today and goes to 0 and 8 explosions' worth when the warm-up covers the crowd page
-  chainPrograms: Number(process.env.PERF_CHAIN_PROGRAMS ?? 2),
-  buffersChain: Number(process.env.PERF_CHAIN_BUFFERS ?? 1000),
+  // no program: the room's warm-up covers every material the blasts draw (the ground marks included). Buffers: eight explosions' worth, plus what the street's seven destructibles
+  // (six gas cylinders, a car) own once they are dented and shot (a part clones its geometry on its first dent, a hit makes a decal, a shard or a scratch): ~100 buffers each, measured
+  chainPrograms: 0,
+  chainDestructibles: 7,
+  buffersPerDamagedObject: 100,
   denseSeconds: 30,
 }
+const chainBuffers = 8 * BUDGET.buffersPerWarmExplosion + HORDE_BUDGET.chainDestructibles * HORDE_BUDGET.buffersPerDamagedObject
 const DRAW_MS = 300
 const ROOM_AIM = { eye: [0, 1.6, 4], target: [0, 0.5, -4] }
 // software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
@@ -86,6 +90,7 @@ const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height:
 const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
+if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
 await page.goto(`${pathToFileURL(dist).href}?area=vfx`)
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
@@ -185,8 +190,10 @@ async function hordePhase(id) {
   await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}`, { timeout: 0 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   await page.evaluate(installFrameRecorder)
+  const buffersAtStart = await page.evaluate(() => window.__glCounts.buffers)
   await phase(id, id === 'dense_horde' ? playDenseHorde : playChainHorde)
   const found = await readHorde()
+  if (id === 'chain_horde') console.log(`CHAIN buffers created before the first blast: ${chainSetupBuffers - buffersAtStart}, after: ${(await page.evaluate(() => window.__glCounts.buffers)) - chainSetupBuffers}`)
   console.log(`HORDE ${id} ${JSON.stringify(found)}`)
   return { ...found, name: id }
 }
@@ -211,6 +218,7 @@ async function playChainHorde() {
   const aim = { eye: [0, 1.6, -31], target: [0, 0.5, -57] }
   await waitForHorde(() => (window.__testRoom.metrics().module.agents ?? 0) > 0, 30)
   await pause(GPU_MODE ? 6000 : 1000)
+  chainSetupBuffers = await page.evaluate(() => window.__glCounts.buffers)
   await fireAndSettle(CHAIN_THROWN, 300, aim)
   await page.evaluate(([view]) => window.__testRoom.equip('rifle_5_56') && window.__testRoom.look(view.eye, view.target), [aim])
   await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push('the rifle never got ready'))
@@ -227,7 +235,7 @@ function checkHorde(id, found) {
   if (crowd.agents === undefined) return fail(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
   if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
   if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
-  if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : HORDE_BUDGET.buffersChain)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
+  if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : chainBuffers)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
   if (id === 'dense_horde') {
     if (!(crowd.falls_pressure > 0)) fail(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)
     if (!(crowd.climbers > 0)) fail(`dense_horde: nobody climbed the mound (${crowd.climbers})`)
@@ -240,6 +248,7 @@ function checkHorde(id, found) {
 
 async function phase(name, run) {
   const before = await page.evaluate(() => window.__perf.mark())
+  if (process.env.PERF_STACKS) await page.evaluate(listUploads)
   const profiler = process.env.PERF_PROFILE === name ? await page.context().newCDPSession(page) : undefined
   if (profiler) await profiler.send('Profiler.enable').then(() => profiler.send('Profiler.setSamplingInterval', { interval: 100 })).then(() => profiler.send('Profiler.start'))
   await run()
@@ -249,6 +258,7 @@ async function phase(name, run) {
   const queues = await page.evaluate(() => window.__testRoom.frameStats?.().budget.queues ?? [])
   result.maxFramesWaiting = Math.max(0, ...queues.map((queue) => queue.maxFramesWaiting))
   result.queues = Object.fromEntries(queues.map((queue) => [queue.id, { maxFramesWaiting: queue.maxFramesWaiting, forced: queue.forced, ranUnits: queue.ranUnits }]))
+  if (process.env.PERF_STACKS) result.bufferStacks = await page.evaluate(() => Object.entries(window.__bufferStacks).sort((a, b) => b[1] - a[1]).slice(0, 80))
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
   return result
@@ -338,6 +348,44 @@ function countWebGlCalls() {
     }
     wrap('createBuffer', 'buffers')
     for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) wrap(name, 'draws')
+  }
+}
+
+/** Tags every attribute with the code that made its geometry (the stack outside three.js), so an upload can be traced to the feature that asked for it. */
+function tagAttributeCreators() {
+  let namespace
+  Object.defineProperty(window, '__THREE', {
+    configurable: true,
+    get: () => namespace,
+    set(value) {
+      namespace = value
+      const proto = value.BufferGeometry.prototype
+      const setAttribute = proto.setAttribute
+      proto.setAttribute = function (name, attribute) {
+        if (attribute && !attribute.__by) {
+          const lines = (new Error().stack ?? '').split('\n').slice(2).map((line) => line.trim().replace(/^at /, ''))
+          attribute.__by = `${this.type} ` + lines.filter((line) => !/ (BufferGeometry|[A-Za-z]*Geometry|Object\.setAttribute)\b|new [A-Za-z]*Geometry/.test(line)).slice(0, 7).join(' < ')
+        }
+        return setAttribute.call(this, name, attribute)
+      }
+    },
+  })
+}
+
+/** Starts a fresh tally of the buffer attributes three.js uploads (its upload callback also runs on every refill, so an attribute counts once). */
+function listUploads() {
+  window.__bufferStacks = {}
+  const proto = window.__THREE.BufferAttribute.prototype
+  if (proto.__tallied) return
+  proto.__tallied = true
+  const original = proto.onUploadCallback
+  const seen = new WeakSet()
+  proto.onUploadCallback = function () {
+    if (seen.has(this)) return original.call(this)
+    seen.add(this)
+    const key = `${this.constructor.name} count=${this.count} item=${this.itemSize} ${this.__by ?? ''}`
+    window.__bufferStacks[key] = (window.__bufferStacks[key] ?? 0) + 1
+    return original.call(this)
   }
 }
 

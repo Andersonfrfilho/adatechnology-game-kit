@@ -77,3 +77,19 @@ describe('the marks on the ground are bounded', () => {
     expect(layer.count()).toBe(0)
   })
 })
+
+describe('the ground marks are warmed with the other programs', () => {
+  const options = { ground: createGroundField(), createCanvas: createFakeCanvas, rockGeometry: new THREE.DodecahedronGeometry(0.5, 0), plateGeometry: new THREE.BoxGeometry(1, 1, 1) }
+
+  it('probes draw the very materials a scorch and a dirt mark are made with, as shadow receivers', () => {
+    const layer = createMarkLayer(THREE, options)
+    layer.handle({ type: 'add', mark: { kind: 'scorch', x: 0, z: 0, radius: 1, variant: 0, lift: 0.01, rotation: 0 } })
+    layer.handle({ type: 'add', mark: { kind: 'dirt', x: 3, z: 0, radius: 1, lift: 0.01, rotation: 0 } as never })
+    const drawn = (layer.group.children as THREE.Mesh[]).filter((child) => child.geometry?.type === 'PlaneGeometry').map((child) => child.material)
+    const probed = layer.probes()
+    for (const material of drawn) expect(probed.some((probe) => probe.material === material)).toBe(true)
+    expect(probed.every((probe) => probe.receiveShadow)).toBe(true)
+    expect(probed.some((probe) => (probe.material as THREE.MeshStandardMaterial).flatShading)).toBe(true)
+    layer.dispose()
+  })
+})

@@ -36,7 +36,7 @@ async function bundleMain(full) {
     format: 'iife',
     platform: 'browser',
     target: 'es2020',
-    minify: true,
+    minify: process.env.ROOM_MINIFY !== '0',
     legalComments: 'none',
     define: { __ROOM_FULL__: String(full) },
     alias: { three: threeDir, ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },

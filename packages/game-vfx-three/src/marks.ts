@@ -35,6 +35,8 @@ export interface MarkLayer {
   update(dt: number): void
   /** Puts the instanced meshes in the scene now, so their shader programs link while loading instead of at the first mark. */
   prepare(): void
+  /** One throwaway mesh per ground-mark material (scorch variants, dirt), so a host's warm-up draws them in every fog state: they are made on demand, a program of theirs is not linked by the instanced meshes. */
+  probes(): THREE_NS.Mesh[]
   /** The draw calls the marks cost right now. */
   count(): number
   dispose(): void
@@ -97,6 +99,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     group.add(mesh)
     return mesh
   }
+  let probeGeometry: THREE_NS.BufferGeometry | undefined
   const groundMarks: GroundDrawn[] = []
   const spareGeometries: THREE_NS.BufferGeometry[] = []
   const blood: BloodDrawn[] = []
@@ -213,6 +216,15 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
       rockMesh()
       plateMesh()
     },
+    probes() {
+      probeGeometry ??= new THREE.PlaneGeometry(0.001, 0.001).rotateX(-Math.PI / 2)
+      return [...scorchMaterials, dirtMaterial].map((material) => {
+        const mesh = new THREE.Mesh(probeGeometry, material)
+        mesh.receiveShadow = true
+        mesh.frustumCulled = false
+        return mesh
+      })
+    },
     update(dt) {
       for (let index = 0; index < blood.length; index++) {
         const drawn = blood[index]
@@ -225,6 +237,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     dispose() {
       clearMarks()
       for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) mesh?.dispose()
+      probeGeometry?.dispose()
       for (const item of owned) item.dispose()
     },
   }
