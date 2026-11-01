@@ -1,6 +1,7 @@
 import type { Three, THREE_NS } from '../three'
 
 import { createBodyMaterial } from './body-material'
+import type { BodyMaterialParams } from './body-material'
 import type { SegmentClipUniforms } from './segment-clips'
 
 const ATTRIBUTES: readonly (readonly [string, number])[] = [['iA', 4], ['iB', 4], ['iC', 4], ['iCol', 3], ['iEye', 3]]
@@ -24,6 +25,8 @@ export type BodyBatchOptions = {
   readonly accessory?: boolean
   /** Walk bodies from the clip texture (`createSegmentClipUniforms`): needs `identity` and a look with `clips`. */
   readonly segmentClips?: SegmentClipUniforms
+  /** Also makes a depth-only mesh over the same geometry, drawn first (`batch.prepass`), so the lit pass shades the nearest body of each pixel only (the room's lights make a fragment dear). */
+  readonly depthPrepass?: boolean
 }
 
 /** One instance: the 12 numbers of the shader's `iA`, `iB` and `iC`, the shirt colour and the eye colour (G 65509 `push`). */
@@ -46,11 +49,25 @@ export type BodyBatchMesh = THREE_NS.Mesh & { count: number }
 
 export type BodyBatch = {
   readonly mesh: BodyBatchMesh
+  /** The depth-only mesh drawn before `mesh` (with `depthPrepass`); add it to the scene next to `mesh`. */
+  readonly prepass?: THREE_NS.Mesh
   readonly max: number
   readonly count: number
   begin(): void
   push(instance: BodyInstance): void
   end(): void
+}
+
+const PREPASS_RENDER_ORDER = -1
+
+/** The mesh that writes the depth of a batch's bodies and no colour, drawn before the lit meshes. */
+const createPrepass = (three: Three, geometry: THREE_NS.BufferGeometry, params: Pick<BodyMaterialParams, 'time' | 'identity' | 'accessory' | 'segmentClips'>): THREE_NS.Mesh => {
+  const material = createBodyMaterial(three, { depth: true, ...params })
+  material.colorWrite = false
+  const mesh = new three.Mesh(geometry, material)
+  mesh.frustumCulled = false
+  mesh.renderOrder = PREPASS_RENDER_ORDER
+  return mesh
 }
 
 /** A batch of bodies drawn in one call (zombies, survivors, corpses). `begin`, `push` per body each frame, then `end` (G 65509 `BodyBatch`). */
@@ -80,9 +97,11 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
   mesh.castShadow = castShadow
   mesh.receiveShadow = true
   mesh.count = 0
+  const prepass = options.depthPrepass ? createPrepass(three, copy, { time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) : undefined
   let count = 0
   return {
     mesh,
+    ...(prepass ? { prepass } : {}),
     max,
     get count() {
       return count

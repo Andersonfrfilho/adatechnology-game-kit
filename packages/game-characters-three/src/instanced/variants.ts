@@ -55,10 +55,12 @@ export type VariantBatchesOptions = {
   readonly segmentClips?: SegmentClipUniforms
   /** Which of the three levels cast a real shadow (default `LOD_CASTS_SHADOW`; `[true, false, false]` is the economy ladder's step 1). */
   readonly castsShadow?: readonly [boolean, boolean, boolean]
+  /** Which of the three levels get a depth-only prepass (default none). */
+  readonly depthPrepass?: readonly [boolean, boolean, boolean]
 }
 
 /** The three batches of a variant (one per level of detail), sized for a horde. */
 export const createVariantBatches = (three: Three, variant: BodyVariant, time: { value: number }, options: VariantBatchesOptions = {}): readonly BodyBatch[] =>
   variant.geometries.map((geometry, level) =>
-    createBodyBatch(three, geometry, { max: LOD_BATCH_CAPACITY[level] as number, castShadow: (options.castsShadow ?? LOD_CASTS_SHADOW)[level] as boolean, time, ...(options.identity ? { identity: true } : {}), ...(options.segmentClips ? { segmentClips: options.segmentClips } : {}) }),
+    createBodyBatch(three, geometry, { max: LOD_BATCH_CAPACITY[level] as number, castShadow: (options.castsShadow ?? LOD_CASTS_SHADOW)[level] as boolean, time, ...(options.depthPrepass?.[level] ? { depthPrepass: true } : {}), ...(options.identity ? { identity: true } : {}), ...(options.segmentClips ? { segmentClips: options.segmentClips } : {}) }),
   )
