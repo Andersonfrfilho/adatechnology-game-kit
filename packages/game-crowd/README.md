@@ -108,6 +108,7 @@ crowd.stats.physics // falls by cause, fallsBeyondBlast, climbers, moundMax, thr
 - **Mound:** lying bodies are a height per cell (integer millimetres) that others climb, trample and bring down when the base goes.
 - **Thrown bodies:** a pool of 32 simulated here (`crowd.thrown`) and only drawn by the renderer; `thrown.priority` is `'mixed'` (half the slots to the fastest, half to the nearest to the band centre), `'fastest'` or `'nearest'`.
 - **Personality:** speed, reaction, stability, trip, drive, cadence, aggression, gait and idle from the identity of each agent, never from the shared random stream.
+- **Far band (R1):** no pairs. Every 12th step a coarse grid of 2 m counts the standing walkers of band R1 per cell; above 4 bodies the wanted speed is `4 / bodies` and the field is `(bodies − 4) · 150` N, which the same balance rule reads (`physics.density`, needs `balance`). A body that falls there lies without entering the mound, and joins it when it comes into R0.
 - **Player pressure:** `playerPressure` reports the pressure of the horde on the target through `knock` and `hurt` (off in the package; a game turns it on).
 
 ### The contact and the pressure in a worker

@@ -58,7 +58,6 @@ export type CrowdOptions = {
   /** Contact, pressure, balance, mounds, thrown bodies and personality: all off by default, and then the horde is the game's, bit for bit. */
   readonly physics?: CrowdPhysicsOptions
 }
-
 export type CrowdView = { readonly x: number; readonly z: number; readonly yaw: number; readonly far: number }
 
 export type CrowdUpdateContext = {
@@ -1250,8 +1249,9 @@ export function createCrowd(options: CrowdOptions): Crowd {
               Z.aimX[i] = tx
               Z.aimZ[i] = tz
             }
-            Z.dvx[i] = tx * sp + sx * N.separationPush
-            Z.dvz[i] = tz * sp + sz * N.separationPush
+            const slow = engine.densitySlowdown(i, b)
+            Z.dvx[i] = (tx * sp + sx * N.separationPush) * slow
+            Z.dvz[i] = (tz * sp + sz * N.separationPush) * slow
             Z.steering[i] = 1
             if (sp > 0.05) Z.yaw[i] = Math.atan2(tx, tz)
             else if (d < 3 && alive) Z.yaw[i] = Math.atan2(-dx, -dz)

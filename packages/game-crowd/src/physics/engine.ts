@@ -7,6 +7,8 @@ import { contactStep, createContactView, prepareHash } from './contact'
 import type { ContactResult, ContactView } from './contact'
 import { createPhysicsStats } from './context'
 import type { PhysicsContext, PhysicsStats } from './context'
+import { createDensity } from './density'
+import type { Density } from './density'
 import { createMound } from './mound'
 import type { Mound } from './mound'
 import type { ResolvedPhysics } from './options'
@@ -53,6 +55,8 @@ export type PhysicsEngine = {
   remap(removed: number, moved: number): void
   /** Stops the worker, if there is one. */
   dispose(): void
+  /** What the wanted speed of an agent of band `band` is multiplied by in a thick far crowd (1 with the density off or in any other band). */
+  densitySlowdown(i: number, band: number): number
   /** `pressure / critical pressure` of an agent: how close it is to falling. */
   pressureRatio(i: number): number
 }
@@ -67,6 +71,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
   const pressure: PressureWorkspace | null = options.pressure && contact ? createPressureWorkspace(store.capacity, store.capacity * PAIRS_PER_AGENT) : null
   const mound: Mound | null = options.mound ? createMound(ctx, Math.max(EXTRA_BODIES, base.corpsesMax), base.moundHeight) : null
   if (mound) ctx.weightOn = mound.weightOn
+  const density: Density | null = options.density && balance ? createDensity(ctx, options.density) : null
   const playerPressure: PlayerPressure | null = pressure ? createPlayerPressure(ctx) : null
   const blasts = createBlasts(ctx, { balance, thrown, pileBlast: base.pileBlast })
   const contactResult: ContactResult = { contacts: 0, maxOverlap: 0, overlapSum: 0 }
@@ -184,6 +189,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
       stats.meanOverlap = contactResult.contacts ? contactResult.overlapSum / contactResult.contacts : 0
       if (pressure) runPressure(contact, pressure)
     }
+    density?.step()
     measureLean()
     balance?.step(options.balance!, contact.workspace.shove)
     mound?.step()
@@ -209,6 +215,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
       offload?.remap(removed, moved)
     },
     dispose: () => offload?.dispose(),
+    densitySlowdown: (i, band) => density?.slowdown(i, band) ?? 1,
     pressureRatio: (i) => (options.balance ? store.pressure[i]! / criticalOf(i) : 0),
   }
 }

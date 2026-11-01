@@ -121,6 +121,16 @@ export type CrowdPersonalityOptions = {
   readonly idle?: readonly number[]
 }
 
+/** Band R1, summarised (D10, `design-chain-horde.md` §9): no pairs, a coarse grid of bodies per cell. */
+export type CrowdDensityOptions = {
+  /** Side of a coarse cell, m (default 2). */
+  readonly cell?: number
+  /** Bodies per cell that walk freely (default 4, one per square metre); above it the speed is `capacity / bodies`. */
+  readonly capacity?: number
+  /** N of pressure per body above `capacity` (default 150). */
+  readonly pressurePerBody?: number
+}
+
 /** Pressure of the horde on the target (D13.2): above `knockThreshold` N it knocks the target down; the excess crushes at `crushDamagePerSecond`. */
 export type CrowdPlayerPressureOptions = {
   readonly enabled?: boolean
@@ -138,6 +148,8 @@ export type CrowdPhysicsOptions = {
   readonly mound?: CrowdMoundOptions | boolean
   /** Needs `balance`. */
   readonly thrown?: CrowdThrownOptions | boolean
+  /** Needs `balance`. The far band without pairs: speed and pressure from the bodies per coarse cell. */
+  readonly density?: CrowdDensityOptions | boolean
   readonly blast?: CrowdBlastOptions
   readonly personality?: CrowdPersonalityOptions | boolean
   readonly door?: { readonly pressureDamage?: number }
@@ -178,6 +190,7 @@ export const BALANCE_DEFAULTS: Required<CrowdBalanceOptions> = {
 }
 export const MOUND_DEFAULTS: Required<CrowdMoundOptions> = { bodyThickness: 0.28, corpseThickness: 0.25, maxHeight: 1.6, corpseRadius: 35 }
 export const THROWN_DEFAULTS: Required<CrowdThrownOptions> = { pool: 32, radius: 30, landingRadius: 0.7, fallDamage: 8, priority: 'mixed', mixedRatio: 0.5 }
+export const DENSITY_DEFAULTS: Required<CrowdDensityOptions> = { cell: 2, capacity: 4, pressurePerBody: 150 }
 export const BLAST_DEFAULTS: Required<CrowdBlastOptions> = { pointsPerKilojoule: 0.6, throwSpeed: 4, maxBlastsPerStep: 8, limbEffectsPerBlast: 24, bloodEffectsPerBlast: 32, shove: {} }
 export const PERSONALITY_DEFAULTS: Required<CrowdPersonalityOptions> = {
   speed: [0.9, 1.1],
@@ -202,6 +215,7 @@ export const CROWD_PHYSICS_DEFAULTS: CrowdPhysicsOptions = {
   balance: BALANCE_DEFAULTS,
   mound: MOUND_DEFAULTS,
   thrown: THROWN_DEFAULTS,
+  density: DENSITY_DEFAULTS,
   blast: BLAST_DEFAULTS,
   personality: PERSONALITY_DEFAULTS,
   door: { pressureDamage: DOOR_PRESSURE_DAMAGE },
@@ -215,6 +229,7 @@ export type ResolvedPhysics = {
   readonly balance: Required<CrowdBalanceOptions> | null
   readonly mound: Required<CrowdMoundOptions> | null
   readonly thrown: Required<CrowdThrownOptions> | null
+  readonly density: Required<CrowdDensityOptions> | null
   readonly blast: Required<CrowdBlastOptions>
   readonly personality: Required<CrowdPersonalityOptions> | null
   readonly doorPressureDamage: number
@@ -238,12 +253,14 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
   const balance = part(physics.balance, BALANCE_DEFAULTS)
   const mound = part(physics.mound, MOUND_DEFAULTS)
   const thrown = part(physics.thrown, THROWN_DEFAULTS)
+  const density = part(physics.density, DENSITY_DEFAULTS)
   const playerPressure = { ...PLAYER_PRESSURE_DEFAULTS, ...physics.playerPressure }
   const missing: string[] = []
   if (!contact && pressure) missing.push('pressure needs contact')
   if (!contact && balance) missing.push('balance needs contact')
   if (!balance && mound) missing.push('mound needs balance')
   if (!balance && thrown) missing.push('thrown needs balance')
+  if (!balance && density) missing.push('density needs balance')
   if (!pressure && playerPressure.enabled) missing.push('playerPressure needs pressure')
   if (!contact && physics.worker === 'on') missing.push('worker needs contact')
   if (missing.length) throw new Error(`crowd physics: ${missing.join('; ')}`)
@@ -253,6 +270,7 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
     balance,
     mound,
     thrown,
+    density,
     blast: { ...BLAST_DEFAULTS, ...physics.blast },
     personality: part(physics.personality, PERSONALITY_DEFAULTS),
     doorPressureDamage: physics.door?.pressureDamage ?? DOOR_PRESSURE_DAMAGE,

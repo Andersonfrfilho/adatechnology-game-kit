@@ -30,6 +30,7 @@ export type {
   CrowdBalanceOptions,
   CrowdBlastOptions,
   CrowdContactOptions,
+  CrowdDensityOptions,
   CrowdMoundOptions,
   CrowdPersonalityOptions,
   CrowdPhysicsOptions,
