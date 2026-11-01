@@ -90,6 +90,28 @@ Civilians are a literal port of the game's survivors on the block (`jogo.js` G 6
 without the rig; the vultures of G 66700-66708 and the live map's ring of birds of the Bancada de Hordas (G 53609-53615). Two goldens replay them
 with the horde: `game-crowd-civilians.json` (3 scenes) and `game-crowd-herd.json`.
 
+## Physics: a dense horde and the chain of a blast
+
+`CrowdOptions.physics` is off by default and then the horde is the game's, bit for bit (the team goldens run with it off). `CROWD_PHYSICS_DEFAULTS` turns everything on:
+
+```ts
+const crowd = createCrowd({ pack, seed, physics: { ...CROWD_PHYSICS_DEFAULTS, playerPressure: { enabled: true, knockThreshold: 1500, crushDamagePerSecond: 6 } } })
+// fixed steps only: the same seed gives the same result at 30, 60 and 144 fps
+crowd.update(1 / 60, { target, bandCentre: [x, z] })
+crowd.blast({ point: [x, y, z], energy: 200000, radius: 15, lethalRadius: 5 }) // resolved at the start of the next step, in one pass over the agents
+crowd.stats.physics // falls by cause, fallsBeyondBlast, climbers, moundMax, thrownPeak, blastChecks...
+```
+
+- **Contact:** inelastic impulses between bodies (symmetric Gauss-Seidel, so a low index has no advantage) and a position correction by the mean of what each agent was asked to move; it never adds energy.
+- **Pressure:** a field apart from the contact that moves one hop per fixed step, so a file of N agents pushing on a wall gives its front `N` times the drive (`design-chain-horde.md` section 4.5).
+- **Balance:** standing, staggering, fallen, getting up and thrown, by pressure over a critical value of the body (`CrowdType.balance` and the personality), shoves, trips, landings and collapses.
+- **Mound:** lying bodies are a height per cell (integer millimetres) that others climb, trample and bring down when the base goes.
+- **Thrown bodies:** a pool of 32 simulated here (`crowd.thrown`) and only drawn by the renderer; `thrown.priority` is `'mixed'` (half the slots to the fastest, half to the nearest to the band centre), `'fastest'` or `'nearest'`.
+- **Personality:** speed, reaction, stability, trip, drive, cadence, aggression, gait and idle from the identity of each agent, never from the shared random stream.
+- **Player pressure:** `playerPressure` reports the pressure of the horde on the target through `knock` and `hurt` (off in the package; a game turns it on).
+
+`bench/dense-update.mjs` measures `crowd.update` with 1000 and 2000 agents pressed against a wall, with and without the physics.
+
 ## What is not here yet
 
 The drawing and the test area are in `@adatechnology/game-crowd-three`. The game's multi-floor houses (`ANDARES`) and the roof (`ROOF`) are not ported: the crowd walks one
