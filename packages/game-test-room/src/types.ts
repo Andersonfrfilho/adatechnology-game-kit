@@ -279,6 +279,8 @@ export interface TestRoomOptions {
     particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>>
     /** Milliseconds of destruction events the renderer applies per frame; the rest wait for the next frames (default 8). `Infinity` applies every event in the frame it happens, which a test comparing counts needs. */
     eventBudgetMs?: number
+    /** The most loose bodies (ejected casings, dropped magazines) modules may keep alive at once, lent as `ModuleHost.particleLimit` (default 900). */
+    particleLimit?: number
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions

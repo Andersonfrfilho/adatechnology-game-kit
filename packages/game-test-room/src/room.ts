@@ -106,6 +106,8 @@ const FIXED_DT = 1 / 60
 /** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
 const EXPLOSIVE_EFFECT_IDS = ['m67', 'molotov', 'pipe_bomb', 'm79_40mm', 'm72_66mm', 'at4_84mm', 'dynamite', 'c4', 'claymore'] as const
 /** The fog the scene may be in while the room runs: none, the weather's linear fog and its exponential one (the weather module comes in after the load). */
+/** The most loose bodies (casings, magazines) the room lets its modules keep alive at once: the cap the weapons viewmodel had on its own. */
+const DEFAULT_PARTICLE_LIMIT = 900
 const WARMED_FOG_STATES = ['none', 'linear', 'exp2'] as const
 /** Slots of the room's LightBudget: the default 16 point and 4 spot (perf.mjs on a real GPU: p50 and p99 of every phase the same as with 13 and 3, and the fixed cost of the light loop is lost in the noise). */
 const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } as const
@@ -3107,6 +3109,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     environment,
     groundAt,
     effects: vfx,
+    particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,
     pools,
     loading,

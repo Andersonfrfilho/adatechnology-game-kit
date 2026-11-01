@@ -393,6 +393,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
         ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         ...(lent.effects ? { effects: lent.effects } : {}),
+        ...(lent.particleLimit ? { particleLimit: lent.particleLimit } : {}),
         ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),
         ...(isRenderPools(lent.pools) ? { pools: lent.pools } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),

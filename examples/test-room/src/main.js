@@ -64,6 +64,8 @@ const room = createTestRoom({
   locale,
   catalog: [],
   scenery,
+  // one chain link per update (design-chain-horde §8): a row of gas cylinders and a car go off one step after the other instead of in one frame
+  worldOptions: { chainLinksPerUpdate: 1 },
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
   // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut

@@ -93,6 +93,17 @@ describe('module bench', () => {
     expect(probe.changes.slice(2)).toEqual([{ kind: 'action', id: 'replay' }, { kind: 'layer', id: 'smoke', on: false }])
   })
 
+  it('lends the budget of loose bodies, 900 by default and the room option when given', () => {
+    const probe = newProbe()
+    makeRoom().loadModule(benchedModule(probe))
+    expect(probe.host?.particleLimit?.()).toBe(900)
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const limited = newProbe()
+    createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false, debris: { particleLimit: 40 } }).loadModule(benchedModule(limited))
+    expect(limited.host?.particleLimit?.()).toBe(40)
+  })
+
   it('a patch sets a value without echo, and new options fall back to the first one', () => {
     const probe = newProbe()
     const room = makeRoom()

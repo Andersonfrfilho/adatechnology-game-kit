@@ -359,6 +359,8 @@ export interface ModuleHost {
   environment?: EnvironmentBus
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
+  /** The most loose bodies a module may keep alive at once (ejected casings, dropped magazines), read at each spawn: the host's one budget. Absent when the host keeps no budget of its own. */
+  particleLimit?: () => number | undefined
   /** The host's light budget (`LightBudget` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): the one owner of point and spot lights. Read it with `isLightBudget`. Absent when the host has none. */
   lights?: unknown
   /** The host's pools of geometries and materials (`RenderPools` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): what an effect asks for instead of making its own, so its shader programs stay linked. Read it with `isRenderPools`. Absent when the host has none. */

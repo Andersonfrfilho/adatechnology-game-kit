@@ -190,7 +190,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       const meshes = createMeshLayerProbes(THREE)
       for (const mesh of meshes) mesh.frustumCulled = false
       const group = new THREE.Group()
-      group.add(...meshes)
+      group.add(...meshes, ...marks.probes())
       anchors = { meshes, group }
       return { group, dispose: () => {} }
     },
