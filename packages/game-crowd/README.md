@@ -110,6 +110,24 @@ crowd.stats.physics // falls by cause, fallsBeyondBlast, climbers, moundMax, thr
 - **Personality:** speed, reaction, stability, trip, drive, cadence, aggression, gait and idle from the identity of each agent, never from the shared random stream.
 - **Player pressure:** `playerPressure` reports the pressure of the horde on the target through `knock` and `hurt` (off in the package; a game turns it on).
 
+### The contact and the pressure in a worker
+
+`physics.worker` is `'off'` by default (the step runs where it always did). `'auto'` moves the contact and the pressure to a worker when one can be made and stays in the step when it cannot; `'on'` throws instead of staying.
+The worker is **one step behind**: it is handed the state at the end of step *k*, and step *k + 1* (`workerLatency: 1`, default) or *k + 2* (`workerLatency: 2`) adds what it computed as deltas of position, push and velocity and replaces the pressure field. With the same inputs per step the answer is the same whichever thread computed it: `inline` (the same kernel on the calling thread) is the reference, and the tests compare it with a worker byte for byte. Balance, mound, thrown bodies and blasts stay on the main thread.
+
+```ts
+const crowd = createCrowd({ pack, seed, physics: { ...CROWD_PHYSICS_DEFAULTS, worker: 'auto', workerLatency: 2 } })
+// ...
+crowd.dispose() // stops the worker
+```
+
+- `workerTransport: 'shared'` (default where `SharedArrayBuffer` is usable): frame in a `SharedArrayBuffer`, control word with `Atomics`. The main thread waits for the answer, so the run is reproducible. A browser needs the page **cross-origin isolated**: serve it with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` (or `credentialless`), and every cross-origin sub-resource with `Cross-Origin-Resource-Policy` or CORS. `crossOriginIsolated` is then `true`. Node has `SharedArrayBuffer` always.
+- `workerTransport: 'transfer'`: without isolation; the frame goes by `postMessage` with its buffer transferred. The main thread cannot wait for an event, so it applies the answer when it has arrived and runs without it otherwise (the contact then lags more): it is not reproducible. `'auto'` picks it when the page is not isolated.
+- `workerFactory`: the default makes a module worker from `physics-worker.js`, which sits next to `index.js` in `dist`, with `new Worker(new URL('./physics-worker.js', import.meta.url), { type: 'module' })` (Vite, webpack 5 and esbuild resolve it); the `index.global.js` build has no `import.meta`, so there give a `workerFactory`. A host that bundles its own worker (or runs node `worker_threads`) gives the factory and calls `attachPhysicsWorker(port)` inside the worker; `tests/fixtures/node-physics-worker.mjs` is a node example.
+- The frame copies the grid occupancy every step (1 byte per cell, 2.4 MB for the default 768 m grid): a `NavGrid` no bigger than the playable area keeps that copy small.
+
+Measured with `bench/dense-update.mjs` (node, 2000 agents pressed against a wall, all in band R0, `WORKER=shared LATENCY=2`): `crowd.update` on the main thread goes from 3.0 ms to 1.7 to 1.9 ms mean; with one step of latency the main thread waits for the worker for a third of its step, so it gains little. See `specs/005-camadas-e-quadro/evidence.md`, row T4b.perf.
+
 `bench/dense-update.mjs` measures `crowd.update` with 1000 and 2000 agents pressed against a wall, with and without the physics.
 
 ## What is not here yet

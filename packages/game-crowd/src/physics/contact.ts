@@ -41,9 +41,13 @@ export type ContactWorkspace = {
   readonly pairNormalZ: Float64Array
 }
 
-export type ContactView = { n: number; readonly store: CrowdStore; readonly grid: NavGrid; readonly workspace: ContactWorkspace }
+/** The arrays the contact and the pressure read and write: the step needs no more of the store, so it can run over a copy of them (a worker). */
+export type PhysicsStore = Pick<CrowdStore, 'x' | 'z' | 'y' | 'vx' | 'vz' | 'pushX' | 'pushZ' | 'mass' | 'build' | 'balance' | 'state' | 'band' | 'identity' | 'aimX' | 'aimZ' | 'field' | 'fieldPrev' | 'type' | 'driveFactor'>
+export type PhysicsGrid = Pick<NavGrid, 'size' | 'half' | 'occ' | 'cellOf'>
 
-export const createContactWorkspace = (capacity: number, grid: NavGrid): ContactWorkspace => ({
+export type ContactView = { n: number; readonly store: PhysicsStore; readonly grid: PhysicsGrid; readonly workspace: ContactWorkspace }
+
+export const createContactWorkspace = (capacity: number, grid: PhysicsGrid): ContactWorkspace => ({
   head: new Int32Array(Math.floor(grid.size) ** 2).fill(-1),
   next: new Int32Array(capacity),
   touched: new Int32Array(capacity),
@@ -66,16 +70,16 @@ export const createContactWorkspace = (capacity: number, grid: NavGrid): Contact
   pairNormalZ: new Float64Array(capacity * PAIRS_PER_AGENT),
 })
 
-export const createContactView = (store: CrowdStore, grid: NavGrid): ContactView => ({ n: 0, store, grid, workspace: createContactWorkspace(store.capacity, grid) })
+export const createContactView = (store: PhysicsStore, grid: PhysicsGrid): ContactView => ({ n: 0, store, grid, workspace: createContactWorkspace(store.x.length, grid) })
 
 /** In the contact: near the viewer, not a pile step, not asleep, not in the air as a thrown body. */
-export const takesPartInContact = (store: CrowdStore, i: number): boolean => store.band[i] === 0 && store.balance[i] !== BALANCE.THROWN && store.state[i] !== STATE.PILE_STEP && store.state[i] !== STATE.DORMANT
+export const takesPartInContact = (store: PhysicsStore, i: number): boolean => store.band[i] === 0 && store.balance[i] !== BALANCE.THROWN && store.state[i] !== STATE.PILE_STEP && store.state[i] !== STATE.DORMANT
 
-const isOnGround = (store: CrowdStore, i: number): boolean => store.balance[i] === BALANCE.FALLEN || store.balance[i] === BALANCE.GETTING_UP
+const isOnGround = (store: PhysicsStore, i: number): boolean => store.balance[i] === BALANCE.FALLEN || store.balance[i] === BALANCE.GETTING_UP
 
-const effectiveMass = (store: CrowdStore, i: number): number => store.mass[i]! * (isOnGround(store, i) ? GROUND_MASS_FACTOR : 1)
+const effectiveMass = (store: PhysicsStore, i: number): number => store.mass[i]! * (isOnGround(store, i) ? GROUND_MASS_FACTOR : 1)
 
-const bodyRadius = (store: CrowdStore, i: number, radius: number): number => radius * store.build[i]!
+const bodyRadius = (store: PhysicsStore, i: number, radius: number): number => radius * store.build[i]!
 
 /** What each agent is for this step: in the contact or not, its radius and its effective mass. */
 function readBodies(view: ContactView, radius: number): void {
@@ -175,7 +179,7 @@ function measurePairs(view: ContactView): void {
 }
 
 /** One inelastic impulse along the normal: the closing speed of the two bodies goes to zero, never below (restitution 0). */
-function solveImpulse(store: CrowdStore, workspace: ContactWorkspace, p: number): void {
+function solveImpulse(store: PhysicsStore, workspace: ContactWorkspace, p: number): void {
   if (workspace.pairDistance[p]! >= workspace.pairReach[p]!) return
   const i = workspace.pairI[p]!
   const j = workspace.pairJ[p]!
@@ -212,7 +216,7 @@ function accumulateCorrection(workspace: ContactWorkspace, p: number, relaxation
   workspace.count[j]!++
 }
 
-const isOpen = (grid: NavGrid, x: number, z: number): boolean => {
+const isOpen = (grid: PhysicsGrid, x: number, z: number): boolean => {
   const cell = grid.cellOf(x, z)
   return cell >= 0 && (grid.occ[cell] === 0 || grid.occ[cell] === 3)
 }
@@ -278,6 +282,12 @@ function dampPush(view: ContactView, params: ContactParams): void {
     store.pushX[i]! *= params.maxPush / speed
     store.pushZ[i]! *= params.maxPush / speed
   }
+}
+
+/** The 1 m hash of the agents in band R0 at their positions of now, for whoever looks at the neighbours (the landing of a thrown body) while the pairs are solved elsewhere. */
+export function prepareHash(view: ContactView, radius: number): void {
+  readBodies(view, radius)
+  rebuildHash(view)
 }
 
 /**

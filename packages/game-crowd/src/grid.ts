@@ -34,6 +34,15 @@ export type NavGrid = {
   losClear(x0: number, z0: number, x1: number, z1: number): boolean
 }
 
+/** The cell index of a world position for a square grid of `n` cells of `cell` metres centred on the origin, -1 outside. */
+export const createCellOf =
+  (half: number, cell: number, n: number) =>
+  (x: number, z: number): number => {
+    const gx = Math.floor((x + half) / cell)
+    const gz = Math.floor((z + half) / cell)
+    return gx < 0 || gz < 0 || gx >= n || gz >= n ? -1 : gz * n + gx
+  }
+
 const BORDER_WIDTH = 1
 const BORDER_HEIGHT = 50
 const LOS_STEP = 0.5
@@ -46,11 +55,7 @@ export function createNavGrid(options: NavGridOptions = {}): NavGrid {
   const n = size / cell
   const occ = new Uint8Array(n * n)
   const occH = new Float32Array(n * n)
-  const cellOf = (x: number, z: number): number => {
-    const gx = Math.floor((x + half) / cell)
-    const gz = Math.floor((z + half) / cell)
-    return gx < 0 || gz < 0 || gx >= n || gz >= n ? -1 : gz * n + gx
-  }
+  const cellOf = createCellOf(half, cell, n)
   const solidAt = (x: number, z: number, y = 0.5): boolean => {
     const c = cellOf(x, z)
     return c < 0 || (occ[c] !== 0 && occ[c] !== 3 && occH[c]! > y)

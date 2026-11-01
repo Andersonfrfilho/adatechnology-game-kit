@@ -1,5 +1,7 @@
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 
+import type { OffloadTransport, PhysicsWorkerFactory } from './offload/types'
+
 export type CrowdContactOptions = {
   /** Body radius over build (default 0.25 → 0.5 m between two average bodies; the separation keeps them at 0.78 m when it can). */
   readonly radius?: number
@@ -143,6 +145,17 @@ export type CrowdPhysicsOptions = {
   readonly playerPressure?: CrowdPlayerPressureOptions
   /** Flow budget in cells per step, `attackPose` in the simulation, positions kept for interpolation. */
   readonly deterministic?: boolean
+  /**
+   * Where the contact and the pressure run. `'off'` (default): in the step, exactly as before. `'on'`: in a worker, one step behind (the main thread applies what the worker
+   * computed from the previous step), and an error when no worker can be made. `'auto'`: the same when a worker can be made, `'off'` when it cannot. Needs `contact`.
+   */
+  readonly worker?: 'off' | 'auto' | 'on'
+  /** Makes the worker (default: a module worker that loads `physics-worker.js` next to the bundle). A host that bundles its own worker gives the factory and calls `attachPhysicsWorker` in it. */
+  readonly workerFactory?: PhysicsWorkerFactory
+  /** `'shared'` (a `SharedArrayBuffer`, deterministic, needs `crossOriginIsolated`), `'transfer'` (`postMessage`, any host, the answer is as late as the event loop makes it), `'inline'` (no worker: the same protocol on the main thread, the reference). Default: `'shared'` when it is available, else `'transfer'`. */
+  readonly workerTransport?: OffloadTransport
+  /** Steps between the state the worker is handed and the step that applies its answer (default 1). 2 gives the worker a whole step to finish in, so the main thread never waits for it, and costs one more step of lag in the contact. */
+  readonly workerLatency?: 1 | 2
 }
 
 export const CONTACT_DEFAULTS: Required<CrowdContactOptions> = { radius: 0.25, iterations: 2, friction: 6, maxPush: 3, maxCorrection: 0.1, relaxation: 1, baseMass: 70, separationMax: 1.5 }
@@ -207,6 +220,10 @@ export type ResolvedPhysics = {
   readonly doorPressureDamage: number
   readonly playerPressure: Required<CrowdPlayerPressureOptions>
   readonly deterministic: boolean
+  readonly worker: 'off' | 'auto' | 'on'
+  readonly workerFactory: PhysicsWorkerFactory | undefined
+  readonly workerTransport: OffloadTransport | undefined
+  readonly workerLatency: 1 | 2
 }
 
 const part = <T extends object>(option: T | boolean | undefined, defaults: Required<T>): Required<T> | null => {
@@ -228,6 +245,7 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
   if (!balance && mound) missing.push('mound needs balance')
   if (!balance && thrown) missing.push('thrown needs balance')
   if (!pressure && playerPressure.enabled) missing.push('playerPressure needs pressure')
+  if (!contact && physics.worker === 'on') missing.push('worker needs contact')
   if (missing.length) throw new Error(`crowd physics: ${missing.join('; ')}`)
   return {
     contact,
@@ -240,5 +258,9 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
     doorPressureDamage: physics.door?.pressureDamage ?? DOOR_PRESSURE_DAMAGE,
     playerPressure,
     deterministic: physics.deterministic ?? false,
+    worker: physics.worker ?? 'off',
+    workerFactory: physics.workerFactory,
+    workerTransport: physics.workerTransport,
+    workerLatency: physics.workerLatency ?? 1,
   }
 }

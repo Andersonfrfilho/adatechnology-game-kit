@@ -1,15 +1,24 @@
-// Cost of crowd.update with N agents packed against a wall, all in band R0. Usage: node bench/dense-update.mjs [counts...] (PHYSICS=1 turns the physics on, ITERATIONS=1|2|3 sets the contact iterations).
+// Cost of crowd.update with N agents packed against a wall, all in band R0. Usage: node bench/dense-update.mjs [counts...] (PHYSICS=1 turns the physics on, ITERATIONS=1|2|3 sets the contact iterations, WORKER=shared|inline runs the contact and the pressure in a node worker or inline, one step behind, WARMUP and MEASURED set the steps).
+import { Worker } from 'node:worker_threads'
+
 import { undeadCrowdPack } from '@adatechnology/game-characters-undead'
 
 import * as crowdPackage from '../dist/index.js'
 
 const { CELL, CROWD_PHYSICS_DEFAULTS, STATE, createCrowd, createNavGrid } = crowdPackage
 const STEP = 1 / 60
-const WARMUP = 120
-const MEASURED = 300
+const WARMUP = Number(process.env.WARMUP ?? 120)
+const MEASURED = Number(process.env.MEASURED ?? 300)
 const counts = process.argv.slice(2).map(Number)
 const iterations = Number(process.env.ITERATIONS ?? 2)
-const physics = process.env.PHYSICS === '1' && CROWD_PHYSICS_DEFAULTS ? { ...CROWD_PHYSICS_DEFAULTS, contact: { ...CROWD_PHYSICS_DEFAULTS.contact, iterations } } : undefined
+const workerTransport = process.env.WORKER
+const workerFile = new URL('../tests/fixtures/node-physics-worker.mjs', import.meta.url)
+const workerFactory = () => {
+  const worker = new Worker(workerFile)
+  return { postMessage: (message, transfer) => worker.postMessage(message, transfer), onMessage: (listener) => worker.on('message', listener), terminate: () => void worker.terminate() }
+}
+const workerOptions = workerTransport ? { worker: 'on', workerTransport, workerLatency: Number(process.env.LATENCY ?? 1), ...(workerTransport === 'inline' ? {} : { workerFactory }) } : {}
+const physics = process.env.PHYSICS === '1' && CROWD_PHYSICS_DEFAULTS ? { ...CROWD_PHYSICS_DEFAULTS, ...workerOptions, contact: { ...CROWD_PHYSICS_DEFAULTS.contact, iterations } } : undefined
 
 const percentile = (sorted, share) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * share))]
 
@@ -35,8 +44,9 @@ const run = (count) => {
   }
   times.sort((a, b) => a - b)
   const mean = times.reduce((sum, value) => sum + value, 0) / times.length
+  crowd.dispose()
   const { bands } = crowd.stats
-  console.log(JSON.stringify({ count, physics: Boolean(physics), agents: crowd.store.n, bands, meanMs: +mean.toFixed(3), p50Ms: +percentile(times, 0.5).toFixed(3), p99Ms: +percentile(times, 0.99).toFixed(3), maxMs: +times.at(-1).toFixed(3) }))
+  console.log(JSON.stringify({ count, physics: Boolean(physics), worker: workerTransport ?? 'off', agents: crowd.store.n, bands, meanMs: +mean.toFixed(3), p50Ms: +percentile(times, 0.5).toFixed(3), p99Ms: +percentile(times, 0.99).toFixed(3), maxMs: +times.at(-1).toFixed(3) }))
 }
 
 for (const count of counts.length ? counts : [1000, 2000]) run(count)

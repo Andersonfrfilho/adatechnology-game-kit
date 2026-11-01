@@ -32,7 +32,6 @@ export const CROWD_DEFAULTS: { readonly sources: Readonly<Record<string, string>
 }
 
 export type { Corpse } from './types'
-
 /** A custom move: runs on every decision tick after the timed states and before the moves on the target; `true` means it took care of the movement. */
 export type CrowdPlugin = {
   readonly id: string
@@ -41,7 +40,6 @@ export type CrowdPlugin = {
 
 /** A migration: `count` agents every `every` s (the first after `numbers.migrationFirst`), born in the box at (x, z) and walking to `goal`. */
 export type MigrationOptions = { readonly every: number; readonly count: number; readonly x: number; readonly z: number; readonly width: number; readonly depth: number; readonly goal: readonly [number, number] }
-
 export type CrowdOptions = {
   readonly pack: CrowdPack
   readonly random?: () => number
@@ -107,6 +105,7 @@ export type Crowd = {
   spawn(x: number, z: number, type?: number): number
   remove(i: number): void
   update(dt: number, context?: CrowdUpdateContext): void
+  dispose(): void
   emitNoise(x: number, z: number, radius: number): void
   damage(i: number, hit: CrowdHit): CrowdDamageResult
   kill(i: number, headshot?: boolean): void
@@ -1449,6 +1448,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     spawn: (x, z, type = -1) => spawn(x, z, type),
     remove,
     update,
+    dispose: () => engine.dispose(),
     emitNoise,
     damage,
     kill: (i, headshot = false) => kill(i, headshot),

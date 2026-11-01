@@ -3,13 +3,18 @@ import { createBalance } from './balance'
 import type { Balance } from './balance'
 import { createBlasts } from './blast'
 import type { Blasts } from './blast'
-import { contactStep, createContactView } from './contact'
+import { contactStep, createContactView, prepareHash } from './contact'
 import type { ContactResult, ContactView } from './contact'
 import { createPhysicsStats } from './context'
 import type { PhysicsContext, PhysicsStats } from './context'
 import { createMound } from './mound'
 import type { Mound } from './mound'
 import type { ResolvedPhysics } from './options'
+import { createDefaultWorkerFactory } from './offload/default-worker'
+import { createOffload } from './offload/offload'
+import type { Offload } from './offload/offload'
+import { createInlineRunner, createSharedRunner, createTransferRunner, isSharedAvailable } from './offload/runner'
+import type { StepRunner } from './offload/runner'
 import { createPlayerPressure } from './player-pressure'
 import type { PlayerPressure } from './player-pressure'
 import { createPressureWorkspace, pressureStep } from './pressure'
@@ -46,6 +51,8 @@ export type PhysicsEngine = {
   endStep(): void
   /** The store removed agent `removed` and moved agent `moved` into its place. */
   remap(removed: number, moved: number): void
+  /** Stops the worker, if there is one. */
+  dispose(): void
   /** `pressure / critical pressure` of an agent: how close it is to falling. */
   pressureRatio(i: number): number
 }
@@ -65,9 +72,43 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
   const contactResult: ContactResult = { contacts: 0, maxOverlap: 0, overlapSum: 0 }
   const pressureResult: PressureResult = { playerLoad: 0, drivers: 0 }
   const driveForceOfType = Float32Array.from(base.types, (type) => type.balance?.driveForce ?? DEFAULT_DRIVE_FORCE)
+  const offload: Offload | null = options.worker !== 'off' && contact ? createOffloadFor() : null
   let doorLoad = new Float32Array(0)
   let doorSince = new Float32Array(0)
   const keepPositions = options.contact !== null || options.deterministic
+
+  function createRunner(): StepRunner | null {
+    const gridCells = grid.occ.length
+    const shape = { capacity: store.capacity, cells: gridCells }
+    const setup = { capacity: store.capacity, gridSize: grid.size, gridCell: grid.cell, contact: options.contact!, pressure: options.pressure, driveForceOfType: Array.from(driveForceOfType) }
+    const transport = options.workerTransport ?? (isSharedAvailable() ? 'shared' : 'transfer')
+    const slots = options.workerLatency
+    if (transport === 'inline') return createInlineRunner(setup, shape, slots)
+    const factory = options.workerFactory ?? createDefaultWorkerFactory()
+    if (!factory) {
+      if (options.worker === 'on') throw new Error('crowd physics: worker "on" but no Worker can be made here (give physics.workerFactory)')
+      return null
+    }
+    return transport === 'shared' ? createSharedRunner(setup, shape, factory, slots) : createTransferRunner(setup, shape, factory, slots)
+  }
+
+  function createOffloadFor(): Offload | null {
+    const runner = createRunner()
+    if (!runner) return null
+    const host = {
+      store,
+      grid,
+      stats,
+      contact: contact!,
+      addDoorLoad: (cell: number, load: number): void => {
+        const door = ctx.doors.at(cell)
+        if (door < 0) return
+        growDoorArrays()
+        doorLoad[door]! += load
+      },
+    }
+    return createOffload(runner, host, options.workerLatency)
+  }
 
   const beginStep = (h: number, centre: { readonly x: number; readonly z: number }): void => {
     ctx.step++
@@ -113,6 +154,17 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     hitDoors()
   }
 
+  /** The contact and the pressure ran in the worker on the state of the previous step: apply them, hand over this step, and keep the hash for the thrown bodies. */
+  const stepOffloaded = (running: Offload, view: ContactView): void => {
+    growDoorArrays()
+    const target = ctx.target()
+    const player = options.playerPressure.enabled && target && target.state.alive ? { x: target.state.x, z: target.state.z } : undefined
+    const result = running.step(ctx.h, player)
+    pressureResult.playerLoad = result.playerLoad
+    prepareHash(view, options.contact!.radius)
+    if (pressure) hitDoors()
+  }
+
   const measureLean = (): void => {
     const maxPush = options.contact!.maxPush
     for (let i = 0; i < store.n; i++) {
@@ -124,11 +176,14 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
   const endStep = (): void => {
     if (!contact) return
     contact.n = store.n
-    contactStep(contact, { ...options.contact!, h: ctx.h }, contactResult)
-    stats.contacts = contactResult.contacts
-    stats.maxOverlap = contactResult.maxOverlap
-    stats.meanOverlap = contactResult.contacts ? contactResult.overlapSum / contactResult.contacts : 0
-    if (pressure) runPressure(contact, pressure)
+    if (offload) stepOffloaded(offload, contact)
+    else {
+      contactStep(contact, { ...options.contact!, h: ctx.h }, contactResult)
+      stats.contacts = contactResult.contacts
+      stats.maxOverlap = contactResult.maxOverlap
+      stats.meanOverlap = contactResult.contacts ? contactResult.overlapSum / contactResult.contacts : 0
+      if (pressure) runPressure(contact, pressure)
+    }
     measureLean()
     balance?.step(options.balance!, contact.workspace.shove)
     mound?.step()
@@ -149,7 +204,11 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     balance,
     beginStep,
     endStep,
-    remap: (removed, moved) => thrown?.remap(removed, moved),
+    remap: (removed, moved) => {
+      thrown?.remap(removed, moved)
+      offload?.remap(removed, moved)
+    },
+    dispose: () => offload?.dispose(),
     pressureRatio: (i) => (options.balance ? store.pressure[i]! / criticalOf(i) : 0),
   }
 }

@@ -1,7 +1,6 @@
-import type { CrowdStore } from '../store'
 import { BALANCE } from '../types'
 import { takesPartInContact } from './contact'
-import type { ContactView } from './contact'
+import type { ContactView, PhysicsStore } from './contact'
 import type { CrowdPressureOptions } from './options'
 
 /** Two bodies count as touching up to this far past the sum of their radii. */
@@ -39,6 +38,8 @@ export type PressureContext = {
   readonly doorLoad: Float32Array
   /** The agent the horde presses on (position only); undefined: nothing to press on. */
   readonly player?: { readonly x: number; readonly z: number } | undefined
+  /** When given, the load a door gets from each agent is recorded here (by agent, with the door "index" `doorAt` answered) instead of added to `doorLoad`: the caller adds it, in agent order. */
+  readonly doorOut?: { readonly cell: Int32Array; readonly load: Float32Array } | undefined
 }
 
 export type PressureResult = { playerLoad: number; drivers: number }
@@ -57,7 +58,7 @@ export const createPressureWorkspace = (capacity: number, pairCapacity: number):
   canPress: new Uint8Array(capacity),
 })
 
-const isPressing = (store: CrowdStore, i: number): boolean => takesPartInContact(store, i) && (store.balance[i] === BALANCE.STANDING || store.balance[i] === BALANCE.STAGGERING)
+const isPressing = (store: PhysicsStore, i: number): boolean => takesPartInContact(store, i) && (store.balance[i] === BALANCE.STANDING || store.balance[i] === BALANCE.STAGGERING)
 
 /** `isPressing` of every agent into `canPress`: the state does not change inside the pressure step. */
 function readPressing(view: ContactView, workspace: PressureWorkspace): void {
@@ -66,10 +67,10 @@ function readPressing(view: ContactView, workspace: PressureWorkspace): void {
 
 const frontWeight = (alignment: number, cone: number): number => (alignment > cone ? (alignment - cone) / (1 - cone) : 0)
 
-const hasAim = (store: CrowdStore, i: number): boolean => store.aimX[i] !== 0 || store.aimZ[i] !== 0
+const hasAim = (store: PhysicsStore, i: number): boolean => store.aimX[i] !== 0 || store.aimZ[i] !== 0
 
 /** The will of `i` against its front neighbour `j`: the part of its speed along the contact that the neighbour does not have is cut. */
-function noteCut(store: CrowdStore, workspace: PressureWorkspace, i: number, j: number, nx: number, nz: number): void {
+function noteCut(store: PhysicsStore, workspace: PressureWorkspace, i: number, j: number, nx: number, nz: number): void {
   const excess = (store.vx[i]! - store.vx[j]!) * nx + (store.vz[i]! - store.vz[j]!) * nz
   if (excess <= workspace.cutExcess[i]!) return
   workspace.cutExcess[i] = excess
@@ -156,7 +157,7 @@ function clearWorkspace(view: ContactView, workspace: PressureWorkspace): void {
 }
 
 /** What agent `i` adds to the field by itself: its drive, when it wants to go and has something in front. */
-function ownDrive(store: CrowdStore, context: PressureContext, workspace: PressureWorkspace, i: number): number {
+function ownDrive(store: PhysicsStore, context: PressureContext, workspace: PressureWorkspace, i: number): number {
   if (!hasAim(store, i) || !workspace.pressing[i]) return 0
   return context.driveForceOfType[store.type[i]!]! * store.driveFactor[i]!
 }
@@ -180,7 +181,12 @@ function spreadField(view: ContactView, workspace: PressureWorkspace, params: Pr
   for (let i = 0; i < view.n; i++) {
     if (!workspace.canPress[i]) continue
     const passed = (params.transmission * store.fieldPrev[i]!) / (workspace.weightSum[i]! || 1)
-    if (workspace.wallKind[i] && workspace.wallDoor[i]! >= 0) context.doorLoad[workspace.wallDoor[i]!]! += passed * params.h
+    if (workspace.wallKind[i] && workspace.wallDoor[i]! >= 0) {
+      if (context.doorOut) {
+        context.doorOut.cell[i] = workspace.wallDoor[i]!
+        context.doorOut.load[i] = passed * params.h
+      } else context.doorLoad[workspace.wallDoor[i]!]! += passed * params.h
+    }
     if (workspace.playerWeight[i]! > 0) out.playerLoad += passed * workspace.playerWeight[i]! * workspace.playerWeight[i]!
     if (store.field[i]! > params.cap) store.field[i] = params.cap
   }
