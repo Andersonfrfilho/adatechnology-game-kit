@@ -10,7 +10,7 @@ export type { BodyJoints, BuildInstancedBodyParams } from './instanced/body-geom
 export { createBodyMaterial } from './instanced/body-material'
 export type { BodyMaterialParams } from './instanced/body-material'
 export { createBodyBatch } from './instanced/body-batch'
-export type { BodyBatch, BodyBatchOptions, BodyInstance } from './instanced/body-batch'
+export type { BodyBatch, BodyBatchMesh, BodyBatchOptions, BodyInstance } from './instanced/body-batch'
 export { LOD_BAKE, LOD_BATCH_CAPACITY, LOD_CASTS_SHADOW, LOD_DISTANCES, LOD_SEGMENTS, lodAt } from './instanced/lod'
 export { BAKE_NEUTRAL_POSE, bakeBody } from './instanced/bake'
 export type { BakeBuilders, BakeSpec, BakedBody } from './instanced/bake'

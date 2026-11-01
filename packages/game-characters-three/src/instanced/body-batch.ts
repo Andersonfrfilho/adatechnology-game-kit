@@ -26,8 +26,11 @@ export type BodyInstance = {
   readonly y?: number
 }
 
+/** A plain `Mesh` over an `InstancedBufferGeometry` (no `instanceMatrix`: 4 vertex attribute slots less); `count` mirrors the geometry's `instanceCount`. */
+export type BodyBatchMesh = THREE_NS.Mesh & { count: number }
+
 export type BodyBatch = {
-  readonly mesh: THREE_NS.InstancedMesh
+  readonly mesh: BodyBatchMesh
   readonly max: number
   readonly count: number
   begin(): void
@@ -38,7 +41,8 @@ export type BodyBatch = {
 /** A batch of bodies drawn in one call (zombies, survivors, corpses). `begin`, `push` per body each frame, then `end` (G 65509 `BodyBatch`). */
 export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry, options: BodyBatchOptions): BodyBatch => {
   const { max, castShadow = true, time } = options
-  const copy = geometry.clone()
+  const copy = new three.InstancedBufferGeometry().copy(geometry as THREE_NS.InstancedBufferGeometry)
+  copy.instanceCount = 0
   const attributes: Record<string, THREE_NS.InstancedBufferAttribute> = {}
   for (const [name, size] of ATTRIBUTES) {
     const attribute = new three.InstancedBufferAttribute(new Float32Array(max * size), size)
@@ -46,7 +50,13 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
     copy.setAttribute(name, attribute)
     attributes[name] = attribute
   }
-  const mesh = new three.InstancedMesh(copy, createBodyMaterial(three, { time }), max)
+  const mesh = new three.Mesh(copy, createBodyMaterial(three, { time })) as unknown as BodyBatchMesh
+  Object.defineProperty(mesh, 'count', {
+    get: () => copy.instanceCount,
+    set: (value: number) => {
+      copy.instanceCount = value
+    },
+  })
   mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time }) as THREE_NS.MeshDepthMaterial
   mesh.frustumCulled = false
   mesh.castShadow = castShadow
