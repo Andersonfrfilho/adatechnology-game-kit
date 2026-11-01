@@ -24,7 +24,7 @@ const HOLE_DECAL_SCALE = 2.4
 /** From a door's skin to its inner card, metres. */
 const DOOR_DEPTH = 0.07
 /** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
-const DOOR_EDGE_PIECES = 16
+const DOOR_EDGE_PIECES = 8
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
 const DOOR_LINER_COLOR = '#5a5e64'
@@ -42,7 +42,7 @@ const DOOR_HANDLE_INSET = 0.12
 const DOOR_HANDLE_MIN = 0.07
 const DOOR_HANDLE_MAX = 0.24
 const DOOR_HANDLE_THIN = 0.07
-const DOOR_HANDLE_OUTSIDE = 0.1
+const DOOR_HANDLE_OUTSIDE = 0.15
 /** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
 const PANE_SEAT_OUT = 0.05
 const PANE_SEAT_IN = -0.05
@@ -522,14 +522,51 @@ export class VehicleVisuals implements CreaseWork {
     const ray = new THREE.Raycaster()
     for (const pane of c.glass as Obj[]) {
       if (pane.userData.glass?.outline) continue
-      const seat = this.paneSeat(pane, shell, ray)
+      const local = this.shellAround(pane, shell)
+      if (!local) continue
+      const seat = this.paneSeat(pane, [local], ray)
       if (!seat) continue
       const near = (c.vehicle.children as Obj[]).filter((o) => o.isMesh && o !== pane && !o.userData.glass && !shell.includes(o) && this.onPane(o, pane, seat))
       for (const m of [pane, ...near]) this.movePane(m, seat)
-      const past = this.shellPast(pane, shell, ray, seat.normal)
+      const past = this.shellPast(pane, [local], ray, seat.normal)
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
       this.paneBorder(pane, near, seat)
     }
+  }
+  /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
+  private shellAround(pane: Obj, shell: Obj[]): Obj | null {
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(pane).expandByScalar(PANE_SEAT_REACH + PANE_SEAT_OUT)
+    const out: number[] = []
+    const a = new THREE.Vector3()
+    const b = new THREE.Vector3()
+    const d = new THREE.Vector3()
+    const tri = new THREE.Box3()
+    for (const mesh of shell) {
+      const pos = mesh.geometry.attributes.position
+      const idx = mesh.geometry.index
+      const count = idx ? idx.count : pos.count
+      const e = mesh.matrixWorld.elements
+      const world = (v: any, i: number): void => {
+        const x = pos.getX(i)
+        const y = pos.getY(i)
+        const z = pos.getZ(i)
+        v.set(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14])
+      }
+      for (let f = 0; f + 2 < count; f += 3) {
+        world(a, idx ? idx.getX(f) : f)
+        world(b, idx ? idx.getX(f + 1) : f + 1)
+        world(d, idx ? idx.getX(f + 2) : f + 2)
+        tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(d)
+        if (tri.intersectsBox(box)) out.push(a.x, a.y, a.z, b.x, b.y, b.z, d.x, d.y, d.z)
+      }
+    }
+    if (!out.length) return null
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3))
+    const proxy = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    proxy.updateMatrixWorld(true)
+    return proxy
   }
   /** The outward normal of a pane and how far the shell is at each sampled point (world). */
   private paneSeat(pane: Obj, shell: Obj[], ray: any): PaneSeat | null {
@@ -720,9 +757,8 @@ export class VehicleVisuals implements CreaseWork {
         const at = box.getCenter(new THREE.Vector3())
         const isHandle = size.x > DOOR_HANDLE_MIN && size.x < DOOR_HANDLE_MAX && size.y < DOOR_HANDLE_THIN && size.z < DOOR_HANDLE_THIN
         if (!isHandle || Math.sign(at.z) !== Math.sign(z.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
-        // the pull inside the cabin stays where it is: only what stands on the outer skin is the outer handle
-        const here = this.surface('z', z.side < 0 ? -1 : 1, B, [[at.x, at.y]])
-        if (here != null && Math.abs(here - at.z) > DOOR_HANDLE_OUTSIDE) continue
+        // the pull inside the cabin stays where it is: only what stands at the outer side is the outer handle
+        if (Math.abs(at.z) < Math.max(Math.abs(B.z0), Math.abs(B.z1)) - DOOR_HANDLE_OUTSIDE) continue
         const skin = this.surface('z', z.side < 0 ? -1 : 1, B, [[free, at.y]])
         o.position.x += free - at.x
         if (skin != null) o.position.z += skin + (z.side < 0 ? -1 : 1) * (size.z / 2) - at.z
