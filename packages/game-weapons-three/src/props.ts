@@ -110,7 +110,7 @@ export interface WeaponItemModel {
 }
 
 // the weapons whose item has another id, or that the laying-down rule turns the wrong way
-const WEAPON_ITEM_MODELS = new Map<string, WeaponItemModel>([
+export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponItemModel]> = [
   ['wrench', { item: 'adjustable_wrench' }],
   ['extinguisher', { item: 'fire_extinguisher', flip: true }],
   ['blowtorch', { item: 'gas_torch', flip: true }],
@@ -118,26 +118,66 @@ const WEAPON_ITEM_MODELS = new Map<string, WeaponItemModel>([
   ['knife', { flip: true }],
   ['meat_cleaver', { flip: true }],
   ['screwdriver', { flip: true }],
-])
+]
 
-/** Draws a weapon the gallery did not model with an item model of game-items-three (a game adds its own or corrects one; `null` keeps the low-poly prop). */
-export function registerWeaponItemModel(weaponId: string, model: WeaponItemModel | null): void {
-  WEAPON_ITEM_MODELS.set(weaponId, model ?? { item: '' })
+/** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
+export interface WeaponProps {
+  /** Draws a weapon the gallery did not model with an item model of game-items-three (a game adds its own or corrects one; `null` keeps the low-poly prop). */
+  register(weaponId: string, model: WeaponItemModel | null): void
+  /** The override of a weapon, if the set has one. */
+  get(weaponId: string): WeaponItemModel | undefined
+  /** The item model of game-items-three that draws a weapon, or undefined when there is none. */
+  itemModelOf(weaponId: string, items?: ItemModels): string | undefined
+  /** `buildItemWeaponModel` with this set's overrides. */
+  buildItemModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined
+  /** `buildWeaponModel` with this set's overrides. */
+  buildModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group
 }
 
-/** The item model of game-items-three that draws a weapon (`baseball_bat`, `axe`, `fire_extinguisher`...), or undefined when there is none. */
-export function itemModelOfWeapon(weaponId: string, items?: ItemModels): string | undefined {
-  const id = WEAPON_ITEM_MODELS.get(weaponId)?.item ?? weaponId
-  return id && (items ?? DEFAULT_ITEM_MODELS).has(id) ? id : undefined
+export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponProps => {
+  const itemModelOf = (weaponId: string, items?: ItemModels): string | undefined => {
+    const id = models.get(weaponId)?.item ?? weaponId
+    return id && (items ?? DEFAULT_ITEM_MODELS).has(id) ? id : undefined
+  }
+  const buildItemModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => drawItemWeapon({ THREE, def, items, models, itemModelOf })
+  return {
+    register: (weaponId, model) => void models.set(weaponId, model ?? { item: '' }),
+    get: (weaponId) => models.get(weaponId),
+    itemModelOf,
+    buildItemModel,
+    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildProp(THREE, weaponProp(def)),
+  }
 }
+
+let defaultProps: WeaponProps | undefined
+
+/** The set behind `registerWeaponItemModel`, `itemModelOfWeapon`, `buildItemWeaponModel` and `buildWeaponModel`, created on first use. */
+export const defaultWeaponProps = (): WeaponProps => (defaultProps ??= weaponPropsOver(new Map(SHIPPED_WEAPON_ITEM_MODELS)))
+
+/** @deprecated use `createWeaponProps(...).register`. */
+export const registerWeaponItemModel = (weaponId: string, model: WeaponItemModel | null): void => defaultWeaponProps().register(weaponId, model)
+
+/** The item model of game-items-three that draws a weapon (`baseball_bat`, `axe`, `fire_extinguisher`...), or undefined when there is none. @deprecated use `createWeaponProps(...).itemModelOf`. */
+export const itemModelOfWeapon = (weaponId: string, items?: ItemModels): string | undefined => defaultWeaponProps().itemModelOf(weaponId, items)
 
 /**
  * A weapon the gallery did not draw, with the team's item model (Itens do Vale Cinzento: the bat, the axe, the machete, the extinguisher...): its long axis turned
  * along +x and laid flat, the wider end (the head) at +x unless `registerWeaponItemModel` says otherwise, the origin at the bottom centre, an empty `handle` at the narrow end where the hand closes. Undefined
  * when `items` (the item models of game-items-three, lent by the host; default `itemModels` there) has none of it.
+ * @deprecated use `createWeaponProps(...).buildItemModel`.
  */
-export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined {
-  const itemId = itemModelOfWeapon(def.id, items)
+export const buildItemWeaponModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => defaultWeaponProps().buildItemModel(THREE, def, items)
+
+type DrawItemWeaponParams = {
+  readonly THREE: typeof THREE_NS
+  readonly def: Pick<WeaponDef, 'id'>
+  readonly items: ItemModels | undefined
+  readonly models: ReadonlyMap<string, WeaponItemModel>
+  readonly itemModelOf: (weaponId: string, items?: ItemModels) => string | undefined
+}
+
+function drawItemWeapon({ THREE, def, items, models, itemModelOf }: DrawItemWeaponParams): THREE_NS.Group | undefined {
+  const itemId = itemModelOf(def.id, items)
   if (!itemId) return undefined
   const { root } = (items ?? DEFAULT_ITEM_MODELS).build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
@@ -153,7 +193,7 @@ export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef
   else if (size.z > size.x && size.z > size.y) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2)
   size = sizeOf()
   if (size.z < size.y) root.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2)
-  const turn = WEAPON_ITEM_MODELS.get(def.id)?.turn ?? 0
+  const turn = models.get(def.id)?.turn ?? 0
   if (turn) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (turn * Math.PI) / 2)
   // the head is the wider end (across the floor, z): it goes to +x
   const box = new THREE.Box3().setFromObject(root)
@@ -175,7 +215,7 @@ export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef
     }
   })
   const reach = span.map(([low, high]) => high - low)
-  const flip = WEAPON_ITEM_MODELS.get(def.id)?.flip === true
+  const flip = models.get(def.id)?.flip === true
   if (reach[0] > reach[1] !== flip) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI)
   group.updateMatrixWorld(true)
   const laid = new THREE.Box3().setFromObject(root)
@@ -195,10 +235,8 @@ export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef
   return group
 }
 
-/** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the low-poly prop the counters show otherwise. */
-export function buildWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group {
-  return buildItemWeaponModel(THREE, def, items) ?? buildProp(THREE, weaponProp(def))
-}
+/** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the low-poly prop the counters show otherwise. @deprecated use `createWeaponProps(...).buildModel`. */
+export const buildWeaponModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group => defaultWeaponProps().buildModel(THREE, def, items)
 
 const MODEL_BODY = 'body'
 

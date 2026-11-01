@@ -1,3 +1,4 @@
+import { buildItemWeaponModel, createWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from '@adatechnology/game-weapons-three'
 import { createShapes, generate, getGenerator, registerGenerator, unregisterGenerator } from '@adatechnology/game-shapes'
 import { buildItem, createItemModels, hasItemModel, listItemModels, registerItemModel, SHIPPED_MODELS, unregisterItemModel } from '@adatechnology/game-items-three'
 import * as THREE from 'three'
@@ -79,5 +80,25 @@ describe('T5.2 shapes: the old global generator registry matches a set made by i
       unregisterGenerator('compat.stones')
     }
     expect(getGenerator('compat.stones')).toBeUndefined()
+  })
+})
+
+describe('T5.2 weapons-three: the old global weapon prop calls match a set made by instance', () => {
+  const box = (object: THREE.Object3D): number[] => new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3()).toArray()
+
+  it('draws the same weapons from the same item models', () => {
+    const made = createWeaponProps()
+    for (const id of ['knife', 'crossbow', 'extinguisher', 'axe']) {
+      expect(made.itemModelOf(id)).toBe(itemModelOfWeapon(id))
+      expect(box(made.buildItemModel(THREE, { id })!)).toEqual(box(buildItemWeaponModel(THREE, { id })!))
+    }
+  })
+
+  it('registerWeaponItemModel on the global set does not reach a set made before or after', () => {
+    const before = createWeaponProps()
+    registerWeaponItemModel('compat_weapon', { item: 'axe' })
+    expect(itemModelOfWeapon('compat_weapon')).toBe('axe')
+    expect(before.itemModelOf('compat_weapon')).toBeUndefined()
+    expect(createWeaponProps().itemModelOf('compat_weapon')).toBeUndefined()
   })
 })
