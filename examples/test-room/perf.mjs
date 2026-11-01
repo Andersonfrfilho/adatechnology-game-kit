@@ -3,7 +3,9 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
+//   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
+//   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
 //   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
@@ -76,6 +78,11 @@ const idle = await phase('idle', () => pause(3000))
 const slots = await phase('light_slots', async () => {
   lightSlotReport = await page.evaluate(readLightSlots)
 })
+console.log(`SLOTS ${JSON.stringify(lightSlotReport)}`)
+if (process.env.PERF_ONLY === 'light_slots') {
+  await browser.close()
+  process.exit(lightSlotReport.problems.length === 0 && slots.programs === 0 ? 0 : 1)
+}
 for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
 const warm = await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200))
 const storm = await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120))
@@ -98,7 +105,7 @@ if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.
 if (after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, lightSlots: lightSlotReport, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', gpu, budget: BUDGET, phases, storm: storm.name, lightSlots: lightSlotReport, failures }, null, 1))
 for (const text of failures) console.log(`FAIL  ${text}`)
 console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
 await browser.close()

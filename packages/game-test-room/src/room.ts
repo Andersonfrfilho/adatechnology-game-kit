@@ -3190,16 +3190,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const LIGHTS_CHECK_MS = 250
 
-  const pinnedPrograms = new WeakSet<object>()
-  /** Holds one extra use on every program: three.js frees a program when the last material using it is disposed, and effects that make and dispose a material per particle would link it again on every burst. */
-  const pinPrograms = (): void => {
-    for (const program of (gl.info?.programs ?? []) as unknown as { usedTimes: number }[]) {
-      if (pinnedPrograms.has(program)) continue
-      pinnedPrograms.add(program)
-      program.usedTimes++
-    }
-  }
-
   /** Every material a probe group draws: they go to the warmup's anchors, which keep them alive (a program is freed when the last material that uses it is disposed). */
   const materialsOf = (group: THREE_NS.Object3D): THREE_NS.Material[] => {
     const found = new Set<THREE_NS.Material>()
@@ -3243,7 +3233,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let warmedUp = false
   const warmUp = (): void => {
     warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES })
-    pinPrograms()
     warmedUp = true
   }
 
@@ -3893,7 +3882,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       () => {
         const restoreCamera = room.applyCamera()
         gl.render(scene, debugView ?? camera)
-        pinPrograms()
         restoreCamera()
         roomMetrics.rendered()
       },
