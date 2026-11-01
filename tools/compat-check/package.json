@@ -13,6 +13,7 @@
     "@adatechnology/game-characters-people": "workspace:*",
     "@adatechnology/game-characters-three": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-floorplan": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
     "@adatechnology/game-floorplan-three": "workspace:*",

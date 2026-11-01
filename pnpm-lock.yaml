@@ -1936,6 +1936,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../../packages/game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../../packages/game-destruction
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../../packages/game-floorplan

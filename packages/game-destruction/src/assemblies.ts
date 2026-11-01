@@ -1,3 +1,6 @@
+import { applyPatches, mergeById, removeIds } from '@adatechnology/game-contracts'
+import type { DeepPartial } from '@adatechnology/game-contracts'
+
 import assembliesJson from './data/assemblies.json'
 import { MATERIALS } from './materials'
 import type { MaterialDef, MaterialId, PartBreach, PartSpec, PartUnits, Reinforcement, SurfaceLayer, Vec3 } from './types'
@@ -37,16 +40,65 @@ export interface AssemblyPartOptions {
   materials?: ReadonlyMap<MaterialId, MaterialDef>
 }
 
-/** Built-in assemblies; `registerAssembly` adds to this list. */
+// What the JSON held at load, before any `registerAssembly` changed the shared list.
+const SHIPPED: readonly AssemblyDef[] = structuredClone(assembliesJson as unknown as AssemblyDef[])
+
+/**
+ * Built-in assemblies; `registerAssembly` adds to this list.
+ * @deprecated the list every page shares. Use `createAssemblies({ packs, patch, remove })`, or `defaultAssemblies()` for this one.
+ */
 export const ASSEMBLIES: AssemblyDef[] = assembliesJson as unknown as AssemblyDef[]
 
-export const registerAssembly = (def: AssemblyDef): void => {
-  const at = ASSEMBLIES.findIndex((a) => a.id === def.id)
-  if (at >= 0) ASSEMBLIES[at] = def
-  else ASSEMBLIES.push(def)
+export interface AssembliesOptions {
+  /** Assemblies added to the built-in ones; one with the id of a built-in replaces it. */
+  readonly packs?: readonly (readonly AssemblyDef[])[]
+  /** Changes by id, merged field by field over what is there. */
+  readonly patch?: Readonly<Record<string, DeepPartial<AssemblyDef>>>
+  /** Ids taken out. */
+  readonly remove?: readonly string[]
 }
 
-export const getAssembly = (id: string): AssemblyDef | undefined => ASSEMBLIES.find((a) => a.id === id)
+export interface Assemblies {
+  list(): readonly AssemblyDef[]
+  get(id: string): AssemblyDef | undefined
+  /** Adds an assembly, or replaces the one with the same id. */
+  register(def: AssemblyDef): void
+  /** The wall as a `PartSpec`; throws for an id this set does not have. */
+  part(assemblyId: string, options: AssemblyPartOptions): PartSpec
+}
+
+const assembliesOver = (defs: AssemblyDef[]): Assemblies => {
+  const get = (id: string): AssemblyDef | undefined => defs.find((a) => a.id === id)
+  return {
+    list: () => defs,
+    get,
+    register(def) {
+      const at = defs.findIndex((a) => a.id === def.id)
+      if (at >= 0) defs[at] = def
+      else defs.push(def)
+    },
+    part: (assemblyId, options) => buildAssemblyPart(get(assemblyId), assemblyId, options),
+  }
+}
+
+/** A set of assemblies of its own: the built-in ones (copied) plus `packs`, `patch` and `remove`. Nothing is shared with any other set on the page. */
+export const createAssemblies = (options: AssembliesOptions = {}): Assemblies => {
+  const entries = mergeById(SHIPPED.map((def) => structuredClone(def)), (options.packs ?? []).flat())
+  applyPatches(entries, options.patch)
+  removeIds(entries, options.remove)
+  return assembliesOver([...entries.values()])
+}
+
+let defaultSet: Assemblies | undefined
+
+/** The set behind `ASSEMBLIES`, `registerAssembly`, `getAssembly` and `assemblyPart`, created on first use. */
+export const defaultAssemblies = (): Assemblies => (defaultSet ??= assembliesOver(ASSEMBLIES))
+
+/** @deprecated use `createAssemblies(...).register`. */
+export const registerAssembly = (def: AssemblyDef): void => defaultAssemblies().register(def)
+
+/** @deprecated use `createAssemblies(...).get`. */
+export const getAssembly = (id: string): AssemblyDef | undefined => defaultAssemblies().get(id)
 
 const faceCount = (layer: SurfaceLayer): number => (layer.faces === 'both' ? 2 : 1)
 
@@ -57,8 +109,7 @@ export const assemblyDepth = (def: AssemblyDef): number => def.depth ?? def.core
  * The wall as a box `[width, height, depth]` (thin along local z) with the assembly's layers, units, rebar and breach. Mass is the core (times `fill`)
  * plus the coats; `thickness` is the core's, so each coat adds its own `penetration x thickness` to what a bullet must cross.
  */
-export const assemblyPart = (assemblyId: string, options: AssemblyPartOptions): PartSpec => {
-  const def = getAssembly(assemblyId)
+const buildAssemblyPart = (def: AssemblyDef | undefined, assemblyId: string, options: AssemblyPartOptions): PartSpec => {
   if (!def) throw new Error(`unknown assembly "${assemblyId}"`)
   const densityOf = (id: MaterialId): number => {
     const m = options.materials?.get(id) ?? MATERIALS.find((x) => x.id === id)
@@ -85,3 +136,6 @@ export const assemblyPart = (assemblyId: string, options: AssemblyPartOptions): 
     ...options.extra,
   }
 }
+
+/** @deprecated use `createAssemblies(...).part`. */
+export const assemblyPart = (assemblyId: string, options: AssemblyPartOptions): PartSpec => defaultAssemblies().part(assemblyId, options)
