@@ -39,3 +39,6 @@ export { createMaterialAnchors } from './pools/anchors'
 export { isRenderPools } from './pools/render-pools'
 export type { RenderPools } from './pools/render-pools'
 export type { MaterialAnchors } from './pools/anchors'
+
+export { createFramePacer } from './frame-pacer'
+export type { FramePacer, FramePacerContext, FramePacerOptions } from './frame-pacer'
