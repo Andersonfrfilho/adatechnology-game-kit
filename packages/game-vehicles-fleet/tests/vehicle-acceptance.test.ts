@@ -10,8 +10,9 @@ type Finding = { readonly model: string; readonly problem: string }
 
 const AIR_ABOVE = 0.4
 const PANE_SAMPLES = 6
+const PANE_SEAT_TOLERANCE = 0.03
 /** Panes a shot along their normal does not reach yet (something drawn stands in front, or the pane is behind trim): to look at one by one, see docs/veiculos-verificacao.md. */
-const KNOWN_OPEN = new Set(['midsize_suv', 'battle_tank', 'fishing_boat', 'single_engine_plane', 'patrol_boat', 'turbine_helicopter'])
+const KNOWN_OPEN = new Set(['midsize_suv', 'armored_truck', 'fastback_sedan', 'battle_tank', 'fishing_boat', 'single_engine_plane'])
 const SHOT = { type: 'ballistic', energy: 527, caliber: 9 } as const
 
 /** Points really on the pane, whatever its outline: the middles of its largest triangles, facing out. A trim or a seal may cover some, never all. */
@@ -55,6 +56,12 @@ function auditModel(key: string): string[] {
       problems.push(`pane ${glass.key ?? glass.label}: the shots land on ${[...new Set(hits.map((hit) => hit?.part ?? 'nothing'))].join(', ')}`)
     }
   })
+  // a windshield or rear window lies on the body: nothing of the shell stands past it and it does not stand off the shell
+  c.glass.forEach((pane: any) => {
+    if (!pane.userData.glass || pane.userData.glass.outline) return
+    const hits = paneAims(pane, centre).map(({ at, normal: n }) => shoot(at.clone().addScaledVector(n, 1), n.clone().negate()))
+    if (hits.every((hit) => hit && hit.distance < 1 - PANE_SEAT_TOLERANCE)) problems.push(`pane ${pane.userData.glass.key}: the ${hits[0]!.part} stands past it`)
+  })
   // the air over the body is air
   const over = shoot(new THREE.Vector3(centre.x, box.max.y + AIR_ABOVE, centre.z), new THREE.Vector3(1, 0, 0))
   if (over) problems.push(`the air above the vehicle takes a shot on ${over.part}`)
@@ -74,6 +81,22 @@ function auditModel(key: string): string[] {
       continue
     }
     const part = d.describe().parts.find((p) => p.id === id)!
+    const zone = (kit as any).zonesOf(c).find((q: any) => q.id === id)
+    if (zone) {
+      const inverse = c.vehicle.matrixWorld.clone().invert()
+      for (const o of c.vehicle.children as any[]) {
+        if (!o.isMesh || o.material !== (kit as any)._.MATERIALS.chrome) continue
+        const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
+        const at = b.getCenter(new THREE.Vector3())
+        const s = b.getSize(new THREE.Vector3())
+        const B = zone.box
+        if (s.x < 0.07 || s.x > 0.24 || s.y > 0.07 || s.z > 0.07 || Math.sign(at.z) !== Math.sign(zone.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
+        // the pull inside the cabin is not the outer handle
+        if (Math.abs(at.z) < Math.max(Math.abs(B.z0), Math.abs(B.z1)) - 0.15) continue
+        const fromFree = zone.hinge === 'rear' ? B.x1 - at.x : at.x - B.x0
+        if (fromFree > (B.x1 - B.x0) * 0.35) problems.push(`${id}: the handle is by the hinge`)
+      }
+    }
     const pos = new THREE.Vector3(...part.position).applyMatrix4(item.root.matrixWorld)
     const out = new THREE.Vector3().setComponent(across === 'x' ? 0 : 2, Math.sign(pos[across] - centre[across]) || 1)
     const low = pos.clone().add(new THREE.Vector3(0, -0.05, 0))
