@@ -37,7 +37,7 @@ import type { Hold } from './hand-hold'
 
 const PI = Math.PI
 const HEAT_DISPLAY_MAX_FALLBACK = 120
-/** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres, at `rate` per second; the world is probed `probe` metres ahead. */
+/** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres or its own length when longer, at `rate` per second; the world is probed `probe` metres ahead. */
 export const WALL_PULL = { margin: 0.03, max: 1.2, rate: 14, probe: 3 }
 /** The grips of the hands stay above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
 export const HAND_IN_VIEW = { floor: -0.88, max: 0.3, rate: 10 }
@@ -337,7 +337,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     ahead.set(0, 0, -1).applyQuaternion(camera.quaternion)
     if (reach === 0) reach = Math.max(0.01, measureReach(session))
     const free = options.contact(camera.position, ahead, WALL_PULL.probe)
-    const want = free === null ? 0 : Math.max(0, Math.min(WALL_PULL.max, reach + WALL_PULL.margin - free))
+    const want = free === null ? 0 : Math.max(0, Math.min(Math.max(WALL_PULL.max, session.lengthMetres * session.holderScale), reach + WALL_PULL.margin - free))
     pull += (want - pull) * Math.min(1, dt * WALL_PULL.rate)
     if (pull < 1e-4) return
     hand.position.addScaledVector(ahead, -pull)
