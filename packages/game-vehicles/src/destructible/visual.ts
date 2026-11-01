@@ -50,6 +50,11 @@ const PANE_SEAT_REACH = 0.14
 const PANE_SEAT_SAMPLES = 24
 const PANE_SEAT_LIFT = 0.004
 const PANE_FRAME_NEAR = 0.07
+/** The bars of a frame: few vertices and long; the band that takes their place. */
+const PANE_BAR_VERTICES = 48
+const PANE_BAR_LENGTH = 0.3
+const PANE_BORDER = 0.03
+const PANE_BORDER_LIFT = 0.003
 type PaneSeat = { readonly normal: any; readonly samples: Array<{ readonly at: any; readonly by: number }> }
 /** A mirror the model draws: small, and this near where the part stands, metres. */
 const DRAWN_MIRROR_SIZE = 0.3
@@ -522,6 +527,7 @@ export class VehicleVisuals implements CreaseWork {
       for (const m of [pane, ...near]) this.movePane(m, seat)
       const past = this.shellPast(pane, shell, ray, seat.normal)
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
+      this.paneBorder(pane, near, seat)
     }
   }
   /** The outward normal of a pane and how far the shell is at each sampled point (world). */
@@ -570,6 +576,72 @@ export class VehicleVisuals implements CreaseWork {
       if (by > -Infinity) samples.push({ at: v.clone(), by })
     }
     return samples.length >= 3 ? { normal, samples } : null
+  }
+  /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
+  private paneBorder(pane: Obj, near: Obj[], seat: PaneSeat): void {
+    const THREE = this.THREE
+    const bars = near.filter((o) => {
+      if (o.geometry.attributes.position.count > PANE_BAR_VERTICES) return false
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return Math.max(size.x, size.y, size.z) > PANE_BAR_LENGTH
+    })
+    if (!bars.length) return
+    const outline = this.paneOutline(pane, seat.normal)
+    if (outline.length < 3) return
+    const centre = new THREE.Vector3()
+    for (const p of outline) centre.add(p)
+    centre.divideScalar(outline.length)
+    const position: number[] = []
+    const toVehicle = this.I.worldInverseOf(this.c)
+    const put = (p: any): void => {
+      const q = p.clone().addScaledVector(seat.normal, PANE_BORDER_LIFT).applyMatrix4(toVehicle)
+      position.push(q.x, q.y, q.z)
+    }
+    const inward = (p: any): any => p.clone().add(centre.clone().sub(p).normalize().multiplyScalar(PANE_BORDER))
+    outline.forEach((a, i) => {
+      const b = outline[(i + 1) % outline.length]!
+      const c = inward(b)
+      const d = inward(a)
+      for (const p of [a, b, c, a, c, d]) put(p)
+    })
+    if (!position.length) return
+    for (const o of bars) o.visible = false
+    const band = new THREE.BufferGeometry()
+    band.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+    band.computeVertexNormals()
+    const material = this.I.MATERIALS.dark.clone()
+    material.side = THREE.DoubleSide
+    const mesh = new THREE.Mesh(band, material)
+    mesh.userData.noFollow = true
+    mesh.castShadow = false
+    mesh.raycast = () => {}
+    this.c.vehicle.add(mesh)
+  }
+  /** The outline of a pane, the convex hull of its vertices seen along its normal, in world space. */
+  private paneOutline(pane: Obj, normal: any): any[] {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const u = new THREE.Vector3(0, 1, 0).cross(normal)
+    if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
+    u.normalize()
+    const w = normal.clone().cross(u)
+    const points: Array<{ x: number; y: number; p: any }> = []
+    for (let i = 0; i < pos.count; i++) {
+      const p = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      points.push({ x: p.dot(u), y: p.dot(w), p })
+    }
+    points.sort((a, b) => a.x - b.x || a.y - b.y)
+    const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+    const half = (list: typeof points): typeof points => {
+      const out: typeof points = []
+      for (const q of list) {
+        while (out.length >= 2 && cross(out[out.length - 2]!, out[out.length - 1]!, q) <= 0) out.pop()
+        out.push(q)
+      }
+      out.pop()
+      return out
+    }
+    return [...half(points), ...half([...points].reverse())].map((q) => q.p)
   }
   /** How far the shell still stands past a seated pane, over its triangles. */
   private shellPast(pane: Obj, shell: Obj[], ray: any, normal: any): number {
