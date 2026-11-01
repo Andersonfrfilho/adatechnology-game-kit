@@ -1,0 +1,5 @@
+---
+'@adatechnology/game-crowd-three': minor
+---
+
+The crowd area steps the crowd in the host's `fixedSimulate` phase when the physics is on (one fixed step per call, the same at any frame rate), keeps the frame step when it is off, and answers the host's `explosion` events with `crowd.blast`. The bench gains `scene` (`dense_wall`: a horde pressed against a wall and a door; `chain_line`: a horde coming down a street at a row of gas cylinders and a car; more by the `scenes` option, drawn with the `props` option) and `physics` controls, applied after the seed and before the count whatever the order of the bench state, and publishes `falls_pressure`, `falls_chain`, `falls_landing`, `climbers`, `mound_max`, `thrown_peak`, `max_overlap`, `chain_links` and `crowd_ms_p99`. `CrowdRenderer.prepare()` bakes every type and makes every batch the frame would make on demand (bodies on the ground, blobs, impostors, accessories) so a host's warm-up links their programs before play; the `eager` option calls it once the bench state is applied.

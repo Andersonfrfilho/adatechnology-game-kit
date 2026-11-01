@@ -5,3 +5,5 @@ export { CROWD_AREA_ID, CROWD_EFFECTS, createCrowdTestModule } from './bench/mod
 export type { CrowdBenchSpecies, CrowdEffectMap, CrowdScenarioLike, CrowdTestModule, CrowdTestModuleOptions } from './bench/module'
 export { crowdBenchTextOf } from './bench/locale'
 export type { CrowdBenchText } from './bench/locale'
+export { BUILTIN_SCENES, CHAIN_LINE, DENSE_WALL } from './bench/scenes'
+export type { CrowdBenchScene, CrowdScenePlace, CrowdSceneProps } from './bench/scenes'

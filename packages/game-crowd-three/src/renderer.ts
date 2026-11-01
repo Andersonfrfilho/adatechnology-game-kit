@@ -49,6 +49,11 @@ export type CrowdRenderer = {
   readonly instances: CrowdInstances
   /** Bakes every type's variants now (otherwise a type is baked the first time one of its bodies is drawn). */
   bake(): void
+  /**
+   * Bakes and makes every batch the frame would make on demand (the bodies on the ground, the blob shadows, the impostors, the accessories of the near and middle levels), so that a host that compiles
+   * its scene (`ProgramWarmup`) links the body, accessory, blob and impostor programs and their depth and distance materials before play, and no batch is made during it.
+   */
+  prepare(): void
   /** Draws the frame: the agents, the bodies on the ground and the civilians. */
   update(dt: number, frame: CrowdFrame): void
   /** Agents drawn at each level of detail in the last frame (G `lodCounts`). */
@@ -225,6 +230,14 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
     group,
     instances,
     bake,
+    prepare() {
+      bake()
+      ensurePlain()
+      if (!variety) return
+      if (variety.blobShadows ?? true) ensureBlobs()
+      if (impostorOptions) ensureImpostors()
+      for (const accessory of accessoryKinds) for (const level of [0, 1]) accessoryBatch(accessory, level)
+    },
     update(dt, frame) {
       bakeSeen()
       time.value += dt

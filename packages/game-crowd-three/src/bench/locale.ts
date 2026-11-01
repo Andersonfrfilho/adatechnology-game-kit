@@ -4,10 +4,11 @@ export type CrowdBenchText = {
   readonly group: string
   readonly name: string
   readonly mix: string
-  readonly controls: Keys<'count' | 'type' | 'night' | 'seed' | 'spawn' | 'noise' | 'hit' | 'kill_all' | 'join' | 'flee' | 'herd' | 'materialize' | 'push' | 'reset'>
-  readonly hints: Keys<'count' | 'type' | 'night' | 'noise' | 'hit' | 'join' | 'flee' | 'herd' | 'materialize' | 'push'>
+  readonly controls: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'seed' | 'spawn' | 'noise' | 'hit' | 'kill_all' | 'join' | 'flee' | 'herd' | 'materialize' | 'push' | 'reset'>
+  readonly hints: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'noise' | 'hit' | 'join' | 'flee' | 'herd' | 'materialize' | 'push'>
   readonly layers: Keys<'corpses' | 'civilians' | 'animals'>
-  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message'>
+  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99'>
+  readonly sceneNames: Keys<'open' | 'dense_wall' | 'chain_line'>
   readonly scenarios: Keys<'relevance' | 'lod' | 'attack_pose' | 'corpse_darkens' | 'civilians_flee' | 'herd_calls' | 'vultures' | 'infection' | 'determinism'>
   readonly messages: Keys<'called' | 'burst_hit' | 'swing_knock' | 'pounce_knock' | 'migration' | 'door_broken' | 'alarm' | 'bark' | 'growl' | 'bitten' | 'turned' | 'died'>
   readonly yes: string
@@ -19,6 +20,8 @@ const EN: CrowdBenchText = {
   name: 'Crowd area',
   mix: 'Mixed (by weight)',
   controls: {
+    scene: 'Scene',
+    physics: 'Crowd physics',
     count: 'Agents',
     type: 'Type of the new ones',
     night: 'Night',
@@ -35,6 +38,8 @@ const EN: CrowdBenchText = {
     reset: 'Start again',
   },
   hints: {
+    scene: 'Where the crowd is born: the open ring, a horde pressed against a wall and a door, or a horde coming down a street at a row of gas cylinders and a car. Applied before the physics and the count.',
+    physics: 'Contact, pressure, falls, mounds, thrown bodies and blasts (the crowd is rebuilt with them).',
     count: 'The crowd grows or shrinks to this many, born 10 to 90 m from the area centre. Only the near ones think every frame (relevance bands).',
     type: 'The type of the agents added from now on; mixed draws them by the weights of the pack.',
     night: 'At night sight drops by 40%.',
@@ -62,7 +67,17 @@ const EN: CrowdBenchText = {
     health: 'Your health',
     grabbed: 'Grabbed',
     message: 'Last message',
+    falls_pressure: 'Falls by pressure',
+    falls_chain: 'Chain falls beyond a blast',
+    falls_landing: 'Falls by a landing body',
+    climbers: 'On the mound, peak',
+    mound_max: 'Highest mound, peak',
+    thrown_peak: 'Thrown bodies, peak',
+    max_overlap: 'Largest overlap, peak',
+    chain_links: 'Chain links',
+    crowd_ms_p99: 'Crowd step, p99',
   },
+  sceneNames: { open: 'Open ring', dense_wall: 'Dense wall', chain_line: 'Chain line' },
   scenarios: {
     relevance: 'Relevance: 500 agents, only the near ones every frame',
     lod: 'Level of detail with 1.5 m of hysteresis',
@@ -97,6 +112,8 @@ const PT_BR: CrowdBenchText = {
   name: 'Área da multidão',
   mix: 'Misturado (pelo peso)',
   controls: {
+    scene: 'Cena',
+    physics: 'Física da multidão',
     count: 'Agentes',
     type: 'Tipo dos novos',
     night: 'Noite',
@@ -113,6 +130,8 @@ const PT_BR: CrowdBenchText = {
     reset: 'Recomeçar',
   },
   hints: {
+    scene: 'Onde a multidão nasce: o anel aberto, uma horda espremida contra um muro e uma porta, ou uma horda descendo uma rua em direção a uma fileira de botijões e um carro. Vale antes da física e da contagem.',
+    physics: 'Contato, pressão, quedas, montes, corpos arremessados e explosões (a multidão é refeita com elas).',
     count: 'A multidão cresce ou diminui até esse número, nascendo de 10 a 90 m do centro da área. Só os de perto pensam todo quadro (faixas de relevância).',
     type: 'O tipo dos agentes acrescentados daqui em diante; misturado sorteia pelos pesos do pacote.',
     night: 'À noite a visão cai 40%.',
@@ -140,7 +159,17 @@ const PT_BR: CrowdBenchText = {
     health: 'Sua vida',
     grabbed: 'Agarrado',
     message: 'Última mensagem',
+    falls_pressure: 'Quedas por pressão',
+    falls_chain: 'Quedas em cadeia além da explosão',
+    falls_landing: 'Quedas por corpo que pousa',
+    climbers: 'No monte, pico',
+    mound_max: 'Maior monte, pico',
+    thrown_peak: 'Arremessados, pico',
+    max_overlap: 'Maior sobreposição, pico',
+    chain_links: 'Elos da cadeia',
+    crowd_ms_p99: 'Passo da multidão, p99',
   },
+  sceneNames: { open: 'Anel aberto', dense_wall: 'Muro denso', chain_line: 'Rua em cadeia' },
   scenarios: {
     relevance: 'Relevância: 500 agentes, só os de perto todo quadro',
     lod: 'Nível de detalhe com 1,5 m de histerese',

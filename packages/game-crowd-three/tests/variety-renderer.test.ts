@@ -129,3 +129,31 @@ describe('the impostor tier', () => {
     expect(renderer.lodCounts[2]).toBeGreaterThan(0)
   })
 })
+
+describe('createCrowdRenderer prepare', () => {
+  it('makes every batch a frame would make on demand, so no batch (and no program) is made during play', () => {
+    const crowd = createCrowd({ pack, seed: 5, capacity: 400, physics: { personality: true } })
+    const renderer = createCrowdRenderer(THREE, { crowd, builders: builders(), typeName: (type) => names.get(type.id) ?? type.id, variety: {} })
+    expect(renderer.group.children).toHaveLength(0)
+    renderer.prepare()
+    const prepared = renderer.group.children.length
+    const materials = new Set(renderer.group.children.flatMap((mesh) => [(mesh as THREE.Mesh).material, (mesh as THREE.Mesh).customDepthMaterial, (mesh as THREE.Mesh).customDistanceMaterial]).filter(Boolean))
+    expect(prepared).toBeGreaterThan(pack.types.length)
+    expect(materials.size).toBeGreaterThan(prepared)
+    for (let k = 0; k < 300; k++) crowd.spawn((k % 20) * 3 - 30, -4 - Math.floor(k / 20) * 40, k % pack.types.length)
+    renderer.update(1 / 30, frame)
+    expect(renderer.group.children).toHaveLength(prepared)
+    renderer.dispose()
+  }, 120000)
+
+  it('without variety only the bodies and the plain body are made', () => {
+    const crowd = createCrowd({ pack, seed: 5, capacity: 40 })
+    const renderer = createCrowdRenderer(THREE, { crowd, builders: builders(), typeName: (type) => names.get(type.id) ?? type.id })
+    renderer.prepare()
+    const prepared = renderer.group.children.length
+    crowd.spawn(0, -4, 0)
+    renderer.update(1 / 30, frame)
+    expect(renderer.group.children).toHaveLength(prepared)
+    renderer.dispose()
+  }, 120000)
+})
