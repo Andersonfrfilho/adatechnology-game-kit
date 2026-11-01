@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { CELL, STATE, createCrowd, createNavGrid } from '../../src'
-import { physicsOptions, makeTarget, packWithBalance } from './scenes'
-
-import { BLAST_STEP, COMPRESS_STEPS, createChainScene, mortarAt, runSteps } from './scenes'
+import { BLAST_STEP, COMPRESS_STEPS, FASTEST_FIRST, createChainScene, makeTarget, mortarAt, packWithBalance, physicsOptions, runSteps } from './scenes'
 import { hashCrowdState } from './state-hash'
 
 /** Regression guard of the performance work: the whole struct of arrays after the same steps must stay byte for byte what it was before the contact and pressure loops were rewritten. */
 describe('the full state of the crowd after N steps is pinned', () => {
   it('the queue and its grenade, 540 steps', () => {
-    const scene = createChainScene()
+    // the landing radius of the first run of this guard, so that it keeps pinning the loops and not a default
+    const scene = createChainScene({ physics: { ...FASTEST_FIRST, thrown: { ...(FASTEST_FIRST.thrown as object), priority: 'fastest', landingRadius: 0.7 } } })
     runSteps(scene, 540, (step) => {
       if (step === BLAST_STEP) scene.crowd.blast(mortarAt(scene.crowd))
     })

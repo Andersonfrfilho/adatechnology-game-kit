@@ -79,7 +79,7 @@ export type CrowdThrownOptions = {
   readonly pool?: number
   /** Only within this distance of the band centre (default 30 m). */
   readonly radius?: number
-  /** m around the landing point that is knocked (default 0.7). */
+  /** m around the landing point that is knocked (default 1.2: a body at 10 m/s knocks the ones within about two body widths; 0.7 left the chain beyond a grenade at 0 in 4 of 12 scenes). */
   readonly landingRadius?: number
   /** Damage per m/s of landing speed above 6 m/s (default 8). */
   readonly fallDamage?: number
@@ -189,7 +189,7 @@ export const BALANCE_DEFAULTS: Required<CrowdBalanceOptions> = {
   trampleDps: 6,
 }
 export const MOUND_DEFAULTS: Required<CrowdMoundOptions> = { bodyThickness: 0.28, corpseThickness: 0.25, maxHeight: 1.6, corpseRadius: 35 }
-export const THROWN_DEFAULTS: Required<CrowdThrownOptions> = { pool: 32, radius: 30, landingRadius: 0.7, fallDamage: 8, priority: 'mixed', mixedRatio: 0.5 }
+export const THROWN_DEFAULTS: Required<CrowdThrownOptions> = { pool: 32, radius: 30, landingRadius: 1.2, fallDamage: 8, priority: 'mixed', mixedRatio: 0.5 }
 export const DENSITY_DEFAULTS: Required<CrowdDensityOptions> = { cell: 2, capacity: 4, pressurePerBody: 150 }
 export const BLAST_DEFAULTS: Required<CrowdBlastOptions> = { pointsPerKilojoule: 0.6, throwSpeed: 4, maxBlastsPerStep: 8, limbEffectsPerBlast: 24, bloodEffectsPerBlast: 32, shove: {} }
 export const PERSONALITY_DEFAULTS: Required<CrowdPersonalityOptions> = {
