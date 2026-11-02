@@ -58,7 +58,8 @@ const PANE_EDGE_BAND = 0.03
 const PANE_REACH_STEP = 0.01
 const PANE_REACH_MAX = 0.25
 const COWL_THIN = 0.06
-const UNDER_PANE_CLEAR = 0.006
+const COWL_UNDER_GLASS = 0.0
+const COWL_NEAR_PANE = 0.08
 const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
@@ -543,7 +544,7 @@ export class VehicleVisuals implements CreaseWork {
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
       this.reachShellBelow(pane, local, ray, seat.normal)
       this.paneBorder(pane, near, seat)
-      this.keepUnderPane(pane, near, seat.normal)
+      this.keepUnderPane(pane, seat.normal)
     }
   }
   /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
@@ -671,22 +672,23 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingBox()
     g.computeBoundingSphere()
   }
-  /** What stands under a windshield (the top of the dashboard) stays under it: its front edge poking through the glass reads as a black bar across the base. */
-  private keepUnderPane(pane: Obj, near: Obj[], normal: any): void {
+  /** The plate drawn right under a windshield is not drawn: through the glass it is a thick black band, and the dashboard behind already closes the view. */
+  private keepUnderPane(pane: Obj, normal: any): void {
     const THREE = this.THREE
+    const paneBox = new THREE.Box3().setFromObject(pane).expandByScalar(COWL_NEAR_PANE)
     const pos = pane.geometry.attributes.position
     const centre = new THREE.Vector3()
     const v = new THREE.Vector3()
     for (let i = 0; i < pos.count; i++) centre.add(v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld))
     centre.divideScalar(pos.count)
     const plane = centre.dot(normal)
-    for (const o of near) {
-      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
-      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_THIN || Math.max(size.x, size.z) < COWL_LONG) continue
-      const p = o.geometry.attributes.position
-      let over = -Infinity
-      for (let i = 0; i < p.count; i++) over = Math.max(over, v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).dot(normal) - plane)
-      if (over > -UNDER_PANE_CLEAR) this.movePane(o, { normal, samples: [{ at: centre, by: -(over + UNDER_PANE_CLEAR + PANE_SEAT_LIFT) }] })
+    for (const o of this.c.vehicle.children as Obj[]) {
+      if (!o.isMesh || o === pane || o.userData.glass || (this.c as any).deform?.includes(o)) continue
+      const box = new THREE.Box3().setFromObject(o)
+      const size = box.getSize(new THREE.Vector3())
+      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_THIN || Math.max(size.x, size.z) < COWL_LONG || !paneBox.containsBox(box)) continue
+      // under the glass, not on top of the body in front of it
+      if (box.getCenter(new THREE.Vector3()).dot(normal) - plane < COWL_UNDER_GLASS) o.visible = false
     }
   }
   /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
