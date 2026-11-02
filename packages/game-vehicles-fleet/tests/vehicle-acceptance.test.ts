@@ -85,6 +85,8 @@ function auditModel(key: string): string[] {
 
   // a door
   const doors = d.describe().parts.filter((p) => p.tags?.includes('door')).map((p) => p.id)
+  const strips = new Set<string>()
+  const inverse = c.vehicle.matrixWorld.clone().invert()
   for (const id of doors) {
     const piv = c.vehicle.getObjectByName(id)
     if (!piv) {
@@ -99,8 +101,8 @@ function auditModel(key: string): string[] {
     }
     const part = d.describe().parts.find((p) => p.id === id)!
     const zone = (kit as any).zonesOf(c).find((q: any) => q.id === id)
+    const zoneBox = zone ? { ...zone.box, side: zone.side } : { x0: 0, x1: 0, y0: 0, y1: 0, z0: 0, z1: 0, side: 1 }
     if (zone) {
-      const inverse = c.vehicle.matrixWorld.clone().invert()
       for (const o of c.vehicle.children as any[]) {
         if (!o.isMesh || o.material !== (kit as any)._.MATERIALS.chrome) continue
         const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
@@ -150,9 +152,29 @@ function auditModel(key: string): string[] {
       if (o.isMesh && o.visible) skin++
     })
     if (skin === 0) problems.push(`${id}: nothing hangs on the hinge`)
+    // nothing the model draws on the side stays across the open door (a strip, a trim, a frame), except the sill it opens over
+    const doorIds = new Set(doors)
+    const point = new THREE.Vector3()
+    c.vehicle.traverse((o: any) => {
+      if (!o.isMesh || !o.visible || o.userData.decal || o.userData.glass) return
+      for (let q = o; q; q = q.parent) if (q.name && doorIds.has(q.name)) return
+      const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
+      const s = b.getSize(new THREE.Vector3())
+      const m = b.getCenter(new THREE.Vector3())
+      if (Math.sign(m.z) !== Math.sign(zoneBox.side) || Math.abs(m.z) < Math.abs(zoneBox.z0 + zoneBox.z1) / 2 - 0.1 || m.y < zoneBox.y0 + 0.25 || m.y > zoneBox.y1 + 0.1 || Math.min(s.y, s.z) > 0.15 || s.x < 0.3) return
+      const pos = o.geometry.attributes.position
+      for (let i = 0; i < pos.count; i++) {
+        point.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).applyMatrix4(inverse)
+        if (point.x > zoneBox.x0 + 0.1 && point.x < zoneBox.x1 - 0.1 && Math.abs(point.y - m.y) < 0.2) {
+          strips.add(`${id}: a strip stays across the open door`)
+          return
+        }
+      }
+    })
     piv.rotation.set(0, 0, 0)
     item.root.updateMatrixWorld(true)
   }
+  for (const strip of strips) problems.push(strip)
   return problems
 }
 
@@ -165,8 +187,10 @@ describe('every model of the fleet', () => {
       for (const problem of problems) findings.push({ model: key, problem })
       if (!problems.length) passed.push(key)
       if (process.env.VEHICLE_REPORT) writeFileSync(process.env.VEHICLE_REPORT, JSON.stringify({ passed, findings }, null, 1))
-      if (KNOWN_OPEN.has(key)) expect(problems.every((problem) => problem.startsWith('pane ') || problem.startsWith('the hood'))).toBe(true)
-      else expect(problems).toEqual([])
+      // strips across an open door are the open work of spec 006 phase 4 (doors as pre-cut parts): reported, listed in docs/veiculos-verificacao.md, not yet failing
+      const hard = problems.filter((problem) => !problem.includes('a strip stays across the open door'))
+      if (KNOWN_OPEN.has(key)) expect(hard.every((problem) => problem.startsWith('pane ') || problem.startsWith('the hood'))).toBe(true)
+      else expect(hard).toEqual([])
     })
   }
 })
