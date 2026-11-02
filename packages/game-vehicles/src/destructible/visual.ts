@@ -590,6 +590,7 @@ export class VehicleVisuals implements CreaseWork {
     const shell = (c.deform as Obj[]).filter((o) => o.isMesh && !o.userData.glass && c.paints?.has(o.material))
     if (!shell.length) return
     const ray = new THREE.Raycaster()
+    ray.layers.enableAll()
     for (const pane of c.glass as Obj[]) {
       if (pane.userData.glass?.outline) continue
       const local = this.shellAround(pane, shell)
