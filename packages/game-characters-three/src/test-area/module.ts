@@ -468,6 +468,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         for (const [id, entry] of entries) {
           // bodies the room built for its contract checks, or has removed, never reach the scene
           if (!entry.root.parent) {
+            // forget it everywhere: the wounds keep a state per tracked body (the whole rig), so a body left tracked stays in memory for good
+            if (entry.body) wounds?.untrack(entry.body)
+            if (selected === entry) selected = null
             entries.delete(id)
             continue
           }

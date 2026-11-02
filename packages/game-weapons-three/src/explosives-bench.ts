@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import type { BenchChange, BenchSheet, DestructionEvent, Hit, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, Vec3 } from '@adatechnology/game-contracts'
@@ -254,7 +255,8 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
     vessel.rings = group
   }
   const clearRings = (vessel: Vessel): void => {
-    vessel.rings?.removeFromParent()
+    // the rings carry their own lines and two canvas labels: freed with them, or each blast leaves two textures behind
+    if (vessel.rings) discardObject3D(vessel.rings)
     vessel.rings = undefined
   }
 
@@ -354,7 +356,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   }
 
   const clearShells = (): void => {
-    for (const shell of shells) shell.mesh.removeFromParent()
+    for (const shell of shells) discardObject3D(shell.mesh)
     shells.length = 0
   }
 

@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import type { AnimationEventSpec } from '@adatechnology/game-contracts'
 import { muzzleSmokeOf } from '@adatechnology/game-weapons'
@@ -184,7 +185,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     session.model.inner.add(shell)
     shell.position.set(-0.25, 0, 0)
     world.schedule(0.02, 0.4, (eased) => (shell.position.x = -0.25 + 0.6 * eased), () => {
-      shell.removeFromParent()
+      discardObject3D(shell)
     })
   }
 }
