@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import type { BlastOptions, DestructionWorld, HitResult, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -111,9 +112,15 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   const meshes: THREE_NS.Object3D[] = []
   const up = new THREE.Vector3(0, 1, 0)
 
+  // a projectile's mesh is its own (geometry, material, the model the host built for it): freed when it leaves the scene, keeping what the scene still draws
+  const drop = (objects: THREE_NS.Object3D[]): void => {
+    for (const object of objects) object.removeFromParent()
+    releaseObject3D(objects, { keep: scene })
+  }
+
   const clear = (): void => {
     projectiles.length = 0
-    for (const mesh of meshes) mesh.removeFromParent()
+    drop(meshes)
     meshes.length = 0
   }
 
@@ -141,13 +148,12 @@ export function createExplosives(context: ExplosivesContext): Explosives {
 
   const remove = (projectile: Projectile): void => {
     for (const extra of projectile.attached ?? []) {
-      extra.removeFromParent()
       const extraAt = meshes.indexOf(extra)
       if (extraAt >= 0) meshes.splice(extraAt, 1)
     }
-    projectile.mesh.removeFromParent()
     const meshAt = meshes.indexOf(projectile.mesh)
     if (meshAt >= 0) meshes.splice(meshAt, 1)
+    drop([...(projectile.attached ?? []), projectile.mesh])
     const at = projectiles.indexOf(projectile)
     if (at >= 0) projectiles.splice(at, 1)
   }

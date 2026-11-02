@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { Three, THREE_NS } from '../three'
 
 const GRAVITY = 9.8
@@ -43,7 +44,11 @@ export const createFlyingPieces = (three: Three, { random, groundAt = () => 0, o
   const quaternion = new three.Quaternion()
   const euler = new three.Euler()
   const trim = (): void => {
-    while (pieces.length > max) pieces.shift()?.object.removeFromParent()
+    // a piece dropped for good frees its own geometry (a cut stump, a torn limb) and keeps what the bodies still on screen share with it
+    while (pieces.length > max) {
+      const piece = pieces.shift()
+      if (piece) discardObject3D(piece.object)
+    }
   }
   const add = (object: THREE_NS.Object3D, velocity: THREE_NS.Vector3, spin: THREE_NS.Vector3, tag?: string): FlyingPiece => {
     const piece: FlyingPiece = { object, velocity, spin, rest: false, ...(tag ? { tag } : {}) }
@@ -92,7 +97,7 @@ export const createFlyingPieces = (three: Three, { random, groundAt = () => 0, o
       }
     },
     clear() {
-      pieces.splice(0).forEach((piece) => piece.object.removeFromParent())
+      discardObject3D(pieces.splice(0).map((piece) => piece.object))
     },
   }
 }

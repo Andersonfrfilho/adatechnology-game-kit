@@ -1,5 +1,6 @@
 import { isLightBudget } from '@adatechnology/game-render-three'
 import type { LightBudget } from '@adatechnology/game-render-three'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createPlantProvider, createUrban, createVehicleProvider, SAMPLE_CELLS } from '@adatechnology/game-urban'
 import type { Locale, Providers, TerrainOptions, UrbanBuilder, UrbanKit, UrbanOptions } from '@adatechnology/game-urban'
@@ -193,7 +194,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   // the throwaway builds of the host's contract checks are never added to a scene and do not count
   const roots = (): Placed[] => [...[...placed.values()].filter((entry) => entry.root.parent), ...(bench ? [bench] : [])]
   const clearHelpers = (): void => {
-    for (const helper of helpers) helper.parent?.remove(helper)
+    discardObject3D(helpers)
     helpers = []
     helpersShown = ''
   }

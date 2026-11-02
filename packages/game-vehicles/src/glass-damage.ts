@@ -116,8 +116,17 @@ export function installGlassDamage(kit: Kit): void {
     x.arc(cx, cy, 26 * s, 0, PI * 2)
     x.fill()
   }
+  // a 2D context that draws nothing: every call and gradient is a no-op
+  const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
   function crackGlass(c: any, msh: any, p: any, force: any, sc?: any) {
     const G = msh.userData.glass
+    // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
+    // seeded result after it) stays the same as when the hidden canvas was still drawn on
+    if (G.cracksFreed) {
+      drawWeb(NO_CANVAS, 0, 0, sc != null ? sc : 0.6 + force * 0.5, Math.max(0.4, G.aspect || 1), c.rand)
+      G.hits++
+      return
+    }
     if (!G.cv) {
       G.cv = document.createElement('canvas')
       G.cv.width = G.cv.height = 256
@@ -191,6 +200,15 @@ export function installGlassDamage(kit: Kit): void {
     const G = msh.userData.glass
     if (G.broken) return
     G.broken = true
+    // the crack layer (its own material over a 256 px canvas) is replaced by the edge below: free it, or every broken pane keeps a texture on the GPU for good
+    const freeCracks = function () {
+      if (!G.tex) return
+      if (msh.material !== MATERIALS.glassEdge && msh.material?.map === G.tex) msh.material.dispose()
+      G.tex.dispose()
+      G.tex = null
+      G.cv = null
+      G.cracksFreed = true
+    }
     const cubesAt = []
     if (G.outline && G.T !== undefined) {
       const out = G.outline
@@ -224,6 +242,7 @@ export function installGlassDamage(kit: Kit): void {
       geo.computeVertexNormals()
       msh.geometry.dispose()
       msh.geometry = geo
+      freeCracks()
       msh.material = MATERIALS.glassEdge
       let minx = 1e9
       let maxx = -1e9
@@ -247,8 +266,12 @@ export function installGlassDamage(kit: Kit): void {
       if (rim) {
         msh.geometry.dispose()
         msh.geometry = rim
+        freeCracks()
         msh.material = MATERIALS.glassEdge
-      } else msh.visible = false
+      } else {
+        freeCracks()
+        msh.visible = false
+      }
       for (let j = 0; j < 36; j++)
         cubesAt.push(
           new V3(

@@ -39,6 +39,7 @@ import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
+import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
@@ -1092,6 +1093,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return m
   }
 
+  // A removed tree's geometries, materials and textures stay on the GPU (and in three.js's caches) until disposed: everything the room takes out of the scene
+  // goes through `dropTree`, released at once or, inside `releasingTogether`, in one pass at its end (one walk of the scene for what is still drawn).
+  let releaseBatch: THREE_NS.Object3D[] | null = null
+  const dropTree = (root: THREE_NS.Object3D | undefined): void => {
+    if (!root) return
+    if (releaseBatch) releaseBatch.push(root)
+    else releaseObject3D(root, { keep: scene })
+  }
+  const releasingTogether = (fn: () => void): void => {
+    if (releaseBatch) return fn()
+    releaseBatch = []
+    try {
+      fn()
+    } finally {
+      const roots = releaseBatch
+      releaseBatch = null
+      releaseObject3D(roots, { keep: scene })
+    }
+  }
+
   const removeEntry = (id: string): void => {
     const e = entries.get(id)
     if (!e) return
@@ -1109,7 +1130,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.follower?.dispose?.()
     if (world.has(id)) world.remove(id)
     e.so.root.removeFromParent()
+    const inner = wrapped.get(e.so.root)
     letGo(e.so.root)
+    // after the renderer let go of it (its restore puts the original meshes back), so the tree released is the one that was drawn
+    dropTree(e.so.root)
+    dropTree(inner)
     entries.delete(id)
     batchers.get(id)?.dispose()
     batchers.delete(id)
@@ -1129,13 +1154,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
       if (world.has(id)) world.remove(id)
       p?.root.removeFromParent()
+      dropTree(p?.root)
       rendererPieces.delete(id)
       splitOf.delete(id)
     }
     loose.length = 0
   }
 
-  const clearEverything = (): void => {
+  const clearEverything = (): void => releasingTogether(clearEverythingNow)
+  const clearEverythingNow = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
     useItemPlayer = null
     playing.length = 0
@@ -1188,8 +1215,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     seating.release()
     pushByKey = false
     push.end()
-    clearEverything()
-    for (const id of [...entries.keys()]) removeEntry(id)
+    releasingTogether(() => {
+      clearEverythingNow()
+      for (const id of [...entries.keys()]) removeEntry(id)
+    })
     renderer.reset()
     for (const listener of [...resetListeners]) listener()
     tools.clear()

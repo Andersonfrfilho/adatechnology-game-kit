@@ -1,4 +1,4 @@
-import type { Bone, BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D } from 'three'
+import type { Bone, BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D, SkinnedMesh } from 'three'
 
 import type { ThreeLib } from './three-lib'
 
@@ -141,7 +141,10 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     dispose() {
       for (const source of sources) if (!source.released) source.mesh.layers.mask = source.mask
       group.removeFromParent()
-      for (const child of group.children) (child as Mesh).geometry.dispose()
+      for (const child of group.children) {
+        ;(child as Mesh).geometry.dispose()
+        ;(child as SkinnedMesh).skeleton?.dispose()
+      }
     },
   }
 }
