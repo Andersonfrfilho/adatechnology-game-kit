@@ -424,11 +424,12 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const creaseQueue = createCreaseQueue()
 
   const updateLod = (entry: Placed): void => {
-    if (!host || settings.quality === 'lite' || entry.scenario) return
+    if (!host || settings.quality === 'lite') return
     entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
     const at = host.player().position
     const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
-    entry.lod.update(distance, entry.touched === true, (entry.posedParts?.size ?? 0) > 0)
+    // a wreck is built damaged: it never draws fused, only in batches
+    entry.lod.update(distance, entry.touched === true || entry.scenario !== undefined, (entry.posedParts?.size ?? 0) > 0)
   }
 
   const frame = (dt: number): void => {
