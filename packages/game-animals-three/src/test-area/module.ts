@@ -2,6 +2,8 @@ import { lineUpLength, visualStateOf } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState } from '@adatechnology/game-animals'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import type { NodeSkin } from '@adatechnology/game-props3d'
+import { createStaticBatcher } from '@adatechnology/game-render-three'
+import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 
 import { createAnimalSound } from '../audio/sound'
@@ -21,7 +23,9 @@ const SKIN_FIELD = { x0: -18, z0: -10, columns: 8, gap: 4.5 }
 const DEFAULT_TIME_SCALE = 60
 
 type Fate = NonNullable<ReturnType<OutbreakLike['bite']>>
-type Placed = { readonly id: string; readonly rig: AnimalRig; fate?: Fate; counted?: 'turned' | 'dead' }
+type Placed = { readonly id: string; readonly rig: AnimalRig; fate?: Fate; counted?: 'turned' | 'dead'; batcher?: StaticBatcher }
+/** Milliseconds a frame the batches of a new animal may take to be made. */
+const BATCH_BUDGET_MS = 1
 
 /**
  * The animals test area as a `TestableModule`: the species of the pack in a row, each drawn by the Bichos do Vale builders, with the alive / infected / dead looks, the gait,
@@ -58,6 +62,17 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   }
   rebuildOutbreak()
 
+  /** Draws the animal's parts one batch per material, posed with it; a new look (other materials) makes the batches again. */
+  const batch = (entry: Placed): void => {
+    entry.batcher?.dispose()
+    if (three) entry.batcher = createStaticBatcher(three, entry.rig.root, { followMeshes: true, budgetMs: BATCH_BUDGET_MS })
+  }
+
+  const look = (entry: Placed, state: AnimalVisualState): void => {
+    animals?.setVisualState(entry.rig, state)
+    batch(entry)
+  }
+
   const item = (animal: AnimalSpecies): TestableItem => ({
     id: `${ANIMAL_ITEM_PREFIX}${animal.id}`,
     name: animal.name[locale as 'en'] ?? animal.id,
@@ -65,8 +80,10 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
     build: (THREE: unknown) => {
       const rig = ensure(THREE as Three).build(animal)
       // the room puts the tree in its scene right after this; trees that never reach it are dropped at the next frame
-      placed.set(rig.root.uuid, { id: rig.root.uuid, rig })
+      const entry: Placed = { id: rig.root.uuid, rig }
+      placed.set(rig.root.uuid, entry)
       if (settings.visual !== 'alive') animals?.setVisualState(rig, settings.visual)
+      batch(entry)
       return rig.root
     },
   })
@@ -76,7 +93,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
     const state = outbreak.stateOf(entry.fate, clock)
     if (state === 'incubating') return
     entry.counted = state === 'turned' ? 'turned' : 'dead'
-    animals?.setVisualState(entry.rig, visualStateOf(entry.rig.species.outcome, true, state === 'dead'))
+    look(entry, visualStateOf(entry.rig.species.outcome, true, state === 'dead'))
   }
 
   const clearRings = (): void => {
@@ -131,7 +148,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   const applyVisual = (): void => {
     for (const entry of placed.values()) {
       if (entry.fate) continue
-      animals?.setVisualState(entry.rig, settings.visual)
+      look(entry, settings.visual)
     }
   }
 
@@ -141,13 +158,13 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
       if (change.id === 'bite_all') {
         for (const entry of placed.values()) {
           entry.fate = outbreak?.bite(entry.rig.species.id, random, clock)
-          if (entry.fate) animals?.setVisualState(entry.rig, visualStateOf(entry.rig.species.outcome, true))
+          if (entry.fate) look(entry, visualStateOf(entry.rig.species.outcome, true))
         }
       } else if (change.id === 'recover') {
         for (const entry of placed.values()) {
           delete entry.fate
           delete entry.counted
-          animals?.setVisualState(entry.rig, settings.visual)
+          look(entry, settings.visual)
         }
       } else if (change.id === 'call' && sound) {
         for (const [id, entry] of placed) {
@@ -174,12 +191,14 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
     sound?.update(dt)
     for (const [id, entry] of placed) {
       if (!entry.rig.root.parent) {
+        entry.batcher?.dispose()
         placed.delete(id)
         continue
       }
       statusOf(entry)
       animals?.animate(entry.rig, { time, delta: dt * settings.speed, clip: settings.gait, split: host?.bench?.layer('split') ?? false })
       animals?.updateSplit(entry.rig, dt)
+      entry.batcher?.update()
     }
     for (const { rig, skin } of skins) {
       animals?.animate(rig, { time, delta: dt * settings.speed, clip: settings.gait })

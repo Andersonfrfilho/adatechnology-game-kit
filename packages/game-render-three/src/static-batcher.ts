@@ -1,4 +1,4 @@
-import type { BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D } from 'three'
+import type { Bone, BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D } from 'three'
 
 import type { ThreeLib } from './three-lib'
 
@@ -12,6 +12,11 @@ export type StaticBatcherOptions = {
   readonly include?: (mesh: Mesh) => boolean
   /** Milliseconds of merging per `update` (default all at once, in the call): batches are made a material at a time over the next frames. */
   readonly budgetMs?: number
+  /**
+   * The meshes move on their own (a body posed bone by bone): each batch is skinned to its meshes, so a mesh carries its part of the batch
+   * wherever it goes, and only a new geometry, material, dent or hiding gives it its own draw back.
+   */
+  readonly followMeshes?: boolean
 }
 
 export type StaticBatcherStats = { readonly batches: number; readonly batched: number; readonly released: number }
@@ -77,6 +82,7 @@ const sameMatrix = (a: Matrix4, b: Matrix4): boolean => a.elements.every((value,
  */
 export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: StaticBatcherOptions = {}): StaticBatcher {
   const include = options.include ?? (() => true)
+  const follow = options.followMeshes === true
   root.updateMatrixWorld(true)
   const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
   const groups = new Map<string, Mesh[]>()
@@ -94,7 +100,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     while (pending.length > 0) {
       const meshes = pending.shift() as Mesh[]
       // a mesh that changed while it waited is left to draw on its own
-      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, meshes, new THREE.Matrix4().copy(root.matrixWorld).invert(), group))
+      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, { meshes, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow }))
       if (performance.now() >= deadline) return
     }
   }
@@ -118,6 +124,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     const { mesh } = source
     if (mesh.geometry !== source.geometry || mesh.material !== source.material || !isShown(mesh, root)) return true
     if ((mesh.geometry.attributes.position as BufferAttribute).version !== source.version) return true
+    if (follow) return false
     inverse.copy(root.matrixWorld).invert()
     return !sameMatrix(scratch.multiplyMatrices(inverse, mesh.matrixWorld), source.local)
   }
@@ -172,7 +179,33 @@ function copyAttribute(name: string, attribute: BufferAttribute, target: Float32
   }
 }
 
-function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, group: Object3D): Source[] {
+type MergeGroupParams = { readonly meshes: readonly Mesh[]; readonly inverse: Matrix4; readonly group: Object3D; readonly follow: boolean }
+
+/** A skinned batch whose bone `n` is mesh `n` itself (no inverse, no bind offset): every vertex lands where its own mesh puts it. */
+function skinnedBatch(THREE: ThreeLib, merged: BufferGeometry, material: Material, meshes: readonly Mesh[]): Mesh {
+  const vertices = (merged.attributes.position as BufferAttribute).count
+  const skinIndex = new Uint16Array(vertices * 4)
+  const skinWeight = new Float32Array(vertices * 4)
+  let at = 0
+  meshes.forEach((mesh, bone) => {
+    for (let k = 0; k < (mesh.geometry.attributes.position as BufferAttribute).count; k++, at++) {
+      skinIndex[at * 4] = bone
+      skinWeight[at * 4] = 1
+    }
+  })
+  merged.setAttribute('skinIndex', new THREE.BufferAttribute(skinIndex, 4))
+  merged.setAttribute('skinWeight', new THREE.BufferAttribute(skinWeight, 4))
+  const mesh = new THREE.SkinnedMesh(merged, material)
+  const identities = meshes.map(() => new THREE.Matrix4())
+  mesh.bind(new THREE.Skeleton(meshes as unknown as Bone[], identities), new THREE.Matrix4())
+  // the parts move apart as the body is posed: the rest-pose bounds would cull the moved ones
+  mesh.frustumCulled = false
+  return mesh
+}
+
+function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, follow }: MergeGroupParams): Source[] {
+  const identity = new THREE.Matrix4()
+  const inverse = follow ? identity : rootInverse
   const first = meshes[0] as Mesh
   const names = ATTRIBUTES.filter((name) => first.geometry.attributes[name] !== undefined)
   const pieces = meshes.map((mesh) => {
@@ -190,7 +223,8 @@ function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, 
     const array = new Float32Array(totalVertices * size)
     let offset = 0
     for (const piece of pieces) {
-      copyAttribute(name, piece.mesh.geometry.attributes[name] as BufferAttribute, array, offset, piece.local, normalMatrix.getNormalMatrix(piece.local))
+      const matrix = follow ? identity : piece.local
+      copyAttribute(name, piece.mesh.geometry.attributes[name] as BufferAttribute, array, offset, matrix, normalMatrix.getNormalMatrix(matrix))
       offset += piece.vertices
     }
     merged.setAttribute(name, new THREE.BufferAttribute(array, size))
@@ -198,7 +232,7 @@ function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, 
   const indexArray = totalVertices > 65535 ? new Uint32Array(totalIndices) : new Uint16Array(totalIndices)
   const indexAttribute = new THREE.BufferAttribute(indexArray, 1)
   merged.setIndex(indexAttribute)
-  const mesh = new THREE.Mesh(merged, first.material)
+  const mesh = follow ? skinnedBatch(THREE, merged, first.material as Material, meshes) : new THREE.Mesh(merged, first.material)
   mesh.name = `batch:${(first.material as Material).name || (first.material as Material).type}`
   mesh.castShadow = first.castShadow
   mesh.receiveShadow = first.receiveShadow
