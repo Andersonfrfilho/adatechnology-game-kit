@@ -29,13 +29,19 @@ const DOOR_EDGE_PIECES = 8
 const DOOR_CARD_COLOR = '#3b3e42'
 const DOOR_LINER_COLOR = '#5a5e64'
 const DOOR_LINER_DARK = 0.15
-/** A strip that crosses a door opening: this thin, within this of the door's height, and cut in pieces this long. */
-const DOOR_STRIP_THIN = 0.05
+/** A strip that crosses a door opening: this thin, and within this of the door's height. */
+const DOOR_STRIP_THIN = 0.08
 const DOOR_STRIP_NEAR = 0.04
+/** A crease drawn along the side is a ribbon up to this tall. */
+const DOOR_STRIP_TALL = 0.22
+/** A strip keeps its smooth shading where it is cut: no hard edge between the long slivers of the cut. */
+const STRIP_SMOOTH_DEG = 180
+/** The body's own shell is not a strip; and up to this over the door's bottom is its sill. */
+const DOOR_STRIP_VERTICES = 20000
+const DOOR_SILL = 0.25
 const DOOR_STRIP_OVER = 0.3
 /** A door's cut goes this far past the lower edge of its pane, metres. */
 const DOOR_TOP_OVER_PANE = 0.03
-const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
 /** Above this many joules of hit points a pane is laminated in the model (a windshield, any pane of an armoured car). */
 const LAMINATED_HP = 1000
@@ -66,6 +72,9 @@ const COWL_PLATE = 0.06
 const COWL_DASH = 0.5
 /** Both run across the car and are deep front to back, unlike the frame of a side window. */
 const COWL_DEEP = 0.3
+/** A window frame lies within this of its pane and runs along most of it. */
+const WINDOW_FRAME_NEAR = 0.06
+const WINDOW_FRAME_SPAN = 0.6
 const DASHBOARD_COLOR = '#121314'
 /** The plate is cut in pieces this long, metres. */
 const COWL_CUT_SUB = 0.06
@@ -390,7 +399,8 @@ export class VehicleVisuals implements CreaseWork {
           const panes = I.windowsOver(this.c, z, inv) as Obj[]
           const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
           const mirrors = this.mirrorsOn(z)
-          objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
+          const frames = this.framesAround(panes, inv)
+          objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors, ...frames]
         }
       } else {
         const pcs = this.cutZone(z)
@@ -480,6 +490,17 @@ export class VehicleVisuals implements CreaseWork {
     }
     piv.attach(edges)
   }
+  /** The frame the model draws round a door's window (a dark strip over the glass) goes with the door: left behind it hangs in the air over the opening. */
+  private framesAround(panes: Obj[], inv: any): Obj[] {
+    const THREE = this.THREE
+    const boxes = panes.map((g) => this.I.localBox(this.c, g, inv).expandByScalar(WINDOW_FRAME_NEAR))
+    return (this.c.vehicle.children as Obj[]).filter((o) => {
+      if (!o.isMesh || !o.visible || o.userData.glass || o.userData.decal || (this.c as any).deform?.includes(o)) return false
+      const box = this.I.localBox(this.c, o, inv)
+      if (box.isEmpty()) return false
+      return boxes.some((b: any) => b.containsBox(box) && box.getSize(new THREE.Vector3()).x > b.getSize(new THREE.Vector3()).x * WINDOW_FRAME_SPAN)
+    })
+  }
   /** A front door carries the mirror drawn at its corner. */
   private mirrorsOn(z: any): Obj[] {
     if (!z.mirror) return []
@@ -505,27 +526,42 @@ export class VehicleVisuals implements CreaseWork {
     const B = z.box
     const x0 = B.x0 + 0.03
     const x1 = B.x1 - 0.03
-    const y0 = B.y0 - DOOR_STRIP_NEAR
-    const y1 = B.y1 + DOOR_STRIP_NEAR
+    // the sill under the door stays on the body: it is the floor of the opening, not across it
+    const y0 = B.y0 + DOOR_SILL
+    // up to the top of the door's window: the trim along the window line goes with the door too
+    const glassTop = (I: any): number => {
+      let top = -Infinity
+      for (const g of I.windowsOver(this.c, z, inv) as Obj[]) top = Math.max(top, I.localBox(this.c, g, inv).max.y)
+      return top
+    }
+    const y1 = Math.max(B.y1, glassTop(this.I)) + DOOR_STRIP_NEAR
     const deform: Obj[] = (this.c as any).deform ?? []
     for (const o of [...(this.c.vehicle.children as Obj[])]) {
-      if (!o.isMesh || o === piv || deform.includes(o) || o.userData.glass || o.userData.decal || !o.visible) continue
+      if (!o.isMesh || o === piv || o.userData.glass || o.userData.decal || !o.visible || (deform.includes(o) && o.geometry.attributes.position.count > DOOR_STRIP_VERTICES)) continue
       const box = this.I.localBox(this.c, o, inv)
       const size = box.getSize(new THREE.Vector3())
       const mid = box.getCenter(new THREE.Vector3())
-      if (Math.sign(mid.z) !== Math.sign(z.side) || size.z > DOOR_STRIP_THIN || size.y > DOOR_STRIP_THIN || Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < (x1 - x0) * DOOR_STRIP_OVER || mid.y < y0 || mid.y > y1) continue
+      if (Math.sign(mid.z) !== Math.sign(z.side) || size.z > DOOR_STRIP_THIN || size.y > DOOR_STRIP_TALL || Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < (x1 - x0) * DOOR_STRIP_OVER || mid.y < y0 || mid.y > y1) continue
       const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)
       const v = new THREE.Vector3()
       const sdf = (x: number, y: number, zz: number): number => {
         v.set(x, y, zz).applyMatrix4(toVehicle)
         return Math.max(x0 - v.x, v.x - x1)
       }
-      this.kit.cutMesh(o, [{ sdf }], 42, { sub: DOOR_STRIP_SUB })
-      const from = Math.max(box.min.x, x0)
-      const to = Math.min(box.max.x, x1)
-      const piece = this.box(to - from, size.y, size.z, o.material, (from + to) / 2, mid.y, mid.z)
-      piece.userData.noFollow = true
-      piv.attach(piece)
+      // the part over the door is the same strip, cut the other way, and it goes with the door
+      const over = new THREE.Mesh(o.geometry.clone(), o.material)
+      over.position.copy(o.position)
+      over.quaternion.copy(o.quaternion)
+      over.scale.copy(o.scale)
+      this.c.vehicle.add(over)
+      over.updateMatrixWorld(true)
+      const overToVehicle = new THREE.Matrix4().multiplyMatrices(inv, over.matrixWorld)
+      const w = new THREE.Vector3()
+      this.kit.cutMesh(over, [{ sdf: (x: number, y: number, zz: number): number => { w.set(x, y, zz).applyMatrix4(overToVehicle); return -Math.max(x0 - w.x, w.x - x1) } }], STRIP_SMOOTH_DEG, {})
+      // the cut is a plane across the strip, exact without subdividing (and a painted livery keeps its texture)
+      this.kit.cutMesh(o, [{ sdf }], STRIP_SMOOTH_DEG, {})
+      over.userData.noFollow = true
+      piv.attach(over)
     }
   }
   private mend(dirty: Set<Obj>): void {
