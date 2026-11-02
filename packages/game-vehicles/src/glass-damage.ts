@@ -89,10 +89,14 @@ export function installGlassDamage(kit: Kit): void {
     x.arc(cx, cy, 26 * s, 0, PI * 2)
     x.fill()
   }
+  // a 2D context that draws nothing: every call and gradient is a no-op
+  const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
   function crackGlass(c: any, msh: any, p: any, force: any, sc?: any) {
     const G = msh.userData.glass
-    // a pane already gone shows its edge, not the crack layer (freed when it broke): nothing left to crack
-    if (G.broken && !G.cv) {
+    // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
+    // seeded result after it) stays the same as when the hidden canvas was still drawn on
+    if (G.cracksFreed) {
+      drawWeb(NO_CANVAS, 0, 0, sc != null ? sc : 0.6 + force * 0.5, Math.max(0.4, G.aspect || 1), c.rand)
       G.hits++
       return
     }
@@ -186,6 +190,7 @@ export function installGlassDamage(kit: Kit): void {
       G.tex.dispose()
       G.tex = null
       G.cv = null
+      G.cracksFreed = true
     }
     const cubesAt = []
     if (G.outline && G.T !== undefined) {
