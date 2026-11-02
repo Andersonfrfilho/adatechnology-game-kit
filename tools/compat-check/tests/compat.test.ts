@@ -139,9 +139,7 @@ describe('the adapters, called as before', () => {
     const clip = defaultCharacterClips().strikeClips.find((candidate) => candidate.events?.some((event) => event.type === 'impact'))!
     expect(old.strike(clip.id)).toBe(fresh.strike(clip.id))
     expect(old.strike(clip.id)).not.toBeNull()
-    expect(old.arms).toBeNull()
-    const withArms = legacyAdapters.roomAvatarWithArms(THREE)
-    expect(withArms.arms).not.toBeNull()
+    // one body for both views (spec 004): the separate first-person arms are gone from the room avatar, the builder stays exported
     expect(createFirstPersonArms).toBeTypeOf('function')
   })
 })

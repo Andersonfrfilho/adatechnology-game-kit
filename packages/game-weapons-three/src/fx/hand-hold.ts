@@ -34,8 +34,6 @@ export const HAND_HOLD = {
   thumbReach: 0.02,
   /** How fast the supporting hand goes to the magazine and back, per second. */
   magRate: 7,
-  /** The hands shrink with the tool: a tool drawn at scale `s` takes hands at `s ** handScaleExponent`. */
-  handScaleExponent: 0.55,
 } as const
 
 /** A point a hand holds: `offset` in the local space of `part` and the hand's orientation in the model root's space. */
@@ -169,7 +167,8 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
     right,
     left,
     leftMagazine,
-    scale: holderScale ** HAND_HOLD.handScaleExponent,
+    // the hands at the tool's scale: a tool drawn smaller than the hands looks like a toy in them
+    scale: holderScale,
     grip: HAND_HOLD.closed,
     gripLeft: HAND_HOLD.forend,
   }
@@ -189,5 +188,5 @@ export function holdOfProp(THREE: Three, group: THREE_NS.Object3D, category: str
   const headSize = head ? size(head) : null
   const left: HandAnchor | null =
     long && head && headSize ? { part: group, offset: head.position.clone().add(V(THREE, -headSize.x * 0.15, -headSize.y / 2 - HAND_HOLD.palm, 0)), quaternion: forendFrame(THREE) } : null
-  return { right, left, leftMagazine: null, scale: scale ** HAND_HOLD.handScaleExponent, grip: HAND_HOLD.closed, gripLeft: HAND_HOLD.forend }
+  return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: HAND_HOLD.forend }
 }

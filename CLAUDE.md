@@ -84,8 +84,9 @@ braço esticado, e na terceira a mira para cima enfiava os braços no corpo.
 - Em cada câmera: parado e andando, mirando para cima, reto e para baixo, e pelo menos uma arma de cada família (pistola, espingarda,
   fuzil, lançador, corpo a corpo, arremesso). Medir na sala real (`examples/test-room`) os números que provam o comportamento
   (ângulo de cotovelo, distância da palma à pega, mão à frente do peito) e tirar um print por câmera como prova final.
-- Proporção: o que o corpo segura em terceira pessoa aparece no **tamanho real** (a arma da primeira pessoa é reduzida para caber na tela;
-  essa redução não vale para o corpo).
+- Proporção: o que o corpo segura aparece no **tamanho real** nas duas câmeras, na mesma escala das mãos e dos braços (dono, 2026-10-31:
+  a arma da primeira pessoa reduzida ficava de brinquedo nas mãos reais). O teste `hand-targets.test.ts` do `game-weapons-three` falha se a mão
+  e a arma se separarem de novo.
 - O relatório da tarefa diz em quais câmeras foi validado. Câmera não validada é tarefa não terminada.
 
 ## 6. Física de cada objeto: os vinte e um critérios

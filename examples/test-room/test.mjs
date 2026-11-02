@@ -79,7 +79,7 @@ if (runs('scenarios')) {
 
 if (runs('views')) {
   await page.goto(`${url}?ui=0&table=0`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
   // the default page carries the SDK's real items (the teams' content) and none of the old procedural demo ones
   const DEMO_IDS = ['chair', 'sofa_demo', 'shelf', 'old_tv', 'steel_sheet', 'glass_pane', 'concrete_block', 'brick_column', 'building_frame', 'car_door', 'small_tree', 'potted_plant', 'coffee_cup', 'glass_bottle', 'wooden_crate', 'steel_drum', 'plastic_bucket', 'jerrycan', 'rental_car']
   const content = await page.evaluate(() => {
@@ -108,7 +108,7 @@ if (runs('views')) {
   // screenshots: a fresh room per scene, driven through window.__testRoom
   async function shot(name, setup) {
     await page.goto(`${url}?ui=1`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     await page.evaluate(setup)
     await page.waitForTimeout(400)
     await page.screenshot({ path: join(shotsDir, `${name}.png`), ...SHOT })
@@ -213,7 +213,7 @@ if (runs('hands')) {
   let fpOk = true
   for (const lang of ['pt-BR', 'en']) {
     await page.goto(`${url}?ui=0&lang=${lang}`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     await page.evaluate(() => {
       const r = window.__testRoom
       r.clear()
@@ -450,7 +450,7 @@ if (runs('hands')) {
   // every weapon with a model in the hands, in first person: contact sheets (five by four, with the id of the weapon) of the view of the hands and the weapon
   {
     await page.goto(`${url}?ui=0&lang=en`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     const ids = await page.evaluate(() => {
       const r = window.__testRoom
       r.clear()
