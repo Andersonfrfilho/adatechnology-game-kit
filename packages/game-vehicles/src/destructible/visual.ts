@@ -170,6 +170,7 @@ export class VehicleVisuals implements CreaseWork {
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
+    ;(c as { smoothLater?: (mesh: Obj) => void }).smoothLater = (mesh) => this.smoothLater(mesh)
     this.kit = kit
     this.c = c
     this.model = model
