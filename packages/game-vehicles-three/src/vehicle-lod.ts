@@ -53,6 +53,7 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     geometry.computeBoundingSphere()
     const proxy = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }))
     proxy.name = 'vehicle-shadow'
+    markKitOrigin(proxy, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
     proxy.castShadow = true
     proxy.userData.skipLite = true
     proxy.raycast = () => undefined
