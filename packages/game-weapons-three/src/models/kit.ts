@@ -1,4 +1,4 @@
-import { shapeGeometries } from '@adatechnology/game-shapes-three'
+import { markShared, shapeGeometries } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import { createRoundedBoxGeometry } from './rounded-box'
 
@@ -53,7 +53,7 @@ const createMaterials = (THREE: Three) => {
     polyMag: standard(0x2a2a26, 0.85, 0),
   }
   // shared by every model of this kit: a model put away (discardObject3D of game-shapes-three) must not free them, or the next one uploads them again
-  for (const material of Object.values(materials)) material.userData.shared = true
+  markShared(...Object.values(materials))
   return materials
 }
 export type ModelMaterials = ReturnType<typeof createMaterials>
@@ -110,7 +110,7 @@ export function modelKit(host: Three): ModelKit {
       let geometry = geometries.get(key)
       if (!geometry) {
         geometry = radius > 0.00025 ? createRoundedBoxGeometry(THREE, w, h, d, 2, radius) : new THREE.BoxGeometry(w, h, d)
-        geometry.userData.shared = true
+        markShared(geometry)
         geometries.set(key, geometry)
       }
       const mesh = place(parent, shadowed(new THREE.Mesh(geometry, material)), x, y, z)

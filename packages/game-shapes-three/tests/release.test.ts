@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { discardObject3D, releaseObject3D } from '../src'
+import { discardObject3D, markShared, releaseObject3D } from '../src'
 
 const disposed = (resource: THREE.EventDispatcher<{ dispose: object }>): { value: boolean } => {
   const flag = { value: false }
@@ -50,6 +50,15 @@ describe('releaseObject3D', () => {
     const flag = disposed(geometry)
     releaseObject3D(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()))
     expect(flag.value).toBe(false)
+  })
+
+  it('leaves a resource marked with markShared, without touching its userData', () => {
+    const material = new THREE.MeshBasicMaterial()
+    markShared(material)
+    const flag = disposed(material)
+    releaseObject3D(new THREE.Mesh(new THREE.BoxGeometry(), material))
+    expect(flag.value).toBe(false)
+    expect(material.userData).toEqual({})
   })
 
   it('releases a tree that still hangs under the kept one', () => {

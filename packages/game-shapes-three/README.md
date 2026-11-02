@@ -39,7 +39,8 @@ const geometry = toGeometry(THREE, buildPrimitive({ kind: 'torus', radius: 0.3, 
 | `createMaterials(THREE, hints, ids)` | `MeshStandardMaterial` per id from the schema's material hints (vertex colours on) |
 | `mergeByMaterial(THREE, root, space)` | Every visible mesh under `root` baked into `space` and joined per material (non-indexed), on game-shapes' merge; the same bytes `game-props3d`'s version gave |
 | `releaseObject3D(roots, { keep })` | Frees the GPU side of trees taken out of the scene for good: geometries, materials, textures (maps and shader uniforms) and skeletons, except what a tree in `keep` (the scene) still uses or what is marked `userData.shared`. Returns how many it freed |
-| `discardObject3D(object, { keep })` | `removeFromParent()` plus `releaseObject3D`, keeping what the rest of its scene draws: the one call for something that leaves the game |
+| `discardObject3D(objects, { keep })` | `removeFromParent()` plus `releaseObject3D` for one object or a list (one walk of the scene), keeping what the rest of its scene draws: the one call for something that leaves the game |
+| `markShared(...resources)` | Marks a palette, kit or catalog resource as shared on purpose, so the release never frees it; same as `userData.shared = true` without touching the resource (digests and goldens stay) |
 
 ## Português
 

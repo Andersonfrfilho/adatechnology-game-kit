@@ -52,7 +52,16 @@ function collect(roots: readonly THREE_NS.Object3D[]): { geometries: Set<Disposa
   return { geometries, materials, textures, skeletons }
 }
 
-const shared = (r: { userData?: Record<string, unknown> }): boolean => r.userData?.shared === true
+const marked = new WeakSet<object>()
+/**
+ * Marks geometries, materials or textures as shared on purpose (a palette, a model kit, a catalog): `releaseObject3D` and `discardObject3D` never free
+ * them. Same as `userData.shared = true`, without touching the resource (its bytes and userData stay as they were, for digests and goldens).
+ */
+export function markShared<T extends object>(...resources: T[]): T[] {
+  for (const resource of resources) marked.add(resource)
+  return resources
+}
+const shared = (r: { userData?: Record<string, unknown> }): boolean => r.userData?.shared === true || marked.has(r)
 
 /**
  * Free the GPU side of trees taken out of the scene: their geometries, materials, textures (maps and shader uniforms) and skeletons. three.js keeps a removed
