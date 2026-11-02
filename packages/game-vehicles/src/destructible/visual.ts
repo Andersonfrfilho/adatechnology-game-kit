@@ -68,6 +68,9 @@ const COWL_DASH = 0.5
 const COWL_DEEP = 0.3
 /** The plate is cut in pieces this long, metres. */
 const COWL_CUT_SUB = 0.06
+/** The body under a pane deeper than this is cut away, metres. */
+const SKIN_UNDER_PANE = 0.025
+const SKIN_EDGE_KEPT = 0.06
 const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
@@ -553,6 +556,8 @@ export class VehicleVisuals implements CreaseWork {
       this.reachShellBelow(pane, local, ray, seat.normal)
       this.paneBorder(pane, near, seat)
       this.keepUnderPane(pane, seat.normal)
+      // the body's own skin left under the glass shows through it inside the car: only the strip the glass rests on stays
+      for (const body of shell) this.cutUnderPane(body, pane, seat.normal, SKIN_UNDER_PANE, SKIN_EDGE_KEPT)
     }
   }
   /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
@@ -680,7 +685,7 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingBox()
     g.computeBoundingSphere()
   }
-  /** What is drawn right under a windshield takes the colour it has on a car: the plate the body's paint, the dashboard the cabin's grey. In black they read as a thick band. */
+  /** The plate drawn right under a windshield stays only outside the glass, in the body's paint: under the glass it would show inside the cabin. */
   private keepUnderPane(pane: Obj, normal: any): void {
     const THREE = this.THREE
     const paneBox = new THREE.Box3().setFromObject(pane).expandByScalar(COWL_NEAR_PANE)
@@ -698,17 +703,15 @@ export class VehicleVisuals implements CreaseWork {
       // under the glass, not on top of the body in front of it
       if (box.getCenter(new THREE.Vector3()).dot(normal) - plane >= COWL_UNDER_GLASS) continue
       // under the glass: the panel in the body's paint and the dashboard behind in the cabin's grey, so the base of the glass reads as the car, not a black band
-      if (size.y >= COWL_PLATE) {
-        o.material = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
-        continue
-      }
+      // the dashboard behind keeps the dark of a cabin
+      if (size.y >= COWL_PLATE) continue
       // the plate stays only outside, up to where the glass meets the body: under the glass it would run into the cabin
       o.material = this.paint()
       this.cutUnderPane(o, pane, normal)
     }
   }
   /** Cuts away the part of a mesh that lies under a pane (behind its plane, inside its outline seen along its normal). */
-  private cutUnderPane(mesh: Obj, pane: Obj, normal: any): void {
+  private cutUnderPane(mesh: Obj, pane: Obj, normal: any, behind = -Infinity, inset = 0): void {
     const THREE = this.THREE
     const outline = this.paneOutline(pane, normal)
     if (outline.length < 3) return
@@ -716,7 +719,17 @@ export class VehicleVisuals implements CreaseWork {
     if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
     u.normalize()
     const w = normal.clone().cross(u)
-    const poly = outline.map((p: any) => [p.dot(u), p.dot(w)] as [number, number])
+    const cx = outline.reduce((sum: number, p: any) => sum + p.dot(u), 0) / outline.length
+    const cy = outline.reduce((sum: number, p: any) => sum + p.dot(w), 0) / outline.length
+    // the strip under the edge of the glass stays: the pillars and the sill it rests on
+    const poly = outline.map((p: any) => {
+      const x = p.dot(u)
+      const y = p.dot(w)
+      const d = Math.hypot(x - cx, y - cy) || 1
+      const k = Math.max(0, d - inset) / d
+      return [cx + (x - cx) * k, cy + (y - cy) * k] as [number, number]
+    })
+    const plane = outline.reduce((sum: number, p: any) => sum + p.dot(normal), 0) / outline.length
     const inside = (x: number, y: number): boolean => {
       let hit = false
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -735,7 +748,7 @@ export class VehicleVisuals implements CreaseWork {
         {
           sdf: (x: number, y: number, z: number): number => {
             v.set(x, y, z).applyMatrix4(toWorld)
-            return inside(v.dot(u), v.dot(w)) ? -1 : 1
+            return inside(v.dot(u), v.dot(w)) && plane - v.dot(normal) > behind ? -1 : 1
           },
         },
       ],
