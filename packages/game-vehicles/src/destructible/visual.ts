@@ -25,6 +25,8 @@ const HOLE_DECAL_SCALE = 2.4
 const DOOR_DEPTH = 0.07
 /** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
 const DOOR_EDGE_PIECES = 8
+/** How far from the door's plane its skin can bend at the edge, metres. */
+const DOOR_EDGE_REACH = 0.08
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
 const DOOR_LINER_COLOR = '#5a5e64'
@@ -445,7 +447,11 @@ export class VehicleVisuals implements CreaseWork {
     run(x1, y0, x1, y1)
     run(x1, y1, x0, y1)
     run(x0, y1, x0, y0)
-    const heights = loop.map(([x, y]) => this.surface('z', side, B, [[x, y]]) ?? flat)
+    // a probe that misses the door (it found a fender or the hull behind a strongly curved side) keeps the edge on the door's own plane
+    const heights = loop.map(([x, y]) => {
+      const at = this.surface('z', side, B, [[x, y]])
+      return at != null && Math.abs(at - flat) < DOOR_EDGE_REACH ? at : flat
+    })
     const band = (lift: number): any => {
       const position: number[] = []
       const index: number[] = []
