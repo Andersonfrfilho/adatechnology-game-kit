@@ -1,6 +1,6 @@
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
-import { buildVehicleItem, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
+import { buildVehicleItem, crackedGlassMaterial, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
 import { isRenderPools } from '@adatechnology/game-render-three'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
@@ -498,6 +498,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const stopFrame = lent.onFrame(frame)
       const stopBlocker = lent.addBlocker?.(blocked)
       const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_CREASE])
+      if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three, new three.DataTexture(new Uint8Array(4), 1, 1)))
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       return () => {

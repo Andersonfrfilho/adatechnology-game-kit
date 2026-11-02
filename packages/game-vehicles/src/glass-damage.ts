@@ -2,13 +2,28 @@
 import type { Kit } from './types'
 import { clamp } from './util'
 
+/** The material of a pane with cracks drawn on it. A host warms its program at load with any texture: the first crack is in the middle of a blast. */
+export function crackedGlassMaterial(THREE: any, texture: unknown): any {
+  return new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: texture,
+    emissive: 0x6a7276,
+    emissiveMap: texture,
+    transparent: true,
+    roughness: 0.25,
+    metalness: 0.1,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  })
+}
+
 export function installGlassDamage(kit: Kit): void {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
   const I = kit._
   const document = kit.document
-  const { DOUBLE_SIDE, MATERIALS, crease, cutGeometry, mergeGeometries, subdivide, tumble } = I
+  const { MATERIALS, crease, cutGeometry, mergeGeometries, subdivide, tumble } = I
 
   /* ================= glass: cracks and shattering ================= */
   /* The point of the pane nearest the hit, on the triangle under it: a pane has few vertices, the web starts where the round landed. */
@@ -110,17 +125,7 @@ export function installGlassDamage(kit: Kit): void {
       x0.fillStyle = 'rgba(48,66,72,0.5)'
       x0.fillRect(0, 0, 256, 256)
       G.tex = new THREE.CanvasTexture(G.cv)
-      msh.material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        map: G.tex,
-        emissive: 0x6a7276,
-        emissiveMap: G.tex,
-        transparent: true,
-        roughness: 0.25,
-        metalness: 0.1,
-        side: DOUBLE_SIDE,
-        depthWrite: false,
-      })
+      msh.material = crackedGlassMaterial(THREE, G.tex)
     }
     const uv = glassUV(c, msh, p)
     const x = G.cv.getContext('2d')
