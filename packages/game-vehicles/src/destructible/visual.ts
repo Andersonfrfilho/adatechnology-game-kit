@@ -864,7 +864,7 @@ export class VehicleVisuals implements CreaseWork {
       const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
       return size.x * size.y * size.z
     }
-    const housing = drawn.filter((o) => o !== glass).sort((a, b) => volumeOf(b) - volumeOf(a))[0]
+    const housing = drawn.filter((o) => o !== glass && o.isMesh && o.geometry).sort((a, b) => volumeOf(b) - volumeOf(a))[0]
     if (housing) {
       this.c.root.updateMatrixWorld(true)
       const inv = this.I.worldInverseOf(this.c)
