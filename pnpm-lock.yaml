@@ -1233,6 +1233,9 @@ importers:
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
       '@adatechnology/game-terrain':
         specifier: workspace:^
         version: link:../game-terrain
@@ -1537,6 +1540,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
       '@adatechnology/game-vehicles':
         specifier: workspace:^
         version: link:../game-vehicles

@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { lineUpLength, visualStateOf } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState } from '@adatechnology/game-animals'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
@@ -80,7 +81,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   }
 
   const clearRings = (): void => {
-    for (const ring of rings) ring.parent?.remove(ring)
+    discardObject3D(rings)
     rings = []
   }
   const refreshLayers = (): void => {
@@ -123,7 +124,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
     }
   }
   const clearSkins = (): void => {
-    skinGroup?.parent?.remove(skinGroup)
+    if (skinGroup) discardObject3D(skinGroup)
     skinGroup = null
     skins = []
   }

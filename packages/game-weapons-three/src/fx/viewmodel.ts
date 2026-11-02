@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
 import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
@@ -191,7 +192,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const release = (): void => {
     if (!session) return
     session.attachments?.dispose()
-    session.model.root.removeFromParent()
+    // the model is built for this equip (buildWeaponModelById): put away, it frees its own geometry and materials
+    discardObject3D(session.model.root)
     player = null
     session = null
     tasks = []

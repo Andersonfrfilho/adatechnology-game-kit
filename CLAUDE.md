@@ -94,3 +94,20 @@ braço esticado, e na terceira a mira para cima enfiava os braços no corpo.
 Nenhum objeto (móvel, item, veículo, parede, estrutura, planta) é dado como pronto sem passar nos vinte e um critérios de
 [`docs/criterios-fisica-objetos.md`](docs/criterios-fisica-objetos.md) (material e massa, tiro, golpes, explosão e fogo, destruição no padrão da latinha, pegar,
 usar, entre outros objetos, personagem esbarrando, ser empurrado, persistência, animações com o item inteiro e quebrado, som, peso, queda, líquidos, reação em cadeia, desgaste visual, desempenho, NPCs e zumbis, inventário), testado na sala de testes com print.
+
+## 7. Memória: o que sai da cena é liberado — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em todo ciclo da sala (cada troca de área deixava ~24 mil buffers na GPU e
++10 MB no heap; explosões, vidro, carros e horda também acumulavam).
+
+- three.js só libera GPU no `dispose()`. **Todo objeto tirado da cena para sempre** (item, destroço, peça solta, projétil, corpo, pedaço cortado,
+  efeito, rótulo) passa por `discardObject3D(objeto)` ou `releaseObject3D(raízes, { keep: cena })` do `game-shapes-three`, que liberam geometrias,
+  materiais, texturas (mapas e uniforms) e esqueletos e preservam o que a cena ainda desenha. Recurso compartilhado de propósito (paleta, catálogo)
+  leva `userData.shared = true`. Nada de `removeFromParent()` sozinho para algo que não volta.
+- Textura de canvas (trinca de vidro, rótulo, placa) é liberada quando a peça troca de material ou some.
+- **Listas e mapas esquecem o que saiu**: módulo de área, sistema de ferimentos, som, multidão. Se guarda uma entrada por objeto, apaga quando a raiz
+  sai da cena (ex.: `wounds.untrack`). Listener e `setInterval` têm remoção no `dispose`/teardown.
+- Testes que barram a volta: `packages/game-test-room/tests/memory.test.ts` (o `clear()` libera o que tirou e preserva o cenário) e
+  `node examples/test-room/leak.mjs` no CI (job `memory-leaks`): repete explosões, vidro e carros, e a troca de áreas, e falha se buffers, texturas,
+  canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
+  `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.

@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { footprintBlocker } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
@@ -214,10 +215,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   }
   const clearHelpers = (): void => {
     for (const entry of placed.values()) {
-      for (const helper of entry.helpers) helper.parent?.remove(helper)
+      discardObject3D(entry.helpers)
       entry.helpers = []
     }
-    for (const axis of axes) axis.parent?.remove(axis)
+    discardObject3D(axes)
     axes = []
     helpersShown = ''
   }

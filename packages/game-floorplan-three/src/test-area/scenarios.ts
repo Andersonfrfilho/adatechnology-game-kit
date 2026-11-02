@@ -31,10 +31,15 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
     return { oid: so.objectId, parts, centre }
   }
   const role = (p: any): string | undefined => p.structure && p.structure.role
+  // listeners opened by `events` during a run; each scenario stops them when it ends, or every later event of the room piles up in a list nobody reads
+  const listening: Array<() => void> = []
   const events = (room: any): any[] => {
     const list: any[] = []
-    room.world.on('*', (e: any) => list.push(e))
+    listening.push(room.world.on('*', (e: any) => list.push(e)))
     return list
+  }
+  const stopListening = (): void => {
+    for (const off of listening.splice(0)) off?.()
   }
   const collapsed = (list: any[]): string[] => list.filter((e) => e.type === 'collapse').flatMap((e) => e.parts.map((p: any) => p.id || p))
   /** Standing: not broken, and not stripped to its rebar cage (reinforced concrete that fractured stays as a cage, stage 3). */
@@ -51,7 +56,7 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
     room.world.hitPart(oid, pid, { type: 'ballistic', point, direction: [0, 0, -1], energy, caliber: 9 })
   }
 
-  return [
+  const scenarios: Array<ModuleScenario<AreaContext>> = [
     {
       id: 'house_one_pillar',
       name: text.scenarios.house_one_pillar as string,
@@ -147,4 +152,14 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
       },
     },
   ]
+  return scenarios.map((scenario) => ({
+    ...scenario,
+    run(context) {
+      try {
+        return scenario.run(context)
+      } finally {
+        stopListening()
+      }
+    },
+  }))
 }

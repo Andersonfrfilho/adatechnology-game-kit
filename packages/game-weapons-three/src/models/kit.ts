@@ -1,4 +1,4 @@
-import { shapeGeometries } from '@adatechnology/game-shapes-three'
+import { markShared, shapeGeometries } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import { createRoundedBoxGeometry } from './rounded-box'
 
@@ -13,7 +13,7 @@ const createMaterials = (THREE: Three) => {
     new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra })
   const basic = (color: number, extra: THREE_NS.MeshBasicMaterialParameters = {}): THREE_NS.MeshBasicMaterial => new THREE.MeshBasicMaterial({ color, ...extra })
   const additive = { transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }
-  return {
+  const materials = {
     metal: standard(0x34373a, 0.42, 0.75),
     steel: standard(0x6c6f72, 0.32, 0.85),
     steelL: standard(0x8a8d90, 0.28, 0.9),
@@ -52,6 +52,9 @@ const createMaterials = (THREE: Three) => {
     bakelite: standard(0x6a2e1c, 0.6, 0),
     polyMag: standard(0x2a2a26, 0.85, 0),
   }
+  // shared by every model of this kit: a model put away (discardObject3D of game-shapes-three) must not free them, or the next one uploads them again
+  markShared(...Object.values(materials))
+  return materials
 }
 export type ModelMaterials = ReturnType<typeof createMaterials>
 
@@ -107,6 +110,7 @@ export function modelKit(host: Three): ModelKit {
       let geometry = geometries.get(key)
       if (!geometry) {
         geometry = radius > 0.00025 ? createRoundedBoxGeometry(THREE, w, h, d, 2, radius) : new THREE.BoxGeometry(w, h, d)
+        markShared(geometry)
         geometries.set(key, geometry)
       }
       const mesh = place(parent, shadowed(new THREE.Mesh(geometry, material)), x, y, z)

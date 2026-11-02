@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import * as GameVegetationMain from '@adatechnology/game-vegetation'
@@ -79,7 +80,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   // ---- the layers ---------------------------------------------------------------------------------------------------------------------------
   const clearHelpers = (): void => {
     for (const entry of placed.values()) {
-      for (const helper of entry.helpers) helper.parent?.remove(helper)
+      discardObject3D(entry.helpers)
       entry.helpers = []
     }
     helpersShown = ''
