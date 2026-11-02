@@ -42,7 +42,7 @@ type Source = {
   released: boolean
 }
 
-type Batch = { readonly mesh: Mesh; readonly index: { array: ArrayLike<number> & { [n: number]: number }; needsUpdate: boolean } }
+type Batch = { readonly mesh: Mesh; live: number; readonly index: { array: ArrayLike<number> & { [n: number]: number }; needsUpdate: boolean } }
 
 const ATTRIBUTES = ['position', 'normal', 'uv', 'color'] as const
 
@@ -110,6 +110,8 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     const first = index.array[source.start] as number
     for (let at = source.start; at < source.start + source.count; at++) index.array[at] = first
     index.needsUpdate = true
+    // a batch whose meshes all draw on their own again is an empty draw: it leaves the screen
+    if (--source.batch.live === 0) source.batch.mesh.visible = false
     released++
   }
   const hasChanged = (source: Source): boolean => {
@@ -204,7 +206,7 @@ function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, 
   merged.computeBoundingBox()
   merged.computeBoundingSphere()
   group.add(mesh)
-  const batch: Batch = { mesh, index: indexAttribute as unknown as Batch['index'] }
+  const batch: Batch = { mesh, live: pieces.length, index: indexAttribute as unknown as Batch['index'] }
   const sources: Source[] = []
   let vertexOffset = 0
   let indexOffset = 0

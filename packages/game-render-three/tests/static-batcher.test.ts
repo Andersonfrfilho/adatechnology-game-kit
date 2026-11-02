@@ -93,3 +93,14 @@ describe('createStaticBatcher with a budget', () => {
     expect(drawn(parts[0]!)).toBe(false)
   })
 })
+
+describe('createStaticBatcher with every mesh of a batch released', () => {
+  it('hides the empty batch', () => {
+    const { root, panes } = car()
+    const batcher = createStaticBatcher(THREE, root)
+    for (const pane of panes) pane.visible = false
+    batcher.update()
+    const glass = batcher.group.children.find((child) => (child as THREE.Mesh).material === panes[0]!.material)!
+    expect(glass.visible).toBe(false)
+  })
+})
