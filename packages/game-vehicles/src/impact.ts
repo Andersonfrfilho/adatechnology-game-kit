@@ -239,6 +239,7 @@ export function installImpact(kit: Kit): void {
     const v0 = new V3()
     const w = new V3()
     const sc = new V3()
+    const local = new V3()
     const cab = m.cabin && !c.flipped && !c.rollState ? m.cabin : null
     c.deform.forEach(function (msh: any) {
       if (!msh.parent || !msh.visible) return
@@ -253,7 +254,16 @@ export function installImpact(kit: Kit): void {
       irel.copy(rel).invert()
       if (!g.userData.p0) g.userData.p0 = new Float32Array(pos.array)
       const p0 = g.userData.p0
+      // the dent reaches H.R around p: in the mesh's own space a vertex farther than H.R over the smallest scale cannot be reached, so it is skipped untransformed
+      local.copy(p).applyMatrix4(irel)
+      const reach = H.R / Math.max(1e-6, Math.min(sc.x, sc.y, sc.z))
+      const reach2 = reach * reach
+      const arr = pos.array
       for (let i = 0; i < pos.count; i++) {
+        const dx = arr[3 * i] - local.x
+        const dy = arr[3 * i + 1] - local.y
+        const dz = arr[3 * i + 2] - local.z
+        if (dx * dx + dy * dy + dz * dz >= reach2) continue
         v.fromBufferAttribute(pos, i).applyMatrix4(rel)
         const a = dentField(v, H)
         if (a <= 0) continue
@@ -270,10 +280,17 @@ export function installImpact(kit: Kit): void {
       }
       if (changed) {
         pos.needsUpdate = true
-        if (g.userData.crease) crease(g, 42)
+        // with drawn damage the creased normals are smoothed in slices by the frame budget (`c.smoothLater`); without it, now
+        if (g.userData.crease && c.smoothLater) c.smoothLater(msh)
+        else if (g.userData.crease) crease(g, 42)
         else g.computeVertexNormals()
-        g.computeBoundingSphere()
+        // the same bounds three.js computes, in two passes instead of three (computeBoundingSphere measures its own box again)
         g.computeBoundingBox()
+        const sphere = g.boundingSphere ?? (g.boundingSphere = new THREE.Sphere())
+        g.boundingBox.getCenter(sphere.center)
+        let far2 = 0
+        for (let i = 0; i < pos.count; i++) far2 = Math.max(far2, sphere.center.distanceToSquared(v.fromBufferAttribute(pos, i)))
+        sphere.radius = Math.sqrt(far2)
       }
     })
     const dset = new Set(c.deform)
