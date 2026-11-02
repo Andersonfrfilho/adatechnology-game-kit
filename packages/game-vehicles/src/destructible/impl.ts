@@ -158,6 +158,8 @@ const SHIELDED: ReadonlySet<PartRole> = new Set<PartRole>(['engine', 'gearbox', 
 const AMBIENT = 20
 const FLAME = 700
 
+/** Parts welded to the body shell. */
+const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
 const FRACTURE: Record<string, 'shatter' | 'snap' | 'tear' | 'none'> = { glass: 'shatter', plastic: 'snap', rubber: 'tear', steel: 'none', aluminium: 'none' }
 
 const add3 = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
@@ -392,7 +394,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const damage = (p: PState, amount: number, dtype: DamageType, source: string | undefined, out: DestructionEvent[], cause?: Vec3): void => {
     if (p.lost || !(amount > 0)) return
     const before = p.hp
-    p.hp = Math.max(0, p.hp - amount)
+    // the welded body (roof, pillars, frame, side panels) bends and tears but stays: it is never knocked off the car as a piece
+    p.hp = Math.max(WELDED.has(p.def.role) ? 1 : 0, p.hp - amount)
     out.push(ev({ type: 'damage', part: p.def.id, amount: r2(before - p.hp), hp: r2(p.hp), damageType: dtype, ...(source ? { source } : {}) }))
     wear(p, amount, out)
     syncZone(p)
