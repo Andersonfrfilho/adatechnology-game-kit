@@ -77,3 +77,19 @@ describe('discardObject3D', () => {
     expect(flags.map((f) => f.value)).toEqual([false, true])
   })
 })
+
+describe('discardObject3D with a list', () => {
+  it('takes every object out and frees what only they used, in one call', () => {
+    const scene = new THREE.Scene()
+    const shared = new THREE.MeshBasicMaterial()
+    scene.add(new THREE.Mesh(new THREE.BoxGeometry(), shared))
+    const pieces = [0, 1, 2].map(() => new THREE.Mesh(new THREE.BoxGeometry(), shared))
+    for (const piece of pieces) scene.add(piece)
+    const flags = pieces.map((piece) => disposed(piece.geometry))
+    const sharedFlag = disposed(shared)
+    discardObject3D(pieces)
+    expect(pieces.every((piece) => piece.parent === null)).toBe(true)
+    expect(flags.every((flag) => flag.value)).toBe(true)
+    expect(sharedFlag.value).toBe(false)
+  })
+})

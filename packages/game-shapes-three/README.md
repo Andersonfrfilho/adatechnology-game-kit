@@ -38,8 +38,12 @@ const geometry = toGeometry(THREE, buildPrimitive({ kind: 'torus', radius: 0.3, 
 | `toObject3D(THREE, buffers, { materials, materialFor, shadows, copy, name })` | `{ object, near, parts, meshes, instanced, points, materials }`; meshes are named `static:<material>` / `part:<id>` with `userData.material`, `userData.part` and `userData.ranges`; levels after the first are static (parts baked at rest), and `cullDistance` ends the `LOD` |
 | `createMaterials(THREE, hints, ids)` | `MeshStandardMaterial` per id from the schema's material hints (vertex colours on) |
 | `mergeByMaterial(THREE, root, space)` | Every visible mesh under `root` baked into `space` and joined per material (non-indexed), on game-shapes' merge; the same bytes `game-props3d`'s version gave |
+| `releaseObject3D(roots, { keep })` | Frees the GPU side of trees taken out of the scene for good: geometries, materials, textures (maps and shader uniforms) and skeletons, except what a tree in `keep` (the scene) still uses or what is marked `userData.shared`. Returns how many it freed |
+| `discardObject3D(object, { keep })` | `removeFromParent()` plus `releaseObject3D`, keeping what the rest of its scene draws: the one call for something that leaves the game |
 
 ## Português
 
 Desenho three.js das formas do `game-shapes`: geometria com o tipo e o protótipo da classe do three, malha por lote, grupos de peça, instâncias e
 LOD; o `shapeGeometries(THREE)` é o `T` que o código portado dos times recebe para continuar escrevendo `new T.CylinderGeometry(...)`.
+
+Tudo o que sai da cena para sempre passa por `discardObject3D` ou `releaseObject3D` (regra de memória do kit, `CLAUDE.md` seção 7): o three.js só libera a GPU no `dispose()`.

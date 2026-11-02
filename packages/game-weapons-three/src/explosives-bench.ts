@@ -356,7 +356,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   }
 
   const clearShells = (): void => {
-    for (const shell of shells) discardObject3D(shell.mesh)
+    discardObject3D(shells.map((shell) => shell.mesh))
     shells.length = 0
   }
 

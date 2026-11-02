@@ -106,14 +106,18 @@ export function releaseObject3D(roots: THREE_NS.Object3D | readonly THREE_NS.Obj
 }
 
 /**
- * Take `object` out of its tree and free what only it used (`releaseObject3D`, keeping whatever the rest of that tree, usually the scene, still draws).
- * The one call for a piece, a fragment or a body that leaves the game for good.
+ * Take `objects` out of their trees and free what only they used (`releaseObject3D`, keeping whatever the rest of those trees, usually the scene,
+ * still draws). The one call for pieces, fragments, helpers or bodies that leave the game for good. A list costs one walk of each scene, so pass
+ * the whole list instead of calling it once per object.
  */
-export function discardObject3D(object: THREE_NS.Object3D, options: ReleaseOptions = {}): ReleaseReport {
-  let top = object
-  while (top.parent) top = top.parent
-  object.removeFromParent()
+export function discardObject3D(objects: THREE_NS.Object3D | readonly THREE_NS.Object3D[], options: ReleaseOptions = {}): ReleaseReport {
+  const list = (Array.isArray(objects) ? objects : [objects]) as THREE_NS.Object3D[]
   const keep = options.keep === undefined ? [] : Array.isArray(options.keep) ? [...(options.keep as THREE_NS.Object3D[])] : [options.keep as THREE_NS.Object3D]
-  if (top !== object) keep.push(top)
-  return releaseObject3D(object, { keep })
+  for (const object of list) {
+    let top = object
+    while (top.parent) top = top.parent
+    object.removeFromParent()
+    if (top !== object && !keep.includes(top)) keep.push(top)
+  }
+  return releaseObject3D(list, { keep })
 }

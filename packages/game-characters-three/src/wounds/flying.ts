@@ -97,7 +97,7 @@ export const createFlyingPieces = (three: Three, { random, groundAt = () => 0, o
       }
     },
     clear() {
-      pieces.splice(0).forEach((piece) => discardObject3D(piece.object))
+      discardObject3D(pieces.splice(0).map((piece) => piece.object))
     },
   }
 }
