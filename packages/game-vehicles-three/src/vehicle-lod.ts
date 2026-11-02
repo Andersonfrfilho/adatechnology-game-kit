@@ -102,11 +102,12 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
       // merged a material at a time over the next frames (BATCH_BUDGET_MS each), never in one frame
       batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
       batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+      markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
       return
     }
     batcher.update()
     // every part changed (the model was rebuilt, or all of it dented): batch what stands now
-    if (batcher.stats().batched === 0 && batcher.stats().released > 0) {
+    if (!isLocked && batcher.stats().batched === 0 && batcher.stats().released > 0) {
       batcher.dispose()
       batcher = null
     }
