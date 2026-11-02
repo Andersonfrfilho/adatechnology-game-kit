@@ -1,5 +1,11 @@
 # @adatechnology/game-weapons-three
 
+## 0.11.1
+
+### Patch Changes
+
+- d28e38f: The hands always take the tool's scale (they shrank only to `scale ** 0.55`, so a weapon drawn smaller looked like a toy in them), and the wall pull reaches the weapon's own length when it is longer than `WALL_PULL.max`. A test fails when the hands and the weapon in first person are drawn at different scales.
+
 ## 0.11.0
 
 ### Minor Changes

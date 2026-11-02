@@ -1,3 +1,5 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
+
 import { fuse, liteMaterials, liteMeshes } from './lite'
 import { primaryPaint } from './build'
 
@@ -26,6 +28,7 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     const fusion = fuse(THREE, { ...context, vehicle: full }, inverse, null, primaryPaint(context), kit.lodHiddenMaterials())
     const group = new THREE.Group()
     group.name = 'vehicle-lite'
+    markKitOrigin(group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
     for (const mesh of liteMeshes(THREE, fusion, liteMaterials(THREE, kit.studioEnvironment()))) group.add(mesh)
     root.add(group)
     return group

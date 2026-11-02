@@ -39,7 +39,6 @@ export const legacyAdapters = {
   urbanTestModule: () => createUrbanTestModule(),
   vegetationTestModule: () => createVegetationTestModule(),
   roomAvatar: (THREE: Three) => toRoomAvatar(createPlayerAvatar(THREE)),
-  roomAvatarWithArms: (THREE: Three) => toRoomAvatar(createPlayerAvatar(THREE), { firstPerson: {} }),
 }
 
 export const legacyWeapons = {
