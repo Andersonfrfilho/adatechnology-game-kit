@@ -9,7 +9,9 @@
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
-//   ?quality=low|medium|high
+//   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
+//   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
+//                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
 //   ?ui=0               hide the panels
 //   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
@@ -77,6 +79,8 @@ const room = createTestRoom({
   strikeCombo: PUNCH_COMBO,
   strikeComboOn: params.get('combo') === '1',
   quality,
+  // the default page calibrates once the teams' content is in (start() below), so the 3 s measure the room and not the loading
+  graphics: params.get('graphics') === '1' || (params.get('graphics') !== '0' && !navigator.webdriver) ? { calibrate: deferred ? 'manual' : 'idle' } : false,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',
   // with the SDK modules, the ids and the area exist only after the loader ran: __roomStart handles them
@@ -137,6 +141,8 @@ async function start() {
     room.spawn('sedan', [-5, 0, 10.5], Math.PI / 2)
     room.look([-4.5, 1.7, 7.6], [-4.5, 1.1, 6])
   }
+  // the graphics calibration of a first run (Gráficos): the room is up and its content in
+  room.graphics?.calibrateIfNeeded()
   const wanted = params.get('scenario')
   if (wanted) {
     const [share, shares] = (params.get('shard') ?? '1/1').split('/').map(Number)

@@ -842,6 +842,49 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-graphics:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-graphics-three:
+    dependencies:
+      '@adatechnology/game-graphics':
+        specifier: workspace:^
+        version: link:../game-graphics
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-infection:
     devDependencies:
       '@types/node':
@@ -1333,6 +1376,12 @@ importers:
       '@adatechnology/game-fluids-three':
         specifier: workspace:^
         version: link:../game-fluids-three
+      '@adatechnology/game-graphics':
+        specifier: workspace:^
+        version: link:../game-graphics
+      '@adatechnology/game-graphics-three':
+        specifier: workspace:^
+        version: link:../game-graphics-three
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player

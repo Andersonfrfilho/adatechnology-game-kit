@@ -29,6 +29,8 @@ import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { createLoading } from './loading'
+import { createRoomGraphics } from './graphics'
+import type { RoomGraphics } from './graphics'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
@@ -205,6 +207,21 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const arenaSize = options.arenaSize ?? 14
   const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery, options.tap)
   scene.add(arena.group)
+  // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)
+  const graphics: RoomGraphics | null =
+    ownRenderer && options.graphics
+      ? createRoomGraphics({
+          gl,
+          camera,
+          sun: arena.sun,
+          container,
+          locale,
+          loading,
+          label: t('loading.graphics'),
+          ui: options.ui !== false,
+          options: options.graphics === true ? {} : options.graphics,
+        })
+      : null
 
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
@@ -3107,6 +3124,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scene,
     camera,
     locale,
+    ...(graphics ? { graphics: graphics.host } : {}),
     ...(audioSink ? { audio: audioSink } : {}),
     environment,
     groundAt,
@@ -3675,6 +3693,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     modules: () => [...modules.values()].map((m) => ({ id: m.id, name: m.name, group: m.group, hasArea: typeof m.area === 'function' })),
     openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
     loading,
+    graphics: graphics?.controller ?? null,
+    graphicsScreen: graphics?.screen ?? null,
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
     warmUp: () => {
@@ -3765,6 +3785,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       window.removeEventListener('resize', onResize)
       player.dispose()
       ui?.dispose()
+      graphics?.dispose()
       loading.dispose()
       renderer.dispose()
       vfx.dispose()
@@ -3842,6 +3863,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
       },
       quality: qualityName,
+      ...(graphics?.screen ? { onGraphics: () => graphics.screen?.open() } : {}),
       scenarios: allScenarios,
       onRun: async (sc) => {
         await runScenarios([sc])
@@ -3924,15 +3946,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       (ctx) => {
         if (!ctx.scripted && !pacer.ready()) return
         const restoreCamera = room.applyCamera()
+        graphics?.beforeRender(camera)
         gl.render(scene, debugView ?? camera)
+        graphics?.afterRender()
         restoreCamera()
         pacer.submitted()
         roomMetrics.rendered()
+        if (!ctx.scripted) graphics?.frameEnd()
       },
       { phase: 'render', id: 'room.render' },
     )
     try {
-      stopLoop = startLoop(scheduler, { onFrame: (realSeconds) => roomMetrics.frame(realSeconds), skipSimulation: () => scenarioRunning })
+      stopLoop = startLoop(scheduler, {
+        onFrame: (realSeconds) => {
+          graphics?.frameStart()
+          roomMetrics.frame(realSeconds)
+        },
+        skipSimulation: () => scenarioRunning,
+        // the player's frame cap (Gráficos → Limite de FPS)
+        ...(graphics ? { minFrameMs: () => graphics.controller.minFrameMs() } : {}),
+      })
       ownsLoop = true
     } catch {
       // no display frames here (a worker): the host calls room.update
