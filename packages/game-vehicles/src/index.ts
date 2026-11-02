@@ -48,10 +48,13 @@ export type {
   BuildZoneState,
   ZoneState,
 } from './api'
-export { ARMOUR_LEVELS, armourLevelOf, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
 export type {
   ArmourLevel,
   ArmourLevelId,
+  CrashOptions,
+  CrashResult,
+  CrashRules,
   CreaseQueue,
   CreaseWork,
   JointDef,
