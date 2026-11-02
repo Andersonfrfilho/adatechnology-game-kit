@@ -158,6 +158,13 @@ const SHIELDED: ReadonlySet<PartRole> = new Set<PartRole>(['engine', 'gearbox', 
 const AMBIENT = 20
 const FLAME = 700
 
+/** Millimetres of RHA-equivalent steel by part (a car skin is under a millimetre; the engine block stops most rounds). */
+const STEEL_MM: Record<string, number> = { panel: 0.8, door: 1.6, hood: 0.8, lid: 0.8, roof: 0.8, fender: 0.8, pillar: 2, frame: 4, rim: 3, engine: 40, gearbox: 25, fuel_tank: 1, radiator: 1, battery: 2, brakes: 10, steering: 8, shocks: 6, oil_pan: 2, alternator: 4, hitch: 8, other: 2 }
+/** Armour plate of each level, millimetres of RHA in place of the 0.8 mm skin. */
+const ARMOUR_STEEL_MM: Record<'IIIA' | 'III', number> = { IIIA: 4, III: 7 }
+/** Below this piercing a round is soft lead (hollow point, slug, buckshot) and opens a wider hole. */
+const SOFT_LEAD = 0.8
+const EXPANDED_HOLE = 1.6
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
 const FRACTURE: Record<string, 'shatter' | 'snap' | 'tear' | 'none'> = { glass: 'shatter', plastic: 'snap', rubber: 'tear', steel: 'none', aluminium: 'none' }
@@ -441,6 +448,19 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return [p.x, p.y, p.z]
   }
   const armour = (): number => armourLevel?.steel ?? 1
+  /** Steel a part puts in a round's way, millimetres of RHA: a skin is a sheet, an armoured car a plate, the engine a block. */
+  const steelMm = (d: PartDef): number => {
+    const base = STEEL_MM[d.role] ?? STEEL_MM.panel!
+    return d.material === 'steel' || d.material === 'aluminium' ? base * (armourLevel ? ARMOUR_STEEL_MM[armourId === 'III' ? 'III' : 'IIIA'] / STEEL_MM.panel! : 1) : base
+  }
+  /** Does the round go through: by its penetration in steel when the weapon gives it (an AP core goes through more, soft lead less), else by its energy. */
+  const goesThrough = (h: Hit, d: PartDef, p: PState, energy: number, res: number): boolean => {
+    const piercing = h.piercing ?? 1
+    const metal = d.material === 'steel' || d.material === 'aluminium'
+    const mm = h.penetration?.steel
+    if (metal && mm != null) return mm >= steelMm(d) * (p.dents.length > 3 ? 0.9 : 1)
+    return energy * (metal || d.material === 'glass' ? piercing : 1) >= res
+  }
   const resist = (d: PartDef, p: PState): number => {
     let base = RESIST[d.material] ?? 100
     if (d.material === 'glass' && d.hp > 1000) base = 120
@@ -612,7 +632,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const dir = dirToLocal(h.direction ?? [0, 0, -1]).normalize()
     const n = h.normal ? dirToLocal(h.normal).normalize() : normalOf(d, v)
     const res = resist(d, p)
-    const through = E >= res
+    const through = goesThrough(h, d, p, E, res)
     const cosInc = Math.abs(dir.dot(n))
     const metal = d.material === 'steel' || d.material === 'aluminium'
     const worldPoint = toWorld(v)
@@ -623,7 +643,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       vis?.spark([v.x, v.y, v.z], [refl.x, refl.y, refl.z], 6)
       return
     }
-    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1))
+    // a hollow point or soft lead opens up in the panel: a wider hole than its calibre
+    const opens = (h.piercing ?? 1) < SOFT_LEAD ? EXPANDED_HOLE : 1
+    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1) * opens)
     const push = (hole: boolean): void => {
       if (!hole) return
       const hp: PartState['holes'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), diameter: r2(holeDiam), through }
