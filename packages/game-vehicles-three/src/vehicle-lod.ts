@@ -31,6 +31,9 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
   const culled = new Map<any, boolean>()
   const keyOf = (): string => full.children.filter((child: any) => child.name !== 'static-batches').map((child: any) => child.uuid).join()
   const armUpload = (): void => {
+    // a model rebuilt again before its first draw (frames skipped on a slow machine) lets go of the old one's meshes
+    for (const [mesh, wasCulled] of culled) mesh.frustumCulled = wasCulled
+    culled.clear()
     modelKey = keyOf()
     isUploaded = false
     full.traverse((object: any) => {

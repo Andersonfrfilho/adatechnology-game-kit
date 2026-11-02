@@ -233,7 +233,12 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   const frame = (dt: number): void => {
     clock += dt
     for (const entry of roots()) entry.drawn.animate(clock)
-    for (const [id, entry] of placed) if (!entry.root.parent) placed.delete(id)
+    for (const [id, entry] of placed) {
+      if (entry.root.parent) continue
+      // the budget follows each lamp's bulb: a source left behind keeps the whole scene (signs, canvases) alive
+      for (const lamp of entry.drawn.lights) lamp.source?.remove()
+      placed.delete(id)
+    }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('light_radius') || host.bench.layer('bounds') || helpersShown !== '')) refreshLayers()
   }
 
@@ -331,6 +336,8 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
         }
         resolvers.plant?.dispose?.()
         resolvers.vehicle?.dispose?.()
+        for (const entry of placed.values()) for (const lamp of entry.drawn.lights) lamp.source?.remove()
+        placed.clear()
         host = null
       }
     },
