@@ -55,3 +55,13 @@ describe('graphics view', () => {
     expect(camera.far).toBe(300)
   })
 })
+
+describe('view distance holds', () => {
+  it('puts the far plane back when something else moved it', () => {
+    const { camera, view } = setup()
+    view.apply(effective({ viewDistance: 'short' }))
+    camera.far = 600
+    view.hold()
+    expect(camera.far).toBe(60)
+  })
+})

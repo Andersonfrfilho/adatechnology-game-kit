@@ -25,6 +25,11 @@ export interface GraphicsView {
   apply(effective: EffectiveGraphics): void
   /** Under `near` the shadow box follows this point (the player or the camera); call it every frame. Does nothing under the other levels. */
   follow(x: number, z: number): void
+  /**
+   * Puts the far plane back on the player's view distance when something else moved it (a module that lends the camera a longer view while it is loaded): the
+   * player's choice holds. Call it every frame, before drawing.
+   */
+  hold(): void
   /** What was last applied. */
   readonly applied: { readonly pixelRatio: number; readonly shadows: ShadowLevel; readonly far: number } | null
 }
@@ -107,6 +112,11 @@ export function createGraphicsView(options: GraphicsViewOptions): GraphicsView {
       sun.target.position.set(fx, targetHome?.y ?? 0, fz)
       sun.position.set(fx + sunOffset.x, sunOffset.y, fz + sunOffset.z)
       sun.target.updateMatrixWorld()
+    },
+    hold() {
+      if (!applied || camera.far === applied.far) return
+      camera.far = applied.far
+      camera.updateProjectionMatrix()
     },
     get applied() {
       return applied

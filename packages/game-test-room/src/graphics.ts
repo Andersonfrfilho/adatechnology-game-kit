@@ -109,6 +109,7 @@ export function createRoomGraphics(o: {
       started = performance.now()
     },
     beforeRender(camera) {
+      view.hold()
       view.follow(camera.position.x, camera.position.z)
       timer.begin()
     },
