@@ -7,8 +7,7 @@ import { primaryPaint } from './build'
 
 /** Past this distance (m) an untouched vehicle draws fused: nobody sees a door seam from here, and the full model costs hundreds of draw calls. */
 export const VEHICLE_LOD_DISTANCE = 14
-/** Frames the full model stays on after it is built: its geometry reaches the GPU now, and not in the frame someone walks up to it. */
-const WARM_FRAMES = 3
+const BATCH_BUDGET_MS = 2
 
 export type VehicleLod = {
   /** `touched`: hit or driven, from now on it always draws in full (its damage only exists there); `posed`: a door, hood or lid is open now (fused only while all are shut). */
@@ -25,7 +24,33 @@ const isShown = (object: any, top: any): boolean => {
 /** Shows `full` near and the kit's fused light mode (one mesh per class of material) far, in `root`'s own space. Hit tests read the full model, visible or not. */
 export function createVehicleLod(kit: any, context: any, root: any, full: any): VehicleLod {
   const THREE = kit.THREE
-  let frames = 0
+  // the full model is drawn whole once, off-camera parts included, before it may hide: its buffers reach the GPU then, not in the frame of a
+  // blast. A model rebuilt in place (the destructible's reset) is new geometry, so it is drawn whole again.
+  let isUploaded = false
+  let modelKey = ''
+  const culled = new Map<any, boolean>()
+  const keyOf = (): string => full.children.filter((child: any) => child.name !== 'static-batches').map((child: any) => child.uuid).join()
+  const armUpload = (): void => {
+    modelKey = keyOf()
+    isUploaded = false
+    full.traverse((object: any) => {
+      if (!object.isMesh || culled.has(object)) return
+      culled.set(object, object.frustumCulled)
+      object.frustumCulled = false
+    })
+    const probe = [...culled.keys()][0]
+    if (!probe) {
+      isUploaded = true
+      return
+    }
+    const before = probe.onAfterRender
+    probe.onAfterRender = function (this: any, ...args: unknown[]) {
+      isUploaded = true
+      probe.onAfterRender = before
+      before?.apply(this, args)
+    }
+  }
+  armUpload()
   let lite: any = null
   let isFused = false
   let isLocked = false
@@ -61,6 +86,8 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     return proxy
   }
   const drawFull = (): void => {
+    // a vehicle hit in play is changing part by part: its batches would be given back as fast as they are made
+    if (!batcher && isLocked) return
     if (!batcher) {
       lite ??= build()
       lite.visible = isFused
@@ -72,13 +99,14 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
         castsShadow.add(object)
         object.castShadow = false
       })
-      batcher = createStaticBatcher(THREE, full)
+      // merged a material at a time over the next frames (BATCH_BUDGET_MS each), never in one frame
+      batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
       batcher.group.traverse((object: any) => (object.userData.skipLite = true))
       return
     }
     batcher.update()
     // every part changed (the model was rebuilt, or all of it dented): batch what stands now
-    if (batcher.stats().batched === 0) {
+    if (batcher.stats().batched === 0 && batcher.stats().released > 0) {
       batcher.dispose()
       batcher = null
     }
@@ -118,10 +146,19 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     if (lite) lite.visible = shouldFuse
     if (shadow) shadow.visible = !shouldFuse
   }
-  return {
+  const api: VehicleLod = {
     update(distance, touched, posed = false) {
       isLocked ||= touched
-      if (++frames <= WARM_FRAMES) return
+      if (keyOf() !== modelKey) {
+        // the fused copy and the batches were made from the old model
+        api.dispose()
+        armUpload()
+      }
+      if (!isUploaded) return show(false)
+      if (culled.size > 0) {
+        for (const [mesh, wasCulled] of culled) mesh.frustumCulled = wasCulled
+        culled.clear()
+      }
       const shouldFuse = !isLocked && !posed && distance > (isFused ? VEHICLE_LOD_DISTANCE * 0.9 : VEHICLE_LOD_DISTANCE)
       if (shouldFuse && !lite) lite = build()
       show(shouldFuse)
@@ -145,4 +182,5 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
       lite = null
     },
   }
+  return api
 }

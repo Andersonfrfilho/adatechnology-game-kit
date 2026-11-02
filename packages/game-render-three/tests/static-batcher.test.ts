@@ -80,3 +80,16 @@ describe('createStaticBatcher with a rebuilt model', () => {
     expect(batcher.update()).toBe(1)
   })
 })
+
+describe('createStaticBatcher with a budget', () => {
+  it('makes the batches over the next updates instead of in the call', () => {
+    const { root, parts } = car()
+    const batcher = createStaticBatcher(THREE, root, { budgetMs: 0 })
+    expect(batcher.stats().batches).toBe(0)
+    expect(drawn(parts[0]!)).toBe(true)
+    batcher.update()
+    batcher.update()
+    expect(batcher.stats().batches).toBe(2)
+    expect(drawn(parts[0]!)).toBe(false)
+  })
+})

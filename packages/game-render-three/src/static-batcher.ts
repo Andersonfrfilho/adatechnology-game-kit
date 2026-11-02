@@ -1,4 +1,4 @@
-import type { BufferAttribute, BufferGeometry, Material, Matrix4, Mesh, Object3D } from 'three'
+import type { BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D } from 'three'
 
 import type { ThreeLib } from './three-lib'
 
@@ -10,6 +10,8 @@ const MATRIX_EPSILON = 1e-6
 export type StaticBatcherOptions = {
   /** Which meshes may be batched (default every shown mesh with one material and no instancing, skinning or morphing). */
   readonly include?: (mesh: Mesh) => boolean
+  /** Milliseconds of merging per `update` (default all at once, in the call): batches are made a material at a time over the next frames. */
+  readonly budgetMs?: number
 }
 
 export type StaticBatcherStats = { readonly batches: number; readonly batched: number; readonly released: number }
@@ -87,10 +89,16 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   const group = new THREE.Group()
   group.name = 'static-batches'
   const sources: Source[] = []
-  for (const meshes of groups.values()) {
-    if (meshes.length < 2) continue
-    sources.push(...mergeGroup(THREE, meshes, inverse, group))
+  const pending = [...groups.values()].filter((meshes) => meshes.length >= 2)
+  const mergeSome = (deadline: number): void => {
+    while (pending.length > 0) {
+      const meshes = pending.shift() as Mesh[]
+      // a mesh that changed while it waited is left to draw on its own
+      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, meshes, new THREE.Matrix4().copy(root.matrixWorld).invert(), group))
+      if (performance.now() >= deadline) return
+    }
   }
+  if (options.budgetMs === undefined) mergeSome(Number.POSITIVE_INFINITY)
   root.add(group)
   const scratch = new THREE.Matrix4()
   let released = 0
@@ -115,6 +123,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   return {
     group,
     update() {
+      if (pending.length > 0) mergeSome(performance.now() + (options.budgetMs ?? Number.POSITIVE_INFINITY))
       const before = released
       for (const source of sources) if (!source.released && hasChanged(source)) release(source)
       return released - before
@@ -128,27 +137,59 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   }
 }
 
+/** Copies `attribute` into `target` at `offset` vertices: positions through `matrix`, normals through its normal matrix, the rest as they are. */
+function copyAttribute(name: string, attribute: BufferAttribute, target: Float32Array, offset: number, matrix: Matrix4, normalMatrix: Matrix3): void {
+  const size = attribute.itemSize
+  const source = attribute.array as ArrayLike<number>
+  const flat = !(attribute as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && source.length === attribute.count * size
+  if (name !== 'position' && name !== 'normal') {
+    if (flat) target.set(source as Float32Array, offset * size)
+    else for (let at = 0; at < attribute.count; at++) for (let k = 0; k < size; k++) target[(offset + at) * size + k] = attribute.getComponent(at, k)
+    return
+  }
+  const e = (name === 'position' ? matrix : normalMatrix).elements
+  const isNormal = name === 'normal'
+  for (let at = 0; at < attribute.count; at++) {
+    const x = attribute.getX(at)
+    const y = attribute.getY(at)
+    const z = attribute.getZ(at)
+    const out = (offset + at) * 3
+    if (isNormal) {
+      const nx = e[0]! * x + e[3]! * y + e[6]! * z
+      const ny = e[1]! * x + e[4]! * y + e[7]! * z
+      const nz = e[2]! * x + e[5]! * y + e[8]! * z
+      const length = Math.hypot(nx, ny, nz) || 1
+      target[out] = nx / length
+      target[out + 1] = ny / length
+      target[out + 2] = nz / length
+    } else {
+      target[out] = e[0]! * x + e[4]! * y + e[8]! * z + e[12]!
+      target[out + 1] = e[1]! * x + e[5]! * y + e[9]! * z + e[13]!
+      target[out + 2] = e[2]! * x + e[6]! * y + e[10]! * z + e[14]!
+    }
+  }
+}
+
 function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, group: Object3D): Source[] {
   const first = meshes[0] as Mesh
   const names = ATTRIBUTES.filter((name) => first.geometry.attributes[name] !== undefined)
   const pieces = meshes.map((mesh) => {
     const local = new THREE.Matrix4().multiplyMatrices(inverse, mesh.matrixWorld)
-    const geometry = mesh.geometry.clone().applyMatrix4(local)
-    const vertices = geometry.attributes.position!.count
-    const index = geometry.index ? Array.from(geometry.index.array as ArrayLike<number>) : Array.from({ length: vertices }, (_, at) => at)
-    return { mesh, local, geometry, vertices, index }
+    const vertices = (mesh.geometry.attributes.position as BufferAttribute).count
+    const indexCount = mesh.geometry.index ? mesh.geometry.index.count : vertices
+    return { mesh, local, vertices, indexCount }
   })
   const totalVertices = pieces.reduce((sum, piece) => sum + piece.vertices, 0)
-  const totalIndices = pieces.reduce((sum, piece) => sum + piece.index.length, 0)
+  const totalIndices = pieces.reduce((sum, piece) => sum + piece.indexCount, 0)
   const merged = new THREE.BufferGeometry()
+  const normalMatrix = new THREE.Matrix3()
   for (const name of names) {
     const size = first.geometry.attributes[name]!.itemSize
     const array = new Float32Array(totalVertices * size)
     let offset = 0
     for (const piece of pieces) {
-      const attribute = piece.geometry.attributes[name] as BufferAttribute
-      for (let at = 0; at < attribute.count; at++) for (let k = 0; k < size; k++) array[(offset + at) * size + k] = attribute.getComponent(at, k)
-      offset += attribute.count
+      copyAttribute(name, piece.mesh.geometry.attributes[name] as BufferAttribute, array, offset, piece.local, normalMatrix.getNormalMatrix(piece.local))
+      offset += piece.vertices
     }
     merged.setAttribute(name, new THREE.BufferAttribute(array, size))
   }
@@ -168,7 +209,9 @@ function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, 
   let vertexOffset = 0
   let indexOffset = 0
   for (const piece of pieces) {
-    for (let at = 0; at < piece.index.length; at++) indexArray[indexOffset + at] = (piece.index[at] as number) + vertexOffset
+    const index = piece.mesh.geometry.index
+    if (index) for (let at = 0; at < piece.indexCount; at++) indexArray[indexOffset + at] = index.getX(at) + vertexOffset
+    else for (let at = 0; at < piece.indexCount; at++) indexArray[indexOffset + at] = at + vertexOffset
     sources.push({
       mesh: piece.mesh,
       geometry: piece.mesh.geometry,
@@ -178,13 +221,12 @@ function mergeGroup(THREE: ThreeLib, meshes: readonly Mesh[], inverse: Matrix4, 
       mask: piece.mesh.layers.mask,
       batch,
       start: indexOffset,
-      count: piece.index.length,
+      count: piece.indexCount,
       released: false,
     })
     piece.mesh.layers.set(BATCHED_LAYER)
-    piece.geometry.dispose()
     vertexOffset += piece.vertices
-    indexOffset += piece.index.length
+    indexOffset += piece.indexCount
   }
   return sources
 }

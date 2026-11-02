@@ -40,6 +40,8 @@ const BUDGET = {
   programsAfterLoad: 0,
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
+  // a vehicle draws its still parts in batches (createStaticBatcher); a part the storm dented or moved draws on its own from then on
+  releasedVehicleParts: 40,
 }
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
@@ -60,6 +62,8 @@ const HORDE_BUDGET = {
   crowdMsP99: TIER === 'integrated' ? 6 : 4,
   drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
   drawGrowth: 1.5,
+  // a vehicle far off draws fused (~10 draws); hit, it draws in full, one draw per part, for good: the street's car adds that to the idle count
+  damagedVehicleDraws: 200,
   buffersDense: 50,
   // no program: the room's warm-up covers every material the blasts draw (the ground marks included). Buffers: eight explosions' worth, plus what the street's seven destructibles
   // (six gas cylinders, a car) own once they are dented and shot (a part clones its geometry on its first dent, a hit makes a decal, a shard or a scratch): ~100 buffers each, measured
@@ -158,7 +162,7 @@ if (slots) for (const problem of lightSlotReport.problems) fail(`light_slots: ${
 if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedVehicleParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
@@ -255,7 +259,8 @@ function checkHorde(id, found) {
   const crowd = found
   if (crowd.agents === undefined) return fail(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
   if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
-  if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
+  const drawAllowance = id === 'chain_horde' ? HORDE_BUDGET.damagedVehicleDraws : 0
+  if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth + drawAllowance) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
   if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : chainBuffers)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
   if (id === 'dense_horde') {
     if (!(crowd.falls_pressure > 0)) fail(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)
