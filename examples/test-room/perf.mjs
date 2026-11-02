@@ -62,8 +62,9 @@ const HORDE_BUDGET = {
   crowdMsP99: TIER === 'integrated' ? 6 : 4,
   drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
   drawGrowth: 1.5,
-  // a vehicle far off draws fused (~10 draws); hit, it draws in full, one draw per part, for good: the street's car adds that to the idle count
-  damagedVehicleDraws: 200,
+  // a vehicle far off draws fused (~10 draws); hit, it draws in full, one draw per part, for good: the street's car adds that to the idle count.
+  // Absolute, not a share of idle: batching the room's still furniture took idle from 81 to 34 draws without making the car cheaper (~240 measured)
+  damagedVehicleDraws: 240,
   buffersDense: 50,
   // no program: the room's warm-up covers every material the blasts draw (the ground marks included). Buffers: eight explosions' worth, plus what the street's seven destructibles
   // (six gas cylinders, a car) own once they are dented and shot (a part clones its geometry on its first dent, a hit makes a decal, a shard or a scratch): ~100 buffers each, measured

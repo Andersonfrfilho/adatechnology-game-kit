@@ -64,6 +64,7 @@
     "@adatechnology/game-audio": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-props3d": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^"
   },
   "peerDependencies": {

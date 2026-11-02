@@ -12,8 +12,8 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
-import type { EffectWarmup, RenderPools, WarmupProbe } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, spriteProbes } from '@adatechnology/game-render-three'
+import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -115,6 +115,12 @@ const WARMED_FOG_STATES = ['none', 'linear', 'exp2'] as const
 const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
+/** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
+const BATCH_MIN_MESHES = 8
+/** Milliseconds a frame the batches of a new object may take to be made. */
+const BATCH_BUDGET_MS = 1
+/** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
+const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
 const STEP_UP = 0.45
 /** Height of the walking body (m): what starts above it is walked under. */
@@ -807,6 +813,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return m
   }
 
+  // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
+  const batchers = new Map<string, StaticBatcher>()
+  const batchObject = (objectId: string, root: THREE_NS.Object3D): void => {
+    let meshes = 0
+    let unbatched = false
+    // the owner mark may sit on an inner node (a wrapper around the vehicle's own root)
+    root.traverse((object) => {
+      if ((object as THREE_NS.Mesh).isMesh) meshes++
+      if (UNBATCHED_OWNERS.test((object.userData.kitOrigin as { owner?: string } | undefined)?.owner ?? '')) unbatched = true
+    })
+    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { budgetMs: BATCH_BUDGET_MS }))
+  }
   const registerEntry = (
     objectId: string,
     itemId: string,
@@ -823,6 +841,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const so: SpawnedObject = { objectId, itemId, root, movable }
     const e: Entry = { so, item, name, arena: arenaObject, fluidOffset: [0, 0, 0], uses: [], piece: null, last: [root.position.x, root.position.y, root.position.z], velocity: [0, 0, 0] }
     entries.set(objectId, e)
+    batchObject(objectId, root)
     if (movable) {
       e.piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
       rendererPieces.set(objectId, e.piece)
@@ -1109,6 +1128,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.so.root.removeFromParent()
     letGo(e.so.root)
     entries.delete(id)
+    batchers.get(id)?.dispose()
+    batchers.delete(id)
     doors.forget(id)
     rendererPieces.delete(id)
     specs.delete(id)
@@ -3945,6 +3966,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scheduler.add(
       (ctx) => {
         if (!ctx.scripted && !pacer.ready()) return
+        for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
         graphics?.beforeRender(camera)
         gl.render(scene, debugView ?? camera)
