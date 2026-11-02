@@ -8,6 +8,8 @@ import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners
 import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
+import { createVehicleLod } from '../vehicle-lod'
+import type { VehicleLod } from '../vehicle-lod'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
@@ -39,6 +41,10 @@ type Placed = {
   readonly item: VehicleItem
   readonly index: number
   paint?: any
+  /** Near in full, far fused (`createVehicleLod`); none in the light quality, which is fused already. */
+  lod?: VehicleLod
+  /** Hit: its damage only exists on the full model. */
+  touched?: boolean
   size?: { length: number; width: number; height: number }
   /** What the walking player bumps into, in the root's own space: the box of the parts low enough to hit a body (a rotor overhead is walked under). */
   footprint?: Footprint
@@ -104,6 +110,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const paletteFor = (key: string) => (settings.palette === 'civil' ? fleet.paintPalettes.civil : settings.palette === 'military' ? fleet.paintPalettes.military : fleet.paletteOf(key))
   const paintOf = (entry: Placed): void => {
     if (!settings.paint) return
+    entry.lod?.dispose()
+    delete entry.lod
     const color = fleet.colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
     if (!entry.paint) {
       const vehicle = entry.item.vehicle as unknown as { vehicle: any }
@@ -141,6 +149,12 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const kit = r.userData.kit as VehicleKit
       const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
+      const hitBody = d.hit.bind(d)
+      d.hit = (h: never) => {
+        const entry = [...placed.values()].find((candidate) => candidate.root === root)
+        if (entry) entry.touched = true
+        return hitBody(h)
+      }
       r.userData.destructible = d
       return d
     },
@@ -389,6 +403,14 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   // one crease queue for every vehicle of the area; a host with a frame budget runs it, any other leaves each vehicle smoothing in its own update
   const creaseQueue = createCreaseQueue()
 
+  const updateLod = (entry: Placed): void => {
+    if (!host || settings.quality === 'lite' || entry.scenario) return
+    entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
+    const at = host.player().position
+    const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
+    entry.lod.update(distance, entry.touched === true)
+  }
+
   const frame = (dt: number): void => {
     for (const [id, entry] of placed) {
       if (!entry.root.parent) {
@@ -396,6 +418,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         continue
       }
       measure(entry)
+      updateLod(entry)
     }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('damageables') || host.bench.layer('zones') || helpersShown !== '')) refreshLayers()
     lane?.step(dt)
