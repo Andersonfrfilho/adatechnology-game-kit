@@ -37,6 +37,9 @@ const DOOR_STRIP_OVER = 0.3
 const DOOR_TOP_OVER_PANE = 0.03
 const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
+/** A closed hood sits this far under the fenders, and this much of the drawn gap round it closes, metres. */
+const HOOD_SINK = 0.002
+const HOOD_GAP_CLOSED = 0.016
 /** A door handle: from its door's free edge, and its size, metres. */
 const DOOR_HANDLE_INSET = 0.12
 const DOOR_HANDLE_MIN = 0.07
@@ -50,6 +53,13 @@ const PANE_SEAT_REACH = 0.14
 const PANE_SEAT_SAMPLES = 24
 const PANE_SEAT_LIFT = 0.004
 const PANE_FRAME_NEAR = 0.07
+const PANE_MIN_SLOPE = 0.01
+const PANE_EDGE_BAND = 0.03
+const PANE_REACH_STEP = 0.01
+const PANE_REACH_MAX = 0.25
+const COWL_THIN = 0.06
+const UNDER_PANE_CLEAR = 0.006
+const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
 const PANE_BAR_LENGTH = 0.3
@@ -530,7 +540,9 @@ export class VehicleVisuals implements CreaseWork {
       for (const m of [pane, ...near]) this.movePane(m, seat)
       const past = this.shellPast(pane, [local], ray, seat.normal)
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
+      this.reachShellBelow(pane, local, ray, seat.normal)
       this.paneBorder(pane, near, seat)
+      this.keepUnderPane(pane, near, seat.normal)
     }
   }
   /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
@@ -614,6 +626,67 @@ export class VehicleVisuals implements CreaseWork {
       if (by > -Infinity) samples.push({ at: v.clone(), by })
     }
     return samples.length >= 3 ? { normal, samples } : null
+  }
+  /** The lower edge of a pane comes down to the shell: left short, the dashboard shows through the slit as a black bar under the glass. */
+  private reachShellBelow(pane: Obj, shell: Obj, ray: any, normal: any): void {
+    const THREE = this.THREE
+    const down = new THREE.Vector3(0, -1, 0).applyQuaternion(this.c.root.getWorldQuaternion(new THREE.Quaternion()))
+    down.addScaledVector(normal, -down.dot(normal))
+    if (down.lengthSq() < PANE_MIN_SLOPE) return
+    down.normalize()
+    const g = pane.geometry
+    const pos = g.attributes.position
+    const v = new THREE.Vector3()
+    let lowest = -Infinity
+    for (let i = 0; i < pos.count; i++) lowest = Math.max(lowest, v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld).dot(down))
+    const edge: number[] = []
+    const mid = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      if (v.dot(down) > lowest - PANE_EDGE_BAND) {
+        edge.push(i)
+        mid.add(v)
+      }
+    }
+    if (!edge.length) return
+    mid.divideScalar(edge.length)
+    let reach = 0
+    for (let d = PANE_REACH_STEP; d <= PANE_REACH_MAX; d += PANE_REACH_STEP) {
+      const at = mid.clone().addScaledVector(down, d).addScaledVector(normal, PANE_SEAT_REACH)
+      ray.set(at, normal.clone().negate())
+      ray.far = PANE_SEAT_REACH * 2
+      if (ray.intersectObject(shell, false)[0]) {
+        reach = d + PANE_REACH_STEP
+        break
+      }
+    }
+    if (!reach) return
+    const inverse = pane.matrixWorld.clone().invert()
+    for (const i of edge) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld).addScaledVector(down, reach).applyMatrix4(inverse)
+      pos.setXYZ(i, v.x, v.y, v.z)
+    }
+    pos.needsUpdate = true
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+  }
+  /** What stands under a windshield (the top of the dashboard) stays under it: its front edge poking through the glass reads as a black bar across the base. */
+  private keepUnderPane(pane: Obj, near: Obj[], normal: any): void {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const centre = new THREE.Vector3()
+    const v = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) centre.add(v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld))
+    centre.divideScalar(pos.count)
+    const plane = centre.dot(normal)
+    for (const o of near) {
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_THIN || Math.max(size.x, size.z) < COWL_LONG) continue
+      const p = o.geometry.attributes.position
+      let over = -Infinity
+      for (let i = 0; i < p.count; i++) over = Math.max(over, v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).dot(normal) - plane)
+      if (over > -UNDER_PANE_CLEAR) this.movePane(o, { normal, samples: [{ at: centre, by: -(over + UNDER_PANE_CLEAR + PANE_SEAT_LIFT) }] })
+    }
   }
   /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
   private paneBorder(pane: Obj, near: Obj[], seat: PaneSeat): void {
@@ -737,13 +810,22 @@ export class VehicleVisuals implements CreaseWork {
   private seatHood(): void {
     const hood = (this.c as any).hood
     if (!hood?.lift) return
-    for (const part of hood.piv.children as Obj[]) part.position.y -= hood.lift
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(hood.piv).getSize(new THREE.Vector3())
+    for (const part of hood.piv.children as Obj[]) {
+      part.position.y -= hood.lift + HOOD_SINK
+      // most of the gap the drawing left round it closes: a thin shut line, not a dark outline that makes it read as a raised plate
+      part.scale.set(1 + HOOD_GAP_CLOSED / Math.max(0.3, box.x), 1, 1 + HOOD_GAP_CLOSED / Math.max(0.3, box.z))
+    }
   }
   /** A handle is at the free edge of its door, the end away from the hinge. */
   private seatDoorHandles(): void {
     const THREE = this.THREE
     const c = this.c as any
     const inv = this.I.worldInverseOf(c)
+    const bodyBox = new THREE.Box3()
+    for (const o of c.deform as Obj[]) if (o.isMesh && !o.userData.glass && c.paints?.has(o.material)) bodyBox.union(this.I.localBox(c, o, inv))
+    const outerHalf = Math.max(Math.abs(bodyBox.min.z), Math.abs(bodyBox.max.z))
     for (const p of this.model.parts) {
       if (p.role !== 'door') continue
       const z = this.zone(p)
@@ -758,7 +840,7 @@ export class VehicleVisuals implements CreaseWork {
         const isHandle = size.x > DOOR_HANDLE_MIN && size.x < DOOR_HANDLE_MAX && size.y < DOOR_HANDLE_THIN && size.z < DOOR_HANDLE_THIN
         if (!isHandle || Math.sign(at.z) !== Math.sign(z.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
         // the pull inside the cabin stays where it is: only what stands at the outer side is the outer handle
-        if (Math.abs(at.z) < Math.max(Math.abs(B.z0), Math.abs(B.z1)) - DOOR_HANDLE_OUTSIDE) continue
+        if (Math.abs(at.z) < outerHalf - DOOR_HANDLE_OUTSIDE) continue
         const skin = this.surface('z', z.side < 0 ? -1 : 1, B, [[free, at.y]])
         o.position.x += free - at.x
         if (skin != null) o.position.z += skin + (z.side < 0 ? -1 : 1) * (size.z / 2) - at.z
