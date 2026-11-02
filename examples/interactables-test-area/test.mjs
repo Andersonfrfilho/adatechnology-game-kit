@@ -138,12 +138,17 @@ for (const lang of languages) {
 
   // the voices of the bodies and the calls of the animals play on the room's engine (T6.1g): a zombie groans, a cow moos
   // (the room plays in real time, so earlier voices may end meanwhile: the count only has to show voices playing, not more than before)
+  // a zombie and a cow stand in the room first: the voices come from bodies in it, and the room was just cleared
   const voices = await page.evaluate(() => {
     const room = window.__testRoom
+    room.spawn('zombie_walker', [0, 0, -3], 0)
+    room.spawn('animal_cow', [3, 0, -3], 0)
+    room.update(1 / 30)
     const before = room.audio.stats()
     const groan = room.bench('characters_area').act('voice')
     const moo = room.bench('animals_area').act('call')
     const after = room.audio.stats()
+    room.clear()
     return { groan, moo, peak: after.peak, voices: after.voices, registered: ['groan_walker', 'scream', 'cow_moo', 'hen_cluck'].every((id) => room.audio.registry.sound(id) !== undefined), before: before.voices }
   })
   check(`[${lang}] the voices of the bodies and the calls of the animals play on the room engine`, voices.groan && voices.moo && voices.registered && voices.voices > 0, voices)
