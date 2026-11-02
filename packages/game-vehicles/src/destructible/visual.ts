@@ -389,7 +389,7 @@ export class VehicleVisuals implements CreaseWork {
           const panes = I.windowsOver(this.c, z, inv) as Obj[]
           const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
           const mirrors = this.mirrorsOn(z)
-          objs = [...pcs, ...this.doorCards(pcs, z), ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
+          objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
         }
       } else {
         const pcs = this.cutZone(z)
@@ -452,6 +452,24 @@ export class VehicleVisuals implements CreaseWork {
     }
     const paint = this.paint().clone()
     paint.side = THREE.DoubleSide
+    // the inside of the door: one smooth panel inside the band, in the trim's grey, instead of a copy of the skin whose cut edge shows as teeth
+    const cardPosition: number[] = []
+    const mid = loop.reduce((acc, [x, y], i) => [acc[0]! + x, acc[1]! + y, acc[2]! + heights[i]!], [0, 0, 0]).map((v) => v / loop.length)
+    const cardZ = (z: number): number => z - side * DOOR_DEPTH
+    loop.forEach(([x, y], i) => {
+      const j = (i + 1) % loop.length
+      cardPosition.push(mid[0]!, mid[1]!, cardZ(mid[2]!), x, y, cardZ(heights[i]!), loop[j]![0], loop[j]![1], cardZ(heights[j]!))
+    })
+    const cardGeometry = new THREE.BufferGeometry()
+    cardGeometry.setAttribute('position', new THREE.Float32BufferAttribute(cardPosition, 3))
+    cardGeometry.computeVertexNormals()
+    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.85 }).clone()
+    cardMaterial.side = THREE.DoubleSide
+    const card = new THREE.Mesh(cardGeometry, cardMaterial)
+    card.userData.noFollow = true
+    card.castShadow = false
+    this.c.vehicle.add(card)
+    piv.attach(card)
     const edges = new THREE.Mesh(band(0.002), paint)
     const lining = new THREE.Mesh(band(0.002), paint)
     for (const m of [edges, lining]) {
@@ -508,23 +526,6 @@ export class VehicleVisuals implements CreaseWork {
       piece.userData.noFollow = true
       piv.attach(piece)
     }
-  }
-  /** The inside of a door: its skin brought in by the depth of the door, in the trim's dark plastic, so the open door is a door and not one sheet of paint. */
-  private doorCards(skins: Obj[], z: any): Obj[] {
-    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.8 })
-    return skins.map((skin) => {
-      const card = new this.THREE.Mesh(skin.geometry, cardMaterial)
-      card.position.copy(skin.position)
-      card.quaternion.copy(skin.quaternion)
-      card.scale.copy(skin.scale)
-      const side = z.side < 0 ? -1 : 1
-      const inward = -side * DOOR_DEPTH
-      card.position.z += inward
-      card.userData.noFollow = true
-      card.castShadow = false
-      this.c.vehicle.add(card)
-      return card
-    })
   }
   private mend(dirty: Set<Obj>): void {
     dirty.forEach((msh) => {
