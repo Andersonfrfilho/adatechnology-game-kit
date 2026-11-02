@@ -66,6 +66,7 @@ const COWL_PLATE = 0.06
 const COWL_DASH = 0.5
 /** Both run across the car and are deep front to back, unlike the frame of a side window. */
 const COWL_DEEP = 0.3
+const DASHBOARD_COLOR = '#121314'
 /** The plate is cut in pieces this long, metres. */
 const COWL_CUT_SUB = 0.06
 /** The body under a pane deeper than this is cut away, metres. */
@@ -703,8 +704,11 @@ export class VehicleVisuals implements CreaseWork {
       // under the glass, not on top of the body in front of it
       if (box.getCenter(new THREE.Vector3()).dot(normal) - plane >= COWL_UNDER_GLASS) continue
       // under the glass: the panel in the body's paint and the dashboard behind in the cabin's grey, so the base of the glass reads as the car, not a black band
-      // the dashboard behind keeps the dark of a cabin
-      if (size.y >= COWL_PLATE) continue
+      // the dashboard behind is matte dark plastic: lit by the sky through the glass a glossy top reads as a grey band of the outside
+      if (size.y >= COWL_PLATE) {
+        o.material = this.I.makeMaterial(DASHBOARD_COLOR, { roughness: 1, metalness: 0 })
+        continue
+      }
       // the plate stays only outside, up to where the glass meets the body: under the glass it would run into the cabin
       o.material = this.paint()
       this.cutUnderPane(o, pane, normal)
