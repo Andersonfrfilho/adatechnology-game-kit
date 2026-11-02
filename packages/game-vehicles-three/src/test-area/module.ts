@@ -27,6 +27,8 @@ const itemId = (key: string): string => ITEM_OF[key] ?? key
 type Entry = { readonly key: string; readonly id: string; readonly scenario?: string }
 
 const LANE = { z: 11, from: -12, wall: 13 }
+/** Radians a door, hood or lid may be off its rest and still count as shut. */
+const LEAF_REST_RADIANS = 0.02
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
@@ -45,6 +47,8 @@ type Placed = {
   lod?: VehicleLod
   /** Hit: its damage only exists on the full model. */
   touched?: boolean
+  /** Leaves away from their rest (an open door): drawn in full while any is. */
+  posedParts?: Set<string>
   size?: { length: number; width: number; height: number }
   /** What the walking player bumps into, in the root's own space: the box of the parts low enough to hit a body (a rotor overhead is walked under). */
   footprint?: Footprint
@@ -149,6 +153,22 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const kit = r.userData.kit as VehicleKit
       const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
+      // a leaf the room swings (door, hood, lid) is posed through here: away from its rest the vehicle draws in full, or the fused one shows it shut
+      const setPartPose = d.setPartPose?.bind(d)
+      {
+        const rests = new Map((d.describe().parts as Array<{ id: string; rotation?: Vec3 }>).map((part) => [part.id, part.rotation ?? [0, 0, 0]]))
+        d.setPartPose = (partId: string, position: Vec3, rotation?: Vec3) => {
+          const entry = [...placed.values()].find((candidate) => candidate.root === root)
+          const rest = rests.get(partId) ?? [0, 0, 0]
+          const isOpen = (rotation ?? [0, 0, 0]).some((angle, axis) => Math.abs(angle - (rest[axis] ?? 0)) > LEAF_REST_RADIANS)
+          if (entry) {
+            entry.posedParts ??= new Set()
+            if (isOpen) entry.posedParts.add(partId)
+            else entry.posedParts.delete(partId)
+          }
+          return setPartPose?.(partId, position, rotation)
+        }
+      }
       const hitBody = d.hit.bind(d)
       d.hit = (h: never) => {
         const entry = [...placed.values()].find((candidate) => candidate.root === root)
@@ -408,7 +428,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
     const at = host.player().position
     const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
-    entry.lod.update(distance, entry.touched === true)
+    entry.lod.update(distance, entry.touched === true, (entry.posedParts?.size ?? 0) > 0)
   }
 
   const frame = (dt: number): void => {

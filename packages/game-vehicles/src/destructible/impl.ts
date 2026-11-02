@@ -950,6 +950,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   const surfaceRays = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  surfaceRays.layers.enableAll()
   surfaceRays.camera = new THREE.PerspectiveCamera()
   let meshParts: Map<any, string> | null = null
   const paneParts = (): Map<any, string> => {

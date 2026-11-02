@@ -152,6 +152,8 @@ export function installImpact(kit: Kit): void {
     polygonOffsetUnits: -2,
   })
   const _ray = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _ray.layers.enableAll()
   function findSurface(c: any, p: any, dir: any) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
@@ -378,6 +380,8 @@ export function installImpact(kit: Kit): void {
   kit.partEffects = {}
   /* ray in c.vehicle coordinates against the visible meshes of the vehicle (no decals); returns the first point */
   const _pr = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _pr.layers.enableAll()
   function probe(c: any, o: any, d: any, far: any) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
