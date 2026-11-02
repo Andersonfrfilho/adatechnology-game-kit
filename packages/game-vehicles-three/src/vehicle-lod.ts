@@ -1,4 +1,6 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
+import { createStaticBatcher } from '@adatechnology/game-render-three'
+import type { StaticBatcher } from '@adatechnology/game-render-three'
 
 import { fuse, liteMaterials, liteMeshes } from './lite'
 import { primaryPaint } from './build'
@@ -27,6 +29,59 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
   let lite: any = null
   let isFused = false
   let isLocked = false
+  // near, the full model draws its still parts in batches by material; a part that moves, dents or falls draws on its own again
+  let batcher: StaticBatcher | null = null
+  let shadow: any = null
+  const castsShadow = new Set<any>()
+  /** One mesh with the shape of the fused body, drawn only into the shadow map. */
+  const shadowProxyOf = (fused: any): any => {
+    const positions: number[] = []
+    const indices: number[] = []
+    for (const mesh of fused.children) {
+      if (!mesh.isMesh || !mesh.castShadow) continue
+      const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrix)
+      const offset = positions.length / 3
+      const position = geometry.attributes.position
+      for (let at = 0; at < position.count; at++) positions.push(position.getX(at), position.getY(at), position.getZ(at))
+      const index = geometry.index ? Array.from(geometry.index.array as ArrayLike<number>) : Array.from({ length: position.count }, (_, at) => at)
+      for (const vertex of index) indices.push(vertex + offset)
+      geometry.dispose()
+    }
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.setIndex(indices)
+    geometry.computeBoundingSphere()
+    const proxy = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }))
+    proxy.name = 'vehicle-shadow'
+    proxy.castShadow = true
+    proxy.userData.skipLite = true
+    proxy.raycast = () => undefined
+    root.add(proxy)
+    return proxy
+  }
+  const drawFull = (): void => {
+    if (!batcher) {
+      lite ??= build()
+      lite.visible = isFused
+      shadow ??= shadowProxyOf(lite)
+      shadow.visible = !isFused
+      // the shadow comes from the one proxy, not from each part: a part's own shadow would be one more pass per draw
+      full.traverse((object: any) => {
+        if (!object.isMesh || !object.castShadow) return
+        castsShadow.add(object)
+        object.castShadow = false
+      })
+      batcher = createStaticBatcher(THREE, full)
+      batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+      return
+    }
+    batcher.update()
+    // every part changed (the model was rebuilt, or all of it dented): batch what stands now
+    if (batcher.stats().batched === 0) {
+      batcher.dispose()
+      batcher = null
+    }
+  }
   const build = (): any => {
     root.updateMatrixWorld(true)
     const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
@@ -60,21 +115,29 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     isFused = shouldFuse
     full.visible = !shouldFuse
     if (lite) lite.visible = shouldFuse
+    if (shadow) shadow.visible = !shouldFuse
   }
   return {
     update(distance, touched, posed = false) {
       isLocked ||= touched
-      if (isLocked || posed) return show(false)
       if (++frames <= WARM_FRAMES) return
-      const shouldFuse = distance > (isFused ? VEHICLE_LOD_DISTANCE * 0.9 : VEHICLE_LOD_DISTANCE)
+      const shouldFuse = !isLocked && !posed && distance > (isFused ? VEHICLE_LOD_DISTANCE * 0.9 : VEHICLE_LOD_DISTANCE)
       if (shouldFuse && !lite) lite = build()
       show(shouldFuse)
+      if (!shouldFuse) drawFull()
     },
     get fused() {
       return isFused
     },
     dispose() {
       show(false)
+      batcher?.dispose()
+      batcher = null
+      for (const mesh of castsShadow) mesh.castShadow = true
+      castsShadow.clear()
+      shadow?.removeFromParent()
+      shadow?.geometry.dispose()
+      shadow = null
       if (!lite) return
       lite.removeFromParent()
       lite.traverse((object: any) => object.geometry?.dispose())

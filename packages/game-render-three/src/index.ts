@@ -42,3 +42,6 @@ export type { MaterialAnchors } from './pools/anchors'
 
 export { createFramePacer } from './frame-pacer'
 export type { FramePacer, FramePacerContext, FramePacerOptions } from './frame-pacer'
+
+export { BATCHED_LAYER, createStaticBatcher } from './static-batcher'
+export type { StaticBatcher, StaticBatcherOptions, StaticBatcherStats } from './static-batcher'

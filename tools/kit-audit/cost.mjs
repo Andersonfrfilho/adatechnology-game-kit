@@ -43,6 +43,8 @@ const census = (area) =>
     room.scene.traverse((object) => {
       if (!(object.isMesh || object.isLine || object.isPoints || object.isSprite)) return
       for (let q = object; q; q = q.parent) if (q.visible === false) return
+      // a mesh drawn inside a batch (createStaticBatcher) is off the camera layer: the batch is what costs
+      if ((object.layers.mask & 1) === 0) return
       let holder = object
       while (holder && !holder.userData?.kitOrigin) holder = holder.parent
       if (!holder) return

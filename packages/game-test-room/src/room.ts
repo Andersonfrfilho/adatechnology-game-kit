@@ -1589,6 +1589,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const shotRay = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  shotRay.layers.enableAll()
   /** Metres of water a pistol round crosses to lose 1/e of its speed (a full can takes about a fifth of it in its 6 cm). */
   const LIQUID_SLOWING = 0.25
   /** Share of the momentum along the surface a round leaves in a wall it meets at a slant (the rest goes on with it). */
