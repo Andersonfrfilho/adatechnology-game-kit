@@ -37,6 +37,8 @@ const DOOR_STRIP_OVER = 0.3
 const DOOR_TOP_OVER_PANE = 0.03
 const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
+/** Above this many joules of hit points a pane is laminated in the model (a windshield, any pane of an armoured car). */
+const LAMINATED_HP = 1000
 /** A closed hood sits this far under the fenders, and this much of the drawn gap round it closes, metres. */
 const HOOD_SINK = 0.002
 const HOOD_GAP_CLOSED = 0.016
@@ -1042,6 +1044,8 @@ export class VehicleVisuals implements CreaseWork {
         best = g
       }
     }
+    // the glass is what the model says it is: an armoured pane cracks round the hit and stays, whatever the drawing first called it
+    if (p.hp > LAMINATED_HP && best.userData.glass) best.userData.glass.type = 'laminated'
     this.kit.hitGlass(this.c, best, pt, new V3(...dir), force)
     return !!best.userData.glass?.broken
   }
