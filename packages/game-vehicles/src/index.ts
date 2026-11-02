@@ -64,3 +64,4 @@ export type {
   VehicleStatus,
 } from './destructible'
 export type { ParticleEffects, ParticleEffectRequest } from './routed-particles'
+export { crackedGlassMaterial } from './glass-damage'

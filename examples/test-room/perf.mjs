@@ -305,9 +305,11 @@ function adaptationOf(samples) {
 function sampleDetailScale() {
   const samples = (window.__detailSamples = [])
   let started
+  let peak = 0
   setInterval(() => {
     const { agents, detail_scale: scale } = window.__testRoom.metrics().module
-    if (!(agents > 0) || scale === undefined) return
+    // the clock starts when the horde stopped growing: while it spawns the detail is following the load, not settling
+    if (scale === undefined || !(agents > 0) || (agents > peak && (peak = agents))) return
     started ??= performance.now()
     samples.push({ seconds: (performance.now() - started) / 1000, scale })
   }, 250)
@@ -352,7 +354,7 @@ function measureCalibration() {
   const times = []
   for (let frame = 0; frame < 40; frame++) {
     const started = performance.now()
-    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 200)
+    for (let pass = 0; pass < 8; pass++) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 400)
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
     if (frame >= 10) times.push(performance.now() - started)
   }

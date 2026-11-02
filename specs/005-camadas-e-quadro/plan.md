@@ -151,8 +151,10 @@ animação em textura) costumam gerar clones andando no mesmo passo, e aqui isso
 
 | Faixa | Placas (exemplos) | Horda na tela | Orçamento |
 |---|---|---|---|
-| Integrada | Intel Iris/UHD/Arc integrada, AMD Radeon Graphics de APU Ryzen | 1.000 zumbis | 0 quadros acima de 33,4 ms |
-| Dedicada | NVIDIA RTX, AMD Radeon RX | 2.000 zumbis | 0 quadros acima de 33,4 ms e p99 ≤ 20 ms |
+| Integrada | Intel Iris/UHD/Arc integrada, AMD Radeon Graphics de APU Ryzen | 1.000 zumbis | 60 fps na jogada normal, reduzindo detalhe e resolução; 30 fps estáveis (0 quadros acima de 33,4 ms) em explosões e horda grande |
+| Dedicada | NVIDIA RTX, AMD Radeon RX | 2.000 zumbis | 60 fps em todas as ações (p99 ≤ 20 ms); 0 quadros acima de 33,4 ms |
+
+**Atualizado em 2026-11-01 (dono):** 60 fps é a meta; 30 fps é o piso, não a meta. Medir sempre com a máquina parada (carga < 4).
 
 **Atualizado em 2026-11-01 (dono):** a meta é por **faixa de placa, nunca por marca**: temos jogadores com AMD. Nenhuma adaptação lê o
 fabricante (`UNMASKED_RENDERER`); tudo decide pelo custo medido ou pela capacidade. As máquinas de medição desta spec (Intel integrada e

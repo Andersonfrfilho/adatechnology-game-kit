@@ -6,3 +6,5 @@ export type { LiteClass, LiteFusion } from './lite'
 export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, DEFAULT_TEST_WRECKS, loadVehiclesTestModule, PAGE_ITEM_ALIASES, PAGE_SCENARIO_ALIASES, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, defaultEffectIds, defaultSoundIds } from './testing'
 /** @deprecated import from '@adatechnology/game-vehicles-three/testing' */
 export type { DocumentLike, EffectsLike, ModuleRoomLike, VehicleEffectIds, VehicleSoundIds, VehiclesContext, VehicleWreck, VehiclesRoom, VehiclesTestFleet, VehiclesTestOptions } from './testing'
+export { VEHICLE_LOD_DISTANCE, createVehicleLod } from './vehicle-lod'
+export type { VehicleLod } from './vehicle-lod'

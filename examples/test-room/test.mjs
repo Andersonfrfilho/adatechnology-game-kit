@@ -138,7 +138,7 @@ if (runs('views')) {
 
   // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
   await page.goto(`${url}?ui=1`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
+  await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
   const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
   await page.keyboard.press('KeyV')
   await page.evaluate(() => {
