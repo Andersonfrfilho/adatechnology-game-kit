@@ -71,7 +71,8 @@ const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
 const DRAWN_MIRROR_MOUNT = 0.2
 const MIRROR_GLASS_FIT = 0.76
-const MIRROR_GLASS_PROUD = 0.0015
+const MIRROR_GLASS_PROUD = 0.001
+const MIRROR_FACE_DEPTH = 0.012
 /** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
 const MIRROR_GLASS_THIN = 0.04
 const MIRROR_GLASS_MIN = 0.05
@@ -870,9 +871,25 @@ export class VehicleVisuals implements CreaseWork {
       glass.updateMatrixWorld(true)
       const gb = this.I.localBox(this.c, glass, inv)
       const hb = this.I.localBox(this.c, housing, inv)
-      const toFront = hb.getCenter(new THREE.Vector3()).x > gb.getCenter(new THREE.Vector3()).x
-      if (toFront) glass.position.x += hb.min.x - MIRROR_GLASS_PROUD - gb.min.x
-      else glass.position.x += hb.max.x + MIRROR_GLASS_PROUD - gb.max.x
+      // the rounded back of the housing is cut flat and the glass lies in that flat, so nothing stands out of the shape seen from the side
+      const side = hb.getCenter(new THREE.Vector3()).x > gb.getCenter(new THREE.Vector3()).x ? -1 : 1
+      const face = side < 0 ? hb.min.x + MIRROR_FACE_DEPTH : hb.max.x - MIRROR_FACE_DEPTH
+      const shape = housing.geometry.clone()
+      const pos = shape.attributes.position
+      const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, housing.matrixWorld)
+      const back = toVehicle.clone().invert()
+      const v = new THREE.Vector3()
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(toVehicle)
+        if ((v.x - face) * side <= 0) continue
+        v.x = face
+        v.applyMatrix4(back)
+        pos.setXYZ(i, v.x, v.y, v.z)
+      }
+      shape.computeVertexNormals()
+      housing.geometry = shape
+      const outer = side < 0 ? gb.min.x : gb.max.x
+      glass.position.x += face + side * MIRROR_GLASS_PROUD - outer
     }
     glass.material = this.I.makeMaterial(MIRROR_GLASS_COLOR, { metalness: 0.95, roughness: 0.12 })
   }
