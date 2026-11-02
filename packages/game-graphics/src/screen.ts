@@ -250,7 +250,9 @@ export function createFpsOverlay(options: { readonly container: HTMLElement; rea
   const render = (): void => {
     const on = options.controller.settings.showFps
     el.classList.toggle('on', on)
-    if (on) el.textContent = t('fps', { fps: Math.round(options.controller.fps) })
+    // a slow machine reads 0.5, not 0
+    const fps = options.controller.fps
+    if (on) el.textContent = t('fps', { fps: fps < 10 ? fps.toFixed(1) : Math.round(fps) })
   }
   render()
   const timer = setInterval(render, REFRESH_MS)
