@@ -72,6 +72,8 @@ const COWL_CUT_SUB = 0.06
 /** The body under a pane deeper than this is cut away, metres. */
 const SKIN_UNDER_PANE = 0.025
 const SKIN_EDGE_KEPT = 0.06
+/** A pane facing the side more than this is a side window. */
+const SIDE_PANE_FACING = 0.6
 const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
@@ -558,7 +560,9 @@ export class VehicleVisuals implements CreaseWork {
       this.paneBorder(pane, near, seat)
       this.keepUnderPane(pane, seat.normal)
       // the body's own skin left under the glass shows through it inside the car: only the strip the glass rests on stays
-      for (const body of shell) this.cutUnderPane(body, pane, seat.normal, SKIN_UNDER_PANE, SKIN_EDGE_KEPT)
+      // only a windshield or rear window has the body's skin under it; a side pane lies over the door, and the door must stay whole
+      const across = new this.THREE.Vector3(0, 0, 1).transformDirection(this.c.vehicle.matrixWorld)
+      if (Math.abs(seat.normal.dot(across)) < SIDE_PANE_FACING) for (const body of shell) if (body.parent === this.c.vehicle) this.cutUnderPane(body, pane, seat.normal, SKIN_UNDER_PANE, SKIN_EDGE_KEPT)
     }
   }
   /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
@@ -887,7 +891,7 @@ export class VehicleVisuals implements CreaseWork {
     for (const part of hood.piv.children as Obj[]) {
       part.position.y -= hood.lift + HOOD_SINK
       // most of the gap the drawing left round it closes: a thin shut line, not a dark outline that makes it read as a raised plate
-      part.scale.set(1 + HOOD_GAP_CLOSED / Math.max(0.3, box.x), 1, 1 + HOOD_GAP_CLOSED / Math.max(0.3, box.z))
+      part.scale.multiply(new THREE.Vector3(1 + HOOD_GAP_CLOSED / Math.max(0.3, box.x), 1, 1 + HOOD_GAP_CLOSED / Math.max(0.3, box.z)))
     }
   }
   /** A handle is at the free edge of its door, the end away from the hinge. */
