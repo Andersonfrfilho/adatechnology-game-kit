@@ -66,6 +66,8 @@ const COWL_PLATE = 0.06
 const COWL_DASH = 0.5
 /** Both run across the car and are deep front to back, unlike the frame of a side window. */
 const COWL_DEEP = 0.3
+/** The plate is cut in pieces this long, metres. */
+const COWL_CUT_SUB = 0.06
 const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
@@ -696,9 +698,50 @@ export class VehicleVisuals implements CreaseWork {
       // under the glass, not on top of the body in front of it
       if (box.getCenter(new THREE.Vector3()).dot(normal) - plane >= COWL_UNDER_GLASS) continue
       // under the glass: the panel in the body's paint and the dashboard behind in the cabin's grey, so the base of the glass reads as the car, not a black band
-      if (size.y < COWL_PLATE) o.material = this.paint()
-      else o.material = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
+      if (size.y >= COWL_PLATE) {
+        o.material = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
+        continue
+      }
+      // the plate stays only outside, up to where the glass meets the body: under the glass it would run into the cabin
+      o.material = this.paint()
+      this.cutUnderPane(o, pane, normal)
     }
+  }
+  /** Cuts away the part of a mesh that lies under a pane (behind its plane, inside its outline seen along its normal). */
+  private cutUnderPane(mesh: Obj, pane: Obj, normal: any): void {
+    const THREE = this.THREE
+    const outline = this.paneOutline(pane, normal)
+    if (outline.length < 3) return
+    const u = new THREE.Vector3(0, 1, 0).cross(normal)
+    if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
+    u.normalize()
+    const w = normal.clone().cross(u)
+    const poly = outline.map((p: any) => [p.dot(u), p.dot(w)] as [number, number])
+    const inside = (x: number, y: number): boolean => {
+      let hit = false
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const [xi, yi] = poly[i]!
+        const [xj, yj] = poly[j]!
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit
+      }
+      return hit
+    }
+    const v = new THREE.Vector3()
+    const toWorld = mesh.matrixWorld
+    mesh.updateMatrixWorld(true)
+    this.kit.cutMesh(
+      mesh,
+      [
+        {
+          sdf: (x: number, y: number, z: number): number => {
+            v.set(x, y, z).applyMatrix4(toWorld)
+            return inside(v.dot(u), v.dot(w)) ? -1 : 1
+          },
+        },
+      ],
+      42,
+      { sub: COWL_CUT_SUB },
+    )
   }
   /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
   private paneBorder(pane: Obj, near: Obj[], seat: PaneSeat): void {

@@ -20,6 +20,8 @@ import type {
   Vec3,
 } from '@adatechnology/game-contracts'
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
+import { ARMOUR_LEVELS, armourLevelOf } from './armour'
+import type { ArmourLevel, ArmourLevelId } from './armour'
 import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, rng, strHash } from '../util'
@@ -50,6 +52,10 @@ export interface VehicleDestructibleOptions {
    * Defaults and meaning of every number: `IgnitionRules` of `@adatechnology/game-contracts`.
    */
   ignition?: Partial<IgnitionRules>
+  /** Armour level of this vehicle (`IIIA` civilian, `III` against rifles), or null for none. Default: its spec. */
+  armour?: ArmourLevelId | null
+  /** Replaces or extends the armour table. */
+  armourLevels?: Partial<Record<ArmourLevelId, ArmourLevel>>
   /**
    * One queue that smooths the normals of cut panels for every vehicle that shares it (`createCreaseQueue()`), run by a frame budget. Without it, or while
    * nobody registered the queue with a budget, each vehicle smooths in its own `update` (2.5 ms a frame), as always.
@@ -165,6 +171,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   let c = vehicleCtx
   const id = options.id ?? c.key
   const headless = !!options.headless
+  const armourId = armourLevelOf(c.meta as any, options.armour)
+  const armourLevel: ArmourLevel | null = armourId ? { ...ARMOUR_LEVELS[armourId], ...options.armourLevels?.[armourId] } : null
   const seedBase = strHash(`${c.key}|${id}|${options.seed ?? 0}`)
   let rand = rng(seedBase)
   const ignitionRules = resolveIgnitionRules(options.ignition)
@@ -227,7 +235,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return d.ignitionC ? 1 : 0
   }
   const setup = (): void => {
-    model = buildVehicleModel(kit, c, { hitch: options.hitch })
+    model = buildVehicleModel(kit, c, { hitch: options.hitch, armour: armourLevel })
     ps.clear()
     for (const d of model.parts) {
       const kg = burnKg(d)
@@ -429,11 +437,11 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const p = v.clone().applyMatrix4(M)
     return [p.x, p.y, p.z]
   }
-  const armour = (): number => (c.meta.armored || c.meta.bullet ? 30 : 1)
+  const armour = (): number => armourLevel?.steel ?? 1
   const resist = (d: PartDef, p: PState): number => {
     let base = RESIST[d.material] ?? 100
     if (d.material === 'glass' && d.hp > 1000) base = 120
-    if (d.material === 'glass' && c.meta.bullet) base *= 30
+    if (d.material === 'glass' && armourLevel) base = armourLevel.glassStops
     const k = ROLE_RESIST[d.role] ?? 1
     const arm = d.material === 'steel' || d.material === 'aluminium' ? armour() : 1
     return base * k * arm * (p.dents.length > 3 ? 0.9 : 1)
@@ -631,7 +639,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           const crack = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), length: r2(0.15 + force * 0.35), rays: 6 + Math.round(force * 6) }
           p.cracks.push(crack)
           out.push(ev({ type: 'crack', part: d.id, crack, worldPoint }))
-          damage(p, E * 0.5, 'ballistic', h.source, out, worldPoint)
+          damage(p, E * (armourLevel && !through ? armourLevel.glassTakes : 0.5), 'ballistic', h.source, out, worldPoint)
         } else damage(p, laminated ? E * 0.5 : p.hp, 'ballistic', h.source, out, worldPoint)
         break
       }
