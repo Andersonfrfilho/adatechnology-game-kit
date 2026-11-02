@@ -59,9 +59,13 @@ const PANE_MIN_SLOPE = 0.01
 const PANE_EDGE_BAND = 0.03
 const PANE_REACH_STEP = 0.01
 const PANE_REACH_MAX = 0.25
-const COWL_THIN = 0.06
 const COWL_UNDER_GLASS = 0.0
 const COWL_NEAR_PANE = 0.08
+/** Under a windshield: a plate is thinner than this; the dashboard is up to this tall. */
+const COWL_PLATE = 0.06
+const COWL_DASH = 0.5
+/** Both run across the car and are deep front to back, unlike the frame of a side window. */
+const COWL_DEEP = 0.3
 const COWL_LONG = 0.8
 /** The bars of a frame: few vertices and long; the band that takes their place. */
 const PANE_BAR_VERTICES = 48
@@ -674,7 +678,7 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingBox()
     g.computeBoundingSphere()
   }
-  /** The plate drawn right under a windshield is not drawn: through the glass it is a thick black band, and the dashboard behind already closes the view. */
+  /** What is drawn right under a windshield takes the colour it has on a car: the plate the body's paint, the dashboard the cabin's grey. In black they read as a thick band. */
   private keepUnderPane(pane: Obj, normal: any): void {
     const THREE = this.THREE
     const paneBox = new THREE.Box3().setFromObject(pane).expandByScalar(COWL_NEAR_PANE)
@@ -688,9 +692,12 @@ export class VehicleVisuals implements CreaseWork {
       if (!o.isMesh || o === pane || o.userData.glass || (this.c as any).deform?.includes(o)) continue
       const box = new THREE.Box3().setFromObject(o)
       const size = box.getSize(new THREE.Vector3())
-      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_THIN || Math.max(size.x, size.z) < COWL_LONG || !paneBox.containsBox(box)) continue
+      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_DASH || Math.max(size.x, size.z) < COWL_LONG || Math.min(size.x, size.z) < COWL_DEEP || !paneBox.intersectsBox(box)) continue
       // under the glass, not on top of the body in front of it
-      if (box.getCenter(new THREE.Vector3()).dot(normal) - plane < COWL_UNDER_GLASS) o.visible = false
+      if (box.getCenter(new THREE.Vector3()).dot(normal) - plane >= COWL_UNDER_GLASS) continue
+      // under the glass: the panel in the body's paint and the dashboard behind in the cabin's grey, so the base of the glass reads as the car, not a black band
+      if (size.y < COWL_PLATE) o.material = this.paint()
+      else o.material = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
     }
   }
   /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
