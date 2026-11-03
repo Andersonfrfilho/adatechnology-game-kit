@@ -691,6 +691,29 @@ describe('the shove of a blast', () => {
     expect(speedAt({ blastShove: { minSpeed: 100 } }, 2)).toBe(0)
   })
 
+  it('is cut by the cover the world finds between the centre and the piece (blastReach), the piece itself and the explosive left out', () => {
+    const speedWith = (reach: number | undefined): { speed: number; calls: { at: number[]; ignore: readonly string[] }[] } => {
+      const { world, renderer, scene } = setup({})
+      const calls: { at: number[]; ignore: readonly string[] }[] = []
+      if (reach !== undefined) (world as unknown as { blastReach: unknown }).blastReach = (_p: number[], at: number[], o: { ignore?: readonly string[] }) => (calls.push({ at, ignore: o.ignore ?? [] }), reach)
+      world.addObject('crate', [partState('box', 'wood', { mass: 10 })])
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6))
+      const root = new THREE.Group()
+      root.add(mesh)
+      root.position.set(2, 0.2, 0)
+      scene.add(root)
+      renderer.bind('crate', root, { parts: { box: mesh } })
+      const piece = renderer.makePiece('crate')
+      renderer.explode([0, 0.2, 0], 50000, 8, { visual: false })
+      return { speed: Math.hypot(...piece.velocity), calls }
+    }
+    const open = speedWith(undefined)
+    const covered = speedWith(0.1)
+    expect(covered.speed).toBeLessThan(open.speed * 0.5)
+    expect(covered.calls[0]!.ignore).toContain('crate')
+    expect(speedWith(1).speed).toBeCloseTo(open.speed, 5)
+  })
+
   it('makes a bound object without a piece one when the host lets a blast move it, and only then', () => {
     const loosened: string[] = []
     const { renderer, root } = crate({ shoveable: (id) => id === 'crate', onLoosened: (id) => loosened.push(id) }, 3, 60)

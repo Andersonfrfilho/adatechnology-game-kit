@@ -435,6 +435,12 @@ export interface ModuleHost {
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.
    */
   blastShove?: BlastShoveOptions
+  /**
+   * The share (0..1) of a blast at `point` that reaches `target` through the cover between them (walls, cars, furniture of the host's world): what a module passes as
+   * `BlastSource.reach` to `blastShove`, so a body behind a wall is not thrown like one in the open. `ignore` lists world objects that never block (the explosive).
+   * Absent when the host has no world: the whole blast reaches.
+   */
+  blastReach?(point: Vec3, target: Vec3, ignore?: readonly string[]): number
   /** The host's loading indicator: a module with a slow job of its own (building a house, laying a district) shows it through this instead of freezing the page. Absent when the host has none. */
   loading?: BusySink
 }

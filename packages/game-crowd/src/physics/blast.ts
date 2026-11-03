@@ -8,6 +8,8 @@ import type { PhysicsContext } from './context'
 import type { Thrown, ThrownCandidate } from './thrown'
 
 const CENTRE_HEIGHT = 1
+/** Below this share of a blast getting through the cover, an agent inside the lethal radius is hurt by what reached it instead of killed outright. */
+const SHELTERED = 0.5
 const DISMEMBER_SHARE = 0.5
 const LIMB_CHANCE = 0.5
 const STUN_BASE = 0.45
@@ -67,8 +69,8 @@ export function createBlasts(ctx: PhysicsContext, hooks: BlastHooks): Blasts {
   }
 
   /** Damage by the falloff, and a blow to a limb with half of it; returns true when the agent died. */
-  const hurt = (i: number, blast: CrowdBlast, distance: number, index: number): boolean => {
-    const falloff = (1 - distance / blast.radius) ** 2
+  const hurt = (i: number, blast: CrowdBlast, distance: number, index: number, reach = 1): boolean => {
+    const falloff = (1 - distance / blast.radius) ** 2 * reach
     const amount = (blast.energy / 1000) * options.pointsPerKilojoule * falloff
     const draw = (salt: number) => () => unit(store.identity[i]!, ctx.step, salt)
     if (ctx.damage(i, { region: 1, amount, distance, cut: falloff }, draw(SALT.JAW + index)).died) return true
@@ -77,14 +79,15 @@ export function createBlasts(ctx: PhysicsContext, hooks: BlastHooks): Blasts {
   }
 
   /** Sums the shove of every blast on the agent: `[vx, vy, vz]` of the body, or undefined when no blast moves it. */
-  const shoveOf = (i: number, blasts: readonly CrowdBlast[]): { vx: number; vy: number; vz: number; falloff: number } | undefined => {
+  const shoveOf = (i: number, blasts: readonly CrowdBlast[], reaches?: readonly number[]): { vx: number; vy: number; vz: number; falloff: number } | undefined => {
     const position: [number, number, number] = [store.x[i]!, store.y[i]! + CENTRE_HEIGHT * store.height[i]!, store.z[i]!]
     let vx = 0
     let vy = 0
     let vz = 0
     let falloff = 0
-    for (const blast of blasts) {
-      const shove = blastShove({ point: blast.point as [number, number, number], energy: blast.energy, radius: blast.radius }, { position, mass: store.mass[i]! }, options.shove)
+    for (let b = 0; b < blasts.length; b++) {
+      const blast = blasts[b]!
+      const shove = blastShove({ point: blast.point as [number, number, number], energy: blast.energy, radius: blast.radius, reach: reaches?.[b] ?? 1 }, { position, mass: store.mass[i]! }, options.shove)
       if (!shove) continue
       vx += shove.speed * shove.direction[0]
       vy += shove.speed * shove.direction[1]
@@ -122,16 +125,21 @@ export function createBlasts(ctx: PhysicsContext, hooks: BlastHooks): Blasts {
 
   const affect = (i: number, blasts: readonly CrowdBlast[], tallies: BlastTally[], candidates: ThrownCandidate[]): void => {
     let dead = store.hp[i]! <= 0
+    // the share of each blast that gets to the agent's chest through the cover in the way; 1 out of reach or when the blast says nothing
+    const reaches = blasts.map((blast) =>
+      blast.reach && distanceTo(i, blast) <= blast.radius ? blast.reach([store.x[i]!, store.y[i]! + CENTRE_HEIGHT * store.height[i]!, store.z[i]!]) : 1,
+    )
     for (let b = 0; b < blasts.length && !dead; b++) {
       const blast = blasts[b]!
       const distance = distanceTo(i, blast)
       if (distance > blast.radius) continue
       tallies[b]!.reached++
-      if (blast.lethalRadius !== undefined && distance < blast.lethalRadius) kill(i, blast, distance, tallies[b]!)
-      else if (hurt(i, blast, distance, b)) tallies[b]!.killed++
+      // behind solid cover the lethal core is not lethal: the agent takes the share that got through
+      if (blast.lethalRadius !== undefined && distance < blast.lethalRadius && reaches[b]! >= SHELTERED) kill(i, blast, distance, tallies[b]!)
+      else if (hurt(i, blast, distance, b, reaches[b])) tallies[b]!.killed++
       dead = store.hp[i]! <= 0 || dead
     }
-    const shove = shoveOf(i, blasts)
+    const shove = shoveOf(i, blasts, reaches)
     if (shove) applyShove(i, shove, candidates, tallies, blasts)
   }
 

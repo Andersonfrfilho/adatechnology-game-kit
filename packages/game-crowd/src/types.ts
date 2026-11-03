@@ -124,6 +124,11 @@ export type CrowdBlast = {
   readonly source?: string
   /** Id of the chain this blast belongs to (game-destruction `chain`), for the counters. */
   readonly chain?: string
+  /**
+   * The share (0..1) of the blast that gets to a point through the cover in the way (the host's `blastReach`): the shove and the damage of an agent behind a wall
+   * are cut by it. Without it the whole blast reaches every agent.
+   */
+  readonly reach?: (target: readonly [number, number, number]) => number
 }
 
 /** The age of a body (G IDADES): its share, and what it does to speed, health, limbs and senses. */

@@ -24,7 +24,7 @@ import { createCrowd } from './crowd'
 import type { Crowd } from './crowd'
 import { HIT_PRESETS, hitFor, hitPresetOf } from './hits'
 import { personSpecOf } from './person-spec'
-import { bodyMass, knockOf, KNOCKED_DOWN_ANGLE, stepKnock } from './knock'
+import { bodyMass, KNOCK_CHEST, knockOf, KNOCKED_DOWN_ANGLE, stepKnock } from './knock'
 import type { Knock } from './knock'
 import { createScenarios } from './scenarios'
 import type { AreaContext, ScenarioDeps } from './scenarios'
@@ -475,7 +475,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         for (const entry of entries.values()) {
           if (!entry.root.parent) continue
           const p = entry.root.position
-          const knock = knockOf(event, [p.x, p.y, p.z], bodyMass(entry.character.spec.height, entry.character.spec.build), lent.blastShove)
+          // the cover between the centre and the chest: a wall or a car between them takes the push
+          const reach = lent.blastReach?.(event.point, [p.x, p.y + KNOCK_CHEST, p.z], [event.source]) ?? 1
+          const knock = knockOf({ ...event, reach }, [p.x, p.y, p.z], bodyMass(entry.character.spec.height, entry.character.spec.build), lent.blastShove)
           if (knock) entry.knock = entry.knock ? { ...knock, lying: entry.knock.lying } : knock
         }
       })

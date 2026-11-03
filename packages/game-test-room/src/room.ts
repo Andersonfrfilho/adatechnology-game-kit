@@ -5,7 +5,7 @@ import { createAudioEngine, createAudioSink, loadKitSamples } from '@adatechnolo
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
-import { surfaceOfMaterial } from '@adatechnology/game-contracts'
+import { bodyMass, KNOCK_CHEST, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -41,6 +41,7 @@ import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
 import { createSeating } from './seating'
@@ -662,6 +663,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     floorAt: terrain.heightAt,
     start: arena.playerStart,
     crouchKeys: options.crouch?.keys,
+    onSlam: (event) => slamPlayer(event),
     onFeet: (event) => {
       const at = player.position
       if (event.type === 'jump') bodySounds.jump(at)
@@ -1339,6 +1341,48 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let cameraMode: CameraMode = options.cameraMode ?? 'first'
   /** Crouched by a player module (`setAvatarState`); the crouch keys crouch too. */
   let crouchForced = false
+  /** Down by a player module (`setAvatarState`: knocked by a zombie, dead); a blast that knocks the player off its feet puts the body down too. */
+  let downForced = false
+  /** Mass of the player's body for the shove of a blast (kg). */
+  const playerMass = options.playerMass ?? bodyMass(1.75)
+  /**
+   * A blast shoves the player the way it shoves the people of the modules (`knockOf`, the host's `blastShove`), cut by the cover between the centre and the chest: strong
+   * enough, it takes the player off its feet, and the body lies a while and gets up.
+   */
+  /** How far ahead of the body (m, from its axis) a wall it slammed into is looked for, and the height of the shoulder that takes it. */
+  const SLAM_REACH = PLAYER_RADIUS + 0.35
+  const SLAM_SHOULDER = 1.3
+  /**
+   * A body thrown into something firm: what it hit takes the blow of its weight (`½ m v²`, blunt, across the shoulder) and answers as its material does (drywall or a board
+   * cracks or breaks, brick holds); the body falls with a thud and, when it was hard, cries out.
+   */
+  const slamPlayer = (event: PlayerSlam): void => {
+    const [x, feet, z] = player.position
+    const energy = 0.5 * playerMass * event.speed * event.speed
+    let hit: RayHit | null = null
+    if (event.against === 'obstacle') {
+      const from: Vec3 = [x, feet + ((player.knocked?.lying ?? 0) > 0.5 ? 0.3 : SLAM_SHOULDER), z]
+      hit = rayWorld(from, event.direction, SLAM_REACH)
+      if (hit) world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, direction: event.direction, energy, radius: 0.2, ...(hit.normal ? { normal: hit.normal } : {}) })
+    }
+    bodySounds.slam(event.speed, [x, feet + 0.5, z])
+    action('player_slammed', t(event.against === 'obstacle' ? 'act.player_slammed' : 'act.player_fell', { speed: num(event.speed, 1), what: hit ? nameOf(hit.object) : '' }), {
+      ...(hit ? { objectId: hit.object, part: hit.part } : {}),
+      data: { against: event.against, speed: event.speed, energy, ...(hit ? { object: hit.object, part: hit.part } : {}) },
+    })
+  }
+  const knockPlayer = (event: { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly source: string }): void => {
+    if (seating.seat) return
+    const feet: Vec3 = [player.x, player.feet, player.z]
+    const reach = world.blastReach(event.point, [feet[0], feet[1] + KNOCK_CHEST, feet[2]], event.source ? { ignore: [event.source] } : {})
+    const knock = knockOf({ point: event.point, energy: event.energy, radius: event.radius, reach }, feet, playerMass, options.blastShove)
+    if (!knock) return
+    player.knock(knock)
+    const speed = Math.hypot(knock.velocity[0], knock.velocity[1], knock.velocity[2])
+    action(knock.down ? 'player_knocked_down' : 'player_shoved', t(knock.down ? 'act.knocked_down' : 'act.player_shoved', { speed: num(speed, 1), reach: num(reach * 100, 0) }), {
+      data: { speed, reach, down: knock.down, source: event.source },
+    })
+  }
   const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
   let feetPrev: [number, number] | null = null
   /** `armed` forced by a module (the bench); null follows the tool in hand. */
@@ -1400,6 +1444,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     feetPrev = [x, z]
     avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
     avatarState.crouch = crouchForced || player.crouching || push.isBent
+    avatarState.down = downForced || Boolean(player.knocked?.down || (player.knocked?.lying ?? 0) > 0.5)
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
@@ -1493,14 +1538,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatar.reach(targets, { camera, keepOutside: { contact: (origin, direction, maxDistance) => rayWorld(origin, direction, maxDistance)?.distance ?? null } })
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
+  const thirdEuler = new THREE.Euler(0, 0, 0, 'YXZ')
   const applyThirdView = (): (() => void) => {
     if (!thirdActive()) return () => undefined
     const home = camera.position.clone()
+    const turn = camera.quaternion.clone()
     const pose = thirdPose(0)
     camera.position.set(pose.position[0], pose.position[1], pose.position[2])
+    // the view of a body on the floor (turned up, rolled) is the first person's: the camera behind the body keeps the player's own look
+    if (player.knocked) camera.quaternion.setFromEuler(thirdEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
     camera.updateMatrixWorld(true)
     return () => {
       camera.position.copy(home)
+      camera.quaternion.copy(turn)
       camera.updateMatrixWorld(true)
     }
   }
@@ -3316,6 +3366,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const environment = options.environment ?? createEnvironmentBus()
   const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
+    if (event.type === 'explosion') knockPlayer(event)
     for (const listener of hostListeners) listener(event)
   }
   function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
@@ -3379,6 +3430,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     addView: (view) => moduleViews.add(view),
     setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
+    blastReach: (point, target, ignore) => world.blastReach(point, target, ignore ? { ignore } : {}),
     tool: () => ({
       weapon: toolId,
       category: tool.def.category,
@@ -3982,7 +4034,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         crouchForced = state.crouch
         avatarState.crouch = state.crouch || player.crouching
       }
-      if (state.down !== undefined) avatarState.down = state.down
+      if (state.down !== undefined) {
+        downForced = state.down
+        avatarState.down = state.down || Boolean(player.knocked?.down)
+      }
       if (state.armed !== undefined) armedForced = state.armed
     },
     avatarState: () => ({ ...avatarState }),
@@ -4002,6 +4057,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    get playerKnock() {
+      return player.knocked
     },
     sit: (objectId, seatId) => seating.sit(objectId, seatId),
     stand: () => seating.stand(),

@@ -56,6 +56,8 @@ export type {
 } from './destruction'
 export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
+export { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, KNOCKED_DOWN_ANGLE, knockOf, stepKnock } from './blast-knock'
+export type { Knock } from './blast-knock'
 export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
 export type { CheckOptions, DestructibleImpl, ImpactContract, SurfaceRay, SurfaceRayHit } from './impact'
