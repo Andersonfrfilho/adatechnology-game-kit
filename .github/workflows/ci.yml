@@ -225,7 +225,7 @@ jobs:
       - name: ${{ matrix.check.title }}
         run: node tools/kit-audit/${{ matrix.check.script }} --check
 
-  # The explosion and horde frame budgets (examples/test-room/perf.mjs) run every night and before a push on a machine with a GPU, not on each PR: see nightly-perf.yml.
+  # The explosion and horde frame budgets (examples/test-room/perf.mjs) run before a push on a machine with a GPU (tools/gpu/perf-gate.mjs from .githooks/pre-push), not on CI: software GL has no real frame times.
 
   # Memory of the test room (CLAUDE.md, "Memória"): the same cycle again and again (blasts; glass and cars; opening the areas), then room.clear();
   # fails when GPU buffers, textures, canvases, listeners, intervals or the JS heap keep growing per cycle (examples/test-room/leak.mjs).

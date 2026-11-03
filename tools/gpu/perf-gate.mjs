@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // The frame budgets of examples/test-room/perf.mjs on this machine's own GPU, before a push (.githooks/pre-push). CI has no GPU (it checks the counts
-// and runs the long budgets every night, see nightly-perf.yml), so the frame times are checked here. A machine without a GPU, where WebGL falls back to
+// and the cost per piece), so the frame times are checked here. A machine without a GPU, where WebGL falls back to
 // software (SwiftShader, llvmpipe), skips with a message; PRE_PUSH_PERF=0 skips on purpose.
 //   node tools/gpu/perf-gate.mjs
 import { execFileSync, spawnSync } from 'node:child_process'
