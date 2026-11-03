@@ -4,7 +4,8 @@
 // the professions in the front row and the five in the lane are the first five professions; the crowd stands in the east field and is filled by the bench.
 import { createCharacters } from '@adatechnology/game-characters'
 import { createPeoplePack, PROFESSIONS } from '@adatechnology/game-characters-people'
-import { BODY_MATERIAL_DEF, CHARACTERS_AREA_ID, bloodLookOfAge, createCharactersTestModule, registerBodyMaterial } from '@adatechnology/game-characters-three'
+import { bloodLookOfAge } from '@adatechnology/game-characters-three'
+import { BODY_MATERIAL_DEF, CHARACTERS_AREA_ID, createCharactersTestModule, registerBodyMaterial } from '@adatechnology/game-characters-three/testing'
 import { UNDEAD_TYPES, createUndead, createUndeadPack, getUndeadAge } from '@adatechnology/game-characters-undead'
 
 export { BODY_MATERIAL_DEF, createCharactersTestModule, registerBodyMaterial }

@@ -58,7 +58,8 @@ export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
 export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
-export type { CheckOptions, DestructibleImpl, ImpactContract } from './impact'
+export type { CheckOptions, DestructibleImpl, ImpactContract, SurfaceRay, SurfaceRayHit } from './impact'
+export type { CostOptions } from './impact-cost'
 export { MISSING_BITS } from './body'
 export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
@@ -79,9 +80,16 @@ export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
 export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
-export type { AreaPlacement, GroundLayout, GroundZone, HostEvent, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
+export { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, FRAME_PHASES, checkDeferredQueue } from './frame'
+export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePhase } from './frame'
+export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
+import { resetWarnOnce as resetWarnOnceForTests } from './warn'
+
+export { warnOnce } from './warn'
+/** @deprecated Import it from `@adatechnology/game-contracts/testing`. */
+export const resetWarnOnce = resetWarnOnceForTests
 export { checkBench } from './bench'
 export type {
   ActionControl,

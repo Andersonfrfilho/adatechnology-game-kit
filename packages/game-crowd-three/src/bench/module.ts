@@ -1,5 +1,5 @@
-import { HERD_ROLES, STATE, bindInfection, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createRng } from '@adatechnology/game-crowd'
-import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdType, Flock, Herd, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
+import { CROWD_PHYSICS_DEFAULTS, HERD_ROLES, STATE, bindInfection, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createRng } from '@adatechnology/game-crowd'
+import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdPhysicsOptions, CrowdType, Flock, Herd, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { createPlayer } from '@adatechnology/game-player'
@@ -12,9 +12,11 @@ import type { AnimalDrawer, HerdView } from '../herd-view'
 import { createCrowdInstances } from '../instances'
 import type { CrowdInstance } from '../instances'
 import { createCrowdRenderer } from '../renderer'
-import type { CrowdRenderer } from '../renderer'
+import type { CrowdRenderer, CrowdRendererVariety } from '../renderer'
 import { crowdBenchTextOf } from './locale'
 import type { CrowdBenchText } from './locale'
+import { BUILTIN_SCENES } from './scenes'
+import type { CrowdBenchScene, CrowdSceneProps } from './scenes'
 
 export const CROWD_AREA_ID = 'crowd_area'
 
@@ -56,6 +58,16 @@ export type CrowdTestModuleOptions = {
   /** The effect ids of the host for the crowd's effects (default `CROWD_EFFECTS`; null leaves one out). */
   readonly effects?: CrowdEffectMap
   readonly seed?: number
+  /** Variety for the drawing (identity, accessories, near shadows, blobs): see `CrowdRendererVariety`. Default off. */
+  readonly variety?: CrowdRendererVariety
+  /** The physics options of the crowd (personality, contact, balance...): see `CrowdPhysicsOptions`. Default off; the bench's `physics` control turns on the package defaults when this is absent. */
+  readonly crowdPhysics?: CrowdPhysicsOptions
+  /** Scenes the bench can be born in, by id, over the built-in `dense_wall` and `chain_line`. */
+  readonly scenes?: Readonly<Record<string, CrowdBenchScene>>
+  /** What the scenes draw with: the host project's wall piece and catalogue item ids. */
+  readonly props?: CrowdSceneProps
+  /** Bake every type and make the drawing as soon as the module is on a frame, so the first play frame pays no bake and the room's warm-up draws the batches. Default off. */
+  readonly eager?: boolean
   /** Agents when the area opens (default 0, so a room that only carries the module stays calm). */
   readonly startCount?: number
   /** Where the crowd is born around (default 0, -45: in front of the room's start). */
@@ -78,6 +90,12 @@ type ThreeLike = Three & { Vector3: new () => { x: number; y: number; z: number 
 
 const CAPACITY = 4000
 const FRAME = 1 / 30
+/** Crowd step times kept for the p99 the bench shows. */
+const STEP_WINDOW = 600
+/** The lethal radius of a blast the host reports with its reach only (`ModuleHost` `explosion`): the grenade's 5 m inside its 15 m. */
+const LETHAL_SHARE = 1 / 3
+/** The renderer's default level budgets (`CrowdRendererVariety.budget`: 160, 320 and 600 bodies at the near, middle and far levels), scaled by a fixed horde detail. */
+const HORDE_BUDGET_LEVELS = [160, 320, 600] as const
 const RING = [10, 90] as const
 /** Two lots of the area for the civilians (a house and a shop) and the way out of the area: the test area's own ground, not a delivery's. */
 const LOTS: Readonly<Record<string, CivilianBuilding>> = { home: { x: -14, z: -14, w: 8, d: 10, house: true, front: 1 }, shop: { x: 8, z: -14, w: 10, d: 10, front: 1 } }
@@ -125,21 +143,32 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   const text = crowdBenchTextOf(locale)
   const effects = options.effects ?? CROWD_EFFECTS
   const [cx, cz] = options.center ?? [0, -45]
-  const settings = { count: options.startCount ?? 0, type: 'mix', night: false, seed: options.seed ?? 1 }
+  const settings = { count: options.startCount ?? 0, type: 'mix', night: false, seed: options.seed ?? 1, scene: 'open', physics: options.crowdPhysics !== undefined }
+  const scenes = { ...BUILTIN_SCENES, ...options.scenes }
+  const sceneOf = (): CrowdBenchScene | undefined => (settings.scene === 'open' ? undefined : scenes[settings.scene])
   const layers = { corpses: true, civilians: true, animals: true }
   let host: ModuleHost | null = null
   let three: Three | null = null
   let renderer: CrowdRenderer | null = null
   let herdView: HerdView | null = null
   let lastMessage = ''
+  let isDirty = false
+  let removeProps: (() => void) | null = null
+  const stepTimes: number[] = []
+  const peaks = { climbers: 0, moundMax: 0, maxOverlap: 0 }
+  let isBaked = false
+  let frameStepMs = 0
   let pending: Partial<Record<PlayerAction, boolean>> = {}
   let last: { x: number; z: number } | null = null
   const offs: (() => void)[] = []
 
-  type World = { crowd: Crowd; player: Player; civilians: Civilians; herd: Herd; flock: Flock; vultures: number; binding: InfectionBinding | null; model: InfectionModelLike | null; place: () => number }
+  const typeOfSetting = (crowd: Crowd): number => (settings.type === 'mix' ? -1 : crowd.typeIndex(settings.type))
+  type World = { crowd: Crowd; player: Player; civilians: Civilians; herd: Herd; flock: Flock; vultures: number; binding: InfectionBinding | null; model: InfectionModelLike | null; place: () => number; physics: boolean; sceneUnit: () => number }
   const build = (seed: number): World => {
     const player = createPlayer({ seed })
-    const crowd = createCrowd({ pack: options.pack, seed, capacity: CAPACITY, target: player })
+    const physics = settings.physics ? (options.crowdPhysics ?? CROWD_PHYSICS_DEFAULTS) : undefined
+    const crowd = createCrowd({ pack: options.pack, seed, capacity: CAPACITY, target: player, ...(physics ? { physics } : {}) })
+    sceneOf()?.layout(crowd, { cx, cz })
     const civilians = createCivilians(crowd, { people: CIVILIANS.map((c) => ({ ...c })), buildings: LOTS })
     const herd = createHerd(crowd, { view: () => ({ x: player.state.x, z: player.state.z }) })
     const flock = createFlock({ count: 0, mode: 'carrion' })
@@ -149,10 +178,10 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     const place = (): number => {
       const a = spot() * Math.PI * 2
       const r = RING[0] + spot() * (RING[1] - RING[0])
-      const type = settings.type === 'mix' ? -1 : crowd.typeIndex(settings.type)
+      const type = typeOfSetting(crowd)
       return crowd.spawn(cx + Math.cos(a) * r, cz + Math.sin(a) * r, type)
     }
-    return { crowd, player, civilians, herd, flock, vultures: 0, binding, model, place }
+    return { crowd, player, civilians, herd, flock, vultures: 0, binding, model, place, physics: physics !== undefined, sceneUnit: createRng(seed + 13) }
   }
   let world = build(settings.seed)
 
@@ -176,9 +205,16 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   }
 
   const fit = (): void => {
+    settle()
     const { crowd } = world
-    while (crowd.store.n < settings.count && world.place() >= 0) {
-      /* born in the ring */
+    const scene = sceneOf()
+    if (scene) {
+      const missing = Math.min(settings.count, CAPACITY) - crowd.store.n
+      if (missing > 0) scene.spawn(crowd, { first: crowd.store.n, count: missing, type: typeOfSetting(crowd), unit: world.sceneUnit }, { cx, cz })
+    } else {
+      while (crowd.store.n < settings.count && world.place() >= 0) {
+        /* born in the ring */
+      }
     }
     while (crowd.store.n > settings.count) crowd.remove(crowd.store.n - 1)
   }
@@ -197,7 +233,21 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     herdView = null
   }
 
+  const sceneView = (): ModuleArea['view'] | undefined => {
+    const view = sceneOf()?.view({ cx, cz })
+    return view ? { eye: [...view.eye], target: [...view.target] } : undefined
+  }
+
+  const settle = (): void => {
+    if (isDirty) reset()
+  }
+
   const reset = (): void => {
+    isDirty = false
+    stepTimes.length = 0
+    peaks.climbers = peaks.moundMax = peaks.maxOverlap = 0
+    removeProps?.()
+    removeProps = null
     world.binding?.unbind()
     renderer?.dispose()
     if (renderer) (host?.scene as THREE_NS.Object3D | undefined)?.remove(renderer.group)
@@ -207,8 +257,11 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     herdView = null
     world = build(settings.seed)
     wire()
+    if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
     fit()
     lastMessage = ''
+    const view = sceneView()
+    if (view) host?.bench?.look?.(view.eye, view.target)
   }
 
   const view = (): { x: number; z: number; yaw: number } | null => {
@@ -222,19 +275,29 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     return { x: camera.position.x, z: camera.position.z, yaw: camera.rotation?.y ?? 0 }
   }
 
+  // the player's horde detail (host.graphics, Gráficos → Detalhe da horda): auto keeps the renderer's own budget.adapt; a share fixes the level budgets at that share
+  const varietyFor = (detail: 'auto' | number): CrowdRendererVariety | undefined => {
+    const variety = options.variety
+    if (!variety || detail === 'auto' || variety.budget === false) return variety
+    const levels = (variety.budget?.levels ?? HORDE_BUDGET_LEVELS).map((n) => Math.max(1, Math.round(n * detail)))
+    return { ...variety, budget: { ...variety.budget, levels, adapt: false } }
+  }
   const ensureDrawing = (): void => {
     if (!host || !three) return
     const scene = host.scene as THREE_NS.Object3D
     if (!renderer && options.builders) {
       const bodies = options.civilianBodies ?? []
+      const variety = varietyFor(host.graphics?.hordeDetail() ?? 'auto')
       renderer = createCrowdRenderer(three, {
         crowd: world.crowd,
         builders: options.builders(three),
         ...(options.typeName ? { typeName: options.typeName } : {}),
         drawCorpses: () => layers.corpses,
+        ...(variety ? { variety } : {}),
         ...(bodies.length ? { civilians: { list: () => (layers.civilians ? world.civilians.list : []), body: (n) => bodies[n.k % bodies.length]! } } : {}),
       })
       scene.add(renderer.group)
+      isBaked = false
     }
     if (!herdView && options.animals?.drawer && world.herd.list.length) {
       herdView = createHerdView(three, { herd: world.herd, flock: world.flock, drawer: options.animals.drawer(three), species: options.animals.species })
@@ -242,7 +305,43 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     }
   }
 
+  const updateContext = (): { viewYaw: number; nightFactor: number; bandCentre?: readonly [number, number]; flowTarget?: readonly [number, number] } => ({
+    viewYaw: view()?.yaw ?? 0,
+    nightFactor: settings.night ? 1 : 0,
+    ...sceneOf()?.context?.({ cx, cz }),
+  })
+  const stepCrowd = (dt: number): void => {
+    const started = performance.now()
+    world.crowd.update(dt, updateContext())
+    frameStepMs += performance.now() - started
+  }
+  const recordPeaks = (): void => {
+    const physics = world.crowd.stats.physics
+    peaks.climbers = Math.max(peaks.climbers, physics.climbers)
+    peaks.moundMax = Math.max(peaks.moundMax, physics.moundMax)
+    peaks.maxOverlap = Math.max(peaks.maxOverlap, physics.maxOverlap)
+    if (frameStepMs <= 0) return
+    stepTimes.push(frameStepMs)
+    if (stepTimes.length > STEP_WINDOW) stepTimes.shift()
+    frameStepMs = 0
+  }
+  const stepMsP99 = (): number => {
+    if (stepTimes.length === 0) return 0
+    const sorted = [...stepTimes].sort((a, b) => a - b)
+    return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.99))]!
+  }
+
+  const prepareDrawing = (): void => {
+    if (!host) return
+    settle()
+    ensureDrawing()
+    if (!renderer || isBaked) return
+    renderer.prepare()
+    isBaked = true
+  }
+
   const frame = (dt: number): void => {
+    settle()
     const { crowd, player, civilians, herd, flock } = world
     const here = view()
     const speed = here && last && dt > 0 ? Math.hypot(here.x - last.x, here.z - last.z) / dt : 0
@@ -264,11 +363,16 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       const carcass = herd.list.find((E) => E.dead)
       flock.update(herd.time, dt, carrionCenter(crowd.corpses.entries.map((e) => e.data), carcass ? [carcass.x, carcass.z] : null), [player.state.x, player.state.z])
     }
-    crowd.update(dt, { viewYaw: here?.yaw ?? 0, nightFactor: settings.night ? 1 : 0 })
+    if (!world.physics) stepCrowd(dt)
+    recordPeaks()
     crowd.updateCorpses(dt)
-    ensureDrawing()
+    if (options.eager) prepareDrawing()
+    else ensureDrawing()
     if (renderer && (crowd.store.n || crowd.corpses.count || civilians.list.length)) {
       renderer.update(dt, { camera: { x: player.state.x, z: player.state.z }, viewYaw: here?.yaw ?? 0, target: { x: player.state.x, z: player.state.z, alive: player.state.alive } })
+      // what the horde draws now, for the settings screen (under auto it is the adaptive share; fixed, the share chosen)
+      const detail = host?.graphics?.hordeDetail() ?? 'auto'
+      host?.graphics?.report('hordeDetail', detail === 'auto' ? renderer.detailScale : detail)
     }
     if (herdView) {
       herdView.group.visible = layers.animals
@@ -313,20 +417,30 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     if (id === 'count' && typeof value === 'number') {
       settings.count = value
       fit()
+    } else if (id === 'scene' && typeof value === 'string' && value !== settings.scene) {
+      settings.scene = value
+      isDirty = true
+    } else if (id === 'physics' && typeof value === 'boolean' && value !== settings.physics) {
+      settings.physics = value
+      isDirty = true
     } else if (id === 'type' && typeof value === 'string') settings.type = value
     else if (id === 'night' && typeof value === 'boolean') settings.night = value
     else if (id === 'seed' && typeof value === 'number' && value !== settings.seed) {
       settings.seed = value
-      reset()
+      isDirty = true
     }
   }
 
   const typeOptions = () => [{ id: 'mix', name: text.mix }, ...options.pack.types.map((type) => ({ id: type.id, name: options.typeLabel?.(type, locale) ?? type.id }))]
+  const sceneOptions = () => [{ id: 'open', name: text.sceneNames.open }, ...Object.keys(scenes).map((id) => ({ id, name: (text.sceneNames as Readonly<Record<string, string>>)[id] ?? id }))]
   const controls = (): ModuleControl[] => [
-    { kind: 'number', id: 'count', name: text.controls.count, hint: text.hints.count, min: 0, max: 3000, step: 100, default: settings.count },
+    // the order is the order the bench state is applied in (`sendInitial`): the seed makes the world, the scene writes its grid, the physics rebuilds the crowd, the count bears the agents
+    { kind: 'number', id: 'seed', name: text.controls.seed, min: 1, max: 9999, step: 1, default: settings.seed },
+    { kind: 'choice', id: 'scene', name: text.controls.scene, hint: text.hints.scene, options: sceneOptions(), default: settings.scene },
+    { kind: 'boolean', id: 'physics', name: text.controls.physics, hint: text.hints.physics, default: settings.physics },
+    { kind: 'number', id: 'count', name: text.controls.count, hint: text.hints.count, min: 0, max: CAPACITY, step: 100, default: settings.count },
     { kind: 'choice', id: 'type', name: text.controls.type, hint: text.hints.type, options: typeOptions(), default: 'mix' },
     { kind: 'boolean', id: 'night', name: text.controls.night, hint: text.hints.night, default: false },
-    { kind: 'number', id: 'seed', name: text.controls.seed, min: 1, max: 9999, step: 1, default: settings.seed },
     { kind: 'action', id: 'spawn', name: text.controls.spawn, slow: true },
     { kind: 'action', id: 'noise', name: text.controls.noise, hint: text.hints.noise },
     { kind: 'action', id: 'hit', name: text.controls.hit, hint: text.hints.hit },
@@ -351,6 +465,8 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     { id: 'lod_far', name: text.metrics.lod_far, digits: 0, read: () => renderer?.lodCounts[2] ?? 0 },
     { id: 'draw_calls', name: text.metrics.draw_calls, digits: 0, read: () => renderer?.drawCalls ?? 0 },
     { id: 'bake_ms', name: text.metrics.bake_ms, unit: 'ms', digits: 0, read: () => renderer?.bakeMs ?? 0 },
+    { id: 'detail_scale', name: text.metrics.detail_scale, digits: 2, read: () => renderer?.detailScale ?? 1 },
+    { id: 'crowd_gpu_ms', name: text.metrics.crowd_gpu_ms, unit: 'ms', digits: 1, read: () => renderer?.gpuMs ?? 0 },
     { id: 'active', name: text.metrics.active, digits: 0, read: () => world.crowd.stats.bands[0] },
     { id: 'kills', name: text.metrics.kills, digits: 0, read: () => world.crowd.stats.kills },
     { id: 'bodies', name: text.metrics.corpses, digits: 0, read: () => world.crowd.corpses.count },
@@ -358,6 +474,15 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     { id: 'health', name: text.metrics.health, digits: 0, read: () => Math.max(0, world.player.state.health) },
     { id: 'grabbed', name: text.metrics.grabbed, read: () => (world.player.state.grabbedBy >= 0 ? text.yes : text.no) },
     { id: 'message', name: text.metrics.message, read: () => lastMessage },
+    { id: 'falls_pressure', name: text.metrics.falls_pressure, digits: 0, read: () => world.crowd.stats.physics.falls[0] },
+    { id: 'falls_chain', name: text.metrics.falls_chain, digits: 0, read: () => world.crowd.stats.physics.fallsBeyondBlast },
+    { id: 'falls_landing', name: text.metrics.falls_landing, digits: 0, read: () => world.crowd.stats.physics.falls[3] },
+    { id: 'climbers', name: text.metrics.climbers, digits: 0, read: () => peaks.climbers },
+    { id: 'mound_max', name: text.metrics.mound_max, unit: 'm', digits: 2, read: () => peaks.moundMax },
+    { id: 'thrown_peak', name: text.metrics.thrown_peak, digits: 0, read: () => world.crowd.stats.physics.thrownPeak },
+    { id: 'max_overlap', name: text.metrics.max_overlap, unit: 'm', digits: 2, read: () => peaks.maxOverlap },
+    { id: 'chain_links', name: text.metrics.chain_links, digits: 0, read: () => world.crowd.stats.physics.chainLinks },
+    { id: 'crowd_ms_p99', name: text.metrics.crowd_ms_p99, unit: 'ms', digits: 2, read: () => stepMsP99() },
   ]
 
   // each scenario runs its own crowd, so the bench's live one is not touched
@@ -545,7 +670,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       return renderer
     },
     items: () => [],
-    area: (): ModuleArea => ({ placements: [], view: { eye: [0, 1.7, 6], target: [cx, 1.2, cz] } }),
+    area: (): ModuleArea => ({ placements: [], view: sceneView() ?? { eye: [0, 1.7, 6], target: [cx, 1.2, cz] } }),
     controls: () => controls(),
     layers: () => benchLayers(),
     metrics: () => metrics(),
@@ -557,9 +682,31 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       lent.audio?.register?.(CROWD_SOUND_BANK)
       const off = lent.bench?.onChange(onChange)
       const offFrame = lent.onFrame(frame)
+      // a new horde detail rebuilds the drawing with the new budget (the next frame makes it again)
+      const offGraphics = lent.graphics?.onChange(() => {
+        if (!renderer) return
+        ;(lent.scene as THREE_NS.Object3D).remove(renderer.group)
+        renderer.dispose()
+        renderer = null
+        isBaked = false
+      })
+      // with the physics the crowd steps in the fixed phase of the host's scheduler: one fixed step per call, the same whatever the frame rate
+      const offFixed = lent.onFrame((step) => (world.physics ? stepCrowd(step) : undefined), { phase: 'fixedSimulate' })
+      const offBlast = lent.on((event) => {
+        if (event.type !== 'explosion') return
+        world.crowd.blast({ point: event.point, energy: event.energy, radius: event.radius, lethalRadius: event.radius * LETHAL_SHARE, source: event.source, ...(event.cause === 'part' ? { chain: event.source } : {}) })
+      })
+      if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
+      // the bench state arrives right after `attach`: once it has been applied the drawing is made and every batch with it, before the host's warm-up draws the scene
+      if (options.eager) queueMicrotask(() => prepareDrawing())
       return () => {
         off?.()
         offFrame()
+        offGraphics?.()
+        offFixed()
+        offBlast()
+        removeProps?.()
+        removeProps = null
         if (renderer) (lent.scene as THREE_NS.Object3D).remove(renderer.group)
         if (herdView) (lent.scene as THREE_NS.Object3D).remove(herdView.group)
         renderer?.dispose()

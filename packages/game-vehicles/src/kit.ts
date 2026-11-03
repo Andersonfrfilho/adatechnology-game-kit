@@ -59,6 +59,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     V3: THREE.Vector3,
     PI: Math.PI,
     document: doc,
+    particleMaterials: opts.particleMaterials,
+    effects: opts.effects,
     strings,
     t,
     matchers: createMatchers(strings),
@@ -340,7 +342,9 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
 
   /* options that are configuration (everything except THREE, locale and document) */
-  const { THREE: _three, lod: _lod, locale: _locale, document: _document, plugins, ...config } = opts
+  const { THREE: _three, lod: _lod, locale: _locale, document: _document, particleMaterials: _particleMaterials, effects: _effects, plugins, ...config } = opts
+  void _particleMaterials
+  void _effects
   void _three
   void _lod
   void _locale

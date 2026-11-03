@@ -11,7 +11,9 @@
   },
   "devDependencies": {
     "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
     "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-urban": "workspace:*",
     "@adatechnology/game-urban-three": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",

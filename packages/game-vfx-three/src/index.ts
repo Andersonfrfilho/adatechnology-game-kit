@@ -3,10 +3,14 @@
  * screen overlay, plus a deformable ground patch and an `EffectSink` to lend to modules.
  */
 export { createVfxRenderer, VFX_LAYERS } from './renderer'
-export { createVfxTestModule } from './bench/module'
-export type { VfxTestModuleOptions } from './bench/module'
-export { benchText, benchTexts } from './bench/text'
-export type { BenchText } from './bench/text'
+/** @deprecated import from '@adatechnology/game-vfx-three/testing' */
+export { createVfxTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-vfx-three/testing' */
+export type { VfxTestModuleOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-vfx-three/testing' */
+export { benchText, benchTexts } from './testing'
+/** @deprecated import from '@adatechnology/game-vfx-three/testing' */
+export type { BenchText } from './testing'
 export { createGroundPatch } from './ground-patch'
 export type { GroundPatch, GroundPatchOptions } from './ground-patch'
 export { createScreenOverlay } from './screen-overlay'

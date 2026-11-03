@@ -46,7 +46,7 @@ const url = `${pathToFileURL(page).href}?ui=0`
 
 // one page for every area: the room clears what an area spawned when the next one opens (loading the page again for each area made the check take ~40 min)
 const tab = await browser.newPage({ viewport: { width: 640, height: 400 } })
-await tab.goto(url)
+await tab.goto(url, { timeout: 180000 })
 await tab.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
 
 /** Opens an area (none: the room as it starts), waits until the scene stops growing, and returns the unmarked drawings grouped by path, and the stand-ins. */

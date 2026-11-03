@@ -4,24 +4,25 @@
 // front of the player with a seed, a share of lamps on, a light budget and, when asked, the vehicles of the fleet (lite build) and the species of the region. Eight scenarios check it.
 // "Plantas" mode: a button on the page opens the 2D map of a city plan of `urban.cities` (select with the 6 templates, button that fills the downtown and commercial blocks).
 import { createVehicleKit } from '@adatechnology/game-vehicles'
+import { defaultPlantSpec, defaultUrbanProviders, defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
-import { URBAN_AREA_ID, createUrbanTestModule, loadUrbanTestModule } from '@adatechnology/game-urban-three'
+import { URBAN_AREA_ID, createUrbanTestModule, loadUrbanTestModule } from '@adatechnology/game-urban-three/testing'
 
 import { drawLayout, fillDowntown, openCityPlans } from './cities-map.js'
 
 export { createUrbanTestModule, loadUrbanTestModule, drawLayout, fillDowntown, openCityPlans }
 
 /** The vehicles of the fleet for the bench: one kit for the room's three.js, the fleet installed, the lite build. */
-export function createVehicleBuilder(THREE, locale = 'pt-BR') {
-  const kit = createVehicleKit({ THREE, locale })
+export function createVehicleBuilder(THREE, locale = 'pt-BR', effects = undefined) {
+  const kit = createVehicleKit({ THREE, locale, ...(effects ? { effects: () => effects } : {}) })
   installFleet(kit)
-  return createVehiclesThree(THREE, { kit })
+  return createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 }
 
 /** The module with the kit's own catalogues; options replace or extend any of it. */
 export function createModule(options = {}) {
-  return createUrbanTestModule({ vehicles: (THREE) => createVehicleBuilder(THREE, options.locale), ...options })
+  return createUrbanTestModule({ providers: defaultUrbanProviders(), plantSpec: defaultPlantSpec, vehicles: (THREE) => createVehicleBuilder(THREE, options.locale, options.effects), ...options })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the urban area. Returns the room's module report. */

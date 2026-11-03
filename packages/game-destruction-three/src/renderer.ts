@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
-import { blastShove } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -14,7 +14,7 @@ import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
-import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
@@ -159,7 +159,8 @@ function isMeshRange(v: Object3D | MeshRange): v is MeshRange {
 /** The seed of the renderer's random stream; `reset` takes it back here. */
 const RNG_SEED = 0xc0ffee
 
-export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer {
+/** The renderer this package makes always has its `deferredQueue`; a third-party `DestructionRenderer` may leave it out. */
+export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer & { deferredQueue(): DeferredQueue } {
   return new Renderer(THREE, options)
 }
 
@@ -185,8 +186,26 @@ class Renderer implements DestructionRenderer {
   private readonly queue: DestructionEvent[] = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
-  /** When the work of this frame must stop; `Infinity` outside `drainQueue`, where a call finishes what it started. */
+  /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
   private sliceDeadline = Infinity
+  /** The clock the drain reads; a budget lends its own while it runs the queue. */
+  private drainClock: () => number = () => performance.now()
+  /** true once a frame budget owns the draining: `update` no longer drains by itself. */
+  private attached = false
+  private readonly eventQueue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
+    pending: () => this.queue.length + this.slices.length,
+    run: (deadline, clock) => this.runBudgeted(deadline, clock),
+    flush: () => {
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length > 0; guard++) this.runBudgeted(Infinity, () => 0)
+    },
+    attach: () => {
+      this.attached = true
+    },
+    detach: () => {
+      this.attached = false
+    },
+  }
   private readonly unsubscribe: () => void
   private readonly visuals: Visuals
   private readonly fragments: FragmentSystem
@@ -235,6 +254,7 @@ class Renderer implements DestructionRenderer {
     const maxParticles = Math.max(8, Math.floor((o.maxParticles ?? 2500) * (this.low ? 0.5 : 1)))
     this.visuals = new Visuals(THREE, this.low, 600)
     this.ground = new GroundSpots(THREE, o.scene, this.groundAt, 48)
+    if (!o.vfx) warnOnce('game-destruction-three.own-effects-world', 'game-destruction-three made an effects world of its own because the host lent none (options.vfx); pass the host effects so the effects share one budget')
     this.vfx = o.vfx ?? createVfx({ profile: this.quality, gravity: this.gravity, groundAt: this.groundAt, sprites: { capacity: maxParticles, density: this.low ? 0.6 : 1 } })
     this.ownVfx = o.vfx ? undefined : createVfxRenderer(THREE, { scene: o.scene, camera: o.camera ?? new THREE.PerspectiveCamera(), vfx: this.vfx, pointScale: o.pointScale ?? 700 })
     this.stopLanding = this.vfx.onLand(this.owner, (x, _y, z, color, tag) => {
@@ -492,7 +512,7 @@ class Renderer implements DestructionRenderer {
     if (this.disposed) return
     dt = clamp(dt, 0, 0.1)
     this.time += dt
-    this.drainQueue()
+    if (!this.attached) this.drainQueue()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
@@ -505,38 +525,54 @@ class Renderer implements DestructionRenderer {
     this.syncTransforms()
   }
 
+  deferredQueue(): DeferredQueue {
+    return this.eventQueue
+  }
+
   private drainQueue(): void {
+    this.runBudgeted(performance.now() + this.eventBudgetMs, () => performance.now())
+  }
+
+  /** Applies the waiting events in order until the deadline, after the slices earlier events left; always at least one unit when something waits. Returns the units run. */
+  private runBudgeted(deadline: number, clock: () => number): number {
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.queue.splice(0, this.queue.length)
-    const deadline = performance.now() + this.eventBudgetMs
+    const outerClock = this.drainClock
+    this.drainClock = clock
     this.sliceDeadline = deadline
+    let ran = 0
     try {
-      this.runSlices(deadline)
+      ran = this.runSlices(deadline)
       for (let i = 0; i < batch.length; i++) {
-        if (i > 0 && performance.now() >= deadline) {
+        if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
           this.queue.unshift(...batch.slice(i))
-          return
+          return ran
         }
         try {
           this.apply(batch[i]!)
         } catch (err) {
           if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
         }
+        ran++
       }
     } finally {
       this.sliceDeadline = Infinity
+      this.drainClock = outerClock
     }
+    return ran
   }
 
   /** Runs the work left by earlier frames until the deadline; at least one piece per frame, so it always finishes. */
-  private runSlices(deadline: number): void {
-    for (let ran = 0; this.slices.length > 0 && (ran === 0 || performance.now() < deadline); ran++) {
+  private runSlices(deadline: number): number {
+    let ran = 0
+    for (; this.slices.length > 0 && (ran === 0 || this.drainClock() < deadline); ran++) {
       try {
         this.slices.shift()!()
       } catch (err) {
         if (typeof console !== 'undefined') console.error('game-destruction-three: failed to run deferred work', err)
       }
     }
+    return ran
   }
 
   /**
@@ -1138,7 +1174,7 @@ class Renderer implements DestructionRenderer {
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     const step = this.low ? 2 : 1
     for (let i = from; i < ev.fragments.length; i += step) {
-      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && performance.now() >= this.sliceDeadline) {
+      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => this.spawnFragments(ev, i, look))
         return
       }
@@ -1164,7 +1200,7 @@ class Renderer implements DestructionRenderer {
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     for (let i = 0; i < loose; i++) {
-      if (i > 0 && performance.now() >= this.sliceDeadline) {
+      if (i > 0 && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => {
           this.staticDirty.add(objectId)
           this.splitLoose(objectId)
@@ -1589,6 +1625,7 @@ class Renderer implements DestructionRenderer {
     const materials = [kit.discMaterial().clone(), kit.patchMaterial(0x808080).clone(), kit.lineMaterial(0x000000).clone()]
     const group = new T.Group()
     group.add(new T.Mesh(kit.discGeometry(), materials[0]), new T.Mesh(kit.discGeometry(), materials[1]), new T.LineSegments(geometry, materials[2] as THREE_NS.LineBasicMaterial))
+    group.add(...this.fragments.warmMeshes())
     for (const probe of group.children) probe.frustumCulled = false
     this.warmProbes = { group, geometry, materials }
     return { group, dispose: () => {} }

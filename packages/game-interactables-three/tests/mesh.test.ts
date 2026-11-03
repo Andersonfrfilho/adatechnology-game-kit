@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createLightBudget } from '@adatechnology/game-render-three'
 import { describe, expect, it } from 'vitest'
 import { applyPose, createMeshApi, poseOf } from '../src'
 
@@ -194,5 +195,48 @@ describe('material parameters', () => {
       console.warn = orig
     }
     expect(warn.filter((w) => w.includes("undefined"))).toEqual([])
+  })
+})
+
+describe('lamps through a LightBudget', () => {
+  it('api.light becomes a source that follows its bulb, with no light of its own, and remove() frees it', () => {
+    const scene = new THREE.Scene()
+    const lights = createLightBudget(THREE, scene, { point: 4, spot: 0, pointShadows: 0 })
+    const { api, finish } = createMeshApi(THREE, { lights })
+    api.light!(M, 1, 2, 3, 0xffeeaa, 6, 'pendant')
+    api.light!(M, 40, 2, 3, 0xffeeaa, 6, 'pendant')
+    const { group, lights: own, sources } = finish()
+    scene.add(group)
+    expect(own).toEqual([])
+    expect(sources.length).toBe(2)
+    let real = 0
+    group.traverse((node) => {
+      if ((node as THREE.Light).isLight) real++
+    })
+    expect(real).toBe(0)
+    scene.updateMatrixWorld(true)
+    lights.present([0, 0, 0], 1)
+    expect(lights.stats().lit).toBe(2)
+    const lit = lights.group.children.filter((child) => (child as THREE.PointLight).isPointLight && (child as THREE.PointLight).intensity > 0) as THREE.PointLight[]
+    expect(lit.map((light) => light.position.toArray()).sort((a, b) => a[0]! - b[0]!)).toEqual([[1, 2, 3], [40, 2, 3]])
+    expect(lit[0]!.distance).toBe(6)
+    sources[0]!.remove()
+    lights.present([0, 0, 0], 1)
+    expect(lights.stats().sources).toBe(1)
+  })
+
+  it('a lamp whose object left the scene counts as off', () => {
+    const scene = new THREE.Scene()
+    const lights = createLightBudget(THREE, scene, { point: 3, spot: 0, pointShadows: 0 })
+    const { api, finish } = createMeshApi(THREE, { lights })
+    api.light!(M, 0, 1, 0, 0xffffff, 5, 'bulb')
+    const { group } = finish()
+    scene.add(group)
+    scene.updateMatrixWorld(true)
+    lights.present([0, 0, 0], 1)
+    expect(lights.stats().lit).toBe(1)
+    scene.remove(group)
+    lights.present([0, 0, 0], 1)
+    expect(lights.stats().lit).toBe(0)
   })
 })

@@ -23,7 +23,7 @@ const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshad
 const tab = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 const errors = []
 tab.on('pageerror', (error) => errors.push(String(error)))
-await tab.goto(`${pathToFileURL(page).href}?lang=pt-BR&ui=0`)
+await tab.goto(`${pathToFileURL(page).href}?lang=pt-BR&ui=0`, { timeout: 180000 })
 await tab.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
 await tab.evaluate(() => window.__testRoom.waitUntilReady())
 

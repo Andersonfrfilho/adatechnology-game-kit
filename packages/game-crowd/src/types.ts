@@ -14,6 +14,12 @@ export const STATE = {
   SEEKING_SOUND: 12,
 } as const
 
+/** Balance of an agent (physics): a state machine of its own, apart from `STATE`, so the game's behaviour machine stays as it is. */
+export const BALANCE = { STANDING: 0, STAGGERING: 1, FALLEN: 2, GETTING_UP: 3, THROWN: 4 } as const
+
+/** Why an agent went down (index `cause - 1` in `stats.physics.falls`). */
+export const FALL_CAUSE = { NONE: 0, PRESSURE: 1, SHOVE: 2, TRIP: 3, LANDING: 4, COLLAPSE: 5, BLAST: 6 } as const
+
 /** Body regions of a hit (G 67012): 0 head, 1 torso, 2 left arm, 3 right arm, 4 left leg, 5 right leg. */
 export type Region = 0 | 1 | 2 | 3 | 4 | 5
 
@@ -91,6 +97,33 @@ export type CrowdType = {
   readonly variants?: number
   readonly eye?: number
   readonly traits?: CrowdTraits
+  /** How the body takes a push (physics only; a type without it uses the defaults). */
+  readonly balance?: CrowdBalanceTraits
+}
+
+export type CrowdBalanceTraits = {
+  /** Multiplies the critical pressure (default 1). */
+  readonly stability?: number
+  /** Chance of tripping when entering a cell with a body (default 0.04). */
+  readonly trip?: number
+  /** Force of its will against what is in front, in N (default 250). */
+  readonly driveForce?: number
+  /** False: already on the ground (a crawler). */
+  readonly canFall?: boolean
+}
+
+/** A blast as the crowd reads it. */
+export type CrowdBlast = {
+  readonly point: readonly [number, number, number]
+  /** J. */
+  readonly energy: number
+  /** m, how far it hurts. */
+  readonly radius: number
+  /** m, everything inside dies. */
+  readonly lethalRadius?: number
+  readonly source?: string
+  /** Id of the chain this blast belongs to (game-destruction `chain`), for the counters. */
+  readonly chain?: string
 }
 
 /** The age of a body (G IDADES): its share, and what it does to speed, health, limbs and senses. */
@@ -155,5 +188,23 @@ export type CrowdEventMap = {
   kill: { agent: number; type: string; headshot: boolean; x: number; z: number }
   remove: { agent: number; moved: number }
   scream: { agent: number; x: number; z: number }
+  fall: { agent: number; cause: number; x: number; z: number; identity: number }
+  blasted: { point: [number, number, number]; radius: number; reached: number; killed: number; thrown: number; fallen: number; chain?: string }
 }
 export type CrowdEventName = keyof CrowdEventMap
+
+/** A body on the ground (G 67062 `CP`). */
+export type Corpse = {
+  readonly x: number
+  readonly z: number
+  readonly yaw: number
+  readonly height: number
+  readonly build: number
+  readonly missing: number
+  readonly color: number
+  /** Body variant of the renderer, -1 for a body that was not an agent (a civilian). */
+  readonly variant: number
+  readonly skin: number
+  readonly seed: number
+  readonly named: number
+}
