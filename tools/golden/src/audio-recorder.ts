@@ -222,6 +222,7 @@ export function createAudioRecorder(options: AudioRecorderOptions = {}): AudioRe
     createOscillator: () => createNode('oscillator'),
     createStereoPanner: () => createNode('stereoPanner'),
     createDynamicsCompressor: () => createNode('dynamicsCompressor'),
+    createWaveShaper: () => createNode('waveShaper'),
     createConvolver: () => createNode('convolver'),
     createDelay: () => createNode('delay'),
     createBuffer,

@@ -3000,6 +3000,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
