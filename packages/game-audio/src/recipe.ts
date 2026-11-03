@@ -273,6 +273,12 @@ export type SampleSound = {
    * then stays shot by shot instead of a wall of overlapping takes (criterion C9). Without it every play rings to its end.
    */
   readonly choke?: { readonly voices: number; readonly fade?: number }
+  /**
+   * A continuous sound (fire, rain, an engine idling) that `engine.loop(id)` plays: the near takes chained without a seam, each crossed into the next
+   * in `crossfade` seconds (default 0.25, equal power), never the same take twice in a row. While the files load, the recipe loop of `fallback`
+   * (or of the same id) plays. `play(id)` still plays one take as a one-shot.
+   */
+  readonly loop?: boolean | { readonly crossfade?: number }
   /** A recipe id the engine plays while the files are not loaded yet (or failed): the synthesized sound stays as the fallback. */
   readonly fallback?: string
   /** Where each file came from: `"freesound:123456 autor CC0"`, or `"sdk"` for files the kit made. */

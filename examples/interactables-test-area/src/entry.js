@@ -24,6 +24,7 @@ import { createVfxTestModule } from '@adatechnology/game-vfx-three/testing'
 import { createTerrainTestModule } from '@adatechnology/game-terrain-three/testing'
 import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
 import { createPersonBuilder } from '@adatechnology/game-characters-three'
+import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three/testing'
 import { PROFESSIONS } from '@adatechnology/game-characters-people'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
@@ -143,7 +144,8 @@ function loadSteps(room, options, lang) {
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
   // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
-  mod('soundCheck', () => createSoundCheckModule({ locale: lang }))
+  // the source is the same portable radio; the wall that muffles it is a wall of the houses (wallPiece: the houses' structure and renderer)
+  mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(THREE, { w: 4, h: 2.6 }).build(THREE) }))
   mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
