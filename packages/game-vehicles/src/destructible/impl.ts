@@ -104,6 +104,11 @@ export interface VehicleDestructible extends DestructibleImpl {
    * without oil it wears and seizes. Call it while the vehicle is driven. Answers the engine temperature, °C.
    */
   runEngine(seconds: number, load: number): number
+  /**
+   * The vehicle rolled `meters` at `speed` m/s: a flat tyre wears through and tears off (a run-flat insert on an armoured vehicle carries it far
+   * at up to 80 km/h), then the bare rim grinds on the road throwing sparks. Answers how many rims are on the road.
+   */
+  rollFlat(meters: number, speed: number): number
 }
 
 export type DriveReport = {
@@ -187,6 +192,15 @@ const TYRE_FLAT_HEALTH = 0.1
 const TYRE_BURST_JOULES = 1500
 const TYRE_BURST_CALIBER = 12
 const TYRE_LEAK_PER_MM2 = 0.00026
+/** A flat tyre driven on tears apart within this many metres at town speed, sooner the faster; a run-flat insert (armoured vehicles) carries it this far at up to 80 km/h, with this much grip. */
+const FLAT_TYRE_LIFE_M = 1500
+const FLAT_TYRE_TOWN_SPEED = 8
+const RUN_FLAT_LIFE_M = 80000
+const RUN_FLAT_SPEED = 22
+const TYRE_RUNFLAT_HEALTH = 0.6
+/** A bare rim on the road: the grip it has left, and the share of its strength it grinds away per metre. */
+const RIM_HEALTH = 0.05
+const RIM_GRIND_PER_M = 0.0004
 /** How far an empty tyre sags, and the air under which it is flat. */
 const TYRE_FLAT_SAG = 0.24
 const TYRE_FLAT_AIR = 0.2
@@ -1100,6 +1114,24 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return out
   }
 
+  const runFlat = armourId != null
+  /** A tyre's grip for driving: whole by its wear and air; flat, it barely holds (a run-flat insert keeps most); torn off, the rim is on the road. */
+  const tyreHealth = (p: PState): number => {
+    if (p.lost) return RIM_HEALTH
+    if (p.flat) return runFlat ? TYRE_RUNFLAT_HEALTH : TYRE_FLAT_HEALTH
+    return Math.min(p.hp / p.def.hp, 0.2 + 0.8 * p.air)
+  }
+  /** The tyre on a rim: the nearest one. */
+  const tyreOf = (rim: PState): PState | undefined => {
+    let best: PState | undefined
+    let bestD = Infinity
+    for (const p of ps.values()) {
+      if (p.def.role !== 'tyre') continue
+      const d = Math.hypot(p.def.box.center[0] - rim.def.box.center[0], p.def.box.center[2] - rim.def.box.center[2])
+      if (d < bestD) [best, bestD] = [p, d]
+    }
+    return best
+  }
   /** Lets the air of a tyre out by `share`: it sags as it empties and is flat under the driver's limit. */
   const deflate = (p: PState, share: number): void => {
     p.air = Math.max(0, p.air - share)
@@ -1230,6 +1262,27 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
+    rollFlat: (meters: number, speed: number): number => {
+      for (const p of ps.values()) {
+        if (p.def.role !== 'tyre' || !p.flat || p.lost) continue
+        const life = runFlat ? RUN_FLAT_LIFE_M * Math.min(1, RUN_FLAT_SPEED / Math.max(speed, 1)) : FLAT_TYRE_LIFE_M * clamp(FLAT_TYRE_TOWN_SPEED / Math.max(speed, 1), 0.2, 1.5)
+        p.hp = Math.max(0, p.hp - (p.def.hp * meters) / life)
+        if (p.hp > 0) continue
+        const at = toWorld(p.def.box.center)
+        lose(p, 'broken', queue, at)
+        queue.push(ev({ type: 'debris', part: p.def.id, kind: 'fibers', point: at, normal: [0, 1, 0], count: 12, speed: Math.max(2, speed * 0.5) }))
+      }
+      let grinding = 0
+      for (const rim of ps.values()) {
+        if (rim.def.role !== 'rim' || rim.lost || !tyreOf(rim)?.lost) continue
+        grinding += 1
+        rim.hp = Math.max(1, rim.hp - rim.def.hp * RIM_GRIND_PER_M * meters)
+        const [x, y, z] = rim.def.box.center
+        queue.push(ev({ type: 'debris', part: rim.def.id, kind: 'sparks', point: toWorld([x, y - rim.def.box.size[1] / 2, z]), normal: [0, 1, 0], count: Math.min(30, Math.ceil(4 + speed)), speed: Math.max(2, speed * 0.4) }))
+      }
+      stateCache = undefined
+      return grinding
+    },
     runEngine: (seconds: number, load: number): number => {
       const engine = [...ps.values()].find((p) => p.def.role === 'engine')
       if (!engine || engine.lost || seized) return engineHeat
@@ -1264,7 +1317,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       }
       const tyres = [...ps.values()]
         .filter((p) => p.def.role === 'tyre')
-        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: p.lost || p.flat ? TYRE_FLAT_HEALTH : Math.min(p.hp / p.def.hp, 0.2 + 0.8 * p.air) }))
+        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: tyreHealth(p) }))
       const status = computeStatus()
       // the brakes need their fluid: a leaking system loses pressure and the pedal sinks
       const brakeSystem = [...ps.values()].find((p) => p.def.role === 'brakes' && p.def.contains)
