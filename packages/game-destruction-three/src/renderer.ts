@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
-import { breakSoundKeys, impactSoundKeys } from './audio/impact-keys'
+import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import type { SoundDetail } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -750,7 +750,9 @@ class Renderer implements DestructionRenderer {
       case 'ricochet': {
         const d = ev.direction
         this.vfx.burst('sparks', ev.point, d, 4 + Math.min(10, ev.energy / 150), 4)
-        this.sound('ricochet', ev.point, 0.7)
+        // the whine of a round off steel, the short crack off stone: by what the part it glanced off is made of
+        const glanced = this.partVis(ev.object, ev.part)?.material ?? ''
+        this.sound('ricochet', ev.point, 0.7, ricochetSoundKeys(glanced, this.world.materials.get(glanced)))
         break
       }
       case 'debris':

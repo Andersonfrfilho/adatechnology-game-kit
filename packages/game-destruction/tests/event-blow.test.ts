@@ -25,3 +25,16 @@ describe('DestructionEvent.blow', () => {
   })
 
 })
+
+describe('DestructionEvent.blow on a shot', () => {
+  it('world.shoot tags what the round does as ballistic', () => {
+    const world = createDestruction({ seed: 1 })
+    world.add({ parts: [{ id: 'p', material: 'concrete', shape: { kind: 'box', size: [0.1, 1, 1] }, position: [0, 0.5, 0] }] })
+    const seen: DestructionEvent[] = []
+    world.on('*', (e) => seen.push(e))
+    world.shoot([2, 0.5, 0], [-1, 0, 0], 600, 9, 'test')
+    const blows = new Set(seen.filter((e) => e.type !== 'damage').map((e) => e.blow))
+    expect(blows.size).toBeGreaterThan(0)
+    expect([...blows]).toEqual(['ballistic'])
+  })
+})

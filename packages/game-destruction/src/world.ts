@@ -2769,15 +2769,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return res
   }
 
-  const doHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
-    const outer = blow
-    blow = hit.type
-    try {
-      return resolveHit(o, hit, only)
-    } finally {
-      blow = outer
+  /** `fn` with every event it emits tagged with the blow `type` (a shot, a hit). */
+  const withBlow =
+    <T>(type: DamageType, fn: () => T) =>
+    (): T => {
+      const outer = blow
+      blow = type
+      try {
+        return fn()
+      } finally {
+        blow = outer
+      }
     }
-  }
+
+  const doHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => withBlow(hit.type, () => resolveHit(o, hit, only))()
 
   const resolveHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
     let point = hit.point
@@ -3284,7 +3289,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     shoot(origin, direction, energy, caliber, source, round) {
       const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}
-      return withCollapses(run(() => {
+      return withCollapses(run(withBlow('ballistic', () => {
         const results: HitResult[] = []
         const d = vec.normalize(direction)
         const ignore = new Set<string>()
@@ -3317,7 +3322,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           E = out.exitEnergy
         }
         return results
-      }))
+      })))
     },
     disassemble(objectId, jointId, tool: ToolKind, dt) {
       const im = impls.get(objectId)

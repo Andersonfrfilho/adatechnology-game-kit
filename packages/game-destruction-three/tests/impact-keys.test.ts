@@ -3,7 +3,7 @@ import { MATERIALS } from '@adatechnology/game-destruction'
 import type { MaterialDef } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
-import { DESTRUCTION_SOUND_BANK, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundKeys } from '../src'
+import { DESTRUCTION_SOUND_BANK, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundKeys, ricochetSoundKeys } from '../src'
 
 // Checklist 5.3: the sound of a blow on a material follows the material and the kind of blow, not only one of five families.
 const def = (id: string): MaterialDef => {
@@ -50,7 +50,7 @@ describe('impact sounds by material and blow', () => {
   })
 
   it('every sound a key names is in the bank', () => {
-    const ids = new Set(DESTRUCTION_SOUND_BANK.sounds.map((s) => s.id))
+    const ids = new Set((DESTRUCTION_SOUND_BANK.sounds ?? []).map((s) => s.id))
     for (const [key, rule] of Object.entries(IMPACT_SOUND_KEYS)) expect(ids.has(rule.sound), key).toBe(true)
   })
 
@@ -58,5 +58,14 @@ describe('impact sounds by material and blow', () => {
     const own = createDestructionSound(engine, { keys: { impact_steel_ballistic: { sound: 'ping' }, impact_masonry_slash: null } })
     expect(own.rule('impact_metal', impactSoundKeys('steel', def('steel'), 'ballistic'))?.sound).toBe('ping')
     expect(own.rule('impact_masonry', impactSoundKeys('concrete', def('concrete'), 'slash'))).toBeUndefined()
+  })
+})
+
+describe('ricochet by material', () => {
+  it('a round off steel whines, off concrete it cracks short, off glass the old ping stays', () => {
+    const rico = (m: string): string | undefined => sound.rule('ricochet', ricochetSoundKeys(m, def(m)))?.sound
+    expect(rico('steel')).toBe('ricochet_metal')
+    expect(rico('concrete')).toBe('ricochet_stone')
+    expect(rico('glass')).toBe('ping')
   })
 })

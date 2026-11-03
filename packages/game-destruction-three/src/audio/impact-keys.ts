@@ -52,3 +52,8 @@ export function impactSoundKeys(material: string, def: MaterialDef | undefined, 
 export function breakSoundKeys(material: string, def: MaterialDef | undefined, blow?: DamageType): SoundDetail {
   return { keys: ordered('break', material, impactFamily(def), blow) }
 }
+
+/** The keys for a round glancing off a part of this material: `ricochet_<material>`, `ricochet_<family>` (then the plain `ricochet`). */
+export function ricochetSoundKeys(material: string, def: MaterialDef | undefined): SoundDetail {
+  return { keys: ordered('ricochet', material, impactFamily(def), undefined) }
+}

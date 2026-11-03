@@ -150,6 +150,9 @@ export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
   impact('leaf_rustle', many(6, () => noise({ type: 'bandpass', f: [2500, 6000], q: 2, d: 0.05, vol: 0.16, delay: [0, 0.3] }))),
   impact('branch_cut', [noise({ type: 'bandpass', f: 1500, q: 2, d: 0.04, vol: 0.55 }), tone({ f: [260, 340], f2: 150, d: 0.05, vol: 0.22 })]),
   impact('fruit_splat', [noise({ type: 'lowpass', f: 1200, d: 0.12, vol: 0.55 }), noise({ type: 'bandpass', f: 600, q: 0.7, d: 0.2, vol: 0.32 })]),
+  // a round glancing off: steel whines down in pitch ("piiuu"), stone and concrete give a short crack with grit
+  impact('ricochet_metal', [noise({ type: 'highpass', f: 3000, d: 0.02, vol: 0.6 }), tone({ f: [2800, 3600], f2: 900, d: 0.38, vol: 0.2, wet: 0.4 }), tone({ f: [5200, 6400], f2: 2000, d: 0.2, vol: 0.05 })]),
+  impact('ricochet_stone', [noise({ type: 'bandpass', f: [2200, 2800], q: 2, d: 0.04, vol: 0.8 }), tone({ f: [1800, 2400], f2: 1200, d: 0.08, vol: 0.1 }), ...many(3, () => noise({ type: 'bandpass', f: [2500, 4500], q: 3, d: 0.015, vol: 0.2, delay: [0.02, 0.12] }))]),
   // breaks a material has of its own (the rest keep the art scene's shatter, crumble and splinter)
   impact('ceramic_break', [noise({ type: 'highpass', f: 1800, d: 0.3, vol: 0.85, wet: 0.4 }), ...many(8, () => tone({ f: [1800, 4500], d: [0.04, 0.1], vol: 0.15, delay: [0, 0.4] }))]),
   impact('tempered_burst', [noise({ type: 'highpass', f: 3500, d: 0.6, vol: 0.9, wet: 0.4 }), ...many(16, () => tone({ f: [4000, 8000], d: 0.04, vol: 0.08, delay: [0, 0.8] }))]),

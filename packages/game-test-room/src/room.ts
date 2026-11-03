@@ -158,6 +158,9 @@ const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1],
  * Create the test room. See `TestRoomOptions`. The room owns a renderer, scene and camera unless you pass them; with your own renderer you call
  * `room.update(dt)` every frame and render yourself.
  */
+/** The destruction events that already play the impact of a blow (a mark, a break): a blow without any of them plays its contact sound itself. */
+const MARK_EVENTS: ReadonlySet<string> = new Set(['dent', 'hole', 'crack', 'chip', 'stage', 'fracture'])
+
 export function createTestRoom(options: TestRoomOptions): TestRoom {
   const THREE = options.THREE
   const locale = options.locale ?? 'en'
@@ -1858,7 +1861,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
+    const blow = useToHit(u, r.point, r.normal)!
+    const result = world.hitPart(r.object, r.part, { ...blow, source: 'player' })
+    // a blow that leaves no mark (a punch on solid wood, a kick on the ground) still meets the surface: its impact sounds, by material and blow
+    if (!result.events.some((e) => MARK_EVENTS.has(e.type))) {
+      const material = world.part(r.object, r.part)?.material ?? heaviestMaterial(r.object) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), r.point, Math.min(0.8, 0.25 + u.energy / 400), impactSoundKeys(material, def, blow.type))
+    }
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
     action('melee', t('act.melee.hit', { weapon: w, energy: num(u.energy, 0), where: hitWhere(r), dist: num(r.distance, 1) }), {
       objectId: r.object,
