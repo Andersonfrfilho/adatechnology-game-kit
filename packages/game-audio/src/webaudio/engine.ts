@@ -310,6 +310,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     noise: () => noiseBuffer(shared, context as AudioContext, mix.noise.seconds),
     register: (loop) => void loops.add(loop),
     unregister: (loop) => void loops.delete(loop),
+    listener: () => listener,
+    ...(options.distance ? { distance: options.distance } : {}),
   }
 
   return {

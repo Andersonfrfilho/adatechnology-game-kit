@@ -19,6 +19,9 @@ import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
 import { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
 import type { EffectsLike, VehiclesContext, VehiclesTestFleet, VehiclesTestOptions } from './types'
+import { createVehicleSound } from '../audio/vehicle-sound'
+import type { VehicleSound } from '../audio/vehicle-sound'
+import { VEHICLE_SOUND_BANK } from '../audio/bank'
 
 export const VEHICLES_AREA_ID = 'vehicles_area'
 
@@ -36,6 +39,8 @@ const SPARK_EVERY_S = 0.08
 /** Radians a door, hood or lid may be off its rest and still count as shut. */
 const LEAF_REST_RADIANS = 0.02
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
+/** Seconds the lane car idles after the key is turned (the starter and the engine catching) before it pulls away. */
+const LANE_START_S = 1.2
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
 type Three = any
@@ -93,10 +98,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const effects = (): EffectsLike | undefined => host?.effects
   // the sounds are asked of the host's shared engine by id (the sink may be absent, and then the module is silent)
   const audio = () => host?.audio
-  let engineLoop: { set(state: { volume?: number; frequency?: number; position?: Vec3 }): void; stop(): void } | undefined
+  // the lane car's engine, tyres and crashes (the vehicle bank of this package)
+  let carSound: VehicleSound | undefined
   const stopEngine = (): void => {
-    engineLoop?.stop()
-    engineLoop = undefined
+    carSound?.dispose()
+    carSound = undefined
   }
 
   /** The puffs' materials come from the host's pool when it lends one (read at each puff: the host attaches after the first build). */
@@ -360,7 +366,9 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       built.group.rotation.y = driver.state.yaw + Math.PI / 2
     }
     pose()
-    engineLoop = audio()?.loop?.(soundIds.engine, { position: [driver.state.x, 0.5, driver.state.z] })
+    carSound = createVehicleSound(audio(), { sounds: soundIds })
+    // the key is turned before the car moves: the starter, then the engine catches
+    carSound.start([driver.state.x, 0.5, driver.state.z])
     const log = (key: 'crash' | 'end', value: number): void => host?.log(fill(text, locale, text.lane[key], value.toFixed(1)))
     lane = {
       car: built,
@@ -375,18 +383,23 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         // the run is over, the damage is not: torn panels, crumples and leaks finish over the next frames
         if (state.ended) {
           damage?.settle(dt)
+          // stopped at the wall or against it: ignition off, the loops run down to silence
+          const at: Vec3 = [driver.state.x, 0.5, driver.state.z]
+          if (carSound?.reading.running) carSound.stop(at)
+          carSound?.update({ dt, position: at, speed: 0, throttle: 0 })
           return
         }
         state.time += dt
         // the crash run does not brake: it shows what the wall does to the car
         const braking = settings.damage !== 'into_wall' && gap() < brakeAt() && state.time > 0.5
-        const input = { ...idle, throttle: braking ? 0 : 1, brake: braking ? 1 : 0, steer: settings.damage === 'into_wall' ? 0 : Math.sin(state.time * 1.4) * 0.15 }
+        const moving = state.time > LANE_START_S
+        const input = { ...idle, throttle: braking || !moving ? 0 : 1, brake: braking ? 1 : 0, steer: settings.damage === 'into_wall' || !moving ? 0 : Math.sin(state.time * 1.4) * 0.15 }
         if (mode === 'arcade') {
           const { events } = arcade.step(input, dt, { blocked: (x, z, yaw) => vehicleCorners(arcade.spec, x, z, yaw).some(([px]) => px >= LANE.wall) })
           for (const e of events) {
             if (e.type !== 'crash') continue
             log('crash', e.speed)
-            audio()?.play({ sound: soundIds.crash, position: [driver.state.x, 0.5, driver.state.z], volume: Math.min(1, e.speed / 15) })
+            carSound?.crash(e.speed, [driver.state.x + built.length / 2, 0.5, driver.state.z])
           }
         } else {
           semi.step(input, dt, { ground: () => ({ surface: settings.surface }) })
@@ -405,14 +418,22 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
               host?.log(fill(text, locale, text.lane.damage, parts('dent'), parts('fracture')))
             }
             log('crash', Math.abs((semi.state as { u: number }).u))
-            audio()?.play({ sound: soundIds.crash, position: [driver.state.x, 0.5, driver.state.z], volume: Math.min(1, Math.abs((semi.state as { u: number }).u) / 15) })
+            carSound?.crash((semi.state as { u: number }).u, [driver.state.x + built.length / 2, 0.5, driver.state.z])
           }
         }
         pose()
         {
           const speed = Math.abs(lane?.speed() ?? 0)
-          // the game's engine (jogo L70421): level 0.035 + speed x 0.003, frequency 38 + speed x 7
-          engineLoop?.set({ volume: state.ended ? 0 : 0.035 + speed * 0.003, frequency: 38 + speed * 7, position: [driver.state.x, 0.5, driver.state.z] })
+          // the engine by RPM and load (the semi driver has its own RPM; the arcade one is guessed from the speed), the tyres by slip and speed
+          const semiState = mode === 'semi' ? (semi.state as { rpm: number; slip: number[] }) : null
+          carSound?.update({
+            dt,
+            position: [driver.state.x, 0.5, driver.state.z],
+            speed,
+            throttle: input.throttle,
+            ...(semiState ? { rpm: semiState.rpm, slip: Math.max(0, ...semiState.slip.map(Math.abs)) } : { slip: braking && speed > 3 ? 0.6 : 0 }),
+            surface: /dirt|gravel|sand|grass|mud/.test(settings.surface) ? 'dirt' : 'asphalt',
+          })
         }
         state.exhaust -= dt
         const fx = effects()
@@ -420,7 +441,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
           state.exhaust = 0.4
           fx.play({ effect: effectIds.exhaust, point: [driver.state.x - Math.cos(driver.state.yaw) * (built.length / 2), 0.3, driver.state.z + Math.sin(driver.state.yaw) * (built.length / 2)], scale: Math.min(1, Math.abs(lane?.speed() ?? 0) / 17) })
         }
-        if (!state.ended && state.time > 1 && Math.abs(lane?.speed() ?? 0) < 0.05) {
+        if (!state.ended && state.time > LANE_START_S + 1 && Math.abs(lane?.speed() ?? 0) < 0.05) {
           state.ended = true
           log('end', Math.max(0, gap()))
         }
@@ -580,6 +601,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three, new three.DataTexture(new Uint8Array(4), 1, 1)))
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
+      lent.audio?.register?.(VEHICLE_SOUND_BANK)
       return () => {
         stopChange?.()
         stopFrame()

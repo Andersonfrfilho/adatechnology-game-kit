@@ -1,6 +1,7 @@
 export { createVehiclesThree } from './build'
 export { createCabinSmoke } from './cabin-smoke'
 export type { CabinSmoke } from './cabin-smoke'
+export * from './audio'
 export type { BuildVehicleOptions, BuiltVehicle, FleetDims, VehicleFleetContent, VehicleQuality, VehiclesThree, VehiclesThreeOptions } from './build'
 export { LITE_CLASSES, PRUNE_BELOW, classColor, classify, fuse, liteMaterials, liteMeshes } from './lite'
 export type { LiteClass, LiteFusion } from './lite'

@@ -117,8 +117,20 @@ describe('the keys of the renderer', () => {
 
   it('answers every key the renderer sends, in both styles, with a recipe that exists', () => {
     const { engine } = engineWith()
-    for (const style of ['art_scene', 'game'] as const) for (const [key, rule] of Object.entries(DESTRUCTION_SOUND_KEYS[style])) expect(engine.registry.sound(rule.sound), `${style} ${key}`).toBeDefined()
+    // a rule that names another package's sound (a vehicle door) falls back to one of this bank
+    for (const style of ['art_scene', 'game'] as const) for (const [key, rule] of Object.entries(DESTRUCTION_SOUND_KEYS[style])) expect(engine.registry.sound(rule.fallback ?? rule.sound), `${style} ${key}`).toBeDefined()
     for (const key of KEYS) expect(DESTRUCTION_SOUND_KEYS.art_scene[key], key).toBeDefined()
+  })
+
+  it("plays a vehicle leaf's own sound when the engine knows it, else the fallback of this bank", () => {
+    const { engine, sound } = engineWith()
+    const played: string[] = []
+    const play = engine.play.bind(engine)
+    engine.play = ((id: string, ...rest: unknown[]) => (played.push(id), (play as (...a: unknown[]) => unknown)(id, ...rest))) as never
+    sound.onSound('vehicle_door_shut', [0, 0, 1], 0.6)
+    engine.register({ id: 'car', sounds: [{ id: 'car_door_close', bus: 'world', layers: [], sources: ['test'] }] })
+    sound.onSound('vehicle_door_shut', [0, 0, 1], 0.6)
+    expect(played).toEqual(['shut_metal', 'car_door_close'])
   })
 
   it('plays a key at its point, louder for a big blast and quieter far away', () => {
