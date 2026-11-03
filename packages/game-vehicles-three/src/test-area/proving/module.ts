@@ -10,10 +10,10 @@ import { certify, createProvingTests, startRun, statusOf, subjectSpec, withResul
 import type { ProvingCertificate, ProvingResult, ProvingRun, ProvingSubject, ProvingTestRegistry } from '@adatechnology/game-vehicles-proving'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 
-import { createVehiclesThree } from '../build'
-import type { BuiltVehicle } from '../build'
-import { defaultSoundIds } from '../test-area/types'
-import type { VehicleSoundIds } from '../test-area/types'
+import { createVehiclesThree } from '../../build'
+import type { BuiltVehicle } from '../../build'
+import { defaultSoundIds } from '../types'
+import type { VehicleSoundIds } from '../types'
 import { fillText, PROVING_TEXT } from './text'
 import type { ProvingText } from './text'
 
