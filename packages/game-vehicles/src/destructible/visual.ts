@@ -7,7 +7,7 @@
  */
 import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
-import { warmTriIndex } from '../tri-index'
+import { raycastIndexed, warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
 
 type Obj = any
@@ -566,7 +566,7 @@ export class VehicleVisuals implements CreaseWork {
         const at = v.clone().addScaledVector(away, off)
         ray.set(at.addScaledVector(normal, PANE_SEAT_REACH), normal.clone().negate())
         ray.far = PANE_SEAT_REACH * 2
-        const hit = ray.intersectObjects(shell, false)[0]
+        const hit = raycastIndexed(THREE, ray, shell)[0]
         if (hit) by = Math.max(by, PANE_SEAT_REACH - hit.distance)
       }
       if (by > -Infinity) samples.push({ at: v.clone(), by })
@@ -589,7 +589,7 @@ export class VehicleVisuals implements CreaseWork {
       const mid = tri.getMidpoint(new THREE.Vector3()).applyMatrix4(pane.matrixWorld)
       ray.set(mid.addScaledVector(normal, PANE_SEAT_REACH), normal.clone().negate())
       ray.far = PANE_SEAT_REACH
-      const hit = ray.intersectObjects(shell, false)[0]
+      const hit = raycastIndexed(THREE, ray, shell)[0]
       if (hit) past = Math.max(past, PANE_SEAT_REACH - hit.distance + PANE_SEAT_LIFT)
     }
     return past
