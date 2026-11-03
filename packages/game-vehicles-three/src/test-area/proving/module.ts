@@ -13,6 +13,8 @@ import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { createVehiclesThree } from '../../build'
 import type { BuiltVehicle } from '../../build'
 import { defaultSoundIds } from '../types'
+import { createVehicleSound } from '../../audio/vehicle-sound'
+import type { VehicleSound } from '../../audio/vehicle-sound'
 import type { VehicleSoundIds } from '../types'
 import { fillText, PROVING_TEXT } from './text'
 import type { ProvingText } from './text'
@@ -78,7 +80,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   /** True while the room has this area open: nothing is built or simulated otherwise, so loading the module costs nothing elsewhere in the room. */
   let open = false
   let lastWrap = 0
-  let engine: { set(state: { volume?: number; frequency?: number; position?: [number, number, number] }): void; stop(): void } | undefined
+  // the car's own sounds (engine by RPM and load, starter, tyres), as on the lane of the vehicles area
+  let engine: VehicleSound | undefined
   const rig = { camera: null as any, vehicle: null as ReturnType<typeof createVehicleCamera> | null, mirrors: [] as Array<{ pose: MirrorPose; camera: any; remove: () => void }> }
 
   const name = (id: string): string => options.nameOf?.(id) ?? id.replace(/_/g, ' ')
@@ -332,7 +335,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
 
   // ---- runs -----------------------------------------------------------------------------------------------------------------------------
   const stopEngine = (): void => {
-    engine?.stop()
+    engine?.dispose()
     engine = undefined
   }
   const startTest = (id: string): void => {
@@ -347,7 +350,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     if (id === 'turn_circle') run.driver.place(0, TRACK.start, 0)
     rig.vehicle?.reset()
     stopEngine()
-    engine = host.audio?.loop?.(sounds.engine, { position: [car.built.group.position.x, 0.5, car.built.group.position.z] })
+    engine = createVehicleSound(host.audio, { sounds })
+    engine.start([car.built.group.position.x, 0.5, car.built.group.position.z])
     host.log(fillText(text.log.start, name(settings.vehicle), text.tests[id] ?? id))
     drawBoard()
   }
@@ -462,7 +466,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       steer = p.driver.state.steerAngle
       if (p.time > 9) parking = null
     }
-    engine?.set({ volume: run ? 0.035 + Math.abs(speed) * 0.003 : 0, frequency: 38 + Math.abs(speed) * 7, position: car ? [car.built.group.position.x, 0.5, car.built.group.position.z] : undefined })
+    if (car) engine?.update({ dt, position: [car.built.group.position.x, 0.5, car.built.group.position.z], speed, throttle: run ? 1 : 0 })
     const f = frameOf(speed)
     if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera, f, dt)
     if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, m.pose, f)

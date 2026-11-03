@@ -729,6 +729,16 @@
       "count": 274
     }
   },
+  "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 15
+    }
+  },
+  "packages/game-vehicles-fleet/tests/crash.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
   "packages/game-vehicles-fleet/tests/crease-queue.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 5
@@ -737,6 +747,21 @@
   "packages/game-vehicles-fleet/tests/digest.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
+    }
+  },
+  "packages/game-vehicles-fleet/tests/engine-heat.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-vehicles-fleet/tests/flat-tyre.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-vehicles-fleet/tests/fluids-leak.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
     }
   },
   "packages/game-vehicles-fleet/tests/helpers/digest.ts": {
@@ -771,7 +796,7 @@
   },
   "packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 9
+      "count": 10
     }
   },
   "packages/game-vehicles-three/src/build.ts": {
@@ -789,9 +814,19 @@
       "count": 19
     }
   },
+  "packages/game-vehicles-three/src/test-area/proving/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 13
+    }
+  },
   "packages/game-vehicles-three/src/vehicle-lod.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 23
+    }
+  },
+  "packages/game-vehicles-three/tests/damage-drives.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
     }
   },
   "packages/game-vehicles-three/tests/dims.test.ts": {
@@ -807,6 +842,11 @@
   "packages/game-vehicles-three/tests/fake-dom.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 5
+    }
+  },
+  "packages/game-vehicles-three/tests/lane-damage.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
     }
   },
   "packages/game-vehicles-three/tests/team-golden-lite.test.ts": {
@@ -871,7 +911,7 @@
   },
   "packages/game-vehicles/src/destructible/impl.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 51
+      "count": 52
     }
   },
   "packages/game-vehicles/src/destructible/item.ts": {
@@ -884,14 +924,19 @@
       "count": 15
     }
   },
+  "packages/game-vehicles/src/destructible/subdivide-near.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
   "packages/game-vehicles/src/destructible/visual.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 57
+      "count": 77
     }
   },
   "packages/game-vehicles/src/explosion.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 38
+      "count": 37
     }
   },
   "packages/game-vehicles/src/fluids.ts": {
