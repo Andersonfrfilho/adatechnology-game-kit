@@ -402,8 +402,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const typed = listeners.get(e.type)
     if (typed) for (const fn of [...typed]) fn(e)
   }
-  const base = (o: ObjRT, source?: string): { object: string; time: number; source?: string } =>
-    source === undefined ? { object: o.id, time } : { object: o.id, time, source }
+  // the kind of the hit being resolved now (`doHit`): every event it emits carries it as `blow`
+  let blow: DamageType | undefined
+  const base = (o: ObjRT, source?: string): { object: string; time: number; source?: string; blow?: DamageType } => ({
+    object: o.id,
+    time,
+    ...(source === undefined ? {} : { source }),
+    ...(blow === undefined ? {} : { blow }),
+  })
 
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
@@ -2764,6 +2770,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   const doHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
+    const outer = blow
+    blow = hit.type
+    try {
+      return resolveHit(o, hit, only)
+    } finally {
+      blow = outer
+    }
+  }
+
+  const resolveHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
     let point = hit.point
     let dir = hit.direction
     if (hit.space === 'local') {

@@ -1,5 +1,7 @@
 import type * as THREE_NS from 'three'
-import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import { breakSoundKeys, impactSoundKeys } from './audio/impact-keys'
+import type { SoundDetail } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
@@ -480,8 +482,7 @@ class Renderer implements DestructionRenderer {
   }
 
   private hardLanding(p: PieceBody, point: Vec3, speed: number): void {
-    const key = this.impactSoundOf(p.objectId)
-    this.sound(key, point, clamp(speed / 10, 0.2, 1))
+    this.landingSound(p.objectId, point, clamp(speed / 10, 0.2, 1))
     // the piece just moved this frame: the world must know where it is before the hit is resolved against its parts
     this.syncBound(p.objectId)
     try {
@@ -491,17 +492,24 @@ class Renderer implements DestructionRenderer {
     }
   }
 
-  private impactSoundOf(objectId: string): string {
+  /** The impact of the heaviest part of an object (a piece landing): its material and the blunt blow of the fall. */
+  private landingSound(objectId: string, point: Vec3, volume: number): void {
     const st = this.world.state(objectId)
-    let best: MaterialDef | undefined
+    let best = ''
     let mass = -1
     for (const p of st?.parts ?? []) {
       if (p.mass > mass) {
         mass = p.mass
-        best = this.world.materials.get(p.material)
+        best = p.material
       }
     }
-    return impactKey(best)
+    this.impactSound(best, point, volume, 'blunt')
+  }
+
+  /** The impact on a material by a blow: the legacy family key (`impactKey`) with the more specific keys to try first (`impactSoundKeys`). */
+  private impactSound(material: string, point: Vec3, volume: number, blow?: DamageType): void {
+    const def = this.world.materials.get(material)
+    this.sound(impactKey(def), point, volume, impactSoundKeys(material, def, blow))
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -902,8 +910,9 @@ class Renderer implements DestructionRenderer {
     return b ? [b.root.position.x, b.root.position.y, b.root.position.z] : [0, 0, 0]
   }
 
-  private sound(key: string, point: Vec3, volume: number): void {
-    this.o.onSound?.(key, point, volume)
+  private sound(key: string, point: Vec3, volume: number, detail?: SoundDetail): void {
+    if (detail) this.o.onSound?.(key, point, volume, detail)
+    else this.o.onSound?.(key, point, volume)
   }
 
   private partVis(objectId: string, partId: string): PartVis | null {
@@ -976,7 +985,7 @@ class Renderer implements DestructionRenderer {
     const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, ev.dent)), ev.dent.radius)
     this.visuals.applyPartDent(shown, wp, wn, ev.dent, reach)
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [wn.x, wn.y, wn.z], 4 + Math.min(8, ev.dent.depth * 150), 3.2)
-    this.sound(impactKey(def), ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1))
+    this.impactSound(pv.material, ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1), ev.blow)
   }
 
   private onHole(ev: Ev<'hole'>): void {
@@ -1008,7 +1017,7 @@ class Renderer implements DestructionRenderer {
       this.vfx.burst('dust', ev.worldPoint, [n.x, n.y, n.z], this.low ? 5 : 10, 0.7, puff)
       if (ev.hole.through && ev.exitPoint) this.vfx.burst('dust', ev.exitPoint, [-n.x, -n.y, -n.z], this.low ? 10 : 20, 1.3, puff)
     }
-    this.sound(impactKey(def), ev.worldPoint, 0.6)
+    this.impactSound(pv.material, ev.worldPoint, 0.6, ev.blow)
   }
 
   private onCrack(ev: Ev<'crack'>): void {
@@ -1027,7 +1036,7 @@ class Renderer implements DestructionRenderer {
       const length = glass ? ev.crack.length : Math.min(ev.crack.length, OPAQUE_CRACK)
       this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
     }
-    this.sound(impactKey(def), ev.worldPoint, 0.5)
+    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
 
   /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
@@ -1091,7 +1100,7 @@ class Renderer implements DestructionRenderer {
       this.fragments.spawn(fr, this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fr.material, fdef), false), ev.object, maxAlive)
     }
     if (!played) this.vfx.burst('dust', ev.opening.center, [0, 1, 0], 14, 1.2, { color })
-    this.sound(impactKey(def), ev.opening.center, 0.8)
+    this.impactSound(pv?.material ?? '', ev.opening.center, 0.8, ev.blow)
   }
 
   /**
@@ -1112,7 +1121,7 @@ class Renderer implements DestructionRenderer {
     }
     // what a blow tore off a face leaves the hole it made where it is
     if (ev.torn) {
-      this.sound(impactKey(def), ev.center, 0.5)
+      this.impactSound(pv?.material ?? '', ev.center, 0.5, ev.blow)
       return
     }
     // the holes and spalls drawn on the unit leave with it (also those on the wall a beam is drawn inside), and on the ragged edge of plaster around it
@@ -1124,7 +1133,7 @@ class Renderer implements DestructionRenderer {
     this.vfx.peekWorkshop()?.decals.clearInside(ev.center, [half.x, half.y, half.z], ev.rotation)
     // a puff of the unit's own dust; not the bullet impact effect, which would leave its black mark on the hole the unit left
     this.vfx.burst('dust', ev.center, [0, 1, 0], 8, 0.8, { color })
-    this.sound(impactKey(def), ev.center, 0.7)
+    this.impactSound(pv?.material ?? '', ev.center, 0.7, ev.blow)
   }
 
   private onFracture(ev: Ev<'fracture'>): void {
@@ -1166,7 +1175,7 @@ class Renderer implements DestructionRenderer {
       default:
         this.vfx.burst('sparks', ev.point, up, 10, 4)
     }
-    this.sound(fractureKey(def, ev.style), ev.point, clamp(0.4 + ev.fragments.length * 0.03, 0.4, 1))
+    this.sound(fractureKey(def, ev.style), ev.point, clamp(0.4 + ev.fragments.length * 0.03, 0.4, 1), breakSoundKeys(matId, def, ev.blow))
   }
 
   /** Spawns the fragments of a fracture from index `from`; what does not fit in this frame's budget is spawned by the next frames. */
