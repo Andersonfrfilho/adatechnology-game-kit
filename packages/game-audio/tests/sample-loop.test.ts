@@ -90,6 +90,17 @@ describe('looping sample sounds', () => {
     expect(fileStarts(entriesOf(recorder), buffers).length).toBe(before)
   })
 
+  it('the files play at the sound\'s own gain, the volume of the handle on top', async () => {
+    const { engine, recorder } = engineWithLoop({ ...FIRE, gain: 3 })
+    await engine.loadSamples(['test_fire'])
+    const loop = engine.loop('test_fire', { volume: 0.5 })
+    loop.set({ volume: 0.2 })
+    const params = entriesOf(recorder).filter((entry) => entry.op === 'param')
+    expect(params.some((entry) => entry.method === 'setValueAtTime' && entry.args?.[0] === 1.5)).toBe(true)
+    expect(params.some((entry) => entry.method === 'setTargetAtTime' && Math.abs((entry.args?.[0] as number) - 0.6) < 1e-9)).toBe(true)
+    loop.stop()
+  })
+
   it('a single take loops on itself', async () => {
     const { engine, recorder } = engineWithLoop({ ...FIRE, close: [{ url: 'fire1.ogg' }] })
     await engine.loadSamples(['test_fire'])

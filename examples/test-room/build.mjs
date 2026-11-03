@@ -1,6 +1,6 @@
 // Inlines three r160, the kit packages (contracts included), the stylesheet and src/main.js into dist/test-room.html (no CDN, no request at all).
 import { createRequire } from 'node:module'
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -134,4 +134,12 @@ const html = `${fullHtml.slice(0, at)}<script type="text/plain" id="room-area">$
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)
+// the recorded blasts and fire (game-audio's sfx/explosoes-fogo and its manifest), fetched by the page from sfx/ when it is served over http;
+// opened as a file the page keeps the synthesized sounds
+const sfx = join(pkg('game-audio'), 'assets/sfx')
+if (existsSync(join(sfx, 'manifest.json'))) {
+  mkdirSync(join(here, 'dist/sfx'), { recursive: true })
+  cpSync(join(sfx, 'manifest.json'), join(here, 'dist/sfx/manifest.json'))
+  cpSync(join(sfx, 'explosoes-fogo'), join(here, 'dist/sfx/explosoes-fogo'), { recursive: true })
+}
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)

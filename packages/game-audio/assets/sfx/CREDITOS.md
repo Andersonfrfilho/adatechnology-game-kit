@@ -57,10 +57,10 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/explosion_car_02.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 |
 | explosoes-fogo/explosion_car_03.ogg | https://freesound.org/people/qubodup/sounds/843248/ | qubodup | CC0 |
 | explosoes-fogo/explosion_car_04.ogg | https://freesound.org/people/qubodup/sounds/843247/ | qubodup | CC0 |
-| explosoes-fogo/explosion_far_01.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
-| explosoes-fogo/explosion_far_02.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
-| explosoes-fogo/explosion_far_03.ogg | https://freesound.org/people/craigsmith/sounds/438693/ | craigsmith | CC0 |
-| explosoes-fogo/explosion_far_04.ogg | https://freesound.org/people/Kostrava/sounds/324277/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_far_close_01.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_far_close_02.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_far_close_03.ogg | https://freesound.org/people/craigsmith/sounds/438693/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_far_close_04.ogg | https://freesound.org/people/Kostrava/sounds/324277/ | Kostrava | CC0 |
 | explosoes-fogo/explosion_flashbang_01.ogg | https://freesound.org/people/modusmogulus/sounds/737326/ | modusmogulus | CC0 |
 | explosoes-fogo/explosion_flashbang_02.ogg | https://freesound.org/people/modusmogulus/sounds/752628/ | modusmogulus | CC0 |
 | explosoes-fogo/explosion_grenade_01.ogg | https://freesound.org/people/modusmogulus/sounds/784163/ | modusmogulus | CC0 |
@@ -82,12 +82,8 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/fire_crackle_01.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
 | explosoes-fogo/fire_crackle_02.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
 | explosoes-fogo/fire_crackle_03.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
-| explosoes-fogo/fire_crackle_04.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
 | explosoes-fogo/fire_crackle_05.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
-| explosoes-fogo/fire_crackle_06.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
 | explosoes-fogo/fire_crackle_07.ogg | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 |
-| explosoes-fogo/fire_crackle_08.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
-| explosoes-fogo/fire_crackle_09.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
 | explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
 | explosoes-fogo/fire_extinguish_02.ogg | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 |
 | explosoes-fogo/fire_ignite_01.ogg | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 |
@@ -95,7 +91,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/fire_ignite_03.ogg | https://freesound.org/people/RedVulpus/sounds/457209/ | RedVulpus | CC0 |
 | explosoes-fogo/fire_ignite_04.ogg | https://freesound.org/people/GrimGrum/sounds/412558/ | GrimGrum | CC0 |
 | explosoes-fogo/fire_loop_01.ogg | https://freesound.org/people/theoneandtruelybitch/sounds/698209/ | theoneandtruelybitch | CC0 |
-| explosoes-fogo/fire_loop_02.ogg | https://freesound.org/people/snds_good/sounds/554855/ | snds_good | CC0 |
 | explosoes-fogo/fire_loop_03.ogg | https://freesound.org/people/kyles/sounds/454019/ | kyles | CC0 |
 | explosoes-fogo/fire_loop_04.ogg | https://freesound.org/people/SKrafft/sounds/681366/ | SKrafft | CC0 |
 | explosoes-fogo/fire_loop_small_01.ogg | https://opengameart.org/content/fireplace-sound-loop | PagDev | CC0 |

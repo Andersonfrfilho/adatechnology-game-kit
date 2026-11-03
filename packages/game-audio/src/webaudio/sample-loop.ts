@@ -149,12 +149,15 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
     }, wait)
   }
 
+  // the files play at the sound's own level (`SampleSound.gain`); the fallback recipe loop has its own
+  const fileLevel = (): number => level * (sound.gain ?? 1)
+
   const startFiles = (): boolean => {
     if (stopped || master || !host.isReady(sound)) return master !== undefined
     const context = host.ready()
     if (!context) return false
     master = context.createGain()
-    master.gain.setValueAtTime(level, context.currentTime)
+    master.gain.setValueAtTime(fileLevel(), context.currentTime)
     master.connect(host.output(sound.bus))
     host.register(entry)
     pump(context, master, context.currentTime, true)
@@ -189,7 +192,7 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
       if (next.volume !== undefined) level = host.muted(sound.bus) ? 0 : Math.max(0, next.volume)
       if (level > 0) ensure()
       const context = host.ready()
-      if (master && context) master.gain.setTargetAtTime(level, context.currentTime, VOLUME_SMOOTHING)
+      if (master && context) master.gain.setTargetAtTime(fileLevel(), context.currentTime, VOLUME_SMOOTHING)
       fallback?.set(next.volume === undefined ? next : { ...next, volume: level })
     },
     stop: entry.stop,
