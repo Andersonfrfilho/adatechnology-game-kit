@@ -31,7 +31,8 @@ O problema é que as regras do `CLAUDE.md` não são cobradas por máquina, e po
 | **L3 Conteúdo** | `-fleet`, `-species`, `-goods`, `-residential`, `-people`, `-undead`… | o próprio núcleo, L0 | three, `-three` |
 | **L4 Adaptadores** | `<lib>-three`, `game-shapes-three`, `game-render-three` (**novo**: orçamento de luzes, pré-aquecimento de shaders, pools da GPU) | o próprio núcleo, L0, `game-shapes-three`, `game-render-three` | conteúdo, outro `-three` de domínio |
 | **L4b Pontes** | como o `game-floorplan-interactables` (zero deps, tudo injetado) | o que injetarem | — |
-| **L5 Composição** | `game-test-room` (como um host), `examples/*`, o jogo | tudo | — |
+| **Construtor compartilhado** | `game-props3d` (vocabulário `PropsApi`, gravador de formas, pele de nós; não é conteúdo, decidido na T3.3) | `game-shapes` | conteúdo, `-three` (sobra só o reexport `mergeByMaterial`, D2) |
+| **L5 Composição** | `game-kit-defaults` (o preset padrão), `game-test-room` (como um host), `examples/*`, o jogo | tudo | — |
 | **Teste** | subpath `./testing` de cada pacote | o pacote + L5 | o `.` de produção |
 
 É o mesmo desenho destas engines:
@@ -116,7 +117,8 @@ Toda etapa que mexe em animação, corpo ou arma na mão segue a regra de valida
 1. **`dependency-cruiser`**, com classes por nome de pacote. As regras `forbidden`:
    - `core-no-three`: núcleo não importa three nem `-three`;
    - `core-not-content`: núcleo não importa pacote de conteúdo;
-   - `content-not-adapter`: conteúdo não importa `-three` nem `game-props3d`;
+   - `content-not-adapter`: conteúdo não importa `-three`;
+   - `shared-builder-not-content-or-adapter`: `game-props3d` não importa conteúdo nem `-three`, salvo o reexport `@deprecated` da allowlist;
    - `adapter-not-content`: adaptador não importa pacote de conteúdo;
    - `no-domain-adapter-to-adapter`: `-three` só importa `game-shapes-three`/`game-render-three`, com allowlist explícita;
    - `nothing-imports-test-room`: só `examples/` importa a sala;

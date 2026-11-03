@@ -1,3 +1,4 @@
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { Puddle } from '@adatechnology/game-vfx'
@@ -34,6 +35,11 @@ export type WeatherRendererOptions = {
   readonly puddles?: readonly Puddle[]
   readonly puddleAt?: (x: number, z: number) => boolean
   readonly headlights?: HeadlightRules
+  /**
+   * The host's light budget: the headlights are sources of it and the lightning flash leases one of its hemisphere slots. With it the fog is also stable (never `null`), because the budget seals
+   * the fog state of the scene. Without it the lights are created here, as before (deprecated, removed in the next major).
+   */
+  readonly lights?: LightBudget
   readonly layers?: Partial<Record<WeatherLayerId, boolean>>
 }
 
@@ -65,9 +71,9 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
   const haze = createHeatHaze(THREE)
   group.add(curtain.object, haze.object)
   const sky = createSky(THREE, scene)
-  const fog = createFog(THREE, scene)
-  const lightning = createLightning(THREE, scene, vfx)
-  const headlights = createHeadlights(THREE, options.headlights)
+  const fog = createFog(THREE, scene, { stable: options.lights !== undefined })
+  const lightning = createLightning(THREE, scene, vfx, options.lights ? { lights: options.lights } : {})
+  const headlights = createHeadlights(THREE, options.lights ? { ...options.headlights, lights: options.lights } : options.headlights)
   const nearRain = createNearRain(vfx, { ...(options.puddles ? { puddles: options.puddles } : {}), ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}) })
   const on = new Map<WeatherLayerId, boolean>(WEATHER_LAYERS.map((id) => [id, options.layers?.[id] ?? true]))
   let zone = options.zone

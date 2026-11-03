@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-characters-three",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "license": "MIT",
   "description": "three.js presentation for @adatechnology/game-characters: the instanced crowd body (GPU animation, LOD, baking, variants, flying limbs) and the rich bodies (the Bestiário v17 builder, survivors with accessories and hands, the animator, wounds, eyes).",
   "keywords": [
@@ -32,6 +32,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -47,6 +51,7 @@
     "@adatechnology/game-characters": "workspace:^",
     "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^"
   },
   "peerDependencies": {
@@ -54,6 +59,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-characters-undead": "workspace:^",
+    "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

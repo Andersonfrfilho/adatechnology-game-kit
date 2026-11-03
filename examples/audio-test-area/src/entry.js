@@ -3,7 +3,8 @@
 // come from the engine (the room's, when it lends one in `host.audio`).
 // Bench: sound, source (bench settings or the probe), distance, bearing, volume, mixing chain, seed, play, voice storm, loop with level and pitch.
 // Layers: reverb, compressor, panning, muffling. Metrics: voices, peak, dropped, loops, context, the chosen sound's plan, the level of each bus.
-import { GAME_SFX_BANK, LIBRARY_BANK, createAudioEngine, createAudioTestModule } from '@adatechnology/game-audio'
+import { GAME_SFX_BANK, LIBRARY_BANK, createAudioEngine } from '@adatechnology/game-audio'
+import { createAudioTestModule } from '@adatechnology/game-audio/testing'
 
 export { createAudioEngine, createAudioTestModule, GAME_SFX_BANK, LIBRARY_BANK }
 

@@ -1,3 +1,4 @@
+import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createVehicleKit, legacyZoneId } from '@adatechnology/game-vehicles'
@@ -31,7 +32,7 @@ function fnv(values: ArrayLike<number>): string {
 
 const kit = createVehicleKit({ THREE, document: fakeDocument, locale: 'pt-BR' })
 installFleet(kit)
-const vehicles = createVehiclesThree(THREE, { kit })
+const vehicles = createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 const idOf = (pageKey: string): string => Object.keys(legacyVehicleSeeds).find((id) => legacyVehicleSeeds[id] === pageKey) as string
 const entries = Object.entries(golden.vehicles as Record<string, any>)
 

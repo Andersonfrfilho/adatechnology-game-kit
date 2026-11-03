@@ -1,6 +1,8 @@
 // Types of the Retratos do Vale survivor builder (the port in `person-builder.ts` keeps the page's short field names, so a diff against it stays readable).
 import type { HairStyle, MoveBlend } from '@adatechnology/game-characters'
 
+import type { SourceHandle } from '@adatechnology/game-render-three'
+
 import type { THREE_NS } from '../three'
 
 /** A clothing or gear entry: its id and, for the ones that take it, a colour. */
@@ -80,6 +82,8 @@ export type DogRig = { tail: THREE_NS.Group; dlegs: Array<{ lg: THREE_NS.Group; 
 
 /** A built survivor: the scene graph and the rig `pose` moves. */
 export type PersonCharacter = {
+  /** Lights the person's items took from the host's LightBudget (the flare); whoever removes the person releases them. */
+  lightSources: SourceHandle[]
   mv: MoveBlend
   phase: number
   turnA: number
