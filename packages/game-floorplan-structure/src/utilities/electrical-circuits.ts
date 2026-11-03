@@ -1,13 +1,15 @@
+import type { PlanDoor, ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Layout } from './electrical'
 import { heightOf, keyOf } from './electrical'
 import { mainDoorOf } from './electrical-entrance'
-import type { Json } from './shared'
 import { round2 } from './shared'
 import { atDoor, hasWindowAt, wallPointsOf } from './wall-points'
+import type { WallPoint } from './wall-points'
+import type { Circuit, Point3, WallFixture } from './types'
 
 const LAMP_CATEGORIES = ['ceiling_light', 'lamp', 'table_light']
 
-const lampsOf = (layout: Layout): Json[] => layout.items.filter((m) => !m.outdoor && LAMP_CATEGORIES.includes(m.category))
+const lampsOf = (layout: Layout): ResultItem[] => layout.items.filter((m) => !m.outdoor && LAMP_CATEGORIES.includes(m.category))
 
 /** A switch by the latch of the main door of each room that has a lamp (and of the room of the front door, for the outside lamp), at 1.10 m. */
 export function addSwitches(layout: Layout): void {
@@ -15,10 +17,10 @@ export function addSwitches(layout: Layout): void {
   const lamps = lampsOf(layout)
   const door = mainDoorOf(plan)
   let counter = 0
-  const positionFor = (room: Json): { point: Json; door: Json; latch: boolean } | null => {
+  const positionFor = (room: Room): { point: WallPoint; door: PlanDoor; latch: boolean } | null => {
     const doors = plan.doors
-      .filter((p: Json) => p.floor === room.floor && (p.a === room.id || p.b === room.id))
-      .sort((a: Json, b: Json) => (a.opensTo === room.id ? 0 : 1) - (b.opensTo === room.id ? 0 : 1) || (a.width < b.width ? 1 : -1))
+      .filter((p) => p.floor === room.floor && (p.a === room.id || p.b === room.id))
+      .sort((a, b) => (a.opensTo === room.id ? 0 : 1) - (b.opensTo === room.id ? 0 : 1) || (a.width < b.width ? 1 : -1))
     const points = wallPointsOf(plan, room, items, 0.12)
     for (const tolerance of [0.16, 0.3]) {
       for (const d of doors) {
@@ -31,7 +33,7 @@ export function addSwitches(layout: Layout): void {
     }
     return null
   }
-  for (const room of rooms.concat(plan.rooms.filter((x: Json) => ['stairs'].includes(x.type)))) {
+  for (const room of rooms.concat(plan.rooms.filter((x) => ['stairs'].includes(x.type)))) {
     const roomLamps = lamps.filter((m) => m.room === room.id && m.floor === room.floor)
     const extra = door && door.a === room.id && room.floor === 0 && plan.lot ? [`outdoor_${door.id}`] : []
     if (!roomLamps.length && !extra.length) continue
@@ -61,12 +63,12 @@ export function addConduits(layout: Layout): void {
     const part = room.parts[0]
     const centreU = round2((part[0] + part[2]) / 2)
     const centreV = round2((part[1] + part[3]) / 2)
-    const circuit = { id: `circuit_${room.id}_${room.floor}`, room: room.id, floor: room.floor, outlets: outlets.map((t) => t.id), switches: switches.map((i) => i.id), lamps: roomLamps.map((m) => m.id), exposed: electrical.exposed, gauge_mm2: outlets.length > 3 ? 2.5 : 1.5 }
+    const circuit: Circuit = { id: `circuit_${room.id}_${room.floor}`, room: room.id, floor: room.floor, outlets: outlets.map((t) => t.id), switches: switches.map((i) => i.id), lamps: roomLamps.map((m) => m.id), exposed: electrical.exposed, gauge_mm2: outlets.length > 3 ? 2.5 : 1.5 }
     electrical.circuits.push(circuit)
     const base = heightOf(plan, room.floor, 0)
-    const riser = panel ? [[panel.u, panel.v, heightOf(plan, panel.floor, panel.y)], [panel.u, panel.v, heightOf(plan, panel.floor, 0) + ceiling]] : []
+    const riser: Point3[] = panel ? [[panel.u, panel.v, heightOf(plan, panel.floor, panel.y)], [panel.u, panel.v, heightOf(plan, panel.floor, 0) + ceiling]] : []
     if (panel) electrical.conduits.push({ id: `conduit_${circuit.id}`, circuit: circuit.id, from: 'panel', to: room.id, exposed: electrical.exposed, diameter: 0.025, points: riser.concat([[centreU, centreV, base + ceiling]]) })
-    for (const point of outlets.concat(switches)) {
+    for (const point of (outlets as WallFixture[]).concat(switches)) {
       electrical.conduits.push({ id: `conduit_${point.id}`, circuit: circuit.id, from: circuit.id, to: point.id, exposed: electrical.exposed, diameter: 0.02, points: [[centreU, centreV, base + ceiling], [point.u, point.v, base + ceiling], [point.u, point.v, base + point.y]] })
     }
   }

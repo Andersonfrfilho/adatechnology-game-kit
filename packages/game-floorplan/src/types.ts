@@ -606,8 +606,8 @@ export interface PlacedItemFields {
   /** Driver side of a car (unit vector). */
   driver?: Vec2
   carClearance?: CarClearance
-  /** Connection of a stair or passage room. */
-  link?: { from: number; to: number }
+  /** Storeys a stair or passage room connects, or the id of the item this one serves (a gas cylinder names its stove). */
+  link?: { from: number; to: number } | string
   /** Unrounded footprint used by the fill, dropped from the result. */
   _r?: Rect
   _seedId?: string

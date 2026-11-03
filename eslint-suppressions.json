@@ -129,11 +129,6 @@
       "count": 7
     }
   },
-  "packages/game-floorplan-structure/src/utilities/shared.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-floorplan-structure/tests/extension.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 16

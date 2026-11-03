@@ -31,3 +31,7 @@ export { PILE_DEFAULTS, SKYSCRAPER_DEFAULTS, SKYSCRAPER_MAX_STOREYS, buildSkyscr
 export type { PileDesign, SkyscraperLayout, SkyscraperOptions, SkyscraperPreset } from './skyscraper'
 export { PLATE_DEFAULTS, exteriorWindows, planToSpace, splitStrip, storeyKinds, stripDoor, towerFloors, towerLocales, towerPlate } from './skyscraper-plan'
 export type { PlateOptions, PlateRect, PlateStrip, StoreyContext, StoreyKind, StripFill, StripFiller, StripId, TowerPlanOptions, TowerPlate } from './skyscraper-plan'
+export type * from './utilities/types'
+export type { Utilities } from './utilities'
+export type { Electrical, EnergyConfig, EnergyMode } from './utilities/electrical'
+export type { Gas, GasMeter } from './utilities/gas'
