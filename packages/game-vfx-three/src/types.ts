@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { EffectSink, WarmUpProbes } from '@adatechnology/game-contracts'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { ScreenState, VfxOptions, VfxProfileName, VfxWorld } from '@adatechnology/game-vfx'
 
 /** The only three.js members the renderer needs at runtime. Pass your own `THREE` instance (the whole namespace works). */
@@ -88,6 +89,8 @@ export interface VfxRendererOptions {
   pointScale?: number
   /** Multiplies the blast and fire lights. Default `Math.PI`: three.js r155+ lights are physical, the Lab's were not (r128). */
   lightScale?: number
+  /** The host's light budget: blast, fire and Workshop lights become requests to it instead of lights of their own (spec 005 D4). Without it the renderer creates its lights as before (deprecated). */
+  lights?: LightBudget
   /** Caps on the marks kept on the ground; once one is full the oldest is reused for the next, so nothing grows and nothing is allocated. Defaults: 64 scorch and dirt, 512 rocks, 256 blood. */
   markLimits?: { readonly maxGroundMarks?: number; readonly maxRocks?: number; readonly maxBlood?: number }
 }

@@ -4,7 +4,7 @@ import { createSilhouetteRandom } from '@adatechnology/game-floorplan'
 
 import { drawBuilding, fillBlock, DEFAULT_FACADES } from './block'
 import type { BlockBuilding, BuildingOptions, FillBlockOptions } from './block'
-import { createLightBudget } from './budget'
+import { createLightAllowance } from './budget'
 import { createTowerDrawer, DEFAULT_TOWER_PRESETS } from './tower'
 import type { TowerOptions } from './tower'
 import { DEFAULT_POLES, POLE_SHAPES } from './poles'
@@ -27,7 +27,9 @@ import type { StreetOptions } from './streets'
 import type { RandomSource } from './types'
 
 /** Lights a scene may spend: the Galeria spends 16 real point lights. */
-export const DEFAULT_LIGHT_BUDGET = 16
+export const DEFAULT_LIGHT_ALLOWANCE = 16
+/** @deprecated Renamed `DEFAULT_LIGHT_ALLOWANCE`. Removed in the next major. */
+export const DEFAULT_LIGHT_BUDGET = DEFAULT_LIGHT_ALLOWANCE
 /** Seed of the Galeria's generator. */
 export const DEFAULT_URBAN_SEED = 7
 
@@ -78,7 +80,7 @@ export function createUrban(options: UrbanOptions = {}) {
   applyPatches(patterns, options.patch?.neighbourhoods)
   removeIds(patterns, options.remove?.neighbourhoods)
   const composers: Record<string, Composer> = { ...COMPOSERS, ...options.composers }
-  const lightBudget = options.lights?.budget ?? DEFAULT_LIGHT_BUDGET
+  const lightBudget = options.lights?.budget ?? DEFAULT_LIGHT_ALLOWANCE
   const facades = options.facades ?? DEFAULT_FACADES
   const propColors: PropColors = { ...DEFAULT_PROP_COLORS, ...options.props }
 
@@ -126,7 +128,7 @@ export function createUrban(options: UrbanOptions = {}) {
   }
   /** A builder with its own seeded generator and light budget. */
   const builder = (o: BuilderOptions = {}): UrbanBuilder =>
-      createUrbanBuilder(o.random ?? createSilhouetteRandom(o.seed ?? DEFAULT_URBAN_SEED), { budget: createLightBudget(o.budget ?? lightBudget) })
+      createUrbanBuilder(o.random ?? createSilhouetteRandom(o.seed ?? DEFAULT_URBAN_SEED), { budget: createLightAllowance(o.budget ?? lightBudget) })
   const neighbourhoods = {
     ids: (): string[] => [...patterns.keys()],
     get(id: string) {

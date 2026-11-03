@@ -1,6 +1,6 @@
 import type { BenchChange, ModuleHost } from '@adatechnology/game-contracts'
 import { createVfx } from '@adatechnology/game-vfx'
-import { createWeatherTestModule } from '@adatechnology/game-weather'
+import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createWeatherVisual } from '../src'

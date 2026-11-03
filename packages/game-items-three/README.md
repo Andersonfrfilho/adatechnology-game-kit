@@ -26,3 +26,9 @@ The geometry comes from [`game-shapes`](../game-shapes): the kit's `T` is `shape
 `new T.CylinderGeometry(...)` and get the same bytes from game-shapes' template cache (a tube still comes from three), and `mergeItem` joins on
 `game-shapes-three`. `tests/exact-golden.test.ts` holds every bit of the 24 models and 25 shapes (alone, merged, half detail, LOD) as the old
 path made them.
+
+## Item models by instance
+
+`createItemModels({ packs, patch, remove })` makes a set of models of its own: the shipped ones plus `packs`. `packs` is a list of lists of `{ entry: ItemModelEntry, builder: ItemModelBuilder }` records (`[[{ entry, builder }]]`); a record with the id of a shipped model replaces it.
+`patch` merges `entry` fields by item id (`scale`, `teamBox`), `remove` lists item ids whose model is taken out (the item then gets its simple shape).
+The set draws on its own: `models.build`, `models.buildLod` and `models.thumbnail`; `buildItem`, `buildItemLod`, `itemThumbnail`, `thumbnailPatch`, `composeThumbnailScene` and `createItemsTestModule` take it as `models`. Without one they use the set behind `registerItemModel` (deprecated).

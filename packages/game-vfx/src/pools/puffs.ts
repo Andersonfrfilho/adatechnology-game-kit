@@ -1,5 +1,7 @@
 import type { Rgb } from '../color'
 import { SMOKE_COLORS } from '../constants'
+import { slideAlong } from '../enclosures'
+import type { Confiner } from '../enclosures'
 import { OrderedPool } from '../pool'
 import type { RandomStream } from '../random'
 
@@ -60,6 +62,10 @@ const FLOOR_BOUNCE = -0.2
 const ARRIVAL_FRAME = 30
 const ARRIVAL_BASE = 0.3
 const GROWTH_CAP_SECONDS = 3.5
+/** Puffs of these kinds are carried by the air (smoke, dust, gas); blood and bile fall. */
+const CARRIED_KINDS: readonly boolean[] = [true, true, false, true, false]
+/** A puff outside a closed space stops this share of its size off the wall. */
+const PAD_OF_SIZE = 0.35
 
 export function createPuffPool(capacity: number): OrderedPool<Puff> {
   const placeholder: RandomStream = { next: () => 0, between: (min) => min, direction: (out) => out, state: 0 }
@@ -136,13 +142,25 @@ function moveFree(puff: Puff, dt: number, age: number, heat: number, wind: { x: 
 }
 
 /** `updatePuffs` (L205-238): ages, removes what ended, then moves the rest with the wind (or along their mushroom ring) and derives what the shader reads. */
-export function updatePuffs(pool: OrderedPool<Puff>, dt: number, wind: { x: number; z: number }): void {
+export function updatePuffs(pool: OrderedPool<Puff>, dt: number, wind: { x: number; z: number }, confiner?: Confiner): void {
   pool.compact(ageOrKeep, dt)
+  const confining = confiner !== undefined && !confiner.empty
   for (const puff of pool.items) {
     const age = puff.t / puff.life
     const heat = puff.h0 > 0 ? puff.h0 * Math.pow(Math.max(0, 1 - puff.t / puff.hl), 1.25) : 0
+    const x0 = puff.x
+    const y0 = puff.y
+    const z0 = puff.z
     if (puff.ring) moveOnRing(puff, puff.ring, wind)
     else moveFree(puff, dt, age, heat, wind)
+    // the smoke, dust and gas go round a closed space (a shut car) and in only through its openings
+    if (confining && CARRIED_KINDS[puff.kind] && confiner.confine(x0, y0, z0, puff.x, puff.y, puff.z, puff.size * PAD_OF_SIZE, dt)) {
+      const out = confiner.out
+      puff.x = out.x
+      puff.y = out.y
+      puff.z = out.z
+      ;[puff.vx, puff.vy, puff.vz] = slideAlong(out, puff.vx, puff.vy, puff.vz)
+    }
     const size = puff.s0 + (puff.s1 - puff.s0) * (1 - Math.exp(-puff.t * puff.gk)) + puff.sg * Math.min(puff.t, GROWTH_CAP_SECONDS)
     puff.size = size * Math.min(1, puff.t * ARRIVAL_FRAME + ARRIVAL_BASE)
     puff.age = age

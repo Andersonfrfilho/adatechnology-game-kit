@@ -1,7 +1,8 @@
 import { SHEET_RULESET } from '@adatechnology/game-characters-people'
-import type { SheetAttributeId, SheetRuleset } from '@adatechnology/game-characters-people'
 
 import sheetNumbers from '../data/sheet.json'
+
+import type { SheetAttributeId, SheetRuleset } from './ruleset'
 
 export type SheetNumbers = Omit<typeof sheetNumbers, 'sources'>
 
@@ -51,9 +52,10 @@ export type CharacterSheet = {
   stance(about: string): 'joins' | 'hostile' | 'neutral'
 }
 
+/** `ruleset` is content: `SHEET_RULESET` of `game-characters-people`, or `defaultStoryContent().ruleset` of `game-kit-defaults`. Default `SHEET_RULESET`; the default is deprecated and removed in the next major. */
 export type SheetOptions = SheetInput & { readonly ruleset?: SheetRuleset; readonly numbers?: Partial<SheetNumbers> }
 
-/** A character sheet on the Personagens ruleset (`game-characters-people` `SHEET_RULESET`), with the memory and opinion rules of the document. */
+/** A character sheet on a ruleset (the Personagens one is `SHEET_RULESET` of `game-characters-people`), with the memory and opinion rules of the document. */
 export function createSheet(options: SheetOptions = {}): CharacterSheet {
   const rules = options.ruleset ?? SHEET_RULESET
   const N = { ...sheetNumbers, ...options.numbers }

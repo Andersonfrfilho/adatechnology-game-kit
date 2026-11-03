@@ -1,5 +1,8 @@
 import type * as THREE_NS from 'three'
+import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
+import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
 import type { Decal, WorkshopEngine } from '@adatechnology/game-vfx'
+import { followEntry } from './lights'
 import { createMeshLayer } from './mesh-layer'
 import { WORKSHOP_SPRITE_FRAGMENT, WORKSHOP_SPRITE_VERTEX } from './shaders/workshop-sprite'
 import type { ThreeLib } from './types'
@@ -323,7 +326,7 @@ function ringLayer(THREE: ThreeLib, pool: WorkshopEngine['rings']): Drawn {
  * Draws the pools of the world's Workshop engine (what `world.play` fills): the two sprite systems, the streaks, the physics debris, the decals, the
  * expanding rings and the flash and fire lights, with the page's shaders and materials.
  */
-export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, pointScale: number, lightScale: number): WorkshopLayers {
+export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, pointScale: number, lightScale: number, budget?: LightBudget): WorkshopLayers {
   const group = new THREE.Group()
   group.name = 'workshop'
   const layers: Drawn[] = [
@@ -338,15 +341,36 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
   for (const layer of layers) group.add(layer.object)
   const meshes = createMeshLayer(THREE, engine.meshes)
   group.add(meshes.group)
-  const flashLights = engine.lights.lights.map(() => new THREE.PointLight(0xffc070, 0, 14))
-  const fireLights = engine.lights.fire.map(() => new THREE.PointLight(FIRE_LIGHT_COLOR, 0, FIRE_LIGHT_DISTANCE))
-  for (const light of [...flashLights, ...fireLights]) group.add(light)
+  const lights = budget ? budgetedLights(engine, lightScale, budget) : legacyLights(THREE, engine, lightScale, group)
   return {
     group,
     sync() {
       let drawCalls = 0
       for (const layer of layers) if (layer.sync()) drawCalls++
       drawCalls += meshes.sync()
+      lights.sync()
+      return drawCalls
+    },
+    dispose() {
+      for (const layer of layers) layer.dispose()
+      meshes.dispose()
+      lights.dispose()
+      group.clear()
+    },
+  }
+}
+
+type WorkshopLights = { sync(): void; dispose(): void }
+
+/** @deprecated Lights created here change every lit material's program key; pass a LightBudget. Removed in the next major. */
+function legacyLights(THREE: ThreeLib, engine: WorkshopEngine, lightScale: number, group: THREE_NS.Group): WorkshopLights {
+  // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
+  const flashLights = engine.lights.lights.map(() => new THREE.PointLight(0xffc070, 0, 14))
+  // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget, removed in the next major
+  const fireLights = engine.lights.fire.map(() => new THREE.PointLight(FIRE_LIGHT_COLOR, 0, FIRE_LIGHT_DISTANCE))
+  for (const light of [...flashLights, ...fireLights]) group.add(light)
+  return {
+    sync() {
       engine.lights.lights.forEach((source, index) => {
         const light = flashLights[index]!
         light.position.set(source.x, source.y, source.z)
@@ -359,12 +383,27 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
         light.position.set(source.x, source.y, source.z)
         light.intensity = source.intensity * lightScale
       })
-      return drawCalls
+    },
+    dispose() {},
+  }
+}
+
+function budgetedLights(engine: WorkshopEngine, lightScale: number, budget: LightBudget): WorkshopLights {
+  const flash: (LightHandle | null)[] = engine.lights.lights.map(() => null)
+  const fire: (LightHandle | null)[] = engine.lights.fire.map(() => null)
+  return {
+    sync() {
+      engine.lights.lights.forEach((source, index) => {
+        const request = { owner: 'vfx.workshop', priority: LIGHT_PRIORITY.blast, urgent: true, color: source.color, intensity: source.intensity * lightScale, distance: source.distance, position: [source.x, source.y, source.z] as const }
+        followEntry(budget, flash, index, source, request)
+      })
+      engine.lights.fire.forEach((source, index) => {
+        const request = { owner: 'vfx.workshop', priority: LIGHT_PRIORITY.fire, color: FIRE_LIGHT_COLOR, intensity: source.intensity * lightScale, distance: FIRE_LIGHT_DISTANCE, position: [source.x, source.y, source.z] as const }
+        followEntry(budget, fire, index, source, request)
+      })
     },
     dispose() {
-      for (const layer of layers) layer.dispose()
-      meshes.dispose()
-      group.clear()
+      for (const handle of [...flash, ...fire]) handle?.release({ fadeMs: 0 })
     },
   }
 }

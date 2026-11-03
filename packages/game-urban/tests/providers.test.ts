@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { createPlantProvider, createUrban, createVehicleProvider, PARKED_VEHICLE_IDS } from '../src'
+import { createPlantProvider as createPlantProviderOf, createUrban, createVehicleProvider as createVehicleProviderOf } from '../src'
+import type { PlantProviderOptions, VehicleProviderOptions } from '../src'
 import type { PlacementPart, Providers } from '../src'
+
+// The cores own no content: the tests hand over a small fleet and a stand-in species table.
+const FLEET_IDS = ['taxi', 'police_sedan', 'hatchback', 'pickup_truck', 'minivan']
+const SPECIES_IDS = ['oak', 'pine', 'palm', 'cedar', 'birch', 'acacia']
+const hashKey = (key: string): number => [...key].reduce((hash, character) => Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0, 2166136261)
+const pickSpecies = (context: string, key: string): string => `${context}:${SPECIES_IDS[hashKey(`${context}|${key}`) % SPECIES_IDS.length]}`
+const createVehicleProvider = (options: Partial<VehicleProviderOptions> = {}) => createVehicleProviderOf({ ids: FLEET_IDS, ...options })
+const createPlantProvider = (options: Partial<PlantProviderOptions> = {}) => createPlantProviderOf({ pickSpecies, ...options })
 
 const placements = (parts: readonly { shape: string }[], kind: PlacementPart['kind']): PlacementPart[] => parts.filter((part): part is PlacementPart => part.shape === 'placement' && (part as PlacementPart).kind === kind)
 
@@ -22,7 +31,7 @@ describe('vehicle and plant providers', () => {
     const cars = placements(b.parts, 'vehicle')
     expect(cars).toHaveLength(plan.vehicles.length)
     cars.forEach((car, index) => {
-      expect(PARKED_VEHICLE_IDS).toContain(car.id)
+      expect(FLEET_IDS).toContain(car.id)
       expect(car.x).toBe(plan.vehicles[index]?.x)
       expect(car.color).toBe(plan.vehicles[index]?.color)
     })
@@ -45,10 +54,10 @@ describe('vehicle and plant providers', () => {
     const painted = kit.builder({ seed: 7 })
     kit.neighbourhoods.get('downtown').compose(painted, { x: 0, z: 0 }, { providers: { vehicle: createVehicleProvider({ pick: () => 'police_sedan', paint: () => 0x112233 }) } })
     expect(placements(painted.parts, 'vehicle').every((car) => car.id === 'police_sedan' && car.color === 0x112233)).toBe(true)
-    expect(() => createVehicleProvider({ ids: [] })).toThrow()
+    expect(() => createVehicleProviderOf({ ids: [] })).toThrow()
   })
 
-  it('a plant provider puts species of the regional table where the pattern plants trees', () => {
+  it('a plant provider puts species chosen by the game where the pattern plants trees', () => {
     const b = kit.builder({ seed: 7 })
     const plan = kit.neighbourhoods.get('mountain_resort').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
     const plants = placements(b.parts, 'plant')

@@ -25,6 +25,7 @@
     "@adatechnology/game-floorplan-structure": "workspace:*",
     "@adatechnology/game-floorplan-three": "workspace:*",
     "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
     "@adatechnology/game-items-goods": "workspace:*",
     "@adatechnology/game-items-three": "workspace:*",

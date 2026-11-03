@@ -1,3 +1,4 @@
+import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
@@ -10,7 +11,7 @@ afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
 const kit = createVehicleKit({ THREE, document: fakeDocument })
 installFleet(kit)
-const vehicles = createVehiclesThree(THREE, { kit })
+const vehicles = createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 
 describe('golden: DIMS of the Frota Leve (G-dims)', () => {
   it.each([...fleetVehicleIds])('%s measures what the team measured, to the millimetre', (id) => {
