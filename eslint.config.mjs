@@ -2,6 +2,7 @@
 import eslint from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import noBareRemove from './tools/eslint/no-bare-remove.mjs'
 
 export default tseslint.config(
   {
@@ -32,6 +33,12 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // CLAUDE.md, "Memória": what leaves the scene for good is freed (discardObject3D), not only taken out of it
+    files: ['packages/*/src/**/*.{ts,tsx}'],
+    plugins: { kit: { rules: { 'no-bare-remove': noBareRemove } } },
+    rules: { 'kit/no-bare-remove': 'error' },
   },
   {
     files: ['packages/*/src/**/*.{ts,tsx}'],

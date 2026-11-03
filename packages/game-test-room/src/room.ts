@@ -843,6 +843,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const letGo = (root: THREE_NS.Object3D): void => {
     const inner = wrapped.get(root)
     if (!inner) return
+    // eslint-disable-next-line kit/no-bare-remove -- the inner object belongs to the module that built it, which shows it again; removeEntry frees it when it goes
     inner.removeFromParent()
     wrapped.delete(root)
   }
@@ -1260,6 +1261,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const setAvatar = (next: RoomAvatar | null): void => {
     if (avatar === next) return
     avatar?.setView?.('third', null)
+    // eslint-disable-next-line kit/no-bare-remove -- the avatar belongs to the host that set it (the player module), which may set it again or dispose it
     avatar?.root.removeFromParent()
     avatar = next
     feetPrev = null

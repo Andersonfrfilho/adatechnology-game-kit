@@ -3,7 +3,7 @@
 // canvases still alive after a forced GC, the event listeners on window, document and the canvas, the intervals still running, and the JS heap
 // (the total of a heap snapshot, so garbage does not count).
 //   node leak.mjs                       every phase
-//   LEAK_PHASE=explosions|glass|areas|more|hands   one phase (CI runs them in parallel)
+//   LEAK_PHASE=explosions|glass|areas|more|world|hands   one phase (CI runs them in parallel)
 //   LEAK_SCENARIOS=a;b                  with LEAK_PHASE, only these scenarios
 //   LEAK_ROUNDS=3                       measured cycles
 //   LEAK_WARMUP=2                       warm-up cycles before the first count
@@ -26,6 +26,8 @@ const PHASES = {
   areas: { areas: ['Veículos', 'Multidão', 'Casas', 'Explosivos', 'Personagens'] },
   // the other areas: weapons, items, animals, effects, ground, sound, plants and the city
   more: { areas: ['Armas', 'Itens', 'Animais', 'effects', 'Terreno', 'Som', 'Árvores, plantas e flores', 'Cidade'] },
+  // the rest of the room: weather, the player, the stories and the furniture
+  world: { areas: ['Clima', 'Jogador', 'Histórias', 'Móveis e objetos'] },
   // the hands: one weapon of each kind taken, fired and put away, in first and third person
   hands: { hands: true },
 }
