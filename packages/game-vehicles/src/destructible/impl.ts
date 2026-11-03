@@ -97,6 +97,15 @@ export interface VehicleDestructible extends DestructibleImpl {
   rollover(side?: number): void
   /** Part ids that are no longer attached to the main body. */
   detachedParts(): string[]
+  /** What the damage leaves for driving: each tyre's health where it stands, the brakes, the engine and the shocks (0 gone .. 1 whole). */
+  driveReport(): DriveReport
+}
+
+export type DriveReport = {
+  readonly tyres: ReadonlyArray<{ readonly x: number; readonly z: number; readonly health: number }>
+  readonly brakes: number
+  readonly engine: number
+  readonly suspension: number
 }
 
 interface PState {
@@ -164,6 +173,8 @@ const STEEL_MM: Record<string, number> = { panel: 0.8, door: 1.6, hood: 0.8, lid
 const ARMOUR_STEEL_MM: Record<'IIIA' | 'III', number> = { IIIA: 4, III: 7 }
 /** Below this piercing a round is soft lead (hollow point, slug, buckshot) and opens a wider hole. */
 const SOFT_LEAD = 0.8
+/** A flat tyre's health for driving (under the driver's flat limit). */
+const TYRE_FLAT_HEALTH = 0.1
 const EXPANDED_HOLE = 1.6
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
@@ -1165,6 +1176,18 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
+    driveReport: (): DriveReport => {
+      const health = (role: PartRole): number => {
+        const list = [...ps.values()].filter((p) => p.def.role === role)
+        if (!list.length) return 1
+        return Math.min(...list.map((p) => (p.lost || !attached(p.def.id) ? 0 : p.hp / p.def.hp)))
+      }
+      const tyres = [...ps.values()]
+        .filter((p) => p.def.role === 'tyre')
+        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: p.lost || p.flat ? TYRE_FLAT_HEALTH : p.hp / p.def.hp }))
+      const status = computeStatus()
+      return { tyres, brakes: Math.min(1, 1 / status.brakeFactor), engine: status.canStart ? health('engine') : 0, suspension: health('shocks') }
+    },
     partWorldCenter: (pid) => {
       sync()
       const d = ps.get(pid)?.def

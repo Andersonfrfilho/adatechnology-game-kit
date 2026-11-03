@@ -56,6 +56,8 @@ export interface VehicleCondition {
   tyres?: readonly number[]
   engine?: number
   suspension?: number
+  /** How much of the brake force is left, 0..1: worn or broken brakes, no brake fluid. */
+  brakes?: number
 }
 
 export interface SemiInput extends DriveInput {

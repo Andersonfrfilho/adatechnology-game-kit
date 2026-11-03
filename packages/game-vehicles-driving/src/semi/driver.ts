@@ -137,6 +137,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
     const mass = baseMass + cargo
     const engineHealth = clamp(cond.engine ?? 1, 0, 1)
     const suspensionHealth = clamp(cond.suspension ?? 1, 0, 1)
+    const brakeHealth = clamp(cond.brakes ?? 1, 0, 1)
     const inertia = (spec.yawInertia ?? (baseMass * (wheelbase * wheelbase + track * track)) / 12) * (mass / baseMass)
     const pitchInertia = (mass * (wheelbase * wheelbase + 1)) / 12
     const rollInertia = (mass * (track * track + 1)) / 12
@@ -252,7 +253,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       let fl = 0
       if (driveWheels.some((d) => d.i === i)) fl += driveForceTotal / drivenCount
       const locked = handbrake && w.handbrake
-      const brakeShare = (spec.brakeForce * brakeInput * ws.n) / loadSum
+      const brakeShare = (spec.brakeForce * brakeHealth * brakeInput * ws.n) / loadSum
       const moving = Math.abs(vl) > 0.05
       if (locked) fl += moving ? -Math.sign(vl) * capacity : 0
       else if (brakeShare > 0 && moving) fl += -Math.sign(vl) * brakeShare

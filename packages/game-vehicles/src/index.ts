@@ -50,6 +50,7 @@ export type {
 } from './api'
 export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
 export type {
+  DriveReport,
   ArmourLevel,
   ArmourLevelId,
   CrashOptions,

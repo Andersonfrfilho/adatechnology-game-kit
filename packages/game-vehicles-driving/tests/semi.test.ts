@@ -244,3 +244,20 @@ describe('spec from the design ratings', () => {
     expect(hatch.tyre.friction).toBeGreaterThan(truck.tyre.friction)
   })
 })
+
+describe('worn brakes', () => {
+  it('a car with half its brakes stops in a longer distance', () => {
+    const surfaces = createSurfaces()
+    const world = { ground: () => ({ surface: 'dry_asphalt' }) }
+    const stopFrom100 = (brakes: number): number => {
+      const driver = createSemiSimDriver({}, { surfaces })
+      driver.place(0, 0, 0)
+      for (let t = 0; t < 40 && Math.abs(driver.state.u) * 3.6 < 100; t += 1 / 60) driver.step({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 1 / 60, world)
+      driver.condition = { brakes }
+      const x0 = driver.state.x
+      for (let t = 0; t < 30 && Math.abs(driver.state.u) > 0.1; t += 1 / 60) driver.step({ throttle: 0, brake: 1, steer: 0, handbrake: false }, 1 / 60, world)
+      return driver.state.x - x0
+    }
+    expect(stopFrom100(0.5)).toBeGreaterThan(stopFrom100(1) * 1.4)
+  })
+})
