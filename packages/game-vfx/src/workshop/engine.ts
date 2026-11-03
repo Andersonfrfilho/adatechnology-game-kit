@@ -1,3 +1,4 @@
+import type { Confiner } from '../enclosures'
 import { PROFILES } from '../budget'
 import type { RandomStream } from '../random'
 import { createScreenState, resetScreenState, updateScreen } from '../screen'
@@ -67,6 +68,8 @@ export interface WorkshopOptions {
   readonly profile?: VfxProfile
   readonly groundAt?: (x: number, z: number) => number
   readonly trace?: WorkshopTrace
+  /** The closed spaces the smoke and dust sprites go round (`VfxWorld.enclose`). */
+  readonly confiner?: Confiner
 }
 
 /** The default ground of the Workshop scene: a raised kerb 12 cm high between z -4.5 and -2.9 (W29). */
@@ -98,9 +101,9 @@ export class WorkshopEngine {
 
   constructor(options: WorkshopOptions) {
     const profile = options.profile ?? PROFILES.high
-    this.context = { random: options.random, groundAt: options.groundAt ?? workshopGround, quality: { level: 0, mult: 1 }, trace: options.trace }
+    this.context = { random: options.random, groundAt: options.groundAt ?? workshopGround, quality: { level: 0, mult: 1 }, trace: options.trace, ...(options.confiner ? { confiner: options.confiner } : {}) }
     this.add = new SpritePool(profile.sprites.add, this.context)
-    this.normal = new SpritePool(profile.sprites.normal, this.context)
+    this.normal = new SpritePool(profile.sprites.normal, this.context, true)
     this.streaks = new StreakPool(profile.streaks, this.context)
     this.debris = new DebrisPool(this.context)
     this.decals = new DecalPool(this.context)
