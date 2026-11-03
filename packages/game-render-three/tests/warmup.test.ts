@@ -134,6 +134,27 @@ describe('ProgramWarmup.warmUp', () => {
     expect(() => createProgramWarmup(THREE).warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())).toThrow(/MAX_FRAGMENT_UNIFORM_VECTORS 1024.*too many uniforms/)
   })
 
+  it('finishes every linked program at load (its first use reads the link), so no draw in play waits for the driver', () => {
+    const { renderer, programs } = fakeRenderer()
+    const used: string[] = []
+    // three's WebGLProgram: getUniforms and getAttributes run the first-use check, which reads the link status and the logs
+    const program = (id: string) => ({ getUniforms: () => used.push(`${id}.uniforms`), getAttributes: () => used.push(`${id}.attributes`) })
+    programs.push(program('lit'), program('shadow'))
+    createProgramWarmup(THREE).warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())
+    expect(used).toEqual(['lit.uniforms', 'lit.attributes', 'shadow.uniforms', 'shadow.attributes'])
+  })
+
+  it('sees a broken link only diagnosed on first use', () => {
+    const { renderer, programs } = fakeRenderer()
+    const broken: { diagnostics?: { runnable: boolean; programLog: string }; getUniforms(): void } = {
+      getUniforms() {
+        this.diagnostics = { runnable: false, programLog: 'link failed' }
+      },
+    }
+    programs.push(broken)
+    expect(() => createProgramWarmup(THREE).warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())).toThrow(/link failed/)
+  })
+
   it('unregisters a probe', () => {
     const { renderer } = fakeRenderer()
     const warmup = createProgramWarmup(THREE)

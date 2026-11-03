@@ -969,11 +969,25 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     }
     return locate(v, 0.08, (p) => p.def.role === 'glass')
   }
+  /**
+   * The meshes a ray can meet: drawn ones, pruned at the first hidden, decal or ghost node, and never a copy of the parts made for drawing
+   * (`userData.noSurfaceRay`: the static batches of the vehicle LOD, one merged mesh per material over the same triangles). Testing those too
+   * doubled the triangles a ray reads, and the room's aim reads it every frame (perf.mjs, 2026-11-03: up to 270 ms in a frame on software GL).
+   */
+  const surfaceMeshes: any[] = []
+  const collectSurfaces = (o: any): void => {
+    if (!o.visible || o.userData.decal || o.userData.ghost || o.userData.noSurfaceRay) return
+    if (o.isMesh) surfaceMeshes.push(o)
+    for (const child of o.children) collectSurfaces(child)
+  }
   const surfaceRay = (ray: SurfaceRay): SurfaceRayHit | null => {
     sync()
     surfaceRays.set(new V3(ray.origin[0], ray.origin[1], ray.origin[2]), new V3(ray.direction[0], ray.direction[1], ray.direction[2]))
     surfaceRays.far = ray.maxDistance
-    for (const h of surfaceRays.intersectObject(c.vehicle, true)) {
+    surfaceMeshes.length = 0
+    // the vehicle's own node is not checked for visibility (the LOD hides the full model above it; hit tests still read it)
+    for (const child of c.vehicle.children) collectSurfaces(child)
+    for (const h of surfaceRays.intersectObjects(surfaceMeshes, false)) {
       if (!h.face || !isDrawnSurface(h.object)) continue
       const p = partOfSurface(h.object, c.vehicle.worldToLocal(h.point.clone()))
       if (!p || p.lost || ray.ignored?.(p.def.id)) continue

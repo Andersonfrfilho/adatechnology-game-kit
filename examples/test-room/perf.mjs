@@ -123,6 +123,7 @@ if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
 await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
+await page.evaluate(installDrawTap)
 await applyPixelRatio()
 await pause(2000)
 
@@ -252,6 +253,7 @@ async function hordePhase(id) {
   await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}${process.env.PERF_QUERY ?? ''}`, { timeout: 0 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   await page.evaluate(installFrameRecorder)
+  await page.evaluate(installDrawTap)
   await applyPixelRatio()
   await page.evaluate(sampleDetailScale)
   const buffersAtStart = await page.evaluate(() => window.__glCounts.buffers)
@@ -327,6 +329,7 @@ async function phase(name, run) {
   const queues = await page.evaluate(() => window.__testRoom.frameStats?.().budget.queues ?? [])
   result.maxFramesWaiting = Math.max(0, ...queues.map((queue) => queue.maxFramesWaiting))
   result.queues = Object.fromEntries(queues.map((queue) => [queue.id, { maxFramesWaiting: queue.maxFramesWaiting, forced: queue.forced, ranUnits: queue.ranUnits }]))
+  if (process.env.PERF_DRAWLIST) result.drawList = await page.evaluate(installDrawTap).then(() => page.evaluate(listDraws))
   if (process.env.PERF_STACKS) result.bufferStacks = await page.evaluate(() => Object.entries(window.__bufferStacks).sort((a, b) => b[1] - a[1]).slice(0, 80))
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
@@ -520,7 +523,7 @@ function countWebGlCalls() {
       if (program && !used.has(program)) {
         used.add(program)
         counts.firstUses++
-        counts.firstUseNames.push(nameOf.get(program) ?? 'unnamed')
+        counts.firstUseNames.push(`${nameOf.get(program) ?? 'unnamed'}${window.__drawing ? ` <- ${window.__drawing()}` : ''}`)
       }
       return useProgram.call(this, program)
     }
@@ -565,6 +568,47 @@ function listUploads() {
     window.__bufferStacks[key] = (window.__bufferStacks[key] ?? 0) + 1
     return original.call(this)
   }
+}
+
+/** Names what three.js is drawing (renderBufferDirect runs before the program is chosen): a program used for the first time is reported with the object that asked for it. */
+function installDrawTap() {
+  const webgl = window.__testRoom.webgl
+  if (webgl.__tapped) return
+  webgl.__tapped = true
+  let current = null
+  const describe = (object, material) => {
+    const path = []
+    for (let node = object; node && path.length < 4; node = node.parent) if (node.name) path.push(node.name)
+    const uniforms = material.isShaderMaterial ? `{${Object.keys(material.uniforms ?? {}).slice(0, 4).join(',')}}` : ''
+    const parents = path.length > 0 ? path.join('<') : `${object.parent?.type ?? '-'}<${object.parent?.parent?.type ?? '-'}`
+    return `${object.type}:${parents} ${material.type}:${material.name || '-'}${uniforms}${object.receiveShadow ? ' receives-shadow' : ''}`
+  }
+  window.__drawing = () => (current ? describe(current.object, current.material) : 'outside the renderer')
+  window.__drawTally = null
+  const direct = webgl.renderBufferDirect.bind(webgl)
+  webgl.renderBufferDirect = (camera, scene, geometry, material, object, group) => {
+    current = { object, material }
+    if (window.__drawTally) {
+      const key = describe(object, material)
+      window.__drawTally[key] = (window.__drawTally[key] ?? 0) + 1
+    }
+    direct(camera, scene, geometry, material, object, group)
+    current = null
+  }
+}
+
+/** One frame's draws by object and material, most first (PERF_DRAWLIST=1). */
+function listDraws() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      window.__drawTally = {}
+      requestAnimationFrame(() => {
+        const tally = window.__drawTally
+        window.__drawTally = null
+        resolve(Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 60))
+      })
+    })
+  })
 }
 
 function installFrameRecorder() {
