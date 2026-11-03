@@ -128,6 +128,15 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/glass_shatter_close_07.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
 | impactos/glass_shatter_close_08.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
 | impactos/glass_shatter_close_09.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| impactos/gravel_hit_close_21.ogg | https://freesound.org/s/169557/ | jorickhoofd ("gravel impact 3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel1.ogg`) | CC-BY |
+| impactos/gravel_hit_close_22.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel2.ogg`) | CC0 |
+| impactos/gravel_hit_close_23.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel3.ogg`) | CC0 |
+| impactos/gravel_hit_close_24.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel4.ogg`) | CC0 |
+| impactos/gravel_hit_close_25.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel5.ogg`) | CC0 |
+| impactos/gravel_hit_close_26.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel6.ogg`) | CC-BY |
+| impactos/gravel_hit_close_27.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel7.ogg`) | CC-BY |
+| impactos/gravel_hit_close_28.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel8.ogg`) | CC-BY |
+| impactos/gravel_hit_close_29.ogg | https://freesound.org/s/150839/ | toxicwafflezz ("Bullet_Impact_3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel9.ogg`) | CC-BY |
 | impactos/impact_generic_light_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/impact_generic_light_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/impact_generic_light_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -145,6 +154,14 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/masonry_bullet_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/masonry_bullet_close_04.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/masonry_bullet_close_05.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/masonry_bullet_close_21.ogg | https://freesound.org/s/321478/ | dslrguide ("Concrete Hit 2"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete1.ogg`) | CC0 |
+| impactos/masonry_bullet_close_22.ogg | https://freesound.org/s/321478/ | dslrguide ("Concrete Hit 2"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete2.ogg`) | CC0 |
+| impactos/masonry_bullet_close_23.ogg | https://freesound.org/s/321477/ | dslrguide ("Concrete Hit "; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete3.ogg`) | CC0 |
+| impactos/masonry_bullet_close_24.ogg | https://freesound.org/s/702860/ | InMotionAudio ("ROCKImpt_Brick25_InMotionAudio_FREESampleSunday.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete4.ogg`) | CC0 |
+| impactos/masonry_bullet_close_25.ogg | https://freesound.org/s/843547/ | kevinklang ("ROCK_IMPACT_GALETS_OUTDOORS_260128 48"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone1.ogg`) | CC0 |
+| impactos/masonry_bullet_close_26.ogg | https://freesound.org/s/150837/ | toxicwafflezz ("Bullet_Impact_1"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone2.ogg`) | CC-BY |
+| impactos/masonry_bullet_close_27.ogg | https://freesound.org/s/423107/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 14.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone3.ogg`) | CC-BY |
+| impactos/masonry_bullet_close_28.ogg | https://freesound.org/s/423106/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 21.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone4.ogg`) | CC-BY |
 | impactos/metal_blunt_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -171,6 +188,20 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/metal_bullet_close_04.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_bullet_close_05.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_bullet_close_06.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_bullet_close_21.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal1.ogg`) | CC0 |
+| impactos/metal_bullet_close_22.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal2.ogg`) | CC0 |
+| impactos/metal_bullet_close_23.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal3.ogg`) | CC0 |
+| impactos/metal_bullet_close_24.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal4.ogg`) | CC0 |
+| impactos/metal_bullet_close_25.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal5.ogg`) | CC0 |
+| impactos/metal_bullet_close_26.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal6.ogg`) | CC0 |
+| impactos/metal_bullet_close_27.ogg | https://freesound.org/s/671098/ | BBoz87 ("metal_hit_1.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal7.ogg`) | CC-BY |
+| impactos/metal_bullet_close_28.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel1.ogg`) | CC0 |
+| impactos/metal_bullet_close_29.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel2.ogg`) | CC0 |
+| impactos/metal_bullet_close_30.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel3.ogg`) | CC0 |
+| impactos/metal_bullet_close_31.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel4.ogg`) | CC0 |
+| impactos/metal_bullet_close_32.ogg | https://freesound.org/s/833262/ | tomlyne ("shot-Bafflebanging-9"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel9.ogg`) | CC-BY |
+| impactos/metal_bullet_close_33.ogg | https://freesound.org/s/237444/ | NoiseCollector ("bulletimpact_metal3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel14.ogg`) | CC-BY |
+| impactos/metal_bullet_close_34.ogg | https://freesound.org/s/176669/ | jorickhoofd ("Dry impact hit metal plate "; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel15.ogg`) | CC-BY |
 | impactos/metal_fall_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_fall_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_fall_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -213,6 +244,14 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/plastic_hit_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/plastic_hit_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/plastic_hit_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| impactos/ricochet_metal_close_21.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel5.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_22.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel6.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_23.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel7.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_24.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel8.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_25.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel10.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_26.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel11.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_27.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel12.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_28.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel13.ogg`) | CC-BY |
 | impactos/rubble_falling_close_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/rubble_falling_close_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/rubble_falling_close_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
@@ -232,6 +271,9 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/soft_bullet_close_08.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/soft_bullet_close_09.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/soft_bullet_close_10.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/soil_bullet_close_21.ogg | https://freesound.org/s/319222/ | worthahep88 ("Single Rock hit Dirt.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt1.ogg`) | CC0 |
+| impactos/soil_bullet_close_22.ogg | https://freesound.org/s/319229/ | worthahep88 ("Single Rock hit dirt 2.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt2.ogg`) | CC0 |
+| impactos/soil_bullet_close_23.ogg | https://freesound.org/s/789388/ | modusmogulus ("Bullet impact ground (subsonic) SFX"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt3.ogg`) | CC0 |
 | impactos/wood_blunt_heavy_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -270,6 +312,13 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/wood_hit_close_12.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_hit_close_13.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_hit_close_14.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/wood_hit_close_21.ogg | https://freesound.org/s/237448/ | NoiseCollector ("bulletimpact_wood1.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood1.ogg`) | CC-BY |
+| impactos/wood_hit_close_22.ogg | https://freesound.org/s/96636/ | CGEffex ("Ricochet wood3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood2.ogg`) | CC-BY |
+| impactos/wood_hit_close_23.ogg | https://freesound.org/s/96636/ | CGEffex ("Ricochet wood3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood3.ogg`) | CC-BY |
+| impactos/wood_hit_close_24.ogg | https://freesound.org/s/66396/ | 110110010 ("wood_hit.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood4.ogg`) | CC0 |
+| impactos/wood_hit_close_25.ogg | https://freesound.org/s/506718/ | jackyyang09 ("Wooden Hit"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood5.ogg`) | CC0 |
+| impactos/wood_hit_close_26.ogg | https://freesound.org/s/178744/ | jorickhoofd ("Kick wood"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood6.ogg`) | CC-BY |
+| impactos/wood_hit_close_27.ogg | https://freesound.org/s/345679/ | VitaWrap ("wood hit.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood7.ogg`) | CC-BY |
 | itens-portas/backpack_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
