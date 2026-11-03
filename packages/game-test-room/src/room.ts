@@ -43,7 +43,7 @@ import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
-import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
+import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
@@ -2689,9 +2689,38 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return t(leaf.locked ? 'hud.door_hint_locked' : leaf.open ? 'hud.door_hint_close' : 'hud.door_hint_open')
   }
 
+  /** The floor under the aim: the profile and the layer there, read from the terrain at the point the ray reached (the floor of a crater, not the flat top). */
+  const groundInspect = (r: RayHit): InspectInfo => {
+    const onFloor = terrain.raycast(aimO, aimD, r.distance + 3)
+    const [x, , z] = onFloor?.point ?? r.point
+    const column = terrain.columnAt(x, z)
+    const materialName = S.text[`material.${column.material}`] ?? dStrings.materialNames[column.material] ?? column.material
+    return {
+      object: t('ground.name'),
+      objectId: GROUND_ID,
+      part: column.profile,
+      material: materialName,
+      status: '',
+      hp: 0,
+      maxHp: 0,
+      temperature: 0,
+      burning: false,
+      char: column.scorch,
+      melt: 0,
+      dents: 0,
+      holes: 0,
+      cracks: 0,
+      mass: 0,
+      joints: [],
+      distance: onFloor?.distance ?? r.distance,
+      ground: { surface: terrainProfileName(column.profile, locale), material: materialName, dug: column.depth, remaining: column.remaining, scorch: column.scorch },
+    }
+  }
+
   const inspectInfo = (): InspectInfo | null => {
     const r = inspectTarget()
     if (!r) return null
+    if (r.object === GROUND_ID) return groundInspect(r)
     const st = world.state(r.object)
     const p = world.part(r.object, r.part)
     if (!st || !p) return null

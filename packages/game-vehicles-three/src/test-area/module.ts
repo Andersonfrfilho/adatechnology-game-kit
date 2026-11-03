@@ -11,6 +11,7 @@ import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleLod } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
+import { createCabinSmoke } from '../cabin-smoke'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
@@ -74,6 +75,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt' }
   const kits = new WeakMap<object, VehicleKit>()
   const placed = new Map<string, Placed>()
+  // the cabins hold the room's smoke out: through a shut car it does not pass, it gets in only by an open door, a broken window or a bullet hole
+  const cabins = createCabinSmoke()
   let host: ModuleHost | null = null
   let three: Three = null
   let counter = 0
@@ -176,6 +179,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         if (entry) entry.touched = true
         return hitBody(h)
       }
+      cabins.track(id, d, root as { parent: unknown | null })
       r.userData.destructible = d
       return d
     },
@@ -447,6 +451,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('damageables') || host.bench.layer('zones') || helpersShown !== '')) refreshLayers()
     lane?.step(dt)
+    cabins.sync(effects())
   }
 
   const count = (): { drawCalls: number; triangles: number } => {
@@ -554,6 +559,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopFrame()
         stopBlocker?.()
         stopCrease?.()
+        cabins.clear(effects())
         clearHelpers()
         clearLane()
         host = null

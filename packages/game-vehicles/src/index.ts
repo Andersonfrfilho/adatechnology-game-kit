@@ -48,8 +48,11 @@ export type {
   BuildZoneState,
   ZoneState,
 } from './api'
-export { createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export { createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES, cabinEnclosure, cabinBoxOf, swingOf, CABIN_LEAK } from './destructible'
 export type {
+  CabinBox,
+  CabinEnclosureOptions,
+  CabinSource,
   CreaseQueue,
   CreaseWork,
   JointDef,

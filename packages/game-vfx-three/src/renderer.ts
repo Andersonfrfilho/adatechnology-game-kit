@@ -159,6 +159,8 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       })
     },
     stop: (handle) => world.stop(handle),
+    // a module's closed space (a shut car's cabin): the world's smoke, dust and steam go round it
+    enclose: (id, enclosure) => world.enclose(id, enclosure),
     configure(settings: Readonly<Record<string, ControlValue>>) {
       const band = settings.lod_band
       if (typeof band === 'string' && band in LOD_BANDS) world.forceLod(LOD_BANDS[band] ?? null)

@@ -57,6 +57,44 @@ describe('vehicles test area', () => {
     expect(room.vfx.explosion(defaultEffectIds.explode, [0, 0.6, 4])).not.toBeNull()
   })
 
+  it('a shut car holds the room smoke out of its cabin; opening the doors lets it in; a car taken away holds nothing', () => {
+    const { room } = roomWithVehicles('en')
+    room.openArea(VEHICLES_AREA_ID)
+    room.clear()
+    const sedan = room.spawn('sedan', [0, 0, -4], 0)
+    room.update(1 / 60)
+    const spaces = room.vfx.enclosures()
+    expect(spaces.ids()).toEqual([sedan.objectId])
+    const cabin = spaces.get(sedan.objectId)!
+    expect(cabin.openings).toEqual([])
+    // smoke thrown at the car from each side for 3 s: none of it inside the cabin
+    const inside = (): number => {
+      const pool = room.vfx.sprites().normal
+      let n = 0
+      for (let i = 0; i < pool.capacity; i++) if (pool.size[i]! > 0 && spaces.inside(pool.position[i * 3]!, pool.position[i * 3 + 1]!, pool.position[i * 3 + 2]!)) n++
+      return n
+    }
+    const c = cabin.center
+    let most = 0
+    for (let f = 0; f < 180; f++) {
+      if (f % 4 === 0) for (const side of [-1, 1]) {
+        room.vfx.burst('smoke', [c[0] + side * 2.4, c[1], c[2]], [-side, 0, 0], 6, 3.5)
+        room.vfx.burst('smoke', [c[0], c[1], c[2] + side * 3.2], [0, 0, -side], 6, 3.5)
+      }
+      room.update(1 / 60)
+      most = Math.max(most, inside())
+    }
+    expect(room.vfx.sprites().live).toBeGreaterThan(50)
+    expect(most).toBe(0)
+    // the doors open: the cabin is open at each door
+    expect(room.playAnimation('open_doors', sedan.objectId)).toBe(true)
+    for (let f = 0; f < 90; f++) room.update(1 / 60)
+    expect(spaces.get(sedan.objectId)!.openings!.length).toBeGreaterThanOrEqual(2)
+    room.clear()
+    room.update(1 / 60)
+    expect(spaces.ids()).toEqual([])
+  })
+
   it('learns the room three.js by itself and brings the door, hood and trunk clips', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
