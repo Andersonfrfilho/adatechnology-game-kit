@@ -4,10 +4,11 @@ import { defineConfig } from 'tsup'
 // so a script tag needs only three.js.
 export default defineConfig([
   {
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/testing.ts'],
     format: ['esm'],
     dts: true,
-    splitting: false,
+    // one copy of the registries, shared by the root and the ./testing entries
+    splitting: true,
     sourcemap: true,
     clean: true,
     target: 'es2020',
@@ -18,6 +19,6 @@ export default defineConfig([
     globalName: 'GameWeaponsThree',
     sourcemap: true,
     target: 'es2020',
-    noExternal: ['@adatechnology/game-audio', '@adatechnology/game-weapons', '@adatechnology/game-interactables-three', '@adatechnology/game-interactables', '@adatechnology/game-props3d', '@adatechnology/game-shapes', '@adatechnology/game-shapes-three', '@adatechnology/game-items', '@adatechnology/game-items-three', '@adatechnology/game-vfx', '@adatechnology/game-vfx-three'],
+    noExternal: ['@adatechnology/game-audio', '@adatechnology/game-weapons', '@adatechnology/game-interactables', '@adatechnology/game-props3d', '@adatechnology/game-shapes', '@adatechnology/game-shapes-three', '@adatechnology/game-items', '@adatechnology/game-vfx', '@adatechnology/game-vfx-three'],
   },
 ])

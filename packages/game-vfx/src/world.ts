@@ -10,6 +10,8 @@ import { GAME_EFFECTS } from './effects/catalog'
 import { createEffectPlayer } from './effects/player'
 import type { EffectPlayer, PlayOptions } from './effects/player'
 import type { EffectDef } from './effects/types'
+import { Enclosures } from './enclosures'
+import type { VfxEnclosure } from './enclosures'
 import { composeExplosion } from './explosion'
 import type { GroundField } from './ground'
 import { createLightPool, resetLightPool, updateLights } from './lights'
@@ -138,6 +140,13 @@ export interface VfxWorld {
   sprites(): SpriteKindSystem
   /** Pushes the smoke and dust within `radius` of `point` outwards, as fast as `speed` at the centre. */
   push(point: Vec3Like, radius: number, speed: number): void
+  /**
+   * Declares, moves or (with `null`) ends the closed space `id` (a shut car's cabin, a closed room): the smoke, dust, steam and gas of every pool go
+   * round it and cross its walls only through its openings, or seep at its leak. Call again whenever it moves or opens. `clear` keeps the spaces.
+   */
+  enclose(id: string, enclosure: VfxEnclosure | null): void
+  /** The closed spaces declared now. */
+  enclosures(): Enclosures
   stop(handle: number): void
   setLayer(layer: VfxLayer, on: boolean): void
   layer(layer: VfxLayer): boolean
@@ -204,12 +213,14 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
   const groundAt = options.groundAt ?? (ground ? (x: number, z: number) => ground.heightAt(x, z) : () => 0)
   const handles = { next: 0, events: 0 }
   const low = options.profile === 'low'
+  const enclosures = new Enclosures(0x51ed + (options.seed ?? 0))
   const spriteSystem = new SpriteKindSystem({
     capacity: options.sprites?.capacity ?? (low ? 1250 : 2500),
     density: options.sprites?.density ?? (low ? 0.6 : 1),
     seed: 0x9e3779b1 + (options.seed ?? 0),
     groundAt,
     gravity: options.gravity ?? DEFAULT_GRAVITY,
+    confiner: enclosures,
     ...(options.sprites?.kinds ? { kinds: options.sprites.kinds } : {}),
   })
   const core: VfxCore = {
@@ -262,7 +273,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
   const view = { get position(): Vec3Tuple { return [camera.x, camera.y, camera.z] }, forward: (local: readonly number[]): Vec3Tuple => [local[0] ?? 0, local[1] ?? 0, local[2] ?? 0] }
 
   function workshop(): WorkshopEngine {
-    return (engine ??= new WorkshopEngine({ random: sharedRandom, profile, groundAt }))
+    return (engine ??= new WorkshopEngine({ random: sharedRandom, profile, groundAt, confiner: enclosures }))
   }
 
   function effectPlayer(): EffectPlayer {
@@ -316,6 +327,10 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
         puff.vz += dz * strength
       }
     },
+    enclose(id, enclosure) {
+      enclosures.set(id, enclosure)
+    },
+    enclosures: () => enclosures,
     stop(handle) {
       player?.stop(handle)
       const fires = core.fires
@@ -343,7 +358,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       core.clock.time += dt
       core.schedule.update(core.clock.time)
       updateRings(core.rings, dt)
-      updatePuffs(core.puffs, dt, wind)
+      updatePuffs(core.puffs, dt, wind, enclosures)
       updateSparks(core.sparks, { dt, groundAt })
       updateGlows(core.glows, dt)
       updateShocks(core.shocks, core.puffs.items, dt)

@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { AttachmentDef, FittedAttachment } from '@adatechnology/game-weapons'
 import type { WeaponModel } from '../index'
 import type { ModelKit } from '../kit'
@@ -15,6 +16,8 @@ export interface AttachmentBuildContext {
   readonly fitted: FittedAttachment
   readonly frame: MountFrame
   readonly raycast: LaserRaycast | undefined
+  /** The host's light budget, when it has one: a light asks it for a slot instead of creating a `SpotLight`. */
+  readonly lights: LightBudget | undefined
   /** The meshes the magazine pivot had before any accessory (a drum or an extension replaces or extends them). */
   readonly factoryMagazine: readonly THREE_NS.Object3D[]
   /** The pivot of the launcher under the barrel, which the reload clip slides (only on a weapon with a place for one). */

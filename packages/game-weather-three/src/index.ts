@@ -14,13 +14,17 @@ export type { Fog, FogValues } from './fog'
 export { createSky, SKY_DAY, SKY_NIGHT, ZONE_FOG_DEFAULTS, ZONE_LIGHT } from './sky'
 export type { Sky } from './sky'
 export { createLightning, LIGHTNING } from './lightning'
-export type { Lightning } from './lightning'
+export type { Lightning, LightningOptions } from './lightning'
 export { createHeadlights, defaultHeadlightRule, HEADLIGHTS } from './headlights'
 export type { HeadlightRules, Headlights } from './headlights'
 export { createHeatHaze, HEAT_HAZE, HEAT_HAZE_FRAGMENT, HEAT_HAZE_VERTEX } from './heat-haze'
 export type { HeatHaze } from './heat-haze'
-export { createWeatherVisual } from './bench/visual'
-export type { RigVehicles, WeatherVisualOptions } from './bench/visual'
-export { weatherVisualTextOf } from './bench/text'
-export type { WeatherVisualText } from './bench/text'
+/** @deprecated import from '@adatechnology/game-weather-three/testing' */
+export { createWeatherVisual } from './testing'
+/** @deprecated import from '@adatechnology/game-weather-three/testing' */
+export type { RigVehicles, WeatherVisualOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-weather-three/testing' */
+export { weatherVisualTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-weather-three/testing' */
+export type { WeatherVisualText } from './testing'
 export type { ThreeLib, Vec3, WeatherProfileName, WeatherSource, ZoneFog } from './types'

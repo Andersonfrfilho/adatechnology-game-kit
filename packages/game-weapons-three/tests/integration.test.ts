@@ -1,3 +1,4 @@
+import { itemModels } from '@adatechnology/game-items-three'
 import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
@@ -15,7 +16,7 @@ function areaRoom(): { room: TestRoom; module: ReturnType<typeof createWeaponsTe
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1 })
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
-  const module = createWeaponsTestModule({ locale: 'en', arsenal })
+  const module = createWeaponsTestModule({ locale: 'en', arsenal, items: itemModels })
   expect(room.loadModule(module).problems).toEqual([])
   return { room, module }
 }

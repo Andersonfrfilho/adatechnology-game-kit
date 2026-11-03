@@ -4,11 +4,14 @@ import type { Region } from '@adatechnology/game-vegetation-species'
 
 import type { PlantProvider, PlantRequest, VehicleProvider, VehicleRequest } from './types'
 
-/** The vehicles of the fleet that park on a street: cars, SUVs, pickups and vans. */
+/**
+ * The vehicles of the fleet that park on a street: cars, SUVs, pickups and vans.
+ * @deprecated the fleet is content: pass `ids` to `createVehicleProvider` (`PARKED_VEHICLE_IDS` of `@adatechnology/game-kit-defaults` is the same list). The default is removed in the next major.
+ */
 export const PARKED_VEHICLE_IDS: readonly string[] = [...cars, ...suvs, ...pickups.filter((id) => id !== 'monster_truck'), ...vans]
 
 export type VehicleProviderOptions = {
-  /** Ids of the fleet to choose from. Default `PARKED_VEHICLE_IDS`. */
+  /** Ids of the fleet to choose from. Default `PARKED_VEHICLE_IDS`, which is deprecated: pass the ids (`game-kit-defaults` has the same list). */
   ids?: readonly string[]
   /** Replaces the choice: the id for a request. The default picks by the spot, so the same pattern parks the same cars every time. */
   pick?: (request: VehicleRequest, ids: readonly string[]) => string
@@ -42,7 +45,12 @@ export function createVehicleProvider(options: VehicleProviderOptions = {}): Veh
 }
 
 export type PlantProviderOptions = {
-  /** Planting table of a region. Default Brazil's. */
+  /** Chooses the species id for a context of the planting table and a key (`defaultPlantPicker` of `game-kit-defaults`, or the game's own). Without it the species come from the `region` table (deprecated default). */
+  pickSpecies?: (context: string, key: string) => string
+  /**
+   * Planting table of a region, used only when `pickSpecies` is absent. Default Brazil's.
+   * @deprecated pass `pickSpecies`; the default is removed in the next major.
+   */
   region?: Region
   /** Context of the table for each kind the patterns plant. */
   contexts?: Partial<Record<PlantRequest['kind'], string>>
@@ -54,7 +62,7 @@ export type PlantProviderOptions = {
 
 export const DEFAULT_PLANT_CONTEXTS: Readonly<Record<PlantRequest['kind'], string>> = { tree: 'sidewalk_tree', pine: 'square' }
 
-/** A plant provider that asks the drawer for a species of the pack, drawn from the region's table for the kind (a tree on the sidewalk, a pine in the square). */
+/** A plant provider that asks the drawer for a species chosen by `pickSpecies`, from the table of the context for the kind (a tree on the sidewalk, a pine in the square). */
 export function createPlantProvider(options: PlantProviderOptions = {}): PlantProvider {
   const region = options.region ?? regions.br
   const contexts = { ...DEFAULT_PLANT_CONTEXTS, ...options.contexts }
@@ -62,7 +70,7 @@ export function createPlantProvider(options: PlantProviderOptions = {}): PlantPr
   return (request, b) => {
     const context = contexts[request.kind]
     const key = `${seed}:${request.kind}:${request.x}:${request.z}`
-    const id = options.pick ? options.pick(request, context, key) : pickForContext(region, context, key)
+    const id = options.pick ? options.pick(request, context, key) : (options.pickSpecies ?? ((table: string, spot: string) => pickForContext(region, table, spot)))(context, key)
     b.place('plant', id, request.x, request.z, { scale: request.scale, seed: key })
   }
 }

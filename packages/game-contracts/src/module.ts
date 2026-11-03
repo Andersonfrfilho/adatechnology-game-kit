@@ -9,6 +9,7 @@ import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
+import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
 import type { SealSpec } from './seal'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -276,10 +277,23 @@ export interface HostReach {
   onGrip?(): void
 }
 
+export interface FrameOptions {
+  /** Default `lateSimulate`, which is where every `onFrame` runs without options. */
+  readonly phase?: Exclude<FramePhase, 'render'>
+  /** Lower runs first inside the phase; ties keep the order of registration. Default 0. */
+  readonly order?: number
+}
+
 /**
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
  */
+export interface HostGraphics {
+  hordeDetail(): 'auto' | number
+  onChange(listener: () => void): () => void
+  report(key: string, value: number): void
+}
+
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -292,8 +306,10 @@ export interface ModuleHost {
   player(): PlayerState
   /** Follow the player's tool events. Returns the unsubscribe function. */
   on(listener: (event: HostEvent) => void): () => void
-  /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
-  onFrame(update: (dt: number) => void): () => void
+  /** Run every simulated frame with the frame's seconds (in the given phase, `lateSimulate` by default). Returns the unsubscribe function. */
+  onFrame(update: (dt: number) => void, options?: FrameOptions): () => void
+  /** Registers a deferred queue with the host's frame budget. Returns the function that takes it out. A host without a budget leaves it out. */
+  defer?(queue: DeferredQueue, options: DeferredQueueOptions): () => void
   /**
    * Follow the host clearing its area (`clear()`, opening an area, running scenarios): everything the module put in the world on its own (not as items) is to be taken away or put back. Returns the
    * unsubscribe function. A host that never clears leaves it out.
@@ -306,6 +322,12 @@ export interface ModuleHost {
   onReset?(listener: () => void): () => void
   /** Write a line to the host's behaviour log; `type` is the kind of entry (default `module_note`), so a module can log what a filter looks for (`sound`). */
   log(text: string, data?: Record<string, unknown>, type?: string): void
+  /**
+   * The player's graphics settings, for what a module draws on its own (a horde): `hordeDetail` is `auto` (the module's renderer adapts by itself) or the share of
+   * its level-of-detail budget the player fixed, 0.1 to 1. `onChange` tells when it changes; `report` says what an adapting renderer draws now, so the settings
+   * screen can show it (`hordeDetail`: the share in use). A host without graphics settings leaves it out.
+   */
+  graphics?: HostGraphics
   /**
    * Sets what the host lets a module tune on its tools, keyed by the id of the module's own control (`ModuleControl.id`) with the id of the option as the value; the tool in hand changes at once and the
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).
@@ -349,6 +371,12 @@ export interface ModuleHost {
   environment?: EnvironmentBus
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
+  /** The most loose bodies a module may keep alive at once (ejected casings, dropped magazines), read at each spawn: the host's one budget. Absent when the host keeps no budget of its own. */
+  particleLimit?: () => number | undefined
+  /** The host's light budget (`LightBudget` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): the one owner of point and spot lights. Read it with `isLightBudget`. Absent when the host has none. */
+  lights?: unknown
+  /** The host's pools of geometries and materials (`RenderPools` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): what an effect asks for instead of making its own, so its shader programs stay linked. Read it with `isRenderPools`. Absent when the host has none. */
+  pools?: unknown
   /**
    * The numbers of the shove a blast gives to a body. A module that moves bodies of its own (people, vehicles) answers the `explosion` host event with `blastShove(event, body, host.blastShove)`
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.

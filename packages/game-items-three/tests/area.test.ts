@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { kitOriginOf } from '@adatechnology/game-contracts'
-import { createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHIPPED_MODELS, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
+import { createItemModels, createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHIPPED_MODELS, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
 
 const catalog = createGoodsItems()
 const translate = (key: string, locale: string): string | undefined => goodsText(key, locale)
@@ -238,5 +238,20 @@ describe('items test area', () => {
     const report = await room.runScenarios(own)
     const failed = report.results.filter((r) => !r.ok).map((r) => ({ id: r.id, checks: r.checks.filter((c) => !c.ok).map((c) => c.label).slice(0, 5) }))
     expect(failed).toEqual([])
+  })
+})
+
+describe('items test area by instance', () => {
+  it('shows the models of the set it is given, not the global registry', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
+    const removed = SHIPPED_MODELS[0]!.entry.id
+    const module = createItemsTestModule({ catalog, translate, models: createItemModels({ remove: [removed] }) })
+    expect(room.loadModule(module).problems).toEqual([])
+    const stand = module.placed().filter((entry) => entry.group === 'showcase')
+    expect(stand.map((entry) => entry.itemId)).not.toContain(removed)
+    expect(stand).toHaveLength(SHIPPED_MODELS.length - 1)
+    expect(listItemModels()).toContain(removed)
   })
 })

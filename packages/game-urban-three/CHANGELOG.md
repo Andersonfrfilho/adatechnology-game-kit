@@ -1,5 +1,14 @@
 # @adatechnology/game-urban-three
 
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [379e44f]
+  - @adatechnology/game-contracts@0.21.0
+  - @adatechnology/game-vehicles-three@0.4.0
+  - @adatechnology/game-urban@0.2.8
+
 ## 0.2.8
 
 ### Patch Changes

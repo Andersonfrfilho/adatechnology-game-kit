@@ -48,3 +48,7 @@ A new piece of the kit marks its root in its builder; a host that draws somethin
 
 The words are a heuristic: a piece whose code names nothing (a bare `BoxGeometry` in a helper) is not seen, so review still looks at what a
 test area or a bench draws.
+
+## Custo de desenho por peça
+
+`node tools/kit-audit/cost.mjs --check` abre a sala e cada área e soma, por peça marcada, chamadas de desenho (com sombra), triângulos e materiais. `budgets.json` guarda o limite por dono e, em `pending`, as peças já acima dele. O CI falha em peça nova acima do limite e em pendente que piorou. Ao reduzir uma peça, baixe o valor dela ou tire-a de `pending`.

@@ -142,6 +142,8 @@ export class Visuals {
     this.b = tmpV(THREE)
     this.m4 = new THREE.Matrix4()
     this.ray = new THREE.Raycaster()
+    // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+    this.ray.layers.enableAll()
     this.box = new THREE.Box3()
     this.t = tmpV(THREE)
     this.lbox = new THREE.Box3()

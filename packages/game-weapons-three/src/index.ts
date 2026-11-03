@@ -3,16 +3,23 @@
  * fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area as a `TestableModule`
  * (any host of @adatechnology/game-contracts, like the test room, loads it with `loadModule`).
  */
-export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './area'
-export type { WeaponsTestModuleOptions } from './area'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { WeaponsTestModuleOptions } from './testing'
 export { WEAPON_THUMBNAILS, DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl, weaponThumbnailCredit } from './thumbnails'
 export type { WeaponThumbnailEntry } from './thumbnails'
-export { createExplosivesTestModule, DEFAULT_EXPLOSIVES_SCENE, EXPLOSIVES_AREA_ID } from './explosives-area'
-export type { ExplosivesRoom, ExplosivesScene, ExplosivesTestModuleOptions } from './explosives-area'
-export { EXPLOSIVES_TEXT, explosivesTextOf } from './explosives-text'
-export type { ExplosivesText } from './explosives-text'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { createExplosivesTestModule, DEFAULT_EXPLOSIVES_SCENE, EXPLOSIVES_AREA_ID } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { ExplosivesRoom, ExplosivesScene, ExplosivesTestModuleOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export { EXPLOSIVES_TEXT, explosivesTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-weapons-three/testing' */
+export type { ExplosivesText } from './testing'
 export { P13_VALVE_MESH, WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
 export type { WorldExplosiveOptions } from './world-explosives'
+export type { ItemModelRequest, ItemModels } from './item-models'
 export { projectileModel } from './projectile-model'
 export type { ProjectileModel, ProjectileQuery } from './projectile-model'
 export { createWorldEffects, WORLD_EFFECTS } from './world-effects'
@@ -43,8 +50,13 @@ export type {
   MechanicalSoundId,
   SoundStep,
 } from './audio'
-export { buildItemWeaponModel, buildWeaponModel, buildProp, itemModelOfWeapon, registerWeaponItemModel, weaponProp, BODY_ACTIONS } from './props'
-export type { WeaponItemModel, WeaponProp } from './props'
+export { buildProp, weaponProp, BODY_ACTIONS } from './props'
+export type { WeaponProp } from './props'
+export { buildItemWeaponModel, buildWeaponModel, defaultWeaponProps, itemModelOfWeapon, registerWeaponItemModel } from './weapon-item-model'
+export type { WeaponItemModel, WeaponProps } from './weapon-item-model'
+export { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from './modeled-prop'
+export { createWeaponProps } from './weapon-props'
+export type { WeaponPropsOptions } from './weapon-props'
 export { MODEL_ENTRIES, ARCHETYPE_MODELS, buildWeaponModelById, hasWeaponModel } from './models'
 export type { ModelEntry, ModelFamily, ModelOptions, ModelParts, WeaponModel } from './models'
 export { buildCartridge, buildCasing, buildRound, cartridgeShape } from './models/cartridge'

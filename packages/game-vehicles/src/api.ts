@@ -3,6 +3,7 @@
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
 import type { LodSettings } from './lod'
+import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
 
@@ -290,7 +291,25 @@ export interface VehicleKitOptions extends KitConfiguration {
   locale?: string | PartialLocaleStrings
   /** Document used for canvas textures and the UI. Defaults to the global `document`. */
   document?: Document
+  /**
+   * Where the material of every smoke, fire and dust puff comes from and goes back to: puffs change their own material every frame (opacity, rotation, dissolve), so each keeps one, but
+   * handing them to the host's pool keeps the shader program linked when the last puff dies. Without it each puff makes and disposes its own (deprecated, removed in the next major).
+   */
+  particleMaterials?: ParticleMaterials
+  /**
+   * The host's effects world, read at each puff (the host attaches after the first build). With one, smoke, fire and dust go through it and its one budget; without one the kit draws its own
+   * sprites with their own cap (deprecated, removed in the next major).
+   */
+  effects?: () => ParticleEffects | undefined
   plugins?: Plugin[]
+}
+
+/** What the host's material pool (`MaterialPool` of `@adatechnology/game-render-three`) lends the particles: a structural type, because this package does not depend on the render layer. */
+export interface ParticleMaterials {
+  /** Makes (with `build`) a material the caller owns and changes per frame. */
+  own<TMaterial>(build: () => TMaterial): TMaterial
+  /** Gives it back: the first of its program family is kept alive, the others are disposed. */
+  release(material: unknown): void
 }
 
 export interface ImpactOptions {
