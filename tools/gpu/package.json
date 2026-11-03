@@ -1,0 +1,16 @@
+{
+  "name": "@adatechnology/gpu-tools",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "The pre-push GPU gate: runs examples/test-room/perf.mjs on this machine's GPU for the branch and for main, and blocks a phase more than 10% worse than main.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3"
+  }
+}

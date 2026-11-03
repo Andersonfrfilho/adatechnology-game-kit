@@ -4,10 +4,12 @@ import { createPlantObject, createVegetationMaterials } from '@adatechnology/gam
 import { toSpec as defaultToSpec } from '@adatechnology/game-vegetation-species'
 import type { PlacementPart } from '@adatechnology/game-urban'
 
-type Three = any
+import type * as THREE_NS from 'three'
+
+type Three = typeof THREE_NS
 
 /** Makes the object of a placement; null when it cannot (an unknown id). The drawer clones it for each spot. */
-export type PlacementResolver = ((part: PlacementPart) => any | null) & { dispose?: () => void }
+export type PlacementResolver = ((part: PlacementPart) => THREE_NS.Object3D | null) & { dispose?: () => void }
 
 const cssColor = (value: number): string => `#${value.toString(16).padStart(6, '0')}`
 
@@ -20,7 +22,7 @@ export type VehicleResolverOptions = {
 }
 
 /** What the vehicle resolver needs of `createVehiclesThree`. */
-export type VehicleBuilder = { build(key: string, options?: VehicleBuildOptions): { group: any; dispose(): void } }
+export type VehicleBuilder = { build(key: string, options?: VehicleBuildOptions): { group: THREE_NS.Object3D; dispose(): void } }
 
 /**
  * Resolves vehicle placements with the vehicles of `game-vehicles-three`. A vehicle is built once for each id and paint and cloned
@@ -28,7 +30,7 @@ export type VehicleBuilder = { build(key: string, options?: VehicleBuildOptions)
  */
 export function createVehicleResolver(vehicles: VehicleBuilder, options: VehicleResolverOptions = {}): PlacementResolver {
   const quality = options.quality ?? 'lite'
-  const built = new Map<string, { group: any; dispose(): void } | null>()
+  const built = new Map<string, { group: THREE_NS.Object3D; dispose(): void } | null>()
   const resolve: PlacementResolver = (part) => {
     const key = `${part.id}|${part.color ?? ''}|${part.seed}`
     if (!built.has(key)) {
@@ -64,7 +66,7 @@ export type PlantResolverOptions = {
 /** Resolves plant placements with the species `toSpec` knows, built with `game-vegetation`. One plant for each species and seed, cloned for each spot. */
 export function createPlantResolver(THREE: Three, options: PlantResolverOptions = {}): PlacementResolver {
   const materials = options.materials ?? createVegetationMaterials(THREE)
-  const made = new Map<string, any | null>()
+  const made = new Map<string, THREE_NS.Object3D | null>()
   const resolve: PlacementResolver = (part) => {
     const key = `${part.id}|${part.seed}`
     if (!made.has(key)) {
@@ -79,7 +81,7 @@ export function createPlantResolver(THREE: Three, options: PlantResolverOptions 
   }
   resolve.dispose = () => {
     for (const object of made.values()) {
-      object?.traverse((o: any) => o.geometry?.dispose?.())
+      object?.traverse((o) => (o as THREE_NS.Mesh).geometry?.dispose?.())
     }
     made.clear()
   }

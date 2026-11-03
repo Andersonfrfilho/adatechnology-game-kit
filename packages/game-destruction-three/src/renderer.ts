@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
-import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
@@ -11,11 +12,12 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
+import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
-import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 let rendererCount = 0
@@ -37,6 +39,11 @@ const QUEUE_CAP = 4000
 const MIN_FRAGMENTS_PER_SLICE = 8
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
 const STATIC_REFRESH = 0.5
+/**
+ * Milliseconds of the periodic re-measure per call: the refresh walks the objects a slice at a time (the dirty ones are measured at once).
+ * Measuring every object in one call cost up to 88 ms in a frame of the horde chain (perf.mjs, software GL, 2026-11-03).
+ */
+const STATIC_REFRESH_SLICE_MS = 1
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
 const STATIC_SPAN = 3
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
@@ -47,6 +54,8 @@ const TIP_NARROW = 0.3
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
 const GENERIC_REFERENCE_RADIUS = 15
+/** Largest half size (m) of the core of a piece swept for what it runs into: a sofa sweeps a small box at its centre, not the whole of it. */
+const SWEEP_CORE = 0.15
 /** The small flame of a part that a bullet or fire primed: it burns until the part goes off. */
 const PRIMED_FIRE_RADIUS = 0.2
 
@@ -123,6 +132,9 @@ export function impactKey(def: MaterialDef | undefined): string {
   return def.fracture === 'none' ? 'impact_metal' : 'impact_wood'
 }
 
+/** Sound key (`shot_*`) of a round striking this material: sharper than a blow (a tink on steel, a crack on glass); a host without it plays the `impact_*`. */
+export const shotKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'shot_')
+
 /** Sound key (`drag_*`) of a base of this material dragged on a floor. */
 export const dragSoundKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'drag_')
 
@@ -180,6 +192,8 @@ class Renderer implements DestructionRenderer {
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
+  /** The periodic refresh: the objects still to measure again in this round, a slice per call. */
+  private staticRound: string[] = []
   /** Boxes of the pieces' meshes (as `staticBoxes`), with the time they were measured. */
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   private staticAt = 0
@@ -275,6 +289,8 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
+      sweep: (p, from, to) => this.sweepPiece(p, from, to),
+      onSlam: (p, hit, speed) => this.slam(p, hit, speed),
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (this.queue.length < QUEUE_CAP) this.queue.push(ev)
@@ -479,9 +495,38 @@ class Renderer implements DestructionRenderer {
     if (p) this.pieceSys.impulse(p, impulse, point)
   }
 
+  /**
+   * What a piece moving from `from` to `to` runs into: the core of its box (its thinnest half each way, at most `SWEEP_CORE`) swept through the world, the piece itself left out,
+   * so a crate thrown by a blast stops at the wall instead of passing through it. Null for a world that cannot sweep.
+   */
+  private sweepPiece(p: PieceBody, from: Vec3, to: Vec3): PieceSweepHit | null {
+    if (typeof this.world.sweepBox !== 'function') return null
+    const d: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]]
+    const travel = Math.hypot(d[0], d[1], d[2])
+    if (travel < 1e-4) return null
+    const core = Math.min(SWEEP_CORE, ...p.halfExtents)
+    const box = { min: [from[0] - core, from[1] - core, from[2] - core] as Vec3, max: [from[0] + core, from[1] + core, from[2] + core] as Vec3 }
+    const hit = this.world.sweepBox(box, d, travel, { ignore: p.objectId, spacing: Math.max(0.05, core) })
+    if (!hit) return null
+    return { object: hit.object, part: hit.part, distance: hit.distance, point: hit.point, normal: hit.normal }
+  }
+
+  /** A piece thrown into a wall: the wall takes the blow of its weight where it met it, the piece takes it too, and each sounds as its material does. */
+  private slam(p: PieceBody, hit: PieceSweepHit, speed: number): void {
+    const energy = 0.5 * p.mass * speed * speed
+    const direction: Vec3 = [-hit.normal[0], -hit.normal[1], -hit.normal[2]]
+    this.landingSound(hit.object, hit.point, clamp(speed / 10, 0.2, 1))
+    this.syncBound(p.objectId)
+    try {
+      this.world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, energy, radius: 0.1, direction, normal: hit.normal, source: p.objectId })
+      this.world.hit(p.objectId, { type: 'blunt', point: hit.point, energy, radius: 0.08, direction: hit.normal, source: 'slam' })
+    } catch {
+      // either may have left the world
+    }
+  }
+
   private hardLanding(p: PieceBody, point: Vec3, speed: number): void {
-    const key = this.impactSoundOf(p.objectId)
-    this.sound(key, point, clamp(speed / 10, 0.2, 1))
+    this.landingSound(p.objectId, point, clamp(speed / 10, 0.2, 1))
     // the piece just moved this frame: the world must know where it is before the hit is resolved against its parts
     this.syncBound(p.objectId)
     try {
@@ -491,17 +536,24 @@ class Renderer implements DestructionRenderer {
     }
   }
 
-  private impactSoundOf(objectId: string): string {
+  /** The impact of the heaviest part of an object (a piece landing): its material and the blunt blow of the fall. */
+  private landingSound(objectId: string, point: Vec3, volume: number): void {
     const st = this.world.state(objectId)
-    let best: MaterialDef | undefined
+    let best = ''
     let mass = -1
     for (const p of st?.parts ?? []) {
       if (p.mass > mass) {
         mass = p.mass
-        best = this.world.materials.get(p.material)
+        best = p.material
       }
     }
-    return impactKey(best)
+    this.impactSound(best, point, volume, 'blunt')
+  }
+
+  /** The impact on a material by a blow: the legacy family key (`impactKey`) with the more specific keys to try first (`impactSoundKeys`). */
+  private impactSound(material: string, point: Vec3, volume: number, blow?: DamageType): void {
+    const def = this.world.materials.get(material)
+    this.sound(impactKey(def), point, volume, impactSoundKeys(material, def, blow))
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -649,9 +701,9 @@ class Renderer implements DestructionRenderer {
   private staticNow(): Map<string, number[]> {
     if (this.time - this.staticAt > STATIC_REFRESH) {
       this.staticAt = this.time
-      this.staticAll = true
+      if (this.staticRound.length === 0) this.staticRound = [...this.bounds.keys()].reverse()
     }
-    if (!this.staticAll && this.staticDirty.size === 0) return this.staticBoxes
+    if (!this.staticAll && this.staticDirty.size === 0 && this.staticRound.length === 0) return this.staticBoxes
     const box = new this.THREE.Box3()
     const measure = (b: Bound): void => {
       if (b.piece || this.pieceSys.get(b.id)) {
@@ -671,14 +723,21 @@ class Renderer implements DestructionRenderer {
       }
       this.staticBoxes.set(b.id, out.length > 6 ? out : [])
     }
+    const measureId = (id: string): void => {
+      const b = this.bounds.get(id)
+      if (b) measure(b)
+      else this.staticBoxes.delete(id)
+    }
     if (this.staticAll) {
       this.staticBoxes.clear()
       for (const b of this.bounds.values()) measure(b)
+      this.staticRound = []
     } else {
-      for (const id of this.staticDirty) {
-        const b = this.bounds.get(id)
-        if (b) measure(b)
-        else this.staticBoxes.delete(id)
+      for (const id of this.staticDirty) measureId(id)
+      const until = performance.now() + STATIC_REFRESH_SLICE_MS
+      while (this.staticRound.length > 0) {
+        measureId(this.staticRound.pop() as string)
+        if (performance.now() >= until) break
       }
     }
     this.staticAll = false
@@ -742,7 +801,9 @@ class Renderer implements DestructionRenderer {
       case 'ricochet': {
         const d = ev.direction
         this.vfx.burst('sparks', ev.point, d, 4 + Math.min(10, ev.energy / 150), 4)
-        this.sound('ricochet', ev.point, 0.7)
+        // the whine of a round off steel, the short crack off stone: by what the part it glanced off is made of
+        const glanced = this.partVis(ev.object, ev.part)?.material ?? ''
+        this.sound('ricochet', ev.point, 0.7, ricochetSoundKeys(glanced, this.world.materials.get(glanced)))
         break
       }
       case 'debris':
@@ -786,7 +847,8 @@ class Renderer implements DestructionRenderer {
           this.vfx.fire({ point: ev.point, radius: PRIMED_FIRE_RADIUS, life: ev.delay })
           this.primedBurning.add(`${ev.object}|${ev.part}`)
           this.activate(ev.object, ev.part)
-          this.sound('ignite', ev.point, 0.7)
+          // the vessel is venting until it bursts: the gas leak for as long as the delay, and the flame it feeds
+          this.sound('primed', ev.point, 0.7, { seconds: ev.delay })
           this.sound('burn_loop', ev.point, 0.5)
         }
         break
@@ -902,8 +964,9 @@ class Renderer implements DestructionRenderer {
     return b ? [b.root.position.x, b.root.position.y, b.root.position.z] : [0, 0, 0]
   }
 
-  private sound(key: string, point: Vec3, volume: number): void {
-    this.o.onSound?.(key, point, volume)
+  private sound(key: string, point: Vec3, volume: number, detail?: SoundDetail): void {
+    if (detail) this.o.onSound?.(key, point, volume, detail)
+    else this.o.onSound?.(key, point, volume)
   }
 
   private partVis(objectId: string, partId: string): PartVis | null {
@@ -976,7 +1039,7 @@ class Renderer implements DestructionRenderer {
     const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, ev.dent)), ev.dent.radius)
     this.visuals.applyPartDent(shown, wp, wn, ev.dent, reach)
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [wn.x, wn.y, wn.z], 4 + Math.min(8, ev.dent.depth * 150), 3.2)
-    this.sound(impactKey(def), ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1))
+    this.impactSound(pv.material, ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1), ev.blow)
   }
 
   private onHole(ev: Ev<'hole'>): void {
@@ -1008,7 +1071,8 @@ class Renderer implements DestructionRenderer {
       this.vfx.burst('dust', ev.worldPoint, [n.x, n.y, n.z], this.low ? 5 : 10, 0.7, puff)
       if (ev.hole.through && ev.exitPoint) this.vfx.burst('dust', ev.exitPoint, [-n.x, -n.y, -n.z], this.low ? 10 : 20, 1.3, puff)
     }
-    this.sound(impactKey(def), ev.worldPoint, 0.6)
+    // the blow's own keys first (`impact_steel_ballistic`...), then the round's per-family key (`shot_metal`), which falls back to the plain impact
+    this.sound(shotKey(def), ev.worldPoint, 0.6, impactSoundKeys(pv.material, def, ev.blow))
   }
 
   private onCrack(ev: Ev<'crack'>): void {
@@ -1027,7 +1091,7 @@ class Renderer implements DestructionRenderer {
       const length = glass ? ev.crack.length : Math.min(ev.crack.length, OPAQUE_CRACK)
       this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
     }
-    this.sound(impactKey(def), ev.worldPoint, 0.5)
+    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
 
   /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
@@ -1091,7 +1155,7 @@ class Renderer implements DestructionRenderer {
       this.fragments.spawn(fr, this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fr.material, fdef), false), ev.object, maxAlive)
     }
     if (!played) this.vfx.burst('dust', ev.opening.center, [0, 1, 0], 14, 1.2, { color })
-    this.sound(impactKey(def), ev.opening.center, 0.8)
+    this.impactSound(pv?.material ?? '', ev.opening.center, 0.8, ev.blow)
   }
 
   /**
@@ -1112,7 +1176,7 @@ class Renderer implements DestructionRenderer {
     }
     // what a blow tore off a face leaves the hole it made where it is
     if (ev.torn) {
-      this.sound(impactKey(def), ev.center, 0.5)
+      this.impactSound(pv?.material ?? '', ev.center, 0.5, ev.blow)
       return
     }
     // the holes and spalls drawn on the unit leave with it (also those on the wall a beam is drawn inside), and on the ragged edge of plaster around it
@@ -1124,7 +1188,7 @@ class Renderer implements DestructionRenderer {
     this.vfx.peekWorkshop()?.decals.clearInside(ev.center, [half.x, half.y, half.z], ev.rotation)
     // a puff of the unit's own dust; not the bullet impact effect, which would leave its black mark on the hole the unit left
     this.vfx.burst('dust', ev.center, [0, 1, 0], 8, 0.8, { color })
-    this.sound(impactKey(def), ev.center, 0.7)
+    this.impactSound(pv?.material ?? '', ev.center, 0.7, ev.blow)
   }
 
   private onFracture(ev: Ev<'fracture'>): void {
@@ -1166,7 +1230,7 @@ class Renderer implements DestructionRenderer {
       default:
         this.vfx.burst('sparks', ev.point, up, 10, 4)
     }
-    this.sound(fractureKey(def, ev.style), ev.point, clamp(0.4 + ev.fragments.length * 0.03, 0.4, 1))
+    this.sound(fractureKey(def, ev.style), ev.point, clamp(0.4 + ev.fragments.length * 0.03, 0.4, 1), breakSoundKeys(matId, def, ev.blow))
   }
 
   /** Spawns the fragments of a fracture from index `from`; what does not fit in this frame's budget is spawned by the next frames. */
@@ -1316,11 +1380,14 @@ class Renderer implements DestructionRenderer {
     const report = options.report
     const confinement = report?.find((r) => r.blast !== undefined)?.blast?.confinement ?? 1
     const energy = ev.energy * confinement
-    // the energy that got to an object after what stood in the way (`blast.shelter`); the whole of it when the blast carries no report
-    const reachOf = (objectId: string): number => report?.find((r) => r.object === objectId)?.blast?.shelter ?? 1
+    // the energy that got to an object after what stood in the way: the world's shelter of this blast when it carries one, else the cover between the centre and the
+    // object's centre (`blastReach`, always on: a wall, a car or a cupboard between them takes the push)
+    const reachOf = (objectId: string, at: Vec3): number =>
+      report?.find((r) => r.object === objectId)?.blast?.shelter ?? this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ?? 1
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
-      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
       if (!hit) return
       const spread = pc.halfExtents[0]
       const momentum = hit.speed * pc.mass
@@ -1329,11 +1396,16 @@ class Renderer implements DestructionRenderer {
     for (const pc of [...this.pieceSys.list]) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
-    this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1))
+    this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1), {
+      radius: ev.radius,
+      ...(ev.effect !== undefined ? { effect: ev.effect } : {}),
+      ...(options.effect !== undefined ? { effect: options.effect } : {}),
+      ...(report ? { confinement } : {}),
+    })
   }
 
   /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */
-  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string) => number): void {
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number): void {
     const shoveable = this.o.shoveable
     if (!shoveable) return
     for (const b of [...this.bounds.values()]) {
@@ -1341,7 +1413,8 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
-      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
+      if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
       if (!hit) continue
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
@@ -1560,11 +1633,15 @@ class Renderer implements DestructionRenderer {
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
         this.bounds.delete(b.id)
+        // its box leaves now: the periodic round only walks the objects still bound
+        this.staticDirty.add(b.id)
       }
     }
   }
 
   clear(): void {
+    // what was bound is gone: the next read measures what is left, all of it
+    this.staticAll = true
     this.queue.length = 0
     this.slices.length = 0
     this.active.clear()
@@ -1593,6 +1670,8 @@ class Renderer implements DestructionRenderer {
     this.rng = createRng(RNG_SEED)
     this.time = 0
     this.staticAt = 0
+    this.staticRound = []
+    this.staticAll = true
     this.throttles.clear()
     this.fragments.reset()
     this.pieceSys.reset()

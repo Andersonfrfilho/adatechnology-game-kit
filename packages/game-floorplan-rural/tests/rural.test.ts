@@ -1,4 +1,5 @@
 import { engine } from '@adatechnology/game-floorplan'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { describe, expect, it } from 'vitest'
 
@@ -6,6 +7,9 @@ import { register, ruralTemplateIds } from '../src'
 
 registerResidential(engine)
 register(engine)
+
+/** The rural templates' plan config (`TemplateDef.config`) as these tests read it. */
+const configOf = (plan: FloorplanResult) => plan.config as { power?: string; solar?: boolean }
 
 const SEEDS = Array.from({ length: 30 }, (_, index) => index + 1)
 const STATES = ['normal', 'fortified', 'abandoned'] as const
@@ -47,7 +51,7 @@ describe('registration', () => {
         const plan = engine.generate(id, { seed: 3, locale, ...options })
         for (const room of plan.rooms) expect(room.name, `${id} ${room.id} (${locale})`).not.toBe(room.label)
         for (const floor of plan.floors) expect(floor.name, `${id} floor (${locale})`).not.toBe(floor.label)
-        for (const zone of plan.lot.zones) expect(zone.name, `${id} zone ${zone.id} (${locale})`).not.toBe(zone.label)
+        for (const zone of plan.lot!.zones) expect(zone.name, `${id} zone ${zone.id} (${locale})`).not.toBe(zone.label)
       }
     }
   })
@@ -67,7 +71,7 @@ describe('generated plans', () => {
           const tag = `${name}#${seed}/${state}`
           for (const message of engine.validate(plan)) problems.push(`${tag}: ${message}`)
           for (const door of plan.doors.filter((x: { exterior: boolean; floor: number }) => x.exterior && x.floor === 0)) {
-            if (!plan.lot.paths.some((path: { to: string }) => path.to === door.id)) problems.push(`${tag}: door ${door.id} has no path`)
+            if (!plan.lot!.paths.some((path: { to: string }) => path.to === door.id)) problems.push(`${tag}: door ${door.id} has no path`)
           }
         }
       expect(problems.slice(0, 5)).toEqual([])
@@ -95,20 +99,20 @@ describe('generated plans', () => {
 describe('rural rules', () => {
   it('an off-grid cabin hangs oil lamps instead of ceiling lights, and every room has one', () => {
     const plan = engine.generate('log_cabin', { seed: 4, rooms: 2, power: 'offgrid', bathroom: 'indoor' })
-    expect(plan.config.power).toBe('offgrid')
+    expect(configOf(plan).power).toBe('offgrid')
     expect(plan.items.some((item: { category: string }) => item.category === 'ceiling_light')).toBe(false)
-    for (const room of plan.rooms.filter((r: { type: string }) => r.type !== 'porch')) expect(plan.items.some((item: { room: string; type: string }) => item.room === room.id && item.type === 'ceiling_oil_lamp')).toBe(true)
+    for (const room of plan.rooms.filter((r: { type: string }) => r.type !== 'porch')) expect(plan.items.some((item) => item.room === room.id && item.type === 'ceiling_oil_lamp')).toBe(true)
   })
 
   it('the shack taps the street line (the old `gato`): the plan says so and the rooms keep their ceiling lights', () => {
     for (const seed of [1, 2, 3, 4, 5, 6]) {
       const plan = engine.generate('shack', { seed })
-      expect(plan.config.power).toBe('tap')
-      expect(plan.config.solar).toBe(false)
+      expect(configOf(plan).power).toBe('tap')
+      expect(configOf(plan).solar).toBe(false)
       expect(plan.items.some((item: { category: string }) => item.category === 'ceiling_light')).toBe(true)
       expect(plan.items.some((item: { category: string }) => item.category === 'oil_lamp')).toBe(false)
     }
-    for (const id of ['wood_frame_house', 'a_frame_chalet', 'campsite']) expect(engine.generate(id, { seed: 1 }).config.power).not.toBe('tap')
+    for (const id of ['wood_frame_house', 'a_frame_chalet', 'campsite']) expect(configOf(engine.generate(id, { seed: 1 })).power).not.toBe('tap')
   })
 
   it('a cabin on the grid keeps the ceiling lights', () => {
@@ -119,16 +123,16 @@ describe('rural rules', () => {
 
   it('the porch door has steps from the foundation elevation (slab 2, stilts 5), the garage door has none', () => {
     const stilts = engine.generate('a_frame_chalet', { seed: 2, foundation: 'stilts' })
-    expect(stilts.doors.find((door: { type: string }) => door.type === 'steps').steps).toBe(5)
+    expect(stilts.doors.find((door: { type: string }) => door.type === 'steps')!.steps).toBe(5)
     const slab = engine.generate('a_frame_chalet', { seed: 2, foundation: 'slab' })
-    expect(slab.doors.find((door: { type: string }) => door.type === 'steps').steps).toBe(2)
+    expect(slab.doors.find((door: { type: string }) => door.type === 'steps')!.steps).toBe(2)
     const house = engine.generate('wood_frame_house', { seed: 2, floors: 2, garage: true })
-    expect(house.doors.find((door: { model: string; exterior: boolean; width: number }) => door.exterior && door.width === 2.6).steps).toBe(0)
+    expect(house.doors.find((door: { model: string; exterior: boolean; width: number }) => door.exterior && door.width === 2.6)!.steps).toBe(0)
   })
 
   it('the chalet living room is double height and the mezzanine heights add up', () => {
     const plan = engine.generate('a_frame_chalet', { seed: 1 })
-    expect(plan.rooms.find((room: { id: string }) => room.id === 'living').ceiling).toBe(4.4)
+    expect(plan.rooms.find((room: { id: string }) => room.id === 'living')!.ceiling).toBe(4.4)
     expect(plan.floors[1].y0).toBe(2.6)
   })
 
@@ -138,8 +142,8 @@ describe('rural rules', () => {
     const tents = plan.rooms.filter((room: { type: string }) => room.type === 'tent')
     expect(tents).toHaveLength(3)
     expect(plan.doors.every((door: { model: string }) => door.model === 'zip')).toBe(true)
-    expect(plan.lot.paths).toHaveLength(3)
-    expect(plan.lot.zones.some((zone: { type: string }) => zone.type === 'camp')).toBe(true)
+    expect(plan.lot!.paths).toHaveLength(3)
+    expect(plan.lot!.zones.some((zone: { type: string }) => zone.type === 'camp')).toBe(true)
   })
 
   it('the rural palette follows the seed and stays within the facade table', () => {

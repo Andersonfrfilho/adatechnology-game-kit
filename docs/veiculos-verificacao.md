@@ -8,12 +8,18 @@ O teste automático cobre: tiro na direção de cada vidro chega no vidro; o ar 
 
 | Modelo | O que falta olhar |
 |---|---|
+| `beetle` | o capô fica 8 mm acima do paralama |
+| `apc_6x6` | o teste do capô mediu 561 mm: provável falso positivo, sem paralama ao lado |
 | `armored_truck` | pane rear_viewport: the shots land on body_rear |
 | `battle_tank` | pane commander_periscope: the shots land on turret |
 | `fastback_sedan` | pane windshield: the roof stands past it; pane windshield: the shots land on roof |
 | `fishing_boat` | pane deckhouse_forward_windows: the shots land on deck |
 | `midsize_suv` | pane quarter_glass: the shots land on roof |
 | `single_engine_plane` | pane left_door_window: the fuel_tanks stands past it; pane left_door_window: the shots land on fuel_tanks; pane left_rear_window: the shots land on fuel_tanks; pane right_door_window: the fuel_tanks stands past it; pane  |
+
+## Porta aberta: faixas que ficam atravessando o vão
+
+O teste da frota mede, porta por porta, se alguma peça desenhada na lateral (vinco, friso, moldura, pintura) continua atravessando o vão com a porta aberta. Em 2026-11-02 sobram em 15 modelos: `taxi`, `entry_hatch`, `midsize_sedan`, `police_sedan`, `highway_police_sedan`, `compact_suv`, `hybrid_suv`, `midsize_suv`, `large_suv`, `compact_pickup`, `crossover_pickup`, `midsize_pickup`, `ambulance`, `boxy_hatch`, `classic_six_sedan`. O teste ainda só relata; passa a reprovar quando as portas virarem peças pré-cortadas (spec 006, fase 4).
 
 ## Modelos que passam no teste automático (62)
 

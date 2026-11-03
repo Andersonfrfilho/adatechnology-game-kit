@@ -84,7 +84,7 @@ export function shapeGeometries(THREE: Three, options: ShapeGeometriesOptions = 
   const made = (p: PrimitiveBuffers): THREE_NS.BufferGeometry => toGeometry(THREE, p)
   const viaCache = (node: PrimitiveNode, direct: () => PrimitiveBuffers): PrimitiveBuffers => (cache ? buildPrimitive(node) : direct())
   const defined = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T
-  const constructors: Record<(typeof SHAPE_GEOMETRY_TYPES)[number], (...args: any[]) => THREE_NS.BufferGeometry> = {
+  const constructors = {
     BoxGeometry: (width?: number, height?: number, depth?: number, ws = 1, hs = 1, ds = 1) =>
       made(viaCache({ kind: 'box', size: [width ?? 1, height ?? 1, depth ?? 1], segments: [ws, hs, ds] }, () => box(width, height, depth, ws, hs, ds))),
     CylinderGeometry: (radiusTop?: number, radiusBottom?: number, height?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number) =>
@@ -113,10 +113,11 @@ export function shapeGeometries(THREE: Three, options: ShapeGeometriesOptions = 
       geometry.parameters = { shapes, options: extrudeOptions ?? {} }
       return geometry
     },
-  }
+  } satisfies Record<(typeof SHAPE_GEOMETRY_TYPES)[number], (...args: never[]) => THREE_NS.BufferGeometry>
   const namespace: Record<string, unknown> = { ...(THREE as unknown as Record<string, unknown>) }
   for (const type of SHAPE_GEOMETRY_TYPES) {
-    const make = constructors[type]
+    // three hands the constructor's own arguments through; each replacement takes the same ones
+    const make = constructors[type] as (...args: unknown[]) => THREE_NS.BufferGeometry
     // callable with `new` (the returned object wins), and `instanceof` checks three's prototype
     const Constructor = function (this: unknown, ...args: unknown[]) {
       return make(...args)

@@ -7,7 +7,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { EXTRAS, FACE_FEATURES, HAND_ITEMS, HATS, bakeBody, buildInstancedBody, createBestBuilder, createPersonBuilder } from '../src'
-import type { BakeBuilders } from '../src'
+import type { BakeBuilders, PersonSpec } from '../src'
 import undeadTypes from '../../game-characters-undead/src/data/types.json'
 
 /**
@@ -17,11 +17,11 @@ import undeadTypes from '../../game-characters-undead/src/data/types.json'
  */
 // happy-dom: import.meta.url is not a file, the fixture is found from the package folder
 const FIXTURE = join(process.cwd(), 'tests/fixtures/exact-characters.json')
-const PEOPLE = JSON.parse(readFileSync(join(process.cwd(), '../../specs/001-migracao-entregas-dos-times/game-slice/characters/people.json'), 'utf8')) as Record<string, any>[]
+const PEOPLE = JSON.parse(readFileSync(join(process.cwd(), '../../specs/001-migracao-entregas-dos-times/game-slice/characters/people.json'), 'utf8')) as Array<{ b?: PersonSpec; kids?: Array<PersonSpec & { x: number }> } & Record<string, unknown>>
 
 const canvas = (): HTMLCanvasElement => document.createElement('canvas')
 const base = { skin: 0xc49070, hair: { s: 'short', c: 0x222222 }, top: { c: 0x445566, sl: 'long' }, pants: { c: 0x333333 }, shoes: 0x111111 }
-const person = (spec: Record<string, any>, detail = 0): THREE.Object3D => createPersonBuilder(THREE, { random: createRng(5), detail, createCanvas: canvas }).build(spec).root
+const person = (spec: PersonSpec, detail = 0): THREE.Object3D => createPersonBuilder(THREE, { random: createRng(5), detail, createCanvas: canvas }).build(spec).root
 
 const cards = undeadTypes.map((type) => ({ name: type.name['pt-BR'], eye: Number.parseInt(type.eye.color, 16) }))
 const best = (spec: Record<string, any>, lod: number): THREE.Object3D => {

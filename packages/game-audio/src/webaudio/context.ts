@@ -9,5 +9,6 @@ export function globalContext(): AudioContext | null {
 
 /** Browsers start a context suspended until a click or key; call from one. */
 export function unlockContext(context: AudioContext): void {
-  if (context.state === 'suspended') void context.resume()
+  // an OfflineAudioContext (no `close`) is started by `startRendering`, never resumed
+  if (context.state === 'suspended' && typeof context.close === 'function') void context.resume()
 }

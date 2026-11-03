@@ -19,7 +19,7 @@ export interface BodyDimensions {
 
 /**
  * A semi-simulation spec for a two-axle vehicle from its design ratings: the grip follows the handling, the torque follows the acceleration,
- * and the air drag is set so that the top gear tops out at the design top speed.
+ * the air drag is set so that the top gear tops out at the design top speed, and the brake force follows the mass.
  */
 export function semiSpecFromStats(stats: DesignStats, body: BodyDimensions, base: Partial<SemiSimSpec> = {}): SemiSimSpec {
   const spec: SemiSimSpec = { ...defaultSemiSpec, ...base }
@@ -42,5 +42,9 @@ export function semiSpecFromStats(stats: DesignStats, body: BodyDimensions, base
   const thrust = (torqueAtTop * lastRatio * spec.finalDrive * spec.efficiency) / spec.wheelRadius
   const rollingForce = spec.rolling * body.mass * 9.81
   const drag = Math.max(0.01, (thrust - rollingForce) / (top * top))
-  return { ...spec, mass: body.mass, wheels, fourWheelDrive: driveAll, engine, gears, drag, tyre: { ...spec.tyre, friction: 0.8 + 0.03 * stats.handling } }
+  // the brakes grow with the mass, so a bus is not stopped by a hatch's brakes: the default car's ratio (about 1.1 g) up to 2 t, easing to the 0.6 g of a loaded truck or bus at 10 t (the tyres still cap it)
+  const carRatio = defaultSemiSpec.brakeForce / (defaultSemiSpec.mass * 9.81)
+  const heavyShare = Math.max(0, Math.min(1, (body.mass - 2000) / 8000))
+  const brakeForce = base.brakeForce ?? body.mass * 9.81 * (carRatio + (0.6 - carRatio) * heavyShare)
+  return { ...spec, mass: body.mass, wheels, fourWheelDrive: driveAll, engine, gears, drag, brakeForce, tyre: { ...spec.tyre, friction: 0.8 + 0.03 * stats.handling } }
 }

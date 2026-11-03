@@ -15,7 +15,31 @@ export interface PieceSystemOptions {
   onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
   /** Notified when a piece is about to be removed. */
   scene: THREE_NS.Scene
+  /**
+   * What a piece moving from `from` to `to` (its centre, world) runs into on the way: a wall, a car, a cupboard (`distance` along the way, the `normal` of what it met).
+   * Without it a piece only meets the ground, the tops of fixed things and the other pieces.
+   */
+  sweep?: (piece: PieceBody, from: Vec3, to: Vec3) => PieceSweepHit | null
+  /** A piece ran into something (`sweep`) faster than `SLAM_MIN_SPEED` m/s into it (throttled per piece): for the blow on both and the sound. */
+  onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
 }
+
+/** What a moving piece ran into (`PieceSystemOptions.sweep`). */
+export interface PieceSweepHit {
+  readonly object: string
+  readonly part: string
+  /** Metres along the way from the centre where the piece meets it. */
+  readonly distance: number
+  readonly point: Vec3
+  readonly normal: Vec3
+}
+
+/** Slower than this (m/s) into a wall a piece only stops against it: no blow, no sound. */
+export const SLAM_MIN_SPEED = 2
+/** Share of the speed into a wall a piece keeps, bouncing back. */
+const SLAM_BOUNCE = 0.2
+/** Normals steeper than this (y) are a floor or a top: the support of the pieces answers those, not the sweep. */
+const SLAM_FLOOR_NORMAL = 0.7
 
 const SUB_DT = 1 / 120
 const MU = 0.7
@@ -311,9 +335,35 @@ export class PieceSystem {
     return Math.max(top, fixed)
   }
 
+  /** Stops a piece that ran into something on its way from `start` to `pos` (`sweep`): moves it back to where it met it and takes the speed into it. */
+  private sweepOn(b: PieceBody, start: Vec3, pos: Vec3): void {
+    const travel = Math.hypot(pos[0] - start[0], pos[1] - start[1], pos[2] - start[2])
+    if (travel < 1e-3) return
+    const hit = this.o.sweep?.(b, start, pos)
+    if (!hit || hit.normal[1] > SLAM_FLOOR_NORMAL) return
+    const v = b.velocity
+    const n = hit.normal
+    const into = -(v[0] * n[0] + v[1] * n[1] + v[2] * n[2])
+    if (into <= 0) return
+    const k = Math.min(1, hit.distance / travel)
+    for (let i = 0; i < 3; i++) {
+      pos[i] = start[i] + (pos[i] - start[i]) * k
+      v[i] += (1 + SLAM_BOUNCE) * into * n[i]
+    }
+    const w = b.angularVelocity
+    w[0] *= 0.5
+    w[1] *= 0.5
+    w[2] *= 0.5
+    if (into >= SLAM_MIN_SPEED && this.time - b.lastHit > 0.15) {
+      b.lastHit = this.time
+      this.o.onSlam?.(b, hit, into)
+    }
+  }
+
   private integrate(b: PieceBody, dt: number): void {
     const c = this.centerOf(b, this.p)
     const pos: Vec3 = [c.x, c.y, c.z]
+    const start: Vec3 = [c.x, c.y, c.z]
     const q = this.q.copy(b.root.quaternion)
     const v = b.velocity
     const w = b.angularVelocity
@@ -589,6 +639,9 @@ export class PieceSystem {
       v[0] *= fd
       v[2] *= fd
     }
+
+    // what stands in the way (a wall, a car): the piece stops against it, bounces a little and both take the blow
+    if (this.o.sweep && !b.held) this.sweepOn(b, start, pos)
 
     // write back
     b.root.quaternion.copy(q)

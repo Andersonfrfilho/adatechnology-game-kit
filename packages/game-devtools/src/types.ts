@@ -131,7 +131,7 @@ export interface Devtools {
   /** Whether entity labels are shown. */
   showLabels: boolean
   /** Server database handle when `window.claude` offers one. */
-  db: any
+  db: MarksDatabase | null
   marks: Mark[]
   scenarioList: Scenario[]
   activeScenario: Scenario | null
@@ -177,4 +177,24 @@ export interface Devtools {
   expose(): void
   /** Removes the DOM, styles and listeners. */
   dispose(): void
+}
+
+/** A stored document as the shared database returns it. */
+export interface MarksDocument {
+  id: string
+  data(): Omit<Mark, 'id'>
+}
+
+/** The part of the shared database (`window.claude.use('db')`) the devtools use: one collection of marks. */
+export interface MarksDatabase {
+  collection(name: string): {
+    onSnapshot(next: (snapshot: { docs: MarksDocument[] }) => void, error?: (reason: unknown) => void): unknown
+    add(mark: Mark): Promise<unknown>
+    doc(id: string): { delete(): Promise<unknown> }
+  }
+}
+
+/** Who is viewing, as `window.claude.use('user')` returns it. */
+export interface ViewerHandle {
+  id(): Promise<string>
 }

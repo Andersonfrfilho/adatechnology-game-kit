@@ -10,7 +10,7 @@
 // And the player area (game-player): the room's camera is the player body, with stamina, wounds, the grab and the individual infection (off by default).
 // And the crowd area (game-crowd-three): a horde on the instanced path that hunts that player body, civilians, the herd and a region model. It starts empty here (the bench adds agents).
 // And the stories area (game-stories): no 3D, a world of stories run to the bench's day, with one character sheet on the room's panel.
-import { createAudioTestModule } from '@adatechnology/game-audio/testing'
+import { createAudioTestModule, createSoundCheckModule } from '@adatechnology/game-audio/testing'
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
@@ -24,6 +24,7 @@ import { createVfxTestModule } from '@adatechnology/game-vfx-three/testing'
 import { createTerrainTestModule } from '@adatechnology/game-terrain-three/testing'
 import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
 import { createPersonBuilder } from '@adatechnology/game-characters-three'
+import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three/testing'
 import { PROFESSIONS } from '@adatechnology/game-characters-people'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
@@ -32,6 +33,7 @@ import { createModule as createCrowdModule } from '../../crowd-test-area/src/ent
 import { createModule as createUrbanModule, createVehicleBuilder } from '../../urban-test-area/src/entry.js'
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
 import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
+import { loadModule as loadProvingModule } from '../../vehicles-proving-area/src/entry.js'
 import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
@@ -91,7 +93,7 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
+export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createSoundCheckModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
@@ -99,6 +101,7 @@ const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 /** Short labels of each loading step, for the modules that are not created before they load (pt-BR, en). */
 const STEP_LABELS = {
   vehicles: ['Veículos', 'Vehicles'],
+  vehicles_proving: ['Banco de provas', 'Proving ground'],
   vegetation: ['Vegetação', 'Vegetation'],
 }
 
@@ -125,7 +128,10 @@ function loadSteps(room, options, lang) {
   const custom = (key, load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
-  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels }))
+  // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
+  const sfx = globalThis.__kitSfx
+  const samples = sfx ? { manifest: sfx.manifest, url: (file) => sfx.files[file] ?? file } : undefined
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels, ...(samples ? { samples } : {}) }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
@@ -140,11 +146,18 @@ function loadSteps(room, options, lang) {
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
+  // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
+  // the source is the same portable radio; the wall that muffles it is a wall of the houses (wallPiece: the houses' structure and renderer)
+  mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(THREE, { w: 4, h: 2.6 }).build(THREE) }))
   mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
-  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang }))
+  // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
+  const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
+  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
+  // the proving ground: a fleet vehicle runs the measured tests on a track, with the vehicle cameras, the mirrors and the certificate board (its own area is `?area=vehicles_proving`; it builds nothing until opened)
+  custom('vehicles_proving', () => loadProvingModule(room, { locale: lang }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)

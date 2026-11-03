@@ -55,7 +55,7 @@ const PARTS: Record<string, (b: UrbanBuilder) => void> = {
 type Root = { traverse(f: (o: unknown) => void): void }
 const cases: Array<[string, () => Root]> = []
 {
-  const THREE: any = THREE_NS
+  const THREE = THREE_NS
   const urban = createUrbanThree(THREE, { document: fakeDocument })
   const draw = (run: (b: UrbanBuilder) => void, seed = 7): Root => {
     const b = kit.builder({ seed, budget: 99 })

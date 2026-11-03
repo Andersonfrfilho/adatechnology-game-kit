@@ -1,12 +1,13 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
+import { createAudioEngine, createAudioSink, loadKitSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
-import { surfaceOfMaterial } from '@adatechnology/game-contracts'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import type { SoundDetail } from '@adatechnology/game-destruction-three'
+import { bodyMass, KNOCK_CHEST, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
-import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -22,6 +23,7 @@ import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, check
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
@@ -39,6 +41,7 @@ import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushTarget } from './furniture-push'
 import { createSeating } from './seating'
@@ -52,6 +55,7 @@ import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thir
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
+import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import type {
   AnimationInfo,
@@ -161,6 +165,19 @@ const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1],
  * Create the test room. See `TestRoomOptions`. The room owns a renderer, scene and camera unless you pass them; with your own renderer you call
  * `room.update(dt)` every frame and render yourself.
  */
+/**
+ * The sound key of a vehicle's door, hood or trunk lid (`vehicle_door_shut`...): a car leaf has its own sounds, not those of its sheet metal. The part's
+ * role tag (`door`, `hood`, `lid`, from game-vehicles) says which; an untagged leaf counts as a door.
+ */
+const vehicleLeafKey = (spec: DestructibleSpec, part: string, moment: 'open' | 'shut'): string => {
+  const tags = spec.parts.find((p) => p.id === part)?.tags ?? []
+  const leaf = tags.includes('hood') ? 'hood' : tags.includes('lid') || tags.includes('trunk') ? 'trunk' : 'door'
+  return `vehicle_${leaf}_${moment}`
+}
+
+/** The destruction events that already play the impact of a blow (a mark, a break): a blow without any of them plays its contact sound itself. */
+const MARK_EVENTS: ReadonlySet<string> = new Set(['dent', 'hole', 'crack', 'chip', 'stage', 'fracture'])
+
 export function createTestRoom(options: TestRoomOptions): TestRoom {
   const THREE = options.THREE
   const locale = options.locale ?? 'en'
@@ -212,6 +229,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const onResize = (): void => resize()
   window.addEventListener('resize', onResize)
+  // the extra views (mirrors, reversing cameras) and the main-view takeover that modules ask for
+  const moduleViews = createModuleViews(THREE, gl)
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Worlds
@@ -287,11 +306,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownAudio = options.audio === undefined
   const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
+  // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
+  if (audio && options.samplesBaseUrl !== null) {
+    void loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' }).then((bank) => {
+      if (!bank || typeof window === 'undefined') return
+      // the hand's sounds (a door, an item taken) load on the first key or click, when the page may make its AudioContext, so even the first one is the recording
+      const preload = (): void => {
+        window.removeEventListener('keydown', preload, true)
+        window.removeEventListener('pointerdown', preload, true)
+        void audio.loadSamples(['latch', 'creak_wood', 'shut_wood', 'rattle', 'grab_hard', 'grab_soft']).catch(() => undefined)
+      }
+      window.addEventListener('keydown', preload, true)
+      window.addEventListener('pointerdown', preload, true)
+    })
+  }
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
-  const playSound = (key: string, point: Vec3, volume: number): void => {
-    destructionSound?.onSound(key, point, volume)
-    options.onSound?.(key, point, volume)
+  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
+    destructionSound?.onSound(key, point, volume, detail)
+    if (detail) options.onSound?.(key, point, volume, detail)
+    else options.onSound?.(key, point, volume)
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
@@ -368,7 +402,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
     renderer.emit(material.debris === 'clods' ? 'dust' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
-    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
+    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
   }
   terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
@@ -629,6 +663,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     floorAt: terrain.heightAt,
     start: arena.playerStart,
     crouchKeys: options.crouch?.keys,
+    onSlam: (event) => slamPlayer(event),
     onFeet: (event) => {
       const at = player.position
       if (event.type === 'jump') bodySounds.jump(at)
@@ -716,7 +751,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return piece
     },
     dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
-    hitSound: (objectId, point) => playSound(impactKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, 0.5),
+    hitSound: (objectId, point) => {
+      const material = heaviestMaterial(objectId) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), point, 0.5, impactSoundKeys(material, def, 'blunt'))
+    },
     onEvent: (ev) => {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
@@ -812,7 +851,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
+    leafSound: (objectId, part, moment) => {
+      const spec = specs.get(objectId)
+      return spec?.tags?.includes('vehicle') ? vehicleLeafKey(spec, part, moment) : undefined
+    },
     sound: playSound,
+    // a vehicle's doors, hood and lid have their own sounds in the vehicle bank (game-vehicles-three), not those of the house
+    leafFoley: (objectId, part, slides) =>
+      specs.get(objectId)?.tags?.includes('vehicle') ? null : leafFoleyOf(entryOf(objectId)?.item?.sounds, part, impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')), slides),
     onEvent: (ev) => {
       const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }
       action(`door_${ev.type}`, t(`act.door_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, part: ev.part, data: { opening: Math.round(ev.opening * 1000) / 1000, ...(ev.by ? { by: ev.by } : {}) } })
@@ -1295,6 +1341,48 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let cameraMode: CameraMode = options.cameraMode ?? 'first'
   /** Crouched by a player module (`setAvatarState`); the crouch keys crouch too. */
   let crouchForced = false
+  /** Down by a player module (`setAvatarState`: knocked by a zombie, dead); a blast that knocks the player off its feet puts the body down too. */
+  let downForced = false
+  /** Mass of the player's body for the shove of a blast (kg). */
+  const playerMass = options.playerMass ?? bodyMass(1.75)
+  /**
+   * A blast shoves the player the way it shoves the people of the modules (`knockOf`, the host's `blastShove`), cut by the cover between the centre and the chest: strong
+   * enough, it takes the player off its feet, and the body lies a while and gets up.
+   */
+  /** How far ahead of the body (m, from its axis) a wall it slammed into is looked for, and the height of the shoulder that takes it. */
+  const SLAM_REACH = PLAYER_RADIUS + 0.35
+  const SLAM_SHOULDER = 1.3
+  /**
+   * A body thrown into something firm: what it hit takes the blow of its weight (`½ m v²`, blunt, across the shoulder) and answers as its material does (drywall or a board
+   * cracks or breaks, brick holds); the body falls with a thud and, when it was hard, cries out.
+   */
+  const slamPlayer = (event: PlayerSlam): void => {
+    const [x, feet, z] = player.position
+    const energy = 0.5 * playerMass * event.speed * event.speed
+    let hit: RayHit | null = null
+    if (event.against === 'obstacle') {
+      const from: Vec3 = [x, feet + ((player.knocked?.lying ?? 0) > 0.5 ? 0.3 : SLAM_SHOULDER), z]
+      hit = rayWorld(from, event.direction, SLAM_REACH)
+      if (hit) world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, direction: event.direction, energy, radius: 0.2, ...(hit.normal ? { normal: hit.normal } : {}) })
+    }
+    bodySounds.slam(event.speed, [x, feet + 0.5, z])
+    action('player_slammed', t(event.against === 'obstacle' ? 'act.player_slammed' : 'act.player_fell', { speed: num(event.speed, 1), what: hit ? nameOf(hit.object) : '' }), {
+      ...(hit ? { objectId: hit.object, part: hit.part } : {}),
+      data: { against: event.against, speed: event.speed, energy, ...(hit ? { object: hit.object, part: hit.part } : {}) },
+    })
+  }
+  const knockPlayer = (event: { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly source: string }): void => {
+    if (seating.seat) return
+    const feet: Vec3 = [player.x, player.feet, player.z]
+    const reach = world.blastReach(event.point, [feet[0], feet[1] + KNOCK_CHEST, feet[2]], event.source ? { ignore: [event.source] } : {})
+    const knock = knockOf({ point: event.point, energy: event.energy, radius: event.radius, reach }, feet, playerMass, options.blastShove)
+    if (!knock) return
+    player.knock(knock)
+    const speed = Math.hypot(knock.velocity[0], knock.velocity[1], knock.velocity[2])
+    action(knock.down ? 'player_knocked_down' : 'player_shoved', t(knock.down ? 'act.knocked_down' : 'act.player_shoved', { speed: num(speed, 1), reach: num(reach * 100, 0) }), {
+      data: { speed, reach, down: knock.down, source: event.source },
+    })
+  }
   const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
   let feetPrev: [number, number] | null = null
   /** `armed` forced by a module (the bench); null follows the tool in hand. */
@@ -1356,6 +1444,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     feetPrev = [x, z]
     avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
     avatarState.crouch = crouchForced || player.crouching || push.isBent
+    avatarState.down = downForced || Boolean(player.knocked?.down || (player.knocked?.lying ?? 0) > 0.5)
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null
@@ -1449,14 +1538,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatar.reach(targets, { camera, keepOutside: { contact: (origin, direction, maxDistance) => rayWorld(origin, direction, maxDistance)?.distance ?? null } })
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
+  const thirdEuler = new THREE.Euler(0, 0, 0, 'YXZ')
   const applyThirdView = (): (() => void) => {
     if (!thirdActive()) return () => undefined
     const home = camera.position.clone()
+    const turn = camera.quaternion.clone()
     const pose = thirdPose(0)
     camera.position.set(pose.position[0], pose.position[1], pose.position[2])
+    // the view of a body on the floor (turned up, rolled) is the first person's: the camera behind the body keeps the player's own look
+    if (player.knocked) camera.quaternion.setFromEuler(thirdEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
     camera.updateMatrixWorld(true)
     return () => {
       camera.position.copy(home)
+      camera.quaternion.copy(turn)
       camera.updateMatrixWorld(true)
     }
   }
@@ -1901,7 +1995,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
+    const hit = useToHit(u, r.point, r.normal)!
+    const result = world.hitPart(r.object, r.part, { ...hit, source: 'player' })
+    // a blow that leaves no mark (a punch on solid wood, a kick on the ground) still meets the surface: its impact sounds, by material and blow
+    if (!result.events.some((e) => MARK_EVENTS.has(e.type))) {
+      const material = world.part(r.object, r.part)?.material ?? heaviestMaterial(r.object) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), r.point, Math.min(0.8, 0.25 + u.energy / 400), impactSoundKeys(material, def, hit.type))
+    }
     const blow = blowOfTool(id, toolDef(id)?.category ?? '')
     if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
@@ -2299,7 +2400,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
+    playSound(pickupSoundOf(heldEntry?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
+    // the hand closing on it: the sound starts as the hold does (criterion C1)
+    playSound(impactKey(world.materials.get(heaviestMaterial(r.object) ?? '')).replace('impact_', 'grab_'), v3(piece.root.getWorldPosition(tmpV)), 0.8)
     fire('grab', { held: true, objectId: r.object })
     return true
   }
@@ -2313,6 +2417,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     releaseHeld()
     piece.velocity = [0, 0, 0]
     renderer.impulse(id, [aimD[0] * speed * piece.mass, (aimD[1] * speed + 1.2) * piece.mass, aimD[2] * speed * piece.mass])
+    playSound('item_throw', [piece.root.position.x, piece.root.position.y, piece.root.position.z], Math.min(1, 0.3 + speed * 0.04))
     action('throw', t('act.throw', { name, speed: num(speed, 1) }), { objectId: id, itemId: entryOf(id)?.so.itemId, data: { speedMs: speed, massKg: piece.mass } })
     fire('throw', { objectId: id, speed })
     return true
@@ -2446,6 +2551,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.opened = true
     if (e.containerId) fluids.open(e.containerId)
     seal.open?.(wrapped.get(e.so.root) ?? e.so.root)
+    playSound(openSoundOf(e.item?.sounds, world.materials.get(heaviestMaterial(e.so.objectId) ?? '')), v3(e.so.root.getWorldPosition(tmpV)), 0.7)
     const tool = opener.tool ? (catalogMap.get(opener.tool)?.name ?? (arsenal.weapons.has(opener.tool) ? toolName(opener.tool) : opener.tool)) : undefined
     action('open_seal', tool ? t('act.open_with', { name: e.name, tool }) : t('act.open_by_hand', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { tool: opener.tool ?? 'hand' } })
     return true
@@ -2499,12 +2605,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (consuming && c.closed) fluids.open(e.containerId)
     useItemPlayer = createItemUse(fluids, e.containerId, def)
     useItemName = def.id
+    useSoundIn = 0
     if (eating) useLiters = c.liters
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     return true
   }
   /** Litres in the container when an eat or drink use began: what it took out is counted as eaten, not leaked. */
   let useLiters: number | null = null
+  /** Seconds until the next sound of the use in progress. */
+  let useSoundIn = 0
 
   const updateItemUse = (dt: number): void => {
     if (!useItemPlayer) return
@@ -2512,6 +2621,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
     const before = c?.liters
     useItemPlayer.update(dt)
+    // a use that lasts repeats its sound (a gulp, a bite chewed) while the container gives something
+    const useSound = e && useLiters !== null ? useSoundOf(e.item?.sounds, useItemName) : undefined
+    if (useSound && e) {
+      useSoundIn -= dt
+      const now = e.containerId ? fluids.container(e.containerId)?.liters : undefined
+      if (useSoundIn <= 0 && before !== undefined && now !== undefined && now < before) {
+        playSound(useSound, v3(e.so.root.getWorldPosition(tmpV)), 0.6)
+        useSoundIn = USE_SOUND_EVERY
+      }
+    }
     const seal = e?.item?.seal
     twisting = null
     if (e && seal?.openUse === useItemName && !e.opened) {
@@ -2743,7 +2862,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Inspector
   // ---------------------------------------------------------------------------------------------------------------------------------------
+  // one aim ray per HUD refresh: the inspect line and the animation panel both read what the eye rests on, and a ray that crosses a vehicle
+  // tests its drawn triangles (`surfaceRay`); `undefined` outside a refresh
+  let hudAimHit: RayHit | null | undefined
   const inspectTarget = (): RayHit | null => {
+    if (hudAimHit !== undefined) return hudAimHit
     aim()
     return rayWorld(aimO, aimD, 14)
   }
@@ -2950,6 +3073,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
@@ -3015,12 +3139,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const updatePresent = (dt: number): void => {
     reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
+    // the log first: it scrolls before anything of this frame touches the DOM, so reading its height lays nothing out
+    ui?.flushLog()
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
       hudAcc = 0
       ui.hud(hudState())
     }
-    ui?.flushLog()
     metricsAcc += dt
     if (metricsAcc >= METRICS_INTERVAL_S && ui) {
       metricsAcc = 0
@@ -3029,6 +3154,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const hudState = (): HudState => {
+    hudAimHit = inspectTarget()
+    try {
+      return readHudState()
+    } finally {
+      hudAimHit = undefined
+    }
+  }
+  const readHudState = (): HudState => {
     const page = Math.floor(toolIndex / 10)
     const slots = loadout.slice(page * 10, page * 10 + 10).map((id) => arsenal.name(id))
     const ammo = tool.def.action.kind === 'firearm' ? `${tool.ammo}/${tool.capacity}${tool.reserve ? ` · ${tool.reserve}` : ''}` : tool.def.action.kind === 'hand' ? '' : tool.def.action.kind === 'melee' || tool.def.action.kind === 'tool' ? '' : `${num(tool.ammo, 0)}`
@@ -3246,6 +3379,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const environment = options.environment ?? createEnvironmentBus()
   const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
+    if (event.type === 'explosion') knockPlayer(event)
     for (const listener of hostListeners) listener(event)
   }
   function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
@@ -3306,7 +3440,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     lights,
     pools,
     loading,
+    addView: (view) => moduleViews.add(view),
+    setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
+    blastReach: (point, target, ignore) => world.blastReach(point, target, ignore ? { ignore } : {}),
     tool: () => ({
       weapon: toolId,
       category: tool.def.category,
@@ -3487,6 +3624,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
         seats: ti.seats,
+        sounds: ti.sounds,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }
@@ -3909,7 +4047,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         crouchForced = state.crouch
         avatarState.crouch = state.crouch || player.crouching
       }
-      if (state.down !== undefined) avatarState.down = state.down
+      if (state.down !== undefined) {
+        downForced = state.down
+        avatarState.down = state.down || Boolean(player.knocked?.down)
+      }
       if (state.armed !== undefined) armedForced = state.armed
     },
     avatarState: () => ({ ...avatarState }),
@@ -3929,6 +4070,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    get playerKnock() {
+      return player.knocked
     },
     sit: (objectId, seatId) => seating.sit(objectId, seatId),
     stand: () => seating.stand(),
@@ -3951,6 +4095,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
+      moduleViews.dispose()
       for (const store of benches.values()) store.dispose()
       benches.clear()
       stopLoop?.()
@@ -4122,7 +4267,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
         graphics?.beforeRender(camera)
-        gl.render(scene, debugView ?? camera)
+        gl.render(scene, debugView ?? moduleViews.main(camera))
+        moduleViews.render(scene)
         graphics?.afterRender()
         restoreCamera()
         pacer.submitted()

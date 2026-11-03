@@ -5,9 +5,26 @@ import type { RealizeTarget } from './nodes'
 
 export type RealizedLoop = {
   readonly gain: GainNode
+  /** The node wired to the bus: the panner when the recipe pans, else the gain. */
+  readonly out: AudioNode
+  readonly panner?: StereoPannerNode
   readonly source: AudioScheduledSourceNode
   readonly frequency?: AudioParam
+  /** The first filter's cutoff, for `set({ cutoff })`. */
+  readonly cutoff?: AudioParam
   stop(): void
+}
+
+// a panning loop goes gain → panner → bus; the others keep the team wiring (gain → bus)
+function outputStage(recipe: LoopRecipe, target: RealizeTarget, gain: GainNode): { out: AudioNode; panner?: StereoPannerNode } {
+  if (!recipe.pan) {
+    gain.connect(target.output)
+    return { out: gain }
+  }
+  const panner = target.context.createStereoPanner()
+  gain.connect(panner)
+  panner.connect(target.output)
+  return { out: panner, panner }
 }
 
 // loops take fixed numbers: a range or a param in a loop recipe reads as 0
@@ -42,7 +59,7 @@ export function realizeGameLoop(recipe: LoopRecipe, target: RealizeTarget): Real
   gain.gain.value = 0
   const last = filters.reduce<AudioNode | undefined>((previous, filter) => (previous ? previous.connect(filter) : filter), undefined)
   last?.connect(gain)
-  gain.connect(target.output)
+  const output = outputStage(recipe, target, gain)
   const { source, frequency } = sourceOf(recipe, target)
   recipe.filters?.bank.forEach((spec, index) => {
     const filter = filters[index] as BiquadFilterNode
@@ -69,7 +86,7 @@ export function realizeGameLoop(recipe: LoopRecipe, target: RealizeTarget): Real
   }
   source.connect(filters[0] ?? gain)
   source.start()
-  return { gain, source, ...(frequency ? { frequency } : {}), stop: stopAll(sources) }
+  return { gain, ...output, source, ...(frequency ? { frequency } : {}), ...(filters[0] ? { cutoff: filters[0].frequency } : {}), stop: stopAll(sources) }
 }
 
 /** The art scene's loops: source, filters, gain at its starting volume, a gain LFO, wired, started. */
@@ -92,8 +109,8 @@ export function realizeChainLoop(recipe: LoopRecipe, target: RealizeTarget, volu
   let tail: AudioNode = source
   for (const filter of filters) tail = tail.connect(filter)
   tail.connect(gain)
-  gain.connect(target.output)
+  const output = outputStage(recipe, target, gain)
   source.start()
   for (const lfo of lfos) lfo.start()
-  return { gain, source, ...(frequency ? { frequency } : {}), stop: stopAll([source, ...lfos]) }
+  return { gain, ...output, source, ...(frequency ? { frequency } : {}), ...(filters[0] ? { cutoff: filters[0].frequency } : {}), stop: stopAll([source, ...lfos]) }
 }

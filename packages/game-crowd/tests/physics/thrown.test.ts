@@ -127,3 +127,22 @@ describe('who gets the slots: mixed, fastest, nearest', () => {
     expect(flying()).toEqual(first)
   })
 })
+
+describe('cover between a blast and the horde', () => {
+  it('an agent behind cover (the blast reach the host measures) is hurt and thrown less, and not killed by the lethal core', () => {
+    const outcome = (reach?: (target: readonly [number, number, number]) => number) => {
+      const scene = createChainScene()
+      runSteps(scene, COMPRESS_STEPS)
+      const before = scene.crowd.store.n
+      const blast = mortarAt(scene.crowd)
+      scene.crowd.blast(reach ? { ...blast, reach } : blast)
+      runSteps(scene, 30)
+      return { lost: before - scene.crowd.store.n, flying: scene.crowd.thrown.active() }
+    }
+    const open = outcome()
+    const covered = outcome(() => 0.02)
+    expect(open.lost).toBeGreaterThan(0)
+    expect(covered.lost).toBeLessThan(open.lost)
+    expect(covered.flying).toBeLessThan(open.flying)
+  })
+})

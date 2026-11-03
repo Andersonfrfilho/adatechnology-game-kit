@@ -1,16 +1,17 @@
+import type { ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Layout } from './electrical'
 import { keyOf } from './electrical'
-import type { Json } from './shared'
 import { distanceToRect } from './shared'
 import { atDoor, hasWindowAt } from './wall-points'
 import type { WallPoint } from './wall-points'
+import type { Outlet } from './types'
 
 /** Categories that need a socket of their own. */
 const APPLIANCES = ['fridge', 'display_fridge', 'freezer', 'tv', 'appliance', 'washing_machine', 'air_conditioner', 'cash_register', 'table_light']
 const COUNTERS = ['kitchen_cabinet', 'workbench', 'checkout_counter']
 const LAMPS = ['table_light', 'lamp']
 
-const needsSocket = (item: Json): boolean => APPLIANCES.includes(item.category) || item.category === 'shower'
+const needsSocket = (item: ResultItem): boolean => APPLIANCES.includes(item.category) || item.category === 'shower'
 
 interface Pick {
   point: WallPoint
@@ -22,18 +23,18 @@ interface Pick {
 export function addOutlets(layout: Layout): void {
   const { plan, items, rooms, electrical, pointsOf } = layout
   let counter = 0
-  const outletsOf = (room: Json): Json[] => electrical.outlets.filter((t) => t.room === room.id && t.floor === room.floor)
-  const newOutlet = (room: Json, point: WallPoint, y: number): Json => {
-    const outlet = { id: `outlet${++counter}`, room: room.id, floor: room.floor, u: point.u, v: point.v, y, c: point.c, axis: point.axis, pos: point.pos, frontU: point.nu, frontV: point.nv, type: '2P+T', voltage: 127 }
+  const outletsOf = (room: Room): Outlet[] => electrical.outlets.filter((t) => t.room === room.id && t.floor === room.floor)
+  const newOutlet = (room: Room, point: WallPoint, y: number): Outlet => {
+    const outlet: Outlet = { id: `outlet${++counter}`, room: room.id, floor: room.floor, u: point.u, v: point.v, y, c: point.c, axis: point.axis, pos: point.pos, frontU: point.nu, frontV: point.nv, type: '2P+T', voltage: 127 }
     electrical.outlets.push(outlet)
     return outlet
   }
   const counters = items.filter((m) => COUNTERS.includes(m.category) && !m.outdoor)
-  const heightFor = (room: Json, point: WallPoint): number =>
+  const heightFor = (room: Room, point: WallPoint): number =>
     room.type === 'kitchen' && counters.some((m) => m.floor === room.floor && m.room === room.id && distanceToRect(point.u, point.v, m.aabb) < 0.45) ? 1.1 : 0.3
-  const valid = (room: Json, point: WallPoint, y: number): boolean =>
+  const valid = (room: Room, point: WallPoint, y: number): boolean =>
     !hasWindowAt(point, y, 0.25) && !atDoor(plan, room, point, 0.45) && !outletsOf(room).some((t) => Math.hypot(t.u - point.u, t.v - point.v) < 0.5 && t.y === y)
-  const pick = (room: Json, score: (point: WallPoint) => number, fixedY: number | null, ignoreBlocked?: boolean): Pick | null => {
+  const pick = (room: Room, score: (point: WallPoint) => number, fixedY: number | null, ignoreBlocked?: boolean): Pick | null => {
     let best: Pick | null = null
     for (const point of pointsOf.get(keyOf(room)) ?? []) {
       const y = fixedY ?? heightFor(room, point)
@@ -43,15 +44,15 @@ export function addOutlets(layout: Layout): void {
     }
     return best
   }
-  const roomOf = (item: Json): Json | undefined => rooms.find((x) => x.id === item.room && x.floor === item.floor)
+  const roomOf = (item: ResultItem): Room | undefined => rooms.find((x) => x.id === item.room && x.floor === item.floor)
   const appliances = items.filter((m) => !m.outdoor && needsSocket(m) && rooms.some((c) => c.id === m.room && c.floor === m.floor) && m.category !== 'table_light')
   for (const item of appliances) connectAppliance(item)
-  function connectAppliance(item: Json): void {
+  function connectAppliance(item: ResultItem): void {
     const room = roomOf(item)!
     const target = item.aabb
     const nearest = outletsOf(room).map((t) => ({ t, d: distanceToRect(t.u, t.v, target) })).filter((o) => o.d <= 1.2 && o.t.y <= 1.1).sort((a, b) => a.d - b.d)[0]
     const isShower = item.category === 'shower'
-    let outlet: Json | null = nearest && !isShower ? nearest.t : null
+    let outlet: Outlet | null = nearest && !isShower ? nearest.t : null
     if (!outlet) {
       const height = isShower ? 1.1 : item.y > 0.7 ? 1.1 : null
       const best = pick(room, (p) => { const d = distanceToRect(p.u, p.v, target); return isShower && d < 0.6 ? 50 + d : d }, height)
@@ -69,7 +70,7 @@ export function addOutlets(layout: Layout): void {
   for (const room of rooms) {
     const area = room.parts.reduce((sum: number, q: number[]) => sum + (q[2]! - q[0]!) * (q[3]! - q[1]!), 0)
     const wanted = Math.max(room.type === 'kitchen' ? 3 : 2, Math.min(6, Math.round(area / 7)))
-    const farthest = (existing: Json[]) => (p: WallPoint) => -Math.min(9, ...existing.map((t) => Math.hypot(t.u - p.u, t.v - p.v)))
+    const farthest = (existing: Outlet[]) => (p: WallPoint) => -Math.min(9, ...existing.map((t) => Math.hypot(t.u - p.u, t.v - p.v)))
     for (let guard = 0; outletsOf(room).length < wanted && guard < 12; guard++) {
       const best = pick(room, farthest(outletsOf(room)), null)
       if (!best) break

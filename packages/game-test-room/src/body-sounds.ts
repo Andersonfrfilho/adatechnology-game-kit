@@ -44,9 +44,14 @@ export type BodySounds = {
   jump(position: Vec3): void
   /** The feet meet the floor after a fall of `speed` m/s on `surface`. */
   land(surface: SurfaceId, speed: number, position: Vec3): void
+  /** A thrown body hits a wall or the floor at `speed` m/s: the fall of the body, and the hurt cry when it was hard (`SLAM_HURT_SPEED`). */
+  slam(speed: number, position: Vec3): void
   /** Ids played, oldest first, for the room's checks (the last 64). */
   readonly played: readonly string[]
 }
+
+/** From this speed (m/s) a body thrown into a wall or onto the floor is hurt: it cries out. */
+export const SLAM_HURT_SPEED = 3.5
 
 /** The test room's body sounds on its engine (the bank is registered in it); with no engine every call does nothing. */
 export function createBodySounds(audio: AudioEngine | null): BodySounds {
@@ -55,7 +60,7 @@ export function createBodySounds(audio: AudioEngine | null): BodySounds {
   const play = (id: string, position: Vec3, volume: number, delay = 0): void => {
     played.push(id)
     if (played.length > 64) played.shift()
-    audio?.play(id, { position, volume, ...(delay > 0 ? { delay } : {}) })
+    audio?.play(id, { position, volume, urgent: true, ...(delay > 0 ? { delay } : {}) })
   }
   return {
     swing(blow, position, delay = 0) {
@@ -67,6 +72,10 @@ export function createBodySounds(audio: AudioEngine | null): BodySounds {
     },
     jump: (position) => play('jump', position, 0.6),
     land: (surface, speed, position) => play(landSoundId(surface, speed), position, Math.min(1, 0.45 + speed / 8)),
+    slam(speed, position) {
+      play('body_fall', position, Math.min(1, 0.4 + speed / 8))
+      if (speed >= SLAM_HURT_SPEED) play('player_hurt', position, Math.min(1, 0.5 + speed / 12))
+    },
     played,
   }
 }

@@ -4,6 +4,8 @@
 import { DISTANCE_CURVES, sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
 import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
+import { BLAST_SOUNDS, FIRE_LOOP, FIRE_SOUNDS } from './blast-fire'
+
 const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars']): SoundRecipe => sceneRecipe(id, layers, line, vars ? { vars } : {})
 
 const boomLayers = (big: boolean): Layer[] => [
@@ -102,6 +104,65 @@ export const LEAF_SOUNDS: readonly SoundRecipe[] = [
   leaf('shut_soft', [tone({ f: 95, f2: 55, d: 0.12, vol: 0.35 }), noise({ type: 'lowpass', f: 500, d: 0.1, vol: 0.3 })]),
   leaf('rattle', many(5, () => noise({ type: 'bandpass', f: [1600, 2600], q: 3, d: 0.035, vol: 0.32, delay: [0, 0.45] }))),
   leaf('slide', [noise({ type: 'bandpass', f: 700, q: 2, a: 0.04, d: 0.35, vol: 0.22 }), noise({ type: 'bandpass', f: 2200, q: 5, d: 0.3, vol: 0.05 })]),
+  // an item taken in the hand: the fingers on a hard surface and the sleeve moving, or a soft thing gathered up (the kit's recordings answer these ids)
+  leaf('grab_hard', [noise({ type: 'bandpass', f: 1800, q: 3, d: 0.03, vol: 0.18 }), noise({ type: 'bandpass', f: 900, q: 1.2, a: 0.02, d: 0.14, vol: 0.08 })]),
+  leaf('grab_soft', [noise({ type: 'lowpass', f: 1400, a: 0.02, d: 0.16, vol: 0.14 })]),
 ]
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }
+const impact = (id: string, layers: readonly Layer[]): SoundRecipe => ({ ...sceneRecipe(id, layers, ''), sources: ['sdk: a blow on a material, by material and kind of blow (synthesised until the recorded samples arrive)'] })
+
+/**
+ * A blow on a material, by what it is made of and what met it (`impactSoundKeys`): a bullet, a blunt blow (a punch, a kick, a fall), a blade. Each
+ * is drawn from how the real thing sounds (checklist 5.3): a bullet rings steel and goes "tchak" on concrete with pebbles after it, a fist on steel is a
+ * low "bong", a knife scrapes it; the ground is a dull "tuf", ceramic a dry "tic", plastic a hollow "toc", a sofa a "fump". Levels are matched so a
+ * bullet on concrete is as loud as on wood.
+ */
+export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
+  // metal
+  impact('metal_bullet', [noise({ type: 'highpass', f: 3000, d: 0.03, vol: 0.8 }), tone({ f: [2600, 3400], f2: 1800, d: 0.14, vol: 0.28, wet: 0.35 }), tone({ f: [520, 720], f2: 480, d: 0.35, vol: 0.22, wet: 0.35 })]),
+  impact('metal_blunt', [noise({ type: 'bandpass', f: 800, q: 1, d: 0.05, vol: 0.5 }), tone({ f: [150, 210], f2: 120, d: 0.6, vol: 0.5, wet: 0.4 }), tone({ f: [420, 520], f2: 400, d: 0.4, vol: 0.12 })]),
+  impact('metal_blade', [noise({ type: 'bandpass', f: [3500, 4500], q: 6, a: 0.01, d: 0.18, vol: 0.45 }), tone({ f: [2200, 2800], f2: 3000, d: 0.15, vol: 0.06 })]),
+  impact('metal_thin', [noise({ type: 'highpass', f: 2500, d: 0.04, vol: 0.6 }), tone({ f: [900, 1300], f2: 700, d: 0.25, vol: 0.22, wet: 0.3 }), noise({ type: 'bandpass', f: 1200, q: 2, d: 0.08, vol: 0.3 })]),
+  // wood (the bullet keeps the art scene's `wood_hit`)
+  impact('wood_blunt', [tone({ f: [110, 150], f2: 70, d: 0.14, vol: 0.6 }), noise({ type: 'bandpass', f: 500, q: 1.2, d: 0.12, vol: 0.55, wet: 0.2 })]),
+  impact('wood_blade', [noise({ type: 'bandpass', f: [1800, 2400], q: 2, a: 0.01, d: 0.12, vol: 0.5 }), ...many(3, () => noise({ type: 'bandpass', f: [2500, 4000], q: 3, d: 0.02, vol: 0.22, delay: [0.02, 0.1] }))]),
+  impact('mdf_puff', [noise({ type: 'lowpass', f: 900, d: 0.08, vol: 1 }), tone({ f: [180, 230], f2: 110, d: 0.06, vol: 0.3 }), noise({ type: 'highpass', f: 3000, a: 0.01, d: 0.2, vol: 0.1 })]),
+  // glass and ceramic
+  impact('glass_bullet', [noise({ type: 'highpass', f: 4000, d: 0.05, vol: 0.7 }), tone({ f: [3200, 4200], f2: 2600, d: 0.2, vol: 0.14, wet: 0.3 }), ...many(4, () => tone({ f: [4000, 7000], d: 0.05, vol: 0.07, delay: [0.02, 0.2] }))]),
+  impact('glass_blunt', [noise({ type: 'bandpass', f: 2200, q: 3, d: 0.05, vol: 0.8 }), tone({ f: [1400, 1800], f2: 1300, d: 0.2, vol: 0.16, wet: 0.3 })]),
+  impact('glass_blade', [noise({ type: 'bandpass', f: 5000, q: 8, a: 0.02, d: 0.25, vol: 0.3 })]),
+  impact('ceramic_hit', [noise({ type: 'bandpass', f: 3000, q: 2, d: 0.03, vol: 0.6 }), tone({ f: [1800, 2400], f2: 1600, d: 0.1, vol: 0.2 })]),
+  impact('ceramic_bullet', [noise({ type: 'highpass', f: 2500, d: 0.06, vol: 0.85 }), ...many(5, () => tone({ f: [2500, 5000], d: 0.04, vol: 0.09, delay: [0, 0.15] }))]),
+  // masonry and the ground
+  impact('masonry_bullet', [noise({ type: 'bandpass', f: [1600, 2000], q: 1, d: 0.05, vol: 1.8 }), noise({ type: 'lowpass', f: 600, d: 0.12, vol: 0.9, wet: 0.2 }), ...many(4, () => noise({ type: 'bandpass', f: [2000, 4000], q: 3, d: 0.02, vol: 0.28, delay: [0.03, 0.3] }))]),
+  impact('masonry_blunt', [tone({ f: [70, 95], f2: 45, d: 0.12, vol: 0.55 }), noise({ type: 'lowpass', f: 400, d: 0.1, vol: 0.5 })]),
+  impact('masonry_blade', [noise({ type: 'bandpass', f: [2500, 3500], q: 4, a: 0.01, d: 0.15, vol: 0.4 })]),
+  impact('plaster_puff', [noise({ type: 'lowpass', f: 900, d: 0.09, vol: 0.7 }), noise({ type: 'highpass', f: 3000, a: 0.01, d: 0.2, vol: 0.14 })]),
+  impact('soil_bullet', [noise({ type: 'lowpass', f: 700, d: 0.08, vol: 2.2 }), ...many(3, () => noise({ type: 'bandpass', f: [1200, 2200], q: 2, d: 0.03, vol: 0.18, delay: [0.02, 0.2] }))]),
+  impact('soil_blunt', [tone({ f: [55, 70], f2: 40, d: 0.1, vol: 0.45 }), noise({ type: 'lowpass', f: 300, d: 0.08, vol: 0.4 })]),
+  impact('sand_hit', [noise({ type: 'bandpass', f: 3500, q: 0.8, a: 0.005, d: 0.15, vol: 0.45 }), noise({ type: 'lowpass', f: 500, d: 0.06, vol: 0.45 })]),
+  impact('gravel_hit', [noise({ type: 'lowpass', f: 500, d: 0.06, vol: 0.45 }), ...many(6, () => noise({ type: 'bandpass', f: [1500, 3500], q: 3, d: 0.025, vol: 0.28, delay: [0, 0.18] }))]),
+  // plastic, rubber, wax
+  impact('plastic_hit', [noise({ type: 'bandpass', f: 1600, q: 3, d: 0.04, vol: 0.5 }), tone({ f: [380, 520], f2: 300, d: 0.08, vol: 0.32 })]),
+  impact('plastic_bullet', [noise({ type: 'bandpass', f: 2500, q: 2, d: 0.03, vol: 1.3 }), tone({ f: [600, 800], f2: 450, d: 0.06, vol: 0.4 })]),
+  impact('rubber_hit', [tone({ f: [90, 130], f2: 60, d: 0.1, vol: 0.45 }), noise({ type: 'lowpass', f: 350, d: 0.06, vol: 0.28 })]),
+  impact('wax_hit', [noise({ type: 'lowpass', f: 800, d: 0.05, vol: 0.45 }), tone({ f: [240, 280], f2: 180, d: 0.05, vol: 0.22 })]),
+  // soft things, paper, plants
+  impact('soft_bullet', [noise({ type: 'lowpass', f: 450, a: 0.003, d: 0.1, vol: 1.8 }), noise({ type: 'bandpass', f: 900, q: 1, d: 0.05, vol: 0.5 })]),
+  impact('fabric_rip', [noise({ type: 'bandpass', f: [2000, 2800], q: 1.5, a: 0.02, d: 0.25, vol: 0.4 }), ...many(4, () => noise({ type: 'bandpass', f: [3000, 5000], q: 4, d: 0.02, vol: 0.14, delay: [0, 0.22] }))]),
+  impact('paper_hit', [noise({ type: 'bandpass', f: 2200, q: 1, d: 0.05, vol: 0.45 })]),
+  impact('paper_tear', [noise({ type: 'highpass', f: 2500, a: 0.02, d: 0.3, vol: 0.15 })]),
+  impact('leaf_rustle', many(6, () => noise({ type: 'bandpass', f: [2500, 6000], q: 2, d: 0.05, vol: 0.16, delay: [0, 0.3] }))),
+  impact('branch_cut', [noise({ type: 'bandpass', f: 1500, q: 2, d: 0.04, vol: 0.55 }), tone({ f: [260, 340], f2: 150, d: 0.05, vol: 0.22 })]),
+  impact('fruit_splat', [noise({ type: 'lowpass', f: 1200, d: 0.12, vol: 0.55 }), noise({ type: 'bandpass', f: 600, q: 0.7, d: 0.2, vol: 0.32 })]),
+  // a round glancing off: steel whines down in pitch ("piiuu"), stone and concrete give a short crack with grit
+  impact('ricochet_metal', [noise({ type: 'highpass', f: 3000, d: 0.02, vol: 0.6 }), tone({ f: [2800, 3600], f2: 900, d: 0.38, vol: 0.2, wet: 0.4 }), tone({ f: [5200, 6400], f2: 2000, d: 0.2, vol: 0.05 })]),
+  impact('ricochet_stone', [noise({ type: 'bandpass', f: [2200, 2800], q: 2, d: 0.04, vol: 0.8 }), tone({ f: [1800, 2400], f2: 1200, d: 0.08, vol: 0.1 }), ...many(3, () => noise({ type: 'bandpass', f: [2500, 4500], q: 3, d: 0.015, vol: 0.2, delay: [0.02, 0.12] }))]),
+  // breaks a material has of its own (the rest keep the art scene's shatter, crumble and splinter)
+  impact('ceramic_break', [noise({ type: 'highpass', f: 1800, d: 0.3, vol: 0.85, wet: 0.4 }), ...many(8, () => tone({ f: [1800, 4500], d: [0.04, 0.1], vol: 0.15, delay: [0, 0.4] }))]),
+  impact('tempered_burst', [noise({ type: 'highpass', f: 3500, d: 0.6, vol: 0.9, wet: 0.4 }), ...many(16, () => tone({ f: [4000, 8000], d: 0.04, vol: 0.08, delay: [0, 0.8] }))]),
+  impact('plastic_crack', [noise({ type: 'bandpass', f: 1800, q: 2, d: 0.06, vol: 0.75 }), tone({ f: [450, 550], f2: 250, d: 0.05, vol: 0.22 })]),
+  impact('mdf_crumble', [noise({ type: 'lowpass', f: 700, d: 0.25, vol: 0.75, wet: 0.2 }), ...many(4, () => noise({ type: 'lowpass', f: 500, d: 0.05, vol: 0.32, delay: [0.05, 0.3] }))]),
+]
+
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, ...IMPACT_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS], loops: [BURN_LOOP, FIRE_LOOP] }

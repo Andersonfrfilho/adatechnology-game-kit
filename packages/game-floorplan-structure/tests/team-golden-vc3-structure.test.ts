@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import type { Structure } from '../src/types'
 import { allEvents, chunksOf, explain, generate, hashOf, hashRows, LISTS, SINGLES, sdkTemplateOf, singlesOf, teamLists, text } from './vc3-golden-support'
 
 // The tests are synchronous: without a turn of the event loop between them the worker never reads vitest's replies, and after 60 s of them
@@ -14,7 +15,7 @@ describe('structure against the Visor de casas 3D (VC3), coarse detail', () => {
       const mismatches: string[] = []
       for (const event of allEvents.filter((x) => x.template === template && x.seed >= from && x.seed <= to)) {
         const result = generate(event)
-        const lists = teamLists(result.structure)
+        const lists = teamLists(result.structure as Structure) // written by the structure extension
         for (const list of LISTS) {
           if (hashRows(lists[list]) !== event.hashes[list]) mismatches.push(`${template}#${event.seed}/${event.state} ${explain(event, list, lists)}`)
         }

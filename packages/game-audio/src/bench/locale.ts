@@ -64,7 +64,7 @@ const EN: AudioBenchText = {
     determinism: 'The same seed gives the same sound plan, another seed another one',
     limiter: 'The voice limiter holds a storm of voices to its group rule and its global cap',
   },
-  mixes: { game: 'Game', art_scene: 'Art scene' },
+  mixes: { game: 'Game', art_scene: 'Art scene', kit: 'Kit (art scene + limiter)' },
   sheet: { title: 'Sound plan', level: 'level', distance: 'distance', pan: 'pan', length: 'seconds', silent: 'too far to be heard', layer: 'layer', none: 'no sound chosen' },
 }
 
@@ -119,7 +119,7 @@ const PT_BR: AudioBenchText = {
     determinism: 'A mesma semente dá o mesmo plano de som, outra semente dá outro',
     limiter: 'O limite de vozes segura uma tempestade de vozes na regra do grupo e no teto global',
   },
-  mixes: { game: 'Jogo', art_scene: 'Cena de Arte' },
+  mixes: { game: 'Jogo', art_scene: 'Cena de Arte', kit: 'Kit (Cena de Arte + limitador)' },
   sheet: { title: 'Plano do som', level: 'nível', distance: 'distância', pan: 'pan', length: 'segundos', silent: 'longe demais para ouvir', layer: 'camada', none: 'nenhum som escolhido' },
 }
 

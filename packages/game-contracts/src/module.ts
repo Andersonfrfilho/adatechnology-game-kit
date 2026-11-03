@@ -57,6 +57,21 @@ export interface Thumbnail {
   render?: true | { yaw?: number; pitch?: number; distance?: number; wear?: 0 | 1 | 2 }
 }
 
+/**
+ * What an item sounds like when the hand works it, as names of sound sets the host knows (the kit's are `LEAF_FOLEY_SETS` and `PICKUP_CLASSES` of game-audio).
+ * Everything is optional: without it the host picks by the material of the part.
+ */
+export interface ItemSounds {
+  /** How it sounds picked up: `metal`, `plastic`, `glass`, `paper`, `fabric`, `wood`, `food`. Default: by its heaviest material. */
+  handling?: string
+  /** The sound set of each leaf worked by hand, by part id, `*` for every other leaf: `car_door`, `car_trunk`, `fridge`, `microwave`, `drawer`, `wood_door`, `metal_door`. */
+  leaves?: Readonly<Record<string, string>>
+  /** The sound id of opening its seal (`can_open`, `bottle_open`). Default: a metal seal is a can, any other a screw cap. */
+  open?: string
+  /** The sound id of each use while it is held (`drink`: `drink_gulp`, `eat`: `eat_chew`), played over and over while the use lasts. */
+  uses?: Readonly<Record<string, string>>
+}
+
 /** One thing a module can put in the test room (or any viewer): a toy car, a chair, a pistol on a table. */
 export interface TestableItem {
   /** snake_case id, unique inside the module. */
@@ -85,6 +100,8 @@ export interface TestableItem {
   pushable?: boolean
   /** Where a body sits or lies on it: the host can seat the player there. */
   seats?: readonly ItemSeat[]
+  /** What it sounds like in the hand (picked up, opened, used) and the sound set of its doors and lids. */
+  sounds?: ItemSounds
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
   slow?: boolean | string
   /**
@@ -291,15 +308,34 @@ export interface FrameOptions {
 }
 
 /**
- * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
- * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
+ * An extra view the host draws over its own, for a module that needs to see from somewhere else at the same time: a rear-view mirror, a side mirror, a reversing camera, a security
+ * monitor. The host renders the scene from `camera` into `rect` after the main view, every frame, until the returned function is called.
  */
+export interface ModuleView {
+  /** A three.js camera the module moves itself every frame. Its aspect is set by the host to the rect's. */
+  camera: unknown
+  /** Where on the screen, as fractions of the canvas from its top-left corner (0..1). */
+  rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+  /** Draws it left-right flipped, as a mirror shows the world. */
+  mirror?: boolean
+  /** Rounds the corners of the frame (a fraction of the shorter side, 0..0.5); 0 or absent is a plain rectangle. */
+  rounded?: number
+  /** Short label the host may print on the frame. */
+  label?: string
+  /** Renders it at this fraction of the canvas resolution (default 0.5): a mirror does not need full detail. */
+  resolution?: number
+}
+
 export interface HostGraphics {
   hordeDetail(): 'auto' | number
   onChange(listener: () => void): () => void
   report(key: string, value: number): void
 }
 
+/**
+ * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
+ * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
+ */
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -371,6 +407,15 @@ export interface ModuleHost {
   reachFor?(reach: HostReach): void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
+  /**
+   * Draws an extra view over the host's own (mirrors, a reversing camera). Returns the function that takes it away. A host that cannot draw more than one view leaves it out.
+   */
+  addView?(view: ModuleView): () => void
+  /**
+   * Takes over the main view with the module's camera (a vehicle's chase, cockpit or hood camera) until it is called again with null. The player's own camera comes back then. A host
+   * that keeps its camera to itself leaves it out.
+   */
+  setViewCamera?(camera: unknown | null): void
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
   /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */
@@ -390,6 +435,12 @@ export interface ModuleHost {
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.
    */
   blastShove?: BlastShoveOptions
+  /**
+   * The share (0..1) of a blast at `point` that reaches `target` through the cover between them (walls, cars, furniture of the host's world): what a module passes as
+   * `BlastSource.reach` to `blastShove`, so a body behind a wall is not thrown like one in the open. `ignore` lists world objects that never block (the explosive).
+   * Absent when the host has no world: the whole blast reaches.
+   */
+  blastReach?(point: Vec3, target: Vec3, ignore?: readonly string[]): number
   /** The host's loading indicator: a module with a slow job of its own (building a house, laying a district) shows it through this instead of freezing the page. Absent when the host has none. */
   loading?: BusySink
 }

@@ -694,7 +694,17 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       const offFixed = lent.onFrame((step) => (world.physics ? stepCrowd(step) : undefined), { phase: 'fixedSimulate' })
       const offBlast = lent.on((event) => {
         if (event.type !== 'explosion') return
-        world.crowd.blast({ point: event.point, energy: event.energy, radius: event.radius, lethalRadius: event.radius * LETHAL_SHARE, source: event.source, ...(event.cause === 'part' ? { chain: event.source } : {}) })
+        const cover = lent.blastReach
+        world.crowd.blast({
+          point: event.point,
+          energy: event.energy,
+          radius: event.radius,
+          lethalRadius: event.radius * LETHAL_SHARE,
+          source: event.source,
+          ...(event.cause === 'part' ? { chain: event.source } : {}),
+          // a wall or a car between the blast and an agent takes its share of the shove and the damage
+          ...(cover ? { reach: (target: readonly [number, number, number]) => cover(event.point, [target[0], target[1], target[2]], [event.source]) } : {}),
+        })
       })
       if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
       // the bench state arrives right after `attach`: once it has been applied the drawing is made and every batch with it, before the host's warm-up draws the scene

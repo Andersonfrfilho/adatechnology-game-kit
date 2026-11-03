@@ -1,6 +1,7 @@
 export { createVehiclesThree } from './build'
 export { createCabinSmoke } from './cabin-smoke'
 export type { CabinSmoke } from './cabin-smoke'
+export * from './audio'
 export type { BuildVehicleOptions, BuiltVehicle, FleetDims, VehicleFleetContent, VehicleQuality, VehiclesThree, VehiclesThreeOptions } from './build'
 export { LITE_CLASSES, PRUNE_BELOW, classColor, classify, fuse, liteMaterials, liteMeshes } from './lite'
 export type { LiteClass, LiteFusion } from './lite'
@@ -10,3 +11,5 @@ export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, DEFAULT_TEST_WRECKS, l
 export type { DocumentLike, EffectsLike, ModuleRoomLike, VehicleEffectIds, VehicleSoundIds, VehiclesContext, VehicleWreck, VehiclesRoom, VehiclesTestFleet, VehiclesTestOptions } from './testing'
 export { VEHICLE_LOD_DISTANCE, createVehicleLod } from './vehicle-lod'
 export type { VehicleLod } from './vehicle-lod'
+export { createProvingModule, loadProvingModule, PROVING_AREA_ID, PROVING_TEXT } from './test-area/proving'
+export type { ProvingModuleOptions, ProvingRoomLike, ProvingText } from './test-area/proving'

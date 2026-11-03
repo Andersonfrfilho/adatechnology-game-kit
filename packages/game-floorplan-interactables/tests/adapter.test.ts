@@ -48,10 +48,10 @@ describe('registries: the game adds, replaces and drops entries without touching
 
   it('a type replaced in typeMap becomes the object of the kit the game chose', () => {
     const r = planOf('single_storey_a', 3)
-    const base = create(kit).plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.fridge')
+    const base = create(kit).plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.fridge')!
     expect(base.type).toBe('fridge')
     const a = create({ ...kit, typeMap: { fridge_large: { type: 'wardrobe' } } })
-    const entry = a.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.fridge')
+    const entry = a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.fridge')!
     expect(entry.type).toBe('wardrobe')
   })
 
@@ -60,18 +60,18 @@ describe('registries: the game adds, replaces and drops entries without touching
     const stacks = r.contents['kitchen.pantry']
     const id = stacks[0].itemId
     const a = create({ ...kit, contentMap: { [id]: 'sugar' } })
-    const placed = Object.values<any>(a.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.pantry').item.contents).flat().filter(Boolean)
-    expect(placed.some((s: any) => s.type === 'sugar' && s.data.source === id)).toBe(true)
+    const placed = Object.values(a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.pantry')!.item.contents ?? {}).flat().filter((s) => s != null)
+    expect(placed.some((s) => s.type === 'sugar' && s.data?.source === id)).toBe(true)
   })
 
   it('a stack that is in no table falls back by group, then to the fallback item', () => {
     const r = planOf('single_storey_a', 3)
     r.contents['kitchen.pantry'] = [{ itemId: 'zz_unknown', count: 1, group: 'tool' }, { itemId: 'zz_other', count: 1 }]
     const a = create(kit)
-    const placed = Object.values<any>(a.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.pantry').item.contents).flat().filter(Boolean)
-    expect(placed.map((s: any) => s.type).sort()).toEqual(['crumpled_paper', 'duct_tape'])
+    const placed = Object.values(a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.pantry')!.item.contents ?? {}).flat().filter((s) => s != null)
+    expect(placed.map((s) => s.type).sort()).toEqual(['crumpled_paper', 'duct_tape'])
     const b = create({ ...kit, contentFallback: 'sponge', groupOf: (id) => (id === 'zz_other' ? 'food' : null) })
-    const types = Object.values<any>(b.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.pantry').item.contents).flat().filter(Boolean).map((s: any) => s.type)
+    const types = Object.values(b.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.pantry')!.item.contents ?? {}).flat().filter((s) => s != null).map((s) => s.type)
     expect(types).toContain('canned_food')
   })
 
@@ -79,8 +79,8 @@ describe('registries: the game adds, replaces and drops entries without touching
     const r = planOf('single_storey_a', 3)
     r.contents['kitchen.fridge'] = [{ itemId: 'milk_carton', count: 1, group: 'food' }]
     const where = (a: ReturnType<typeof create>) => {
-      const c = a.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.fridge').item.contents
-      return Object.keys(c).filter((k) => c[k].some(Boolean))
+      const c = a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.fridge')!.item.contents ?? {}
+      return Object.keys(c).filter((k) => c[k]!.some(Boolean))
     }
     expect(where(create(kit))).toEqual(['fridge'])
     expect(where(create({ ...kit, preference: { fridge: () => ['freezer', 'fridge'] } }))).toEqual(['freezer'])
@@ -99,7 +99,7 @@ describe('registries: the game adds, replaces and drops entries without touching
 
   it('seedKey changes the seed of an object, and the default is the id', () => {
     const r = planOf('single_storey_a', 3)
-    const seedOf = (a: ReturnType<typeof create>) => a.plan(r, { seed: r.seed }).items.find((e: any) => e.id === 'kitchen.fridge').item.seed
+    const seedOf = (a: ReturnType<typeof create>) => a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.fridge')!.item.seed
     expect(seedOf(create(kit))).toBe(seedOf(create({ ...kit, seedKey: () => null })))
     expect(seedOf(create({ ...kit, seedKey: (id) => `legacy.${id}` }))).not.toBe(seedOf(create(kit)))
   })

@@ -56,7 +56,8 @@ page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
 const url = pathToFileURL(dist).href
 
 // EXAMPLE_PART splits the run across CI jobs, each part opening its own pages: `scenarios` or `scenarios:i/n` (every scenario, or the i-th of n
-// shares of them), `views` (the SDK content, the screenshots, the player's body, the test table), `hands` (first person, close-ups, contact sheets); unset runs all
+// shares of them), `views` or `views:i/2` (1: the SDK content and the first screenshots; 2: the burning sofa, the player's body, the test table: each
+// page load takes minutes on software GL, so the halves run in parallel jobs), `hands` (first person, close-ups, contact sheets); unset runs all
 const [PART, SHARD] = (process.env.EXAMPLE_PART || 'all').split(':')
 const runs = (part) => PART === 'all' || PART === part
 const report = { passed: 0, failed: 0, results: [] }
@@ -78,32 +79,35 @@ if (runs('scenarios')) {
 }
 
 if (runs('views')) {
-  await page.goto(`${url}?ui=0&table=0`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
-  // the default page carries the SDK's real items (the teams' content) and none of the old procedural demo ones
-  const DEMO_IDS = ['chair', 'sofa_demo', 'shelf', 'old_tv', 'steel_sheet', 'glass_pane', 'concrete_block', 'brick_column', 'building_frame', 'car_door', 'small_tree', 'potted_plant', 'coffee_cup', 'glass_bottle', 'wooden_crate', 'steel_drum', 'plastic_bucket', 'jerrycan', 'rental_car']
-  const content = await page.evaluate(() => {
-    const r = window.__furnitureReport
-    const lists = { household: r.items, weapons: r.weapons?.items ?? [], goods: r.itemsArea?.items ?? [], vehicles: r.vehicles?.items ?? [], vegetation: r.vegetation?.items ?? [], characters: r.characters?.items ?? [], animals: r.animals?.items ?? [] }
-    const all = Object.values(lists).flat()
-    const room = window.__testRoom
-    const spawnable = {}
-    for (const id of ['weapon_pistol_9mm', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
-      try {
-        spawnable[id] = !!room.spawn(id, [0, 0, -5], 0)
-      } catch {
-        spawnable[id] = false
+  const viewsHalf = (i) => !SHARD || SHARD.split('/')[0] === String(i)
+  if (viewsHalf(1)) {
+    await page.goto(`${url}?ui=0&table=0`, { timeout: 180000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
+    // the default page carries the SDK's real items (the teams' content) and none of the old procedural demo ones
+    const DEMO_IDS = ['chair', 'sofa_demo', 'shelf', 'old_tv', 'steel_sheet', 'glass_pane', 'concrete_block', 'brick_column', 'building_frame', 'car_door', 'small_tree', 'potted_plant', 'coffee_cup', 'glass_bottle', 'wooden_crate', 'steel_drum', 'plastic_bucket', 'jerrycan', 'rental_car']
+    const content = await page.evaluate(() => {
+      const r = window.__furnitureReport
+      const lists = { household: r.items, weapons: r.weapons?.items ?? [], goods: r.itemsArea?.items ?? [], vehicles: r.vehicles?.items ?? [], vegetation: r.vegetation?.items ?? [], characters: r.characters?.items ?? [], animals: r.animals?.items ?? [] }
+      const all = Object.values(lists).flat()
+      const room = window.__testRoom
+      const spawnable = {}
+      for (const id of ['weapon_pistol_9mm', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
+        try {
+          spawnable[id] = !!room.spawn(id, [0, 0, -5], 0)
+        } catch {
+          spawnable[id] = false
+        }
+        room.clear()
       }
-      room.clear()
-    }
-    return { counts: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.length])), all, spawnable, problems: Object.values(r).flatMap((x) => x?.problems ?? []).length }
-  })
-  const extra = content.all.filter((id) => id.startsWith('weapon_') || id.startsWith('item_')).length
-  const demoLeft = DEMO_IDS.filter((id) => content.all.includes(id))
-  const spawnOk = Object.values(content.spawnable).every(Boolean)
-  const contentOk = content.counts.household === 51 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
-  console.log(`${contentOk ? 'PASS' : 'FAIL'}  default page loads the SDK content`, JSON.stringify({ counts: content.counts, demoLeft, spawnable: content.spawnable }))
-  if (!contentOk) report.failed++
+      return { counts: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.length])), all, spawnable, problems: Object.values(r).flatMap((x) => x?.problems ?? []).length }
+    })
+    const extra = content.all.filter((id) => id.startsWith('weapon_') || id.startsWith('item_')).length
+    const demoLeft = DEMO_IDS.filter((id) => content.all.includes(id))
+    const spawnOk = Object.values(content.spawnable).every(Boolean)
+    const contentOk = content.counts.household === 51 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
+    console.log(`${contentOk ? 'PASS' : 'FAIL'}  default page loads the SDK content`, JSON.stringify({ counts: content.counts, demoLeft, spawnable: content.spawnable }))
+    if (!contentOk) report.failed++
+  }
 
   // screenshots: a fresh room per scene, driven through window.__testRoom
   async function shot(name, setup) {
@@ -113,76 +117,81 @@ if (runs('views')) {
     await page.waitForTimeout(400)
     await page.screenshot({ path: join(shotsDir, `${name}.png`), ...SHOT })
   }
-  await shot('overview', () => {
-    const r = window.__testRoom
-    r.spawn('fridge', [-1.5, 0, -2])
-    r.spawn('sofa', [0.5, 0, -2])
-    r.spawn('sedan', [4, 0, -4])
-  })
-  await shot('weapon-in-hand', () => {
-    const r = window.__testRoom
-    r.spawn('wardrobe', [0, 0, -3])
-    r.setTool('pistol_9mm')
-    for (let i = 0; i < 40; i++) r.update(0.02)
-  })
-  await shot('burning-sofa', () => {
-    const r = window.__testRoom
-    r.spawn('sofa', [0, 0, -4])
-    r.setTool('lighter')
-    r.update(0.4)
-    r.look([0, 0.5, -3.2], [0, 0.4, -4])
-    r.use(5)
-    for (let i = 0; i < 12; i++) r.update(0.25)
-    r.look([0.4, 1.2, -2.2], [0, 0.3, -4])
-  })
+  if (viewsHalf(1)) {
+    await shot('overview', () => {
+      const r = window.__testRoom
+      r.spawn('fridge', [-1.5, 0, -2])
+      r.spawn('sofa', [0.5, 0, -2])
+      r.spawn('sedan', [4, 0, -4])
+    })
+    await shot('weapon-in-hand', () => {
+      const r = window.__testRoom
+      r.spawn('wardrobe', [0, 0, -3])
+      r.setTool('pistol_9mm')
+      for (let i = 0; i < 40; i++) r.update(0.02)
+    })
+  }
 
-  // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
-  await page.goto(`${url}?ui=1`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
-  const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
-  await page.keyboard.press('KeyV')
-  await page.evaluate(() => {
-    const r = window.__testRoom
-    r.spawn('fridge', [-1.5, 0, -2])
-    r.look([0, 1.7, 3.5], [0, 1.2, -8])
-    for (let i = 0; i < 40; i++) r.update(0.02)
-  })
-  await page.waitForTimeout(400)
-  await page.screenshot({ path: join(shotsDir, 'third-person.png'), ...SHOT })
-  const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
-  bodyOk = before.mode === 'first' && before.visible === true && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
-  console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: drawn in first person and after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
+  if (viewsHalf(2)) {
+    await shot('burning-sofa', () => {
+      const r = window.__testRoom
+      r.spawn('sofa', [0, 0, -4])
+      r.setTool('lighter')
+      r.update(0.4)
+      r.look([0, 0.5, -3.2], [0, 0.4, -4])
+      r.use(5)
+      for (let i = 0; i < 12; i++) r.update(0.25)
+      r.look([0.4, 1.2, -2.2], [0, 0.3, -4])
+    })
+
+    // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
+    await page.goto(`${url}?ui=1`, { timeout: 180000 })
+    await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
+    const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
+    await page.keyboard.press('KeyV')
+    await page.evaluate(() => {
+      const r = window.__testRoom
+      r.spawn('fridge', [-1.5, 0, -2])
+      r.look([0, 1.7, 3.5], [0, 1.2, -8])
+      for (let i = 0; i < 40; i++) r.update(0.02)
+    })
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: join(shotsDir, 'third-person.png'), ...SHOT })
+    const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
+    bodyOk = before.mode === 'first' && before.visible === true && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
+    console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: drawn in first person and after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
 
-  // the test table: the goods and the weapons laid on the long dining table of the furniture catalogue a page at a time, and each trial (shot, punch, knife, fire, blast) reaches the item picked
-  await page.goto(`${url}?ui=1&table=1`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
-  const table = await page.evaluate(() => {
-    const r = window.__testRoom
-    const groups = r.testTable.groups()
-    const sizes = Object.fromEntries(groups.map((g) => [g, r.testTable.items().filter((i) => i.group === g).length]))
-    const reached = {}
-    for (const kind of ['shot', 'punch', 'stab', 'fire', 'blast']) {
-      const page = r.testTable.find('item_canned_beans') ?? r.testTable.find(r.testTable.items()[0].id)
-      const target = page.selected
-      const before = r.log.entries().length
-      r.testTable.trial(kind)
-      for (let i = 0; i < 60; i++) r.update(1 / 60)
-      reached[kind] = r.log.entries().slice(before).some((e) => e.objectId === target && e.type !== 'spawn')
-    }
-    const panel = !!document.querySelector('.tr-table') && document.querySelectorAll('.tr-table [data-trial]').length === 5
-    return { groups: groups.length, sizes, reached, panel }
-  })
-  await page.evaluate(() => {
-    const r = window.__testRoom
-    r.testTable.relay()
-    r.look([-8, 2.2, 6], [-8, 0.8, 3])
-  })
-  await page.waitForTimeout(400)
-  await page.screenshot({ path: join(shotsDir, 'test-table.png'), ...SHOT })
-  const tableOk = table.panel && table.groups > 5 && Object.values(table.reached).every(Boolean)
-  console.log(`${tableOk ? 'PASS' : 'FAIL'}  test table: every group laid a page at a time, each trial reaches the item picked`, JSON.stringify(table))
-  if (!tableOk) report.failed++
+    // the test table: the goods and the weapons laid on the long dining table of the furniture catalogue a page at a time, and each trial (shot, punch, knife, fire, blast) reaches the item picked
+    await page.goto(`${url}?ui=1&table=1`, { timeout: 180000 })
+    await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
+    const table = await page.evaluate(() => {
+      const r = window.__testRoom
+      const groups = r.testTable.groups()
+      const sizes = Object.fromEntries(groups.map((g) => [g, r.testTable.items().filter((i) => i.group === g).length]))
+      const reached = {}
+      for (const kind of ['shot', 'punch', 'stab', 'fire', 'blast']) {
+        const page = r.testTable.find('item_canned_beans') ?? r.testTable.find(r.testTable.items()[0].id)
+        const target = page.selected
+        const before = r.log.entries().length
+        r.testTable.trial(kind)
+        for (let i = 0; i < 60; i++) r.update(1 / 60)
+        reached[kind] = r.log.entries().slice(before).some((e) => e.objectId === target && e.type !== 'spawn')
+      }
+      const panel = !!document.querySelector('.tr-table') && document.querySelectorAll('.tr-table [data-trial]').length === 5
+      return { groups: groups.length, sizes, reached, panel }
+    })
+    await page.evaluate(() => {
+      const r = window.__testRoom
+      r.testTable.relay()
+      r.look([-8, 2.2, 6], [-8, 0.8, 3])
+    })
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: join(shotsDir, 'test-table.png'), ...SHOT })
+    const tableOk = table.panel && table.groups > 5 && Object.values(table.reached).every(Boolean)
+    console.log(`${tableOk ? 'PASS' : 'FAIL'}  test table: every group laid a page at a time, each trial reaches the item picked`, JSON.stringify(table))
+    if (!tableOk) report.failed++
+  }
 }
 
 if (runs('hands')) {

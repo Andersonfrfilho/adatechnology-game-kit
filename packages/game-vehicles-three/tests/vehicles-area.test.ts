@@ -3,6 +3,7 @@ import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it, vi } from 'vitest'
 
 import { defaultEffectIds, defaultSoundIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule } from '../src'
+import { CAR_ENGINE } from '../src/audio/profiles'
 import { fakeDocument } from './fake-dom'
 import { roomWithVehicles } from './vehicles-room'
 
@@ -10,10 +11,10 @@ import { roomWithVehicles } from './vehicles-room'
 vi.setConfig({ testTimeout: 600_000 })
 
 describe('vehicles test area', () => {
-  it('asks the room engine for the horn and the engine loop by id (the crash sound waits for a crash), from the library bank of game-audio', () => {
+  it('asks the room engine for the horn, the starter, the engine loops by RPM, the tyres and the crashes, all from banks the room knows', () => {
     const { room } = roomWithVehicles('en', 'sedan')
-    for (const id of [defaultSoundIds.horn, defaultSoundIds.crash]) expect([id, room.audio!.registry.sound(id) !== undefined]).toEqual([id, true])
-    expect(room.audio!.registry.loop(defaultSoundIds.engine)).toBeDefined()
+    for (const id of [defaultSoundIds.horn, defaultSoundIds.start, defaultSoundIds.crashLight, defaultSoundIds.crashMedium, defaultSoundIds.crashHeavy]) expect([id, room.audio!.registry.sound(id) !== undefined]).toEqual([id, true])
+    for (const id of [...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound, defaultSoundIds.roll, defaultSoundIds.skidAsphalt]) expect([id, room.audio!.registry.loop(id) !== undefined]).toEqual([id, true])
     const played: string[] = []
     const loops: string[] = []
     const audio = room.audio!
@@ -27,7 +28,11 @@ describe('vehicles test area', () => {
     bench?.act('drive_lane')
     for (let i = 0; i < 600; i++) room.update(1 / 30)
     expect(played).toContain(defaultSoundIds.horn)
-    expect(loops).toContain(defaultSoundIds.engine)
+    // the key first, then the engine; the lane car brakes hard before the wall (the tyres squeal) and is switched off once it stops
+    expect(played.indexOf(defaultSoundIds.start)).toBeGreaterThanOrEqual(0)
+    expect(loops).toContain(defaultSoundIds.skidAsphalt)
+    expect(played.indexOf(defaultSoundIds.stop)).toBeGreaterThan(played.indexOf(defaultSoundIds.start))
+    expect(loops).toContain(CAR_ENGINE.layers[0]!.sound)
   })
 
   it('asks the room effects for ids the game-vfx catalogue knows (no particle code of its own)', () => {

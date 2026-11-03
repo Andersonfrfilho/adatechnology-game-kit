@@ -6,7 +6,7 @@ import { blocksWindow, windowZone, windowsOfRoom, zonesOfFloor } from './queries
 import { registries } from './registry'
 import { weightedOrder } from './rng'
 import type { Rng } from './rng'
-import type { FurnitureDef, Json, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
+import type { FurnitureDef, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
 
 function candidatesOf(cats: Weights): { it: FurnitureDef; weight: number }[] {
   const out: { it: FurnitureDef; weight: number }[] = []
@@ -20,6 +20,7 @@ function candidatesOf(cats: Weights): { it: FurnitureDef; weight: number }[] {
 
 function itemRect(slot: Slot, it: FurnitureDef, shift: number): Rect {
   const c = slot._cell
+  if (!c) throw new Error('Slot without a cell: ' + slot.id)
   const f: Vec2 = c.f
   const [extentU, extentV] = extent([it.w, it.d], f)
   const R: Rect = c.R
@@ -97,7 +98,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
   const make = (s: Slot, it: FurnitureDef, r: Rect, parent: PlacedItem | null, overheadOff?: boolean) => {
     const f: Vec2 = [s.frontU, s.frontV]
     const id = room.id + '.' + s.id
-    const m: Json = {
+    const m: PlacedItem = {
       id,
       type: it.type,
       category: it.category,
@@ -119,7 +120,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       clearance: s.clearance,
       flat: it.flat,
       low: it.low,
-      aabb: r.map(r2),
+      aabb: r.map(r2) as Rect,
       _r: r,
       _seedId: registries().SEED_KEYS.items[id] ?? id,
     }
@@ -131,8 +132,8 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
     if (parent && s.anchor === 'inside') m.y = r2(parent.y || 0)
     if (room.link) m.link = { from: room.link[0], to: room.link[1] }
     state[s.id] = m
-    items.push(m as PlacedItem)
-    return m as PlacedItem
+    items.push(m)
+    return m
   }
   const tryFit = (s: Slot, relax: boolean, overheadOff?: boolean): PlacedItem | null => {
     const cands = weightedOrder(candidatesOf(s.cats), rng)
@@ -141,7 +142,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
       if (!parent) return null
       for (const { it } of cands) {
         if (it.w > parent.w + EPS || it.d > parent.d + EPS) continue
-        const f: Vec2 = [parent.frontU, parent.frontV]
+        const f: Vec2 = [parent.frontU ?? 0, parent.frontV ?? 1]
         const r: Rect = parent.aabb
         const [extentU, extentV] = extent([it.w, it.d], f)
         const cu = (r[0] + r[2]) / 2 - f[0] * (parent.d / 2 - it.d / 2)
@@ -175,7 +176,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
         if (!car && !relax && s.clearance > 0 && !it.low) {
           cl = clearRect(r, f, s.clearance)
           if (!insideUnion(cl, inners)) continue
-          if (items.some((m) => !m.low && !m.flat && !m.on && overlaps(cl as Rect, m._r))) continue
+          if (items.some((m) => !m.low && !m.flat && !m.on && overlaps(cl as Rect, m._r ?? m.aabb))) continue
         }
         if (!it.low && reserves.some((q) => overlaps(r, q))) continue
         let rimRect: Rect | null = null

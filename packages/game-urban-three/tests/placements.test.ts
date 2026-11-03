@@ -4,22 +4,23 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
 import { createPlantResolver, createUrbanThree, createVehicleResolver } from '../src'
+import type { VehicleBuildOptions } from '../src'
 import { fakeDocument } from './fake-dom'
 
-const placed = (root: any, kind: string): any[] => {
-  const found: any[] = []
-  root.traverse((o: any) => {
-    if (o.userData?.placement?.kind === kind) found.push(o)
+const placed = (root: THREE.Object3D, kind: string): THREE.Object3D[] => {
+  const found: THREE.Object3D[] = []
+  root.traverse((o) => {
+    if ((o.userData?.placement as { kind?: string } | undefined)?.kind === kind) found.push(o)
   })
   return found
 }
 
 /** A vehicle builder that gives a box of the size of a car, as `createVehiclesThree(...).build` gives a group. */
 const stubVehicles = () => {
-  const calls: { key: string; options: any }[] = []
+  const calls: { key: string; options: VehicleBuildOptions }[] = []
   return {
     calls,
-    build: (key: string, options: any = {}) => {
+    build: (key: string, options: VehicleBuildOptions = {}) => {
       calls.push({ key, options })
       const group = new THREE.Group()
       group.add(new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 4.2), new THREE.MeshBasicMaterial()))
@@ -65,7 +66,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
     expect(vehicles.calls).toHaveLength(1)
     expect(vehicles.calls[0]!.options.quality).toBe('high')
     expect(first).not.toBe(second)
-    expect(first.children[0].geometry).toBe(second.children[0].geometry)
+    expect((first!.children[0] as THREE.Mesh).geometry).toBe((second!.children[0] as THREE.Mesh).geometry)
     resolver({ ...part, color: 0x00ff00 })
     expect(vehicles.calls).toHaveLength(2)
   })
@@ -93,7 +94,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
       const b = kit.builder({ seed: 7 })
       kit.neighbourhoods.get('rural').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
       const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: createPlantResolver(THREE, { lod: 2, toSpec: defaultPlantSpec }) } }).draw(b.scene())
-      return placed(drawn.root, 'plant').map((plant) => [plant.userData.placement.id, plant.position.x, plant.children[0]?.children[0]?.geometry.attributes.position.count])
+      return placed(drawn.root, 'plant').map((plant) => [plant.userData.placement.id, plant.position.x, (plant.children[0]?.children[0] as THREE.Mesh | undefined)?.geometry.attributes.position.count])
     }
     expect(run()).toEqual(run())
   })

@@ -75,6 +75,29 @@ function checkDeclaredEqualsImported(directory, manifest, report) {
   }
 }
 
+// "Everything is typed" (CLAUDE.md section 10): no package turns the strict checks off and no source file opts out with @ts-nocheck.
+// The ones below predate the rule; each is removed from its list when the package is fixed, and nothing new may be added.
+const STRICT_OFF_KNOWN = new Set(['game-floorplan-three'])
+const TS_NOCHECK_KNOWN = new Set([
+  'game-shapes/src/primitives/earcut.ts', // verbatim copy of three's Earcut, kept as is so triangulation matches
+])
+const STRICT_FLAGS = ['strict', 'noImplicitAny', 'strictNullChecks', 'noImplicitThis', 'strictFunctionTypes']
+const TS_NOCHECK = /^\s*\/\/\s*@ts-nocheck\b/m
+
+function checkTyping(directory, report) {
+  const packageDirectory = join(ROOT, 'packages', directory)
+  const options = readJson(join(packageDirectory, 'tsconfig.json')).compilerOptions ?? {}
+  const relaxed = STRICT_FLAGS.filter((flag) => options[flag] === false)
+  if (relaxed.length > 0 && !STRICT_OFF_KNOWN.has(directory)) report(`tsconfig.json turns off ${relaxed.join(', ')}: everything is typed (CLAUDE.md section 10)`)
+  if (relaxed.length === 0 && STRICT_OFF_KNOWN.has(directory)) report('tsconfig.json is strict now: remove it from STRICT_OFF_KNOWN in tools/check-packages.mjs')
+  for (const file of listSourceFiles(packageDirectory)) {
+    const key = `${directory}/${relative(packageDirectory, file)}`
+    const noCheck = TS_NOCHECK.test(readFileSync(file, 'utf8'))
+    if (noCheck && !TS_NOCHECK_KNOWN.has(key)) report(`${relative(packageDirectory, file)} has @ts-nocheck: everything is typed (CLAUDE.md section 10)`)
+    if (!noCheck && TS_NOCHECK_KNOWN.has(key)) report(`${relative(packageDirectory, file)} is checked now: remove it from TS_NOCHECK_KNOWN in tools/check-packages.mjs`)
+  }
+}
+
 const problems = []
 
 for (const directory of packageDirectories) {
@@ -91,6 +114,7 @@ for (const directory of packageDirectories) {
     if (manifest[field]?.three) report(`three is in ${field}; it must be a peerDependency`)
   }
   checkDeclaredEqualsImported(directory, manifest, report)
+  checkTyping(directory, report)
 
   const threePeer = manifest.peerDependencies?.three
   if (threePeer !== undefined && threePeer !== THREE_PEER_RANGE) report(`peerDependencies.three is "${threePeer}", expected "${THREE_PEER_RANGE}"`)

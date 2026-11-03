@@ -16,19 +16,19 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, Quality, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
-import type { GroundLayout } from '@adatechnology/game-contracts'
+import type { GroundLayout, Knock } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -88,6 +88,8 @@ export interface TestRoomItem {
   animations?: AnimationClipSpec[]
   /** Where the player can sit or lie on it (see `TestRoom.sit`). */
   seats?: readonly ItemSeat[]
+  /** What it sounds like in the hand and the sound set of its doors and lids (`TestableItem.sounds`). */
+  sounds?: ItemSounds
   /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
   thumbnail?: string
   /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector. */
@@ -225,12 +227,15 @@ export interface TestRoomOptions {
   area?: string
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
-  onSound?: (key: string, point: Vec3, volume: number) => void
+  /** Every sound key the room plays, with its detail: the more specific keys of an impact, the named explosion, a leak's seconds (`SoundDetail` of game-destruction-three). */
+  onSound?: (key: string, point: Vec3, volume: number, detail?: SoundDetail) => void
   /**
    * The sound engine of the room (@adatechnology/game-audio): the destruction renderer's sound keys play on it, and modules get it as `host.audio`.
    * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
    */
   audio?: AudioEngine | false
+  /** Where the kit's recorded sound files (game-audio `assets/sfx/`) are served, for the room's engine (default `./sfx/`); `null` plays the recipes only. */
+  samplesBaseUrl?: string | null
   /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
   environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
@@ -302,6 +307,8 @@ export interface TestRoomOptions {
    * Default: the SDK's (`DEFAULT_BLAST_SHOVE` of game-contracts: 2 % of the energy becomes speed, 20 m/s at most, falloff `(1 - d / r)^2`).
    */
   blastShove?: BlastShoveOptions
+  /** Mass of the player's body in kg: how far a blast throws it and whether it knocks it down (default 70, the `bodyMass` of 1.75 m). */
+  playerMass?: number
   /**
    * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
    * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
@@ -389,6 +396,8 @@ export interface TestRoom {
   use(hold?: number): UseStatus
   /** Where the player's feet are. */
   readonly playerPosition: Vec3
+  /** The knock of a blast on the player while it lasts (thrown, down, getting up), or null on its feet. */
+  readonly playerKnock: Readonly<Knock> | null
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
   /**

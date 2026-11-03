@@ -1,12 +1,13 @@
-import type { PaletteContext } from './palette'
+import type { Palette, PaletteContext } from './palette'
 import type { Rng } from './rng'
 
 /** Axis-aligned rectangle `[u0, v0, u1, v1]`. `u` runs along the facade, `v` from the street to the back. */
 export type Rect = [number, number, number, number]
 export type Vec2 = [number, number]
 export type Weights = Record<string, number>
- 
-export type Json = any
+
+/** An open value from a template or a plugin: narrow it before use. */
+export type Json = unknown
 
 export type MeshFront = '+z' | '-z' | '+x' | '-x'
 export type Mount = 'ceiling' | 'wall' | 'window' | 'support' | 'floor' | 'roof' | 'ground' | 'wall_top' | (string & {})
@@ -74,6 +75,10 @@ export interface SlotDef {
   facing?: FacingRule
   target?: string
   slide?: number
+  /** Parent slot id of an `on`/`inside` slot (copied from `on` when the room's slots are expanded). */
+  parent?: string
+  /** The slot may sit over door and stair swing zones. */
+  floorFree?: boolean
   [extra: string]: Json
 }
 
@@ -182,7 +187,7 @@ export interface TemplateDef {
   floorRange?: [number, number]
   lot?: ((w: number, d: number, style: StyleDef, o: FloorplanOptions) => LotConfig) | null
   facade?: { balcony?: boolean; veranda?: boolean; steelDoor?: boolean }
-  facadeExtra?: (facade: Json, rng: Rng, w: number, d: number, o: FloorplanOptions) => void
+  facadeExtra?: (facade: Facade, rng: Rng, w: number, d: number, o: FloorplanOptions) => void
   building?: (w: number, d: number, o: FloorplanOptions) => Json
   singleFloor?: boolean
   /** Place tag of the building for finds (`house`, `pharmacy`...). */
@@ -202,7 +207,7 @@ export interface TemplateDef {
   /** Marks lot areas taken by the building (chimney, tank, tents) as keep-out zones for the lot fill. */
   reservations?: (plan: Plan) => void
   /** Own paths from the doors that sit away from the building edge (tents); replaces the generated ones. */
-  paths?: (plan: Plan, context: { gates: Json[]; setback: number; marginLeft: number; marginRight: number; backyard: number; w: number; d: number }) => Json[]
+  paths?: (plan: Plan, context: { gates: PlanGate[]; setback: number; marginLeft: number; marginRight: number; backyard: number; w: number; d: number }) => LotPath[]
   /** Sides built against a neighbour (`left` / `right`): exempt from the side setback. */
   partyWalls?: ('left' | 'right')[]
   options?: Json
@@ -246,13 +251,13 @@ export interface CarClearance {
 export interface ResultExtensionContext {
   plan: Plan
   /** The result built so far: the plan, the items, the state items and the extensions that ran before. */
-  result: Json
+  result: FloorplanResult
   seed: number | string
   /** Seeded stream of the extension: `createRng(seed, seedKey ?? name)`. */
   rng: Rng
   options: FloorplanOptions
 }
-export type ResultExtensionRun = (context: ResultExtensionContext) => Json
+export type ResultExtensionRun = (context: ResultExtensionContext) => unknown
 export interface ResultExtensionOptions {
   /** Extensions that must run first. */
   after?: string[]
@@ -336,6 +341,162 @@ export interface Room {
   ground?: string
 }
 
+/** Axis a wall or opening runs along: `u` is across the lot (x), `v` is front to back (z). */
+export type PlanAxis = 'u' | 'v'
+
+/** A door placed on a wall of one storey (`Plan.doors`). */
+export interface PlanDoor {
+  id: string
+  floor: number
+  u: number
+  v: number
+  axis: PlanAxis
+  /** Position of the wall line on the other axis. */
+  pos: number
+  /** Centre of the door along the wall. */
+  at: number
+  width: number
+  /** Room on each side; `b` is `outside` on an exterior door. */
+  a: string
+  b: string
+  opensTo: string
+  exterior: boolean
+  side: string | null
+  leaves: number
+  model: string
+  type: string
+  steps: number
+  hinge: string
+  /** Swing areas on both sides that furniture keeps clear of. */
+  zones: Rect[]
+  /** Left open (set by a house state). */
+  open?: boolean
+  /** Blocked shut, e.g. barricaded (set by a house state). */
+  blocked?: boolean
+}
+
+/** One straight piece of wall or railing of one storey (`Plan.walls`). */
+export interface PlanWall {
+  floor: number
+  axis: PlanAxis
+  u0: number
+  v0: number
+  u1: number
+  v1: number
+  thickness: number
+  /** Room ids on each face (`outside` for the street side). */
+  sides: [string, string]
+  exterior: boolean
+  type: 'railing' | 'wall'
+  /** Height in metres (the storey ceiling for a full wall). */
+  h: number
+}
+
+/** A window on an exterior wall (`Plan.windows`). */
+export interface PlanWindow {
+  id: string
+  floor: number
+  u: number
+  v: number
+  axis: PlanAxis
+  pos: number
+  at: number
+  width: number
+  /** Sill and head heights above the storey floor. */
+  y0: number
+  y1: number
+  room: string
+  side: string
+  /** Boarded up (set by a house state). */
+  boards?: boolean
+}
+
+/** A gate in the lot boundary (`Plan.gates`). */
+export interface PlanGate {
+  id: string
+  type: string
+  model: string
+  u: number
+  v: number
+  axis: PlanAxis
+  width: number
+  height: number
+  side: string
+  /** What the gate leads to (`door`, `inner_garage`...), or null. */
+  to: string | null
+  material: string
+  zones: Rect[]
+  /** Starts open (set by a template or a later pass). */
+  open?: boolean
+}
+
+/** A door or a lot gate: anything a path or the furniture fill has to keep clear. */
+export type PlanOpening = PlanDoor | PlanGate
+
+/** A walkway or driveway across the lot (`Plan.paths`). */
+export interface LotPath {
+  id: string
+  type: 'pedestrian' | 'vehicle' | string
+  /** Gate the path starts at, or null when it starts at no gate. */
+  from: string | null
+  to: string
+  width: number
+  rects: Rect[]
+  points: Vec2[]
+}
+
+/** How one side of the lot is closed (wall, fence or railing). */
+export interface LotBoundary {
+  type: string
+  material: string
+  height: number
+  top: string
+  totalHeight: number
+  thickness: number
+}
+
+/** One straight piece of the lot boundary. */
+export interface LotPerimeterPiece extends LotBoundary {
+  id: string
+  side: string
+  u0: number
+  v0: number
+  u1: number
+  v1: number
+}
+
+/** The lot around the building (`Plan.lot`). */
+export interface Lot {
+  rect: Rect
+  setback: number
+  sideYard: { left: number; right: number }
+  backyard: number
+  style: string
+  zones: Room[]
+  perimeter: LotPerimeterPiece[]
+  gates: PlanGate[]
+  paths: LotPath[]
+  pool: boolean
+}
+
+/** The known fields of a facade. */
+export interface FacadeFields {
+  style: string
+  color: { name: string; hex: string }
+  finish: string
+  grilles: boolean
+  roof: string
+  balcony: boolean
+  veranda: boolean
+  steelDoor: boolean
+  floors: number
+}
+
+/** The look of the building from the street (`Plan.facade`); templates may add fields through `facadeExtra`. */
+export interface Facade extends FacadeFields {
+  [extra: string]: unknown
+}
+
 export interface Plan {
   w: number
   d: number
@@ -345,13 +506,13 @@ export interface Plan {
   floors: { index: number; name?: string; number?: number; y0: number; ceiling: number }[]
   rooms: Room[]
   zones: Room[]
-  doors: Json[]
-  windows: Json[]
-  walls: Json[]
-  gates: Json[]
-  paths: Json[]
-  lot: Json
-  facade?: Json
+  doors: PlanDoor[]
+  windows: PlanWindow[]
+  walls: PlanWall[]
+  gates: PlanGate[]
+  paths: LotPath[]
+  lot: Lot | null
+  facade?: Facade
   openPairs: Record<number, [string, string][]>
   zoning?: ZoningReport
   /** Lot areas the building keeps out of the fill (set by `TemplateDef.reservations`). */
@@ -366,7 +527,17 @@ export interface Plan {
   carClearance: CarClearance
 }
 
-export interface Slot {
+/** Where a resolved slot sits inside the room: its cell, facing, the room part and the walls it leans on. */
+export interface SlotCell {
+  rect: Rect
+  f: Vec2
+  enclosed: string[]
+  R: Rect
+  size: Vec2
+}
+
+/** The known fields of a resolved slot. */
+export interface SlotFields {
   id: string
   room: string
   floor: number
@@ -374,12 +545,37 @@ export interface Slot {
   anchor: string
   side: string | null
   cats: Weights
+  slide?: number
+  required: boolean
+  chance: number
+  clearance: number
+  front: string
+  group: string | null
+  requires: string | null
+  /** Parent slot of an `on`/`inside` slot. */
+  on: string | null
+  target: string | null
   valid: boolean
   reason: string | null
+  x: number
+  z: number
+  ry: number
+  w: number
+  d: number
+  frontU: number
+  frontV: number
+  aabb: Rect
+  /** Null on an invalid slot. */
+  _cell: SlotCell | null
+}
+
+/** A slot of a room after it has been placed (`resolveSlot`); a library may carry fields of its own. */
+export interface Slot extends SlotFields {
   [extra: string]: Json
 }
 
-export interface PlacedItem {
+/** The known fields of a placed item (`PlacedItem` without its open extras). */
+export interface PlacedItemFields {
   id: string
   type: string
   category: string
@@ -395,7 +591,133 @@ export interface PlacedItem {
   outdoor: boolean
   aabb: Rect
   color?: number | string
+  /** Facing of the item's front. */
+  frontU?: number
+  frontV?: number
+  /** Slot that placed it, and the item it stands on or in. */
+  slot?: string
+  on?: string | null
+  mode?: 'on' | 'inside' | null
+  clearance?: number
+  flat?: boolean
+  low?: boolean
+  decor?: boolean
+  overhead?: boolean
+  /** Driver side of a car (unit vector). */
+  driver?: Vec2
+  carClearance?: CarClearance
+  /** Storeys a stair or passage room connects, or the id of the item this one serves (a gas cylinder names its stove). */
+  link?: { from: number; to: number } | string
+  /** Unrounded footprint used by the fill, dropped from the result. */
+  _r?: Rect
+  _seedId?: string
+  /** Where a decor item hangs (`floor`, `wall`...). */
+  mount?: Mount
+  /** Colour rule set by a plugin; replaced by `color` in the result. */
+  colorSpec?: ItemColor
+}
+
+/** An item placed by the fill, a decor pass or a state plugin; plugins may add fields of their own. */
+export interface PlacedItem extends PlacedItemFields {
   [extra: string]: Json
+}
+
+// ---- result of generate ----
+/** A storey of the result. */
+export interface ResultFloor {
+  index: number
+  label?: string
+  name?: string
+  number?: number
+  y0: number
+  ceiling: number
+}
+
+/** A room of the result, with its first part spread as `u0..v1` and the colour roles of its wall and floor. */
+export interface ResultRoom {
+  id: string
+  type: string
+  label?: string
+  name?: string
+  floor: number
+  u0: number
+  v0: number
+  u1: number
+  v1: number
+  parts: Rect[]
+  link: number[] | null
+  ceiling: number
+  color: { wall: string; floor: string }
+}
+
+/** A gate of the result lot. */
+export interface ResultGate extends Omit<PlanGate, 'zones' | 'open'> {
+  open: boolean
+  color: string
+}
+
+/** The lot of the result (null for apartments). */
+export interface ResultLot {
+  rect: Rect
+  setback: number
+  backyard: number
+  sideYard: { left: number; right: number }
+  style: string
+  pool: boolean
+  zones: { id: string; type: string; label?: string; name?: string; parts: Rect[]; ground?: string }[]
+  perimeter: (LotPerimeterPiece & { color: string })[]
+  gates: ResultGate[]
+  paths: LotPath[]
+}
+
+/** The facade of the result: the plan facade with the palette colour and the colour roles. */
+export interface ResultFacade extends Omit<FacadeFields, 'color'> {
+  color: { name?: string; key: string; hex: string }
+  roles: Record<string, string>
+  [extra: string]: unknown
+}
+
+/** An item of the result: the placed item without its internal fields, with its colour role or value. */
+export interface ResultItem extends Omit<PlacedItemFields, '_r' | '_seedId' | 'colorSpec'> {
+  [extra: string]: unknown
+}
+
+/** The known fields of a `generate` result. */
+export interface FloorplanResultFields {
+  template: string
+  name: string
+  use: string
+  seed: number | string
+  style: string
+  state: string
+  locale?: string
+  w: number
+  d: number
+  floors: ResultFloor[]
+  rooms: ResultRoom[]
+  walls: PlanWall[]
+  doors: PlanDoor[]
+  windows: PlanWindow[]
+  openPairs: [string, string][]
+  facade: ResultFacade
+  lot: ResultLot | null
+  items: ResultItem[]
+  stateItems: ResultItem[]
+  colors: Palette
+  /** Output of `TemplateDef.building`. */
+  building: Json
+  missing: { room: string; slot: string }[]
+  /** Storey of an apartment unit. */
+  floorNumber?: number
+  partyWalls: string[]
+  /** Output of `TemplateDef.config`. */
+  config?: Json
+  zoning?: ZoningReport
+}
+
+/** What `generate` returns. Result extensions add their output under their own name. */
+export interface FloorplanResult extends FloorplanResultFields {
+  [extension: string]: unknown
 }
 
 // ---- zoning ----
@@ -459,13 +781,41 @@ export interface StatePlugin {
   adjustPalette?(roles: Record<string, Hsl>): void
 }
 
+/** Walkability grid of a room (`createGrid`): cells of `gs` metres, the walkable ones and the entry cells. */
+export interface WalkGrid {
+  gs: number
+  u0: number
+  v0: number
+  nx: number
+  nz: number
+  inside: Uint8Array
+  entries: [number, number][]
+  center: [number, number]
+}
+
+/** Options of `PlacementContext.placeOnFloor`. */
+export interface PlaceOnFloorOptions {
+  /** Treat the item as flat (no clearance or walkability check). */
+  flat?: boolean
+  /** Candidate rectangles to try instead of the corners and walls. */
+  cands?: Rect[]
+  /** Footprint to use instead of the catalogue size. */
+  dim?: readonly number[]
+  /** Try the candidates in order instead of shuffled. */
+  ordered?: boolean
+  /** Rejects a candidate. */
+  without?: (rect: Rect) => boolean
+  /** Walkability grid to check instead of the room's. */
+  railing?: WalkGrid
+}
+
 export interface PlacementContext {
-  make(room: Room, type: string, rect: Rect, front: Vec2, extra?: Json): PlacedItem
+  make(room: Room, type: string, rect: Rect, front: Vec2, extra?: Partial<PlacedItem>): PlacedItem
   add(item: PlacedItem): PlacedItem
-  placeOnFloor(room: Room, type: string, rng: Rng, opts?: Json): Rect | null
+  placeOnFloor(room: Room, type: string, rng: Rng, opts?: PlaceOnFloorOptions): Rect | null
   itemsOfRoom(room: Room): PlacedItem[]
   solidsOfRoom(room: Room): Rect[]
-  gridOf(room: Room): Json
+  gridOf(room: Room): WalkGrid
   extraSolids: Record<string, Rect[]>
   roomById(id: string): Room | undefined
   setIgnored(ids: Set<string> | null): void
@@ -486,11 +836,11 @@ export interface PlacementKit {
   insideUnion(r: Rect, inners: Rect[]): boolean
   usableParts(room: Room, extra?: number): Rect[]
   zonesOfFloor(plan: Plan, floor: number): Rect[]
-  windowsOfRoom(plan: Plan, room: Room): Json[]
-  windowZone(j: Json, outside?: boolean): Rect
+  windowsOfRoom(plan: Plan, room: Room): PlanWindow[]
+  windowZone(j: Pick<PlanWindow, 'width' | 'side' | 'u' | 'v' | 'axis'>, outside?: boolean): Rect
   roomAt(plan: Plan, u: number, v: number, floor: number): Room | null
-  reachable(grid: Json, solids: Rect[], inflation: number): boolean
-  createGrid(plan: Plan, room: Room, ignored?: Set<string> | null): Json
+  reachable(grid: WalkGrid, solids: Rect[], inflation: number): boolean
+  createGrid(plan: Plan, room: Room, ignored?: Set<string> | null): WalkGrid
   clearRect(r: Rect, f: Vec2, clearance: number): Rect
   pickWeighted(rng: Rng, w: Weights): string
   createRng(seed: number | string, key: string): Rng
@@ -499,7 +849,7 @@ export interface PlacementKit {
   shuffle<T>(a: T[], rng: Rng): T[]
   facingRotation(f: Vec2, type: string): number
   cutIntervals(intervals: [number, number][], a: number, b: number): [number, number][]
-  blocksWindow(it: FurnitureDef, j: Json, overheadOff?: boolean): boolean
+  blocksWindow(it: FurnitureDef, j: Pick<PlanWindow, 'y0'>, overheadOff?: boolean): boolean
 }
 
 export interface DecorPassContext {
@@ -560,7 +910,8 @@ export interface FloorplanLocale {
 export interface ViewerLayerContext {
   /** Canvas 2D context, already in CSS pixels. */
   g: CanvasRenderingContext2D
-  plan: Json
+  /** The `generate` result being drawn. */
+  plan: FloorplanResult
   /** Storey being drawn (0 when `all`). */
   floor: number
   /** All storeys at once (the lot view). */
@@ -585,5 +936,5 @@ export interface ViewerLayer {
   label: string
   defaultOn?: boolean
   draw(context: ViewerLayerContext): void
-  legend?(plan: Json): ViewerLayerLegendEntry[]
+  legend?(plan: FloorplanResult): ViewerLayerLegendEntry[]
 }

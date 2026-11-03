@@ -70,6 +70,7 @@ export interface ExplosivesText {
     push_outward: string
     push_falloff: string
     push_person: string
+    push_sheltered: string
     push_heavy: string
   }
 }
@@ -157,6 +158,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       push_outward: 'Every body inside the reach moved away from the blast ({moved} of {n}, {least} m at the least)',
       push_falloff: '{what}: the nearer one moved more than the farther one ({near} m at {nearDistance} m, {far} m at {farDistance} m)',
       push_person: '{who} at {distance} m was pushed {moved} m away',
+      push_sheltered: '{what} at {distance} m stood behind cover ({cover}% of the blast got through) and moved only {moved} m',
       push_heavy: '{what} (too heavy to grab, not fixed) was moved {moved} m by the blast',
     },
   },
@@ -242,6 +244,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       push_outward: 'Todo corpo dentro do alcance se afastou da explosão ({moved} de {n}, no mínimo {least} m)',
       push_falloff: '{what}: o mais perto andou mais que o mais longe ({near} m a {nearDistance} m, {far} m a {farDistance} m)',
       push_person: '{who} a {distance} m foi empurrado {moved} m para longe',
+      push_sheltered: '{what} a {distance} m estava atrás de cobertura ({cover}% da explosão passou) e andou só {moved} m',
       push_heavy: '{what} (pesado demais para pegar, mas solto) foi movido {moved} m pela explosão',
     },
   },

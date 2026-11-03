@@ -3,7 +3,7 @@ import type { AreaPlacement, BenchChange, ChoiceOption, ModuleControl, ModuleHos
 import { GAME_SFX_BANK } from '../recipes/noise-class'
 import { LIBRARY_BANK } from '../library'
 import { DISTANCE_CURVES } from '../falloff'
-import { MIX_PROFILES } from '../mix'
+import { DEFAULT_MIX, MIX_PROFILES } from '../mix'
 import type { MixProfile } from '../mix'
 import { BUS_IDS } from '../recipe'
 import type { BusId, Layer, SoundBank } from '../recipe'
@@ -132,7 +132,7 @@ export function createAudioTestModule(options: AudioTestModuleOptions = {}): Aud
     distance: 10,
     bearing: 0,
     volume: 1,
-    mix: 'art_scene',
+    mix: DEFAULT_MIX,
     seed: options.seed ?? 1,
     source: 'bench',
     loop: NONE,

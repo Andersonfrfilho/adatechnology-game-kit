@@ -9,6 +9,7 @@ import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
 import { raycastIndexed, warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
+import { subdivideNear } from './subdivide-near'
 
 type Obj = any
 
@@ -24,25 +25,38 @@ const HOLE_DECAL_SCALE = 2.4
 /** From a door's skin to its inner card, metres. */
 const DOOR_DEPTH = 0.07
 /** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
-const DOOR_EDGE_PIECES = 16
+const DOOR_EDGE_PIECES = 8
+/** How far from the door's plane its skin can bend at the edge, metres. */
+const DOOR_EDGE_REACH = 0.08
 /** The inner face of a door, trim grey: a lit surface, not a hole. */
 const DOOR_CARD_COLOR = '#3b3e42'
 const DOOR_LINER_COLOR = '#5a5e64'
 const DOOR_LINER_DARK = 0.15
-/** A strip that crosses a door opening: this thin, within this of the door's height, and cut in pieces this long. */
-const DOOR_STRIP_THIN = 0.05
+/** A strip that crosses a door opening: this thin, and within this of the door's height. */
+const DOOR_STRIP_THIN = 0.08
 const DOOR_STRIP_NEAR = 0.04
+/** A crease drawn along the side is a ribbon up to this tall. */
+const DOOR_STRIP_TALL = 0.22
+/** A strip keeps its smooth shading where it is cut: no hard edge between the long slivers of the cut. */
+const STRIP_SMOOTH_DEG = 180
+/** The body's own shell is not a strip; and up to this over the door's bottom is its sill. */
+const DOOR_STRIP_VERTICES = 20000
+const DOOR_SILL = 0.25
 const DOOR_STRIP_OVER = 0.3
 /** A door's cut goes this far past the lower edge of its pane, metres. */
 const DOOR_TOP_OVER_PANE = 0.03
-const DOOR_STRIP_SUB = 0.02
 const HOLE_TEXTURE_SIZE = 64
+/** Above this many joules of hit points a pane is laminated in the model (a windshield, any pane of an armoured car). */
+const LAMINATED_HP = 1000
+/** A closed hood sits this far under the fenders, and this much of the drawn gap round it closes, metres. */
+const HOOD_SINK = 0.002
+const HOOD_GAP_CLOSED = 0.016
 /** A door handle: from its door's free edge, and its size, metres. */
 const DOOR_HANDLE_INSET = 0.12
 const DOOR_HANDLE_MIN = 0.07
 const DOOR_HANDLE_MAX = 0.24
 const DOOR_HANDLE_THIN = 0.07
-const DOOR_HANDLE_OUTSIDE = 0.1
+const DOOR_HANDLE_OUTSIDE = 0.15
 /** Seating a pane on the shell: how far past its edge to look, how far along its normal the shell may be, how many of its vertices to sample, how proud of the shell it stays, metres. */
 const PANE_SEAT_OUT = 0.05
 const PANE_SEAT_IN = -0.05
@@ -50,14 +64,49 @@ const PANE_SEAT_REACH = 0.14
 const PANE_SEAT_SAMPLES = 24
 const PANE_SEAT_LIFT = 0.004
 const PANE_FRAME_NEAR = 0.07
+const PANE_MIN_SLOPE = 0.01
+const PANE_EDGE_BAND = 0.03
+const PANE_REACH_STEP = 0.01
+const PANE_REACH_MAX = 0.25
+const COWL_UNDER_GLASS = 0.0
+const COWL_NEAR_PANE = 0.08
+/** Under a windshield: a plate is thinner than this; the dashboard is up to this tall. */
+const COWL_PLATE = 0.06
+const COWL_DASH = 0.5
+/** Both run across the car and are deep front to back, unlike the frame of a side window. */
+const COWL_DEEP = 0.3
+/** A window frame lies within this of its pane and runs along most of it. */
+const WINDOW_FRAME_NEAR = 0.06
+const WINDOW_FRAME_SPAN = 0.6
+const DASHBOARD_COLOR = '#121314'
+/** The plate is cut in pieces this long, metres. */
+const COWL_CUT_SUB = 0.1
+/** How far past a pane's outline the faces are split for its cut, metres. */
+const COWL_CUT_MARGIN = 0.08
+/** The body under a pane deeper than this is cut away, metres. */
+const SKIN_UNDER_PANE = 0.025
+const SKIN_EDGE_KEPT = 0.06
+/** A pane facing the side more than this is a side window. */
+const SIDE_PANE_FACING = 0.6
+const COWL_LONG = 0.8
+/** The bars of a frame: few vertices and long; the band that takes their place. */
+const PANE_BAR_VERTICES = 48
+const PANE_BAR_LENGTH = 0.3
+const PANE_BORDER = 0.03
+const PANE_BORDER_LIFT = 0.003
 type PaneSeat = { readonly normal: any; readonly samples: Array<{ readonly at: any; readonly by: number }> }
 /** A mirror the model draws: small, and this near where the part stands, metres. */
 const DRAWN_MIRROR_SIZE = 0.3
 const DRAWN_MIRROR_REACH = 0.4
 const DRAWN_MIRROR_MOUNT = 0.2
 const MIRROR_GLASS_FIT = 0.76
+const MIRROR_GLASS_PROUD = 0.001
+const MIRROR_FACE_DEPTH = 0.012
 /** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
 const MIRROR_GLASS_THIN = 0.04
+/** A wheel's radius when the model does not say, and the share of it that is the tyre's sidewall (a 65 profile). */
+const DEFAULT_WHEEL_RADIUS = 0.3
+const SIDEWALL_SHARE = 0.3
 const MIRROR_GLASS_MIN = 0.05
 /** A mirror shows what is behind it: darker than chrome, or it reads as a white square against the sky. */
 const MIRROR_GLASS_COLOR = '#59636a'
@@ -149,6 +198,7 @@ export class VehicleVisuals implements CreaseWork {
     this.hood = this.nameHood()
     this.seatPanes()
     this.seatDoorHandles()
+    this.seatHood()
     this.warming = (c.deform as Obj[]).filter((msh) => msh.geometry && msh.geometry.attributes.position && msh.geometry.attributes.position.count >= 1500)
     if (!this.warming.length) this.warming = null
     for (const p of model.parts) {
@@ -357,7 +407,8 @@ export class VehicleVisuals implements CreaseWork {
           const panes = I.windowsOver(this.c, z, inv) as Obj[]
           const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
           const mirrors = this.mirrorsOn(z)
-          objs = [...pcs, ...this.doorCards(pcs, z), ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors]
+          const frames = this.framesAround(panes, inv)
+          objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[]), ...panes, ...seals, ...mirrors, ...frames]
         }
       } else {
         const pcs = this.cutZone(z)
@@ -402,7 +453,11 @@ export class VehicleVisuals implements CreaseWork {
     run(x1, y0, x1, y1)
     run(x1, y1, x0, y1)
     run(x0, y1, x0, y0)
-    const heights = loop.map(([x, y]) => this.surface('z', side, B, [[x, y]]) ?? flat)
+    // a probe that misses the door (it found a fender or the hull behind a strongly curved side) keeps the edge on the door's own plane
+    const heights = loop.map(([x, y]) => {
+      const at = this.surface('z', side, B, [[x, y]])
+      return at != null && Math.abs(at - flat) < DOOR_EDGE_REACH ? at : flat
+    })
     const band = (lift: number): any => {
       const position: number[] = []
       const index: number[] = []
@@ -420,6 +475,24 @@ export class VehicleVisuals implements CreaseWork {
     }
     const paint = this.paint().clone()
     paint.side = THREE.DoubleSide
+    // the inside of the door: one smooth panel inside the band, in the trim's grey, instead of a copy of the skin whose cut edge shows as teeth
+    const cardPosition: number[] = []
+    const mid = loop.reduce((acc, [x, y], i) => [acc[0]! + x, acc[1]! + y, acc[2]! + heights[i]!], [0, 0, 0]).map((v) => v / loop.length)
+    const cardZ = (z: number): number => z - side * DOOR_DEPTH
+    loop.forEach(([x, y], i) => {
+      const j = (i + 1) % loop.length
+      cardPosition.push(mid[0]!, mid[1]!, cardZ(mid[2]!), x, y, cardZ(heights[i]!), loop[j]![0], loop[j]![1], cardZ(heights[j]!))
+    })
+    const cardGeometry = new THREE.BufferGeometry()
+    cardGeometry.setAttribute('position', new THREE.Float32BufferAttribute(cardPosition, 3))
+    cardGeometry.computeVertexNormals()
+    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.85 }).clone()
+    cardMaterial.side = THREE.DoubleSide
+    const card = new THREE.Mesh(cardGeometry, cardMaterial)
+    card.userData.noFollow = true
+    card.castShadow = false
+    this.c.vehicle.add(card)
+    piv.attach(card)
     const edges = new THREE.Mesh(band(0.002), paint)
     const lining = new THREE.Mesh(band(0.002), paint)
     for (const m of [edges, lining]) {
@@ -428,6 +501,17 @@ export class VehicleVisuals implements CreaseWork {
       this.c.vehicle.add(m)
     }
     piv.attach(edges)
+  }
+  /** The frame the model draws round a door's window (a dark strip over the glass) goes with the door: left behind it hangs in the air over the opening. */
+  private framesAround(panes: Obj[], inv: any): Obj[] {
+    const THREE = this.THREE
+    const boxes = panes.map((g) => this.I.localBox(this.c, g, inv).expandByScalar(WINDOW_FRAME_NEAR))
+    return (this.c.vehicle.children as Obj[]).filter((o) => {
+      if (!o.isMesh || !o.visible || o.userData.glass || o.userData.decal || (this.c as any).deform?.includes(o)) return false
+      const box = this.I.localBox(this.c, o, inv)
+      if (box.isEmpty()) return false
+      return boxes.some((b: any) => b.containsBox(box) && box.getSize(new THREE.Vector3()).x > b.getSize(new THREE.Vector3()).x * WINDOW_FRAME_SPAN)
+    })
   }
   /** A front door carries the mirror drawn at its corner. */
   private mirrorsOn(z: any): Obj[] {
@@ -454,45 +538,43 @@ export class VehicleVisuals implements CreaseWork {
     const B = z.box
     const x0 = B.x0 + 0.03
     const x1 = B.x1 - 0.03
-    const y0 = B.y0 - DOOR_STRIP_NEAR
-    const y1 = B.y1 + DOOR_STRIP_NEAR
+    // the sill under the door stays on the body: it is the floor of the opening, not across it
+    const y0 = B.y0 + DOOR_SILL
+    // up to the top of the door's window: the trim along the window line goes with the door too
+    const glassTop = (I: any): number => {
+      let top = -Infinity
+      for (const g of I.windowsOver(this.c, z, inv) as Obj[]) top = Math.max(top, I.localBox(this.c, g, inv).max.y)
+      return top
+    }
+    const y1 = Math.max(B.y1, glassTop(this.I)) + DOOR_STRIP_NEAR
     const deform: Obj[] = (this.c as any).deform ?? []
     for (const o of [...(this.c.vehicle.children as Obj[])]) {
-      if (!o.isMesh || o === piv || deform.includes(o) || o.userData.glass || o.userData.decal || !o.visible) continue
+      if (!o.isMesh || o === piv || o.userData.glass || o.userData.decal || !o.visible || (deform.includes(o) && o.geometry.attributes.position.count > DOOR_STRIP_VERTICES)) continue
       const box = this.I.localBox(this.c, o, inv)
       const size = box.getSize(new THREE.Vector3())
       const mid = box.getCenter(new THREE.Vector3())
-      if (Math.sign(mid.z) !== Math.sign(z.side) || size.z > DOOR_STRIP_THIN || size.y > DOOR_STRIP_THIN || Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < (x1 - x0) * DOOR_STRIP_OVER || mid.y < y0 || mid.y > y1) continue
+      if (Math.sign(mid.z) !== Math.sign(z.side) || size.z > DOOR_STRIP_THIN || size.y > DOOR_STRIP_TALL || Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < (x1 - x0) * DOOR_STRIP_OVER || mid.y < y0 || mid.y > y1) continue
       const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)
       const v = new THREE.Vector3()
       const sdf = (x: number, y: number, zz: number): number => {
         v.set(x, y, zz).applyMatrix4(toVehicle)
         return Math.max(x0 - v.x, v.x - x1)
       }
-      this.kit.cutMesh(o, [{ sdf }], 42, { sub: DOOR_STRIP_SUB })
-      const from = Math.max(box.min.x, x0)
-      const to = Math.min(box.max.x, x1)
-      const piece = this.box(to - from, size.y, size.z, o.material, (from + to) / 2, mid.y, mid.z)
-      piece.userData.noFollow = true
-      piv.attach(piece)
+      // the part over the door is the same strip, cut the other way, and it goes with the door
+      const over = new THREE.Mesh(o.geometry.clone(), o.material)
+      over.position.copy(o.position)
+      over.quaternion.copy(o.quaternion)
+      over.scale.copy(o.scale)
+      this.c.vehicle.add(over)
+      over.updateMatrixWorld(true)
+      const overToVehicle = new THREE.Matrix4().multiplyMatrices(inv, over.matrixWorld)
+      const w = new THREE.Vector3()
+      this.kit.cutMesh(over, [{ sdf: (x: number, y: number, zz: number): number => { w.set(x, y, zz).applyMatrix4(overToVehicle); return -Math.max(x0 - w.x, w.x - x1) } }], STRIP_SMOOTH_DEG, {})
+      // the cut is a plane across the strip, exact without subdividing (and a painted livery keeps its texture)
+      this.kit.cutMesh(o, [{ sdf }], STRIP_SMOOTH_DEG, {})
+      over.userData.noFollow = true
+      piv.attach(over)
     }
-  }
-  /** The inside of a door: its skin brought in by the depth of the door, in the trim's dark plastic, so the open door is a door and not one sheet of paint. */
-  private doorCards(skins: Obj[], z: any): Obj[] {
-    const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.8 })
-    return skins.map((skin) => {
-      const card = new this.THREE.Mesh(skin.geometry, cardMaterial)
-      card.position.copy(skin.position)
-      card.quaternion.copy(skin.quaternion)
-      card.scale.copy(skin.scale)
-      const side = z.side < 0 ? -1 : 1
-      const inward = -side * DOOR_DEPTH
-      card.position.z += inward
-      card.userData.noFollow = true
-      card.castShadow = false
-      this.c.vehicle.add(card)
-      return card
-    })
   }
   private mend(dirty: Set<Obj>): void {
     dirty.forEach((msh) => {
@@ -518,13 +600,57 @@ export class VehicleVisuals implements CreaseWork {
     ray.layers.enableAll()
     for (const pane of c.glass as Obj[]) {
       if (pane.userData.glass?.outline) continue
-      const seat = this.paneSeat(pane, shell, ray)
+      const local = this.shellAround(pane, shell)
+      if (!local) continue
+      const seat = this.paneSeat(pane, [local], ray)
       if (!seat) continue
       const near = (c.vehicle.children as Obj[]).filter((o) => o.isMesh && o !== pane && !o.userData.glass && !shell.includes(o) && this.onPane(o, pane, seat))
       for (const m of [pane, ...near]) this.movePane(m, seat)
-      const past = this.shellPast(pane, shell, ray, seat.normal)
+      const past = this.shellPast(pane, [local], ray, seat.normal)
       if (past > 0) for (const m of [pane, ...near]) this.movePane(m, { normal: seat.normal, samples: [{ at: seat.samples[0]!.at, by: past }] })
+      this.reachShellBelow(pane, local, ray, seat.normal)
+      this.paneBorder(pane, near, seat)
+      this.keepUnderPane(pane, seat.normal)
+      // the body's own skin left under the glass shows through it inside the car: only the strip the glass rests on stays
+      // only a windshield or rear window has the body's skin under it; a side pane lies over the door, and the door must stay whole
+      const across = new this.THREE.Vector3(0, 0, 1).transformDirection(this.c.vehicle.matrixWorld)
+      if (Math.abs(seat.normal.dot(across)) < SIDE_PANE_FACING) for (const body of shell) if (body.parent === this.c.vehicle) this.cutUnderPane(body, pane, seat.normal, SKIN_UNDER_PANE, SKIN_EDGE_KEPT)
     }
+  }
+  /** Only the triangles of the shell around a pane, in world space: seating casts many rays and the whole hull has too many triangles for each. */
+  private shellAround(pane: Obj, shell: Obj[]): Obj | null {
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(pane).expandByScalar(PANE_SEAT_REACH + PANE_SEAT_OUT)
+    const out: number[] = []
+    const a = new THREE.Vector3()
+    const b = new THREE.Vector3()
+    const d = new THREE.Vector3()
+    const tri = new THREE.Box3()
+    for (const mesh of shell) {
+      const pos = mesh.geometry.attributes.position
+      const idx = mesh.geometry.index
+      const count = idx ? idx.count : pos.count
+      const e = mesh.matrixWorld.elements
+      const world = (v: any, i: number): void => {
+        const x = pos.getX(i)
+        const y = pos.getY(i)
+        const z = pos.getZ(i)
+        v.set(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14])
+      }
+      for (let f = 0; f + 2 < count; f += 3) {
+        world(a, idx ? idx.getX(f) : f)
+        world(b, idx ? idx.getX(f + 1) : f + 1)
+        world(d, idx ? idx.getX(f + 2) : f + 2)
+        tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(d)
+        if (tri.intersectsBox(box)) out.push(a.x, a.y, a.z, b.x, b.y, b.z, d.x, d.y, d.z)
+      }
+    }
+    if (!out.length) return null
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3))
+    const proxy = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    proxy.updateMatrixWorld(true)
+    return proxy
   }
   /** The outward normal of a pane and how far the shell is at each sampled point (world). */
   private paneSeat(pane: Obj, shell: Obj[], ray: any): PaneSeat | null {
@@ -572,6 +698,198 @@ export class VehicleVisuals implements CreaseWork {
       if (by > -Infinity) samples.push({ at: v.clone(), by })
     }
     return samples.length >= 3 ? { normal, samples } : null
+  }
+  /** The lower edge of a pane comes down to the shell: left short, the dashboard shows through the slit as a black bar under the glass. */
+  private reachShellBelow(pane: Obj, shell: Obj, ray: any, normal: any): void {
+    const THREE = this.THREE
+    const down = new THREE.Vector3(0, -1, 0).applyQuaternion(this.c.root.getWorldQuaternion(new THREE.Quaternion()))
+    down.addScaledVector(normal, -down.dot(normal))
+    if (down.lengthSq() < PANE_MIN_SLOPE) return
+    down.normalize()
+    const g = pane.geometry
+    const pos = g.attributes.position
+    const v = new THREE.Vector3()
+    let lowest = -Infinity
+    for (let i = 0; i < pos.count; i++) lowest = Math.max(lowest, v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld).dot(down))
+    const edge: number[] = []
+    const mid = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      if (v.dot(down) > lowest - PANE_EDGE_BAND) {
+        edge.push(i)
+        mid.add(v)
+      }
+    }
+    if (!edge.length) return
+    mid.divideScalar(edge.length)
+    let reach = 0
+    for (let d = PANE_REACH_STEP; d <= PANE_REACH_MAX; d += PANE_REACH_STEP) {
+      const at = mid.clone().addScaledVector(down, d).addScaledVector(normal, PANE_SEAT_REACH)
+      ray.set(at, normal.clone().negate())
+      ray.far = PANE_SEAT_REACH * 2
+      if (ray.intersectObject(shell, false)[0]) {
+        reach = d + PANE_REACH_STEP
+        break
+      }
+    }
+    if (!reach) return
+    const inverse = pane.matrixWorld.clone().invert()
+    for (const i of edge) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld).addScaledVector(down, reach).applyMatrix4(inverse)
+      pos.setXYZ(i, v.x, v.y, v.z)
+    }
+    pos.needsUpdate = true
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+  }
+  /** The plate drawn right under a windshield stays only outside the glass, in the body's paint: under the glass it would show inside the cabin. */
+  private keepUnderPane(pane: Obj, normal: any): void {
+    const THREE = this.THREE
+    const paneBox = new THREE.Box3().setFromObject(pane).expandByScalar(COWL_NEAR_PANE)
+    const pos = pane.geometry.attributes.position
+    const centre = new THREE.Vector3()
+    const v = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) centre.add(v.fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld))
+    centre.divideScalar(pos.count)
+    const plane = centre.dot(normal)
+    for (const o of this.c.vehicle.children as Obj[]) {
+      if (!o.isMesh || o === pane || o.userData.glass || (this.c as any).deform?.includes(o)) continue
+      const box = new THREE.Box3().setFromObject(o)
+      const size = box.getSize(new THREE.Vector3())
+      if (o.geometry.attributes.position.count <= PANE_BAR_VERTICES || size.y > COWL_DASH || Math.max(size.x, size.z) < COWL_LONG || Math.min(size.x, size.z) < COWL_DEEP || !paneBox.intersectsBox(box)) continue
+      // under the glass, not on top of the body in front of it
+      if (box.getCenter(new THREE.Vector3()).dot(normal) - plane >= COWL_UNDER_GLASS) continue
+      // under the glass: the panel in the body's paint and the dashboard behind in the cabin's grey, so the base of the glass reads as the car, not a black band
+      // the dashboard behind is matte dark plastic: lit by the sky through the glass a glossy top reads as a grey band of the outside
+      if (size.y >= COWL_PLATE) {
+        o.material = this.I.makeMaterial(DASHBOARD_COLOR, { roughness: 1, metalness: 0 })
+        continue
+      }
+      // the plate stays only outside, up to where the glass meets the body: under the glass it would run into the cabin
+      o.material = this.paint()
+      this.cutUnderPane(o, pane, normal)
+    }
+  }
+  /** Cuts away the part of a mesh that lies under a pane (behind its plane, inside its outline seen along its normal). */
+  private cutUnderPane(mesh: Obj, pane: Obj, normal: any, behind = -Infinity, inset = 0): void {
+    const THREE = this.THREE
+    const outline = this.paneOutline(pane, normal)
+    if (outline.length < 3) return
+    const u = new THREE.Vector3(0, 1, 0).cross(normal)
+    if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
+    u.normalize()
+    const w = normal.clone().cross(u)
+    const cx = outline.reduce((sum: number, p: any) => sum + p.dot(u), 0) / outline.length
+    const cy = outline.reduce((sum: number, p: any) => sum + p.dot(w), 0) / outline.length
+    // the strip under the edge of the glass stays: the pillars and the sill it rests on
+    const poly = outline.map((p: any) => {
+      const x = p.dot(u)
+      const y = p.dot(w)
+      const d = Math.hypot(x - cx, y - cy) || 1
+      const k = Math.max(0, d - inset) / d
+      return [cx + (x - cx) * k, cy + (y - cy) * k] as [number, number]
+    })
+    const plane = outline.reduce((sum: number, p: any) => sum + p.dot(normal), 0) / outline.length
+    const inside = (x: number, y: number): boolean => {
+      let hit = false
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const [xi, yi] = poly[i]!
+        const [xj, yj] = poly[j]!
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit
+      }
+      return hit
+    }
+    const v = new THREE.Vector3()
+    const toWorld = mesh.matrixWorld
+    mesh.updateMatrixWorld(true)
+    // only the faces that reach the outline are split fine enough for the cut to follow it: the rest of the body keeps its own triangles
+    const xs = poly.map((p) => p[0])
+    const ys = poly.map((p) => p[1])
+    const [x0, x1, y0, y1] = [Math.min(...xs) - COWL_CUT_MARGIN, Math.max(...xs) + COWL_CUT_MARGIN, Math.min(...ys) - COWL_CUT_MARGIN, Math.max(...ys) + COWL_CUT_MARGIN]
+    subdivideNear(THREE, { mesh, maxLen: COWL_CUT_SUB, near: (corners) => {
+      const us = corners.map((c) => c.dot(u))
+      const ws = corners.map((c) => c.dot(w))
+      return Math.max(...us) >= x0 && Math.min(...us) <= x1 && Math.max(...ws) >= y0 && Math.min(...ws) <= y1
+    } })
+    this.kit.cutMesh(
+      mesh,
+      [
+        {
+          sdf: (x: number, y: number, z: number): number => {
+            v.set(x, y, z).applyMatrix4(toWorld)
+            return inside(v.dot(u), v.dot(w)) && plane - v.dot(normal) > behind ? -1 : 1
+          },
+        },
+      ],
+      42,
+      {},
+    )
+  }
+  /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
+  private paneBorder(pane: Obj, near: Obj[], seat: PaneSeat): void {
+    const THREE = this.THREE
+    const bars = near.filter((o) => {
+      if (o.geometry.attributes.position.count > PANE_BAR_VERTICES) return false
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return Math.max(size.x, size.y, size.z) > PANE_BAR_LENGTH
+    })
+    if (!bars.length) return
+    const outline = this.paneOutline(pane, seat.normal)
+    if (outline.length < 3) return
+    const centre = new THREE.Vector3()
+    for (const p of outline) centre.add(p)
+    centre.divideScalar(outline.length)
+    const position: number[] = []
+    const toVehicle = this.I.worldInverseOf(this.c)
+    const put = (p: any): void => {
+      const q = p.clone().addScaledVector(seat.normal, PANE_BORDER_LIFT).applyMatrix4(toVehicle)
+      position.push(q.x, q.y, q.z)
+    }
+    const inward = (p: any): any => p.clone().add(centre.clone().sub(p).normalize().multiplyScalar(PANE_BORDER))
+    outline.forEach((a, i) => {
+      const b = outline[(i + 1) % outline.length]!
+      const c = inward(b)
+      const d = inward(a)
+      for (const p of [a, b, c, a, c, d]) put(p)
+    })
+    if (!position.length) return
+    for (const o of bars) o.visible = false
+    const band = new THREE.BufferGeometry()
+    band.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+    band.computeVertexNormals()
+    const material = this.I.MATERIALS.dark.clone()
+    material.side = THREE.DoubleSide
+    const mesh = new THREE.Mesh(band, material)
+    mesh.userData.noFollow = true
+    mesh.castShadow = false
+    mesh.raycast = () => {}
+    this.c.vehicle.add(mesh)
+  }
+  /** The outline of a pane, the convex hull of its vertices seen along its normal, in world space. */
+  private paneOutline(pane: Obj, normal: any): any[] {
+    const THREE = this.THREE
+    const pos = pane.geometry.attributes.position
+    const u = new THREE.Vector3(0, 1, 0).cross(normal)
+    if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
+    u.normalize()
+    const w = normal.clone().cross(u)
+    const points: Array<{ x: number; y: number; p: any }> = []
+    for (let i = 0; i < pos.count; i++) {
+      const p = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(pane.matrixWorld)
+      points.push({ x: p.dot(u), y: p.dot(w), p })
+    }
+    points.sort((a, b) => a.x - b.x || a.y - b.y)
+    const cross = (o: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+    const half = (list: typeof points): typeof points => {
+      const out: typeof points = []
+      for (const q of list) {
+        while (out.length >= 2 && cross(out[out.length - 2]!, out[out.length - 1]!, q) <= 0) out.pop()
+        out.push(q)
+      }
+      out.pop()
+      return out
+    }
+    return [...half(points), ...half([...points].reverse())].map((q) => q.p)
   }
   /** How far the shell still stands past a seated pane, over its triangles. */
   private shellPast(pane: Obj, shell: Obj[], ray: any, normal: any): number {
@@ -625,11 +943,26 @@ export class VehicleVisuals implements CreaseWork {
     g.computeBoundingSphere()
     mesh.geometry = g
   }
+  /** A closed hood is flush with the fenders beside it: the height it was drawn with to keep clear of the hull goes, the hull has its hole. */
+  private seatHood(): void {
+    const hood = (this.c as any).hood
+    if (!hood?.lift) return
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(hood.piv).getSize(new THREE.Vector3())
+    for (const part of hood.piv.children as Obj[]) {
+      part.position.y -= hood.lift + HOOD_SINK
+      // most of the gap the drawing left round it closes: a thin shut line, not a dark outline that makes it read as a raised plate
+      part.scale.multiply(new THREE.Vector3(1 + HOOD_GAP_CLOSED / Math.max(0.3, box.x), 1, 1 + HOOD_GAP_CLOSED / Math.max(0.3, box.z)))
+    }
+  }
   /** A handle is at the free edge of its door, the end away from the hinge. */
   private seatDoorHandles(): void {
     const THREE = this.THREE
     const c = this.c as any
     const inv = this.I.worldInverseOf(c)
+    const bodyBox = new THREE.Box3()
+    for (const o of c.deform as Obj[]) if (o.isMesh && !o.userData.glass && c.paints?.has(o.material)) bodyBox.union(this.I.localBox(c, o, inv))
+    const outerHalf = Math.max(Math.abs(bodyBox.min.z), Math.abs(bodyBox.max.z))
     for (const p of this.model.parts) {
       if (p.role !== 'door') continue
       const z = this.zone(p)
@@ -643,9 +976,8 @@ export class VehicleVisuals implements CreaseWork {
         const at = box.getCenter(new THREE.Vector3())
         const isHandle = size.x > DOOR_HANDLE_MIN && size.x < DOOR_HANDLE_MAX && size.y < DOOR_HANDLE_THIN && size.z < DOOR_HANDLE_THIN
         if (!isHandle || Math.sign(at.z) !== Math.sign(z.side) || at.x < B.x0 || at.x > B.x1 || at.y < B.y0 || at.y > B.y1) continue
-        // the pull inside the cabin stays where it is: only what stands on the outer skin is the outer handle
-        const here = this.surface('z', z.side < 0 ? -1 : 1, B, [[at.x, at.y]])
-        if (here != null && Math.abs(here - at.z) > DOOR_HANDLE_OUTSIDE) continue
+        // the pull inside the cabin stays where it is: only what stands at the outer side is the outer handle
+        if (Math.abs(at.z) < outerHalf - DOOR_HANDLE_OUTSIDE) continue
         const skin = this.surface('z', z.side < 0 ? -1 : 1, B, [[free, at.y]])
         o.position.x += free - at.x
         if (skin != null) o.position.z += skin + (z.side < 0 ? -1 : 1) * (size.z / 2) - at.z
@@ -654,7 +986,7 @@ export class VehicleVisuals implements CreaseWork {
     c.root.updateMatrixWorld(true)
   }
   /** The glass of a drawn mirror sits inside its rounded housing, without corners standing past it. */
-  private seatMirrorGlass(glass: Obj): void {
+  private seatMirrorGlass(glass: Obj, drawn: Obj[]): void {
     const g = glass.geometry.clone()
     g.computeBoundingBox()
     const mid = g.boundingBox.getCenter(new this.THREE.Vector3())
@@ -662,6 +994,39 @@ export class VehicleVisuals implements CreaseWork {
     g.scale(MIRROR_GLASS_FIT, MIRROR_GLASS_FIT, MIRROR_GLASS_FIT)
     g.translate(mid.x, mid.y, mid.z)
     glass.geometry = g
+    // set into the housing's face, barely proud of it: the largest thing beside it is the housing
+    const THREE = this.THREE
+    const volumeOf = (o: Obj): number => {
+      const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3())
+      return size.x * size.y * size.z
+    }
+    const housing = drawn.filter((o) => o !== glass && o.isMesh && o.geometry).sort((a, b) => volumeOf(b) - volumeOf(a))[0]
+    if (housing) {
+      this.c.root.updateMatrixWorld(true)
+      const inv = this.I.worldInverseOf(this.c)
+      glass.updateMatrixWorld(true)
+      const gb = this.I.localBox(this.c, glass, inv)
+      const hb = this.I.localBox(this.c, housing, inv)
+      // the rounded back of the housing is cut flat and the glass lies in that flat, so nothing stands out of the shape seen from the side
+      const side = hb.getCenter(new THREE.Vector3()).x > gb.getCenter(new THREE.Vector3()).x ? -1 : 1
+      const face = side < 0 ? hb.min.x + MIRROR_FACE_DEPTH : hb.max.x - MIRROR_FACE_DEPTH
+      const shape = housing.geometry.clone()
+      const pos = shape.attributes.position
+      const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, housing.matrixWorld)
+      const back = toVehicle.clone().invert()
+      const v = new THREE.Vector3()
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(toVehicle)
+        if ((v.x - face) * side <= 0) continue
+        v.x = face
+        v.applyMatrix4(back)
+        pos.setXYZ(i, v.x, v.y, v.z)
+      }
+      shape.computeVertexNormals()
+      housing.geometry = shape
+      const outer = side < 0 ? gb.min.x : gb.max.x
+      glass.position.x += face + side * MIRROR_GLASS_PROUD - outer
+    }
     glass.material = this.I.makeMaterial(MIRROR_GLASS_COLOR, { metalness: 0.95, roughness: 0.12 })
   }
   /** The mirror the model already draws around where the part says, if it draws one. */
@@ -687,7 +1052,12 @@ export class VehicleVisuals implements CreaseWork {
       for (const o of drawn) {
         if (!o.isMesh || o.material !== this.I.MATERIALS.chrome) continue
         const size = new this.THREE.Box3().setFromObject(o).getSize(new this.THREE.Vector3())
-        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o)
+        // thin across its face whichever way the model stands
+        const [thin, mid] = size.toArray().sort((a: number, b: number) => a - b)
+        if (thin < MIRROR_GLASS_THIN && mid > MIRROR_GLASS_MIN) {
+          this.seatMirrorGlass(o, drawn)
+          o.userData.mirrorGlass = true
+        }
       }
       this.extra.set(p.id, drawn)
       return
@@ -699,13 +1069,26 @@ export class VehicleVisuals implements CreaseWork {
     g.name = `obj_${p.id}`
     g.position.set(cx, cy, cz)
     this.c.vehicle.add(g)
-    this.box(0.05, 0.04, 0.1, mats.dark, 0, -0.04, -s * 0.07, g)
-    const housing = this.box(0.1, 0.12, 0.05, mats.plastic ?? mats.dark, 0, 0, s * 0.02, g)
+    // arm off the door, a housing wide outboard, and the glass on its rear face looking back along the car (the front is +x)
+    this.box(0.05, 0.035, 0.05, mats.dark, 0, -0.04, -s * 0.06, g)
+    const housing = this.box(0.08, 0.11, 0.125, mats.plastic ?? mats.dark, 0, 0, s * 0.0225, g)
     housing.userData.mirrorHousing = true
-    const glass = this.box(0.095, 0.1, 0.006, mats.chrome ?? mats.dark, 0, 0, s * 0.048, g)
+    const glass = this.box(0.006, 0.095, 0.115, mats.chrome ?? mats.dark, -0.043, 0, s * 0.0225, g)
     glass.userData.mirrorGlass = true
     g.userData.rigid = true
     this.extra.set(p.id, [g])
+  }
+  /** A round through the mirror shatters its glass: the shards drop out of the housing, which stays on with the hole. Returns whether there was glass to break. */
+  shatterMirror(id: string): boolean {
+    let broke = false
+    for (const o of this.extra.get(id) ?? []) {
+      o.traverse((m: Obj) => {
+        if (!m.userData.mirrorGlass || !m.visible) return
+        m.visible = false
+        broke = true
+      })
+    }
+    return broke
   }
   private makeBattery(p: PartDef): void {
     const mats = this.I.MATERIALS
@@ -754,6 +1137,11 @@ export class VehicleVisuals implements CreaseWork {
     if (carrier) carrier.attach(m)
   }
   /** The door or lid a hinge group stands for. */
+  /** The part a separately drawn piece stands for (a mirror on the door, a battery under the hood), so a shot at it lands on that part. */
+  extraIdOf(o: Obj): string | undefined {
+    for (const [id, objs] of this.extra) if (objs.includes(o)) return id
+    return undefined
+  }
   plateIdOf(o: Obj): string | undefined {
     return o.userData.plateOf
   }
@@ -811,6 +1199,8 @@ export class VehicleVisuals implements CreaseWork {
         best = g
       }
     }
+    // the glass is what the model says it is: an armoured pane cracks round the hit and stays, whatever the drawing first called it
+    if (p.hp > LAMINATED_HP && best.userData.glass) best.userData.glass.type = 'laminated'
     this.kit.hitGlass(this.c, best, pt, new V3(...dir), force)
     return !!best.userData.glass?.broken
   }
@@ -831,6 +1221,18 @@ export class VehicleVisuals implements CreaseWork {
     const z = this.zone(p)
     if (!z) return
     for (const w of z.wheels as Obj[]) if (w.parent) this.I.flattenTire(w, k)
+  }
+  /** A tyre driven flat until it tore apart: the rubber is gone and the bare rim shows. */
+  tyreTornOff(p: PartDef): void {
+    const z = this.zone(p)
+    if (!z) return
+    for (const w of z.wheels as Obj[]) {
+      if (!w.parent || w.userData.tornOff) continue
+      w.userData.tornOff = true
+      for (const m of this.I.tireMeshes(w) as Obj[]) m.visible = false
+      // the rim comes down onto the road by the height of the sidewall it lost
+      w.position.y -= (w.userData.r ?? DEFAULT_WHEEL_RADIUS) * SIDEWALL_SHARE
+    }
   }
   /** Burning rubber: the tyre sags and goes black as it melts. */
   tyreMelt(p: PartDef, melt: number): void {

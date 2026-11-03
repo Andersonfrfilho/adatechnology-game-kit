@@ -420,9 +420,18 @@ export function createUi(o: UiOptions): RoomUi {
       nodes.delete(oldest.value)
       logBody.firstElementChild?.remove()
     }
-    if (autoscroll) logBody.scrollTop = logBody.scrollHeight
+    // scrolled at the next flush, before it touches the DOM: read now, scrollHeight would lay the page out in the middle of the frame
+    // (perf.mjs, 2026-11-03: part of the 118 ms long task of the horde chain's first blast)
+    if (autoscroll) isScrollDue = true
+  }
+  let isScrollDue = false
+  const scrollToEnd = (): void => {
+    if (!isScrollDue) return
+    isScrollDue = false
+    logBody.scrollTop = logBody.scrollHeight
   }
   const flushLog = (): void => {
+    scrollToEnd()
     if (pendingAdds.length === 0 && pendingUpdates.size === 0) return
     if (!isLogVisible()) {
       isLogStale = true

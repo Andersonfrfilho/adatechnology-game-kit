@@ -43,6 +43,24 @@ function failedProgram(renderer: WarmupRenderer): string | undefined {
   return undefined
 }
 
+/**
+ * Finishes every program the renderer holds: three.js links a program when a material first compiles, but reads its link status, its logs and its
+ * uniform locations only on the program's first draw (`getUniforms`), and that read waits for the driver to end the link: ~7 ms a program on the
+ * RTX 5070 laptop, 43 ms for the six shadow-receiving programs the horde chain's first blast drew for the first time (perf.mjs, 2026-11-03).
+ * A program linked here and drawn only in play (a hidden part of a vehicle, an effect of another area) pays that at load instead.
+ */
+function finishPrograms(renderer: WarmupRenderer): number {
+  let finished = 0
+  for (const program of renderer.info.programs ?? []) {
+    const linked = program as { getUniforms?: () => unknown; getAttributes?: () => unknown }
+    if (typeof linked.getUniforms !== 'function') continue
+    linked.getUniforms()
+    linked.getAttributes?.()
+    finished++
+  }
+  return finished
+}
+
 export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | 'SpriteMaterial' | 'DataTexture' | 'Fog' | 'FogExp2' | 'Mesh' | 'Points' | 'LineSegments' | 'BufferGeometry' | 'BufferAttribute'>): ProgramWarmup {
   const probes = new Set<WarmupProbe>()
   const effects = new Set<EffectWarmup>()
@@ -173,6 +191,8 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
         scene.fog = originalFog
         removeProbes(scene, built)
       }
+      // also what lets failedProgram see a broken link: three only fills `diagnostics` on the first use
+      finishPrograms(renderer)
       const context = renderer.getContext()
       const uniformVectors = Number(context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS))
       const failure = failedProgram(renderer)

@@ -180,6 +180,13 @@ export type LoopRecipe = {
   readonly startAbove?: number
   /** Volume the gain starts at when the loop opens (`chain_loop`). */
   readonly volume?: number
+  /**
+   * Distance falloff of the loop, applied each time `set` gives a `position` (an engine, a fire, a skid heard from where it is). Left out, the loop is
+   * heard at the listener, as the team loops are. `cutoffK` also lowers the first filter's cutoff with the distance, as it does for one-shots.
+   */
+  readonly falloff?: Falloff
+  /** Stereo pan from the listener, from the `position` of each `set` (a panner after the gain). Off by default. */
+  readonly pan?: boolean
   readonly sources: readonly string[]
 }
 
@@ -202,4 +209,78 @@ export type SoundBank = {
   readonly sounds?: readonly SoundRecipe[]
   readonly loops?: readonly LoopRecipe[]
   readonly sets?: readonly SoundSet[]
+  /** Sounds played from recorded files (see `sample.ts`). A sample and a recipe may share an id: the sample plays once its files are loaded. */
+  readonly samples?: readonly SampleSound[]
+}
+
+// ----- sounds from recorded files (planned by `planSample` in sample.ts; the types live here so the bank has them without an import cycle)
+
+/** One take: a file and its own trim (linear gain, default 1). */
+export type SampleRef = { readonly url: string; readonly gain?: number }
+
+/** Where a sound happens: a closed room rings short and dense, the open field long and thin. */
+export type SampleEnvironment = 'indoor' | 'outdoor'
+
+/** Where the near take hands over to the far one: all near up to `from` metres, all far from `to`, an equal-power crossfade between. */
+export type SampleCrossover = { readonly from: number; readonly to: number }
+
+export type SampleTail = {
+  readonly indoor?: readonly SampleRef[]
+  readonly outdoor?: readonly SampleRef[]
+  /** Level of the tail against the dry take (default 0.6). */
+  readonly gain?: number
+  /** Seconds after the start (default 0: the tail file carries its own pre-delay). */
+  readonly at?: number
+}
+
+/**
+ * A set of takes for a strength of the action (criterion C7: a light blow, a heavy one, a car at 10 or 60 km/h): from `from` (0..1) up, these takes
+ * replace `close` and `far`. The tier played is the last one whose `from` is at or below `PlayOptions.intensity`.
+ */
+export type SampleTier = {
+  readonly name: string
+  readonly from: number
+  readonly close: readonly SampleRef[]
+  readonly far?: readonly SampleRef[]
+}
+
+export type SampleSound = {
+  readonly id: string
+  readonly bus: BusId
+  /** The takes heard near; at least one (the criteria ask four for a sound heard all the time). */
+  readonly close: readonly SampleRef[]
+  /** The takes heard far; without them the near take plays at every distance (muffled by the lowpass). */
+  readonly far?: readonly SampleRef[]
+  /** Takes by strength (light, medium, heavy), in rising `from`; without `intensity` the near takes above play. */
+  readonly tiers?: readonly SampleTier[]
+  /** Default `{ from: 30, to: 80 }`. */
+  readonly crossover?: SampleCrossover
+  readonly tail?: SampleTail
+  /** ± fraction of the playback rate drawn per play (default 0.04: ±4 %, inside the 3–5 % of the criteria). 0 plays every take at its pitch. */
+  readonly pitch?: number
+  /** Level of the sound (default 1). */
+  readonly gain?: number
+  /** Default `{ model: 'inverse_square', k: 0.002, minGain: 0.002 }`: a recorded take already sounds near or far, so the curve is gentler than a recipe's. */
+  readonly falloff?: Falloff
+  /** The lowpass cutoff is `20000 / (1 + d × cutoffK)` Hz (default 0.01: 10 kHz at 100 m). 0 turns the distance lowpass off. */
+  readonly cutoffK?: number
+  /** Stereo pan from the listener (default true). */
+  readonly pan?: boolean
+  readonly group?: string
+  readonly priority?: number
+  /**
+   * At most `voices` plays of this sound ring at once: a new one fades the oldest out in `fade` seconds (default 0.03) at its own start. Rapid fire
+   * then stays shot by shot instead of a wall of overlapping takes (criterion C9). Without it every play rings to its end.
+   */
+  readonly choke?: { readonly voices: number; readonly fade?: number }
+  /**
+   * A continuous sound (fire, rain, an engine idling) that `engine.loop(id)` plays: the near takes chained without a seam, each crossed into the next
+   * in `crossfade` seconds (default 0.25, equal power), never the same take twice in a row. While the files load, the recipe loop of `fallback`
+   * (or of the same id) plays. `play(id)` still plays one take as a one-shot.
+   */
+  readonly loop?: boolean | { readonly crossfade?: number }
+  /** A recipe id the engine plays while the files are not loaded yet (or failed): the synthesized sound stays as the fallback. */
+  readonly fallback?: string
+  /** Where each file came from: `"freesound:123456 autor CC0"`, or `"sdk"` for files the kit made. */
+  readonly sources: readonly string[]
 }

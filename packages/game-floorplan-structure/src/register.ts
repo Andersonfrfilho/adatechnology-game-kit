@@ -4,6 +4,7 @@ import { constructionFor } from './construction'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import type { ConstructionBuild } from './registry'
+import type { WaterTank } from './types'
 import { buildStructure } from './structure'
 import { contentOf } from './utilities/content'
 import { planContents, planUtilities } from './utilities'
@@ -36,7 +37,7 @@ function constructionExtension(context: ResultExtensionContext): unknown {
 
 function structureExtension(context: ResultExtensionContext): unknown {
   const cache = cacheOf(context.result)
-  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: context.result.waterTank ?? null, wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail }
+  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: tankOf(context), wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail }
   const { roof, ...structure } = buildStructure(context.result, options)
   cache.roof = roof
   for (const part of structure.parts) {
@@ -48,6 +49,9 @@ function structureExtension(context: ResultExtensionContext): unknown {
 }
 
 const COOKING_CYLINDER = { type: 'cooking_gas_cylinder', category: 'cooking_gas_cylinder', w: 0.36, d: 0.36, h: 0.48 }
+
+/** The tank the `waterTank` extension (registered here) wrote into the result. */
+const tankOf = (context: ResultExtensionContext): WaterTank | null => (context.result.waterTank as WaterTank | null | undefined) ?? null
 
 function energyOf(context: ResultExtensionContext): EnergyConfig | undefined {
   const energy = context.plan.tpl.energy
@@ -66,7 +70,7 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerResultExtension(
     'waterTank',
     (context) => {
-      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank, location: context.plan.tpl.tankLocation }
+      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'] } // templates declare their own tank hooks
       return planWaterTank(context.result as never, context.rng, tank)
     },
     { after: ['construction'], seedKey: 'caixa' },
@@ -81,5 +85,5 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
     if (context.result.lot) addOutbuildingPaths(context.result.lot, outbuildings, context.result.items)
     return outbuildings
   }, { after: ['contents'] })
-  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: context.result.waterTank ?? null, ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
+  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
 }

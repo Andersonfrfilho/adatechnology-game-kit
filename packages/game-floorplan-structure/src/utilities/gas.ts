@@ -1,5 +1,6 @@
+import type { Plan, ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Rect } from '../types'
-import type { Json, Rng } from './shared'
+import type { Rng } from './shared'
 import { HALF_WALL, clamp, groundExteriorWalls, inner, isSolid, outwardOf, overlaps, round2, sideNameOf } from './shared'
 
 export const CYLINDER_TYPE = 'cooking_gas_cylinder'
@@ -32,7 +33,7 @@ interface Spot {
 }
 
 /** Gas meter on the front wall of the ground floor, 1.2 m up. */
-function placeMeter(plan: Json): GasMeter | null {
+function placeMeter(plan: Plan): GasMeter | null {
   const segments = groundExteriorWalls(plan).sort((a, b) => (b.sides.includes('outside') ? 1 : 0) - (a.sides.includes('outside') ? 1 : 0) || (a.axis === 'u' && a.v0 === 0 ? -1 : 1))
   const wall = segments.find((w) => w.axis === 'u' && w.v0 === 0) || segments[0]
   if (!wall) return null
@@ -45,18 +46,18 @@ function placeMeter(plan: Json): GasMeter | null {
 }
 
 interface Context {
-  plan: Json
-  items: Json[]
-  stateItems: Json[]
+  plan: Plan
+  items: ResultItem[]
+  stateItems: ResultItem[]
   rng: Rng
 }
 
-function besideStove(context: Context, stove: Json, room: Json, solids: Rect[], doorZones: Rect[]): Spot | undefined {
-  const t: [number, number] = [-stove.frontV, stove.frontU]
+function besideStove(context: Context, stove: ResultItem, room: Room, solids: Rect[], doorZones: Rect[]): Spot | undefined {
+  const t: [number, number] = [-(stove.frontV ?? 1), (stove.frontU ?? 0)]
   const parts = room.parts.map(inner)
   for (const s of context.rng() < 0.5 ? [1, -1] : [-1, 1]) {
-    const cx = stove.x + t[0] * s * (stove.w / 2 + CYLINDER.w / 2 + 0.03) - (stove.frontU * (stove.d - CYLINDER.d)) / 2
-    const cz = stove.z + t[1] * s * (stove.w / 2 + CYLINDER.w / 2 + 0.03) - (stove.frontV * (stove.d - CYLINDER.d)) / 2
+    const cx = stove.x + t[0] * s * (stove.w / 2 + CYLINDER.w / 2 + 0.03) - ((stove.frontU ?? 0) * (stove.d - CYLINDER.d)) / 2
+    const cz = stove.z + t[1] * s * (stove.w / 2 + CYLINDER.w / 2 + 0.03) - ((stove.frontV ?? 1) * (stove.d - CYLINDER.d)) / 2
     const rect = [cx - CYLINDER.w / 2, cz - CYLINDER.d / 2, cx + CYLINDER.w / 2, cz + CYLINDER.d / 2].map(round2) as Rect
     const inside = parts.some((q: Rect) => rect[0] >= q[0] - 0.011 && rect[2] <= q[2] + 0.011 && rect[1] >= q[1] - 0.011 && rect[3] <= q[3] + 0.011)
     if (inside && !solids.some((o) => overlaps(rect, o, 0.011)) && !doorZones.some((z) => overlaps(rect, z, 0.011))) return { mode: 'beside', x: cx, z: cz, rect }
@@ -64,10 +65,10 @@ function besideStove(context: Context, stove: Json, room: Json, solids: Rect[], 
   return undefined
 }
 
-function inNiche(context: Context, stove: Json, room: Json, doorZones: Rect[]): Spot | undefined {
+function inNiche(context: Context, stove: ResultItem, room: Room, doorZones: Rect[]): Spot | undefined {
   const { plan, items, stateItems } = context
   const wall = plan.walls.find(
-    (p: Json) =>
+    (p) =>
       p.exterior && p.floor === stove.floor && p.type === 'wall' && p.sides.includes(room.id) &&
       (p.axis === 'u'
         ? Math.abs(stove.x - clamp(stove.x, p.u0, p.u1)) < 1.6 && Math.abs(stove.z - p.v0) < 1.6
@@ -80,15 +81,15 @@ function inNiche(context: Context, stove: Json, room: Json, doorZones: Rect[]): 
   const rect = [cx - CYLINDER.w / 2, cz - CYLINDER.d / 2, cx + CYLINDER.w / 2, cz + CYLINDER.d / 2].map(round2) as Rect
   const blockedByItem = items.some((o) => o.outdoor && isSolid(o) && overlaps(rect, o.aabb, 0.011))
   const blockedByState = stateItems.some((o) => o.outdoor && o.aabb && !o.flat && o.mount !== 'ground' && overlaps(rect, o.aabb, 0.011))
-  const blockedByPath = plan.paths.some((c: Json) => c.rects.some((z: Rect) => overlaps(rect, z, 0.011)))
-  const blockedByGate = plan.gates.some((g: Json) => g.zones.some((z: Rect) => overlaps(rect, z, 0.011)))
-  const blockedByFence = !plan.lot || plan.lot.perimeter.some((q: Json) => overlaps(rect, [Math.min(q.u0, q.u1) - HALF_WALL, Math.min(q.v0, q.v1) - HALF_WALL, Math.max(q.u0, q.u1) + HALF_WALL, Math.max(q.v0, q.v1) + HALF_WALL], 0.011))
+  const blockedByPath = plan.paths.some((c) => c.rects.some((z: Rect) => overlaps(rect, z, 0.011)))
+  const blockedByGate = plan.gates.some((g) => g.zones.some((z: Rect) => overlaps(rect, z, 0.011)))
+  const blockedByFence = !plan.lot || plan.lot.perimeter.some((q) => overlaps(rect, [Math.min(q.u0, q.u1) - HALF_WALL, Math.min(q.v0, q.v1) - HALF_WALL, Math.max(q.u0, q.u1) + HALF_WALL, Math.max(q.v0, q.v1) + HALF_WALL], 0.011))
   if (blockedByItem || blockedByState || blockedByPath || doorZones.some((z) => overlaps(rect, z, 0.011)) || blockedByGate || blockedByFence) return undefined
   return { mode: 'niche', x: cx, z: cz, rect, outdoor: true }
 }
 
-function underCounter(context: Context, stove: Json): Spot | undefined {
-  const distance = (m: Json): number => Math.hypot(m.x - stove.x, m.z - stove.z)
+function underCounter(context: Context, stove: ResultItem): Spot | undefined {
+  const distance = (m: ResultItem): number => Math.hypot(m.x - stove.x, m.z - stove.z)
   const cabinets = context.items
     .filter(
       (m) => m.floor === stove.floor && m.room === stove.room && !m.outdoor && !m.on && !m.flat && ['kitchen_cabinet', 'workbench'].includes(m.category) && m.aabb && m.id !== stove.id &&
@@ -111,10 +112,10 @@ function underCounter(context: Context, stove: Json): Spot | undefined {
 
 const PLACEMENT = { beside: 'beside', niche: 'external_niche', under: 'under_counter' } as const
 
-function cylinderItem(stove: Json, spot: Spot): Json {
-  const item: Json = {
+function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
+  const item: ResultItem = {
     id: `${stove.room}.${CYLINDER_TYPE}`, type: CYLINDER_TYPE, category: CYLINDER_TYPE, x: round2(spot.x), z: round2(spot.z), ry: 0, w: CYLINDER.w, d: CYLINDER.d, h: CYLINDER.h, y: 0,
-    frontU: -stove.frontU, frontV: -stove.frontV, room: stove.room, floor: stove.floor, outdoor: !!spot.outdoor, slot: 'cylinder', on: null, mode: null, clearance: 0, flat: false, low: false,
+    frontU: -(stove.frontU ?? 0), frontV: -(stove.frontV ?? 1), room: stove.room, floor: stove.floor, outdoor: !!spot.outdoor, slot: 'cylinder', on: null, mode: null, clearance: 0, flat: false, low: false,
     aabb: spot.rect, link: stove.id, placement: PLACEMENT[spot.mode], hose: [[round2(spot.x), round2(spot.z), 0.3], [stove.x, stove.z, 0.5]], capacityKg: CYLINDER_KG,
   }
   if (spot.cabinet) {
@@ -141,7 +142,7 @@ export function planGas(context: Context): Gas | null {
     if (!out.meter) out.meter = placeMeter(plan)
   }
   for (const stove of stoves) {
-    const room = plan.rooms.find((c: Json) => c.id === stove.room && c.floor === stove.floor)
+    const room = plan.rooms.find((c) => c.id === stove.room && c.floor === stove.floor)
     if (!room) continue
     stove.gas = piped ? 'piped' : 'cylinder'
     if (piped) {
@@ -151,7 +152,7 @@ export function planGas(context: Context): Gas | null {
     }
     const solids = items.filter((m) => m.floor === stove.floor && m.room === stove.room && isSolid(m) && m.id !== stove.id).map((m) => m.aabb as Rect)
       .concat(stateItems.filter((m) => m.aabb && m.room === stove.room && m.floor === stove.floor && !m.flat && !m.on && m.mount !== 'window' && m.mount !== 'ground').map((m) => m.aabb as Rect))
-    const doorZones = plan.doors.filter((p: Json) => p.floor === stove.floor).flatMap((p: Json) => p.zones as Rect[])
+    const doorZones = plan.doors.filter((p) => p.floor === stove.floor).flatMap((p) => p.zones as Rect[])
     const order: Spot['mode'][] = rng() < 0.7 ? ['beside', 'niche', 'under'] : ['niche', 'beside', 'under']
     let spot: Spot | undefined
     for (const mode of order) {

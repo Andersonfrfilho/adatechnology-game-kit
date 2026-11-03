@@ -8,16 +8,19 @@ import type {
   EntityLabel,
   HereInfo,
   Mark,
+  MarksDatabase,
   PlaceGroup,
   PlayerPosition,
   ProjectionCamera,
   Team,
   ThreeLib,
+  ViewerHandle,
 } from './types'
 
 /** Minimal shape of the optional `window.claude` runtime that provides a shared database. */
 interface ClaudeRuntime {
-  use(name: 'db' | 'user'): Promise<any>
+  use(name: 'db'): Promise<MarksDatabase | null | undefined>
+  use(name: 'user'): Promise<ViewerHandle | null | undefined>
 }
 declare global {
   interface Window {
@@ -113,7 +116,7 @@ export function create(THREE: ThreeLib, options: DevtoolsOptions = {}): Devtools
     hud: true,
     openPanel: null as Devtools['openPanel'],
     showLabels: false,
-    db: null as any,
+    db: null as MarksDatabase | null,
     marks: [] as Mark[],
     goTo: null as Devtools['goTo'],
     extras: (() => '') as () => string,
@@ -223,8 +226,8 @@ export function create(THREE: ThreeLib, options: DevtoolsOptions = {}): Devtools
       if (!db) return
       dev.db = db
       db.collection(C.collection).onSnapshot(
-        (s: any) => {
-          dev.marks = s.docs.map((d: any) => ({ id: d.id, ...d.data() }))
+        (s) => {
+          dev.marks = s.docs.map((d) => ({ ...d.data(), id: d.id }))
           if (dev.openPanel === 'list') render()
         },
         () => {},

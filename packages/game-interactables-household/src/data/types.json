@@ -8,7 +8,12 @@
     "y": 0,
     "solid": true,
     "pushable": true,
-    "massKg": 70
+    "massKg": 70,
+    "sounds": {
+      "leaves": {
+        "*": "fridge"
+      }
+    }
   },
   {
     "id": "fridge_compact",
@@ -19,7 +24,12 @@
     "y": 0,
     "solid": true,
     "pushable": true,
-    "massKg": 30
+    "massKg": 30,
+    "sounds": {
+      "leaves": {
+        "*": "fridge"
+      }
+    }
   },
   {
     "id": "kitchen_cabinet_base",
@@ -245,7 +255,12 @@
     "h": 0.3,
     "y": 0.9,
     "solid": false,
-    "massKg": 14
+    "massKg": 14,
+    "sounds": {
+      "leaves": {
+        "*": "microwave"
+      }
+    }
   },
   {
     "id": "washing_machine",

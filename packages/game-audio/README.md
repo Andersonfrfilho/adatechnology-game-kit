@@ -85,3 +85,23 @@ The subject banks (weapons, destruction, characters, animals, weather) live in t
 Som como dados: a receita diz quais nós o som tem e quais números o movem; `planSound` sorteia tudo com semente na ordem em que a receita está
 escrita e devolve o plano que a camada WebAudio constrói. Curvas de distância dos times, pan da Cena de Arte, limite de vozes, laços e as cadeias de
 mixagem do jogo e da Cena. Os sons em si ficam no banco de cada assunto (armas, materiais, vozes, bichos, clima).
+
+## Sounds from files (`SampleSound`)
+
+A bank can carry `samples`: sounds made of recorded takes. The engine plays the files once they are loaded and the `fallback` recipe until then.
+
+```ts
+import { createAudioEngine, sampleBankFromManifest } from '@adatechnology/game-audio'
+import manifest from '@adatechnology/game-audio/assets/sfx/manifest.json'
+
+const engine = createAudioEngine({ banks: [sampleBankFromManifest(manifest, { id: 'sfx', baseUrl: '/sfx/', sounds: { pistol_9mm: { bus: 'weapons', fallback: 'sfx_pistol' } } })] })
+await engine.loadSamples()
+engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay: 40 / 343 })
+```
+
+- Layers: `close` (≥ 4 takes for a P1 sound), `far` (crossfades in between `crossover.from` and `to`, default 30–80 m, equal power), `tiers` (light/medium/heavy by `PlayOptions.intensity`), `tail.indoor` / `tail.outdoor` (by `PlayOptions.environment` or `engine.setEnvironment`).
+- Each play: a take drawn among all but the last one (round-robin, never twice in a row), the rate ± `pitch` (default 4 %), the level by `falloff`, a lowpass by distance (`cutoffK`) and behind a wall (`occlusion`), the pan.
+- Sample voices of a bus go through a zero-delay limiter (ceiling −1 dBFS); `choke: { voices }` fades the oldest plays of a sound for rapid fire.
+- `onVoiceStart` reports every voice (recipe or sample, the files and takes, `requestedAt` / `startAt`): the event log the criteria measure.
+- Files: drop them in `assets/sfx-inbox/<categoria>/` with a line in its `CREDITOS.md` and run `pnpm --filter @adatechnology/game-audio sfx:convert` (ffmpeg): Ogg Vorbis mono 48 kHz, −1 dBFS peak, attack on the first ms, `manifest.json` and `CREDITOS.md`. Only CC0 and CC-BY go into the SDK.
+- Measuring: `measureCriteria({ sound, banks, loader })` renders C1–C9 through the real engine on an `OfflineAudioContext`; the test room's `?area=sound_check_area` (`createSoundCheckModule`) runs it on a button and records 3 s for C10. `CALIBRATION_SOUND` is a kit-made sample sound (no file) with every layer, for checking the path end to end.
