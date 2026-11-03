@@ -2934,12 +2934,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const updatePresent = (dt: number): void => {
     reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
+    // the log first: it scrolls before anything of this frame touches the DOM, so reading its height lays nothing out
+    ui?.flushLog()
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
       hudAcc = 0
       ui.hud(hudState())
     }
-    ui?.flushLog()
     metricsAcc += dt
     if (metricsAcc >= METRICS_INTERVAL_S && ui) {
       metricsAcc = 0

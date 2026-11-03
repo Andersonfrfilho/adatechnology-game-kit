@@ -14,7 +14,7 @@
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -116,7 +116,9 @@ const measure = async (pageRoot, out, label) => {
   await waitForQuiet()
   console.log(`pre-push: measuring ${label}`)
   const started = Date.now()
-  spawnSync(process.execPath, [join(root, 'examples/test-room/perf.mjs')], {
+  // a report left by an earlier run must never stand in for this one
+  rmSync(out, { force: true })
+  const run = spawnSync(process.execPath, [join(root, 'examples/test-room/perf.mjs')], {
     stdio: 'inherit',
     env: {
       ...process.env,
@@ -132,7 +134,8 @@ const measure = async (pageRoot, out, label) => {
     },
   })
   console.log(`pre-push: ${label} took ${((Date.now() - started) / 60000).toFixed(1)} min`)
-  if (!existsSync(out)) throw new Error(`perf.mjs wrote no report for ${label} (${out})`)
+  // perf.mjs exits 1 on a hard failure and still writes its report; with no report (a crash, a closed browser) the run did not happen
+  if (!existsSync(out)) throw new Error(`perf.mjs wrote no report for ${label} (exit ${run.status ?? run.signal}): the run did not finish`)
   return JSON.parse(readFileSync(out, 'utf8'))
 }
 

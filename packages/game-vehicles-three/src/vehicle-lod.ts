@@ -41,21 +41,14 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
   // the full model is drawn whole once, off-camera parts included, before it may hide: its buffers reach the GPU then, not in the frame of a
   // blast. A model rebuilt in place (the destructible's reset) is new geometry, so it is drawn whole again.
   let isUploaded = false
-  // the model's own parts when it was armed: it was rebuilt when one of them left the vehicle (the reset builds new ones); a decal, a scratch or
-  // a soot mark added by a hit is not a rebuild. Until 2026-11-03 any new child counted, so the first scratch threw the batches away and the
-  // vehicle drew one call per part (perf.mjs, chain_horde on the RTX 5070: ~900 draws a frame after the first blast)
-  let modelParts: any[] = []
+  let modelKey = ''
   const culled = new Map<any, boolean>()
-  const isUnder = (object: any): boolean => {
-    for (let node = object.parent; node; node = node.parent) if (node === full) return true
-    return false
-  }
-  const wasRebuilt = (): boolean => modelParts.some((part) => !isUnder(part))
+  const keyOf = (): string => full.children.filter((child: any) => child.name !== 'static-batches').map((child: any) => child.uuid).join()
   const armUpload = (): void => {
     // a model rebuilt again before its first draw (frames skipped on a slow machine) lets go of the old one's meshes
     for (const [mesh, wasCulled] of culled) mesh.frustumCulled = wasCulled
     culled.clear()
-    modelParts = full.children.filter((child: any) => child.name !== 'static-batches' && !child.userData.decal)
+    modelKey = keyOf()
     isUploaded = false
     full.traverse((object: any) => {
       if (!object.isMesh || culled.has(object)) return
@@ -116,18 +109,6 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
     // the batches copy the parts' triangles: a hit test reads the parts (`surfaceRay`), never the copy
     batcher.group.userData.noSurfaceRay = true
     markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
-  }
-  /** Hit: the shadow proxy has the shape of the vehicle before the hit; from now on the batches and the parts given back cast it. */
-  const castDamagedShadow = (): void => {
-    if (!shadow) return
-    // a batch casts when a part merged into it did (the parts' own flag was taken off when the proxy came)
-    for (const batch of batcher?.batches() ?? []) batch.mesh.castShadow = batch.sources.some((mesh) => castsShadow.has(mesh))
-    for (const mesh of castsShadow) mesh.castShadow = true
-    castsShadow.clear()
-    shadow.removeFromParent()
-    shadow.geometry.dispose()
-    shadow.material.dispose()
-    shadow = null
   }
   const drawFull = (): void => {
     // a vehicle hit in play is changing part by part: batched now, its batches would be given back as fast as they are made
@@ -198,12 +179,9 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
   }
   const api: VehicleLod = {
     update(distance, touched, posed = false) {
-      if (touched && !isLocked) {
-        changedAt = now()
-        castDamagedShadow()
-      }
+      if (touched && !isLocked) changedAt = now()
       isLocked ||= touched
-      if (wasRebuilt()) {
+      if (keyOf() !== modelKey) {
         changedAt = now()
         // the fused copy and the batches were made from the old model
         api.dispose()
@@ -230,7 +208,6 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
       castsShadow.clear()
       shadow?.removeFromParent()
       shadow?.geometry.dispose()
-      shadow?.material.dispose()
       shadow = null
       if (!lite) return
       lite.removeFromParent()
