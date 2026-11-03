@@ -23,6 +23,8 @@ export const checkReadCost = ({ name, read, options, problems }: CheckReadCostPa
   const ceilingMs = options.ceilingMs ?? DEFAULT_COST_CEILING_MS
   const allocationBytes = options.allocationBytes ?? DEFAULT_COST_ALLOCATION_BYTES
   if (read() !== read()) problems.push(`${name}() returns a new object on each read: cache it between changes (cost contract)`)
+  // a first pass lets the engine compile and optimise the loop: that code and its feedback are heap too, and would read as the method allocating
+  for (let i = 0; i < reads; i++) read()
   const heapBefore = heapUsedBytes()
   const started = performance.now()
   for (let i = 0; i < reads; i++) read()
