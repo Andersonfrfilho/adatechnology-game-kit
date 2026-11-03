@@ -102,8 +102,11 @@ mkdirSync(outDir, { recursive: true })
 const SOFTWARE_GL = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox']
 const REAL_GL = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--disable-frame-rate-limit', '--no-sandbox']
 const { chromium } = loadPlaywright()
+// PERF_HEADED=1: a real window (X11), as a player sees it; headless Chrome composites off screen and reads several times slower on the same GPU
+const HEADED = GPU_MODE && process.env.PERF_HEADED === '1'
 const browser = await chromium.launch({
-  args: GPU_MODE ? REAL_GL : SOFTWARE_GL,
+  args: GPU_MODE ? [...REAL_GL, ...(HEADED ? ['--ozone-platform=x11', '--window-size=1600,900'] : [])] : SOFTWARE_GL,
+  ...(HEADED ? { headless: false } : {}),
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
 // software GL pays per pixel and the counters do not depend on the size, so CI draws a small window

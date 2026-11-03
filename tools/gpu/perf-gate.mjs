@@ -6,6 +6,7 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -58,10 +59,22 @@ const renderer = await (await browser.newPage()).evaluate(() => {
 await browser.close()
 if (SOFTWARE_RENDERERS.test(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
 
-console.log(`pre-push: perf on ${renderer}`)
+// the budgets hold for a quiet machine: other work on the CPU reads as a slow frame
+const QUIET_LOAD = 4
+const WAIT_FOR_QUIET_MS = 10 * 60 * 1000
+const until = Date.now() + WAIT_FOR_QUIET_MS
+while (loadavg()[0] >= QUIET_LOAD && Date.now() < until) {
+  console.log(`pre-push: waiting for a quiet machine (load ${loadavg()[0].toFixed(1)}, under ${QUIET_LOAD} wanted)`)
+  await new Promise((done) => setTimeout(done, 30000))
+}
+if (loadavg()[0] >= QUIET_LOAD) console.log(`pre-push: the machine is still busy (load ${loadavg()[0].toFixed(1)}): the frame times below read slower than a player sees`)
+const tier = /nvidia|radeon|amd/i.test(renderer) && !/intel/i.test(renderer) ? 'discrete' : 'integrated'
+console.log(`pre-push: perf on ${renderer} (${tier})`)
+const started = Date.now()
 execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'inherit' })
 const run = spawnSync(process.execPath, [join(root, 'examples/test-room/perf.mjs')], {
   stdio: 'inherit',
-  env: { ...process.env, PERF_MODE: 'gpu', ...(chrome ? { PERF_CHROME: chrome } : {}), ...(storeModules ? { NODE_PATH: [process.env.NODE_PATH, storeModules].filter(Boolean).join(':') } : {}) },
+  env: { ...process.env, PERF_MODE: 'gpu', PERF_TIER: tier, ...(process.env.DISPLAY ? { PERF_HEADED: '1' } : {}), ...(chrome ? { PERF_CHROME: chrome } : {}), ...(storeModules ? { NODE_PATH: [process.env.NODE_PATH, storeModules].filter(Boolean).join(':') } : {}) },
 })
+console.log(`pre-push: perf took ${((Date.now() - started) / 60000).toFixed(1)} min`)
 process.exit(run.status ?? 1)
