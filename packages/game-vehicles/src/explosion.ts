@@ -9,8 +9,8 @@ export function installExplosion(kit: Kit): void {
   const { makeMaterial, DOUBLE_SIDE, MATERIALS, paintColor, textTexture } = I
 
   /* ================= explosion ================= */
-  /* Chain: the engine catches fire with black smoke (3 to 8 s), the vehicle jumps ~1.5 m, hood, doors, trunk and a wheel fly off with a fire trail,
-     the glass bursts into shards and the burnt-out shell is left with a low fire. Fuel tank explosion damage: > 200 fire, > 400 explodes in 0.6 s.
+  /* Chain: the engine catches fire with black smoke (3 to 8 s), the vehicle jumps ~1.5 m, the hood and the rear bumper fly off with a fire trail,
+     the tempered glass bursts into cubes and the laminated windshield crazes and the burnt-out shell is left with a low fire. Fuel tank explosion damage: > 200 fire, > 400 explodes in 0.6 s.
      The tanker truck (meta.bigBlast) makes a gas station tank explosion: lethal radius 12 m, injury radius 30 m, 16 m mushroom cloud. */
   const BURNT = ['#1d1a17', '#26211c', '#171514', '#2e2620'].map(function (h, i) {
     return makeMaterial(h, { roughness: 1, metalness: i === 3 ? 0.35 : 0.15 })
@@ -218,8 +218,10 @@ export function installExplosion(kit: Kit): void {
     c.glass.slice().forEach(function (gm2: any) {
       const G = gm2.userData.glass
       if (!G || G.broken || !gm2.visible || !gm2.parent) return
+      // a laminated windshield holds together by its film: it crazes all over and stays; a tempered pane bursts into cubes
       if (G.type === 'laminated') {
-        G.type = 'tempered'
+        for (let k = 0; k < 3; k++) I.crackGlass(c, gm2, I.glassPt ? I.glassPt(c, gm2, c.rand) : gm2.position.clone(), 1.2)
+        return
       }
       I.shatterGlass(c, gm2, 1.4, new V3(0, 1, 0))
     })
@@ -231,18 +233,7 @@ export function installExplosion(kit: Kit): void {
       fling(c, c.hood.piv, new V3(rv(1, 3), rv(6, 8.5), rv(-1.5, 1.5)), new V3(rv(-4, 4), rv(-2, 2), rv(3, 7)))
       c.hood = null
     }
-    const W = m.width || 1.6
-    const gh = m.glasshouse
-    if (m.kind === 'car' && gh) {
-      ;[1, -1].forEach(function (sd) {
-        const dh = Math.max(0.35, (m.belt || 1) - (m.clearance || 0.3) - 0.08)
-        const dx = gh.fb - 0.55
-        const door = c.roundBox(0.95, dh, 0.045, 0.03, c.paint(m.color || '#777'), dx, (m.clearance || 0.3) + dh / 2 + 0.04, sd * (W / 2 + 0.01))
-        const hole = c.roundBox(0.9, dh * 0.95, 0.02, 0.02, MATERIALS.dark, dx, (m.clearance || 0.3) + dh / 2 + 0.04, sd * (W / 2 - 0.01))
-        hole.userData.noFollow = true
-        fling(c, door, c.dirToEffects(new V3(rv(-1, 1), rv(3.5, 6), sd * rv(4, 6.5))), new V3(rv(-5, 5), rv(-4, 4), rv(-5, 5)))
-      })
-    }
+    /* the doors stay on their hinges (the destruction model decides if a blast tears one off); no copy of a door flies */
     if (m.rearBumper && m.rearBumper.parent)
       fling(
         c,
@@ -250,20 +241,7 @@ export function installExplosion(kit: Kit): void {
         c.dirToEffects(new V3(rv(-5, -3), rv(4, 6), rv(-1, 1))),
         new V3(rv(-3, 3), rv(-6, 6), rv(-3, 3)),
       )
-    if (c.wheels.length) {
-      const wi = Math.floor(c.rand() * c.wheels.length)
-      const wh = c.wheels[wi]
-      c.wheels.splice(wi, 1)
-      c.parts.forEach(function (p: any) {
-        if (p.obj === wh) p.done = true
-      })
-      fling(
-        c,
-        wh,
-        c.dirToEffects(new V3(rv(-2, 2), rv(5, 7.5), (wh.position.z >= 0 ? 1 : -1) * rv(3, 5))),
-        new V3(rv(-8, 8), rv(-3, 3), rv(-8, 8)),
-      )
-    }
+    /* a wheel is bolted to its hub: the tyres burn, no wheel flies off */
     burnAll(c)
     /* low fire that stays on the shell */
     c.emitters = c.emitters.filter(function (e: any) {

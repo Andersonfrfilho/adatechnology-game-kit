@@ -2,6 +2,16 @@
 import type { Kit } from './types'
 import { clamp } from './util'
 
+/** Colour of the puddle each car fluid leaves: coolant green, brake fluid amber, transmission and power steering fluid red, washer fluid blue, battery acid a pale stain. */
+const PUDDLE_COLORS: Record<string, number> = {
+  coolant: 0x2fa84f,
+  brake_fluid: 0xb8892a,
+  transmission_fluid: 0x9a1c22,
+  power_steering_fluid: 0x8a2a30,
+  washer_fluid: 0x2d6fd0,
+  battery_acid: 0xd8d8c8,
+}
+
 export function installFluids(kit: Kit): void {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
@@ -239,14 +249,23 @@ export function installFluids(kit: Kit): void {
               opacity: 0.9,
               depthWrite: false,
             })
-          : new THREE.MeshStandardMaterial({
-              color: 0x000000,
-              roughness: 0.03,
-              metalness: 0.5,
-              transparent: true,
-              opacity: 0.45,
-              depthWrite: false,
-            })
+          : PUDDLE_COLORS[kind]
+            ? new THREE.MeshStandardMaterial({
+                color: PUDDLE_COLORS[kind],
+                roughness: 0.05,
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false,
+              })
+            : new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                roughness: 0.03,
+                metalness: 0.5,
+                transparent: true,
+                opacity: 0.45,
+                depthWrite: false,
+              })
     const m = new THREE.Mesh(puddleGeometry(), mat)
     m.position.set(q.x, kind === 'oil' ? 0.013 : 0.016, q.z)
     m.receiveShadow = true

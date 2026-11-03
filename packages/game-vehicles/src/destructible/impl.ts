@@ -20,6 +20,8 @@ import type {
   Vec3,
 } from '@adatechnology/game-contracts'
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
+import { ARMOUR_LEVELS, armourLevelOf } from './armour'
+import type { ArmourLevel, ArmourLevelId } from './armour'
 import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, rng, strHash } from '../util'
@@ -50,6 +52,10 @@ export interface VehicleDestructibleOptions {
    * Defaults and meaning of every number: `IgnitionRules` of `@adatechnology/game-contracts`.
    */
   ignition?: Partial<IgnitionRules>
+  /** Armour level of this vehicle (`IIIA` civilian, `III` against rifles), or null for none. Default: its spec. */
+  armour?: ArmourLevelId | null
+  /** Replaces or extends the armour table. */
+  armourLevels?: Partial<Record<ArmourLevelId, ArmourLevel>>
   /**
    * One queue that smooths the normals of cut panels for every vehicle that shares it (`createCreaseQueue()`), run by a frame budget. Without it, or while
    * nobody registered the queue with a budget, each vehicle smooths in its own `update` (2.5 ms a frame), as always.
@@ -91,6 +97,27 @@ export interface VehicleDestructible extends DestructibleImpl {
   rollover(side?: number): void
   /** Part ids that are no longer attached to the main body. */
   detachedParts(): string[]
+  /** What the damage leaves for driving: each tyre's health where it stands, the brakes, the engine and the shocks (0 gone .. 1 whole). */
+  driveReport(): DriveReport
+  /**
+   * The engine ran for `seconds` at `load` (0 idle .. 1 full throttle): without coolant it heats up, steams and seizes in a few minutes;
+   * without oil it wears and seizes. Call it while the vehicle is driven. Answers the engine temperature, °C.
+   */
+  runEngine(seconds: number, load: number): number
+  /**
+   * The vehicle rolled `meters` at `speed` m/s: a flat tyre wears through and tears off (a run-flat insert on an armoured vehicle carries it far
+   * at up to 80 km/h), then the bare rim grinds on the road throwing sparks. Answers how many rims are on the road.
+   */
+  rollFlat(meters: number, speed: number): number
+  /** Pushes the drawn body in by `depth` metres around `point` (world), along `direction`: the crumple of a crash. Drawing only. */
+  crumple(point: Vec3, direction: Vec3, depth: number): void
+}
+
+export type DriveReport = {
+  readonly tyres: ReadonlyArray<{ readonly x: number; readonly z: number; readonly health: number }>
+  readonly brakes: number
+  readonly engine: number
+  readonly suspension: number
 }
 
 interface PState {
@@ -109,6 +136,9 @@ interface PState {
   lost: boolean
   status: PartState['status']
   flat: boolean
+  /** Air left in a tyre, 0..1, and the share it loses per second through its holes. */
+  air: number
+  airLoss: number
   fireLoss: number
 }
 
@@ -152,6 +182,55 @@ const SHIELDED: ReadonlySet<PartRole> = new Set<PartRole>(['engine', 'gearbox', 
 const AMBIENT = 20
 const FLAME = 700
 
+/** Millimetres of RHA-equivalent steel by part (a car skin is under a millimetre; the engine block stops most rounds). */
+const STEEL_MM: Record<string, number> = { panel: 0.8, door: 1.6, hood: 0.8, lid: 0.8, roof: 0.8, fender: 0.8, pillar: 2, frame: 4, rim: 3, engine: 40, gearbox: 25, fuel_tank: 1, radiator: 1, battery: 2, brakes: 10, steering: 8, shocks: 6, oil_pan: 2, alternator: 4, hitch: 8, other: 2 }
+/** Armour plate of each level, millimetres of RHA in place of the 0.8 mm skin. */
+const ARMOUR_STEEL_MM: Record<'IIIA' | 'III', number> = { IIIA: 4, III: 7 }
+/** Below this piercing a round is soft lead (hollow point, slug, buckshot) and opens a wider hole. */
+const SOFT_LEAD = 0.8
+/** A flat tyre's health for driving (under the driver's flat limit). */
+const TYRE_FLAT_HEALTH = 0.1
+/** A round this strong or this wide bursts a tyre; a smaller hole leaks this share of the air per second per mm² of hole (a 9 mm hole: flat in about a minute). */
+const TYRE_BURST_JOULES = 1500
+const TYRE_BURST_CALIBER = 12
+const TYRE_LEAK_PER_MM2 = 0.00026
+/** A flat tyre driven on tears apart within this many metres at town speed, sooner the faster; a run-flat insert (armoured vehicles) carries it this far at up to 80 km/h, with this much grip. */
+const FLAT_TYRE_LIFE_M = 1500
+const FLAT_TYRE_TOWN_SPEED = 8
+const RUN_FLAT_LIFE_M = 80000
+const RUN_FLAT_SPEED = 22
+const TYRE_RUNFLAT_HEALTH = 0.6
+/** The kit's impact depth for a force: this much at none, this much more per unit of force, within these forces. */
+const CRUMPLE_BASE_M = 0.04
+const CRUMPLE_PER_FORCE_M = 0.15
+const CRUMPLE_MIN_FORCE = 0.3
+const CRUMPLE_MAX_FORCE = 1.4
+/** A bare rim on the road: the grip it has left, and the share of its strength it grinds away per metre. */
+const RIM_HEALTH = 0.05
+const RIM_GRIND_PER_M = 0.0004
+/** How far an empty tyre sags, and the air under which it is flat. */
+const TYRE_FLAT_SAG = 0.24
+const TYRE_FLAT_AIR = 0.2
+/** Brake fluid under this share of the system's leaves the brakes weaker; with none left only this much (the handbrake, engine braking) remains. */
+const BRAKE_FLUID_NEEDED = 0.6
+const BRAKE_NO_FLUID = 0.15
+/** An engine runs at this temperature; without coolant it climbs this many °C per second at full work, steams at, and seizes at. Under this share of oil it wears this share of its life per second. */
+const ENGINE_WORKING_C = 90
+const ENGINE_SETTLE_S = 30
+const ENGINE_HEATING = 0.5
+const ENGINE_STEAM_C = 120
+const ENGINE_SEIZE_C = 150
+const COOLANT_NEEDED = 0.4
+const OIL_NEEDED = 0.3
+const OIL_WEAR = 0.004
+const ENGINE_SEIZE_HP = 0.2
+const EXPANDED_HOLE = 1.6
+/** A round going through anything spends at least this share of its energy. */
+const MIN_SPENT = 0.08
+/** Parts welded to the body shell. */
+const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
+/** Bolted or hinged sheet metal: a blow crumples it in place. */
+const CRUMPLES = new Set<string>(['door', 'hood', 'lid', 'fender', 'bumper'])
 const FRACTURE: Record<string, 'shatter' | 'snap' | 'tear' | 'none'> = { glass: 'shatter', plastic: 'snap', rubber: 'tear', steel: 'none', aluminium: 'none' }
 
 const add3 = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
@@ -165,6 +244,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   let c = vehicleCtx
   const id = options.id ?? c.key
   const headless = !!options.headless
+  const armourId = armourLevelOf(c.meta as any, options.armour)
+  const armourLevel: ArmourLevel | null = armourId ? { ...ARMOUR_LEVELS[armourId], ...options.armourLevels?.[armourId] } : null
   const seedBase = strHash(`${c.key}|${id}|${options.seed ?? 0}`)
   let rand = rng(seedBase)
   const ignitionRules = resolveIgnitionRules(options.ignition)
@@ -227,7 +308,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return d.ignitionC ? 1 : 0
   }
   const setup = (): void => {
-    model = buildVehicleModel(kit, c, { hitch: options.hitch })
+    model = buildVehicleModel(kit, c, { hitch: options.hitch, armour: armourLevel })
     ps.clear()
     for (const d of model.parts) {
       const kg = burnKg(d)
@@ -247,6 +328,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         lost: false,
         status: 'intact',
         flat: false,
+        air: 1,
+        airLoss: 0,
         fireLoss: 0,
       })
     }
@@ -353,7 +436,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           vis.breakLight(d, true)
           break
         case 'tyre':
-          vis.tyreFlat(d, 0.34)
+          if (status === 'broken') vis.tyreTornOff(d)
+          else vis.tyreFlat(d, 0.34)
           break
         case 'mirror':
         case 'bumper':
@@ -384,7 +468,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const damage = (p: PState, amount: number, dtype: DamageType, source: string | undefined, out: DestructionEvent[], cause?: Vec3): void => {
     if (p.lost || !(amount > 0)) return
     const before = p.hp
-    p.hp = Math.max(0, p.hp - amount)
+    // the welded body (roof, pillars, frame, side panels) bends and tears but stays: it is never knocked off the car as a piece
+    // sheet metal hit by a blow crumples and stays on: it only comes off when its hinges or bolts give way (`wear`)
+    const crumples = dtype === 'blunt' && CRUMPLES.has(p.def.role) && (p.def.material === 'steel' || p.def.material === 'aluminium')
+    p.hp = Math.max(WELDED.has(p.def.role) || crumples ? 1 : 0, p.hp - amount)
     out.push(ev({ type: 'damage', part: p.def.id, amount: r2(before - p.hp), hp: r2(p.hp), damageType: dtype, ...(source ? { source } : {}) }))
     wear(p, amount, out)
     syncZone(p)
@@ -429,11 +516,24 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const p = v.clone().applyMatrix4(M)
     return [p.x, p.y, p.z]
   }
-  const armour = (): number => (c.meta.armored || c.meta.bullet ? 30 : 1)
+  const armour = (): number => armourLevel?.steel ?? 1
+  /** Steel a part puts in a round's way, millimetres of RHA: a skin is a sheet, an armoured car a plate, the engine a block. */
+  const steelMm = (d: PartDef): number => {
+    const base = STEEL_MM[d.role] ?? STEEL_MM.panel!
+    return d.material === 'steel' || d.material === 'aluminium' ? base * (armourLevel ? ARMOUR_STEEL_MM[armourId === 'III' ? 'III' : 'IIIA'] / STEEL_MM.panel! : 1) : base
+  }
+  /** Does the round go through: by its penetration in steel when the weapon gives it (an AP core goes through more, soft lead less), else by its energy. */
+  const goesThrough = (h: Hit, d: PartDef, p: PState, energy: number, res: number): boolean => {
+    const piercing = h.piercing ?? 1
+    const metal = d.material === 'steel' || d.material === 'aluminium'
+    const mm = h.penetration?.steel
+    if (metal && mm != null) return mm >= steelMm(d) * (p.dents.length > 3 ? 0.9 : 1)
+    return energy * (metal || d.material === 'glass' ? piercing : 1) >= res
+  }
   const resist = (d: PartDef, p: PState): number => {
     let base = RESIST[d.material] ?? 100
     if (d.material === 'glass' && d.hp > 1000) base = 120
-    if (d.material === 'glass' && c.meta.bullet) base *= 30
+    if (d.material === 'glass' && armourLevel) base = armourLevel.glassStops
     const k = ROLE_RESIST[d.role] ?? 1
     const arm = d.material === 'steel' || d.material === 'aluminium' ? armour() : 1
     return base * k * arm * (p.dents.length > 3 ? 0.9 : 1)
@@ -457,8 +557,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       leaks.set(d.id, l)
       if (vis) {
         const pos = new V3(d.box.center[0], Math.max(0.2, (c.meta.clearance ?? 0.3) * 0.8), d.box.center[2])
+        // hot coolant also steams out of the front; every liquid runs down into a puddle of its own colour
         if (fluid === 'coolant') kit.addEmitter(c, new V3(d.box.center[0], d.box.center[1] + 0.2, d.box.center[2]), 'white', { rate: 5, s: 0.8 })
-        else if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : 1.1)
+        if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
       }
     }
     const out3 = dirToWorld(new V3(dirLocal.x * 0.5, dirLocal.y * 0.5 - 0.6, dirLocal.z * 0.5))
@@ -601,7 +702,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const dir = dirToLocal(h.direction ?? [0, 0, -1]).normalize()
     const n = h.normal ? dirToLocal(h.normal).normalize() : normalOf(d, v)
     const res = resist(d, p)
-    const through = E >= res
+    const through = goesThrough(h, d, p, E, res)
     const cosInc = Math.abs(dir.dot(n))
     const metal = d.material === 'steel' || d.material === 'aluminium'
     const worldPoint = toWorld(v)
@@ -612,13 +713,23 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       vis?.spark([v.x, v.y, v.z], [refl.x, refl.y, refl.z], 6)
       return
     }
-    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1))
+    // a hollow point or soft lead opens up in the panel: a wider hole than its calibre
+    const opens = (h.piercing ?? 1) < SOFT_LEAD ? EXPANDED_HOLE : 1
+    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1) * opens)
+    /** What a round keeps after going through: it spends on the part the share of its penetration the part's steel takes (a skin little, a door about half of a pistol round), else the part's resistance out of its energy. */
+    const energyLeft = (): number => {
+      const metal = d.material === 'steel' || d.material === 'aluminium'
+      const mm = h.penetration?.steel
+      const spent = metal && mm ? clamp(steelMm(d) / mm, MIN_SPENT, 1) : clamp(res / Math.max(E, 1), MIN_SPENT, 1)
+      return E * (1 - spent)
+    }
     const push = (hole: boolean): void => {
       if (!hole) return
       const hp: PartState['holes'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), diameter: r2(holeDiam), through }
       p.holes.push(hp)
-      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
+      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
       vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam, d)
+      if (d.role === 'mirror') vis?.shatterMirror(d.id)
       startLeak(p, v, cal, out, dir)
     }
     switch (d.material) {
@@ -631,7 +742,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           const crack = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), length: r2(0.15 + force * 0.35), rays: 6 + Math.round(force * 6) }
           p.cracks.push(crack)
           out.push(ev({ type: 'crack', part: d.id, crack, worldPoint }))
-          damage(p, E * 0.5, 'ballistic', h.source, out, worldPoint)
+          damage(p, E * (armourLevel && !through ? armourLevel.glassTakes : 0.5), 'ballistic', h.source, out, worldPoint)
         } else damage(p, laminated ? E * 0.5 : p.hp, 'ballistic', h.source, out, worldPoint)
         break
       }
@@ -639,8 +750,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         push(through)
         damage(p, E * 0.4, 'ballistic', h.source, out, worldPoint)
         if (through && !p.lost && !p.flat) {
-          p.flat = true
-          vis?.tyreFlat(d, 0.24)
+          // a rifle round, a slug or a big tear bursts it at once; a small hole lets the air out over seconds to minutes
+          if (E >= TYRE_BURST_JOULES || cal >= TYRE_BURST_CALIBER) deflate(p, 1)
+          else p.airLoss += TYRE_LEAK_PER_MM2 * Math.PI * (cal / 2) ** 2
         }
         break
       }
@@ -769,7 +881,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const electric = (c.spec as any).fuel === 'electric'
     const tank = tankPart()
     const fuel = tank ? (tank.liters ?? 0) : electric ? 1 : 1
-    const engineOk = sound('engine') && !exploded && fuel > 0.05
+    const engineOk = sound('engine') && !exploded && !seized && fuel > 0.05
     const powered = sound('battery') && sound('alternator')
     const gearOk = sound('gearbox')
     const brakes = [...ps.values()].find((p) => p.def.role === 'brakes')
@@ -937,10 +1049,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const state = (): ObjectState => (stateCache ??= buildState())
   const isSimulating = (): boolean => {
     if (leaks.size > 0) return true
-    for (const p of ps.values()) if (!p.lost && (p.burning || p.temp > AMBIENT)) return true
+    for (const p of ps.values()) if (!p.lost && (p.burning || p.temp > AMBIENT || (p.airLoss > 0 && p.air > 0))) return true
     return false
   }
 
+  let engineHeat = ENGINE_WORKING_C
+  let seized = false
+  let steaming = false
   const surfaceRays = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   surfaceRays.layers.enableAll()
@@ -960,12 +1075,14 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return false
     return true
   }
-  /** The part a drawn mesh belongs to: its pane, the door hanging it, else the smallest box of bodywork at the point. */
+  /** The part a drawn mesh belongs to: its pane, the door hanging it, the piece drawn for it, else the smallest box of bodywork at the point. */
   const partOfSurface = (o: any, v: any): PState | null => {
     const pane = paneParts().get(o)
     if (pane) return ps.get(pane) ?? null
     for (let q = o; q && q !== c.vehicle; q = q.parent) {
       if (vis?.plateIdOf(q)) return ps.get(vis.plateIdOf(q)!) ?? null
+      const piece = vis?.extraIdOf(q)
+      if (piece) return ps.get(piece) ?? null
     }
     return locate(v, 0.08, (p) => p.def.role === 'glass')
   }
@@ -1009,7 +1126,32 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return out
   }
 
+  const runFlat = armourId != null
+  /** A tyre's grip for driving: whole by its wear and air; flat, it barely holds (a run-flat insert keeps most); torn off, the rim is on the road. */
+  const tyreHealth = (p: PState): number => {
+    if (p.lost) return RIM_HEALTH
+    if (p.flat) return runFlat ? TYRE_RUNFLAT_HEALTH : TYRE_FLAT_HEALTH
+    return Math.min(p.hp / p.def.hp, 0.2 + 0.8 * p.air)
+  }
+  /** The tyre on a rim: the nearest one. */
+  const tyreOf = (rim: PState): PState | undefined => {
+    let best: PState | undefined
+    let bestD = Infinity
+    for (const p of ps.values()) {
+      if (p.def.role !== 'tyre') continue
+      const d = Math.hypot(p.def.box.center[0] - rim.def.box.center[0], p.def.box.center[2] - rim.def.box.center[2])
+      if (d < bestD) [best, bestD] = [p, d]
+    }
+    return best
+  }
+  /** Lets the air of a tyre out by `share`: it sags as it empties and is flat under the driver's limit. */
+  const deflate = (p: PState, share: number): void => {
+    p.air = Math.max(0, p.air - share)
+    vis?.tyreFlat(p.def, TYRE_FLAT_SAG * (1 - p.air))
+    if (p.air <= TYRE_FLAT_AIR) p.flat = true
+  }
   const update = (dt: number): DestructionEvent[] => {
+    for (const p of ps.values()) if (p.airLoss > 0 && p.air > 0 && !p.lost) deflate(p, p.airLoss * dt)
     clock += dt
     const out: DestructionEvent[] = queue
     queue = []
@@ -1132,6 +1274,75 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
+    crumple: (point: Vec3, direction: Vec3, depth: number): void => {
+      if (!vis || depth <= 0) return
+      sync()
+      const force = clamp((depth - CRUMPLE_BASE_M) / CRUMPLE_PER_FORCE_M, CRUMPLE_MIN_FORCE, CRUMPLE_MAX_FORCE)
+      kit.impact(c, toLocal(point), dirToLocal(direction).normalize(), force, { maxDepth: depth })
+      stateCache = undefined
+    },
+    rollFlat: (meters: number, speed: number): number => {
+      for (const p of ps.values()) {
+        if (p.def.role !== 'tyre' || !p.flat || p.lost) continue
+        const life = runFlat ? RUN_FLAT_LIFE_M * Math.min(1, RUN_FLAT_SPEED / Math.max(speed, 1)) : FLAT_TYRE_LIFE_M * clamp(FLAT_TYRE_TOWN_SPEED / Math.max(speed, 1), 0.2, 1.5)
+        p.hp = Math.max(0, p.hp - (p.def.hp * meters) / life)
+        if (p.hp > 0) continue
+        const at = toWorld(p.def.box.center)
+        lose(p, 'broken', queue, at)
+        queue.push(ev({ type: 'debris', part: p.def.id, kind: 'fibers', point: at, normal: [0, 1, 0], count: 12, speed: Math.max(2, speed * 0.5) }))
+      }
+      let grinding = 0
+      for (const rim of ps.values()) {
+        if (rim.def.role !== 'rim' || rim.lost || !tyreOf(rim)?.lost) continue
+        grinding += 1
+        rim.hp = Math.max(1, rim.hp - rim.def.hp * RIM_GRIND_PER_M * meters)
+        const [x, y, z] = rim.def.box.center
+        queue.push(ev({ type: 'debris', part: rim.def.id, kind: 'sparks', point: toWorld([x, y - rim.def.box.size[1] / 2, z]), normal: [0, 1, 0], count: Math.min(30, Math.ceil(4 + speed)), speed: Math.max(2, speed * 0.4) }))
+      }
+      stateCache = undefined
+      return grinding
+    },
+    runEngine: (seconds: number, load: number): number => {
+      const engine = [...ps.values()].find((p) => p.def.role === 'engine')
+      if (!engine || engine.lost || seized) return engineHeat
+      const share = (fluid: string): number => {
+        const list = [...ps.values()].filter((p) => p.def.contains?.fluid === fluid)
+        return list.length ? Math.min(...list.map((p) => (p.liters ?? 0) / p.def.contains!.liters)) : 1
+      }
+      const coolant = share('coolant')
+      const oil = share('oil')
+      const work = 0.4 + 0.6 * clamp(load, 0, 1)
+      // the cooling holds the engine at its working temperature while there is coolant enough; below that it climbs with the load
+      if (coolant < COOLANT_NEEDED) engineHeat += ((COOLANT_NEEDED - coolant) / COOLANT_NEEDED) * ENGINE_HEATING * work * seconds
+      else engineHeat += (ENGINE_WORKING_C - engineHeat) * Math.min(1, seconds / ENGINE_SETTLE_S)
+      // with no oil the bearings wear through
+      if (oil < OIL_NEEDED) engine.hp = Math.max(0, engine.hp - engine.def.hp * OIL_WEAR * work * seconds * ((OIL_NEEDED - oil) / OIL_NEEDED))
+      if (engineHeat >= ENGINE_STEAM_C && vis && !steaming) {
+        steaming = true
+        kit.addEmitter(c, new V3(engine.def.box.center[0], engine.def.box.center[1] + 0.4, 0), 'white', { rate: 8, s: 1 })
+      }
+      if (engineHeat >= ENGINE_SEIZE_C || engine.hp <= engine.def.hp * ENGINE_SEIZE_HP) {
+        seized = true
+        queue.push(ev({ type: 'damage', part: engine.def.id, amount: 0, hp: r2(engine.hp), damageType: 'heat' }))
+      }
+      stateCache = undefined
+      return engineHeat
+    },
+    driveReport: (): DriveReport => {
+      const health = (role: PartRole): number => {
+        const list = [...ps.values()].filter((p) => p.def.role === role)
+        if (!list.length) return 1
+        return Math.min(...list.map((p) => (p.lost || !attached(p.def.id) ? 0 : p.hp / p.def.hp)))
+      }
+      const tyres = [...ps.values()]
+        .filter((p) => p.def.role === 'tyre')
+        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: tyreHealth(p) }))
+      const status = computeStatus()
+      // the brakes need their fluid: a leaking system loses pressure and the pedal sinks
+      const brakeSystem = [...ps.values()].find((p) => p.def.role === 'brakes' && p.def.contains)
+      const fluidLeft = brakeSystem ? clamp((brakeSystem.liters ?? 0) / brakeSystem.def.contains!.liters / BRAKE_FLUID_NEEDED, 0, 1) : 1
+      return { tyres, brakes: Math.min(1, 1 / status.brakeFactor) * (BRAKE_NO_FLUID + (1 - BRAKE_NO_FLUID) * fluidLeft), engine: status.canStart ? health('engine') : 0, suspension: health('shocks') }
+    },
     partWorldCenter: (pid) => {
       sync()
       const d = ps.get(pid)?.def

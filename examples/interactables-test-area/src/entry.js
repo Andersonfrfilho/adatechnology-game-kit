@@ -144,7 +144,9 @@ function loadSteps(room, options, lang) {
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
-  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang }))
+  // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
+  const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
+  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)

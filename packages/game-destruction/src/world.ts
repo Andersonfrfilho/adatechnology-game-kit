@@ -3279,10 +3279,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           if (!rh) break
           const im = impls.get(rh.object)
           if (im) {
-            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...extras, ...(source !== undefined ? { source } : {}) })
+            // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
+            const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
+            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
             r.part = rh.part
             r.point = rh.point
-            r.exitEnergy = r.penetrated ? E * 0.5 : 0
+            // the part says what the round keeps (a sheet takes little, a block all of it); else half, as before
+            const left = r.events.find((e) => e.type === 'hole' && (e as { energyLeft?: number }).energyLeft !== undefined) as { energyLeft?: number } | undefined
+            r.exitEnergy = r.penetrated ? (left?.energyLeft ?? E * 0.5) : 0
             results.push(r)
             ignore.add(`${im.impl.id}\0${rh.part}`)
             if (!r.penetrated) break

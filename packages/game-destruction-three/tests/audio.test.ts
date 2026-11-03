@@ -139,6 +139,17 @@ describe('the keys of the renderer', () => {
     expect(sound.rule('ricochet')?.sound).toBe('ping')
   })
 
+  it('gives a round its own sound per material, and the blow when a host drops it', () => {
+    expect(DESTRUCTION_SOUND_KEYS.art_scene.shot_metal?.sound).toBe('ping')
+    expect(DESTRUCTION_SOUND_KEYS.art_scene.shot_glass?.sound).not.toBe(DESTRUCTION_SOUND_KEYS.art_scene.impact_glass?.sound)
+    const { recorder, sound } = engineWith()
+    sound.onSound('shot_wood', [0, 0, 1], 1)
+    expect(starts(recorder)).toBeGreaterThan(0)
+    const silenced = engineWith({ keys: { shot_metal: null } })
+    silenced.sound.onSound('shot_metal', [0, 0, 1], 1)
+    expect(starts(silenced.recorder)).toBe(0)
+  })
+
   it('takes a replaced or silenced key', () => {
     const { recorder, sound } = engineWith({ keys: { impact_metal: null, detach: { sound: 'clang', volumeScale: 0.5 } } })
     sound.onSound('impact_metal', [0, 0, 1], 1)
