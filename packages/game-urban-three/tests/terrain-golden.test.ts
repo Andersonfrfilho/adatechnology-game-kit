@@ -11,8 +11,10 @@ import goldenFile from './fixtures/team-golden/urban-terrain.json'
 import valley from './fixtures/valley-terrain.json'
 
 const golden = goldenFile as unknown as GoldenRecord
-const events = golden.events as unknown as { type: string; data: Record<string, any> }[]
-const eventOf = (type: string) => events.find((event) => event.type === type)?.data as Record<string, any>
+/** The terrain event of the team's page: vertex count, hashes and the material and shadow settings. */
+type TerrainEvent = { vertices: number; positionsHash: string; colorsHash: string; minHeight: number; maxHeight: number; flatShading: boolean; roughness: number; receiveShadow: boolean; castShadow: boolean; rows: number[][] }
+const events = golden.events as unknown as { type: string; data: TerrainEvent }[]
+const eventOf = (type: string): TerrainEvent => events.find((event) => event.type === type)!.data
 const round4 = (value: number): number => Math.round(value * 1e4) / 1e4 + 0
 
 describe('the ground mesh against buildWorld of the Galeria do Vale Cinzento', () => {
@@ -21,8 +23,9 @@ describe('the ground mesh against buildWorld of the Galeria do Vale Cinzento', (
   const b = kit.builder({ seed: 7 })
   kit.drawTerrain(b, terrain)
   const drawn = createUrbanThree(THREE, { document: fakeDocument }).draw(b.scene())
-  const mesh = drawn.root.children[0]
-  const water = drawn.root.children[1]
+  // the terrain draws a vertex-coloured ground and a water plane
+  const mesh = drawn.root.children[0] as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
+  const water = drawn.root.children[1] as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
   const expected = eventOf('terrain')
 
   it('has the same 181 x 181 vertices at the same positions', () => {

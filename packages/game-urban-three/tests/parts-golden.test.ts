@@ -74,9 +74,23 @@ const eventOf = (type: string, label: string): Event['data'] => {
 }
 
 /** What the scene hash does not read, collected the way the capture does: shadows, the surface of each material and the settings of each light. */
-function surfaceOf(root: any): { nodes: number; hash: string } {
+/** The fields of a node, material and light the surface reads (each is absent on the nodes that do not have it). */
+type SurfaceNode = THREE.Object3D & {
+  material?: THREE.Material & { roughness?: number; metalness?: number; flatShading?: boolean }
+  isLight?: boolean
+  color: THREE.Color
+  intensity?: number
+  distance?: number
+  decay?: number
+  angle?: number
+  penumbra?: number
+  count?: number
+}
+
+function surfaceOf(root: THREE.Object3D): { nodes: number; hash: string } {
   const extra: unknown[][] = []
-  root.traverse((node: any) => {
+  root.traverse((object) => {
+    const node = object as SurfaceNode
     const material = node.material
     extra.push([
       node.type,
@@ -146,7 +160,7 @@ describe('animation and cleanup', () => {
     const builder = kit.builder()
     kit.props.watchtower(builder, 2, -3, true)
     const drawn = urban.draw(builder.scene())
-    const spot = drawn.lights[0]
+    const spot = drawn.lights[0] as THREE.SpotLight
     drawn.animate(0)
     expect(spot.target.position.x).toBeCloseTo(2 + Math.sin(2) * 25, 6)
     expect(spot.target.position.z).toBeCloseTo(-3 + Math.cos(2) * 25, 6)

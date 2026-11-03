@@ -1,13 +1,17 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { ItemBox, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
+import type * as THREE_NS from 'three'
 
 import { createPrism, createRoundedBox } from './rounded-box'
 import { createTextTexture } from './text'
 import type { CanvasFactory } from './text'
 import type { PlacementResolver } from './resolvers'
 
-type Three = any
+type Three = typeof THREE_NS
+type Obj = THREE_NS.Object3D
+/** The lights a scene draws: street lamps and searchlights. */
+export type UrbanLight = THREE_NS.PointLight | THREE_NS.SpotLight
 
 const DEFAULT_ROUGHNESS = 0.9
 const DEFAULT_METALNESS = 0
@@ -26,17 +30,17 @@ export type UrbanThreeOptions = {
 
 /** What a drawn scene gives back: the group to add to a scene, the per-frame animation and the cleanup. */
 export type DrawnUrban = {
-  root: any
+  root: Obj
   /** Moves the animated parts to time `t` (seconds): flickering lamps and sweeping searchlights. */
   animate(t: number): void
   /** Lights drawn, for a budget meter. */
-  readonly lights: any[]
+  readonly lights: UrbanLight[]
   dispose(): void
 }
 
 export type DrawOptions = {
   /** Group the parts go into. Default a new `THREE.Group`. */
-  root?: any
+  root?: Obj
 }
 
 /**
@@ -46,12 +50,12 @@ export type DrawOptions = {
  */
 export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) {
   // three with its primitive geometries made by game-shapes (bit-identical on r128 and r160, cached by parameters)
-  const T = shapeGeometries(THREE) as Three
-  const geometries = new Map<string, any>()
-  const materials = new Map<string, any>()
-  const disposables: any[] = []
+  const T = shapeGeometries(THREE)
+  const geometries = new Map<string, THREE_NS.BufferGeometry>()
+  const materials = new Map<string, THREE_NS.Material>()
+  const disposables: Array<{ dispose(): void }> = []
 
-  const standard = (color: number, style?: PartStyle, flat = false): any => {
+  const standard = (color: number, style?: PartStyle, flat = false): THREE_NS.Material => {
     const roughness = style?.roughness ?? DEFAULT_ROUGHNESS
     const metalness = style?.metalness ?? DEFAULT_METALNESS
     const key = `s|${color}|${roughness}|${metalness}|${flat ? 1 : 0}`
@@ -62,7 +66,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
     return material
   }
-  const glowing = (color: number): any => {
+  const glowing = (color: number): THREE_NS.Material => {
     const key = `b|${color}`
     let material = materials.get(key)
     if (!material) {
@@ -71,7 +75,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
     return material
   }
-  const roundedBox = (width: number, height: number, depth: number, radius: number): any => {
+  const roundedBox = (width: number, height: number, depth: number, radius: number): THREE_NS.BufferGeometry => {
     const key = [width, height, depth, radius].map((value) => value.toFixed(3)).join('|')
     let geometry = geometries.get(key)
     if (!geometry) {
@@ -80,17 +84,17 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
     return geometry
   }
-  const shadows = (mesh: any, style: PartStyle | undefined, cast: boolean, receive: boolean): void => {
+  const shadows = (mesh: Obj, style: PartStyle | undefined, cast: boolean, receive: boolean): void => {
     mesh.castShadow = style?.castShadow ?? cast
     mesh.receiveShadow = style?.receiveShadow ?? receive
   }
-  const texture = (lines: readonly string[], width: number, height: number, background: string, foreground: string, font: string): any => {
+  const texture = (lines: readonly string[], width: number, height: number, background: string, foreground: string, font: string): THREE_NS.Texture => {
     if (!options.document) throw new Error('createUrbanThree needs a document (option) to draw signs and labels')
     const map = createTextTexture(THREE, options.document, lines, { width, height, background, foreground, font })
     disposables.push(map)
     return map
   }
-  const textPlane = (part: { x: number; y: number; z: number; width: number; height: number; ry: number }, map: any): any => {
+  const textPlane = (part: { x: number; y: number; z: number; width: number; height: number; ry: number }, map: THREE_NS.Texture): THREE_NS.Mesh => {
     const mesh = new THREE.Mesh(new T.PlaneGeometry(part.width, part.height), new THREE.MeshBasicMaterial({ map, transparent: true }))
     mesh.userData.own = true
     mesh.position.set(part.x, part.y, part.z)
@@ -99,7 +103,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     return mesh
   }
 
-  const drawPart = (part: UrbanPart, animators: ((t: number) => void)[], lights: any[]): any[] => {
+  const drawPart = (part: UrbanPart, animators: ((t: number) => void)[], lights: UrbanLight[]): Obj[] => {
     switch (part.shape) {
       case 'group': {
         const group = new THREE.Group()
@@ -240,7 +244,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
   }
 
-  const instancedItems = (list: readonly ItemBox[]): any => {
+  const instancedItems = (list: readonly ItemBox[]): THREE_NS.InstancedMesh => {
     const mesh = new THREE.InstancedMesh(roundedBox(1, 1, 1, ITEM_ROUNDNESS), standard(0xffffff), list.length)
     const matrix = new THREE.Matrix4()
     const quaternion = new THREE.Quaternion()
@@ -260,7 +264,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     return mesh
   }
 
-  const instancedWindows = (list: readonly SilhouetteWindow[], material: any): any => {
+  const instancedWindows = (list: readonly SilhouetteWindow[], material: THREE_NS.Material): THREE_NS.InstancedMesh => {
     const geometry = new T.PlaneGeometry(1, 1)
     disposables.push(geometry)
     const mesh = new THREE.InstancedMesh(geometry, material, list.length)
@@ -280,12 +284,12 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
   function draw(scene: UrbanScene, drawOptions: DrawOptions = {}): DrawnUrban {
     const root = markKitOrigin(drawOptions.root ?? new THREE.Group(), { owner: 'game-urban-three', kind: 'urban' })
     const animators: ((t: number) => void)[] = []
-    const lights: any[] = []
-    const objects: any[][] = []
+    const lights: UrbanLight[] = []
+    const objects: Obj[][] = []
     for (const part of scene.parts) {
       const made = drawPart(part, animators, lights)
       objects.push(made)
-      const parent = part.parent < 0 ? root : (objects[part.parent] as any[])[0]
+      const parent = part.parent < 0 ? root : (objects[part.parent] as Obj[])[0]
       parent.add(...made)
     }
     if (scene.items.length) root.add(instancedItems(scene.items))
