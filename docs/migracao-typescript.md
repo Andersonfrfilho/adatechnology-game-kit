@@ -16,7 +16,7 @@ Levantamento na main em 2026-11-03. Atualize ao terminar cada passo (CLAUDE.md, 
 
 ### Pacotes com o strict desligado ou contornado
 - [ ] `game-floorplan-three`: `strict: false` e `noImplicitAny: false` no tsconfig (536 `any`)
-- [ ] `game-characters-three`: 8 arquivos com `// @ts-nocheck` (`rich/person-kit.ts`, `rich/person-builder.ts`, `rich/best-builder.ts` e 5 em `rich/accessories/`)
+- [x] `game-characters-three`: 8 arquivos com `// @ts-nocheck` (`rich/person-kit.ts`, `rich/person-builder.ts`, `rich/best-builder.ts` e 5 em `rich/accessories/`)
 - [ ] `game-shapes`: `primitives/earcut.ts` com `// @ts-nocheck` (código de terceiros portado)
 
 ### `any` explícito: 4.979 em 240 arquivos (src, testes e tools), contados em `eslint-suppressions.json`

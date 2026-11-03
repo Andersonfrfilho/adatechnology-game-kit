@@ -1,8 +1,17 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars */
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
 
-export type ExtraContext = { THREE: any; PI: number; U: any; Hd: any; root: any; add: any; Bx: any; cmat: any; ring: any; torsoGeo: any; legs: any[]; arms: any[]; fem: boolean; topM: any; m: any; e: any[]; k: string; sp: any; splat: any; R: () => number; ball: any; cap: any; hc: any; headG: any; fig: any; upper: any; skinM: any }
+import type { PersonKit } from '../person-kit'
+import type { THREE_NS } from '../../three'
+import type { ArmRig, LegRig, PersonExtra, PersonSpec } from '../types'
+
+type Common = { THREE: PersonKit['THREE']; PI: number; add: PersonKit['add']; Bx: PersonKit['Bx']; cmat: PersonKit['cmat'] }
+
+export type ExtraContext = Common & {
+  U: THREE_NS.Group; Hd: THREE_NS.Group; root: THREE_NS.Group; ring: PersonKit['ring']; torsoGeo: PersonKit['torsoGeo']; legs: LegRig[]; arms: ArmRig[]; fem: boolean
+  topM: THREE_NS.Material; m: THREE_NS.Material; e: PersonExtra; k: string; sp: PersonSpec; splat: PersonKit['splat']; R: () => number; ball: PersonKit['ball']
+  cap: PersonKit['cap']; hc: THREE_NS.Material; headG: THREE_NS.Group; fig: THREE_NS.Group; upper: THREE_NS.Group; skinM: THREE_NS.MeshStandardMaterial
+}
 
 /** Clothing and gear by id (`sp.ex` entries `[id, colour?]`), each drawn onto the body parts it names. */
 export const EXTRAS: Record<string, (context: ExtraContext) => void> = {

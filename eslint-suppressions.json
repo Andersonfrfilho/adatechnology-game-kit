@@ -1,47 +1,7 @@
 {
-  "packages/game-characters-three/src/rich/accessories/extras.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 23
-    }
-  },
-  "packages/game-characters-three/src/rich/accessories/face-features.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-characters-three/src/rich/accessories/hand-items.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
-  "packages/game-characters-three/src/rich/accessories/hands.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-characters-three/src/rich/accessories/hats.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
-  "packages/game-characters-three/src/rich/best-builder.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-characters-three/src/rich/person-builder.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-characters-three/src/test-area/person-spec.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-characters-three/tests/exact-golden.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 1
     }
   },
   "packages/game-characters-three/tests/people.test.ts": {

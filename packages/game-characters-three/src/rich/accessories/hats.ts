@@ -1,8 +1,12 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
 
-export type HatContext = { THREE: any; PI: number; Hd: any; add: any; Bx: any; cmat: any; cap: any; c: any; k: string; sp: any }
+import type { PersonKit } from '../person-kit'
+import type { THREE_NS } from '../../three'
+import type { PersonSpec } from '../types'
+
+type Common = { THREE: PersonKit['THREE']; PI: number; add: PersonKit['add']; Bx: PersonKit['Bx']; cmat: PersonKit['cmat'] }
+
+export type HatContext = Common & { Hd: THREE_NS.Object3D; cap: PersonKit['cap']; c: THREE_NS.Material; k: string; sp: PersonSpec }
 
 /** Hats by kind (`sp.hat.k`); `c` is the hat's material. */
 export const HATS = [
@@ -37,9 +41,9 @@ export const HATS = [
   {
     kinds: ['helmet'],
     apply: ({ Bx, Hd, PI, THREE, add, c, cap, cmat, sp }: HatContext) => {const o=add(Hd,cap(.205,PI/2),c,0,1.835,-.005);o.scale.set(1,.98,1.08);add(Hd,new THREE.CylinderGeometry(.208,.212,.04,20),c,0,1.84,-.005);
-      if(sp.hat.tape)add(Hd,new THREE.CylinderGeometry(.205,.207,.035,20),cmat(sp.hat.tape),0,1.9,-.005);
-      if(sp.hat.photo){add(Hd,Bx(.07,.08,.012),cmat(0xf4f0e0),.13,1.9,.14,0,.75,0);add(Hd,Bx(.05,.055,.014),cmat(0x8a6a50),.13,1.9,.141,0,.75,0);}
-      if(sp.hat.nvg){add(Hd,Bx(.07,.05,.06),cmat(0x1a1a1a),0,2.0,.175);for(const s of[-1,1])add(Hd,new THREE.CylinderGeometry(.024,.024,.09,10).rotateX(PI/2),cmat(0x2a3a2a),s*.032,1.965,.235);}
+      if(sp.hat?.tape)add(Hd,new THREE.CylinderGeometry(.205,.207,.035,20),cmat(sp.hat.tape),0,1.9,-.005);
+      if(sp.hat?.photo){add(Hd,Bx(.07,.08,.012),cmat(0xf4f0e0),.13,1.9,.14,0,.75,0);add(Hd,Bx(.05,.055,.014),cmat(0x8a6a50),.13,1.9,.141,0,.75,0);}
+      if(sp.hat?.nvg){add(Hd,Bx(.07,.05,.06),cmat(0x1a1a1a),0,2.0,.175);for(const s of[-1,1])add(Hd,new THREE.CylinderGeometry(.024,.024,.09,10).rotateX(PI/2),cmat(0x2a3a2a),s*.032,1.965,.235);}
       for(const s of[-1,1])add(Hd,Bx(.012,.15,.012),cmat(0x1a1a1a),s*.16,1.74,.04);},
   },
 ]

@@ -1,8 +1,11 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
 
-export type HandItemContext = { THREE: any; PI: number; add: any; Bx: any; cmat: any; g: any; metal: any; dark: any; woodM: any }
+import type { PersonKit } from '../person-kit'
+import type { THREE_NS } from '../../three'
+
+type Common = { THREE: PersonKit['THREE']; PI: number; add: PersonKit['add']; Bx: PersonKit['Bx']; cmat: PersonKit['cmat'] }
+
+export type HandItemContext = Common & { g: THREE_NS.Group; metal: THREE_NS.Material; dark: THREE_NS.Material; woodM: THREE_NS.Material }
 
 /** Items held in a hand by kind (`sp.hand`, `sp.lhand`); `g` is the group on the hand's mount. */
 export const HAND_ITEMS: Record<string, (context: HandItemContext) => void> = {

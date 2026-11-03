@@ -11,6 +11,7 @@ import { createBestBuilder } from '../rich/best-builder'
 import type { BestBuilder } from '../rich/best-builder'
 import { createPersonBuilder } from '../rich/person-builder'
 import type { PersonBuilder } from '../rich/person-builder'
+import type { PersonCharacter } from '../rich/types'
 import type { Three, THREE_NS } from '../three'
 import { createFluidsBridge } from '../wounds/fluids-bridge'
 import { woundBodyOf } from '../wounds/segment-nodes'
@@ -267,7 +268,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
     }
     const speed = settings.pose === 'walk' ? speedOf(entry) : 0
     entry.walk += dt * speed
-    if (entry.kind === 'person') (people as PersonBuilder).pose(entry.built, false, settings.pose === 'walk' ? 1 : 0, time)
+    if (entry.kind === 'person') (people as PersonBuilder).pose(entry.built as PersonCharacter, false, settings.pose === 'walk' ? 1 : 0, time)
     else if (settings.pose === 'walk') {
       animator.animate(root, time, { speed: speed || GAIT_MOMENT_STRIDE })
       if (settings.cascade) animator.cascade(root.userData.rig, dt)
