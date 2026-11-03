@@ -1,6 +1,7 @@
 import { inferJoints } from '@adatechnology/game-destruction'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
+
 import { residentialItems } from '@adatechnology/game-floorplan-residential'
 
 import { create } from '../create.js'
@@ -29,7 +30,7 @@ export interface FurnitureSpecOptions {
     /** Colour roles of the builder (`wood`, `fabric_main`, `fabric_accent`, `metal`...) as `0xRRGGBB`. */
     palette?: Record<string, number>
   }
-  /** Catalogue the default size is read from (default `residentialItems`). */
+  /** Catalogue the default size is read from (`defaultFurnitureCatalog()` of `game-kit-defaults`, or the game's own). Default `residentialItems`, which is deprecated: pass the catalogue. */
   catalog?: readonly FurnitureCatalogEntry[]
   /** The `document` the house renderer makes its textures with (default the global one). */
   document?: unknown

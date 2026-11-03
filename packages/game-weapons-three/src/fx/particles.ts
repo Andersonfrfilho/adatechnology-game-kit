@@ -26,6 +26,8 @@ export interface ParticleOptions {
   onGround?: (position: THREE_NS.Vector3) => void
   /** The geometry of the object is its own (not shared with a model) and goes with it. */
   ownsGeometry?: boolean
+  /** Called once when the particle leaves for good (life over, floor, too many): where an object that came from a pool gives its geometry and material back. */
+  onRemove?: () => void
 }
 
 interface Particle extends Required<Pick<ParticleOptions, 'life' | 'gravity' | 'bounce' | 'drag' | 'radius' | 'grow' | 'kind'>> {
@@ -38,6 +40,7 @@ interface Particle extends Required<Pick<ParticleOptions, 'life' | 'gravity' | '
   onRest: ParticleOptions['onRest']
   onGround: ParticleOptions['onGround']
   ownsGeometry: boolean
+  onRemove: ParticleOptions['onRemove']
   bounces: number
 }
 
@@ -61,11 +64,13 @@ const disposeOwned = (object: THREE_NS.Object3D): void => {
   })
 }
 
-export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number): Particles {
+/** `limit`: the most bodies the host allows at once (its one budget); without it the own cap of 900 stands (no host lends one yet, so no warning). */
+export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined): Particles {
   let list: Particle[] = []
   const remove = (particle: Particle): void => {
     particle.object.removeFromParent()
     if (particle.ownsGeometry) disposeOwned(particle.object)
+    particle.onRemove?.()
     if (particle.fadeFrom !== undefined) ((particle.object as THREE_NS.Mesh).material as THREE_NS.Material).dispose()
     list = list.filter((other) => other !== particle)
   }
@@ -89,10 +94,12 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
         onRest: options.onRest,
         onGround: options.onGround,
         ownsGeometry: options.ownsGeometry ?? false,
+        onRemove: options.onRemove,
         bounces: 0,
       })
+      const hostLimit = limit?.()
       const oldest = list[0]
-      if (list.length > MAX_PARTICLES && oldest) remove(oldest)
+      if (list.length > (hostLimit ?? MAX_PARTICLES) && oldest) remove(oldest)
     },
     update(dt) {
       for (const particle of [...list]) {

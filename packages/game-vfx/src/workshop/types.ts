@@ -1,3 +1,4 @@
+import type { Confiner } from '../enclosures'
 import type { RandomStream } from '../random'
 
 export type Vec3Tuple = readonly [number, number, number]
@@ -119,4 +120,6 @@ export interface WorkshopContext {
   readonly groundAt: (x: number, z: number) => number
   readonly quality: { level: number; mult: number }
   readonly trace: WorkshopTrace | undefined
+  /** The closed spaces the carried sprites (smoke, dust, steam) do not cross; absent: none. */
+  readonly confiner?: Confiner
 }

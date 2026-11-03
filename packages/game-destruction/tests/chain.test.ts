@@ -220,3 +220,60 @@ describe('chain reaction: blasts queued in one call', () => {
     expect(hpOf()).toBe(afterCall)
   })
 })
+
+describe('chain reaction: chainLinksPerUpdate (the links of a chain are counted in steps, not in machine speed)', () => {
+  const cylinder = (): DestructibleSpec => ({
+    parts: [explosivePart(explosiveDef('propane_p13'), { id: 'tank', material: 'steel', shape: { kind: 'cylinder', radius: 0.15, height: 0.5 }, position: [0, 0.25, 0], thickness: 0.002, fill: 0.03 })],
+  })
+  const scene = (linksPerUpdate: number | undefined) => {
+    const world = createDestruction({ seed: 31, ...(linksPerUpdate !== undefined ? { chainLinksPerUpdate: linksPerUpdate } : {}) })
+    const ids = Array.from({ length: 6 }, (_, k) => world.add(cylinder(), { id: `gas_${k}`, position: [k * 1.2, 0, 0] }))
+    ids.push(world.add(steelBox('car_fuel_tank', [0.8, 0.3, 0.5], 0.5), { id: 'car', position: [7.5, 0, 0] }))
+    return { world, ids }
+  }
+  const perStep = (linksPerUpdate: number | undefined, step: number) => {
+    const { world, ids } = scene(linksPerUpdate)
+    world.hit(ids[0] as string, bulletAt([0.15, 0.25, 0]))
+    const steps: Array<Array<{ object: string; time: number }>> = []
+    for (let elapsed = 0; elapsed < 30 - 1e-9; elapsed += step) {
+      steps.push(explosions(world.update(step)).map((blast) => ({ object: blast.object, time: Math.round(blast.time * 1e6) / 1e6 })))
+    }
+    const finalState = ids.map((id) => world.part(id, 'tank')?.status)
+    return { steps, finalState, ids }
+  }
+
+  it('is the same as today when it is off or 0', () => {
+    const base = JSON.stringify(perStep(undefined, 1 / 60).steps)
+    expect(JSON.stringify(perStep(0, 1 / 60).steps)).toBe(base)
+    expect(JSON.stringify(perStep(Infinity, 1 / 60).steps)).toBe(base)
+  })
+
+  it('with the cap on, at most one link goes off per step and the whole row and the car still go off', () => {
+    const off = perStep(undefined, 1 / 60)
+    const capped = perStep(1, 1 / 60)
+    const fired = capped.steps.flat()
+    expect(fired).toHaveLength(7)
+    expect(capped.steps.every((blasts) => blasts.length <= 1)).toBe(true)
+    expect(capped.finalState).toEqual(off.finalState)
+    expect(capped.finalState.every((status) => status === 'broken')).toBe(true)
+    expect(new Set(fired.map((blast) => blast.object)).size).toBe(7)
+  })
+
+  it('links that were due together go off on consecutive steps, in due-time order', () => {
+    const off = perStep(undefined, 1 / 60)
+    const capped = perStep(1, 1 / 60)
+    const crowded = off.steps.findIndex((blasts) => blasts.length > 1)
+    expect(crowded).toBeGreaterThan(0)
+    const first = off.steps[crowded]?.[0]?.object
+    const second = off.steps[crowded]?.[1]?.object
+    expect(capped.steps[crowded]?.map((blast) => blast.object)).toEqual([first])
+    expect(capped.steps[crowded + 1]?.map((blast) => blast.object)).toEqual([second])
+  })
+
+  it.each([30, 60, 144])('gives the same order and the same final state at %i Hz', (hertz) => {
+    const reference = perStep(1, 1 / 60)
+    const other = perStep(1, 1 / hertz)
+    expect(other.steps.flat().map((blast) => blast.object)).toEqual(reference.steps.flat().map((blast) => blast.object))
+    expect(other.finalState).toEqual(reference.finalState)
+  })
+})

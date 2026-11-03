@@ -38,6 +38,7 @@ export type {
   UiHelpers,
   VehicleContext,
   VehicleKit,
+  ParticleMaterials,
   VehicleKitOptions,
   VehicleMeta,
   VehiclePart,
@@ -47,8 +48,13 @@ export type {
   BuildZoneState,
   ZoneState,
 } from './api'
-export { createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export { createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES, cabinEnclosure, cabinBoxOf, swingOf, CABIN_LEAK } from './destructible'
 export type {
+  CabinBox,
+  CabinEnclosureOptions,
+  CabinSource,
+  CreaseQueue,
+  CreaseWork,
   JointDef,
   LocalBox,
   PartDef,
@@ -60,3 +66,5 @@ export type {
   VehicleModel,
   VehicleStatus,
 } from './destructible'
+export type { ParticleEffects, ParticleEffectRequest } from './routed-particles'
+export { crackedGlassMaterial } from './glass-damage'

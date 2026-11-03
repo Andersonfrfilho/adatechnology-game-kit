@@ -1,3 +1,5 @@
+import { checkReadCost } from './impact-cost'
+import type { CostOptions } from './impact-cost'
 import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, ObjectState, ToolKind, Vec3 } from './destruction'
 
 /**
@@ -9,17 +11,49 @@ import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, Ob
  * `setTransform` is only used by the world for raycasts and blast range). Every event must carry `object === id` and name parts listed by
  * `describe()`.
  */
+/** World-space ray for `DestructibleImpl.surfaceRay`. */
+export interface SurfaceRay {
+  readonly origin: Vec3
+  readonly direction: Vec3
+  readonly maxDistance: number
+  ignored?(part: string): boolean
+}
+
+export interface SurfaceRayHit {
+  readonly part: string
+  readonly point: Vec3
+  readonly normal: Vec3
+  readonly distance: number
+  /** Thickness the ray crosses in this part, metres. */
+  readonly pathLen: number
+}
+
 export interface DestructibleImpl {
   readonly id: string
   readonly name?: string
-  /** Parts, joints and structure in the impl's local space, for raycast, inspector and log. Called often: keep it cheap. */
+  /**
+   * Parts, joints and structure in the impl's local space, for raycast, inspector and log.
+   * COST CONTRACT (D8): called per frame by the renderer, so it is O(1), allocation-free and cached between changes: the same object comes
+   * back until a hit, tool, fire or pose change alters it. `checkDestructible(impl, { cost: true })` measures it.
+   */
   describe(): DestructibleSpec
   /** Apply one hit (see `IMPACT_CONTRACT` for the fields per type) and return the events it caused. */
   hit(hit: Hit): DestructionEvent[]
+  /**
+   * The real surface a ray meets, for an impl whose drawn shape is not its boxes (a car body): the boxes of `describe()` only say where to look, and a shot that crosses
+   * them without touching the drawn surface goes on. `ignored` answers for the parts the round already went through. Null when the ray meets nothing.
+   */
+  surfaceRay?(ray: SurfaceRay): SurfaceRayHit | null
   /** Advance fire, melting, collapse and other timed behaviour. */
   update?(dt: number): DestructionEvent[]
-  state(): ObjectState
+  /**
+   * COST CONTRACT (D8): the host reads it per part per frame, so it is O(1), allocation-free and cached between changes (see `describe()`).
+   * The cached object is shared with every reader: treat it as read-only, copy before changing it.
+   */
+  state(): Readonly<ObjectState>
   reset?(): void
+  /** The world took the object out (`DestructionWorld.remove`): the impl lets go of what it joined (shared queues, listeners). */
+  dispose?(): void
   /** Same contract as `DestructionWorld.disassemble`: progress 0..1, or -1 when the tool cannot undo the joint. */
   disassemble?(jointId: string, tool: ToolKind, dt: number): number
   extinguish?(partId?: string): void
@@ -64,6 +98,8 @@ export interface CheckOptions {
    * `world.materials`, or the built-in plus your own). When omitted, the material check is skipped.
    */
   materials?: Iterable<string>
+  /** Opt-in cost measurement (D8): `true` for the defaults, or the limits to use. */
+  cost?: boolean | CostOptions
 }
 
 const finiteJson = (v: unknown, path: string, out: string[]) => {
@@ -77,7 +113,7 @@ const finiteJson = (v: unknown, path: string, out: string[]) => {
 /**
  * Contract checker for the test room (it needs no world): `describe()` is valid, a 500 J ballistic hit at a part centre returns well-formed events of this impl, `state()`
  * matches `describe()`, hit points never go negative, `update(0.016)` returns an array and every event is JSON-serializable. It hits the impl
- * (and calls `reset()` afterwards when there is one).
+ * (and calls `reset()` afterwards when there is one). With `options.cost` it also times `state()` and `describe()` (the cost contract of D8).
  */
 export const checkDestructible = (impl: DestructibleImpl, options: CheckOptions = {}): { ok: boolean; problems: string[] } => {
   const problems: string[] = []
@@ -158,6 +194,15 @@ export const checkDestructible = (impl: DestructibleImpl, options: CheckOptions 
     impl.reset?.()
   } catch (e) {
     problems.push(`reset() threw: ${String(e)}`)
+  }
+  if (options.cost) {
+    const cost = options.cost === true ? {} : options.cost
+    try {
+      checkReadCost({ name: 'state', read: () => impl.state(), options: cost, problems })
+      checkReadCost({ name: 'describe', read: () => impl.describe(), options: cost, problems })
+    } catch (e) {
+      problems.push(`cost measurement threw: ${String(e)}`)
+    }
   }
   return { ok: problems.length === 0, problems }
 }

@@ -26,7 +26,7 @@ const people = ['game-characters', 'game-characters-three', 'game-characters-peo
 const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-interactables', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
 const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three', 'game-vehicles-driving', 'game-vehicles-proving', 'game-camera']
 const vegetation = ['game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
-const urban = ['game-urban', 'game-urban-three']
+const urban = ['game-kit-defaults', 'game-urban', 'game-urban-three']
   // the crowd: the horde, its drawing on the baked variants and the region model it comes from
   const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
   // the stories: casting, beats, the life simulation and the character sheet (no 3D)
@@ -46,6 +46,18 @@ const result = await esbuild.build({
   minify: true,
   legalComments: 'none',
   alias: {
+    '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
+    '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),
+    '@adatechnology/game-vehicles-three/testing': join(pkg('game-vehicles-three'), 'dist/testing.js'),
+    '@adatechnology/game-vfx-three/testing': join(pkg('game-vfx-three'), 'dist/testing.js'),
+    '@adatechnology/game-weather-three/testing': join(pkg('game-weather-three'), 'dist/testing.js'),
+    '@adatechnology/game-weather/testing': join(pkg('game-weather'), 'dist/testing.js'),
+    '@adatechnology/game-stories/testing': join(pkg('game-stories'), 'dist/testing.js'),
+    '@adatechnology/game-player/testing': join(pkg('game-player'), 'dist/testing.js'),
+    '@adatechnology/game-floorplan-three/testing': join(pkg('game-floorplan-three'), 'dist/testing.js'),
+    '@adatechnology/game-crowd-three/testing': join(pkg('game-crowd-three'), 'dist/testing.js'),
+    '@adatechnology/game-animals-three/testing': join(pkg('game-animals-three'), 'dist/testing.js'),
+    '@adatechnology/game-characters-three/testing': join(pkg('game-characters-three'), 'dist/testing.js'),
     '@adatechnology/game-interactables': join(pkg('game-interactables'), 'dist/index.js'),
     '@adatechnology/game-interactables-household': join(pkg('game-interactables-household'), 'dist/index.js'),
     '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
@@ -55,13 +67,16 @@ const result = await esbuild.build({
     '@adatechnology/game-vfx-three': join(pkg('game-vfx-three'), 'dist/index.js'),
     '@adatechnology/game-terrain': join(pkg('game-terrain'), 'dist/index.js'),
     '@adatechnology/game-terrain-three': join(pkg('game-terrain-three'), 'dist/index.js'),
+    '@adatechnology/game-terrain-three/testing': join(pkg('game-terrain-three'), 'dist/testing.js'),
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    '@adatechnology/game-weapons-three/testing': join(pkg('game-weapons-three'), 'dist/testing.js'),
     // the items module and the goods catalog ride along: the containers of the furniture hold real items
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
     // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
     '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
+    '@adatechnology/game-audio/testing': join(pkg('game-audio'), 'dist/testing.js'),
     '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
     // the player area rides along: the room's camera is the player body
     '@adatechnology/game-player': join(pkg('game-player'), 'dist/index.js'),
@@ -69,6 +84,7 @@ const result = await esbuild.build({
     '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
     '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
+    '@adatechnology/game-items-three/testing': join(pkg('game-items-three'), 'dist/testing.js'),
     // the characters and the animals modules ride along too: a shot crosses a wardrobe door and reaches a zombie behind it
     ...Object.fromEntries(people.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the vehicles module rides along too: a car stands in the yard next to the furniture

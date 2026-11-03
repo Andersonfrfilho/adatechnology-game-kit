@@ -1,4 +1,4 @@
-import { catenary, createCord } from '@adatechnology/game-interactables-three'
+import { catenary, createCord } from '@adatechnology/game-shapes-three'
 import { buildBeltBox } from './belt-box'
 import type { AttachmentModel, AttachmentModelBuilder } from './types'
 

@@ -8,6 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
@@ -16,10 +17,14 @@ import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
-import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
+import type { GraphicsController } from '@adatechnology/game-graphics'
+import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
+import type { RoomGraphicsOptions } from './graphics'
+import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { GroundLayout } from '@adatechnology/game-contracts'
+import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
@@ -185,6 +190,12 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
+  /**
+   * The player's graphics settings (`game-graphics`): a Gráficos button opens the screen (presets Automático, Baixa, Média, Alta, Ultra and each option), the
+   * choice is kept in the browser, the first load runs a short calibration on the loading indicator and the automatic mode moves what is left on auto. Only on a
+   * renderer the room makes. Default off (the fixed look of `quality`).
+   */
+  graphics?: boolean | RoomGraphicsOptions
   /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
   ground?: GroundLayout
   /** Limits of the floor's marks, thrown pieces and redraws per frame. */
@@ -258,6 +269,11 @@ export interface TestRoomOptions {
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
   thirdPerson?: ThirdPersonOptions
+  /**
+   * Milliseconds of every frame the deferred queues (sound voices, destruction events, breach paint, vehicle crease) share. Default 8, the biggest budget the loose
+   * queues had; 4 is the library default of `@adatechnology/game-runtime`, for a room whose `maxFramesWaiting` stays under 15 (see `frameStats()`).
+   */
+  frameBudgetMs?: number
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**
@@ -266,12 +282,18 @@ export interface TestRoomOptions {
    * sprites (dust, smoke, chips, sparks...) by kind, e.g. `{ dust: { life: [10, 30] } }` (seconds, min and max). Loose pieces (what breaks off whole: a door, a leg,
    * a slab) stay as part of the map, with collision.
    */
+  /** Slots of the room's light budget (default 16 point and 4 spot). Each light is paid per pixel, lit or not, so a weak GPU gets fewer; changing them recompiles every lit program, so they are fixed at load. */
+  lightSizes?: { readonly point?: number; readonly spot?: number }
+  /** Drawn frames the GPU may be behind before the room holds a draw back (`createFramePacer`, default 2). */
+  framesInFlight?: number
   debris?: {
     fragmentLife?: number | FragmentLifeRule
     maxFragments?: number
     particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>>
     /** Milliseconds of destruction events the renderer applies per frame; the rest wait for the next frames (default 8). `Infinity` applies every event in the frame it happens, which a test comparing counts needs. */
     eventBudgetMs?: number
+    /** The most loose bodies (ejected casings, dropped magazines) modules may keep alive at once, lent as `ModuleHost.particleLimit` (default 900). */
+    particleLimit?: number
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
@@ -334,6 +356,10 @@ export interface TestRoom {
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.PerspectiveCamera
+  /** The room's light budget (what `host.lights` lends): the one owner of its point and spot lights. */
+  readonly lights?: LightBudget
+  /** The WebGL renderer the room draws with, for tools that read what the GPU got (the `light_slots` phase of `perf.mjs` reads the uniforms of a lit material). */
+  readonly webgl?: THREE_NS.WebGLRenderer
   /** The test table: lays the catalogue on the `test_table` piece a page at a time and runs the trials (shot, punch, knife, fire, blast) on one item. */
   readonly testTable: TestTable
   /** Spawn a catalogue item at a world position (default in front of the player). */
@@ -353,8 +379,12 @@ export interface TestRoom {
   readonly tool: WeaponState
   /** Play an item use on the held item (`drink`, `pour`...). Returns false when nothing is held or the use does not apply. */
   useItem(useId: string): boolean
-  /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
-  use(hold?: number): void
+  /**
+   * Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools.
+   * Answers what the trigger said: `ok` when the tool did something; `drawing` when the draw is not over for the trigger yet (the frame that ends the draw is the trigger's
+   * too, so `tool.phase` turns null one frame before the first pull can go: a script waits a frame and pulls again), `cooldown`, `empty`, `reloading`... otherwise.
+   */
+  use(hold?: number): UseStatus
   /** Where the player's feet are. */
   readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
@@ -387,7 +417,7 @@ export interface TestRoom {
   /** Everything the inspector panel shows for the aimed part (state, joints and the tools that undo them), or null. */
   inspectInfo(): InspectInfo | null
   spawned(): SpawnedObject[]
-  /** Advance one frame (only needed when the host owns the loop). */
+  /** Advance one frame, and throw what a system threw in it. The host that owns the loop must call it every frame: the deferred queues lent to the room's budget (sound voices, destruction events) drain only inside a frame. */
   update(dt: number): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
@@ -433,6 +463,10 @@ export interface TestRoom {
   openAreaAsync(group: string): Promise<SpawnedObject[]>
   /** The loading indicator of the room: `begin`, `busy`, `state`, `on` (see `RoomLoading`); modules get it as `ModuleHost.loading`. */
   readonly loading: RoomLoading
+  /** The player's graphics settings (`options.graphics`): presets, options, the automatic mode, the calibration; null without them. */
+  readonly graphics: GraphicsController | null
+  /** The graphics screen (open, close, toggle); null without settings or without the panels. */
+  readonly graphicsScreen: GraphicsScreen | null
   /** `loading.busy`: shows the indicator, waits for it to be painted, runs `work` and takes it down. The way to run a slow, synchronous job. */
   busy<T>(label: string, work: (task: BusyTask) => T | Promise<T>, options?: BusyOptions): Promise<T>
   /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */
@@ -503,6 +537,8 @@ export interface TestRoom {
    */
   applyCamera(): () => void
   metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
+  /** What the frame scheduler measured: ms per phase of the last frame, substeps, and per deferred queue the work waiting, run, forced and the most frames anything waited. */
+  frameStats?(): SchedulerStats
   dispose(): void
 }
 
@@ -618,3 +654,6 @@ export type {
 } from '@adatechnology/game-contracts'
 
 export type { RoomSeat } from './seating'
+
+/** What the trigger answered to `TestRoom.use`: the status of the weapons package's trigger. */
+export type UseStatus = TriggerResult['status']

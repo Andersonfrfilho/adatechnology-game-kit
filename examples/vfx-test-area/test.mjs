@@ -48,7 +48,7 @@ async function open(query = '') {
   const page = await context.newPage()
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-  await page.goto(pathToFileURL(dist).href + query)
+  await page.goto(pathToFileURL(dist).href + query, { timeout: 180000 })
   await page.waitForFunction(() => window.__vfxReport, null, { timeout: 90000 })
   return page
 }

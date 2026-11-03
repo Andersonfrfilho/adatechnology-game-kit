@@ -24,6 +24,8 @@ export function installFluids(kit: Kit): void {
   }
   kit.defineFluid('stain', { fresh: '#4a4a44', dry: '#26241f', wipeable: false })
   const _fr = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _fr.layers.enableAll()
   /* Liquid splat: a flat stain glued to the surface, irregular outline, satellite drops and a trickle that runs down,
      thins and ends in a bulb. The trickle stops when the volume runs out. Glossy when fresh, dries matte in the fluid type's time.
      o: { fluid (key of kit.fluidTypes; default config.defaultSplat), glass, obj (mesh to attach to; the trickle follows its curve) } */
