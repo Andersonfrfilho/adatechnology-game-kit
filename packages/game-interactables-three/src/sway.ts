@@ -41,7 +41,7 @@ uniform float swayAmplitude;
 `
 
 /** Patches a vertex shader so the vertices hang from the anchor line and swing with the shared uniforms. */
-export function patchSwayShader(shader: { uniforms: Record<string, any>; vertexShader: string }, uniforms: SwayUniforms, amplitude: number): void {
+export function patchSwayShader(shader: { uniforms: Record<string, ThreeNS.IUniform>; vertexShader: string }, uniforms: SwayUniforms, amplitude: number): void {
   shader.uniforms.swayTime = uniforms.time
   shader.uniforms.swayAx = uniforms.ax
   shader.uniforms.swayAz = uniforms.az
@@ -66,9 +66,12 @@ function patch<M extends ThreeNS.Material>(material: M, uniforms: SwayUniforms, 
  * directional / spot shadow maps and point-light shadow cubes follow the animation. Assign it to a mesh, and set
  * `mesh.customDepthMaterial` / `mesh.customDistanceMaterial` from the material (or just use `attachSway`).
  */
-export function swayMaterial(THREE: ThreeLib, base: ThreeNS.Material, options: SwayOptions = {}): ThreeNS.Material & {
+/** A material `swayMaterial` made: it carries its sway handle and the shadow materials that follow it. */
+export type SwayMaterial = ThreeNS.Material & {
   userData: { sway: SwayHandle; depthMaterial: ThreeNS.MeshDepthMaterial; distanceMaterial: ThreeNS.MeshDistanceMaterial }
-} {
+}
+
+export function swayMaterial(THREE: ThreeLib, base: ThreeNS.Material, options: SwayOptions = {}): SwayMaterial {
   const amplitude = options.amplitude ?? 0.04
   const uniforms: SwayUniforms = { time: { value: 0 }, ax: { value: 0 }, az: { value: 0 }, anchorY: { value: options.anchorY ?? 0 } }
   const handle: SwayHandle = {
@@ -85,7 +88,7 @@ export function swayMaterial(THREE: ThreeLib, base: ThreeNS.Material, options: S
   material.userData.sway = handle
   material.userData.depthMaterial = depth
   material.userData.distanceMaterial = distance
-  return material as any
+  return material as SwayMaterial // userData filled just above
 }
 
 /**

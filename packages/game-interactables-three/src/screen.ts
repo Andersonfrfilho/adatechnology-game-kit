@@ -17,7 +17,7 @@ export interface ScreenOptions {
 export interface Screen {
   material: ThreeNS.MeshStandardMaterial
   texture: ThreeNS.CanvasTexture
-  canvas: any
+  canvas: HTMLCanvasElement
   readonly on: boolean
   readonly channel: number
   setOn(on: boolean): void

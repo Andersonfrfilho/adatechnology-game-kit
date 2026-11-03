@@ -1,3 +1,4 @@
+import type * as THREE_NS from 'three'
 import { isLightBudget } from '@adatechnology/game-render-three'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
@@ -48,8 +49,10 @@ const VIEW_FAR = 600
 const GRID = { block: 36, count: 2, width: 10 }
 const LAMP_SHARES: Record<string, number | undefined> = { pattern: undefined, all: 1, half: 0.5, none: 0 }
 
-type Three = any
-type Placed = { root: any; drawn: DrawnUrban }
+type Three = typeof THREE_NS
+type Placed = { root: THREE_NS.Object3D; drawn: DrawnUrban }
+/** A mesh, as three marks one (`isMesh`). */
+const isMesh = (o: THREE_NS.Object3D): o is THREE_NS.Mesh => (o as THREE_NS.Mesh).isMesh === true
 
 /**
  * The urban test area as a `TestableModule`: the five poles of the Galeria in a row, a street grid with a filled block, a patch of terrain and the ten neighbourhoods of the
@@ -64,12 +67,12 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   const benchOrigin = options.benchOrigin ?? [0, -60]
   const settings = { pattern: 'downtown', seed, lamps: 'pattern', budget: 16, providers: 'none' }
   let host: ModuleHost | null = null
-  let three: Three = null
+  let three: Three | null = null
   let clock = 0
   let helpersShown = ''
   let bench: (Placed & { plan: ReturnType<ReturnType<UrbanKit['neighbourhoods']['get']>['compose']> }) | null = null
   const placed = new Map<string, Placed>()
-  let helpers: any[] = []
+  let helpers: THREE_NS.Object3D[] = []
   const resolvers: { plant?: PlacementResolver; vehicle?: PlacementResolver } = {}
 
   const baseKit = createUrban(options.urban)
@@ -126,15 +129,15 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     name: text.items[id] ?? id,
     movable: false,
     build: (THREE: unknown) => {
-      three = THREE
-      const made = sample(THREE as Three, id)
+      three = THREE as Three // the room hands its three.js namespace
+      const made = sample(three, id)
       made.root.userData.urbanItem = id
       placed.set(made.root.uuid, made)
       return made.root
     },
     spec: (root: unknown) => {
       // an urban sample is scenery: one anchored slab of concrete as large as the sample, so the room has a body to put it on and a box to aim at
-      const THREE_ = three
+      const THREE_ = three as Three // build() ran before spec()
       const box = new THREE_.Box3().setFromObject(root as never)
       const size = box.getSize(new THREE_.Vector3())
       const centre = box.getCenter(new THREE_.Vector3())
@@ -148,7 +151,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     bench.drawn.dispose()
     bench = null
   }
-  const countObjects = (root: any): number => {
+  const countObjects = (root: THREE_NS.Object3D): number => {
     let n = 0
     root.traverse(() => n++)
     return n
@@ -163,7 +166,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     const document = options.document ?? (globalThis as unknown as { document?: CanvasFactory }).document
     const drawn = createUrbanThree(three, { ...(document ? { document } : {}), resolvers: resolversFor(three), ...lightsOption() }).draw(b.scene())
     drawn.root.position.set(benchOrigin[0], FLOOR_Y, benchOrigin[1])
-    ;(host.scene as any).add(drawn.root)
+    ;(host.scene as THREE_NS.Object3D).add(drawn.root) // the host's three.js scene
     bench = { root: drawn.root, drawn, plan: made }
     lightsLeft = b.lights.left
     host.log(fill(text.log.composed, settings.pattern, settings.seed, countObjects(drawn.root), drawn.lights.length), { pattern: settings.pattern, seed: settings.seed })
@@ -202,7 +205,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   const refreshLayers = (): void => {
     if (!host?.bench || !three) return
     clearHelpers()
-    const mark = (parent: any, helper: any): void => {
+    const mark = (parent: THREE_NS.Object3D, helper: THREE_NS.Object3D): void => {
       helper.userData.helper = true
       parent.add(helper)
       helpers.push(helper)
@@ -219,9 +222,9 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
       if (host.bench.layer('light_radius')) {
         for (const lamp of entry.drawn.lights) {
           // a lamp drawn through the budget is its bulb; one drawn as a real light is the light
-          const light = lamp.bulb ? { node: lamp.bulb, distance: lamp.part.distance, color: lamp.part.color } : lamp.isPointLight || lamp.isSpotLight ? { node: lamp, distance: lamp.distance, color: lamp.color } : null
+          const light = 'bulb' in lamp ? { node: lamp.bulb, distance: lamp.part.distance, color: lamp.part.color } : lamp.isLight ? { node: lamp, distance: lamp.distance, color: lamp.color } : null
           if (!light) continue
-          const reach = new three.Mesh(new (shapeGeometries(three) as any).SphereGeometry(Math.min(light.distance || 10, 60), 14, 8), new three.MeshBasicMaterial({ color: light.color ?? 0xffcc66, wireframe: true, transparent: true, opacity: 0.25 }))
+          const reach = new three.Mesh(new (shapeGeometries(three)).SphereGeometry(Math.min(light.distance || 10, 60), 14, 8), new three.MeshBasicMaterial({ color: light.color ?? 0xffcc66, wireframe: true, transparent: true, opacity: 0.25 }))
           reach.position.copy(light.node.position)
           mark(light.node.parent ?? entry.root, reach)
         }
@@ -236,7 +239,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     for (const [id, entry] of placed) {
       if (entry.root.parent) continue
       // the budget follows each lamp's bulb: a source left behind keeps the whole scene (signs, canvases) alive
-      for (const lamp of entry.drawn.lights) lamp.source?.remove()
+      for (const lamp of entry.drawn.lights) if ('source' in lamp) lamp.source.remove()
       placed.delete(id)
     }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('light_radius') || host.bench.layer('bounds') || helpersShown !== '')) refreshLayers()
@@ -248,18 +251,19 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     let lights = 0
     let instances = 0
     for (const entry of roots()) {
-      entry.root.traverse((o: any) => {
-        if (o.isLight) lights += 1
-        if (!o.isMesh || o.userData.helper) return
-        for (let p = o; p; p = p.parent) if (p.visible === false) return
+      entry.root.traverse((o) => {
+        if ((o as THREE_NS.Light).isLight) lights += 1
+        if (!isMesh(o) || o.userData.helper) return
+        for (let p: THREE_NS.Object3D | null = o; p; p = p.parent) if (p.visible === false) return
         drawCalls += 1
-        if (o.isInstancedMesh) instances += o.count
+        const instanced = (o as THREE_NS.InstancedMesh).isInstancedMesh === true
+        if (instanced) instances += (o as THREE_NS.InstancedMesh).count
         const g = o.geometry
         const perInstance = (g.index ? g.index.count : g.attributes.position.count) / 3
-        triangles += perInstance * (o.isInstancedMesh ? o.count : 1)
+        triangles += perInstance * (instanced ? (o as THREE_NS.InstancedMesh).count : 1)
       })
       // lamps drawn through the budget are no lights of the scene: they count as the lights they stand for
-      lights += entry.drawn.lights.filter((lamp: any) => lamp.source).length
+      lights += entry.drawn.lights.filter((lamp) => 'source' in lamp).length
     }
     return { drawCalls, triangles: Math.round(triangles), lights, instances }
   }
@@ -315,7 +319,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     ],
     attach(lent) {
       host = lent
-      three = lent.THREE
+      three = lent.THREE as Three
       // the sample sheet is 240 m wide: the room's camera sees 140 m, so the module lends it a longer view while it is loaded
       const camera = lent.camera as { far: number; updateProjectionMatrix(): void } | undefined
       const farBefore = camera?.far
@@ -336,7 +340,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
         }
         resolvers.plant?.dispose?.()
         resolvers.vehicle?.dispose?.()
-        for (const entry of placed.values()) for (const lamp of entry.drawn.lights) lamp.source?.remove()
+        for (const entry of placed.values()) for (const lamp of entry.drawn.lights) if ('source' in lamp) lamp.source.remove()
         placed.clear()
         host = null
       }

@@ -1,10 +1,14 @@
+import type * as THREE_NS from 'three'
 import type { Condition, Lod, Placement, Season } from '@adatechnology/game-vegetation'
 import type { ScatterRulesOptions } from '@adatechnology/game-vegetation-species'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import type { MaterialsLike, SpeciesSdk, VegetationSdk } from './types'
 
-type Three = any
+type Three = typeof THREE_NS
+
+/** A mesh, as three marks one (`isMesh`). */
+const isMesh = (o: THREE_NS.Object3D): o is THREE_NS.Mesh => (o as THREE_NS.Mesh).isMesh === true
 
 /** The plot of the Viveiro's lot demo, in metres: the corner at (0, 0), the street on the negative z side. */
 export const LOT = { W: 12, D: 20 } as const
@@ -57,12 +61,12 @@ export function scatterLot(sdk: VegetationSdk, species: SpeciesSdk, seedNumber: 
 }
 
 /** The static scenery of the plot: ground, street, sidewalk, path, house and walls. Simple boxes; the room's own floor is under it. */
-function buildScenery(THREE: Three): any {
+function buildScenery(THREE: Three): THREE_NS.Group {
   const g = new THREE.Group()
   g.name = 'nursery-scenery'
-  const material = (color: number, roughness = 0.9): any => new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 })
+  const material = (color: number, roughness = 0.9): THREE_NS.MeshStandardMaterial => new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 })
   const mats = { ground: material(0x5f7d45), asphalt: material(0x3a3d42), concrete: material(0xb7b3a8), house: material(0xe3d6bd), roof: material(0x9a4d38), door: material(0x6b4a2f), glass: material(0x9fc7dd, 0.2), wall: material(0xc9c2b2) }
-  const box = (w: number, h: number, d: number, m: any, x: number, y: number, z: number): any => {
+  const box = (w: number, h: number, d: number, m: THREE_NS.Material, x: number, y: number, z: number): THREE_NS.Mesh => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m)
     mesh.position.set(x, y, z)
     mesh.castShadow = mesh.receiveShadow = true
@@ -104,7 +108,7 @@ function buildScenery(THREE: Three): any {
  * The nursery: the 12 x 20 m plot of the Viveiro's lot demo (house, walls, street, path) planted by `scatterRulesFor` + `scatter` + `buildLot`, and the walker that crosses it and bends
  * the plants (the wind shader's actors). The module owns it; `plant` builds it, `clear` takes it away.
  */
-export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Three, materials: MaterialsLike, parent: any, origin: readonly [number, number]) {
+export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Three, materials: MaterialsLike, parent: THREE_NS.Object3D, origin: readonly [number, number]) {
   // three with its primitive geometries made by game-shapes (bit-identical, cached by parameters)
   const T = shapeGeometries(THREE) as Three
   const group = new THREE.Group()
@@ -113,25 +117,25 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
   const dynamic = new THREE.Group()
   const colliders = new THREE.Group()
   colliders.visible = false
-  let scenery: any = null
-  let lotObject: any = null
+  let scenery: THREE_NS.Group | null = null
+  let lotObject: THREE_NS.Object3D | null = null
   let data: ReturnType<VegetationSdk['buildLot']> | null = null
   let stats: LotStats | null = null
-  let actor: any = null
+  let actor: THREE_NS.Mesh | null = null
   const walker = { x: WAY[0]![0], z: WAY[0]![1], waypoint: 0, on: false }
   const actors = [{ x: 0, y: 0.8, z: 0, radius: 1.5 }]
   let attached = false
 
-  const disposeObject = (object: any): void => {
-    object.traverse((child: any) => {
-      child.geometry?.dispose?.()
+  const disposeObject = (object: THREE_NS.Object3D): void => {
+    object.traverse((child) => {
+      if (isMesh(child)) child.geometry?.dispose?.()
     })
   }
-  const clearGroup = (g: any): void => {
+  const clearGroup = (g: THREE_NS.Object3D): void => {
     for (const child of [...g.children]) {
       g.remove(child)
       disposeObject(child)
-      child.material?.dispose?.()
+      if (isMesh(child) && !Array.isArray(child.material)) child.material?.dispose?.()
     }
   }
   const ensure = (): void => {
@@ -190,8 +194,8 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
       data = sdk.buildLot(placements, (id) => species.toSpec(id), { seed: `quintal-${settings.seed}`, quality: settings.quality, lod: settings.lod, condition: settings.condition, season: settings.season })
       const buildMs = Date.now() - t0
       lotObject = sdk.createLotObject(THREE, data, materials as never)
-      lotObject.traverse((c: any) => {
-        if (c.isMesh) {
+      lotObject.traverse((c) => {
+        if (isMesh(c)) {
           c.castShadow = true
           c.receiveShadow = true
         }
@@ -213,7 +217,7 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
     setWalker(on: boolean): void {
       ensure()
       walker.on = on
-      actor.visible = on
+      actor!.visible = on // ensure() made it
       if (!on) {
         actors[0]!.radius = 0
         materials.setActors(actors)
@@ -239,9 +243,9 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
         if (!blocked(nx, walker.z)) walker.x = nx
         if (!blocked(walker.x, nz)) walker.z = nz
         if (blocked(nx, nz)) walker.waypoint = (walker.waypoint + 1) % WAY.length
-        actor.rotation.y = Math.atan2(dx, dz)
+        actor!.rotation.y = Math.atan2(dx, dz)
       }
-      actor.position.set(walker.x, 0.78, walker.z)
+      actor!.position.set(walker.x, 0.78, walker.z)
       const a = actors[0]!
       a.x = origin[0] + walker.x
       a.z = origin[1] + walker.z
