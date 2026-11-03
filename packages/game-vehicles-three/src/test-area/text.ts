@@ -10,7 +10,7 @@ export type VehiclesText = {
   layers: Record<'damageables' | 'zones' | 'axes', string>
   metrics: Record<'vehicles' | 'triangles' | 'draw_calls' | 'size_error_mm' | 'metal' | 'glass' | 'rubber' | 'fuel' | 'speed' | 'lane', string>
   words: { yes: string; no: string; open: string; tight: string; on: string; off: string }
-  lane: Record<'crash' | 'end', string>
+  lane: Record<'crash' | 'end' | 'damage', string>
   scenarios: Record<string, string>
   checks: Record<string, string>
 }
@@ -79,13 +79,13 @@ export const TEXT: Record<string, VehiclesText> = {
       palette: { auto: 'Auto', civil: 'Civil', military: 'Military' },
       driving: { arcade: 'Arcade', semi: 'Semi-simulation' },
       surface: { dry_asphalt: 'Dry asphalt', wet_asphalt: 'Wet asphalt', dirt: 'Dirt', grass: 'Grass', mud: 'Mud', blood: 'Blood' },
-      lane_damage: { none: 'None', flat_tyre: 'Flat tyre (rifle round)', torn_tyre: 'Tyre torn off: rim on the road', run_flat: 'Armoured, flat tyre (run-flat)', no_brake_fluid: 'No brake fluid' },
+      lane_damage: { none: 'None', into_wall: 'Into the wall, no braking', flat_tyre: 'Flat tyre (rifle round)', torn_tyre: 'Tyre torn off: rim on the road', run_flat: 'Armoured, flat tyre (run-flat)', no_brake_fluid: 'No brake fluid' },
     },
     actions: { repaint: 'Repaint with the seed', drive_lane: 'Drive the lane', clear_lane: 'Remove the lane car', honk: 'Honk the horn' },
     layers: { damageables: 'Damageable boxes by material', zones: 'Zone boxes by type', axes: 'Output frame axes' },
     metrics: { vehicles: 'Vehicles', triangles: 'Triangles', draw_calls: 'Draw calls', size_error_mm: 'Size against DIMS', metal: 'Metal boxes', glass: 'Glass boxes', rubber: 'Rubber boxes', fuel: 'Fuel boxes', speed: 'Lane speed', lane: 'Lane distance' },
     words: { yes: 'true', no: 'false', open: 'open', tight: 'tight', on: 'on', off: 'off' },
-    lane: { crash: 'Lane: the car hit the wall at {0} m/s', end: 'Lane: the car stopped {0} m from the wall' },
+    lane: { crash: 'Lane: the car hit the wall at {0} m/s', end: 'Lane: the car stopped {0} m from the wall', damage: 'Lane: the crash dented {0} and broke {1}' },
     scenarios: {
       vehicles_9mm_windshield: 'Vehicles: 9 mm through the windshield',
       vehicles_shotgun_door: 'Vehicles: shotgun on the door',
@@ -148,13 +148,13 @@ export const TEXT: Record<string, VehiclesText> = {
       palette: { auto: 'Auto', civil: 'Civil', military: 'Militar' },
       driving: { arcade: 'Arcade', semi: 'Semissimulação' },
       surface: { dry_asphalt: 'Asfalto seco', wet_asphalt: 'Asfalto molhado', dirt: 'Terra', grass: 'Grama', mud: 'Lama', blood: 'Sangue' },
-      lane_damage: { none: 'Nenhum', flat_tyre: 'Pneu furado (tiro de fuzil)', torn_tyre: 'Pneu desfeito: aro no chão', run_flat: 'Blindado, pneu furado (run-flat)', no_brake_fluid: 'Sem fluido de freio' },
+      lane_damage: { none: 'Nenhum', into_wall: 'Contra o muro, sem frear', flat_tyre: 'Pneu furado (tiro de fuzil)', torn_tyre: 'Pneu desfeito: aro no chão', run_flat: 'Blindado, pneu furado (run-flat)', no_brake_fluid: 'Sem fluido de freio' },
     },
     actions: { repaint: 'Repintar com a semente', drive_lane: 'Percorrer a pista', clear_lane: 'Tirar o carro da pista', honk: 'Buzinar' },
     layers: { damageables: 'Caixas danificáveis por material', zones: 'Caixas das zonas por tipo', axes: 'Eixos do quadro de saída' },
     metrics: { vehicles: 'Veículos', triangles: 'Triângulos', draw_calls: 'Chamadas de desenho', size_error_mm: 'Medida contra DIMS', metal: 'Caixas de metal', glass: 'Caixas de vidro', rubber: 'Caixas de borracha', fuel: 'Caixas de combustível', speed: 'Velocidade na pista', lane: 'Distância na pista' },
     words: { yes: 'sim', no: 'não', open: 'soltos', tight: 'presos', on: 'acesos', off: 'apagados' },
-    lane: { crash: 'Pista: o carro bateu no muro a {0} m/s', end: 'Pista: o carro parou a {0} m do muro' },
+    lane: { crash: 'Pista: o carro bateu no muro a {0} m/s', end: 'Pista: o carro parou a {0} m do muro', damage: 'Pista: a batida amassou {0} e quebrou {1}' },
     scenarios: {
       vehicles_9mm_windshield: 'Veículos: 9 mm atravessa o para-brisa',
       vehicles_shotgun_door: 'Veículos: espingarda na porta',

@@ -372,9 +372,14 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       speed: () => ('u' in driver.state ? (driver.state as { u: number }).u : (driver.state as { v: number }).v),
       distance: () => driver.state.x - LANE.from,
       step(dt) {
-        if (state.ended) return
+        // the run is over, the damage is not: torn panels, crumples and leaks finish over the next frames
+        if (state.ended) {
+          damage?.settle(dt)
+          return
+        }
         state.time += dt
-        const braking = gap() < brakeAt() && state.time > 0.5
+        // the crash run does not brake: it shows what the wall does to the car
+        const braking = settings.damage !== 'into_wall' && gap() < brakeAt() && state.time > 0.5
         const input = { ...idle, throttle: braking ? 0 : 1, brake: braking ? 1 : 0, steer: Math.sin(state.time * 1.4) * 0.15 }
         if (mode === 'arcade') {
           const { events } = arcade.step(input, dt, { blocked: (x, z, yaw) => vehicleCorners(arcade.spec, x, z, yaw).some(([px]) => px >= LANE.wall) })
@@ -394,6 +399,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
           }
           if (gap() <= 0) {
             state.ended = true
+            const crashed = damage?.crash({ speed: Math.abs((semi.state as { u: number }).u), direction: [Math.cos(driver.state.yaw), 0, -Math.sin(driver.state.yaw)] })
+            if (crashed) {
+              const parts = (type: string): string => [...new Set(crashed.flatMap((e) => (e.type === type && 'part' in e ? [e.part] : [])))].join(', ') || '-'
+              host?.log(fill(text, locale, text.lane.damage, parts('dent'), parts('fracture')))
+            }
             log('crash', Math.abs((semi.state as { u: number }).u))
             audio()?.play({ sound: soundIds.crash, position: [driver.state.x, 0.5, driver.state.z], volume: Math.min(1, Math.abs((semi.state as { u: number }).u) / 15) })
           }

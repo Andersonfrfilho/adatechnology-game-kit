@@ -222,6 +222,8 @@ const EXPANDED_HOLE = 1.6
 const MIN_SPENT = 0.08
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
+/** Bolted or hinged sheet metal: a blow crumples it in place. */
+const CRUMPLES = new Set<string>(['door', 'hood', 'lid', 'fender', 'bumper'])
 const FRACTURE: Record<string, 'shatter' | 'snap' | 'tear' | 'none'> = { glass: 'shatter', plastic: 'snap', rubber: 'tear', steel: 'none', aluminium: 'none' }
 
 const add3 = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
@@ -460,7 +462,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     if (p.lost || !(amount > 0)) return
     const before = p.hp
     // the welded body (roof, pillars, frame, side panels) bends and tears but stays: it is never knocked off the car as a piece
-    p.hp = Math.max(WELDED.has(p.def.role) ? 1 : 0, p.hp - amount)
+    // sheet metal hit by a blow crumples and stays on: it only comes off when its hinges or bolts give way (`wear`)
+    const crumples = dtype === 'blunt' && CRUMPLES.has(p.def.role) && (p.def.material === 'steel' || p.def.material === 'aluminium')
+    p.hp = Math.max(WELDED.has(p.def.role) || crumples ? 1 : 0, p.hp - amount)
     out.push(ev({ type: 'damage', part: p.def.id, amount: r2(before - p.hp), hp: r2(p.hp), damageType: dtype, ...(source ? { source } : {}) }))
     wear(p, amount, out)
     syncZone(p)

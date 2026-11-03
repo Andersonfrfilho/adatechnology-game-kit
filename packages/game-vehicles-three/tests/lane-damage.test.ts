@@ -34,3 +34,16 @@ describe('the drive lane with damage', () => {
     expect(drive('no_brake_fluid').condition.brakes).toBeLessThan(0.5)
   })
 })
+
+describe('the drive lane car hitting the wall', () => {
+  it('crumples its front in place: the hood takes the blow and stays on, the plastic bumper breaks', () => {
+    const kit: any = createVehicleKit({ THREE, document: fakeDocument })
+    installFleet(kit)
+    const item: any = buildVehicleItem(kit, 'compact_hatch')
+    const model = createLaneDamage({ kit, context: item.vehicle, frame: item.root, damage: 'into_wall' })
+    const events: any[] = model.crash({ speed: 14, direction: [1, 0, 0] })
+    expect(events.some((e) => e.type === 'damage' && e.part === 'hood')).toBe(true)
+    expect(events.some((e) => e.type === 'fracture' && e.part === 'bumper_front')).toBe(true)
+    expect(events.some((e) => (e.type === 'fracture' && e.part === 'hood') || (e.type === 'detach' && e.parts.includes('hood')))).toBe(false)
+  })
+})

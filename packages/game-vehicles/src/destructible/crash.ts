@@ -17,7 +17,7 @@ export type CrashRules = {
   readonly rows: readonly number[]
 }
 
-export const CRASH_RULES: CrashRules = { energyToDamage: 0.3, hitSpacing: 0.35, minSpeed: 1.5, rows: [0, 0.3] }
+export const CRASH_RULES: CrashRules = { energyToDamage: 0.3, hitSpacing: 0.6, minSpeed: 1.5, rows: [0, 0.3] }
 
 export type CrashOptions = {
   /** Where the vehicle touched the obstacle, world space. */
