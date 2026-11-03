@@ -183,10 +183,25 @@ export type LoopRecipe = {
   readonly sources: readonly string[]
 }
 
+/**
+ * One id that plays one of several recipes (the takes of a footstep, of a punch): `play(id)` draws a variant, never the one it played last time (unless
+ * `repeat`), and plays it at a rate drawn from `rate` (1.04 is 4% higher and 4% shorter; see `retunePlan`), so ten footsteps never sound like one.
+ */
+export type SoundSet = {
+  readonly id: string
+  /** Recipe ids, at least one. */
+  readonly variants: readonly string[]
+  /** `[min, max]` of the playback rate (pitch and speed together). Default `[1, 1]`. */
+  readonly rate?: readonly [min: number, max: number]
+  /** Allow the same variant twice in a row (default false). */
+  readonly repeat?: boolean
+}
+
 export type SoundBank = {
   readonly id: string
   readonly sounds?: readonly SoundRecipe[]
   readonly loops?: readonly LoopRecipe[]
+  readonly sets?: readonly SoundSet[]
   /** Sounds played from recorded files (see `sample.ts`). A sample and a recipe may share an id: the sample plays once its files are loaded. */
   readonly samples?: readonly SampleSound[]
 }
@@ -251,6 +266,12 @@ export type SampleSound = {
    * then stays shot by shot instead of a wall of overlapping takes (criterion C9). Without it every play rings to its end.
    */
   readonly choke?: { readonly voices: number; readonly fade?: number }
+  /**
+   * A continuous sound (fire, rain, an engine idling) that `engine.loop(id)` plays: the near takes chained without a seam, each crossed into the next
+   * in `crossfade` seconds (default 0.25, equal power), never the same take twice in a row. While the files load, the recipe loop of `fallback`
+   * (or of the same id) plays. `play(id)` still plays one take as a one-shot.
+   */
+  readonly loop?: boolean | { readonly crossfade?: number }
   /** A recipe id the engine plays while the files are not loaded yet (or failed): the synthesized sound stays as the fallback. */
   readonly fallback?: string
   /** Where each file came from: `"freesound:123456 autor CC0"`, or `"sdk"` for files the kit made. */

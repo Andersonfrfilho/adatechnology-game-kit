@@ -1,0 +1,524 @@
+{
+  "$comment": "How each calibre family sounds, as layers the synth plays now and a sample replaces later (ids of checklist-sons.md 5.1). close = crack (supersonic N-wave or the muzzle snap, highpass), blast (the mid 'slap', lowpass) and body (the low thump, a sine sweep). far = what is left at 50 m and more: a lowpassed boom and its echoes. tail_in / tail_out = the room or the open field answering. Seconds are the exponential fall to -60 dB. Values chosen by the SDK from the real character of each calibre (see the checklist's 'Como deve soar'); referenceJ is the muzzle energy the numbers are written for.",
+  "profiles": {
+    "pistol_22lr": {
+      "referenceJ": 160,
+      "far": "pistol",
+      "crack": {
+        "frequency": 5200,
+        "gain": 0.4,
+        "seconds": 0.006
+      },
+      "blast": {
+        "cutoff": 3400,
+        "gain": 0.517,
+        "seconds": 0.05
+      },
+      "body": {
+        "from": 200,
+        "to": 90,
+        "gain": 0.045,
+        "seconds": 0.04
+      },
+      "far_layer": {
+        "cutoff": 1300,
+        "gain": 0.22,
+        "seconds": 0.12
+      },
+      "tail_out": {
+        "cutoff": 1500,
+        "gain": 0.08,
+        "seconds": 0.5
+      },
+      "tail_in": {
+        "cutoff": 2400,
+        "gain": 0.24,
+        "seconds": 0.25
+      }
+    },
+    "pistol_9mm": {
+      "referenceJ": 500,
+      "far": "pistol",
+      "crack": {
+        "frequency": 4200,
+        "gain": 0.55,
+        "seconds": 0.008
+      },
+      "blast": {
+        "cutoff": 2500,
+        "gain": 0.92,
+        "seconds": 0.09
+      },
+      "body": {
+        "from": 160,
+        "to": 55,
+        "gain": 0.189,
+        "seconds": 0.1
+      },
+      "far_layer": {
+        "cutoff": 950,
+        "gain": 0.35,
+        "seconds": 0.2
+      },
+      "tail_out": {
+        "cutoff": 1150,
+        "gain": 0.2,
+        "seconds": 0.9
+      },
+      "tail_in": {
+        "cutoff": 2200,
+        "gain": 0.45,
+        "seconds": 0.4
+      }
+    },
+    "pistol_45": {
+      "referenceJ": 480,
+      "far": "pistol",
+      "crack": {
+        "frequency": 3400,
+        "gain": 0.42,
+        "seconds": 0.009
+      },
+      "blast": {
+        "cutoff": 1650,
+        "gain": 0.977,
+        "seconds": 0.12
+      },
+      "body": {
+        "from": 120,
+        "to": 42,
+        "gain": 0.279,
+        "seconds": 0.15
+      },
+      "far_layer": {
+        "cutoff": 760,
+        "gain": 0.4,
+        "seconds": 0.25
+      },
+      "tail_out": {
+        "cutoff": 1000,
+        "gain": 0.22,
+        "seconds": 1.0
+      },
+      "tail_in": {
+        "cutoff": 1900,
+        "gain": 0.48,
+        "seconds": 0.45
+      }
+    },
+    "revolver_38_357": {
+      "referenceJ": 800,
+      "far": "pistol",
+      "crack": {
+        "frequency": 4000,
+        "gain": 0.6,
+        "seconds": 0.009
+      },
+      "blast": {
+        "cutoff": 2000,
+        "gain": 1.035,
+        "seconds": 0.13
+      },
+      "body": {
+        "from": 135,
+        "to": 45,
+        "gain": 0.248,
+        "seconds": 0.15
+      },
+      "far_layer": {
+        "cutoff": 820,
+        "gain": 0.42,
+        "seconds": 0.28
+      },
+      "tail_out": {
+        "cutoff": 1100,
+        "gain": 0.28,
+        "seconds": 1.4
+      },
+      "tail_in": {
+        "cutoff": 2000,
+        "gain": 0.54,
+        "seconds": 0.5
+      }
+    },
+    "revolver_44_50ae": {
+      "referenceJ": 1800,
+      "far": "pistol",
+      "crack": {
+        "frequency": 3100,
+        "gain": 0.62,
+        "seconds": 0.012
+      },
+      "blast": {
+        "cutoff": 1350,
+        "gain": 1.15,
+        "seconds": 0.18
+      },
+      "body": {
+        "from": 100,
+        "to": 36,
+        "gain": 0.369,
+        "seconds": 0.21
+      },
+      "far_layer": {
+        "cutoff": 650,
+        "gain": 0.5,
+        "seconds": 0.33
+      },
+      "tail_out": {
+        "cutoff": 900,
+        "gain": 0.34,
+        "seconds": 1.7
+      },
+      "tail_in": {
+        "cutoff": 1700,
+        "gain": 0.6,
+        "seconds": 0.6
+      }
+    },
+    "shotgun_12": {
+      "referenceJ": 2700,
+      "far": "shotgun",
+      "crack": {
+        "frequency": 2600,
+        "gain": 0.36,
+        "seconds": 0.012
+      },
+      "blast": {
+        "cutoff": 900,
+        "gain": 1.15,
+        "seconds": 0.26
+      },
+      "body": {
+        "from": 90,
+        "to": 32,
+        "gain": 0.405,
+        "seconds": 0.3
+      },
+      "far_layer": {
+        "cutoff": 540,
+        "gain": 0.55,
+        "seconds": 0.42
+      },
+      "tail_out": {
+        "cutoff": 800,
+        "gain": 0.38,
+        "seconds": 1.9
+      },
+      "tail_in": {
+        "cutoff": 1500,
+        "gain": 0.63,
+        "seconds": 0.7
+      }
+    },
+    "rifle_5_56": {
+      "referenceJ": 1750,
+      "far": "rifle",
+      "crack": {
+        "frequency": 5400,
+        "gain": 0.78,
+        "seconds": 0.007
+      },
+      "blast": {
+        "cutoff": 2700,
+        "gain": 0.977,
+        "seconds": 0.11
+      },
+      "body": {
+        "from": 145,
+        "to": 50,
+        "gain": 0.216,
+        "seconds": 0.12
+      },
+      "far_layer": {
+        "cutoff": 900,
+        "gain": 0.5,
+        "seconds": 0.36
+      },
+      "tail_out": {
+        "cutoff": 1300,
+        "gain": 0.4,
+        "seconds": 2.1
+      },
+      "tail_in": {
+        "cutoff": 2300,
+        "gain": 0.57,
+        "seconds": 0.55
+      }
+    },
+    "rifle_7_62x39": {
+      "referenceJ": 2100,
+      "far": "rifle",
+      "crack": {
+        "frequency": 4300,
+        "gain": 0.72,
+        "seconds": 0.01
+      },
+      "blast": {
+        "cutoff": 1850,
+        "gain": 1.092,
+        "seconds": 0.15
+      },
+      "body": {
+        "from": 115,
+        "to": 40,
+        "gain": 0.297,
+        "seconds": 0.17
+      },
+      "far_layer": {
+        "cutoff": 780,
+        "gain": 0.52,
+        "seconds": 0.38
+      },
+      "tail_out": {
+        "cutoff": 1100,
+        "gain": 0.42,
+        "seconds": 2.2
+      },
+      "tail_in": {
+        "cutoff": 2000,
+        "gain": 0.6,
+        "seconds": 0.6
+      }
+    },
+    "rifle_308_3006": {
+      "referenceJ": 3500,
+      "far": "rifle",
+      "crack": {
+        "frequency": 4500,
+        "gain": 0.8,
+        "seconds": 0.01
+      },
+      "blast": {
+        "cutoff": 1500,
+        "gain": 1.15,
+        "seconds": 0.19
+      },
+      "body": {
+        "from": 100,
+        "to": 36,
+        "gain": 0.36,
+        "seconds": 0.21
+      },
+      "far_layer": {
+        "cutoff": 650,
+        "gain": 0.6,
+        "seconds": 0.46
+      },
+      "tail_out": {
+        "cutoff": 950,
+        "gain": 0.5,
+        "seconds": 2.7
+      },
+      "tail_in": {
+        "cutoff": 1800,
+        "gain": 0.675,
+        "seconds": 0.7
+      }
+    },
+    "sniper_338_300wm": {
+      "referenceJ": 6600,
+      "far": "heavy",
+      "crack": {
+        "frequency": 4200,
+        "gain": 0.86,
+        "seconds": 0.012
+      },
+      "blast": {
+        "cutoff": 1250,
+        "gain": 1.208,
+        "seconds": 0.23
+      },
+      "body": {
+        "from": 85,
+        "to": 32,
+        "gain": 0.414,
+        "seconds": 0.26
+      },
+      "far_layer": {
+        "cutoff": 580,
+        "gain": 0.65,
+        "seconds": 0.52
+      },
+      "tail_out": {
+        "cutoff": 850,
+        "gain": 0.56,
+        "seconds": 3.1
+      },
+      "tail_in": {
+        "cutoff": 1650,
+        "gain": 0.72,
+        "seconds": 0.8
+      }
+    },
+    "antimateriel_50bmg": {
+      "referenceJ": 18000,
+      "far": "heavy",
+      "crack": {
+        "frequency": 3500,
+        "gain": 0.9,
+        "seconds": 0.015
+      },
+      "blast": {
+        "cutoff": 900,
+        "gain": 1.265,
+        "seconds": 0.3
+      },
+      "body": {
+        "from": 62,
+        "to": 25,
+        "gain": 0.495,
+        "seconds": 0.36
+      },
+      "far_layer": {
+        "cutoff": 450,
+        "gain": 0.7,
+        "seconds": 0.62
+      },
+      "tail_out": {
+        "cutoff": 700,
+        "gain": 0.6,
+        "seconds": 3.6
+      },
+      "tail_in": {
+        "cutoff": 1400,
+        "gain": 0.75,
+        "seconds": 0.9
+      }
+    }
+  },
+  "calibers": {
+    "22lr": "pistol_22lr",
+    "380acp": "pistol_9mm",
+    "9x18": "pistol_9mm",
+    "9x19": "pistol_9mm",
+    "32acp": "pistol_9mm",
+    "5_7x28": "pistol_9mm",
+    "4_6x30": "pistol_9mm",
+    "40sw": "pistol_45",
+    "45acp": "pistol_45",
+    "38spl": "revolver_38_357",
+    "357mag": "revolver_38_357",
+    "44mag": "revolver_44_50ae",
+    "50ae": "revolver_44_50ae",
+    "12ga_00buck": "shotgun_12",
+    "12ga_slug": "shotgun_12",
+    "12ga_birdshot": "shotgun_12",
+    "20ga_buck": "shotgun_12",
+    "5_56x45": "rifle_5_56",
+    "5_45x39": "rifle_5_56",
+    "7_62x39": "rifle_7_62x39",
+    "30_30": "rifle_308_3006",
+    "7_62x51": "rifle_308_3006",
+    "7_62x54r": "rifle_308_3006",
+    "30_06": "rifle_308_3006",
+    "45_70_bp": "rifle_308_3006",
+    "300wm": "sniper_338_300wm",
+    "338lapua": "sniper_338_300wm",
+    "408cheytac": "antimateriel_50bmg",
+    "50bmg": "antimateriel_50bmg"
+  },
+  "suppressor": {
+    "$comment": "A suppressor takes 20-30 dB off the muzzle blast and most of the low body; a supersonic bullet still cracks (only quieter, it is the bullet, not the muzzle), and the action becomes the loudest thing (the 'pfft' plus the slide or bolt).",
+    "blastGain": 0.1,
+    "blastCutoff": 0.45,
+    "bodyGain": 0.22,
+    "tailGain": 0.14,
+    "farGain": 0.08,
+    "supersonicCrack": 0.55,
+    "subsonicCrack": 0.05,
+    "mechGain": 2.2
+  },
+  "shells": {
+    "$comment": "A slug is one heavy projectile: a drier, shorter blast than buckshot; birdshot is the lightest load.",
+    "slug": {
+      "blastSeconds": 0.75,
+      "crackGain": 1.3
+    },
+    "birdshot": {
+      "blastGain": 0.8,
+      "bodyGain": 0.75
+    }
+  },
+  "mech": {
+    "$comment": "The action cycling right after the shot (slide, bolt carrier): heard close, under the blast, louder when suppressed.",
+    "pistol": {
+      "at": 0.028,
+      "frequency": 2600,
+      "gain": 0.08
+    },
+    "revolver": {
+      "at": 0.0,
+      "frequency": 1900,
+      "gain": 0.0
+    },
+    "smg": {
+      "at": 0.022,
+      "frequency": 2300,
+      "gain": 0.09
+    },
+    "rifle": {
+      "at": 0.03,
+      "frequency": 2000,
+      "gain": 0.09
+    },
+    "dmr": {
+      "at": 0.035,
+      "frequency": 1800,
+      "gain": 0.1
+    },
+    "machine_gun": {
+      "at": 0.03,
+      "frequency": 1700,
+      "gain": 0.11
+    },
+    "shotgun": {
+      "at": 0.0,
+      "frequency": 1500,
+      "gain": 0.0
+    },
+    "sniper": {
+      "at": 0.0,
+      "frequency": 1600,
+      "gain": 0.0
+    },
+    "hunting": {
+      "at": 0.0,
+      "frequency": 1700,
+      "gain": 0.0
+    },
+    "carbine": {
+      "at": 0.026,
+      "frequency": 2400,
+      "gain": 0.07
+    }
+  },
+  "space": {
+    "$comment": "Echoes of the open field (a wall of trees or houses 60 m and 140 m away) and the early reflections of a room.",
+    "outdoorEchoes": [
+      [
+        0.35,
+        0.32
+      ],
+      [
+        0.82,
+        0.16
+      ]
+    ],
+    "indoorReflections": [
+      [
+        0.009,
+        0.7
+      ],
+      [
+        0.019,
+        0.5
+      ],
+      [
+        0.033,
+        0.32
+      ]
+    ],
+    "indoorWet": 1.0
+  }
+}

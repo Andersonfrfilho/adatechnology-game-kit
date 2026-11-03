@@ -140,6 +140,62 @@ export const sceneToneRecipe = (wave: 'sine' | 'square'): SoundRecipe => ({
   sources: [SOURCE_SCENE],
 })
 
+export const GUNSHOT_IDS = {
+  lowpass: 'gunshot_noise_lowpass',
+  highpass: 'gunshot_noise_highpass',
+  bandpass: 'gunshot_noise_bandpass',
+  lowpass_wet: 'gunshot_noise_lowpass_wet',
+  tone: 'gunshot_tone',
+} as const
+const SOURCE_GUNSHOT = 'sdk: the layered gunshot (audio/gunshot.ts): a 1 ms attack so the peak lands on the shot (C1), panned from the shooter, the room tail sent to the reverb'
+const GUNSHOT_ATTACK = 0.001
+
+/** A gunshot layer of noise: params `frequency`, `q`, `gain` and `seconds`; the level and distance are already in `gain`, so there is no falloff here. */
+export const gunshotNoiseRecipe = (type: 'lowpass' | 'highpass' | 'bandpass', wet: boolean): SoundRecipe => ({
+  id: wet ? GUNSHOT_IDS.lowpass_wet : GUNSHOT_IDS[type],
+  bus: 'weapons',
+  order: 'layered',
+  duration: { param: 'seconds', add: GUNSHOT_ATTACK },
+  pan: true,
+  layers: [
+    {
+      gain: { param: 'gain' },
+      ...(wet ? { wet: 1 } : {}),
+      source: { kind: 'noise', offset: 'random', offsetScale: 1.2, loop: true },
+      filters: { mode: 'serial', bank: [{ type, frequency: { set: { param: 'frequency' } }, q: { param: 'q' } }] },
+      envelope: [
+        [0, 0.0001, 'set', 'fixed'],
+        [GUNSHOT_ATTACK, 1, 'exp'],
+        ['1d', 0.0001, 'exp', 'fixed'],
+      ],
+    },
+  ],
+  falloff: { model: 'none' },
+  sources: [SOURCE_GUNSHOT],
+})
+
+/** A gunshot tone: params `frequency`, `to`, `gain` and `seconds` (the body sweeping down). */
+export const gunshotToneRecipe = (): SoundRecipe => ({
+  id: GUNSHOT_IDS.tone,
+  bus: 'weapons',
+  order: 'layered',
+  duration: { param: 'seconds', add: GUNSHOT_ATTACK },
+  pan: true,
+  layers: [
+    {
+      gain: { param: 'gain' },
+      source: { kind: 'osc', wave: 'sine', frequency: { from: { param: 'frequency' }, to: { param: 'to' }, curve: 'exp', over: 'duration' } },
+      envelope: [
+        [0, 0.0001, 'set', 'fixed'],
+        [GUNSHOT_ATTACK, 1, 'exp'],
+        ['1d', 0.0001, 'exp', 'fixed'],
+      ],
+    },
+  ],
+  falloff: { model: 'none' },
+  sources: [SOURCE_GUNSHOT],
+})
+
 /** The recipes of an adapter: the three primitives, with the class burst on the given distance curve. */
 export function weaponRecipes(curve: DistanceCurve): SoundRecipe[] {
   return [
@@ -152,5 +208,10 @@ export function weaponRecipes(curve: DistanceCurve): SoundRecipe[] {
     ...(['lowpass', 'highpass', 'bandpass'] as const).flatMap((type) => [sceneNoiseRecipe(type, false), sceneNoiseRecipe(type, true)]),
     sceneToneRecipe('sine'),
     sceneToneRecipe('square'),
+    gunshotNoiseRecipe('lowpass', false),
+    gunshotNoiseRecipe('highpass', false),
+    gunshotNoiseRecipe('bandpass', false),
+    gunshotNoiseRecipe('lowpass', true),
+    gunshotToneRecipe(),
   ]
 }

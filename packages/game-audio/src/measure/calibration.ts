@@ -73,6 +73,9 @@ const TAKES: Readonly<Record<string, Shot>> = {
   'heavy_2.wav': { seconds: 0.6, thump: 105, noise: 1.2, decay: 0.12, brightness: 0.9, gain: 0.95, seed: 10 },
   'tail_in.wav': { seconds: 0.5, thump: 0, noise: 1, decay: 0.08, brightness: 0.4, gain: 0.25, seed: 11, attack: 0.01 },
   'tail_out.wav': { seconds: 2, thump: 0, noise: 1, decay: 0.45, brightness: 0.25, gain: 0.2, seed: 12, attack: 0.02 },
+  'loop_1.wav': { seconds: 0.6, thump: 0, noise: 1, decay: 100, brightness: 0.5, gain: 0.5, seed: 13, attack: 0.01 },
+  'loop_2.wav': { seconds: 0.6, thump: 0, noise: 1, decay: 100, brightness: 0.45, gain: 0.5, seed: 14, attack: 0.01 },
+  'loop_3.wav': { seconds: 0.6, thump: 0, noise: 1, decay: 100, brightness: 0.55, gain: 0.5, seed: 15, attack: 0.01 },
 }
 
 const PREFIX = 'calibration/'
@@ -95,6 +98,20 @@ export const CALIBRATION_SOUND: SampleSound = {
   fallback: 'sfx_pistol',
   sources: ['sdk: calibration takes synthesized by the harness (measure/calibration.ts), no file, no licence'],
 }
+
+export const CALIBRATION_LOOP_ID = 'calibration_loop'
+
+/** A steady hiss in three 0.6 s takes, crossed in 0.15 s: the loop the harness checks for seams (no dip, no gap where two takes meet). */
+export const CALIBRATION_LOOP_SOUND: SampleSound = {
+  id: CALIBRATION_LOOP_ID,
+  bus: 'ambience',
+  close: ['loop_1.wav', 'loop_2.wav', 'loop_3.wav'].map((name) => ({ url: url(name) })),
+  loop: { crossfade: 0.15 },
+  sources: ['sdk: calibration takes synthesized by the harness (measure/calibration.ts), no file, no licence'],
+}
+
+/** Whether a url is one of the calibration takes. */
+export const isCalibrationUrl = (url: string): boolean => url.startsWith(PREFIX)
 
 /** Bytes of the calibration takes (made on demand, the same for the same name). Falls through to `next` for any other url. */
 export function calibrationLoader(next?: SampleLoader): SampleLoader {

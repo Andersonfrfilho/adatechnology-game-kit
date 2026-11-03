@@ -1,3 +1,6 @@
+import { SWING_LEAD_SECONDS, footstepSoundId, hitSoundId, landSoundId, surfaceOfMaterial, swingSoundId } from '@adatechnology/game-contracts'
+import type { BlowId, BodyFoleyId, SurfaceId } from '@adatechnology/game-contracts'
+
 import defaults from './data/defaults.json'
 import { createRng } from './rng'
 import type {
@@ -175,7 +178,14 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     const set = listeners.get(event)
     if (set) for (const listener of set) (listener as (event: PlayerEventMap[K]) => void)(payload)
   }
-  const sound = (id: PlayerSoundId, volume: number): void => emit('sound', { sound: id, volume, position: [P.x, P.y, P.z] })
+  const sound = (id: PlayerSoundId, volume: number, ids: readonly BodyFoleyId[], surface?: SurfaceId, at?: readonly number[]): void =>
+    emit('sound', { sound: id, ids, volume, position: [P.x, P.y, P.z], ...(surface ? { surface } : {}), ...(at ? { at } : {}) })
+  // what is under the feet: the host's word this frame, else the world's, else concrete; water wins over everything
+  let surfaceHint: string | undefined
+  const surfaceHere = (): SurfaceId => (inWater(P.x, P.z) ? 'water' : surfaceOfMaterial(surfaceHint ?? world.surfaceAt?.(P.x, P.z)))
+  // set by the first `footfall` the host sends: from then on its feet, not the stride timer, decide the footsteps
+  let hostFeet = false
+  const blowOf = (item: MeleeItem): BlowId => item.blow ?? (item === fist ? 'punch' : (item.crit ?? 0) > 0 ? 'blade' : 'blunt')
   const noise = (x: number, z: number, radius: number): void => emit('noise', { x, z, radius })
   const message = (id: PlayerMessageId | DeathCause, seconds: number): void => emit('message', { id, seconds })
   const inWater = (x: number, z: number): boolean => world.inWater?.(x, z) ?? false
@@ -209,7 +219,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     if (!P.alive) return
     P.health -= amount
     P.hurtFlash = numbers.hurtFlash
-    sound('flesh', numbers.hurtVolume)
+    sound('flesh', numbers.hurtVolume, ['player_hurt'])
     const kind = drawWound(wounds, random)
     P.wounds.push(kind)
     if (wounds[kind]?.bleeds) P.bleeding = 1
@@ -222,7 +232,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     P.hurtFlash = numbers.biteFlash
     P.bleeding = 1
     P.wounds.push('bite')
-    sound('flesh', numbers.biteVolume)
+    sound('flesh', numbers.biteVolume, ['bite', 'player_hurt'])
     emit('hurt', { amount: numbers.biteDamage, wound: 'bite' })
     infect('bite')
     message('bitten', 5)
@@ -235,7 +245,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     P.grabNoJaw = noJaw
     P.grabDrown = drown
     message(drown ? 'grabbed_drown' : 'grabbed', 3)
-    sound('flesh', numbers.grabVolume)
+    sound('flesh', numbers.grabVolume, ['grab'])
     emit('grabbed', { by, noJaw, drown })
   }
 
@@ -256,7 +266,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
   }
 
   const shove = (yaw: number): void => {
-    sound('step', numbers.shoveVolume)
+    sound('step', numbers.shoveVolume, ['shove_two_hands'])
     const crowd = world.crowd
     const targets: number[] = []
     for (const [d, i] of front(numbers.shoveRange, numbers.shoveCone, yaw)) {
@@ -268,13 +278,21 @@ export function createPlayer(options: PlayerOptions = {}): Player {
 
   const melee = (item: MeleeItem, yaw: number): void => {
     const t = front(numbers.meleeRangeBase + (item.reach ?? 0), numbers.meleeCone, yaw)[0]
-    sound('flesh', numbers.meleeVolume)
-    noise(P.x, P.z, item.noise || 1)
-    if (!t) return
+    const blow = blowOf(item)
+    const swing = swingSoundId(blow)
+    if (!t) {
+      sound('flesh', numbers.meleeVolume, swing ? [swing] : [])
+      noise(P.x, P.z, item.noise || 1)
+      return
+    }
     const crowd = world.crowd!
     const i = t[1]
     // a blow to the head is x3 in melee; on the ground or crawling it is an execution
     const region = crowd.down(i) ? 0 : random() < numbers.meleeHeadChance ? 0 : random() < numbers.meleeArmChance ? 1 : 2 + Math.floor(random() * 2)
+    const hit = hitSoundId(blow, region === 0 ? 'head' : 'body')
+    if (swing) sound('flesh', numbers.meleeVolume, [swing, hit], undefined, [0, SWING_LEAD_SECONDS[blow]])
+    else sound('flesh', numbers.meleeVolume, [hit])
+    noise(P.x, P.z, item.noise || 1)
     const damage = item.damage * (1 + (attributes.strength - numbers.meleeStrengthBase) * numbers.meleeStrengthPerPoint)
     const cut = Math.min(1, (item.crit || 0) / numbers.meleeCritToCut)
     crowd.damage(i, { region, amount: damage, distance: t[0], cut })
@@ -283,6 +301,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
 
   const update = (dt: number, input: PlayerInput = {}, frameWorld?: PlayerWorld): void => {
     world = frameWorld ?? defaultWorld
+    surfaceHint = input.surface
     if (!P.alive) {
       P.deathTime += dt
       if (P.infected && infection && !P.turned && P.deathTime >= infection.reanimateSeconds) {
@@ -311,7 +330,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
       const every = 1 / infection.feverNoiseEvery
       if (P.infectionTime > infection.feverSeconds && Math.floor(P.infectionTime * every) !== Math.floor((P.infectionTime - dt) * every) && random() < infection.feverNoiseChance) {
         noise(P.x, P.z, infection.feverNoiseRadius)
-        sound('step', infection.feverNoiseVolume)
+        sound('step', infection.feverNoiseVolume, ['cloth_rustle'])
       }
       if (P.infectionTime > infection.deathSeconds) {
         P.health = 0
@@ -347,7 +366,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
       if (wasPressed('push') && P.stamina > numbers.grabPushMinStamina) {
         P.grabPushes++
         P.stamina -= numbers.grabPushCost
-        sound('step', numbers.grabPushVolume)
+        sound('step', numbers.grabPushVolume, ['shove_two_hands'])
       }
       if (wasPressed('knife')) {
         if (random() < numbers.grabKnifeChance) {
@@ -403,7 +422,8 @@ export function createPlayer(options: PlayerOptions = {}): Player {
       if (P.vaultTimer <= 0) {
         P.y = 0
         noise(P.x, P.z, numbers.vaultNoise)
-        sound('step', numbers.vaultLandVolume)
+        const surface = surfaceHere()
+        sound('step', numbers.vaultLandVolume, [landSoundId(surface, 0)], surface)
       }
       return
     }
@@ -420,7 +440,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
               P.vault = [P.x, P.z, ex, ez]
               P.vaultTimer = numbers.vaultSeconds
               P.stamina -= numbers.vaultCost
-              sound('step', numbers.vaultStartVolume)
+              sound('step', numbers.vaultStartVolume, ['jump'])
               emit('vault', { from: [P.x, P.z], to: [ex, ez] })
               return
             }
@@ -498,11 +518,15 @@ export function createPlayer(options: PlayerOptions = {}): Player {
       P.yaw += input.aim || input.firing ? dy : dy * Math.min(1, dt * numbers.turnFollow)
     }
     // footsteps make noise: walk 3 m, run 8 m, crouched 1 m (x the sheet's footstep noise, x2 in water)
+    // the host's feet (`input.footfall`) once it sends them, else the stride timer
+    if (input.footfall) hostFeet = true
     P.stepTimer -= dt * spd
-    if (P.stepTimer <= 0 && spd > numbers.stepMinSpeed) {
+    const stepNow = hostFeet ? input.footfall === true : P.stepTimer <= 0 && spd > numbers.stepMinSpeed
+    if (stepNow) {
       P.stepTimer = numbers.stepEvery
       noise(P.x, P.z, (P.running ? numbers.stepNoiseRun : P.crouch ? numbers.stepNoiseCrouch : numbers.stepNoiseWalk) * derived.footstepNoise * (wet ? numbers.stepNoiseWater : 1))
-      sound('step', P.running ? numbers.stepVolumeRun : numbers.stepVolumeWalk)
+      const surface = surfaceHere()
+      sound('step', P.running ? numbers.stepVolumeRun : numbers.stepVolumeWalk, [footstepSoundId(surface, P.running ? 'run' : 'walk')], surface)
       emit('step', { x: P.x, z: P.z, yaw: P.yaw })
     }
     // shove and melee

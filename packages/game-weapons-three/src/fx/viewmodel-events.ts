@@ -30,6 +30,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     const casing = buildCasing(kit, session.cartridge.dims, session.cartridge.shape)
     casing.group.position.copy(positionOf(mark))
     casing.group.rotation.set(0, random() * 0.6 - 0.3, tilt)
+    if (session.cartridge.caseType) casing.group.userData['caseType'] = session.cartridge.caseType
     particles.spawn(casing.group, velocity, { kind: 'casing', life: 25, radius: casing.radius, bounce: 0.35, spin, onRest: restFlat, ownsGeometry: true })
   }
 
