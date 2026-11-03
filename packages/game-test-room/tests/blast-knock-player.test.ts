@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { HostEvent } from '@adatechnology/game-contracts'
+import * as THREE from 'three'
 import { makeRoom } from './helpers'
 import type { TestRoom } from '../src'
 
@@ -48,6 +49,24 @@ describe('a blast shoves the player', () => {
     expect(after).toBeGreaterThan(before)
     run(room, 10)
     expect(room.playerKnock).toBeNull()
+  })
+
+  it('falls on its back facing the blast and face down with the blast behind it', () => {
+    const fell = (target: number[]) => {
+      const room = makeRoom()
+      // a body to read what the room tells it while down
+      let forward: boolean | undefined
+      room.setAvatar({ root: new THREE.Group(), update: (_dt, state) => void (state.down && (forward = state.fallForward)) })
+      // the grenade lies near z = -5: looking at -z the body faces it, at +z turns its back
+      grenade(room, () => room.look([0, 1.7, -3.2], target as [number, number, number]))
+      return { state: { fallForward: forward }, room }
+    }
+    const facing = fell([0, 1.7, -8])
+    const turned = fell([0, 1.7, 2])
+    expect(facing.room.log.entries().some((e) => e.type === 'player_knocked_down')).toBe(true)
+    expect(turned.room.log.entries().some((e) => e.type === 'player_knocked_down')).toBe(true)
+    expect(facing.state?.fallForward).toBe(false)
+    expect(turned.state?.fallForward).toBe(true)
   })
 
   it('a brick wall between the blast and the player takes most of the push', () => {
