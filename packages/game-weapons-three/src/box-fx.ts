@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
@@ -11,9 +12,13 @@ import { IN_HAND_NODE_NAME } from './laser-raycast'
 import { createEyeFrame, placeOnBody } from './fx/body-hold'
 import { holdOfProp, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
-import { BODY_ACTIONS, buildWeaponModel } from './props'
+import type { ItemModels } from './item-models'
+import { BODY_ACTIONS } from './props'
+import { buildWeaponModel } from './weapon-item-model'
 
 export interface WeaponFxOptions {
+  /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; default `itemModels` there (deprecated: pass it). */
+  items?: ItemModels
   THREE: typeof THREE_NS
   scene: THREE_NS.Scene
   camera: THREE_NS.Camera
@@ -46,6 +51,12 @@ export interface WeaponFxOptions {
   bodyHold?: () => HandPose | null
   /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
+  /** The most casings and magazines alive at once (`host.particleLimit`), read at each spawn; without it the viewmodel keeps a cap of its own. */
+  particleLimit?: () => number | undefined
+  /** The host's light budget (`host.lights`): the rocket in flight and the weapon light ask it for a light; without it they create lights of their own (deprecated, removed in the next major). */
+  lights?: LightBudget
+  /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them; without them each makes its own (deprecated, removed in the next major). */
+  pools?: RenderPools
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */
@@ -124,7 +135,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     inHand = null
     def = arsenal.weapons.get(weapon) ?? null
     if (!def || BODY_ACTIONS.has(def.id)) return
-    model = buildWeaponModel(THREE, def)
+    model = buildWeaponModel(THREE, def, options.items)
     const length = new THREE.Box3().setFromObject(model).getSize(v).x
     rear = new THREE.Box3().setFromObject(model).min.x
     lengthMetres = length

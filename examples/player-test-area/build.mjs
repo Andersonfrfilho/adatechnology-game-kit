@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-player', 'game-contracts', 'game-characters', 'game-characters-people', 'game-characters-three']
+const names = ['game-kit-defaults', 'game-player', 'game-contracts', 'game-characters', 'game-characters-people', 'game-characters-three']
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
@@ -36,7 +36,11 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
-  alias: Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+  alias: {
+    ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    '@adatechnology/game-characters-three/testing': join(pkg('game-characters-three'), 'dist/testing.js'),
+    '@adatechnology/game-player/testing': join(pkg('game-player'), 'dist/testing.js'),
+  },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
 const bundle = result.outputFiles[0].text

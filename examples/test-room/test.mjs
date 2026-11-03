@@ -29,6 +29,8 @@ mkdirSync(shotsDir, { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
 const consoleErrors = []
+// an adapter that made its own effects world or audio engine says so with `[game-kit]`: the room lends every one, so none may appear
+const fallbackWarnings = []
 // CI runs software GL, several times slower and nothing there reads the pictures: screenshots get a long timeout, and the first-person steps, the contact sheets and the close-ups keep every assertion
 // (both languages, the 100 weapons held, each number) but take no picture; the pictures in shots/ come from a run on a developer's machine
 const CI = Boolean(process.env.CI)
@@ -47,6 +49,7 @@ const page = await context.newPage()
 const isThumbnailError = (text) => /weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(text)
 page.on('console', (m) => {
   if (m.type() === 'error' && !isThumbnailError(m.text())) consoleErrors.push(m.text())
+  if (m.type() === 'warning' && m.text().startsWith('[game-kit]')) fallbackWarnings.push(m.text())
 })
 page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
 
@@ -76,7 +79,7 @@ if (runs('scenarios')) {
 
 if (runs('views')) {
   await page.goto(`${url}?ui=0&table=0`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
   // the default page carries the SDK's real items (the teams' content) and none of the old procedural demo ones
   const DEMO_IDS = ['chair', 'sofa_demo', 'shelf', 'old_tv', 'steel_sheet', 'glass_pane', 'concrete_block', 'brick_column', 'building_frame', 'car_door', 'small_tree', 'potted_plant', 'coffee_cup', 'glass_bottle', 'wooden_crate', 'steel_drum', 'plastic_bucket', 'jerrycan', 'rental_car']
   const content = await page.evaluate(() => {
@@ -105,7 +108,7 @@ if (runs('views')) {
   // screenshots: a fresh room per scene, driven through window.__testRoom
   async function shot(name, setup) {
     await page.goto(`${url}?ui=1`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     await page.evaluate(setup)
     await page.waitForTimeout(400)
     await page.screenshot({ path: join(shotsDir, `${name}.png`), ...SHOT })
@@ -135,7 +138,7 @@ if (runs('views')) {
 
   // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
   await page.goto(`${url}?ui=1`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
+  await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
   const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
   await page.keyboard.press('KeyV')
   await page.evaluate(() => {
@@ -210,7 +213,7 @@ if (runs('hands')) {
   let fpOk = true
   for (const lang of ['pt-BR', 'en']) {
     await page.goto(`${url}?ui=0&lang=${lang}`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     await page.evaluate(() => {
       const r = window.__testRoom
       r.clear()
@@ -447,7 +450,7 @@ if (runs('hands')) {
   // every weapon with a model in the hands, in first person: contact sheets (five by four, with the id of the weapon) of the view of the hands and the weapon
   {
     await page.goto(`${url}?ui=0&lang=en`, { timeout: 180000 })
-    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+    await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
     const ids = await page.evaluate(() => {
       const r = window.__testRoom
       r.clear()
@@ -526,6 +529,10 @@ if (external.length) {
 }
 if (consoleErrors.length) {
   console.log('console errors:', consoleErrors)
+  bad = true
+}
+if (fallbackWarnings.length) {
+  console.log('fallback warnings:', fallbackWarnings)
   bad = true
 }
 console.log(bad ? 'FAILED' : 'OK')

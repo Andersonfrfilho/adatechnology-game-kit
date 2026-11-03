@@ -108,6 +108,7 @@ interface Settings {
   readonly alias?: Readonly<Record<string, string>>
   readonly seed: number | string
   readonly generators?: GenerateOptions['generators']
+  readonly isolatedGenerators?: boolean
   readonly autoMin?: number
 }
 
@@ -252,7 +253,7 @@ interface LevelResult {
 
 /** Expands a custom node into the node its generator returns (wrapped so that the custom node's own fields still apply). */
 function expandCustom(node: Extract<ShapeNode, { kind: 'custom' }>, settings: Settings, detail: number, path: string): ShapeNode {
-  const generator = settings.generators?.[node.generator] ?? getGenerator(node.generator)
+  const generator = settings.generators?.[node.generator] ?? (settings.isolatedGenerators ? undefined : getGenerator(node.generator))
   if (!generator) throw new Error(`game-shapes: no generator "${node.generator}" (register it with registerGenerator, in the worker too) at ${path}`)
   const generated = generator(node.params, { random: streamFor(settings.seed, node.generator, path), seed: settings.seed, detail, path })
   const { kind: _kind, generator: _generator, params: _params, ...common } = node
@@ -483,6 +484,7 @@ export function generate(schema: ShapeSchema, options: GenerateOptions = {}): Sh
     ...(options.materialAlias ? { alias: options.materialAlias } : {}),
     seed: options.seed ?? 0,
     ...(options.generators ? { generators: options.generators } : {}),
+    ...(options.isolatedGenerators ? { isolatedGenerators: true } : {}),
     ...(options.instancing ? { autoMin: Math.max(2, options.instancing.minCount) } : {}),
   }
   const specs: LevelSpec[] = [{ distance: 0, detail: 1, index: 0 }, ...(schema.lod ?? []).map((rule, index) => ({ ...rule, index: index + 1 }))]

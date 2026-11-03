@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const packages = ['game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
+const packages = ['game-kit-defaults', 'game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
 for (const p of [...packages, 'game-contracts']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
@@ -37,6 +37,7 @@ const result = await esbuild.build({
   minify: true,
   legalComments: 'none',
   alias: {
+    '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
     ...Object.fromEntries([...packages, 'game-contracts'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the engine's three.js adapter is a second entry of the same package
     '@adatechnology/game-vegetation/three': join(pkg('game-vegetation'), 'dist/three.js'),

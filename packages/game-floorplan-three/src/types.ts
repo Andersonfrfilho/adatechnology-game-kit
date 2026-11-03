@@ -1,3 +1,5 @@
+import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 
 /** A part of the house a hit can damage (door, window, glass, tank...): the game reads `hp`. */
@@ -34,9 +36,11 @@ export interface HouseRendererOptions {
   destruction?: any
   /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
   destructionRenderer?: any
+  /** The lights of effects (a blast, a fire, a flare) light the room where their point is, and the rooms either side of an open door or window next to it (see `effectLights` and `lighting`). Default true; false keeps them off every house surface. */
+  effectLightsIndoors?: boolean
   /** Milliseconds per frame the house may spend repainting damaged walls (chipped plaster, holes); events of one frame are painted together. Default `Infinity` (all of them at the frame's flush); a game loop sets a few ms. */
   breachPaintBudgetMs?: number
-  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, camera, onEvent, onSeat }`. */
+  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, effectSink, camera, onEvent, onSeat }`. */
   interactives?: any
   /** The vegetation packages, injected: `{ GameVegetation, GameVegetationSpecies }`. */
   vegetation?: any
@@ -122,6 +126,23 @@ export interface House {
   [extra: string]: any
 }
 
+/** What `HouseRenderer.lighting` reads. */
+export interface LightingOptions {
+  scene?: any
+  /** Room lights, 1 to 12 (6). */
+  n?: number
+  /** How many of them cast shadows (2). */
+  shadows?: number
+  shadowSize?: number
+  /** Outside lamps that may take a light (2). */
+  external?: number
+  /**
+   * The host's LightBudget: the house leases `n` point slots (`shadows` with shadow) for good instead of creating lights, and the room masks are written at the slot of each light (what the shader
+   * indexes by). Without it the lights are created here, which changes every lit material's program key (deprecated, removed in the next major).
+   */
+  budget?: LightBudget
+}
+
 /** The renderer `create(THREE, options)` returns. */
 export interface HouseRenderer {
   version: string
@@ -132,8 +153,15 @@ export interface HouseRenderer {
   applyPart(group: any, t: number): void
   materials: Record<string, any>
   roomLightMask(material: any): void
-  lighting(options?: any): any
+  lighting(options?: LightingOptions): any
+  /**
+   * Lets the lights of effects (a blast, a fire, a flare) that hold slots of `budget` light the room their point is in, and the rooms either side of an open door or window next to it.
+   * Call `update(houses)` every frame after the budget's `present`. Works without `lighting()`. Off for every house with `effectLightsIndoors: false`.
+   */
+  effectLights?(options: { budget: any }): { update(houses: unknown): void }
   setNight(night: boolean): void
+  /** The painting of the damaged walls of every house as a `DeferredQueue` for a shared frame budget; `budget.register` attaches it and `flush()` stops painting from `onFrame`. */
+  deferredQueue?(): DeferredQueue
   cars: { model(kind: string, seed?: number): any; group(...args: any[]): any; info(kind: string, seed?: number): any }
   dispose(): void
 }

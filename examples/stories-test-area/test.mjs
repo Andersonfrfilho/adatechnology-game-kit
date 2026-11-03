@@ -41,7 +41,7 @@ if (!playwright || !existsSync(page)) {
     await tab.route(/^https?:/, (route) => route.abort())
     tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`)
+    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__storiesReport, null, { timeout: 90000 })
     const state = await tab.evaluate(async (content) => {
       const room = window.__testRoom

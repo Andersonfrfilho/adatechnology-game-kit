@@ -1,17 +1,22 @@
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
-import { footprintBlocker } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
-import { buildVehicleItem, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
-import type { VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
+import { buildVehicleItem, crackedGlassMaterial, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
+import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
+import { isRenderPools } from '@adatechnology/game-render-three'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
+
 import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
+import { createVehicleLod } from '../vehicle-lod'
+import type { VehicleLod } from '../vehicle-lod'
+import { createCabinSmoke } from '../cabin-smoke'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
 import { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
-import type { EffectsLike, VehiclesContext, VehiclesTestOptions } from './types'
+import type { EffectsLike, VehiclesContext, VehiclesTestFleet, VehiclesTestOptions } from './types'
 
 export const VEHICLES_AREA_ID = 'vehicles_area'
 
@@ -24,6 +29,8 @@ const itemId = (key: string): string => ITEM_OF[key] ?? key
 type Entry = { readonly key: string; readonly id: string; readonly scenario?: string }
 
 const LANE = { z: 11, from: -12, wall: 13 }
+/** Radians a door, hood or lid may be off its rest and still count as shut. */
+const LEAF_REST_RADIANS = 0.02
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
@@ -38,6 +45,12 @@ type Placed = {
   readonly item: VehicleItem
   readonly index: number
   paint?: any
+  /** Near in full, far fused (`createVehicleLod`); none in the light quality, which is fused already. */
+  lod?: VehicleLod
+  /** Hit: its damage only exists on the full model. */
+  touched?: boolean
+  /** Leaves away from their rest (an open door): drawn in full while any is. */
+  posedParts?: Set<string>
   size?: { length: number; width: number; height: number }
   /** What the walking player bumps into, in the root's own space: the box of the parts low enough to hit a body (a rotor overhead is walked under). */
   footprint?: Footprint
@@ -51,6 +64,7 @@ type Placed = {
  * exhaust) are requested by id through `host.effects` when the host has it; this module draws none.
  */
 export function createVehiclesTestModule(options: VehiclesTestOptions = {}): TestableModule<VehiclesContext> & { readonly placed: ReadonlyMap<string, unknown> } {
+  const fleet: VehiclesTestFleet = options.fleet ?? { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf }
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale] ?? (TEXT['pt-BR'] as (typeof TEXT)[string])
   const keys = options.vehicles ?? DEFAULT_TEST_VEHICLES
@@ -61,6 +75,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt' }
   const kits = new WeakMap<object, VehicleKit>()
   const placed = new Map<string, Placed>()
+  // the cabins hold the room's smoke out: through a shut car it does not pass, it gets in only by an open door, a broken window or a bullet hole
+  const cabins = createCabinSmoke()
   let host: ModuleHost | null = null
   let three: Three = null
   let counter = 0
@@ -79,24 +95,32 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     engineLoop = undefined
   }
 
+  /** The puffs' materials come from the host's pool when it lends one (read at each puff: the host attaches after the first build). */
+  const particleMaterials: ParticleMaterials = {
+    own: <TMaterial>(build: () => TMaterial): TMaterial => (isRenderPools(host?.pools) ? (host.pools.materials.own(build as never) as unknown as TMaterial) : build()),
+    release: (material) => (isRenderPools(host?.pools) ? host.pools.materials.release(material as never) : (material as { dispose?(): void }).dispose?.()),
+  }
+
   const kitFor = (THREE: Three): VehicleKit => {
     three = THREE
     let kit = kits.get(THREE)
     if (!kit) {
       if (options.createKit) kit = options.createKit(THREE)
       else {
-        kit = createVehicleKit({ THREE, locale, ...(options.document ? { document: options.document as never } : {}) })
-        installFleet(kit)
+        kit = createVehicleKit({ THREE, locale, particleMaterials, effects: () => host?.effects, ...(options.document ? { document: options.document as never } : {}) })
+        fleet.installFleet(kit)
       }
       kits.set(THREE, kit)
     }
     return kit
   }
 
-  const paletteFor = (key: string) => (settings.palette === 'civil' ? paintPalettes.civil : settings.palette === 'military' ? paintPalettes.military : paletteOf(key))
+  const paletteFor = (key: string) => (settings.palette === 'civil' ? fleet.paintPalettes.civil : settings.palette === 'military' ? fleet.paintPalettes.military : fleet.paletteOf(key))
   const paintOf = (entry: Placed): void => {
     if (!settings.paint) return
-    const color = colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
+    entry.lod?.dispose()
+    delete entry.lod
+    const color = fleet.colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
     if (!entry.paint) {
       const vehicle = entry.item.vehicle as unknown as { vehicle: any }
       const primary = primaryPaint(entry.item.vehicle)
@@ -131,8 +155,31 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     impl: (root: unknown, id: string) => {
       const r = root as { userData: Record<string, unknown> }
       const kit = r.userData.kit as VehicleKit
-      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key })
+      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
+      // a leaf the room swings (door, hood, lid) is posed through here: away from its rest the vehicle draws in full, or the fused one shows it shut
+      const setPartPose = d.setPartPose?.bind(d)
+      {
+        const rests = new Map((d.describe().parts as Array<{ id: string; rotation?: Vec3 }>).map((part) => [part.id, part.rotation ?? [0, 0, 0]]))
+        d.setPartPose = (partId: string, position: Vec3, rotation?: Vec3) => {
+          const entry = [...placed.values()].find((candidate) => candidate.root === root)
+          const rest = rests.get(partId) ?? [0, 0, 0]
+          const isOpen = (rotation ?? [0, 0, 0]).some((angle, axis) => Math.abs(angle - (rest[axis] ?? 0)) > LEAF_REST_RADIANS)
+          if (entry) {
+            entry.posedParts ??= new Set()
+            if (isOpen) entry.posedParts.add(partId)
+            else entry.posedParts.delete(partId)
+          }
+          return setPartPose?.(partId, position, rotation)
+        }
+      }
+      const hitBody = d.hit.bind(d)
+      d.hit = (h: never) => {
+        const entry = [...placed.values()].find((candidate) => candidate.root === root)
+        if (entry) entry.touched = true
+        return hitBody(h)
+      }
+      cabins.track(id, d, root as { parent: unknown | null })
       r.userData.destructible = d
       return d
     },
@@ -283,7 +330,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     if (!host || !three) return
     clearLane()
     const kit = kitFor(three)
-    const vehicles = createVehiclesThree(three, { kit })
+    const vehicles = createVehiclesThree(three, { kit, fleet })
     const built = vehicles.build('compact_hatch', { quality: 'lite', seed: settings.seed })
     const wall = new three.Mesh(new three.BoxGeometry(0.6, 2, 6), new three.MeshStandardMaterial({ color: 0x777777 }))
     wall.position.set(LANE.wall + 0.3, 1, LANE.z)
@@ -378,6 +425,21 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     }
   }
 
+  // one crease queue for every vehicle of the area; a host with a frame budget runs it, any other leaves each vehicle smoothing in its own update
+  const creaseQueue = createCreaseQueue()
+
+  const updateLod = (entry: Placed): void => {
+    if (!host || settings.quality === 'lite') return
+    entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
+    const at = host.player().position
+    const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
+    // rolling over and blowing up move the body without a part pose: the fused copy would stay upright where the car was
+    const c = entry.item.vehicle as { rollState?: unknown; flipped?: boolean; blast?: unknown; exploded?: boolean } | undefined
+    if (c && (c.rollState || c.flipped || c.blast || c.exploded)) entry.touched = true
+    // a wreck is built damaged: it never draws fused, only in batches (as a posed one)
+    entry.lod.update(distance, entry.touched === true, entry.scenario !== undefined || (entry.posedParts?.size ?? 0) > 0)
+  }
+
   const frame = (dt: number): void => {
     for (const [id, entry] of placed) {
       if (!entry.root.parent) {
@@ -385,9 +447,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         continue
       }
       measure(entry)
+      updateLod(entry)
     }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('damageables') || host.bench.layer('zones') || helpersShown !== '')) refreshLayers()
     lane?.step(dt)
+    cabins.sync(effects())
   }
 
   const count = (): { drawCalls: number; triangles: number } => {
@@ -415,7 +479,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const sizeError = (): number => {
     let worst = 0
     for (const entry of placed.values()) {
-      const want = fleetDims(entry.key)
+      const want = fleet.fleetDims(entry.key)
       const got = entry.size
       if (!want || !got || entry.scenario) continue
       worst = Math.max(worst, Math.abs(got.length - want.length), Math.abs(got.width - want.width), Math.abs(got.height - want.height))
@@ -439,15 +503,15 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const rowOf = (list: readonly Entry[], z: number) => {
         let cursor = 0
         const spots = list.map((entry) => {
-          const width = fleetDims(entry.key)?.width ?? 2
+          const width = fleet.fleetDims(entry.key)?.width ?? 2
           const x = cursor + width / 2
           cursor += width + gap
           return { id: entry.id, x }
         })
         return { spots, z, width: Math.max(0, cursor - gap) }
       }
-      const front = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) <= WIDE), 0)
-      const back = rowOf(entries.filter((e) => (fleetDims(e.key)?.width ?? 2) > WIDE), -16)
+      const front = rowOf(entries.filter((e) => (fleet.fleetDims(e.key)?.width ?? 2) <= WIDE), 0)
+      const back = rowOf(entries.filter((e) => (fleet.fleetDims(e.key)?.width ?? 2) > WIDE), -16)
       const placements = [front, back].flatMap((row) => row.spots.map(({ id, x }) => ({ item: id, position: [x - row.width / 2, 0, row.z] as Vec3, rotationY: 0 })))
       return { placements, view: { eye: [0, 5, Math.max(14, front.width * 0.6)], target: [0, 1, -2] } }
     },
@@ -486,12 +550,16 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       const stopBlocker = lent.addBlocker?.(blocked)
+      const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_CREASE])
+      if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three, new three.DataTexture(new Uint8Array(4), 1, 1)))
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       return () => {
         stopChange?.()
         stopFrame()
         stopBlocker?.()
+        stopCrease?.()
+        cabins.clear(effects())
         clearHelpers()
         clearLane()
         host = null

@@ -10,19 +10,21 @@
 // And the player area (game-player): the room's camera is the player body, with stamina, wounds, the grab and the individual infection (off by default).
 // And the crowd area (game-crowd-three): a horde on the instanced path that hunts that player body, civilians, the herd and a region model. It starts empty here (the bench adds agents).
 // And the stories area (game-stories): no 3D, a world of stories run to the bench's day, with one character sheet on the room's panel.
-import { createAudioTestModule } from '@adatechnology/game-audio'
+import { createAudioTestModule } from '@adatechnology/game-audio/testing'
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
-import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
-import { createWeatherTestModule } from '@adatechnology/game-weather'
-import { createWeatherVisual } from '@adatechnology/game-weather-three'
-import { createVfxTestModule } from '@adatechnology/game-vfx-three'
-import { createTerrainTestModule } from '@adatechnology/game-terrain-three'
-import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three'
-import { createPersonBuilder, personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three'
+import { buildItem, itemModels } from '@adatechnology/game-items-three'
+import { createItemsTestModule } from '@adatechnology/game-items-three/testing'
+import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
+import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
+import { createVfxTestModule } from '@adatechnology/game-vfx-three/testing'
+import { createTerrainTestModule } from '@adatechnology/game-terrain-three/testing'
+import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
+import { createPersonBuilder } from '@adatechnology/game-characters-three'
+import { personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three/testing'
 import { PROFESSIONS } from '@adatechnology/game-characters-people'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
 import { createModule as createCharactersModule } from '../../characters-test-area/src/entry.js'
@@ -123,9 +125,9 @@ function loadSteps(room, options, lang) {
   const custom = (key, load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
-  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false }))
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
-  mod('explosives', () => createExplosivesTestModule({ locale: lang, room }))
+  mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
   const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
   mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))
@@ -138,7 +140,7 @@ function loadSteps(room, options, lang) {
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang), rigItem: 'sedan' }) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
@@ -146,7 +148,7 @@ function loadSteps(room, options, lang) {
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
-  mod('urban', () => createUrbanModule({ locale: lang }))
+  mod('urban', () => createUrbanModule({ locale: lang, effects: room.vfx }))
   // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
   mod('player', () => createPlayerModule({ locale: lang }))
   // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body
