@@ -63,3 +63,15 @@ Format: `file | source page | author | license | original title`. Every file is 
 - explosoes-fogo/flashbang_02.ogg | https://freesound.org/people/modusmogulus/sounds/752628/ | modusmogulus | CC0 1.0 (Creative Commons 0) | Flashbang Open Field High Quality
 - explosoes-fogo/tinnitus_ring_01.ogg | https://freesound.org/people/dbdarby/sounds/365956/ | dbdarby | CC0 1.0 (Creative Commons 0) | Ear Ringing (After explosion)
 - explosoes-fogo/tinnitus_ring_02.ogg | https://freesound.org/people/deleted_user_9482149/sounds/456698/ | deleted_user_9482149 | CC0 1.0 (Creative Commons 0) | Ear Ringing Long (Extended Falloff)
+- explosoes-fogo/fire_gas_jet_01.ogg | https://freesound.org/people/DarkSidedGenXer/sounds/654360/ | DarkSidedGenXer | CC0 1.0 (Creative Commons 0) | Propane_Torch_1.mp3
+- explosoes-fogo/fire_gas_jet_02.ogg | https://freesound.org/people/NickPeeters/sounds/243763/ | NickPeeters | CC0 1.0 (Creative Commons 0) | gas vuur dakwerken gasbrander luchtballon.wav
+- explosoes-fogo/fire_gas_jet_03.ogg | https://freesound.org/people/Dr.%20Macak/sounds/491300/ | Dr. Macak | CC0 1.0 (Creative Commons 0) | HotAirBaloonTorch.wav
+- explosoes-fogo/fire_gas_jet_04.ogg | https://freesound.org/people/SyntaxSeed/sounds/244230/ | SyntaxSeed | CC0 1.0 (Creative Commons 0) | Gas Torch Burn
+- explosoes-fogo/fire_gas_jet_05.ogg | https://freesound.org/people/rombart/sounds/197800/ | rombart | CC0 1.0 (Creative Commons 0) | Chalumeau.wav
+- explosoes-fogo/fire_fuel_pool_01.ogg | https://freesound.org/people/SGAK/sounds/87564/ | SGAK | CC0 1.0 (Creative Commons 0) | Fire.wav
+- explosoes-fogo/fire_fuel_pool_02.ogg | https://freesound.org/people/florianreichelt/sounds/563765/ | florianreichelt | CC0 1.0 (Creative Commons 0) | Fire Auto - car on fire
+- explosoes-fogo/fire_fuel_pool_03.ogg | https://freesound.org/people/loganzsound/sounds/784382/ | loganzsound | CC0 1.0 (Creative Commons 0) | Flame Crackle and Flicker 91% isopropyl Alcohol burning 02
+- explosoes-fogo/fire_fuel_pool_04.ogg | https://freesound.org/people/Aegersum/sounds/387924/ | Aegersum | CC0 1.0 (Creative Commons 0) | Fire -massive no cracking.wav
+- explosoes-fogo/fire_plastic_melt_03.ogg | https://freesound.org/people/jc144940/sounds/178729/ | jc144940 | CC0 1.0 (Creative Commons 0) | Plastic Bag Burning- Zilch Sounds 3.aif
+- explosoes-fogo/fire_plastic_melt_04.ogg | https://freesound.org/people/jc144940/sounds/178738/ | jc144940 | CC0 1.0 (Creative Commons 0) | Plastic Bag Burning- Zilch Sounds 5.aif
+- explosoes-fogo/fire_plastic_melt_05.ogg | https://freesound.org/people/aroth4/sounds/133857/ | aroth4 | CC0 1.0 (Creative Commons 0) | Plastic burn
