@@ -22,6 +22,11 @@ export interface AnimationEventSpec {
   /** snake_case type the host maps (`sound`, `eject_casing`, `door_latch`...). */
   type: string
   data?: Record<string, unknown>
+  /**
+   * Seconds of real time the event fires before `t`, not stretched with the clip: a recorded sound whose hit comes that long after its start
+   * (the click of a magazine seating) starts early so the hit lands on `t`. The player passes the lead it could apply as `data.lead`.
+   */
+  lead?: number
 }
 
 /** A use animation a module brings with its item. Poses between keys are interpolated by the player (the test room does it linearly). */

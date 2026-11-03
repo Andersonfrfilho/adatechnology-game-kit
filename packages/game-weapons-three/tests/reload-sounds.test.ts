@@ -109,13 +109,13 @@ describe('the cues of every reload', () => {
 })
 
 describe('the cues follow the duration of the weapon', () => {
-  it('the same clip played in twice the time puts every cue at twice the second', () => {
+  it('the same clip played in twice the time puts every cue hit at twice the second (the lead of a recording is real time)', () => {
     const model = buildWeaponModelById(THREE, 'colt_m4a1')!
     const clips = buildToolClips({ parts: model.parts, family: model.parts.family, caseType: 'rifle', reloadFamily: 'magazine' })
     const at = (duration: number): number[] => {
       const player = createToolClipPlayer({ clips, rig: { setPartPose: () => undefined } })
       player.apply({ type: 'play', clip: 'reload', variant: 'empty', duration })
-      return (player.running[0]!.clip.events ?? []).filter((event) => event.type === 'sound').map((event) => event.t)
+      return (player.running[0]!.clip.events ?? []).filter((event) => event.type === 'sound').map((event) => event.t + (typeof event.data?.lead === 'number' ? event.data.lead : 0))
     }
     const short = at(3)
     const long = at(6)

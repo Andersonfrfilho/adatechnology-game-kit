@@ -1,6 +1,10 @@
 import { STAGE_EVENT } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, AnimationEventSpec, AnimationPose } from '@adatechnology/game-contracts'
 
+import hitData from '../data/reload-sample-hits.json'
+
+const RELOAD_SAMPLE_HITS: Readonly<Record<string, number>> = hitData.hits
+
 export type Axis = 'x' | 'y' | 'z'
 type Channel = 'position' | 'rotation'
 
@@ -31,7 +35,14 @@ export const turn = (part: string, axis: Axis, start: number, duration: number, 
 export const cue = (t: number, type: string, data?: Record<string, unknown>): AnimationEventSpec => ({ t, type, ...(data ? { data } : {}) })
 
 /** A sound the host plays at `t` (`id` is a key of `data/reload-sounds.json`): the animation says when each part makes its noise. */
-export const sound = (t: number, id: string): AnimationEventSpec => ({ t, type: 'sound', data: { id } })
+/**
+ * A sound cue of the clip at the instant the part reaches its stop. A cue with a recording leads by the seconds its takes take to reach their hit
+ * (`data/reload-sample-hits.json`), so the player starts it that early and the click lands on `t`.
+ */
+export const sound = (t: number, id: string): AnimationEventSpec => {
+  const lead = RELOAD_SAMPLE_HITS[id]
+  return lead ? { t, type: 'sound', data: { id }, lead } : { t, type: 'sound', data: { id } }
+}
 
 export const stage = (id: string, t: number): AnimationEventSpec => ({ t, type: STAGE_EVENT, data: { stage: id } })
 

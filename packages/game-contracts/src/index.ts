@@ -78,7 +78,7 @@ export type { EffectHandle, EffectRequest, EffectSink, Enclosure, EnclosureBox }
 export type { WarmUpProbes } from './warm-up'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
-export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
+export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, leadClipEvents, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
 export { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, FRAME_PHASES, checkDeferredQueue } from './frame'
 export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePhase } from './frame'
