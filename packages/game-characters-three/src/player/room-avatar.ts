@@ -14,6 +14,8 @@ export type RoomAvatarLike = {
   update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'push' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
+  /** How far a hand holds a palm target from its shoulder (`RoomAvatar.armLength`). */
+  armLength(side: 'R' | 'L'): number
   /** Where the body's eyes are after its pose (`RoomAvatar.eye`): the room draws the body in both views and puts the first-person camera there. */
   eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
   /** Hides the head and neck from `camera` in first person (`RoomAvatar.setView`). */
@@ -105,6 +107,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     },
     hand: (side) => avatar.hand(side),
     shoulder: (side) => avatar.shoulder(side),
+    armLength: (side) => avatar.armLength(side),
     reach: (targets, view) => avatar.reach(targets, view),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)

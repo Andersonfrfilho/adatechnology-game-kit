@@ -6,7 +6,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { AnimationClipSpec, HandTargets, HostReach } from '@adatechnology/game-contracts'
-import { createDoorUse, DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT, DOOR_USE_DEFAULTS } from '@adatechnology/game-player'
+import { createDoorUse, DEFAULT_ARM_REACH, DEFAULT_SHOULDER_HEIGHT, DOOR_USE_DEFAULTS, swingSecondsFor } from '@adatechnology/game-player'
 import type { DoorUsePhase, DoorUseRules } from '@adatechnology/game-player'
 import { PLAYER_RADIUS } from './player'
 import type { Player } from './player'
@@ -31,8 +31,10 @@ const DRAWER_TRAVEL = 0.3
 const CLEAR_OF_ARC = 0.3
 const OUT_IN_FRONT = 0.42
 /** The least a player stands in front of a handle, metres on the floor. */
+/** The most the body moves in all pulling one leaf by hand (backing off and edging after the handle), metres: the standoff of the feet plus the clearance past the arc. */
+const PULL_TRAVEL = STANDOFF + CLEAR_OF_ARC
 const MIN_IN_FRONT = PLAYER_RADIUS + 0.04
-/** The right shoulder joint is this far to the right of the body's middle, metres. */
+/** Without a body that says where its shoulder is: the right shoulder joint is this far to the right of the body's middle, metres (half the shoulder width of the rich body). */
 const SHOULDER_SIDE = 0.2
 /** Close enough to the place, metres; the longest walk to it before the hand goes anyway, seconds. */
 const ARRIVED = 0.05
@@ -53,8 +55,10 @@ export type RoomDoorOptions = {
   readonly camera: THREE_NS.Object3D
   readonly arena: { readonly limit: number; readonly colliders: ReadonlyArray<readonly [number, number, number, number]>; readonly ids: ReadonlyArray<string | null> }
   readonly rules?: Partial<DoorUseRules>
-  /** The world position of the body's right shoulder (the arm reach is measured from it); without one the shoulder is taken at the standard height over the feet. */
-  shoulder?(): Vec3 | null
+  /** The body's right shoulder joint in the body's own frame (x right, y up from the feet, z its front; the arm reach is measured from it); without one `DEFAULT_SHOULDER_HEIGHT` and `SHOULDER_SIDE`. */
+  shoulderOffset?(): Vec3 | null
+  /** How far the hand holds a palm target from the shoulder (`RoomAvatar.armLength`); without one `DEFAULT_ARM_REACH`. */
+  armLength?(): number | null
   /** What the eye rests on within reach, best first (the crosshair, then what the eye faces over the shoulder). */
   pick(): ReadonlyArray<{ readonly objectId: string; readonly part: string; readonly point: Vec3 }>
   /** The leaves of an object (none when it has nothing to open). */
@@ -116,6 +120,10 @@ type Using = {
   readonly pull: boolean
   /** Where the grip is with the leaf at its goal. */
   readonly goalAt: THREE_NS.Vector3 | null
+  /** How far the body has stepped back pulling this leaf, metres. */
+  stepped: number
+  /** How far the shoulder was from the handle when the hand took it, metres: the distance the body keeps while pulling. */
+  hold: number
   phase: DoorUsePhase
   progress: number
   /** Seconds walked to the handle, and whether the player got there. */
@@ -145,17 +153,111 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
   const centre = new THREE.Vector3()
   let using: Using | null = null
   /** A module's own leaf under the hand (a house door). */
-  let reaching: { readonly reach: HostReach; phase: Exclude<DoorUsePhase, 'idle'>; time: number; progress: number; walked: number; there: boolean } | null = null
+  let reaching: { readonly reach: HostReach; phase: Exclude<DoorUsePhase, 'idle'>; time: number; progress: number; walked: number; there: boolean; stepped: number; hold: number } | null = null
   /** Where the hand was the last frame it held or pushed (world), so letting go comes back from there and never from a handle out of reach. */
   const lastHold = new THREE.Vector3()
   const shoulderAt = new THREE.Vector3()
+  /** The shoulder in the body's own frame as the body last drew it (the pose barely moves it); the world position follows the player's place and yaw now, never a frame behind. */
+  const body = { x: 0, y: 0, z: 0, valid: false }
+  const sampleShoulder = (): void => {
+    const o = options.shoulderOffset?.()
+    body.valid = o !== null && o !== undefined
+    if (o) {
+      body.x = o[0]
+      body.y = o[1]
+      body.z = o[2]
+    }
+  }
   /** The body's shoulder now. */
   const shoulderPoint = (): THREE_NS.Vector3 => {
-    const s = options.shoulder?.()
-    return s ? shoulderAt.set(s[0], s[1], s[2]) : shoulderAt.set(player.x + Math.cos(player.yaw) * SHOULDER_SIDE, player.feet + DOOR_SHOULDER_HEIGHT, player.z - Math.sin(player.yaw) * SHOULDER_SIDE)
+    const turn = player.yaw + Math.PI
+    const x = body.valid ? body.x : -SHOULDER_SIDE
+    const y = body.valid ? body.y : DEFAULT_SHOULDER_HEIGHT
+    const z = body.valid ? body.z : 0
+    // the body is turned to the player's yaw plus pi (its front is +z)
+    return shoulderAt.set(player.x + x * Math.cos(turn) + z * Math.sin(turn), player.feet + y, player.z - x * Math.sin(turn) + z * Math.cos(turn))
   }
+  /** How far the body's own arm holds a palm target. */
+  const armReach = (): number => options.armLength?.() ?? DEFAULT_ARM_REACH
   /** Whether a point is within the arm's reach. */
-  const withinReach = (p: THREE_NS.Vector3): boolean => shoulderPoint().distanceTo(p) <= DOOR_ARM_REACH
+  const withinReach = (p: THREE_NS.Vector3): boolean => shoulderPoint().distanceTo(p) <= armReach()
+  /** How far to the right of the body's middle the shoulder joint is: the body's own, else the default. */
+  const shoulderSide = (): number => {
+    const s = shoulderPoint()
+    return (s.x - player.x) * Math.cos(player.yaw) - (s.z - player.z) * Math.sin(player.yaw)
+  }
+  /**
+   * How far along the floor, on the line from the handle to the body, the body has to move for the shoulder to be `keep` metres from the handle again: positive backs off (the handle came
+   * too close), negative goes toward it (the handle swung off to the side), 0 when it is there.
+   */
+  const retreatFor = (handle: THREE_NS.Vector3, keep: number): number => {
+    const hx = player.x - handle.x
+    const hz = player.z - handle.z
+    const flat = Math.hypot(hx, hz)
+    if (flat < 1e-4) return 0
+    const shoulder = shoulderPoint()
+    const dx = shoulder.x - handle.x
+    const dy = shoulder.y - handle.y
+    const dz = shoulder.z - handle.z
+    const along = (dx * hx + dz * hz) / flat
+    return -along + Math.sqrt(Math.max(0, along * along - (dx * dx + dy * dy + dz * dz - keep * keep)))
+  }
+  /**
+   * Pulling a leaf that comes toward the body, the body keeps the distance it took the handle at: it backs off as the handle comes and edges after it as the leaf swings off to the
+   * side, as fast as the approach (a module's own leaf: as fast as its handle goes), `PULL_TRAVEL` in all and as far as the floor lets it. `keep` is the distance to hold (the one of the grasp). `held.stepped` is how far it has
+   * moved in this use. Answers whether the body moved.
+   */
+  const stepBack = (held: { stepped: number }, handle: THREE_NS.Vector3, dt: number, keep: number = armReach(), speed: number = APPROACH_SPEED): boolean => {
+    const left = PULL_TRAVEL - held.stepped
+    const needed = retreatFor(handle, keep)
+    if (Math.abs(needed) < 1e-3 || left <= 1e-4) return false
+    const dx = player.x - handle.x
+    const dz = player.z - handle.z
+    const d = Math.hypot(dx, dz)
+    if (d < 1e-4) return false
+    const go = Math.sign(needed) * Math.min(Math.abs(needed), left, speed * dt)
+    const x0 = player.x
+    const z0 = player.z
+    player.moveBy((dx / d) * go, (dz / d) * go)
+    const moved = Math.hypot(player.x - x0, player.z - z0)
+    held.stepped += moved
+    return moved > 1e-5
+  }
+
+  /** Pulling, a handle just past the arm is still held while the body can catch up with it within a step (and has travel left). */
+  const stillHeld = (held: { stepped: number; hold: number }, handle: THREE_NS.Vector3, dt: number, speed: number = APPROACH_SPEED): boolean =>
+    withinReach(handle) || (PULL_TRAVEL - held.stepped > 1e-3 && Math.abs(retreatFor(handle, held.hold)) <= speed * dt)
+
+  /**
+   * Pulling, the leaf comes only as fast as the body backs off with the hand on the handle: the handle's place after this step is tried, the body retreats from it (as fast as the
+   * approach, up to `STANDOFF` in all) to keep the distance it took the handle at, and when it cannot keep up the step is shortened. Answers the share of `dt` the leaf may move; with no
+   * way to keep the hand on the handle at all it answers 1 and the hand-off lets go.
+   */
+  const pacedPull = (u: Using, dt: number): number => {
+    const swing = swingSecondsFor(massOf(u.objectId, u.leaf.part), rules)
+    const opening = control.opening
+    const goal = control.goal
+    const capacity = Math.min(APPROACH_SPEED * dt, PULL_TRAVEL - u.stepped)
+    if (capacity <= 1e-4) return 1
+    for (let share = 1; share > 0.1; share *= 0.5) {
+      const next = opening + Math.sign(goal - opening) * Math.min(Math.abs(goal - opening), (dt * share) / swing)
+      options.pose(u.objectId, u.leaf.part, u.leaf.clip, next)
+      u.obj.updateMatrixWorld(true)
+      const handle = u.obj.localToWorld(tmp.copy(u.grip))
+      options.pose(u.objectId, u.leaf.part, u.leaf.clip, opening)
+      u.obj.updateMatrixWorld(true)
+      const need = retreatFor(handle, u.hold)
+      if (Math.abs(need) > capacity) continue
+      if (Math.abs(need) > 1e-3) {
+        const first = u.stepped === 0
+        stepBack(u, handle, dt, u.hold)
+        if (first && u.stepped > 0) event('stepped_back', u)
+      }
+      return share
+    }
+    return 1
+  }
+
   const rules = { ...DOOR_USE_DEFAULTS, ...options.rules }
 
   /** Where the hand is going or holding now, and how: the leaf in use or the module's leaf. */
@@ -211,14 +313,30 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     }
     // never farther from the handle than the arm reaches (the shoulder sits to the side of the body's middle): a leaf that goes away sweeps clear of the body, so it is pushed from
     // right in front of the handle; one that comes toward the body is taken as near as the arc it sweeps allows
-    const dropToHandle = Math.abs(player.feet + DOOR_SHOULDER_HEIGHT - handle.y)
-    const inFront = Math.max(MIN_IN_FRONT, Math.sqrt(Math.max(0, DOOR_ARM_REACH ** 2 - dropToHandle ** 2 - SHOULDER_SIDE ** 2)) * 0.95)
-    // in front of the face as far as the arm needs, and for a leaf that comes toward the body as far along past the arc as that leaves room for
-    const out = pushed ? inFront : Math.min(OUT_IN_FRONT, inFront)
-    const along = pushed ? 0 : Math.min(CLEAR_OF_ARC, Math.sqrt(Math.max(0, inFront * inFront - out * out)))
-    // the right shoulder, not the body's middle, is the one in front of the handle: the body stands a shoulder's width to the left of it
-    const x = handle.x + ax * along + nx * out - nz * SHOULDER_SIDE
-    const z = handle.z + az * along + nz * out + nx * SHOULDER_SIDE
+    const shoulderOut = shoulderSide()
+    const dropToHandle = Math.abs(shoulderPoint().y - handle.y)
+    const inFront = Math.max(MIN_IN_FRONT, Math.sqrt(Math.max(0, armReach() ** 2 - dropToHandle ** 2 - shoulderOut ** 2)) * 0.95)
+    let x: number
+    let z: number
+    if (pushed) {
+      // right in front of the handle as far as the arm needs, the right shoulder a shoulder's width in from the body's middle
+      x = handle.x + nx * inFront - nz * shoulderOut
+      z = handle.z + nz * inFront + nx * shoulderOut
+    } else {
+      // beside the free edge, clear of the arc the leaf sweeps (it would slam into the body), then as near the handle as the arm needs and that arc allows
+      const x0 = hinge.x + ax * (width + CLEAR_OF_ARC) + nx * OUT_IN_FRONT
+      const z0 = hinge.z + az * (width + CLEAR_OF_ARC) + nz * OUT_IN_FRONT
+      x = x0
+      z = z0
+      for (let i = 1; i <= 10; i++) {
+        if (Math.hypot(x - handle.x, z - handle.z) ** 2 + shoulderOut ** 2 + dropToHandle ** 2 <= armReach() ** 2) break
+        const px = x0 + (handle.x - x0) * (i / 10)
+        const pz = z0 + (handle.z - z0) * (i / 10)
+        if (Math.hypot(px - hinge.x, pz - hinge.z) < width + PLAYER_RADIUS + SKIN * 2) break
+        x = px
+        z = pz
+      }
+    }
     // something stands there (the next cabinet, a nightstand): in front of the handle, and the leaf will make the player step back
     return player.canStand(x, z) ? [x, z] : standFor(handle, null, false, pushed)
   }
@@ -326,6 +444,28 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     return [(dx / d) * push, (dz / d) * push]
   }
 
+  /** The player's body against a hinged leaf held by hand, taken as the line from its hinge to its free edge (a leaf seen from above): the overlap on the floor, or null. */
+  const leafLineOverlap = (u: Using, b: THREE_NS.Box3): [number, number] | null => {
+    if (b.min.y > player.feet + BODY_HEIGHT || b.max.y < player.feet + 0.05) return null
+    const hinge = u.obj.getWorldPosition(new THREE.Vector3())
+    const grip = u.obj.localToWorld(new THREE.Vector3().copy(u.grip))
+    const abx = grip.x - hinge.x
+    const abz = grip.z - hinge.z
+    const length = Math.hypot(abx, abz) || 1
+    // the free edge is a little past the handle
+    const reachAlong = (length + HANDLE_INSET) / length
+    const tipX = hinge.x + abx * reachAlong - hinge.x
+    const tipZ = hinge.z + abz * reachAlong - hinge.z
+    const along = Math.max(0, Math.min(1, ((player.x - hinge.x) * tipX + (player.z - hinge.z) * tipZ) / (tipX * tipX + tipZ * tipZ || 1)))
+    const dx = player.x - (hinge.x + tipX * along)
+    const dz = player.z - (hinge.z + tipZ * along)
+    const d = Math.hypot(dx, dz)
+    if (d >= PLAYER_RADIUS) return null
+    if (d < 1e-4) return bodyOverlap(b)
+    const push = PLAYER_RADIUS - d + SKIN
+    return [(dx / d) * push, (dz / d) * push]
+  }
+
   /** Can the leaf go from one opening to the other: poses it there and looks at what it would go through. Leaves it where it can be. */
   const isFree = (u: Using, from: number, to: number): boolean => {
     const { objectId, leaf, obj } = u
@@ -362,7 +502,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     }
     // the player: steps back out of the way of the leaf, or holds it when there is no room behind
     if (!by) {
-      const out = bodyOverlap(box)
+      const out = u.pull && u.phase === 'swing' && !slides(leaf.clip, leaf.part) ? leafLineOverlap(u, box) : bodyOverlap(box)
       if (out) {
         const x0 = player.x
         const z0 = player.z
@@ -450,7 +590,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       pull = goal === 1 ? dOpen <= dShut : dShut <= dOpen
       goalAt = goal === 1 ? openAt : shutAt
     }
-    using = { objectId, leaf, obj, grip, pull, goalAt, phase: control.phase, progress: 0, walked: 0, there: goal === null }
+    using = { objectId, leaf, obj, grip, pull, goalAt, stepped: 0, hold: 0, phase: control.phase, progress: 0, walked: 0, there: goal === null }
     const at = obj.localToWorld(grip.clone())
     if (goal === null) {
       options.sound('leaf_rattle', [at.x, at.y, at.z], 0.6)
@@ -487,6 +627,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     },
     opening: openingOf,
     step(dt) {
+      sampleShoulder()
       const r = reaching
       if (r) {
         r.time += dt
@@ -500,6 +641,8 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
           if (r.there) r.time = 0
         } else if (r.phase === 'reach') {
           r.progress = Math.min(1, r.time / rules.reachSeconds)
+          const grasp = r.reach.handle()
+          r.hold = Math.min(armReach(), shoulderPoint().distanceTo(tmp.set(grasp[0], grasp[1], grasp[2])))
           if (r.progress >= 1) {
             r.reach.onGrip?.()
             r.phase = r.reach.locked ? 'rattle' : 'swing'
@@ -509,7 +652,8 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
         } else if (r.phase === 'swing' || r.phase === 'rattle') {
           r.progress = Math.min(1, r.time / (r.phase === 'rattle' ? rules.rattleSeconds : Math.max(0.05, r.reach.seconds)))
           const h = r.reach.handle()
-          if (r.phase === 'swing' && !withinReach(tmp.set(h[0], h[1], h[2]))) {
+          if (r.phase === 'swing' && r.reach.pull !== false) stepBack(r, tmp.set(h[0], h[1], h[2]), dt, r.hold, Infinity)
+          if (r.phase === 'swing' && !(r.reach.pull === false ? withinReach(tmp.set(h[0], h[1], h[2])) : stillHeld(r, tmp.set(h[0], h[1], h[2]), dt, Infinity))) {
             r.phase = r.reach.pull === false ? 'push' : 'release'
             r.time = 0
             r.progress = 0
@@ -544,11 +688,15 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
         face(g, dt)
         if (!u.there) return
       }
-      const s = control.step(dt, (from, to) => isFree(u, from, to), {
+      if (u.pull && wasPhase === 'reach') u.hold = Math.min(armReach(), shoulderPoint().distanceTo(u.obj.localToWorld(tmp.copy(u.grip))))
+      // pulling, the body keeps the distance it took the handle at, and the leaf comes only as fast as it can
+      const pace = u.pull && wasPhase === 'swing' ? pacedPull(u, dt) : 1
+      const s = control.step(dt * pace, (from, to) => isFree(u, from, to), {
         pull: u.pull,
         reaches: () => {
           u.obj.updateMatrixWorld(true)
-          return withinReach(u.obj.localToWorld(tmp.copy(u.grip)))
+          const handle = u.obj.localToWorld(tmp.copy(u.grip))
+          return u.pull ? stillHeld(u, handle, dt) : withinReach(handle)
         },
       })
       u.phase = s.phase
@@ -594,7 +742,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       // the palm never goes past the arm: a handle out of reach (the player could not get near it) leaves the hand at the end of the arm, not stretched after it
       const shoulder = shoulderPoint()
       const stretch = pos.distanceTo(shoulder)
-      if (stretch > DOOR_ARM_REACH) pos.copy(shoulder).addScaledVector(pos.clone().sub(shoulder), DOOR_ARM_REACH / stretch)
+      if (stretch > armReach()) pos.sub(shoulder).multiplyScalar(armReach() / stretch).add(shoulder)
       if (phase !== 'release') lastHold.copy(pos)
       // a hand round a vertical handle: fingers away from the player, thumb up (HandPose of game-contracts: +x to the knuckles, +z to the little finger)
       const way = new THREE.Vector3(at.x - player.x, 0, at.z - player.z)
@@ -611,7 +759,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
         control.cancel()
         using = null
       }
-      reaching = { reach, phase: 'reach', time: 0, progress: 0, walked: 0, there: false }
+      reaching = { reach, phase: 'reach', time: 0, progress: 0, walked: 0, there: false, stepped: 0, hold: 0 }
     },
     forget(objectId) {
       for (const k of [...openings.keys()]) if (k.startsWith(`${objectId}\0`)) openings.delete(k)

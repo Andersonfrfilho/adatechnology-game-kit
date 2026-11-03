@@ -67,6 +67,8 @@ export type ReachView = {
 export type ArmReach = {
   /** Brings the hands to `targets` (world space) over the pose the body already has; null leaves the arms as the pose put them. A `view` keeps the elbows bent and the hands out of walls. */
   apply(targets: HandTargets | null, view?: ReachView | null): void
+  /** How far from its shoulder joint a hand holds a palm target before the chest and the shoulder blade have to move: the wrist limit of the last `apply` (the arm nearly straight, or at the view's elbow bend); a palm turned to hold a handle reaches no farther than the wrist, metres of this body. */
+  length(side: Side): number
   /** Puts back what the last `apply` changed, so the pose and its smoothing see only their own numbers next frame. */
   restore(): void
 }
@@ -224,6 +226,10 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
   }
 
   return {
+    length(side) {
+      const { upper: up, fore } = lengthsOf(arms[side])
+      return limitOf(side, up, fore)
+    },
     apply(targets, view) {
       if (!targets || (!targets.R && !targets.L)) return
       save()

@@ -50,11 +50,15 @@ mudança de estado do jogador aparece nas duas vistas, no mesmo commit.
 
 - T4.1 `room-avatar.ts`: `strike()` só no corpo (`ATTACK_CLIPS`), nas duas vistas; o guarda (`fight_guard`) também.
 - T4.2 Porta (#110): `doors.handTargets()` vai para o `reachAvatar`; a pose `door` vale nas duas vistas.
-- T4.3 Porta: a mão abre e empurra, não segue a folha (dono, 2026-11-01). A mão pega o puxador e começa a oscilação; quando o puxador sai do alcance do
-  braço (`DOOR_ARM_REACH`, medido do ombro do corpo), a folha que **vai embora** (lado de empurrar) recebe um empurrão com a palma na face da folha
-  (fase `push`) e a mão solta e volta ao repouso, e a folha termina sozinha no destino. **Exceção (dono):** a folha que **vem para o corpo** (lado de
-  puxar) não é empurrada: a mão segura o puxador e puxa enquanto ele estiver ao alcance, e solta no limite do alcance (`release`) com a folha
-  terminando sozinha. Nunca braço esticado no ar atrás de puxador fora do alcance. Testes: `door-use` (game-player) e `doors` (test-room).
+- T4.3 Porta: a mão abre e empurra, não segue a folha (dono, 2026-11-01). Regra genérica da mecânica de porta (`game-player`), vale para geladeira e
+  freezer, guarda-roupa e armário, e porta de cômodo (casas do `game-floorplan`, `reachFor`). A mão pega o puxador e começa a oscilação; o alcance do
+  braço vem do corpo (`avatar.armLength('R')` e `avatar.shoulder('R')`; `DEFAULT_ARM_REACH` e `DEFAULT_SHOULDER_HEIGHT` só quando o hospedeiro não tem
+  corpo). **Folha que vai embora (lado de empurrar):** com o puxador fora do alcance a palma passa para a face da folha (fase `push`) e empurra, a mão
+  solta e a folha termina sozinha no destino. **Exceção (dono): folha que vem para o corpo (lado de puxar):** não há empurrão; a mão segura o
+  puxador e puxa, e o corpo dá um passo curto para trás (`door_stepped_back`, mesma máquina de recuo da porta, até `STANDOFF` no total e até onde o
+  chão deixar) para manter o puxador ao alcance, até a folha abrir de vez; só então solta (`release`) e o controle volta ao jogador. Nunca braço
+  esticado no ar atrás de puxador fora do alcance (a palma é presa ao alcance; apertar E com a folha ainda indo sozinha aproxima o corpo antes).
+  Testes: `door-use` (game-player) e `doors` (test-room).
 
 ## Fase 5 — Limpeza e fechamento
 > 🤖 Modelo: `haiku` (T5.3 → `sonnet`)

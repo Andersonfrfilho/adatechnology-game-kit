@@ -179,4 +179,12 @@ describe('reach seen from the body\'s own eyes (view)', () => {
       expect(same.rig.upper.rotation.y).toBe(plain.rig.upper.rotation.y)
     }
   })
+
+  it('says how far its hand holds a palm target: the arm of this body, the same on both sides', () => {
+    const avatar = standing()
+    const right = avatar.armLength('R')
+    expect(right).toBeGreaterThan(0.45)
+    expect(right).toBeLessThan(0.75)
+    expect(avatar.armLength('L')).toBeCloseTo(right, 3)
+  })
 })

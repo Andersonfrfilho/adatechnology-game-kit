@@ -727,10 +727,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     arena: { limit: arenaSize, colliders: standingColliders, ids: standingIds },
     ...(options.doors ? { rules: options.doors } : {}),
-    shoulder: () => {
+    armLength: () => avatar?.armLength?.('R') ?? null,
+    shoulderOffset: () => {
       const joint = avatar?.shoulder?.('R')
-      if (!joint) return null
-      joint.getWorldPosition(doorShoulder)
+      if (!joint || !avatar) return null
+      avatar.root.updateMatrixWorld(true)
+      avatar.root.worldToLocal(joint.getWorldPosition(doorShoulder))
       return [doorShoulder.x, doorShoulder.y, doorShoulder.z]
     },
     pick: () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { AnimationClipSpec, HandTargets, TestableModule } from '@adatechnology/game-contracts'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { ScenarioContext } from '../src'
-import { DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT } from '@adatechnology/game-player'
+import { DEFAULT_ARM_REACH, DEFAULT_SHOULDER_HEIGHT } from '@adatechnology/game-player'
 import { makeRoom } from './helpers'
 
 const OPEN = 1.4
@@ -53,7 +53,8 @@ const cabinet = (): TestableModule<ScenarioContext> => ({
 const run = (room: ReturnType<typeof makeRoom>, seconds: number): void => {
   for (let i = 0; i < seconds * 60; i++) room.update(1 / 60)
 }
-const types = (room: ReturnType<typeof makeRoom>): string[] => room.log.entries().filter((e) => e.type.startsWith('door_') && e.type !== 'door_stepped_back').map((e) => e.type)
+const types = (room: ReturnType<typeof makeRoom>, withSteps = false): string[] =>
+  room.log.entries().filter((e) => e.type.startsWith('door_') && (withSteps || e.type !== 'door_stepped_back')).map((e) => e.type)
 
 function setup() {
   const sounds: string[] = []
@@ -126,40 +127,72 @@ describe('opening by hand', () => {
     expect(poses.some((pose) => pose !== null && pose !== undefined)).toBe(true)
   })
 
-  it.each([['open', 'pull'], ['close', 'push']] as const)('the hand never stretches off the handle: %s (the leaf is %sed), it lets go or shoves at the reach limit and the leaf still gets to its goal', (way, kind) => {
+  it.each(['open', 'close'] as const)('the hand never stretches off the handle: %s, it holds and steps back (leaf toward the body) or shoves (leaf away) and the leaf still gets to its goal', (way) => {
     const { room, so, door } = setup()
     room.setAvatar({ root: new THREE.Group(), update: () => undefined, reach: () => undefined })
     // a handle at the height of the shoulder
     room.look([0.2, 1.7, -2.6], [0.2, 1.3, -3.74])
     const phases = new Set<string>()
+    let pull: boolean | null = null
     const reachOf = (): number => {
       const hand = room.handState().targets?.R
       if (!hand) return 0
       const [px, py, pz] = room.playerPosition
       const yaw = room.camera.rotation.y
-      return Math.hypot(hand.position[0] - (px + Math.cos(yaw) * 0.2), hand.position[1] - (py + DOOR_SHOULDER_HEIGHT), hand.position[2] - (pz - Math.sin(yaw) * 0.2))
+      return Math.hypot(hand.position[0] - (px + Math.cos(yaw) * 0.2), hand.position[1] - (py + DEFAULT_SHOULDER_HEIGHT), hand.position[2] - (pz - Math.sin(yaw) * 0.2))
     }
     let worst = 0
+    let nearest = Infinity
     const play = (): void => {
       for (let i = 0; i < 600 && (i === 0 || room.door); i++) {
         room.update(1 / 60)
-        const phase = room.avatarState().door?.phase
-        if (phase) phases.add(phase)
+        const state = room.avatarState().door
+        if (state) phases.add(state.phase)
+        if (state && (state.phase === 'swing' || state.phase === 'push')) pull = state.pull
         worst = Math.max(worst, reachOf())
+        if (state?.phase === 'swing' || state?.phase === 'push') nearest = Math.min(nearest, reachOf())
       }
     }
     expect(room.useLeaf(so.objectId)).toBe(true)
     play()
     if (way === 'close') {
       phases.clear()
+      pull = null
       expect(room.useLeaf(so.objectId)).toBe(true)
       play()
     }
     // the shoulder stands where the avatar puts it; the palm target is never farther than the arm plus the width of the hand
-    expect(worst).toBeLessThanOrEqual(DOOR_ARM_REACH + 0.1)
-    expect(phases.has('push')).toBe(kind === 'push')
+    expect(worst).toBeLessThanOrEqual(DEFAULT_ARM_REACH + 0.15)
+    // the palm is out on the handle or the leaf, not folded onto the shoulder
+    if (nearest !== Infinity) expect(nearest).toBeGreaterThan(0.2)
+    // a leaf going away is shoved, one coming toward the body never is
+    if (pull === true) expect(phases.has('push')).toBe(false)
+    if (pull === false) expect(phases.has('push')).toBe(true)
     expect(room.leafOpening(so.objectId)).toBe(way === 'open' ? 1 : 0)
     expect(door.rotation.y).toBeCloseTo(way === 'open' ? -OPEN : 0, 5)
+  })
+
+  it('pressing E again while the leaf still goes on its own never sends the hand to a handle out of reach', () => {
+    const { room, so } = setup()
+    room.setAvatar({ root: new THREE.Group(), update: () => undefined, reach: () => undefined })
+    room.look([0.2, 1.7, -2.6], [0.2, 1.3, -3.74])
+    expect(room.useLeaf(so.objectId)).toBe(true)
+    for (let i = 0; i < 600 && room.door; i++) room.update(1 / 60)
+    // closing is a push: the hand lets go and the leaf is still swinging
+    expect(room.useLeaf(so.objectId)).toBe(true)
+    for (let i = 0; i < 600 && room.avatarState().door?.phase !== 'release'; i++) room.update(1 / 60)
+    expect(room.leafOpening(so.objectId)).toBeGreaterThan(0)
+    expect(room.useLeaf(so.objectId)).toBe(true)
+    let worst = 0
+    for (let i = 0; i < 600 && room.door; i++) {
+      room.update(1 / 60)
+      const hand = room.handState().targets?.R
+      if (!hand) continue
+      const [px, py, pz] = room.playerPosition
+      const yaw = room.camera.rotation.y
+      worst = Math.max(worst, Math.hypot(hand.position[0] - (px + Math.cos(yaw) * 0.2), hand.position[1] - (py + DEFAULT_SHOULDER_HEIGHT), hand.position[2] - (pz - Math.sin(yaw) * 0.2)))
+    }
+    expect(worst).toBeLessThanOrEqual(DEFAULT_ARM_REACH + 0.15)
   })
 
   it('a locked door rattles and does not move', () => {

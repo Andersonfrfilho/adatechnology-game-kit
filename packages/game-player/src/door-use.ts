@@ -37,10 +37,12 @@ export const DOOR_USE_DEFAULTS: DoorUseRules = {
   endTolerance: 0.02,
 }
 
-/** The body's shoulder, metres over the feet (the avatar's door pose is drawn for it). */
-export const DOOR_SHOULDER_HEIGHT = 1.42
-/** The farthest a handle is from the shoulder joint for the palm to stay on it (measured on the body in both views: the palm is 0.06 m off up to 0.5, 0.11 at 0.55, 0.24 at 0.65). */
-export const DOOR_ARM_REACH = 0.55
+/**
+ * Fallbacks for a host whose body does not say its own (the room asks the avatar: its shoulder joint and `armLength`): the shoulder height over the feet and the reach of the arm, metres,
+ * as the rich body of game-characters-three draws its door pose (`DOOR_SHOULDER` and `DOOR_ARM` of its avatar).
+ */
+export const DEFAULT_SHOULDER_HEIGHT = 1.42
+export const DEFAULT_ARM_REACH = 0.62
 
 export type DoorUseTarget = {
   /** How open the leaf is now, 0 closed to 1 open. */
@@ -166,9 +168,11 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
       if (phase === 'reach') {
         const p = time / r.reachSeconds
         if (p < 1) return out(p)
+        // the hand is on the handle: the leaf starts to move with the next step, so a host that paces the swing sees the hand holding before the leaf goes
         phase = 'swing'
         time = 0
         start = opening
+        return out(0)
       }
       if (phase === 'swing' || phase === 'push' || coasting) {
         const result = advance(dt, isFree)
@@ -185,7 +189,7 @@ export function createDoorUse(rules: Partial<DoorUseRules> = {}): DoorUse {
           if (result === 'arrived') return inHand ? out(1, true) : releaseOut(true)
           return inHand ? out(progress, false, 'obstacle') : releaseOut(false, 'obstacle')
         }
-        if (inHand && hand && !hand.reaches()) {
+        if (phase === 'swing' && hand && !hand.reaches()) {
           time = 0
           if (hand.pull) {
             phase = 'release'

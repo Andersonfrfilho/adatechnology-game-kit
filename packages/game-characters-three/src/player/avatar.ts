@@ -152,6 +152,8 @@ export type PlayerAvatar = {
    * `view` (given on each call, as the camera moves) is for the body seen from its own eyes: the elbows keep their bend and the hands stay out of walls; without it nothing changes.
    */
   reach(targets: HandTargets | null, view?: ReachView | null): void
+  /** How far a hand holds a palm target from its shoulder joint (`createArmReach().length`), metres of this body. */
+  armLength(side: 'R' | 'L'): number
   on(type: 'event', listener: (event: AvatarEvent) => void): () => void
   dispose(): void
 }
@@ -672,6 +674,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     },
     hand: (side) => sockets[side],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
+    armLength: (side) => armReach.length(side),
     reach(targets, view) {
       if (run || fall > 0) return
       root.updateMatrixWorld(true)
