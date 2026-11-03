@@ -1,4 +1,6 @@
-import type { Json, Rng } from './shared'
+import type { Plan, ResultItem, Room } from '@adatechnology/game-floorplan'
+import type { Rng } from './shared'
+import type { Circuit, Conduit, ElectricalPanel, LightSwitch, OutdoorLamp, Outlet, ServiceEntrance } from './types'
 import { NO_SOCKET_ROOMS } from './shared'
 import { addOutlets } from './electrical-outlets'
 import { addConduits, addSwitches } from './electrical-circuits'
@@ -16,36 +18,36 @@ export interface EnergyConfig {
 
 export interface Electrical {
   mode: EnergyMode
-  serviceEntrance: Json | null
-  panel: Json | null
-  outlets: Json[]
-  switches: Json[]
-  circuits: Json[]
-  conduits: Json[]
+  serviceEntrance: ServiceEntrance | null
+  panel: ElectricalPanel | null
+  outlets: Outlet[]
+  switches: LightSwitch[]
+  circuits: Circuit[]
+  conduits: Conduit[]
   exposed: boolean
-  outdoorLamps: Json[]
+  outdoorLamps: OutdoorLamp[]
   source?: 'solar' | 'lamp'
 }
 
 export interface ElectricalContext {
-  plan: Json
-  items: Json[]
+  plan: Plan
+  items: ResultItem[]
   rng: Rng
   energy?: EnergyConfig
 }
 
 /** Shared state of the steps that lay the installation out. */
 export interface Layout {
-  plan: Json
-  items: Json[]
-  rooms: Json[]
+  plan: Plan
+  items: ResultItem[]
+  rooms: Room[]
   electrical: Electrical
   pointsOf: Map<string, WallPoint[]>
 }
 
-export const keyOf = (room: Json): string => `${room.id}@${room.floor}`
+export const keyOf = (room: Room): string => `${room.id}@${room.floor}`
 
-const absolute = (plan: Json, floor: number, y: number): number => (plan.floors[floor] ? plan.floors[floor].y0 : 0) + y
+const absolute = (plan: Plan, floor: number, y: number): number => (plan.floors[floor] ? plan.floors[floor].y0 : 0) + y
 export const heightOf = absolute
 
 /**
@@ -62,7 +64,7 @@ export function planElectrical(context: ElectricalContext): Electrical {
     electrical.source = energy?.solar ? 'solar' : 'lamp'
     return electrical
   }
-  const rooms = plan.rooms.filter((room: Json) => !NO_SOCKET_ROOMS.includes(room.type) && !room.outdoor)
+  const rooms = plan.rooms.filter((room) => !NO_SOCKET_ROOMS.includes(room.type) && !room.outdoor)
   const pointsOf = new Map<string, WallPoint[]>()
   for (const room of rooms) pointsOf.set(keyOf(room), wallPointsOf(plan, room, items))
   const layout: Layout = { plan, items, rooms, electrical, pointsOf }
@@ -71,9 +73,9 @@ export function planElectrical(context: ElectricalContext): Electrical {
   placePanel(layout)
   addSwitches(layout)
   addConduits(layout)
-  if (mode === 'tap' && electrical.serviceEntrance?.meter) {
-    const entrance = electrical.serviceEntrance
-    const meter = entrance.meter
+  const entrance = electrical.serviceEntrance
+  const meter = entrance?.meter
+  if (mode === 'tap' && entrance && meter) {
     entrance.tap = true
     entrance.connection = { u: meter.u, v: meter.v, y: 2.6 }
     entrance.meter = null

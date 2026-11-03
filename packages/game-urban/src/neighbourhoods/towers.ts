@@ -33,7 +33,7 @@ const financialDistrict: NeighbourhoodPattern<DowntownParams> = {
 }
 
 /** The patterns of the tower pack. */
-export const TOWER_PATTERNS: readonly NeighbourhoodPattern<any>[] = [financialDistrict]
+export const TOWER_PATTERNS: readonly NeighbourhoodPattern[] = [financialDistrict]
 
 /** Where the sample sheet puts them (pass it as `cells`). */
 export const TOWER_SAMPLE_CELLS: Readonly<Record<string, { x: number; z: number }>> = { financial_district: { x: 160, z: 56 } }

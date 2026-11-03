@@ -182,7 +182,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   for (const key of ['skin', 'hair']) if (typeof spec[key] === 'string') spec[key] = hexOf(spec[key])
   const best = createBestBuilder(THREE, { types: [{ name: String(spec.type), eye: 0 }], random: createRng(Number(spec.seed ?? 1)) })
   const body = best.build(spec) as THREE_NS.Object3D
-  best.topM().color.setHex(options.shirtColor ?? hexOf(preset.shirtColor))
+  best.topM()?.color.setHex(options.shirtColor ?? hexOf(preset.shirtColor)) // set by the build above
   const rig = body.userData.rig as RichRig
 
   // walk: the profile follows the speed (arm swing and bob are the shader's numbers times the stride)

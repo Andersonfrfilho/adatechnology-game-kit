@@ -1,6 +1,7 @@
-import type { Json } from './shared'
+import type { Plan, ResultItem } from '@adatechnology/game-floorplan'
 import { round2 } from './shared'
 import type { WaterTank } from '../types'
+import type { Plumbing, PlumbingPoint, PlumbingRun } from './types'
 
 const FIXTURES: Record<string, string> = { kitchen_cabinet: 'tap', washbasin: 'tap', shower: 'shower', toilet: 'flush', laundry_tub: 'tub', washing_machine: 'machine' }
 const FLOW_LPM: Record<string, number> = { tap: 6, shower: 9, flush: 6, tub: 8, machine: 12 }
@@ -8,24 +9,24 @@ const POINT_HEIGHT: Record<string, number> = { shower: 2.1, flush: 0.9, machine:
 const DEFAULT_CAPACITY = { budget: 500, mid: 1000 }
 
 export interface PlumbingContext {
-  plan: Json
-  items: Json[]
+  plan: Plan
+  items: ResultItem[]
   tank: WaterTank | null
 }
 
-const absolute = (plan: Json, floor: number, y: number): number => (plan.floors[floor] ? plan.floors[floor].y0 : 0) + y
+const absolute = (plan: Plan, floor: number, y: number): number => (plan.floors[floor] ? plan.floors[floor].y0 : 0) + y
 
 /**
  * Plumbing as logic: a point for every tap, shower, toilet, tub and machine, and the runs you can see: the outlet of the tank, under each sink and in the wall
  * from the tank to every wet room (hidden in the wall, it shows only where the wall breaks).
  */
-export function planPlumbing(context: PlumbingContext): Json {
+export function planPlumbing(context: PlumbingContext): Plumbing {
   const { plan, items, tank } = context
   const fixtures = items.filter((m) => FIXTURES[m.category] && !m.decor)
-  const points: Json[] = []
-  const runs: Json[] = []
+  const points: PlumbingPoint[] = []
+  const runs: PlumbingRun[] = []
   const capacity = tank?.capacity ?? (plan.style === 'budget' ? DEFAULT_CAPACITY.budget : plan.style === 'mid' ? DEFAULT_CAPACITY.mid : plan.tpl?.id === 'mansion' ? 3000 : 2000)
-  const plumbing: Json = { tank: tank ? 'water_tank' : null, capacityL: tank || !plan.tpl.noWalls ? capacity : 0, points, visibleRuns: runs }
+  const plumbing: Plumbing = { tank: tank ? 'water_tank' : null, capacityL: tank || !plan.tpl.noWalls ? capacity : 0, points, visibleRuns: runs }
   const top = plan.floors.length - 1
   fixtures.forEach((item, index) => {
     const kind = FIXTURES[item.category]!
@@ -42,13 +43,13 @@ export function planPlumbing(context: PlumbingContext): Json {
     const behind = [item.x - front[0]! * (item.d / 2 + 0.02), item.z - front[1]! * (item.d / 2 + 0.02)]
     runs.push({ id: `run_under_${point.id}`, from: 'valve', to: point.id, points: [[round2(behind[0]!), round2(behind[1]!), absolute(plan, item.floor, 0.5)], [item.x, item.z, absolute(plan, item.floor, 0.5)], [item.x, item.z, absolute(plan, item.floor, 0.75)]], diameter: 0.025, exposed: 'under_sink' })
   }
-  const wet: { room: string; floor: number; points: Json[] }[] = []
+  const wet: { room: string | null; floor: number; points: PlumbingPoint[] }[] = []
   for (const point of points) {
     if (!wet.some((c) => c.room === point.room && c.floor === point.floor)) wet.push({ room: point.room, floor: point.floor, points: points.filter((q) => q.room === point.room && q.floor === point.floor) })
   }
   for (const room of wet) {
-    const found = plan.rooms.find((c: Json) => c.id === room.room && c.floor === room.floor)
-    const zone = plan.zones.find((z: Json) => z.id === room.room)
+    const found = plan.rooms.find((c) => c.id === room.room && c.floor === room.floor)
+    const zone = plan.zones.find((z) => z.id === room.room)
     const parts = (found || zone || { parts: [[tank.u, tank.v, tank.u, tank.v]] }).parts
     const centreU = (parts[0][0] + parts[0][2]) / 2
     const centreV = (parts[0][1] + parts[0][3]) / 2

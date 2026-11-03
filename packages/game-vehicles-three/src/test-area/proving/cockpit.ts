@@ -14,6 +14,7 @@ import type { BuiltVehicle } from '../../build'
 import { createVehicleLamps } from '../../lamps'
 import type { VehicleLamps } from '../../lamps'
 
+/** The cabin's sounds; an empty name stays silent (the starter, when the host's engine sound turns the key itself). */
 export type CockpitSounds = { horn: string; blinker: string; starter: string; alarm: string; chirp: string; wiper: string; chime: string; radio: string }
 export const DEFAULT_COCKPIT_SOUNDS: CockpitSounds = { horn: 'horn', blinker: 'blinker_tick', starter: 'starter_crank', alarm: 'car_alarm', chirp: 'alarm_chirp', wiper: 'wiper_swish', chime: 'seatbelt_chime', radio: 'radio_static' }
 
@@ -21,12 +22,14 @@ export interface Cockpit {
   readonly driver: SemiDriver
   readonly controls: VehicleControls
   readonly lamps: VehicleLamps
+  /** The gas this step, 0..1 (what the engine's sound loads by). */
+  readonly throttle: number
   step(dt: number): void
   stop(): void
 }
 
 export function createCockpit(o: {
-  THREE: any
+  THREE: Parameters<typeof createVehicleLamps>[0]
   host: ModuleHost
   built: BuiltVehicle
   subject: ProvingSubject
@@ -49,6 +52,7 @@ export function createCockpit(o: {
   let chimeAgain = 0
   let radioAgain = 0
   let exitAsked = false
+  let gas = 0
 
   const controls = createVehicleControls({
     gears: spec.gears?.length ?? 5,
@@ -56,7 +60,7 @@ export function createCockpit(o: {
     fogLamps: lamps.has.fog,
     onEvent: (event) => {
       if (event.type === 'command') {
-        if (event.command === 'ignition' && event.state.ignition) play(sounds.starter)
+        if (event.command === 'ignition' && event.state.ignition && sounds.starter) play(sounds.starter)
         if (event.command === 'ignition' && !event.state.ignition) driver.state.engineOn = false
         if (event.command === 'alarm' && event.state.alarm === 'armed') play(sounds.chirp)
         if (event.command === 'alarm') alarmAgain = 0
@@ -88,8 +92,12 @@ export function createCockpit(o: {
     driver,
     controls,
     lamps,
+    get throttle() {
+      return gas
+    },
     step(dt) {
       const input = controls.input(dt, driver)
+      gas = input.throttle
       driver.step(input, dt)
       controls.after(driver, dt)
       const s = controls.state

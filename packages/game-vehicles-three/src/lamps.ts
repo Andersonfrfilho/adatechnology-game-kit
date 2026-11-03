@@ -6,6 +6,8 @@
 import { isLightBudget, LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 
+import type { Object3D } from 'three'
+
 import type { BuiltVehicle } from './build'
 
 export type LampSwitch = {
@@ -37,27 +39,30 @@ export interface VehicleLamps {
   dispose(): void
 }
 
-type Lamp = { kind: string; fog?: boolean; inner: Array<{ material: any }>; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: any }
+/** A lamp's glass material: the kit's are emissive standard materials (`MATERIALS.head`, `tail`, `led`, `amber`). */
+type Glass = { clone(): Glass; dispose?(): void; emissiveIntensity?: number; color?: { r: number; g: number; b: number } }
+type Glazed = { material: Glass | Glass[] | null }
+type Lamp = { kind: string; fog?: boolean; inner: Glazed[]; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: { position?: { x: number } } }
 
-export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
+export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
   const budget: LightBudget | null = isLightBudget(options.lights) ? options.lights : null
   const owner = options.owner ?? 'vehicle-lamps'
   // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the decorative fog bulbs a body lists in `context.fogBulbs` (or tags `userData.lamp = 'fog'`)
-  const context = built.context as { lights?: Array<Lamp & { fog?: boolean }>; fogBulbs?: Array<{ material: any }> } | null
+  const context = built.context as { lights?: Array<Lamp & { fog?: boolean }>; fogBulbs?: Glazed[] } | null
   const lamps: Lamp[] = (context?.lights ?? [])
     .filter((l) => l && Array.isArray(l.inner))
     .map((l) => (l.fog ? { ...l, kind: 'fog' } : l))
-  const bulbs: Array<{ material: any }> = (context?.fogBulbs ?? []).filter((o) => o?.material)
-  built.group.traverse((o: any) => {
-    if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o)) bulbs.push(o)
+  const bulbs: Glazed[] = (context?.fogBulbs ?? []).filter((o) => o?.material)
+  built.group.traverse((o: Object3D & Partial<Glazed>) => {
+    if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o as Glazed)) bulbs.push(o as Glazed)
   })
   if (bulbs.length) lamps.push({ kind: 'fog', inner: bulbs })
   const has = { head: lamps.some((l) => l.kind === 'headlight'), tail: lamps.some((l) => l.kind === 'taillight'), fog: lamps.some((l) => l.kind === 'fog'), indicators: false }
   // the kit's lamp materials are shared by every vehicle: this one gets its own copies, given back on dispose
-  const originals = new Map<any, any>()
-  const copies = new Map<any, any>()
-  const base = new Map<any, number>()
-  const own = (mesh: { material: any }): any => {
+  const originals = new Map<Glazed, Glass>()
+  const copies = new Map<Glass, Glass>()
+  const base = new Map<Glass, number>()
+  const own = (mesh: Glazed): Glass | null => {
     const mat = mesh.material
     if (!mat || Array.isArray(mat)) return null
     if (copies.has(mat) || base.has(mat)) return mat
@@ -68,18 +73,19 @@ export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { l
     mesh.material = copy
     return copy
   }
-  const haloBase = new Map<any, number>()
+  const haloBase = new Map<object, number>()
   for (const l of lamps) {
     for (const m of l.inner) own(m)
     for (const h of l.halo ?? []) haloBase.set(h, h.scale.x)
   }
   // the amber parts of a lamp (indicators) blink on their own: told by the colour of the kit's amber, and by the side of the lamp (left is +x)
-  const amber = new Set<any>()
-  const sideOf = new Map<any, 'left' | 'right'>()
+  const amber = new Set<Glazed>()
+  const sideOf = new Map<Glazed, 'left' | 'right'>()
   for (const l of lamps) {
     const x = l.group?.position?.x ?? 0
     for (const m of l.inner) {
-      const c = (copies.get(m.material) ?? m.material)?.color
+      const mat = Array.isArray(m.material) ? null : m.material
+      const c = (mat && (copies.get(mat) ?? mat))?.color
       if (c && c.r > 0.5 && c.r - c.b > 0.35 && c.g < c.r * 0.8 && c.g > c.b) {
         amber.add(m)
         sideOf.set(m, x >= 0 ? 'left' : 'right')
@@ -87,9 +93,9 @@ export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { l
     }
   }
   has.indicators = amber.size > 0
-  const glowMesh = (m: { material: any }, share: number): void => {
+  const glowMesh = (m: Glazed, share: number): void => {
     const mat = m.material
-    if (mat && base.has(mat) && 'emissiveIntensity' in mat) mat.emissiveIntensity = (base.get(mat) as number) * share
+    if (mat && !Array.isArray(mat) && base.has(mat) && 'emissiveIntensity' in mat) mat.emissiveIntensity = (base.get(mat) as number) * share
   }
   const glow = (l: Lamp, share: number): void => {
     for (const m of l.inner) {
@@ -107,8 +113,8 @@ export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { l
   const L = built.length
   const W = built.width
   const H = built.height
-  const anchors: any[] = []
-  const anchor = (x: number, y: number, z: number, yaw: number, drop: number): any => {
+  const anchors: Object3D[] = []
+  const anchor = (x: number, y: number, z: number, yaw: number, drop: number): Object3D => {
     const a = new THREE.Object3D()
     a.position.set(x, y, z)
     a.rotation.set(-drop, yaw, 0, 'YXZ')
@@ -130,12 +136,12 @@ export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { l
       sources.delete(id)
     }
   }
-  const spots = (at: any[], rule: { color: number; intensity: number; distance: number; angle: number; penumbra: number; decay: number; drop: number }): SourceHandle[] =>
+  const spots = (at: Object3D[], rule: { color: number; intensity: number; distance: number; angle: number; penumbra: number; decay: number; drop: number }): SourceHandle[] =>
     at.map((a) => {
       a.rotation.x = -rule.drop
       return (budget as LightBudget).addSource({ owner, kind: 'spot', priority: LIGHT_PRIORITY.headlight, color: rule.color, intensity: rule.intensity, distance: rule.distance, decay: rule.decay, angle: rule.angle, penumbra: rule.penumbra, position: [0, 0, 0], follow: a })
     })
-  const point = (a: any, rule: { color: number; intensity: number; distance: number; decay: number }): SourceHandle[] => [
+  const point = (a: Object3D, rule: { color: number; intensity: number; distance: number; decay: number }): SourceHandle[] => [
     (budget as LightBudget).addSource({ owner, kind: 'point', priority: LIGHT_PRIORITY.lamp, color: rule.color, intensity: rule.intensity, distance: rule.distance, decay: rule.decay, position: [0, 0, 0], follow: a }),
   ]
 
@@ -178,7 +184,7 @@ export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { l
           const original = originals.get(m)
           if (original) {
             m.material = original
-            copy?.dispose?.()
+            if (copy && !Array.isArray(copy)) copy.dispose?.()
           }
         }
         for (const h of l.halo ?? []) {

@@ -23,7 +23,7 @@ function addPorchSteps(context: BuildContext): void {
   }
 }
 
-function boxOfSteps(door: { u: number; v: number; width: number; axis: string; side?: string }, depth: number): Rect {
+function boxOfSteps(door: { u: number; v: number; width: number; axis: string; side?: string | null }, depth: number): Rect {
   const direction = door.axis === 'u' ? (door.side === 'front' ? -1 : 1) : door.side === 'left' ? -1 : 1
   if (door.axis === 'u') return [door.u - door.width / 2, Math.min(door.v, door.v + direction * depth), door.u + door.width / 2, Math.max(door.v, door.v + direction * depth)]
   return [Math.min(door.u, door.u + direction * depth), door.v - door.width / 2, Math.max(door.u, door.u + direction * depth), door.v + door.width / 2]

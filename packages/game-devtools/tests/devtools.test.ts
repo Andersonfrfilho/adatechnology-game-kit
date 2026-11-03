@@ -179,7 +179,7 @@ describe('marks (browser storage)', () => {
           }),
         }
       },
-    }
+    } as unknown as NonNullable<Window['claude']> // a partial database: only what this test exercises
     const d = make()
     await flush()
     expect(d.marks.map((m) => m.id)).toEqual(['srv1'])

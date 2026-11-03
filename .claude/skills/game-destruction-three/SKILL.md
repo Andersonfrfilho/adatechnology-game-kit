@@ -64,6 +64,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 - `game-fluids-three`: vazamento e poça são do fluido; o evento `leak` aqui só desenha o fio de gotas da peça.
 - `game-weapons-three`: usa o mundo de destruição nos alvos da área de armas.
 - Sons: não toca nada; entrega chaves (`impact_metal`, `shatter_glass`, `explode`...) em `onSound`, que o jogo liga ao `game-audio`.
+- Som por material × golpe: impacto, quebra e ricochete mandam também `detail.keys` (`impact_<material>_<golpe>` → `impact_<material>` → `impact_<família>_<golpe>` → `impact_<família>`; `break_*`, `ricochet_*`). O golpe vem de `event.blow` (o `DamageType` do `hit`/`shoot`), a família de `impactFamily`. Som novo de material entra como regra em `IMPACT_SOUND_KEYS` (ou `keys` do jogo), nunca mexendo no `impactKey`.
 
 ## Ambiente de teste
 `examples/test-room` carrega este renderizador na sala de testes (um HTML só, `node build.mjs`); a área de destruição abre com `?area=`. Não há

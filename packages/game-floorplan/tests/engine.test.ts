@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { runResultExtensions } from '../src/extensions'
 import { engine, checkLot, createRng, defineZone, getZone, hashString, listStates, listZones, translate } from '../src'
+import type { FloorplanResult } from '../src/types'
 
 describe('seeded rng', () => {
   it('is deterministic per seed and key, and different across keys', () => {
@@ -99,7 +100,7 @@ describe('result extensions and finds', () => {
     const order: string[] = []
     engine.registerResultExtension('zz_second', ({ rng }) => (order.push('second'), rng()), { after: ['zz_first'], seedKey: 'team_flow' })
     engine.registerResultExtension('zz_first', () => (order.push('first'), 1))
-    const result: Record<string, unknown> = {}
+    const result = {} as FloorplanResult // only the extensions' own keys are read here
     runResultExtensions({} as never, result, 3, {})
     expect(order).toEqual(['first', 'second'])
     expect(result.zz_first).toBe(1)

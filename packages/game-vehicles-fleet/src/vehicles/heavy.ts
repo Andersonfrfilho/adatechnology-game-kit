@@ -1693,6 +1693,8 @@ export function installHeavy(fx: FleetContext): void {
       hood: true,
     },
     function (c) {
+      // cash in transit: armour against rifles
+      c.meta.armor = 'III'
       const f = 3.75,
         W = 2.32,
         len = 1.85,

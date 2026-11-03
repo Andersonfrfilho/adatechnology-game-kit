@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest'
 
 import { cutTeamAudio } from '@adatechnology/golden-tool/team-audio'
 
-import { GAME_SFX_BANK, GAME_SFX_CLASSES, GAME_SFX_FALLBACK, LIBRARY_BANK, MIX_PROFILES, VOICE_GROUPS, createSoundRegistry, noiseClassRecipe, planSound } from '../src'
+import { limiterCurve } from '../src/webaudio/chain'
+import { DEFAULT_MIX, GAME_SFX_BANK, GAME_SFX_CLASSES, GAME_SFX_FALLBACK, LIBRARY_BANK, MIX_PROFILES, VOICE_GROUPS, createSoundRegistry, noiseClassRecipe, planSound } from '../src'
 
 const JOGO = resolve(dirname(fileURLToPath(import.meta.url)), '../../../specs/001-migracao-entregas-dos-times/artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js')
 
@@ -49,6 +50,27 @@ describe('shipped data', () => {
     expect(MIX_PROFILES.game).toMatchObject({ master: 0.5, noise: { seconds: 1.5, create: 'lazy' } })
     expect(MIX_PROFILES.art_scene).toMatchObject({ master: 0.85, compressor: { threshold: -12, ratio: 5 }, reverb: { seconds: 2.2, decay: 3.4, wet: 0.4 }, noise: { seconds: 2, create: 'eager' } })
     expect(VOICE_GROUPS.undead_voice).toMatchObject({ maxConcurrent: 5, cooldown: 0.25, maxDistance: 40 })
+  })
+
+  it('the kit chain is the art scene chain with a limiter at the end, and it is the default', () => {
+    const { id: _kit, limiter, sources: _a, ...kit } = MIX_PROFILES.kit!
+    const { id: _art, sources: _b, ...art } = MIX_PROFILES.art_scene!
+    expect(kit).toEqual(art)
+    expect(limiter).toMatchObject({ ceiling: -1, knee: -6 })
+    expect(DEFAULT_MIX).toBe('kit')
+  })
+
+  it('the limiter curve leaves the sound alone below the knee and never passes the ceiling', () => {
+    const curve = limiterCurve(-1, -6, 4, 4001)
+    const at = (x: number): number => curve[Math.round(((x / 4 + 1) / 2) * 4000)]!
+    expect(at(0.25)).toBeCloseTo(0.25, 3)
+    expect(at(-0.4)).toBeCloseTo(-0.4, 3)
+    const ceiling = 10 ** (-1 / 20)
+    for (const x of [0.8, 1, 2, 4]) {
+      expect(at(x)).toBeLessThanOrEqual(ceiling)
+      expect(at(x)).toBeGreaterThan(0.5)
+    }
+    expect(at(2)).toBeGreaterThan(at(1))
   })
 
   it('the library has the six orphan sounds and every one plans', () => {

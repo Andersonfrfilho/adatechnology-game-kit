@@ -106,6 +106,7 @@ Decidido pelo dono em 2026-11-01, depois de carros que passavam nos testes e est
 - **O que o desenho já mostra junto sai junto**: ao abrir, a porta leva pele, forro, borda, vidro, borracha e maçaneta.
 - **Camada nova não substitui a antiga sem provar o mesmo comportamento**: o PR lista o que a antiga fazia e o teste mostra que continua (foi assim que o furo da camada `destructible/` perdeu o que `zone-decals` já fazia).
 - **Todo modelo passa pelo teste de aceitação** `packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts`, na frota inteira, não numa amostra: contar filhos ou eventos não prova comportamento, o teste mede posição no mundo.
+- **Cada categoria tem a sua lista de peças** em [`docs/veiculos-pecas-por-categoria.md`](docs/veiculos-pecas-por-categoria.md) (carro, moto, caminhão, trator, barco, avião, militar): material, movimento, resposta ao dano e o que conferir de cada peça. Modelo novo confere a lista da sua categoria.
 - **Modelo novo ou mudança em porta, vidro, furo ou colisão** atualiza [`docs/veiculos-verificacao.md`](docs/veiculos-verificacao.md) e traz print no jogo real com a porta aberta depois do tiro. Pendência fica escrita lá, nunca escondida.
 
 ## 8. Memória: o que sai da cena é liberado — **OBRIGATÓRIO**
@@ -129,3 +130,20 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
   `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.
 - **Aviso na tela**: a sala mostra geometrias, texturas e heap no painel da bancada e, quando a memória sobe a cada limpeza (quatro seguidas na mesma
   área, acima do orçamento), põe uma faixa vermelha sob a ferramenta e um evento `memory_leak` no registro. Faixa vermelha na sala é vazamento a corrigir.
+
+## 8. Tudo tipado — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-11-03: o kit é a base de vários jogos, e os contratos entre os pacotes (materiais, golpes, `TestableModule`) têm
+que quebrar no editor e no build, nunca no jogo.
+
+- Código novo ou alterado é **TypeScript** com `strict` (o `tsconfig.base.json`). Os pacotes já estão todos em `.ts`; sala de teste, `tools/` e
+  `site/` que ainda estão em JS passam para `.ts` ao serem mexidos (ou, durante a migração, ganham tipos JSDoc checados por `checkJs`).
+- **Sem `any`**, implícito ou explícito. O tipo que ainda não se conhece é `unknown` estreitado por verificação; three.js tem tipos
+  (`@types/three`). Contrato público de pacote (o que o `index.ts` exporta) tem tipo explícito em parâmetros e retorno.
+- Sem `@ts-nocheck`, `@ts-ignore` ou `strict: false` em `tsconfig`. `@ts-expect-error` só com o motivo na mesma linha.
+- O que é anterior à regra está contado e só pode diminuir: os `any` por arquivo em `eslint-suppressions.json` (o `pnpm lint` falha num `any`
+  novo), e `strict: false` e `@ts-nocheck` em `STRICT_OFF_KNOWN` e `TS_NOCHECK_KNOWN` do `tools/check-packages.mjs` (o `pnpm check:packages`
+  falha num novo). Ao tirar `any` de um arquivo, rode `npx eslint . --prune-suppressions` para baixar a contagem; ao deixar um pacote strict ou
+  tirar um `@ts-nocheck`, tire-o da lista. O checklist do que falta está em `docs/migracao-typescript.md`.
+- Tipar não pode deixar o jogo mais lento: tipo não muda o código gerado, mas uma refatoração para tipar passa pelo mesmo gate de desempenho
+  do pre-push, sem `--no-verify`.

@@ -1,8 +1,12 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
 
-export type FaceContext = { THREE: any; PI: number; Hd: any; add: any; Bx: any; cmat: any; hc: any; sp: any; f: string[]; scaleHex: (hex: number, factor: number) => number }
+import type { PersonKit } from '../person-kit'
+import type { THREE_NS } from '../../three'
+import type { PersonSpec } from '../types'
+
+type Common = { THREE: PersonKit['THREE']; PI: number; add: PersonKit['add']; Bx: PersonKit['Bx']; cmat: PersonKit['cmat'] }
+
+export type FaceContext = Common & { Hd: THREE_NS.Object3D; hc: THREE_NS.Material; sp: PersonSpec; f: readonly string[]; scaleHex: (hex: number, factor: number) => number }
 
 /** Face features in the order the page draws them (the order is part of the scene hash): `ids` are the `sp.face` entries that switch one on. */
 export const FACE_FEATURES = [

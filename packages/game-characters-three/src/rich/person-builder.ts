@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-vars */
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html `build`, `pose`, `zombify`, `buildPerson`), kept as the team wrote it so a diff
 // against the page stays readable. The accessories (face, hats, clothing and gear, hand items) are registries in `./accessories`; the primitives are in `./person-kit`;
 // the hands are in `./accessories/hands` and have fingers only at the highest level of detail. Changes from the page, all listed in KNOWN_DEVIATIONS: three.js, the random
@@ -8,15 +7,16 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { MOVES, createRng } from '@adatechnology/game-characters'
 
-import type { Three } from '../three'
+import type { Three, THREE_NS } from '../three'
 
 import { FACE_FEATURES } from './accessories/face-features'
 import { buildHand } from './accessories/hands'
 import { HAND_ITEMS } from './accessories/hand-items'
 import { HATS } from './accessories/hats'
 import { EXTRAS } from './accessories/extras'
-import type { LightBudget } from '@adatechnology/game-render-three'
+import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 import { createPersonKit } from './person-kit'
+import type { ArmRig, BodySegment, DogRig, LegRig, PersonCharacter, PersonGroupSpec, PersonSpec } from './types'
 
 export type PersonBuilderOptions = {
   /** The stream for stains and phases. The page shared one `rng(77)` across the cast, built in order; default the same. */
@@ -33,13 +33,13 @@ export type PersonBuilderOptions = {
 }
 
 export type PersonBuilder = {
-  build(spec: Record<string, any>, index?: number): any
-  pose(character: any, zombie: boolean, walk: number, time: number): void
-  zombify(character: any, category?: string): void
-  buildPerson(person: Record<string, any>, zombie: boolean): { root: any; chars: any[] }
+  build(spec: PersonSpec, index?: number): PersonCharacter
+  pose(character: PersonCharacter, zombie: boolean, walk: number, time: number): void
+  zombify(character: PersonCharacter, category?: string): void
+  buildPerson(person: PersonGroupSpec, zombie: boolean): { root: THREE_NS.Group; chars: PersonCharacter[] }
 }
 
-const PAGE_EYES = { lento: 0xe3c341, corredor: 0xe5392b, brutamonte: 0xef8a2a }
+const PAGE_EYES: Readonly<Record<string, number>> = { lento: 0xe3c341, corredor: 0xe5392b, brutamonte: 0xef8a2a }
 
 export const createPersonBuilder = (host: Three, options: PersonBuilderOptions = {}): PersonBuilder => {
   const THREE = shapeGeometries(host)
@@ -47,20 +47,20 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
   const { PI, R, scaleHex, Bx, add, cmat, ball, ring, cap, limb, mlimb, torsoGeo, splat, stainM, chessTex } = kit
   const reduce = options.reducedMotion ?? false
   const detailed = (options.detail ?? 0) === 0
-  const EYE = { ...PAGE_EYES, ...options.zombieEyes }
+  const EYE: Record<string, number> = { ...PAGE_EYES, ...options.zombieEyes }
   const T = THREE
   const ZSKIN2 = new T.Color(0x6f7a5c)
-  function build(sp,idx){
+  function build(sp: PersonSpec, idx?: number): PersonCharacter {
   const root=new THREE.Group();
   const H=sp.h||1,B=sp.bulk||1,fem=!!sp.fem;
   const fig=new THREE.Group();fig.scale.set(B,H,Math.min(1.12,B));root.add(fig);
   const skinM=new THREE.MeshStandardMaterial({color:sp.skin,roughness:.8,flatShading:false});
   const topM=sp.top.plaid?new THREE.MeshStandardMaterial({map:chessTex(sp.top.c,sp.top.plaid),roughness:.9,flatShading:false}):cmat(sp.top.c);
   const pantsM=cmat(sp.pants.c),shoeM=cmat(sp.shoes);
-  const exHas=k=>(sp.ex||[]).some(e=>e[0]===k);
+  const exHas=(k: string)=>(sp.ex||[]).some(e=>e[0]===k);
   // pelvis + legs
   const pel=ball(fig,.2,sp.pants.skirt?cmat(sp.pants.c):pantsM,0,.92,0);pel.scale.set(fem?1.16:1.08,.62,.74);
-  const legs=[];
+  const legs: LegRig[]=[];
   for(const s of[-1,1]){const g=new THREE.Group();g.position.set(s*(fem?.115:.105),.9,0);fig.add(g);
     const thighM=sp.pants.skirt?skinM:pantsM;
     mlimb(g,fem?[.113,.117,.106,.09,.078]:[.106,.112,.104,.09,.078],.42,thighM);
@@ -98,11 +98,11 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
   const ridge=ball(Hd,.1,skinM,0,1.842,.105);ridge.scale.set(1.3,.28,.55);
   add(Hd,new THREE.SphereGeometry(.021,10,8),skinM,0,1.762,.182);
   add(Hd,Bx(.064,.013,.02),cmat(scaleHex(sp.skin,.68)),0,1.703,.156);
-  const bags=add(Hd,Bx(.2,.022,.012),new THREE.MeshBasicMaterial({color:0x3a2a2a,transparent:true,opacity:0}),0,1.79,.166);bags.castShadow=false;
+  const bags=add(Hd,Bx(.2,.022,.012),new THREE.MeshBasicMaterial({color:0x3a2a2a,transparent:true,opacity:0}),0,1.79,.166) as THREE_NS.Mesh<THREE_NS.BufferGeometry,THREE_NS.MeshBasicMaterial>;bags.castShadow=false;
   // hair
   const hc=cmat(sp.hair.c),hs=sp.hair.s;
-  const hairCap=(r,len,tilt)=>{const o=add(Hd,cap(r,len),hc,0,1.8,-.004);o.scale.set(.97,1.1,1.04);o.rotation.x=tilt;return o;};
-  const backBand=(t0,tl)=>{const o=add(Hd,new THREE.SphereGeometry(.172,20,10,PI*.85,PI*1.3,t0,tl),hc,0,1.8,0);o.scale.set(.97,1.1,1.04);return o;};
+  const hairCap=(r:number,len:number,tilt:number)=>{const o=add(Hd,cap(r,len),hc,0,1.8,-.004);o.scale.set(.97,1.1,1.04);o.rotation.x=tilt;return o;};
+  const backBand=(t0:number,tl:number)=>{const o=add(Hd,new THREE.SphereGeometry(.172,20,10,PI*.85,PI*1.3,t0,tl),hc,0,1.8,0);o.scale.set(.97,1.1,1.04);return o;};
   if(hs==='short'||hs==='bun'||hs==='long'){hairCap(.174,PI/2,-.38);backBand(PI*.45,PI*.22);}
   if(hs==='bun')ball(Hd,.085,hc,0,1.92,-.15);
   if(hs==='long'){const l=add(Hd,new THREE.CylinderGeometry(.15,.12,.42,16,1,false,PI*.6,PI*.8),hc,0,1.66,-.02);l.scale.set(1.05,1,1.1);}
@@ -118,7 +118,7 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     HATS.find((hat) => hat.kinds.includes(k))?.apply({ THREE, PI, Hd, add, Bx, cmat, cap, c, k, sp });
   }
   // arms: shoulder -> elbow -> hand
-  const arms=[];
+  const arms: ArmRig[]=[];
   const glove=(sp.ex||[]).find(e=>e[0]==='gloves');
   for(const s of[1,-1]){const g=new THREE.Group();g.position.set(s*(fem?.285:.305),1.475,0);U.add(g);
     const sl=sp.top.sl;
@@ -128,13 +128,13 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     const el=new THREE.Group();el.position.y=-.31;g.add(el);
     ball(el,.06,foreM);
     mlimb(el,[.06,.067,.06,.05,.044],.29,foreM);
-    const hg=new THREE.Group();hg.position.y=-.3;el.add(hg);const handM=glove?cmat(glove[1]):skinM;const palm=ball(hg,.048,handM,0,-.035,0);palm.scale.set(.6,1.05,1);
+    const hg=new THREE.Group();hg.position.y=-.3;el.add(hg);const handM=glove?cmat(glove[1]??0xffffff):skinM;const palm=ball(hg,.048,handM,0,-.035,0);palm.scale.set(.6,1.05,1);
     const { fingers, th } = buildHand({ THREE, add, hg, handM, s, detailed });
     const mount=new THREE.Group();mount.position.set(0,-.04,.015);hg.add(mount);
     g.rotation.z=s*.07;
     arms.push({g,el,hg,mount,s,fingers,th});}
   // extras
-  for(const e of sp.ex||[]){const [k,c]=e;const m=c!==undefined?cmat(c):null;
+  for(const e of sp.ex||[]){const [k,c]=e;const m=c!==undefined?cmat(c):topM; // the page passed null; an entry without a colour now takes the top's instead of a mesh without material
     EXTRAS[k]?.({ THREE, PI, U, Hd, root, add, Bx, cmat, ring, torsoGeo, legs, arms, fem, topM, m, e, k, headG, fig, upper, skinM, sp, splat, R, ball, cap, hc });
   }
   // back weapon
@@ -142,30 +142,31 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     add(g,Bx(.05,.9,.05),cmat(0x1c1d1f,{metalness:.6,roughness:.45}),0,.15,0);add(g,Bx(.07,.36,.09),cmat(0x6a3a1c),0,-.45,0);add(g,Bx(.06,.22,.07),cmat(0x6a3a1c),0,.15,.03);
     add(U,Bx(.04,.9,.02),cmat(0x3a2a1a),0,1.22,.175,0,0,-.75);}
   // hand items
-  const lightSources=[];
-  function item(kind,mount){if(!kind)return;const g=new THREE.Group();mount.add(g);
+  const lightSources: SourceHandle[]=[];
+  function item(kind: string | undefined, mount: THREE_NS.Object3D){if(!kind)return;const g=new THREE.Group();mount.add(g);
     const metal=cmat(0x8a9096,{metalness:.7,roughness:.35}),dark=cmat(0x1c1d1f,{metalness:.6,roughness:.45}),woodM=cmat(0x6a3a1c);
     HAND_ITEMS[kind]?.({ THREE, PI, add, Bx, cmat, g, metal, dark, woodM, lights: options.lights, sources: lightSources });
   }
-  item(sp.hand,arms[0].mount);item(sp.lhand,arms[1].mount);
-  if(sp.hand)arms[0].hold=true;
-  if(sp.lhand)arms[1].hold=true;
+  const [rightArm, leftArm] = arms as [ArmRig, ArmRig];
+  item(sp.hand,rightArm.mount);item(sp.lhand,leftArm.mount);
+  if(sp.hand)rightArm.hold=true;
+  if(sp.lhand)leftArm.hold=true;
   // zombie blood + mouth (stage 4)
-  const zb=[];for(let i=0;i<4;i++)splat(U,-.15+R()*.3,1.2+R()*.25,.17,.035+R()*.025,0x3b1d14,3,zb);{const mb=stainM(0x8a0a0a,{roughness:.1,metalness:.15});splat(Hd,0,1.672,.152,.026,0x8a0a0a,2,zb,'skin');
+  const zb: THREE_NS.Object3D[]=[];for(let i=0;i<4;i++)splat(U,-.15+R()*.3,1.2+R()*.25,.17,.035+R()*.025,0x3b1d14,3,zb);{const mb=stainM(0x8a0a0a,{roughness:.1,metalness:.15});splat(Hd,0,1.672,.152,.026,0x8a0a0a,2,zb,'skin');
     const st=add(Hd,new THREE.CylinderGeometry(.0035,.0025,.05,6).translate(0,-.025,0),mb,.03,1.676,.15);zb.push(st);const dg=add(Hd,new THREE.SphereGeometry(.007,8,6),mb,.03,1.626,.15);dg.userData.zdrop=1;zb.push(dg);}zb.forEach(b=>b.visible=false);
   // body segments: each one hangs from a joint; a cut at a joint takes everything after it
-  const tag=(o,seg)=>o.traverse(m=>{if(m.isMesh&&m.userData.seg===undefined)m.userData.seg=seg;});
-  arms.forEach((a,k)=>{tag(a.mount,'item');tag(a.hg,'hand'+k);tag(a.el,'fArm'+k);tag(a.g,'uArm'+k);a.g.children[0].userData.joint=1;a.el.children[0].userData.joint=1;});
-  legs.forEach((l,k)=>{tag(l.kn,'shin'+k);tag(l.g,'thigh'+k);l.kn.children[0].userData.joint=1;});
+  const tag=(o: THREE_NS.Object3D,seg: string)=>o.traverse(m=>{if((m as THREE_NS.Mesh).isMesh&&m.userData.seg===undefined)m.userData.seg=seg;});
+  arms.forEach((a,k)=>{tag(a.mount,'item');tag(a.hg,'hand'+k);tag(a.el,'fArm'+k);tag(a.g,'uArm'+k);a.g.children[0]!.userData.joint=1;a.el.children[0]!.userData.joint=1;});
+  legs.forEach((l,k)=>{tag(l.kn,'shin'+k);tag(l.g,'thigh'+k);l.kn.children[0]!.userData.joint=1;});
   tag(headG,'head');tag(U,'torso');tag(fig,'pelvis');
   const SIDE=['esquerdo','direito'],LSIDE=['direita','esquerda'];
-  const segs={head:{node:headG,label:'Cabeça',hp:40,r:.07,flip:1},torso:{label:'Tronco',hp:120},pelvis:{label:'Quadril',hp:90}};
+  const segs: Record<string, BodySegment>={head:{node:headG,label:'Cabeça',hp:40,r:.07,flip:1},torso:{label:'Tronco',hp:120},pelvis:{label:'Quadril',hp:90}};
   arms.forEach((a,k)=>{segs['uArm'+k]={node:a.g,label:'Braço '+SIDE[k],hp:60,r:.085,arm:k,kind:'shoulder'};segs['fArm'+k]={node:a.el,label:'Antebraço '+SIDE[k],hp:45,r:.065,arm:k,kind:'elbow'};segs['hand'+k]={node:a.hg,label:'Mão '+SIDE[k],hp:25,r:.05,arm:k,kind:'wrist'};});
   legs.forEach((l,k)=>{segs['thigh'+k]={node:l.g,label:'Coxa '+LSIDE[k],hp:80,r:.1,leg:k};segs['shin'+k]={node:l.kn,label:'Canela e pé '+LSIDE[k],hp:55,r:.08,leg:k};});
-  for(const k in segs){segs[k].max=segs[k].hp;segs[k].state='ok';}
+  for(const k in segs){const seg=segs[k]!;seg.max=seg.hp;seg.state='ok';}
   const mouth=add(Hd,Bx(.1,.04,.02),cmat(0x3a0a08),0,1.69,.145);mouth.visible=false;
   // dog
-  let dog=null;
+  let dog: THREE_NS.Group | null=null;
   if(sp.dog){dog=new THREE.Group();dog.position.set(.78,0,.3);dog.rotation.y=-.5;root.add(dog);const dm=cmat(0xb07a3e),dl=cmat(0xd8b07a);
     const body=add(dog,new THREE.CylinderGeometry(.12,.11,.56,16).rotateX(PI/2),dm,0,.42,0);body.scale.set(1,1.05,1);
     ball(dog,.12,dm,0,.43,.26);
@@ -173,14 +174,14 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     add(dog,new THREE.CylinderGeometry(.045,.055,.12,16).rotateX(PI/2),dl,0,.57,.5);
     add(dog,Bx(.03,.03,.02),cmat(0x111111),0,.585,.565);
     for(const s of[-1,1]){add(dog,new THREE.ConeGeometry(.035,.09,5),dm,s*.06,.7,.36,0,0,s*-.3);}
-    const dlegs=[];for(const a of[-1,1])for(const b of[-1,1]){const lg=new THREE.Group();lg.position.set(a*.075,.36,b*.21);dog.add(lg);limb(lg,.035,.028,.34,dm);dlegs.push({lg,ph:(a*b>0?0:PI)});}
+    const dlegs: DogRig['dlegs']=[];for(const a of[-1,1])for(const b of[-1,1]){const lg=new THREE.Group();lg.position.set(a*.075,.36,b*.21);dog.add(lg);limb(lg,.035,.028,.34,dm);dlegs.push({lg,ph:(a*b>0?0:PI)});}
     const tail=new THREE.Group();tail.position.set(0,.48,-.28);dog.add(tail);add(tail,new THREE.CylinderGeometry(.02,.012,.24,16).rotateX(PI/2).translate(0,0,-.1),dm,0,0,0,.6,0,0);
-    dog.userData={tail,dlegs};}
-  root.traverse(o=>{if(o.isMesh)o.userData.idx=idx;});
+    dog.userData={tail,dlegs} satisfies DogRig;}
+  root.traverse(o=>{if((o as THREE_NS.Mesh).isMesh)o.userData.idx=idx;});
   return {lightSources,mv:Object.assign({},MOVES_IDLE),phase:0,turnA:0,segs,dmg:{leg:0,dead:0},pends:[],limp:[0,0],skirt:!!sp.pants.skirt,root,fig,upper,headG,arms,legs,skinM,base:new THREE.Color(sp.skin),eyeM,bags,zb,mouth,dog,hunch:sp.hunch||0,ph:R()*6};
 }
   const MOVES_IDLE = MOVES.idle
-  function pose(c,z,W,t){
+  function pose(c: PersonCharacter,z: boolean,W: number,t: number){
   const p=c.ph+t,freq=z?3.4:5.6,ph=t*freq+c.ph;
   const breathe=reduce?0:Math.sin(p*1.6)*.012;
   c.upper.scale.y=1+breathe;
@@ -196,18 +197,18 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     a.g.rotation.x=(a.grip&&!z?-.75:base-raise*(z?1.12:1.3))+swing+(z&&!reduce&&t?Math.sin(p*3+a.s*2)*.08:0);
     a.g.rotation.z=a.s*(.07+(z?.1:0))+(a.grip&&!z?-a.s*.35:0);
     a.el.rotation.x=z?-.18:(a.grip?-1.1:-(.12+(a.hold?.25:0)+W*(.25+Math.max(0,a.s*Math.sin(ph))*.3)));
-    if(a.fingers){const gr=(a.hold||a.grip?1.25:.4)*(z?.5:1);a.fingers.forEach((f,j)=>f.rotation.z=-a.s*gr*(j%2?1.1:.9));a.th.rotation.z=-a.s*(.45+gr*.25);a.hg.rotation.x=reduce?0:-W*Math.sin(ph-.6)*.15*a.s}});
-  if(c.dog&&!reduce&&t){const d=c.dog.userData;d.tail.rotation.y=Math.sin(t*9)*.5;d.dlegs.forEach(l=>{l.lg.rotation.x=W*Math.sin(t*7+l.ph)*.45})}
+    if(a.fingers){const gr=(a.hold||a.grip?1.25:.4)*(z?.5:1);a.fingers.forEach((f,j)=>f.rotation.z=-a.s*gr*(j%2?1.1:.9));if(a.th)a.th.rotation.z=-a.s*(.45+gr*.25);a.hg.rotation.x=reduce?0:-W*Math.sin(ph-.6)*.15*a.s}});
+  if(c.dog&&!reduce&&t){const d=c.dog.userData as DogRig;d.tail.rotation.y=Math.sin(t*9)*.5;d.dlegs.forEach(l=>{l.lg.rotation.x=W*Math.sin(t*7+l.ph)*.45})}
 }
-  function zombify(c,cat){c.skinM.color.copy(c.base).lerp(ZSKIN2,1);c.eyeM.color.set(EYE[cat||"lento"]);c.zb.forEach(b=>b.visible=true);c.mouth.visible=true;c.bags.material.opacity=.9}
-  function buildPerson(p,zed){
-  const root=new THREE.Group(),chars=[];
-  if(p.b){const c=build(p.b,0);chars.push(c);root.add(c.root);if(zed&&!p.kid)zombify(c,p.zcat);c.z=zed&&!p.kid}
+  function zombify(c: PersonCharacter,cat?: string){c.skinM.color.copy(c.base).lerp(ZSKIN2,1);c.eyeM.color.set(EYE[cat||"lento"] ?? EYE.lento!);c.zb.forEach(b=>b.visible=true);c.mouth.visible=true;c.bags.material.opacity=.9}
+  function buildPerson(p: PersonGroupSpec,zed: boolean){
+  const root=new THREE.Group(),chars: PersonCharacter[]=[];
+  if(p.b){const c=build(p.b,0);chars.push(c);root.add(c.root);if(zed&&!p.kid)zombify(c,p.zcat);c.z=!!(zed&&!p.kid)}
   (p.kids||[]).forEach(k=>{const c=build(k,0);c.root.position.x=k.x;c.root.rotation.y=-k.x*.4;c.z=false;chars.push(c);root.add(c.root)});
-  chars.forEach(c=>pose(c,c.z,0,0));
+  chars.forEach(c=>pose(c,!!c.z,0,0));
   return {root,chars};
 }
   // every person this builder draws is a piece of the kit (the port above stays as the team wrote it)
-  const mark = (c) => { markKitOrigin(c.root, { owner: 'game-characters-three', kind: 'person' }); return c }
+  const mark = <C extends { root: THREE_NS.Object3D }>(c: C): C => { markKitOrigin(c.root, { owner: 'game-characters-three', kind: 'person' }); return c }
   return { build: (sp, idx) => mark(build(sp, idx)), pose, zombify, buildPerson: (p, zed) => mark(buildPerson(p, zed)) }
 }

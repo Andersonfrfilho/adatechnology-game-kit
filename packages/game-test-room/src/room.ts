@@ -3,10 +3,11 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
-import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -22,6 +23,7 @@ import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, check
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
@@ -162,6 +164,19 @@ const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1],
  * Create the test room. See `TestRoomOptions`. The room owns a renderer, scene and camera unless you pass them; with your own renderer you call
  * `room.update(dt)` every frame and render yourself.
  */
+/**
+ * The sound key of a vehicle's door, hood or trunk lid (`vehicle_door_shut`...): a car leaf has its own sounds, not those of its sheet metal. The part's
+ * role tag (`door`, `hood`, `lid`, from game-vehicles) says which; an untagged leaf counts as a door.
+ */
+const vehicleLeafKey = (spec: DestructibleSpec, part: string, moment: 'open' | 'shut'): string => {
+  const tags = spec.parts.find((p) => p.id === part)?.tags ?? []
+  const leaf = tags.includes('hood') ? 'hood' : tags.includes('lid') || tags.includes('trunk') ? 'trunk' : 'door'
+  return `vehicle_${leaf}_${moment}`
+}
+
+/** The destruction events that already play the impact of a blow (a mark, a break): a blow without any of them plays its contact sound itself. */
+const MARK_EVENTS: ReadonlySet<string> = new Set(['dent', 'hole', 'crack', 'chip', 'stage', 'fracture'])
+
 export function createTestRoom(options: TestRoomOptions): TestRoom {
   const THREE = options.THREE
   const locale = options.locale ?? 'en'
@@ -292,9 +307,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
-  const playSound = (key: string, point: Vec3, volume: number): void => {
-    destructionSound?.onSound(key, point, volume)
-    options.onSound?.(key, point, volume)
+  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
+    destructionSound?.onSound(key, point, volume, detail)
+    if (detail) options.onSound?.(key, point, volume, detail)
+    else options.onSound?.(key, point, volume)
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
@@ -371,7 +387,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
     renderer.emit(material.debris === 'clods' ? 'dust' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
-    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
+    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
   }
   terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
@@ -719,7 +735,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return piece
     },
     dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
-    hitSound: (objectId, point) => playSound(impactKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, 0.5),
+    hitSound: (objectId, point) => {
+      const material = heaviestMaterial(objectId) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), point, 0.5, impactSoundKeys(material, def, 'blunt'))
+    },
     onEvent: (ev) => {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
@@ -815,7 +835,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
+    leafSound: (objectId, part, moment) => {
+      const spec = specs.get(objectId)
+      return spec?.tags?.includes('vehicle') ? vehicleLeafKey(spec, part, moment) : undefined
+    },
     sound: playSound,
+    // a vehicle's doors, hood and lid have their own sounds in the vehicle bank (game-vehicles-three), not those of the house
+    leafFoley: (objectId, part, slides) =>
+      specs.get(objectId)?.tags?.includes('vehicle') ? null : leafFoleyOf(entryOf(objectId)?.item?.sounds, part, impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')), slides),
     onEvent: (ev) => {
       const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }
       action(`door_${ev.type}`, t(`act.door_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, part: ev.part, data: { opening: Math.round(ev.opening * 1000) / 1000, ...(ev.by ? { by: ev.by } : {}) } })
@@ -1904,7 +1931,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
+    const hit = useToHit(u, r.point, r.normal)!
+    const result = world.hitPart(r.object, r.part, { ...hit, source: 'player' })
+    // a blow that leaves no mark (a punch on solid wood, a kick on the ground) still meets the surface: its impact sounds, by material and blow
+    if (!result.events.some((e) => MARK_EVENTS.has(e.type))) {
+      const material = world.part(r.object, r.part)?.material ?? heaviestMaterial(r.object) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), r.point, Math.min(0.8, 0.25 + u.energy / 400), impactSoundKeys(material, def, hit.type))
+    }
     const blow = blowOfTool(id, toolDef(id)?.category ?? '')
     if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
@@ -2302,6 +2336,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
+    playSound(pickupSoundOf(heldEntry?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
     fire('grab', { held: true, objectId: r.object })
     return true
@@ -2316,6 +2351,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     releaseHeld()
     piece.velocity = [0, 0, 0]
     renderer.impulse(id, [aimD[0] * speed * piece.mass, (aimD[1] * speed + 1.2) * piece.mass, aimD[2] * speed * piece.mass])
+    playSound('item_throw', [piece.root.position.x, piece.root.position.y, piece.root.position.z], Math.min(1, 0.3 + speed * 0.04))
     action('throw', t('act.throw', { name, speed: num(speed, 1) }), { objectId: id, itemId: entryOf(id)?.so.itemId, data: { speedMs: speed, massKg: piece.mass } })
     fire('throw', { objectId: id, speed })
     return true
@@ -2449,6 +2485,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.opened = true
     if (e.containerId) fluids.open(e.containerId)
     seal.open?.(wrapped.get(e.so.root) ?? e.so.root)
+    playSound(openSoundOf(e.item?.sounds, world.materials.get(heaviestMaterial(e.so.objectId) ?? '')), v3(e.so.root.getWorldPosition(tmpV)), 0.7)
     const tool = opener.tool ? (catalogMap.get(opener.tool)?.name ?? (arsenal.weapons.has(opener.tool) ? toolName(opener.tool) : opener.tool)) : undefined
     action('open_seal', tool ? t('act.open_with', { name: e.name, tool }) : t('act.open_by_hand', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { tool: opener.tool ?? 'hand' } })
     return true
@@ -2502,12 +2539,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (consuming && c.closed) fluids.open(e.containerId)
     useItemPlayer = createItemUse(fluids, e.containerId, def)
     useItemName = def.id
+    useSoundIn = 0
     if (eating) useLiters = c.liters
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     return true
   }
   /** Litres in the container when an eat or drink use began: what it took out is counted as eaten, not leaked. */
   let useLiters: number | null = null
+  /** Seconds until the next sound of the use in progress. */
+  let useSoundIn = 0
 
   const updateItemUse = (dt: number): void => {
     if (!useItemPlayer) return
@@ -2515,6 +2555,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
     const before = c?.liters
     useItemPlayer.update(dt)
+    // a use that lasts repeats its sound (a gulp, a bite chewed) while the container gives something
+    const useSound = e && useLiters !== null ? useSoundOf(e.item?.sounds, useItemName) : undefined
+    if (useSound && e) {
+      useSoundIn -= dt
+      const now = e.containerId ? fluids.container(e.containerId)?.liters : undefined
+      if (useSoundIn <= 0 && before !== undefined && now !== undefined && now < before) {
+        playSound(useSound, v3(e.so.root.getWorldPosition(tmpV)), 0.6)
+        useSoundIn = USE_SOUND_EVERY
+      }
+    }
     const seal = e?.item?.seal
     twisting = null
     if (e && seal?.openUse === useItemName && !e.opened) {
@@ -2953,6 +3003,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
@@ -3493,6 +3544,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
         seats: ti.seats,
+        sounds: ti.sounds,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }

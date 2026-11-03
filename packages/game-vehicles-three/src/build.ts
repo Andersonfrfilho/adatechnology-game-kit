@@ -128,13 +128,14 @@ export function primaryPaint(c: any): any {
 const SEATED_EYE = { up: 0.55, back: 0.28 }
 
 /** The driver's eyes in the group frame (the group sits at the origin while it is built): the frontmost seat, on the driver's side. */
-function eyeOf(THREE: any, c: any): [number, number, number] | null {
-  const tops: Array<{ x: number; y: number; z: number }> = c.seatTops ?? []
+type Point = { x: number; y: number; z: number }
+function eyeOf(THREE: { Vector3: new (x: number, y: number, z: number) => Point }, c: { seatTops?: Point[]; vehicle: { localToWorld(v: Point): Point } }): [number, number, number] | null {
+  const tops = c.seatTops ?? []
   if (!tops.length) return null
   const points = tops.map((t) => c.vehicle.localToWorld(new THREE.Vector3(t.x, t.y, t.z)))
-  const front = Math.max(...points.map((p: any) => p.z))
-  const row = points.filter((p: any) => p.z > front - 0.25)
-  const seat = row.reduce((a: any, b: any) => (b.x > a.x ? b : a))
+  const front = Math.max(...points.map((p) => p.z))
+  const row = points.filter((p) => p.z > front - 0.25)
+  const seat = row.reduce((a, b) => (b.x > a.x ? b : a))
   return [+seat.x.toFixed(3), +(seat.y + SEATED_EYE.up).toFixed(3), +(seat.z - SEATED_EYE.back).toFixed(3)]
 }
 
@@ -184,6 +185,8 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       c.vehicle.matrixAutoUpdate = true
       pivot.add(c.vehicle)
       group.add(pivot)
+      // the kit refreshes the matrices of what it deforms from c.root: it has to be the group that now carries the vehicle
+      c.root = group
       if (color && primary) {
         const repainted = primary.clone()
         repainted.color.set(color)

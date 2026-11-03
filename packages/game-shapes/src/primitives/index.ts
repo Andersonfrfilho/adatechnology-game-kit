@@ -1,5 +1,5 @@
 import { canonicalJson } from '../hash'
-import type { PrimitiveBuffers, PrimitiveNode } from '../types'
+import type { MeshNode, PrimitiveBuffers, PrimitiveNode } from '../types'
 import { difference } from './difference'
 import { computeVertexNormals, extrude } from './extrude'
 import { box, circle, cone, cylinder, indexArray, lathe, plane, ring, sphere, torus } from './three-generators'
@@ -61,7 +61,7 @@ export function primitiveParameters(node: PrimitiveNode, options: DetailOptions 
   return out
 }
 
-function mesh(p: Record<string, unknown>): PrimitiveBuffers {
+function mesh(p: MeshNode): PrimitiveBuffers {
   const positions = new Float32Array(p.positions as number[])
   const indices = p.indices ? indexArray(p.indices as number[]) : undefined
   return {
@@ -75,11 +75,12 @@ function mesh(p: Record<string, unknown>): PrimitiveBuffers {
   }
 }
 
-function make(kind: PrimitiveNode['kind'], p: Record<string, any>): PrimitiveBuffers {
-  switch (kind) {
+/** Builds a node whose parameters were already resolved (`primitiveParameters` merged over it, so the detail level is applied). */
+function make(p: PrimitiveNode): PrimitiveBuffers {
+  switch (p.kind) {
     case 'box': {
-      const size = (p.size ?? [1, 1, 1]) as number[]
-      const segments = (p.segments ?? [1, 1, 1]) as number[]
+      const size = p.size ?? [1, 1, 1]
+      const segments = p.segments ?? [1, 1, 1]
       return box(size[0], size[1], size[2], segments[0], segments[1], segments[2])
     }
     case 'cylinder':
@@ -105,7 +106,7 @@ function make(kind: PrimitiveNode['kind'], p: Record<string, any>): PrimitiveBuf
     case 'mesh':
       return mesh(p)
     default:
-      throw new Error(`game-shapes: unknown primitive kind "${String(kind)}"`)
+      throw new Error(`game-shapes: unknown primitive kind "${String((p as { kind: unknown }).kind)}"`)
   }
 }
 
@@ -133,7 +134,7 @@ export const templateCacheStats = (): { size: number; hits: number; misses: numb
 export function buildPrimitive(node: PrimitiveNode, options: DetailOptions = {}): PrimitiveBuffers {
   const parameters = primitiveParameters(node, options)
   // raw meshes are not worth a key of their whole arrays; they are cheap to wrap
-  if (node.kind === 'mesh' || templateLimit === 0) return make(node.kind, parameters)
+  if (node.kind === 'mesh' || templateLimit === 0) return make({ ...node, ...parameters } as PrimitiveNode)
   const key = `${node.kind}:${canonicalJson(parameters)}`
   const cached = templates.get(key)
   if (cached) {
@@ -143,7 +144,7 @@ export function buildPrimitive(node: PrimitiveNode, options: DetailOptions = {})
     return cached
   }
   stats.misses++
-  const built = make(node.kind, parameters)
+  const built = make({ ...node, ...parameters } as PrimitiveNode)
   templates.set(key, built)
   if (templates.size > templateLimit) templates.delete(templates.keys().next().value as string)
   return built

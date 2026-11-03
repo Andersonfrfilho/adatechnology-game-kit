@@ -11,7 +11,7 @@ import { registries } from './registry'
 import { createRng, hashString } from './rng'
 import { resolveSlots } from './slots'
 import { checkLot, clampOptionsToZone, resolveZone, useOf } from './zoning'
-import type { FloorplanOptions, ItemColor, Json, PlacedItem, Plan, Slot, TemplateDef, ZoneAdjustment } from './types'
+import type { FloorplanOptions, FloorplanResult, ItemColor, FloorplanResultFields, PlacedItem, Plan, Rect, ResultItem, ResultLot, Slot, SlotFields, TemplateDef, ZoneAdjustment } from './types'
 import type { StateContext } from './types'
 
 export function templateOf(t: string | TemplateDef): TemplateDef {
@@ -22,15 +22,21 @@ export function templateOf(t: string | TemplateDef): TemplateDef {
   return t
 }
 
-const cleanSlot = (s: Slot) => {
-  const o: Json = {}
+/** A recorded slot: the resolved slot without its internal fields, with the category names only. */
+export interface RecordedSlot extends Omit<SlotFields, '_cell' | 'cats'> {
+  cats: string[]
+  [extra: string]: unknown
+}
+
+const cleanSlot = (s: Slot): RecordedSlot => {
+  const o: Record<string, unknown> = {}
   for (const k of Object.keys(s)) if (k[0] !== '_') o[k] = s[k]
   o.cats = Object.keys(s.cats || {})
-  return o
+  return o as RecordedSlot // the slot's own fields, copied
 }
 
 /** Recorded slots (resolved positions) of every storey and of the lot. */
-export function slots(template: string | TemplateDef, options?: FloorplanOptions): Json[] {
+export function slots(template: string | TemplateDef, options?: FloorplanOptions): RecordedSlot[] {
   const tpl = templateOf(template)
   const o = options || {}
   const plan = buildPlan(tpl, o.w, o.d, o)
@@ -55,7 +61,7 @@ export function pickState(requested: string | undefined, seed: number | string):
   return keys[keys.length - 1]
 }
 
-function colorOf(m: Json, seed: number | string): number | string {
+function colorOf(m: PlacedItem, seed: number | string): number | string {
   const spec: ItemColor = m.colorSpec || registries().CATALOG[m.type]?.color || { role: 'wood' }
   if ('role' in spec) return spec.role
   if ('hex' in spec) return spec.hex
@@ -82,7 +88,7 @@ function applyState(plan: Plan, items: PlacedItem[], ctx: ReturnType<typeof crea
 const loc = (key: string | undefined, locale: string, ns: 'labels' | 'facadeColors' = 'labels', vars?: Record<string, string | number>) => (key ? translate(ns, key, locale, vars) : key)
 
 /** Generates a plan: building, lot, seeded item fill, decor, house state and palette. */
-export function generate(template: string | TemplateDef, options?: FloorplanOptions): Json {
+export function generate(template: string | TemplateDef, options?: FloorplanOptions): FloorplanResult {
   const tpl = templateOf(template)
   const o = options || {}
   const seed = o.seed == null ? 1 : o.seed
@@ -105,22 +111,22 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
   const state = pickState(o.state, seed)
   const stateItemsAll = applyState(plan, items, ctx, seed, state)
   const colors = palette({ seed, style: plan.style, state })
-  const strip = (m: Json) => {
-    const x: Json = {}
+  const strip = (m: PlacedItem): ResultItem => {
+    const x: Record<string, unknown> = {}
     for (const k of Object.keys(m)) if (k[0] !== '_' && k !== 'colorSpec') x[k] = m[k]
-    return x
+    return x as ResultItem // the item's own fields, copied
   }
   const L = plan.lot
-  const lot = L
+  const lot: ResultLot | null = L
     ? {
-        rect: L.rect.map(r2),
+        rect: L.rect.map(r2) as Rect,
         setback: r2(L.setback),
         backyard: r2(L.backyard),
         sideYard: L.sideYard,
         style: L.style,
         pool: L.pool,
         zones: plan.zones.map((z) => ({ id: z.id, type: z.type, label: z.label, name: loc(z.label, locale), parts: z.parts, ground: z.ground })),
-        perimeter: L.perimeter.map((s: Json) => Object.assign({ color: 'wall' }, s)),
+        perimeter: L.perimeter.map((s) => Object.assign({ color: 'wall' }, s)),
         gates: plan.gates.map((g) => ({ id: g.id, type: g.type, model: g.model, u: g.u, v: g.v, axis: g.axis, width: g.width, height: g.height, side: g.side, to: g.to, material: g.material, open: !!g.open, color: 'gate' })),
         paths: plan.paths.map((c) => ({ id: c.id, type: c.type, from: c.from, to: c.to, width: c.width, rects: c.rects, points: c.points })),
       }
@@ -139,7 +145,7 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
     if (m.category) out.color = colorOf(m, seed)
     return out
   })
-  const result: Json = {
+  const base: Omit<FloorplanResultFields, 'partyWalls'> = {
     template: tpl.id,
     name: translate('templates', tpl.id, locale),
     use: useOf(tpl),
@@ -167,7 +173,7 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
     walls: plan.walls,
     doors: plan.doors,
     windows: plan.windows,
-    openPairs: ([] as Json[]).concat(...Object.values(plan.openPairs)),
+    openPairs: ([] as [string, string][]).concat(...Object.values(plan.openPairs)),
     facade,
     lot,
     items: itemsOut,
@@ -176,8 +182,8 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
     building: tpl.building ? tpl.building(plan.w, plan.d, op) : null,
     missing,
   }
-  if (tpl.singleFloor) result.floorNumber = op.floor || 3
-  result.partyWalls = tpl.partyWalls || []
+  if (tpl.singleFloor) base.floorNumber = op.floor || 3
+  const result: FloorplanResult = Object.assign(base, { partyWalls: tpl.partyWalls || [] })
   if (plan.config) result.config = plan.config
   runResultExtensions(plan, result, seed, op)
   if (zone) {
@@ -187,20 +193,20 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
   return result
 }
 
-const isSolid = (m: Json) => !m.flat && !m.on && (!m.decor || m.mount === 'floor')
+const isSolid = (m: Pick<PlacedItem, 'flat' | 'on' | 'decor' | 'mount'>) => !m.flat && !m.on && (!m.decor || m.mount === 'floor')
 
 /** Validates a result of `generate`; returns a list of messages (empty when valid). */
-export function validate(result: Json, options?: { locale?: string }): string[] {
+export function validate(result: FloorplanResult, options?: { locale?: string }): string[] {
   const locale = options?.locale || result.locale || 'en'
   const t = (key: string, vars: Record<string, string | number>) => translate('messages', key, locale, vars)
   const errors: string[] = []
-  const solids: Json[] = result.items.filter(isSolid)
+  const solids = result.items.filter(isSolid)
   for (let i = 0; i < solids.length; i++)
     for (let j = i + 1; j < solids.length; j++)
       if (solids[i].floor === solids[j].floor && !solids[i].barricade && !solids[j].barricade && overlaps(solids[i].aabb, solids[j].aabb, 0.011)) errors.push(t('overlap', { a: solids[i].id, b: solids[j].id }))
   for (const m of solids) {
     if (m.barricade) continue
-    for (const p of result.doors) if (p.floor === (m.outdoor ? 0 : m.floor) && p.zones.some((z: Json) => overlaps(m.aabb, z, 0.011))) errors.push(t('door_blocked', { id: m.id }))
+    for (const p of result.doors) if (p.floor === (m.outdoor ? 0 : m.floor) && p.zones.some((z) => overlaps(m.aabb, z, 0.011))) errors.push(t('door_blocked', { id: m.id }))
     if (result.lot) for (const g of result.lot.gates) if (m.outdoor && openingZones(g.u, g.v, 'u', g.width, DOOR_CLEARANCE).some((z) => overlaps(m.aabb, z, 0.011))) errors.push(t('gate_blocked', { id: m.id }))
   }
   for (const f of result.missing) errors.push(t('missing_required', { room: f.room, slot: f.slot }))

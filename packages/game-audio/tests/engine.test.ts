@@ -57,6 +57,32 @@ describe('the audio engine', () => {
     expect(engine.play('sfx_pistol', { distance: 0 })).not.toBeNull()
   })
 
+  it('places a loop with a falloff: quieter and duller far from the listener, panned to its side; a loop without one is heard at the listener', () => {
+    const { recorder, engine } = engineOn()
+    const placed = { id: 'placed', bus: 'world', order: 'game_loop', source: { kind: 'osc', wave: 'sawtooth', loop: true }, filters: { mode: 'serial', bank: [{ type: 'lowpass', frequency: { set: 400 } }] }, falloff: { model: 'inverse_square', k: 0.004, cutoffK: 0.01 }, pan: true, sources: ['test'] } as const
+    engine.register({ id: 'test', loops: [placed] })
+    engine.setListener({ position: [0, 0, 0], yaw: 0 })
+    const targets = (param: string): number[] =>
+      recorder
+        .trace()
+        .entries.filter((e) => e.op === 'param' && (e as { param: string }).param === param && (e as { method: string }).method === 'setTargetAtTime')
+        .map((e) => (e as unknown as { args: number[] }).args[0] as number)
+    const loop = engine.loop('placed')
+    loop.set({ volume: 0.5, frequency: 30, cutoff: 800, position: [0, 0, 0] })
+    loop.set({ volume: 0.5, frequency: 30, cutoff: 800, position: [30, 0, 0] })
+    const [near, far] = targets('gain')
+    expect(near).toBeCloseTo(0.5)
+    expect(far).toBeCloseTo(0.5 / (1 + 900 * 0.004))
+    const [, nearCut, , farCut] = targets('frequency')
+    expect(nearCut).toBeCloseTo(800)
+    expect(farCut).toBeCloseTo(800 / (1 + 30 * 0.01))
+    // to the listener's right (+x at yaw 0)
+    expect(targets('pan').at(-1)).toBeGreaterThan(0.5)
+    const plain = engine.loop('engine_saw')
+    plain.set({ volume: 0.3, position: [30, 0, 0] })
+    expect(targets('gain').at(-1)).toBeCloseTo(0.3)
+  })
+
   it('stops loops and clears on dispose', () => {
     const { engine } = engineOn({ mix: 'game' })
     const loop = engine.loop('rotor_blades')

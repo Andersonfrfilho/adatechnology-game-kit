@@ -1,0 +1,1142 @@
+{
+  "packages/game-characters-three/tests/exact-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-characters-three/tests/people.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-commercial/tests/commercial.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-floorplan-commercial/tests/interiors.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-commercial/tests/office-tower.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-interactables/tests/adapter.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 17
+    }
+  },
+  "packages/game-floorplan-interactables/tests/support/plans.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-interactables/tests/support/team-shape.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-interactables/tests/team-golden-extras.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-interactables/tests/team-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-post-apocalyptic/src/state.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-post-apocalyptic/tests/floorplan.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 29
+    }
+  },
+  "packages/game-floorplan-post-apocalyptic/tests/support.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 86
+    }
+  },
+  "packages/game-floorplan-post-apocalyptic/tests/triage.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-post-apocalyptic/tests/vc3-rows.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-residential/tests/residential-tower.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-floorplan-residential/tests/residential.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-floorplan-structure/tests/extension.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 16
+    }
+  },
+  "packages/game-floorplan-structure/tests/finds-goods.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-structure/tests/flexure.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-structure/tests/load-path.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-structure/tests/slab-panels.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-structure/tests/structure.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-floorplan-structure/tests/team-utilities.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-structure/tests/team-vocabulary.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-structure/tests/tower-plan.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-structure/tests/utilities.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 24
+    }
+  },
+  "packages/game-floorplan-structure/tests/vc3-golden-support.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-structure/tests/viewer-layer.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-structure/tests/wall-detail.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-floorplan-three/src/build/api.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-three/src/build/build.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-floorplan-three/src/cars.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-three/src/create.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/destruction/breach.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 42
+    }
+  },
+  "packages/game-floorplan-three/src/destruction/panels.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/destruction/pieces.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/destruction/world.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/builders.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/extra-types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/fixtures.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/place-items.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/plants.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 26
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/taps.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/type-table.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/furniture/yard.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/house/baseboard.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/house/doors.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-floorplan-three/src/house/outbuildings.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/house/stairs.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/interactables/bridge.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-floorplan-three/src/interactables/kit.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/interaction/state.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-three/src/interaction/target.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/kernel-types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/kernel/close-scene.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-three/src/kernel/geometry.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-floorplan-three/src/lights/decor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/lights/fixtures.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-three/src/lights/room-light.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/lot/gates.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/lot/perimeter.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-three/src/materials/materials.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-three/src/navigation/bind.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-three/src/navigation/floor-navigator.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "packages/game-floorplan-three/src/roof/gutters.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/roof/rect.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/roof/roofs.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    }
+  },
+  "packages/game-floorplan-three/src/roof/slabs.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/src/roof/tiles.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/test-area/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 24
+    }
+  },
+  "packages/game-floorplan-three/src/test-area/scenarios.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 17
+    }
+  },
+  "packages/game-floorplan-three/src/test-area/specimens.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-floorplan-three/src/test-area/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-floorplan-three/src/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 71
+    }
+  },
+  "packages/game-floorplan-three/src/utilities/electrical.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/utilities/water.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-floorplan-three/src/vegetation/bridge.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/src/wall.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 17
+    }
+  },
+  "packages/game-floorplan-three/tests/blast-presentation.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-three/tests/destruction.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 42
+    }
+  },
+  "packages/game-floorplan-three/tests/effect-lights-indoors.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    }
+  },
+  "packages/game-floorplan-three/tests/exact-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/tests/golden-scene.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-three/tests/helpers/area-room.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-floorplan-three/tests/helpers/fake-document.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/tests/helpers/houses.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-floorplan-three/tests/interactables-default.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-three/tests/interaction.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-floorplan-three/tests/lot-roof.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 14
+    }
+  },
+  "packages/game-floorplan-three/tests/navigation.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 15
+    }
+  },
+  "packages/game-floorplan-three/tests/room-lights-budget.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-floorplan-three/tests/skyscraper.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/tests/structure.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    }
+  },
+  "packages/game-floorplan-three/tests/team-golden-house-area.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-floorplan-three/tests/test-area.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 18
+    }
+  },
+  "packages/game-floorplan-three/tests/wall.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-interactables-three/src/merge.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-interactables-three/src/pose.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-interactables-three/src/screen.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-interactables-three/src/sway.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-interactables-three/src/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-interactables-three/tests/helpers.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-interactables-three/tests/merge.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "packages/game-interactables-three/tests/mirrors.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-interactables-three/tests/sway.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-urban-three/src/draw.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 27
+    }
+  },
+  "packages/game-urban-three/src/resolvers.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-urban-three/src/rounded-box.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-urban-three/src/test-area/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "packages/game-urban-three/src/text.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-urban-three/tests/exact-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-urban-three/tests/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-urban-three/tests/parts-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-urban-three/tests/patterns-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-urban-three/tests/placements.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-urban-three/tests/terrain-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-urban-three/tests/towers.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vegetation-three/src/test-area/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "packages/game-vegetation-three/src/test-area/nursery.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 13
+    }
+  },
+  "packages/game-vegetation-three/src/test-area/plants.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-vegetation-three/src/test-area/scenarios.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vegetation-three/src/test-area/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vegetation-three/tests/exact-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-vegetation-three/tests/team-golden-module.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles-fleet/src/context.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles-fleet/src/pack.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/boats-extra.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 61
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/cars-extra.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 364
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/heavy.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 88
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/helicopters-extra.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 138
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/military.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 289
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/motorcycles-cars.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 442
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 108
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/planes-extra.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 205
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/suv-pickup-van.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 244
+    }
+  },
+  "packages/game-vehicles-fleet/src/vehicles/water-air.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 274
+    }
+  },
+  "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 15
+    }
+  },
+  "packages/game-vehicles-fleet/tests/crash.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-vehicles-fleet/tests/crease-queue.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles-fleet/tests/digest.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles-fleet/tests/engine-heat.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-vehicles-fleet/tests/flat-tyre.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "packages/game-vehicles-fleet/tests/fluids-leak.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-vehicles-fleet/tests/helpers/digest.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles-fleet/tests/helpers/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles-fleet/tests/helpers/golden.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "packages/game-vehicles-fleet/tests/locale.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles-fleet/tests/tear-off-budget.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles-fleet/tests/torn-panels-digest.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "packages/game-vehicles-three/src/build.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 17
+    }
+  },
+  "packages/game-vehicles-three/src/lite.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 24
+    }
+  },
+  "packages/game-vehicles-three/src/test-area/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 19
+    }
+  },
+  "packages/game-vehicles-three/src/test-area/proving/module.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 13
+    }
+  },
+  "packages/game-vehicles-three/src/vehicle-lod.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 23
+    }
+  },
+  "packages/game-vehicles-three/tests/damage-drives.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-vehicles-three/tests/dims.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-vehicles-three/tests/exact-golden.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles-three/tests/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles-three/tests/lane-damage.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "packages/game-vehicles-three/tests/team-golden-lite.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles-three/tests/team-golden-module.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles/src/api.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 26
+    }
+  },
+  "packages/game-vehicles/src/armor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 16
+    }
+  },
+  "packages/game-vehicles/src/body.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 41
+    }
+  },
+  "packages/game-vehicles/src/car.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 42
+    }
+  },
+  "packages/game-vehicles/src/context.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 79
+    }
+  },
+  "packages/game-vehicles/src/damage-panels.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 65
+    }
+  },
+  "packages/game-vehicles/src/damage-parts.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 86
+    }
+  },
+  "packages/game-vehicles/src/damageables.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles/src/destructible/clips.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles/src/destructible/enclosure.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles/src/destructible/impl.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 52
+    }
+  },
+  "packages/game-vehicles/src/destructible/item.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-vehicles/src/destructible/model.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 15
+    }
+  },
+  "packages/game-vehicles/src/destructible/subdivide-near.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles/src/destructible/visual.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 77
+    }
+  },
+  "packages/game-vehicles/src/explosion.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 37
+    }
+  },
+  "packages/game-vehicles/src/fluids.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 26
+    }
+  },
+  "packages/game-vehicles/src/geometry.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 103
+    }
+  },
+  "packages/game-vehicles/src/glass-damage.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 60
+    }
+  },
+  "packages/game-vehicles/src/glass.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 37
+    }
+  },
+  "packages/game-vehicles/src/hood.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 24
+    }
+  },
+  "packages/game-vehicles/src/impact.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 44
+    }
+  },
+  "packages/game-vehicles/src/interior.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 27
+    }
+  },
+  "packages/game-vehicles/src/kit.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 23
+    }
+  },
+  "packages/game-vehicles/src/lights.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 78
+    }
+  },
+  "packages/game-vehicles/src/locale.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "packages/game-vehicles/src/lod.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 59
+    }
+  },
+  "packages/game-vehicles/src/materials.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 14
+    }
+  },
+  "packages/game-vehicles/src/particles.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 51
+    }
+  },
+  "packages/game-vehicles/src/rollover.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 38
+    }
+  },
+  "packages/game-vehicles/src/scenarios.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 35
+    }
+  },
+  "packages/game-vehicles/src/tick.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-vehicles/src/tri-index.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 39
+    }
+  },
+  "packages/game-vehicles/src/trucks.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles/src/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "packages/game-vehicles/src/ui.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 34
+    }
+  },
+  "packages/game-vehicles/src/util.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles/src/warp.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 23
+    }
+  },
+  "packages/game-vehicles/src/wheels.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 16
+    }
+  },
+  "packages/game-vehicles/src/zone-apply.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 32
+    }
+  },
+  "packages/game-vehicles/src/zone-auto.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 68
+    }
+  },
+  "packages/game-vehicles/src/zone-core.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 47
+    }
+  },
+  "packages/game-vehicles/src/zone-decals.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 89
+    }
+  },
+  "packages/game-vehicles/src/zone-dent.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 55
+    }
+  },
+  "packages/game-vehicles/src/zone-derive.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 44
+    }
+  },
+  "packages/game-vehicles/tests/crease.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles/tests/cut.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-vehicles/tests/damage.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-vehicles/tests/demo.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "packages/game-vehicles/tests/destructible.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "packages/game-vehicles/tests/helpers/cases.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles/tests/helpers/digest.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "packages/game-vehicles/tests/helpers/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles/tests/legacy-seeds.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "packages/game-vehicles/tests/lod.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles/tests/particle-materials.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles/tests/routed-particles.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "packages/game-vehicles/tests/zones.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "tools/characters-catalog/tests/sheet-sources.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "tools/compat-check/tests/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "tools/golden/src/exact-snapshot.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "tools/vehicles-catalog/src/digest.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "tools/vehicles-catalog/src/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "tools/vehicles-catalog/src/record-lite.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  }
+}

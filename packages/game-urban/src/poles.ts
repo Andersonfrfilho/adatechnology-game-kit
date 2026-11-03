@@ -52,7 +52,8 @@ export type PoleOptions = {
   transformer?: boolean
 }
 
-export type PoleShapeBuilder = (b: UrbanBuilder, spec: any, o: PoleOptions) => void
+/** Draws a pole from its `spec`. Declared as a method so the registry can hold each builder with its own spec type (the `PoleDef` names the builder that reads its spec). */
+export type PoleShapeBuilder<TSpec extends object = object> = { build(b: UrbanBuilder, spec: TSpec, o: PoleOptions): void }['build']
 
 export type PoleDef = {
   id: string

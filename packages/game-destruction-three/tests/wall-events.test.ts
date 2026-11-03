@@ -56,7 +56,7 @@ describe('a mark on the face as drawn', () => {
     const { world, renderer, wall } = setup()
     // the drawn face is at z 0.1; the world's part ends 4 mm short of it
     world.emit({ type: 'spall', object: 'o1', part: 'wall', layer: 0, point: [0.3, 1.2, 0.096], area: 0.0113 })
-    world.emit({ type: 'hole', object: 'o1', part: 'wall', hole: { point: [0.3, 1.2, 0.096], normal: [0, 0, 1], diameter: 0.009, through: false }, worldPoint: [0.3, 1.2, 0.096] } as any)
+    world.emit({ type: 'hole', object: 'o1', part: 'wall', hole: { point: [0.3, 1.2, 0.096], normal: [0, 0, 1], diameter: 0.009, through: false }, worldPoint: [0.3, 1.2, 0.096] })
     renderer.update(0.016)
     expect(wall.children).toHaveLength(2)
     for (const mark of wall.children) expect(mark.position.z).toBeGreaterThan(0.1)
@@ -81,7 +81,7 @@ describe('the mark of a round by material', () => {
 
   it('wood: the hole has a rim of torn fresh wood under it', () => {
     const { world, renderer, mesh } = piece('wood')
-    world.emit({ type: 'hole', object: 'o1', part: 'p', hole: { point: [0, 0, 0.025], normal: [0, 0, 1], diameter: 0.009, through: false }, worldPoint: [0, 0, 0.025] } as any)
+    world.emit({ type: 'hole', object: 'o1', part: 'p', hole: { point: [0, 0, 0.025], normal: [0, 0, 1], diameter: 0.009, through: false }, worldPoint: [0, 0, 0.025] })
     renderer.update(0.016)
     const rim = mesh.children.find((c) => c.renderOrder === 1) as THREE.Mesh
     expect(rim).toBeDefined()
@@ -92,14 +92,14 @@ describe('the mark of a round by material', () => {
 
   it('an opaque brittle body cracks a hand around the hit in a shade of its colour; glass cracks as far as the event says, in white', () => {
     const tub = piece('ceramic', 0xe0ddd6)
-    tub.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] } as any)
+    tub.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] })
     tub.renderer.update(0.016)
     const lines = tub.mesh.children.find((c) => (c as THREE.LineSegments).isLineSegments) as THREE.LineSegments
     lines.geometry.computeBoundingSphere()
     expect(lines.geometry.boundingSphere!.radius).toBeLessThan(0.13)
     expect((lines.material as THREE.LineBasicMaterial).color.getHex()).toBe(new THREE.Color(0xe0ddd6).multiplyScalar(0.45).getHex())
     const pane = piece('glass', 0xffffff)
-    pane.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] } as any)
+    pane.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] })
     pane.renderer.update(0.016)
     const glass = pane.mesh.children.find((c) => (c as THREE.LineSegments).isLineSegments) as THREE.LineSegments
     glass.geometry.computeBoundingSphere()

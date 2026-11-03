@@ -70,6 +70,17 @@ const torqueAt = (spec: SemiSimSpec, rpm: number): number => {
  * simulated RPM, a handbrake that locks the rear wheels, surfaces with their grip, and damage that changes how it drives. No team code exists
  * for it: the numbers are the document's and the tests check them.
  */
+/** Sliding friction of a locked tyre against its rolling grip, and how much of its side grip is left. */
+const SLIDING_GRIP = 0.75
+const LOCKED_STEER = 0.15
+/** Brakes: air temperature, where they start to fade and where only `BRAKE_FADED` of their force is left, joules per °C per kg of vehicle, cooling time. */
+const AMBIENT_C = 25
+const BRAKE_FADE_FROM_C = 350
+const BRAKE_FADE_TO_C = 650
+const BRAKE_FADED = 0.5
+const BRAKE_HEAT_CAPACITY = 3
+const BRAKE_COOL_S = 60
+
 export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, options: SemiSimOptions = {}): SemiDriver {
   const spec: SemiSimSpec = { ...defaultSemiSpec, ...specification }
   const surfaces = options.surfaces ?? createSurfaces()
@@ -137,6 +148,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
     const mass = baseMass + cargo
     const engineHealth = clamp(cond.engine ?? 1, 0, 1)
     const suspensionHealth = clamp(cond.suspension ?? 1, 0, 1)
+    const brakeHealth = clamp(cond.brakes ?? 1, 0, 1)
     const inertia = (spec.yawInertia ?? (baseMass * (wheelbase * wheelbase + track * track)) / 12) * (mass / baseMass)
     const pitchInertia = (mass * (wheelbase * wheelbase + 1)) / 12
     const rollInertia = (mass * (track * track + 1)) / 12
@@ -228,6 +240,10 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       sumNA += load * w.x
       sumNB += load * w.z
     }
+    // brakes fade as they heat up from hard stops, and cool down in the air
+    const brakeHeat = state.brakeHeat ?? AMBIENT_C
+    const fade = 1 - clamp((brakeHeat - BRAKE_FADE_FROM_C) / (BRAKE_FADE_TO_C - BRAKE_FADE_FROM_C), 0, 1) * (1 - BRAKE_FADED)
+    let brakeWork = 0
     // forces on the ground, per wheel
     let fFwd = 0
     let fRight = 0
@@ -252,15 +268,19 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       let fl = 0
       if (driveWheels.some((d) => d.i === i)) fl += driveForceTotal / drivenCount
       const locked = handbrake && w.handbrake
-      const brakeShare = (spec.brakeForce * brakeInput * ws.n) / loadSum
+      const brakeShare = (spec.brakeForce * brakeHealth * fade * brakeInput * ws.n) / loadSum
       const moving = Math.abs(vl) > 0.05
-      if (locked) fl += moving ? -Math.sign(vl) * capacity : 0
+      // without ABS a brake asking more than the tyre holds locks the wheel: it slides on less grip and steers no more
+      const lockedByBrake = spec.abs === false && moving && brakeShare > capacity
+      if (locked || lockedByBrake) fl += moving ? -Math.sign(vl) * capacity * (lockedByBrake ? SLIDING_GRIP : 1) : 0
       else if (brakeShare > 0 && moving) fl += -Math.sign(vl) * brakeShare
+      if (brakeShare > 0 && moving) brakeWork += Math.min(brakeShare, capacity) * Math.abs(vl) * dt
       const rolling = ws.bog && accelInput > 0 ? spec.bogResistance : spec.rolling * (ws.flat ? 6 : 1)
       // lateral: slip angle into a saturating curve, separate from the longitudinal one
       const alpha = Math.atan2(vc, Math.abs(vl) + 0.5)
       let fc = -Math.tanh((spec.tyre.corneringStiffness * alpha)) * capacity
       if (locked) fc *= 0.6
+      if (lockedByBrake) fc *= LOCKED_STEER
       // friction circle
       const total = Math.hypot(fl, fc)
       let used = 1
@@ -284,6 +304,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
     const bogNow = bogging && Math.abs(state.u) < 1 && accelInput > 0
     if (bogNow && !state.bogged) events.push({ type: 'bogged' })
     state.bogged = bogNow
+    state.brakeHeat = brakeHeat + brakeWork / (baseMass * BRAKE_HEAT_CAPACITY) - (brakeHeat - AMBIENT_C) * Math.min(1, dt / BRAKE_COOL_S)
     // air drag
     fFwd += -spec.drag * state.u * Math.abs(state.u)
     fRight += -spec.drag * state.w * Math.abs(state.w)
