@@ -3261,6 +3261,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           if (t < 1e-4) return 0
         }
       }
+      // hosted bodies (a vehicle): a part with a thickness is a shell, crossed through its two walls, not through the air inside it
+      for (const im of impls.values()) {
+        if (ignore.has(im.impl.id)) continue
+        for (const ps of im.impl.describe().parts) {
+          const mat = materials.get(ps.material)
+          if (!mat) continue
+          const ov = im.poses.get(ps.id)
+          const r = rayPartRaw(im.position, im.rotation, ps, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])), point, d, ov?.pos)
+          if (!r || r.t1 < 0 || r.t0 > L) continue
+          let path = Math.min(r.t1, L) - Math.max(r.t0, 0)
+          if (ps.thickness !== undefined && ps.thickness > 0) path = Math.min(path, 2 * ps.thickness)
+          else if (path < shelter.minPath) continue
+          t *= Math.exp(-(mat.hpPerKg * mat.density * path * (mat.damageScale?.shelter ?? 1)) / shelter.k)
+          if (t < 1e-4) return 0
+        }
+      }
       return t
     },
     explode(point, energy, radius, source, blast) {
