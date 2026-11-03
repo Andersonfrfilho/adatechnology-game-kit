@@ -333,12 +333,12 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
   foley(
     'item_pickup_metal',
     [
-      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.12 }),
+      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.18 }),
       tone({
         f: [1900, 2600],
         f2: 1700,
         d: [0.05, 0.08],
-        vol: [0.04, 0.06],
+        vol: [0.06, 0.09],
         delay: [0.01, 0.03],
       }),
     ],
@@ -347,13 +347,13 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
   foley(
     'item_pickup_plastic',
     [
-      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.12 }),
+      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.18 }),
       noise({
         type: 'bandpass',
         f: [1500, 1900],
         q: 3,
         d: 0.03,
-        vol: [0.1, 0.14],
+        vol: [0.15, 0.21],
         delay: [0.01, 0.03],
       }),
     ],
@@ -362,11 +362,11 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
   foley(
     'item_pickup_glass',
     [
-      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.1 }),
+      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.15 }),
       tone({
         f: [3200, 4200],
         d: [0.05, 0.08],
-        vol: [0.025, 0.04],
+        vol: [0.038, 0.06],
         delay: [0.01, 0.03],
       }),
     ],
@@ -380,9 +380,9 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
         f: [2600, 3400],
         a: 0.01,
         d: [0.1, 0.14],
-        vol: [0.08, 0.12],
+        vol: [0.12, 0.18],
       }),
-      noise({ type: 'bandpass', f: [800, 1000], q: 1, d: 0.05, vol: 0.08 }),
+      noise({ type: 'bandpass', f: [800, 1000], q: 1, d: 0.05, vol: 0.12 }),
     ],
     'picking up paper or cardboard',
   ),
@@ -395,7 +395,7 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
         q: 0.8,
         a: 0.02,
         d: [0.12, 0.16],
-        vol: [0.1, 0.14],
+        vol: [0.15, 0.21],
       }),
     ],
     'picking up cloth',
@@ -403,13 +403,13 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
   foley(
     'item_pickup_wood',
     [
-      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.12 }),
+      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.18 }),
       noise({
         type: 'bandpass',
         f: [900, 1100],
         q: 2,
         d: 0.04,
-        vol: [0.1, 0.14],
+        vol: [0.15, 0.21],
         delay: [0.01, 0.03],
       }),
     ],
@@ -418,12 +418,12 @@ export const ITEM_FOLEY: readonly SoundRecipe[] = [
   foley(
     'item_pickup_food',
     [
-      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.12 }),
+      noise({ type: 'bandpass', f: [700, 900], q: 1, d: 0.06, vol: 0.18 }),
       noise({
         type: 'lowpass',
         f: [500, 650],
         d: 0.05,
-        vol: 0.08,
+        vol: 0.12,
         delay: [0.01, 0.03],
       }),
     ],
