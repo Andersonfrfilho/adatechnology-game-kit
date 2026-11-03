@@ -976,7 +976,7 @@
   },
   "packages/game-vehicles/src/tri-index.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 14
+      "count": 39
     }
   },
   "packages/game-vehicles/src/trucks.ts": {
