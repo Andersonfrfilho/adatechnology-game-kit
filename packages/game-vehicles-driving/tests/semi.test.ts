@@ -261,3 +261,41 @@ describe('worn brakes', () => {
     expect(stopFrom100(0.5)).toBeGreaterThan(stopFrom100(1) * 1.4)
   })
 })
+
+describe('brakes that lock and fade', () => {
+  const surfaces = createSurfaces()
+  const world = { ground: () => ({ surface: 'dry_asphalt' }) }
+  const speedUp = (driver: ReturnType<typeof createSemiSimDriver>, kmh: number) => {
+    for (let t = 0; t < 40 && Math.abs(driver.state.u) * 3.6 < kmh; t += 1 / 60) driver.step({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 1 / 60, world)
+  }
+  const stop = (driver: ReturnType<typeof createSemiSimDriver>, steer = 0) => {
+    const x0 = driver.state.x
+    const yaw0 = driver.state.yaw
+    for (let t = 0; t < 30 && Math.abs(driver.state.u) > 0.1; t += 1 / 60) driver.step({ throttle: 0, brake: 1, steer, handbrake: false }, 1 / 60, world)
+    return { distance: driver.state.x - x0, turned: Math.abs(driver.state.yaw - yaw0) }
+  }
+  it('without ABS the wheels lock: the car slides further', () => {
+    const withAbs = createSemiSimDriver({}, { surfaces })
+    const without = createSemiSimDriver({ abs: false }, { surfaces })
+    for (const d of [withAbs, without]) {
+      d.place(0, 0, 0)
+      speedUp(d, 100)
+    }
+    const a = stop(withAbs)
+    const b = stop(without)
+    expect(b.distance).toBeGreaterThan(a.distance * 1.15)
+  })
+  it('stop after stop the brakes heat up and fade', () => {
+    const driver = createSemiSimDriver({}, { surfaces })
+    driver.place(0, 0, 0)
+    speedUp(driver, 100)
+    const first = stop(driver).distance
+    for (let i = 0; i < 6; i++) {
+      speedUp(driver, 100)
+      stop(driver)
+    }
+    speedUp(driver, 100)
+    expect(driver.state.brakeHeat).toBeGreaterThan(350)
+    expect(stop(driver).distance).toBeGreaterThan(first * 1.1)
+  })
+})

@@ -30,6 +30,8 @@ export interface SemiSimSpec {
   maxSteer: number
   /** Total brake force, newtons, split by the wheel loads. */
   brakeForce: number
+  /** Anti-lock brakes (default true). Without them a hard stop locks the wheels: they slide on less grip and the car does not steer. */
+  abs?: boolean
   engine: { idleRpm: number; peakRpm: number; redlineRpm: number; peakTorque: number }
   /** Gear ratios, first to last. */
   gears: readonly number[]
@@ -77,6 +79,8 @@ export interface SemiWorld {
 }
 
 export interface SemiState {
+  /** Temperature of the brakes, °C: hard stops heat them, and past about 350 °C they fade. */
+  brakeHeat?: number
   x: number
   z: number
   yaw: number
