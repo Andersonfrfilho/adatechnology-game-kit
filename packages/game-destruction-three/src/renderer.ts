@@ -39,6 +39,11 @@ const QUEUE_CAP = 4000
 const MIN_FRAGMENTS_PER_SLICE = 8
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
 const STATIC_REFRESH = 0.5
+/**
+ * Milliseconds of the periodic re-measure per call: the refresh walks the objects a slice at a time (the dirty ones are measured at once).
+ * Measuring every object in one call cost up to 88 ms in a frame of the horde chain (perf.mjs, software GL, 2026-11-03).
+ */
+const STATIC_REFRESH_SLICE_MS = 1
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
 const STATIC_SPAN = 3
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
@@ -187,6 +192,8 @@ class Renderer implements DestructionRenderer {
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
+  /** The periodic refresh: the objects still to measure again in this round, a slice per call. */
+  private staticRound: string[] = []
   /** Boxes of the pieces' meshes (as `staticBoxes`), with the time they were measured. */
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   private staticAt = 0
@@ -694,9 +701,9 @@ class Renderer implements DestructionRenderer {
   private staticNow(): Map<string, number[]> {
     if (this.time - this.staticAt > STATIC_REFRESH) {
       this.staticAt = this.time
-      this.staticAll = true
+      if (this.staticRound.length === 0) this.staticRound = [...this.bounds.keys()].reverse()
     }
-    if (!this.staticAll && this.staticDirty.size === 0) return this.staticBoxes
+    if (!this.staticAll && this.staticDirty.size === 0 && this.staticRound.length === 0) return this.staticBoxes
     const box = new this.THREE.Box3()
     const measure = (b: Bound): void => {
       if (b.piece || this.pieceSys.get(b.id)) {
@@ -716,14 +723,21 @@ class Renderer implements DestructionRenderer {
       }
       this.staticBoxes.set(b.id, out.length > 6 ? out : [])
     }
+    const measureId = (id: string): void => {
+      const b = this.bounds.get(id)
+      if (b) measure(b)
+      else this.staticBoxes.delete(id)
+    }
     if (this.staticAll) {
       this.staticBoxes.clear()
       for (const b of this.bounds.values()) measure(b)
+      this.staticRound = []
     } else {
-      for (const id of this.staticDirty) {
-        const b = this.bounds.get(id)
-        if (b) measure(b)
-        else this.staticBoxes.delete(id)
+      for (const id of this.staticDirty) measureId(id)
+      const until = performance.now() + STATIC_REFRESH_SLICE_MS
+      while (this.staticRound.length > 0) {
+        measureId(this.staticRound.pop() as string)
+        if (performance.now() >= until) break
       }
     }
     this.staticAll = false
@@ -1619,11 +1633,15 @@ class Renderer implements DestructionRenderer {
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
         this.bounds.delete(b.id)
+        // its box leaves now: the periodic round only walks the objects still bound
+        this.staticDirty.add(b.id)
       }
     }
   }
 
   clear(): void {
+    // what was bound is gone: the next read measures what is left, all of it
+    this.staticAll = true
     this.queue.length = 0
     this.slices.length = 0
     this.active.clear()
@@ -1652,6 +1670,8 @@ class Renderer implements DestructionRenderer {
     this.rng = createRng(RNG_SEED)
     this.time = 0
     this.staticAt = 0
+    this.staticRound = []
+    this.staticAll = true
     this.throttles.clear()
     this.fragments.reset()
     this.pieceSys.reset()

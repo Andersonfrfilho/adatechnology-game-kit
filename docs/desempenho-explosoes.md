@@ -129,3 +129,45 @@ Nada muda no three.js. As correções valem sozinhas para quem atualizar os paco
 - **Luz por lâmpada da casa** (`game-interactables-three/src/mesh.ts:155`). Quebrar uma lâmpada muda o número de luzes e recompila tudo. Precisa do orçamento único de luzes (item 10 da análise de arquitetura).
 - **Nós estáticos do sedã de alta qualidade.** São ~800 nós que recalculam a matriz todo quadro. Congelá-los exige a lista dos nós que nunca se movem.
 - **A ordem do quadro não tem dono** (item 9 da análise). Os orçamentos de tempo (áudio 2 ms, eventos 8 ms, `crease` 2,5 ms) foram postos cada um no seu pacote. O `game-runtime` proposto deve juntá-los num orçamento único por quadro.
+
+## Gate do pre-push: comparação com a main na mesma máquina (2026-11-03)
+
+Os orçamentos absolutos (p99 20 ms, nenhum quadro acima de 33,4 ms, long task até 50 ms, draws) travavam até o push da própria `main` na RTX 5070 do
+notebook (11 orçamentos estourados no `e7b02cae`). Um número fixo depende da máquina, da janela e do carregador. Por isso o
+`tools/gpu/perf-gate.mjs` passou a fazer assim:
+
+- **Bloqueia:** (1) falha dura do `perf.mjs` em qualquer máquina: programa ligado no meio do jogo, erro na página, luz no slot errado, horda que não
+  faz o que a fase pede; (2) fase mais de 10% pior que a `origin/main` **medida na mesma máquina**, mesma GPU e mesma janela (p99, pior quadro,
+  pior long task, quadros acima de 33 ms, draws por quadro, passo e draws da horda). Cada métrica tem um piso de ruído (`tools/gpu/compare.mjs`).
+- **Tempo de quadro lido a partir de um refresh de 60 Hz:** com janela, o compositor segura o quadro na vsync. Duas rodadas da `main` deram
+  `cold_dynamite` p99 9,5 e 17,6 ms; abaixo de 16,7 ms a diferença não diz nada do código.
+- **Duas rodadas antes de bloquear:** se algo passou de 10%, mede os dois lados de novo e compara a melhor rodada da branch com a pior da `main`.
+  Só bloqueia quando toda rodada da branch é pior que toda rodada da `main`.
+- **Buffers criados no jogo não bloqueiam:** voltar a desenhar em lotes um carro atingido cria algumas centenas de buffers uma vez para economizar
+  centenas de draws por quadro. Um envio que custa um quadro aparece no tempo de quadro, que é comparado.
+- **Os orçamentos absolutos continuam no relatório como meta** (`TARGET`), com a contagem da `main` ao lado. `PERF_GATE_ABSOLUTE=1` volta a bloquear
+  neles.
+- A rodada da `main` fica em cache por commit, GPU, janela e versão do `perf.mjs` (`~/.cache/adatechnology-game-kit/perf`), e a `main` é
+  montada num worktree próprio ali. A primeira vez depois de cada merge leva uns 8 min a mais.
+- `perf.mjs` ganhou `PERF_TARGETS=report` (metas fora do código de saída), `PERF_VIEWPORT=LxA`, `firstUses` (programas desenhados pela primeira
+  vez no jogo, com o objeto que pediu) e `PERF_DRAWLIST=1` (os draws de um quadro por objeto e material).
+
+### O que a medição achou e o que foi corrigido
+
+Medido na RTX 5070 do notebook, com a máquina quieta, a 1600×900. Em 320×180 os draws, buffers e `firstUses` dão praticamente o mesmo:
+a diferença para o CI não vinha do tamanho da janela, e sim de o CI não ter GPU.
+
+| Causa | Onde | Correção |
+|---|---|---|
+| Um carro atingido nunca voltava a ser desenhado em lotes: desenhava peça por peça para sempre (~900 draws por quadro na `chain_horde`) | `game-vehicles-three/src/vehicle-lod.ts` | Volta a lotes depois de 1,5 s sem mudança (`VEHICLE_REBATCH_AFTER_MS`), com as sombras das próprias peças (o formato amassado). Tentativa descartada: manter os lotes de antes do tiro deixava as peças amassadas soltas para sempre e subiu os draws (`cold_claymore` 194 → 342) |
+| Seis programas de sombra ligados no carregamento e desenhados pela primeira vez no jogo: o three lê o link e os logs no primeiro uso (~43 ms no primeiro estouro da `chain_horde`) | `game-render-three/src/warmup.ts` | O `warmUp` termina todo programa ligado (`getUniforms`), e só então vê um link quebrado |
+| A mira do HUD testava os triângulos dos lotes do carro além das peças, duas vezes por atualização | `game-vehicles/src/destructible/impl.ts`, `game-test-room/src/room.ts` | `surfaceRay` pula `userData.noSurfaceRay` e nós escondidos; um raio por atualização do HUD |
+| A remedição periódica das caixas estáticas media todos os objetos num quadro (até 88 ms em GL por software) | `game-destruction-three/src/renderer.ts` | Fatias de 1 ms; os objetos tocados por um evento continuam medidos na hora |
+| O log da sala lia `scrollHeight` logo depois de mexer no DOM (layout forçado no meio do quadro) | `game-test-room/src/ui.ts`, `room.ts` | Rola no começo do próximo flush, que roda antes do HUD |
+| As caixas do amassado do carro eram recalculadas com `getX/getY/getZ` por vértice | `game-vehicles/src/impact.ts` | Lidas direto do array, com o mesmo resultado |
+
+### O que ainda falta (medido na RTX em 2026-11-03)
+
+O primeiro estouro perto do carro na `chain_horde` ainda tem um quadro de ~100 ms. O tempo é CPU do dano no veículo, não da GPU: `tearOff` e
+`panelBand` montam a geometria da faixa arrancada copiando os arrays num quadro só (~72 ms), o amassado percorre os vértices, o `smoothLater`
+chama `toNonIndexed`, e o lixo dessas cópias custa ~25 ms de coleta logo depois. É o trabalho da fase 4 da spec 006 (dano do carro em fatias).

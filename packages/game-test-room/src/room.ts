@@ -2862,7 +2862,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Inspector
   // ---------------------------------------------------------------------------------------------------------------------------------------
+  // one aim ray per HUD refresh: the inspect line and the animation panel both read what the eye rests on, and a ray that crosses a vehicle
+  // tests its drawn triangles (`surfaceRay`); `undefined` outside a refresh
+  let hudAimHit: RayHit | null | undefined
   const inspectTarget = (): RayHit | null => {
+    if (hudAimHit !== undefined) return hudAimHit
     aim()
     return rayWorld(aimO, aimD, 14)
   }
@@ -3135,12 +3139,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const updatePresent = (dt: number): void => {
     reachAvatar()
     if (progress && simTime - progress.at > 0.25) progress = null
+    // the log first: it scrolls before anything of this frame touches the DOM, so reading its height lays nothing out
+    ui?.flushLog()
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
       hudAcc = 0
       ui.hud(hudState())
     }
-    ui?.flushLog()
     metricsAcc += dt
     if (metricsAcc >= METRICS_INTERVAL_S && ui) {
       metricsAcc = 0
@@ -3149,6 +3154,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const hudState = (): HudState => {
+    hudAimHit = inspectTarget()
+    try {
+      return readHudState()
+    } finally {
+      hudAimHit = undefined
+    }
+  }
+  const readHudState = (): HudState => {
     const page = Math.floor(toolIndex / 10)
     const slots = loadout.slice(page * 10, page * 10 + 10).map((id) => arsenal.name(id))
     const ammo = tool.def.action.kind === 'firearm' ? `${tool.ammo}/${tool.capacity}${tool.reserve ? ` · ${tool.reserve}` : ''}` : tool.def.action.kind === 'hand' ? '' : tool.def.action.kind === 'melee' || tool.def.action.kind === 'tool' ? '' : `${num(tool.ammo, 0)}`
