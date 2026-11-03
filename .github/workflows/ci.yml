@@ -31,7 +31,9 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
-  typecheck:
+  # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
+  # dist), instead of each job spending two minutes on its own `pnpm build`.
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,13 +45,40 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # workspace packages resolve each other through dist, so build first
       - run: pnpm build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/*/dist
+            tools/*/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  typecheck:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
 
       - run: pnpm typecheck
 
-  # Builds the test matrix from packages/*/package.json (packages with a "test" script).
-  # Slow packages are split with vitest --shard: add them to SHARDS as package -> shard count.
+  # Builds the test matrix from packages/*/package.json (packages with a "test" script). Most packages test in a few seconds, so a job per package
+  # spent more time in setup and in the queue (the account runs about 20 jobs at once) than in the tests: they are packed into GROUPS jobs,
+  # balanced by WEIGHTS (seconds of `vitest run` on CI; 10 for a package not listed). Slow packages are split with vitest --shard instead: add
+  # them to SHARDS as package -> shard count, and each shard is a job of its own.
   matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -59,28 +88,42 @@ jobs:
 
       - id: set
         env:
-          SHARDS: '{"@adatechnology/game-vehicles-fleet":16,"@adatechnology/game-floorplan-structure":3}'
+          SHARDS: '{"@adatechnology/game-vehicles-fleet":8,"@adatechnology/game-floorplan-structure":3,"@adatechnology/game-vehicles-three":4}'
+          GROUPS: '6'
+          WEIGHTS: '{"@adatechnology/game-floorplan-post-apocalyptic":162,"@adatechnology/game-weapons-three":144,"@adatechnology/game-floorplan-three":123,"@adatechnology/game-floorplan-commercial":69,"@adatechnology/game-vehicles":66,"@adatechnology/game-floorplan-residential":48,"@adatechnology/game-crowd":39,"@adatechnology/game-test-room":25,"@adatechnology/game-interactables-household":20,"@adatechnology/game-characters-three":19,"@adatechnology/game-floorplan-rural":18,"@adatechnology/game-items-three":18,"@adatechnology/game-vegetation-three":17,"@adatechnology/game-crowd-three":15,"@adatechnology/game-fluids":15,"@adatechnology/game-destruction":14,"@adatechnology/game-floorplan-interactables":13}'
         run: |
           node -e '
             const fs = require("fs");
             const shards = JSON.parse(process.env.SHARDS);
+            const weights = JSON.parse(process.env.WEIGHTS);
             const include = [];
+            const single = [];
             for (const dir of fs.readdirSync("packages").sort()) {
               const file = `packages/${dir}/package.json`;
               if (!fs.existsSync(file)) continue;
               const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
               if (!pkg.scripts || !pkg.scripts.test) continue;
-              const total = shards[pkg.name] || 1;
-              for (let shard = 1; shard <= total; shard++) include.push({ pkg: pkg.name, shard, total });
+              const total = shards[pkg.name];
+              if (total) for (let shard = 1; shard <= total; shard++) include.push({ name: `${pkg.name.replace("@adatechnology/", "")} ${shard}/${total}`, pkgs: pkg.name, shard, total });
+              else single.push(pkg.name);
             }
-            const json = JSON.stringify(include);
+            // the heaviest first, each into the lightest group so far
+            const groups = Array.from({ length: Number(process.env.GROUPS) }, () => ({ weight: 0, pkgs: [] }));
+            single.sort((a, b) => (weights[b] ?? 10) - (weights[a] ?? 10) || a.localeCompare(b));
+            for (const name of single) {
+              const group = groups.reduce((low, g) => (g.weight < low.weight ? g : low));
+              group.pkgs.push(name);
+              group.weight += weights[name] ?? 10;
+            }
+            const used = groups.filter((g) => g.pkgs.length);
+            used.forEach((g, i) => include.push({ name: `group ${i + 1}/${used.length}`, pkgs: g.pkgs.sort().join(" "), shard: 1, total: 1 }));
             console.log(JSON.stringify(include, null, 2));
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `include=${json}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `include=${JSON.stringify(include)}\n`);
           '
 
   test:
-    name: test (${{ matrix.pkg }} ${{ matrix.shard }}/${{ matrix.total }})
-    needs: matrix
+    name: test (${{ matrix.name }})
+    needs: [matrix, build]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -96,16 +139,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # the package and the workspace packages it depends on
-      - name: Build
-        run: pnpm --filter "${{ matrix.pkg }}..." run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
 
+      # a group tests its packages one at a time, as the pre-push hook does (in parallel the long golden loops miss vitest's 5 s timeout), and
+      # goes on after a failure so the log shows every package that failed
       - name: Test
         run: |
           if [ "${{ matrix.total }}" -gt 1 ]; then
-            pnpm --filter "${{ matrix.pkg }}" exec vitest run --passWithNoTests --shard=${{ matrix.shard }}/${{ matrix.total }}
+            pnpm --filter "${{ matrix.pkgs }}" exec vitest run --passWithNoTests --shard=${{ matrix.shard }}/${{ matrix.total }}
           else
-            pnpm --filter "${{ matrix.pkg }}" test
+            filters=""
+            for pkg in ${{ matrix.pkgs }}; do filters="$filters --filter $pkg"; done
+            pnpm $filters --workspace-concurrency=1 --no-bail run test
           fi
 
   # The goldens must give the same hashes on a newer Node (V8 changed Math.pow's last bit between Node 22 and 24); one cheap job, not the whole matrix.
@@ -130,9 +177,10 @@ jobs:
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
   # In shards, each a job of its own: one job with every area reached the 40 min limit. A new area goes in the shard with the least time.
-  # An entry `area:part` runs one part of that area's check (EXAMPLE_PART in its test.mjs): the test room's scenarios in two halves, views and hands; the
+  # An entry `area:part` runs one part of that area's check (EXAMPLE_PART in its test.mjs): the test room's scenarios and views in two halves each, and hands; the
   # furniture area's checks in each language and its screenshots.
   examples:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -141,7 +189,8 @@ jobs:
         areas:
           - test-room:scenarios:1/2
           - test-room:scenarios:2/2
-          - test-room:views
+          - test-room:views:1/2
+          - test-room:views:2/2
           - test-room:hands
           - interactables-test-area:pt-BR
           - interactables-test-area:en
@@ -159,7 +208,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
 
       # the checks load Playwright from NODE_PATH; it is not a dependency of the workspace
       - name: Install Playwright and Chromium
@@ -192,6 +243,7 @@ jobs:
   # each area and fails on anything with no origin mark of a kit builder (markKitOrigin) that is not pending in tools/kit-audit/allowlist.json (`drawn`).
   scene-origin:
     name: scene-origin (${{ matrix.check.name }})
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -211,7 +263,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
 
       - name: Install Playwright and Chromium
         run: |
@@ -230,6 +284,7 @@ jobs:
   # Memory of the test room (CLAUDE.md, "Memória"): the same cycle again and again (blasts; glass and cars; opening the areas), then room.clear();
   # fails when GPU buffers, textures, canvases, listeners, intervals or the JS heap keep growing per cycle (examples/test-room/leak.mjs).
   memory-leaks:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -246,7 +301,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
 
       - name: Install Playwright and Chromium
         run: |
@@ -316,7 +373,7 @@ jobs:
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench, architecture, memory-leaks]
+    needs: [lint, build, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench, architecture, memory-leaks]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
