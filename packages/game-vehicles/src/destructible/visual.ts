@@ -1037,7 +1037,12 @@ export class VehicleVisuals implements CreaseWork {
       for (const o of drawn) {
         if (!o.isMesh || o.material !== this.I.MATERIALS.chrome) continue
         const size = new this.THREE.Box3().setFromObject(o).getSize(new this.THREE.Vector3())
-        if (size.x < MIRROR_GLASS_THIN && size.y > MIRROR_GLASS_MIN && size.z > MIRROR_GLASS_MIN) this.seatMirrorGlass(o, drawn)
+        // thin across its face whichever way the model stands
+        const [thin, mid] = size.toArray().sort((a: number, b: number) => a - b)
+        if (thin < MIRROR_GLASS_THIN && mid > MIRROR_GLASS_MIN) {
+          this.seatMirrorGlass(o, drawn)
+          o.userData.mirrorGlass = true
+        }
       }
       this.extra.set(p.id, drawn)
       return
@@ -1056,6 +1061,18 @@ export class VehicleVisuals implements CreaseWork {
     glass.userData.mirrorGlass = true
     g.userData.rigid = true
     this.extra.set(p.id, [g])
+  }
+  /** A round through the mirror shatters its glass: the shards drop out of the housing, which stays on with the hole. Returns whether there was glass to break. */
+  shatterMirror(id: string): boolean {
+    let broke = false
+    for (const o of this.extra.get(id) ?? []) {
+      o.traverse((m: Obj) => {
+        if (!m.userData.mirrorGlass || !m.visible) return
+        m.visible = false
+        broke = true
+      })
+    }
+    return broke
   }
   private makeBattery(p: PartDef): void {
     const mats = this.I.MATERIALS

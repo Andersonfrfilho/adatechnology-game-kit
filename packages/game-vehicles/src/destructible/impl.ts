@@ -703,6 +703,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       p.holes.push(hp)
       out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
       vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam, d)
+      if (d.role === 'mirror') vis?.shatterMirror(d.id)
       startLeak(p, v, cal, out, dir)
     }
     switch (d.material) {

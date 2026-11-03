@@ -50,3 +50,26 @@ describe('kinds of round against a car', () => {
     expect(fire('door_front_left', SIDE, AP_762, 'III')?.through).toBe(true)
   })
 })
+
+describe('a round at the door mirror', () => {
+  const shootMirror = (round: { energy: number; caliber: number; steelMm: number; piercing: number }) => {
+    const kit: any = makeFleetKit('en')
+    const item: any = buildVehicleItem(kit, 'midsize_sedan')
+    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    const glassLeft = (): number => {
+      let n = 0
+      item.root.traverse((m: any) => { if (m.userData.mirrorGlass && m.visible) n++ })
+      return n
+    }
+    const before = glassLeft()
+    const t = d.partWorldCenter('mirror_left')
+    const events = d.hit({ type: 'ballistic', point: [t[0], t[1], t[2] - 0.05], direction: [0, 0, 1], energy: round.energy, caliber: round.caliber, penetration: { steel: round.steelMm }, piercing: round.piercing })
+    return { shattered: before - glassLeft(), torn: events.some((e: any) => e.type === 'detach') }
+  }
+  it('a pistol round shatters the glass and leaves the housing on', () => {
+    expect(shootMirror(FMJ_9)).toEqual({ shattered: 1, torn: false })
+  })
+  it('a rifle round tears the mirror off', () => {
+    expect(shootMirror(AP_762).torn).toBe(true)
+  })
+})
