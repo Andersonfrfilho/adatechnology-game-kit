@@ -475,8 +475,8 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         for (const entry of entries.values()) {
           if (!entry.root.parent) continue
           const p = entry.root.position
-          // the cover between the centre and the chest: a wall or a car between them takes the push
-          const reach = lent.blastReach?.(event.point, [p.x, p.y + KNOCK_CHEST, p.z], [event.source]) ?? 1
+          // the cover between the centre and the chest: a wall or a car between them takes the push (the body itself is not its own cover)
+          const reach = lent.blastReach?.(event.point, [p.x, p.y + KNOCK_CHEST, p.z], [event.source, entry.id]) ?? 1
           const knock = knockOf({ ...event, reach }, [p.x, p.y, p.z], bodyMass(entry.character.spec.height, entry.character.spec.build), lent.blastShove)
           if (knock) entry.knock = entry.knock ? { ...knock, lying: entry.knock.lying } : knock
         }
