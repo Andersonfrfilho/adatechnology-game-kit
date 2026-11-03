@@ -20,7 +20,7 @@ import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOpti
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
-import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
+import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { GroundLayout } from '@adatechnology/game-contracts'
@@ -379,8 +379,12 @@ export interface TestRoom {
   readonly tool: WeaponState
   /** Play an item use on the held item (`drink`, `pour`...). Returns false when nothing is held or the use does not apply. */
   useItem(useId: string): boolean
-  /** Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools. */
-  use(hold?: number): void
+  /**
+   * Use the current tool once from the camera (tests and scripted demos), as the click does: bare hands punch (or let go of what they hold). `hold` seconds for continuous tools.
+   * Answers what the trigger said: `ok` when the tool did something; `drawing` when the draw is not over for the trigger yet (the frame that ends the draw is the trigger's
+   * too, so `tool.phase` turns null one frame before the first pull can go: a script waits a frame and pulls again), `cooldown`, `empty`, `reloading`... otherwise.
+   */
+  use(hold?: number): UseStatus
   /** Where the player's feet are. */
   readonly playerPosition: Vec3
   /** Grab what the camera looks at (or drop what is held). */
@@ -650,3 +654,6 @@ export type {
 } from '@adatechnology/game-contracts'
 
 export type { RoomSeat } from './seating'
+
+/** What the trigger answered to `TestRoom.use`: the status of the weapons package's trigger. */
+export type UseStatus = TriggerResult['status']
