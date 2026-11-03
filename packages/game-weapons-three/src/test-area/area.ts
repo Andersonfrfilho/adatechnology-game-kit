@@ -57,7 +57,7 @@ export const COUNTER_ITEM_ID = 'counter_weapons'
 // how loud an explosion is: a base plus what its reach adds (the game's `explosao` class is at full volume for a blast of 15 m or more)
 const EXPLOSION_VOLUME_BASE = 0.4
 const EXPLOSION_VOLUME_PER_METRE = 0.04
-const SOUND_DISTANCE_MAX = 200
+const SOUND_DISTANCE_MAX = 800
 /** Longest safety fuse the bench offers, metres: one metre burns 131 s, enough to see a delayed trap. */
 const FUSE_LENGTH_MAX = 1
 const DEFAULT_FUSE_LENGTH = 0.03
@@ -100,6 +100,10 @@ interface Text {
   reloadKinds: Record<string, string>
   /** The line of a sound cue of a reload clip and the name of each cue. */
   soundCue: string
+  gunshotSound: string
+  casingSound: string
+  spaces: Record<'indoor' | 'outdoor', string>
+  surfaces: Record<'hard' | 'wood' | 'metal' | 'soft', string>
   soundCues: Record<string, string>
   reloadEnd: string
   worldExplosives: Record<string, string>
@@ -112,6 +116,8 @@ interface Text {
   ammoQualities: Record<string, string>
   soundDistance: string
   soundDistanceHint: string
+  soundIndoors: string
+  soundIndoorsHint: string
   fuseLength: string
   fuseLengthHint: string
   layers: Record<'muzzle_flash' | 'casings' | 'magazines', string>
@@ -127,6 +133,10 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Reload of {weapon}: {kind}, clip {clip} ({seconds} s)',
     soundCue: 'Sound: {cue} ({weapon})',
+    gunshotSound: 'Shot sound: {profile}, take {take}/4, pitch {pitch}, {space}, {distance} m{far}',
+    casingSound: 'Case lands: {case} on {surface}',
+    spaces: { indoor: 'indoors', outdoor: 'outdoors' },
+    surfaces: { hard: 'concrete', wood: 'wood', metal: 'metal', soft: 'dirt' },
     soundCues: { mag_release: 'magazine release button', mag_out: 'magazine slides out', mag_insert: 'magazine slides in', mag_seat: 'magazine seats (click)', slide_release: 'slide snaps forward', charging_handle_pull: 'charging handle pulled', charging_handle_release: 'charging handle released', bolt_lift: 'bolt handle lifted', bolt_pull: 'bolt pulled back', bolt_push: 'bolt pushed forward', bolt_lock: 'bolt handle locked down', shell_insert: 'round inserted', pump_back: 'pump back', pump_forward: 'pump forward', lever_open: 'lever down', lever_close: 'lever up', cylinder_open: 'cylinder opens', cylinder_eject: 'cases fall out', speedloader: 'speed loader empties', cylinder_close: 'cylinder closes', barrels_open: 'barrels open', casings_eject: 'cases pop out', barrels_close: 'barrels close', belt_cover_open: 'cover opens', belt_insert: 'belt seats', belt_cover_close: 'cover closes', rocket_load: 'rocket slides in', rocket_seat: 'rocket seats', grenade_load: 'grenade goes in', breech_open: 'breech opens', breech_close: 'breech closes', tube_drop: 'empty tube dropped', tube_seat: 'new tube seats' },
     reloadKinds: { tactical: 'tactical (round chambered, no pull)', empty: 'empty chamber (works the action)', one_by_one: 'one by one', full: 'speed loader' },
     reloadEnd: 'Reload done: {weapon} ({ammo}/{capacity})',
@@ -140,6 +150,8 @@ const TEXT: Record<string, Text> = {
     ammoQualities: { factory: 'Factory', reloaded: 'Reloaded' },
     soundDistance: 'Sound distance',
     soundDistanceHint: 'How far the listener is from the shot: farther is quieter and duller',
+    soundIndoors: 'Shot indoors',
+    soundIndoorsHint: 'In a room the walls answer at once (short, dense tail); outdoors the field answers late (long tail and echoes)',
     fuseLength: 'Dynamite fuse length',
     fuseLengthHint: 'Metres of safety fuse (131 s per metre): a long one is set down lit, for a delayed trap',
     layers: { muzzle_flash: 'Muzzle flash', casings: 'Ejected casings', magazines: 'Dropped magazines' },
@@ -153,6 +165,10 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Recarga de {weapon}: {kind}, clipe {clip} ({seconds} s)',
     soundCue: 'Som: {cue} ({weapon})',
+    gunshotSound: 'Som do tiro: {profile}, tomada {take}/4, tom {pitch}, {space}, {distance} m{far}',
+    casingSound: 'Cápsula caiu: {case} em {surface}',
+    spaces: { indoor: 'ambiente fechado', outdoor: 'ao ar livre' },
+    surfaces: { hard: 'concreto', wood: 'madeira', metal: 'metal', soft: 'terra' },
     soundCues: { mag_release: 'botão do carregador', mag_out: 'carregador desliza para fora', mag_insert: 'carregador desliza para dentro', mag_seat: 'carregador encaixa (clique)', slide_release: 'ferrolho volta com estalo', charging_handle_pull: 'alavanca de armar puxada', charging_handle_release: 'alavanca de armar solta', bolt_lift: 'alavanca do ferrolho levantada', bolt_pull: 'ferrolho puxado', bolt_push: 'ferrolho empurrado', bolt_lock: 'alavanca do ferrolho travada', shell_insert: 'cartucho entra', pump_back: 'bomba para trás', pump_forward: 'bomba para frente', lever_open: 'alavanca para baixo', lever_close: 'alavanca para cima', cylinder_open: 'tambor abre', cylinder_eject: 'cápsulas caem', speedloader: 'speedloader esvazia', cylinder_close: 'tambor fecha', barrels_open: 'canos abrem', casings_eject: 'estojos saltam', barrels_close: 'canos fecham', belt_cover_open: 'tampa abre', belt_insert: 'cinta encaixa', belt_cover_close: 'tampa fecha', rocket_load: 'foguete desliza para dentro', rocket_seat: 'foguete encaixa', grenade_load: 'granada entra', breech_open: 'culatra abre', breech_close: 'culatra fecha', tube_drop: 'tubo vazio cai', tube_seat: 'tubo novo encaixa' },
     reloadKinds: { tactical: 'tática (com bala na câmara, sem puxar)', empty: 'vazia (puxa o ferrolho ou a trava)', one_by_one: 'uma a uma', full: 'carregador rápido' },
     reloadEnd: 'Recarga completa: {weapon} ({ammo}/{capacity})',
@@ -166,6 +182,8 @@ const TEXT: Record<string, Text> = {
     ammoQualities: { factory: 'De fábrica', reloaded: 'Recarregada' },
     soundDistance: 'Distância do som',
     soundDistanceHint: 'Quão longe o ouvinte está do tiro: mais longe soa mais baixo e abafado',
+    soundIndoors: 'Tiro em ambiente fechado',
+    soundIndoorsHint: 'Numa sala as paredes respondem na hora (cauda curta e densa); ao ar livre o campo responde depois (cauda longa e ecos)',
     fuseLength: 'Pavio da dinamite',
     fuseLengthHint: 'Metros de pavio de segurança (131 s por metro): um longo é posto no chão aceso, para armadilha com atraso',
     layers: { muzzle_flash: 'Clarão do cano', casings: 'Cápsulas ejetadas', magazines: 'Pentes que caem' },
@@ -313,6 +331,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   let fx: WeaponFx | null = null
   let host: ModuleHost | null = null
   let soundDistance = 0
+  let soundIndoors = false
   const heatPercent = (): number => Math.min(100, (host?.tool().heat ?? 0) * 100)
   return {
     id: 'weapons_area',
@@ -358,6 +377,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         default: arsenal.rules.defaultAmmoQuality,
       },
       { kind: 'number', id: 'sound_distance', name: text.soundDistance, hint: text.soundDistanceHint, unit: 'm', min: 0, max: SOUND_DISTANCE_MAX, step: 5, default: 0 },
+      { kind: 'boolean', id: 'sound_indoors', name: text.soundIndoors, hint: text.soundIndoorsHint, default: false },
       { kind: 'number', id: 'fuse_length', name: text.fuseLength, hint: text.fuseLengthHint, unit: 'm', min: 0.01, max: FUSE_LENGTH_MAX, step: 0.01, default: arsenal.explosives.get('dynamite')?.fuseLength ?? DEFAULT_FUSE_LENGTH },
       ...accessoryControls(accessoryText),
     ],
@@ -373,7 +393,17 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       const lentEngine = (lent.audio as EngineSink | undefined)?.engine
       if (lentEngine && options.sound !== false) {
         audio?.dispose()
-        audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
+        audio = createWeaponAudio(undefined, {
+          ...seedOption,
+          engine: lentEngine,
+          onGunshot: (shot, input) =>
+            lent.log(
+              fill(text.gunshotSound, { profile: shot.profile, take: String(shot.take + 1), pitch: `${shot.pitch >= 1 ? '+' : ''}${((shot.pitch - 1) * 100).toFixed(1)} %`, space: text.spaces[input.space ?? 'outdoor'], distance: String(Math.round(input.distance ?? 0)), far: shot.closeMix < 1 ? ` (${Math.round((1 - shot.closeMix) * 100)} % far)` : '' }),
+              { profile: shot.profile, take: shot.take, pitch: shot.pitch, space: input.space ?? 'outdoor', distance: input.distance ?? 0, closeMix: shot.closeMix, delay: shot.delay, samples: shot.samples },
+              'sound',
+            ),
+          onCasing: (sound) => lent.log(fill(text.casingSound, { case: sound.kind, surface: text.surfaces[sound.surface] }), { case: sound.kind, surface: sound.surface, sample: sound.sample }, 'sound'),
+        })
       }
       let simulatedMs = 0
       const offClock = lent.onFrame((dt) => (simulatedMs += dt * 1000))
@@ -388,6 +418,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio: ownAudio(),
         tool: lent.tool,
         soundDistance: () => soundDistance,
+        soundSpace: () => (soundIndoors ? 'indoor' : 'outdoor'),
+        ...(lent.surfaceAt ? { surfaceAt: (x: number, z: number) => lent.surfaceAt?.(x, z) } : {}),
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
         // the weapon against a wall asks as often as the laser, on the clock of the simulation (so a fast-forwarded room measures as often per frame)
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
@@ -418,6 +450,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
             lent.configureTool?.({ condition: change.value })
           } else if (change.id === 'ammo_quality') lent.configureTool?.({ ammo_quality: change.value })
         } else if (change.kind === 'control' && change.id === 'sound_distance' && typeof change.value === 'number') soundDistance = change.value
+        else if (change.kind === 'control' && change.id === 'sound_indoors' && typeof change.value === 'boolean') soundIndoors = change.value
         else if (change.kind === 'control' && change.id === 'fuse_length' && typeof change.value === 'number') lent.configureTool?.({ fuse_length: String(change.value) })
       })
       const worldEffects = createWorldEffects({ arsenal })

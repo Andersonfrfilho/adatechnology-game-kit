@@ -3,6 +3,9 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { surfaceOfMaterial } from '@adatechnology/game-contracts'
+import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
+import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -33,7 +36,8 @@ import { createLoading } from './loading'
 import { createRoomGraphics } from './graphics'
 import type { RoomGraphics } from './graphics'
 import { createLog } from './log'
-import { createRoomMetrics, ROOM_METRICS } from './metrics'
+import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
+import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
@@ -284,6 +288,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownAudio = options.audio === undefined
   const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
+  // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
+  const bodySounds = createBodySounds(audio)
   const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
     destructionSound?.onSound(key, point, volume, detail)
     if (detail) options.onSound?.(key, point, volume, detail)
@@ -463,7 +469,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   let pending: DestructionEvent[] = []
   const eventListeners = new Set<(d: unknown) => void>()
-  const listeners: Record<string, Set<(d: unknown) => void>> = { spawn: new Set(), tool: new Set(), grab: new Set(), throw: new Set(), event: eventListeners, camera: new Set() }
+  const listeners: Record<string, Set<(d: unknown) => void>> = { spawn: new Set(), tool: new Set(), grab: new Set(), throw: new Set(), event: eventListeners, camera: new Set(), footfall: new Set() }
   const fire = (type: string, data: unknown): void => {
     for (const fn of listeners[type] ?? []) fn(data)
   }
@@ -625,6 +631,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     floorAt: terrain.heightAt,
     start: arena.playerStart,
     crouchKeys: options.crouch?.keys,
+    onFeet: (event) => {
+      const at = player.position
+      if (event.type === 'jump') bodySounds.jump(at)
+      else {
+        bodySounds.land(surfaceUnderFeet(), event.speed, at)
+        action('landing_player', t('act.player_land', { speed: num(event.speed, 1) }), { data: { speedMs: Math.round(event.speed * 100) / 100, surface: surfaceUnderFeet() } })
+      }
+    },
     hooks: {
       primaryDown: () => {
         useHeld = true
@@ -898,6 +912,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const letGo = (root: THREE_NS.Object3D): void => {
     const inner = wrapped.get(root)
     if (!inner) return
+    // eslint-disable-next-line kit/no-bare-remove -- the inner object belongs to the module that built it, which shows it again; removeEntry frees it when it goes
     inner.removeFromParent()
     wrapped.delete(root)
   }
@@ -1317,6 +1332,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const setAvatar = (next: RoomAvatar | null): void => {
     if (avatar === next) return
     avatar?.setView?.('third', null)
+    // eslint-disable-next-line kit/no-bare-remove -- the avatar belongs to the host that set it (the player module), which may set it again or dispose it
     avatar?.root.removeFromParent()
     avatar = next
     feetPrev = null
@@ -1511,6 +1527,32 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const rayWorld = (o: Vec3, d: Vec3, max: number): RayHit | null => withoutHeld(() => world.raycast(o, d, max))
 
+  /** What the feet stand on, by its sound: the part right under them (a heap of boards, a car roof) or the ground's top layer (a slab, turf, a crater's soil). */
+  const surfaceUnderFeet = (): SurfaceId => {
+    const [x, feet, z] = player.position
+    const under = rayWorld([x, feet + 0.15, z], [0, -1, 0], 0.5)
+    if (under && under.object !== GROUND_ID) {
+      const material = world.state(under.object)?.parts.find((p) => p.id === under.part)?.material
+      if (material) return surfaceOfMaterial(material)
+    }
+    return surfaceOfMaterial(terrain.columnAt(x, z).material)
+  }
+
+  // footfalls: the body's walk says when a heel is down; with no body (or one that does not say) the room counts strides along the ground walked
+  const strides = createStrideCounter()
+  let feetAt: [number, number] | null = null
+  const stepFeet = (dt: number): void => {
+    const [x, , z] = player.position
+    const moved = feetAt && dt > 0 ? Math.hypot(x - feetAt[0], z - feetAt[1]) : 0
+    feetAt = [x, z]
+    if (dt <= 0 || seating.seat) return
+    const gait: GaitId = player.running ? 'run' : 'walk'
+    const foot = avatar?.footfall ? avatar.footfall() : moved / dt > MAX_STRIDE_SPEED ? null : strides.advance(moved, gait)
+    if (!foot || !player.grounded) return
+    emitHost({ type: 'footfall', foot, surface: surfaceUnderFeet(), gait, position: player.position })
+    fire('footfall', { foot, gait, time: simTime })
+  }
+
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Particles helpers and a tiny seeded rng for visuals
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1648,6 +1690,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const toolName = (id = toolId): string => arsenal.name(id)
+  const toolDef = (id: string): { readonly category: string } | undefined => arsenal.weapons.get(id)
+  /** What a blow met, for its sound: a body (a head apart) or anything else. */
+  const blowTarget = (r: RayHit): 'body' | 'head' | 'object' => {
+    const part = world.state(r.object)?.parts.find((p) => p.id === r.part)
+    if (!part || !(world.materials.get(part.material)?.tags ?? []).includes('body')) return 'object'
+    return /head|face|jaw|skull|neck/.test(r.part) ? 'head' : 'body'
+  }
   const hitWhere = (r: RayHit): string => {
     const p = world.part(r.object, r.part)
     return `${nameOf(r.object)} › ${r.part}${p ? ` (${dStrings.materialNames[p.material] ?? p.material})` : ''}`
@@ -1855,6 +1904,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return
     }
     world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
+    const blow = blowOfTool(id, toolDef(id)?.category ?? '')
+    if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
     action('melee', t('act.melee.hit', { weapon: w, energy: num(u.energy, 0), where: hitWhere(r), dist: num(r.distance, 1) }), {
       objectId: r.object,
@@ -1865,7 +1916,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** Strikes that have begun and whose blow has not landed yet: the tool they belong to, the simulated seconds left and what lands. */
-  let strikes: Array<{ key: string; remaining: number; land: () => void }> = []
+  let strikes: Array<{ key: string; remaining: number; land: () => void; swing?: () => void; lead?: number }> = []
   /**
    * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip on the body, in both views, and the blow lands when the clip reaches its
    * impact, with the aim read again then; any other blow lands now.
@@ -1903,6 +1954,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       comboNext = (stepIndex + 1) % combo!.steps.length
       comboAt = simTime
     }
+    const blow = blowOfTool(id, toolDef(id)?.category ?? '')
+    // the swing's loudest part meets the contact: it starts `swingLead` before the clip's impact (counted in the room's time, so slow motion keeps it), or now
+    const lead = blow ? swingLead(blow) : 0
+    const swing = blow ? (): void => bodySounds.swing(blow, player.position) : undefined
+    if (swing && (seconds === null || seconds <= lead)) swing()
     if (clip === undefined || seconds === null) {
       if (leg) {
         legAim()
@@ -1917,6 +1973,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     strikes.push({
       key: id,
       remaining: seconds,
+      ...(swing && seconds > lead ? { swing, lead } : {}),
       land: () => {
         if (leg) legAim()
         else aim()
@@ -1926,7 +1983,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const stepStrikes = (dt: number): void => {
     if (strikes.length === 0) return
-    for (const strike of strikes) strike.remaining -= dt
+    for (const strike of strikes) {
+      strike.remaining -= dt
+      if (strike.swing && strike.remaining <= (strike.lead ?? 0)) {
+        strike.swing()
+        delete strike.swing
+      }
+    }
     const landed = strikes.filter((strike) => strike.remaining <= 0)
     strikes = strikes.filter((strike) => strike.remaining > 0)
     for (const strike of landed) strike.land()
@@ -2813,6 +2876,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS])
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
+  // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
+  const MEMORY_CLEARS = 4
+  const memoryWatch = createMemoryWatch({
+    clears: MEMORY_CLEARS,
+    read: () => {
+      const memory = (gl as { info?: { memory?: { geometries: number; textures: number } } }).info?.memory
+      const heap = heapMB()
+      return memory ? { geometries: memory.geometries, textures: memory.textures, ...(heap === undefined ? {} : { heapMB: heap }) } : undefined
+    },
+  })
+  clearListeners.add(() => {
+    const verdict = memoryWatch.cleared(activeBench ?? undefined)
+    if (!verdict) return
+    if (!verdict.leaking) {
+      ui?.alert(null)
+      return
+    }
+    const text = t('memory.leak', { geometries: verdict.grew.geometries, textures: verdict.grew.textures, clears: MEMORY_CLEARS })
+    log.add({ channel: 'event', type: 'memory_leak', text, data: { ...verdict.after, grew: verdict.grew } })
+    ui?.alert(`⚠ ${text}`)
+  })
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
@@ -2916,6 +3000,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!isPaused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)
+    stepFeet(isPaused ? 0 : dt)
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
@@ -3138,10 +3223,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const metricRows = (): { room: MetricRow[]; module: MetricRow[] } => {
     const sampled = roomMetrics.sample()
-    const room = roomMetricIds.flatMap((id) => {
+    const room: MetricRow[] = roomMetricIds.flatMap((id): MetricRow[] => {
       const value = sampled[id]
       return value === undefined ? [] : [{ id, name: t(`metric.${id}`), text: num(value, id === 'frame_ms' ? 1 : 0) }]
     })
+    // stays on the counters line until a clear finds the memory back down
+    const leak = memoryWatch.last
+    if (leak?.leaking) room.push({ id: 'memory_leak', name: '⚠', text: t('memory.leak_short', { geometries: leak.grew.geometries, textures: leak.grew.textures, clears: MEMORY_CLEARS }) })
     const values = moduleMetrics()
     const declared = (activeBench ? benches.get(activeBench)?.metrics : undefined) ?? []
     const module = declared.map((metric) => {
@@ -3214,6 +3302,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(audioSink ? { audio: audioSink } : {}),
     environment,
     groundAt,
+    // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
+    surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,

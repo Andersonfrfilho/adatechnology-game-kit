@@ -320,6 +320,8 @@ export type RoomMetricId =
   | 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
   /** Of the last blast, once the room's blast options are on: the share that reached the most sheltered target (%), the pressure multiplier, the fragment hits. */
   | 'blast_shelter' | 'blast_confinement' | 'blast_fragments'
+  /** Memory: geometries and textures alive on the GPU (three's `renderer.info.memory`), the JS heap in MB where the browser tells it. */
+  | 'geometries' | 'textures' | 'heap_mb'
 
 /** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
 export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }
@@ -421,7 +423,8 @@ export interface TestRoom {
   update(dt: number): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
-  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera', fn: (data: unknown) => void): () => void
+  /** `footfall`: a foot of the player's body touched the ground (`{ foot, gait, time }`), the moment its footstep sounds. */
+  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera' | 'footfall', fn: (data: unknown) => void): () => void
   /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */

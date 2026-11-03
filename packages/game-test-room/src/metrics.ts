@@ -1,11 +1,11 @@
 import type { RoomMetricId } from './types'
 
-export const ROOM_METRICS: readonly RoomMetricId[] = ['fps', 'frame_ms', 'draw_calls', 'triangles', 'objects', 'fragments', 'particles', 'decals', 'blast_shelter', 'blast_confinement', 'blast_fragments']
+export const ROOM_METRICS: readonly RoomMetricId[] = ['fps', 'frame_ms', 'draw_calls', 'triangles', 'objects', 'fragments', 'particles', 'decals', 'blast_shelter', 'blast_confinement', 'blast_fragments', 'geometries', 'textures', 'heap_mb']
 
 const WINDOW_S = 0.5
 
 interface RenderInfo {
-  info?: { render?: { calls: number; triangles: number } }
+  info?: { render?: { calls: number; triangles: number }; memory?: { geometries: number; textures: number } }
 }
 
 export interface RoomMetricsSources {
@@ -24,6 +24,12 @@ export interface RoomMetrics {
   /** Right after the room renders (only when it owns the loop). */
   rendered(): void
   sample(): Partial<Record<RoomMetricId, number>>
+}
+
+/** The JS heap in MB where the browser tells it (Chrome's `performance.memory`), undefined elsewhere. */
+export function heapMB(): number | undefined {
+  const memory = (globalThis.performance as { memory?: { usedJSHeapSize?: number } } | undefined)?.memory
+  return typeof memory?.usedJSHeapSize === 'number' ? memory.usedJSHeapSize / 1048576 : undefined
 }
 
 export function createRoomMetrics(sources: RoomMetricsSources): RoomMetrics {
@@ -61,6 +67,9 @@ export function createRoomMetrics(sources: RoomMetricsSources): RoomMetrics {
       const render = ownsRender ? { calls, triangles } : gl.info?.render
       put('draw_calls', render?.calls)
       put('triangles', render?.triangles)
+      put('geometries', gl.info?.memory?.geometries)
+      put('textures', gl.info?.memory?.textures)
+      put('heap_mb', heapMB())
       const blast = sources.blast?.()
       if (blast) {
         put('blast_shelter', blast.shelter * 100)
