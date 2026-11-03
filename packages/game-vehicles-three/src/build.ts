@@ -58,6 +58,11 @@ export interface BuiltVehicle {
   expected: FleetDims | undefined
   /** The kit's context, for damage and animation (full detail only). */
   context: VehicleContext | null
+  /**
+   * The driver's eyes in the group frame: over the front seat on the driver's side (+x, left-hand drive), a seated person's eye height above the cushion.
+   * Null when the vehicle has no seats drawn (lite detail, a boat deck).
+   */
+  driverEye: [number, number, number] | null
   dispose(): void
 }
 
@@ -119,6 +124,20 @@ export function primaryPaint(c: any): any {
  * Builds vehicles in a game frame. Port of `FrotaLeve.criar(...).construir` (frota-leve.js 14311-14442): the kit builds with +x to the front
  * and +z to the right; the game wants +z to the front and -x to the right, the vehicle centred on x and z and standing on y = 0.
  */
+/** Eyes of a seated driver over the top of the seat cushion and behind its centre, metres: the cushion gives under the body and the hips sit at its back. */
+const SEATED_EYE = { up: 0.55, back: 0.28 }
+
+/** The driver's eyes in the group frame (the group sits at the origin while it is built): the frontmost seat, on the driver's side. */
+function eyeOf(THREE: any, c: any): [number, number, number] | null {
+  const tops: Array<{ x: number; y: number; z: number }> = c.seatTops ?? []
+  if (!tops.length) return null
+  const points = tops.map((t) => c.vehicle.localToWorld(new THREE.Vector3(t.x, t.y, t.z)))
+  const front = Math.max(...points.map((p: any) => p.z))
+  const row = points.filter((p: any) => p.z > front - 0.25)
+  const seat = row.reduce((a: any, b: any) => (b.x > a.x ? b : a))
+  return [+seat.x.toFixed(3), +(seat.y + SEATED_EYE.up).toFixed(3), +(seat.z - SEATED_EYE.back).toFixed(3)]
+}
+
 export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): VehiclesThree {
   const kit = options.kit
   const fleet: VehicleFleetContent = options.fleet ?? { colorFromSeed: defaultColorFromSeed, fleetDims: defaultFleetDims, paintPalettes: defaultPaintPalettes, paletteOf: defaultPaletteOf }
@@ -155,6 +174,7 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
     markKitOrigin(group, { owner: 'game-vehicles-three', kind: 'vehicle', id: key })
     const damageables = kit.damageables(c, pivotMatrix)
     let pruned = 0
+    let driverEye: [number, number, number] | null = null
     if (quality === 'high') {
       const pivot = new THREE.Group()
       pivot.name = 'vehicle'
@@ -175,6 +195,7 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       }
       markDamageables(c, damageables)
       group.updateMatrixWorld(true)
+      driverEye = eyeOf(THREE, c)
     } else {
       const fusion = fuse(THREE, c, pivotMatrix, color ? new THREE.Color(color) : null, primary, kit.lodHiddenMaterials())
       for (const mesh of liteMeshes(THREE, fusion, liteMaterials(THREE, kit.studioEnvironment()))) group.add(mesh)
@@ -200,6 +221,7 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       pruned,
       expected: fleetDims(key),
       context: quality === 'high' ? c : null,
+      driverEye,
       dispose() {
         group.traverse((m: any) => {
           if (m.geometry) m.geometry.dispose()

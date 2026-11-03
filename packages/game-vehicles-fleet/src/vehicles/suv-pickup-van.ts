@@ -277,7 +277,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     const x = kit.profX(s.lower, s.bottomY + 0.14, true) + 0.09
     ;[1, -1].forEach(function (sd) {
       c.roundBox(0.04, r * 2.6, r * 3.2, 0.015, MT.housing, x, y, sd * z)
-      kit.headlight(c, {
+      const lamp = kit.headlight(c, {
         style: 'round',
         x: x + 0.01,
         y: y,
@@ -289,6 +289,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
         label: sd > 0 ? trl('labels.right_fog_light') : trl('labels.left_fog_light'),
         reach: 0.5,
       })
+      // a fog lamp: drawn and damaged as a headlight, switched on its own
+      lamp.fog = true
     })
   }
   function roofBars(c: any, z: any, h: any, r: any) {

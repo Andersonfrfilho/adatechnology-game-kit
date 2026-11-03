@@ -58,3 +58,12 @@ describe('shipped data', () => {
     for (const id of registry.soundIds()) expect(planSound(registry.sound(id) as NonNullable<ReturnType<typeof registry.sound>>), id).not.toBeNull()
   })
 })
+
+describe('cabin bank', () => {
+  it('every cabin sound plans', async () => {
+    const { CABIN_BANK } = await import('../src')
+    const registry = createSoundRegistry([CABIN_BANK])
+    for (const id of registry.soundIds()) expect(planSound(registry.sound(id) as NonNullable<ReturnType<typeof registry.sound>>), id).not.toBeNull()
+    expect(registry.soundIds()).toEqual(expect.arrayContaining(['blinker_tick', 'starter_crank', 'car_alarm', 'alarm_chirp', 'wiper_swish', 'seatbelt_chime']))
+  })
+})
