@@ -77,6 +77,9 @@ const HORDE_BUDGET = {
 }
 const chainBuffers = 8 * BUDGET.buffersPerWarmExplosion + HORDE_BUDGET.chainDestructibles * HORDE_BUDGET.buffersPerDamagedObject
 const DRAW_MS = 300
+// what the trigger answers while it cannot take a pull yet (pullUntilItGoes pulls again on the next frames): a launcher fired once is `empty`, and that pull
+// starts its reload (the room's reserve), as the player's click does; the next pulls answer `reloading` until the round is in
+const NOT_YET = ['drawing', 'busy', 'cooldown', 'empty', 'reloading']
 const ROOM_AIM = { eye: [0, 1.6, 4], target: [0, 0.5, -4] }
 // software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
 const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
@@ -190,13 +193,9 @@ async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE
     await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
     await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push(`${id} never got ready`))
     await pause(DRAW_MS)
-    const fired = await page.evaluate(([weapon, view]) => {
-      const room = window.__testRoom
-      room.look(view.eye, view.target)
-      room.use()
-      return room.tool?.id ?? weapon
-    }, [id, aim])
-    if (fired !== id) pageErrors.push(`could not fire ${id} (holding ${fired})`)
+    const fired = await pullUntilItGoes(id, aim)
+    if (fired.id !== id) pageErrors.push(`could not fire ${id} (holding ${fired.id})`)
+    else if (fired.status !== 'ok') pageErrors.push(`could not fire ${id} (the trigger answered ${fired.status})`)
     if (gapMs > 0) await pause(gapMs)
   }
   // charges set down wait for their trigger: Y sets off the remote ones, and the player walks through the trip wire of the claymore
@@ -206,6 +205,31 @@ async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE
   await page.waitForFunction(effectsAreOn, null, { timeout: SETTLE_TIMEOUT_MS, polling: 50 }).catch(() => pageErrors.push(`no blast after ${ids.join(', ')}`))
   await page.waitForFunction(effectsAreOver, null, { timeout: settleMs, polling: 250 }).catch(() => undefined)
   await pause(500)
+}
+
+// `tool.phase` turns null in the frame that ends the draw, and that frame is the trigger's too: a pull before the next frame still answers `drawing` and throws nothing.
+// Software GL draws a frame in 0.3–1.3 s, longer than DRAW_MS, so the pull waits for frames until the trigger takes it (as a player clicking again would).
+// Before UseStatus the second use of each launcher (warm_all, storm) answered `empty` and fired nothing, unnoticed: the other blasts hid it.
+async function pullUntilItGoes(id, aim) {
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS
+  for (;;) {
+    const fired = await page.evaluate(([weapon, view]) => {
+      const room = window.__testRoom
+      room.look(view.eye, view.target)
+      const status = room.use()
+      return { id: room.tool?.id ?? weapon, status }
+    }, [id, aim])
+    if (fired.id !== id || !NOT_YET.includes(fired.status) || Date.now() > deadline) return fired
+    await nextFrames(2)
+  }
+}
+
+/** Resolves after `count` frames of the page (the room's loop runs first in each of them). */
+function nextFrames(count) {
+  return page.evaluate((frames) => new Promise((resolve) => {
+    const step = (left) => (left === 0 ? resolve() : requestAnimationFrame(() => step(left - 1)))
+    step(frames)
+  }), count)
 }
 
 /** The metrics of the module the room shows (the crowd area is the active bench), by id. */
