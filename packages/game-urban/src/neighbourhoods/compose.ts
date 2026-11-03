@@ -9,7 +9,7 @@ const SAMPLE_GROUND = { color: 0x1e2124, size: 500 }
 export type Origin = { x: number; z: number }
 
 /** Draws one pattern at `origin`: its composer, then the board with the title and the caption. */
-export function composePattern(kit: UrbanKitCore, pattern: NeighbourhoodPattern<any>, composer: Composer, b: UrbanBuilder, origin: Origin, options: ComposeOptions = {}): UrbanPlan {
+export function composePattern(kit: UrbanKitCore, pattern: NeighbourhoodPattern, composer: Composer, b: UrbanBuilder, origin: Origin, options: ComposeOptions = {}): UrbanPlan {
   const locale = options.locale ?? DEFAULT_LOCALE
   const providers: Providers = options.providers ?? {}
   const house = providers.house ?? createSilhouetteHouses()
@@ -52,7 +52,7 @@ export function composePattern(kit: UrbanKitCore, pattern: NeighbourhoodPattern<
 }
 
 /** The marker (map pin) of a pattern at an origin: where it stands, how high, and what it says. */
-export function patternMarker(pattern: NeighbourhoodPattern<any>, origin: Origin, locale: Locale = DEFAULT_LOCALE): { x: number; y: number; z: number; label: string; detail: string } {
+export function patternMarker(pattern: NeighbourhoodPattern, origin: Origin, locale: Locale = DEFAULT_LOCALE): { x: number; y: number; z: number; label: string; detail: string } {
   const text = pattern.text[locale] ?? pattern.text[DEFAULT_LOCALE]
   return { x: origin.x, y: pattern.marker.height, z: origin.z + (pattern.marker.dz ?? 0), label: text.label, detail: text.detail }
 }

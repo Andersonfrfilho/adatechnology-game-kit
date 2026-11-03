@@ -49,31 +49,6 @@
       "count": 1
     }
   },
-  "packages/game-contracts/tests/origin.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-destruction-three/tests/wall-events.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-destruction/tests/chip.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-devtools/src/devtools.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-devtools/src/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-floorplan-commercial/tests/commercial.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 7
@@ -604,36 +579,6 @@
       "count": 4
     }
   },
-  "packages/game-props3d/tests/shape-recorder.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-shapes-three/src/namespace.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-shapes-three/tests/three.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-shapes/src/primitives/index.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-shapes/src/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-stories/tests/team-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-urban-three/src/draw.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 22
@@ -694,36 +639,6 @@
       "count": 2
     }
   },
-  "packages/game-urban/src/kit.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-urban/src/neighbourhoods/compose.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-urban/src/neighbourhoods/patterns.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-urban/src/neighbourhoods/towers.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-urban/src/neighbourhoods/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-urban/src/poles.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-vegetation-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 10
@@ -755,16 +670,6 @@
     }
   },
   "packages/game-vegetation-three/tests/team-golden-module.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vegetation/src/generate.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vehicles-driving/tests/team-golden-arcade.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
     }

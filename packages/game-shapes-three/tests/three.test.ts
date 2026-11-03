@@ -46,8 +46,9 @@ describe('shapeGeometries: the same geometry as three, made by game-shapes', () 
   it.each(builds)('%s', (_label, build) => {
     const ours = build(T)
     const theirs = build(THREE)
-    expect(ours).toBeInstanceOf((THREE as Record<string, any>)[theirs.type])
-    expect(ours).toBeInstanceOf((T as Record<string, any>)[theirs.type])
+    type Constructors = Record<string, new (...args: never[]) => unknown>
+    expect(ours).toBeInstanceOf((THREE as unknown as Constructors)[theirs.type])
+    expect(ours).toBeInstanceOf((T as unknown as Constructors)[theirs.type])
     expect(ours.type).toBe(theirs.type)
     expect(Object.keys(ours.attributes)).toEqual(Object.keys(theirs.attributes))
     for (const name of Object.keys(theirs.attributes)) {
@@ -61,8 +62,9 @@ describe('shapeGeometries: the same geometry as three, made by game-shapes', () 
     expect(sameBits(ours.index?.array, theirs.index?.array)).toBe(true)
     expect(ours.groups).toEqual(theirs.groups)
     // an extrusion's parameters hold the Shape objects the caller passed (two builds, two uuids): compare the options
-    if (theirs.type === 'ExtrudeGeometry') expect((ours as any).parameters.options).toEqual((theirs as any).parameters.options)
-    else expect((ours as any).parameters).toEqual((theirs as any).parameters)
+    const parameters = (g: THREE.BufferGeometry) => (g as THREE.BufferGeometry & { parameters: { options?: unknown } }).parameters
+    if (theirs.type === 'ExtrudeGeometry') expect(parameters(ours).options).toEqual(parameters(theirs).options)
+    else expect(parameters(ours)).toEqual(parameters(theirs))
     const clone = ours.clone()
     expect(clone.type).toBe(theirs.type)
     expect(sameBits(clone.getAttribute('position').array, theirs.getAttribute('position').array)).toBe(true)

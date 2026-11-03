@@ -16,7 +16,16 @@ const golden = JSON.parse(readFileSync(join(__dirname, 'fixtures/team-golden/gam
 const cast = slice<Person[]>('cast.json')
 const stories = slice<Story[]>('stories.json')
 const life = slice<LifeOptions>('life.json')
-const of = (type: string) => golden.events.filter((e) => e.type === type).map((e) => e.data as Record<string, any>)
+/** The fields each kind of golden event carries (as the team's page recorded them). */
+type GoldenEvents = {
+  run: { id: string; days: number; seed: number; actions: string[]; fill?: number }
+  log: Record<string, EventValue> & { run: string }
+  final: Record<string, EventValue> & { run: string; stats: EventValue }
+  life: { seed: number; log: unknown[]; S: string }
+  events: { actions: string[]; log: unknown[]; S: string; flags: string[] }
+  sheet: { attributes: number[]; profession: string; traits: string[]; derived: [string, number][]; pool: number }
+}
+const of = <K extends keyof GoldenEvents>(type: K): GoldenEvents[K][] => golden.events.filter((e) => e.type === type).map((e) => e.data as unknown as GoldenEvents[K])
 
 /** The team's state words (the kit keeps its own ids; the valley's are the team's). */
 const TEAM_STATE: Record<string, string> = { ok: 'ok', hurt: 'ferido', bitten: 'mordido', undead: 'zumbi', dead: 'morto', missing: 'sumido', party: 'grupo', hostile: 'hostil', moved: 'mudou', left: 'partiu', unborn: 'nao' }
@@ -91,10 +100,10 @@ describe('the Personagens golden: point buy and derived values', () => {
   const DERIVED: Record<string, string> = { vida: 'health', folego: 'stamina', carga: 'carry', corrida: 'run_speed', raio: 'detection', ruido: 'noise', xp: 'learning', comp: 'composure', dano: 'melee' }
   it('gives the creator page pool and the nine derived values on 48 drawn sheets', () => {
     for (const item of of('sheet')) {
-      const [strength, vigor, agility, perception, intellect, presence] = item.attributes as number[]
-      const sheet = createSheet({ profession: PROFESSION[item.profession]!, attributes: { strength, vigor, agility, perception, intellect, presence }, traits: (item.traits as string[]).map((t) => TRAIT[t]!) })
+      const [strength, vigor, agility, perception, intellect, presence] = item.attributes
+      const sheet = createSheet({ profession: PROFESSION[item.profession]!, attributes: { strength, vigor, agility, perception, intellect, presence }, traits: item.traits.map((t) => TRAIT[t]!) })
       const derived = sheet.derived()
-      const mine = round('sheet', { pool: sheet.pool(), derived: (item.derived as [string, number][]).map(([key]) => [key, derived[DERIVED[key]!]!]) })
+      const mine = round('sheet', { pool: sheet.pool(), derived: item.derived.map(([key]) => [key, derived[DERIVED[key]!]!]) })
       expect(mine).toEqual({ pool: item.pool, derived: item.derived })
     }
   })

@@ -28,7 +28,7 @@ describe('createShapeRecorder', () => {
       recorder.api.light(M, 0, 2, 0, 0xffeedd, 4, 'lamp')
     })
     recorder.api.part('door', [9, 9, 9], 1, () => recorder.api.leaf(M, 0, 0, 0, 0.1, 0.2, 0x228833, 0, 0.3))
-    const root = recorder.schema().root as unknown as { children: Array<Record<string, any>> }
+    const root = recorder.schema().root as unknown as { children: Array<{ part?: number; heading?: string; children: Array<{ kind: string }> }> }
     expect(root.children.map((c) => c.part ?? c.heading)).toEqual([0.5, 0, 'door'])
     expect(root.children[0]!.children.map((c: { kind: string }) => c.kind)).toEqual(['box', 'cylinder'])
     expect(root.children[0]!.children[0]).toMatchObject({ position: [0, 1, 0], scale: [1, 2, 3], rotationOrder: 'YXZ' })

@@ -33,9 +33,9 @@ export const DEFAULT_URBAN_SEED = 7
 
 export type UrbanOptions = {
   /** Entries added to the catalogues (an entry with an existing id replaces it). */
-  packs?: { poles?: readonly PoleDef[]; neighbourhoods?: readonly NeighbourhoodPattern<any>[]; districtKinds?: readonly DistrictKindDef[]; cityPlans?: readonly CityPlanInput[] }
+  packs?: { poles?: readonly PoleDef[]; neighbourhoods?: readonly NeighbourhoodPattern[]; districtKinds?: readonly DistrictKindDef[]; cityPlans?: readonly CityPlanInput[] }
   /** Numbers changed on shipped entries, by id (objects merge, arrays replace). */
-  patch?: { poles?: Record<string, DeepPartial<PoleDef>>; neighbourhoods?: Record<string, DeepPartial<NeighbourhoodPattern<any>>>; districtKinds?: Record<string, DeepPartial<DistrictKindDef>>; cityPlans?: Record<string, DeepPartial<CityPlanInput>> }
+  patch?: { poles?: Record<string, DeepPartial<PoleDef>>; neighbourhoods?: Record<string, DeepPartial<NeighbourhoodPattern>>; districtKinds?: Record<string, DeepPartial<DistrictKindDef>>; cityPlans?: Record<string, DeepPartial<CityPlanInput>> }
   /** Ids taken out of the catalogues. */
   remove?: { poles?: readonly string[]; neighbourhoods?: readonly string[]; districtKinds?: readonly string[]; cityPlans?: readonly string[] }
   /** Shape builders for the poles a pack adds; the five of the Galeria are always there. */

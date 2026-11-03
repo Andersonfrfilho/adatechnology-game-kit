@@ -353,7 +353,11 @@ export interface GeneratorContext {
   readonly detail: number
   readonly path: string
 }
-export type ShapeGenerator = (params: any, context: GeneratorContext) => ShapeNode
+/**
+ * A custom node's generator. Declared as a method so the registry can hold generators with their own params type (the custom node that
+ * names a generator carries the matching params).
+ */
+export type ShapeGenerator<TParams = unknown> = { generate(params: TParams, context: GeneratorContext): ShapeNode }['generate']
 
 export interface GenerateOptions {
   /** Seed of the custom generators. Default 0. */

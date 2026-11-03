@@ -158,7 +158,7 @@ describe('a row of shots along a wall', () => {
         { a: 'wall', b: 'ground', kind: 'mortar', strength: 400, bears: 'a_on_b' },
         { a: 'beam', b: 'wall', kind: 'mortar', strength: 400, bears: 'a_on_b' },
       ],
-    } as any, { id: 'W', position: [0, 0, -11] })
+    }, { id: 'W', position: [0, 0, -11] })
     return world
   }
   const row = (world: ReturnType<typeof createDestruction>, y: number, shots: number) => {
@@ -206,7 +206,7 @@ describe('a wall of units shot along its base', () => {
         { a: 'wall', b: 'ground', kind: 'mortar', strength: 400, bears: 'a_on_b' },
         { a: 'beam', b: 'wall', kind: 'mortar', strength: 400, bears: 'a_on_b' },
       ],
-    } as any, { id: 'W', position: [0, 0, -11] })
+    }, { id: 'W', position: [0, 0, -11] })
     const events: DestructionEvent[] = []
     world.on('*', (e) => events.push(e))
     const shoot = (x: number, y: number) => {
