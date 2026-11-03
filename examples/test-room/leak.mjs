@@ -24,8 +24,8 @@ const PHASES = {
   glass: { scenarios: ['vehicles_9mm_windshield', 'house_window_glass', 'furniture_shower_glass_shatters', 'furniture_tv_screen_shatters', 'vehicles_rollover', 'car_in_the_yard'] },
   // opening the areas one after another (cars, crowd, houses, explosives, bodies) and clearing the room
   areas: { areas: ['Veículos', 'Multidão', 'Casas', 'Explosivos', 'Personagens'] },
-  // the other areas: weapons, items, animals, effects, ground, sound, plants and the city
-  more: { areas: ['Armas', 'Itens', 'Animais', 'effects', 'Terreno', 'Som', 'Árvores, plantas e flores', 'Cidade'] },
+  // the other areas: weapons, items, animals, effects, ground, sound, plants, the city and the vehicle proving ground
+  more: { areas: ['Armas', 'Itens', 'Animais', 'effects', 'Terreno', 'Som', 'Árvores, plantas e flores', 'Cidade', 'vehicles_proving'] },
   // the hands: one weapon of each kind taken, fired and put away, in first and third person
   hands: { hands: true },
 }

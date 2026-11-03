@@ -1,0 +1,53 @@
+{
+  "name": "@adatechnology/game-vehicles-proving",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Vehicle proving ground without three.js: measured tests (0-100, top speed, braking, turning circle, wet braking, mud) run on the semi-simulation driver, ranges by class and design card, visual checks signed off by a person, a certificate per vehicle and the list of approved vehicles a game lets in. Land, water and air. Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "vehicles",
+    "testing",
+    "homologation",
+    "physics"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-vehicles-proving"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-vehicles-driving": "workspace:^"
+  }
+}

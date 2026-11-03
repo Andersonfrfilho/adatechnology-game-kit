@@ -1510,6 +1510,9 @@ importers:
       '@adatechnology/game-vehicles':
         specifier: workspace:^
         version: link:../game-vehicles
+      '@adatechnology/game-vehicles-proving':
+        specifier: workspace:^
+        version: link:../game-vehicles-proving
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1532,11 +1535,36 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-vehicles-proving:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
+      '@adatechnology/game-vehicles-driving':
+        specifier: workspace:^
+        version: link:../game-vehicles-driving
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-vehicles-three:
     dependencies:
       '@adatechnology/game-audio':
         specifier: workspace:^
         version: link:../game-audio
+      '@adatechnology/game-camera':
+        specifier: workspace:^
+        version: link:../game-camera
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
@@ -1552,6 +1580,9 @@ importers:
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:^
         version: link:../game-vehicles-fleet
+      '@adatechnology/game-vehicles-proving':
+        specifier: workspace:^
+        version: link:../game-vehicles-proving
     devDependencies:
       '@adatechnology/game-test-room':
         specifier: workspace:^

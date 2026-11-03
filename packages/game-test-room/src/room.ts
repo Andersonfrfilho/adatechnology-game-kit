@@ -43,6 +43,7 @@ import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thir
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
+import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import type {
   AnimationInfo,
@@ -188,6 +189,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const onResize = (): void => resize()
   window.addEventListener('resize', onResize)
+  // the extra views (mirrors, reversing cameras) and the main-view takeover that modules ask for
+  const moduleViews = createModuleViews(THREE, gl)
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Worlds
@@ -3084,6 +3087,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     effects: vfx,
     loading,
+    addView: (view) => moduleViews.add(view),
+    setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
       weapon: toolId,
@@ -3730,6 +3735,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
+      moduleViews.dispose()
       for (const store of benches.values()) store.dispose()
       benches.clear()
       cancelAnimationFrame?.(raf)
@@ -3874,7 +3880,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       last = now
       if (!scenarioRunning) update(dt)
       const restoreCamera = room.applyCamera()
-      gl.render(scene, debugView ?? camera)
+      gl.render(scene, debugView ?? moduleViews.main(camera))
+      moduleViews.render(scene)
       pinPrograms()
       restoreCamera()
       roomMetrics.rendered()

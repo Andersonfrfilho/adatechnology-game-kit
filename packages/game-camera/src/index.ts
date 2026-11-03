@@ -23,3 +23,5 @@ export type {
   ViewmodelConfig,
   ViewmodelTarget,
 } from './types'
+export { createVehicleCamera, defaultEye, mirrorPoses, VEHICLE_CAMERA_DEFAULTS } from './vehicle'
+export type { MirrorPose, VehicleCameraLike, VehicleCameraMode, VehicleCameraOptions, VehicleCameraRig, VehicleFrame, VehicleMirrorId, VehicleThreeLib } from './vehicle'

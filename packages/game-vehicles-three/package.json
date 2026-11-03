@@ -43,11 +43,13 @@
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",
+    "@adatechnology/game-camera": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-vehicles": "workspace:^",
     "@adatechnology/game-vehicles-driving": "workspace:^",
-    "@adatechnology/game-vehicles-fleet": "workspace:^"
+    "@adatechnology/game-vehicles-fleet": "workspace:^",
+    "@adatechnology/game-vehicles-proving": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-test-room": "workspace:^",
