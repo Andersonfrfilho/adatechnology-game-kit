@@ -243,6 +243,17 @@ describe('spec from the design ratings', () => {
     expect(top(truck)).toBeLessThan(100 * 1.15)
     expect(hatch.tyre.friction).toBeGreaterThan(truck.tyre.friction)
   })
+
+  it('gives a heavy vehicle brakes in proportion to its mass', async () => {
+    const { semiSpecFromStats } = await import('../src')
+    const hatch = semiSpecFromStats({ acceleration: 7, handling: 7, maxSpeedKmh: 170 }, { mass: 1100, wheelbase: 2.55, track: 1.5 })
+    const bus = semiSpecFromStats({ acceleration: 3, handling: 3, maxSpeedKmh: 90 }, { mass: 12000, wheelbase: 6, track: 2.1 })
+    // more force in all, less per kilogram, as on a real bus
+    expect(bus.brakeForce).toBeGreaterThan(hatch.brakeForce * 4)
+    expect(bus.brakeForce / bus.mass).toBeCloseTo(0.6 * 9.81, 6)
+    expect(hatch.brakeForce / hatch.mass).toBeCloseTo(14000 / 1300, 6)
+    expect(semiSpecFromStats({ acceleration: 3, handling: 3, maxSpeedKmh: 90 }, { mass: 12000, wheelbase: 6, track: 2.1 }, { brakeForce: 50000 }).brakeForce).toBe(50000)
+  })
 })
 
 describe('worn brakes', () => {

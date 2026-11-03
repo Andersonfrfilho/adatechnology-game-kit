@@ -1,0 +1,23 @@
+{
+  "name": "@adatechnology/vehicles-proving-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Vehicle proving ground for the shared test room: a fleet vehicle runs the measured tests of game-vehicles-proving live on a track (0-100, top speed, braking, turning circle, wet braking, mud), with the chase, cockpit and hood cameras of game-camera, the rear-view and side mirrors and the reversing camera as extra views, the certificate board by the track and the sign-off of the visual checks.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-audio": "workspace:*",
+    "@adatechnology/game-camera": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-driving": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-proving": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*"
+  }
+}

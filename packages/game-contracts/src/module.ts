@@ -308,15 +308,34 @@ export interface FrameOptions {
 }
 
 /**
- * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
- * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
+ * An extra view the host draws over its own, for a module that needs to see from somewhere else at the same time: a rear-view mirror, a side mirror, a reversing camera, a security
+ * monitor. The host renders the scene from `camera` into `rect` after the main view, every frame, until the returned function is called.
  */
+export interface ModuleView {
+  /** A three.js camera the module moves itself every frame. Its aspect is set by the host to the rect's. */
+  camera: unknown
+  /** Where on the screen, as fractions of the canvas from its top-left corner (0..1). */
+  rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+  /** Draws it left-right flipped, as a mirror shows the world. */
+  mirror?: boolean
+  /** Rounds the corners of the frame (a fraction of the shorter side, 0..0.5); 0 or absent is a plain rectangle. */
+  rounded?: number
+  /** Short label the host may print on the frame. */
+  label?: string
+  /** Renders it at this fraction of the canvas resolution (default 0.5): a mirror does not need full detail. */
+  resolution?: number
+}
+
 export interface HostGraphics {
   hordeDetail(): 'auto' | number
   onChange(listener: () => void): () => void
   report(key: string, value: number): void
 }
 
+/**
+ * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
+ * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
+ */
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -388,6 +407,15 @@ export interface ModuleHost {
   reachFor?(reach: HostReach): void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
+  /**
+   * Draws an extra view over the host's own (mirrors, a reversing camera). Returns the function that takes it away. A host that cannot draw more than one view leaves it out.
+   */
+  addView?(view: ModuleView): () => void
+  /**
+   * Takes over the main view with the module's camera (a vehicle's chase, cockpit or hood camera) until it is called again with null. The player's own camera comes back then. A host
+   * that keeps its camera to itself leaves it out.
+   */
+  setViewCamera?(camera: unknown | null): void
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
   /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */

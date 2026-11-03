@@ -32,6 +32,7 @@ import { createModule as createCrowdModule } from '../../crowd-test-area/src/ent
 import { createModule as createUrbanModule, createVehicleBuilder } from '../../urban-test-area/src/entry.js'
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
 import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
+import { loadModule as loadProvingModule } from '../../vehicles-proving-area/src/entry.js'
 import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
@@ -99,6 +100,7 @@ const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 /** Short labels of each loading step, for the modules that are not created before they load (pt-BR, en). */
 const STEP_LABELS = {
   vehicles: ['Veículos', 'Vehicles'],
+  vehicles_proving: ['Banco de provas', 'Proving ground'],
   vegetation: ['Vegetação', 'Vegetation'],
 }
 
@@ -149,6 +151,8 @@ function loadSteps(room, options, lang) {
   // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
   custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
+  // the proving ground: a fleet vehicle runs the measured tests on a track, with the vehicle cameras, the mirrors and the certificate board (its own area is `?area=vehicles_proving`; it builds nothing until opened)
+  custom('vehicles_proving', () => loadProvingModule(room, { locale: lang }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
