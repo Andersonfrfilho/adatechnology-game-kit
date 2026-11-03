@@ -1,6 +1,7 @@
 /** Impact resolution: direction, surface lookup, deformation, shards and sparks. */
 import type { Kit } from './types'
 import { clamp, hash, markDecal } from './util'
+import { raycastIndexed } from './tri-index'
 
 export function installImpact(kit: Kit): void {
   const THREE = kit.THREE
@@ -388,7 +389,7 @@ export function installImpact(kit: Kit): void {
     const inv = new THREE.Matrix4().copy(Mw).invert()
     _pr.set(o.clone().applyMatrix4(Mw), d.clone().transformDirection(Mw))
     _pr.far = far || 10
-    const hits = _pr.intersectObject(c.vehicle, true)
+    const hits = raycastIndexed(THREE, _pr, [c.vehicle], true)
     for (let i = 0; i < hits.length; i++) {
       const h = hits[i]
       const ob = h.object
