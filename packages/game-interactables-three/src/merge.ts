@@ -31,7 +31,7 @@ const QROT = /* glsl */ `
 vec3 batchRotate(vec4 q, vec3 v) { return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v); }
 `
 
-function patchProgram<M extends ThreeNS.Material>(material: M, key: string, patchShader: (shader: { uniforms: Record<string, any>; vertexShader: string }) => void, inherit?: ThreeNS.Material): M {
+function patchProgram<M extends ThreeNS.Material>(material: M, key: string, patchShader: (shader: { uniforms: Record<string, ThreeNS.IUniform>; vertexShader: string }) => void, inherit?: ThreeNS.Material): M {
   const previous = material.onBeforeCompile
   material.onBeforeCompile = (shader, renderer) => {
     previous?.call(material, shader, renderer)
@@ -55,7 +55,7 @@ function cloneKeepingHooks(base: ThreeNS.Material): ThreeNS.Material {
 }
 
 /** Material, depth material and distance material patched by the same function, so shadows follow the animation. */
-function patchedSet(THREE: ThreeLib, base: ThreeNS.Material, key: string, patchShader: (shader: { uniforms: Record<string, any>; vertexShader: string }) => void) {
+function patchedSet(THREE: ThreeLib, base: ThreeNS.Material, key: string, patchShader: (shader: { uniforms: Record<string, ThreeNS.IUniform>; vertexShader: string }) => void) {
   return {
     material: patchProgram(cloneKeepingHooks(base), key, patchShader, base),
     depth: patchProgram(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), key, patchShader),
@@ -206,7 +206,7 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
     })
     const merged = new THREE.Group() as unknown as MergedGroup
     merged.name = 'merge:cloth'
-    const patch = (shader: { uniforms: Record<string, any>; vertexShader: string }): void => {
+    const patch = (shader: { uniforms: Record<string, ThreeNS.IUniform>; vertexShader: string }): void => {
       shader.uniforms.swayTime = uniforms.time
       shader.uniforms.swayAxz = uniforms.axz
       shader.vertexShader =
@@ -269,7 +269,7 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
     })
     const merged = new THREE.Group() as unknown as MergedGroup
     merged.name = `merge:${sig.split('|')[0]}`
-    const patch = (shader: { uniforms: Record<string, any>; vertexShader: string }): void => {
+    const patch = (shader: { uniforms: Record<string, ThreeNS.IUniform>; vertexShader: string }): void => {
       shader.uniforms.batchQ = uniforms.q
       shader.uniforms.batchPos = uniforms.pos
       shader.uniforms.batchScale = uniforms.scale

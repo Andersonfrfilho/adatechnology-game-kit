@@ -1,6 +1,6 @@
 import { poseOf as enginePoseOf } from '@adatechnology/game-interactables'
 import type { Motion, World } from '@adatechnology/game-interactables'
-import type { ThreeLib, Vec3 } from './types'
+import type { ThreeLib, ThreeNS, Vec3 } from './types'
 
 /** Pure pose of a part at `t`, in the part's own frame (the frame at rest: pivot at the origin, already turned by the part's `ry`). */
 export interface Pose {
@@ -36,7 +36,7 @@ interface Rest {
 }
 
 /** Remembers the rest transform of a part group in `userData.rest` (once). */
-export function rememberRest(group: { position: any; quaternion: any; scale: any; userData: Record<string, any> }): Rest {
+export function rememberRest(group: Pick<ThreeNS.Object3D, 'position' | 'quaternion' | 'scale' | 'userData'>): Rest {
   let rest = group.userData.rest as Rest | undefined
   if (!rest) {
     const p = group.position

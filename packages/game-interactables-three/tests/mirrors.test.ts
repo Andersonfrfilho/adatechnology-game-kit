@@ -4,7 +4,7 @@ import { catenary, createCord, createMirrors } from '../src'
 
 class FakeReflector extends THREE.Mesh {
   static created = 0
-  constructor(geometry: THREE.BufferGeometry, public options: any = {}) {
+  constructor(geometry: THREE.BufferGeometry, public options: { textureWidth?: number; textureHeight?: number; clipBias?: number } = {}) {
     super(geometry, new THREE.MeshBasicMaterial())
     FakeReflector.created++
   }
@@ -12,7 +12,7 @@ class FakeReflector extends THREE.Mesh {
 
 function setup(max = 1, withReflector = true) {
   const scene = new THREE.Scene()
-  const mirrors = createMirrors(THREE, { Reflector: withReflector ? (FakeReflector as any) : undefined, max, resolution: 256 })
+  const mirrors = createMirrors(THREE, { Reflector: withReflector ? FakeReflector : undefined, max, resolution: 256 })
   const make = (id: string, x: number, ry = 0) => {
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.6), new THREE.MeshBasicMaterial())
     mesh.position.set(x, 1, 0)
@@ -133,7 +133,7 @@ describe('reflector orientation', () => {
 describe('mirrors and renderer.info', () => {
   // three's Reflector renders the scene inside onBeforeRender, and that nested render resets info when autoReset is on
   class ResettingReflector extends FakeReflector {
-    onBeforeRender(renderer: any): void {
+    onBeforeRender(renderer: THREE.WebGLRenderer): void {
       renderer.info.reset()
       renderer.info.render.calls += 5
       renderer.info.render.triangles += 50
@@ -151,7 +151,7 @@ describe('mirrors and renderer.info', () => {
   }
   const run = (options: { keepInfo?: boolean }, autoReset = true) => {
     const scene = new THREE.Scene()
-    const mirrors = createMirrors(THREE, { Reflector: ResettingReflector as any, ...options })
+    const mirrors = createMirrors(THREE, { Reflector: ResettingReflector, ...options })
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial())
     scene.add(mesh)
     mirrors.register('o:m', mesh)
@@ -163,7 +163,7 @@ describe('mirrors and renderer.info', () => {
     const renderer = fakeRenderer(autoReset)
     renderer.info.render.calls = 100 // drawn before the reflector in the main pass
     renderer.info.render.triangles = 1000
-    ;(reflector as any).onBeforeRender(renderer, scene, camera, mesh.geometry, mesh.material, null)
+    ;(reflector as THREE.Mesh).onBeforeRender(renderer as unknown as THREE.WebGLRenderer, scene, camera, mesh.geometry, mesh.material, null as unknown as THREE.Group) // a fake renderer: only its info
     return renderer.info.render
   }
 

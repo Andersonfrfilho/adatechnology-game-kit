@@ -1,12 +1,12 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createScreen } from '../src'
-import { fakeDocument, type FakeCtx } from './helpers'
+import { fakeCtxOf, fakeDocument, type FakeCtx } from './helpers'
 
 describe('createScreen', () => {
   it('is black and not emissive while off', () => {
     const s = createScreen(THREE, { document: fakeDocument(), w: 64, h: 36 })
-    const ctx = s.canvas.ctx as FakeCtx
+    const ctx = fakeCtxOf(s.canvas)
     expect(s.on).toBe(false)
     expect(s.material.emissiveIntensity).toBe(0)
     expect(ctx.fills.length).toBe(1)
@@ -17,7 +17,7 @@ describe('createScreen', () => {
 
   it('draws content when on and goes back to black', () => {
     const s = createScreen(THREE, { document: fakeDocument(), w: 64, h: 36, fps: 10 })
-    const ctx = s.canvas.ctx as FakeCtx
+    const ctx = fakeCtxOf(s.canvas)
     s.setOn(true)
     expect(s.material.emissiveIntensity).toBe(1)
     expect(new Set(ctx.fills.map((f) => f.style)).size).toBeGreaterThan(4) // colour bars
@@ -36,7 +36,7 @@ describe('createScreen', () => {
       const s = createScreen(THREE, { document: fakeDocument(), w: 64, h: 36, seed })
       s.setOn(true)
       s.setChannel(channel)
-      return (s.canvas.ctx as FakeCtx).fills.map((f) => f.style).join('|')
+      return (fakeCtxOf(s.canvas)).fills.map((f) => f.style).join('|')
     }
     expect(styles(0)).not.toBe(styles(1))
     expect(styles(1)).not.toBe(styles(2))
@@ -52,12 +52,14 @@ describe('screen canvas context', () => {
     const doc = {
       createElement(tag: 'canvas') {
         const c = base.createElement(tag)
-        const get = c.getContext
-        c.getContext = (...a: unknown[]) => {
+        // the fake canvas: a context getter and the recording context
+        const fake = c as unknown as { getContext: (...a: unknown[]) => unknown; ctx: FakeCtx & { getImageData?: () => never } }
+        const get = fake.getContext
+        fake.getContext = (...a: unknown[]) => {
           calls.push(a)
           return get()
         }
-        c.ctx.getImageData = () => {
+        fake.ctx.getImageData = () => {
           throw new Error('no readback')
         }
         return c

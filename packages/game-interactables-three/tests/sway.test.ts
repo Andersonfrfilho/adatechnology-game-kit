@@ -2,8 +2,9 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { attachSway, createMeshApi, patchSwayShader, swayMaterial, syncObject } from '../src'
 import type { World } from '@adatechnology/game-interactables'
+import { compileStub, type ShaderStub } from './helpers'
 
-const shaderStub = () => ({ uniforms: {} as Record<string, any>, vertexShader: 'void main() {\n#include <begin_vertex>\n}' })
+const shaderStub = (): ShaderStub => ({ uniforms: {}, vertexShader: 'void main() {\n#include <begin_vertex>\n}' })
 
 describe('swayMaterial / attachSway', () => {
   it('patches the material, depth and distance materials with the same uniforms', () => {
@@ -17,7 +18,7 @@ describe('swayMaterial / attachSway', () => {
 
     const shaders = [mesh.material as THREE.Material, mesh.customDepthMaterial!, mesh.customDistanceMaterial!].map((m) => {
       const s = shaderStub()
-      m.onBeforeCompile(s as any, null as any)
+      compileStub(m, s)
       return s
     })
     for (const s of shaders) {
@@ -102,7 +103,7 @@ describe('sway shader matches the group rotation', () => {
   // same point by Euler(ax, 0, az), which is what syncObject does for meshes without the shader.
   function displaced(ax: number, az: number, hang: number): number[] {
     const shader = shaderStub()
-    patchSwayShader(shader as any, { time: { value: 0 }, ax: { value: ax }, az: { value: az }, anchorY: { value: 0 } }, 0)
+    patchSwayShader(shader, { time: { value: 0 }, ax: { value: ax }, az: { value: az }, anchorY: { value: 0 } }, 0)
     const block = shader.vertexShader.split('#include <begin_vertex>')[1].split('}')[0] + '}'
     const js = block
       .replace(/\bfloat\s+/g, 'let ')

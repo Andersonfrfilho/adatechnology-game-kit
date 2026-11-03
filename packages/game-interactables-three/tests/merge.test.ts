@@ -3,6 +3,7 @@ import { createHousehold } from '@adatechnology/game-interactables-household'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createMeshApi, syncObject } from '../src'
+import { compileStub, type ShaderStub } from './helpers'
 
 const hh = createHousehold({ region: 'br', locale: 'en' })
 
@@ -76,9 +77,9 @@ describe('mergeParts (game quality)', () => {
       expect(batch.kind).toBe('pose')
       const mesh = merged.children[0] as THREE.Mesh
       const mat = mesh.material as THREE.Material
-      let uni: Record<string, { value: any }> = {}
+      let uni: Record<string, THREE.IUniform> = {}
       const shader = { uniforms: uni, vertexShader: '#include <begin_vertex>' }
-      mat.onBeforeCompile(shader as any, undefined as any)
+      compileStub(mat, shader)
       uni = shader.uniforms
       const q = uni.batchQ.value as THREE.Vector4
       const pos = uni.batchPos.value as THREE.Vector3
@@ -119,8 +120,8 @@ describe('mergeParts (game quality)', () => {
     expect(ids.size).toBe(cloths.length)
     const anchor = mesh.geometry.getAttribute('swayAnchor')
     expect(anchor.getX(0)).toBeGreaterThan(1)
-    const shader = { uniforms: {} as Record<string, { value: any }>, vertexShader: '#include <begin_vertex>' }
-    ;(mesh.material as THREE.Material).onBeforeCompile(shader as any, undefined as any)
+    const shader: ShaderStub = { uniforms: {}, vertexShader: '#include <begin_vertex>' }
+    compileStub(mesh.material as THREE.Material, shader)
     const axz = shader.uniforms.swayAxz.value as THREE.Vector2[]
     const swing = axz.map((a) => Math.abs(a.x) + Math.abs(a.y))
     expect(Math.max(...swing)).toBeGreaterThan(0)
@@ -141,8 +142,9 @@ describe('merged groups keep the host material', () => {
     const calls: unknown[] = []
     mat.defines = { ROOM_MASK: '1' }
     mat.userData.mask = true
-    mat.onBeforeCompile = function (this: THREE.Material, shader: any) {
+    mat.onBeforeCompile = function (this: THREE.Material, parameters) {
       calls.push(this)
+      const shader = parameters as unknown as ShaderStub
       shader.fragmentShader = `${shader.fragmentShader ?? ''}// masked`
       shader.hostRan = true
     }
@@ -162,8 +164,8 @@ describe('merged groups keep the host material', () => {
     expect(m.defines).toMatchObject({ ROOM_MASK: '1' })
     expect(m.userData.mask).toBe(true)
     expect(m.customProgramCacheKey()).toMatch(/^mask1\|/)
-    const shader: any = { uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '' }
-    m.onBeforeCompile(shader, undefined as any)
+    const shader: ShaderStub = { uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '' }
+    compileStub(m, shader)
     expect(shader.hostRan).toBe(true)
     expect(shader.fragmentShader).toContain('masked')
     expect(calls).toHaveLength(1)

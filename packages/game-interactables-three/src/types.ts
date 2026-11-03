@@ -26,5 +26,5 @@ export interface HouseholdApi extends PropsApi {
 
 /** Anything that can create a canvas (the global `document`, or a fake in tests). */
 export interface CanvasFactory {
-  createElement(tag: 'canvas'): any
+  createElement(tag: 'canvas'): HTMLCanvasElement
 }
