@@ -149,6 +149,8 @@ for (const [name, phase] of Object.entries(PHASES)) {
       }
       room.clear()
       room.update(1 / 60)
+      // the on-screen memory warning of the room (memory_leak): kept before the log is emptied, so the report says whether the room warned
+      window.__memoryWarnings = (window.__memoryWarnings ?? 0) + room.log.entries({ type: 'memory_leak' }).length
       // the behaviour log is bounded on purpose (its last 5000 lines): emptied here so its filling up does not read as a leak
       room.log.clear()
     }, phase)
@@ -182,12 +184,14 @@ for (const [name, phase] of Object.entries(PHASES)) {
     const growth = (kept[key] - first[key]) / ROUNDS
     return { key, first: +first[key].toFixed(1), last: +kept[key].toFixed(1), perRound: +growth.toFixed(2), budget: perRound, ok: growth <= perRound }
   })
+  const warnings = await page.evaluate(() => window.__memoryWarnings ?? 0)
   const ok = rows.every((row) => row.ok) && errors.length === 0
   if (!ok) failed++
-  report.phases[name] = { ok, rows, samples, errors }
+  report.phases[name] = { ok, rows, samples, errors, warnings }
   console.log(`\n${ok ? 'PASS' : 'FAIL'}  ${name}`)
   for (const row of rows) console.log(`  ${row.ok ? 'ok ' : 'XX '} ${row.key.padEnd(12)} ${String(row.first).padStart(9)} -> ${String(row.last).padStart(9)}   ${row.perRound >= 0 ? '+' : ''}${row.perRound} per cycle (budget ${row.budget})`)
   for (const error of errors) console.log(`  XX  page error: ${error}`)
+  console.log(`  ${warnings === 0 ? 'ok ' : '!! '} on-screen memory warnings: ${warnings}`)
   await page.close()
 }
 

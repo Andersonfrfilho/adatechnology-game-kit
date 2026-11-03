@@ -27,7 +27,8 @@ import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { createLoading } from './loading'
 import { createLog } from './log'
-import { createRoomMetrics, ROOM_METRICS } from './metrics'
+import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
+import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
@@ -2687,6 +2688,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let ownsLoop = false
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
+  // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
+  const MEMORY_CLEARS = 4
+  const memoryWatch = createMemoryWatch({
+    clears: MEMORY_CLEARS,
+    read: () => {
+      const memory = (gl as { info?: { memory?: { geometries: number; textures: number } } }).info?.memory
+      const heap = heapMB()
+      return memory ? { geometries: memory.geometries, textures: memory.textures, ...(heap === undefined ? {} : { heapMB: heap }) } : undefined
+    },
+  })
+  clearListeners.add(() => {
+    const verdict = memoryWatch.cleared(activeBench ?? undefined)
+    if (!verdict) return
+    if (!verdict.leaking) {
+      ui?.alert(null)
+      return
+    }
+    const text = t('memory.leak', { geometries: verdict.grew.geometries, textures: verdict.grew.textures, clears: MEMORY_CLEARS })
+    log.add({ channel: 'event', type: 'memory_leak', text, data: { ...verdict.after, grew: verdict.grew } })
+    ui?.alert(`⚠ ${text}`)
+  })
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
@@ -3006,10 +3028,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const metricRows = (): { room: MetricRow[]; module: MetricRow[] } => {
     const sampled = roomMetrics.sample()
-    const room = roomMetricIds.flatMap((id) => {
+    const room: MetricRow[] = roomMetricIds.flatMap((id): MetricRow[] => {
       const value = sampled[id]
       return value === undefined ? [] : [{ id, name: t(`metric.${id}`), text: num(value, id === 'frame_ms' ? 1 : 0) }]
     })
+    // stays on the counters line until a clear finds the memory back down
+    const leak = memoryWatch.last
+    if (leak?.leaking) room.push({ id: 'memory_leak', name: '⚠', text: t('memory.leak_short', { geometries: leak.grew.geometries, textures: leak.grew.textures, clears: MEMORY_CLEARS }) })
     const values = moduleMetrics()
     const declared = (activeBench ? benches.get(activeBench)?.metrics : undefined) ?? []
     const module = declared.map((metric) => {

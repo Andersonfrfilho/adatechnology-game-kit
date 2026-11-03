@@ -111,3 +111,5 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
   `node examples/test-room/leak.mjs` no CI (job `memory-leaks`): repete explosões, vidro e carros, e a troca de áreas, e falha se buffers, texturas,
   canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
   `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.
+- **Aviso na tela**: a sala mostra geometrias, texturas e heap no painel da bancada e, quando a memória sobe a cada limpeza (quatro seguidas na mesma
+  área, acima do orçamento), põe uma faixa vermelha sob a ferramenta e um evento `memory_leak` no registro. Faixa vermelha na sala é vazamento a corrigir.
