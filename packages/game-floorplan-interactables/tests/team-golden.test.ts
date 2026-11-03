@@ -57,11 +57,11 @@ describe('plan: the same objects as the team\'s adapter, house by house', () => 
   it('the stacks keep the item they came from in data.source', () => {
     const r = planOf('single_storey_a', 3)
     const mine = adapter.plan(r, { seed: r.seed })
-    const fridge = mine.items.find((e: any) => e.type === 'fridge')
+    const fridge = mine.items.find((e) => e.type === 'fridge')!
     const ids = new Set(r.contents['kitchen.fridge'].map((s: any) => s.itemId))
-    const placed = Object.values<any>(fridge.item.contents).flat().filter(Boolean)
+    const placed = Object.values(fridge.item.contents ?? {}).flat().filter((s) => s != null)
     expect(placed.length).toBeGreaterThan(0)
-    for (const stack of placed) expect(ids.has(stack.data.source)).toBe(true)
+    for (const stack of placed) expect(ids.has(stack.data?.source)).toBe(true)
   })
 })
 

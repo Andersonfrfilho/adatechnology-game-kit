@@ -402,8 +402,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const typed = listeners.get(e.type)
     if (typed) for (const fn of [...typed]) fn(e)
   }
-  const base = (o: ObjRT, source?: string): { object: string; time: number; source?: string } =>
-    source === undefined ? { object: o.id, time } : { object: o.id, time, source }
+  // the kind of the hit being resolved now (`doHit`): every event it emits carries it as `blow`
+  let blow: DamageType | undefined
+  const base = (o: ObjRT, source?: string): { object: string; time: number; source?: string; blow?: DamageType } => ({
+    object: o.id,
+    time,
+    ...(source === undefined ? {} : { source }),
+    ...(blow === undefined ? {} : { blow }),
+  })
 
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
@@ -2763,7 +2769,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return res
   }
 
-  const doHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
+  /** `fn` with every event it emits tagged with the blow `type` (a shot, a hit). */
+  const withBlow =
+    <T>(type: DamageType, fn: () => T) =>
+    (): T => {
+      const outer = blow
+      blow = type
+      try {
+        return fn()
+      } finally {
+        blow = outer
+      }
+    }
+
+  const doHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => withBlow(hit.type, () => resolveHit(o, hit, only))()
+
+  const resolveHit = (o: ObjRT, hit: Hit, only?: PartRT): HitResult => {
     let point = hit.point
     let dir = hit.direction
     if (hit.space === 'local') {
@@ -3239,6 +3260,46 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastProbe() {
       return { ...blastProbe }
     },
+    blastReach(point, target, options = {}) {
+      const L = vec.distance(point, target)
+      if (L < 1e-4) return 1
+      const shelter: Required<ShelterOptions> = { ...SHELTER_DEFAULTS, ...options.shelter }
+      const ignore = new Set(options.ignore ?? [])
+      const d = vec.scale(vec.sub(target, point), 1 / L)
+      let t = 1
+      for (const o of objects.values()) {
+        if (ignore.has(o.id) || raySphereMiss(point, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, L)) continue
+        for (const p of o.parts) {
+          if (isLost(p) || p.st.stripped) continue
+          const r = rayPart(o, p, point, d)
+          if (!r) continue
+          const t0 = Math.max(r.t0, 0)
+          const path = Math.min(r.t1, L) - t0
+          if (path < shelter.minPath) continue
+          // a hole the line goes through (a breached wall, an open window) lets the blast by
+          if (p.st.opening && insideOpening(o, p, toLocal(o.st.position, o.st.rotation, vec.madd(point, d, t0 + path / 2)))) continue
+          t *= Math.exp(-(p.mat.hpPerKg * p.mat.density * path * (p.mat.damageScale?.shelter ?? 1)) / shelter.k)
+          if (t < 1e-4) return 0
+        }
+      }
+      // hosted bodies (a vehicle): a part with a thickness is a shell, crossed through its two walls, not through the air inside it
+      for (const im of impls.values()) {
+        if (ignore.has(im.impl.id)) continue
+        for (const ps of im.impl.describe().parts) {
+          const mat = materials.get(ps.material)
+          if (!mat) continue
+          const ov = im.poses.get(ps.id)
+          const r = rayPartRaw(im.position, im.rotation, ps, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])), point, d, ov?.pos)
+          if (!r || r.t1 < 0 || r.t0 > L) continue
+          let path = Math.min(r.t1, L) - Math.max(r.t0, 0)
+          if (ps.thickness !== undefined && ps.thickness > 0) path = Math.min(path, 2 * ps.thickness)
+          else if (path < shelter.minPath) continue
+          t *= Math.exp(-(mat.hpPerKg * mat.density * path * (mat.damageScale?.shelter ?? 1)) / shelter.k)
+          if (t < 1e-4) return 0
+        }
+      }
+      return t
+    },
     explode(point, energy, radius, source, blast) {
       blastProbe.partsTested = 0
       blastProbe.partsNear = 0
@@ -3268,7 +3329,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     shoot(origin, direction, energy, caliber, source, round) {
       const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}
-      return withCollapses(run(() => {
+      return withCollapses(run(withBlow('ballistic', () => {
         const results: HitResult[] = []
         const d = vec.normalize(direction)
         const ignore = new Set<string>()
@@ -3279,10 +3340,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           if (!rh) break
           const im = impls.get(rh.object)
           if (im) {
-            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...extras, ...(source !== undefined ? { source } : {}) })
+            // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
+            const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
+            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
             r.part = rh.part
             r.point = rh.point
-            r.exitEnergy = r.penetrated ? E * 0.5 : 0
+            // the part says what the round keeps (a sheet takes little, a block all of it); else half, as before
+            const left = r.events.find((e) => e.type === 'hole' && (e as { energyLeft?: number }).energyLeft !== undefined) as { energyLeft?: number } | undefined
+            r.exitEnergy = r.penetrated ? (left?.energyLeft ?? E * 0.5) : 0
             results.push(r)
             ignore.add(`${im.impl.id}\0${rh.part}`)
             if (!r.penetrated) break
@@ -3301,7 +3366,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           E = out.exitEnergy
         }
         return results
-      }))
+      })))
     },
     disassemble(objectId, jointId, tool: ToolKind, dt) {
       const im = impls.get(objectId)

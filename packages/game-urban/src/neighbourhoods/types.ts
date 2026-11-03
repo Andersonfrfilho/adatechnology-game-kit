@@ -116,7 +116,11 @@ export type ComposeContext<TParams = Record<string, unknown>> = {
   building(x: number, z: number, width: number, depth: number, height: number, color: number, options?: { lit?: number; shop?: number }): void
 }
 
-export type Composer<TParams = any> = (context: ComposeContext<TParams>) => void
+/**
+ * Draws a pattern from its params. Declared as a method so a registry of composers can hold each with its own params type
+ * (the pattern that names the composer carries the matching params).
+ */
+export type Composer<TParams = Record<string, unknown>> = { compose(context: ComposeContext<TParams>): void }['compose']
 
 export type ComposeOptions = { locale?: Locale; providers?: Providers }
 

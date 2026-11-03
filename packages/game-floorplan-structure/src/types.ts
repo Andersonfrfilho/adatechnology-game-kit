@@ -207,7 +207,7 @@ export interface StructureSource {
   walls: SourceWall[]
   doors: SourceDoor[]
   windows?: SourceWindow[]
-  items: { id?: string; type: string; category?: string; floor: number; aabb?: Rect; link?: { from: number; to: number } | null }[]
+  items: { id?: string; type: string; category?: string; floor: number; aabb?: Rect; link?: { from: number; to: number } | string | null }[]
   facade: { roof?: string; finish?: string; [extra: string]: unknown }
   style?: string
   template?: string
@@ -262,7 +262,7 @@ export interface SourceDoor {
   u: number
   v: number
   width: number
-  side?: string
+  side?: string | null
   axis: 'u' | 'v'
   steps?: number
 }

@@ -770,14 +770,14 @@
   "counts": "107,1,0,3,21,6,5,4"
  },
  "op explode": {
-  "objects": 584,
-  "hash": "279e604f",
-  "counts": "257,3,0,1,21,6,5,3"
+  "objects": 529,
+  "hash": "dffdcfd3",
+  "counts": "211,3,0,1,21,6,5,4"
  },
  "op explode delayed": {
-  "objects": 579,
-  "hash": "d4278e37",
-  "counts": "252,4,0,1,21,6,5,3"
+  "objects": 523,
+  "hash": "cde8ab3b",
+  "counts": "205,4,0,1,21,6,5,4"
  },
  "op roll": {
   "objects": 640,

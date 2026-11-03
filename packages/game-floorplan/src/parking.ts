@@ -11,6 +11,7 @@ const MAX_CANDIDATES = 80
  */
 export function carCandidates(slot: Slot, item: FurnitureDef, car: CarClearance): { rect: Rect; clear: Rect }[] {
   const front: Vec2 = [slot.frontU, slot.frontV]
+  if (!slot._cell) throw new Error('Slot without a cell: ' + slot.id)
   const zone: Rect = slot._cell.R
   const alongV = Math.abs(front[1]) === 1
   const [extentU, extentV] = extent([item.w, item.d], front)

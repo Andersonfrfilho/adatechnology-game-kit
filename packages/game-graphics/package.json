@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-graphics",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "The player's graphics settings without any engine: presets (Automatic, Low, Medium, High, Ultra), resolution scale, horde detail, shadows, view distance, FPS cap and counter, the automatic mode driven by the frame time, a short calibration on load, the choice kept in the browser, and a plain DOM settings screen.",
   "keywords": [

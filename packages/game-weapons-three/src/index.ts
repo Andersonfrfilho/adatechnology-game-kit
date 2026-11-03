@@ -35,6 +35,18 @@ export {
   GAME_DISTANCE_CURVE,
   DEFAULT_ENERGY_CURVE,
   CLASS_REFERENCE_ENERGY,
+  computeGunshot,
+  computeCasingSound,
+  computeFlyby,
+  GUNSHOT_PROFILES,
+  GUNSHOT_SAMPLE,
+  GUNSHOT_SAMPLE_IDS,
+  RELOAD_SAMPLE,
+  RELOAD_SAMPLE_HITS,
+  CUES_IN_SAMPLE,
+  WEIGHT_INTENSITY,
+  weaponSampleBank,
+  weaponSampleDefaults,
 } from './audio'
 export type {
   WeaponAudio,
@@ -49,6 +61,13 @@ export type {
   EnergyCurve,
   MechanicalSoundId,
   SoundStep,
+  Gunshot,
+  GunshotInput,
+  GunshotPlayed,
+  CuePlayed,
+  CasingSound,
+  FlybySound,
+  WeaponSampleOptions,
 } from './audio'
 export { buildProp, weaponProp, BODY_ACTIONS } from './props'
 export type { WeaponProp } from './props'

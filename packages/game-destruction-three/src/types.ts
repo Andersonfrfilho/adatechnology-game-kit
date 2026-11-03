@@ -21,6 +21,8 @@ export type Quality = 'low' | 'medium' | 'high'
 
 /** What a sound key carries besides the point and the volume: the named explosion and its size, how enclosed it was, how long a leak lasts. */
 export interface SoundDetail {
+  /** An impact or a break: the keys to try before the key itself, most specific first (material and blow, material, family and blow, family). */
+  readonly keys?: readonly string[]
   /** `explode`: the named explosion (`explosions.json` of game-vfx: `m67`, `c4`, `propane_p13`...). */
   readonly effect?: string
   /** `explode`: blast radius in metres. */
@@ -75,7 +77,11 @@ export interface RendererOptions {
   shoveable?: (objectId: string) => boolean
   /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
   onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
-  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
+  /**
+   * Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out.
+   * An impact or a break also sends `detail.keys`, the keys to try before `key`, most specific first (`impact_concrete_ballistic`, `impact_concrete`, `impact_masonry_ballistic`, `impact_masonry`).
+   * An explosion sends its named effect, radius and confinement; `primed` sends the seconds of its leak.
+   */
   onSound?: (key: string, point: Vec3, volume: number, detail?: SoundDetail) => void
   /**
    * The effects world that draws blasts and fires. Pass the one the host shares with the other renderers (and step it, through its

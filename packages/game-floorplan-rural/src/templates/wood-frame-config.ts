@@ -28,7 +28,7 @@ export function createWoodFrameConfig(createRng: CreateRng) {
     const foundation: WoodFrameFoundation =
       options.basement === 'none' ? 'slab' : options.basement === 'basement' || options.basement === 'crawl_space' ? options.basement : foundationDraw < 0.28 ? 'basement' : foundationDraw < 0.6 ? 'crawl_space' : 'slab'
     const attic = options.attic != null ? !!options.attic : draw('sot') < 0.5
-    const bedrooms = clamp(Math.round(options.bedrooms || 2 + Math.floor(draw('qts') * 3)), 2, 4)
+    const bedrooms = clamp(Math.round(Number(options.bedrooms) || 2 + Math.floor(draw('qts') * 3)), 2, 4)
     return { floors, garage, fireplace, foundation: floors === 1 && foundation === 'basement' ? 'crawl_space' : foundation, attic, bedrooms }
   }
 }

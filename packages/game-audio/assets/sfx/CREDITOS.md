@@ -32,6 +32,237 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | ambiente/water_splash_13.ogg | https://opengameart.org/content/40-cc0-water-splash-slime-sfx | rubberduck | CC0 |
 | ambiente/water_splash_14.ogg | https://opengameart.org/content/40-cc0-water-splash-slime-sfx | rubberduck | CC0 |
 | ambiente/water_splash_15.ogg | https://opengameart.org/content/40-cc0-water-splash-slime-sfx | rubberduck | CC0 |
+| armas/bolt_lift_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_1) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lift_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (E_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lift_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lift_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lift_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_1) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lock_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lock_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (E_8) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lock_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (E_8) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lock_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_lock_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (E_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_9) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_9) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_pull_medium_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_14) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (E_7) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/bolt_push_medium_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/casing_drop_concreto_01.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingConcrete_OS_01.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_concreto_02.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingConcrete_OS_02.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_concreto_03.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingConcrete_OS_03.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_metal_01.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingMetal_OS_01.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_metal_02.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingMetal_OS_02.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_metal_03.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingMetal_OS_03.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_terra_01.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingGrass_OS_01.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_terra_02.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingGrass_OS_02.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/casing_drop_terra_03.ogg | https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack (BLLTShel_ShellCasingGrass_OS_03.ogg) | Oculus Audio Pack 1 (Oculus sound design team) | CC-BY |
+| armas/charging_handle_pull_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_8) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_8) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (F_8) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_light_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_9) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_9) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_pull_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (Q_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_release_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_release_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_release_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_release_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/charging_handle_release_medium_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (Q_9) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_close_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_close_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_close_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_15) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_close_light_04.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Cylinder Close-001.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/cylinder_close_light_05.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Cylinder Close-002.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/cylinder_eject_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_eject_light_02.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Eject Spent Rounds-001.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/cylinder_eject_light_03.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Eject Spent Rounds-002.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/cylinder_open_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_open_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_14) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_open_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_14) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/cylinder_open_light_04.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Cylinder Open-001.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/cylinder_open_light_05.ogg | https://github.com/sakkaku/restrained-firearms-soundpack (Restrained Freedom - Colt Python - Cylinder Open-002.wav) | Restrained Firearms Soundpack, https://envalid.com | CC-BY |
+| armas/lever_close_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (I_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/lever_close_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (L_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/lever_open_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (I_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/lever_open_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (L_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_heavy_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (F_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_light_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_6) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_out_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_10) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_heavy_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (N_10) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (F_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_light_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/mag_seat_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_10) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_32) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_34) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_22lr_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_42) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_42) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_33) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_33) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_34) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_45_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_34) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_39) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_39) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_39) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_close_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_41) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_30) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_30) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_32) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pistol_9mm_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_32) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_back_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_back_heavy_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_back_heavy_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_back_heavy_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_back_heavy_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_forward_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_forward_heavy_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/pump_forward_heavy_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_5) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/revolver_38_357_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_27) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_23) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_close_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_23) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (W_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_15) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_308_3006_far_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (B_15) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_32) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_32) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_23) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_23) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_5_56_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_25) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_28) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_28) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_07.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_28) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_08.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_28) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_09.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_10.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_11.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_close_12.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/rifle_7_62x39_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_37) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (H_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_07.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_08.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shell_insert_heavy_09.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_3) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_19) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_19) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_close_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_14) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_14) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_16) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (O_16) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_15) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/shotgun_12_far_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (K_15) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (A_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (F_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (F_11) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_light_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (R_12) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_medium_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_medium_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (D_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_medium_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (C_13) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/slide_release_medium_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (U_4) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_19) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_19) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_19) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_close_07.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_21) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_24) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_26) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_26) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/sniper_338_300wm_far_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (M_26) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_18) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_18) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_18) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_18) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_06.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_07.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/speedloader_light_08.ogg | https://opengameart.org/content/the-free-firearm-sound-library (V_2) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_43) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_43) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_43) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_45) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_close_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_45) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_34) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_34) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_36) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_36) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_pistol_far_05.ogg | https://opengameart.org/content/the-free-firearm-sound-library (X_36) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_close_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_close_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_29) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_close_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_close_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_31) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_far_01.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_far_02.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_20) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_far_03.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
+| armas/suppressed_rifle_far_04.ogg | https://opengameart.org/content/the-free-firearm-sound-library (T_22) | Ben Jaszczak (The Free Firearm Sound Library) | CC0 |
 | explosoes-fogo/debris_rain_mixed_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/debris_rain_mixed_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/debris_rain_mixed_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
@@ -168,6 +399,15 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/glass_shatter_close_07.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
 | impactos/glass_shatter_close_08.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
 | impactos/glass_shatter_close_09.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| impactos/gravel_hit_close_21.ogg | https://freesound.org/s/169557/ | jorickhoofd ("gravel impact 3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel1.ogg`) | CC-BY |
+| impactos/gravel_hit_close_22.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel2.ogg`) | CC0 |
+| impactos/gravel_hit_close_23.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel3.ogg`) | CC0 |
+| impactos/gravel_hit_close_24.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel4.ogg`) | CC0 |
+| impactos/gravel_hit_close_25.ogg | https://freesound.org/s/179341/ | lolamadeus ("Gravel Impacts and Falls.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel5.ogg`) | CC0 |
+| impactos/gravel_hit_close_26.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel6.ogg`) | CC-BY |
+| impactos/gravel_hit_close_27.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel7.ogg`) | CC-BY |
+| impactos/gravel_hit_close_28.ogg | https://freesound.org/s/133783/ | Julien Nicolas ("IMPACT GRAVIER"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel8.ogg`) | CC-BY |
+| impactos/gravel_hit_close_29.ogg | https://freesound.org/s/150839/ | toxicwafflezz ("Bullet_Impact_3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel9.ogg`) | CC-BY |
 | impactos/impact_generic_light_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/impact_generic_light_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/impact_generic_light_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -185,6 +425,14 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/masonry_bullet_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/masonry_bullet_close_04.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/masonry_bullet_close_05.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/masonry_bullet_close_21.ogg | https://freesound.org/s/321478/ | dslrguide ("Concrete Hit 2"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete1.ogg`) | CC0 |
+| impactos/masonry_bullet_close_22.ogg | https://freesound.org/s/321478/ | dslrguide ("Concrete Hit 2"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete2.ogg`) | CC0 |
+| impactos/masonry_bullet_close_23.ogg | https://freesound.org/s/321477/ | dslrguide ("Concrete Hit "; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete3.ogg`) | CC0 |
+| impactos/masonry_bullet_close_24.ogg | https://freesound.org/s/702860/ | InMotionAudio ("ROCKImpt_Brick25_InMotionAudio_FREESampleSunday.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/concrete4.ogg`) | CC0 |
+| impactos/masonry_bullet_close_25.ogg | https://freesound.org/s/843547/ | kevinklang ("ROCK_IMPACT_GALETS_OUTDOORS_260128 48"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone1.ogg`) | CC0 |
+| impactos/masonry_bullet_close_26.ogg | https://freesound.org/s/150837/ | toxicwafflezz ("Bullet_Impact_1"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone2.ogg`) | CC-BY |
+| impactos/masonry_bullet_close_27.ogg | https://freesound.org/s/423107/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 14.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone3.ogg`) | CC-BY |
+| impactos/masonry_bullet_close_28.ogg | https://freesound.org/s/423106/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 21.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone4.ogg`) | CC-BY |
 | impactos/metal_blunt_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -211,6 +459,20 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/metal_bullet_close_04.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_bullet_close_05.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_bullet_close_06.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_bullet_close_21.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal1.ogg`) | CC0 |
+| impactos/metal_bullet_close_22.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal2.ogg`) | CC0 |
+| impactos/metal_bullet_close_23.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal3.ogg`) | CC0 |
+| impactos/metal_bullet_close_24.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal4.ogg`) | CC0 |
+| impactos/metal_bullet_close_25.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal5.ogg`) | CC0 |
+| impactos/metal_bullet_close_26.ogg | https://freesound.org/s/182263/ | martian ("Foley bullet hit metal 02.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal6.ogg`) | CC0 |
+| impactos/metal_bullet_close_27.ogg | https://freesound.org/s/671098/ | BBoz87 ("metal_hit_1.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/metal7.ogg`) | CC-BY |
+| impactos/metal_bullet_close_28.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel1.ogg`) | CC0 |
+| impactos/metal_bullet_close_29.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel2.ogg`) | CC0 |
+| impactos/metal_bullet_close_30.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel3.ogg`) | CC0 |
+| impactos/metal_bullet_close_31.ogg | https://freesound.org/s/675951/ | craigsmith ("S31-15 Shooting gallery; hitting metal targets.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel4.ogg`) | CC0 |
+| impactos/metal_bullet_close_32.ogg | https://freesound.org/s/833262/ | tomlyne ("shot-Bafflebanging-9"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel9.ogg`) | CC-BY |
+| impactos/metal_bullet_close_33.ogg | https://freesound.org/s/237444/ | NoiseCollector ("bulletimpact_metal3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel14.ogg`) | CC-BY |
+| impactos/metal_bullet_close_34.ogg | https://freesound.org/s/176669/ | jorickhoofd ("Dry impact hit metal plate "; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel15.ogg`) | CC-BY |
 | impactos/metal_fall_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_fall_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_fall_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -253,6 +515,14 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/plastic_hit_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/plastic_hit_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/plastic_hit_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| impactos/ricochet_metal_close_21.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel5.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_22.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel6.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_23.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel7.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_24.ogg | https://freesound.org/s/43403/ | gezortenplotz ("rifle_steel plate_multiple ricochettes.mp3"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel8.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_25.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel10.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_26.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel11.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_27.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel12.ogg`) | CC-BY |
+| impactos/ricochet_metal_close_28.ogg | https://freesound.org/s/854335/ | mikiko850 ("Metal Bullet Ricochets"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/steel13.ogg`) | CC-BY |
 | impactos/rubble_falling_close_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/rubble_falling_close_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/rubble_falling_close_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
@@ -272,6 +542,9 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/soft_bullet_close_08.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/soft_bullet_close_09.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/soft_bullet_close_10.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/soil_bullet_close_21.ogg | https://freesound.org/s/319222/ | worthahep88 ("Single Rock hit Dirt.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt1.ogg`) | CC0 |
+| impactos/soil_bullet_close_22.ogg | https://freesound.org/s/319229/ | worthahep88 ("Single Rock hit dirt 2.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt2.ogg`) | CC0 |
+| impactos/soil_bullet_close_23.ogg | https://freesound.org/s/789388/ | modusmogulus ("Bullet impact ground (subsonic) SFX"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt3.ogg`) | CC0 |
 | impactos/wood_blunt_heavy_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -310,6 +583,13 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | impactos/wood_hit_close_12.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_hit_close_13.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_hit_close_14.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| impactos/wood_hit_close_21.ogg | https://freesound.org/s/237448/ | NoiseCollector ("bulletimpact_wood1.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood1.ogg`) | CC-BY |
+| impactos/wood_hit_close_22.ogg | https://freesound.org/s/96636/ | CGEffex ("Ricochet wood3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood2.ogg`) | CC-BY |
+| impactos/wood_hit_close_23.ogg | https://freesound.org/s/96636/ | CGEffex ("Ricochet wood3.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood3.ogg`) | CC-BY |
+| impactos/wood_hit_close_24.ogg | https://freesound.org/s/66396/ | 110110010 ("wood_hit.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood4.ogg`) | CC0 |
+| impactos/wood_hit_close_25.ogg | https://freesound.org/s/506718/ | jackyyang09 ("Wooden Hit"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood5.ogg`) | CC0 |
+| impactos/wood_hit_close_26.ogg | https://freesound.org/s/178744/ | jorickhoofd ("Kick wood"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood6.ogg`) | CC-BY |
+| impactos/wood_hit_close_27.ogg | https://freesound.org/s/345679/ | VitaWrap ("wood hit.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood7.ogg`) | CC-BY |
 | itens-portas/backpack_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -330,8 +610,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | itens-portas/door_creak_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_creak_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
-| itens-portas/door_creak_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/door_creak_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_creak_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_glass_sliding_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -536,15 +814,15 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | personagem/footstep_generic_alt_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_alt_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_04.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_05.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
-| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_run_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |

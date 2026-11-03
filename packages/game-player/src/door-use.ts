@@ -27,7 +27,8 @@ export const DOOR_USE_DEFAULTS: DoorUseRules = {
   reachSeconds: 0.3,
   swingSeconds: { base: 0.45, perKg: 0.02, min: 0.45, max: 1.6 },
   releaseSeconds: 0.22,
-  rattleSeconds: 0.6,
+  // the length of the recorded handle shaken (game-audio door_locked_rattle, 0.6 to 0.83 s): the hand lets go as the sound ends
+  rattleSeconds: 0.75,
   stepFraction: 0.04,
   endTolerance: 0.02,
 }

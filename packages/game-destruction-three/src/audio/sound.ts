@@ -1,5 +1,5 @@
 import type { Vec3 } from '@adatechnology/game-contracts'
-import { GAME_SFX_BANK } from '@adatechnology/game-audio'
+import { FOLEY_BANK, GAME_SFX_BANK } from '@adatechnology/game-audio'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
 import { BIG_BLAST_RADIUS, BLAST_FAR_DISTANCE, BLAST_KIND_OF, BLAST_SOUND_OF, FIRE_CRACKLE_OF, FIRE_FUEL_OF, FIRE_LOOP_OF } from './blast-fire'
@@ -16,9 +16,65 @@ export type SoundKeyRule = {
   readonly params?: Readonly<Record<string, number>>
   readonly volumeScale?: number
   readonly above?: { readonly volume: number; readonly sound: string }
+  /** A sound of this bank played when the engine does not know `sound` (a vehicle door without the vehicle bank registered shuts like metal). */
+  readonly fallback?: string
 }
 
 export type DestructionSoundStyle = 'art_scene' | 'game'
+
+/**
+ * The keys of a blow on a material (`impactSoundKeys`, `breakSoundKeys`): `impact_<family>_<blow>`, `impact_<material>[_<blow>]`, `break_<...>`. The renderer
+ * sends them before its legacy family key, so the first one with a rule plays; a game replaces any of them in `keys`.
+ */
+export const IMPACT_SOUND_KEYS: Readonly<Record<string, SoundKeyRule>> = {
+  impact_metal_ballistic: { sound: 'metal_bullet' },
+  impact_metal_blunt: { sound: 'metal_blunt' },
+  impact_metal_slash: { sound: 'metal_blade' },
+  impact_aluminium_ballistic: { sound: 'metal_thin' },
+  impact_aluminium_blunt: { sound: 'metal_thin' },
+  impact_copper_ballistic: { sound: 'metal_thin' },
+  impact_copper_blunt: { sound: 'metal_thin' },
+  impact_wood_ballistic: { sound: 'wood_hit' },
+  impact_wood_blunt: { sound: 'wood_blunt' },
+  impact_wood_slash: { sound: 'wood_blade' },
+  impact_mdf_ballistic: { sound: 'mdf_puff' },
+  impact_mdf_blunt: { sound: 'mdf_puff', volumeScale: 0.8 },
+  impact_glass_ballistic: { sound: 'glass_bullet' },
+  impact_glass_blunt: { sound: 'glass_blunt' },
+  impact_glass_slash: { sound: 'glass_blade' },
+  impact_ceramic: { sound: 'ceramic_hit' },
+  impact_ceramic_ballistic: { sound: 'ceramic_bullet' },
+  impact_masonry_ballistic: { sound: 'masonry_bullet' },
+  impact_masonry_blunt: { sound: 'masonry_blunt' },
+  impact_masonry_slash: { sound: 'masonry_blade' },
+  impact_plaster: { sound: 'plaster_puff' },
+  impact_soil: { sound: 'soil_blunt' },
+  impact_soil_ballistic: { sound: 'soil_bullet' },
+  impact_sand: { sound: 'sand_hit' },
+  impact_gravel: { sound: 'gravel_hit' },
+  impact_plastic: { sound: 'plastic_hit' },
+  impact_plastic_ballistic: { sound: 'plastic_bullet' },
+  impact_rubber: { sound: 'rubber_hit' },
+  impact_wax: { sound: 'wax_hit' },
+  impact_soft_ballistic: { sound: 'soft_bullet' },
+  impact_soft_slash: { sound: 'fabric_rip' },
+  impact_paper: { sound: 'paper_hit' },
+  impact_paper_slash: { sound: 'paper_tear' },
+  impact_plant: { sound: 'leaf_rustle' },
+  impact_plant_slash: { sound: 'branch_cut' },
+  impact_flesh_fruit: { sound: 'fruit_splat' },
+  ricochet_metal: { sound: 'ricochet_metal' },
+  ricochet_masonry: { sound: 'ricochet_stone' },
+  ricochet_soil: { sound: 'ricochet_stone' },
+  ricochet_ceramic: { sound: 'ricochet_stone' },
+  break_ceramic: { sound: 'ceramic_break' },
+  break_tempered_glass: { sound: 'tempered_burst' },
+  break_plastic: { sound: 'plastic_crack' },
+  break_mdf: { sound: 'mdf_crumble' },
+  break_soft: { sound: 'fabric_rip' },
+  break_paper: { sound: 'paper_tear' },
+  break_plant: { sound: 'branch_cut' },
+}
 
 /**
  * The keys `createDestructionRenderer` sends to `onSound`, mapped to the sounds the teams delivered. The Cena de Arte has a sound for every material
@@ -32,6 +88,12 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     impact_glass: { sound: 'ping' },
     impact_masonry: { sound: 'chip' },
     impact_soft: { sound: 'thud' },
+    // a round strikes: the steel rings high, glass cracks, wood and masonry chip, a soft part takes a dull thunk
+    shot_metal: { sound: 'ping' },
+    shot_wood: { sound: 'chip' },
+    shot_glass: { sound: 'crack' },
+    shot_masonry: { sound: 'chip' },
+    shot_soft: { sound: 'thunk' },
     drag_wood: { sound: 'drag_wood' },
     drag_metal: { sound: 'drag_metal' },
     drag_glass: { sound: 'drag_glass' },
@@ -57,12 +119,25 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     hood_shut: { sound: 'shut_metal' },
     trunk_shut: { sound: 'shut_metal' },
     door_close: { sound: 'shut_wood', volumeScale: 0.7 },
+    // a vehicle's leaves (the vehicle bank of game-vehicles-three): a car door shuts with a padded thump and a latch, not like a fridge
+    vehicle_door_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_door_shut: { sound: 'car_door_close', fallback: 'shut_metal' },
+    vehicle_trunk_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_trunk_shut: { sound: 'car_trunk_close', fallback: 'shut_metal' },
+    vehicle_hood_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_hood_shut: { sound: 'car_hood_close', fallback: 'shut_metal' },
     drawer_open: { sound: 'slide' },
     drawer_close: { sound: 'slide' },
     lid_open: { sound: 'latch' },
     lid_close: { sound: 'shut_soft' },
     flap_open: { sound: 'latch' },
     flap_close: { sound: 'shut_soft' },
+    // an item taken in the hand, by what it is made of (game-audio's KIT_SAMPLE_ALIASES puts recordings on these ids)
+    grab_metal: { sound: 'grab_hard' },
+    grab_wood: { sound: 'grab_hard' },
+    grab_glass: { sound: 'grab_hard', volumeScale: 0.7 },
+    grab_masonry: { sound: 'grab_hard' },
+    grab_soft: { sound: 'grab_soft' },
     shatter_glass: { sound: 'glass_shatter' },
     crumble: { sound: 'crumble' },
     splinter: { sound: 'crack' },
@@ -75,6 +150,7 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     melt_sizzle: { sound: 'hiss', params: { seconds: 0.6 } },
     // the blast family comes from the explosion's effect (`BLAST_KIND_OF`); this rule answers only an explosion the kit cannot place
     explode: { sound: 'explosion_grenade', above: { volume: 0.9, sound: 'explosion_big' } },
+    ...IMPACT_SOUND_KEYS,
   },
   game: {
     impact_metal: { sound: 'sfx_impact' },
@@ -92,7 +168,7 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
 export type DestructionSoundOptions = {
   /** Which team answers the keys (default `art_scene`, the kit mix). `game` falls back to the art scene for the keys the game has no sound for. */
   readonly style?: DestructionSoundStyle
-  /** Replaces or adds a key's rule; `null` silences it. */
+  /** Replaces or adds a key's rule; `null` silences it. A key without a rule that is the id of a registered sound (the foley bank's) plays that sound. */
   readonly keys?: Readonly<Record<string, SoundKeyRule | null>>
   /** The fire loop: the volume each burning part adds and the most it reaches (the page never raises it, so these are the kit's). */
   readonly fire?: { readonly perFire?: number; readonly max?: number }
@@ -125,8 +201,8 @@ export type DestructionSound = {
   update(dt: number): void
   /** The sound an explosion plays (`explode` with its detail), for a listener at the engine's listener position. */
   blastSound(point: Vec3, volume: number, detail?: SoundDetail): string
-  /** The rule a key resolves to, if any. */
-  rule(key: string): SoundKeyRule | undefined
+  /** The rule a key resolves to, if any; with `detail`, the rule `onSound` would play (the first of `detail.keys` that has one, else `key`'s). */
+  rule(key: string, detail?: SoundDetail): SoundKeyRule | undefined
   /** Parts burning now. */
   readonly burning: () => number
   /** Parts burning now, by fuel. */
@@ -149,6 +225,8 @@ export const DEFAULT_INDOOR_CONFINEMENT = 1.3
 export function createDestructionSound(engine: AudioEngine, options: DestructionSoundOptions = {}): DestructionSound {
   engine.register(DESTRUCTION_SOUND_BANK)
   engine.register(GAME_SFX_BANK)
+  // the foley of the hand (doors, lids, drawers, items): its ids are keys of their own, played as they are
+  engine.register(FOLEY_BANK)
   const fire = { ...DEFAULT_FIRE, ...options.fire }
   const crackles = options.crackles === false ? null : { ...DEFAULT_CRACKLES, ...options.crackles }
   const fireLoop = options.fireLoop ?? 'fire_loop'
@@ -241,9 +319,24 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
         if (sound !== 'explosion_far' && sound !== 'molotov_break_ignite' && (detail?.confinement ?? 1) >= indoorFrom) engine.play('explosion_indoor_tail', { position: point, volume })
         return
       }
-      const rule = rules[key]
-      if (!rule) return
-      const sound = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
+      // the most specific key that has a rule (material and blow, material, family and blow, family), else the key itself (a `shot_` key with no rule
+      // falls back to its `impact_` one); `null` on a specific key silences it
+      let rule: SoundKeyRule | null | undefined
+      for (const k of detail?.keys ?? []) {
+        if (k in rules) {
+          rule = rules[k]
+          break
+        }
+      }
+      if (rule === undefined) rule = key in rules ? rules[key] : rules[key.replace(/^shot_/, 'impact_')]
+      if (rule === null) return
+      if (!rule) {
+        // a key with no rule that names a registered sound plays that sound (the foley ids: `door_wood_close`, `item_pickup_metal`...)
+        if (engine.registry.sound(key)) engine.play(key, { position: point, volume })
+        return
+      }
+      const wanted = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
+      const sound = rule.fallback && !engine.registry.sound(wanted) ? rule.fallback : wanted
       const params = detail?.seconds === undefined ? rule.params : { ...rule.params, seconds: detail.seconds }
       engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(params ? { params } : {}) })
     },
@@ -264,7 +357,10 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       if (nextCrackle < 0) nextCrackle = 0
     },
     blastSound,
-    rule: (key) => rules[key] ?? undefined,
+    rule(key, detail) {
+      for (const k of detail?.keys ?? []) if (k in rules) return rules[k] ?? undefined
+      return rules[key] ?? undefined
+    },
     burning: () => fires.length,
     burningBy: () => {
       const by: Partial<Record<FireFuel, number>> = {}

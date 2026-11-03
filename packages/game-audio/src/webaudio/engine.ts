@@ -43,6 +43,10 @@ export type PlayOptions = {
   readonly seed?: number
   /** Seconds from now. */
   readonly delay?: number
+  /** Built now instead of waiting in the engine's deferred start queue: for a sound that has to land on the frame the player sees it (a blow's
+   * contact, a heel strike, a landing). The queue builds a voice on the next frame budget and drops it after its latency, which at a low frame
+   * rate is late or silent. Default false. */
+  readonly urgent?: boolean
   /** A named stream of the engine (`streamFor(seed, name)`), so one subject never shifts another's sounds. */
   readonly channel?: string
   /** The tail a sample sound plays (default the engine's, see `setEnvironment`). */
@@ -370,8 +374,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return pending
   }
 
-  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, fallbackOf?: string): VoiceHandle | null => {
-    const realized = startQueue ? deferVoice(plan, store, voiceId, delay, fallbackOf) : build(plan, store, delay, context?.currentTime ?? 0, fallbackOf)
+  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, fallbackOf?: string, urgent = false): VoiceHandle | null => {
+    const realized = startQueue && !urgent ? deferVoice(plan, store, voiceId, delay, fallbackOf) : build(plan, store, delay, context?.currentTime ?? 0, fallbackOf)
     if (voiceId === undefined) return null
     voices.setLength(voiceId, plan.length + delay)
     active.set(voiceId, realized)
@@ -508,7 +512,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (voiceId === null) return null
     if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
     const plan = planSound(recipe, inputFor(recipe, playOptions, random))
-    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf) : null
+    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent) : null
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -535,6 +539,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     noise: () => noiseBuffer(shared, context as AudioContext, mix.noise.seconds),
     register: (loop) => void loops.add(loop),
     unregister: (loop) => void loops.delete(loop),
+    listener: () => listener,
+    ...(options.distance ? { distance: options.distance } : {}),
   }
 
   return {

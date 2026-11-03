@@ -38,8 +38,8 @@ describe('commercial pack', () => {
   it('has a steel front door, a cargo gate and no garden (the shops on the street line)', () => {
     for (const id of SHOP_TEMPLATE_IDS) {
       const r = engine.generate(id, { seed: 2 })
-      expect(r.lot.zones.some((z: any) => z.type === 'garden')).toBe(false)
-      expect(r.lot.gates.some((g: any) => g.type === 'cargo')).toBe(true)
+      expect(r.lot!.zones.some((z: any) => z.type === 'garden')).toBe(false)
+      expect(r.lot!.gates.some((g: any) => g.type === 'cargo')).toBe(true)
       expect(r.doors.some((p: any) => p.model === 'steel' && p.exterior)).toBe(true)
       expect(engine.validate(r)).toEqual([])
       expect(r.missing).toEqual([])
@@ -63,7 +63,7 @@ describe('urban zoning (region br, commercial)', () => {
     for (const id of commercialTemplateIds) {
       const ok = engine.listZones().filter((zone) => {
         const r = engine.generate(id, { seed: 5, zone: zone.id })
-        return r.zoning.violations.length === 0 && engine.validate(r).length === 0
+        return r.zoning!.violations.length === 0 && engine.validate(r).length === 0
       })
       expect(ok.length, `${id} fits no zone`).toBeGreaterThan(0)
     }
@@ -79,6 +79,6 @@ describe('urban zoning (region br, commercial)', () => {
 
   it('pushes the front setback to the zone minimum', () => {
     const r = engine.generate('pharmacy', { seed: 3, zone: 'zr3_zm' })
-    expect(r.zoning.violations.filter((v: any) => v.rule.startsWith('setback'))).toEqual([])
+    expect(r.zoning!.violations.filter((v: any) => v.rule.startsWith('setback'))).toEqual([])
   })
 })

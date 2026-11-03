@@ -17,14 +17,14 @@ const spec: DestructibleSpec = {
   ],
   joints: [{ id: 'hinge', a: 'body', b: 'door', kind: 'hinge' }],
 }
-const cabinet = (): TestableModule<ScenarioContext> => ({
+const cabinet = (vehicle = false): TestableModule<ScenarioContext> => ({
   id: 'cabinets',
   name: 'Cabinets',
   group: 'Cabinets',
   items: () => [
     {
       id: 'cabinet',
-      name: 'Cabinet',
+      name: vehicle ? 'Car' : 'Cabinet',
       build: (T) => {
         const three = T as typeof THREE
         const g = new three.Group()
@@ -41,7 +41,8 @@ const cabinet = (): TestableModule<ScenarioContext> => ({
         g.add(door)
         return g
       },
-      spec,
+      // a vehicle's spec carries the `vehicle` tag and each leaf its role (game-vehicles)
+      spec: vehicle ? { ...spec, tags: ['vehicle'], parts: spec.parts.map((p) => (p.id === 'door' ? { ...p, material: 'steel', tags: ['door'] } : p)) } : spec,
       movable: false,
       animations: [open, close],
     },
@@ -54,10 +55,10 @@ const run = (room: ReturnType<typeof makeRoom>, seconds: number): void => {
 }
 const types = (room: ReturnType<typeof makeRoom>): string[] => room.log.entries().filter((e) => e.type.startsWith('door_')).map((e) => e.type)
 
-function setup() {
+function setup(vehicle = false) {
   const sounds: string[] = []
   const room = makeRoom({ onSound: (k) => sounds.push(k), scenery: { table: null, shelf: null } })
-  room.loadModule(cabinet())
+  room.loadModule(cabinet(vehicle))
   const so = room.spawn('cabinet', [0, 0, -4], 0)
   return { room, so, sounds, door: so.root.getObjectByName('door')! }
 }
@@ -78,7 +79,7 @@ describe('opening by hand', () => {
     expect(room.leafOpening(so.objectId)).toBe(1)
     expect(door.rotation.y).toBeCloseTo(-OPEN, 5)
     expect(room.door).toBeNull()
-    expect(sounds).toEqual(expect.arrayContaining(['leaf_latch', 'leaf_creak_wood']))
+    expect(sounds).toEqual(expect.arrayContaining(['door_wood_open', 'door_creak']))
     // the eye now rests inside the cabinet: the open door is the one E closes
     room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.9])
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
@@ -86,8 +87,26 @@ describe('opening by hand', () => {
     run(room, 2)
     expect(room.leafOpening(so.objectId)).toBe(0)
     expect(door.rotation.y).toBeCloseTo(0, 5)
-    expect(sounds).toContain('leaf_shut_wood')
+    expect(sounds.some((k) => k === 'door_wood_close' || k === 'door_wood_slam')).toBe(true)
     expect(types(room)).toEqual(['door_reach', 'door_opened', 'door_reach', 'door_closed'])
+  })
+
+  it("a vehicle's door has its own sounds: the car latch opening, the padded car shut closing (not the hollow metal of a fridge)", () => {
+    const { room, so, sounds } = setup(true)
+    room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.74])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }))
+    run(room, 2)
+    expect(room.leafOpening(so.objectId)).toBe(1)
+    expect(sounds).toContain('vehicle_door_open')
+    expect(sounds).not.toContain('leaf_creak_metal')
+    room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.9])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }))
+    run(room, 2)
+    expect(room.leafOpening(so.objectId)).toBe(0)
+    expect(sounds).toContain('vehicle_door_shut')
+    expect(sounds).not.toContain('leaf_shut_metal')
   })
 
   it('the hand goes to the free edge of the leaf and follows it, and the body takes the pose', () => {
@@ -131,7 +150,7 @@ describe('opening by hand', () => {
     run(room, 1)
     expect(room.leafOpening(so.objectId)).toBe(0)
     expect(door.rotation.y).toBe(0)
-    expect(sounds).toContain('leaf_rattle')
+    expect(sounds).toContain('door_locked_rattle')
     expect(types(room)).toEqual(['door_locked'])
     room.lockLeaf(so.objectId, false)
     room.useLeaf(so.objectId)

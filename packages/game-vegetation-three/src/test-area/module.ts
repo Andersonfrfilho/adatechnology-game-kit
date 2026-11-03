@@ -1,3 +1,4 @@
+import type * as THREE_NS from 'three'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
@@ -36,8 +37,11 @@ export const VEGETATION_SCENARIO_IDS: readonly string[] = [
   'veg_walk_on_grass',
 ]
 
-type Three = any
-type Placed = { readonly root: any; helpers: any[] }
+type Three = typeof THREE_NS
+
+/** A mesh, as three marks one (`isMesh`). */
+const isMesh = (o: THREE_NS.Object3D): o is THREE_NS.Mesh => (o as THREE_NS.Mesh).isMesh === true
+type Placed = { readonly root: THREE_NS.Object3D; helpers: THREE_NS.Object3D[] }
 
 const defaultSdk = (): VegetationSdk => ({ ...GameVegetationMain, ...GameVegetationAdapter }) as VegetationSdk
 const AXIS_COLOURS: Record<string, number> = { trunk: 0xd9822b, branch: 0xe5c07b, arm: 0x6fcf6f, stem: 0x6fcf97, pad: 0x6fb7cf }
@@ -54,7 +58,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   const sdk: VegetationSdk = options.GameVegetation ?? defaultSdk()
   const species: SpeciesSdk = options.GameVegetationSpecies ?? (GameVegetationSpeciesMain as SpeciesSdk)
   let mats: MaterialsLike | null = options.materials ?? null
-  let three: Three = null
+  let three = null as unknown as Three // the room's three.js: set by the first build or by attach, before anything is drawn
   let host: ModuleHost | null = null
   const materials = (THREE?: unknown): MaterialsLike => {
     if (!mats) mats = sdk.createVegetationMaterials((THREE ?? three) as never) as unknown as MaterialsLike
@@ -70,8 +74,8 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   const item = (base: TestableItem): TestableItem => ({
     ...base,
     build: (THREE: unknown) => {
-      three = THREE
-      const root = base.build(THREE) as any
+      three = THREE as Three // the room hands its three.js namespace
+      const root = base.build(THREE) as THREE_NS.Object3D
       placed.set(root.uuid, { root, helpers: [] })
       return root
     },
@@ -93,23 +97,23 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
     for (const entry of placed.values()) {
       const root = entry.root
       if (!root.parent) continue
-      const mark = (helper: any): void => {
+      const mark = (helper: THREE_NS.Object3D): void => {
         helper.userData.helper = true
         root.add(helper)
         entry.helpers.push(helper)
       }
       if (host.bench.layer('colliders') && root.userData.collider && root.userData.collider.kind) {
         const c = root.userData.collider
-        const wire = new three.Mesh(new (shapeGeometries(three) as any).CylinderGeometry(c.radius, c.radius, c.height, 14, 1, true), new three.MeshBasicMaterial({ color: root.userData.thorny ? 0xff7a1a : 0xe5251d, wireframe: true }))
+        const wire = new three.Mesh(new (shapeGeometries(three)).CylinderGeometry(c.radius, c.radius, c.height, 14, 1, true), new three.MeshBasicMaterial({ color: root.userData.thorny ? 0xff7a1a : 0xe5251d, wireframe: true }))
         wire.position.set(0, c.height / 2, 0)
         mark(wire)
       }
       for (const mesh of root.children) {
         const v = mesh.userData?.veg as PieceMeta | undefined
-        if (!v || !mesh.geometry) continue
+        if (!v || !isMesh(mesh) || !mesh.geometry) continue
         if (host.bench.layer('piece_boxes')) {
           mesh.geometry.computeBoundingBox()
-          const box = mesh.geometry.boundingBox.clone().translate(mesh.position)
+          const box = mesh.geometry.boundingBox!.clone().translate(mesh.position)
           mark(new three.Box3Helper(box, 0x66ccff))
         }
         if (host.bench.layer('wood_axes') && v.radius !== undefined && v.length !== undefined && v.axis && !v.sub) {
@@ -127,8 +131,8 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
     helpersShown = boxKey()
   }
   // the `base` of a wood piece is recorded on the destruction part of its mesh by the SDK; the module keeps it in `userData.destructionPart` of the mesh
-  const pieceBase = (root: any, v: PieceMeta): Vec3 | null => {
-    const mesh = root.children.find((c: any) => c.userData?.veg?.id === v.id)
+  const pieceBase = (root: THREE_NS.Object3D, v: PieceMeta): Vec3 | null => {
+    const mesh = root.children.find((c) => (c.userData?.veg as PieceMeta | undefined)?.id === v.id)
     const base = mesh?.userData?.destructionPart?.base
     return Array.isArray(base) ? (base as Vec3) : null
   }
@@ -136,7 +140,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   // ---- the nursery ----------------------------------------------------------------------------------------------------------------------------
   const nurseryOf = (): Nursery | null => {
     if (!host || !three) return null
-    if (!nursery) nursery = createNursery(sdk, species, three, materials(three), host.scene, options.nurseryOrigin ?? [-6, 14])
+    if (!nursery) nursery = createNursery(sdk, species, three, materials(three), host.scene as THREE_NS.Object3D, options.nurseryOrigin ?? [-6, 14])
     return nursery
   }
   const plantLot = (): void => {
@@ -195,9 +199,9 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
     let triangles = 0
     let pieces = 0
     for (const entry of placed.values()) {
-      entry.root.traverse((mesh: any) => {
-        if (!mesh.isMesh || mesh.userData.helper) return
-        for (let p = mesh; p; p = p.parent) if (p.visible === false) return
+      entry.root.traverse((mesh) => {
+        if (!isMesh(mesh) || mesh.userData.helper) return
+        for (let p: THREE_NS.Object3D | null = mesh; p; p = p.parent) if (p.visible === false) return
         drawCalls += 1
         if (mesh.userData.veg) pieces += 1
         const g = mesh.geometry
@@ -208,8 +212,8 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
   }
   const lotCalls = (): number => {
     let calls = 0
-    nursery?.group.traverse((o: any) => {
-      if (o.isMesh && o.visible) calls += 1
+    nursery?.group.traverse((o) => {
+      if (isMesh(o) && o.visible) calls += 1
     })
     return calls
   }
@@ -278,7 +282,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
     ],
     attach(lent) {
       host = lent
-      three = lent.THREE
+      three = lent.THREE as Three
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       applyWind()

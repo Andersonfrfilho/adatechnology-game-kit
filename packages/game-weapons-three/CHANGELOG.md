@@ -1,5 +1,46 @@
 # @adatechnology/game-weapons-three
 
+## 0.12.0
+
+### Minor Changes
+
+- d97cf9f: Firearm sounds: a layered gunshot per calibre family (crack, blast, body, action, room or field tail, far boom) with 4 takes that never repeat back to back, ±4 % pitch, stereo side from the shooter, the arrival delay of sound (d / 343 s), a close-to-far crossfade at 25–80 m (a rifle still carries at 800 m), occlusion, indoor vs outdoor tails and a suppressor that keeps a supersonic crack. Cases landing sound by floor (concrete, wood, metal, dirt) and case type (pistol, rifle, shotgun hull); a bullet passing by cracks (supersonic) or whizzes (subsonic). The game's single burst stays as `shotModel: 'game'`. `ModuleHost.surfaceAt` gives the floor material; the room fills it from the terrain. The weapons area logs each shot sound and each case, and has a "shot indoors" control.
+- f48b676: Lights go through the `LightBudget` of `game-render-three` (spec 005, D4 and D2). New optional `lights` (a `LightBudget`) on `createVfxRenderer`, `HouseRenderer.lighting` (`budget`), `createWeaponFx`, `createMeshApi` and `createThreeAdapter`, `createPersonBuilder`, `createWeatherRenderer`, `createHeadlights` (rules), `createLightning` and `createUrbanThree`: blast, fire and Workshop lights, the rooms' lights (their masks are written at `handle.slot`, which fixes the 12-entry mask), the rocket, the weapon light, the lamps, the flare, the headlights, the lightning flash (a leased hemisphere slot) and the street lights become requests or sources of the budget, so no light appears or goes while the game runs and no lit material recompiles. Without the option every package creates its own lights as before; that path is deprecated and goes in the next major, and the goldens that read light nodes stay on it. `ModuleHost` gains `lights` and `pools` (`unknown`: read them with `isLightBudget` and `isRenderPools`), the test room creates both and exposes `lights` and `webgl`. `game-urban` renames its counter to `LightAllowance`/`createLightAllowance`/`DEFAULT_LIGHT_ALLOWANCE` (the old names stay, deprecated). `game-render-three` gains `shadowSettings` and `LightLease.invalidateShadow`. `game-vehicles` takes `particleMaterials` (a structural pool) so the puffs' shader programs survive them; `game-weapons-three` takes `pools` for the flamethrower droplets and ground flames. The lint rule that forbids creating a light outside the budget is now an error.
+- 455522d: New `./testing` subpath on each package that ships a test area or bench (spec 005, D6): `import { createXTestModule } from '@adatechnology/game-<pkg>/testing'`. The test areas, benches and their texts moved behind it so the runtime entry does not carry them. Nothing is removed: every export that used to be on the package root is still there, `@deprecated`, and will be removed in the next major. The ESM build splits chunks (`splitting: true`), so the root and `./testing` share one copy of the module-level registries.
+- 455522d: `game-weapons-three` takes the item models by option (spec 005, D1 and D2): `items` on `createWeaponFx`, `createWeaponsTestModule`, `createExplosivesTestModule`, `buildWeaponModel`, `buildItemWeaponModel`, `itemModelOfWeapon` and `worldExplosiveItem`. Without `items` the weapons still draw with `itemModels` of `game-items-three`, as before; that default is deprecated and will be removed in the next major, and `game-items-three` stays a dependency until then. `game-items-three` exports `itemModels`, the value to pass.
+- e0cddcd: `ViewmodelOptions.particleLimit` (spec 005, A9): the host's cap on casings and magazines alive at once, read at each spawn. Without it the 900 cap stands.
+- be7bae5: Weapon props by instance (spec 005, D5): `createWeaponProps({ packs, patch, remove })` returns a set (`register`, `get`, `itemModelOf`, `buildItemModel`, `buildModel`) with the item model overrides of the weapons, shared with no other set. `defaultWeaponProps()` is the set behind `registerWeaponItemModel`, `itemModelOfWeapon`, `buildItemWeaponModel` and `buildWeaponModel`, which stay exported and `@deprecated` with the same results. The test area and `buildModeledProp` still read the default set.
+
+### Patch Changes
+
+- fab813c: Silent fallbacks now say so (spec 005, review item 12). `warnOnce(key, message)` in `game-contracts` warns once per key on the console, outside production. `createDestructionRenderer` and `createFluidRenderer` without `vfx`, `createViewmodel` (and `createWeaponFx`) without `effects` and `createWeaponAudio` without `engine` keep working with a world or engine of their own and warn once. The weapons test module makes its own audio only when it is first needed, so a room that lends the engine never triggers the warning.
+- Updated dependencies [ce94d04]
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [41b9dd4]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [05fbba9]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [57c5a6f]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+- Updated dependencies [65ccb0c]
+- Updated dependencies [455522d]
+  - @adatechnology/game-floorplan-three@0.9.0
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-audio@0.4.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-render-three@0.1.0
+  - @adatechnology/game-items-three@0.7.0
+  - @adatechnology/game-vfx-three@0.5.0
+  - @adatechnology/game-vfx@0.7.0
+  - @adatechnology/game-weapons@0.5.8
+
 ## 0.11.3
 
 ### Patch Changes

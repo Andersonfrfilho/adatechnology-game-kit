@@ -33,6 +33,7 @@ import { createModule as createCrowdModule } from '../../crowd-test-area/src/ent
 import { createModule as createUrbanModule, createVehicleBuilder } from '../../urban-test-area/src/entry.js'
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
 import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
+import { loadModule as loadProvingModule } from '../../vehicles-proving-area/src/entry.js'
 import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
@@ -100,6 +101,7 @@ const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 /** Short labels of each loading step, for the modules that are not created before they load (pt-BR, en). */
 const STEP_LABELS = {
   vehicles: ['Veículos', 'Vehicles'],
+  vehicles_proving: ['Banco de provas', 'Proving ground'],
   vegetation: ['Vegetação', 'Vegetation'],
 }
 
@@ -126,7 +128,10 @@ function loadSteps(room, options, lang) {
   const custom = (key, load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
-  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels }))
+  // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
+  const sfx = globalThis.__kitSfx
+  const samples = sfx ? { manifest: sfx.manifest, url: (file) => sfx.files[file] ?? file } : undefined
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels, ...(samples ? { samples } : {}) }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
@@ -148,7 +153,11 @@ function loadSteps(room, options, lang) {
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
-  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang }))
+  // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
+  const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
+  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
+  // the proving ground: a fleet vehicle runs the measured tests on a track, with the vehicle cameras, the mirrors and the certificate board (its own area is `?area=vehicles_proving`; it builds nothing until opened)
+  custom('vehicles_proving', () => loadProvingModule(room, { locale: lang }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)

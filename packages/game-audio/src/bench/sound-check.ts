@@ -375,10 +375,14 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
       run: async ({ expect }) => {
         const report = await engine.loadSamples([CALIBRATION_ID])
         expect(report.failed.length === 0 && engine.sampleStatus(CALIBRATION_ID) === 'ready', 'the calibration files load and decode', { failed: report.failed })
-        const before = log.length
+        // the voices of these six plays, watched on their own: the bench log keeps only its last LOG_LIMIT voices, so after a room full of sounds an
+        // index into it no longer points at these
+        const started: VoiceStartEvent[] = []
+        const offStarted = engine.watchVoices((event) => void started.push(event))
         const handles = Array.from({ length: 6 }, (_, index) => engine.play(CALIBRATION_ID, { distance: 2, environment: index % 2 === 0 ? 'indoor' : 'outdoor' }))
+        offStarted()
         expect(handles.every((handle) => handle?.kind === 'sample'), 'it plays the files, not the fallback', { kinds: handles.map((handle) => handle?.kind) })
-        const events = log.slice(before).filter((event) => event.id === CALIBRATION_ID)
+        const events = started.filter((event) => event.id === CALIBRATION_ID)
         const takes = events.map((event) => event.layers?.find((layer) => layer.role === 'close')?.url)
         expect(takes.length === 6 && takes.every((take, index) => index === 0 || take !== takes[index - 1]), 'never the same take twice in a row', { takes })
         const tails = events.map((event) => event.layers?.find((layer) => layer.role === 'tail')?.url ?? '')
@@ -408,7 +412,12 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
         engine.level('ambience')
         const loop = engine.loop(CALIBRATION_LOOP_ID, { volume: 0.8 })
         const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-        await wait(300)
+        // the seams are measured once the loop sounds: the context may still be resuming and the bus analyser filling (on a busy machine
+        // the first reads come back 0 and read as a dip that is only the start)
+        const started = performance.now()
+        while (engine.level('ambience') < 0.01 && performance.now() - started < 2000) await wait(20)
+        expect(performance.now() - started < 2000, 'the loop starts within 2 s', { ms: Math.round(performance.now() - started) })
+        await wait(200)
         const levels: number[] = []
         // 2.4 s: four seams of 0.6 s takes
         for (let index = 0; index < 60; index++) {

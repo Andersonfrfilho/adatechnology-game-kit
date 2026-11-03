@@ -1,7 +1,7 @@
 import { registries } from './registry'
 import type { ResultExtension } from './registry'
 import { createRng } from './rng'
-import type { FindsQuery, FindStack, FloorplanOptions, Json, Plan } from './types'
+import type { FindsQuery, FindStack, FloorplanOptions, FloorplanResult, Plan } from './types'
 
 /** Extensions in the order they run: registration order, with each one after the ones it names. */
 function orderOf(extensions: readonly ResultExtension[]): ResultExtension[] {
@@ -23,7 +23,7 @@ function orderOf(extensions: readonly ResultExtension[]): ResultExtension[] {
 }
 
 /** Runs the registered extensions and stores each output in `result[name]`. */
-export function runResultExtensions(plan: Plan, result: Json, seed: number | string, options: FloorplanOptions): void {
+export function runResultExtensions(plan: Plan, result: FloorplanResult, seed: number | string, options: FloorplanOptions): void {
   for (const extension of orderOf(registries().RESULT_EXTENSIONS)) {
     result[extension.name] = extension.run({ plan, result, seed, rng: createRng(seed, extension.seedKey), options })
   }

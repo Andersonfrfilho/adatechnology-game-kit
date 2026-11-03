@@ -1,0 +1,287 @@
+{
+  "$comment": "Which recorded tracks feed each firearm sound of assets/sfx-inbox/armas. `ffl` is The Free Firearm Sound Library (Ben Jaszczak, Kickstarter 2014, CC0; mirror github.com/buddingmonkey/FreeFirearmsSFXLibrary, track codes of its Master Sheet.xlsx). `rfs` is the Restrained Firearms Soundpack (envalid.com, CC BY 4.0; github.com/sakkaku/restrained-firearms-soundpack). Each track holds several repetitions of the action: cut.mjs splits them into takes. Shots: `close` = the near microphone, `far` = the mid-distance one. Reload cues end in `_light` (pistols, revolvers), `_medium` (rifles, bolt and lever guns) or `_heavy` (shotguns): the strength tiers game-audio picks by the weapon's weight. `oap` is the Oculus Audio Pack 1 (Oculus sound design team, 2015, CC BY 4.0; github.com/facebookincubator/Meta-open-sound, corpora/oculus-audio-pack/ogg): whole files, one take each. Casings: a case's bounces on one floor (`casing_drop_<concreto|terra|metal>`), played on the first hit.",
+  "sources": {
+    "ffl": {
+      "link": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "author": "Ben Jaszczak (The Free Firearm Sound Library)",
+      "license": "CC0"
+    },
+    "rfs": {
+      "link": "https://github.com/sakkaku/restrained-firearms-soundpack",
+      "author": "Restrained Firearms Soundpack, https://envalid.com",
+      "license": "CC-BY 4.0"
+    },
+    "oap": {
+      "link": "https://github.com/facebookincubator/Meta-open-sound/tree/main/corpora/oculus-audio-pack",
+      "author": "Oculus Audio Pack 1 (Oculus sound design team)",
+      "license": "CC-BY 4.0"
+    }
+  },
+  "shots": {
+    "pistol_22lr": {
+      "close": [
+        "R_32",
+        "R_34"
+      ],
+      "far": [
+        "R_27",
+        "R_29"
+      ]
+    },
+    "pistol_9mm": {
+      "close": [
+        "X_39",
+        "X_41"
+      ],
+      "far": [
+        "X_30",
+        "X_32"
+      ]
+    },
+    "pistol_45": {
+      "close": [
+        "A_41",
+        "A_42"
+      ],
+      "far": [
+        "A_33",
+        "A_34"
+      ]
+    },
+    "revolver_38_357": {
+      "close": [
+        "V_25",
+        "V_27"
+      ],
+      "far": [
+        "V_20",
+        "V_22"
+      ]
+    },
+    "shotgun_12": {
+      "close": [
+        "O_19",
+        "O_21",
+        "K_20"
+      ],
+      "far": [
+        "O_14",
+        "O_16",
+        "K_15"
+      ]
+    },
+    "rifle_5_56": {
+      "close": [
+        "D_31",
+        "D_32"
+      ],
+      "far": [
+        "D_23",
+        "D_24"
+      ]
+    },
+    "rifle_7_62x39": {
+      "close": [
+        "C_25",
+        "C_28",
+        "U_12"
+      ],
+      "far": [
+        "C_31",
+        "C_37"
+      ]
+    },
+    "rifle_308_3006": {
+      "close": [
+        "W_27",
+        "W_29",
+        "B_23"
+      ],
+      "far": [
+        "W_22",
+        "W_24",
+        "B_15"
+      ]
+    },
+    "sniper_338_300wm": {
+      "close": [
+        "M_19",
+        "M_21"
+      ],
+      "far": [
+        "M_24",
+        "M_26"
+      ]
+    },
+    "suppressed_pistol": {
+      "close": [
+        "X_43",
+        "X_45"
+      ],
+      "far": [
+        "X_34",
+        "X_36"
+      ]
+    },
+    "suppressed_rifle": {
+      "close": [
+        "T_29",
+        "T_31"
+      ],
+      "far": [
+        "T_20",
+        "T_22"
+      ]
+    }
+  },
+  "mechanics": {
+    "mag_out_light": [
+      "X_5",
+      "F_5",
+      "R_6"
+    ],
+    "mag_out_medium": [
+      "D_5",
+      "W_5",
+      "C_11"
+    ],
+    "mag_out_heavy": [
+      "N_11"
+    ],
+    "mag_seat_light": [
+      "X_4",
+      "A_4",
+      "F_4",
+      "R_5"
+    ],
+    "mag_seat_medium": [
+      "D_4",
+      "W_4",
+      "C_10"
+    ],
+    "mag_seat_heavy": [
+      "N_10"
+    ],
+    "slide_release_light": [
+      "X_11",
+      "A_11",
+      "F_11",
+      "R_12"
+    ],
+    "slide_release_medium": [
+      "D_13",
+      "C_13",
+      "U_4"
+    ],
+    "charging_handle_pull_light": [
+      "X_8",
+      "A_8",
+      "F_8",
+      "R_9"
+    ],
+    "charging_handle_pull_medium": [
+      "D_9",
+      "C_12",
+      "U_3",
+      "Q_6"
+    ],
+    "charging_handle_release_medium": [
+      "D_13",
+      "U_4",
+      "C_13",
+      "Q_9"
+    ],
+    "bolt_lift_medium": [
+      "B_1",
+      "E_3",
+      "W_6",
+      "T_1"
+    ],
+    "bolt_pull_medium": [
+      "B_3",
+      "E_5",
+      "W_9",
+      "T_3",
+      "M_4"
+    ],
+    "bolt_pull_heavy": [
+      "N_13"
+    ],
+    "bolt_push_medium": [
+      "B_5",
+      "E_7",
+      "W_12",
+      "T_5",
+      "M_6"
+    ],
+    "bolt_push_heavy": [
+      "N_14"
+    ],
+    "bolt_lock_medium": [
+      "B_6",
+      "E_8",
+      "T_6"
+    ],
+    "pump_back_heavy": [
+      "H_4",
+      "K_4",
+      "O_4"
+    ],
+    "pump_forward_heavy": [
+      "H_5",
+      "K_5",
+      "O_5"
+    ],
+    "shell_insert_heavy": [
+      "H_3",
+      "K_3",
+      "O_3"
+    ],
+    "lever_open_medium": [
+      "I_2",
+      "L_2"
+    ],
+    "lever_close_medium": [
+      "I_4",
+      "L_4"
+    ],
+    "cylinder_open_light": [
+      "V_11",
+      "V_14",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Cylinder Open-001.wav",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Cylinder Open-002.wav"
+    ],
+    "cylinder_close_light": [
+      "V_12",
+      "V_15",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Cylinder Close-001.wav",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Cylinder Close-002.wav"
+    ],
+    "cylinder_eject_light": [
+      "V_3",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Eject Spent Rounds-001.wav",
+      "rfs:colt-python/Export/Restrained Freedom - Colt Python - Eject Spent Rounds-002.wav"
+    ],
+    "speedloader_light": [
+      "V_18",
+      "V_2"
+    ]
+  },
+  "casings": {
+    "casing_drop_concreto": [
+      "oap:BLLTShel_ShellCasingConcrete_OS_01.ogg",
+      "oap:BLLTShel_ShellCasingConcrete_OS_02.ogg",
+      "oap:BLLTShel_ShellCasingConcrete_OS_03.ogg"
+    ],
+    "casing_drop_terra": [
+      "oap:BLLTShel_ShellCasingGrass_OS_01.ogg",
+      "oap:BLLTShel_ShellCasingGrass_OS_02.ogg",
+      "oap:BLLTShel_ShellCasingGrass_OS_03.ogg"
+    ],
+    "casing_drop_metal": [
+      "oap:BLLTShel_ShellCasingMetal_OS_01.ogg",
+      "oap:BLLTShel_ShellCasingMetal_OS_02.ogg",
+      "oap:BLLTShel_ShellCasingMetal_OS_03.ogg"
+    ]
+  }
+}

@@ -1,18 +1,21 @@
-type Three = any
+import type * as THREE_NS from 'three'
+
+type Three = typeof THREE_NS
 
 /** What `document.createElement('canvas')` needs; a fake works in Node. */
-export type CanvasFactory = { createElement(tag: string): any }
+export type CanvasFactory = { createElement(tag: 'canvas'): HTMLCanvasElement }
 
 export type TextTextureOptions = { width: number; height: number; background: string; foreground: string; font: string }
 
 const FIT = 0.92
 
 /** Canvas texture with centred lines of text, shrunk to fit 92 % of the width, on a filled background. */
-export function createTextTexture(THREE: Three, document: CanvasFactory, lines: readonly string[], o: TextTextureOptions): any {
+export function createTextTexture(THREE: Three, document: CanvasFactory, lines: readonly string[], o: TextTextureOptions): THREE_NS.CanvasTexture {
   const canvas = document.createElement('canvas')
   canvas.width = o.width
   canvas.height = o.height
   const g = canvas.getContext('2d')
+  if (!g) throw new Error('game-urban-three: the canvas has no 2D context')
   g.fillStyle = o.background
   g.fillRect(0, 0, o.width, o.height)
   g.fillStyle = o.foreground

@@ -87,4 +87,19 @@ describe('an explosion shoves what is around it', () => {
     room.loadModule({ id: 'probe', name: 'probe', group: 'probe', items: () => [], attach: (host) => { seen = host.blastShove; return () => undefined } })
     expect(seen).toEqual({ maxSpeed: 0.1 })
   })
+
+  it('a thrown item stops against what stands in its way (a steel sheet) instead of flying through it, and bounces back a little', () => {
+    const room = roomWith({ maxCarryKg: 3 })
+    const bucket = room.spawn('plastic_bucket', [0, 0, -4.5], 0)
+    room.spawn('steel_sheet', [0, 0, -3.6], 0)
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    room.renderer.explode([0, 0.3, -5.5], 200000, 15, { visual: false })
+    let farthest = -Infinity
+    for (let i = 0; i < 120; i++) {
+      room.update(1 / 60)
+      farthest = Math.max(farthest, bucket.root.position.z)
+    }
+    expect(farthest).toBeLessThan(-3.5)
+    expect(bucket.root.position.z).toBeLessThan(-3.6)
+  })
 })

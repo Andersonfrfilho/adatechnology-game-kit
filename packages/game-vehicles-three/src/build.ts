@@ -164,6 +164,8 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       c.vehicle.matrixAutoUpdate = true
       pivot.add(c.vehicle)
       group.add(pivot)
+      // the kit refreshes the matrices of what it deforms from c.root: it has to be the group that now carries the vehicle
+      c.root = group
       if (color && primary) {
         const repainted = primary.clone()
         repainted.color.set(color)

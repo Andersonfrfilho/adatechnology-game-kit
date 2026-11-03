@@ -1,6 +1,9 @@
 /** Hoods, engine bays and hinge helpers. */
 import type { Kit } from './types'
 
+/** How far a hood drawn from the hull is raised over the hull, metres. */
+const HOOD_LIFT = 0.008
+
 export function installHood(kit: Kit): void {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
@@ -26,7 +29,7 @@ export function installHood(kit: Kit): void {
     for (let i = 0; i < p.count; i++) {
       p.setX(i, cx + (p.getX(i) - cx) * sx)
       p.setZ(i, p.getZ(i) * sz)
-      p.setY(i, p.getY(i) + 0.008)
+      p.setY(i, p.getY(i) + HOOD_LIFT)
     }
     geo.translate(-hx, -hy, 0)
     const under = geo.clone()
@@ -56,6 +59,7 @@ export function installHood(kit: Kit): void {
       zw: bb.max.z,
       label: o.label,
       noLatch: !!o.noLatch,
+      lift: HOOD_LIFT,
     }
     c.part('hood', { key: 'hood' }, piv, new V3((hx + bb.max.x) / 2, hy, 0), 0.9)
     return c.hood

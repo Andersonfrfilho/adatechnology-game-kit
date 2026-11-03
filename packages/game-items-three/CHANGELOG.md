@@ -1,5 +1,34 @@
 # @adatechnology/game-items-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 57c5a6f: Item models by instance (spec 005, D5): `createItemModels({ packs, patch, remove })` returns a set (`has`, `entry`, `builder`, `list`, `register`, `unregister`, `build`) that starts from the shipped models and shares nothing with any other set; `buildItem` takes it through the new `models` option. `defaultItemModels()` is the registry behind `registerItemModel`, `unregisterItemModel`, `hasItemModel`, `itemModelEntry`, `itemModelBuilder` and `listItemModels`, which stay exported and `@deprecated` with the same results.
+- 455522d: New `./testing` subpath on each package that ships a test area or bench (spec 005, D6): `import { createXTestModule } from '@adatechnology/game-<pkg>/testing'`. The test areas, benches and their texts moved behind it so the runtime entry does not carry them. Nothing is removed: every export that used to be on the package root is still there, `@deprecated`, and will be removed in the next major. The ESM build splits chunks (`splitting: true`), so the root and `./testing` share one copy of the module-level registries.
+- 455522d: `game-weapons-three` takes the item models by option (spec 005, D1 and D2): `items` on `createWeaponFx`, `createWeaponsTestModule`, `createExplosivesTestModule`, `buildWeaponModel`, `buildItemWeaponModel`, `itemModelOfWeapon` and `worldExplosiveItem`. Without `items` the weapons still draw with `itemModels` of `game-items-three`, as before; that default is deprecated and will be removed in the next major, and `game-items-three` stays a dependency until then. `game-items-three` exports `itemModels`, the value to pass.
+
+### Patch Changes
+
+- Updated dependencies [ce94d04]
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+  - @adatechnology/game-floorplan-three@0.9.0
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-fluids@0.4.2
+  - @adatechnology/game-interactables@0.2.14
+  - @adatechnology/game-items@0.2.2
+
 ## 0.6.2
 
 ### Patch Changes

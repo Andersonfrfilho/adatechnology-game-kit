@@ -1,5 +1,13 @@
 # @adatechnology/game-floorplan-residential
 
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies [81bd9c0]
+  - @adatechnology/game-floorplan@0.3.0
+  - @adatechnology/game-floorplan-structure@2.0.0
+
 ## 5.0.0
 
 ### Patch Changes

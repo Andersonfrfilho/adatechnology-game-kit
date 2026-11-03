@@ -8,6 +8,17 @@ import { primaryPaint } from './build'
 /** Past this distance (m) an untouched vehicle draws fused: nobody sees a door seam from here, and the full model costs hundreds of draw calls. */
 export const VEHICLE_LOD_DISTANCE = 14
 const BATCH_BUDGET_MS = 2
+/**
+ * A vehicle hit in play changes part by part (dents, holes, a door torn off): it is batched again once nothing has changed on it for this long.
+ * Before 2026-11-03 a hit vehicle never batched again and drew one call per part for good (~950 draws per frame for the sedan, colour and shadow,
+ * after the first blast of the horde chain), the larger share of the frame time of `chain_horde` in perf.mjs.
+ */
+export const VEHICLE_REBATCH_AFTER_MS = 1500
+
+export type VehicleLodOptions = {
+  /** The clock (ms) the quiet time is read from (default `performance.now`). */
+  readonly now?: () => number
+}
 
 export type VehicleLod = {
   /** `touched`: hit or driven, from now on it always draws in full (its damage only exists there); `posed`: a door, hood or lid is open now (fused only while all are shut). */
@@ -22,8 +33,11 @@ const isShown = (object: any, top: any): boolean => {
 }
 
 /** Shows `full` near and the kit's fused light mode (one mesh per class of material) far, in `root`'s own space. Hit tests read the full model, visible or not. */
-export function createVehicleLod(kit: any, context: any, root: any, full: any): VehicleLod {
+export function createVehicleLod(kit: any, context: any, root: any, full: any, options: VehicleLodOptions = {}): VehicleLod {
   const THREE = kit.THREE
+  const now = options.now ?? (() => performance.now())
+  // when the vehicle last changed (hit, rebuilt, a batched part given back): a hit one is batched again only after a quiet time
+  let changedAt = Number.NEGATIVE_INFINITY
   // the full model is drawn whole once, off-camera parts included, before it may hide: its buffers reach the GPU then, not in the frame of a
   // blast. A model rebuilt in place (the destructible's reset) is new geometry, so it is drawn whole again.
   let isUploaded = false
@@ -88,9 +102,20 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
     root.add(proxy)
     return proxy
   }
+  const batchLocked = (): void => {
+    // the parts keep their own shadows (the proxy has the shape of the vehicle before the hit); the batches cast for the still ones
+    batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
+    batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+    // the batches copy the parts' triangles: a hit test reads the parts (`surfaceRay`), never the copy
+    batcher.group.userData.noSurfaceRay = true
+    markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
+  }
   const drawFull = (): void => {
-    // a vehicle hit in play is changing part by part: its batches would be given back as fast as they are made
-    if (!batcher && isLocked) return
+    // a vehicle hit in play is changing part by part: batched now, its batches would be given back as fast as they are made
+    if (!batcher && isLocked) {
+      if (now() - changedAt >= VEHICLE_REBATCH_AFTER_MS) batchLocked()
+      return
+    }
     if (!batcher) {
       lite ??= build()
       lite.visible = isFused
@@ -105,12 +130,14 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
       // merged a material at a time over the next frames (BATCH_BUDGET_MS each), never in one frame
       batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
       batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+      batcher.group.userData.noSurfaceRay = true
       markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
       return
     }
-    batcher.update()
-    // every part changed (the model was rebuilt, or all of it dented): batch what stands now
-    if (!isLocked && batcher.stats().batched === 0 && batcher.stats().released > 0) {
+    if (!batcher) return
+    if (batcher.update() > 0) changedAt = now()
+    // every part changed (the model was rebuilt, or all of it dented): batch what stands now (a hit vehicle, once it is quiet again)
+    if (batcher.stats().batched === 0 && batcher.stats().released > 0) {
       batcher.dispose()
       batcher = null
     }
@@ -152,8 +179,10 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any): 
   }
   const api: VehicleLod = {
     update(distance, touched, posed = false) {
+      if (touched && !isLocked) changedAt = now()
       isLocked ||= touched
       if (keyOf() !== modelKey) {
+        changedAt = now()
         // the fused copy and the batches were made from the old model
         api.dispose()
         armUpload()

@@ -242,7 +242,7 @@ const rural: NeighbourhoodPattern<RuralParams> = {
 }
 
 /** The ten patterns of the Galeria's sample sheet, in the order the page builds them. */
-export const DEFAULT_PATTERNS: readonly NeighbourhoodPattern<any>[] = [downtown, suburb, workingClass, historicStreet, industrialPort, railwayVillage, mountainResort, stiltVillage, military, rural]
+export const DEFAULT_PATTERNS: readonly NeighbourhoodPattern[] = [downtown, suburb, workingClass, historicStreet, industrialPort, railwayVillage, mountainResort, stiltVillage, military, rural]
 
 /** Where the sample sheet puts each pattern: a 3 x 3 grid 80 by 56 m apart, and the military cell off to the east. */
 export const SAMPLE_CELLS: Readonly<Record<string, { x: number; z: number }>> = {

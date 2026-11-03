@@ -22,11 +22,11 @@ interface WallRun {
 export const decorPass: DecorPass = (c: DecorPassContext) => {
   const { plan, items, rng, ctx, kit, catalog: CATALOG, profiles, seed } = c
   const { MARGIN, r2, clamp, overlaps, inner, inflate, topOf, zonesOfFloor, roomAt, reachable, pickWeighted, cutIntervals, createRng, roomSeedKey } = kit
-  const density: DecorProfile = profiles[plan.style] || profiles.mid
+  const density = (profiles[plan.style] || profiles.mid) as DecorProfile // this pack registers the profiles (index.ts)
   const isBudget = density === profiles.budget
   const isHigh = density === profiles.high
   const isApartment = !plan.tpl.lot
-  const isOffGrid = plan.config?.power === 'offgrid'
+  const isOffGrid = (plan.config as { power?: string } | undefined)?.power === 'offgrid'
   const { make, add, added, itemsOfRoom, placeOnFloor, gridOf, roomById } = ctx
   void roomById
 
@@ -223,7 +223,7 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
             const slackV = (A[3] - A[1] - it.d) / 2
             const cx = m.x + (A[0] - R[0] < R[2] - A[2] ? slackU : -slackU)
             const cz = m.z + (A[1] - R[1] < R[3] - A[3] ? slackV : -slackV)
-            add(make(room, 'table_lamp', [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2], [m.frontU, m.frontV], { y: r2(topOf(m)), supportId: m.id }))
+            add(make(room, 'table_lamp', [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2], [m.frontU ?? 0, m.frontV ?? 1], { y: r2(topOf(m)), supportId: m.id }))
             lit.add(m.id)
             break
           }

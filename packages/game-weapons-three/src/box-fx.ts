@@ -4,7 +4,7 @@ import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@ad
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
-import type { WeaponAudio } from './audio'
+import type { CuePlayed, WeaponAudio } from './audio'
 import type { SoundProfile } from './audio/reload-sounds'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
@@ -45,7 +45,7 @@ export interface WeaponFxOptions {
   /** The floor material under a point, for the sound of a case landing there. Default concrete. */
   surfaceAt?: (x: number, z: number) => string | undefined
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio): the weapon, the cue id and the profile it sounds with. */
-  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
+  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile; played?: CuePlayed }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes from a point along a direction (metres), or null when it hits nothing: the dot lands where it ends. */

@@ -1,4 +1,4 @@
-export { impactKey, dragSoundKey, createDestructionRenderer } from './renderer'
+export { impactKey, shotKey, dragSoundKey, createDestructionRenderer } from './renderer'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'
@@ -26,8 +26,10 @@ export type {
   ThreeNamespace,
   Vec3,
 } from './types'
-export { BURN_LOOP, DESTRUCTION_SOUND_BANK, DRAG_SOUNDS, EXPLOSION_BOOM, SCENE_SOUNDS } from './audio/recipes'
-export { DEFAULT_CRACKLES, DEFAULT_FIRE, DEFAULT_INDOOR_CONFINEMENT, DESTRUCTION_SOUND_KEYS, createDestructionSound } from './audio/sound'
+export { BURN_LOOP, DESTRUCTION_SOUND_BANK, DRAG_SOUNDS, EXPLOSION_BOOM, IMPACT_SOUNDS, SCENE_SOUNDS } from './audio/recipes'
+export { IMPACT_FAMILY_TAGS, breakSoundKeys, impactFamily, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
+export type { ImpactFamily, ImpactKeys } from './audio/impact-keys'
+export { DEFAULT_CRACKLES, DEFAULT_FIRE, DEFAULT_INDOOR_CONFINEMENT, DESTRUCTION_SOUND_KEYS, IMPACT_SOUND_KEYS, createDestructionSound } from './audio/sound'
 export {
   BIG_BLAST_RADIUS,
   BLAST_FALLOFF,

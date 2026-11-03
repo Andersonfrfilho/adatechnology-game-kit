@@ -1,5 +1,6 @@
-// Weapon sounds synthesized with WebAudio: no sound files, so the kit stays offline and small. Every call is a no-op where there is no
-// AudioContext (tests, workers), and the context is only created on the first sound, which comes from a click or a key (browsers allow it).
+// Weapon sounds: synthesized with WebAudio, and with `samples` the recorded shots and reload steps of game-audio's sfx (the synthesized sound stays
+// as the fallback until the files are loaded). Every call is a no-op where there is no AudioContext (tests, workers), and the context is only
+// created on the first sound, which comes from a click or a key (browsers allow it).
 // The numbers live in ./audio/*: `computeShotSound` is pure and this file only turns its result into nodes.
 import { warnOnce } from '@adatechnology/game-contracts'
 import { MIX_PROFILES, createAudioEngine } from '@adatechnology/game-audio'
@@ -15,7 +16,9 @@ import type { FlybyInput, FlybyVoice } from './audio/flyby'
 import type { CasingInput, CasingSound, CasingVoice } from './audio/casing-sound'
 import type { Gunshot, GunshotInput, GunshotOptions, GunshotSpace, GunshotVoice } from './audio/gunshot'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
-import { RELOAD_CUES, reloadCueSteps } from './audio/reload-sounds'
+import { DEFAULT_SOUND_PROFILE, RELOAD_CUES, reloadCueSteps } from './audio/reload-sounds'
+import { CUES_IN_SAMPLE, WEIGHT_INTENSITY, casingSampleId, weaponSampleBank } from './audio/samples'
+import type { WeaponSampleOptions } from './audio/samples'
 import type { SoundProfile } from './audio/reload-sounds'
 import { computeShotSound, FALLBACK_SOUND_CLASS, GAME_DISTANCE_CURVE, GAME_SOUND_CLASSES } from './audio/shot-sound'
 import type { ShotSound, ShotSoundInput, ShotSoundOptions, SoundClassDef } from './audio/shot-sound'
@@ -32,6 +35,14 @@ export { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 export type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 export { RELOAD_CUES, RELOAD_CUE_IDS, DEFAULT_SOUND_PROFILE, reloadCueSteps, soundProfileOf } from './audio/reload-sounds'
 export type { ReloadCueId, SoundProfile } from './audio/reload-sounds'
+export { CASING_SAMPLE, casingSampleId, CUES_IN_SAMPLE, GUNSHOT_SAMPLE, GUNSHOT_SAMPLE_IDS, RELOAD_SAMPLE, RELOAD_SAMPLE_HITS, WEIGHT_INTENSITY, weaponSampleBank, weaponSampleDefaults } from './audio/samples'
+export type { WeaponSampleOptions } from './audio/samples'
+
+/** What a reload cue played: its recording, nothing (another cue's recording carries it), or the synthesized steps. */
+export type CuePlayed = 'sample' | 'carried' | 'synth'
+
+/** What sounded for a shot: the recorded takes (`sample`, with the take of each layer) or the synthesized layers (`synth`). */
+export type GunshotPlayed = { readonly kind: 'synth' } | { readonly kind: 'sample'; readonly id: string; readonly layers: readonly { readonly role: string; readonly take: number; readonly rate: number }[] }
 
 /** What a shot adds to the energy and the category: where the listener is and how the weapon is set. */
 export type ShotExtras = Pick<ShotSoundInput, 'caliber' | 'distance' | 'volume' | 'suppressed' | 'indoors'> & {
@@ -54,9 +65,9 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
   /** Pitch spread of a shot, ± this fraction (default 0.04, C5). */
   readonly pitchSpread?: number
   /** Told each gunshot played (profile, take, pitch, space, distance), so a host can log what sounded. */
-  readonly onGunshot?: (shot: Gunshot, input: GunshotInput) => void
+  readonly onGunshot?: (shot: Gunshot, input: GunshotInput, played: GunshotPlayed) => void
   /** Told each case that lands (floor, case type, sample id). */
-  readonly onCasing?: (sound: CasingSound) => void
+  readonly onCasing?: (sound: CasingSound, played: 'sample' | 'synth') => void
   /** Seed of the noise buffer, of the start point in it and of the casing pitch: same seed, same sound. Default 1. */
   readonly seed?: number
   /** Replaces or adds mechanical sounds by id. */
@@ -71,6 +82,11 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
    * weapon audio makes its own engine with the game mix, no voice limit, and the master at `volume`.
    */
   readonly engine?: AudioEngine
+  /**
+   * The recorded shots and reload steps (game-audio's `assets/sfx/manifest.json` and where its files are served). A shot of a profile with files
+   * plays its takes, a reload cue the takes of the weapon's weight; until they are loaded, and for anything without files, the synthesized sound.
+   */
+  readonly samples?: WeaponSampleOptions
 }
 
 /** Sounds the weapon presentation plays. */
@@ -85,8 +101,14 @@ export interface WeaponAudio {
   click(): void
   /** A mechanical sound by id: a reload stage, `dry_fire`, `jam`, `safety_on`... */
   mechanical(id: MechanicalSoundId): void
-  /** A cue of a reload clip (`mag_seat`, `charging_handle_pull`, `pump_back`...) for a weapon's profile (the weight of its metal and what it is made of): played now, where the clip says. */
-  cue(id: string, profile?: SoundProfile): void
+  /**
+   * A cue of a reload clip (`mag_seat`, `charging_handle_pull`, `pump_back`...) for a weapon's profile (the weight of its metal and what it is made
+   * of), where the clip says. `lead` is how early the clip started it (seconds before the part reaches its stop): a recording plays at once, its hit
+   * that much later; the synthesized steps, whose hit is at their start, wait `lead`.
+   */
+  cue(id: string, profile?: SoundProfile, lead?: number): CuePlayed
+  /** Loads the recorded files now (they load on the first sound otherwise, and the synthesized sound plays meanwhile). */
+  loadSamples(): Promise<void>
   /** The mechanical sound of a weapon event, if it has one (reload stages, empty, misfire, fault, clear, safety, mode, feed). */
   event(event: WeaponEvent): void
   /** A sound class of the game by name (`impact`, `flesh`, `glass`...), with the game's distance muffling. */
@@ -137,6 +159,19 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   const channel = shared && options.seed !== undefined ? shared.channel({ seed }) : engine.channel({})
   engine.register({ id: `weapons_three@${classBurstId(distanceCurve)}`, sounds: weaponRecipes(distanceCurve) })
   const classBurst = classBurstId(distanceCurve)
+
+  // the recorded shots and reload steps: registered now, loaded on the first sound (or `loadSamples`), the synthesized sound until then
+  const sampleBank = options.samples ? weaponSampleBank(options.samples) : null
+  if (sampleBank) engine.register(sampleBank)
+  const sampleIds = new Set((sampleBank?.samples ?? []).map((sample) => sample.id))
+  let sampleLoad: Promise<void> | null = null
+  const loadSamples = (): Promise<void> => (sampleLoad ??= sampleIds.size > 0 ? engine.loadSamples([...sampleIds]).then(() => undefined, () => undefined) : Promise.resolve())
+  const sampleReady = (id: string): boolean => {
+    if (!sampleIds.has(id)) return false
+    if (engine.sampleStatus(id) === 'ready') return true
+    void loadSamples()
+    return false
+  }
 
   // a filtered noise burst with a fast attack and an exponential tail
   const burst = (config: Burst): void => {
@@ -198,8 +233,15 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   }
   const casing = (input: CasingInput): void => {
     const sound = computeCasingSound({ ...input, pitch: input.pitch ?? 1 + (channel.random() * 2 - 1) * 0.06 })
+    // a recording holds every bounce of the case: it plays on the first hit, and the later hits add nothing
+    const recorded = sound.kind === 'shell' ? '' : casingSampleId(sound.sample)
+    if (recorded && sampleReady(recorded)) {
+      if ((input.bounce ?? 0) === 0) channel.play(recorded, { volume: Math.min(1, Math.max(0.2, (input.speed ?? 1.5) / 2.5)) })
+      options.onCasing?.(sound, 'sample')
+      return
+    }
     for (const voice of sound.voices) playCasingVoice(voice)
-    options.onCasing?.(sound)
+    options.onCasing?.(sound, 'synth')
   }
   const lastTake = new Map<string, number>()
   const pitchSpread = options.pitchSpread ?? 0.04
@@ -222,8 +264,24 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
         lastTake.set(profile, take)
         const pitch = 1 + (channel.random() * 2 - 1) * pitchSpread
         const shot = computeGunshot({ ...base, take, pitch }, options.gunshot)
+        const recorded = shot.samples.close
+        if (shot.audible && sampleReady(recorded)) {
+          // the recording carries the crack, the body, the action and the field's echo; a room still adds its own tail
+          const occlusion = Math.min(1, Math.max(0, extras.occlusion ?? 0))
+          const handle = channel.play(recorded, {
+            volume: (extras.volume ?? 1) * (1 - 0.5 * occlusion),
+            environment: base.space === 'indoor' ? 'indoor' : 'outdoor',
+            ...(extras.position ? { position: [extras.position[0], extras.position[1], extras.position[2]] as [number, number, number] } : {}),
+            ...(extras.distance === undefined ? {} : { distance: extras.distance }),
+            ...(shot.delay > 0 ? { delay: shot.delay } : {}),
+          })
+          if (base.space === 'indoor') for (const voice of shot.voices) if (voice.group === 'tail') playGunshotVoice(voice, extras)
+          const layers = handle?.kind === 'sample' ? handle.plan.layers.map((layer) => ({ role: layer.role, take: layer.take, rate: layer.rate })) : []
+          options.onGunshot?.(shot, { ...base, take, pitch }, { kind: 'sample', id: recorded, layers })
+          return
+        }
         for (const voice of shot.voices) playGunshotVoice(voice, extras)
-        if (shot.audible) options.onGunshot?.(shot, { ...base, take, pitch })
+        if (shot.audible) options.onGunshot?.(shot, { ...base, take, pitch }, { kind: 'synth' })
         return
       }
       const sound = shotSound({ ...extras, energyJ, category })
@@ -238,9 +296,19 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       mechanical('dry_fire')
     },
     mechanical,
-    cue(id, profile) {
-      for (const entry of reloadCueSteps(id, profile, cueTable)) step(entry)
+    cue(id, profile, lead = 0) {
+      // a step the recording of another cue already carries (the release button, the magazine sliding in) stays silent
+      const carriedBy = CUES_IN_SAMPLE[id]
+      if (carriedBy && sampleReady(carriedBy)) return 'carried'
+      if (sampleReady(id)) {
+        channel.play(id, { intensity: WEIGHT_INTENSITY[(profile ?? DEFAULT_SOUND_PROFILE).weight] })
+        return 'sample'
+      }
+      // the synthesized steps hit at their start: they wait the lead the clip gave the recording
+      for (const entry of reloadCueSteps(id, profile, cueTable)) step(lead > 0 ? { ...entry, at: entry.at + lead } : entry)
+      return 'synth'
     },
+    loadSamples,
     event(event) {
       const id = mechanicalSoundOf(event)
       if (id) mechanical(id)

@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { kitOriginOf, markKitOrigin, unmarkedDrawings } from '../src'
 
-const node = (name: string, extra: Record<string, unknown> = {}, children: any[] = []): any => {
-  const n: any = { name, userData: {}, children, visible: true, parent: null, ...extra }
+/** A scene-graph node as three lays it out: enough of an Object3D for the origin walk. */
+type FakeNode = { name: string; userData: Record<string, unknown>; children: FakeNode[]; visible: boolean; parent: FakeNode | null; [key: string]: unknown }
+
+const node = (name: string, extra: Record<string, unknown> = {}, children: FakeNode[] = []): FakeNode => {
+  const n: FakeNode = { name, userData: {}, children, visible: true, parent: null, ...extra }
   for (const c of children) c.parent = n
   return n
 }

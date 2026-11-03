@@ -8,6 +8,7 @@
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, strHash } from '../util'
+import type { ArmourLevel } from './armour'
 
 /** What a part is, which decides its material, its joint and what happens when it comes off. */
 export type PartRole =
@@ -91,6 +92,8 @@ export interface VehicleModel {
 export interface ModelOptions {
   /** Fit a tow hitch. Default: the spec flag `hitch`, else a seeded choice by vehicle kind. */
   hitch?: boolean
+  /** Armour of the vehicle: its glass is laminated and as strong as the level says. */
+  armour?: ArmourLevel | null
 }
 
 /** Joint kinds as the vehicle uses them: strength in joules of wear, the tools that undo them and the seconds of work. */
@@ -149,6 +152,14 @@ const boxOf = (z: { box: { x0: number; x1: number; y0: number; y1: number; z0: n
   center: [(z.box.x0 + z.box.x1) / 2, (z.box.y0 + z.box.y1) / 2, (z.box.z0 + z.box.z1) / 2],
   size: [Math.max(0.02, z.box.x1 - z.box.x0), Math.max(0.02, z.box.y1 - z.box.y0), Math.max(0.02, z.box.z1 - z.box.z0)],
 })
+
+/** Fluids of the mechanical parts, litres for a car: transmission fluid in the gearbox, brake fluid in the brake system, power steering fluid, battery acid. */
+const PART_FLUIDS: Partial<Record<PartRole, { fluid: string; liters: number }>> = {
+  gearbox: { fluid: 'transmission_fluid', liters: 6 },
+  brakes: { fluid: 'brake_fluid', liters: 0.6 },
+  steering: { fluid: 'power_steering_fluid', liters: 1 },
+  battery: { fluid: 'battery_acid', liters: 3 },
+}
 
 /** Panel material by vehicle kind: aircraft and boats are aluminium, the rest steel. */
 const skinOf = (kind: Kind): MaterialId => (kind === 'plane' || kind === 'heli' || kind === 'boat' ? 'aluminium' : 'steel')
@@ -220,7 +231,8 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
   const spec = c.spec as { fuel?: string; hitch?: boolean }
   const t = kit.t
   const skin = skinOf(kind)
-  const armour = m.armored || m.bullet ? 12 : 1
+  const armoured = options.armour ?? null
+  const armour = armoured ? 12 : 1
   const mass = vehicleMass(c)
   const W = m.width ?? 1.7
   const F = m.front ?? 2
@@ -294,8 +306,8 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     }
     if (role === 'glass') {
       const glass = (z.glass ?? [])[0]
-      const laminated = glass?.userData?.glass?.type === 'laminated' || m.bullet
-      add({ id, role, name: label, material: 'glass', box, mass: 10 * area, hp: laminated ? 4000 : 450, zoneId: id, visual: false, tags: ['glass', ...tags] })
+      const laminated = glass?.userData?.glass?.type === 'laminated' || !!armoured
+      add({ id, role, name: label, material: 'glass', box, mass: 10 * area, hp: armoured ? armoured.glassHp : laminated ? 4000 : 450, zoneId: id, visual: false, tags: ['glass', ...tags] })
       continue
     }
     if (role === 'light') {
@@ -371,8 +383,8 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     if (claimed.has(pane)) continue
     const G = pane.userData.glass
     const bb = paneBox(c, pane, inverse)
-    const laminated = G?.type === 'laminated' || m.bullet
-    add({ id: `pane_${G?.key ?? 'glass'}`, role: 'glass', name: String(G?.label ?? G?.key ?? 'glass'), material: 'glass', box: bb, mass: 10 * areaOf(bb.size), hp: laminated ? 4000 : 450, panes: [pane], visual: false, tags: ['glass'] })
+    const laminated = G?.type === 'laminated' || !!armoured
+    add({ id: `pane_${G?.key ?? 'glass'}`, role: 'glass', name: String(G?.label ?? G?.key ?? 'glass'), material: 'glass', box: bb, mass: 10 * areaOf(bb.size), hp: armoured ? armoured.glassHp : laminated ? 4000 : 450, panes: [pane], visual: false, tags: ['glass'] })
   }
 
   // the hub is a synthetic frame part when the vehicle has no underbody or chassis zone
@@ -719,5 +731,10 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     }
   }
   void has
+  // the fluids the mechanical parts hold in a real car, when the vehicle did not give them their own
+  for (const part of parts) {
+    const fluid = PART_FLUIDS[part.role]
+    if (fluid && !part.contains && !(kind === 'bike' && part.role === 'steering')) part.contains = { ...fluid }
+  }
   return { parts, joints, hub: hubId, hitch }
 }
