@@ -24,6 +24,7 @@ import type { RealizedVoice } from './nodes'
 import { createStartQueue } from './engine-queue'
 import type { StartQueueOptions } from './engine-queue'
 import { realize } from './realize'
+import { createSetPicker, retunePlan } from '../variation'
 
 export type PlayOptions = {
   readonly position?: Vec3
@@ -255,7 +256,18 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return decision.id
   }
 
-  const playWith = (id: string, playOptions: PlayOptions, random: () => number, store: NoiseStore): VoiceHandle | null => {
+  // a set id (`SoundBank.sets`) plays one of its variants, never the last one, at a drawn rate; a recipe id plays itself at rate 1
+  const picker = createSetPicker()
+  const resolve = (id: string, random: () => number, chooser = picker): { readonly id: string; readonly rate: number } => {
+    if (registry.sound(id)) return { id, rate: 1 }
+    const set = registry.set(id)
+    return set ? chooser.pick(set, random) : { id, rate: 1 }
+  }
+
+  const playWith = (asked: string, playOptions: PlayOptions, streamRandom: () => number, store: NoiseStore): VoiceHandle | null => {
+    const seeded = playOptions.seed === undefined ? null : createRng(playOptions.seed)
+    const { id, rate } = resolve(asked, seeded ?? streamRandom)
+    const random = seeded ?? streamRandom
     const recipe = registry.sound(id)
     if (!recipe || busSettings.get(recipe.bus)?.muted) return null
     const distance = playOptions.distance ?? (playOptions.position ? listenerDistance(listener, playOptions.position, options.distance) : 0)
@@ -270,8 +282,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     const voiceId = silent ? undefined : admit(recipe, level, distance)
     if (voiceId === null) return null
     if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
-    const plan = planSound(recipe, inputFor(recipe, playOptions, playOptions.seed === undefined ? random : createRng(playOptions.seed)))
-    return plan ? start(plan, store, voiceId, playOptions.delay) : null
+    const plan = planSound(recipe, inputFor(recipe, playOptions, random))
+    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay) : null
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -283,9 +295,12 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return stream
   }
 
-  const planWith = (id: string, playOptions: PlayOptions, random: () => number): SoundPlan | null => {
+  // pure: a set is drawn with a picker of its own, so planning never moves what `play` picks next
+  const planWith = (asked: string, playOptions: PlayOptions, random: () => number): SoundPlan | null => {
+    const { id, rate } = resolve(asked, random, createSetPicker())
     const recipe = registry.sound(id)
-    return recipe ? planSound(recipe, inputFor(recipe, playOptions, random)) : null
+    const plan = recipe ? planSound(recipe, inputFor(recipe, playOptions, random)) : null
+    return plan ? retunePlan(plan, rate) : null
   }
 
   const loopHost: LoopHost = {
