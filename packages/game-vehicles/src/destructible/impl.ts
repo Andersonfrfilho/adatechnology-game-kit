@@ -1049,12 +1049,14 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return false
     return true
   }
-  /** The part a drawn mesh belongs to: its pane, the door hanging it, else the smallest box of bodywork at the point. */
+  /** The part a drawn mesh belongs to: its pane, the door hanging it, the piece drawn for it, else the smallest box of bodywork at the point. */
   const partOfSurface = (o: any, v: any): PState | null => {
     const pane = paneParts().get(o)
     if (pane) return ps.get(pane) ?? null
     for (let q = o; q && q !== c.vehicle; q = q.parent) {
       if (vis?.plateIdOf(q)) return ps.get(vis.plateIdOf(q)!) ?? null
+      const piece = vis?.extraIdOf(q)
+      if (piece) return ps.get(piece) ?? null
     }
     return locate(v, 0.08, (p) => p.def.role === 'glass')
   }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import * as THREE from 'three'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
 import { makeFleetKit } from './helpers/kit'
 
@@ -71,5 +72,23 @@ describe('a round at the door mirror', () => {
   })
   it('a rifle round tears the mirror off', () => {
     expect(shootMirror(AP_762).torn).toBe(true)
+  })
+})
+
+describe('a shot aimed at a mirror', () => {
+  it('lands on the mirror, not on the body behind it', () => {
+    const kit: any = makeFleetKit('en')
+    const item: any = buildVehicleItem(kit, 'midsize_sedan')
+    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    d.partWorldCenter('roof')
+    item.root.updateMatrixWorld(true)
+    const glasses: THREE.Vector3[] = []
+    item.root.traverse((m: any) => { if (m.userData.mirrorGlass) glasses.push(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3())) })
+    expect(glasses.length).toBeGreaterThan(0)
+    const parts = glasses.map((at) => {
+      const hits = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((dir) => d.surfaceRay({ origin: [at.x - dir[0]! * 3, at.y, at.z - dir[2]! * 3], direction: dir, maxDistance: 3.2 }))
+      return hits.find((h: any) => h && Math.abs(h.distance - 3) < 0.08)?.part
+    })
+    for (const part of parts) expect(part).toMatch(/^mirror_/)
   })
 })

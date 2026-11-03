@@ -1054,10 +1054,11 @@ export class VehicleVisuals implements CreaseWork {
     g.name = `obj_${p.id}`
     g.position.set(cx, cy, cz)
     this.c.vehicle.add(g)
-    this.box(0.05, 0.04, 0.1, mats.dark, 0, -0.04, -s * 0.07, g)
-    const housing = this.box(0.1, 0.12, 0.05, mats.plastic ?? mats.dark, 0, 0, s * 0.02, g)
+    // arm off the door, a housing wide outboard, and the glass on its rear face looking back along the car (the front is +x)
+    this.box(0.05, 0.035, 0.05, mats.dark, 0, -0.04, -s * 0.06, g)
+    const housing = this.box(0.08, 0.11, 0.125, mats.plastic ?? mats.dark, 0, 0, s * 0.0225, g)
     housing.userData.mirrorHousing = true
-    const glass = this.box(0.095, 0.1, 0.006, mats.chrome ?? mats.dark, 0, 0, s * 0.048, g)
+    const glass = this.box(0.006, 0.095, 0.115, mats.chrome ?? mats.dark, -0.043, 0, s * 0.0225, g)
     glass.userData.mirrorGlass = true
     g.userData.rigid = true
     this.extra.set(p.id, [g])
@@ -1121,6 +1122,11 @@ export class VehicleVisuals implements CreaseWork {
     if (carrier) carrier.attach(m)
   }
   /** The door or lid a hinge group stands for. */
+  /** The part a separately drawn piece stands for (a mirror on the door, a battery under the hood), so a shot at it lands on that part. */
+  extraIdOf(o: Obj): string | undefined {
+    for (const [id, objs] of this.extra) if (objs.includes(o)) return id
+    return undefined
+  }
   plateIdOf(o: Obj): string | undefined {
     return o.userData.plateOf
   }
