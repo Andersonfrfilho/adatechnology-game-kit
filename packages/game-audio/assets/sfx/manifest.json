@@ -156,12 +156,12 @@
       }
     },
     {
-      "id": "backpack_open",
+      "id": "backpack_open_shut",
       "category": "itens-portas",
       "layers": {
         "close": [
           {
-            "file": "itens-portas/backpack_open_close_01.ogg",
+            "file": "itens-portas/backpack_open_shut_01.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.41,
@@ -171,7 +171,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/backpack_open_close_02.ogg",
+            "file": "itens-portas/backpack_open_shut_02.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.22,
@@ -181,7 +181,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/backpack_open_close_03.ogg",
+            "file": "itens-portas/backpack_open_shut_03.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.4,
@@ -191,7 +191,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/backpack_open_close_04.ogg",
+            "file": "itens-portas/backpack_open_shut_04.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.38,
@@ -201,7 +201,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/backpack_open_close_05.ogg",
+            "file": "itens-portas/backpack_open_shut_05.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.03,
@@ -211,7 +211,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/backpack_open_close_06.ogg",
+            "file": "itens-portas/backpack_open_shut_06.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.03,
@@ -340,12 +340,12 @@
       }
     },
     {
-      "id": "book_open",
+      "id": "book_open_shut",
       "category": "itens-portas",
       "layers": {
         "close": [
           {
-            "file": "itens-portas/book_open_close_01.ogg",
+            "file": "itens-portas/book_open_shut_01.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.09,
@@ -355,7 +355,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/book_open_close_02.ogg",
+            "file": "itens-portas/book_open_shut_02.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.4,
@@ -365,7 +365,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/book_open_close_03.ogg",
+            "file": "itens-portas/book_open_shut_03.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.46,
@@ -375,7 +375,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/book_open_close_04.ogg",
+            "file": "itens-portas/book_open_shut_04.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.02,
@@ -385,7 +385,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_05.ogg",
+            "file": "itens-portas/book_open_shut_05.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.08,
@@ -395,7 +395,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_06.ogg",
+            "file": "itens-portas/book_open_shut_06.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.02,
@@ -405,7 +405,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_07.ogg",
+            "file": "itens-portas/book_open_shut_07.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.1,
@@ -415,7 +415,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_08.ogg",
+            "file": "itens-portas/book_open_shut_08.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.02,
@@ -425,7 +425,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_09.ogg",
+            "file": "itens-portas/book_open_shut_09.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.14,
@@ -435,7 +435,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_10.ogg",
+            "file": "itens-portas/book_open_shut_10.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -0.98,
@@ -445,7 +445,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/book_open_close_11.ogg",
+            "file": "itens-portas/book_open_shut_11.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1,
@@ -453,24 +453,6 @@
             "source": "https://kenney.nl/assets/rpg-audio",
             "author": "Kenney (kenney.nl)",
             "license": "CC0"
-          }
-        ]
-      }
-    },
-    {
-      "id": "car_door",
-      "category": "veiculos",
-      "layers": {
-        "close": [
-          {
-            "file": "veiculos/car_door_close_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.05,
-            "seconds": 0.902,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
           }
         ]
       }
@@ -486,6 +468,24 @@
             "channels": 1,
             "peak": -1.07,
             "seconds": 0.874,
+            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
+            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
+            "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "car_door_shut",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/car_door_shut_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.902,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
@@ -512,12 +512,12 @@
       }
     },
     {
-      "id": "car_trunk",
+      "id": "car_trunk_shut",
       "category": "veiculos",
       "layers": {
         "close": [
           {
-            "file": "veiculos/car_trunk_close_01.ogg",
+            "file": "veiculos/car_trunk_shut_01.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -0.97,
@@ -1444,12 +1444,12 @@
       }
     },
     {
-      "id": "door_metal_open",
+      "id": "door_metal_open_shut",
       "category": "itens-portas",
       "layers": {
         "close": [
           {
-            "file": "itens-portas/door_metal_open_close_01.ogg",
+            "file": "itens-portas/door_metal_open_shut_01.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.1,
@@ -1459,7 +1459,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/door_metal_open_close_02.ogg",
+            "file": "itens-portas/door_metal_open_shut_02.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.09,
@@ -1469,7 +1469,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/door_metal_open_close_03.ogg",
+            "file": "itens-portas/door_metal_open_shut_03.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -0.95,
@@ -1479,7 +1479,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/door_metal_open_close_04.ogg",
+            "file": "itens-portas/door_metal_open_shut_04.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.07,
@@ -1489,7 +1489,7 @@
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/door_metal_open_close_05.ogg",
+            "file": "itens-portas/door_metal_open_shut_05.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.05,
@@ -1499,7 +1499,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/door_metal_open_close_06.ogg",
+            "file": "itens-portas/door_metal_open_shut_06.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.1,
@@ -1509,7 +1509,7 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/door_metal_open_close_07.ogg",
+            "file": "itens-portas/door_metal_open_shut_07.ogg",
             "sampleRate": 48000,
             "channels": 1,
             "peak": -1.17,
@@ -1570,94 +1570,6 @@
       }
     },
     {
-      "id": "door_wood",
-      "category": "itens-portas",
-      "layers": {
-        "close": [
-          {
-            "file": "itens-portas/door_wood_close_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.2,
-            "seconds": 0.547,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
-          },
-          {
-            "file": "itens-portas/door_wood_close_02.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.01,
-            "seconds": 0.709,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
-          },
-          {
-            "file": "itens-portas/door_wood_close_03.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.25,
-            "seconds": 0.673,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/door_wood_close_04.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.08,
-            "seconds": 0.61,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/door_wood_close_05.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.04,
-            "seconds": 0.714,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/door_wood_close_06.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.07,
-            "seconds": 0.599,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/door_wood_close_07.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.19,
-            "seconds": 0.397,
-            "source": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
-            "author": "rubberduck",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/door_wood_close_08.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.14,
-            "seconds": 0.439,
-            "source": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
-            "author": "rubberduck",
-            "license": "CC0"
-          }
-        ]
-      }
-    },
-    {
       "id": "door_wood_open",
       "category": "itens-portas",
       "layers": {
@@ -1706,29 +1618,89 @@
       }
     },
     {
-      "id": "drawer",
+      "id": "door_wood_shut",
       "category": "itens-portas",
       "layers": {
         "close": [
           {
-            "file": "itens-portas/drawer_close_01.ogg",
+            "file": "itens-portas/door_wood_shut_01.ogg",
             "sampleRate": 48000,
             "channels": 1,
-            "peak": -1.06,
-            "seconds": 1.708,
+            "peak": -1.2,
+            "seconds": 0.547,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
           },
           {
-            "file": "itens-portas/drawer_close_02.ogg",
+            "file": "itens-portas/door_wood_shut_02.ogg",
             "sampleRate": 48000,
             "channels": 1,
-            "peak": -0.98,
-            "seconds": 1.389,
+            "peak": -1.01,
+            "seconds": 0.709,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.25,
+            "seconds": 0.673,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.08,
+            "seconds": 0.61,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.714,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 0.599,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_07.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.397,
+            "source": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/door_wood_shut_08.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.14,
+            "seconds": 0.439,
+            "source": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+            "author": "rubberduck",
+            "license": "CC0"
           }
         ]
       }
@@ -1754,6 +1726,34 @@
             "channels": 1,
             "peak": -1.03,
             "seconds": 1.061,
+            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
+            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
+            "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawer_shut",
+      "category": "itens-portas",
+      "layers": {
+        "close": [
+          {
+            "file": "itens-portas/drawer_shut_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.06,
+            "seconds": 1.708,
+            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
+            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
+            "license": "CC-BY"
+          },
+          {
+            "file": "itens-portas/drawer_shut_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 1.389,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"

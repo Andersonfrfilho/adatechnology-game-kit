@@ -548,8 +548,8 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | veiculos/engine_start_run_stop_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/engine_start_run_stop_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_door_open_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| veiculos/car_door_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| veiculos/car_trunk_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| veiculos/car_door_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| veiculos/car_trunk_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_gear_shift_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_window_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_window_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
@@ -557,14 +557,14 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/door_wood_open_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_wood_open_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_wood_open_04.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_wood_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_wood_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_wood_close_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_wood_close_08.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_wood_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_wood_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_wood_shut_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_wood_shut_08.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_creak_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
@@ -591,21 +591,21 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/door_lock_unlock_10.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_lock_unlock_11.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_knock_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_metal_open_close_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_metal_open_close_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_glass_sliding_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/drawer_open_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/drawer_open_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/drawer_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/drawer_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/drawer_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/drawer_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/item_pickup_generic_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
@@ -630,12 +630,12 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/item_drop_bag_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/item_drop_glass_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/item_drop_paper_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/keys_jingle_01.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_02.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_03.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
@@ -643,17 +643,17 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/keys_jingle_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/book_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_07.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_11.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_07.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_11.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/switch_click_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/switch_click_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/switch_click_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
