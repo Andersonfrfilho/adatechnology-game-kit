@@ -391,7 +391,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     equip,
     unequip: release,
     handle(event, tool) {
-      if (event.type === 'explosion' || event.type === 'player') return
+      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session

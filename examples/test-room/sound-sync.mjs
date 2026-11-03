@@ -57,6 +57,20 @@ await context.addInitScript(() => {
 const page = await context.newPage()
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
+// the floors: strips of the ground profiles across the back of the room (z 3 to 13.6), walked one by one from z = 12.5 toward the shelf;
+// they stop short of the blow spot so a raised floor (the wooden deck) never lifts the player while striking
+const FLOORS = [
+  ['concrete', 'concrete_slab'],
+  ['grass', 'lawn'],
+  ['asphalt', 'road'],
+  ['wood', 'wood_floor'],
+  ['tile', 'tile_floor'],
+  ['dirt', 'dirt'],
+  ['sand', 'sand'],
+]
+
+// the room is loaded fresh for each camera, so the blows of one camera never leave the other a shelf knocked over or a plank to stand on
+const boot = async () => {
 await page.goto(`${pathToFileURL(dist).href}?table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 300000 })
 
@@ -86,6 +100,11 @@ await page.evaluate(() => {
   room.audio.unlock()
   room.audio.warmUp()
 })
+await page.evaluate((floors) => {
+  const room = window.__testRoom
+  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], i) => ({ rect: [-13 + i * 3.6, 3, -13 + i * 3.6 + 3, 13.6], surface: profile })) })
+}, FLOORS)
+}
 
 /** Holds the keys until `done()` (polled in the page) is true or `ms` pass, and answers the wall clock the keys went up. */
 const holdUntil = async (keys, done, ms) => {
@@ -101,37 +120,28 @@ const tool = (id) => page.evaluate((i) => window.__testRoom.setTool(i), id)
 const now = () => page.evaluate(() => performance.now())
 
 const phases = []
+// 0.26 m from the side of the shelf's upright: inside the reach of every tool (the knife's is 0.4 m)
+const AT_SHELF = [-2.62, 1.5, 0]
 // the CI and this container have no GPU: the room runs at a few frames per second there, so each phase waits for the last blow to land before the next one starts
+let camera = null
 const phase = async (id, expect, run, settle = 2000) => {
   const from = await now()
   const keysUp = await run()
   await page.waitForTimeout(settle)
-  phases.push({ id, expect, from, to: await now(), keysUp: typeof keysUp === 'number' ? keysUp : null })
+  const at = await page.evaluate(() => ({ position: window.__testRoom.playerPosition.map((v) => Math.round(v * 100) / 100), camera: window.__testRoom.cameraMode }))
+  phases.push({ id, camera, expect, from, to: await now(), keysUp: typeof keysUp === 'number' ? keysUp : null, at })
 }
 
-// the floors: strips of the ground profiles across the room, walked one by one from the start (z = 6) toward the wall
-const FLOORS = [
-  ['concrete', 'concrete_slab'],
-  ['grass', 'lawn'],
-  ['asphalt', 'road'],
-  ['wood', 'wood_floor'],
-  ['tile', 'tile_floor'],
-  ['dirt', 'dirt'],
-  ['sand', 'sand'],
-]
-await page.evaluate((floors) => {
-  const room = window.__testRoom
-  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], i) => ({ rect: [-13 + i * 3.6, -6, -13 + i * 3.6 + 3, 8], surface: profile })) })
-}, FLOORS)
-
 const camerasTested = []
-for (const camera of ['first', 'third']) {
+const datasets = {}
+for (camera of (process.env.CAMERAS ?? 'first,third').split(',')) {
+  await boot()
   await page.evaluate((c) => window.__testRoom.setCameraMode(c), camera)
   camerasTested.push(camera)
-  for (const [surface] of FLOORS) {
+  for (const [surface] of process.env.SKIP_WALK ? [] : FLOORS) {
     const x = -13 + FLOORS.findIndex(([s]) => s === surface) * 3.6 + 1.5
     for (const gait of ['walk', 'run']) {
-      await look([x, 1.7, 7], [x, 1.7, 0])
+      await look([x, 1.7, 12.5], [x, 1.7, 0])
       // walk until the body has put a foot down five times (the room may run at a few frames per second without a GPU)
       const before = await count('__feet')
       await phase(
@@ -142,17 +152,28 @@ for (const camera of ['first', 'third']) {
       )
     }
   }
-  await look([-12, 1.7, 7], [-12, 1.7, 0])
+  await look([-12, 1.7, 12.5], [-12, 1.7, 0])
   const jumps = await count('__plays', 'jump')
   await phase(`${camera}:jump`, { jump: 'jump', land: 'land_concrete_light' }, () => holdUntil(['Space'], `window.__plays.filter((p) => p.id === 'jump').length > ${jumps}`, 10000), 3000)
   // blows at the bookcase (wood), then into the air
-  const BLOWS = { hand: ['punch_swing', 'punch_hit_object'], kick: ['kick_swing', 'kick_hit_object'], shove: [null, 'shove_two_hands'], knife: ['knife_swing', 'knife_hit_object'], baseball_bat: ['blunt_swing', 'blunt_hit_object'], axe: ['axe_swing', 'axe_hit_object'] }
+  // ten punches in a row at the bookcase: the takes and the limiter
+  await page.evaluate(() => window.__testRoom.resetAll())
+  await tool('hand')
+  await look(AT_SHELF, [-3.5, 1.0, 0])
+  await phase(`${camera}:punch-x10`, { swing: 'punch_swing', hit: 'punch_hit_object', series: 10 }, async () => {
+    for (let i = 0; i < 10; i++) {
+      await page.evaluate(() => window.__testRoom.use())
+      await page.waitForTimeout(900)
+    }
+  })
+  // the kick last: it knocks the shelf over (and the player may end up standing on it)
+  const BLOWS = { hand: ['punch_swing', 'punch_hit_object'], knife: ['knife_swing', 'knife_hit_object'], baseball_bat: ['blunt_swing', 'blunt_hit_object'], axe: ['axe_swing', 'axe_hit_object'], shove: [null, 'shove_two_hands'], kick: ['kick_swing', 'kick_hit_object'] }
   for (const [id, [swing, hit]] of Object.entries(BLOWS)) {
     // the bookcase back where it stood (the axe and the bat move it)
     await page.evaluate(() => window.__testRoom.resetAll())
     await tool(id)
     await page.waitForTimeout(1500)
-    await look([-2.4, 1.5, 0], [-3.5, 1.0, 0])
+    await look(AT_SHELF, [-3.5, 1.0, 0])
     await phase(`${camera}:${id}:wood`, { swing, hit }, async () => {
       for (let i = 0; i < 4; i++) {
         if (id === 'kick') await page.evaluate(() => window.__testRoom.kick())
@@ -160,30 +181,20 @@ for (const camera of ['first', 'third']) {
         await page.waitForTimeout(1500)
       }
     })
-    await look([0, 1.6, 6], [0, 1.6, 14])
+    await look([12.5, 1.6, -2], [12.5, 1.6, -14])
     await phase(`${camera}:${id}:air`, { swing, hit: null }, async () => {
       if (id === 'kick') await page.evaluate(() => window.__testRoom.kick())
       else await page.evaluate(() => window.__testRoom.use())
     })
   }
-  // ten punches in a row at the bookcase: the takes and the limiter
-  await page.evaluate(() => window.__testRoom.resetAll())
-  await tool('hand')
-  await look([-2.4, 1.5, 0], [-3.5, 1.0, 0])
-  await phase(`${camera}:punch-x10`, { swing: 'punch_swing', hit: 'punch_hit_object', series: 10 }, async () => {
-    for (let i = 0; i < 10; i++) {
-      await page.evaluate(() => window.__testRoom.use())
-      await page.waitForTimeout(900)
-    }
-  })
   await look([-1.8, 1.7, 1.8], [-3.5, 0.9, 0])
   await page.screenshot({ path: join(shots, `sound-sync-${camera}.png`) })
+  datasets[camera] = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: window.__soundStarts, feet: window.__feet }))
 }
-
-const data = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: window.__soundStarts, feet: window.__feet }))
 await browser.close()
 
 // ---- scoring --------------------------------------------------------------------------------------------------------------------------------------
+let data = null
 const within = (list, p) => list.filter((e) => e.at >= p.from && e.at <= p.to)
 /** ms from `at` to the moment the first node of the play after it sounds: the wait to the play call, the deferred start, and how far ahead it is scheduled. */
 const soundDelay = (at, id) => {
@@ -201,10 +212,11 @@ const check = (row, ok, label) => {
   if (!ok) failures.push(`${row.phase}: ${label}`)
 }
 for (const p of phases) {
+  data = datasets[p.camera]
   const plays = within(data.plays, p)
   const lines = within(data.lines, p)
   const feet = within(data.feet, p)
-  const row = { phase: p.id, ids: [...new Set(plays.map((x) => x.id))], checks: [], numbers: {} }
+  const row = { phase: p.id, at: p.at, ids: [...new Set(plays.map((x) => x.id))], checks: [], numbers: {} }
   if (p.expect.footstep) {
     // a footstep after the keys went up is the body settling, whatever the gait was
     const steps = plays.filter((x) => x.id.startsWith('footstep_') && (p.keysUp === null || x.at <= p.keysUp))
@@ -241,7 +253,7 @@ for (const p of phases) {
       check(row, hits.length === melees.length && hits.length > 0, `C2 the hit (${p.expect.hit}) on each contact: ${hits.length}/${melees.length}`)
       check(row, hitDelays.every((d) => d !== null && d <= SYNC_MS), `C1 hit ≤ ${SYNC_MS} ms after the contact: ${JSON.stringify(hitDelays)}`)
       if (p.expect.swing) check(row, peaks.length > 0 && peaks.every((d) => d !== null && d >= 0 && d <= 200), `C1 the swing starts 0-200 ms (room time) before the contact: ${JSON.stringify(peaks)}`)
-    } else check(row, !plays.some((x) => /_hit|_stab|_chop|shove_two/.test(x.id)), 'C2 no hit sound into the air')
+    } else check(row, !plays.some((x) => /^(punch|kick|knife|blunt|axe)_(hit|stab|slash|chop)|^shove_two/.test(x.id)), 'C2 no hit sound into the air')
     if (p.expect.series) {
       const takes = takesOf(plays, p.expect.hit)
       check(row, new Set(takes).size >= 4, `C5 ≥ 4 takes in ${takes.length} punches: ${new Set(takes).size}`)

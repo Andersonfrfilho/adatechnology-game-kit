@@ -62,7 +62,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   })
   return {
     handle(event, tool) {
-      if (event.type === 'explosion' || event.type === 'player') return
+      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
       if (event.type === 'tool') {
         if (hasWeaponModel(event.weapon)) box.unequip()
         else model.unequip()
