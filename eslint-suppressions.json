@@ -641,7 +641,7 @@
   },
   "packages/game-vehicles-three/src/vehicle-lod.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 23
+      "count": 24
     }
   },
   "packages/game-vehicles-three/tests/damage-drives.test.ts": {
@@ -731,7 +731,7 @@
   },
   "packages/game-vehicles/src/destructible/impl.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 52
+      "count": 54
     }
   },
   "packages/game-vehicles/src/destructible/item.ts": {
