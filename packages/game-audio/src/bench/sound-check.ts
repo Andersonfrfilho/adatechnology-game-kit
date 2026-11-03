@@ -412,7 +412,12 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
         engine.level('ambience')
         const loop = engine.loop(CALIBRATION_LOOP_ID, { volume: 0.8 })
         const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-        await wait(300)
+        // the seams are measured once the loop sounds: the context may still be resuming and the bus analyser filling (on a busy machine
+        // the first reads come back 0 and read as a dip that is only the start)
+        const started = performance.now()
+        while (engine.level('ambience') < 0.01 && performance.now() - started < 2000) await wait(20)
+        expect(performance.now() - started < 2000, 'the loop starts within 2 s', { ms: Math.round(performance.now() - started) })
+        await wait(200)
         const levels: number[] = []
         // 2.4 s: four seams of 0.6 s takes
         for (let index = 0; index < 60; index++) {
