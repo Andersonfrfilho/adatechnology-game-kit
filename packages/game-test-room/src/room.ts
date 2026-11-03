@@ -813,8 +813,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
     sound: playSound,
+    // a vehicle's doors, hood and lid have their own sounds in the vehicle bank (game-vehicles-three), not those of the house
     leafFoley: (objectId, part, slides) =>
-      leafFoleyOf(entryOf(objectId)?.item?.sounds, part, impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')), slides),
+      specs.get(objectId)?.tags?.includes('vehicle') ? null : leafFoleyOf(entryOf(objectId)?.item?.sounds, part, impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')), slides),
     onEvent: (ev) => {
       const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }
       action(`door_${ev.type}`, t(`act.door_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, part: ev.part, data: { opening: Math.round(ev.opening * 1000) / 1000, ...(ev.by ? { by: ev.by } : {}) } })

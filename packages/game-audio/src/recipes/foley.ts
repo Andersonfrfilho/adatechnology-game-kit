@@ -272,59 +272,6 @@ export const LEAF_FOLEY: readonly SoundRecipe[] = [
     ],
     'a drawer pushed home',
   ),
-  // a car door: the handle, the latch letting go; shutting it is a deep, damped "tum" with the latch, not a hollow sheet of metal (the seals damp it)
-  foley(
-    'car_door_open',
-    [
-      ...click(1500, 0.3),
-      tone({
-        f: vary(260),
-        f2: 170,
-        d: [0.05, 0.07],
-        vol: [0.2, 0.26],
-        delay: [0.03, 0.05],
-      }),
-      noise({
-        type: 'lowpass',
-        f: [380, 440],
-        d: 0.06,
-        vol: 0.12,
-        delay: [0.03, 0.05],
-      }),
-    ],
-    'a car door: handle and latch',
-  ),
-  foley(
-    'car_door_close',
-    [
-      tone({ f: vary(78), f2: 40, d: [0.15, 0.19], vol: [0.75, 0.9] }),
-      noise({
-        type: 'lowpass',
-        f: [330, 400],
-        d: [0.1, 0.14],
-        vol: [0.5, 0.6],
-        wet: 0.15,
-      }),
-      ...click(1800, 0.22, [0.008, 0.02]),
-      tone({ f: [2900, 3300], d: 0.04, vol: 0.012, delay: [0.02, 0.05] }),
-    ],
-    'a car door shut: the damped thump of the door on its seals and the latch',
-  ),
-  foley(
-    'car_trunk_close',
-    [
-      tone({ f: vary(66), f2: 36, d: [0.17, 0.21], vol: [0.75, 0.9] }),
-      noise({
-        type: 'lowpass',
-        f: [300, 360],
-        d: 0.14,
-        vol: [0.5, 0.6],
-        wet: 0.2,
-      }),
-      ...click(1600, 0.24, [0.01, 0.025]),
-    ],
-    'a car boot or bonnet shut',
-  ),
 ]
 
 /** What the hand does with an item: picking it up by what it is made of, throwing it, and the uses (opening, drinking, eating, first aid). */
@@ -668,16 +615,6 @@ export const LEAF_FOLEY_SETS: Readonly<Record<string, LeafFoley>> = {
   drawer: {
     open: 'drawer_open',
     close: 'drawer_close',
-    locked: 'door_locked_rattle',
-  },
-  car_door: {
-    open: 'car_door_open',
-    close: 'car_door_close',
-    locked: 'door_locked_rattle',
-  },
-  car_trunk: {
-    open: 'car_door_open',
-    close: 'car_trunk_close',
     locked: 'door_locked_rattle',
   },
 }

@@ -24,7 +24,7 @@ describe('foley bank', () => {
   })
 
   it('falls off and loses its highs with distance, and is gone far away (C3)', () => {
-    const recipe = registry.sound('car_door_close')!
+    const recipe = registry.sound('door_wood_close')!
     const at = (distance: number) => planSound(recipe, { distance, volume: 1 })
     const level = (distance: number) => at(distance)?.level ?? 0
     expect(level(1)).toBeGreaterThan(level(10))
@@ -33,7 +33,10 @@ describe('foley bank', () => {
     expect(cutoffDivisor(FOLEY_FALLOFF, 50)).toBeGreaterThan(2)
   })
 
-  it('a car door is not the fridge nor the microwave', () => {
-    expect(new Set([LEAF_FOLEY_SETS.car_door.close, LEAF_FOLEY_SETS.fridge.close, LEAF_FOLEY_SETS.microwave.close]).size).toBe(3)
+  it('a wooden door is not the fridge nor the microwave', () => {
+    expect(new Set([LEAF_FOLEY_SETS.wood_door.close, LEAF_FOLEY_SETS.fridge.close, LEAF_FOLEY_SETS.microwave.close]).size).toBe(3)
+  })
+  it('leaves the vehicle ids to the vehicle bank', () => {
+    expect((FOLEY_BANK.sounds ?? []).some((s) => s.id.startsWith('car_'))).toBe(false)
   })
 })

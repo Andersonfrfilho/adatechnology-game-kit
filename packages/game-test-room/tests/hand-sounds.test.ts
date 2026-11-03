@@ -15,8 +15,8 @@ describe('hand sounds', () => {
     expect(pickupSoundOf({ handling: 'food' }, materials.get('aluminium'))).toBe('item_pickup_food')
   })
   it('uses the leaf set the item names, else the material, else a drawer for a slide', () => {
-    expect(leafFoleyOf({ leaves: { '*': 'car_door', hood: 'car_trunk' } }, 'side_front_left', 'impact_metal', false)).toBe(LEAF_FOLEY_SETS.car_door)
-    expect(leafFoleyOf({ leaves: { '*': 'car_door', hood: 'car_trunk' } }, 'hood', 'impact_metal', false)).toBe(LEAF_FOLEY_SETS.car_trunk)
+    expect(leafFoleyOf({ leaves: { '*': 'fridge', freezer: 'drawer' } }, 'door', 'impact_metal', false)).toBe(LEAF_FOLEY_SETS.fridge)
+    expect(leafFoleyOf({ leaves: { '*': 'fridge', freezer: 'drawer' } }, 'freezer', 'impact_metal', false)).toBe(LEAF_FOLEY_SETS.drawer)
     expect(leafFoleyOf(undefined, 'door', 'impact_metal', false)).toBe(LEAF_FOLEY_SETS.metal_door)
     expect(leafFoleyOf(undefined, 'door', 'impact_wood', false)).toBe(LEAF_FOLEY_SETS.wood_door)
     expect(leafFoleyOf(undefined, 'drawer_1', 'impact_wood', true)).toBe(LEAF_FOLEY_SETS.drawer)
