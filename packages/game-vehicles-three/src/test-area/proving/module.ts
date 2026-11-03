@@ -79,6 +79,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   /** The player at the wheel: the room's walking keys are held and the vehicle takes them. */
   let driving: Cockpit | null = null
   let gearbox: 'automatic' | 'manual' = 'automatic'
+  let lastGear: number | null = null
+  let driveClock = 0
   let queue: string[] = []
   /** True while the room has this area open: nothing is built or simulated otherwise, so loading the module costs nothing elsewhere in the room. */
   let open = false
@@ -233,6 +235,13 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       g.fillStyle = { pass: '#5cc98a', fail: '#ef6a5b', pending: '#a7a0f0' }[r.verdict]
       g.fillText(r.verdict === 'pass' ? '✓ ' + text.verdict.pass : r.verdict === 'fail' ? '✗ ' + text.verdict.fail : '…', cols[3]!, y)
       y += 30
+    }
+    // the gearbox live: the gear and the engine speed of the run or of the driver
+    const live = run?.driver.state ?? driving?.driver.state
+    if (live) {
+      g.font = '24px monospace'
+      g.fillStyle = '#f2c230'
+      g.fillText(fillText(text.board.gear, gearName(live.gear), Math.round(live.rpm), Math.round(Math.abs(live.u) * 3.6)), cols[0]!, y + 16)
     }
     board.texture.needsUpdate = true
   }
@@ -567,7 +576,15 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       mirrorKey = key
       refreshMirrors()
     }
-    if (run && Math.floor(run.time * 2) !== Math.floor((run.time - dt * settings.timeScale) * 2)) drawBoard()
+    // each shift of the gearbox goes to the log (the automatic climbs the gears on a run, the driver shifts by hand)
+    const geared = run?.driver.state ?? driving?.driver.state
+    if (geared && geared.gear !== lastGear) {
+      if (lastGear !== null && geared.gear > 0) host.log(fillText(text.log.shift, gearName(lastGear), gearName(geared.gear), Math.round(Math.abs(geared.u) * 3.6)), { from: lastGear, to: geared.gear, kmh: +(Math.abs(geared.u) * 3.6).toFixed(1), rpm: Math.round(geared.rpm) }, 'proving_shift')
+      lastGear = geared.gear
+      drawBoard()
+    } else if (!geared) lastGear = null
+    if ((run && Math.floor(run.time * 2) !== Math.floor((run.time - dt * settings.timeScale) * 2)) || (driving && Math.floor(driveClock * 2) !== Math.floor((driveClock - dt) * 2))) drawBoard()
+    if (driving) driveClock += dt
   }
 
   const speedNow = (): number => Math.abs(run?.driver.state.u ?? driving?.driver.state.u ?? parking?.driver.state.u ?? 0) * 3.6

@@ -11,7 +11,7 @@ export type ProvingText = {
   tests: Record<string, string>
   status: Record<'approved' | 'rejected' | 'pending', string>
   verdict: Record<'pass' | 'fail' | 'pending', string>
-  board: { title: string; test: string; value: string; range: string; verdict: string; notRun: string; running: string }
+  board: { title: string; test: string; value: string; range: string; verdict: string; notRun: string; running: string; gear: string }
   log: { start: string; result: string; signed: string; certified: string; drive: string; leave: string; shift: string }
   cabin: {
     keys: string
@@ -77,8 +77,8 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     status: { approved: 'APROVADO', rejected: 'REPROVADO', pending: 'PENDENTE' },
     verdict: { pass: 'ok', fail: 'falhou', pending: '…' },
-    board: { title: 'Ficha de homologação', test: 'Prova', value: 'Medido', range: 'Faixa', verdict: 'Resultado', notRun: 'não rodada', running: 'rodando' },
-    log: { start: 'Prova {0}: {1}', result: '{0} · {1}: {2} {3} (faixa {4}) → {5}', signed: '{0} · {1}: {2} na sala', certified: '{0}: {1}', drive: 'Dirigindo {0}: I liga o motor, F sai do carro', leave: 'Saiu do volante', shift: 'Câmbio {0}, marcha {1}' },
+    board: { title: 'Ficha de homologação', test: 'Prova', value: 'Medido', range: 'Faixa', verdict: 'Resultado', notRun: 'não rodada', running: 'rodando', gear: 'Marcha {0} · {1} rpm · {2} km/h' },
+    log: { start: 'Prova {0}: {1}', result: '{0} · {1}: {2} {3} (faixa {4}) → {5}', signed: '{0} · {1}: {2} na sala', certified: '{0}: {1}', drive: 'Dirigindo {0}: I liga o motor, F sai do carro', leave: 'Saiu do volante', shift: 'Marcha {0} → {1} a {2} km/h' },
     cabin: {
       keys: 'W ou ↑ acelera · S ou ↓ freia (parado, dá ré) · A/D ou ←/→ vira · Espaço freio de mão · P puxa o freio de mão · I liga e desliga · M câmbio manual/automático · E sobe e Q desce marcha · G tração 4x2/4x4/4x4 automática · L luzes (posição, baixa) · K farol alto · N neblina · U luz interna · vírgula e ponto setas · B pisca-alerta · O limpador · J cinto · H buzina · Y alarme · R rádio · T rádio/fita · F sai do carro',
       on: 'ligado',
@@ -141,8 +141,8 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     status: { approved: 'APPROVED', rejected: 'REJECTED', pending: 'PENDING' },
     verdict: { pass: 'ok', fail: 'failed', pending: '…' },
-    board: { title: 'Certificate', test: 'Test', value: 'Measured', range: 'Range', verdict: 'Result', notRun: 'not run', running: 'running' },
-    log: { start: 'Test {0}: {1}', result: '{0} · {1}: {2} {3} (range {4}) → {5}', signed: '{0} · {1}: {2} in the room', certified: '{0}: {1}', drive: 'Driving {0}: I starts the engine, F gets out', leave: 'Left the wheel', shift: 'Gearbox {0}, gear {1}' },
+    board: { title: 'Certificate', test: 'Test', value: 'Measured', range: 'Range', verdict: 'Result', notRun: 'not run', running: 'running', gear: 'Gear {0} · {1} rpm · {2} km/h' },
+    log: { start: 'Test {0}: {1}', result: '{0} · {1}: {2} {3} (range {4}) → {5}', signed: '{0} · {1}: {2} in the room', certified: '{0}: {1}', drive: 'Driving {0}: I starts the engine, F gets out', leave: 'Left the wheel', shift: 'Gear {0} → {1} at {2} km/h' },
     cabin: {
       keys: 'W or ↑ accelerates · S or ↓ brakes (stopped, reverses) · A/D or ←/→ steer · Space handbrake · P pulls the handbrake · I ignition · M manual/automatic gearbox · E shifts up, Q down · G drive 4x2/4x4/auto 4x4 · L lamps (position, low) · K high beam · N fog · U cabin light · comma and period indicators · B hazard · O wipers · J seat belt · H horn · Y alarm · R radio · T radio/tape · F gets out',
       on: 'on',

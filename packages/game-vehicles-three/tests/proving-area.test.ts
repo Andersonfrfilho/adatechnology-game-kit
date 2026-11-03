@@ -57,6 +57,24 @@ describe('proving ground area', () => {
     room.dispose()
   })
 
+  it('climbs the gears in order on the 0-100 run, logs each shift and shows the gear live on the board', () => {
+    const { room, module, bench } = setUp()
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    bench.set('time_scale', 1)
+    bench.act('run_test')
+    for (let i = 0; i < 900 && module.certificate('compact_hatch')?.results[0]?.verdict === 'pending'; i++) room.update(1 / 30)
+    const shifts = room.log.entries().filter((e) => e.type === 'proving_shift').map((e) => e.data as { from: number; to: number; kmh: number; rpm: number })
+    // the automatic goes up one gear at a time, each at a higher speed, the engine back under its peak after each shift
+    expect(shifts.length).toBeGreaterThanOrEqual(2)
+    shifts.forEach((s, i) => {
+      expect(s.to).toBe(s.from + 1)
+      if (i > 0) expect(s.kmh).toBeGreaterThan(shifts[i - 1]!.kmh)
+    })
+    expect(shifts[0]!.from).toBe(1)
+    room.dispose()
+  })
+
   it('certifies at once and takes the sign-off of a visual check (a refused one rejects the vehicle)', () => {
     const { room, module, bench } = setUp()
     room.openArea(PROVING_AREA_ID)
