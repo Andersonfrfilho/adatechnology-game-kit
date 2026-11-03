@@ -31,6 +31,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -48,6 +52,7 @@
     "@adatechnology/game-floorplan-interactables": "workspace:^",
     "@adatechnology/game-floorplan-structure": "workspace:^",
     "@adatechnology/game-props3d": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-floorplan-residential": "workspace:^"
   },
@@ -62,6 +67,7 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:^",
+    "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-interactables": "workspace:^",
     "@adatechnology/game-interactables-household": "workspace:^",
     "@adatechnology/game-interactables-three": "workspace:^",

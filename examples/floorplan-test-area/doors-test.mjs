@@ -16,7 +16,7 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
-await page.goto(`${pathToFileURL(join(here, 'dist/sala-casas.html')).href}?arena=40&table=0`)
+await page.goto(`${pathToFileURL(join(here, 'dist/sala-casas.html')).href}?arena=40&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__floorplanReport, null, { timeout: 240000 })
 
 const failures = []

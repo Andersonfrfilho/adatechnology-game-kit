@@ -9,7 +9,9 @@
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
-//   ?quality=low|medium|high
+//   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
+//   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
+//                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
 //   ?ui=0               hide the panels
 //   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
@@ -21,6 +23,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -41,9 +44,9 @@ const items = params.get('items')
 // the strip footing with the bond beam on it, drawn by the house renderer with its plaster, baseboard and sidewalk), and the team's table and bookcase.
 const wall = wallPiece(THREE, { w: 10, h: 3 })
 const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
-const shelf = furnitureSpec(THREE, 'bookcase')
+const shelf = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog() })
 // the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
-const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
+const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCatalog(), options: { materials: { plain: 'ceramic' } } })
 // the test table is a long wooden table of the furniture catalogue (the gourmet table, without the dining table's cloth: a shot at the cloth moved it as a loose white sheet
 // over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
@@ -63,14 +66,21 @@ const room = createTestRoom({
   locale,
   catalog: [],
   scenery,
+  // one chain link per update (design-chain-horde §8): a row of gas cylinders and a car go off one step after the other instead of in one frame
+  worldOptions: { chainLinksPerUpdate: 1 },
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
   // the punch combo of the people package is an ability: N (or its button) turns it on, and each punch then follows jab, cross, hook, uppercut
   // ?pushForce=2000: the legs that move the loaded bookcase (242 kg), which the default force of the kit does not
   ...(params.get('pushForce') ? { push: { forceN: Number(params.get('pushForce')) } } : {}),
+  // ?lights=8,2: point and spot slots of the room's light budget
+  ...(params.get('lights') ? { lightSizes: { point: Number(params.get('lights').split(',')[0]), spot: Number(params.get('lights').split(',')[1]) } } : {}),
+  ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   strikeCombo: PUNCH_COMBO,
   strikeComboOn: params.get('combo') === '1',
   quality,
+  // the default page calibrates once the teams' content is in (start() below), so the 3 s measure the room and not the loading
+  graphics: params.get('graphics') === '1' || (params.get('graphics') !== '0' && !navigator.webdriver) ? { calibrate: deferred ? 'manual' : 'idle' } : false,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',
   // with the SDK modules, the ids and the area exist only after the loader ran: __roomStart handles them
@@ -88,7 +98,7 @@ const room = createTestRoom({
 
 // the player's body (the team game's player, @adatechnology/game-characters-three): seen in third person, hidden in first. V toggles.
 // The first person stays the default; pages that load an area (`window.__THREE` is for them) may start in third.
-room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))
+room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE), defaultCharacterClips()))
 if (params.get('cam') === 'third') room.setCameraMode('third')
 // V is the camera; say it once, in the room's language
 room.log.add({ channel: 'action', type: 'hint', text: locale === 'en' ? 'Press V for 1st/3rd person (your body shows in the 3rd).' : 'Aperte V para 1ª/3ª pessoa (seu corpo aparece na 3ª).' })
@@ -131,6 +141,8 @@ async function start() {
     room.spawn('sedan', [-5, 0, 10.5], Math.PI / 2)
     room.look([-4.5, 1.7, 7.6], [-4.5, 1.1, 6])
   }
+  // the graphics calibration of a first run (Gráficos): the room is up and its content in
+  room.graphics?.calibrateIfNeeded()
   const wanted = params.get('scenario')
   if (wanted) {
     const [share, shares] = (params.get('shard') ?? '1/1').split('/').map(Number)

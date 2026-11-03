@@ -32,6 +32,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -44,13 +48,14 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation": "workspace:^",
-    "@adatechnology/game-vegetation-species": "workspace:^",
-    "@adatechnology/game-vehicles-three": "workspace:^"
+    "@adatechnology/game-vegetation-species": "workspace:^"
   },
   "devDependencies": {
+    "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

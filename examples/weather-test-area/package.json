@@ -10,6 +10,7 @@
     "test": "node test.mjs"
   },
   "devDependencies": {
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-weather": "workspace:*",
     "@adatechnology/game-weather-three": "workspace:*",
     "@adatechnology/game-vfx": "workspace:*",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ACCESSORY_TEXT } from '../src/accessory-text'
+import { ACCESSORY_TEXT } from '../src/test-area/accessory-text'
 
 const keysOf = (value: unknown, prefix = ''): string[] =>
   typeof value === 'object' && value !== null

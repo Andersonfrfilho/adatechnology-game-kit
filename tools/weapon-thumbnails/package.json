@@ -13,6 +13,7 @@
     "manifest": "node dist/cli.js manifest"
   },
   "dependencies": {
+    "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*",
     "@adatechnology/game-weapons-three": "workspace:*"
   },
