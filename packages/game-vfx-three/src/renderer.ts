@@ -81,7 +81,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   const chunks = createChunkLayer(THREE, pools.chunks, { rock: rockGeometry, plate: plateGeometry }, colorOfChunk)
   const shocks = createShockLayer(THREE, pools.shocks)
   const sprites = createSpriteLayer(THREE, world.sprites(), options.pointScale ?? 700)
-  const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI)
+  const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI, options.lights)
   const marks = createMarkLayer(THREE, { ground: pools.ground, createCanvas: options.createCanvas, rockGeometry, plateGeometry, ...options.markLimits })
   root.add(puffs.mesh, sparks.mesh, glows.mesh, chunks.rocks, chunks.plates, shocks.group, lights.group, sprites.additive, sprites.normal, marks.group)
   const stopMarks = world.onMarks((event) => marks.handle(event))
@@ -117,7 +117,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     workshopLayers?.dispose()
     if (workshopLayers) root.remove(workshopLayers.group)
     workshopEngine = engine
-    workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1)
+    workshopLayers = createWorkshopLayers(THREE, engine, options.pointScale ?? 700, 1, options.lights)
     root.add(workshopLayers.group)
     applyLayers()
   }
@@ -159,6 +159,8 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       })
     },
     stop: (handle) => world.stop(handle),
+    // a module's closed space (a shut car's cabin): the world's smoke, dust and steam go round it
+    enclose: (id, enclosure) => world.enclose(id, enclosure),
     configure(settings: Readonly<Record<string, ControlValue>>) {
       const band = settings.lod_band
       if (typeof band === 'string' && band in LOD_BANDS) world.forceLod(LOD_BANDS[band] ?? null)
@@ -190,7 +192,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       const meshes = createMeshLayerProbes(THREE)
       for (const mesh of meshes) mesh.frustumCulled = false
       const group = new THREE.Group()
-      group.add(...meshes)
+      group.add(...meshes, ...marks.probes())
       anchors = { meshes, group }
       return { group, dispose: () => {} }
     },

@@ -33,6 +33,8 @@ export interface SpriteKindDef {
   readonly ground: SpriteGround
   readonly flutter?: number
   readonly flicker?: number
+  /** Carried by the air (smoke, dust, steam, ash): a closed space (`VfxWorld.enclose`, a shut car) keeps it out, or in. */
+  readonly carried?: boolean
 }
 
 export const SPRITE_KINDS: Readonly<Record<SpriteKind, SpriteKindDef>> = kindData as unknown as Record<SpriteKind, SpriteKindDef>

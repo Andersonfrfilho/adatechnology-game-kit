@@ -1,4 +1,7 @@
 import type { ActiveEmitter, EmitterKind } from '@adatechnology/game-interactables'
+import { warnOnce } from '@adatechnology/game-contracts'
+import { isRoutedKind, routedParticleRequest } from './routed-particles'
+import type { ParticleEffects, PoolKind } from './routed-particles'
 import type { CanvasFactory, ThreeLib, ThreeNS } from './types'
 
 export interface EffectsOptions {
@@ -25,6 +28,11 @@ export interface EffectsOptions {
   maxStreams?: number
   /** Most gas flame rings drawn at once (all rings share one draw call). Default 16. */
   maxFlames?: number
+  /**
+   * The host's effects world, read at each particle. With one, smoke, steam, fire and sparks go through it and its one budget (`maxParticles` then only caps water);
+   * without one every kind is drawn here with its own cap (deprecated, removed in the next major).
+   */
+  effects?: () => ParticleEffects | undefined
 }
 
 /** What the effects read from a camera. */
@@ -40,7 +48,7 @@ export interface EffectsStats {
   byKind: Record<PoolKind, number>
 }
 
-export type PoolKind = 'smoke' | 'steam' | 'fire' | 'water' | 'spark'
+export type { PoolKind }
 
 export interface Effects {
   /**
@@ -269,6 +277,12 @@ export function createEffects(THREE: ThreeLib, a: EffectsOptions | ThreeNS.Objec
   let clock = 0
 
   const spawn = (p: Pool, x: number, y: number, z: number, vx: number, vy: number, vz: number, life: number, s0: number, s1: number, tint: number, flag = 0, ground = -1e9): void => {
+    const sink = isRoutedKind(p.kind) ? options.effects?.() : undefined
+    if (sink) {
+      sink.play(routedParticleRequest({ kind: p.kind, flag, position: [x, y, z], velocity: [vx, vy, vz], life, startSize: s0, endSize: s1, tint }))
+      return
+    }
+    if (isRoutedKind(p.kind)) warnOnce('game-interactables-three.own-particles', 'game-interactables-three drew its smoke, steam, fire and sparks with pools of its own because the host lent no effects world (options.effects); pass the host effects so the particles share one budget')
     if (p.count >= p.cap) return
     const i = p.count++
     p.pos[i * 3] = x

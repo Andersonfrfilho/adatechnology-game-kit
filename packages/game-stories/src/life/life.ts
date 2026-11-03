@@ -1,7 +1,6 @@
-import type { NamePools } from '@adatechnology/game-characters-people'
-
 import { holds } from '../conditions'
 import type { ConditionContext } from '../conditions'
+import type { NamePools } from '../sheet/ruleset'
 import { setState } from '../story/apply'
 import { fillText, shortName } from '../text'
 import type { Actions, ChronicleEntry, Flags, Person, ResolvedChange, StateId, States } from '../types'

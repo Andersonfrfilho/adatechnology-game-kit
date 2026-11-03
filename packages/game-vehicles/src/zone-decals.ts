@@ -120,6 +120,8 @@ export function installZoneDecals(kit: Kit): void {
   }
   /* ---- surface inside the box: rays from outside in ---- */
   const _zr = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _zr.layers.enableAll()
   /* Every ray of a `zoneDecals` call stays inside one region around the zone (the rays of `zoneSurf` and the strokes of `scratchPath`). Bodywork
      meshes have tens of thousands of triangles and three.js tests all of them per ray, so for those the call raycasts a proxy that holds only the
      triangles whose box meets the region: same triangles that can be hit, same faces and distances, a fraction of the tests. */
@@ -381,6 +383,8 @@ export function installZoneDecals(kit: Kit): void {
   /* scratch that follows the surface: points along the stroke are projected onto the bodywork and the stroke stops where the bodywork ends
      (no straight stick sticking out of the body curve) */
   const _rt = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _rt.layers.enableAll()
   function scratchPath(c: any, s: any, len: any, ang: any, cands: any, B: any) {
     const n = s.n.clone().normalize()
     const t = Math.abs(n.y) < 0.9 ? new V3().crossVectors(new V3(0, 1, 0), n) : new V3().crossVectors(new V3(1, 0, 0), n)

@@ -42,6 +42,29 @@ describe('impact contract', () => {
     expect(checkHit({ type: 'nope' as Hit['type'], point: [0, 0, 0] })[0]).toMatch(/unknown damage type/)
   })
 
+  it('the cost contract: opt-in, passes a cached impl and reports one that rebuilds its state on every read', () => {
+    const cached = panelImpl()
+    const state = cached.state()
+    const spec = cached.describe()
+    expect(checkDestructible({ ...cached, state: () => state, describe: () => spec }, { cost: true })).toEqual({ ok: true, problems: [] })
+    expect(checkDestructible(cached).ok).toBe(true)
+    const rebuilding = checkDestructible(panelImpl(), { cost: true })
+    expect(rebuilding.problems).toContain('state() returns a new object on each read: cache it between changes (cost contract)')
+    expect(rebuilding.problems).toContain('describe() returns a new object on each read: cache it between changes (cost contract)')
+    const slow = { ...cached, state: () => state, describe: () => { const end = performance.now() + 0.01; while (performance.now() < end); return spec } }
+    expect(checkDestructible(slow, { cost: { reads: 200, ceilingMs: 0.1 } }).problems.join()).toMatch(/describe\(\) took/)
+  })
+
+  it('the cost contract flags an impl that keeps allocating while it returns the same object', () => {
+    const cached = panelImpl()
+    const state = cached.state()
+    const spec = cached.describe()
+    const retained: number[][] = []
+    const leaking = { ...cached, state: () => state, describe: () => { retained.push(new Array<number>(4096).fill(1)); return spec } }
+    const result = checkDestructible(leaking, { cost: { reads: 2000, allocationBytes: 1000, ceilingMs: 10_000 } })
+    expect(result.problems.join()).toMatch(/describe\(\) grew the heap by/)
+  })
+
   it('checkDestructible needs no world: it hits the impl and validates the shape of everything', () => {
     expect(checkDestructible(panelImpl())).toEqual({ ok: true, problems: [] })
   })

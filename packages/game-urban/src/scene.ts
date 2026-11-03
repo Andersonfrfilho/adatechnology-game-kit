@@ -1,8 +1,8 @@
 import { boxRadius } from '@adatechnology/game-floorplan'
 
-import { createLightBudget } from './budget'
+import { createLightAllowance } from './budget'
 import type { TerrainGrid } from './terrain/types'
-import type { ItemBox, LightBudget, LightPart, PartStyle, PlacementPart, RandomSource, Silhouette, UrbanPart, UrbanScene } from './types'
+import type { ItemBox, LightAllowance, LightPart, PartStyle, PlacementPart, RandomSource, Silhouette, UrbanPart, UrbanScene } from './types'
 
 const ROOT = -1
 const DEFAULT_CYLINDER_SEGMENTS = 14
@@ -15,7 +15,7 @@ type BoxOptions = { parent?: number; ry?: number; rz?: number; emissive?: boolea
 
 export type UrbanBuilderOptions = {
   /** Lights the scene may spend; omitted means no limit. */
-  budget?: LightBudget
+  budget?: LightAllowance
 }
 
 /**
@@ -27,7 +27,7 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
   const parts: UrbanPart[] = []
   const items: ItemBox[] = []
   const windows: UrbanScene['windows'] = { lit: [], dark: [] }
-  const lights = options.budget ?? createLightBudget(Number.POSITIVE_INFINITY)
+  const lights = options.budget ?? createLightAllowance(Number.POSITIVE_INFINITY)
   const pick = <TEntry>(list: readonly TEntry[]): TEntry => list[Math.floor(random() * list.length)] as TEntry
 
   const group = (x: number, y: number, z: number, ry = 0, parent = ROOT): number => parts.push({ shape: 'group', parent, x, y, z, ry }) - 1

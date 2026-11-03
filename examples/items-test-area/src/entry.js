@@ -3,7 +3,7 @@
 // Bench: category (shows one shelf), wear, age and storage of the food (with power or without), the place, container, state and outbreak day of the finds with a seed and a
 // "roll finds" button (the stacks go on the finds table), the recipe and a "craft" button. Layers: labels, size boxes, highlight of the items that are still simple shapes.
 import { createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
-import { createItemsTestModule } from '@adatechnology/game-items-three'
+import { createItemsTestModule } from '@adatechnology/game-items-three/testing'
 
 export { createItemsTestModule, createGoodsItems }
 

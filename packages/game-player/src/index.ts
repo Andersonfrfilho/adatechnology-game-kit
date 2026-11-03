@@ -5,8 +5,10 @@ export { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, gripSecondsFor, 
 export type { FurniturePush, FurniturePushBlock, FurniturePushInput, FurniturePushPhase, FurniturePushRules, FurniturePushStep, FurniturePushTarget } from './furniture-push'
 export { PLAYER_TEXT, playerTextOf } from './locales'
 export type { PlayerText } from './locales'
-export { createPlayerTestModule } from './bench/module'
-export type { PlayerTestModule, PlayerTestModuleOptions } from './bench/module'
+/** @deprecated import from '@adatechnology/game-player/testing' */
+export { createPlayerTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-player/testing' */
+export type { PlayerTestModule, PlayerTestModuleOptions } from './testing'
 export type * from './types'
 export { DOOR_USE_DEFAULTS, createDoorUse, swingSecondsFor } from './door-use'
 export type { DoorUse, DoorUseBlock, DoorUsePhase, DoorUseRules, DoorUseStep, DoorUseTarget } from './door-use'

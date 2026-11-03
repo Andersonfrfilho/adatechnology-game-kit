@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { crackLines } from '@adatechnology/game-terrain'
 import type { Terrain, TerrainDebrisKind } from '@adatechnology/game-terrain'
 
 type ThreeLib = typeof THREE_NS
@@ -134,6 +135,104 @@ export function createDebrisLayer(THREE: ThreeLib, terrain: Terrain): { mesh: TH
       geometry.dispose()
       material.dispose()
       mesh.removeFromParent()
+    },
+  }
+}
+
+const CRACK_LIFT = 0.004
+/** Quads all the cracks of the terrain can take at once; past it the farthest stars are left out. */
+const MAX_CRACK_QUADS = 8192
+/** A crack shows the material's own colour, much darker: the shadow inside the line. */
+const CRACK_SHADE = 0.22
+/** Under this luminance a surface is dark (asphalt) and its cracks are drawn lighter than it. */
+const DARK_SURFACE = 0.1
+const DUST_LIFT = 2
+const DUST_GREY = 0.12
+
+/**
+ * The cracks of rigid ground (`Terrain.cracks`) as thin ribbons on the surface, wide at the point and thin at the tips, in one draw call. The geometry is rebuilt only when a crack
+ * is added or grows, or the ground under them moves, never per frame.
+ */
+export function createCrackLayer(THREE: ThreeLib, terrain: Terrain): { mesh: THREE_NS.Mesh; sync(): void; dispose(): void } {
+  const positions = new Float32Array(MAX_CRACK_QUADS * 4 * 3)
+  const colours = new Float32Array(MAX_CRACK_QUADS * 4 * 3)
+  const indices = new Uint32Array(MAX_CRACK_QUADS * 6)
+  for (let quad = 0; quad < MAX_CRACK_QUADS; quad++) {
+    const first = quad * 4
+    indices.set([first, first + 2, first + 1, first + 1, first + 2, first + 3], quad * 6)
+  }
+  const geometry = new THREE.BufferGeometry()
+  const position = new THREE.BufferAttribute(positions, 3)
+  const colour = new THREE.BufferAttribute(colours, 3)
+  position.setUsage(THREE.DynamicDrawUsage)
+  colour.setUsage(THREE.DynamicDrawUsage)
+  geometry.setAttribute('position', position)
+  geometry.setAttribute('color', colour)
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  geometry.setDrawRange(0, 0)
+  const material = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'terrain-cracks'
+  mesh.frustumCulled = false
+  mesh.renderOrder = 2
+  let seen = -1
+  let groundMoved = false
+  const stopListening = terrain.onDeform(() => {
+    groundMoved = true
+  })
+  const lift = (x: number, z: number): number => terrain.heightAt(x, z) + CRACK_LIFT
+  return {
+    mesh,
+    sync() {
+      const cracks = terrain.cracks()
+      if (seen === terrain.cracksVersion && !(groundMoved && cracks.length > 0)) return
+      seen = terrain.cracksVersion
+      groundMoved = false
+      let quad = 0
+      // the newest first: when the buffer is full, it is the old hairlines that go unseen
+      for (let n = cracks.length - 1; n >= 0 && quad < MAX_CRACK_QUADS; n--) {
+        const crack = cracks[n]!
+        const tone = terrain.material(crack.material).color
+        // on a dark surface (asphalt) a crack reads by the grey dust of the broken binder at its lips, not by a shadow darker than black
+        const dark = tone[0] * 0.3 + tone[1] * 0.59 + tone[2] * 0.11 < DARK_SURFACE
+        const k = dark ? DUST_LIFT : CRACK_SHADE
+        const r = dark ? Math.min(1, tone[0] * k + DUST_GREY) : tone[0] * k
+        const g = dark ? Math.min(1, tone[1] * k + DUST_GREY) : tone[1] * k
+        const b = dark ? Math.min(1, tone[2] * k + DUST_GREY) : tone[2] * k
+        for (const s of crackLines(crack)) {
+          if (quad >= MAX_CRACK_QUADS) break
+          if (!terrain.contains(s.x0, s.z0) || !terrain.contains(s.x1, s.z1)) continue
+          const length = Math.hypot(s.x1 - s.x0, s.z1 - s.z0)
+          if (length < 1e-5) continue
+          // across the line, half the width each side
+          const ax = -(s.z1 - s.z0) / length
+          const az = (s.x1 - s.x0) / length
+          const corners = [
+            [s.x0 + ax * s.w0 * 0.5, s.z0 + az * s.w0 * 0.5],
+            [s.x0 - ax * s.w0 * 0.5, s.z0 - az * s.w0 * 0.5],
+            [s.x1 + ax * s.w1 * 0.5, s.z1 + az * s.w1 * 0.5],
+            [s.x1 - ax * s.w1 * 0.5, s.z1 - az * s.w1 * 0.5],
+          ] as const
+          corners.forEach(([x, z], corner) => {
+            const at = (quad * 4 + corner) * 3
+            positions[at] = x
+            positions[at + 1] = lift(x, z)
+            positions[at + 2] = z
+            colours[at] = r
+            colours[at + 1] = g
+            colours[at + 2] = b
+          })
+          quad++
+        }
+      }
+      position.needsUpdate = true
+      colour.needsUpdate = true
+      geometry.setDrawRange(0, quad * 6)
+    },
+    dispose() {
+      stopListening()
+      geometry.dispose()
+      material.dispose()
     },
   }
 }

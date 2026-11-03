@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { HostEvent, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
+import { createAudioEngine } from '@adatechnology/game-audio'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { ScenarioContext } from '../src'
 import { makeRoom } from './helpers'
@@ -331,3 +332,91 @@ describe('scenery objects of a module', () => {
   })
 })
 
+
+describe('onFrame phases', () => {
+  it('runs a callback without options where it always ran, and puts the others in the phase and order asked for', async () => {
+    const order: string[] = []
+    const room = makeRoom()
+    room.loadModule({
+      id: 'phases',
+      name: 'Phases',
+      group: 'Phases',
+      items: () => [],
+      attach: (host) => {
+        const offs = [
+          host.onFrame(() => order.push('default')),
+          host.onFrame(() => order.push('present'), { phase: 'present' }),
+          host.onFrame(() => order.push('input'), { phase: 'input' }),
+          host.onFrame(() => order.push('early'), { order: -1 }),
+          host.onFrame(() => order.push('late-last'), { order: 2000 }),
+          host.onFrame(() => order.push('idle'), { phase: 'idle' }),
+        ]
+        return () => offs.forEach((off) => off())
+      },
+    })
+    room.update(1 / 60)
+    expect(order).toEqual(['input', 'early', 'default', 'late-last', 'present', 'idle'])
+    room.pause()
+    order.length = 0
+    room.update(1 / 60)
+    expect(order).toEqual(['input', 'present', 'idle'])
+    room.resume()
+    order.length = 0
+    await room.runScenarios([{ id: 's', name: 's', run: ({ step }: ScenarioContext) => step(1 / 60) }] as never)
+    expect(order).toContain('default')
+  })
+})
+
+describe('host.defer', () => {
+  it('lends the room frame budget to a module queue: drained after update, attached while registered, detached when taken out', () => {
+    const room = makeRoom()
+    let units = 6
+    let attached = 0
+    let detached = 0
+    const queue = {
+      id: 'probe.queue',
+      pending: () => units,
+      run: (_deadline: number, _clock: () => number) => {
+        units--
+        return 1
+      },
+      flush: () => (units = 0),
+      attach: () => attached++,
+      detach: () => detached++,
+    }
+    let stop: (() => void) | undefined
+    room.loadModule({
+      id: 'defers',
+      name: 'Defers',
+      group: 'Defers',
+      items: () => [],
+      attach: (host) => {
+        stop = host.defer?.(queue, { priority: 1, phase: 'present' })
+        return () => stop?.()
+      },
+    })
+    expect(attached).toBe(1)
+    room.update(1 / 60)
+    expect(units).toBeLessThan(6)
+    stop?.()
+    expect(detached).toBe(1)
+    const left = units
+    room.update(1 / 60)
+    expect(units).toBe(left)
+  })
+
+  it('registers the sound engine voice queue with the budget, so the engine stops draining by itself', () => {
+    const audio = createAudioEngine({ deferredStart: {} })
+    const voices = audio.deferredQueue?.()
+    if (!voices) throw new Error('the engine made no voice queue')
+    let attached = 0
+    const attach = voices.attach?.bind(voices)
+    voices.attach = () => {
+      attached++
+      attach?.()
+    }
+    const room = makeRoom({ audio })
+    expect(attached).toBe(1)
+    room.dispose()
+  })
+})
