@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { GunshotSpace } from './audio/gunshot'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
@@ -39,6 +40,10 @@ export interface WeaponFxOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Whether shots are in a room or in the open (the gunshot tail). Default outdoor. */
+  soundSpace?: () => GunshotSpace
+  /** The floor material under a point, for the sound of a case landing there. Default concrete. */
+  surfaceAt?: (x: number, z: number) => string | undefined
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio): the weapon, the cue id and the profile it sounds with. */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
@@ -204,7 +209,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     kick = 1
     const caliber = weapon.action.kind === 'firearm' ? arsenal.calibers.get(weapon.action.caliber) : undefined
     const energy = caliber ? muzzleEnergy(caliber) * (caliber.pellets ?? 1) : FALLBACK_ENERGY
-    audio?.shot(energy, weapon.category, { ...(caliber ? { caliber } : {}), distance: options.soundDistance?.() ?? 0 })
+    audio?.shot(energy, weapon.category, { ...(caliber ? { caliber } : {}), distance: options.soundDistance?.() ?? 0, space: options.soundSpace?.() ?? 'outdoor' })
     if (CYCLES.has(weapon.id)) audio?.cycle()
     if (EJECTS_ON_SHOT.has(weapon.category) && weapon.id !== 'shotgun_double_12') ejectCasing(caliberOf(weapon), weapon.category === 'shotgun', false)
   }
@@ -259,7 +264,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       return targetsOf(THREE, hold, model.getWorldQuaternion(q2), 0)
     },
     handle(event, tool) {
-      if (event.type === 'explosion' || event.type === 'player') return
+      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
       const weapon = arsenal.weapons.get(event.weapon)
       if (event.type === 'tool') equip(event.weapon)
       if (!weapon) return

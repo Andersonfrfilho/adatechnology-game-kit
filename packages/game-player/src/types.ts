@@ -1,4 +1,5 @@
 import type defaults from './data/defaults.json'
+import type { BlowId, BodyFoleyId, SurfaceId } from '@adatechnology/game-contracts'
 
 export type AttributeId = 'strength' | 'vigor' | 'agility' | 'perception' | 'intellect' | 'presence'
 export type Attributes = Readonly<Record<AttributeId, number>>
@@ -38,7 +39,15 @@ export type InfectionRule = {
 export type PlayerNumbers = typeof defaults.numbers
 
 /** What is in the hand for melee (the fist when absent): damage, critical (0..60 turns into a cut), reach in metres, noise radius, mass. */
-export type MeleeItem = { readonly damage: number; readonly crit?: number; readonly reach?: number; readonly noise?: number; readonly kg?: number }
+export type MeleeItem = {
+  readonly damage: number
+  readonly crit?: number
+  readonly reach?: number
+  readonly noise?: number
+  readonly kg?: number
+  /** How it strikes, for its sound (`game-contracts`' `BlowId`). Default: `punch` for the bare fist, `blade` when it cuts (`crit`), else `blunt`. */
+  readonly blow?: BlowId
+}
 
 /** One frame of input. Held keys are booleans; the `pressed` ones are true only on the frame the key went down. */
 export type PlayerInput = {
@@ -58,6 +67,13 @@ export type PlayerInput = {
   readonly pressed?: Readonly<Partial<Record<PlayerAction, boolean>>>
   /** The melee item in hand. */
   readonly melee?: MeleeItem
+  /**
+   * A foot of the body the host draws touched the ground this frame (its walk cycle, `HostEvent` `footfall`). From the first one on, the footsteps (their
+   * noise and their sound) follow the host's feet instead of the player's own stride timer, so the step is heard at the frame the foot is seen down.
+   */
+  readonly footfall?: boolean
+  /** What is under the feet this frame (a surface id or a material id), when the host knows better than `world.surfaceAt`. */
+  readonly surface?: string
 }
 export type PlayerAction = 'crouch' | 'push' | 'knife' | 'vault' | 'throw'
 
@@ -93,6 +109,8 @@ export interface PlayerWorld {
   /** Blocks the player's body at (x, z). Default `solidAt(x, z, blockHeight)` (a roof or a floor plan passes its own). */
   blocked?(x: number, z: number): boolean
   inWater?(x: number, z: number): boolean
+  /** What is under the feet at (x, z): a surface id (`concrete`, `gravel`...) or a material id (`wood_hard`, `turf`). Default `concrete`. */
+  surfaceAt?(x: number, z: number): string | undefined
   /** Something else drives the player this frame (a car seat, a chair, a ladder): skip moving. */
   busy?(dt: number): boolean
   /** Low walls can be vaulted here (the game says no on a roof or an upper floor). Default: only on the ground floor. */
@@ -161,7 +179,19 @@ export type DeathCause = KnownDeathCause | (string & {})
 
 export type PlayerEventMap = {
   noise: { x: number; z: number; radius: number }
-  sound: { sound: PlayerSoundId; volume: number; position: [number, number, number] }
+  /**
+   * `sound` is the team's class (`step` or `flesh`, what the game played); `ids` are the body sounds of `game-contracts` to play together (the swing and the hit of
+   * a blow, a footstep on its surface), which `game-audio`'s `BODY_FOLEY_BANK` answers. `surface` is set for footsteps and landings.
+   */
+  sound: {
+    sound: PlayerSoundId
+    ids: readonly BodyFoleyId[]
+    /** Seconds after now each of `ids` starts (the hit of a blow lands at the swing's loudest point); left out, all now. */
+    at?: readonly number[]
+    volume: number
+    position: [number, number, number]
+    surface?: SurfaceId
+  }
   step: { x: number; z: number; yaw: number }
   message: { id: PlayerMessageId | DeathCause; seconds: number }
   hurt: { amount: number; wound: string }

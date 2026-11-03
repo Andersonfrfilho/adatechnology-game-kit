@@ -7,7 +7,13 @@ import type { AudioEngine } from '@adatechnology/game-audio'
 import type { WeaponEvent } from '@adatechnology/game-weapons'
 
 import { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
-import { BURST_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
+import { BURST_IDS, GUNSHOT_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
+import { computeGunshot, pickTake } from './audio/gunshot'
+import { computeCasingSound } from './audio/casing-sound'
+import { computeFlyby } from './audio/flyby'
+import type { FlybyInput, FlybyVoice } from './audio/flyby'
+import type { CasingInput, CasingSound, CasingVoice } from './audio/casing-sound'
+import type { Gunshot, GunshotInput, GunshotOptions, GunshotSpace, GunshotVoice } from './audio/gunshot'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 import { RELOAD_CUES, reloadCueSteps } from './audio/reload-sounds'
 import type { SoundProfile } from './audio/reload-sounds'
@@ -16,15 +22,41 @@ import type { ShotSound, ShotSoundInput, ShotSoundOptions, SoundClassDef } from 
 
 export { computeShotSound, GAME_SOUND_CLASSES, GAME_DISTANCE_CURVE, DEFAULT_ENERGY_CURVE, CLASS_REFERENCE_ENERGY } from './audio/shot-sound'
 export type { ShotSound, ShotSoundInput, ShotSoundOptions, ShotSoundClass, SoundClassDef, DistanceCurve, EnergyCurve } from './audio/shot-sound'
+export { computeGunshot, gunshotProfileOf, pickTake, energyOfGunshot, GUNSHOT_PROFILES, GUNSHOT_CALIBER_PROFILES, GUNSHOT_TAKES, SPEED_OF_SOUND } from './audio/gunshot'
+export type { Gunshot, GunshotInput, GunshotOptions, GunshotProfile, GunshotProfileId, GunshotFarClass, GunshotSpace, GunshotGroup, GunshotVoice } from './audio/gunshot'
+export { computeFlyby } from './audio/flyby'
+export type { FlybyInput, FlybySound, FlybyVoice } from './audio/flyby'
+export { computeCasingSound, casingSurfaceOf, casingKindOf } from './audio/casing-sound'
+export type { CasingInput, CasingSound, CasingVoice, CasingSurface, CasingKind } from './audio/casing-sound'
 export { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 export type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 export { RELOAD_CUES, RELOAD_CUE_IDS, DEFAULT_SOUND_PROFILE, reloadCueSteps, soundProfileOf } from './audio/reload-sounds'
 export type { ReloadCueId, SoundProfile } from './audio/reload-sounds'
 
 /** What a shot adds to the energy and the category: where the listener is and how the weapon is set. */
-export type ShotExtras = Pick<ShotSoundInput, 'caliber' | 'distance' | 'volume' | 'suppressed' | 'indoors'>
+export type ShotExtras = Pick<ShotSoundInput, 'caliber' | 'distance' | 'volume' | 'suppressed' | 'indoors'> & {
+  /** Where the shot is, for the stereo side (the engine's listener is the other end). Left out, the shot is in front (the player's own weapon). */
+  readonly position?: readonly [number, number, number]
+  /** 0..1, a wall between the shot and the listener (the host's occlusion test): quieter and duller. */
+  readonly occlusion?: number
+  /** Open field or a room; `indoors: true` means `'indoor'`. Default outdoor. */
+  readonly space?: GunshotSpace
+}
+
+/** `gunshot` (default): the layered shot of `computeGunshot`. `game`: the game's single class burst (`computeShotSound`), kept for the golden traces. */
+export type ShotModel = 'gunshot' | 'game'
 
 export interface WeaponAudioOptions extends ShotSoundOptions {
+  /** How a shot is built; default `gunshot`. */
+  readonly shotModel?: ShotModel
+  /** Tunes the layered gunshot (profiles, calibre links, distance law). */
+  readonly gunshot?: GunshotOptions
+  /** Pitch spread of a shot, ± this fraction (default 0.04, C5). */
+  readonly pitchSpread?: number
+  /** Told each gunshot played (profile, take, pitch, space, distance), so a host can log what sounded. */
+  readonly onGunshot?: (shot: Gunshot, input: GunshotInput) => void
+  /** Told each case that lands (floor, case type, sample id). */
+  readonly onCasing?: (sound: CasingSound) => void
   /** Seed of the noise buffer, of the start point in it and of the casing pitch: same seed, same sound. Default 1. */
   readonly seed?: number
   /** Replaces or adds mechanical sounds by id. */
@@ -43,10 +75,12 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
 
 /** Sounds the weapon presentation plays. */
 export interface WeaponAudio {
-  /** A shot: class and distance muffling of the game, loudness and body from the muzzle energy (joules). */
+  /** A shot: the layered gunshot of its calibre (close, action, room or field, far) at its distance, or the game's class burst with `shotModel: 'game'`. */
   shot(energyJ: number, category: string, extras?: ShotExtras): void
-  /** The parameters `shot` would play (pure). */
+  /** The parameters `shot` would play with the `game` model (pure). */
   shotSound(input: ShotSoundInput): ShotSound
+  /** The voices `shot` plays with the `gunshot` model (pure; give `take` and `pitch` to fix them). */
+  gunshot(input: GunshotInput): Gunshot
   /** Dry click of an empty weapon. */
   click(): void
   /** A mechanical sound by id: a reload stage, `dry_fire`, `jam`, `safety_on`... */
@@ -63,8 +97,12 @@ export interface WeaponAudio {
   reloadEnd(category: string): void
   /** The pump or lever cycling after a shot. */
   cycle(): void
-  /** A casing bouncing on the floor. */
+  /** A casing bouncing on the floor (the art scene's single ring; with the `gunshot` model, a pistol case on concrete). */
   clink(): void
+  /** A case hitting the floor: its type (pistol, rifle, shell), the floor material, the speed and which bounce. */
+  casing(input: CasingInput): void
+  /** A bullet passing the listener (shot by someone else): crack when supersonic, whiz when not; `position` is where it passes, for the side. */
+  flyby(input: FlybyInput & { readonly position?: readonly [number, number, number] }): void
   /** A magazine landing on the floor. */
   thud(): void
   /** Master volume, 0 to 1. */
@@ -152,9 +190,42 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   }
 
   const shotSound = (input: ShotSoundInput): ShotSound => computeShotSound(input, options)
+  const gunshot = (input: GunshotInput): Gunshot => computeGunshot(input, options.gunshot)
+  const playCasingVoice = (voice: CasingVoice | FlybyVoice, position?: readonly [number, number, number]): void => {
+    const id = voice.kind === 'tone' ? GUNSHOT_IDS.tone : GUNSHOT_IDS[voice.filter ?? 'lowpass']
+    const params: Record<string, number> = voice.kind === 'tone' ? { frequency: voice.frequency, to: voice.to ?? voice.frequency, gain: voice.gain, seconds: voice.seconds } : { frequency: voice.frequency, q: voice.q ?? 0.7, gain: voice.gain, seconds: voice.seconds }
+    channel.play(id, { params, ...(position ? { position: [position[0], position[1], position[2]] as [number, number, number] } : {}) })
+  }
+  const casing = (input: CasingInput): void => {
+    const sound = computeCasingSound({ ...input, pitch: input.pitch ?? 1 + (channel.random() * 2 - 1) * 0.06 })
+    for (const voice of sound.voices) playCasingVoice(voice)
+    options.onCasing?.(sound)
+  }
+  const lastTake = new Map<string, number>()
+  const pitchSpread = options.pitchSpread ?? 0.04
+  const playGunshotVoice = (voice: GunshotVoice, extras: ShotExtras): void => {
+    const id = voice.kind === 'tone' ? GUNSHOT_IDS.tone : voice.wet ? GUNSHOT_IDS.lowpass_wet : GUNSHOT_IDS[voice.filter ?? 'lowpass']
+    const params: Record<string, number> = voice.kind === 'tone' ? { frequency: voice.frequency, to: voice.to ?? voice.frequency, gain: voice.gain, seconds: voice.seconds } : { frequency: voice.frequency, q: voice.q ?? 0.7, gain: voice.gain, seconds: voice.seconds }
+    channel.play(id, {
+      params,
+      ...(voice.at > 0 ? { delay: voice.at } : {}),
+      ...(extras.position ? { position: [extras.position[0], extras.position[1], extras.position[2]] as [number, number, number] } : {}),
+    })
+  }
 
   return {
     shot(energyJ, category, extras = {}) {
+      if (options.shotModel !== 'game') {
+        const base: GunshotInput = { energyJ, category, ...extras, space: extras.space ?? (extras.indoors ? 'indoor' : 'outdoor') }
+        const profile = computeGunshot(base, options.gunshot).profile
+        const take = pickTake(lastTake.get(profile), channel.random)
+        lastTake.set(profile, take)
+        const pitch = 1 + (channel.random() * 2 - 1) * pitchSpread
+        const shot = computeGunshot({ ...base, take, pitch }, options.gunshot)
+        for (const voice of shot.voices) playGunshotVoice(voice, extras)
+        if (shot.audible) options.onGunshot?.(shot, { ...base, take, pitch })
+        return
+      }
       const sound = shotSound({ ...extras, energyJ, category })
       if (!sound.audible) return
       classBurstAt(0, sound.cutoff, sound.gain, sound.duration)
@@ -162,6 +233,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       tone({ seconds: sound.body.duration, gain: sound.body.gain, frequency: sound.body.frequency, to: sound.body.to })
     },
     shotSound,
+    gunshot,
     click() {
       mechanical('dry_fire')
     },
@@ -187,7 +259,16 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     cycle() {
       mechanical('cycle')
     },
+    casing,
+    flyby(input) {
+      const sound = computeFlyby({ ...input, pitch: input.pitch ?? 1 + (channel.random() * 2 - 1) * 0.05 })
+      for (const voice of sound?.voices ?? []) playCasingVoice(voice, input.position)
+    },
     clink() {
+      if (options.shotModel !== 'game') {
+        casing({})
+        return
+      }
       // the art scene's `casing` (cena L1344): one ring at 4200-5700 Hz sliding to 3800, 0.25-0.45 s after the case leaves
       const f = 4200 + channel.random() * 1500
       const at = 0.25 + channel.random() * 0.2
