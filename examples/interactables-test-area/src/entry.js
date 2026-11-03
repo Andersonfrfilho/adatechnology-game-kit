@@ -125,7 +125,10 @@ function loadSteps(room, options, lang) {
   const custom = (key, load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
-  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels }))
+  // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
+  const sfx = globalThis.__kitSfx
+  const samples = sfx ? { manifest: sfx.manifest, url: (file) => sfx.files[file] ?? file } : undefined
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels, ...(samples ? { samples } : {}) }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot

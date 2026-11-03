@@ -9,7 +9,7 @@ import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from '../audio'
-import type { WeaponAudio } from '../audio'
+import type { WeaponAudio, WeaponSampleOptions } from '../audio'
 import { createWeaponFx } from '../fx'
 import type { WeaponFx } from '../fx'
 import { createLaserRaycast } from '../laser-raycast'
@@ -33,6 +33,8 @@ export interface WeaponsTestModuleOptions {
   arsenal?: Arsenal
   /** Play sounds (default true; silent anyway where there is no AudioContext). */
   sound?: boolean
+  /** The recorded shots and reload steps (game-audio's sfx manifest and where its files are); without it the synthesized sounds play. */
+  samples?: WeaponSampleOptions
   /** Wear of the weapon in the hands, which the gallery models show in their metal: `new` (default), `used`, `worn` or `rusty`. */
   condition?: string
   /** Seed of the scatter of casings and smoke (default 1). */
@@ -100,7 +102,12 @@ interface Text {
   reloadKinds: Record<string, string>
   /** The line of a sound cue of a reload clip and the name of each cue. */
   soundCue: string
+  /** Appended to `soundCue`: the recording played, or the cue sounds inside the next one's recording. */
+  cueRecorded: string
+  cueCarried: string
   gunshotSound: string
+  /** Appended to `gunshotSound` when the recording played: which take near and far. */
+  gunshotRecorded: string
   casingSound: string
   spaces: Record<'indoor' | 'outdoor', string>
   surfaces: Record<'hard' | 'wood' | 'metal' | 'soft', string>
@@ -133,7 +140,10 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Reload of {weapon}: {kind}, clip {clip} ({seconds} s)',
     soundCue: 'Sound: {cue} ({weapon})',
+    cueRecorded: ' · recorded',
+    cueCarried: ' · inside the next recording',
     gunshotSound: 'Shot sound: {profile}, take {take}/4, pitch {pitch}, {space}, {distance} m{far}',
+    gunshotRecorded: ' · recorded take {takes}',
     casingSound: 'Case lands: {case} on {surface}',
     spaces: { indoor: 'indoors', outdoor: 'outdoors' },
     surfaces: { hard: 'concrete', wood: 'wood', metal: 'metal', soft: 'dirt' },
@@ -165,7 +175,10 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Recarga de {weapon}: {kind}, clipe {clip} ({seconds} s)',
     soundCue: 'Som: {cue} ({weapon})',
+    cueRecorded: ' · gravação',
+    cueCarried: ' · dentro da gravação seguinte',
     gunshotSound: 'Som do tiro: {profile}, tomada {take}/4, tom {pitch}, {space}, {distance} m{far}',
+    gunshotRecorded: ' · gravação, tomada {takes}',
     casingSound: 'Cápsula caiu: {case} em {surface}',
     spaces: { indoor: 'ambiente fechado', outdoor: 'ao ar livre' },
     surfaces: { hard: 'concreto', wood: 'madeira', metal: 'metal', soft: 'terra' },
@@ -308,7 +321,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const seedOption = options.seed === undefined ? {} : { seed: options.seed }
   // the module's own audio, made when first needed (it makes no context until the first sound); when the host lends a sound engine, `attach` makes one on that engine instead
   let audio: WeaponAudio | null | undefined
-  const ownAudio = (): WeaponAudio | null => (audio === undefined ? (audio = options.sound === false ? null : createWeaponAudio(undefined, seedOption)) : audio)
+  const ownAudio = (): WeaponAudio | null => (audio === undefined ? (audio = options.sound === false ? null : createWeaponAudio(undefined, { ...seedOption, ...(options.samples ? { samples: options.samples } : {}) })) : audio)
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
@@ -396,19 +409,22 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio = createWeaponAudio(undefined, {
           ...seedOption,
           engine: lentEngine,
-          onGunshot: (shot, input) =>
+          ...(options.samples ? { samples: options.samples } : {}),
+          onGunshot: (shot, input, played) => {
+            const recorded = played.kind === 'sample' && played.layers.length > 0 ? fill(text.gunshotRecorded, { takes: played.layers.map((layer) => `${layer.role} ${layer.take + 1}`).join(', ') }) : ''
             lent.log(
-              fill(text.gunshotSound, { profile: shot.profile, take: String(shot.take + 1), pitch: `${shot.pitch >= 1 ? '+' : ''}${((shot.pitch - 1) * 100).toFixed(1)} %`, space: text.spaces[input.space ?? 'outdoor'], distance: String(Math.round(input.distance ?? 0)), far: shot.closeMix < 1 ? ` (${Math.round((1 - shot.closeMix) * 100)} % far)` : '' }),
-              { profile: shot.profile, take: shot.take, pitch: shot.pitch, space: input.space ?? 'outdoor', distance: input.distance ?? 0, closeMix: shot.closeMix, delay: shot.delay, samples: shot.samples },
+              fill(text.gunshotSound, { profile: shot.profile, take: String(shot.take + 1), pitch: `${shot.pitch >= 1 ? '+' : ''}${((shot.pitch - 1) * 100).toFixed(1)} %`, space: text.spaces[input.space ?? 'outdoor'], distance: String(Math.round(input.distance ?? 0)), far: shot.closeMix < 1 ? ` (${Math.round((1 - shot.closeMix) * 100)} % far)` : '' }) + recorded,
+              { profile: shot.profile, take: shot.take, pitch: shot.pitch, space: input.space ?? 'outdoor', distance: input.distance ?? 0, closeMix: shot.closeMix, delay: shot.delay, samples: shot.samples, played },
               'sound',
-            ),
-          onCasing: (sound) => lent.log(fill(text.casingSound, { case: sound.kind, surface: text.surfaces[sound.surface] }), { case: sound.kind, surface: sound.surface, sample: sound.sample }, 'sound'),
+            )
+          },
+          onCasing: (sound, played) => lent.log(fill(text.casingSound, { case: sound.kind, surface: text.surfaces[sound.surface] }) + (played === 'sample' ? text.cueRecorded : ''), { case: sound.kind, surface: sound.surface, sample: sound.sample, played }, 'sound'),
         })
       }
       let simulatedMs = 0
       const offClock = lent.onFrame((dt) => (simulatedMs += dt * 1000))
       const created = createWeaponFx({
-        onSound: ({ weapon, cue, profile }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }), { weapon, cue, weight: profile.weight, material: profile.material }, 'sound'),
+        onSound: ({ weapon, cue, profile, played }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }) + (played === 'sample' ? text.cueRecorded : played === 'carried' ? text.cueCarried : ''), { weapon, cue, weight: profile.weight, material: profile.material, ...(played ? { played } : {}) }, 'sound'),
         THREE: lent.THREE as typeof THREE_NS,
         scene: lent.scene as THREE_NS.Scene,
         camera: lent.camera as THREE_NS.Camera,
