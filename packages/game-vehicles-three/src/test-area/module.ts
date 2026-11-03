@@ -139,6 +139,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     id: itemKey,
     name: text.items[itemKey] ?? key,
     movable: false,
+    // the doors shut with the damped thump of a car door, the hood and the hatch with the heavier one of a lid (game-audio LEAF_FOLEY_SETS)
+    sounds: { leaves: { '*': 'car_door', hood: 'car_trunk', hatch: 'car_trunk' } },
     // the first build of a vehicle takes most of a second
     slow: true,
     build: (THREE: unknown) => {

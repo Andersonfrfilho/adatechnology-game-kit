@@ -19,6 +19,7 @@ import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, check
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
@@ -799,6 +800,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
     sound: playSound,
+    leafFoley: (objectId, part, slides) =>
+      leafFoleyOf(entryOf(objectId)?.item?.sounds, part, impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')), slides),
     onEvent: (ev) => {
       const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }
       action(`door_${ev.type}`, t(`act.door_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, part: ev.part, data: { opening: Math.round(ev.opening * 1000) / 1000, ...(ev.by ? { by: ev.by } : {}) } })
@@ -2236,6 +2239,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
+    playSound(pickupSoundOf(heldEntry?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
     fire('grab', { held: true, objectId: r.object })
     return true
@@ -2250,6 +2254,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     releaseHeld()
     piece.velocity = [0, 0, 0]
     renderer.impulse(id, [aimD[0] * speed * piece.mass, (aimD[1] * speed + 1.2) * piece.mass, aimD[2] * speed * piece.mass])
+    playSound('item_throw', [piece.root.position.x, piece.root.position.y, piece.root.position.z], Math.min(1, 0.3 + speed * 0.04))
     action('throw', t('act.throw', { name, speed: num(speed, 1) }), { objectId: id, itemId: entryOf(id)?.so.itemId, data: { speedMs: speed, massKg: piece.mass } })
     fire('throw', { objectId: id, speed })
     return true
@@ -2383,6 +2388,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.opened = true
     if (e.containerId) fluids.open(e.containerId)
     seal.open?.(wrapped.get(e.so.root) ?? e.so.root)
+    playSound(openSoundOf(e.item?.sounds, world.materials.get(heaviestMaterial(e.so.objectId) ?? '')), v3(e.so.root.getWorldPosition(tmpV)), 0.7)
     const tool = opener.tool ? (catalogMap.get(opener.tool)?.name ?? (arsenal.weapons.has(opener.tool) ? toolName(opener.tool) : opener.tool)) : undefined
     action('open_seal', tool ? t('act.open_with', { name: e.name, tool }) : t('act.open_by_hand', { name: e.name }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { tool: opener.tool ?? 'hand' } })
     return true
@@ -2436,12 +2442,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (consuming && c.closed) fluids.open(e.containerId)
     useItemPlayer = createItemUse(fluids, e.containerId, def)
     useItemName = def.id
+    useSoundIn = 0
     if (eating) useLiters = c.liters
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     return true
   }
   /** Litres in the container when an eat or drink use began: what it took out is counted as eaten, not leaked. */
   let useLiters: number | null = null
+  /** Seconds until the next sound of the use in progress. */
+  let useSoundIn = 0
 
   const updateItemUse = (dt: number): void => {
     if (!useItemPlayer) return
@@ -2449,6 +2458,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
     const before = c?.liters
     useItemPlayer.update(dt)
+    // a use that lasts repeats its sound (a gulp, a bite chewed) while the container gives something
+    const useSound = e && useLiters !== null ? useSoundOf(e.item?.sounds, useItemName) : undefined
+    if (useSound && e) {
+      useSoundIn -= dt
+      const now = e.containerId ? fluids.container(e.containerId)?.liters : undefined
+      if (useSoundIn <= 0 && before !== undefined && now !== undefined && now < before) {
+        playSound(useSound, v3(e.so.root.getWorldPosition(tmpV)), 0.6)
+        useSoundIn = USE_SOUND_EVERY
+      }
+    }
     const seal = e?.item?.seal
     twisting = null
     if (e && seal?.openUse === useItemName && !e.opened) {
@@ -3397,6 +3416,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
         seats: ti.seats,
+        sounds: ti.sounds,
         thumbnail: ti.thumbnail,
         thumbnailCredit: ti.thumbnailCredit,
       }

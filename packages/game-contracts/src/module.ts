@@ -56,6 +56,21 @@ export interface Thumbnail {
   render?: true | { yaw?: number; pitch?: number; distance?: number; wear?: 0 | 1 | 2 }
 }
 
+/**
+ * What an item sounds like when the hand works it, as names of sound sets the host knows (the kit's are `LEAF_FOLEY_SETS` and `PICKUP_CLASSES` of game-audio).
+ * Everything is optional: without it the host picks by the material of the part.
+ */
+export interface ItemSounds {
+  /** How it sounds picked up: `metal`, `plastic`, `glass`, `paper`, `fabric`, `wood`, `food`. Default: by its heaviest material. */
+  handling?: string
+  /** The sound set of each leaf worked by hand, by part id, `*` for every other leaf: `car_door`, `car_trunk`, `fridge`, `microwave`, `drawer`, `wood_door`, `metal_door`. */
+  leaves?: Readonly<Record<string, string>>
+  /** The sound id of opening its seal (`can_open`, `bottle_open`). Default: a metal seal is a can, any other a screw cap. */
+  open?: string
+  /** The sound id of each use while it is held (`drink`: `drink_gulp`, `eat`: `eat_chew`), played over and over while the use lasts. */
+  uses?: Readonly<Record<string, string>>
+}
+
 /** One thing a module can put in the test room (or any viewer): a toy car, a chair, a pistol on a table. */
 export interface TestableItem {
   /** snake_case id, unique inside the module. */
@@ -84,6 +99,8 @@ export interface TestableItem {
   pushable?: boolean
   /** Where a body sits or lies on it: the host can seat the player there. */
   seats?: readonly ItemSeat[]
+  /** What it sounds like in the hand (picked up, opened, used) and the sound set of its doors and lids. */
+  sounds?: ItemSounds
   /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
   slow?: boolean | string
   /**

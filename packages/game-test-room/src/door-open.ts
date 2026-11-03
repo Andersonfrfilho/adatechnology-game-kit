@@ -8,6 +8,7 @@ import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { AnimationClipSpec, HandTargets, HostReach } from '@adatechnology/game-contracts'
 import { createDoorUse, DOOR_USE_DEFAULTS } from '@adatechnology/game-player'
 import type { DoorUsePhase, DoorUseRules } from '@adatechnology/game-player'
+import type { LeafFoley } from '@adatechnology/game-audio'
 import { PLAYER_RADIUS } from './player'
 import type { Player } from './player'
 
@@ -62,8 +63,18 @@ export type RoomDoorOptions = {
   /** The sound class of what the leaf is made of (`impact_wood`, `impact_metal`...). */
   impactKey(objectId: string, part: string): string
   sound(key: string, point: Vec3, volume: number): void
+  /**
+   * The sound set of a leaf (a car door, a fridge, a wooden door: `LEAF_FOLEY_SETS` of game-audio), from its item or its material; `null` keeps the
+   * material keys of the destruction renderer (`leaf_latch`, `leaf_creak_*`, `leaf_shut_*`).
+   */
+  leafFoley?(objectId: string, part: string, slides: boolean): LeafFoley | null
   onEvent(event: RoomDoorEvent): void
 }
+
+/** At or above this volume (a heavy leaf, see `shutVolume`) a leaf with a `slam` sound slams instead of closing gently. */
+export const LEAF_SLAM_VOLUME = 0.85
+/** The volume a leaf meets its frame with: heavier leaves are louder. */
+export const shutVolume = (massKg: number): number => Math.min(1, 0.3 + massKg * 0.03)
 
 export type RoomDoorEventType = 'reach' | 'opened' | 'closed' | 'blocked' | 'locked' | 'stepped_back'
 
@@ -406,7 +417,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     using = { objectId, leaf, obj, grip, pull, phase: control.phase, progress: 0, walked: 0, there: goal === null }
     const at = obj.localToWorld(grip.clone())
     if (goal === null) {
-      options.sound('leaf_rattle', [at.x, at.y, at.z], 0.6)
+      options.sound(options.leafFoley?.(objectId, leaf.part, slides(leaf.clip, leaf.part))?.locked ?? 'leaf_rattle', [at.x, at.y, at.z], 0.6)
       event('locked', using)
     } else event('reach', using)
     return true
@@ -493,10 +504,15 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       const at = u.obj.localToWorld(tmp.copy(u.grip))
       const point: Vec3 = [at.x, at.y, at.z]
       const slide = slides(u.leaf.clip, u.leaf.part)
+      const foley = options.leafFoley?.(u.objectId, u.leaf.part, slides(u.leaf.clip, u.leaf.part)) ?? null
       const shut = options.impactKey(u.objectId, u.leaf.part).replace('impact_', 'leaf_shut_')
       // the latch gives as the leaf leaves the frame, the hinge sounds while it turns, the leaf meets the frame closing
       if (wasPhase === 'reach' && s.phase !== 'reach') {
-        if (slide) options.sound('leaf_slide', point, 0.5)
+        if (foley) {
+          // a closed leaf lets go of its latch or seal; one already ajar only turns
+          if (was < 0.02) options.sound(foley.open, point, 0.5)
+          if (foley.turn) options.sound(foley.turn, point, 0.35)
+        } else if (slide) options.sound('leaf_slide', point, 0.5)
         else {
           if (was < 0.02) options.sound('leaf_latch', point, 0.5)
           options.sound(/metal|glass/.test(shut) ? 'leaf_creak_metal' : 'leaf_creak_wood', point, 0.35)
@@ -504,7 +520,9 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       }
       if (s.arrived) {
         if (s.opening <= 0) {
-          options.sound(slide ? 'leaf_slide' : shut, point, Math.min(1, 0.3 + massOf(u.objectId, u.leaf.part) * 0.03))
+          const volume = shutVolume(massOf(u.objectId, u.leaf.part))
+          if (foley) options.sound(foley.slam && volume >= LEAF_SLAM_VOLUME ? foley.slam : foley.close, point, volume)
+          else options.sound(slide ? 'leaf_slide' : shut, point, volume)
           event('closed', u)
         } else event('opened', u)
       }

@@ -28,7 +28,7 @@ import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -88,6 +88,8 @@ export interface TestRoomItem {
   animations?: AnimationClipSpec[]
   /** Where the player can sit or lie on it (see `TestRoom.sit`). */
   seats?: readonly ItemSeat[]
+  /** What it sounds like in the hand and the sound set of its doors and lids (`TestableItem.sounds`). */
+  sounds?: ItemSounds
   /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
   thumbnail?: string
   /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector. */
