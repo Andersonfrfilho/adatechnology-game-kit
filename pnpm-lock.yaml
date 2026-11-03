@@ -380,6 +380,9 @@ importers:
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-animals':
         specifier: workspace:^

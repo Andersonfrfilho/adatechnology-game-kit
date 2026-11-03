@@ -117,3 +117,24 @@ export { KIT_ORIGIN_KEY, kitOriginOf, markKitOrigin, unmarkedDrawings } from './
 export type { KitOrigin, UnmarkedDrawing } from './origin'
 export { footprintBlocker } from './footprint'
 export type { Footprint, FootprintObject } from './footprint'
+export {
+  BLOW_IDS,
+  BODY_FOLEY_IDS,
+  BODY_SOUND_IDS,
+  DEFAULT_SURFACE,
+  FOOTSTEP_SOUND_IDS,
+  GAIT_IDS,
+  HEAVY_LANDING_SPEED,
+  LANDING_IDS,
+  LAND_SOUND_IDS,
+  MATERIAL_SURFACES,
+  SURFACE_IDS,
+  SWING_LEAD_SECONDS,
+  footstepSoundId,
+  hitSoundId,
+  isSurfaceId,
+  landSoundId,
+  surfaceOfMaterial,
+  swingSoundId,
+} from './foley'
+export type { BlowId, BlowTarget, BodyFoleyId, BodySoundId, FootstepSoundId, GaitId, LandSoundId, LandingId, SurfaceId } from './foley'
