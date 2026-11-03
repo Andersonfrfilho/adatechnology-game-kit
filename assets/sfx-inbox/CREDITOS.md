@@ -1,0 +1,65 @@
+# Sound credits (sfx-inbox)
+
+Format: `file | source page | author | license | original title`. Every file is a Freesound HQ preview (OGG) of a recording published as CC0 1.0; credit is optional under CC0 but kept for traceability.
+
+- explosoes-fogo/fire_loop_small_01.ogg | https://freesound.org/people/HECKFRICKER/sounds/729395/ | HECKFRICKER | CC0 1.0 (Creative Commons 0) | Campfire 01
+- explosoes-fogo/fire_loop_small_02.ogg | https://freesound.org/people/kyles/sounds/637523/ | kyles | CC0 1.0 (Creative Commons 0) | fire small campfire crackling short +air tone.flac
+- explosoes-fogo/fire_loop_small_03.ogg | https://freesound.org/people/Defaultv/sounds/536935/ | Defaultv | CC0 1.0 (Creative Commons 0) | Campfire.wav
+- explosoes-fogo/fire_loop_small_04.ogg | https://freesound.org/people/SKrafft/sounds/681366/ | SKrafft | CC0 1.0 (Creative Commons 0) | Campfire (Position 1)
+- explosoes-fogo/fire_loop_small_05.ogg | https://freesound.org/people/FunWithSound/sounds/588401/ | FunWithSound | CC0 1.0 (Creative Commons 0) | Campfire Close Crackling Sticks.mp3
+- explosoes-fogo/fire_loop_large_01.ogg | https://freesound.org/people/kyles/sounds/454019/ | kyles | CC0 1.0 (Creative Commons 0) | fire large rumbling in fireplace nearby center more roomy good detail warm with loud snaps.flac
+- explosoes-fogo/fire_loop_large_02.ogg | https://freesound.org/people/theoneandtruelybitch/sounds/698209/ | theoneandtruelybitch | CC0 1.0 (Creative Commons 0) | Fire Large Roar And Hiss With Crackles.mp3
+- explosoes-fogo/fire_loop_large_03.ogg | https://freesound.org/people/craigsmith/sounds/483323/ | craigsmith | CC0 1.0 (Creative Commons 0) | R30-09-Fires Burns Wood and Metal Crackling.wav
+- explosoes-fogo/fire_loop_large_04.ogg | https://freesound.org/people/jamesdrake89/sounds/636178/ | jamesdrake89 | CC0 1.0 (Creative Commons 0) | Fire - Crackling, Spitting, Roaring
+- explosoes-fogo/fire_loop_large_05.ogg | https://freesound.org/people/snds_good/sounds/554855/ | snds_good | CC0 1.0 (Creative Commons 0) | Wood burning stove fire
+- explosoes-fogo/fire_crackle_01.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 1.0 (Creative Commons 0) | Fire Crackling
+- explosoes-fogo/fire_crackle_02.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 1.0 (Creative Commons 0) | Crackle (fire).wav
+- explosoes-fogo/fire_crackle_03.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 1.0 (Creative Commons 0) | Pinewood fire pops
+- explosoes-fogo/fire_crackle_04.ogg | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 1.0 (Creative Commons 0) | fire ambience, flames, crackles, pops, burning
+- explosoes-fogo/fire_ignite_01.ogg | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 1.0 (Creative Commons 0) | Bonfire Being Lit
+- explosoes-fogo/fire_ignite_02.ogg | https://freesound.org/people/hnhnh/sounds/244926/ | hnhnh | CC0 1.0 (Creative Commons 0) | fire-whoosh.wav
+- explosoes-fogo/fire_ignite_03.ogg | https://freesound.org/people/GrimGrum/sounds/412558/ | GrimGrum | CC0 1.0 (Creative Commons 0) | Combust.wav
+- explosoes-fogo/fire_ignite_04.ogg | https://freesound.org/people/RedVulpus/sounds/457209/ | RedVulpus | CC0 1.0 (Creative Commons 0) | Fire-Bottle_AUDIO.mp3
+- explosoes-fogo/molotov_break_ignite_01.ogg | https://freesound.org/people/craigsmith/sounds/483288/ | craigsmith | CC0 1.0 (Creative Commons 0) | R29-26-Molotov Cocktails through Windows and Explode.wav
+- explosoes-fogo/molotov_break_ignite_02.ogg | https://freesound.org/people/craigsmith/sounds/483322/ | craigsmith | CC0 1.0 (Creative Commons 0) | R28-08-Torch or Molotov Cocktail.wav
+- explosoes-fogo/molotov_break_ignite_03.ogg | https://freesound.org/people/craigsmith/sounds/675768/ | craigsmith | CC0 1.0 (Creative Commons 0) | S18-08 Fire bomb; lights and hisses; fuse.wav
+- explosoes-fogo/molotov_break_ignite_04.ogg | https://freesound.org/people/dasebr/sounds/212698/ | dasebr | CC0 1.0 (Creative Commons 0) | Breaking a glass bottle
+- explosoes-fogo/molotov_break_ignite_05.ogg | https://freesound.org/people/IENBA/sounds/607910/ | IENBA | CC0 1.0 (Creative Commons 0) | Glass Bottle Breaking
+- explosoes-fogo/explosion_grenade_01.ogg | https://freesound.org/people/craigsmith/sounds/674893/ | craigsmith | CC0 1.0 (Creative Commons 0) | S16-24 Hand grenade; 3 explosions.wav
+- explosoes-fogo/explosion_grenade_02.ogg | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 1.0 (Creative Commons 0) | G33-03-Grenades Exploding.wav
+- explosoes-fogo/explosion_grenade_03.ogg | https://freesound.org/people/modusmogulus/sounds/784163/ | modusmogulus | CC0 1.0 (Creative Commons 0) | Real explosion recording (new year's eve, no effects)
+- explosoes-fogo/explosion_grenade_04.ogg | https://freesound.org/people/felix.blume/sounds/251401/ | felix.blume | CC0 1.0 (Creative Commons 0) | Dynamite explosion in the mountain
+- explosoes-fogo/explosion_big_01.ogg | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 1.0 (Creative Commons 0) | S16-23 Violent explosion and debris; 2 takes.wav
+- explosoes-fogo/explosion_big_02.ogg | https://freesound.org/people/craigsmith/sounds/486018/ | craigsmith | CC0 1.0 (Creative Commons 0) | R12-02-Large Explosions.wav
+- explosoes-fogo/explosion_big_03.ogg | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 1.0 (Creative Commons 0) | Big dynamite explosion in an open mine (Chile)
+- explosoes-fogo/explosion_big_04.ogg | https://freesound.org/people/Evan%20Cruder/sounds/160798/ | Evan Cruder | CC0 1.0 (Creative Commons 0) | 120527 09 Dynamite 4.WAV
+- explosoes-fogo/explosion_big_05.ogg | https://freesound.org/people/craigsmith/sounds/483295/ | craigsmith | CC0 1.0 (Creative Commons 0) | R30-07-Big Explosions Some Debris.wav
+- explosoes-fogo/explosion_far_01.ogg | https://freesound.org/people/craigsmith/sounds/438693/ | craigsmith | CC0 1.0 (Creative Commons 0) | G43-14-25 Distant Explosions.wav
+- explosoes-fogo/explosion_far_02.ogg | https://freesound.org/people/craigsmith/sounds/438538/ | craigsmith | CC0 1.0 (Creative Commons 0) | G33-32-Distant Bomb Explosion.wav
+- explosoes-fogo/explosion_far_03.ogg | https://freesound.org/people/Kostrava/sounds/324277/ | Kostrava | CC0 1.0 (Creative Commons 0) | distant explosion
+- explosoes-fogo/explosion_far_04.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 1.0 (Creative Commons 0) | distant explosions
+- explosoes-fogo/explosion_far_05.ogg | https://freesound.org/people/craigsmith/sounds/479927/ | craigsmith | CC0 1.0 (Creative Commons 0) | R24-20-Bombs Exploding.wav
+- explosoes-fogo/debris_rain_01.ogg | https://freesound.org/people/craigsmith/sounds/438528/ | craigsmith | CC0 1.0 (Creative Commons 0) | G33-22-Falling Debris and Explosion.wav
+- explosoes-fogo/debris_rain_02.ogg | https://freesound.org/people/Nox_Sound/sounds/550342/ | Nox_Sound | CC0 1.0 (Creative Commons 0) | Foley_Stones_Falls_Debris_Stereo_DR05.wav
+- explosoes-fogo/debris_rain_03.ogg | https://freesound.org/people/LampEight/sounds/400643/ | LampEight | CC0 1.0 (Creative Commons 0) | Wood panel board debris clatter falling constant
+- explosoes-fogo/debris_rain_04.ogg | https://freesound.org/people/Sheyvan/sounds/569746/ | Sheyvan | CC0 1.0 (Creative Commons 0) | Gravel Stone Dirt Debris Falling Small 1 13
+- explosoes-fogo/fire_wood_crackle_01.ogg | https://freesound.org/people/mcmikai/sounds/532191/ | mcmikai | CC0 1.0 (Creative Commons 0) | Fire in the stove
+- explosoes-fogo/fire_wood_crackle_02.ogg | https://freesound.org/people/Vrymaa/sounds/770108/ | Vrymaa | CC0 1.0 (Creative Commons 0) | Fire - Chimney / Stove
+- explosoes-fogo/fire_plastic_melt_01.ogg | https://freesound.org/people/jc144940/sounds/178731/ | jc144940 | CC0 1.0 (Creative Commons 0) | Plastic Bag Burning- Zilch Sounds 2.aif
+- explosoes-fogo/fire_plastic_melt_02.ogg | https://freesound.org/people/jc144940/sounds/178733/ | jc144940 | CC0 1.0 (Creative Commons 0) | Plastic Bag Burning- Zilch Sounds 4.aif
+- explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 1.0 (Creative Commons 0) | J7_fire extinguisher.mp3
+- explosoes-fogo/fire_extinguish_02.ogg | https://freesound.org/people/Sassaby/sounds/827829/ | Sassaby | CC0 1.0 (Creative Commons 0) | Extinguishing fire at night camping
+- explosoes-fogo/fire_extinguish_03.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 1.0 (Creative Commons 0) | Fire Extinguisher
+- explosoes-fogo/gas_leak_hiss_01.ogg | https://freesound.org/people/davidou/sounds/88461/ | davidou | CC0 1.0 (Creative Commons 0) | FuiteDeGaz.wav
+- explosoes-fogo/gas_leak_hiss_02.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 1.0 (Creative Commons 0) | FOL-gas-leak-01.wav
+- explosoes-fogo/explosion_car_01.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 1.0 (Creative Commons 0) | Car fire burning tires explosion horn
+- explosoes-fogo/explosion_car_02.ogg | https://freesound.org/people/qubodup/sounds/843247/ | qubodup | CC0 1.0 (Creative Commons 0) | Explosion 1 (Burning Car rec by Ñado)
+- explosoes-fogo/explosion_car_03.ogg | https://freesound.org/people/qubodup/sounds/843248/ | qubodup | CC0 1.0 (Creative Commons 0) | Explosion 2 (Burning Car rec by Ñado)
+- explosoes-fogo/explosion_indoor_tail_01.ogg | https://freesound.org/people/SamsterBirdies/sounds/591999/ | SamsterBirdies | CC0 1.0 (Creative Commons 0) | Huge big explosion
+- explosoes-fogo/structure_collapse_01.ogg | https://freesound.org/people/craigsmith/sounds/487142/ | craigsmith | CC0 1.0 (Creative Commons 0) | R29-04-Crashing Collapse of Wood Building.wav
+- explosoes-fogo/structure_collapse_02.ogg | https://freesound.org/people/craigsmith/sounds/675967/ | craigsmith | CC0 1.0 (Creative Commons 0) | S10-19 Falling wooden beam; big interior crash; house collapses; long.wav
+- explosoes-fogo/structure_collapse_03.ogg | https://freesound.org/people/craigsmith/sounds/845932/ | craigsmith | CC0 1.0 (Creative Commons 0) | Building Collapse
+- explosoes-fogo/flashbang_01.ogg | https://freesound.org/people/modusmogulus/sounds/737326/ | modusmogulus | CC0 1.0 (Creative Commons 0) | Flashbang
+- explosoes-fogo/flashbang_02.ogg | https://freesound.org/people/modusmogulus/sounds/752628/ | modusmogulus | CC0 1.0 (Creative Commons 0) | Flashbang Open Field High Quality
+- explosoes-fogo/tinnitus_ring_01.ogg | https://freesound.org/people/dbdarby/sounds/365956/ | dbdarby | CC0 1.0 (Creative Commons 0) | Ear Ringing (After explosion)
+- explosoes-fogo/tinnitus_ring_02.ogg | https://freesound.org/people/deleted_user_9482149/sounds/456698/ | deleted_user_9482149 | CC0 1.0 (Creative Commons 0) | Ear Ringing Long (Extended Falloff)
