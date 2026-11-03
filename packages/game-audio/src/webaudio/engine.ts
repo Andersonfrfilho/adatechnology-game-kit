@@ -25,6 +25,12 @@ import { createStartQueue } from './engine-queue'
 import type { StartQueueOptions } from './engine-queue'
 import { realize } from './realize'
 import { createSetPicker, retunePlan } from '../variation'
+import { planSample, sampleUrls } from '../sample'
+import type { SampleEnvironment, SampleMemory, SamplePlan, SampleSound } from '../sample'
+import { createSampleStore, fetchLoader } from './sample-store'
+import type { SampleLoadReport, SampleLoader, SampleStatus } from './sample-store'
+import { realizeSample, sampleLength } from './realize-sample'
+import type { RealizedSampleVoice } from './realize-sample'
 
 export type PlayOptions = {
   readonly position?: Vec3
@@ -42,9 +48,51 @@ export type PlayOptions = {
   readonly urgent?: boolean
   /** A named stream of the engine (`streamFor(seed, name)`), so one subject never shifts another's sounds. */
   readonly channel?: string
+  /** The tail a sample sound plays (default the engine's, see `setEnvironment`). */
+  readonly environment?: SampleEnvironment
+  /** 0 (light) to 1 (heavy): the tier of takes a sample sound plays (criterion C7). */
+  readonly intensity?: number
 }
 
-export type VoiceHandle = { readonly id: number; readonly plan: SoundPlan; stop(): void }
+/** A playing voice: a recipe (`kind: 'recipe'`, the plan of the synthesized sound) or files (`kind: 'sample'`). */
+export type VoiceHandle =
+  | { readonly id: number; readonly kind: 'recipe'; readonly plan: SoundPlan; stop(): void }
+  | { readonly id: number; readonly kind: 'sample'; readonly plan: SamplePlan; stop(): void }
+
+/**
+ * A voice that started, for measuring (criterion C1: the event against the start of the sound). Times are the context clock, in seconds:
+ * `requestedAt` when `play` was called, `startAt` when the first sample of the sound leaves the engine; `outputLatency` is what the device adds
+ * after that (`baseLatency + outputLatency` of the context, 0 when unknown).
+ */
+export type VoiceStartEvent = {
+  readonly id: string
+  readonly kind: 'recipe' | 'sample'
+  /** The sample sound this recipe stood in for while its files were not loaded. */
+  readonly fallbackOf?: string
+  readonly requestedAt: number
+  readonly startAt: number
+  readonly outputLatency: number
+  readonly level: number
+  readonly distance: number
+  readonly pan?: number
+  /** The files a sample voice plays, by layer. */
+  readonly layers?: readonly { readonly role: string; readonly url: string; readonly take: number; readonly rate: number }[]
+  /** The tier of takes a sample voice played (criterion C7). */
+  readonly tier?: string
+}
+
+export type SampleOptions = {
+  /** Gets the bytes of a file (default `fetch`, relative to `baseUrl`). */
+  readonly loader?: SampleLoader
+  readonly baseUrl?: string
+  /** Load a sound's files the first time it is played (default true); the fallback plays meanwhile. */
+  readonly autoLoad?: boolean
+  /**
+   * The peak limiter every sample voice of a bus goes through before the bus (criteria C6 and C9: no sound and no burst goes over −1 dBFS): linear
+   * up to `knee` (default 0.5, −6 dBFS), then bent smoothly to `ceiling` (default 0.891, −1 dBFS), with no delay. `false` leaves it out.
+   */
+  readonly limiter?: false | { readonly knee?: number; readonly ceiling?: number }
+}
 
 /** A subject's own random stream; `ownNoise` also gives it its own noise buffer, filled from that stream (the order `createWeaponAudio` uses). */
 export type AudioChannel = {
@@ -77,6 +125,12 @@ export type AudioEngineOptions = {
   readonly createContext?: () => AudioContext | null
   /** Build voices in timed slices between frames instead of inside `play` (a sound starts a few ms late; a burst never costs a frame). Off by default. */
   readonly deferredStart?: StartQueueOptions
+  /** Where sample sounds get their files. */
+  readonly samples?: SampleOptions
+  /** The tail sample sounds play when `play` names none (default `outdoor`). */
+  readonly environment?: SampleEnvironment
+  /** Called when a voice is built (recipe or sample): the measuring hook of the criteria. */
+  readonly onVoiceStart?: (event: VoiceStartEvent) => void
 }
 
 export type AudioEngine = {
@@ -84,6 +138,16 @@ export type AudioEngine = {
   register(bank: SoundBank): void
   /** Pure: the plan a sound would play with, from `options.seed` or the engine seed; draws nothing from the live streams. */
   plan(id: string, options?: PlayOptions): SoundPlan | null
+  /** Pure: the plan a sample sound would play with (no round-robin memory), from `options.seed` or the engine seed. */
+  planSample(id: string, options?: PlayOptions): SamplePlan | null
+  /** Loads the files of these sample sounds (default all registered). Creates the context; resolves when every file is decoded or failed. */
+  loadSamples(ids?: readonly string[]): Promise<SampleLoadReport>
+  /** `ready` when every file of the sound is decoded. */
+  sampleStatus(id: string): SampleStatus
+  /** The tail sample sounds play from now on. */
+  setEnvironment(environment: SampleEnvironment): void
+  /** The node everything is mixed into before the speakers (to record or meter the whole output), or `null` before the context exists. */
+  output(): AudioNode | null
   play(id: string, options?: PlayOptions): VoiceHandle | null
   playPlan(plan: SoundPlan, options?: { readonly delay?: number }): VoiceHandle | null
   loop(id: string, options?: { readonly volume?: number }): AudioLoopHandle
@@ -107,6 +171,21 @@ export type AudioEngine = {
   deferredQueue?(): DeferredQueue | null
   dispose(): void
 }
+
+/** The limiter's transfer curve over ±`range`: linear up to `knee`, then a tanh bend that never passes `ceiling`. */
+export function limiterCurve(knee: number, ceiling: number, range: number, points = 2049): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(points)
+  const room = Math.max(1e-6, ceiling - knee)
+  for (let index = 0; index < points; index++) {
+    const value = ((index / (points - 1)) * 2 - 1) * range
+    const size = Math.abs(value)
+    const bent = size <= knee ? size : knee + room * Math.tanh((size - knee) / room)
+    curve[index] = Math.sign(value) * bent
+  }
+  return curve
+}
+
+type Admission = { readonly bus: BusId; readonly group?: string; readonly priority?: number }
 
 const usesNoise = (recipe: SoundRecipe): boolean => recipe.layers.some((layer) => layer.source.kind !== 'osc')
 const planUsesNoise = (plan: SoundPlan): boolean => plan.layers.some((layer) => layer.source.kind !== 'osc')
@@ -132,6 +211,39 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   let chain: MixChain | null = null
   let listener: Listener = DEFAULT_LISTENER
   let lastTime = 0
+  let environment: SampleEnvironment = options.environment ?? 'outdoor'
+  const sampleLimiters = new Map<BusId, AudioNode>()
+  // recipes go straight to the bus (their traces match the team routines node for node); recorded files go through a limiter of their bus. It is a
+  // waveshaper, not a compressor: a compressor of the browser looks 6 ms ahead, which C1 (≤ 20 ms from the event) cannot spare.
+  const sampleOutput = (bus: BusId): AudioNode => {
+    const setting = options.samples?.limiter
+    if (setting === false || !context) return outputFor(bus)
+    const existing = sampleLimiters.get(bus)
+    if (existing) return existing
+    const range = 4
+    const input = context.createGain()
+    input.gain.value = 1 / range
+    const shaper = context.createWaveShaper()
+    shaper.curve = limiterCurve(setting?.knee ?? 0.5, setting?.ceiling ?? 0.891, range)
+    ensureBus(bus)
+    input.connect(shaper)
+    shaper.connect(outputFor(bus))
+    sampleLimiters.set(bus, input)
+    return input
+  }
+  const chokes = new Map<string, { readonly id: number; readonly voice: RealizedSampleVoice }[]>()
+  // the voices of a choked sound still ringing (the limiter forgets the ones that ended)
+  const choked = (id: string): { readonly id: number; readonly voice: RealizedSampleVoice }[] => {
+    const list = (chokes.get(id) ?? []).filter((entry) => active.has(entry.id))
+    chokes.set(id, list)
+    return list
+  }
+  const sampleStore = createSampleStore(options.samples?.loader ?? fetchLoader(options.samples?.baseUrl))
+  const memory: SampleMemory = new Map()
+  const latencyOf = (audio: BaseAudioContext): number => {
+    const live = audio as Partial<Pick<AudioContext, 'baseLatency' | 'outputLatency'>>
+    return (live.baseLatency ?? 0) + (live.outputLatency ?? 0)
+  }
 
   const outputFor = (bus: BusId): AudioNode => (busNodes.get(bus) ?? chain?.master) as AudioNode
 
@@ -197,19 +309,33 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
 
   const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
 
-  const build = (plan: SoundPlan, store: NoiseStore, delay: number): RealizedVoice => {
+  const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string): RealizedVoice => {
     const audio = context as AudioContext
-    return realize(plan, {
+    const time = audio.currentTime + delay
+    const realized = realize(plan, {
       context: audio,
       output: outputFor(plan.bus),
       ...(chain?.wet ? { wet: chain.wet } : {}),
       noise: () => noiseBuffer(store, audio, mix.noise.seconds),
-      time: audio.currentTime + delay,
+      time,
     })
+    options.onVoiceStart?.({
+      id: plan.id,
+      kind: 'recipe',
+      ...(fallbackOf ? { fallbackOf } : {}),
+      requestedAt,
+      startAt: time,
+      outputLatency: latencyOf(audio),
+      level: plan.level,
+      distance: plan.distance,
+      ...(plan.pan === undefined ? {} : { pan: plan.pan }),
+    })
+    return realized
   }
 
   // the voice a deferred sound is tracked by until it is built: `stop` cancels it or stops what was built
-  const deferVoice = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay: number): RealizedVoice => {
+  const deferVoice = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay: number, fallbackOf?: string): RealizedVoice => {
+    const requestedAt = context?.currentTime ?? 0
     let built: RealizedVoice | null = null
     let cancelled = false
     const pending: RealizedVoice = {
@@ -223,7 +349,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
     ;(startQueue as ReturnType<typeof createStartQueue>).push({
       run() {
-        if (!cancelled && context) built = build(plan, store, delay)
+        if (!cancelled && context) built = build(plan, store, delay, requestedAt, fallbackOf)
       },
       drop() {
         if (voiceId === undefined) return
@@ -234,13 +360,14 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return pending
   }
 
-  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, urgent = false): VoiceHandle | null => {
-    const realized = startQueue && !urgent ? deferVoice(plan, store, voiceId, delay) : build(plan, store, delay)
+  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, fallbackOf?: string, urgent = false): VoiceHandle | null => {
+    const realized = startQueue && !urgent ? deferVoice(plan, store, voiceId, delay, fallbackOf) : build(plan, store, delay, context?.currentTime ?? 0, fallbackOf)
     if (voiceId === undefined) return null
     voices.setLength(voiceId, plan.length + delay)
     active.set(voiceId, realized)
     return {
       id: voiceId,
+      kind: 'recipe',
       plan,
       stop() {
         realized.stop()
@@ -250,7 +377,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
   }
 
-  const admit = (recipe: SoundRecipe, gain: number, distance: number): number | null => {
+  const admit = (recipe: Admission, gain: number, distance: number): number | null => {
     const decision = voices.request({ ...(recipe.group ? { group: recipe.group } : {}), priority: recipe.priority ?? busPriority(recipe.bus), gain, distance, length: 0 })
     if (!decision.accepted) return null
     for (const id of decision.evicted) {
@@ -268,7 +395,87 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return set ? chooser.pick(set, random) : { id, rate: 1 }
   }
 
-  const playWith = (asked: string, playOptions: PlayOptions, streamRandom: () => number, store: NoiseStore): VoiceHandle | null => {
+  const loadSounds = (sounds: readonly SampleSound[]): Promise<SampleLoadReport> => {
+    const audio = ready()
+    if (!audio) return Promise.resolve({ loaded: [], failed: sounds.flatMap(sampleUrls).map((url) => ({ url, error: 'no audio context' })) })
+    return sampleStore.load([...new Set(sounds.flatMap(sampleUrls))], audio)
+  }
+
+  const sampleInput = (playOptions: PlayOptions, random: () => number, withMemory: boolean) => ({
+    random,
+    listener,
+    environment: playOptions.environment ?? environment,
+    ...(withMemory ? { memory } : {}),
+    ...(options.distance ? { distanceMode: options.distance } : {}),
+    ...(playOptions.volume === undefined ? {} : { volume: playOptions.volume }),
+    ...(playOptions.intensity === undefined ? {} : { intensity: playOptions.intensity }),
+    ...(playOptions.distance === undefined ? {} : { distance: playOptions.distance }),
+    ...(playOptions.position ? { position: playOptions.position } : {}),
+    ...(options.occlusion && playOptions.position ? { occlusion: options.occlusion(playOptions.position) } : {}),
+  })
+
+  // undefined: the files are not ready and there is no fallback, so the recipe of the same id (if any) plays
+  const playSample = (sample: SampleSound, playOptions: PlayOptions, random: () => number, store: NoiseStore): VoiceHandle | null | undefined => {
+    if (busSettings.get(sample.bus)?.muted) return null
+    if (!sampleStore.ready(sampleUrls(sample))) {
+      if (options.samples?.autoLoad !== false && ready()) void loadSounds([sample]).catch(() => undefined)
+      if (sample.fallback && sample.fallback !== sample.id) return playWith(sample.fallback, playOptions, random, store, sample.id)
+      return registry.sound(sample.id) ? undefined : null
+    }
+    const plan = planSample(sample, sampleInput(playOptions, playOptions.seed === undefined ? random : createRng(playOptions.seed), true))
+    if (!plan) return null
+    const audio = ready()
+    if (!audio) return null
+    unlockContext(audio)
+    advance()
+    const voiceId = admit(plan, plan.level, plan.distance)
+    if (voiceId === null) return null
+    const requestedAt = audio.currentTime
+    const time = requestedAt + (playOptions.delay ?? 0)
+    const chokeList = sample.choke ? choked(sample.id) : undefined
+    const realized = realizeSample(plan, { context: audio, output: sampleOutput(plan.bus), buffer: (url) => sampleStore.buffer(url), time })
+    options.onVoiceStart?.({
+      id: plan.id,
+      kind: 'sample',
+      requestedAt,
+      startAt: time,
+      outputLatency: latencyOf(audio),
+      level: plan.level,
+      distance: plan.distance,
+      ...(plan.pan === undefined ? {} : { pan: plan.pan }),
+      layers: plan.layers.map((layer) => ({ role: layer.role, url: layer.url, take: layer.take, rate: layer.rate })),
+      ...(plan.tier ? { tier: plan.tier } : {}),
+    })
+    voices.setLength(voiceId, sampleLength(plan, (url) => sampleStore.seconds(url)) + (playOptions.delay ?? 0))
+    active.set(voiceId, realized)
+    if (chokeList && sample.choke) {
+      chokeList.push({ id: voiceId, voice: realized })
+      while (chokeList.length > Math.max(1, sample.choke.voices)) {
+        const oldest = chokeList.shift()
+        if (!oldest) break
+        oldest.voice.fade(time, sample.choke.fade ?? 0.03)
+        voices.release(oldest.id)
+        active.delete(oldest.id)
+      }
+    }
+    return {
+      id: voiceId,
+      kind: 'sample',
+      plan,
+      stop() {
+        realized.stop()
+        voices.release(voiceId)
+        active.delete(voiceId)
+      },
+    }
+  }
+
+  const playWith = (asked: string, playOptions: PlayOptions, streamRandom: () => number, store: NoiseStore, fallbackOf?: string): VoiceHandle | null => {
+    const sample = fallbackOf === undefined ? registry.sample(asked) : undefined
+    if (sample) {
+      const played = playSample(sample, playOptions, streamRandom, store)
+      if (played !== undefined) return played
+    }
     const seeded = playOptions.seed === undefined ? null : createRng(playOptions.seed)
     const { id, rate } = resolve(asked, seeded ?? streamRandom)
     const random = seeded ?? streamRandom
@@ -287,7 +494,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (voiceId === null) return null
     if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
     const plan = planSound(recipe, inputFor(recipe, playOptions, random))
-    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, playOptions.urgent) : null
+    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent) : null
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -322,6 +529,27 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     registry,
     register: (bank) => registry.register(bank),
     plan: (id, playOptions = {}) => planWith(id, playOptions, createRng(playOptions.seed ?? seed)),
+    planSample(id, playOptions = {}) {
+      const sample = registry.sample(id)
+      return sample ? planSample(sample, sampleInput(playOptions, createRng(playOptions.seed ?? seed), false)) : null
+    },
+    loadSamples(ids) {
+      const chosen = (ids ?? registry.sampleIds()).map((id) => registry.sample(id)).filter((sample): sample is SampleSound => sample !== undefined)
+      return loadSounds(chosen)
+    },
+    sampleStatus(id) {
+      const sample = registry.sample(id)
+      if (!sample) return 'none'
+      const statuses = sampleUrls(sample).map((url) => sampleStore.status(url))
+      if (statuses.every((status) => status === 'ready')) return 'ready'
+      if (statuses.includes('failed')) return 'failed'
+      if (statuses.includes('loading')) return 'loading'
+      return statuses.includes('ready') ? 'loading' : 'none'
+    },
+    setEnvironment(next) {
+      environment = next
+    },
+    output: () => chain?.master ?? null,
     play: (id, playOptions = {}) => playWith(id, playOptions, randomFor(playOptions), shared),
     playPlan(plan, playOptions = {}) {
       const audio = ready()
@@ -415,6 +643,10 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       busNodes.clear()
       meters.clear()
       shared.reset()
+      sampleStore.clear()
+      memory.clear()
+      sampleLimiters.clear()
+      chokes.clear()
     },
   }
 }

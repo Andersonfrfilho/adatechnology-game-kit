@@ -10,7 +10,7 @@
 // And the player area (game-player): the room's camera is the player body, with stamina, wounds, the grab and the individual infection (off by default).
 // And the crowd area (game-crowd-three): a horde on the instanced path that hunts that player body, civilians, the herd and a region model. It starts empty here (the bench adds agents).
 // And the stories area (game-stories): no 3D, a world of stories run to the bench's day, with one character sheet on the room's panel.
-import { createAudioTestModule } from '@adatechnology/game-audio/testing'
+import { createAudioTestModule, createSoundCheckModule } from '@adatechnology/game-audio/testing'
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
@@ -91,7 +91,7 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
+export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createSoundCheckModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
@@ -140,6 +140,8 @@ function loadSteps(room, options, lang) {
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
+  // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
+  mod('soundCheck', () => createSoundCheckModule({ locale: lang }))
   mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))

@@ -31,6 +31,30 @@ export type {
   Time,
 } from './recipe'
 export { planSound } from './plan'
+export {
+  DEFAULT_CROSSOVER,
+  DEFAULT_SAMPLE_CUTOFF_K,
+  DEFAULT_SAMPLE_FALLOFF,
+  DEFAULT_SAMPLE_PITCH,
+  DEFAULT_TAIL_GAIN,
+  LAYER_FLOOR,
+  OPEN_CUTOFF,
+  SAMPLE_ENVIRONMENTS,
+  crossGains,
+  farMixAt,
+  pickTake,
+  planSample,
+  sampleCutoff,
+  sampleUrls,
+  tierFor,
+} from './sample'
+export type { PlannedSampleLayer, SampleCrossover, SampleEnvironment, SampleLayerRole, SampleMemory, SamplePlan, SamplePlanInput, SampleRef, SampleSound, SampleTail, SampleTier } from './sample'
+export { CALIBRATION_ID, CALIBRATION_SOUND, calibrationLoader, encodeWav } from './measure/calibration'
+export { CRITERIA, CRITERIA_TARGETS, measureCriteria, recordOutput } from './measure/criteria'
+export type { ActionCheck, CriterionId, CriterionResult, MeasureOptions } from './measure/criteria'
+export { balanceOf, centroidHz, countHits, dbOf, endDropDb, onsetIndex, peakIndex, peakOf, ringSeconds, rmsDb } from './measure/analyze'
+export { SDK_LICENSES, SFX_LAYERS, SFX_TIERS, parseSfxName, sampleBankFromManifest, splitTier } from './manifest'
+export type { SampleBankOptions, SampleDefaults, SdkLicense, SfxFileEntry, SfxLayer, SfxManifest, SfxManifestSound } from './manifest'
 export type { PlanInput, PlannedAutomation, PlannedEnvelopePoint, PlannedFilter, PlannedLayer, PlannedModulator, PlannedSource, SoundPlan } from './plan'
 export { DISTANCE_CURVES, cutoffDivisor, falloffGain, isSilent } from './falloff'
 export type { DistanceCurveName } from './falloff'
@@ -54,8 +78,12 @@ export type { LeafFoley, PickupClass } from './recipes/foley'
 export { BODY_FALLOFF, BODY_FOLEY_BANK, BODY_FOLEY_SET_IDS, BODY_FOLEY_TAKES, FOOTSTEP_FALLOFF } from './recipes/body-foley'
 export { createSetPicker, retunePlan } from './variation'
 export type { SetPicker } from './variation'
-export { createAudioEngine } from './webaudio/engine'
-export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, VoiceHandle } from './webaudio/engine'
+export { createAudioEngine, limiterCurve } from './webaudio/engine'
+export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, SampleOptions, VoiceHandle, VoiceStartEvent } from './webaudio/engine'
+export { createSampleStore, fetchLoader, inlineLoader } from './webaudio/sample-store'
+export type { SampleLoadReport, SampleLoader, SampleStatus, SampleStore } from './webaudio/sample-store'
+export { realizeSample, sampleLength } from './webaudio/realize-sample'
+export type { RealizedSampleVoice, SampleTarget } from './webaudio/realize-sample'
 export type { AudioLoopHandle, LoopSet } from './webaudio/engine-loop'
 export type { StartQueueOptions } from './webaudio/engine-queue'
 export { realize } from './webaudio/realize'
