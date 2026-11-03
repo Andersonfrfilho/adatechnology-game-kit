@@ -57,6 +57,8 @@ export { SFX_BLOWS, SFX_CATALOG, SFX_CATEGORIES, SFX_IMPACTS, SFX_MATERIALS, imp
 export type { SfxBlow, SfxCategory, SfxEntry, SfxMaterial, SfxPriority, SfxState } from './catalog'
 export { SDK_LICENSES, SFX_LAYERS, SFX_TIERS, parseSfxName, sampleBankFromManifest, splitTier } from './manifest'
 export type { SampleBankOptions, SampleDefaults, SdkLicense, SfxFileEntry, SfxLayer, SfxManifest, SfxManifestSound } from './manifest'
+export { KIT_CATEGORY_BUS, KIT_SAMPLE_ALIASES, kitSampleBank, kitSampleDefaults, loadKitSamples, withAliases } from './kit-samples'
+export type { KitSampleBankOptions, LoadKitSamplesOptions } from './kit-samples'
 export type { PlanInput, PlannedAutomation, PlannedEnvelopePoint, PlannedFilter, PlannedLayer, PlannedModulator, PlannedSource, SoundPlan } from './plan'
 export { DISTANCE_CURVES, cutoffDivisor, falloffGain, isSilent } from './falloff'
 export type { DistanceCurveName } from './falloff'

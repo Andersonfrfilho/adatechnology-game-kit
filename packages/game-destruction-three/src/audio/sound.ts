@@ -132,6 +132,12 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     lid_close: { sound: 'shut_soft' },
     flap_open: { sound: 'latch' },
     flap_close: { sound: 'shut_soft' },
+    // an item taken in the hand, by what it is made of (game-audio's KIT_SAMPLE_ALIASES puts recordings on these ids)
+    grab_metal: { sound: 'grab_hard' },
+    grab_wood: { sound: 'grab_hard' },
+    grab_glass: { sound: 'grab_hard', volumeScale: 0.7 },
+    grab_masonry: { sound: 'grab_hard' },
+    grab_soft: { sound: 'grab_soft' },
     shatter_glass: { sound: 'glass_shatter' },
     crumble: { sound: 'crumble' },
     splinter: { sound: 'crack' },

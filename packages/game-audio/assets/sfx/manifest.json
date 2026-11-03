@@ -1179,26 +1179,6 @@
             "license": "CC0"
           },
           {
-            "file": "itens-portas/door_creak_04.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.47,
-            "seconds": 3.519,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
-          },
-          {
-            "file": "itens-portas/door_creak_05.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.28,
-            "seconds": 3.53,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
-          },
-          {
             "file": "itens-portas/door_creak_06.ogg",
             "sampleRate": 48000,
             "channels": 1,

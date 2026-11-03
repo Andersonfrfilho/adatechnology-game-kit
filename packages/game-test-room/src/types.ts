@@ -234,6 +234,8 @@ export interface TestRoomOptions {
    * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
    */
   audio?: AudioEngine | false
+  /** Where the kit's recorded sound files (game-audio `assets/sfx/`) are served, for the room's engine (default `./sfx/`); `null` plays the recipes only. */
+  samplesBaseUrl?: string | null
   /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
   environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
