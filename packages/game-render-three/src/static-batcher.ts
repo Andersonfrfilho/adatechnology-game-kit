@@ -30,6 +30,8 @@ export type StaticBatcher = {
    */
   update(): number
   stats(): StaticBatcherStats
+  /** Each batch mesh with the meshes merged into it (released ones included): what a caller needs to give a batch a flag its meshes carry. */
+  batches(): ReadonlyArray<{ readonly mesh: Mesh; readonly sources: readonly Mesh[] }>
   /** Every mesh draws on its own again and the batches are disposed. */
   dispose(): void
 }
@@ -143,6 +145,11 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
       return released - before
     },
     stats: () => ({ batches: group.children.length, batched: sources.filter((source) => !source.released).length, released }),
+    batches() {
+      const byBatch = new Map<Mesh, Mesh[]>()
+      for (const source of sources) byBatch.set(source.batch.mesh, [...(byBatch.get(source.batch.mesh) ?? []), source.mesh])
+      return [...byBatch].map(([mesh, meshes]) => ({ mesh, sources: meshes }))
+    },
     dispose() {
       for (const source of sources) if (!source.released) source.mesh.layers.mask = source.mask
       group.removeFromParent()

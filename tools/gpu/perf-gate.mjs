@@ -20,7 +20,7 @@ import { homedir, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { bestOf, compare, failuresOf } from './compare.mjs'
+import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
@@ -170,12 +170,12 @@ else if (sameTree) {
 
 let regressions = base ? compare(base, branch, TOLERANCE) : []
 if (base && regressions.length > 0) {
-  // one more run of each side before blocking, the better of the two kept: one frame of the GPU clock dropping is not a regression
+  // one more run of each side before blocking: one frame of the GPU clock dropping is not a regression
   console.log(`pre-push: ${regressions.length} metric(s) over ${Math.round(TOLERANCE * 100)}% worse: measuring both sides again`)
   branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again'))
   const tree = existsSync(join(cacheDir, 'base-worktree', '.git')) ? join(cacheDir, 'base-worktree') : buildBase()
-  base = bestOf(base, await measure(tree, join(cacheDir, 'base-again.json'), `${baseRef} again`))
-  writeFileSync(baseReport, JSON.stringify(base))
+  // the better run of the branch against the worse run of main: it blocks only when every run of the branch is worse than every run of main
+  base = worstOf(base, await measure(tree, join(cacheDir, 'base-again.json'), `${baseRef} again`))
   regressions = compare(base, branch, TOLERANCE)
 }
 

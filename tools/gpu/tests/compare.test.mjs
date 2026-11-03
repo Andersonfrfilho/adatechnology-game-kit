@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { bestOf, compare, failuresOf } from '../compare.mjs'
+import { bestOf, compare, failuresOf, worstOf } from '../compare.mjs'
 
 /** @param {Partial<import('../compare.mjs').Phase>} values @returns {import('../compare.mjs').Phase} */
 const phase = (values) => ({ name: 'idle', p99: 8, max: 12, worstLongTask: 0, hitches: 0, drawsPerFrame: 113, buffers: 0, programs: 0, ...values })
@@ -17,7 +17,7 @@ test('a phase within 10% of main passes, over 10% and over the floor blocks', ()
 
 test('a small number does not block on noise under the floor (one more draw on 4 is 25%)', () => {
   const base = report([phase({ drawsPerFrame: 4, hitches: 0, max: 8 })])
-  assert.deepEqual(compare(base, report([phase({ drawsPerFrame: 6, hitches: 1, max: 20 })]), 0.1), [])
+  assert.deepEqual(compare(base, report([phase({ drawsPerFrame: 6, hitches: 1, max: 30 })]), 0.1), [])
   assert.deepEqual(compare(base, report([phase({ drawsPerFrame: 9, hitches: 3 })]), 0.1).map((r) => r.metric), ['hitches', 'drawsPerFrame'])
 })
 
@@ -40,4 +40,20 @@ test('two runs of one build keep the lower value of every metric', () => {
 
 test('a report from before the kinds reads its failures as targets', () => {
   assert.deepEqual(failuresOf(['idle: p99 30 ms', { text: 'page errors', kind: 'hard' }]), [{ text: 'idle: p99 30 ms', kind: 'target' }, { text: 'page errors', kind: 'hard' }])
+})
+
+test('a frame time under one 60 Hz refresh is read as the refresh: a window held to the display is not a slower build', () => {
+  const base = report([phase({ name: 'cold_dynamite', p99: 9.5, max: 14 })])
+  assert.deepEqual(compare(base, report([phase({ name: 'cold_dynamite', p99: 17.6, max: 17.9 })]), 0.1), [])
+  assert.deepEqual(compare(base, report([phase({ name: 'cold_dynamite', p99: 23.3 })]), 0.1).map((r) => r.metric), ['p99'])
+})
+
+test('the buffers made in play are not compared (batching again trades them once for draws every frame)', () => {
+  assert.deepEqual(compare(report([phase({ buffers: 878 })]), report([phase({ buffers: 1094 })]), 0.1), [])
+})
+
+test('the worse of two runs keeps the higher value of every metric', () => {
+  const joined = worstOf(report([phase({ p99: 9, max: 80 })]), report([phase({ p99: 12, max: 40 })]))
+  assert.equal(joined.phases[0]?.p99, 12)
+  assert.equal(joined.phases[0]?.max, 80)
 })

@@ -83,4 +83,28 @@ describe('vehicle-lod: a vehicle hit in play', () => {
     lod.dispose()
     expect(meshes.some(inBatch)).toBe(false)
   })
+
+  it('keeps its batches when a hit adds a decal or a scratch, and lets them go when a part of the model leaves', () => {
+    let clock = 0
+    const { root, full, meshes } = vehicle(6)
+    const lod = createVehicleLod({ THREE }, {}, root, full, { now: () => clock })
+    lod.update(30, true)
+    drawOnce(full)
+    clock += VEHICLE_REBATCH_AFTER_MS
+    lod.update(30, true)
+    lod.update(30, true)
+    expect(meshes.every(inBatch)).toBe(true)
+    // the destructible adds a scratch (a box) and a soot mark next to the parts: not a rebuilt model
+    const scratch = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.01, 0.005), new THREE.MeshBasicMaterial())
+    scratch.userData.decal = true
+    full.add(scratch)
+    full.add(new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshBasicMaterial()))
+    lod.update(30, true)
+    expect(batches(root)?.children.length).toBe(1)
+    expect(meshes.every(inBatch)).toBe(true)
+    // the reset takes the parts away and builds new ones: the batches go with the old ones
+    for (const mesh of meshes) mesh.removeFromParent()
+    lod.update(30, true)
+    expect(batches(root)).toBeUndefined()
+  })
 })
