@@ -1,5 +1,6 @@
 import type { Hit } from '@adatechnology/game-contracts'
 import { DEFAULT_BAR_YIELD_JOULES, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
+import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
@@ -14,6 +15,7 @@ export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   maxDebrisPerBlow: 36,
   maxSlideCellsPerFrame: 2500,
   maxBurningCells: 300,
+  maxCracks: 120,
 }
 
 const GRAVITY = 9.81
@@ -118,6 +120,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const mixed = new Uint8Array(chunksX * chunksZ)
   const dirty = new Set<number>()
   const marks = createMarkStore(budget)
+  const cracks = createCrackStore()
   const debrisStore = createDebrisStore(() => budget.maxDebris)
   const sliding = new Set<number>()
   const burning = new Map<number, number>()
@@ -312,6 +315,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     let depth = start.depth
     let radius = 0
     let carved = 0
+    let breached = false
     const firstMaterial = materials.get(start.material)!
     if (start.loose <= 0) {
       for (;;) {
@@ -323,6 +327,20 @@ export function createTerrain(options: TerrainOptions): Terrain {
         const response = material.hits[blow]
         if (!response || energy < (response.thresholdJoules ?? 0)) break
         const bars = layer.stratum.reinforcement
+        // a contact charge with enough for the whole thickness of a rigid layer breaks it right through: the shock spalls the far face and the layer goes in one piece, bars or not
+        const breach = blow === 'explosive' ? material.breach : undefined
+        const breachJoules = breach ? breach.joulesPerCubedThickness * layer.stratum.thickness ** 3 : Infinity
+        if (breach && depth <= layer.top + 1e-6 && energy >= breachJoules) {
+          const takenRadius = layer.stratum.thickness * breach.radiusOverThickness * Math.cbrt(energy / breachJoules)
+          const takenVolume = (Math.PI * takenRadius * takenRadius * room) / 2
+          energy -= breachJoules
+          depth += room
+          carved += room
+          breached = true
+          radius = Math.max(radius, takenRadius)
+          removed.push({ material: material.id, volume: takenVolume })
+          continue
+        }
         const pastCover = bars !== undefined && depth - layer.top >= bars.cover - 1e-6
         const specificEnergy = response.specificEnergy * (pastCover ? bars.resistance : 1)
         const limit = bars && !pastCover ? Math.min(room, layer.top + bars.cover - depth) : room
@@ -351,8 +369,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
         removed.push({ material: firstMaterial.id, volume })
       }
     }
-    const collapsed = loadBars(blow, spec.energy, x, z, profile)
-    if (radius <= 0) return { point, radius: 0, depth: 0, totalDepth: columnAt(x, z).depth, removed: [], exposed: start.material, atLimit: start.remaining <= 1e-6, rebarExposed: rebarShowing(profile, start.depth), collapsed, fine: true }
+    let collapsed = loadBars(blow, spec.energy, x, z, profile)
+    const crack = crackAround(blow, spec.energy, x, z, start.loose > 0 ? undefined : firstMaterial)
+    const extra = { ...(crack ? { crack } : {}), ...(breached ? { breached } : {}) }
+    if (radius <= 0) return { point, radius: 0, depth: 0, totalDepth: columnAt(x, z).depth, removed: [], exposed: start.material, atLimit: start.remaining <= 1e-6, rebarExposed: rebarShowing(profile, start.depth), collapsed, fine: true, ...extra }
 
     // a rigid floor cannot go down any more where it is already deep: the next blow breaks the edge of the hole, so a hole in a slab opens as it deepens
     if (firstMaterial.reposeDegrees === undefined && start.loose <= 0) radius *= 1 + RIGID_WIDENING * (start.depth / maxDepthOfProfile(profile))
@@ -373,8 +393,20 @@ export function createTerrain(options: TerrainOptions): Terrain {
       throwPieces({ x, y: point[1], z, volume: thrown, material, energy: spec.energy * (entry.volume / volumeTotal), direction: spec.direction, quota: share, bowlRadius: radius, blow })
       quota -= share
     }
+    // a breach bares the bars under the same blow that broke the concrete, so they take that blow's load at once and, over a void, may let the floor go
+    if (breached) collapsed = loadBars(blow, spec.energy, x, z, profile) || collapsed
     const after = columnAt(x, z)
-    return { point, radius, depth: carved, totalDepth: after.depth, removed, exposed: after.material, atLimit: after.remaining <= 1e-4, rebarExposed: rebarShowing(profile, after.depth), collapsed, fine }
+    return { point, radius, depth: carved, totalDepth: after.depth, removed, exposed: after.material, atLimit: after.remaining <= 1e-4, rebarExposed: rebarShowing(profile, after.depth), collapsed, fine, ...extra }
+  }
+
+  /** A rigid surface cracks around a hard enough blow, the lines running out with the cube root of the energy; a soft one (soil, sand, turf) only gives way. */
+  function crackAround(blow: TerrainBlow, energy: number, x: number, z: number, material: TerrainMaterial | undefined): ReturnType<typeof cracks.add> | undefined {
+    const response = material?.crack
+    if (!material || !response || energy < response.thresholdJoules) return undefined
+    // a cut does not crack a slab; a bullet, a hammer and a blast do
+    if (blow === 'slash') return undefined
+    const scale = Math.cbrt(energy / CRACK_REFERENCE_JOULES)
+    return cracks.add({ x, z, reach: response.reach * scale, width: response.width * scale, material: material.id, seed: Math.floor(random() * 2 ** 31) }, budget.maxCracks)
   }
 
   /**
@@ -633,6 +665,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     barBend.fill(0)
     touched.fill(0)
     marks.clear()
+    cracks.clear()
     debrisStore.clear()
     sliding.clear()
     burning.clear()
@@ -687,6 +720,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
       updateSlides()
       updateFire(dt)
     },
+    get dirtyChunkCount() {
+      return dirty.size
+    },
     drainDirtyChunks(max = budget.maxDirtyChunksPerFrame) {
       const taken: TerrainChunk[] = []
       for (const index of dirty) {
@@ -698,6 +734,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
     },
     chunk,
     marks: () => marks.list,
+    cracks: () => cracks.list,
+    get cracksVersion() {
+      return cracks.version
+    },
     debris: () => debrisStore.list,
     burningPoints: () => [...burning.keys()].map((key) => {
       const cellRow = Math.floor(key / 65536)
@@ -710,7 +750,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     stats: () => ({ marks: marks.list.length, debris: debrisStore.list.length, debrisMoving: debrisStore.list.filter((piece) => !piece.atRest).length, dirtyChunks: dirty.size, burning: burning.size }),
     reset,
     serialize(): TerrainSnapshot {
-      return { layout: currentLayout, dug: sparse(dug), loose: sparse(loose), scorch: sparse(scorch), barBend: sparse(barBend), marks: marks.list.map((mark) => ({ ...mark })) }
+      return { layout: currentLayout, dug: sparse(dug), loose: sparse(loose), scorch: sparse(scorch), barBend: sparse(barBend), marks: marks.list.map((mark) => ({ ...mark })), cracks: cracks.list.map((crack) => ({ ...crack })) }
     },
     load(snapshot) {
       currentLayout = snapshot.layout
@@ -720,6 +760,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       fillSparse(scorch, snapshot.scorch)
       fillSparse(barBend, snapshot.barBend ?? [])
       marks.load(snapshot.marks)
+      cracks.load(snapshot.cracks ?? [])
       for (let chunkIndex = 0; chunkIndex < touched.length; chunkIndex++) markChunk(chunkIndex)
     },
   }

@@ -12,8 +12,8 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, spriteProbes } from '@adatechnology/game-render-three'
-import type { EffectWarmup, RenderPools, WarmupProbe } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, spriteProbes } from '@adatechnology/game-render-three'
+import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
@@ -29,6 +29,8 @@ import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { createLoading } from './loading'
+import { createRoomGraphics } from './graphics'
+import type { RoomGraphics } from './graphics'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
@@ -39,8 +41,9 @@ import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
+import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
-import { createTerrainRenderer } from '@adatechnology/game-terrain-three'
+import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
@@ -113,6 +116,12 @@ const WARMED_FOG_STATES = ['none', 'linear', 'exp2'] as const
 const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
+/** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
+const BATCH_MIN_MESHES = 8
+/** Milliseconds a frame the batches of a new object may take to be made. */
+const BATCH_BUDGET_MS = 1
+/** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
+const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
 const STEP_UP = 0.45
 /** Height of the walking body (m): what starts above it is walked under. */
@@ -205,6 +214,21 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const arenaSize = options.arenaSize ?? 14
   const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery, options.tap)
   scene.add(arena.group)
+  // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)
+  const graphics: RoomGraphics | null =
+    ownRenderer && options.graphics
+      ? createRoomGraphics({
+          gl,
+          camera,
+          sun: arena.sun,
+          container,
+          locale,
+          loading,
+          label: t('loading.graphics'),
+          ui: options.ui !== false,
+          options: options.graphics === true ? {} : options.graphics,
+        })
+      : null
 
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
@@ -790,6 +814,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return m
   }
 
+  // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
+  const batchers = new Map<string, StaticBatcher>()
+  const batchObject = (objectId: string, root: THREE_NS.Object3D): void => {
+    let meshes = 0
+    let unbatched = false
+    // the owner mark may sit on an inner node (a wrapper around the vehicle's own root)
+    root.traverse((object) => {
+      if ((object as THREE_NS.Mesh).isMesh) meshes++
+      if (UNBATCHED_OWNERS.test((object.userData.kitOrigin as { owner?: string } | undefined)?.owner ?? '')) unbatched = true
+    })
+    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { budgetMs: BATCH_BUDGET_MS }))
+  }
   const registerEntry = (
     objectId: string,
     itemId: string,
@@ -806,6 +842,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const so: SpawnedObject = { objectId, itemId, root, movable }
     const e: Entry = { so, item, name, arena: arenaObject, fluidOffset: [0, 0, 0], uses: [], piece: null, last: [root.position.x, root.position.y, root.position.z], velocity: [0, 0, 0] }
     entries.set(objectId, e)
+    batchObject(objectId, root)
     if (movable) {
       e.piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
       rendererPieces.set(objectId, e.piece)
@@ -1073,6 +1110,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return m
   }
 
+  // A removed tree's geometries, materials and textures stay on the GPU (and in three.js's caches) until disposed: everything the room takes out of the scene
+  // goes through `dropTree`, released at once or, inside `releasingTogether`, in one pass at its end (one walk of the scene for what is still drawn).
+  let releaseBatch: THREE_NS.Object3D[] | null = null
+  const dropTree = (root: THREE_NS.Object3D | undefined): void => {
+    if (!root) return
+    if (releaseBatch) releaseBatch.push(root)
+    else releaseObject3D(root, { keep: scene })
+  }
+  const releasingTogether = (fn: () => void): void => {
+    if (releaseBatch) return fn()
+    releaseBatch = []
+    try {
+      fn()
+    } finally {
+      const roots = releaseBatch
+      releaseBatch = null
+      releaseObject3D(roots, { keep: scene })
+    }
+  }
+
   const removeEntry = (id: string): void => {
     const e = entries.get(id)
     if (!e) return
@@ -1090,8 +1147,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.follower?.dispose?.()
     if (world.has(id)) world.remove(id)
     e.so.root.removeFromParent()
+    const inner = wrapped.get(e.so.root)
     letGo(e.so.root)
+    // after the renderer let go of it (its restore puts the original meshes back), so the tree released is the one that was drawn
+    dropTree(e.so.root)
+    dropTree(inner)
     entries.delete(id)
+    batchers.get(id)?.dispose()
+    batchers.delete(id)
     doors.forget(id)
     rendererPieces.delete(id)
     specs.delete(id)
@@ -1108,13 +1171,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
       if (world.has(id)) world.remove(id)
       p?.root.removeFromParent()
+      dropTree(p?.root)
       rendererPieces.delete(id)
       splitOf.delete(id)
     }
     loose.length = 0
   }
 
-  const clearEverything = (): void => {
+  const clearEverything = (): void => releasingTogether(clearEverythingNow)
+  const clearEverythingNow = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
     useItemPlayer = null
     playing.length = 0
@@ -1167,8 +1232,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     seating.release()
     pushByKey = false
     push.end()
-    clearEverything()
-    for (const id of [...entries.keys()]) removeEntry(id)
+    releasingTogether(() => {
+      clearEverythingNow()
+      for (const id of [...entries.keys()]) removeEntry(id)
+    })
     renderer.reset()
     for (const listener of [...resetListeners]) listener()
     tools.clear()
@@ -2622,9 +2689,38 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return t(leaf.locked ? 'hud.door_hint_locked' : leaf.open ? 'hud.door_hint_close' : 'hud.door_hint_open')
   }
 
+  /** The floor under the aim: the profile and the layer there, read from the terrain at the point the ray reached (the floor of a crater, not the flat top). */
+  const groundInspect = (r: RayHit): InspectInfo => {
+    const onFloor = terrain.raycast(aimO, aimD, r.distance + 3)
+    const [x, , z] = onFloor?.point ?? r.point
+    const column = terrain.columnAt(x, z)
+    const materialName = S.text[`material.${column.material}`] ?? dStrings.materialNames[column.material] ?? column.material
+    return {
+      object: t('ground.name'),
+      objectId: GROUND_ID,
+      part: column.profile,
+      material: materialName,
+      status: '',
+      hp: 0,
+      maxHp: 0,
+      temperature: 0,
+      burning: false,
+      char: column.scorch,
+      melt: 0,
+      dents: 0,
+      holes: 0,
+      cracks: 0,
+      mass: 0,
+      joints: [],
+      distance: onFloor?.distance ?? r.distance,
+      ground: { surface: terrainProfileName(column.profile, locale), material: materialName, dug: column.depth, remaining: column.remaining, scorch: column.scorch },
+    }
+  }
+
   const inspectInfo = (): InspectInfo | null => {
     const r = inspectTarget()
     if (!r) return null
+    if (r.object === GROUND_ID) return groundInspect(r)
     const st = world.state(r.object)
     const p = world.part(r.object, r.part)
     if (!st || !p) return null
@@ -3107,6 +3203,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scene,
     camera,
     locale,
+    ...(graphics ? { graphics: graphics.host } : {}),
     ...(audioSink ? { audio: audioSink } : {}),
     environment,
     groundAt,
@@ -3675,6 +3772,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     modules: () => [...modules.values()].map((m) => ({ id: m.id, name: m.name, group: m.group, hasArea: typeof m.area === 'function' })),
     openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
     loading,
+    graphics: graphics?.controller ?? null,
+    graphicsScreen: graphics?.screen ?? null,
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
     warmUp: () => {
@@ -3765,6 +3864,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       window.removeEventListener('resize', onResize)
       player.dispose()
       ui?.dispose()
+      graphics?.dispose()
       loading.dispose()
       renderer.dispose()
       vfx.dispose()
@@ -3842,6 +3942,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
       },
       quality: qualityName,
+      ...(graphics?.screen ? { onGraphics: () => graphics.screen?.open() } : {}),
       scenarios: allScenarios,
       onRun: async (sc) => {
         await runScenarios([sc])
@@ -3923,16 +4024,28 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scheduler.add(
       (ctx) => {
         if (!ctx.scripted && !pacer.ready()) return
+        for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
+        graphics?.beforeRender(camera)
         gl.render(scene, debugView ?? camera)
+        graphics?.afterRender()
         restoreCamera()
         pacer.submitted()
         roomMetrics.rendered()
+        if (!ctx.scripted) graphics?.frameEnd()
       },
       { phase: 'render', id: 'room.render' },
     )
     try {
-      stopLoop = startLoop(scheduler, { onFrame: (realSeconds) => roomMetrics.frame(realSeconds), skipSimulation: () => scenarioRunning })
+      stopLoop = startLoop(scheduler, {
+        onFrame: (realSeconds) => {
+          graphics?.frameStart()
+          roomMetrics.frame(realSeconds)
+        },
+        skipSimulation: () => scenarioRunning,
+        // the player's frame cap (Gráficos → Limite de FPS)
+        ...(graphics ? { minFrameMs: () => graphics.controller.minFrameMs() } : {}),
+      })
       ownsLoop = true
     } catch {
       // no display frames here (a worker): the host calls room.update

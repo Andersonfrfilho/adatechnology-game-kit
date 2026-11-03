@@ -48,7 +48,7 @@ export type {
   BuildZoneState,
   ZoneState,
 } from './api'
-export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES, cabinEnclosure, cabinBoxOf, swingOf, CABIN_LEAK } from './destructible'
 export type {
   DriveReport,
   ArmourLevel,
@@ -56,6 +56,9 @@ export type {
   CrashOptions,
   CrashResult,
   CrashRules,
+  CabinBox,
+  CabinEnclosureOptions,
+  CabinSource,
   CreaseQueue,
   CreaseWork,
   JointDef,

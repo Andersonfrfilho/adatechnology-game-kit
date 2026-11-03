@@ -35,7 +35,8 @@ describe('contract', () => {
       expect(r.problems).toEqual([])
       expect(r.ok).toBe(true)
       for (const clip of d.animations()) expect(checkAnimation(clip, spec.parts.map((p) => p.id)).problems).toEqual([])
-    })
+      // building a whole vehicle takes about 1 s alone and passed the default 5 s on a loaded machine (a timeout, not memory: the heap stays flat)
+    }, 20000)
   }
 
   it('lists every zone as a part with a material from the table', () => {

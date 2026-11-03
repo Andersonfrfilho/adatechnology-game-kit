@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import { LIGHT_PRIORITY, geometryKey, materialKey } from '@adatechnology/game-render-three'
 import type { LightBudget, LightHandle, RenderPools } from '@adatechnology/game-render-three'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { ModelKit } from '../models/kit'
 import type { ModelParts } from '../models/types'
 import { buildFlyingRocket } from '../models/launcher-rounds'
@@ -109,7 +110,8 @@ export function launchRocket(context: HeavyContext, flyRound = true): void {
       if (random() < 0.9) context.effects.smoke(rocket.position.clone().addScaledVector(forward, -0.12), new THREE.Vector3((random() - 0.5) * 0.1, 0.05, (random() - 0.5) * 0.1), 0.02 + random() * 0.015, 2.2, 0.5)
     },
     () => {
-      rocket.removeFromParent()
+      // the rocket in flight is a model built for this shot: it frees its own geometry and materials when it is gone
+      discardObject3D(rocket)
       exhaust.geometry.dispose()
       ;(exhaust.material as THREE_NS.Material).dispose()
       releaseLight(flame, light)

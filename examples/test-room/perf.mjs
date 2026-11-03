@@ -3,7 +3,7 @@
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
-//   PERF_SHARD=cold | warm | horde     one share: the nine first uses, warm_all + storm + after_storm, or the two horde phases (CI runs the three in parallel)
+//   PERF_SHARD=cold[:K/N] | warm | storm | horde   one share: the first uses (the K-th of N slices), warm_all, storm + after_storm, or the horde phases (PERF_PHASES picks which)
 //   PERF_HORDE=2000                    agents of the horde phases (default 2000 in gpu mode, 300 in counters mode, where software GL pays per agent)
 //   PERF_TIER=integrated | discrete    the GPU tier of the plan's D12 (crowd step budget); PERF_GPU=intel|nvidia is its deprecated alias
 //   PERF_PIXEL_RATIO=0.5               the resolution scale of the run: separates pixel cost from vertex cost
@@ -26,10 +26,12 @@ const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
+const sliceOf = (list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT - 1)
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
-// PERF_SHARD=cold|warm runs one half (CI runs both in parallel); unset runs everything
-const SHARD = process.env.PERF_SHARD ?? 'all'
-const runs = (part) => SHARD === 'all' || SHARD === part
+// PERF_SHARD=cold|warm|storm|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
+const [SHARD, SLICE] = (process.env.PERF_SHARD ?? 'all').split(':')
+const runs = (part) => SHARD === 'all' || SHARD === part || (part === 'warm' && SHARD === 'storm')
+const [SLICE_AT, SLICE_COUNT] = (SLICE ?? '1/1').split('/').map(Number)
 // A hitch is a frame that misses two 60 Hz refreshes; a long task blocks input for more than 50 ms.
 const BUDGET = {
   hitchMs: 33.4,
@@ -40,6 +42,8 @@ const BUDGET = {
   programsAfterLoad: 0,
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
+  // what the blasts dent or tear off draws on its own again, out of its batch: the car's parts and the room's furniture (~56 measured after the storm)
+  releasedParts: 60,
 }
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
@@ -60,6 +64,9 @@ const HORDE_BUDGET = {
   crowdMsP99: TIER === 'integrated' ? 6 : 4,
   drawsPerFrame: Number(process.env.PERF_HORDE_DRAWS ?? 95),
   drawGrowth: 1.5,
+  // a vehicle far off draws fused (~10 draws); hit, it draws in full, one draw per part, for good: the street's car adds that to the idle count.
+  // Absolute, not a share of idle: batching the room's still furniture took idle from 81 to 34 draws without making the car cheaper (~240 measured)
+  damagedVehicleDraws: 240,
   buffersDense: 50,
   // no program: the room's warm-up covers every material the blasts draw (the ground marks included). Buffers: eight explosions' worth, plus what the street's seven destructibles
   // (six gas cylinders, a car) own once they are dented and shot (a part clones its geometry on its first dent, a hit makes a decal, a shard or a scratch): ~100 buffers each, measured
@@ -73,6 +80,8 @@ const DRAW_MS = 300
 const ROOM_AIM = { eye: [0, 1.6, 4], target: [0, 0.5, -4] }
 // software GL in CI runs a frame in 0.3–0.8 s and the room caps dt, so a 4 s fuse takes minutes of real time there
 const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
+// a first use is checked for the programs it links, which happens in its first frames: in counters mode the room does not wait for the smoke to clear
+const FIRST_USE_SETTLE_MS = GPU_MODE ? SETTLE_TIMEOUT_MS : 45000
 
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
@@ -93,8 +102,11 @@ mkdirSync(outDir, { recursive: true })
 const SOFTWARE_GL = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox']
 const REAL_GL = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--disable-frame-rate-limit', '--no-sandbox']
 const { chromium } = loadPlaywright()
+// PERF_HEADED=1: a real window (X11), as a player sees it; headless Chrome composites off screen and reads several times slower on the same GPU
+const HEADED = GPU_MODE && process.env.PERF_HEADED === '1'
 const browser = await chromium.launch({
-  args: GPU_MODE ? REAL_GL : SOFTWARE_GL,
+  args: GPU_MODE ? [...REAL_GL, ...(HEADED ? ['--ozone-platform=x11', '--window-size=1600,900'] : [])] : SOFTWARE_GL,
+  ...(HEADED ? { headless: false } : {}),
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
 // software GL pays per pixel and the counters do not depend on the size, so CI draws a small window
@@ -123,7 +135,7 @@ const phases = []
 let lightSlotReport = { point: [], spot: [], problems: ['light_slots did not run'] }
 const idle = await phase('idle', () => pause(3000))
 // the light slots are a load-time property of the room: the cold shard (or the whole run) checks them, the warm shard skips them
-const slots = runs('cold') ? await phase('light_slots', async () => {
+const slots = runs('cold') && SLICE_AT === 1 ? await phase('light_slots', async () => {
   lightSlotReport = await page.evaluate(readLightSlots)
 }) : undefined
 if (slots) console.log(`SLOTS ${JSON.stringify(lightSlotReport)}`)
@@ -131,12 +143,12 @@ if (process.env.PERF_ONLY === 'light_slots') {
   await browser.close()
   process.exit(lightSlotReport.problems.length === 0 && slots?.programs === 0 ? 0 : 1)
 }
-if (runs('cold')) for (const id of EXPLOSIVES) await phase(`cold_${id}`, () => fireAndSettle([id]))
+if (runs('cold')) for (const id of sliceOf(EXPLOSIVES)) await phase(`cold_${id}`, () => fireAndSettle([id], { settleMs: FIRST_USE_SETTLE_MS }))
 // the warm shard alone first uses every explosive once, unmeasured, so warm_all measures second uses as in a full run
-if (!runs('cold') && runs('warm')) await fireAndSettle(EXPLOSIVES, 300)
-const warm = runs('warm') ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, 1200)) : undefined
-const storm = runs('warm') ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], 120)) : undefined
-const after = runs('warm') ? await phase('after_storm', () => pause(3000)) : undefined
+if (!runs('cold') && runs('warm')) await fireAndSettle(EXPLOSIVES, { gapMs: 300, settleMs: FIRST_USE_SETTLE_MS })
+const warm = runs('warm') && SHARD !== 'storm' ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, { gapMs: 1200 })) : undefined
+const storm = runs('warm') && SHARD !== 'warm' ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], { gapMs: 120 })) : undefined
+const after = runs('warm') && SHARD !== 'warm' ? await phase('after_storm', () => pause(3000)) : undefined
 
 // the horde phases reload the page on their own bench state (seed, scene, physics, count: applied in that order whatever the URL says)
 const hordeMetrics = {}
@@ -158,7 +170,7 @@ if (slots) for (const problem of lightSlotReport.problems) fail(`light_slots: ${
 if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
@@ -172,7 +184,7 @@ function pause(ms) {
   return page.evaluate((delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
 }
 
-async function fireAndSettle(ids, gapMs = 0, aim = ROOM_AIM) {
+async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE_TIMEOUT_MS } = {}) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
     await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
@@ -192,7 +204,7 @@ async function fireAndSettle(ids, gapMs = 0, aim = ROOM_AIM) {
   if (ids.includes('claymore')) await page.evaluate(() => window.__testRoom.walk([0, 0, -6], 1.5))
   // thrown and fused explosives go off seconds after the use: wait for the blast before waiting for it to end
   await page.waitForFunction(effectsAreOn, null, { timeout: SETTLE_TIMEOUT_MS, polling: 50 }).catch(() => pageErrors.push(`no blast after ${ids.join(', ')}`))
-  await page.waitForFunction(effectsAreOver, null, { timeout: SETTLE_TIMEOUT_MS, polling: 250 }).catch(() => undefined)
+  await page.waitForFunction(effectsAreOver, null, { timeout: settleMs, polling: 250 }).catch(() => undefined)
   await pause(500)
 }
 
@@ -240,7 +252,7 @@ async function playChainHorde() {
   await waitForHorde(() => (window.__testRoom.metrics().module.agents ?? 0) > 0, 30)
   await pause(GPU_MODE ? 6000 : 1000)
   chainSetupBuffers = await page.evaluate(() => window.__glCounts.buffers)
-  await fireAndSettle(CHAIN_THROWN, 300, aim)
+  await fireAndSettle(CHAIN_THROWN, { gapMs: 300, aim })
   await page.evaluate(([view]) => window.__testRoom.equip('rifle_5_56') && window.__testRoom.look(view.eye, view.target), [aim])
   await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push('the rifle never got ready'))
   for (let shot = 0; shot < 10; shot++) {
@@ -255,7 +267,8 @@ function checkHorde(id, found) {
   const crowd = found
   if (crowd.agents === undefined) return fail(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
   if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
-  if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
+  const drawAllowance = id === 'chain_horde' ? HORDE_BUDGET.damagedVehicleDraws : 0
+  if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth + drawAllowance) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
   if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : chainBuffers)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
   if (id === 'dense_horde') {
     if (!(crowd.falls_pressure > 0)) fail(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)

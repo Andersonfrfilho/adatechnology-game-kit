@@ -9,7 +9,8 @@ import type { Eyes } from '../eyes'
 import { createRigAnimator } from '../rich/animator'
 import { createBestBuilder } from '../rich/best-builder'
 import type { BestBuilder } from '../rich/best-builder'
-import { isLightBudget } from '@adatechnology/game-render-three'
+import { createStaticBatcher, isLightBudget } from '@adatechnology/game-render-three'
+import type { StaticBatcher } from '@adatechnology/game-render-three'
 import { createPersonBuilder } from '../rich/person-builder'
 import type { PersonBuilder } from '../rich/person-builder'
 import type { Three, THREE_NS } from '../three'
@@ -50,7 +51,12 @@ type Entry = {
   tilt: number
   /** What a blast is doing to the body now (see `knock.ts`); undefined at rest. */
   knock?: Knock
+  /** The body's parts drawn one batch per material, posed with the body (see `createStaticBatcher`). */
+  batcher?: StaticBatcher
 }
+
+/** Milliseconds a frame the batches of a new body may take to be made. */
+const BATCH_BUDGET_MS = 1
 
 const MOMENTS_WITH_LIMP = new Set(['limp', 'crawl'])
 
@@ -189,6 +195,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       const age = made.kind === 'zombie' ? undead?.traitsOf(character)?.age : undefined
       const blood = age !== undefined ? options.bloodOf?.(age) : undefined
       if (entry.body && blood) entry.body.blood = blood
+      if (three) entry.batcher = createStaticBatcher(three, object, { followMeshes: true, budgetMs: BATCH_BUDGET_MS })
       entries.set(id, entry)
       selected ??= entry
       trackEntry(entry)
@@ -476,10 +483,15 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         for (const [id, entry] of entries) {
           // bodies the room built for its contract checks, or has removed, never reach the scene
           if (!entry.root.parent) {
+            entry.batcher?.dispose()
+            // forget it everywhere: the wounds keep a state per tracked body (the whole rig), so a body left tracked stays in memory for good
+            if (entry.body) wounds?.untrack(entry.body)
+            if (selected === entry) selected = null
             entries.delete(id)
             continue
           }
           animate(entry, dt)
+          entry.batcher?.update()
         }
         wounds?.update(dt)
         sound?.update(dt)

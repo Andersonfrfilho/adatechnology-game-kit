@@ -1,4 +1,5 @@
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, crackedGlassMaterial, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
@@ -10,6 +11,7 @@ import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleLod } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
+import { createCabinSmoke } from '../cabin-smoke'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
 import type { LaneDamage } from './lane-damage'
 import { createScenarios } from './scenarios'
@@ -77,6 +79,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt', damage: 'none' as LaneDamage }
   const kits = new WeakMap<object, VehicleKit>()
   const placed = new Map<string, Placed>()
+  // the cabins hold the room's smoke out: through a shut car it does not pass, it gets in only by an open door, a broken window or a bullet hole
+  const cabins = createCabinSmoke()
   let host: ModuleHost | null = null
   let three: Three = null
   let counter = 0
@@ -179,6 +183,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         if (entry) entry.touched = true
         return hitBody(h)
       }
+      cabins.track(id, d, root as { parent: unknown | null })
       r.userData.destructible = d
       return d
     },
@@ -261,10 +266,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   }
   const clearHelpers = (): void => {
     for (const entry of placed.values()) {
-      for (const helper of entry.helpers) helper.parent?.remove(helper)
+      discardObject3D(entry.helpers)
       entry.helpers = []
     }
-    for (const axis of axes) axis.parent?.remove(axis)
+    discardObject3D(axes)
     axes = []
     helpersShown = ''
   }
@@ -443,8 +448,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
     const at = host.player().position
     const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
-    // a wreck is built damaged: it never draws fused, only in batches
-    entry.lod.update(distance, entry.touched === true || entry.scenario !== undefined, (entry.posedParts?.size ?? 0) > 0)
+    // rolling over and blowing up move the body without a part pose: the fused copy would stay upright where the car was
+    const c = entry.item.vehicle as { rollState?: unknown; flipped?: boolean; blast?: unknown; exploded?: boolean } | undefined
+    if (c && (c.rollState || c.flipped || c.blast || c.exploded)) entry.touched = true
+    // a wreck is built damaged: it never draws fused, only in batches (as a posed one)
+    entry.lod.update(distance, entry.touched === true, entry.scenario !== undefined || (entry.posedParts?.size ?? 0) > 0)
   }
 
   const frame = (dt: number): void => {
@@ -458,6 +466,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     }
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('damageables') || host.bench.layer('zones') || helpersShown !== '')) refreshLayers()
     lane?.step(dt)
+    cabins.sync(effects())
   }
 
   const count = (): { drawCalls: number; triangles: number } => {
@@ -566,6 +575,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopFrame()
         stopBlocker?.()
         stopCrease?.()
+        cabins.clear(effects())
         clearHelpers()
         clearLane()
         host = null

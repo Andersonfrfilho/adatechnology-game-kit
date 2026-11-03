@@ -77,6 +77,17 @@ is the recipes plus these, what a world plays by default. Texts of every recipe 
 `vehicle_leak` is the page's pool and drips without the fire and the explosion (`FUEL_LEAK_ONLY`: the same `decal` and `emit` steps); `vehicle_leak_ignited` is the whole sequence (the spark, the fire running along
 the pool to the tank and the blast at 7.2 s), played when the leak catches fire.
 
+## Closed spaces (a shut car keeps the smoke out)
+
+`world.enclose(id, { center, halfSize, orientation, openings, leak })` declares a closed space: a turned box the smoke, dust, steam and gas do not
+cross. It works on all three particle systems: the puffs (kinds smoke, dust and gas; not blood or bile), the sprite kinds marked `carried`
+(`smoke`, `dust`, `steam`, `ash`) and the Workshop's light normal-blend sprites (`g` under 3). A step that would cross a wall is put back on the
+wall and slides along it; it passes only inside an opening (an opening with a `rate` passes that share per second of what presses on it, like a
+bullet hole), or through a closed wall at `leak` per second (the gaps of a shut door). What starts inside stays inside. A puff stops about a third
+of its size off a wall it is outside of, so its edge does not show through the glass. Call `enclose` again each time the space moves or opens;
+`enclose(id, null)` ends it, and `clear()` keeps the spaces (they are the scene, not effects). The same shape is `Enclosure` of the contracts,
+and `game-vfx-three`'s renderer forwards `EffectSink.enclose` here.
+
 ## Install
 
 ```sh

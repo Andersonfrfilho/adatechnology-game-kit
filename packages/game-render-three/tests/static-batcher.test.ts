@@ -80,3 +80,55 @@ describe('createStaticBatcher with a rebuilt model', () => {
     expect(batcher.update()).toBe(1)
   })
 })
+
+describe('createStaticBatcher with a budget', () => {
+  it('makes the batches over the next updates instead of in the call', () => {
+    const { root, parts } = car()
+    const batcher = createStaticBatcher(THREE, root, { budgetMs: 0 })
+    expect(batcher.stats().batches).toBe(0)
+    expect(drawn(parts[0]!)).toBe(true)
+    batcher.update()
+    batcher.update()
+    expect(batcher.stats().batches).toBe(2)
+    expect(drawn(parts[0]!)).toBe(false)
+  })
+})
+
+describe('createStaticBatcher with every mesh of a batch released', () => {
+  it('hides the empty batch', () => {
+    const { root, panes } = car()
+    const batcher = createStaticBatcher(THREE, root)
+    for (const pane of panes) pane.visible = false
+    batcher.update()
+    const glass = batcher.group.children.find((child) => (child as THREE.Mesh).material === panes[0]!.material)!
+    expect(glass.visible).toBe(false)
+  })
+})
+
+describe('createStaticBatcher following its meshes', () => {
+  it('keeps a posed mesh batched and draws its part of the batch where the mesh now is', () => {
+    const { root, parts } = car()
+    const batcher = createStaticBatcher(THREE, root, { followMeshes: true })
+    const moved = parts[1]!
+    moved.position.set(5, 3, -2)
+    moved.rotation.set(0, Math.PI / 2, 0)
+    root.updateMatrixWorld(true)
+    expect(batcher.update()).toBe(0)
+    const paint = batcher.group.children.find((child) => (child as THREE.Mesh).material === moved.material) as THREE.SkinnedMesh
+    expect(paint.isSkinnedMesh).toBe(true)
+    paint.skeleton.update()
+    const vertices = (parts[0]!.geometry.attributes.position as THREE.BufferAttribute).count
+    const corner = new THREE.Vector3().fromBufferAttribute(moved.geometry.attributes.position as THREE.BufferAttribute, 0)
+    const expected = moved.localToWorld(corner.clone())
+    const drawnAt = paint.localToWorld(paint.applyBoneTransform(vertices, new THREE.Vector3().fromBufferAttribute(paint.geometry.attributes.position as THREE.BufferAttribute, vertices)))
+    expect(drawnAt.distanceTo(expected)).toBeLessThan(1e-5)
+  })
+
+  it('still gives a dented or hidden mesh its own draw back', () => {
+    const { root, parts } = car()
+    const batcher = createStaticBatcher(THREE, root, { followMeshes: true })
+    parts[0]!.visible = false
+    ;(parts[1]!.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    expect(batcher.update()).toBe(2)
+  })
+})

@@ -288,6 +288,12 @@ export interface FrameOptions {
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
  */
+export interface HostGraphics {
+  hordeDetail(): 'auto' | number
+  onChange(listener: () => void): () => void
+  report(key: string, value: number): void
+}
+
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -316,6 +322,12 @@ export interface ModuleHost {
   onReset?(listener: () => void): () => void
   /** Write a line to the host's behaviour log; `type` is the kind of entry (default `module_note`), so a module can log what a filter looks for (`sound`). */
   log(text: string, data?: Record<string, unknown>, type?: string): void
+  /**
+   * The player's graphics settings, for what a module draws on its own (a horde): `hordeDetail` is `auto` (the module's renderer adapts by itself) or the share of
+   * its level-of-detail budget the player fixed, 0.1 to 1. `onChange` tells when it changes; `report` says what an adapting renderer draws now, so the settings
+   * screen can show it (`hordeDetail`: the share in use). A host without graphics settings leaves it out.
+   */
+  graphics?: HostGraphics
   /**
    * Sets what the host lets a module tune on its tools, keyed by the id of the module's own control (`ModuleControl.id`) with the id of the option as the value; the tool in hand changes at once and the
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).

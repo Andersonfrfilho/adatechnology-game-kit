@@ -212,3 +212,22 @@ describe('houses in the room', () => {
     expect(checks.filter(([ok]) => !ok)).toEqual([])
   })
 })
+
+describe('the scenarios stop listening when they end (CLAUDE.md, "Memória")', () => {
+  it('leaves no listener of theirs on the room world', async () => {
+    const { module, room, step } = fakeRoom({ locale: 'en' })
+    const on = room.world.on.bind(room.world)
+    let open = 0
+    room.world.on = ((type: any, fn: any) => {
+      open++
+      const off = on(type, fn)
+      return () => {
+        open--
+        off()
+      }
+    }) as typeof room.world.on
+    const scenario = module.scenarios!('en').find((s) => s.id === 'house_gas_explodes')!
+    await scenario.run({ room, step, expect: () => undefined })
+    expect(open).toBe(0)
+  })
+})

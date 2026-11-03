@@ -32,11 +32,12 @@ const census = (area) =>
     const frames = (n) => new Promise((done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
     const count = () => { let n = 0; room.scene.traverse(() => n++); return n }
     if (area) await room.openAreaAsync(area)
-    const until = performance.now() + 60000
-    for (let last = -1; performance.now() < until; ) {
-      await frames(5)
+    // settled: the same count three checks in a row (a CI runner takes over a minute to tear an area down and batch the next one)
+    const until = performance.now() + 240000
+    for (let last = -1, same = 0; performance.now() < until && same < 3; ) {
+      await frames(10)
       const now = count()
-      if (now === last) break
+      same = now === last ? same + 1 : 0
       last = now
     }
     const pieces = new Map()
