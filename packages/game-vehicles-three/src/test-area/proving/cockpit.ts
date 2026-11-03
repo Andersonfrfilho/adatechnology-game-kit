@@ -11,6 +11,8 @@ import { subjectSpec } from '@adatechnology/game-vehicles-proving'
 import type { ProvingSubject } from '@adatechnology/game-vehicles-proving'
 
 import type { BuiltVehicle } from '../../build'
+import { createVehicleDashboard } from '../../dashboard'
+import type { VehicleDashboard } from '../../dashboard'
 import { createVehicleLamps } from '../../lamps'
 import type { VehicleLamps } from '../../lamps'
 
@@ -22,6 +24,7 @@ export interface Cockpit {
   readonly driver: SemiDriver
   readonly controls: VehicleControls
   readonly lamps: VehicleLamps
+  readonly dashboard: VehicleDashboard | null
   /** The gas this step, 0..1 (what the engine's sound loads by). */
   readonly throttle: number
   step(dt: number): void
@@ -29,7 +32,11 @@ export interface Cockpit {
 }
 
 export function createCockpit(o: {
-  THREE: Parameters<typeof createVehicleLamps>[0]
+  THREE: Parameters<typeof createVehicleLamps>[0] & Parameters<typeof createVehicleDashboard>[0]
+  /** The kit's dial material (`kit.materials.gauge`): with it the cluster reads live. */
+  gauge?: unknown
+  /** The kit's needle material (`kit.materials.amber`). */
+  needle?: unknown
   host: ModuleHost
   built: BuiltVehicle
   subject: ProvingSubject
@@ -44,6 +51,9 @@ export function createCockpit(o: {
   driver.place(o.place[0], o.place[1], o.place[2])
   const lamps = createVehicleLamps(o.THREE, o.built, { lights: o.host.lights, owner: 'proving-ground' })
   const audio = o.host.audio
+  // the cluster: the speedometer to the next 20 km/h over the vehicle's top speed, the rev counter to its red line
+  const top = o.subject.stats.maxSpeedKmh
+  const dashboard = o.gauge ? createVehicleDashboard(o.THREE, o.built, { gauge: o.gauge, needle: o.needle, redlineRpm: spec.engine.redlineRpm, maxKmh: top ? Math.ceil((top + 10) / 20) * 20 : undefined }) : null
   const at = (): [number, number, number] => [o.built.group.position.x, 1, o.built.group.position.z]
   const play = (sound: string, volume = 1): void => void audio?.play?.({ sound, position: at(), volume })
   let alarmAgain = 0
@@ -92,6 +102,7 @@ export function createCockpit(o: {
     driver,
     controls,
     lamps,
+    dashboard,
     get throttle() {
       return gas
     },
@@ -110,6 +121,24 @@ export function createCockpit(o: {
         left: s.blinkOn && (s.indicator === 'left' || s.indicator === 'hazard'),
         right: s.blinkOn && (s.indicator === 'right' || s.indicator === 'hazard'),
       })
+      dashboard?.update(
+        {
+          kmh: Math.abs(driver.state.u) * 3.6,
+          rpm: driver.state.engineOn ? driver.state.rpm : 0,
+          gear: driver.state.gear,
+          ignition: s.ignition,
+          engineOn: driver.state.engineOn,
+          left: s.blinkOn && (s.indicator === 'left' || s.indicator === 'hazard'),
+          right: s.blinkOn && (s.indicator === 'right' || s.indicator === 'hazard'),
+          highBeam: s.lamps.mode === 'high',
+          lowBeam: s.lamps.mode === 'low' || s.lamps.mode === 'position',
+          fog: s.lamps.fog,
+          parkingBrake: s.parkingBrake,
+          seatbelt: s.seatbelt,
+          fourWheel: s.fourWheelEngaged,
+        },
+        dt,
+      )
       if (s.tick) play(sounds.blinker, 0.8)
       // the horn's note is 0.6 s: held, it sounds again before the last one ends
       if (s.horn && (hornAgain -= dt) <= 0) {
@@ -146,6 +175,7 @@ export function createCockpit(o: {
       target?.removeEventListener('blur', blur)
       controls.release()
       lamps.dispose()
+      dashboard?.dispose()
     },
   }
 }

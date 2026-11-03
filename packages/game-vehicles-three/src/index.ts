@@ -15,3 +15,5 @@ export { createProvingModule, loadProvingModule, PROVING_AREA_ID, PROVING_TEXT }
 export type { ProvingModuleOptions, ProvingRoomLike, ProvingText } from './test-area/proving'
 export { createVehicleLamps, LAMP_RULES } from './lamps'
 export type { LampSwitch, VehicleLamps } from './lamps'
+export { createVehicleDashboard, DASHBOARD_LOOK } from './dashboard'
+export type { DashboardOptions, DashboardReading, VehicleDashboard } from './dashboard'

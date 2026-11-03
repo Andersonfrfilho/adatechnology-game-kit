@@ -416,6 +416,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       built: car.built,
       subject: car.subject,
       place: [0, 0, 0],
+      gauge: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.gauge,
+      needle: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.amber,
       // the engine's own sound turns the key (starter, catch, idle by RPM)
       sounds: { starter: '' },
       onExit: () => stopDriving(),
