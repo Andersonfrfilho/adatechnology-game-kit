@@ -20,7 +20,35 @@ export {
   TYPE_MAP,
 } from './tables.js'
 export type { TypeMapEntry } from './tables.js'
-export type { AdapterOptions, FloorplanAdapter, Json, Registry } from './types.js'
+export type {
+  AdapterOptions,
+  AdapterPlan,
+  AdapterRegistries,
+  AdapterSource,
+  AddOptions,
+  AddResult,
+  BlockedFn,
+  BlockedOptions,
+  ContentStack,
+  CreateWorldOptions,
+  EntryConnections,
+  EntryItem,
+  FloorplanAdapter,
+  HouseholdKit,
+  InteractablesKit,
+  Json,
+  LightsOn,
+  PlanEntry,
+  PlanOptions,
+  PlannedCylinder,
+  PlannedFixture,
+  Registry,
+  ShowerHeater,
+  SourceChimney,
+  SourceItem,
+  SourcePlan,
+  WaterNetwork,
+} from './types.js'
 
 /**
  * The adapter as the house renderer takes it (`interactives.adapter`): `create(options)` makes the adapter; the tables are on it too.
