@@ -261,6 +261,45 @@ jobs:
           name: perf-budget-${{ matrix.shard }}
           path: examples/test-room/dist/perf.json
 
+  # Memory of the test room (CLAUDE.md, "Memória"): the same cycle again and again (blasts; glass and cars; opening the areas), then room.clear();
+  # fails when GPU buffers, textures, canvases, listeners, intervals or the JS heap keep growing per cycle (examples/test-room/leak.mjs).
+  memory-leaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [explosions, glass, areas, more, hands]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
+          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
+
+      - name: Build the test room
+        run: node examples/test-room/build.mjs
+
+      - name: Check that nothing stays in memory across cycles
+        run: LEAK_PHASE=${{ matrix.phase }} node examples/test-room/leak.mjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memory-leaks-${{ matrix.phase }}
+          path: examples/test-room/dist/leak-${{ matrix.phase }}.json
+
   # Timing of the kit's 3D builders (tools/shapes-bench): medians as ratios to a calibration loop, against baseline.json.
   # Fails when a builder is twice as slow as its baseline, or a group (props3d, household, items, weapons, animals...) 1.5 times, after
   # re-timing the suspects; the table goes to the job summary and the run to an artifact (bench --baseline-from turns it into a baseline).
@@ -311,7 +350,7 @@ jobs:
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench, architecture]
+    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench, architecture, memory-leaks]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

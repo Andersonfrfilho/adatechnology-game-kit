@@ -107,3 +107,20 @@ Decidido pelo dono em 2026-11-01, depois de carros que passavam nos testes e est
 - **Camada nova não substitui a antiga sem provar o mesmo comportamento**: o PR lista o que a antiga fazia e o teste mostra que continua (foi assim que o furo da camada `destructible/` perdeu o que `zone-decals` já fazia).
 - **Todo modelo passa pelo teste de aceitação** `packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts`, na frota inteira, não numa amostra: contar filhos ou eventos não prova comportamento, o teste mede posição no mundo.
 - **Modelo novo ou mudança em porta, vidro, furo ou colisão** atualiza [`docs/veiculos-verificacao.md`](docs/veiculos-verificacao.md) e traz print no jogo real com a porta aberta depois do tiro. Pendência fica escrita lá, nunca escondida.
+
+## 8. Memória: o que sai da cena é liberado — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em todo ciclo da sala (cada troca de área deixava ~24 mil buffers na GPU e
++10 MB no heap; explosões, vidro, carros e horda também acumulavam).
+
+- three.js só libera GPU no `dispose()`. **Todo objeto tirado da cena para sempre** (item, destroço, peça solta, projétil, corpo, pedaço cortado,
+  efeito, rótulo) passa por `discardObject3D(objeto)` ou `releaseObject3D(raízes, { keep: cena })` do `game-shapes-three`, que liberam geometrias,
+  materiais, texturas (mapas e uniforms) e esqueletos e preservam o que a cena ainda desenha. Recurso compartilhado de propósito (paleta, catálogo)
+  leva `userData.shared = true`. Nada de `removeFromParent()` sozinho para algo que não volta.
+- Textura de canvas (trinca de vidro, rótulo, placa) é liberada quando a peça troca de material ou some.
+- **Listas e mapas esquecem o que saiu**: módulo de área, sistema de ferimentos, som, multidão. Se guarda uma entrada por objeto, apaga quando a raiz
+  sai da cena (ex.: `wounds.untrack`). Listener e `setInterval` têm remoção no `dispose`/teardown.
+- Testes que barram a volta: `packages/game-test-room/tests/memory.test.ts` (o `clear()` libera o que tirou e preserva o cenário) e
+  `node examples/test-room/leak.mjs` no CI (job `memory-leaks`): repete explosões, vidro e carros, e a troca de áreas, e falha se buffers, texturas,
+  canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
+  `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.

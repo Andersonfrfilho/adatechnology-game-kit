@@ -1,4 +1,5 @@
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, crackedGlassMaterial, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from '@adatechnology/game-vehicles'
@@ -257,10 +258,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   }
   const clearHelpers = (): void => {
     for (const entry of placed.values()) {
-      for (const helper of entry.helpers) helper.parent?.remove(helper)
+      discardObject3D(entry.helpers)
       entry.helpers = []
     }
-    for (const axis of axes) axis.parent?.remove(axis)
+    discardObject3D(axes)
     axes = []
     helpersShown = ''
   }
@@ -428,6 +429,9 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
     const at = host.player().position
     const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
+    // rolling over and blowing up move the body without a part pose: the fused copy would stay upright where the car was
+    const c = entry.item.vehicle as { rollState?: unknown; flipped?: boolean; blast?: unknown; exploded?: boolean } | undefined
+    if (c && (c.rollState || c.flipped || c.blast || c.exploded)) entry.touched = true
     // a wreck is built damaged: it never draws fused, only in batches (as a posed one)
     entry.lod.update(distance, entry.touched === true, entry.scenario !== undefined || (entry.posedParts?.size ?? 0) > 0)
   }

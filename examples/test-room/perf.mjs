@@ -40,8 +40,8 @@ const BUDGET = {
   programsAfterLoad: 0,
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
   drawGrowthAfterStorm: 1.1,
-  // a vehicle draws its still parts in batches (createStaticBatcher); a part the storm dented or moved draws on its own from then on
-  releasedVehicleParts: 40,
+  // what the blasts dent or tear off draws on its own again, out of its batch: the car's parts and the room's furniture (~56 measured after the storm)
+  releasedParts: 60,
 }
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
@@ -163,7 +163,7 @@ if (slots) for (const problem of lightSlotReport.problems) fail(`light_slots: ${
 if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedVehicleParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 

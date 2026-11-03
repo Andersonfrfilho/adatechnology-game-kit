@@ -1,3 +1,4 @@
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
@@ -478,9 +479,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     }
   }
   const clearBoxes = (): void => {
-    for (const box of boxes) {
-      box.parent?.remove(box)
-    }
+    discardObject3D(boxes)
     boxes = []
   }
   const applyBoxes = (): void => {
@@ -500,7 +499,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
 
   const clearFinds = (): void => {
     if (findsGroup) {
-      findsGroup.parent?.remove(findsGroup)
+      discardObject3D(findsGroup)
       findsGroup = null
     }
   }
@@ -767,7 +766,10 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       latestTHREE = lent.THREE as typeof THREE_NS
       const offChange = lent.bench?.onChange(onChange)
       const offFrame = lent.onFrame((dt) => {
-        for (const entry of entries) if (entry.group === 'showcase' && entry.root.parent) entry.root.rotation.y += dt * SPIN
+        // what the room took out (or built only for its checks) is forgotten at the next frame: each entry holds its whole model
+        for (let i = entries.length - 1; i >= 0; i--) if (!entries[i].root.parent) entries.splice(i, 1)
+        for (let i = shelfRoots.length - 1; i >= 0; i--) if (!shelfRoots[i].parent) shelfRoots.splice(i, 1)
+        for (const entry of entries) if (entry.group === 'showcase') entry.root.rotation.y += dt * SPIN
       })
       return () => {
         offChange?.()
