@@ -1,6 +1,8 @@
 import type { TerrainMaterial, TerrainProfile } from './types'
 
 // Specific energies are what the marks of real blows imply: a 500 J pistol round leaves about 120 cm³ in soil and 3 cm³ in concrete, an 800 kJ grenade a 1.3 m crater in soil and a 25 cm spall on a slab.
+// Cracks run about a metre from a grenade on a slab and half that on asphalt; a contact charge breaks a reinforced slab right through at about 1 kg of TNT (4.2 MJ) for 12 cm,
+// the thickness cubed (the breaching rule of thumb), leaving a hole about one and a half thicknesses wide with the bars across it.
 export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'turf',
@@ -67,6 +69,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     debris: 'chips',
     color: [0.05, 0.05, 0.055],
     pattern: 'asphalt',
+    crack: { reach: 0.6, width: 0.008, thresholdJoules: 800 },
     hits: {
       ballistic: { specificEnergy: 3e7, aspect: 0.2, minRadius: 0.03 },
       blunt: { specificEnergy: 1e8, aspect: 0.1, thresholdJoules: 400 },
@@ -80,6 +83,8 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     debris: 'chips',
     color: [0.33, 0.33, 0.31],
     pattern: 'concrete',
+    crack: { reach: 1, width: 0.006, thresholdJoules: 300 },
+    breach: { joulesPerCubedThickness: 2.4e9, radiusOverThickness: 1.5 },
     hits: {
       ballistic: { specificEnergy: 1.5e8, aspect: 0.14, minRadius: 0.018 },
       blunt: { specificEnergy: 3e8, aspect: 0.08, thresholdJoules: 800 },
@@ -106,6 +111,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     debris: 'shards',
     color: [0.72, 0.7, 0.66],
     pattern: 'tile',
+    crack: { reach: 0.5, width: 0.002, thresholdJoules: 40 },
     hits: {
       ballistic: { specificEnergy: 8e6, aspect: 0.1, minRadius: 0.05 },
       blunt: { specificEnergy: 1e7, aspect: 0.08, thresholdJoules: 80, minRadius: 0.06 },
@@ -132,6 +138,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     debris: 'chips',
     color: [0.23, 0.22, 0.2],
     pattern: 'stone',
+    crack: { reach: 0.5, width: 0.004, thresholdJoules: 1000 },
     hits: {
       ballistic: { specificEnergy: 2.5e8, aspect: 0.12, minRadius: 0.015 },
       blunt: { specificEnergy: 5e8, aspect: 0.08, thresholdJoules: 1500 },
