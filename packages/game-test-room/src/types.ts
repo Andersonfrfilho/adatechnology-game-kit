@@ -320,6 +320,8 @@ export type RoomMetricId =
   | 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
   /** Of the last blast, once the room's blast options are on: the share that reached the most sheltered target (%), the pressure multiplier, the fragment hits. */
   | 'blast_shelter' | 'blast_confinement' | 'blast_fragments'
+  /** Memory: geometries and textures alive on the GPU (three's `renderer.info.memory`), the JS heap in MB where the browser tells it. */
+  | 'geometries' | 'textures' | 'heap_mb'
 
 /** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
 export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }

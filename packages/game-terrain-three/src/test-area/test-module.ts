@@ -102,7 +102,14 @@ export function createTerrainTestModule(options: { readonly locale?: string } = 
       })
       return () => {
         stop?.()
-        for (const label of labels) label.removeFromParent()
+        // each label is built for this attach (its own plane, material and canvas texture): freed when the area goes
+        for (const label of labels) {
+          label.removeFromParent()
+          const mesh = label as THREE_NS.Mesh<THREE_NS.BufferGeometry, THREE_NS.MeshBasicMaterial>
+          mesh.geometry.dispose()
+          mesh.material.map?.dispose()
+          mesh.material.dispose()
+        }
         labels = []
       }
     },
