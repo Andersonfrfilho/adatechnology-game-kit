@@ -45,4 +45,16 @@ describe('kit samples', () => {
     expect(await loadKitSamples(engine, { fetchManifest: async () => Promise.reject(new Error('file://')) })).toBeNull()
     expect(banks).toHaveLength(1)
   })
+
+  it('does not even ask for the manifest from a page opened from disk (the refused fetch would log a console error)', async () => {
+    const fetched: string[] = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (async (url: string) => (fetched.push(String(url)), new Response('{}'))) as typeof fetch
+    try {
+      expect(await loadKitSamples({ register: () => undefined }, { baseUrl: 'file:///room/sfx/' })).toBeNull()
+      expect(fetched).toEqual([])
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
 })

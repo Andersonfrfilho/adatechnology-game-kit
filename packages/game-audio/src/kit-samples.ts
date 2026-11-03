@@ -83,7 +83,19 @@ export type LoadKitSamplesOptions = KitSampleBankOptions & {
 
 type Registers = { register(bank: SoundBank): void; loadSamples?(ids?: readonly string[]): Promise<unknown> }
 
+/** True when `url`, read against the page, is a `file://` one: `fetch` refuses that scheme and the browser logs an error for each try. */
+const isFileUrl = (url: string): boolean => {
+  const page = (globalThis as { location?: { href?: string } }).location?.href
+  try {
+    return new URL(url, page).protocol === 'file:'
+  } catch {
+    return false
+  }
+}
+
 const fetchJson = async (url: string): Promise<SfxManifest> => {
+  // a page opened from disk keeps the recipes without asking: the refused fetch would only put an error in the console
+  if (isFileUrl(url)) throw new Error(`${url}: file:// is not fetched`)
   const response = await fetch(url)
   if (!response.ok) throw new Error(`${url}: ${response.status}`)
   return (await response.json()) as SfxManifest
