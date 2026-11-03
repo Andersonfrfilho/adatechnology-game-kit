@@ -1445,6 +1445,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.running = !player.crouching && (player.keys.has('ShiftLeft') || player.keys.has('ShiftRight'))
     avatarState.crouch = crouchForced || player.crouching || push.isBent
     avatarState.down = downForced || Boolean(player.knocked?.down || (player.knocked?.lying ?? 0) > 0.5)
+    // a blast falls the body the way it pushed it; a module's own knock-down keeps the avatar's pick
+    avatarState.fallForward = downForced ? undefined : player.knockedForward
     avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
     avatarState.pitch = player.pitch
     avatarState.holding = heldPiece !== null

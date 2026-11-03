@@ -22,6 +22,8 @@ export interface RoomAvatarState {
   running: boolean
   crouch: boolean
   down: boolean
+  /** Which way the body falls while `down`: true face down, false on its back; left out, the avatar picks. A blast falls it the way it pushed. */
+  fallForward?: boolean
   /** A firearm is the tool in hand. */
   armed: boolean
   /** Camera pitch, radians, positive looking up (the room's own convention). */
