@@ -123,6 +123,9 @@ export function impactKey(def: MaterialDef | undefined): string {
   return def.fracture === 'none' ? 'impact_metal' : 'impact_wood'
 }
 
+/** Sound key (`shot_*`) of a round striking this material: sharper than a blow (a tink on steel, a crack on glass); a host without it plays the `impact_*`. */
+export const shotKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'shot_')
+
 /** Sound key (`drag_*`) of a base of this material dragged on a floor. */
 export const dragSoundKey = (def: MaterialDef | undefined): string => impactKey(def).replace('impact_', 'drag_')
 
@@ -1008,7 +1011,7 @@ class Renderer implements DestructionRenderer {
       this.vfx.burst('dust', ev.worldPoint, [n.x, n.y, n.z], this.low ? 5 : 10, 0.7, puff)
       if (ev.hole.through && ev.exitPoint) this.vfx.burst('dust', ev.exitPoint, [-n.x, -n.y, -n.z], this.low ? 10 : 20, 1.3, puff)
     }
-    this.sound(impactKey(def), ev.worldPoint, 0.6)
+    this.sound(shotKey(def), ev.worldPoint, 0.6)
   }
 
   private onCrack(ev: Ev<'crack'>): void {

@@ -94,7 +94,7 @@ describe('dents', () => {
 
 describe('holes and cracks', () => {
   it('adds decals as children of the mesh and removes them on restore', () => {
-    const { world, renderer } = setup()
+    const { world, renderer, sounds } = setup()
     world.addObject('o1', [partState('plate', 'steel'), partState('top', 'glass')])
     const a = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1))
     const b = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1))
@@ -112,6 +112,7 @@ describe('holes and cracks', () => {
     expect(b.children.length).toBe(2) // glass: crack stars instead of discs
     expect(b.children.every((c) => c instanceof THREE.LineSegments)).toBe(true)
     expect(renderer.stats().decals).toBe(4)
+    expect(sounds.filter((k) => k.startsWith('shot_'))).toEqual(['shot_metal', 'shot_glass'])
     renderer.restore('o1')
     expect(a.children.length + b.children.length).toBe(0)
     expect(renderer.stats().decals).toBe(0)

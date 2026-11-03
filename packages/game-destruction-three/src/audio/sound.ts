@@ -29,6 +29,12 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     impact_glass: { sound: 'ping' },
     impact_masonry: { sound: 'chip' },
     impact_soft: { sound: 'thud' },
+    // a round strikes: the steel rings high, glass cracks, wood and masonry chip, a soft part takes a dull thunk
+    shot_metal: { sound: 'ping' },
+    shot_wood: { sound: 'chip' },
+    shot_glass: { sound: 'crack' },
+    shot_masonry: { sound: 'chip' },
+    shot_soft: { sound: 'thunk' },
     drag_wood: { sound: 'drag_wood' },
     drag_metal: { sound: 'drag_metal' },
     drag_glass: { sound: 'drag_glass' },
@@ -142,7 +148,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
         setFire()
         return
       }
-      const rule = rules[key]
+      const rule = key in rules ? rules[key] : rules[key.replace(/^shot_/, 'impact_')]
       if (!rule) return
       const sound = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
       engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(rule.params ? { params: rule.params } : {}) })
