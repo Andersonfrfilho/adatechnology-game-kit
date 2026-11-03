@@ -1,4 +1,4 @@
-import type { BenchChange, ModuleControl, ModuleHost, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
+import type { BenchChange, GaitId, ModuleControl, ModuleHost, ModuleMetric, ModuleScenario, SurfaceId, TestableModule } from '@adatechnology/game-contracts'
 
 import { playerTextOf } from '../locales'
 import { createPlayer } from '../player'
@@ -22,6 +22,8 @@ type CameraLike = { position: { x: number; y: number; z: number }; rotation?: { 
 type ThreeLike = { Vector3?: new () => { x: number; y: number; z: number } }
 
 const MOVING_SPEED = 0.2
+/** Metres per second above which a move of the view is a jump of the camera, not the body walking. */
+const TELEPORT_SPEED = 10
 const SPRINT_SPEED = 3.4
 const FRAME = 1 / 30
 
@@ -77,6 +79,9 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
   let lastMessage = ''
   let pending: Partial<Record<PlayerAction, boolean>> = {}
   let bandage = false
+  let footfall = false
+  let surface: SurfaceId | undefined
+  let gait: GaitId | undefined
   let last: { x: number; z: number } | null = null
   const offs: (() => void)[] = []
 
@@ -86,7 +91,16 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
     offs.push(made.on('noise', (e) => void (lastNoise = e.radius)))
     offs.push(made.on('step', () => void (steps += 1)))
     offs.push(made.on('message', (e) => void (lastMessage = playerTextOf(e.id, locale))))
-    offs.push(made.on('sound', (e) => void host?.audio?.play({ sound: e.sound, volume: e.volume, position: e.position })))
+    // the body sounds of each event (a footstep on its surface, the swing and then the hit of a blow); the team's class only when it names none
+    offs.push(
+      made.on('sound', (e) => {
+        if (e.ids.length === 0) return
+        e.ids.forEach((id, index) => {
+          const delay = e.at?.[index] ?? 0
+          host?.audio?.play({ sound: id, volume: e.volume, position: e.position, ...(delay > 0 ? { delay } : {}) })
+        })
+      }),
+    )
     offs.push(made.on('died', (e) => host?.log(`player died: ${e.cause}`, { cause: e.cause })))
     lastNoise = 0
     steps = 0
@@ -108,13 +122,16 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
 
   const frame = (dt: number): void => {
     const here = view()
-    const speed = here && last && dt > 0 ? Math.hypot(here.x - last.x, here.z - last.z) / dt : 0
+    const raw = here && last && dt > 0 ? Math.hypot(here.x - last.x, here.z - last.z) / dt : 0
+    // faster than anyone runs is the view put somewhere else (an area opening, a scripted look), not a walk: no footstep for it
+    const speed = raw > TELEPORT_SPEED ? 0 : raw
     if (here) {
       player.state.x = here.x
       player.state.z = here.z
     }
-    const input: PlayerInput = { forward: speed > MOVING_SPEED ? 1 : 0, run: speed > SPRINT_SPEED, yaw: here?.yaw ?? 0, bandage, pressed: pending }
+    const input: PlayerInput = { forward: speed > MOVING_SPEED ? 1 : 0, run: gait ? gait === 'run' : speed > SPRINT_SPEED, yaw: here?.yaw ?? 0, bandage, pressed: pending, footfall, ...(surface ? { surface } : {}) }
     pending = {}
+    footfall = false
     bandage = false
     player.update(dt, input, { crowd: grabber.crowd })
     if (here) {
@@ -289,9 +306,17 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
       last = null
       const off = lent.bench?.onChange(onChange)
       const offFrame = lent.onFrame(frame)
+      // the host's body puts its feet down: the footsteps follow it (and what it says is under them)
+      const offFeet = lent.on((event) => {
+        if (event.type !== 'footfall') return
+        footfall = true
+        surface = event.surface
+        gait = event.gait
+      })
       return () => {
         off?.()
         offFrame()
+        offFeet()
         host = null
       }
     },

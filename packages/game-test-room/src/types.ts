@@ -421,7 +421,8 @@ export interface TestRoom {
   update(dt: number): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
-  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera', fn: (data: unknown) => void): () => void
+  /** `footfall`: a foot of the player's body touched the ground (`{ foot, gait, time }`), the moment its footstep sounds. */
+  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera' | 'footfall', fn: (data: unknown) => void): () => void
   /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
