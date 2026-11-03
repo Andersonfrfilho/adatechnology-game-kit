@@ -4,6 +4,8 @@
 import { DISTANCE_CURVES, sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
 import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
+import { BLAST_SOUNDS, FIRE_LOOP, FIRE_SOUNDS } from './blast-fire'
+
 const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars']): SoundRecipe => sceneRecipe(id, layers, line, vars ? { vars } : {})
 
 const boomLayers = (big: boolean): Layer[] => [
@@ -104,4 +106,4 @@ export const LEAF_SOUNDS: readonly SoundRecipe[] = [
   leaf('slide', [noise({ type: 'bandpass', f: 700, q: 2, a: 0.04, d: 0.35, vol: 0.22 }), noise({ type: 'bandpass', f: 2200, q: 5, d: 0.3, vol: 0.05 })]),
 ]
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS], loops: [BURN_LOOP, FIRE_LOOP] }

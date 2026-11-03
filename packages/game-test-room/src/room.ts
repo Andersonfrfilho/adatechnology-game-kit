@@ -4,6 +4,7 @@ import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
+import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -283,9 +284,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownAudio = options.audio === undefined
   const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
-  const playSound = (key: string, point: Vec3, volume: number): void => {
-    destructionSound?.onSound(key, point, volume)
-    options.onSound?.(key, point, volume)
+  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
+    destructionSound?.onSound(key, point, volume, detail)
+    if (detail) options.onSound?.(key, point, volume, detail)
+    else options.onSound?.(key, point, volume)
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
@@ -2866,6 +2868,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)

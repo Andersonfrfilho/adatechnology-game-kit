@@ -2,7 +2,10 @@ import type { Vec3 } from '@adatechnology/game-contracts'
 import { GAME_SFX_BANK } from '@adatechnology/game-audio'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
+import { BIG_BLAST_RADIUS, BLAST_FAR_DISTANCE, BLAST_KIND_OF, BLAST_SOUND_OF } from './blast-fire'
+import type { BlastKind } from './blast-fire'
 import { DESTRUCTION_SOUND_BANK } from './recipes'
+import type { SoundDetail } from '../types'
 
 /**
  * What a sound key plays: the recipe, its params, a scale on the volume the renderer gives, and (optionally) a louder recipe above a volume
@@ -66,10 +69,12 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     ricochet: { sound: 'ping' },
     unscrew: { sound: 'chip' },
     detach: { sound: 'thunk' },
-    ignite: { sound: 'hiss', params: { seconds: 0.5 } },
-    extinguish: { sound: 'hiss' },
+    ignite: { sound: 'fire_ignite' },
+    primed: { sound: 'gas_leak' },
+    extinguish: { sound: 'fire_extinguish' },
     melt_sizzle: { sound: 'hiss', params: { seconds: 0.6 } },
-    explode: { sound: 'boom', above: { volume: 0.9, sound: 'boom_big' } },
+    // the blast family comes from the explosion's effect (`BLAST_KIND_OF`); this rule answers only an explosion the kit cannot place
+    explode: { sound: 'explosion_grenade', above: { volume: 0.9, sound: 'explosion_big' } },
   },
   game: {
     impact_metal: { sound: 'sfx_impact' },
@@ -93,11 +98,27 @@ export type DestructionSoundOptions = {
   readonly fire?: { readonly perFire?: number; readonly max?: number }
   /** Burn loop on or off (default on). */
   readonly burnLoop?: boolean
+  /** The fire loop played while something burns (default `fire_loop`; `burn_loop` is the art scene's bright one). */
+  readonly fireLoop?: string
+  /** Crackles per second over the fire loop: `base + perSqrtFire × √(parts burning)`, at most `max` (default 2, 3, 14). `false` turns them off. */
+  readonly crackles?: false | { readonly base?: number; readonly perSqrtFire?: number; readonly max?: number; readonly volume?: number }
+  /** Adds to or changes `BLAST_KIND_OF`: which family a named explosion (`effect`) sounds like. */
+  readonly blastKinds?: Readonly<Record<string, BlastKind>>
+  /** Metres past which a blast plays `explosion_far` instead of its own sound (default `BLAST_FAR_DISTANCE`). */
+  readonly blastFarDistance?: number
+  /** `confinement` of a blast (from its report) from which the indoor tail plays too (default 1.3). */
+  readonly indoorConfinement?: number
+  /** Seed of the crackle timing (default 1). */
+  readonly seed?: number
 }
 
 export type DestructionSound = {
   /** Pass to `createDestructionRenderer({ onSound })`. */
-  readonly onSound: (key: string, point: Vec3, volume: number) => void
+  readonly onSound: (key: string, point: Vec3, volume: number, detail?: SoundDetail) => void
+  /** Moves the fire crackles on; call once per frame with the frame time in seconds. */
+  update(dt: number): void
+  /** The sound an explosion plays (`explode` with its detail), for a listener at the engine's listener position. */
+  blastSound(point: Vec3, volume: number, detail?: SoundDetail): string
   /** The rule a key resolves to, if any. */
   rule(key: string): SoundKeyRule | undefined
   /** Parts burning now. */
@@ -105,19 +126,34 @@ export type DestructionSound = {
   dispose(): void
 }
 
-export const DEFAULT_FIRE = { perFire: 0.05, max: 0.2 } as const
+export const DEFAULT_FIRE = { perFire: 0.08, max: 0.45 } as const
+export const DEFAULT_CRACKLES = { base: 2, perSqrtFire: 3, max: 14, volume: 0.5 } as const
+export const DEFAULT_INDOOR_CONFINEMENT = 1.3
 
 /**
  * Plays the renderer's sound keys on a game-audio engine: the bank is registered in the engine, a key becomes a positional sound at the point, and
- * `burn_loop` / `burn_end` (a part starts to burn, a part burns out or is put out) drive one fire loop whose volume follows how many parts burn.
+ * `burn_loop` / `burn_end` (a part starts to burn, a part burns out or is put out) drive one fire loop whose volume follows how many parts burn, with
+ * crackles at the burning points (`update`). An explosion plays the sound of its family (`BLAST_KIND_OF` by its effect), the far rumble past
+ * `blastFarDistance` and the indoor tail when the blast was confined.
  */
 export function createDestructionSound(engine: AudioEngine, options: DestructionSoundOptions = {}): DestructionSound {
   engine.register(DESTRUCTION_SOUND_BANK)
   engine.register(GAME_SFX_BANK)
   const fire = { ...DEFAULT_FIRE, ...options.fire }
+  const crackles = options.crackles === false ? null : { ...DEFAULT_CRACKLES, ...options.crackles }
+  const fireLoop = options.fireLoop ?? 'fire_loop'
+  const kinds: Readonly<Record<string, BlastKind>> = { ...BLAST_KIND_OF, ...options.blastKinds }
+  const farDistance = options.blastFarDistance ?? BLAST_FAR_DISTANCE
+  const indoorFrom = options.indoorConfinement ?? DEFAULT_INDOOR_CONFINEMENT
   const rules: Record<string, SoundKeyRule | null | undefined> = { ...DESTRUCTION_SOUND_KEYS.art_scene, ...(options.style === 'game' ? DESTRUCTION_SOUND_KEYS.game : {}), ...options.keys }
+  // a blast takes its family's sound unless the host chose the explode rule itself (a style or a key of its own)
+  const blastByKind = options.style !== 'game' && !(options.keys && 'explode' in options.keys)
+  const channel = engine.channel({ seed: options.seed ?? 1 })
   let loop: AudioLoopHandle | undefined
   let burning = 0
+  // where the fires are, for the crackles: one point per part burning
+  const fires: Vec3[] = []
+  let nextCrackle = 0
 
   const setFire = (): void => {
     if (options.burnLoop === false) return
@@ -126,33 +162,78 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       loop = undefined
       return
     }
-    loop ??= engine.loop('burn_loop')
+    loop ??= engine.loop(fireLoop)
     loop.set({ volume: Math.min(fire.max, fire.perFire * burning) })
   }
 
+  const forget = (point: Vec3): void => {
+    let best = -1
+    let bestD = Infinity
+    fires.forEach((f, i) => {
+      const d = (f[0] - point[0]) ** 2 + (f[1] - point[1]) ** 2 + (f[2] - point[2]) ** 2
+      if (d < bestD) {
+        bestD = d
+        best = i
+      }
+    })
+    if (best >= 0) fires.splice(best, 1)
+  }
+
+  const blastSound = (point: Vec3, volume: number, detail?: SoundDetail): string => {
+    const named = detail?.effect === undefined ? undefined : kinds[detail.effect]
+    const kind = named ?? ((detail?.radius ?? 0) >= BIG_BLAST_RADIUS || volume >= 0.9 ? 'big' : 'grenade')
+    const sound = BLAST_SOUND_OF[kind]
+    const distance = engine.plan(sound, { position: point, seed: 1 })?.distance ?? 0
+    // a molotov is a fire, not a blast: it never turns into the far rumble
+    return kind !== 'molotov' && distance > farDistance ? 'explosion_far' : sound
+  }
+
   return {
-    onSound(key, point, volume) {
+    onSound(key, point, volume, detail) {
       if (key === 'burn_loop') {
         burning += 1
+        fires.push(point)
         setFire()
         return
       }
       if (key === 'burn_end') {
         if (burning > 0) burning -= 1
+        forget(point)
         setFire()
+        return
+      }
+      if (key === 'explode' && blastByKind) {
+        const sound = blastSound(point, volume, detail)
+        engine.play(sound, { position: point, volume })
+        if (sound !== 'explosion_far' && sound !== 'molotov_break_ignite' && (detail?.confinement ?? 1) >= indoorFrom) engine.play('explosion_indoor_tail', { position: point, volume })
         return
       }
       const rule = rules[key]
       if (!rule) return
       const sound = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
-      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(rule.params ? { params: rule.params } : {}) })
+      const params = detail?.seconds === undefined ? rule.params : { ...rule.params, seconds: detail.seconds }
+      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(params ? { params } : {}) })
     },
+    update(dt) {
+      if (!crackles || fires.length === 0 || options.burnLoop === false) return
+      nextCrackle -= dt
+      // at most a few crackles per frame, even after a long one
+      for (let i = 0; i < 4 && nextCrackle <= 0; i++) {
+        const rate = Math.min(crackles.max, crackles.base + crackles.perSqrtFire * Math.sqrt(fires.length))
+        nextCrackle += (0.4 + channel.random() * 1.2) / rate
+        const at = fires[Math.floor(channel.random() * fires.length)] as Vec3
+        engine.play(channel.random() < 0.18 ? 'fire_pop' : 'fire_crackle', { position: at, volume: crackles.volume })
+      }
+      if (nextCrackle < 0) nextCrackle = 0
+    },
+    blastSound,
     rule: (key) => rules[key] ?? undefined,
     burning: () => burning,
     dispose() {
       loop?.stop()
       loop = undefined
       burning = 0
+      fires.length = 0
     },
   }
 }

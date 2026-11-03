@@ -15,7 +15,7 @@ import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
-import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 let rendererCount = 0
@@ -786,7 +786,8 @@ class Renderer implements DestructionRenderer {
           this.vfx.fire({ point: ev.point, radius: PRIMED_FIRE_RADIUS, life: ev.delay })
           this.primedBurning.add(`${ev.object}|${ev.part}`)
           this.activate(ev.object, ev.part)
-          this.sound('ignite', ev.point, 0.7)
+          // the vessel is venting until it bursts: the gas leak for as long as the delay, and the flame it feeds
+          this.sound('primed', ev.point, 0.7, { seconds: ev.delay })
           this.sound('burn_loop', ev.point, 0.5)
         }
         break
@@ -902,8 +903,9 @@ class Renderer implements DestructionRenderer {
     return b ? [b.root.position.x, b.root.position.y, b.root.position.z] : [0, 0, 0]
   }
 
-  private sound(key: string, point: Vec3, volume: number): void {
-    this.o.onSound?.(key, point, volume)
+  private sound(key: string, point: Vec3, volume: number, detail?: SoundDetail): void {
+    if (detail) this.o.onSound?.(key, point, volume, detail)
+    else this.o.onSound?.(key, point, volume)
   }
 
   private partVis(objectId: string, partId: string): PartVis | null {
@@ -1329,7 +1331,12 @@ class Renderer implements DestructionRenderer {
     for (const pc of [...this.pieceSys.list]) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
-    this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1))
+    this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1), {
+      radius: ev.radius,
+      ...(ev.effect !== undefined ? { effect: ev.effect } : {}),
+      ...(options.effect !== undefined ? { effect: options.effect } : {}),
+      ...(report ? { confinement } : {}),
+    })
   }
 
   /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */

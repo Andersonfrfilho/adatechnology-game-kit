@@ -16,7 +16,7 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, Quality, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
@@ -225,7 +225,7 @@ export interface TestRoomOptions {
   area?: string
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
-  onSound?: (key: string, point: Vec3, volume: number) => void
+  onSound?: (key: string, point: Vec3, volume: number, detail?: SoundDetail) => void
   /**
    * The sound engine of the room (@adatechnology/game-audio): the destruction renderer's sound keys play on it, and modules get it as `host.audio`.
    * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.

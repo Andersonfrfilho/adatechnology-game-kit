@@ -8,5 +8,18 @@
       "jogo:L66986 one groan every 0.25 s (`groanBudget`), only nearer than 40 m",
       "jogo:L70472 the budget counts down by the frame time"
     ]
+  },
+  "fire_ignite": {
+    "maxConcurrent": 2,
+    "cooldown": 0.15,
+    "sources": [
+      "sdk: many parts catching at once (a blast sets a shelf alight) are one or two ignitions, not forty"
+    ]
+  },
+  "fire_crackle": {
+    "maxConcurrent": 4,
+    "sources": [
+      "sdk: the crackles of every fire share four voices"
+    ]
   }
 }

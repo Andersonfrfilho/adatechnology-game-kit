@@ -318,7 +318,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     if (!detonation.cone) told(results)
     if (detonation.energy > 0) {
       const isPlayed = context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed, report: results })
+      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed, report: results, effect: detonation.explosive })
     }
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
     const onPlayer = blastEffect(detonation, toArray(camera.position))

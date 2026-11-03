@@ -2,15 +2,31 @@
   {
     "id": "game",
     "master": 0.5,
-    "noise": { "seconds": 1.5, "create": "lazy" },
-    "sources": ["jogo:L62077-62081 master 0.5 to the output", "jogo:L62082-62088 noise 1.5 s made by the first sound that needs it"]
+    "noise": {
+      "seconds": 1.5,
+      "create": "lazy"
+    },
+    "sources": [
+      "jogo:L62077-62081 master 0.5 to the output",
+      "jogo:L62082-62088 noise 1.5 s made by the first sound that needs it"
+    ]
   },
   {
     "id": "art_scene",
     "master": 0.85,
-    "compressor": { "threshold": -12, "ratio": 5 },
-    "reverb": { "seconds": 2.2, "decay": 3.4, "wet": 0.4 },
-    "noise": { "seconds": 2, "create": "eager" },
+    "compressor": {
+      "threshold": -12,
+      "ratio": 5
+    },
+    "reverb": {
+      "seconds": 2.2,
+      "decay": 3.4,
+      "wet": 0.4
+    },
+    "noise": {
+      "seconds": 2,
+      "create": "eager"
+    },
     "sources": [
       "cena:L1308 compressor -12 dB, ratio 5",
       "cena:L1309 master 0.85",
@@ -18,5 +34,29 @@
       "cena:L1311 wet 0.4",
       "cena:L1312 noise 2 s made with the chain"
     ]
+  },
+  {
+    "id": "kit",
+    "master": 0.85,
+    "compressor": {
+      "threshold": -12,
+      "ratio": 5
+    },
+    "reverb": {
+      "seconds": 2.2,
+      "decay": 3.4,
+      "wet": 0.4
+    },
+    "noise": {
+      "seconds": 2,
+      "create": "eager"
+    },
+    "sources": [
+      "sdk: the art scene chain (cena L1308-L1312) with a limiter after the compressor: the page has none, and a blast with its debris and a fire catching reached +7 dBFS"
+    ],
+    "limiter": {
+      "ceiling": -1,
+      "knee": -6
+    }
   }
 ]
