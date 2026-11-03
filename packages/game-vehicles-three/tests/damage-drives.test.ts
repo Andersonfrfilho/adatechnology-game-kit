@@ -43,7 +43,7 @@ describe('damage that changes the driving', () => {
   it('a flat tyre reaches the driver as a flat wheel on its side', () => {
     const car = sedan()
     const t = car.partWorldCenter('tyre_front_left')
-    car.hit({ type: 'ballistic', point: t, part: 'tyre_front_left', direction: [0, 0, 1], energy: 527, caliber: 9 })
+    car.hit({ type: 'ballistic', point: t, part: 'tyre_front_left', direction: [0, 0, 1], energy: 3500, caliber: 7.8 })
     const report = car.driveReport()
     const driver: any = createSemiSimDriver({}, { surfaces: createSurfaces() })
     const condition = conditionFromDamage(driver.spec, report)

@@ -124,6 +124,9 @@ interface PState {
   lost: boolean
   status: PartState['status']
   flat: boolean
+  /** Air left in a tyre, 0..1, and the share it loses per second through its holes. */
+  air: number
+  airLoss: number
   fireLoss: number
 }
 
@@ -175,6 +178,13 @@ const ARMOUR_STEEL_MM: Record<'IIIA' | 'III', number> = { IIIA: 4, III: 7 }
 const SOFT_LEAD = 0.8
 /** A flat tyre's health for driving (under the driver's flat limit). */
 const TYRE_FLAT_HEALTH = 0.1
+/** A round this strong or this wide bursts a tyre; a smaller hole leaks this share of the air per second per mm² of hole (a 9 mm hole: flat in about a minute). */
+const TYRE_BURST_JOULES = 1500
+const TYRE_BURST_CALIBER = 12
+const TYRE_LEAK_PER_MM2 = 0.00026
+/** How far an empty tyre sags, and the air under which it is flat. */
+const TYRE_FLAT_SAG = 0.24
+const TYRE_FLAT_AIR = 0.2
 const EXPANDED_HOLE = 1.6
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
@@ -275,6 +285,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         lost: false,
         status: 'intact',
         flat: false,
+        air: 1,
+        airLoss: 0,
         fireLoss: 0,
       })
     }
@@ -683,8 +695,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         push(through)
         damage(p, E * 0.4, 'ballistic', h.source, out, worldPoint)
         if (through && !p.lost && !p.flat) {
-          p.flat = true
-          vis?.tyreFlat(d, 0.24)
+          // a rifle round, a slug or a big tear bursts it at once; a small hole lets the air out over seconds to minutes
+          if (E >= TYRE_BURST_JOULES || cal >= TYRE_BURST_CALIBER) deflate(p, 1)
+          else p.airLoss += TYRE_LEAK_PER_MM2 * Math.PI * (cal / 2) ** 2
         }
         break
       }
@@ -981,7 +994,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const state = (): ObjectState => (stateCache ??= buildState())
   const isSimulating = (): boolean => {
     if (leaks.size > 0) return true
-    for (const p of ps.values()) if (!p.lost && (p.burning || p.temp > AMBIENT)) return true
+    for (const p of ps.values()) if (!p.lost && (p.burning || p.temp > AMBIENT || (p.airLoss > 0 && p.air > 0))) return true
     return false
   }
 
@@ -1053,7 +1066,14 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return out
   }
 
+  /** Lets the air of a tyre out by `share`: it sags as it empties and is flat under the driver's limit. */
+  const deflate = (p: PState, share: number): void => {
+    p.air = Math.max(0, p.air - share)
+    vis?.tyreFlat(p.def, TYRE_FLAT_SAG * (1 - p.air))
+    if (p.air <= TYRE_FLAT_AIR) p.flat = true
+  }
   const update = (dt: number): DestructionEvent[] => {
+    for (const p of ps.values()) if (p.airLoss > 0 && p.air > 0 && !p.lost) deflate(p, p.airLoss * dt)
     clock += dt
     const out: DestructionEvent[] = queue
     queue = []
@@ -1184,7 +1204,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       }
       const tyres = [...ps.values()]
         .filter((p) => p.def.role === 'tyre')
-        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: p.lost || p.flat ? TYRE_FLAT_HEALTH : p.hp / p.def.hp }))
+        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: p.lost || p.flat ? TYRE_FLAT_HEALTH : Math.min(p.hp / p.def.hp, 0.2 + 0.8 * p.air) }))
       const status = computeStatus()
       return { tyres, brakes: Math.min(1, 1 / status.brakeFactor), engine: status.canStart ? health('engine') : 0, suspension: health('shocks') }
     },

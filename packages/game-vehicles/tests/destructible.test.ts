@@ -271,12 +271,21 @@ describe('detaching and mechanics', () => {
     expect(d.status()).toMatchObject({ canStart: true, canDrive: false })
   })
 
-  it('shooting the battery kills it, and a bullet in a tyre makes it flat', () => {
+  it('shooting the battery kills it, and a pistol round in a tyre lets it down within a minute', () => {
     const { d } = make('proto')
     d.hit({ type: 'ballistic', point: d.partWorldCenter('battery'), direction: [0, -1, 0], energy: 500, caliber: 9 })
     expect(d.status().lightsOn).toBe(false)
     const t = d.partWorldCenter('tyre_rear_left')
     d.hit({ type: 'ballistic', point: [t[0], t[1] + 0.27, t[2]], direction: [0, -1, 0], energy: 500, caliber: 9 })
+    expect(d.status().flatTyres).not.toContain('tyre_rear_left')
+    for (let i = 0; i < 60; i++) d.update!(1)
+    expect(d.status().flatTyres).toContain('tyre_rear_left')
+  })
+
+  it('a rifle round bursts a tyre at once', () => {
+    const { d } = make('proto')
+    const t = d.partWorldCenter('tyre_rear_left')
+    d.hit({ type: 'ballistic', point: [t[0], t[1] + 0.27, t[2]], direction: [0, -1, 0], energy: 3500, caliber: 7.8 })
     expect(d.status().flatTyres).toContain('tyre_rear_left')
   })
 
