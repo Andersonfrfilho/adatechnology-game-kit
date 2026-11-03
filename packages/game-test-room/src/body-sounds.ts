@@ -55,7 +55,7 @@ export function createBodySounds(audio: AudioEngine | null): BodySounds {
   const play = (id: string, position: Vec3, volume: number, delay = 0): void => {
     played.push(id)
     if (played.length > 64) played.shift()
-    audio?.play(id, { position, volume, ...(delay > 0 ? { delay } : {}) })
+    audio?.play(id, { position, volume, urgent: true, ...(delay > 0 ? { delay } : {}) })
   }
   return {
     swing(blow, position, delay = 0) {

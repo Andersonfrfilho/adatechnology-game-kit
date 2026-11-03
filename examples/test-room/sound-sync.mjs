@@ -12,7 +12,7 @@
 // Writes shots/sound-sync.json and a screenshot per camera; exits 1 when a criterion fails (BASELINE=1 only records).
 // Run: node build.mjs && node sound-sync.mjs
 import { createRequire } from 'node:module'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -36,6 +36,14 @@ mkdirSync(shots, { recursive: true })
 const BASELINE = process.env.BASELINE === '1'
 const SYNC_MS = 20
 
+// RESCORE=1 scores the last run again (shots/sound-sync-raw.json) without playing it
+const RESCORE = process.env.RESCORE === '1'
+const raw = RESCORE ? JSON.parse(readFileSync(join(shots, 'sound-sync-raw.json'), 'utf8')) : null
+const phases = raw?.phases ?? []
+const datasets = raw?.datasets ?? []
+const camerasTested = raw?.cameras ?? []
+const errors = raw?.errors ?? []
+if (!RESCORE) {
 const browser = await chromium.launch({
   args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--autoplay-policy=no-user-gesture-required'],
 })
@@ -55,7 +63,7 @@ await context.addInitScript(() => {
   }
 })
 const page = await context.newPage()
-const errors = []
+
 page.on('pageerror', (e) => errors.push(e.message))
 // the floors: strips of the ground profiles across the back of the room (z 3 to 13.6), walked one by one from z = 12.5 toward the shelf;
 // they stop short of the blow spot so a raised floor (the wooden deck) never lifts the player while striking
@@ -119,24 +127,50 @@ const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e
 const tool = (id) => page.evaluate((i) => window.__testRoom.setTool(i), id)
 const now = () => page.evaluate(() => performance.now())
 
-const phases = []
+
 // 0.26 m from the side of the shelf's upright: inside the reach of every tool (the knife's is 0.4 m)
 const AT_SHELF = [-2.62, 1.5, 0]
 // the CI and this container have no GPU: the room runs at a few frames per second there, so each phase waits for the last blow to land before the next one starts
 let camera = null
+// each page load records its own clocks (performance.now starts again): a phase is scored against the load it ran in
+let load = -1
+
+const collect = async () => {
+  datasets[load] = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: window.__soundStarts, feet: window.__feet }))
+}
+const fresh = async () => {
+  if (load >= 0) await collect()
+  load++
+  await boot()
+  await page.evaluate((c) => window.__testRoom.setCameraMode(c), camera)
+}
+/** One blow: uses the tool (or kicks) and waits for the room to swing it (a `strike` or `melee` line); a tool still drawing or recovering ignores the
+ * use, so it tries again, up to three times. Then waits for the blow to land. */
+const blow = async (kick) => {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const before = await page.evaluate(() => window.__lines.filter((l) => l.type === 'strike' || l.type === 'melee').length)
+    await page.evaluate((k) => (k ? window.__testRoom.kick() : window.__testRoom.use()), kick)
+    const until = Date.now() + 4000
+    while (Date.now() < until) {
+      if (await page.evaluate((n) => window.__lines.filter((l) => l.type === 'strike' || l.type === 'melee').length > n, before)) {
+        await page.waitForTimeout(1500)
+        return
+      }
+      await page.waitForTimeout(150)
+    }
+  }
+}
 const phase = async (id, expect, run, settle = 2000) => {
   const from = await now()
   const keysUp = await run()
   await page.waitForTimeout(settle)
   const at = await page.evaluate(() => ({ position: window.__testRoom.playerPosition.map((v) => Math.round(v * 100) / 100), camera: window.__testRoom.cameraMode }))
-  phases.push({ id, camera, expect, from, to: await now(), keysUp: typeof keysUp === 'number' ? keysUp : null, at })
+  phases.push({ id, camera, load, expect, from, to: await now(), keysUp: typeof keysUp === 'number' ? keysUp : null, at })
 }
 
-const camerasTested = []
-const datasets = {}
+
 for (camera of (process.env.CAMERAS ?? 'first,third').split(',')) {
-  await boot()
-  await page.evaluate((c) => window.__testRoom.setCameraMode(c), camera)
+  await fresh()
   camerasTested.push(camera)
   for (const [surface] of process.env.SKIP_WALK ? [] : FLOORS) {
     const x = -13 + FLOORS.findIndex(([s]) => s === surface) * 3.6 + 1.5
@@ -154,54 +188,59 @@ for (camera of (process.env.CAMERAS ?? 'first,third').split(',')) {
   }
   await look([-12, 1.7, 12.5], [-12, 1.7, 0])
   const jumps = await count('__plays', 'jump')
-  await phase(`${camera}:jump`, { jump: 'jump', land: 'land_concrete_light' }, () => holdUntil(['Space'], `window.__plays.filter((p) => p.id === 'jump').length > ${jumps}`, 10000), 3000)
+  const lands = await count('__lines', 'landing_player')
+  await phase(`${camera}:jump`, { jump: 'jump', land: 'land_concrete_light' }, async () => {
+    const up = await holdUntil(['Space'], `window.__plays.filter((p) => p.id === 'jump').length > ${jumps}`, 10000)
+    // the landing: at a few frames per second the jump lasts several seconds of wall time
+    const until = Date.now() + 20000
+    while (Date.now() < until && (await count('__lines', 'landing_player')) <= lands) await page.waitForTimeout(200)
+    return up
+  }, 800)
   // blows at the bookcase (wood), then into the air
   // ten punches in a row at the bookcase: the takes and the limiter
   await page.evaluate(() => window.__testRoom.resetAll())
   await tool('hand')
   await look(AT_SHELF, [-3.5, 1.0, 0])
   await phase(`${camera}:punch-x10`, { swing: 'punch_swing', hit: 'punch_hit_object', series: 10 }, async () => {
-    for (let i = 0; i < 10; i++) {
-      await page.evaluate(() => window.__testRoom.use())
-      await page.waitForTimeout(900)
-    }
+    // each punch waits for the room to throw it, so all ten land however slow the frames are
+    for (let i = 0; i < 10; i++) await blow(false)
   })
-  // the kick last: it knocks the shelf over (and the player may end up standing on it)
-  const BLOWS = { hand: ['punch_swing', 'punch_hit_object'], knife: ['knife_swing', 'knife_hit_object'], baseball_bat: ['blunt_swing', 'blunt_hit_object'], axe: ['axe_swing', 'axe_hit_object'], shove: [null, 'shove_two_hands'], kick: ['kick_swing', 'kick_hit_object'] }
+  // the bat and the kick last, each on a fresh load: they knock the shelf over, and its planks stay on the floor for the player to stand on
+  const BLOWS = { hand: ['punch_swing', 'punch_hit_object'], knife: ['knife_swing', 'knife_hit_object'], axe: ['axe_swing', 'axe_hit_object'], shove: [null, 'shove_two_hands'], baseball_bat: ['blunt_swing', 'blunt_hit_object'], kick: ['kick_swing', 'kick_hit_object'] }
   for (const [id, [swing, hit]] of Object.entries(BLOWS)) {
-    // the bookcase back where it stood (the axe and the bat move it)
+    if (id === 'baseball_bat' || id === 'kick') await fresh()
     await page.evaluate(() => window.__testRoom.resetAll())
     await tool(id)
     await page.waitForTimeout(1500)
     await look(AT_SHELF, [-3.5, 1.0, 0])
     await phase(`${camera}:${id}:wood`, { swing, hit }, async () => {
-      for (let i = 0; i < 4; i++) {
-        if (id === 'kick') await page.evaluate(() => window.__testRoom.kick())
-        else await page.evaluate(() => window.__testRoom.use())
-        await page.waitForTimeout(1500)
-      }
+      for (let i = 0; i < 4; i++) await blow(id === 'kick')
     })
     await look([12.5, 1.6, -2], [12.5, 1.6, -14])
-    await phase(`${camera}:${id}:air`, { swing, hit: null }, async () => {
-      if (id === 'kick') await page.evaluate(() => window.__testRoom.kick())
-      else await page.evaluate(() => window.__testRoom.use())
-    })
+    await page.waitForTimeout(1500)
+    await phase(`${camera}:${id}:air`, { swing, hit: null }, () => blow(id === 'kick'))
   }
   await look([-1.8, 1.7, 1.8], [-3.5, 0.9, 0])
   await page.screenshot({ path: join(shots, `sound-sync-${camera}.png`) })
-  datasets[camera] = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: window.__soundStarts, feet: window.__feet }))
 }
+await collect()
 await browser.close()
+writeFileSync(join(shots, 'sound-sync-raw.json'), JSON.stringify({ phases, datasets, cameras: camerasTested, errors }))
+}
 
 // ---- scoring --------------------------------------------------------------------------------------------------------------------------------------
 let data = null
 const within = (list, p) => list.filter((e) => e.at >= p.from && e.at <= p.to)
 /** ms from `at` to the moment the first node of the play after it sounds: the wait to the play call, the deferred start, and how far ahead it is scheduled. */
-const soundDelay = (at, id) => {
-  const play = data.plays.find((x) => x.at >= at - 1 && x.id === id)
+// The play that answers an event is the one of that id nearest to it in the room's time (the same frame, most of the time: the room may log the
+// event before or after it plays the sound); the delay counts from the earlier of the two in wall time.
+const soundDelay = (event, id) => {
+  const t = event.t ?? event.time
+  let play = null
+  for (const x of data.plays) if (x.id === id && Math.abs(x.t - t) <= 0.25 && (!play || Math.abs(x.t - t) < Math.abs(play.t - t))) play = x
   if (!play) return null
   const start = data.starts.find((s, i) => i >= play.startsBefore && s.at >= play.at - 1)
-  return start ? Math.round((start.at - at + start.lead) * 10) / 10 : null
+  return start ? Math.round((start.at - Math.min(event.at, play.at) + start.lead) * 10) / 10 : null
 }
 const takesOf = (plays, id) => plays.filter((p) => p.id === id).map((p) => p.take)
 const repeats = (takes) => takes.filter((t, i) => i > 0 && t === takes[i - 1]).length
@@ -212,15 +251,16 @@ const check = (row, ok, label) => {
   if (!ok) failures.push(`${row.phase}: ${label}`)
 }
 for (const p of phases) {
-  data = datasets[p.camera]
+  data = datasets[p.load]
   const plays = within(data.plays, p)
   const lines = within(data.lines, p)
-  const feet = within(data.feet, p)
+  // a foot put down after the keys went up is the body settling: neither it nor its sound is the walk
+  const feet = within(data.feet, p).filter((f) => p.keysUp === null || f.at <= p.keysUp)
   const row = { phase: p.id, at: p.at, ids: [...new Set(plays.map((x) => x.id))], checks: [], numbers: {} }
   if (p.expect.footstep) {
     // a footstep after the keys went up is the body settling, whatever the gait was
     const steps = plays.filter((x) => x.id.startsWith('footstep_') && (p.keysUp === null || x.at <= p.keysUp))
-    const delays = feet.map((f) => soundDelay(f.at, p.expect.footstep)).filter((d) => d !== null)
+    const delays = feet.map((f) => soundDelay(f, p.expect.footstep)).filter((d) => d !== null)
     row.numbers = { footfalls: feet.length, footsteps: steps.length, delaysMs: delays, takes: takesOf(plays, p.expect.footstep) }
     check(row, feet.length >= 2, `footfalls from the body: ${feet.length}`)
     check(row, steps.length >= feet.length - 1 && steps.length > 0, `a footstep for each footfall: ${steps.length}/${feet.length}`)
@@ -232,7 +272,7 @@ for (const p of phases) {
     check(row, plays.some((x) => x.id === p.expect.jump), `C2 jump sound`)
     const lands = lines.filter((l) => l.type === 'landing_player')
     check(row, lands.length > 0 && plays.some((x) => x.id.startsWith('land_concrete_')), `C2 landing on concrete (${lands.length} landings)`)
-    row.numbers = { landings: lands.map((l) => l.data?.speedMs), landDelaysMs: lands.map((l) => soundDelay(l.at, plays.find((x) => x.id.startsWith('land_'))?.id ?? '')) }
+    row.numbers = { landings: lands.map((l) => l.data?.speedMs), landDelaysMs: lands.map((l) => soundDelay(l, plays.find((x) => x.id.startsWith('land_'))?.id ?? '')) }
     check(row, row.numbers.landDelaysMs.every((d) => d !== null && d <= SYNC_MS), `C1 landing ≤ ${SYNC_MS} ms: ${JSON.stringify(row.numbers.landDelaysMs)}`)
   }
   if ('hit' in p.expect) {
@@ -241,11 +281,12 @@ for (const p of phases) {
     const strikes = lines.filter((l) => l.type === 'strike')
     const swings = plays.filter((x) => x.id === p.expect.swing)
     const hits = plays.filter((x) => p.expect.hit && x.id === p.expect.hit)
-    const hitDelays = p.expect.hit ? melees.map((l) => soundDelay(l.at, p.expect.hit)) : []
+    const hitDelays = p.expect.hit ? melees.map((l) => soundDelay(l, p.expect.hit)) : []
     // the swing starts in the room's time a little before the contact (its loudest point is SWING_LEAD later): ms of room time from the swing to the contact
-    const peaks = swings.map((s) => {
-      const contact = melees.find((l) => l.t >= s.t) ?? null
-      return contact ? Math.round((contact.t - s.t) * 1000) : null
+    // for each contact, the last swing that started before it
+    const peaks = melees.map((l) => {
+      const swing = swings.filter((s) => s.t <= l.t + 0.001).at(-1) ?? null
+      return swing ? Math.round((l.t - swing.t) * 1000) : null
     })
     row.numbers = { strikes: strikes.length, contacts: melees.length, swings: swings.length, hits: hits.length, hitDelaysMs: hitDelays, swingStartBeforeContactMs: peaks, takes: takesOf(plays, p.expect.hit ?? p.expect.swing) }
     if (p.expect.swing) check(row, swings.length >= Math.max(1, strikes.length, p.expect.hit === null ? 1 : 0), `C2 a swing (${p.expect.swing}) per blow: ${swings.length}`)

@@ -13,6 +13,10 @@ export interface SoundRequest {
   readonly seed?: number
   /** Seconds from now (the hit of a blow after its swing); the host schedules it on the audio clock, not on a timer. */
   readonly delay?: number
+  /** Built now instead of waiting in the engine's deferred start queue: for a sound that has to land on the frame the player sees it (a blow's
+   * contact, a heel strike, a landing). The queue builds a voice on the next frame budget and drops it after its latency, which at a low frame
+   * rate is late or silent. Default false. */
+  readonly urgent?: boolean
 }
 
 /** What `AudioSink.play` hands back; opaque to the module, given back to `stop`. */

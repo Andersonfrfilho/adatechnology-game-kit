@@ -97,7 +97,7 @@ export function createPlayerTestModule(options: PlayerTestModuleOptions = {}): P
         if (e.ids.length === 0) return
         e.ids.forEach((id, index) => {
           const delay = e.at?.[index] ?? 0
-          host?.audio?.play({ sound: id, volume: e.volume, position: e.position, ...(delay > 0 ? { delay } : {}) })
+          host?.audio?.play({ sound: id, volume: e.volume, position: e.position, urgent: true, ...(delay > 0 ? { delay } : {}) })
         })
       }),
     )
