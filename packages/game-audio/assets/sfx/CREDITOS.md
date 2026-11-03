@@ -53,7 +53,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/explosion_big_03.ogg | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 |
 | explosoes-fogo/explosion_big_04.ogg | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 |
 | explosoes-fogo/explosion_big_05.ogg | https://freesound.org/people/craigsmith/sounds/486018/ | craigsmith | CC0 |
-| explosoes-fogo/explosion_big_06.ogg | https://opengameart.org/content/100-cc0-sfx | rubberduck | CC0 |
 | explosoes-fogo/explosion_car_01.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 |
 | explosoes-fogo/explosion_car_02.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 |
 | explosoes-fogo/explosion_car_03.ogg | https://freesound.org/people/qubodup/sounds/843248/ | qubodup | CC0 |

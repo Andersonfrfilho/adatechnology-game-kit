@@ -1965,16 +1965,6 @@
             "source": "https://freesound.org/people/craigsmith/sounds/486018/",
             "author": "craigsmith",
             "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/explosion_big_06.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.18,
-            "seconds": 0.461,
-            "source": "https://opengameart.org/content/100-cc0-sfx",
-            "author": "rubberduck",
-            "license": "CC0"
           }
         ]
       }
