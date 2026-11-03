@@ -1,5 +1,5 @@
 import type { Vec3 } from '@adatechnology/game-contracts'
-import { GAME_SFX_BANK } from '@adatechnology/game-audio'
+import { FOLEY_BANK, GAME_SFX_BANK } from '@adatechnology/game-audio'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
 import { DESTRUCTION_SOUND_BANK } from './recipes'
@@ -102,7 +102,7 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
 export type DestructionSoundOptions = {
   /** Which team answers the keys (default `art_scene`, the kit mix). `game` falls back to the art scene for the keys the game has no sound for. */
   readonly style?: DestructionSoundStyle
-  /** Replaces or adds a key's rule; `null` silences it. */
+  /** Replaces or adds a key's rule; `null` silences it. A key without a rule that is the id of a registered sound (the foley bank's) plays that sound. */
   readonly keys?: Readonly<Record<string, SoundKeyRule | null>>
   /** The fire loop: the volume each burning part adds and the most it reaches (the page never raises it, so these are the kit's). */
   readonly fire?: { readonly perFire?: number; readonly max?: number }
@@ -129,6 +129,8 @@ export const DEFAULT_FIRE = { perFire: 0.05, max: 0.2 } as const
 export function createDestructionSound(engine: AudioEngine, options: DestructionSoundOptions = {}): DestructionSound {
   engine.register(DESTRUCTION_SOUND_BANK)
   engine.register(GAME_SFX_BANK)
+  // the foley of the hand (doors, lids, drawers, items): its ids are keys of their own, played as they are
+  engine.register(FOLEY_BANK)
   const fire = { ...DEFAULT_FIRE, ...options.fire }
   const rules: Record<string, SoundKeyRule | null | undefined> = { ...DESTRUCTION_SOUND_KEYS.art_scene, ...(options.style === 'game' ? DESTRUCTION_SOUND_KEYS.game : {}), ...options.keys }
   let loop: AudioLoopHandle | undefined
@@ -157,8 +159,14 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
         setFire()
         return
       }
-      const rule = key in rules ? rules[key] : rules[key.replace(/^shot_/, 'impact_')]
-      if (!rule) return
+      const found = key in rules ? rules[key] : rules[key.replace(/^shot_/, 'impact_')]
+      if (found === null) return
+      if (!found) {
+        // a key with no rule that names a registered sound plays that sound (the foley ids: `door_wood_close`, `item_pickup_metal`...)
+        if (engine.registry.sound(key)) engine.play(key, { position: point, volume })
+        return
+      }
+      const rule = found
       const wanted = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
       const sound = rule.fallback && !engine.registry.sound(wanted) ? rule.fallback : wanted
       engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(rule.params ? { params: rule.params } : {}) })

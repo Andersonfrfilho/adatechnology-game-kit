@@ -63,6 +63,11 @@ export interface HouseholdTypeDef {
    * two tonnes): a host that builds a physical body splits this mass over the pieces. Absent for what is built into the ground (a fireplace, a well).
    */
   massKg?: number
+  /**
+   * How its doors and lids sound worked by hand: a sound set by leaf part, `*` for all (`fridge`, `microwave`, `drawer`, `wood_door`, `metal_door`: the sets of
+   * game-audio `LEAF_FOLEY_SETS`). Absent: the host picks by the leaf's material. A host hands it on as `TestableItem.sounds`.
+   */
+  sounds?: { readonly leaves?: Readonly<Record<string, string>> }
 }
 
 export interface HouseholdType extends HouseholdTypeDef {

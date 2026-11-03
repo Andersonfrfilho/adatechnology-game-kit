@@ -79,7 +79,7 @@ describe('opening by hand', () => {
     expect(room.leafOpening(so.objectId)).toBe(1)
     expect(door.rotation.y).toBeCloseTo(-OPEN, 5)
     expect(room.door).toBeNull()
-    expect(sounds).toEqual(expect.arrayContaining(['leaf_latch', 'leaf_creak_wood']))
+    expect(sounds).toEqual(expect.arrayContaining(['door_wood_open', 'door_creak']))
     // the eye now rests inside the cabinet: the open door is the one E closes
     room.look([0.2, 1.7, -2.6], [0.2, 1.1, -3.9])
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
@@ -87,7 +87,7 @@ describe('opening by hand', () => {
     run(room, 2)
     expect(room.leafOpening(so.objectId)).toBe(0)
     expect(door.rotation.y).toBeCloseTo(0, 5)
-    expect(sounds).toContain('leaf_shut_wood')
+    expect(sounds.some((k) => k === 'door_wood_close' || k === 'door_wood_slam')).toBe(true)
     expect(types(room)).toEqual(['door_reach', 'door_opened', 'door_reach', 'door_closed'])
   })
 
@@ -150,7 +150,7 @@ describe('opening by hand', () => {
     run(room, 1)
     expect(room.leafOpening(so.objectId)).toBe(0)
     expect(door.rotation.y).toBe(0)
-    expect(sounds).toContain('leaf_rattle')
+    expect(sounds).toContain('door_locked_rattle')
     expect(types(room)).toEqual(['door_locked'])
     room.lockLeaf(so.objectId, false)
     room.useLeaf(so.objectId)
