@@ -1,5 +1,7 @@
+import type { Plan } from '@adatechnology/game-floorplan'
 import { outwardOf, groundExteriorWalls, HALF_WALL, round2, sideNameOf } from './shared'
-import type { Json, Rng } from './shared'
+import type { Rng } from './shared'
+import type { Inverter, Solar, SolarPanel } from './types'
 import type { EnergyConfig } from './electrical'
 
 const PANEL_WIDTH = 1.0
@@ -7,13 +9,13 @@ const PANEL_LENGTH = 1.65
 const NO_PANELS_UNDER: readonly string[] = ['void', 'elevator', 'stairs', 'balcony', 'terrace', 'porch']
 
 export interface SolarContext {
-  plan: Json
+  plan: Plan
   rng: Rng
   energy?: EnergyConfig
 }
 
 /** Inverter on a side wall of the ground floor, 1.5 m up. */
-function placeInverter(plan: Json): Json | null {
+function placeInverter(plan: Plan): Inverter | null {
   const wall = groundExteriorWalls(plan).filter((q) => q.sides.includes('outside')).sort((a, b) => (a.axis === 'v' ? 0 : 1) - (b.axis === 'v' ? 0 : 1))[0]
   if (!wall) return null
   const vector = outwardOf(wall)
@@ -26,7 +28,7 @@ function placeInverter(plan: Json): Json | null {
  * Solar panels: about 6% of budget houses, 25% of mid and 50% of the rest; on the roof slope that faces north or on tilted racks on a flat roof, with the
  * inverter on the wall. A template with its own energy decides (`energy.solar`).
  */
-export function planSolar(context: SolarContext): Json | null {
+export function planSolar(context: SolarContext): Solar | null {
   const { plan, rng, energy } = context
   if (!plan.lot || plan.style === 'commercial' || !plan.facade) return null
   const chance = plan.style === 'budget' ? 0.06 : plan.style === 'mid' ? 0.25 : 0.5
@@ -36,9 +38,9 @@ export function planSolar(context: SolarContext): Json | null {
   const floor = plan.floors.length - 1
   const level = plan.floors[floor]
   const flat = plan.facade.roof === 'slab'
-  const tops = plan.rooms.filter((c: Json) => c.floor === floor && !NO_PANELS_UNDER.includes(c.type))
+  const tops = plan.rooms.filter((c) => c.floor === floor && !NO_PANELS_UNDER.includes(c.type))
   if (!tops.length) return null
-  const parts: number[][] = tops.flatMap((c: Json) => c.parts)
+  const parts: number[][] = tops.flatMap((c) => c.parts)
   const box = [Math.min(...parts.map((q) => q[0]!)), Math.min(...parts.map((q) => q[1]!)), Math.max(...parts.map((q) => q[2]!)), Math.max(...parts.map((q) => q[3]!))] as [number, number, number, number]
   const north = rng() < 0.5 ? 'front' : 'back'
   const angle = flat ? 15 : 25
@@ -56,7 +58,7 @@ export function planSolar(context: SolarContext): Json | null {
   const count = Math.min(wanted, rows * columns)
   const u0 = uStart + (uEnd - uStart - columns * (PANEL_WIDTH + 0.05)) / 2
   const vStart = north === 'front' ? vArea[0]! : vArea[1]! - rows * step
-  const panels: Json[] = []
+  const panels: SolarPanel[] = []
   for (let k = 0; k < count; k++) {
     const row = Math.floor(k / columns)
     const column = k % columns

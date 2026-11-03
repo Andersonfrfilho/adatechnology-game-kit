@@ -36,9 +36,9 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
       seen++
       r.structureExtras = { ...(r.structureExtras || {}), chimney: { kind: 'fireplace', material: 'stone', aabb: [fire.x + 0.6, fire.z - 0.4, fire.x + 1.4, fire.z + 0.4], height: 7.4 } }
       const mine = same(r)
-      const entry = mine.items.find((e: any) => e.type === 'fireplace')
+      const entry = mine.items.find((e) => e.type === 'fireplace')!
       expect(entry.connections.chimneyTop).toBeDefined()
-      expect(entry.connections.chimneyTop[1]).toBe(7.4)
+      expect(entry.connections.chimneyTop![1]).toBe(7.4)
       expect(entry.item.variant).toBe('stone')
     }
     expect(seen).toBeGreaterThan(0)
@@ -53,7 +53,7 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
       seen++
       r.structureExtras = { ...(r.structureExtras || {}), chimney: { kind: 'flue', material: 'steel', aabb: [stove.x, stove.z, stove.x + 0.2, stove.z + 0.2], flue: true, height: 4.1 } }
       const mine = same(r)
-      const entry = mine.items.find((e: any) => e.type === 'wood_stove')
+      const entry = mine.items.find((e) => e.type === 'wood_stove')!
       expect(entry.item.flueHeight).toBe(Math.round((4.1 - (stove.y || 0)) * 1000) / 1000)
     }
     expect(seen).toBeGreaterThan(0)
@@ -65,9 +65,9 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
     if (!fire) return
     r.structureExtras = { chimney: { kind: 'fireplace', material: 'brick', aabb: [0, 0, 1, 1], height: 6, fireplace: 'nobody' } }
     const mine = adapter.plan(r, { seed: r.seed })
-    expect(mine.items.find((e: any) => e.type === 'fireplace').connections.chimneyTop).toBeUndefined()
+    expect(mine.items.find((e) => e.type === 'fireplace')!.connections.chimneyTop).toBeUndefined()
     r.structureExtras.chimney.fireplace = fire.id
-    expect(adapter.plan(r, { seed: r.seed }).items.find((e: any) => e.type === 'fireplace').connections.chimneyTop).toBeDefined()
+    expect(adapter.plan(r, { seed: r.seed }).items.find((e) => e.type === 'fireplace')!.connections.chimneyTop).toBeDefined()
   })
 })
 

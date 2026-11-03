@@ -1,6 +1,6 @@
 import { EPS, MARGIN, OVERHEAD_TOP } from './constants'
 import { eq, inRect } from './geometry'
-import type { FurnitureDef, Json, Plan, Rect, Room } from './types'
+import type { FurnitureDef, Plan, PlanOpening, PlanWindow, Rect, Room } from './types'
 
 /** Door and path zones of a storey (storey -1 is the lot). */
 export function zonesOfFloor(plan: Plan, floorIndex: number): Rect[] {
@@ -16,13 +16,13 @@ export function zonesOfFloor(plan: Plan, floorIndex: number): Rect[] {
   return out
 }
 
-export function openingsOfFloor(plan: Plan, floorIndex: number): Json[] {
+export function openingsOfFloor(plan: Plan, floorIndex: number): PlanOpening[] {
   if (floorIndex >= 0) return plan.doors.filter((p) => p.floor === floorIndex)
-  return plan.doors.filter((p) => p.floor === 0 && p.exterior).concat(plan.gates)
+  return (plan.doors.filter((p) => p.floor === 0 && p.exterior) as PlanOpening[]).concat(plan.gates)
 }
 
 /** Keep-out zone of a window (inside, or outside for the lot). */
-export function windowZone(j: Json, outside?: boolean): Rect {
+export function windowZone(j: Pick<PlanWindow, 'width' | 'side' | 'u' | 'v' | 'axis'>, outside?: boolean): Rect {
   const h = j.width / 2 + 0.1
   const depth = 0.5
   let n: [number, number]
@@ -38,12 +38,12 @@ export function windowZone(j: Json, outside?: boolean): Rect {
 }
 
 /** `overheadOff`: the counter sits under the window without its wall cabinet. */
-export function blocksWindow(it: Pick<FurnitureDef, 'window' | 'overhead' | 'windowHeight'> & { h: number }, win: Json, overheadOff?: boolean): boolean {
+export function blocksWindow(it: Pick<FurnitureDef, 'window' | 'overhead' | 'windowHeight'> & { h: number }, win: Pick<PlanWindow, 'y0'>, overheadOff?: boolean): boolean {
   const height = Math.max(it.h, it.windowHeight || 0, it.overhead && !overheadOff ? OVERHEAD_TOP : 0)
   return !it.window || it.h > 1.0 + EPS || height > win.y0 - 0.05 + EPS
 }
 
-export function windowsOfRoom(plan: Plan, room: Room): Json[] {
+export function windowsOfRoom(plan: Plan, room: Room): PlanWindow[] {
   if (!room.outdoor) return plan.windows.filter((j) => j.room === room.id)
   return plan.windows.filter(
     (j) =>

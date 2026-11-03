@@ -60,7 +60,7 @@ function runTeam(scene: Scene, inputs: DriveInput[]): Frame[] {
     ${cutFunction(source, 'carUpdate')}
     return { step(input, dt) { keys.KeyW = input.throttle > 0; keys.KeyS = input.brake > 0; keys.KeyA = input.steer > 0; keys.KeyD = input.steer < 0; keys.Space = input.handbrake; pressedH = !!input.horn; carUpdate(dt); }, CAR, Z };
   `
-  const world = evaluateSlice<{ step: (input: DriveInput, dt: number) => void; CAR: any; Z: any }>(
+  const world = evaluateSlice<{ step: (input: DriveInput, dt: number) => void; CAR: { x: number; z: number; yaw: number; v: number; steer: number }; Z: unknown }>(
     `const { log, bodies, wall } = __scope;\n${code.replace('return { step', 'return { step').replace(/^\s*return \{ step[\s\S]*$/m, (m) => m)}`.replace('return { step(input, dt)', 'return { step(input, dt)'),
     ['step', 'CAR', 'Z'],
     { __scope: { log, bodies: scene.bodies, wall: { x: scene.wallX, z: scene.wallZ } }, Math },

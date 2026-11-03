@@ -1,6 +1,6 @@
 import type { ViewerLayer, ViewerLayerContext, ViewerLayerLegendEntry } from '@adatechnology/game-floorplan'
 
-import type { StructurePart } from './types'
+import type { Roof, Structure, StructurePart } from './types'
 
 type MaterialGroup = 'concrete' | 'steel' | 'masonry' | 'wood'
 
@@ -62,18 +62,19 @@ function drawPorchRoofs(context: ViewerLayerContext, parts: readonly StructurePa
 
 /** What the viewer draws at one storey: pillars (filled for concrete, steel and masonry, hollow for wood), dashed beams, trusses on the top storey, the porch roof outline. */
 export function drawStructure(context: ViewerLayerContext): void {
-  const structure = context.plan.structure
+  // the structure and roof extensions of this pack wrote these into the result
+  const structure = context.plan.structure as Structure | undefined
   if (!structure) return
   const floor = context.all ? 0 : context.floor
-  const here = (structure.parts as StructurePart[]).filter((part) => part.floor === floor)
+  const here = structure.parts.filter((part) => part.floor === floor)
   drawPorchRoofs(context, here)
-  if (floor === (context.plan.roof?.bearingFloor ?? 0)) drawRoofFrames(context, structure.parts)
+  if (floor === ((context.plan.roof as Roof | null | undefined)?.bearingFloor ?? 0)) drawRoofFrames(context, structure.parts)
   drawBeams(context, here)
   drawColumns(context, here)
 }
 
-export function structureLegend(plan: { structure?: { parts: StructurePart[] } }): ViewerLayerLegendEntry[] {
-  const parts = plan.structure?.parts ?? []
+export function structureLegend(plan: Readonly<Record<string, unknown>>): ViewerLayerLegendEntry[] {
+  const parts = (plan.structure as Pick<Structure, 'parts'> | undefined)?.parts ?? [] // written by the structure extension
   const entries: ViewerLayerLegendEntry[] = []
   for (const group of ['concrete', 'steel', 'masonry', 'wood'] as const) {
     const columns = parts.some((p) => p.role === 'column' && groupOf(p.material) === group)

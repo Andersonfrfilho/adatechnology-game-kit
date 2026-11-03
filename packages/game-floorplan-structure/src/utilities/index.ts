@@ -1,4 +1,4 @@
-import type { FindsQuery, FindStack } from '@adatechnology/game-floorplan'
+import type { FindStack, FindsQuery, Plan, ResultItem } from '@adatechnology/game-floorplan'
 
 import type { WaterTank } from '../types'
 import { hasContent } from './content'
@@ -7,20 +7,21 @@ import { planElectrical } from './electrical'
 import { planGas } from './gas'
 import type { Gas } from './gas'
 import { planPlumbing } from './plumbing'
-import type { Json, Rng } from './shared'
+import type { Rng } from './shared'
+import type { Plumbing, Solar } from './types'
 import { planSolar } from './solar'
 
 export interface Utilities {
   gas: Gas | null
   electrical: Electrical
-  solar: Json | null
-  plumbing: Json
+  solar: Solar | null
+  plumbing: Plumbing
 }
 
 export interface UtilitiesContext {
-  plan: Json
-  items: Json[]
-  stateItems: Json[]
+  plan: Plan
+  items: ResultItem[]
+  stateItems: ResultItem[]
   tank: WaterTank | null
   energy?: EnergyConfig
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
@@ -41,7 +42,7 @@ const OVERHEAD = 'overhead_cabinet'
 const ALWAYS_HOLD: readonly string[] = ['trash_bin', 'outdoor_bin', 'mailbox']
 
 export interface ContentsContext {
-  items: Json[]
+  items: ResultItem[]
   state: string
   place: string
   /** Outbreak days and region of the world, passed to the finds provider. */
@@ -54,7 +55,7 @@ export interface ContentsContext {
 /** What every container holds, asked of the registered finds provider: by item id, and `<id>#overhead` for the wall cabinet over a sink. */
 export function planContents(context: ContentsContext): Record<string, readonly FindStack[]> {
   const out: Record<string, readonly FindStack[]> = {}
-  const ask = (item: Json, container: string, key: string): readonly FindStack[] =>
+  const ask = (item: ResultItem, container: string, key: string): readonly FindStack[] =>
     context.findsFor({ place: context.place, container, state: context.state, rng: context.rngFor(key), footprint: item.w * item.d, key: item.id, ...(context.day === undefined ? {} : { day: context.day }), ...(context.region === undefined ? {} : { region: context.region }) })
   for (const item of context.items) {
     if (item.decor && item.mount !== 'wall_top') continue

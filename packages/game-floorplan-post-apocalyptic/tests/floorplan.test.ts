@@ -116,18 +116,18 @@ describe('template specifics', () => {
     const c = engine.generate('single_storey_a', { seed: 1, style: 'luxury' })
     expect(n.style).toBe('high')
     expect(c.style).toBe('high')
-    expect(n.lot.perimeter.some((s: any) => s.type === 'wall' && s.height >= 2.5)).toBe(true)
-    expect(p.lot.perimeter.every((s: any) => s.height <= 2.0)).toBe(true)
-    expect(p.lot.pool).toBeTruthy()
-    expect(c.lot.perimeter.some((s: any) => s.height >= 2.5)).toBe(true)
+    expect(n.lot!.perimeter.some((s: any) => s.type === 'wall' && s.height >= 2.5)).toBe(true)
+    expect(p.lot!.perimeter.every((s: any) => s.height <= 2.0)).toBe(true)
+    expect(p.lot!.pool).toBeTruthy()
+    expect(c.lot!.perimeter.some((s: any) => s.height >= 2.5)).toBe(true)
   })
 
   it('commercial: the market has no garden, a steel door and a cargo gate', () => {
     const m = engine.generate('market', { seed: 1 })
-    expect(m.lot.zones.some((z: any) => z.type === 'garden')).toBe(false)
+    expect(m.lot!.zones.some((z: any) => z.type === 'garden')).toBe(false)
     expect(m.facade.steelDoor).toBeTruthy()
     expect(m.doors.some((p: any) => p.model === 'steel' && p.exterior)).toBe(true)
-    expect(m.lot.gates.some((g: any) => g.type === 'cargo')).toBe(true)
+    expect(m.lot!.gates.some((g: any) => g.type === 'cargo')).toBe(true)
   })
 
   it('only the mansion and high-end houses must have a pool', () => {
@@ -140,7 +140,7 @@ describe('template specifics', () => {
   it('apartments have no lot; apartment_modern describes the building', () => {
     for (const id of ['apartment_basic', 'apartment_modern']) expect(engine.generate(id, { seed: 1 }).lot, id).toBeNull()
     const high = engine.generate('apartment_modern', { seed: 1, tier: 'high', locale: 'pt-BR' })
-    const b = high.building
+    const b = high.building as Record<string, unknown> | null // the apartment template's building description
     expect(b && b.elevator && b.stairs && b.hall && b.unitsPerFloor && b.floors).toBeTruthy()
     expect(engine.generate('apartment_modern', { seed: 1 }).style).toBe('mid')
     expect(high.style).toBe('high')
@@ -164,7 +164,7 @@ describe('template specifics', () => {
     expect(al.items.some((m: any) => m.type === 'sauna')).toBe(true)
     expect(al.items.some((m: any) => m.type === 'soaking_tub')).toBe(true)
     expect(al.items.filter((m: any) => m.category === 'car').length).toBeGreaterThanOrEqual(2)
-    expect(al.rooms.find((c: any) => c.type === 'living' && c.id === 'living').ceiling).toBeGreaterThanOrEqual(5)
+    expect(al.rooms.find((c: any) => c.type === 'living' && c.id === 'living')!.ceiling).toBeGreaterThanOrEqual(5)
   })
 })
 

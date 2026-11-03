@@ -2,14 +2,18 @@ import { GROUND } from '../types'
 import type { StructureSource } from '../types'
 import type { BuildContext } from './context'
 
-type StairItem = StructureSource['items'][number]
+type SourceItem = StructureSource['items'][number]
+/** A stair item: its `link` names the storeys it joins. */
+type StairItem = SourceItem & { link: { from: number; to: number } }
+
+const isStair = (item: SourceItem): item is StairItem => item.category === 'stairs' && typeof item.link === 'object' && item.link !== null
 
 /** One flight per pair of linked storeys, taken from the item of the lower storey when both are present. */
-function flightsOf(items: readonly StairItem[]): Map<string, StairItem> {
+function flightsOf(items: readonly SourceItem[]): Map<string, StairItem> {
   const flights = new Map<string, StairItem>()
-  for (const item of items.filter((it) => it.category === 'stairs' && it.link)) {
-    const key = `${item.link!.from}_${item.link!.to}`
-    if (!flights.has(key) || item.floor === item.link!.from) flights.set(key, item)
+  for (const item of items.filter(isStair)) {
+    const key = `${item.link.from}_${item.link.to}`
+    if (!flights.has(key) || item.floor === item.link.from) flights.set(key, item)
   }
   return flights
 }
@@ -19,7 +23,7 @@ export function addStairs(context: BuildContext): void {
   const { builder, construction } = context
   const material = context.isTimber ? construction.frame.timber : (construction.stairs ?? 'concrete')
   for (const [key, item] of flightsOf(context.source.items)) {
-    const { from, to } = item.link!
+    const { from, to } = item.link
     const flight = builder.add({ id: `stairs_${key}`, role: 'stair', material, aabb: item.aabb!, y0: context.level(from), y1: context.level(to) }, { floor: from, steps: Math.round((context.level(to) - context.level(from)) / 0.18) })
     const base = context.baseOf(from)
     builder.rest(flight, !base || base === GROUND ? GROUND : base, !base || base === GROUND ? 'resting' : context.isTimber ? 'nail' : 'mortar')

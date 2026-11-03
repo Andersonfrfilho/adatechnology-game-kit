@@ -1,5 +1,7 @@
+import type { FurnitureDef, Plan, ResultItem, ResultLot, Vec2 } from '@adatechnology/game-floorplan'
 import type { Rect } from '../types'
-import type { Json, Rng } from './shared'
+import type { Rng } from './shared'
+import type { Outbuilding, OutbuildingItem, OutbuildingOpening, OutbuildingWall } from './types'
 import { isSolid, overlaps, round2 } from './shared'
 
 const WALL = 0.15
@@ -10,9 +12,9 @@ const USE_WEIGHTS: Record<string, number> = { guest_room: 3, office: 2, storage:
 const PATH_WIDTH = 1.0
 
 export interface OutbuildingContext {
-  plan: Json
-  items: Json[]
-  catalog: Record<string, Json>
+  plan: Plan
+  items: ResultItem[]
+  catalog: Record<string, FurnitureDef>
   rngFor(key: string): Rng
 }
 
@@ -52,15 +54,15 @@ interface Frame {
 
 const at = (frame: Frame, a: number, b: number): [number, number] => [frame.cx + frame.n[0] * a + frame.t[0] * b, frame.cz + frame.n[1] * a + frame.t[1] * b]
 
-function opening(frame: Frame, id: string, a: number, b: number, vector: [number, number], width: number, extra: Json): Json {
+function opening(frame: Frame, id: string, a: number, b: number, vector: [number, number], width: number, extra: Partial<OutbuildingOpening>): OutbuildingOpening {
   const [u, v] = at(frame, a, b)
   const alongU = Math.abs(vector[0]) !== 1
   return { id, axis: alongU ? 'u' : 'v', pos: round2(alongU ? v : u), at: round2(alongU ? u : v), u: round2(u), v: round2(v), width: round2(width), side: sideOf(vector[0], vector[1]), ...extra }
 }
 
-function wallsOf(box: Rect, door: Json, height: number): Json[] {
-  const walls: Json[] = []
-  const sides = [
+function wallsOf(box: Rect, door: OutbuildingOpening, height: number): OutbuildingWall[] {
+  const walls: OutbuildingWall[] = []
+  const sides: { axis: 'u' | 'v'; pos: number; i0: number; i1: number; side: string }[] = [
     { axis: 'u', pos: box[1], i0: box[0], i1: box[2], side: 'front' }, { axis: 'u', pos: box[3], i0: box[0], i1: box[2], side: 'back' },
     { axis: 'v', pos: box[0], i0: box[1], i1: box[3], side: 'left' }, { axis: 'v', pos: box[2], i0: box[1], i1: box[3], side: 'right' },
   ]
@@ -75,8 +77,8 @@ function wallsOf(box: Rect, door: Json, height: number): Json[] {
   return walls
 }
 
-function furnish(context: OutbuildingContext, frame: Frame, use: string, interior: Rect, insideDoor: Rect): Json[] {
-  const placed: Json[] = []
+function furnish(context: OutbuildingContext, frame: Frame, use: string, interior: Rect, insideDoor: Rect): OutbuildingItem[] {
+  const placed: OutbuildingItem[] = []
   USES[use]!.forEach((type, k) => {
     const def = context.catalog[type]!
     const facing: [number, number] = k === 0 ? frame.n : [frame.t[0] * frame.sideToMiddle, frame.t[1] * frame.sideToMiddle]
@@ -95,17 +97,19 @@ function furnish(context: OutbuildingContext, frame: Frame, use: string, interio
  * The outbuilding at the back of the yard is a small building of its own: walls with a gap for the door, a door of 0.85 m facing the yard, two windows and the
  * furniture of a drawn use (guest room, office, storage, gourmet space).
  */
-export function planOutbuildings(context: OutbuildingContext): Json[] {
+export function planOutbuildings(context: OutbuildingContext): Outbuilding[] {
   const { plan, items } = context
   const lot = plan.lot
   if (!lot) return []
-  const out: Json[] = []
+  const out: Outbuilding[] = []
   for (const item of items.filter((m) => m.category === 'outbuilding')) {
     const rng = context.rngFor(streamOf(item.id))
     const [a0, a1, a2, a3] = item.aabb as Rect
-    const n: [number, number] = [item.frontU, item.frontV]
-    const t: [number, number] = [-item.frontV, item.frontU]
-    const horizontal = Math.abs(item.frontU) === 1
+    const frontU = item.frontU ?? 0
+    const frontV = item.frontV ?? 1
+    const n: [number, number] = [frontU, frontV]
+    const t: [number, number] = [-frontV, frontU]
+    const horizontal = Math.abs(frontU) === 1
     const cx = (a0 + a2) / 2
     const cz = (a1 + a3) / 2
     const depth = horizontal ? a2 - a0 : a3 - a1
@@ -117,24 +121,24 @@ export function planOutbuildings(context: OutbuildingContext): Json[] {
     const windowFront = opening(frame, `${item.id}.w0`, depth / 2, -sideToMiddle * (width / 2 - 0.9), n, Math.min(1.0, width / 2 - 0.6), { y0: 1.0, y1: 2.0 })
     const windowSide = opening(frame, `${item.id}.w1`, 0, (sideToMiddle * width) / 2, [t[0] * sideToMiddle, t[1] * sideToMiddle], Math.min(1.0, depth - 0.8), { y0: 1.0, y1: 2.0 })
     const [p, q] = [at(frame, depth / 2, doorOffset), at(frame, depth / 2 - 0.9, doorOffset)]
-    door.zone = (horizontal ? [Math.min(p[0], q[0]), p[1] - door.width / 2, Math.max(p[0], q[0]), p[1] + door.width / 2] : [p[0] - door.width / 2, Math.min(p[1], q[1]), p[0] + door.width / 2, Math.max(p[1], q[1])]).map(round2)
+    door.zone = (horizontal ? [Math.min(p[0], q[0]), p[1] - door.width / 2, Math.max(p[0], q[0]), p[1] + door.width / 2] : [p[0] - door.width / 2, Math.min(p[1], q[1]), p[0] + door.width / 2, Math.max(p[1], q[1])]).map(round2) as Rect
     const interior: Rect = [a0 + WALL, a1 + WALL, a2 - WALL, a3 - WALL]
     const use = pickWeighted(rng, USE_WEIGHTS)
-    out.push({ id: item.id, type: 'outbuilding', use, floor: 0, aabb: (item.aabb as Rect).slice(), interior: [interior.map(round2)], ceiling: item.h, thickness: WALL, front: n, walls: wallsOf(item.aabb, door, item.h), doors: [door], windows: [windowFront, windowSide], items: furnish(context, frame, use, interior, door.zone) })
+    out.push({ id: item.id, type: 'outbuilding', use, floor: 0, aabb: item.aabb.slice() as Rect, interior: [interior.map(round2) as Rect], ceiling: item.h, thickness: WALL, front: n, walls: wallsOf(item.aabb, door, item.h), doors: [door], windows: [windowFront, windowSide], items: furnish(context, frame, use, interior, door.zone) })
   }
   return out
 }
 
 /** A pedestrian path from every door of an outbuilding: a 1 m stub out of the door and an L to the nearest existing path, away from furniture, the building and the fence. */
-export function addOutbuildingPaths(lot: Json, outbuildings: Json[], items: Json[]): void {
+export function addOutbuildingPaths(lot: ResultLot, outbuildings: Outbuilding[], items: ResultItem[]): void {
   const half = PATH_WIDTH / 2
-  const rect = lot.rect as Rect
+  const rect = lot.rect
   const solids = items.filter((m) => m.outdoor && m.aabb && isSolid(m)).map((m) => m.aabb as Rect)
-  const fence = lot.perimeter.map((q: Json) => [Math.min(q.u0, q.u1) - 0.075, Math.min(q.v0, q.v1) - 0.075, Math.max(q.u0, q.u1) + 0.075, Math.max(q.v0, q.v1) + 0.075] as Rect)
+  const fence = lot.perimeter.map((q) => [Math.min(q.u0, q.u1) - 0.075, Math.min(q.v0, q.v1) - 0.075, Math.max(q.u0, q.u1) + 0.075, Math.max(q.v0, q.v1) + 0.075] as Rect)
   const strip = (p: number[], q: number[]): Rect => [Math.min(p[0]!, q[0]!) - half, Math.min(p[1]!, q[1]!) - half, Math.max(p[0]!, q[0]!) + half, Math.max(p[1]!, q[1]!) + half]
   for (const building of outbuildings) {
-    for (const door of building.doors as Json[]) {
-      if (lot.paths.some((c: Json) => c.to === door.id)) continue
+    for (const door of building.doors) {
+      if (lot.paths.some((c) => c.to === door.id)) continue
       const z = door.zone as Rect
       const zc = door.axis === 'v' ? (z[0] + z[2]) / 2 : (z[1] + z[3]) / 2
       const outside = zc > door.pos ? -1 : 1
@@ -153,7 +157,7 @@ export function addOutbuildingPaths(lot: Json, outbuildings: Json[], items: Json
         return n
       }
       let best: { v: number; k: { rects: Rect[]; points: number[][] }; from: string | null } | null = null
-      for (const c of lot.paths.filter((p: Json) => p.type === 'pedestrian' || p.id === 'cargo_path')) {
+      for (const c of lot.paths.filter((p) => p.type === 'pedestrian' || p.id === 'cargo_path')) {
         for (const r of c.rects as Rect[]) {
           const T = [Math.min(Math.max(S[0]!, r[0] + half), r[2] - half), Math.min(Math.max(S[1]!, r[1] + half), r[3] - half)]
           const candidates: { rects: Rect[]; points: number[][] }[] = []
@@ -167,7 +171,7 @@ export function addOutbuildingPaths(lot: Json, outbuildings: Json[], items: Json
         }
       }
       const chosen = best ? best.k : { rects: [stub], points: [A, S] }
-      lot.paths.push({ id: `path_${door.id}`, type: 'pedestrian', from: best ? best.from : null, to: door.id, width: PATH_WIDTH, rects: chosen.rects.map((q) => q.map(round2)), points: chosen.points.map((q) => q.map(round2)) })
+      lot.paths.push({ id: `path_${door.id}`, type: 'pedestrian', from: best ? best.from : null, to: door.id, width: PATH_WIDTH, rects: chosen.rects.map((q) => q.map(round2) as Rect), points: chosen.points.map((q) => q.map(round2) as Vec2) })
     }
   }
 }

@@ -19,7 +19,8 @@ import { generateConifer } from './archetypes/conifer'
 import { generateVine } from './archetypes/vine'
 import { generatePotted } from './archetypes/potted'
 
-type Gen = (spec: any, ctx: Ctx) => ArchResult
+// a method, so each archetype keeps its own spec type: `generate` hands it the spec whose archetype names it
+type Gen = { generate(spec: PlantSpec, ctx: Ctx): ArchResult }['generate']
 
 /** Registry of archetype generators. Filled in by each archetype module through `GENERATORS`. */
 export const GENERATORS: Record<string, Gen> = {

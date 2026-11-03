@@ -1,18 +1,9 @@
 import { MARGIN } from './constants'
 import { entryPoints, eq, inRect, inner, sharedEdge, usableParts } from './geometry'
 import { openingsOfFloor } from './queries'
-import type { Json, Plan, Rect, Room } from './types'
+import type { Plan, Rect, Room, WalkGrid } from './types'
 
-export interface Grid {
-  gs: number
-  u0: number
-  v0: number
-  nx: number
-  nz: number
-  inside: Uint8Array
-  entries: [number, number][]
-  center: [number, number]
-}
+export type Grid = WalkGrid
 
 /** Wall bodies of a storey (the wall line plus half a wall each side); a wall end that stops at a door opening has no extension there. */
 function wallBodies(plan: Plan, floor: number): Rect[] {
@@ -67,7 +58,7 @@ export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null,
       if (insets.some((r) => u >= r[0] && u <= r[2] && v >= r[1] && v <= r[3]) && (room.outdoor || !tooClose(u, v))) insideCells[j * nx + i] = 1
     }
   const entries: [number, number][] = []
-  for (const ab of openingsOfFloor(plan, room.floor) as Json[])
+  for (const ab of openingsOfFloor(plan, room.floor))
     if (!(ignored && ignored.has(ab.id)))
       for (const pt of entryPoints(ab)) {
         if (!inRect(room, pt[0], pt[1])) continue

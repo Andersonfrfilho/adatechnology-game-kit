@@ -1,4 +1,4 @@
-import type { PlacedItem, Rect, Room, StateContext, StatePlugin, Vec2 } from '@adatechnology/game-floorplan'
+import type { LotPerimeterPiece, PlacedItem, PlanAxis, Rect, Room, StateContext, StatePlugin, Vec2 } from '@adatechnology/game-floorplan'
 import { LEGACY_STREAMS, legacyCarId } from './legacy-seeds'
 
 type Item = PlacedItem & Record<string, any>  
@@ -165,8 +165,8 @@ function fortified(c: StateContext): PlacedItem[] {
     }
   // wall tops
   if (plan.lot) {
-    const segs = plan.lot.perimeter.filter((s: Item) => s.type !== 'railing')
-    const applyTop = (s: Item) => {
+    const segs = plan.lot.perimeter.filter((s) => s.type !== 'railing')
+    const applyTop = (s: LotPerimeterPiece & { axis?: PlanAxis }) => {
       const previous = s.top
       const next = rng() < 0.5 ? 'barbed_wire' : 'razor_wire'
       const finalTop = previous === 'razor_wire' ? 'razor_wire' : next // existing razor wire stays
