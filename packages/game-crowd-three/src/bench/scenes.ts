@@ -2,6 +2,7 @@ import { STATE, CELL } from '@adatechnology/game-crowd'
 import type { Crowd, CrowdUpdateContext } from '@adatechnology/game-crowd'
 import type { ModuleHost } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 
 /** The ground a scene lays out its things on: the crowd area centre. */
 export type CrowdScenePlace = { readonly cx: number; readonly cz: number }
@@ -79,8 +80,9 @@ export const DENSE_WALL: CrowdBenchScene = {
       ;(host.scene as THREE_NS.Object3D).add(wall)
       made.push(wall)
     }
+    // the walls are built for this scene: freed when it goes, keeping what the scene still draws (the house palette)
     return () => {
-      for (const wall of made) wall.removeFromParent()
+      discardObject3D(made)
     }
   },
 }

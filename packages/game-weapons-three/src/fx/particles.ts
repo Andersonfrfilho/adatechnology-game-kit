@@ -52,8 +52,8 @@ export interface Particles {
   spawn(object: THREE_NS.Object3D, velocity: THREE_NS.Vector3, options?: ParticleOptions): void
   update(dt: number): void
   count(kind: ParticleKind): number
-  /** Called when something bounces: `casing` or `magazine` (for the sound). */
-  onBounce?: (kind: ParticleKind) => void
+  /** Called when something bounces: `casing` or `magazine` (for the sound), with what hit, how fast (m/s, vertical) and which bounce (0 = first). */
+  onBounce?: (kind: ParticleKind, hit?: { readonly object: THREE_NS.Object3D; readonly speed: number; readonly bounce: number }) => void
   dispose(): void
 }
 
@@ -127,11 +127,13 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
           continue
         }
         object.position.y = floor
+        const impact = Math.abs(particle.velocity.y)
         particle.velocity.y *= -particle.bounce
         particle.velocity.x *= FLOOR_FRICTION
         particle.velocity.z *= FLOOR_FRICTION
         particle.spin.multiplyScalar(FLOOR_FRICTION)
-        if (particle.bounces++ < 4 && Math.abs(particle.velocity.y) >= 0.18) api.onBounce?.(particle.kind)
+        if (particle.bounces < 4 && Math.abs(particle.velocity.y) >= 0.18) api.onBounce?.(particle.kind, { object, speed: impact, bounce: particle.bounces })
+        particle.bounces++
         if (Math.abs(particle.velocity.y) < 0.18) {
           particle.resting = true
           particle.onRest?.(object)

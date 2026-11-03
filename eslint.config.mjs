@@ -2,6 +2,7 @@
 import eslint from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import noBareRemove from './tools/eslint/no-bare-remove.mjs'
 
 export default tseslint.config(
   {
@@ -46,6 +47,12 @@ export default tseslint.config(
     // the one allowlisted file: a scene of its own, off screen, drawn by a renderer of its own (see `renderItemThumbnail`), so its lights reach no material of the game
     files: ['packages/game-items-three/src/thumbnails.ts'],
     rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
+    // CLAUDE.md, "Memória": what leaves the scene for good is freed (discardObject3D), not only taken out of it
+    files: ['packages/*/src/**/*.{ts,tsx}'],
+    plugins: { kit: { rules: { 'no-bare-remove': noBareRemove } } },
+    rules: { 'kit/no-bare-remove': 'error' },
   },
   {
     files: ['packages/*/src/**/*.{ts,tsx}'],

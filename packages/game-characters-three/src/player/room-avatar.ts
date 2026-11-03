@@ -22,6 +22,8 @@ export type RoomAvatarLike = {
   reach(targets: HandTargets | null, view?: ReachView | null): void
   /** Plays a strike on the body (the only source of it, in both views) and answers the seconds to its impact (`RoomAvatar.strike`). */
   strike(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
+  /** The foot the walk put down since the last call (`RoomAvatar.footfall`), or null. */
+  footfall(): 'left' | 'right' | null
   /** The avatar it wraps. */
   readonly avatar: PlayerAvatar
 }
@@ -41,6 +43,10 @@ export type ToRoomAvatarOptions = {
 const impactOf = (clip: PoseClip): number | null => clip.events?.find((event) => event.type === 'impact')?.t ?? null
 /** A punch is a clip whose impact is a `punch` (the hands close for it); after one the body keeps the guard. */
 const isPunch = (clip: PoseClip): boolean => clip.events?.some((event) => event.type === 'impact' && event.data?.kind === 'punch') ?? false
+/** Below this ground speed (m/s) the body does not walk, so its feet do not fall. */
+const FOOTFALL_SPEED = 0.3
+/** Radians the legs must be apart at the turn for it to be a step (not the sway of standing). */
+const FOOTFALL_SPREAD = 0.08
 /** Below this ground speed the body stands to keep the guard; walking gives the legs back to the gait. */
 const GUARD_SPEED = 0.3
 
@@ -63,6 +69,34 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
   const guardHold = options.guardHold ?? 1.2
   const punchBlend = options.punchBlend ?? 0.05
   let strikeLeft = 0 // seconds of the punch still to play
+  // Heel strikes, read off the legs the walk drew: the hip angles of the two legs (more negative is further forward) part and close; each time
+  // their difference turns back, one leg is at its furthest forward and its heel is down. The left leg is `legs[0]` (+x, the body's left).
+  let footDown: 'left' | 'right' | null = null
+  let walking = false
+  let lastSpread: number | null = null
+  let lastSlope = 0
+  const updateFeet = (state: Parameters<RoomAvatarLike['update']>[1]): void => {
+    walking = state.speed >= FOOTFALL_SPEED && !state.down && !state.seat
+    if (!walking) {
+      lastSpread = null
+      lastSlope = 0
+    }
+  }
+  const readFeet = (): void => {
+    if (!walking) return
+    const [left, right] = avatar.rig.legs
+    if (!left || !right) return
+    const spread = (left.g as unknown as THREE_NS.Object3D).rotation.x - (right.g as unknown as THREE_NS.Object3D).rotation.x
+    if (lastSpread !== null) {
+      const slope = spread - lastSpread
+      if (Math.abs(spread) > FOOTFALL_SPREAD) {
+        if (lastSlope < 0 && slope >= 0) footDown = 'left'
+        else if (lastSlope > 0 && slope <= 0) footDown = 'right'
+      }
+      if (slope !== 0) lastSlope = slope
+    }
+    lastSpread = spread
+  }
   let guardLeft = 0 // seconds the guard stays up after it
   let guarding = false
   const stepGuard = (dt: number, state: Parameters<RoomAvatarLike['update']>[1]): void => {
@@ -89,6 +123,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     setView: (mode, camera) => avatar.setView(mode, camera),
     update: (dt, state) => {
       stepGuard(dt, state)
+      updateFeet(state)
       avatar.update(dt, {
         speed: state.speed,
         running: state.running,
@@ -102,6 +137,12 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         ...(state.seat !== undefined ? { seat: state.seat } : {}),
         ...(state.door !== undefined ? { door: state.door } : {}),
       })
+      readFeet()
+    },
+    footfall: () => {
+      const foot = footDown
+      footDown = null
+      return foot
     },
     hand: (side) => avatar.hand(side),
     shoulder: (side) => avatar.shoulder(side),
