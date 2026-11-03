@@ -271,6 +271,15 @@ async function main() {
     }
   }
   for (const [outDir, manifest] of Object.entries(manifests)) {
+    // a take whose file is gone (replaced or renamed in the inbox) leaves the manifest and the credits, and so does a sound left with no take
+    for (const sound of manifest.sounds) {
+      for (const [layer, takes] of Object.entries(sound.layers)) {
+        const kept = (takes ?? []).filter((entry) => existsSync(join(outDir, entry.file)))
+        if (kept.length > 0) sound.layers[layer] = kept
+        else delete sound.layers[layer]
+      }
+    }
+    manifest.sounds = manifest.sounds.filter((sound) => Object.keys(sound.layers).length > 0)
     manifest.sounds.sort((a, b) => a.id.localeCompare(b.id))
     writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
     writeFileSync(join(outDir, 'CREDITOS.md'), creditsMarkdown(manifest, outDir))

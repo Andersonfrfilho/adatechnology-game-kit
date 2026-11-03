@@ -2564,54 +2564,6 @@
       }
     },
     {
-      "id": "explosion",
-      "category": "explosoes-fogo",
-      "layers": {
-        "far": [
-          {
-            "file": "explosoes-fogo/explosion_far_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.02,
-            "seconds": 5.225,
-            "source": "https://freesound.org/people/Kostrava/sounds/320788/",
-            "author": "Kostrava",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/explosion_far_02.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.01,
-            "seconds": 0.875,
-            "source": "https://freesound.org/people/Kostrava/sounds/320788/",
-            "author": "Kostrava",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/explosion_far_03.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1,
-            "seconds": 0.565,
-            "source": "https://freesound.org/people/craigsmith/sounds/438693/",
-            "author": "craigsmith",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/explosion_far_04.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.13,
-            "seconds": 6.023,
-            "source": "https://freesound.org/people/Kostrava/sounds/324277/",
-            "author": "Kostrava",
-            "license": "CC0"
-          }
-        ]
-      }
-    },
-    {
       "id": "explosion_big",
       "category": "explosoes-fogo",
       "layers": {
@@ -2665,16 +2617,6 @@
             "source": "https://freesound.org/people/craigsmith/sounds/486018/",
             "author": "craigsmith",
             "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/explosion_big_06.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.18,
-            "seconds": 0.461,
-            "source": "https://opengameart.org/content/100-cc0-sfx",
-            "author": "rubberduck",
-            "license": "CC0"
           }
         ]
       }
@@ -2722,6 +2664,54 @@
             "seconds": 0.67,
             "source": "https://freesound.org/people/qubodup/sounds/843247/",
             "author": "qubodup",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "explosion_far",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "explosoes-fogo/explosion_far_close_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 5.225,
+            "source": "https://freesound.org/people/Kostrava/sounds/320788/",
+            "author": "Kostrava",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/explosion_far_close_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 0.875,
+            "source": "https://freesound.org/people/Kostrava/sounds/320788/",
+            "author": "Kostrava",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/explosion_far_close_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.565,
+            "source": "https://freesound.org/people/craigsmith/sounds/438693/",
+            "author": "craigsmith",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/explosion_far_close_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 6.023,
+            "source": "https://freesound.org/people/Kostrava/sounds/324277/",
+            "author": "Kostrava",
             "license": "CC0"
           }
         ]
@@ -2967,16 +2957,6 @@
             "license": "CC0"
           },
           {
-            "file": "explosoes-fogo/fire_crackle_04.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.21,
-            "seconds": 0.234,
-            "source": "https://freesound.org/people/deleted_user_2104797/sounds/164471/",
-            "author": "deleted_user_2104797",
-            "license": "CC0"
-          },
-          {
             "file": "explosoes-fogo/fire_crackle_05.ogg",
             "sampleRate": 48000,
             "channels": 1,
@@ -2987,16 +2967,6 @@
             "license": "CC0"
           },
           {
-            "file": "explosoes-fogo/fire_crackle_06.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.26,
-            "seconds": 0.254,
-            "source": "https://freesound.org/people/deleted_user_2104797/sounds/164471/",
-            "author": "deleted_user_2104797",
-            "license": "CC0"
-          },
-          {
             "file": "explosoes-fogo/fire_crackle_07.ogg",
             "sampleRate": 48000,
             "channels": 1,
@@ -3004,26 +2974,6 @@
             "seconds": 0.425,
             "source": "https://freesound.org/people/ahriik/sounds/508110/",
             "author": "ahriik",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/fire_crackle_08.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.17,
-            "seconds": 0.165,
-            "source": "https://freesound.org/people/deleted_user_2104797/sounds/164471/",
-            "author": "deleted_user_2104797",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/fire_crackle_09.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.18,
-            "seconds": 0.423,
-            "source": "https://freesound.org/people/deleted_user_2104797/sounds/164471/",
-            "author": "deleted_user_2104797",
             "license": "CC0"
           }
         ]
@@ -3114,27 +3064,17 @@
             "file": "explosoes-fogo/fire_loop_01.ogg",
             "sampleRate": 48000,
             "channels": 2,
-            "peak": -1.18,
+            "peak": -1.1,
             "seconds": 24,
             "source": "https://freesound.org/people/theoneandtruelybitch/sounds/698209/",
             "author": "theoneandtruelybitch",
             "license": "CC0"
           },
           {
-            "file": "explosoes-fogo/fire_loop_02.ogg",
-            "sampleRate": 48000,
-            "channels": 2,
-            "peak": -1.11,
-            "seconds": 24,
-            "source": "https://freesound.org/people/snds_good/sounds/554855/",
-            "author": "snds_good",
-            "license": "CC0"
-          },
-          {
             "file": "explosoes-fogo/fire_loop_03.ogg",
             "sampleRate": 48000,
             "channels": 2,
-            "peak": -1.05,
+            "peak": -1.02,
             "seconds": 24,
             "source": "https://freesound.org/people/kyles/sounds/454019/",
             "author": "kyles",
@@ -3144,7 +3084,7 @@
             "file": "explosoes-fogo/fire_loop_04.ogg",
             "sampleRate": 48000,
             "channels": 2,
-            "peak": -0.96,
+            "peak": -1.21,
             "seconds": 24,
             "source": "https://freesound.org/people/SKrafft/sounds/681366/",
             "author": "SKrafft",

@@ -20,6 +20,7 @@
 //   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
+import { blastFireSampleBank } from '@adatechnology/game-destruction-three'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
@@ -95,6 +96,24 @@ const room = createTestRoom({
     },
   },
 })
+
+// the recorded blasts and fire: served next to the page in sfx/ (build.mjs copies them); each id plays its synthesized recipe until its files load,
+// and keeps it if they never do (the page opened as a file, or ?sfx=0)
+if (room.audio && params.get('sfx') !== '0' && location.protocol.startsWith('http')) {
+  fetch('sfx/manifest.json')
+    .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`sfx/manifest.json ${response.status}`))))
+    .then((manifest) => {
+      const bank = blastFireSampleBank(manifest, { baseUrl: 'sfx/' })
+      room.audio.register(bank)
+      return room.audio.loadSamples(bank.samples.map((sample) => sample.id))
+    })
+    .then((report) => {
+      window.__sfxReport = report
+    })
+    .catch((error) => {
+      window.__sfxReport = { loaded: [], failed: [{ url: 'sfx/manifest.json', error: String(error) }] }
+    })
+}
 
 // the player's body (the team game's player, @adatechnology/game-characters-three): seen in third person, hidden in first. V toggles.
 // The first person stays the default; pages that load an area (`window.__THREE` is for them) may start in third.
