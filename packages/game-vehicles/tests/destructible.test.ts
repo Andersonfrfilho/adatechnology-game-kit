@@ -21,7 +21,7 @@ describe('light mode item', () => {
     const kit = makeKit()
     const full = createVehicleDestructible(kit, buildVehicleItem(kit, 'proto').vehicle)
     const light = createVehicleDestructible(kit, buildVehicleItem(kit, 'proto', { lod: true }).vehicle)
-    expect(checkDestructible(light, { materials: MATERIALS }).problems).toEqual([])
+    expect(checkDestructible(light, { materials: MATERIALS, cost: true }).problems).toEqual([])
     expect(light.describe().parts.map((p) => p.id)).toEqual(full.describe().parts.map((p) => p.id))
   })
 })
@@ -31,7 +31,7 @@ describe('contract', () => {
     it(`${key}: checkDestructible and checkAnimation pass`, () => {
       const { d } = make(key)
       const spec = d.describe()
-      const r = checkDestructible(d, { materials: MATERIALS })
+      const r = checkDestructible(d, { materials: MATERIALS, cost: true })
       expect(r.problems).toEqual([])
       expect(r.ok).toBe(true)
       for (const clip of d.animations()) expect(checkAnimation(clip, spec.parts.map((p) => p.id)).problems).toEqual([])

@@ -153,6 +153,8 @@ export function installBody(kit: Kit): void {
      kit.surfaceAt(c, origin, direction, { all, max }) -> { p, n, obj } in c.vehicle coordinates, or null.
      By default only paint and the meshes that dent count; all: true accepts any visible mesh. */
   const _sr = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  _sr.layers.enableAll()
   kit.surfaceAt = function (c: any, org: any, dir: any, o: any) {
     o = o || {}
     c.root.updateMatrixWorld(true)

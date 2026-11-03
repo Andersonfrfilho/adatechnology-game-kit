@@ -15,6 +15,7 @@ import { buildHand } from './accessories/hands'
 import { HAND_ITEMS } from './accessories/hand-items'
 import { HATS } from './accessories/hats'
 import { EXTRAS } from './accessories/extras'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import { createPersonKit } from './person-kit'
 
 export type PersonBuilderOptions = {
@@ -27,6 +28,8 @@ export type PersonBuilderOptions = {
   readonly reducedMotion?: boolean
   /** Eye colour of a zombified body by category (default the page's: lento, corredor, brutamonte). */
   readonly zombieEyes?: Readonly<Record<string, number>>
+  /** The host's LightBudget: what a person holds that gives light (the flare) is a source of it instead of a PointLight. The sources a person took are in `lightSources` of what `build` returns: `remove()` them when the person leaves. */
+  readonly lights?: LightBudget
 }
 
 export type PersonBuilder = {
@@ -139,9 +142,10 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     add(g,Bx(.05,.9,.05),cmat(0x1c1d1f,{metalness:.6,roughness:.45}),0,.15,0);add(g,Bx(.07,.36,.09),cmat(0x6a3a1c),0,-.45,0);add(g,Bx(.06,.22,.07),cmat(0x6a3a1c),0,.15,.03);
     add(U,Bx(.04,.9,.02),cmat(0x3a2a1a),0,1.22,.175,0,0,-.75);}
   // hand items
+  const lightSources=[];
   function item(kind,mount){if(!kind)return;const g=new THREE.Group();mount.add(g);
     const metal=cmat(0x8a9096,{metalness:.7,roughness:.35}),dark=cmat(0x1c1d1f,{metalness:.6,roughness:.45}),woodM=cmat(0x6a3a1c);
-    HAND_ITEMS[kind]?.({ THREE, PI, add, Bx, cmat, g, metal, dark, woodM });
+    HAND_ITEMS[kind]?.({ THREE, PI, add, Bx, cmat, g, metal, dark, woodM, lights: options.lights, sources: lightSources });
   }
   item(sp.hand,arms[0].mount);item(sp.lhand,arms[1].mount);
   if(sp.hand)arms[0].hold=true;
@@ -173,7 +177,7 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     const tail=new THREE.Group();tail.position.set(0,.48,-.28);dog.add(tail);add(tail,new THREE.CylinderGeometry(.02,.012,.24,16).rotateX(PI/2).translate(0,0,-.1),dm,0,0,0,.6,0,0);
     dog.userData={tail,dlegs};}
   root.traverse(o=>{if(o.isMesh)o.userData.idx=idx;});
-  return {mv:Object.assign({},MOVES_IDLE),phase:0,turnA:0,segs,dmg:{leg:0,dead:0},pends:[],limp:[0,0],skirt:!!sp.pants.skirt,root,fig,upper,headG,arms,legs,skinM,base:new THREE.Color(sp.skin),eyeM,bags,zb,mouth,dog,hunch:sp.hunch||0,ph:R()*6};
+  return {lightSources,mv:Object.assign({},MOVES_IDLE),phase:0,turnA:0,segs,dmg:{leg:0,dead:0},pends:[],limp:[0,0],skirt:!!sp.pants.skirt,root,fig,upper,headG,arms,legs,skinM,base:new THREE.Color(sp.skin),eyeM,bags,zb,mouth,dog,hunch:sp.hunch||0,ph:R()*6};
 }
   const MOVES_IDLE = MOVES.idle
   function pose(c,z,W,t){

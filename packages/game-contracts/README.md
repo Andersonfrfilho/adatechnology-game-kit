@@ -58,6 +58,8 @@ Hits arrive in world space and events go out in world space. `checkDestructible`
 well-formed and JSON-serializable. The contracts package does not know your materials: pass their ids (the world's `world.materials.keys()`) or
 leave `materials` out to skip that check.
 
+**Cost contract (D8):** the host reads `describe()` and `state()` per part per frame, so both are O(1), allocation-free and cached between changes (the same object comes back until a hit, tool, fire or pose change). `checkDestructible(impl, { cost: true })` (or `cost: { reads, ceilingMs, allocationBytes }`) reads each 10 000 times and fails on a new object per read, on time over the ceiling (default 50 ms) and, in Node, on heap growth over the ceiling (default 1 MiB).
+
 ### Weapons
 
 ```ts

@@ -1,0 +1,30 @@
+{
+  "limits": {
+    "game-vehicles": 60,
+    "game-characters-three": 60,
+    "game-animals-three": 30,
+    "game-floorplan-three": 20,
+    "game-vegetation-three": 20,
+    "game-interactables-three": 20,
+    "game-items-three": 15,
+    "game-weapons-three": 15,
+    "game-terrain-three": 30,
+    "game-vfx-three": 30,
+    "game-test-room": 10
+  },
+  "pending": {
+    "game-characters-three|": 193,
+    "game-floorplan-three|laundry_tub": 80,
+    "game-items-three|shopping_cart": 30,
+    "game-items-three|janitor_keys": 30,
+    "game-items-three|sheet_metal_forearm_guard": 23,
+    "game-items-three|fishing_net": 22,
+    "game-items-three|portable_generator": 20,
+    "game-items-three|electronic_components": 17,
+    "game-items-three|firefighter_suit": 17,
+    "game-items-three|banana_bunch": 16,
+    "game-items-three|master_key": 16,
+    "game-items-three|safe_key": 16,
+    "game-terrain-three|floor": 41
+  }
+}

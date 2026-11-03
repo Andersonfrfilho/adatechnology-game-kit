@@ -1,320 +1,6 @@
 [
   {
     "type": "dependency",
-    "from": "packages/game-animals-three/src/index.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-animals-three/src/test-area/module.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/player/room-avatar.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-floorplan-three/src/create.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-floorplan-three/src/furniture/spec.ts",
-    "to": "packages/game-floorplan-residential/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-floorplan-residential",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-three/src/mesh.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-three/src/types.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-urban-three/src/resolvers.ts",
-    "to": "packages/game-vegetation-species/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vegetation-species",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vegetation-three/src/test-area/module.ts",
-    "to": "packages/game-vegetation-species/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vegetation-species",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vegetation-three/src/test-area/nursery.ts",
-    "to": "packages/game-vegetation-species/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vegetation-species",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vegetation-three/src/test-area/types.ts",
-    "to": "packages/game-vegetation-species/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vegetation-species",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vehicles-three/src/build.ts",
-    "to": "packages/game-vehicles-fleet/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vehicles-fleet",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vehicles-three/src/test-area/module.ts",
-    "to": "packages/game-vehicles-fleet/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vehicles-fleet",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "adapter-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-household/src/ctx.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "content-not-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-household/src/garments.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "content-not-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-household/src/types.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "content-not-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-interactables-household/src/util.ts",
-    "to": "packages/game-props3d/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-props3d",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "content-not-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-props3d/src/merge-by-material.ts",
-    "to": "packages/game-shapes-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-shapes-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "content-not-adapter"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/game-camera/src/types.ts",
     "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
     "unresolvedTo": "three",
@@ -393,195 +79,6 @@
       "severity": "error",
       "name": "core-no-three"
     }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-stories/src/bench/module.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-stories/src/casting.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-stories/src/life/life.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-stories/src/sheet/sheet.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-stories/src/world.ts",
-    "to": "packages/game-characters-people/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-characters-people",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-urban/src/neighbourhoods/providers.ts",
-    "to": "packages/game-vegetation-species/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vegetation-species",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-urban/src/neighbourhoods/providers.ts",
-    "to": "packages/game-vehicles-fleet/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vehicles-fleet",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-not-content"
-    }
-  },
-  {
-    "type": "cycle",
-    "from": "packages/game-animals-three/src/index.ts",
-    "to": "packages/game-animals-three/src/test-area/module.ts",
-    "unresolvedTo": "./test-area/module",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "packages/game-animals-three/src/test-area/module.ts",
-        "dependencyTypes": [
-          "local",
-          "export"
-        ]
-      },
-      {
-        "name": "packages/game-animals-three/src/index.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "packages/game-animals-three/src/test-area/module.ts",
-    "to": "packages/game-animals-three/src/test-area/scenarios.ts",
-    "unresolvedTo": "./scenarios",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "packages/game-animals-three/src/test-area/scenarios.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-animals-three/src/index.ts",
-        "dependencyTypes": [
-          "local",
-          "type-only",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-animals-three/src/test-area/module.ts",
-        "dependencyTypes": [
-          "local",
-          "export"
-        ]
-      }
-    ]
   },
   {
     "type": "cycle",
@@ -10254,8 +9751,8 @@
   },
   {
     "type": "cycle",
-    "from": "packages/game-terrain-three/src/test-module.ts",
-    "to": "packages/game-terrain-three/src/locale.ts",
+    "from": "packages/game-terrain-three/src/test-area/test-module.ts",
+    "to": "packages/game-terrain-three/src/test-area/locale.ts",
     "unresolvedTo": "./locale",
     "dependencyTypes": [
       "local",
@@ -10267,14 +9764,14 @@
     },
     "cycle": [
       {
-        "name": "packages/game-terrain-three/src/locale.ts",
+        "name": "packages/game-terrain-three/src/test-area/locale.ts",
         "dependencyTypes": [
           "local",
           "import"
         ]
       },
       {
-        "name": "packages/game-terrain-three/src/test-module.ts",
+        "name": "packages/game-terrain-three/src/test-area/test-module.ts",
         "dependencyTypes": [
           "local",
           "type-only",
@@ -10740,242 +10237,9 @@
   },
   {
     "type": "dependency",
-    "from": "packages/game-destruction-three/src/renderer.ts",
-    "to": "packages/game-vfx-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vfx-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-fluids-three/src/renderer.ts",
-    "to": "packages/game-vfx-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vfx-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-fluids-three/src/types.ts",
-    "to": "packages/game-vfx-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vfx-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-items-three/src/area.ts",
-    "to": "packages/game-floorplan-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-floorplan-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-urban-three/src/resolvers.ts",
-    "to": "packages/game-vehicles-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vehicles-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/area.ts",
-    "to": "packages/game-floorplan-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-floorplan-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/fx/viewmodel.ts",
-    "to": "packages/game-vfx-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-vfx-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/models/attachments/ammo-backpack.ts",
-    "to": "packages/game-interactables-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-interactables-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/models/attachments/sling.ts",
-    "to": "packages/game-interactables-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-interactables-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/props.ts",
-    "to": "packages/game-items-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-items-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weapons-three/src/world-explosives.ts",
-    "to": "packages/game-items-three/src/index.ts",
-    "unresolvedTo": "@adatechnology/game-items-three",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-paths",
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-domain-adapter-to-adapter"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/game-animals-three/src/index.ts",
-    "to": "packages/game-animals-three/src/test-area/module.ts",
-    "unresolvedTo": "./test-area/module",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-animals-three/src/index.ts",
-    "to": "packages/game-animals-three/src/test-area/scenarios.ts",
-    "unresolvedTo": "./test-area/scenarios",
-    "dependencyTypes": [
-      "local",
-      "type-only",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-animals-three/src/index.ts",
-    "to": "packages/game-animals-three/src/test-area/types.ts",
-    "unresolvedTo": "./test-area/types",
-    "dependencyTypes": [
-      "local",
-      "type-only",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-audio/src/index.ts",
-    "to": "packages/game-audio/src/bench/locale.ts",
-    "unresolvedTo": "./bench/locale",
+    "to": "packages/game-animals-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -10988,8 +10252,8 @@
   {
     "type": "dependency",
     "from": "packages/game-audio/src/index.ts",
-    "to": "packages/game-audio/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "to": "packages/game-audio/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11002,94 +10266,8 @@
   {
     "type": "dependency",
     "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/hits.ts",
-    "unresolvedTo": "./test-area/hits",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/material.ts",
-    "unresolvedTo": "./test-area/material",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/module.ts",
-    "unresolvedTo": "./test-area/module",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/person-spec.ts",
-    "unresolvedTo": "./test-area/person-spec",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/scenarios.ts",
-    "unresolvedTo": "./test-area/scenarios",
-    "dependencyTypes": [
-      "local",
-      "type-only",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-characters-three/src/index.ts",
-    "to": "packages/game-characters-three/src/test-area/types.ts",
-    "unresolvedTo": "./test-area/types",
-    "dependencyTypes": [
-      "local",
-      "type-only",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-crowd-three/src/index.ts",
-    "to": "packages/game-crowd-three/src/bench/locale.ts",
-    "unresolvedTo": "./bench/locale",
+    "to": "packages/game-characters-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11102,8 +10280,8 @@
   {
     "type": "dependency",
     "from": "packages/game-crowd-three/src/index.ts",
-    "to": "packages/game-crowd-three/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "to": "packages/game-crowd-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11116,8 +10294,8 @@
   {
     "type": "dependency",
     "from": "packages/game-floorplan-three/src/index.ts",
-    "to": "packages/game-floorplan-three/src/test-area/module.ts",
-    "unresolvedTo": "./test-area/module.js",
+    "to": "packages/game-floorplan-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11129,40 +10307,11 @@
   },
   {
     "type": "dependency",
-    "from": "packages/game-floorplan-three/src/index.ts",
-    "to": "packages/game-floorplan-three/src/test-area/scenarios.ts",
-    "unresolvedTo": "./test-area/scenarios.js",
+    "from": "packages/game-items-three/src/index.ts",
+    "to": "packages/game-items-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-floorplan-three/src/index.ts",
-    "to": "packages/game-floorplan-three/src/test-area/specimens.ts",
-    "unresolvedTo": "./test-area/specimens.js",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-floorplan-three/src/index.ts",
-    "to": "packages/game-floorplan-three/src/test-area/types.ts",
-    "unresolvedTo": "./test-area/types.js",
-    "dependencyTypes": [
-      "local",
-      "type-only",
       "export"
     ],
     "rule": {
@@ -11173,8 +10322,8 @@
   {
     "type": "dependency",
     "from": "packages/game-player/src/index.ts",
-    "to": "packages/game-player/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "to": "packages/game-player/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11187,8 +10336,8 @@
   {
     "type": "dependency",
     "from": "packages/game-stories/src/index.ts",
-    "to": "packages/game-stories/src/bench/example.ts",
-    "unresolvedTo": "./bench/example",
+    "to": "packages/game-stories/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11200,9 +10349,9 @@
   },
   {
     "type": "dependency",
-    "from": "packages/game-stories/src/index.ts",
-    "to": "packages/game-stories/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "from": "packages/game-terrain-three/src/index.ts",
+    "to": "packages/game-terrain-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11215,8 +10364,8 @@
   {
     "type": "dependency",
     "from": "packages/game-urban-three/src/index.ts",
-    "to": "packages/game-urban-three/src/test-area/index.ts",
-    "unresolvedTo": "./test-area",
+    "to": "packages/game-urban-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11229,8 +10378,8 @@
   {
     "type": "dependency",
     "from": "packages/game-vegetation-three/src/index.ts",
-    "to": "packages/game-vegetation-three/src/test-area/index.ts",
-    "unresolvedTo": "./test-area",
+    "to": "packages/game-vegetation-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11243,8 +10392,8 @@
   {
     "type": "dependency",
     "from": "packages/game-vehicles-three/src/index.ts",
-    "to": "packages/game-vehicles-three/src/test-area/index.ts",
-    "unresolvedTo": "./test-area",
+    "to": "packages/game-vehicles-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11257,8 +10406,8 @@
   {
     "type": "dependency",
     "from": "packages/game-vfx-three/src/index.ts",
-    "to": "packages/game-vfx-three/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "to": "packages/game-vfx-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11270,23 +10419,9 @@
   },
   {
     "type": "dependency",
-    "from": "packages/game-vfx-three/src/index.ts",
-    "to": "packages/game-vfx-three/src/bench/text.ts",
-    "unresolvedTo": "./bench/text",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weather-three/src/index.ts",
-    "to": "packages/game-weather-three/src/bench/text.ts",
-    "unresolvedTo": "./bench/text",
+    "from": "packages/game-weapons-three/src/index.ts",
+    "to": "packages/game-weapons-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11299,8 +10434,8 @@
   {
     "type": "dependency",
     "from": "packages/game-weather-three/src/index.ts",
-    "to": "packages/game-weather-three/src/bench/visual.ts",
-    "unresolvedTo": "./bench/visual",
+    "to": "packages/game-weather-three/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"
@@ -11313,22 +10448,8 @@
   {
     "type": "dependency",
     "from": "packages/game-weather/src/index.ts",
-    "to": "packages/game-weather/src/bench/locale.ts",
-    "unresolvedTo": "./bench/locale",
-    "dependencyTypes": [
-      "local",
-      "export"
-    ],
-    "rule": {
-      "severity": "warn",
-      "name": "testing-only-from-testing"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-weather/src/index.ts",
-    "to": "packages/game-weather/src/bench/module.ts",
-    "unresolvedTo": "./bench/module",
+    "to": "packages/game-weather/src/testing.ts",
+    "unresolvedTo": "./testing",
     "dependencyTypes": [
       "local",
       "export"

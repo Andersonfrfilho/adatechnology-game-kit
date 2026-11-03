@@ -1,3 +1,5 @@
+import { warnOnce } from './warn'
+
 type PlainObject = Record<string, unknown>
 type Entry = { readonly id: string }
 
@@ -35,14 +37,18 @@ export const mergeById = <TEntry extends Entry>(shipped: readonly TEntry[], extr
   return entries
 }
 
-/** Applies `patch` by id; a patch for an id that does not exist is ignored. */
+/** Applies `patch` by id; a patch for an id that does not exist is ignored (and warned about once, in development). */
 export const applyPatches = <TEntry extends Entry>(entries: Map<string, TEntry>, patches: Readonly<Record<string, DeepPartial<TEntry> | Partial<TEntry>>> | undefined): void => {
   for (const [id, patch] of Object.entries(patches ?? {})) {
     const entry = entries.get(id)
     if (entry) entries.set(id, deepMerge(entry, patch))
+    else warnOnce(`registry.patch.${id}`, `patch for "${id}" ignored: no entry has that id`)
   }
 }
 
+/** Takes the ids out; an id that does not exist is ignored (and warned about once, in development). */
 export const removeIds = (entries: Map<string, unknown>, ids: readonly string[] | undefined): void => {
-  for (const id of ids ?? []) entries.delete(id)
+  for (const id of ids ?? []) {
+    if (!entries.delete(id)) warnOnce(`registry.remove.${id}`, `remove of "${id}" ignored: no entry has that id`)
+  }
 }

@@ -60,7 +60,11 @@ export { bufferOf, fillImpulse, fillNoise } from './webaudio/noise'
 export { globalContext, unlockContext } from './webaudio/context'
 export { createAudioSink } from './webaudio/sink'
 export type { EngineSink } from './webaudio/sink'
-export { BENCH_BANK, createAudioTestModule } from './bench/module'
-export type { AudioScenarioLike, AudioTestModule, AudioTestModuleOptions } from './bench/module'
-export { audioBenchTextOf } from './bench/locale'
-export type { AudioBenchText } from './bench/locale'
+/** @deprecated import from '@adatechnology/game-audio/testing' */
+export { BENCH_BANK, createAudioTestModule } from './testing'
+/** @deprecated import from '@adatechnology/game-audio/testing' */
+export type { AudioScenarioLike, AudioTestModule, AudioTestModuleOptions } from './testing'
+/** @deprecated import from '@adatechnology/game-audio/testing' */
+export { audioBenchTextOf } from './testing'
+/** @deprecated import from '@adatechnology/game-audio/testing' */
+export type { AudioBenchText } from './testing'

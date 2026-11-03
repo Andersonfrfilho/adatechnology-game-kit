@@ -373,6 +373,8 @@ export interface GenerateOptions {
   readonly levels?: readonly number[]
   /** Generators besides the registered ones. */
   readonly generators?: Readonly<Record<string, ShapeGenerator>>
+  /** Look custom nodes up only in `generators`, never in the global registry (what a `createShapes` set does). */
+  readonly isolatedGenerators?: boolean
   /** Validate the schema first (default true). */
   readonly validate?: boolean
   /**

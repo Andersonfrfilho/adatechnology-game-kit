@@ -17,7 +17,7 @@ import { rotationFor } from './fill'
 import { createGrid, reachable } from './grid'
 import { STREAM } from './legacy-seeds'
 import { blocksWindow, roomAt, windowZone, windowsOfRoom, zonesOfFloor } from './queries'
-import { CATALOG, DECOR_PROFILES, GROUND_OVERLAYS, PASSES, SEED_KEYS } from './registry'
+import { registries } from './registry'
 import { createRng, pickWeighted, shuffle } from './rng'
 import type { Rng } from './rng'
 import type { Json, PlacedItem, Plan, PlacementContext, PlacementKit, Rect, Room, Vec2 } from './types'
@@ -45,9 +45,9 @@ export const placementKit: PlacementKit = {
   clearRect,
   pickWeighted,
   createRng,
-  roomSeedKey: (room: Room) => room.seedKey ?? SEED_KEYS.rooms[room.id] ?? room.id,
+  roomSeedKey: (room: Room) => room.seedKey ?? registries().SEED_KEYS.rooms[room.id] ?? room.id,
   shuffle,
-  facingRotation: (f: Vec2, type: string) => rotationFor(f, CATALOG[type].front),
+  facingRotation: (f: Vec2, type: string) => rotationFor(f, registries().CATALOG[type].front),
   cutIntervals,
   blocksWindow,
 }
@@ -57,7 +57,7 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
   const added: PlacedItem[] = []
   const counters: Record<string, number> = {}
   const make = (room: Room, type: string, r: Rect, f: Vec2, o?: Json): PlacedItem => {
-    const it = CATALOG[type]
+    const it = registries().CATALOG[type]
     const n = (counters[room.id + type] = (counters[room.id + type] || 0) + 1)
     return Object.assign(
       {
@@ -109,9 +109,9 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
   /** Places a floor item at a corner or along a wall; respects doors, windows, clearances and walkability. */
   function placeOnFloor(room: Room, type: string, rng2: Rng, optsIn?: Json): Rect | null {
     const opts = Object.assign({}, optsIn || {})
-    const it0 = CATALOG[type]
+    const it0 = registries().CATALOG[type]
     if (it0.flat) opts.flat = true
-    const it = CATALOG[type]
+    const it = registries().CATALOG[type]
     const inners = usableParts(room, 0)
     const solidList = solidsOfRoom(room)
     const zones = zonesOfFloor(plan, room.floor)
@@ -201,7 +201,7 @@ function groundCover(plan: Plan, items: PlacedItem[], ctx: PlacementContext) {
         .map((p) => [Math.max(r[0], p[0]), Math.max(r[1], p[1]), Math.min(r[2], p[2]), Math.min(r[3], p[3])] as Rect)
         .filter((q) => q[2] - q[0] > 0.3 && q[3] - q[1] > 0.3)
         .sort((a, b) => areaOf(b) - areaOf(a))[0]
-    for (const rule of GROUND_OVERLAYS) {
+    for (const rule of registries().GROUND_OVERLAYS) {
       const triggers = items.filter((m) => m.room === z.id && m.category === rule.category)
       if (rule.merge) {
         if (triggers.length && z.ground !== rule.unlessGround) {
@@ -223,7 +223,7 @@ function groundCover(plan: Plan, items: PlacedItem[], ctx: PlacementContext) {
 export function runPostProcess(plan: Plan, items: PlacedItem[], seed: number | string): PlacementContext {
   const ctx = createPlacementContext(plan, items)
   const rng = createRng(seed, STREAM.decor)
-  for (const pass of PASSES) pass.run({ plan, items, seed, rng, ctx, kit: placementKit, catalog: CATALOG, profiles: DECOR_PROFILES })
+  for (const pass of registries().PASSES) pass.run({ plan, items, seed, rng, ctx, kit: placementKit, catalog: registries().CATALOG, profiles: registries().DECOR_PROFILES })
   groundCover(plan, items, ctx)
   return ctx
 }

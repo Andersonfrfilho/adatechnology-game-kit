@@ -191,42 +191,16 @@ jobs:
   # Every drawn thing of every area of the test room comes from the SDK that owns it (CLAUDE.md, "Nada desenhado à mão"): tools/kit-audit/scene.mjs opens
   # each area and fails on anything with no origin mark of a kit builder (markKitOrigin) that is not pending in tools/kit-audit/allowlist.json (`drawn`).
   scene-origin:
+    name: scene-origin (${{ matrix.check.name }})
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm build
-
-      - name: Install Playwright and Chromium
-        run: |
-          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
-          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
-          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
-
-      - name: Build the test room
-        run: node examples/test-room/build.mjs
-
-      - name: Check where every drawn piece comes from
-        run: node tools/kit-audit/scene.mjs --check
-
-  # Explosion frame budget (examples/test-room/perf.mjs, docs/desempenho-explosoes.md): every explosive cold, warm and all at once in the room's own loop. Software GL
-  # has no real frame times, so CI checks what does not depend on the machine: no shader compiled during play, GPU buffers per warm explosion, draws back to idle.
-  # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu).
-  perf-budget:
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        shard: [cold, warm]
+        # one page walk each: where every drawn piece comes from, and what every piece costs to draw
+        check:
+          - { name: origin, script: scene.mjs, title: Check where every drawn piece comes from }
+          - { name: cost, script: cost.mjs, title: Check what every piece costs to draw }
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -248,14 +222,10 @@ jobs:
       - name: Build the test room
         run: node examples/test-room/build.mjs
 
-      - name: Check the explosion budget
-        run: PERF_SHARD=${{ matrix.shard }} node examples/test-room/perf.mjs
+      - name: ${{ matrix.check.title }}
+        run: node tools/kit-audit/${{ matrix.check.script }} --check
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: perf-budget-${{ matrix.shard }}
-          path: examples/test-room/dist/perf.json
+  # The explosion and horde frame budgets (examples/test-room/perf.mjs) run before a push on a machine with a GPU (tools/gpu/perf-gate.mjs from .githooks/pre-push), not on CI: software GL has no real frame times.
 
   # Memory of the test room (CLAUDE.md, "Memória"): the same cycle again and again (blasts; glass and cars; opening the areas), then room.clear();
   # fails when GPU buffers, textures, canvases, listeners, intervals or the JS heap keep growing per cycle (examples/test-room/leak.mjs).

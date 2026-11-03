@@ -27,7 +27,7 @@ export type RoomAvatarLike = {
 }
 
 export type ToRoomAvatarOptions = {
-  /** The third-person strike clips `strike` finds by id. Default `ATTACK_CLIPS` of game-characters-people. */
+  /** The third-person strike clips `strike` finds by id (`defaultCharacterClips()` of game-kit-defaults, or the game's own). Default `ATTACK_CLIPS` of game-characters-people, which is deprecated: pass them. */
   strikeClips?: readonly PoseClip[]
   /** The looping clip the body holds between punches (a clip of `strikeClips`), so a combo goes guard, punch, guard instead of dropping the hands each time; `false` for none. Default `'fight_guard'`. */
   guardClip?: string | false

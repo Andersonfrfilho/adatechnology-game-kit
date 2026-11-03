@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { AttachmentDef, FittedAttachment } from '@adatechnology/game-weapons'
 import type { WeaponModel } from '../index'
 import type { ModelKit } from '../kit'
@@ -17,6 +18,8 @@ export interface FitAttachmentOptions {
   readonly isDrawn?: () => boolean
   /** Asked every frame: false puts the light and laser out whatever they are set to (the bench layer for the beams). */
   readonly areBeamsOn?: () => boolean
+  /** The host's light budget: the weapon light is a source of it. Without it the light is a `SpotLight` of its own (deprecated, removed in the next major). */
+  readonly lights?: LightBudget
 }
 
 /** The accessories drawn on one model: it follows the list of fitted parts. */
@@ -85,7 +88,7 @@ export function fitAttachmentModels(model: WeaponModel, fitted: readonly FittedA
     const builder = registry[attachment.model] ?? registry[attachment.id]
     const frame = mountFrame(model, part.mount as Parameters<typeof mountFrame>[1])
     if (!builder || !frame) return
-    const made = builder({ kit, model, attachment, fitted: part, frame, raycast: options.raycast, factoryMagazine, slide: parts.ugl })
+    const made = builder({ kit, model, attachment, fitted: part, frame, raycast: options.raycast, lights: options.lights, factoryMagazine, slide: parts.ugl })
     if (!made) return
     const entry = toModel(made)
     const parent = entry.hangsFrom === 'magazine' && parts.mag ? parts.mag : root
