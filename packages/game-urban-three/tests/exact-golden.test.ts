@@ -1,3 +1,4 @@
+import { defaultPlantSpec } from '@adatechnology/game-kit-defaults'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -64,7 +65,7 @@ const cases: Array<[string, () => Root]> = []
   for (const [label, run] of Object.entries(PARTS)) cases.push([`part/${label}`, () => draw(run)])
   cases.push([`patterns`, () => draw((b) => void kit.neighbourhoods.composeSampleSheet(b, { ground: { color: 0x1e2124, size: 500 } }))])
   cases.push([`terrain`, () => draw((b) => kit.drawTerrain(b, kit.terrain(valley as unknown as TerrainOptions)))])
-  const module = createUrbanTestModule({ locale: 'en', document: fakeDocument })
+  const module = createUrbanTestModule({ locale: 'en', document: fakeDocument, plantSpec: defaultPlantSpec })
   for (const item of module.items('en')) cases.push([`item/${item.id}`, () => item.build(THREE) as Root])
   cases.push([
     `helpers`,

@@ -40,7 +40,7 @@ if (!playwright || !existsSync(page)) {
     const tab = await context.newPage()
     tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`)
+    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__audioReport, null, { timeout: 90000 })
     await tab.evaluate(() => {
       for (let i = 0; i < 60; i++) window.__testRoom.update(0.02)

@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { LightBudget } from '@adatechnology/game-render-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { WeatherSample } from '@adatechnology/game-weather'
 import type { ThreeLib } from './types'
@@ -19,10 +20,22 @@ export type Lightning = {
   dispose(): void
 }
 
-export function createLightning(THREE: ThreeLib, scene: { add(object: THREE_NS.Object3D): unknown; remove(object: THREE_NS.Object3D): unknown }, vfx?: VfxWorld): Lightning {
-  const light = new THREE.HemisphereLight(LIGHTNING.skyColor, LIGHTNING.groundColor, 0)
+export type LightningOptions = {
+  /**
+   * The host's light budget: the flash uses one of its hemisphere slots (leased for good) instead of a light of its own, so the weather coming up in the middle of the game does not
+   * change the number of lights. Without it the light is created here (deprecated, removed in the next major).
+   */
+  readonly lights?: LightBudget
+}
+
+export function createLightning(THREE: ThreeLib, scene: { add(object: THREE_NS.Object3D): unknown; remove(object: THREE_NS.Object3D): unknown }, vfx?: VfxWorld, options: LightningOptions = {}): Lightning {
+  const leased = options.lights?.leaseHemisphere('weather.lightning') ?? null
+  // eslint-disable-next-line no-restricted-syntax -- D2: legacy path without LightBudget (or a budget with no hemisphere slot left: then it stays out of the scene), removed in the next major
+  const light = leased ?? new THREE.HemisphereLight(LIGHTNING.skyColor, LIGHTNING.groundColor, 0)
   light.name = 'weather-lightning'
-  scene.add(light)
+  light.color.setHex(LIGHTNING.skyColor)
+  light.groundColor.setHex(LIGHTNING.groundColor)
+  if (!options.lights) scene.add(light)
   return {
     light,
     update(sample, background) {
@@ -38,6 +51,8 @@ export function createLightning(THREE: ThreeLib, scene: { add(object: THREE_NS.O
       if (screen) screen.white = Math.max(screen.white, flash * LIGHTNING.white)
     },
     dispose() {
+      light.intensity = 0
+      if (options.lights) return
       scene.remove(light)
       light.dispose()
     },

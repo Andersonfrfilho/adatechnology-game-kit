@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { checkSpec } from '@adatechnology/game-contracts'
-import { assemblyDepth, assemblyPart, ASSEMBLIES, createDestruction, getAssembly, MATERIALS, registerAssembly } from '../src'
+import { assemblyDepth, assemblyPart, ASSEMBLIES, createAssemblies, createDestruction, defaultAssemblies, getAssembly, MATERIALS, registerAssembly } from '../src'
 import type { AssemblyDef } from '../src'
 
 const IDS = ['brick_wall_plastered', 'concrete_block_wall', 'reinforced_concrete', 'drywall', 'wood_frame_wall', 'log_wall', 'sheet_metal_shack', 'glass_pane']
@@ -59,5 +59,34 @@ describe('assemblies', () => {
 
   it('refuses an unknown assembly', () => {
     expect(() => assemblyPart('nope', { id: 'x', width: 1, height: 1, position: [0, 0, 0] })).toThrow(/unknown assembly/)
+  })
+})
+
+describe('assemblies by instance', () => {
+  const wall = { id: 'only_here', name: 'Only here', core: { material: 'concrete', thickness: 0.2 } } as AssemblyDef
+  const options = { id: 'w', width: 3, height: 2.5, position: [0, 1.25, 0] as [number, number, number] }
+
+  it('the global functions and defaultAssemblies() give the same results as an instance with the built-in set', () => {
+    const made = createAssemblies()
+    expect(defaultAssemblies().list()).toBe(ASSEMBLIES)
+    for (const id of IDS) expect(made.part(id, options)).toEqual(assemblyPart(id, options))
+    expect(IDS.every((id) => made.get(id) !== undefined)).toBe(true)
+  })
+
+  it('two sets with different packs, patches and removals do not leak into each other or into the global one', () => {
+    const first = createAssemblies({ packs: [[wall]], remove: ['drywall'], patch: { glass_pane: { name: 'Patched' } } })
+    const second = createAssemblies()
+    expect(first.get('only_here')).toBeDefined()
+    expect(second.get('only_here')).toBeUndefined()
+    expect(getAssembly('only_here')).toBeUndefined()
+    expect(first.get('drywall')).toBeUndefined()
+    expect(second.get('drywall')).toBeDefined()
+    expect(first.get('glass_pane')?.name).toBe('Patched')
+    expect(second.get('glass_pane')?.name).not.toBe('Patched')
+    expect(getAssembly('glass_pane')?.name).not.toBe('Patched')
+    expect(() => first.part('drywall', options)).toThrow('unknown assembly')
+    second.register({ ...wall, id: 'later' })
+    expect(first.get('later')).toBeUndefined()
+    expect(first.part('only_here', options).material).toBe('concrete')
   })
 })

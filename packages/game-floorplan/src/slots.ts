@@ -1,6 +1,6 @@
 import { EPS, MARGIN, TOL } from './constants'
 import { cardinal, clamp, eq, extent, inner, overlaps, r2 } from './geometry'
-import { LIBRARIES, LIBRARY_ALIAS } from './registry'
+import { registries } from './registry'
 import { isOpenSide, openingsOfFloor, windowsOfRoom, zonesOfFloor } from './queries'
 import type { Json, Plan, Rect, Room, Slot, SlotDef, Vec2 } from './types'
 
@@ -12,8 +12,8 @@ const WINDOW_SIDE: Record<string, string> = { front: 'front', back: 'back', left
 /** Slot definitions of a room after `without`, `overrides`, `extras` and `any`/window expansion. */
 export function slotDefsOf(plan: Plan, room: Room): SlotDef[] {
   const name = room.library || room.type
-  const key = LIBRARY_ALIAS[name] || name
-  const library = room.slots ? room.slots : LIBRARIES[key]
+  const key = registries().LIBRARY_ALIAS[name] || name
+  const library = room.slots ? room.slots : registries().LIBRARIES[key]
   if (!library) return []
   const R = inner(room.parts[0])
   let defs = typeof library === 'function' ? library({ w: R[2] - R[0], d: R[3] - R[1] }) : library.slice()

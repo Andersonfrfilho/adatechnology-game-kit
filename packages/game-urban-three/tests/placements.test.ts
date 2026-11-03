@@ -1,9 +1,10 @@
-import { createPlantProvider, createUrban, createVehicleProvider } from '@adatechnology/game-urban'
+import { createUrban } from '@adatechnology/game-urban'
+import { createPlantProvider, createVehicleProvider, defaultPlantSpec } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import type { BuildVehicleOptions } from '@adatechnology/game-vehicles-three'
 
 import { createPlantResolver, createUrbanThree, createVehicleResolver } from '../src'
+import type { VehicleBuildOptions } from '../src'
 import { fakeDocument } from './fake-dom'
 
 const placed = (root: THREE.Object3D, kind: string): THREE.Object3D[] => {
@@ -16,10 +17,10 @@ const placed = (root: THREE.Object3D, kind: string): THREE.Object3D[] => {
 
 /** A vehicle builder that gives a box of the size of a car, as `createVehiclesThree(...).build` gives a group. */
 const stubVehicles = () => {
-  const calls: { key: string; options: BuildVehicleOptions }[] = []
+  const calls: { key: string; options: VehicleBuildOptions }[] = []
   return {
     calls,
-    build: (key: string, options: BuildVehicleOptions = {}) => {
+    build: (key: string, options: VehicleBuildOptions = {}) => {
       calls.push({ key, options })
       const group = new THREE.Group()
       group.add(new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 4.2), new THREE.MeshBasicMaterial()))
@@ -78,7 +79,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
   it('puts the species of the pack where the pattern plants, scaled as asked', () => {
     const b = kit.builder({ seed: 7 })
     const plan = kit.neighbourhoods.get('mountain_resort').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
-    const resolver = createPlantResolver(THREE, { lod: 2 })
+    const resolver = createPlantResolver(THREE, { lod: 2, toSpec: defaultPlantSpec })
     const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: resolver } }).draw(b.scene())
     const plants = placed(drawn.root, 'plant')
     expect(plants).toHaveLength(plan.plants.length)
@@ -92,7 +93,7 @@ describe('placements drawn with the resolvers of the vehicles and plants', () =>
     const run = () => {
       const b = kit.builder({ seed: 7 })
       kit.neighbourhoods.get('rural').compose(b, { x: 0, z: 0 }, { providers: { plant: createPlantProvider() } })
-      const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: createPlantResolver(THREE, { lod: 2 }) } }).draw(b.scene())
+      const drawn = createUrbanThree(THREE, { document: fakeDocument, resolvers: { plant: createPlantResolver(THREE, { lod: 2, toSpec: defaultPlantSpec }) } }).draw(b.scene())
       return placed(drawn.root, 'plant').map((plant) => [plant.userData.placement.id, plant.position.x, (plant.children[0]?.children[0] as THREE.Mesh | undefined)?.geometry.attributes.position.count])
     }
     expect(run()).toEqual(run())

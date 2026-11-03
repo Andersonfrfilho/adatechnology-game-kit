@@ -1,6 +1,7 @@
 // Weapon sounds synthesized with WebAudio: no sound files, so the kit stays offline and small. Every call is a no-op where there is no
 // AudioContext (tests, workers), and the context is only created on the first sound, which comes from a click or a key (browsers allow it).
 // The numbers live in ./audio/*: `computeShotSound` is pure and this file only turns its result into nodes.
+import { warnOnce } from '@adatechnology/game-contracts'
 import { MIX_PROFILES, createAudioEngine } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { WeaponEvent } from '@adatechnology/game-weapons'
@@ -84,6 +85,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   const mechanicalTable = { ...MECHANICAL_SOUNDS, ...options.mechanical }
   const cueTable = { ...RELOAD_CUES, ...options.reloadCues }
   const shared = options.engine
+  if (!shared) warnOnce('game-weapons-three.own-audio-engine', 'game-weapons-three made an audio engine of its own because the host lent none (options.engine); pass the host engine so the sounds share one mix and one voice limit')
   // own engine: the game mix at the given volume, noise made with the chain, and no voice limit (these sounds are short and the old audio had none)
   const engine: AudioEngine =
     shared ??

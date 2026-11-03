@@ -22,6 +22,35 @@ export interface EffectRequest {
   readonly values?: Readonly<Record<string, number>>
 }
 
+/** A box in the frame of an {@link Enclosure}: `center` is the offset from the enclosure's centre along its own axes, `halfSize` half the size along each. */
+export interface EnclosureBox {
+  readonly center: Vec3
+  readonly halfSize: Vec3
+  /**
+   * How much gets through, as the share per second of what presses on it (a bullet hole: a small number). Absent: it is open, everything passes
+   * (an open door, a shattered window, a panel torn off).
+   */
+  readonly rate?: number
+}
+
+/**
+ * A closed space that holds out what the air carries (smoke, dust, steam, gas) and holds in what starts inside it: the cabin of a car, a closed room.
+ * It is a box turned by `orientation`; what is carried crosses its walls only through `openings`, and through a closed wall only at `leak`
+ * (the gaps of a shut door), like a real one. Nothing here is specific to a kind of thing or to a renderer.
+ */
+export interface Enclosure {
+  /** Centre in world space, metres. */
+  readonly center: Vec3
+  /** Half the size along the box's own axes, metres. */
+  readonly halfSize: Vec3
+  /** Which way the box is turned, a unit quaternion `[x, y, z, w]` (default not turned). */
+  readonly orientation?: readonly [number, number, number, number]
+  /** Where the walls are open, in the box's own frame (an opening sticks out through the wall it is in). */
+  readonly openings?: readonly EnclosureBox[]
+  /** Share per second of what presses on a closed wall that seeps through it (a shut car: about 0.02). Default 0: sealed. */
+  readonly leak?: number
+}
+
 /** Identifies a running effect so it can be stopped. */
 export type EffectHandle = number
 
@@ -36,6 +65,11 @@ export interface EffectSink {
   stop(handle: EffectHandle): void
   /** Sets what the host lets a module tune (`quality`, `lod_band`...): the id of the setting and its value. A host applies the ids it knows. */
   configure?(settings: Readonly<Record<string, ControlValue>>): void
+  /**
+   * Declares, moves or ends (`null`) a closed space by the module's own id: the host's smoke, dust and steam go round it and enter only through its
+   * openings. A module calls it again whenever the space moves or opens (every frame is fine). A host without it lets smoke through everything.
+   */
+  enclose?(id: string, enclosure: Enclosure | null): void
   /** Counters of what is alive (`puffs`, `sparks`, `lights`...), for a bench. */
   stats?(): Readonly<Record<string, number>>
   /** The ids `play` accepts. */

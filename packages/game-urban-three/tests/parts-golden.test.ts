@@ -147,7 +147,7 @@ describe('animation and cleanup', () => {
     const builder = kit.builder({ budget: 99 })
     pole('led_double', builder, { x: 4, z: 0, on: true, flicker: true })
     const drawn = urban.draw(builder.scene())
-    const light = drawn.lights[0]
+    const light = drawn.lights[0] as THREE.PointLight
     const seen = new Set<number>()
     for (let t = 0; t < 10; t += 0.05) {
       drawn.animate(t)
