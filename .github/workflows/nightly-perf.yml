@@ -1,0 +1,64 @@
+name: Nightly performance
+
+# The long frame-budget runs (examples/test-room/perf.mjs): every explosive cold, the second uses, the storm and the horde phases. On software GL each takes
+# 20 to 60 minutes, so they run once a night on main (and by hand on any branch) instead of on each PR, which keeps only the quick counts (cost per piece, memory).
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Explosion frame budget (examples/test-room/perf.mjs, docs/desempenho-explosoes.md): every explosive cold, warm and all at once in the room's own loop. Software GL
+  # has no real frame times, so CI checks what does not depend on the machine: no shader compiled during play, GPU buffers per warm explosion, draws back to idle.
+  # Frame times and long tasks are checked on a machine with a GPU (PERF_MODE=gpu). The `horde` shard runs the dense_horde and chain_horde phases (PERF_HORDE agents, 300
+  # in counters mode) in a page of their own, so the cold and warm shards stay as long as they were.
+  perf-budget:
+    name: perf-budget (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # each share stays under 15 minutes on a runner: the nine first uses in four slices, the second uses apart from the storm, one horde phase per page
+        include:
+          - { name: cold-1, shard: 'cold:1/4' }
+          - { name: cold-2, shard: 'cold:2/4' }
+          - { name: cold-3, shard: 'cold:3/4' }
+          - { name: cold-4, shard: 'cold:4/4' }
+          - { name: warm, shard: warm }
+          - { name: storm, shard: storm }
+          - { name: dense-horde, shard: horde, phases: dense_horde }
+          - { name: chain-horde, shard: horde, phases: chain_horde }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
+          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
+
+      - name: Build the test room
+        run: node examples/test-room/build.mjs
+
+      - name: Check the explosion budget
+        run: PERF_SHARD=${{ matrix.shard }} PERF_PHASES=${{ matrix.phases || 'dense_horde,chain_horde' }} node examples/test-room/perf.mjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-budget-${{ matrix.name }}
+          path: examples/test-room/dist/perf.json
