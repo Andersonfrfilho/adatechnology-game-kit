@@ -157,4 +157,6 @@ export {
 }
 export type * from './types'
 export type { PaletteDraw, PaletteEarly, PaletteStyleDef } from './palette'
+export type { RecordedSlot } from './generate'
+export type { ZoneCheckedLot, ZoneCheckedPlan } from './zoning'
 export * from './silhouettes'

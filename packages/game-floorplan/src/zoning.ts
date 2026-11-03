@@ -1,5 +1,27 @@
 import { r2 } from './geometry'
-import type { FloorplanOptions, Json, Plan, TemplateDef, ZoneAdjustment, ZoneDef, ZoneViolation } from './types'
+import type { FloorplanOptions, Lot, LotConfig, Plan, Room, TemplateDef, ZoneAdjustment, ZoneDef, ZoneViolation } from './types'
+
+/** What the zone checks read from a plan: a generated result or the internal plan. */
+export interface ZoneCheckedPlan {
+  floors: { y0: number; ceiling: number }[]
+  floorNumber?: number | null
+  rooms?: { floor: number; parts: readonly (readonly number[])[] }[]
+  w: number
+  d: number
+  use?: string
+  partyWalls?: string[]
+}
+
+/** What the zone checks read from a lot (`result.lot`). */
+export interface ZoneCheckedLot {
+  rect: readonly number[]
+  setback: number
+  sideYard: { left: number; right: number }
+  backyard: number
+  zones: { ground?: string; parts: readonly (readonly number[])[] }[]
+}
+
+type LotSetbackKey = 'frontSetback' | 'marginLeft' | 'marginRight' | 'backyardDepth'
 
 const ZONES: Record<string, ZoneDef> = {}
 const PERMEABLE_GROUNDS = new Set<string>()
@@ -34,12 +56,12 @@ export const floorsOfTemplate = (tpl: TemplateDef, op: FloorplanOptions): number
 export const useOf = (tpl: TemplateDef): string => tpl.use || 'residential_single'
 
 /** Totals used by the checks: storeys, height, areas. Works on a generated result or an internal plan. */
-function measure(plan: Json) {
-  const floors: { index: number; y0: number; ceiling: number }[] = plan.floors
+function measure(plan: ZoneCheckedPlan) {
+  const floors = plan.floors
   const top = floors.reduce((m, f) => Math.max(m, f.y0 + f.ceiling), 0)
   const number = plan.floorNumber != null ? plan.floorNumber : floors.length
-  const rooms: { floor: number; parts: number[][] }[] = (plan.rooms || []).filter((r: Json) => r.floor >= 0)
-  const area = (r: Json) => r.parts.reduce((s: number, p: number[]) => s + (p[2] - p[0]) * (p[3] - p[1]), 0)
+  const rooms = (plan.rooms || []).filter((r) => r.floor >= 0)
+  const area = (r: { parts: readonly (readonly number[])[] }) => r.parts.reduce((s: number, p) => s + (p[2] - p[0]) * (p[3] - p[1]), 0)
   const footprint = plan.w * plan.d
   const built = rooms.reduce((s, r) => s + area(r), 0)
   return { storeys: number, height: r2(top), footprint, built }
@@ -49,7 +71,7 @@ function measure(plan: Json) {
  * Checks a generated lot against a zone and returns the violations (empty when compliant).
  * `lot` is `result.lot` (may be null for apartments), `plan` is the result of `generate`.
  */
-export function checkLot(zoneIn: string | ZoneDef, lot: Json, plan: Json): ZoneViolation[] {
+export function checkLot(zoneIn: string | ZoneDef, lot: ZoneCheckedLot | null | undefined, plan: ZoneCheckedPlan): ZoneViolation[] {
   const zone = resolveZone(zoneIn) as ZoneDef
   const out: ZoneViolation[] = []
   const m = measure(plan)
@@ -58,7 +80,7 @@ export function checkLot(zoneIn: string | ZoneDef, lot: Json, plan: Json): ZoneV
   if (m.storeys > zone.maxFloors) out.push({ rule: 'floors', actual: m.storeys, limit: zone.maxFloors })
   if (m.height > zone.maxHeight + 1e-9) out.push({ rule: 'height', actual: m.height, limit: zone.maxHeight })
   if (!lot) return out
-  const [u0, v0, u1, v1] = lot.rect as number[]
+  const [u0, v0, u1, v1] = lot.rect
   const width = r2(u1 - u0)
   const depth = r2(v1 - v0)
   const area = width * depth
@@ -77,7 +99,7 @@ export function checkLot(zoneIn: string | ZoneDef, lot: Json, plan: Json): ZoneV
   const far = m.built / area
   if (far > zone.maxFar + 1e-9) out.push({ rule: 'far', actual: r2(far), limit: zone.maxFar })
   let permeable = 0
-  for (const z of lot.zones as Json[]) if (PERMEABLE_GROUNDS.has(z.ground)) for (const p of z.parts as number[][]) permeable += (p[2] - p[0]) * (p[3] - p[1])
+  for (const z of lot.zones) if (z.ground && PERMEABLE_GROUNDS.has(z.ground)) for (const p of z.parts) permeable += (p[2] - p[0]) * (p[3] - p[1])
   const permeability = permeable / area
   if (permeability < zone.permeableMin - 1e-9) out.push({ rule: 'permeable', actual: r2(permeability), limit: zone.permeableMin })
   return out
@@ -106,8 +128,8 @@ export function clampOptionsToZone(tpl: TemplateDef, op: FloorplanOptions, zone:
 }
 
 /** Raises lot setbacks to the zone minimums. */
-export function clampLotToZone(cfg: Json, zone: ZoneDef, adjustments: ZoneAdjustment[], partyWalls: string[] = []): void {
-  const raise = (field: string, key: string, min: number, reason: string) => {
+export function clampLotToZone(cfg: LotConfig, zone: ZoneDef, adjustments: ZoneAdjustment[], partyWalls: string[] = []): void {
+  const raise = (field: string, key: LotSetbackKey, min: number, reason: string) => {
     if (cfg[key] < min) {
       adjustments.push({ field, from: cfg[key], to: min, reason })
       cfg[key] = min
@@ -128,18 +150,18 @@ const ADJUSTABLE_ZONES = new Set(['garden', 'backyard', 'side_yard'])
  * Raises the permeable area of a lot to the zone's `permeableMin` by turning paved garden, yard
  * and side zones (largest first) into the first registered permeable ground. Reports each change.
  */
-export function enforcePermeability(lot: Json, zones: Json[], zone: ZoneDef, adjustments: ZoneAdjustment[]): void {
+export function enforcePermeability(lot: Lot, zones: Room[], zone: ZoneDef, adjustments: ZoneAdjustment[]): void {
   const target = [...PERMEABLE_GROUNDS][0]
   if (!target) return
-  const [u0, v0, u1, v1] = lot.rect as number[]
+  const [u0, v0, u1, v1] = lot.rect
   const area = (u1 - u0) * (v1 - v0)
-  const areaOfZone = (z: Json) => (z.parts as number[][]).reduce((s, p) => s + (p[2] - p[0]) * (p[3] - p[1]), 0)
-  let permeable = zones.filter((z) => PERMEABLE_GROUNDS.has(z.ground)).reduce((s, z) => s + areaOfZone(z), 0)
+  const areaOfZone = (z: Room) => z.parts.reduce((s, p) => s + (p[2] - p[0]) * (p[3] - p[1]), 0)
+  let permeable = zones.filter((z) => z.ground != null && PERMEABLE_GROUNDS.has(z.ground)).reduce((s, z) => s + areaOfZone(z), 0)
   if (permeable / area >= zone.permeableMin) return
-  const candidates = zones.filter((z) => ADJUSTABLE_ZONES.has(z.type) && !PERMEABLE_GROUNDS.has(z.ground)).sort((a, b) => areaOfZone(b) - areaOfZone(a))
+  const candidates = zones.filter((z) => ADJUSTABLE_ZONES.has(z.type) && !(z.ground != null && PERMEABLE_GROUNDS.has(z.ground))).sort((a, b) => areaOfZone(b) - areaOfZone(a))
   for (const z of candidates) {
     if (permeable / area >= zone.permeableMin) break
-    adjustments.push({ field: 'ground:' + z.id, from: z.ground, to: target, reason: 'permeable_min' })
+    adjustments.push({ field: 'ground:' + z.id, from: z.ground ?? '', to: target, reason: 'permeable_min' })
     z.ground = target
     permeable += areaOfZone(z)
   }

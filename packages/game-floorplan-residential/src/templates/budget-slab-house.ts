@@ -63,8 +63,9 @@ export function createBudgetSlabHouse(hashString: (s: string) => number): Templa
     lot: (w, d) => ({ frontSetback: 2.2, marginLeft: 0.8, marginRight: 0, backyardDepth: clamp(25 - 2.2 - d, 6, 16), pedestrian: { u: 1.0 }, doorTarget: { a: 'living', side: 'front' }, libraries: { backyard: 'backyard_slab' } }),
     facadeExtra: (f, rng, w, d, op) => {
       f.roof = 'slab'; f.finish = rng() < 0.55 ? 'exposed_block' : 'partial_plaster'
-      f.slab = { exposedRebar: true, waterTank: { u: r2(0.5 + rng() * (w - 1.5)), v: r2(1 + rng() * (d - 2)) }, annex: rng() < 0.55 ? { rect: [0, 0, r2(w * (0.5 + rng() * 0.3)), r2(d * 0.4)], state: 'exposed_brick' } : null }
-      if (floorsOf(op) > 1) f.slab.exposedRebar = rng() < 0.6
+      const slab = { exposedRebar: true, waterTank: { u: r2(0.5 + rng() * (w - 1.5)), v: r2(1 + rng() * (d - 2)) }, annex: rng() < 0.55 ? { rect: [0, 0, r2(w * (0.5 + rng() * 0.3)), r2(d * 0.4)], state: 'exposed_brick' } : null }
+      f.slab = slab
+      if (floorsOf(op) > 1) slab.exposedRebar = rng() < 0.6
     },
   }
 }

@@ -23,7 +23,8 @@ Levantamento na main em 2026-11-03. Atualize ao terminar cada passo (CLAUDE.md, 
 Contratos primeiro, depois quem os outros importam, e os grandes por último, um PR por pacote:
 - [x] Contratos: `game-contracts` 3 (registros de tipos heterogêneos, como compositores, geradores e postes, usam a forma de método, sem `any`)
 - [x] Pequenos: `game-devtools` 5, `game-destruction` 2, `game-destruction-three` 4, `game-shapes` 2, `game-shapes-three` 7, `game-urban` 8, `game-vehicles-driving` 2, e 1 cada em `game-props3d`, `game-stories`, `game-vegetation`
-- [ ] Casas: `type Json = any` em `game-floorplan`, `game-floorplan-structure` e `game-floorplan-interactables` esconde mais ~320 usos de `any` que o lint não conta; `game-floorplan-residential` 12, `game-floorplan-commercial` 13, `game-floorplan-interactables` 49, `game-floorplan-structure` 86, `game-floorplan-post-apocalyptic` 125
+- [x] `game-floorplan`: `Json` virou `unknown`; a planta (portas, paredes, janelas, portões, caminhos, lote, fachada), os slots, a grade de circulação e o resultado do `generate` (`FloorplanResult`) têm tipo próprio. Residential, rural, commercial, post-apocalyptic e structure ajustados ao resultado tipado
+- [ ] Casas: `type Json = any` em `game-floorplan-structure` e `game-floorplan-interactables` ainda esconde usos de `any` que o lint não conta; `game-floorplan-residential` 12, `game-floorplan-commercial` 13, `game-floorplan-interactables` 49, `game-floorplan-structure` 86, `game-floorplan-post-apocalyptic` 125
 - [ ] `game-floorplan-three` 536 (junto com ligar o strict)
 - [ ] Adaptadores three (`type Three = any` em `game-urban-three` e `game-vegetation-three` vira o namespace tipado do three): `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62, `game-characters-three` 66, `game-vehicles-three` 75
 - [ ] Veículos: `game-vehicles` 1.584 e `game-vehicles-fleet` 2.247 (depois que os PRs de física dos carros entrarem)

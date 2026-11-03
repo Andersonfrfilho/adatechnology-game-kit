@@ -1,9 +1,9 @@
 import { r2 } from './geometry'
-import type { Json, Plan, Rect, Room } from './types'
+import type { LotPath, Plan, PlanGate, Rect, Room, Vec2 } from './types'
 
 export interface ExteriorPathContext {
-  gates: Json[]
-  paths: Json[]
+  gates: PlanGate[]
+  paths: LotPath[]
   zones: Room[]
   setback: number
   marginLeft: number
@@ -115,7 +115,7 @@ export function addExteriorDoorPaths(plan: Plan, c: ExteriorPathContext): void {
       if (best) {
         const { lane, laneWidth, half: h, vertical, horizontal, frontStub, rearStrip, rearY, frontY, overlapsParking } = best
         width = laneWidth
-        if (overlapsParking) fromId = (gates.find((g) => g.type === 'garage') || social || ({} as Json)).id || null
+        if (overlapsParking) fromId = (gates.find((g) => g.type === 'garage') || social || ({} as Partial<PlanGate>)).id || null
         if (door.side === 'back') {
           rects.push([door.u - half, door.v, door.u + half, door.v + rearStrip + laneWidth], horizontal as Rect, vertical)
           points.push([door.u, door.v], [door.u, rearY], [lane.x, rearY], [lane.x, frontY])
@@ -148,10 +148,10 @@ export function addExteriorDoorPaths(plan: Plan, c: ExteriorPathContext): void {
         }
       }
     }
-    const inside = (g: Json) => reached.some((r) => g.u >= r[0] - CLOSE && g.u <= r[2] + CLOSE && g.v >= r[1] - CLOSE && g.v <= r[3] + CLOSE)
+    const inside = (g: { u: number; v: number }) => reached.some((r) => g.u >= r[0] - CLOSE && g.u <= r[2] + CLOSE && g.v >= r[1] - CLOSE && g.v <= r[3] + CLOSE)
     const gate = gates.find((q) => q.type === 'pedestrian' && inside(q)) || gates.find((q) => q.type !== 'cargo' && inside(q))
     if (gate) fromId = gate.id
-    paths.push({ id, type: 'pedestrian', from: fromId, to: door.id, width, rects: rects.map(rounded), points: points.map((q) => q.map(r2)) })
+    paths.push({ id, type: 'pedestrian', from: fromId, to: door.id, width, rects: rects.map(rounded), points: points.map((q) => q.map(r2) as Vec2) })
   }
 }
 

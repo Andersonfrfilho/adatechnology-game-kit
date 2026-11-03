@@ -5,7 +5,7 @@ import { createRng, pickWeighted } from './rng'
 import { STYLES, WALL_TOP_HEIGHTS, resolveStyleId, styleOf } from './registry'
 import { addExteriorDoorPaths } from './paths'
 import { clampLotToZone, enforcePermeability } from './zoning'
-import type { FloorDef, FloorplanOptions, Json, LotConfig, Plan, Rect, Room, StyleDef, TemplateDef, WindowDef, ZoneAdjustment, ZoneDef } from './types'
+import type { FloorDef, FloorplanOptions, GateCfg, Lot, LotBoundary, LotConfig, LotPath, Plan, PlanDoor, PlanGate, PlanWall, PlanWindow, Rect, Room, StyleDef, TemplateDef, WindowDef, ZoneAdjustment, ZoneDef } from './types'
 
 export const floorsOf = (tpl: TemplateDef, op?: FloorplanOptions): FloorDef[] => (tpl.floorsFn ? tpl.floorsFn(op || {}) : (tpl.floors as FloorDef[]))
 
@@ -50,7 +50,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
     }
     const byId: Record<string, Room> = {}
     for (const c of list) byId[c.id] = c
-    const floorDoors: Json[] = []
+    const floorDoors: PlanDoor[] = []
     ;(A.doors(w, d, op) || []).forEach((sp, i) => {
       const a = byId[sp.a]
       if (!a) throw new Error('Door references a missing room: ' + sp.a)
@@ -106,17 +106,17 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
 }
 
 interface WindowGroup {
-  wall: Json
+  wall: PlanWall
   edge: { axis: 'u' | 'v'; pos: number }
   start: number
   end: number
-  def: Json
-  entries: { def: Json; centre: number; order: number }[]
+  def: WindowDef
+  entries: { def: WindowDef; centre: number; order: number }[]
 }
 interface WindowParams {
   list: Room[]
   byId: Record<string, Room>
-  floorWalls: Json[]
+  floorWalls: PlanWall[]
   windowDefs: WindowDef[]
   floorIndex: number
   ceiling: number
@@ -129,10 +129,10 @@ interface WindowParams {
  * Each window lands on a stretch of exterior wall (between corners, junctions and doors) and is spread over it: a single window is centred,
  * several get equal gaps, and none comes closer than `clearance` to a corner, a junction or a door. A room that needs light but got no window gets one.
  */
-function placeWindows(params: WindowParams): Json[] {
+function placeWindows(params: WindowParams): PlanWindow[] {
   const { list, byId, floorWalls, windowDefs, floorIndex, ceiling, w, d, clearance } = params
   const stretches = floorWalls.filter((p) => p.exterior && p.type === 'wall')
-  const found: Json[] = []
+  const found: (PlanWindow & { _order?: number })[] = []
   const groups: WindowGroup[] = []
   let order = 0
   for (const def of windowDefs) {
@@ -143,9 +143,9 @@ function placeWindows(params: WindowParams): Json[] {
     const centres = def.n ? Array.from({ length: def.n }, (_, i) => edge.a0 + ((edge.a1 - edge.a0) * (i + 1)) / (def.n! + 1)) : [def.at as number]
     for (const centre of centres) {
       const onEdge = stretches.filter((t) => t.axis === edge.axis && eq(edge.axis === 'u' ? t.v0 : t.u0, edge.pos) && t.sides.includes(def.room))
-      const start = (t: Json) => (edge.axis === 'u' ? t.u0 : t.v0)
-      const end = (t: Json) => (edge.axis === 'u' ? t.u1 : t.v1)
-      const gap = (t: Json) => Math.min(Math.abs(centre - start(t)), Math.abs(centre - end(t)))
+      const start = (t: PlanWall) => (edge.axis === 'u' ? t.u0 : t.v0)
+      const end = (t: PlanWall) => (edge.axis === 'u' ? t.u1 : t.v1)
+      const gap = (t: PlanWall) => Math.min(Math.abs(centre - start(t)), Math.abs(centre - end(t)))
       const target = onEdge.find((t) => centre >= start(t) - TOL && centre <= end(t) + TOL) || onEdge.slice().sort((x, y) => gap(x) - gap(y))[0]
       if (!target) continue
       let group = groups.find((x) => x.wall === target && x.def.room === def.room)
@@ -186,7 +186,7 @@ function placeWindows(params: WindowParams): Json[] {
   }
   for (const room of list) {
     if (WINDOWLESS_ROOM_TYPES.has(room.type) || found.some((j) => j.room === room.id)) continue
-    let best: { length: number; window: Json } | null = null
+    let best: { length: number; window: PlanWindow & { _order?: number } } | null = null
     for (const t of stretches) {
       if (!t.sides.includes(room.id)) continue
       const i0 = t.axis === 'u' ? t.u0 : t.v0
@@ -202,7 +202,7 @@ function placeWindows(params: WindowParams): Json[] {
     }
     if (best) found.push(best.window)
   }
-  found.sort((x, y) => x._order - y._order)
+  found.sort((x, y) => (x._order as number) - (y._order as number))
   found.forEach((j, i) => {
     delete j._order
     j.id = 'w' + floorIndex + '_' + i
@@ -239,7 +239,7 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
   const marginL = cfg.marginLeft
   const marginR = cfg.marginRight
   const backDepth = cfg.backyardDepth
-  const lot: Json = {
+  const lot: Lot = {
     rect: [-marginL, -setback, w + marginR, d + backDepth],
     setback,
     sideYard: { left: marginL, right: marginR },
@@ -258,7 +258,7 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
   if (setback > 0) {
     let parts: Rect[] = [[-marginL, -setback, w + marginR, 0]]
     if (cfg.parking) {
-      const garageU = (cfg.garage as Json).u
+      const garageU = (cfg.garage as GateCfg).u
       const vw = cfg.parking.width
       const x0 = Math.max(-marginL, garageU - vw / 2)
       const x1 = Math.min(w + marginR, garageU + vw / 2)
@@ -278,9 +278,9 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
   for (const q of cfg.extraZones || []) addZone(q.id, q.type, q.label || q.id, q.parts, q.library)
   if (marginL > 0.5) addZone('side_left', 'side_yard', 'side_left', [[-marginL, 0, 0, d]], libs.sideYard)
   if (marginR > 0.5) addZone('side_right', 'side_yard', 'side_right', [[w, 0, w + marginR, d]], libs.sideYard)
-  const gates: Json[] = []
+  const gates: PlanGate[] = []
   const addGate = (type: string, model: string, u: number, v: number, width: number, side: string, toTarget?: string | null) => {
-    const g: Json = {
+    const g: PlanGate = {
       id: 'g' + gates.length,
       type,
       model,
@@ -292,8 +292,8 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
       side,
       to: toTarget || null,
       material: 'iron',
+      zones: openingZones(u, v, 'u', width, openingDepth(width, type === 'pedestrian' ? width : 0)),
     }
-    g.zones = openingZones(u, v, 'u', width, openingDepth(width, type === 'pedestrian' ? width : 0))
     gates.push(g)
     return g
   }
@@ -302,7 +302,7 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
   if (cfg.cargo) addGate('cargo', 'sliding', cfg.cargo.u, d + backDepth, cfg.cargo.width, 'back', 'stockroom')
   plan.gates = gates
   lot.gates = gates
-  const paths: Json[] = []
+  const paths: LotPath[] = []
   const target = (a: string, side: string) => plan.doors.find((p) => p.exterior && p.a === a && p.side === side)
   for (const g of gates) {
     if (g.type === 'pedestrian' && cfg.doorTarget) {
@@ -320,17 +320,17 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
         rs.push([Math.min(gateU, dx) - h, ym - h, Math.max(gateU, dx) + h, ym + h])
         rs.push([dx - h, ym - h, dx + h, 0])
       }
-      paths.push({ id: 'pedestrian_path', type: 'pedestrian', from: g.id, to: pt.id, width: L, rects: rs.map((r) => r.map(r2)), points: [[gateU, -setback], [gateU, ym], [dx, ym], [dx, 0]] })
+      paths.push({ id: 'pedestrian_path', type: 'pedestrian', from: g.id, to: pt.id, width: L, rects: rs.map((r) => r.map(r2) as Rect), points: [[gateU, -setback], [gateU, ym], [dx, ym], [dx, 0]] })
     } else if (g.type === 'garage' && g.to === 'inner_garage') {
       const pt = plan.doors.find((p) => p.exterior && p.side === 'front' && Math.abs(p.u - g.u) < 0.6 && p.width >= 2.5)
       if (!pt) continue
       const hw = Math.max(g.width, pt.width) / 2
-      paths.push({ id: 'garage_path', type: 'vehicle', from: g.id, to: pt.id, width: hw * 2, rects: [[g.u - hw, -setback, g.u + hw, 0].map(r2)], points: [[g.u, -setback], [g.u, 0]] })
+      paths.push({ id: 'garage_path', type: 'vehicle', from: g.id, to: pt.id, width: hw * 2, rects: [[g.u - hw, -setback, g.u + hw, 0].map(r2) as Rect], points: [[g.u, -setback], [g.u, 0]] })
     } else if (g.type === 'cargo') {
       const pt = target('stockroom', 'back')
       if (!pt) continue
       const hw = Math.max(g.width, pt.width) / 2
-      paths.push({ id: 'cargo_path', type: 'vehicle', from: g.id, to: pt.id, width: hw * 2, rects: [[g.u - hw, d, g.u + hw, d + backDepth].map(r2)], points: [[g.u, d + backDepth], [g.u, d]] })
+      paths.push({ id: 'cargo_path', type: 'vehicle', from: g.id, to: pt.id, width: hw * 2, rects: [[g.u - hw, d, g.u + hw, d + backDepth].map(r2) as Rect], points: [[g.u, d + backDepth], [g.u, d]] })
     }
   }
   if (tpl.paths) paths.push(...tpl.paths(plan, { gates, setback, marginLeft: marginL, marginRight: marginR, backyard: backDepth, w, d }))
@@ -343,12 +343,12 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
     const wallHeight = type === 'railing' ? 1.2 : type === 'fence' ? (style.fenceHeight ?? 2.0) : style.height
     return { type, material: type === 'wall' ? 'block' : type === 'fence' ? 'wire_mesh' : 'iron', height: wallHeight, top, totalHeight: r2(wallHeight + WALL_TOP_HEIGHTS[top]), thickness: WALL_THICKNESS }
   }
-  const A: Record<string, Json> = { front: boundary(style.front), left: boundary(style.sideYard), right: boundary(style.sideYard), back: boundary(style.back) }
+  const A: Record<string, LotBoundary> = { front: boundary(style.front), left: boundary(style.sideYard), right: boundary(style.sideYard), back: boundary(style.back) }
   const seg = (side: string, u0: number, v0: number, u1: number, v1: number) => {
     if (Math.abs(u1 - u0) + Math.abs(v1 - v0) < 0.05) return
     lot.perimeter.push(Object.assign({ id: 'm' + lot.perimeter.length, side, u0: r2(u0), v0: r2(v0), u1: r2(u1), v1: r2(v1) }, A[side]))
   }
-  const cutRun = (side: string, de: number, to: number, vfix: number, gs: Json[]) => {
+  const cutRun = (side: string, de: number, to: number, vfix: number, gs: PlanGate[]) => {
     let pieces: [number, number][] = [[de, to]]
     for (const g of gs) {
       const g0 = g.u - g.width / 2

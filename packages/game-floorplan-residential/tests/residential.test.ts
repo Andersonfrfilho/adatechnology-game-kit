@@ -3,6 +3,11 @@ import { engine } from '@adatechnology/game-floorplan'
 import { register, residentialTemplateIds } from '../src'
 import en from '../src/locales/en.json'
 import ptBR from '../src/locales/pt-BR.json'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
+
+/** The budget slab house config (`TemplateDef.config`) as these tests read it. */
+type SideStair = { side: string; flights: number; rect: number[]; doors: string[] }
+const slabConfigOf = (plan: FloorplanResult) => plan.config as { sideStair: SideStair | null }
 
 beforeAll(() => {
   register(engine, { region: 'br' })
@@ -72,7 +77,7 @@ describe('urban zoning (region br)', () => {
     for (const id of residentialTemplateIds) {
       const ok = engine.listZones().filter((zone) => {
         const r = engine.generate(id, { seed: 5, zone: zone.id })
-        return r.zoning.violations.length === 0 && engine.validate(r).length === 0 && r.missing.length === 0
+        return r.zoning!.violations.length === 0 && engine.validate(r).length === 0 && r.missing.length === 0
       })
       expect(ok.length, `${id} fits no zone`).toBeGreaterThan(0)
     }
@@ -90,15 +95,15 @@ describe('urban zoning (region br)', () => {
 
   it('validate() includes the zone violations', () => {
     const r = engine.generate('apartment_modern', { seed: 1, zone: 'zr1' })
-    expect(r.zoning.violations.length).toBeGreaterThan(0)
+    expect(r.zoning!.violations.length).toBeGreaterThan(0)
     expect(engine.validate(r).some((e: string) => e.includes('zr1'))).toBe(true)
   })
 
   it('clamps floors to the zone and reports the adjustment', () => {
     const r = engine.generate('mansion', { seed: 1, zone: 'zr1' })
     expect(r.floors.length).toBe(2)
-    expect(r.zoning.adjustments).toContainEqual({ field: 'floors', from: 3, to: 2, reason: 'max_floors' })
-    expect(r.zoning.violations).toEqual([])
+    expect(r.zoning!.adjustments).toContainEqual({ field: 'floors', from: 3, to: 2, reason: 'max_floors' })
+    expect(r.zoning!.violations).toEqual([])
     const t = engine.generate('mid_modern_townhouse', { seed: 1, floors: 3, zone: 'zr1' })
     expect(t.floors.length).toBe(2)
   })
@@ -106,26 +111,26 @@ describe('urban zoning (region br)', () => {
   it('keeps the floors when the zone allows them', () => {
     const r = engine.generate('mansion', { seed: 1, zone: 'zr_ap' })
     expect(r.floors.length).toBe(3)
-    expect(r.zoning.adjustments).toEqual([])
+    expect(r.zoning!.adjustments).toEqual([])
   })
 
   it('raises setbacks to the zone minimums and reports them', () => {
     engine.defineZone({ id: 'wide_test', allowedUses: ['residential_single'], maxFloors: 2, maxHeight: 9, setbacks: { front: 9, side: 4, back: 6 }, maxCoverage: 0.5, maxFar: 1, minLot: 100, minFrontage: 5, permeableMin: 0.5 })
     const r = engine.generate('townhouse', { seed: 1, zone: 'wide_test' })
-    const fields = r.zoning.adjustments.map((a: any) => a.field)
+    const fields = r.zoning!.adjustments.map((a: any) => a.field)
     expect(fields).toEqual(expect.arrayContaining(['frontSetback', 'marginLeft', 'marginRight']))
-    expect(r.lot.setback).toBeGreaterThanOrEqual(9)
-    expect(r.zoning.violations).toEqual([])
+    expect(r.lot!.setback).toBeGreaterThanOrEqual(9)
+    expect(r.zoning!.violations).toEqual([])
   })
 
   it('enforces the permeable area by turning paved yards into lawn', () => {
     const r = engine.generate('townhouse', { seed: 1, zone: 'wide_test' })
-    expect(r.zoning.adjustments.some((a: any) => a.field.startsWith('ground:') && a.to === 'lawn' && a.reason === 'permeable_min')).toBe(true)
+    expect(r.zoning!.adjustments.some((a: any) => a.field.startsWith('ground:') && a.to === 'lawn' && a.reason === 'permeable_min')).toBe(true)
   })
 
   it('apartments clamp the storey they sit on', () => {
     const r = engine.generate('apartment_modern', { seed: 1, floor: 8, zone: 'zr2' })
-    expect(r.zoning.adjustments).toContainEqual({ field: 'floor', from: 8, to: 4, reason: 'max_floors' })
+    expect(r.zoning!.adjustments).toContainEqual({ field: 'floor', from: 8, to: 4, reason: 'max_floors' })
   })
 
   it('output without a zone has no adjustments and a null-safe report', () => {
@@ -140,7 +145,7 @@ describe('budget slab house, 1 to 3 floors', () => {
   it('declares the floor range and keeps one floor when nothing is asked (the page plans)', () => {
     expect(engine.listTemplates().find((t) => t.id === 'budget_slab_house')?.floorRange).toEqual([1, 3])
     expect(engine.generate('budget_slab_house', { seed: 3 }).floors).toHaveLength(1)
-    expect(engine.generate('budget_slab_house', { seed: 3 }).config.sideStair).toBeNull()
+    expect(slabConfigOf(engine.generate('budget_slab_house', { seed: 3 })).sideStair).toBeNull()
   })
 
   for (const floors of [2, 3]) {
@@ -155,7 +160,7 @@ describe('budget slab house, 1 to 3 floors', () => {
           for (let floor = 1; floor < floors; floor++) {
             const rooms = plan.rooms.filter((room: { floor: number }) => room.floor === floor)
             if (rooms.filter((room: { type: string }) => room.type === 'bedroom').length !== 2 || rooms.filter((room: { type: string }) => room.type === 'bathroom').length !== 1) problems.push(`${tag}: floor ${floor} is not 2 bedrooms + bathroom`)
-            for (const room of rooms) if (!plan.items.some((item: { room: string }) => item.room === room.id)) problems.push(`${tag}: ${room.id} is empty`)
+            for (const room of rooms) if (!plan.items.some((item) => item.room === room.id)) problems.push(`${tag}: ${room.id} is empty`)
           }
         }
       expect(problems.slice(0, 5)).toEqual([])
@@ -175,22 +180,22 @@ describe('budget slab house, 1 to 3 floors', () => {
   it('the stair goes straight up the side margin and every upper floor has the outside door where it arrives', () => {
     for (const floors of [2, 3]) {
       const plan = engine.generate('budget_slab_house', { seed: 9, floors })
-      const stair = plan.config.sideStair
+      const stair = slabConfigOf(plan).sideStair!
       expect(stair.side).toBe('left')
       expect(stair.flights).toBe(floors - 1)
-      expect(stair.rect[0]).toBeGreaterThanOrEqual(-plan.lot.sideYard.left)
+      expect(stair.rect[0]).toBeGreaterThanOrEqual(-plan.lot!.sideYard.left)
       expect(stair.rect[2]).toBeLessThanOrEqual(0)
       expect(stair.rect[3]).toBeLessThan(plan.d)
       stair.doors.forEach((id: string, index: number) => {
         const door = plan.doors.find((x: { id: string }) => x.id === id)
         expect(door).toMatchObject({ floor: index + 1, exterior: true, side: 'left' })
-        expect(door.v).toBeCloseTo(stair.rect[1] + 3.9 * (index + 1), 5)
+        expect(door!.v).toBeCloseTo(stair.rect[1] + 3.9 * (index + 1), 5)
       })
     }
   })
 
   it('rebar starter bars come out of the top slab in about 60% of the houses (always on the one-floor house, as on the page)', () => {
-    const rebar = (floors: number) => SEEDS.concat(SEEDS.map((s) => s + 100)).map((seed) => engine.generate('budget_slab_house', { seed, floors }).facade.slab.exposedRebar)
+    const rebar = (floors: number) => SEEDS.concat(SEEDS.map((s) => s + 100)).map((seed) => (engine.generate('budget_slab_house', { seed, floors }).facade.slab as { exposedRebar: boolean }).exposedRebar)
     expect(rebar(1).every(Boolean)).toBe(true)
     for (const floors of [2, 3]) {
       const share = rebar(floors).filter(Boolean).length / 120

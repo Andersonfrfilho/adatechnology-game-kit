@@ -529,11 +529,6 @@
       "count": 8
     }
   },
-  "packages/game-floorplan/src/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-interactables-three/src/merge.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 4

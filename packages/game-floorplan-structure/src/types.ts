@@ -262,7 +262,7 @@ export interface SourceDoor {
   u: number
   v: number
   width: number
-  side?: string
+  side?: string | null
   axis: 'u' | 'v'
   steps?: number
 }

@@ -2,7 +2,7 @@ import { EPS, MARGIN, TOL } from './constants'
 import { cardinal, clamp, eq, extent, inner, overlaps, r2 } from './geometry'
 import { LIBRARIES, LIBRARY_ALIAS } from './registry'
 import { isOpenSide, openingsOfFloor, windowsOfRoom, zonesOfFloor } from './queries'
-import type { Json, Plan, Rect, Room, Slot, SlotDef, Vec2 } from './types'
+import type { Plan, PlanOpening, PlanWindow, Rect, Room, Slot, SlotDef, Vec2 } from './types'
 
 const SIDE_NORMAL: Record<string, Vec2> = { left: [1, 0], right: [-1, 0], front: [0, 1], back: [0, -1] }
 const FIXED_FACING: Record<string, Vec2> = { 'u+': [1, 0], 'u-': [-1, 0], 'v+': [0, 1], 'v-': [0, -1] }
@@ -55,8 +55,11 @@ export function resolveSlots(plan: Plan): Slot[] {
   return all
 }
 
+/** Fields `resolveSlot` adds once it knows where the slot sits. */
+type SlotPlacementKey = 'x' | 'z' | 'ry' | 'w' | 'd' | 'frontU' | 'frontV' | 'aabb' | '_cell'
+
 export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<string, Slot>, zones: Rect[]): Slot {
-  const base: Json = {
+  const base: Omit<Slot, SlotPlacementKey> = {
     id: def.id,
     room: room.id,
     floor: room.floor,
@@ -78,7 +81,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
   }
   const invalid = (m: string): Slot => Object.assign(base, { valid: false, reason: m, x: 0, z: 0, ry: 0, w: 0, d: 0, frontU: 0, frontV: 1, aabb: [0, 0, 0, 0], _cell: null }) as Slot
   if (def.anchor === 'on' || def.anchor === 'inside') {
-    const parent = byId[def.parent]
+    const parent = def.parent ? byId[def.parent] : undefined
     if (!parent || !parent.valid) return invalid('invalid_parent')
     return Object.assign(base, { x: parent.x, z: parent.z, ry: parent.ry, w: parent.w, d: parent.d, frontU: parent.frontU, frontV: parent.frontV, aabb: parent.aabb, _cell: parent._cell }) as Slot
   }
@@ -91,7 +94,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
   let point: Vec2 = [0, 0]
   const targetPoint = (rule: string): Vec2 => {
     if (rule === 'door') {
-      let best: Json = null
+      let best: PlanOpening | null = null
       let bestDist = 1e9
       for (const ab of openings) {
         const dist = Math.hypot(ab.u - point[0], ab.v - point[1])
@@ -114,18 +117,19 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
   if (def.anchor === 'wall' || def.anchor === 'window') {
     let side = def.side as string
     let a: number | null = null
-    let win: Json = null
+    let win: PlanWindow | null = null
     if (def.anchor === 'window') {
       const windowList = windowsOfRoom(plan, room)
       win = windowList[def.n as number]
       if (!win) return invalid('no_window')
+      const found = win
       side = room.outdoor ? SIDE_OPPOSITE[win.side] : WINDOW_SIDE[win.side]
       const cand = room.parts
         .map(inner)
         .find(
           (r) =>
-            (win.axis === 'u' ? win.u >= r[0] - TOL && win.u <= r[2] + TOL : win.v >= r[1] - TOL && win.v <= r[3] + TOL) &&
-            ((side === 'left' && eq(r[0], win.pos + MARGIN)) || (side === 'right' && eq(r[2], win.pos - MARGIN)) || (side === 'front' && eq(r[1], win.pos + MARGIN)) || (side === 'back' && eq(r[3], win.pos - MARGIN))),
+            (found.axis === 'u' ? found.u >= r[0] - TOL && found.u <= r[2] + TOL : found.v >= r[1] - TOL && found.v <= r[3] + TOL) &&
+            ((side === 'left' && eq(r[0], found.pos + MARGIN)) || (side === 'right' && eq(r[2], found.pos - MARGIN)) || (side === 'front' && eq(r[1], found.pos + MARGIN)) || (side === 'back' && eq(r[3], found.pos - MARGIN))),
         )
       if (!cand) return invalid('window_outside_room')
       R = cand
@@ -160,7 +164,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     const sp: Vec2 = horizontal ? [found, wp - n[1] * 0.1] : [wp - n[0] * 0.1, found]
     if (isOpenSide(plan, room, sp[0], sp[1])) return invalid('open_wall')
     const rect = cell(found)
-    return Object.assign(base, { side, x: r2((rect[0] + rect[2]) / 2), z: r2((rect[1] + rect[3]) / 2), frontU: n[0], frontV: n[1], ry: r2(Math.atan2(n[0], n[1])), w: size[0], d: size[1], aabb: rect.map(r2), _cell: { rect, f: n, enclosed: [side], R, size } }) as Slot
+    return Object.assign(base, { side, x: r2((rect[0] + rect[2]) / 2), z: r2((rect[1] + rect[3]) / 2), frontU: n[0], frontV: n[1], ry: r2(Math.atan2(n[0], n[1])), w: size[0], d: size[1], aabb: rect.map(r2) as Rect, _cell: { rect, f: n, enclosed: [side], R, size } }) as Slot
   }
   if (def.anchor === 'corner') {
     const [cornerV, cornerU] = (def.corner as string).split('-')
@@ -183,7 +187,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     const rect: Rect = [cornerU === 'left' ? R[0] : R[2] - extentU, cornerV === 'front' ? R[1] : R[3] - extentV, cornerU === 'left' ? R[0] + extentU : R[2], cornerV === 'front' ? R[1] + extentV : R[3]]
     if (!free(rect)) return invalid('blocked_by_door')
     for (const sp of [[kx - normalU[0] * (MARGIN + 0.1), (rect[1] + rect[3]) / 2], [(rect[0] + rect[2]) / 2, kz - normalV[1] * (MARGIN + 0.1)]]) if (isOpenSide(plan, room, sp[0], sp[1])) return invalid('open_wall')
-    return Object.assign(base, { x: r2((rect[0] + rect[2]) / 2), z: r2((rect[1] + rect[3]) / 2), frontU: f[0], frontV: f[1], ry: r2(Math.atan2(f[0], f[1])), w: size[0], d: size[1], aabb: rect.map(r2), _cell: { rect, f, enclosed: [cornerU, cornerV], R, size } }) as Slot
+    return Object.assign(base, { x: r2((rect[0] + rect[2]) / 2), z: r2((rect[1] + rect[3]) / 2), frontU: f[0], frontV: f[1], ry: r2(Math.atan2(f[0], f[1])), w: size[0], d: size[1], aabb: rect.map(r2) as Rect, _cell: { rect, f, enclosed: [cornerU, cornerV], R, size } }) as Slot
   }
   if (def.anchor === 'center') {
     let cx = R[0] + (def.fx == null ? 0.5 : def.fx) * (R[2] - R[0]) + (def.dx || 0)
@@ -203,7 +207,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     cz = clamp(cz, R[1] + extentV / 2, R[3] - extentV / 2)
     const rect: Rect = [cx - extentU / 2, cz - extentV / 2, cx + extentU / 2, cz + extentV / 2]
     if (!free(rect)) return invalid('blocked_by_door')
-    return Object.assign(base, { x: r2(cx), z: r2(cz), frontU: f[0], frontV: f[1], ry: r2(Math.atan2(f[0], f[1])), w: size[0], d: size[1], aabb: rect.map(r2), _cell: { rect, f, enclosed: [], R, size } }) as Slot
+    return Object.assign(base, { x: r2(cx), z: r2(cz), frontU: f[0], frontV: f[1], ry: r2(Math.atan2(f[0], f[1])), w: size[0], d: size[1], aabb: rect.map(r2) as Rect, _cell: { rect, f, enclosed: [] as string[], R, size } }) as Slot
   }
   return invalid('unknown_anchor')
 }

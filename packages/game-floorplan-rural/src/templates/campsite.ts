@@ -1,4 +1,4 @@
-import type { FloorDef, FloorplanOptions, TemplateDef } from '@adatechnology/game-floorplan'
+import type { FloorDef, FloorplanOptions, TemplateDef, Vec2 } from '@adatechnology/game-floorplan'
 import { r2 } from '../util'
 import type { CreateRng } from '../util'
 
@@ -14,7 +14,8 @@ const TENT_HEIGHT: Record<TentKind, Record<number, number>> = { dome: { 1: 1.1, 
 export function createCampsite(createRng: CreateRng): TemplateDef {
   const layoutOf = (w: number, options: FloorplanOptions): { tents: Tent[]; end: number; reach: number } => {
     const draw = (key: string): number => createRng(options.seed == null ? 1 : options.seed, 'cp:' + key)()
-    const count = [1, 2, 3, 4].includes(options.tents) ? (options.tents as number) : 2 + Math.floor(draw('n') * 3)
+    const tentsOption = options.tents
+    const count = typeof tentsOption === 'number' && [1, 2, 3, 4].includes(tentsOption) ? tentsOption : 2 + Math.floor(draw('n') * 3)
     const forcedKind = options.tentType === 'dome' || options.tentType === 'tunnel' ? options.tentType : null
     const cursor = [0.8, 0.8]
     const tents: Tent[] = []
@@ -59,9 +60,10 @@ export function createCampsite(createRng: CreateRng): TemplateDef {
       const middle = plan.w / 2, half = 0.5, trunk: Rect = [middle - half, -context.setback, middle + half, layoutOf(plan.w, plan.options).end]
       return layoutOf(plan.w, plan.options).tents.map((t) => {
         const door = plan.doors.find((q) => q.a === t.id && q.exterior)
+        if (!door) throw new Error('Tent without an exterior door: ' + t.id)
         const center = (t.rect[1] + t.rect[3]) / 2
         const stub: Rect = t.side === 'right' ? [t.rect[2], center - half, middle - half, center + half] : [middle + half, center - half, t.rect[0], center + half]
-        return { id: `path_${door.id}`, type: 'pedestrian', from: gate.id, to: door.id, width: 1.0, rects: [stub, trunk].map((q) => q.map(r2)), points: [[middle, -context.setback], [middle, center], [t.side === 'right' ? t.rect[2] : t.rect[0], center]].map((q) => q.map(r2)) }
+        return { id: `path_${door.id}`, type: 'pedestrian', from: gate.id, to: door.id, width: 1.0, rects: [stub, trunk].map((q) => q.map(r2) as Rect), points: [[middle, -context.setback], [middle, center], [t.side === 'right' ? t.rect[2] : t.rect[0], center]].map((q) => q.map(r2) as Vec2) }
       }) },
   }
 }

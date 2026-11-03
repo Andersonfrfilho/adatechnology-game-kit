@@ -1,5 +1,5 @@
 import { EPS, MARGIN, TOL, WALL_THICKNESS } from './constants'
-import type { PlacedItem, Rect, Room, RoomDef, Vec2 } from './types'
+import type { PlacedItem, PlanWall, Rect, Room, RoomDef, Vec2 } from './types'
 
 export const r2 = (x: number): number => Math.round(x * 100) / 100
 export const clamp = (x: number, a: number, b: number): number => Math.max(a, Math.min(b, x))
@@ -169,7 +169,7 @@ export interface WallBuildDoor {
 }
 
 /** Walls of one storey, split where rooms meet and cut where doors open. */
-export function buildWalls(rooms: Room[], doors: WallBuildDoor[], openPairs: [string, string][], floorIndex: number) {
+export function buildWalls(rooms: Room[], doors: WallBuildDoor[], openPairs: [string, string][], floorIndex: number): PlanWall[] {
   const groups: Record<string, { axis: 'u' | 'v'; pos: number; es: { a: number; b: number; id: string; side: number }[] }> = {}
   const add = (axis: 'u' | 'v', pos: number, a: number, b: number, id: string, side: number) => {
     const k = axis + '|' + pos.toFixed(2)
@@ -185,7 +185,7 @@ export function buildWalls(rooms: Room[], doors: WallBuildDoor[], openPairs: [st
   const par = (x: string, y: string) => openPairs.some((o) => (o[0] === x && o[1] === y) || (o[0] === y && o[1] === x))
   const typeOf: Record<string, string> = {}
   for (const c of rooms) typeOf[c.id] = c.type
-  const out: Record<string, unknown>[] = []
+  const out: PlanWall[] = []
   for (const g of Object.values(groups)) {
     const breaks = [...new Set(g.es.flatMap((e) => [r2(e.a), r2(e.b)]))].sort((x, y) => x - y)
     const segs: { A: string; B: string; p: number; q: number }[] = []

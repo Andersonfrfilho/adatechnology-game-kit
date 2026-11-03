@@ -20,7 +20,7 @@ import { blocksWindow, roomAt, windowZone, windowsOfRoom, zonesOfFloor } from '.
 import { CATALOG, DECOR_PROFILES, GROUND_OVERLAYS, PASSES, SEED_KEYS } from './registry'
 import { createRng, pickWeighted, shuffle } from './rng'
 import type { Rng } from './rng'
-import type { Json, PlacedItem, Plan, PlacementContext, PlacementKit, Rect, Room, Vec2 } from './types'
+import type { PlaceOnFloorOptions, PlacedItem, Plan, PlacementContext, PlacementKit, Rect, Room, Vec2 } from './types'
 
 /** Geometry and grid helpers shared with decor passes and state plugins. */
 export const placementKit: PlacementKit = {
@@ -56,7 +56,7 @@ export const placementKit: PlacementKit = {
 export function createPlacementContext(plan: Plan, items: PlacedItem[]): PlacementContext {
   const added: PlacedItem[] = []
   const counters: Record<string, number> = {}
-  const make = (room: Room, type: string, r: Rect, f: Vec2, o?: Json): PlacedItem => {
+  const make = (room: Room, type: string, r: Rect, f: Vec2, o?: Partial<PlacedItem>): PlacedItem => {
     const it = CATALOG[type]
     const n = (counters[room.id + type] = (counters[room.id + type] || 0) + 1)
     return Object.assign(
@@ -82,7 +82,7 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
         clearance: 0,
         flat: !!it.flat,
         low: it.low,
-        aabb: r.map(r2),
+        aabb: r.map(r2) as Rect,
         _r: r,
         decor: true,
         mount: it.mount,
@@ -107,8 +107,8 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
   const gridOf = (c: Room) => gridCache[c.id] || (gridCache[c.id] = createGrid(plan, c, ignored))
 
   /** Places a floor item at a corner or along a wall; respects doors, windows, clearances and walkability. */
-  function placeOnFloor(room: Room, type: string, rng2: Rng, optsIn?: Json): Rect | null {
-    const opts = Object.assign({}, optsIn || {})
+  function placeOnFloor(room: Room, type: string, rng2: Rng, optsIn?: PlaceOnFloorOptions): Rect | null {
+    const opts: PlaceOnFloorOptions = Object.assign({}, optsIn || {})
     const it0 = CATALOG[type]
     if (it0.flat) opts.flat = true
     const it = CATALOG[type]
@@ -149,7 +149,7 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
         if (!(opts.without && opts.without(r))) return r
         continue
       }
-      if (occupied.some((m) => !m.low && !m.flat && !m.on && !m.decor && m.clearance > 0 && overlaps(r, clearRect(m._r as Rect, [m.frontU, m.frontV], m.clearance)))) continue
+      if (occupied.some((m) => !m.low && !m.flat && !m.on && !m.decor && (m.clearance ?? 0) > 0 && overlaps(r, clearRect(m._r as Rect, [m.frontU ?? 0, m.frontV ?? 1], m.clearance ?? 0)))) continue
       if (opts.without && opts.without(r)) continue
       if (!reachable(opts.railing || gridOf(room), solidList.concat([r]), room.outdoor ? 0.16 : plan.playerRadius)) continue
       return r
