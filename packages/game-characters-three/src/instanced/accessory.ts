@@ -45,7 +45,7 @@ export const buildKitAccessory = (host: Three, accessory: KitAccessory): THREE_N
   const { THREE, PI, Bx, add, cmat, cap } = kit
   const group = new THREE.Group()
   const color = cmat(accessory.color, undefined)
-  if (accessory.hat) HATS.find((hat) => hat.kinds.includes(accessory.hat as string))?.apply({ THREE, PI, Hd: group, add, Bx, cmat, cap, c: color, k: accessory.hat, sp: { hat: {} } })
+  if (accessory.hat) HATS.find((hat) => hat.kinds.includes(accessory.hat as string))?.apply({ THREE, PI, Hd: group, add, Bx, cmat, cap, c: color, k: accessory.hat, sp: { hat: {} } } as never)
   if (accessory.extra) EXTRAS[accessory.extra]?.({ THREE, PI, U: group, Hd: group, root: group, add, Bx, cmat, m: color, k: accessory.extra } as never)
   group.updateMatrixWorld(true)
   const reference = accessory.attach === 'head' ? HEAD_REFERENCE : TORSO_REFERENCE

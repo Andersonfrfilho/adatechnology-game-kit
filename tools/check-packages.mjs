@@ -79,14 +79,6 @@ function checkDeclaredEqualsImported(directory, manifest, report) {
 // The ones below predate the rule; each is removed from its list when the package is fixed, and nothing new may be added.
 const STRICT_OFF_KNOWN = new Set(['game-floorplan-three'])
 const TS_NOCHECK_KNOWN = new Set([
-  'game-characters-three/src/rich/accessories/extras.ts',
-  'game-characters-three/src/rich/accessories/face-features.ts',
-  'game-characters-three/src/rich/accessories/hand-items.ts',
-  'game-characters-three/src/rich/accessories/hands.ts',
-  'game-characters-three/src/rich/accessories/hats.ts',
-  'game-characters-three/src/rich/best-builder.ts',
-  'game-characters-three/src/rich/person-builder.ts',
-  'game-characters-three/src/rich/person-kit.ts',
   'game-shapes/src/primitives/earcut.ts', // verbatim copy of three's Earcut, kept as is so triangulation matches
 ])
 const STRICT_FLAGS = ['strict', 'noImplicitAny', 'strictNullChecks', 'noImplicitThis', 'strictFunctionTypes']

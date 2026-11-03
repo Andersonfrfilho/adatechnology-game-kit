@@ -1,12 +1,17 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
-import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
-
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
 
-export type HandItemContext = {
-  THREE: any; PI: number; add: any; Bx: any; cmat: any; g: any; metal: any; dark: any; woodM: any
+import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
+import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
+import type { PersonKit } from '../person-kit'
+import type { THREE_NS } from '../../three'
+
+type Common = { THREE: PersonKit['THREE']; PI: number; add: PersonKit['add']; Bx: PersonKit['Bx']; cmat: PersonKit['cmat'] }
+
+export type HandItemContext = Common & {
+  g: THREE_NS.Group
+  metal: THREE_NS.Material
+  dark: THREE_NS.Material
+  woodM: THREE_NS.Material
   /** The host's LightBudget: the flare asks it for a light instead of creating a PointLight. */
   lights?: LightBudget
   /** Where an item that took a source from `lights` leaves it, so the builder can hand it to whoever removes the person. */
