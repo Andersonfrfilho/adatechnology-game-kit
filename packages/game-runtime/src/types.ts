@@ -158,4 +158,9 @@ export interface LoopOptions {
   readonly onFrame?: (realSeconds: number) => void
   /** true: this frame only presents and renders (a scenario is stepping the world). */
   readonly skipSimulation?: () => boolean
+  /**
+   * The least milliseconds between two frames that run (a frame cap): a display frame that comes sooner is skipped and its time goes to the next one. Asked on
+   * every display frame, so the cap may change while the loop runs; 0 or absent runs every display frame.
+   */
+  readonly minFrameMs?: () => number
 }

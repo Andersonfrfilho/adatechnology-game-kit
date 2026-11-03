@@ -94,6 +94,8 @@ const FRAME = 1 / 30
 const STEP_WINDOW = 600
 /** The lethal radius of a blast the host reports with its reach only (`ModuleHost` `explosion`): the grenade's 5 m inside its 15 m. */
 const LETHAL_SHARE = 1 / 3
+/** The renderer's default level budgets (`CrowdRendererVariety.budget`: 160, 320 and 600 bodies at the near, middle and far levels), scaled by a fixed horde detail. */
+const HORDE_BUDGET_LEVELS = [160, 320, 600] as const
 const RING = [10, 90] as const
 /** Two lots of the area for the civilians (a house and a shop) and the way out of the area: the test area's own ground, not a delivery's. */
 const LOTS: Readonly<Record<string, CivilianBuilding>> = { home: { x: -14, z: -14, w: 8, d: 10, house: true, front: 1 }, shop: { x: 8, z: -14, w: 10, d: 10, front: 1 } }
@@ -273,17 +275,25 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     return { x: camera.position.x, z: camera.position.z, yaw: camera.rotation?.y ?? 0 }
   }
 
+  // the player's horde detail (host.graphics, Gráficos → Detalhe da horda): auto keeps the renderer's own budget.adapt; a share fixes the level budgets at that share
+  const varietyFor = (detail: 'auto' | number): CrowdRendererVariety | undefined => {
+    const variety = options.variety
+    if (!variety || detail === 'auto' || variety.budget === false) return variety
+    const levels = (variety.budget?.levels ?? HORDE_BUDGET_LEVELS).map((n) => Math.max(1, Math.round(n * detail)))
+    return { ...variety, budget: { ...variety.budget, levels, adapt: false } }
+  }
   const ensureDrawing = (): void => {
     if (!host || !three) return
     const scene = host.scene as THREE_NS.Object3D
     if (!renderer && options.builders) {
       const bodies = options.civilianBodies ?? []
+      const variety = varietyFor(host.graphics?.hordeDetail() ?? 'auto')
       renderer = createCrowdRenderer(three, {
         crowd: world.crowd,
         builders: options.builders(three),
         ...(options.typeName ? { typeName: options.typeName } : {}),
         drawCorpses: () => layers.corpses,
-        ...(options.variety ? { variety: options.variety } : {}),
+        ...(variety ? { variety } : {}),
         ...(bodies.length ? { civilians: { list: () => (layers.civilians ? world.civilians.list : []), body: (n) => bodies[n.k % bodies.length]! } } : {}),
       })
       scene.add(renderer.group)
@@ -360,6 +370,9 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     else ensureDrawing()
     if (renderer && (crowd.store.n || crowd.corpses.count || civilians.list.length)) {
       renderer.update(dt, { camera: { x: player.state.x, z: player.state.z }, viewYaw: here?.yaw ?? 0, target: { x: player.state.x, z: player.state.z, alive: player.state.alive } })
+      // what the horde draws now, for the settings screen (under auto it is the adaptive share; fixed, the share chosen)
+      const detail = host?.graphics?.hordeDetail() ?? 'auto'
+      host?.graphics?.report('hordeDetail', detail === 'auto' ? renderer.detailScale : detail)
     }
     if (herdView) {
       herdView.group.visible = layers.animals
@@ -669,6 +682,14 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       lent.audio?.register?.(CROWD_SOUND_BANK)
       const off = lent.bench?.onChange(onChange)
       const offFrame = lent.onFrame(frame)
+      // a new horde detail rebuilds the drawing with the new budget (the next frame makes it again)
+      const offGraphics = lent.graphics?.onChange(() => {
+        if (!renderer) return
+        ;(lent.scene as THREE_NS.Object3D).remove(renderer.group)
+        renderer.dispose()
+        renderer = null
+        isBaked = false
+      })
       // with the physics the crowd steps in the fixed phase of the host's scheduler: one fixed step per call, the same whatever the frame rate
       const offFixed = lent.onFrame((step) => (world.physics ? stepCrowd(step) : undefined), { phase: 'fixedSimulate' })
       const offBlast = lent.on((event) => {
@@ -681,6 +702,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       return () => {
         off?.()
         offFrame()
+        offGraphics?.()
         offFixed()
         offBlast()
         removeProps?.()

@@ -17,6 +17,9 @@ import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
 import type { DestructionRenderer, FragmentLifeRule, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { GraphicsController } from '@adatechnology/game-graphics'
+import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
+import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
@@ -187,6 +190,12 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
+  /**
+   * The player's graphics settings (`game-graphics`): a Gráficos button opens the screen (presets Automático, Baixa, Média, Alta, Ultra and each option), the
+   * choice is kept in the browser, the first load runs a short calibration on the loading indicator and the automatic mode moves what is left on auto. Only on a
+   * renderer the room makes. Default off (the fixed look of `quality`).
+   */
+  graphics?: boolean | RoomGraphicsOptions
   /** What the floor is made of until an area lays its own (`TestableModule.ground`). Default a concrete slab. */
   ground?: GroundLayout
   /** Limits of the floor's marks, thrown pieces and redraws per frame. */
@@ -450,6 +459,10 @@ export interface TestRoom {
   openAreaAsync(group: string): Promise<SpawnedObject[]>
   /** The loading indicator of the room: `begin`, `busy`, `state`, `on` (see `RoomLoading`); modules get it as `ModuleHost.loading`. */
   readonly loading: RoomLoading
+  /** The player's graphics settings (`options.graphics`): presets, options, the automatic mode, the calibration; null without them. */
+  readonly graphics: GraphicsController | null
+  /** The graphics screen (open, close, toggle); null without settings or without the panels. */
+  readonly graphicsScreen: GraphicsScreen | null
   /** `loading.busy`: shows the indicator, waits for it to be painted, runs `work` and takes it down. The way to run a slow, synchronous job. */
   busy<T>(label: string, work: (task: BusyTask) => T | Promise<T>, options?: BusyOptions): Promise<T>
   /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */

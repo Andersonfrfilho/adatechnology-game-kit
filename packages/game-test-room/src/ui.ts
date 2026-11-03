@@ -79,6 +79,8 @@ export interface UiOptions {
   onFast: (on: boolean) => void
   onQuality: (q: 'low' | 'medium' | 'high') => void
   quality: 'low' | 'medium' | 'high'
+  /** Opens the graphics screen: the button takes the place of the quality select. Absent: the select. */
+  onGraphics?: () => void
   scenarios: () => TestRoomScenario[]
   onRun: (s: TestRoomScenario) => Promise<ScenarioReport | void>
   onRunAll: () => Promise<ScenarioReport | void>
@@ -520,17 +522,22 @@ export function createUi(o: UiOptions): RoomUi {
   fullscreenBtn.title = t('ui.fullscreen.hint')
   const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
   for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
-  const qSel = mk('select')
-  for (const q of ['low', 'medium', 'high'] as const) {
-    const op = mk('option', undefined, t(`ui.quality.${q}`))
-    op.value = q
-    qSel.appendChild(op)
+  if (o.onGraphics) {
+    const g = ctl(t('ui.graphics'), () => o.onGraphics!())
+    g.dataset.testid = 'graphics-button'
+  } else {
+    const qSel = mk('select')
+    for (const q of ['low', 'medium', 'high'] as const) {
+      const op = mk('option', undefined, t(`ui.quality.${q}`))
+      op.value = q
+      qSel.appendChild(op)
+    }
+    qSel.value = o.quality
+    qSel.onchange = () => o.onQuality(qSel.value as 'low' | 'medium' | 'high')
+    const qLabel = mk('label', undefined, t('ui.quality') + ' ')
+    qLabel.appendChild(qSel)
+    controls.appendChild(qLabel)
   }
-  qSel.value = o.quality
-  qSel.onchange = () => o.onQuality(qSel.value as 'low' | 'medium' | 'high')
-  const qLabel = mk('label', undefined, t('ui.quality') + ' ')
-  qLabel.appendChild(qSel)
-  controls.appendChild(qLabel)
   const count = mk('span')
   controls.appendChild(count)
   cat.appendChild(controls)
