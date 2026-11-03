@@ -12,6 +12,8 @@ export function startLoop(scheduler: Scheduler, options: LoopOptions = {}): () =
   const onFrame = (nowMs: number): void => {
     if (stopped) return
     handle = requestFrame(onFrame)
+    const gap = options.minFrameMs?.() ?? 0
+    if (gap > 0 && nowMs - last < gap) return
     const realSeconds = (nowMs - last) / 1000
     last = nowMs
     options.onFrame?.(realSeconds)

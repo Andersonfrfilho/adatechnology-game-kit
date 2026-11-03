@@ -82,7 +82,7 @@ export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleCli
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
 export { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, FRAME_PHASES, checkDeferredQueue } from './frame'
 export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePhase } from './frame'
-export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
+export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, ModuleArea, ModuleHost, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
 import { resetWarnOnce as resetWarnOnceForTests } from './warn'
