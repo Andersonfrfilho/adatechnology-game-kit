@@ -76,6 +76,11 @@ export interface RoomAvatar {
    */
   strike?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): number | null
   /**
+   * The foot the body put down since the last call (its walk cycle reached a heel strike), or null. The room asks after each `update` and sends the footfall to the
+   * modules (`HostEvent` `footfall`), so the step is heard on the frame the foot is seen on the ground. Without it the room counts strides by distance.
+   */
+  footfall?(): 'left' | 'right' | null
+  /**
    * Brings the body's hands to the tool in them (`HandTargets`, world space: the module's). The room calls it in both views every frame, after the modules have placed the tool and
    * before the render, with `view` (the eye's camera, and `contact` to keep the hands out of walls) in both views. An avatar without it keeps the hands where its own pose puts them.
    */

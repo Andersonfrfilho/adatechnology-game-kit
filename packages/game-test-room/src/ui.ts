@@ -122,6 +122,8 @@ export interface RoomUi {
   /** The hold timer around the crosshair, 0 to 1; null hides it. Called every frame while it runs. */
   holdRing(value: number | null): void
   toast(text: string): void
+  /** A warning that stays on screen under the tool (the memory watch: memory keeps growing after each clear); null takes it away. */
+  alert(text: string | null): void
   /** Re-read the catalogue and the scenarios (after `loadModule`). */
   refresh(): void
   /** Open the catalogue on a group tab (its translated name), clearing the search. */
@@ -157,6 +159,7 @@ const CSS = `
 .tr-top{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;max-width:46vw}
 .tr-tool{display:inline-block;background:rgba(10,12,16,.72);padding:4px 12px;border-radius:6px;font-size:14px;font-weight:600}
 .tr-tool small{font-weight:400;opacity:.8;margin-left:8px}
+.tr-alert{display:none;position:relative;z-index:20;margin-top:6px;background:rgba(183,28,28,.92);color:#fff;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .tr-status{margin-top:4px;min-height:16px;color:#ffd23f;text-shadow:0 1px 2px #000}
 .tr-prog{margin:4px auto 0;width:260px;background:rgba(10,12,16,.72);border-radius:6px;padding:4px 8px;display:none}
 .tr-prog b{display:block;font-weight:500;margin-bottom:3px}
@@ -287,13 +290,14 @@ export function createUi(o: UiOptions): RoomUi {
   const top = mk('div', 'tr-top')
   const toolBox = mk('div', 'tr-tool')
   const status = mk('div', 'tr-status')
+  const alertBox = mk('div', 'tr-alert')
   const prog = mk('div', 'tr-prog')
   const progLabel = mk('b')
   const progBar = mk('div', 'tr-bar')
   const progFill = mk('i')
   progBar.appendChild(progFill)
   prog.append(progLabel, progBar)
-  top.append(toolBox, status, prog)
+  top.append(toolBox, alertBox, status, prog)
 
   // bottom: held hint and hotbar
   const bottom = mk('div', 'tr-bottom')
@@ -787,6 +791,10 @@ export function createUi(o: UiOptions): RoomUi {
         lastInspect = ik
         renderInspector(s.inspect)
       }
+    },
+    alert(text) {
+      alertBox.textContent = text ?? ''
+      alertBox.style.display = text ? 'block' : 'none'
     },
     toast(text) {
       status.textContent = text

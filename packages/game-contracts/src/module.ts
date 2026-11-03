@@ -8,6 +8,7 @@ import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource } from './hands'
+import type { GaitId, SurfaceId } from './foley'
 import type { ContainerSpec } from './fluids'
 import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
 import type { SealSpec } from './seal'
@@ -193,6 +194,11 @@ export type HostEvent =
   | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
+  /**
+   * A foot of the player's body touched the ground, at the frame the body's walk puts it down (the host's avatar, or the host's own stride without one):
+   * `surface` is what is under it. A module that owns the footsteps (their sound and their noise) steps on this instead of its own timer.
+   */
+  | { type: 'footfall'; foot: 'left' | 'right'; surface: SurfaceId; gait: GaitId; position: Vec3 }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -301,6 +307,8 @@ export interface ModuleHost {
   locale: string
   /** Height of whatever things rest on at (x, z): the floor, a table, a counter. */
   groundAt(x: number, z: number): number
+  /** Material id of the floor at (x, z) (`concrete`, `soil`, `wood_hard`...): what a dropped case or a footstep lands on. Optional; undefined where the host does not know. */
+  surfaceAt?(x: number, z: number): string | undefined
   tool(): HostTool
   /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
   player(): PlayerState

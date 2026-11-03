@@ -235,7 +235,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phase: [explosions, glass, areas, more, hands]
+        phase: [explosions, glass, areas, more, world, hands]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

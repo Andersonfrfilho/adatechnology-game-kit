@@ -11,6 +11,8 @@ export interface SoundRequest {
   readonly params?: Readonly<Record<string, number>>
   /** Seed for the sound's own random stream: same seed, same sound. */
   readonly seed?: number
+  /** Seconds from now (the hit of a blow after its swing); the host schedules it on the audio clock, not on a timer. */
+  readonly delay?: number
 }
 
 /** What `AudioSink.play` hands back; opaque to the module, given back to `stop`. */
