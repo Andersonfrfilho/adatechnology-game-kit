@@ -1,5 +1,51 @@
 # @adatechnology/game-crowd-three
 
+## 0.4.0
+
+### Minor Changes
+
+- a407665: The crowd area steps the crowd in the host's `fixedSimulate` phase when the physics is on (one fixed step per call, the same at any frame rate), keeps the frame step when it is off, and answers the host's `explosion` events with `crowd.blast`. The bench gains `scene` (`dense_wall`: a horde pressed against a wall and a door; `chain_line`: a horde coming down a street at a row of gas cylinders and a car; more by the `scenes` option, drawn with the `props` option) and `physics` controls, applied after the seed and before the count whatever the order of the bench state, and publishes `falls_pressure`, `falls_chain`, `falls_landing`, `climbers`, `mound_max`, `thrown_peak`, `max_overlap`, `chain_links` and `crowd_ms_p99`. `CrowdRenderer.prepare()` bakes every type and makes every batch the frame would make on demand (bodies on the ground, blobs, impostors, accessories) so a host's warm-up links their programs before play; the `eager` option calls it once the bench state is applied.
+- 41b9dd4: The horde draw cost (spec 005, D12). `createCrowdRenderer({ variety })` gets a level `budget` (bodies per mesh level, bodies on the ground included; a crowd packed near the camera pulls the level edges in, the nearest bodies draw first), an `adapt` loop that sizes it from the crowd's GPU time (`EXT_disjoint_timer_query_webgl2`, the frame time where there is none), `nearDepthPrepass` (the near level draws its depth first so the room's lights shade a pixel once) and `detailScale`/`gpuMs` read-outs. `createBodyBatch` and `createVariantBatches` take `depthPrepass` and return `batch.prepass`; add it to the scene next to `batch.mesh`. `game-render-three` gets `createFramePacer`, which holds the draw back while the GPU is a frame behind.
+- dc95951: The impostor tier of the economy ladder (with `variety`, `impostor: false` turns it off): `bakeImpostorAtlas` draws each silhouette (one per crowd type, from the far mesh of its first variant) on the CPU at 8 views and 8 steps of the walk into an RGBA8 atlas of bone, material class, shade and coverage (plus a colour layer), both `NearestFilter`; `createImpostorBatch` draws every far body in one call, picking its cell by the view angle and the walk phase, tinted per instance (shirt, trousers palette, missing limbs hide their bones). `createBlobShadowBatch` is the blob shadow under bodies beyond the nearest level. The renderer sends the bodies that walk past 90 m to the impostor batch and keeps the others on the far mesh. The identity extension recolours the legs above the shoes with the trousers palette, as the atlas does.
+- 5aba035: Segment clips in a texture (step 3 of the ladder, option `variety.segmentClips`, default off): `bakeSegmentClips` samples 14 clips at 30 Hz (a walk, a limp on each side, a drag, a lurch, a shamble and a stagger, each with the arms down and raised) from the maths of the shader's walk into 12 bones of 24 texels, `createSegmentClipUniforms` makes the RGBA32F `NearestFilter` texture, and a body material built with `segmentClips` walks the bodies flagged `clips` in `iD` from it: the clips of the agent's gait family blended by how far it has raised its arms, the amplitude scaled by its gait, the phase and the cadence its own. Shadow and distance materials read the same texture. The other poses stay on the shader's procedural pose.
+- 04128b6: Variety on the instanced renderer (option `variety`, default off, the game's renderer is unchanged without it): every body gets an identity from its crowd identity and state (`lookOfAgent`: trousers, wound splashes that grow with the infection age, accessories, gait style, the stagger pose, the lean of a shove), the kit's accessories (cap, helmet, backpack, hood) are drawn in eight fixed batches placed per variant, real shadows are cast only by the nearest level and a blob shadow batch covers the rest. `createCrowdTestModule` takes `variety` and `crowdPhysics`; `appearanceSignature` is the look of an instance as one number.
+- b97f318: Graphics settings for the player. New `@adatechnology/game-graphics` (presets Automático, Baixa, Média, Alta, Ultra; resolution scale, horde detail, shadows, view distance, FPS cap and counter; the automatic mode that moves only what is left on `auto` by the frame time; a 3 s calibration on the first load, kept per GPU; the choice in `localStorage`; the settings screen at `/screen`) and `@adatechnology/game-graphics-three` (pixel ratio, sun shadow and far plane on three.js, GPU name, whole-frame GPU timer). `startLoop` takes `minFrameMs` (a frame cap). `ModuleHost.graphics` (`HostGraphics`) lends the horde detail to modules; the crowd test module fixes its level budgets at that share or keeps `budget.adapt` under auto, and reports its `detailScale`. The test room takes `graphics: true | RoomGraphicsOptions`: a Gráficos button in place of the quality select, the calibration on its loading indicator, `room.graphics` and `room.graphicsScreen`.
+- 455522d: New `./testing` subpath on each package that ships a test area or bench (spec 005, D6): `import { createXTestModule } from '@adatechnology/game-<pkg>/testing'`. The test areas, benches and their texts moved behind it so the runtime entry does not carry them. Nothing is removed: every export that used to be on the package root is still there, `@deprecated`, and will be removed in the next major. The ESM build splits chunks (`splitting: true`), so the root and `./testing` share one copy of the module-level registries.
+
+### Patch Changes
+
+- 6247fbe: The room shows its memory and warns on screen when it leaks. The counters line adds geometries, textures and the JS heap (`geometries`, `textures`, `heap_mb` in `metrics()`). After each clear the room compares the GPU counts with the earlier clears of the same area: when they grew on each of the last four clears past the budget (40 geometries or 4 textures), a red banner stays under the tool, the log gets a `memory_leak` event and the counters line marks it, until a clear finds the memory back down. New `createMemoryWatch` and `RoomUi.alert`.
+
+  The terrain area frees its strip labels (plane, material and canvas texture) when it closes, and a new lint rule (`kit/no-bare-remove`) fails a `removeFromParent()` in a function that frees nothing.
+  The horde bench frees the walls of its scenes when a scene closes.
+
+- Updated dependencies [ce94d04]
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [f613255]
+- Updated dependencies [81af508]
+- Updated dependencies [41b9dd4]
+- Updated dependencies [33f4fd8]
+- Updated dependencies [dc95951]
+- Updated dependencies [302a2dc]
+- Updated dependencies [5aba035]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+  - @adatechnology/game-characters-three@0.8.0
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-audio@0.4.0
+  - @adatechnology/game-player@0.5.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-characters@0.2.8
+  - @adatechnology/game-crowd@0.3.0
+
 ## 0.3.9
 
 ### Patch Changes

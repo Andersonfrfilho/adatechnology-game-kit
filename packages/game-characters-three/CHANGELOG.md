@@ -1,5 +1,51 @@
 # @adatechnology/game-characters-three
 
+## 0.8.0
+
+### Minor Changes
+
+- ce94d04: New optional options that take content by option (spec 005, D1 and D7). Every call written before keeps working: the default is the content pack the adapter always used, it is deprecated, and it will be removed in the next major.
+
+  - `game-characters-three`: `toRoomAvatar(avatar, { strikeClips, firstPersonClips })`; the defaults are `ATTACK_CLIPS` and `FIRST_PERSON_CLIPS` of `game-characters-people`. Recommended: spread `defaultCharacterClips()` of `@adatechnology/game-kit-defaults`.
+  - `game-floorplan-three`: `furnitureSpec(THREE, type, { catalog })`; the default is `residentialItems`. Recommended: `defaultFurnitureCatalog()`.
+  - `game-vehicles-three`: `createVehiclesThree(THREE, { kit, fleet })` and `createVehiclesTestModule({ fleet })` (`VehicleFleetContent`, `VehiclesTestFleet`); the default is the fleet of `game-vehicles-fleet`. Recommended: `defaultVehicleFleet()`.
+  - `game-vegetation-three`: `createVegetationTestModule({ GameVegetationSpecies })` keeps its default `game-vegetation-species`; recommended `defaultVegetationSpecies()`.
+
+  `game-props3d` is now a shared builder, not content (spec 005, D1): the layer rules let content, cores and adapters import it. Its deprecated `mergeByMaterial` re-export stays until the next major.
+
+- 15046ce: Body sounds by action and by floor. `game-contracts` names them (`footstep_<surface>_<walk|run>` on 12 surfaces, `land_<surface>_<light|heavy>`, the swing and the hit of each blow, hurt, bite, grab, body fall) with `surfaceOfMaterial` and the `footfall` host event; `game-audio` answers every id with `BODY_FOLEY_BANK` (four takes each) and adds sound sets (`SoundBank.sets`: a take that never repeats, at ±4% of rate, through `retunePlan`) and `SoundRequest.delay`; `game-player` emits the ids (`sound.ids`, the team class stays in `sound.sound`), reads the floor (`world.surfaceAt`, `input.surface`) and steps on the host's footfalls (`input.footfall`); the player body says when a heel is down (`footfall()`); the test room sends the footfalls, plays the jump and the landing on the floor under the feet, the swing just before the contact and the hit with it.
+- f613255: The body batch is a plain `Mesh` over an `InstancedBufferGeometry` instead of an `InstancedMesh`: the unused `instanceMatrix` is gone, so the body program takes 11 vertex attribute slots instead of 15 and has room for the identity attributes. `BodyBatch.mesh` is a `BodyBatchMesh` (`Mesh & { count }`); `count` mirrors the geometry's `instanceCount`. The pose, the colours and the golden attributes do not change; the program key does (no `USE_INSTANCING`), so a warm-up must register the batch's own material after this change.
+- 41b9dd4: The horde draw cost (spec 005, D12). `createCrowdRenderer({ variety })` gets a level `budget` (bodies per mesh level, bodies on the ground included; a crowd packed near the camera pulls the level edges in, the nearest bodies draw first), an `adapt` loop that sizes it from the crowd's GPU time (`EXT_disjoint_timer_query_webgl2`, the frame time where there is none), `nearDepthPrepass` (the near level draws its depth first so the room's lights shade a pixel once) and `detailScale`/`gpuMs` read-outs. `createBodyBatch` and `createVariantBatches` take `depthPrepass` and return `batch.prepass`; add it to the scene next to `batch.mesh`. `game-render-three` gets `createFramePacer`, which holds the draw back while the GPU is a frame behind.
+- 33f4fd8: Identity for the instanced body (option `identity`, default off): the `iD` attribute and `BODY_CHUNK_EXT` (after the game's chunk, which stays byte for byte) give each body a gait style (limp, drag, lurch, shamble), a stagger pose (index 8), the lean of a shove, a 16-colour trousers palette and wound splashes by region with freshness. `createBodyMaterial` takes `identity`, `accessory` and `distance` (a `customDistanceMaterial` for point-light shadows) and sets `customProgramCacheKey` only with them. Accessories (`KIT_ACCESSORIES`: cap, helmet, backpack, hood) are baked once from the kit's survivor builder in a unit frame and placed per variant by `iAcc` (`accessoryPlacement`). `packIdentity` and `unpackIdentity` hold the layout.
+
+  Fix: `accessoryPlacement` reads the head (bone 1, eyes left out) and the torso (bone 0) of a baked body, which marks skin, hair and trousers as one own-colour material; it used to look for skin and found nothing, so every accessory sat unscaled at the feet. A body without a head or a torso gets a zero scale: the accessory is not drawn.
+
+- dc95951: The impostor tier of the economy ladder (with `variety`, `impostor: false` turns it off): `bakeImpostorAtlas` draws each silhouette (one per crowd type, from the far mesh of its first variant) on the CPU at 8 views and 8 steps of the walk into an RGBA8 atlas of bone, material class, shade and coverage (plus a colour layer), both `NearestFilter`; `createImpostorBatch` draws every far body in one call, picking its cell by the view angle and the walk phase, tinted per instance (shirt, trousers palette, missing limbs hide their bones). `createBlobShadowBatch` is the blob shadow under bodies beyond the nearest level. The renderer sends the bodies that walk past 90 m to the impostor batch and keeps the others on the far mesh. The identity extension recolours the legs above the shoes with the trousers palette, as the atlas does.
+- 5aba035: Segment clips in a texture (step 3 of the ladder, option `variety.segmentClips`, default off): `bakeSegmentClips` samples 14 clips at 30 Hz (a walk, a limp on each side, a drag, a lurch, a shamble and a stagger, each with the arms down and raised) from the maths of the shader's walk into 12 bones of 24 texels, `createSegmentClipUniforms` makes the RGBA32F `NearestFilter` texture, and a body material built with `segmentClips` walks the bodies flagged `clips` in `iD` from it: the clips of the agent's gait family blended by how far it has raised its arms, the amplitude scaled by its gait, the phase and the cadence its own. Shadow and distance materials read the same texture. The other poses stay on the shader's procedural pose.
+- f48b676: Lights go through the `LightBudget` of `game-render-three` (spec 005, D4 and D2). New optional `lights` (a `LightBudget`) on `createVfxRenderer`, `HouseRenderer.lighting` (`budget`), `createWeaponFx`, `createMeshApi` and `createThreeAdapter`, `createPersonBuilder`, `createWeatherRenderer`, `createHeadlights` (rules), `createLightning` and `createUrbanThree`: blast, fire and Workshop lights, the rooms' lights (their masks are written at `handle.slot`, which fixes the 12-entry mask), the rocket, the weapon light, the lamps, the flare, the headlights, the lightning flash (a leased hemisphere slot) and the street lights become requests or sources of the budget, so no light appears or goes while the game runs and no lit material recompiles. Without the option every package creates its own lights as before; that path is deprecated and goes in the next major, and the goldens that read light nodes stay on it. `ModuleHost` gains `lights` and `pools` (`unknown`: read them with `isLightBudget` and `isRenderPools`), the test room creates both and exposes `lights` and `webgl`. `game-urban` renames its counter to `LightAllowance`/`createLightAllowance`/`DEFAULT_LIGHT_ALLOWANCE` (the old names stay, deprecated). `game-render-three` gains `shadowSettings` and `LightLease.invalidateShadow`. `game-vehicles` takes `particleMaterials` (a structural pool) so the puffs' shader programs survive them; `game-weapons-three` takes `pools` for the flamethrower droplets and ground flames. The lint rule that forbids creating a light outside the budget is now an error.
+- 455522d: New `./testing` subpath on each package that ships a test area or bench (spec 005, D6): `import { createXTestModule } from '@adatechnology/game-<pkg>/testing'`. The test areas, benches and their texts moved behind it so the runtime entry does not carry them. Nothing is removed: every export that used to be on the package root is still there, `@deprecated`, and will be removed in the next major. The ESM build splits chunks (`splitting: true`), so the root and `./testing` share one copy of the module-level registries.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [41b9dd4]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [05fbba9]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-audio@0.4.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-characters@0.2.8
+  - @adatechnology/game-render-three@0.1.0
+
 ## 0.7.2
 
 ### Patch Changes

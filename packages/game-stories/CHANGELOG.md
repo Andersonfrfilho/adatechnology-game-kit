@@ -1,5 +1,25 @@
 # @adatechnology/game-stories
 
+## 0.3.0
+
+### Minor Changes
+
+- ba6dd38: `game-stories` has new optional options (spec 005, D1 and D7): `names` and `ruleset` on `createStoryWorld`, `simulateStories`, `createSheet`, `drawSheet` and `createStoriesTestModule`, and `professionName` on `createStoriesTestModule`. Without them nothing changes: the name pools come from `getNamePools(locale)`, the ruleset from `SHEET_RULESET` and the profession names from `getProfession`, all of `game-characters-people`. The default is deprecated and will be removed in the next major. The schema types (`NamePools`, `SheetRuleset` and friends) are exported by `game-stories`. Recommended path: spread `defaultStoryContent(locale)` of `@adatechnology/game-kit-defaults`.
+- 455522d: New `./testing` subpath on each package that ships a test area or bench (spec 005, D6): `import { createXTestModule } from '@adatechnology/game-<pkg>/testing'`. The test areas, benches and their texts moved behind it so the runtime entry does not carry them. Nothing is removed: every export that used to be on the package root is still there, `@deprecated`, and will be removed in the next major. The ESM build splits chunks (`splitting: true`), so the root and `./testing` share one copy of the module-level registries.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-characters@0.2.8
+
 ## 0.2.8
 
 ### Patch Changes

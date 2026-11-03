@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-render-three",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Owner of the GPU-facing state of a three.js game: the one ThreeLib type, a LightBudget with a fixed number of lights (slots, priority, fades), a ProgramWarmup that links every shader program at load and keeps it linked, and geometry and material pools.",
   "keywords": [

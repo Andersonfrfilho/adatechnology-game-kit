@@ -1,5 +1,20 @@
 # @adatechnology/game-characters
 
+## 0.2.8
+
+### Patch Changes
+
+- 7b77aa7: Cost contract of `DestructibleImpl` (spec 005, D8): `describe()` and `state()` are O(1), allocation-free and cached between changes. `checkDestructible(impl, { cost: true })` measures 10 000 reads of each (new object per read, time and heap ceilings, all configurable). The character and the terrain now cache what they return; the values are the same.
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+
 ## 0.2.7
 
 ### Patch Changes

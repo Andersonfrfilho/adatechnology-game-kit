@@ -1,5 +1,58 @@
 # @adatechnology/game-test-room
 
+## 0.21.0
+
+### Minor Changes
+
+- 15046ce: Body sounds by action and by floor. `game-contracts` names them (`footstep_<surface>_<walk|run>` on 12 surfaces, `land_<surface>_<light|heavy>`, the swing and the hit of each blow, hurt, bite, grab, body fall) with `surfaceOfMaterial` and the `footfall` host event; `game-audio` answers every id with `BODY_FOLEY_BANK` (four takes each) and adds sound sets (`SoundBank.sets`: a take that never repeats, at ±4% of rate, through `retunePlan`) and `SoundRequest.delay`; `game-player` emits the ids (`sound.ids`, the team class stays in `sound.sound`), reads the floor (`world.surfaceAt`, `input.surface`) and steps on the host's footfalls (`input.footfall`); the player body says when a heel is down (`footfall()`); the test room sends the footfalls, plays the jump and the landing on the floor under the feet, the swing just before the contact and the hit with it.
+- cbb20a2: The kit's deferred work can share one frame budget. `engine.deferredQueue()` (voices), `renderer.deferredQueue()` (destruction events and slices), `houseRenderer.deferredQueue()` (breach paint) and `createCreaseQueue()` with `VehicleDestructibleOptions.creaseQueue` (vehicle crease, one queue for every vehicle, round robin) give a `DeferredQueue` that `@adatechnology/game-runtime` runs inside its budget. Nothing changes without a budget: the queues keep draining by themselves and `deferredStart`, `eventBudgetMs`, `breachPaintBudgetMs` and `pump()` keep their meaning and defaults. The test room runs on the scheduler, registers the voice and destruction queues, lends `host.defer` and `onFrame(fn, { phase, order })`, and gains `frameBudgetMs` and `frameStats()`.
+- d97cf9f: Firearm sounds: a layered gunshot per calibre family (crack, blast, body, action, room or field tail, far boom) with 4 takes that never repeat back to back, ±4 % pitch, stereo side from the shooter, the arrival delay of sound (d / 343 s), a close-to-far crossfade at 25–80 m (a rifle still carries at 800 m), occlusion, indoor vs outdoor tails and a suppressor that keeps a supersonic crack. Cases landing sound by floor (concrete, wood, metal, dirt) and case type (pistol, rifle, shotgun hull); a bullet passing by cracks (supersonic) or whizzes (subsonic). The game's single burst stays as `shotModel: 'game'`. `ModuleHost.surfaceAt` gives the floor material; the room fills it from the terrain. The weapons area logs each shot sound and each case, and has a "shot indoors" control.
+- b97f318: Graphics settings for the player. New `@adatechnology/game-graphics` (presets Automático, Baixa, Média, Alta, Ultra; resolution scale, horde detail, shadows, view distance, FPS cap and counter; the automatic mode that moves only what is left on `auto` by the frame time; a 3 s calibration on the first load, kept per GPU; the choice in `localStorage`; the settings screen at `/screen`) and `@adatechnology/game-graphics-three` (pixel ratio, sun shadow and far plane on three.js, GPU name, whole-frame GPU timer). `startLoop` takes `minFrameMs` (a frame cap). `ModuleHost.graphics` (`HostGraphics`) lends the horde detail to modules; the crowd test module fixes its level budgets at that share or keeps `budget.adapt` under auto, and reports its `detailScale`. The test room takes `graphics: true | RoomGraphicsOptions`: a Gráficos button in place of the quality select, the calibration on its loading indicator, `room.graphics` and `room.graphicsScreen`.
+- f48b676: Lights go through the `LightBudget` of `game-render-three` (spec 005, D4 and D2). New optional `lights` (a `LightBudget`) on `createVfxRenderer`, `HouseRenderer.lighting` (`budget`), `createWeaponFx`, `createMeshApi` and `createThreeAdapter`, `createPersonBuilder`, `createWeatherRenderer`, `createHeadlights` (rules), `createLightning` and `createUrbanThree`: blast, fire and Workshop lights, the rooms' lights (their masks are written at `handle.slot`, which fixes the 12-entry mask), the rocket, the weapon light, the lamps, the flare, the headlights, the lightning flash (a leased hemisphere slot) and the street lights become requests or sources of the budget, so no light appears or goes while the game runs and no lit material recompiles. Without the option every package creates its own lights as before; that path is deprecated and goes in the next major, and the goldens that read light nodes stay on it. `ModuleHost` gains `lights` and `pools` (`unknown`: read them with `isLightBudget` and `isRenderPools`), the test room creates both and exposes `lights` and `webgl`. `game-urban` renames its counter to `LightAllowance`/`createLightAllowance`/`DEFAULT_LIGHT_ALLOWANCE` (the old names stay, deprecated). `game-render-three` gains `shadowSettings` and `LightLease.invalidateShadow`. `game-vehicles` takes `particleMaterials` (a structural pool) so the puffs' shader programs survive them; `game-weapons-three` takes `pools` for the flamethrower droplets and ground flames. The lint rule that forbids creating a light outside the budget is now an error.
+- 6247fbe: The room shows its memory and warns on screen when it leaks. The counters line adds geometries, textures and the JS heap (`geometries`, `textures`, `heap_mb` in `metrics()`). After each clear the room compares the GPU counts with the earlier clears of the same area: when they grew on each of the last four clears past the budget (40 geometries or 4 textures), a red banner stays under the tool, the log gets a `memory_leak` event and the counters line marks it, until a clear finds the memory back down. New `createMemoryWatch` and `RoomUi.alert`.
+
+  The terrain area frees its strip labels (plane, material and canvas texture) when it closes, and a new lint rule (`kit/no-bare-remove`) fails a `removeFromParent()` in a function that frees nothing.
+  The horde bench frees the walls of its scenes when a scene closes.
+
+- 141f296: `TestRoom.use()` answers what the trigger said (`UseStatus`: `ok`, `drawing`, `cooldown`, `empty`...), so a script knows when a pull did nothing. `tool.phase` turns null in the frame that ends the draw, which is the trigger's frame too: a pull before the next frame answers `drawing` and throws nothing. The explosion budget (`examples/test-room/perf.mjs`) pulled there now and then on software GL, where a frame outlasts its 300 ms wait, and failed with "no blast after frag_grenade"; it now pulls again on the next frames until the trigger takes it.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [41b9dd4]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [6489939]
+- Updated dependencies [3a46bd0]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [05fbba9]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [6247fbe]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+- Updated dependencies [65ccb0c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-audio@0.4.0
+  - @adatechnology/game-player@0.5.0
+  - @adatechnology/game-destruction@0.14.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-terrain@0.2.1
+  - @adatechnology/game-render-three@0.1.0
+  - @adatechnology/game-destruction-three@0.13.0
+  - @adatechnology/game-runtime@0.2.0
+  - @adatechnology/game-graphics@0.1.0
+  - @adatechnology/game-graphics-three@0.1.0
+  - @adatechnology/game-vfx-three@0.5.0
+  - @adatechnology/game-terrain-three@0.3.0
+  - @adatechnology/game-fluids-three@0.4.8
+  - @adatechnology/game-vfx@0.7.0
+  - @adatechnology/game-fluids@0.4.2
+  - @adatechnology/game-weapons@0.5.8
+
 ## 0.20.0
 
 ### Minor Changes

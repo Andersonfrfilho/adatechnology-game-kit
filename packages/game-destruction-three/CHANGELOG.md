@@ -1,5 +1,33 @@
 # @adatechnology/game-destruction-three
 
+## 0.13.0
+
+### Minor Changes
+
+- cbb20a2: The kit's deferred work can share one frame budget. `engine.deferredQueue()` (voices), `renderer.deferredQueue()` (destruction events and slices), `houseRenderer.deferredQueue()` (breach paint) and `createCreaseQueue()` with `VehicleDestructibleOptions.creaseQueue` (vehicle crease, one queue for every vehicle, round robin) give a `DeferredQueue` that `@adatechnology/game-runtime` runs inside its budget. Nothing changes without a budget: the queues keep draining by themselves and `deferredStart`, `eventBudgetMs`, `breachPaintBudgetMs` and `pump()` keep their meaning and defaults. The test room runs on the scheduler, registers the voice and destruction queues, lends `host.defer` and `onFrame(fn, { phase, order })`, and gains `frameBudgetMs` and `frameStats()`.
+
+### Patch Changes
+
+- fab813c: Silent fallbacks now say so (spec 005, review item 12). `warnOnce(key, message)` in `game-contracts` warns once per key on the console, outside production. `createDestructionRenderer` and `createFluidRenderer` without `vfx`, `createViewmodel` (and `createWeaponFx`) without `effects` and `createWeaponAudio` without `engine` keep working with a world or engine of their own and warn once. The weapons test module makes its own audio only when it is first needed, so a room that lends the engine never triggers the warning.
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [6489939]
+- Updated dependencies [3a46bd0]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+- Updated dependencies [65ccb0c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-audio@0.4.0
+  - @adatechnology/game-destruction@0.14.0
+  - @adatechnology/game-vfx-three@0.5.0
+  - @adatechnology/game-vfx@0.7.0
+
 ## 0.12.1
 
 ### Patch Changes

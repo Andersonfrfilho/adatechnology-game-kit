@@ -1,5 +1,25 @@
 # @adatechnology/game-fluids-three
 
+## 0.4.8
+
+### Patch Changes
+
+- fab813c: Silent fallbacks now say so (spec 005, review item 12). `warnOnce(key, message)` in `game-contracts` warns once per key on the console, outside production. `createDestructionRenderer` and `createFluidRenderer` without `vfx`, `createViewmodel` (and `createWeaponFx`) without `effects` and `createWeaponAudio` without `engine` keep working with a world or engine of their own and warn once. The weapons test module makes its own audio only when it is first needed, so a room that lends the engine never triggers the warning.
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+- Updated dependencies [455522d]
+- Updated dependencies [65ccb0c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-vfx-three@0.5.0
+  - @adatechnology/game-vfx@0.7.0
+  - @adatechnology/game-fluids@0.4.2
+
 ## 0.4.7
 
 ### Patch Changes

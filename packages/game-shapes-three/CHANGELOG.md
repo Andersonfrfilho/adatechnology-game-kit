@@ -1,5 +1,16 @@
 # @adatechnology/game-shapes-three
 
+## 0.3.0
+
+### Minor Changes
+
+- 455522d: `createCord` and `catenary` move to `@adatechnology/game-shapes-three` (spec 005, D1), so the weapons no longer reach into `game-interactables-three` for them. `game-interactables-three` keeps both exports, `@deprecated`, delegating to the new ones; they are removed in the next major.
+
+### Patch Changes
+
+- Updated dependencies [24b4981]
+  - @adatechnology/game-shapes@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

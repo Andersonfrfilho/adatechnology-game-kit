@@ -1,5 +1,12 @@
 # @adatechnology/game-floorplan-post-apocalyptic
 
+## 3.0.0
+
+### Patch Changes
+
+- Updated dependencies [81bd9c0]
+  - @adatechnology/game-floorplan@0.3.0
+
 ## 2.0.0
 
 ### Minor Changes

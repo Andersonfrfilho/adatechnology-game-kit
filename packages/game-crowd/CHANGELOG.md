@@ -1,5 +1,25 @@
 # @adatechnology/game-crowd
 
+## 0.3.0
+
+### Minor Changes
+
+- 81af508: The default walk cadence range of the personality is 0.85 to 1.15 (it was 0.88 to 1.12), so a group of nine neighbours differs in step by a coefficient of variation of 0.056. A crowd with `personality` on and no explicit `cadence` walks differently from before; pass `cadence: [0.88, 1.12]` for the old numbers.
+- 302a2dc: A dense horde with physics, off by default and then the horde of the game bit for bit: bodies that push each other (inelastic impulse and a position correction that never adds energy), a pressure field that moves one hop per fixed step (a file of N agents against a wall gives its front N times the drive), a balance machine (standing, staggering, fallen, getting up, thrown) with the critical pressure of each body, trips and collapses, a mound of lying bodies that others climb and trample, doors broken by the pressure in discrete blows, `crowd.blast(...)` resolved in one pass over the agents with the shove of `game-contracts`, a pool of thrown bodies simulated here (`thrown.priority` `mixed`, `fastest` or `nearest`), personality by seed (speed, reaction, stability, trip, drive, cadence, aggression, gait, idle) and an optional pressure of the horde on the player through `knock` and `hurt`. Everything uses a counter-based draw (`unit(identity, step, salt)`) and never the shared random stream, so the same seed gives the same result at 30, 60 and 144 frames per second. `CrowdUpdateContext.bandCentre` and `CrowdOptions.flow.cellsPerStep` are new; `CROWD_PHYSICS_DEFAULTS` turns everything on. `physics.worker` (`'off'` | `'auto'` | `'on'`, with `workerTransport`, `workerLatency` and `workerFactory`) runs the contact and the pressure in a worker one step behind (a `SharedArrayBuffer` frame, or a transferred one without cross-origin isolation); the answer is byte for byte what the same step gives on the main thread. `attachPhysicsWorker`, `crowd.dispose()` and `dist/physics-worker.js` are new. `physics.density` summarises band R1 without pairs: a coarse grid of 2 m counts the walkers, above 4 bodies per cell the speed falls by `capacity / bodies` and the field is `(bodies − 4) · 150` N.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-characters@0.2.8
+
 ## 0.2.6
 
 ### Patch Changes

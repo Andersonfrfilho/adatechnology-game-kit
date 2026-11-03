@@ -1,5 +1,23 @@
 # @adatechnology/game-shapes
 
+## 0.2.0
+
+### Minor Changes
+
+- 24b4981: Shape generators by instance (spec 005, D5): `createShapes({ packs, patch, remove })` returns a set (`register`, `unregister`, `get`, `list`, `record`, `generate`) of its own; its `generate` looks custom nodes up only in the set (new `GenerateOptions.isolatedGenerators`). `defaultShapeGenerators()` is the set behind `registerGenerator`, `unregisterGenerator`, `getGenerator` and `listGenerators`, which stay exported and `@deprecated` with the same results. The package now depends on `@adatechnology/game-contracts` for the catalog helpers; the IIFE bundles it. The worker and the shape cache still read the global registry.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+
 ## 0.1.0
 
 ### Minor Changes

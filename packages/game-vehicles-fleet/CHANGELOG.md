@@ -1,5 +1,16 @@
 # @adatechnology/game-vehicles-fleet
 
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies [3dbca8c]
+- Updated dependencies [cbb20a2]
+- Updated dependencies [f48b676]
+- Updated dependencies [65ccb0c]
+- Updated dependencies [6168372]
+  - @adatechnology/game-vehicles@0.6.0
+
 ## 5.0.0
 
 ### Patch Changes
