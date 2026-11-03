@@ -3,10 +3,11 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
-import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -172,6 +173,9 @@ const vehicleLeafKey = (spec: DestructibleSpec, part: string, moment: 'open' | '
   return `vehicle_${leaf}_${moment}`
 }
 
+/** The destruction events that already play the impact of a blow (a mark, a break): a blow without any of them plays its contact sound itself. */
+const MARK_EVENTS: ReadonlySet<string> = new Set(['dent', 'hole', 'crack', 'chip', 'stage', 'fracture'])
+
 export function createTestRoom(options: TestRoomOptions): TestRoom {
   const THREE = options.THREE
   const locale = options.locale ?? 'en'
@@ -300,9 +304,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
-  const playSound = (key: string, point: Vec3, volume: number): void => {
-    destructionSound?.onSound(key, point, volume)
-    options.onSound?.(key, point, volume)
+  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
+    destructionSound?.onSound(key, point, volume, detail)
+    if (detail) options.onSound?.(key, point, volume, detail)
+    else options.onSound?.(key, point, volume)
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
@@ -379,7 +384,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
     renderer.emit(material.debris === 'clods' ? 'dust' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
-    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius))
+    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
   }
   terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
   const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
@@ -727,7 +732,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return piece
     },
     dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
-    hitSound: (objectId, point) => playSound(impactKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, 0.5),
+    hitSound: (objectId, point) => {
+      const material = heaviestMaterial(objectId) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), point, 0.5, impactSoundKeys(material, def, 'blunt'))
+    },
     onEvent: (ev) => {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
@@ -1919,7 +1928,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
+    const hit = useToHit(u, r.point, r.normal)!
+    const result = world.hitPart(r.object, r.part, { ...hit, source: 'player' })
+    // a blow that leaves no mark (a punch on solid wood, a kick on the ground) still meets the surface: its impact sounds, by material and blow
+    if (!result.events.some((e) => MARK_EVENTS.has(e.type))) {
+      const material = world.part(r.object, r.part)?.material ?? heaviestMaterial(r.object) ?? ''
+      const def = world.materials.get(material)
+      playSound(impactKey(def), r.point, Math.min(0.8, 0.25 + u.energy / 400), impactSoundKeys(material, def, hit.type))
+    }
     const blow = blowOfTool(id, toolDef(id)?.category ?? '')
     if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)

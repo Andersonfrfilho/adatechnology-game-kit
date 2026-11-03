@@ -6,6 +6,7 @@
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
 import type * as THREE_NS from 'three'
+import type { SoundDetail } from './audio/impact-keys'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
@@ -59,8 +60,11 @@ export interface RendererOptions {
   shoveable?: (objectId: string) => boolean
   /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
   onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
-  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
-  onSound?: (key: string, point: Vec3, volume: number) => void
+  /**
+   * Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out.
+   * An impact or a break also sends `detail.keys`, the keys to try before `key`, most specific first (`impact_concrete_ballistic`, `impact_concrete`, `impact_masonry_ballistic`, `impact_masonry`).
+   */
+  onSound?: (key: string, point: Vec3, volume: number, detail?: SoundDetail) => void
   /**
    * The effects world that draws blasts and fires. Pass the one the host shares with the other renderers (and step it, through its
    * `VfxRenderer.update`, once per frame); without it the renderer makes its own world and its own three layer and steps them in `update`.

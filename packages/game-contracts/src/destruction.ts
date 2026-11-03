@@ -695,6 +695,8 @@ interface EventBase {
   /** Seconds since the world was created. */
   time: number
   source?: string
+  /** The kind of hit the event came out of (a shot, a blow, a cut, a blast...), when it came out of a hit; the sound of an impact is chosen by it. */
+  blow?: DamageType
 }
 
 /** Points in events are in world space. */
