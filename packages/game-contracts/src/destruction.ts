@@ -702,7 +702,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'damage'; part: string; amount: number; hp: number; damageType: DamageType })
   | (EventBase & { type: 'dent'; part: string; dent: Dent; worldPoint: Vec3 })
   /** `powder`: the part's loose dry contents (`PartSpec.powder`), which puff out of the hole. */
-  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number } })
+  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number }; /** Joules the round still carries out of the part, when the part knows. */ energyLeft?: number })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
   | (EventBase & { type: 'ricochet'; part: string; point: Vec3; direction: Vec3; energy: number })
   /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */

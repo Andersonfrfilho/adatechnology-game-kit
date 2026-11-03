@@ -204,6 +204,8 @@ const OIL_NEEDED = 0.3
 const OIL_WEAR = 0.004
 const ENGINE_SEIZE_HP = 0.2
 const EXPANDED_HOLE = 1.6
+/** A round going through anything spends at least this share of its energy. */
+const MIN_SPENT = 0.08
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
 const FRACTURE: Record<string, 'shatter' | 'snap' | 'tear' | 'none'> = { glass: 'shatter', plastic: 'snap', rubber: 'tear', steel: 'none', aluminium: 'none' }
@@ -688,11 +690,18 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     // a hollow point or soft lead opens up in the panel: a wider hole than its calibre
     const opens = (h.piercing ?? 1) < SOFT_LEAD ? EXPANDED_HOLE : 1
     const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1) * opens)
+    /** What a round keeps after going through: it spends on the part the share of its penetration the part's steel takes (a skin little, a door about half of a pistol round), else the part's resistance out of its energy. */
+    const energyLeft = (): number => {
+      const metal = d.material === 'steel' || d.material === 'aluminium'
+      const mm = h.penetration?.steel
+      const spent = metal && mm ? clamp(steelMm(d) / mm, MIN_SPENT, 1) : clamp(res / Math.max(E, 1), MIN_SPENT, 1)
+      return E * (1 - spent)
+    }
     const push = (hole: boolean): void => {
       if (!hole) return
       const hp: PartState['holes'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), diameter: r2(holeDiam), through }
       p.holes.push(hp)
-      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
+      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
       vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam, d)
       startLeak(p, v, cal, out, dir)
     }

@@ -13,7 +13,8 @@ function fire(part: string, from: number[], round: { energy: number; caliber: nu
   const u = dir.map((v) => v / n)
   const size = d.describe().parts.find((p: any) => p.id === part).shape.size
   const events = d.hit({ type: 'ballistic', point: [t[0] - u[0] * size[0] * 0.5, t[1] - u[1] * size[1] * 0.5, t[2] - u[2] * size[2] * 0.5], direction: u, energy: round.energy, caliber: round.caliber, penetration: { steel: round.steelMm }, piercing: round.piercing })
-  return events.find((e: any) => e.type === 'hole' && e.part === part)?.hole as { through: boolean; diameter: number } | undefined
+  const e = events.find((e: any) => e.type === 'hole' && e.part === part)
+  return e && ({ ...e.hole, energyLeft: e.energyLeft }) as { through: boolean; diameter: number; energyLeft?: number } | undefined
 }
 
 const SIDE = [-4, 0.7, 0]
@@ -28,6 +29,13 @@ describe('kinds of round against a car', () => {
   it('a pistol round goes through a door; a hollow point leaves a wider hole', () => {
     expect(fire('door_front_left', SIDE, FMJ_9)?.through).toBe(true)
     expect(fire('door_front_left', SIDE, HP_9)!.diameter).toBeGreaterThan(fire('door_front_left', SIDE, FMJ_9)!.diameter)
+  })
+  it('a round loses energy in each panel: a pistol keeps less than a rifle after the door', () => {
+    const pistol = fire('door_front_left', SIDE, FMJ_9)!
+    const rifle = fire('door_front_left', SIDE, AP_762)!
+    expect(pistol.energyLeft).toBeLessThan(FMJ_9.energy)
+    expect(pistol.energyLeft).toBeGreaterThan(0)
+    expect(rifle.energyLeft! / AP_762.energy).toBeGreaterThan(pistol.energyLeft! / FMJ_9.energy)
   })
   it('the engine block stops rifle rounds', () => {
     expect(fire('engine', FRONT, AP_762)?.through ?? false).toBe(false)
