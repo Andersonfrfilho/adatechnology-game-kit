@@ -5,13 +5,13 @@ export type ProvingText = {
   hints: Record<'vehicle' | 'test' | 'camera' | 'time_scale' | 'visual_check', string>
   actions: Record<'run_test' | 'run_all' | 'certify_now' | 'reverse_park' | 'sign_ok' | 'sign_fail' | 'reset', string>
   layers: Record<'mirrors' | 'reverse_camera' | 'scoreboard', string>
-  metrics: Record<'speed' | 'time' | 'value' | 'passed' | 'failed' | 'pending' | 'status', string>
+  metrics: Record<'speed' | 'gear' | 'rpm' | 'time' | 'value' | 'passed' | 'failed' | 'pending' | 'status', string>
   cameras: Record<'room' | 'chase' | 'cockpit' | 'hood', string>
   tests: Record<string, string>
   status: Record<'approved' | 'rejected' | 'pending', string>
   verdict: Record<'pass' | 'fail' | 'pending', string>
-  board: { title: string; test: string; value: string; range: string; verdict: string; notRun: string; running: string }
-  log: { start: string; result: string; signed: string; certified: string }
+  board: { title: string; test: string; value: string; range: string; verdict: string; notRun: string; running: string; gear: string }
+  log: { start: string; result: string; signed: string; certified: string; shift: string }
 }
 
 export const PROVING_TEXT: Record<string, ProvingText> = {
@@ -27,7 +27,7 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     actions: { run_test: 'Rodar prova', run_all: 'Rodar todas na pista', certify_now: 'Homologar agora (sem animação)', reverse_park: 'Dar ré (câmera de ré)', sign_ok: 'Aprovar checagem visual', sign_fail: 'Reprovar checagem visual', reset: 'Limpar ficha' },
     layers: { mirrors: 'Retrovisores', reverse_camera: 'Câmera de ré', scoreboard: 'Painel da ficha' },
-    metrics: { speed: 'Velocidade', time: 'Tempo da prova', value: 'Medição', passed: 'Aprovadas', failed: 'Reprovadas', pending: 'Pendentes', status: 'Situação (0 pend., 1 aprov., -1 reprov.)' },
+    metrics: { speed: 'Velocidade', gear: 'Marcha (-1 ré, 0 neutro)', rpm: 'Giro do motor', time: 'Tempo da prova', value: 'Medição', passed: 'Aprovadas', failed: 'Reprovadas', pending: 'Pendentes', status: 'Situação (0 pend., 1 aprov., -1 reprov.)' },
     cameras: { room: 'Sala', chase: 'Perseguição (3ª pessoa)', cockpit: 'Cabine (1ª pessoa)', hood: 'Capô' },
     tests: {
       accel_0_100: '0 a 100 km/h',
@@ -49,8 +49,8 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     status: { approved: 'APROVADO', rejected: 'REPROVADO', pending: 'PENDENTE' },
     verdict: { pass: 'ok', fail: 'falhou', pending: '…' },
-    board: { title: 'Ficha de homologação', test: 'Prova', value: 'Medido', range: 'Faixa', verdict: 'Resultado', notRun: 'não rodada', running: 'rodando' },
-    log: { start: 'Prova {0}: {1}', result: '{0} · {1}: {2} {3} (faixa {4}) → {5}', signed: '{0} · {1}: {2} na sala', certified: '{0}: {1}' },
+    board: { title: 'Ficha de homologação', test: 'Prova', value: 'Medido', range: 'Faixa', verdict: 'Resultado', notRun: 'não rodada', running: 'rodando', gear: 'Marcha {0} · {1} rpm · {2} km/h' },
+    log: { start: 'Prova {0}: {1}', result: '{0} · {1}: {2} {3} (faixa {4}) → {5}', signed: '{0} · {1}: {2} na sala', certified: '{0}: {1}', shift: 'Marcha {0} → {1} a {2} km/h ({3} rpm)' },
   },
   en: {
     name: 'Proving ground',
@@ -64,7 +64,7 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     actions: { run_test: 'Run test', run_all: 'Run all on the track', certify_now: 'Certify now (no animation)', reverse_park: 'Reverse (reversing camera)', sign_ok: 'Approve visual check', sign_fail: 'Refuse visual check', reset: 'Clear certificate' },
     layers: { mirrors: 'Mirrors', reverse_camera: 'Reversing camera', scoreboard: 'Certificate board' },
-    metrics: { speed: 'Speed', time: 'Test time', value: 'Measured', passed: 'Passed', failed: 'Failed', pending: 'Pending', status: 'Status (0 pending, 1 approved, -1 rejected)' },
+    metrics: { speed: 'Speed', gear: 'Gear (-1 reverse, 0 neutral)', rpm: 'Engine speed', time: 'Test time', value: 'Measured', passed: 'Passed', failed: 'Failed', pending: 'Pending', status: 'Status (0 pending, 1 approved, -1 rejected)' },
     cameras: { room: 'Room', chase: 'Chase (third person)', cockpit: 'Cockpit (first person)', hood: 'Hood' },
     tests: {
       accel_0_100: '0 to 100 km/h',
@@ -86,8 +86,8 @@ export const PROVING_TEXT: Record<string, ProvingText> = {
     },
     status: { approved: 'APPROVED', rejected: 'REJECTED', pending: 'PENDING' },
     verdict: { pass: 'ok', fail: 'failed', pending: '…' },
-    board: { title: 'Certificate', test: 'Test', value: 'Measured', range: 'Range', verdict: 'Result', notRun: 'not run', running: 'running' },
-    log: { start: 'Test {0}: {1}', result: '{0} · {1}: {2} {3} (range {4}) → {5}', signed: '{0} · {1}: {2} in the room', certified: '{0}: {1}' },
+    board: { title: 'Certificate', test: 'Test', value: 'Measured', range: 'Range', verdict: 'Result', notRun: 'not run', running: 'running', gear: 'Gear {0} · {1} rpm · {2} km/h' },
+    log: { start: 'Test {0}: {1}', result: '{0} · {1}: {2} {3} (range {4}) → {5}', signed: '{0} · {1}: {2} in the room', certified: '{0}: {1}', shift: 'Gear {0} → {1} at {2} km/h ({3} rpm)' },
   },
 }
 

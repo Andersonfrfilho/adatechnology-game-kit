@@ -42,6 +42,10 @@ export interface ProvingModuleOptions {
 /** Track: a straight strip along +x (the semi driver's forward at yaw 0), drawn as a 260 m tile the vehicle wraps on so a top-speed run of kilometres stays on the same tarmac. */
 const TRACK = { x0: -30, z: 22, tile: 260, width: 14, start: 4 }
 const SURFACE_LOOK: Record<string, { color: number; roughness: number }> = { dry_asphalt: { color: 0x2b2d31, roughness: 0.95 }, wet_asphalt: { color: 0x1c1f24, roughness: 0.18 }, mud: { color: 0x4a3524, roughness: 1 } }
+/** The gear as the dashboard shows it: R reverse, N neutral, the number otherwise. */
+const gearLabel = (gear: number): string => (gear < 0 ? 'R' : gear === 0 ? 'N' : String(gear))
+/** Engine loop pitch from the crankshaft: a four-stroke four-cylinder fires twice a turn, so the pitch drops with the RPM at every upshift. */
+const engineFrequency = (rpm: number): number => Math.max(20, rpm / 30)
 const VISUAL_CHECKS = ['cabin', 'cameras', 'mirrors'] as const
 const MIRROR_RECTS: Record<string, { x: number; y: number; width: number; height: number; rounded: number }> = {
   rear_view: { x: 0.38, y: 0.02, width: 0.24, height: 0.09, rounded: 0.35 },
@@ -78,6 +82,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   /** True while the room has this area open: nothing is built or simulated otherwise, so loading the module costs nothing elsewhere in the room. */
   let open = false
   let lastWrap = 0
+  let lastGear = 0
   let engine: { set(state: { volume?: number; frequency?: number; position?: [number, number, number] }): void; stop(): void } | undefined
   const rig = { camera: null as any, vehicle: null as ReturnType<typeof createVehicleCamera> | null, mirrors: [] as Array<{ pose: MirrorPose; camera: any; remove: () => void }> }
 
@@ -229,6 +234,12 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       g.fillText(r.verdict === 'pass' ? '✓ ' + text.verdict.pass : r.verdict === 'fail' ? '✗ ' + text.verdict.fail : '…', cols[3]!, y)
       y += 30
     }
+    const drive = driveState()
+    if (run && !run.done && drive) {
+      g.font = '600 30px monospace'
+      g.fillStyle = '#f2c230'
+      g.fillText(fillText(text.board.gear, gearLabel(drive.gear), Math.round(drive.rpm), Math.round(Math.abs(drive.u) * 3.6)), cols[0]!, board.canvas.height - 28)
+    }
     board.texture.needsUpdate = true
   }
 
@@ -346,6 +357,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     // the turning circle needs room on the left: start it at the right edge
     if (id === 'turn_circle') run.driver.place(0, TRACK.start, 0)
     rig.vehicle?.reset()
+    lastGear = run.driver.state.gear
     stopEngine()
     engine = host.audio?.loop?.(sounds.engine, { position: [car.built.group.position.x, 0.5, car.built.group.position.z] })
     host.log(fillText(text.log.start, name(settings.vehicle), text.tests[id] ?? id))
@@ -451,6 +463,10 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       pose(s, s.steerAngle)
       speed = s.u
       steer = s.steerAngle
+      if (s.gear !== lastGear) {
+        host.log(fillText(text.log.shift, gearLabel(lastGear), gearLabel(s.gear), Math.round(Math.abs(s.u) * 3.6), Math.round(s.rpm)), { vehicle: car?.subject.id, from: lastGear, to: s.gear, rpm: s.rpm, speed: s.u }, 'proving_shift')
+        lastGear = s.gear
+      }
       if (run.done) finishTest()
     } else if (parking) {
       // backs up 12 m along a gentle curve to the right, the way a driver parks watching the reversing camera
@@ -462,7 +478,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       steer = p.driver.state.steerAngle
       if (p.time > 9) parking = null
     }
-    engine?.set({ volume: run ? 0.035 + Math.abs(speed) * 0.003 : 0, frequency: 38 + Math.abs(speed) * 7, position: car ? [car.built.group.position.x, 0.5, car.built.group.position.z] : undefined })
+    engine?.set({ volume: run ? 0.035 + Math.abs(speed) * 0.003 : 0, frequency: engineFrequency(driveState()?.rpm ?? 0), position: car ? [car.built.group.position.x, 0.5, car.built.group.position.z] : undefined })
     const f = frameOf(speed)
     if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera, f, dt)
     if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, m.pose, f)
@@ -475,6 +491,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     if (run && Math.floor(run.time * 2) !== Math.floor((run.time - dt * settings.timeScale) * 2)) drawBoard()
   }
 
+  const driveState = (): SemiDriver['state'] | undefined => run?.driver.state ?? parking?.driver.state
   const speedNow = (): number => Math.abs(run?.driver.state.u ?? parking?.driver.state.u ?? 0) * 3.6
   const counts = (verdict: 'pass' | 'fail' | 'pending'): number => certificateOf(settings.vehicle)?.results.filter((r) => r.verdict === verdict).length ?? 0
 
@@ -528,6 +545,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     ],
     metrics: (): ModuleMetric[] => [
       { id: 'speed', name: text.metrics.speed, unit: 'km/h', digits: 0, read: speedNow },
+      { id: 'gear', name: text.metrics.gear, read: () => driveState()?.gear ?? 0 },
+      { id: 'rpm', name: text.metrics.rpm, unit: 'rpm', digits: 0, read: () => driveState()?.rpm ?? 0 },
       { id: 'time', name: text.metrics.time, unit: 's', digits: 1, read: () => run?.time ?? 0 },
       { id: 'value', name: text.metrics.value, digits: 1, read: () => (run ? (run.trace[run.trace.length - 1]?.[1] ?? 0) : 0) },
       { id: 'passed', name: text.metrics.passed, read: () => counts('pass') },

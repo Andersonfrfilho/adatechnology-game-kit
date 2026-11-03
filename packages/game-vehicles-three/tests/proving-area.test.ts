@@ -57,6 +57,35 @@ describe('proving ground area', () => {
     room.dispose()
   })
 
+  it('shifts up through the gears on the 0 to 100 run, the engine speed dropping at every upshift', () => {
+    const { room, module, bench } = setUp()
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    bench.set('time_scale', 4)
+    bench.act('run_test')
+    const read = (id: string): number => Number(module.metrics!('en').find((m) => m.id === id)!.read())
+    const gears: number[] = []
+    const drops: number[] = []
+    for (let i = 0; i < 400 && module.certificate('compact_hatch')?.results[0]?.verdict === 'pending'; i++) {
+      const [gearBefore, rpmBefore] = [read('gear'), read('rpm')]
+      room.update(1 / 30)
+      if (read('gear') === 0) break
+      if (gearBefore > 0 && read('gear') > gearBefore) drops.push(rpmBefore - read('rpm'))
+      gears.push(read('gear'))
+    }
+    const shifts = room.log.entries().filter((e) => e.type === 'proving_shift').map((e) => e.data as { from: number; to: number; rpm: number; speed: number })
+    expect(shifts.length).toBeGreaterThanOrEqual(2)
+    shifts.forEach((s, i) => {
+      expect(s.to).toBe(s.from + 1)
+      if (i > 0) expect(s.speed).toBeGreaterThan(shifts[i - 1]!.speed)
+    })
+    expect(Math.max(...gears)).toBeGreaterThanOrEqual(3)
+    expect(gears).toEqual([...gears].sort((x, y) => x - y))
+    expect(drops.length).toBe(shifts.length)
+    for (const drop of drops) expect(drop).toBeGreaterThan(500)
+    room.dispose()
+  })
+
   it('certifies at once and takes the sign-off of a visual check (a refused one rejects the vehicle)', () => {
     const { room, module, bench } = setUp()
     room.openArea(PROVING_AREA_ID)
