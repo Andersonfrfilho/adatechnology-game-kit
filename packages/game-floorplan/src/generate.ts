@@ -7,7 +7,7 @@ import { STREAM } from './legacy-seeds'
 import { translate } from './locale'
 import { buildPlan, floorsOf } from './plan'
 import { hexString, palette } from './palette'
-import { CATALOG, DECOR_PROFILES, SEED_KEYS, STATE_PLUGINS, TEMPLATES, WALL_TOP_HEIGHTS, stateDistribution } from './registry'
+import { registries } from './registry'
 import { createRng, hashString } from './rng'
 import { resolveSlots } from './slots'
 import { checkLot, clampOptionsToZone, resolveZone, useOf } from './zoning'
@@ -16,8 +16,8 @@ import type { StateContext } from './types'
 
 export function templateOf(t: string | TemplateDef): TemplateDef {
   if (typeof t === 'string') {
-    if (!TEMPLATES[t]) throw new Error('Unknown template: ' + t)
-    return TEMPLATES[t]
+    if (!registries().TEMPLATES[t]) throw new Error('Unknown template: ' + t)
+    return registries().TEMPLATES[t]
   }
   return t
 }
@@ -42,10 +42,10 @@ export function slots(template: string | TemplateDef, options?: FloorplanOptions
 
 /** Picks the house state: the requested one, else a seeded draw over the registered distribution, else `normal`. */
 export function pickState(requested: string | undefined, seed: number | string): string {
-  if (requested && STATE_PLUGINS[requested]) return requested
-  const dist = stateDistribution.weights
+  if (requested && registries().STATE_PLUGINS[requested]) return requested
+  const dist = registries().stateDistribution.weights
   if (!dist) return 'normal'
-  const x = createRng(seed, stateDistribution.seedKey)()
+  const x = createRng(seed, registries().stateDistribution.seedKey)()
   let acc = 0
   const keys = Object.keys(dist)
   for (const k of keys) {
@@ -56,14 +56,14 @@ export function pickState(requested: string | undefined, seed: number | string):
 }
 
 function colorOf(m: Json, seed: number | string): number | string {
-  const spec: ItemColor = m.colorSpec || CATALOG[m.type]?.color || { role: 'wood' }
+  const spec: ItemColor = m.colorSpec || registries().CATALOG[m.type]?.color || { role: 'wood' }
   if ('role' in spec) return spec.role
   if ('hex' in spec) return spec.hex
   return spec.pick[hashString(seed + '|' + (m._seedId ?? m.id)) % spec.pick.length]
 }
 
 function applyState(plan: Plan, items: PlacedItem[], ctx: ReturnType<typeof createPlacementContext>, seed: number | string, state: string): PlacedItem[] {
-  const plugin = STATE_PLUGINS[state]
+  const plugin = registries().STATE_PLUGINS[state]
   if (!plugin || state === 'normal') return []
   const c: StateContext = {
     plan,
@@ -73,8 +73,8 @@ function applyState(plan: Plan, items: PlacedItem[], ctx: ReturnType<typeof crea
     rng: createRng(seed, plugin.seedKey ?? 'state:' + state),
     ctx,
     kit: placementKit,
-    catalog: CATALOG,
-    wallTopHeights: WALL_TOP_HEIGHTS,
+    catalog: registries().CATALOG,
+    wallTopHeights: registries().WALL_TOP_HEIGHTS,
   }
   return plugin.apply(c)
 }
@@ -97,7 +97,7 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
   const missing: { room: string; slot: string }[] = []
   for (const room of plan.rooms.concat(plan.zones)) {
     const sl = all.filter((s) => s.room === room.id && s.floor === room.floor)
-    const r = fillRoom(plan, room, sl, createRng(seed, STREAM.roomPrefix + (room.seedKey ?? SEED_KEYS.rooms[room.id] ?? room.id)))
+    const r = fillRoom(plan, room, sl, createRng(seed, STREAM.roomPrefix + (room.seedKey ?? registries().SEED_KEYS.rooms[room.id] ?? room.id)))
     items.push(...r.items)
     missing.push(...r.missing)
   }
@@ -216,7 +216,7 @@ export function limitsOf(template: string | TemplateDef, options?: FloorplanOpti
 }
 
 export function listTemplates(locale = 'en') {
-  return Object.values(TEMPLATES).map((t) => {
+  return Object.values(registries().TEMPLATES).map((t) => {
     const a = floorsOf(t, {})
     return {
       id: t.id,
@@ -233,4 +233,3 @@ export function listTemplates(locale = 'en') {
   })
 }
 
-export { DECOR_PROFILES }

@@ -1,4 +1,9 @@
 import type { SpriteKindDef } from './kinds'
+import { slideAlong } from '../enclosures'
+import type { Confiner } from '../enclosures'
+
+/** A carried sprite stops this share of its size off a wall it is outside of. */
+const PAD_OF_SIZE = 0.35
 
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v)
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
@@ -31,6 +36,8 @@ export interface KindPoolHost {
   groundAt(x: number, z: number): number
   gravity: number
   land(owner: string, x: number, y: number, z: number, color: number, tag: number): void
+  /** The closed spaces the carried kinds (`SpriteKindDef.carried`) go round. */
+  confiner?: Confiner
 }
 
 /** The destruction renderer's old generator (mulberry32), so a seed gives the same sprites. */
@@ -202,9 +209,20 @@ export class SpriteKindPool {
         vy *= k
         vz *= k
       }
-      const x = this.position[i3]! + vx * dt
+      let x = this.position[i3]! + vx * dt
       let y = this.position[i3 + 1]! + vy * dt
-      const z = this.position[i3 + 2]! + vz * dt
+      let z = this.position[i3 + 2]! + vz * dt
+      const confiner = host.confiner
+      if (def.carried && confiner && !confiner.empty) {
+        const pad = this.size0[i]! * lerp(1, def.grow, t) * PAD_OF_SIZE
+        if (confiner.confine(this.position[i3]!, this.position[i3 + 1]!, this.position[i3 + 2]!, x, y, z, pad, dt)) {
+          const out = confiner.out
+          x = out.x
+          y = out.y
+          z = out.z
+          ;[vx, vy, vz] = slideAlong(out, vx, vy, vz)
+        }
+      }
       if (def.ground !== 'none') {
         const own = this.floor[i]!
         const gy = Number.isNaN(own) ? host.groundAt(x, z) + 0.005 : own

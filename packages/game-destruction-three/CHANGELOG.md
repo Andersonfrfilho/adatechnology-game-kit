@@ -1,5 +1,16 @@
 # @adatechnology/game-destruction-three
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [379e44f]
+  - @adatechnology/game-contracts@0.21.0
+  - @adatechnology/game-vfx@0.6.0
+  - @adatechnology/game-vfx-three@0.4.0
+  - @adatechnology/game-audio@0.3.6
+  - @adatechnology/game-destruction@0.13.2
+
 ## 0.12.0
 
 ### Minor Changes

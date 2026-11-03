@@ -2,6 +2,7 @@ import { SpriteKindPool, spriteRandom } from './kind-pool'
 import type { SpriteSpawnOptions } from './kind-pool'
 import { SPRITE_KINDS } from './kinds'
 import type { SpriteKind, SpriteKindDef } from './kinds'
+import type { Confiner } from '../enclosures'
 
 type Vec3 = readonly [number, number, number]
 
@@ -14,6 +15,8 @@ export interface SpriteKindSystemOptions {
   readonly groundAt: (x: number, z: number) => number
   readonly gravity: number
   readonly kinds?: Readonly<Record<string, SpriteKindDef>>
+  /** The closed spaces the carried kinds go round. */
+  readonly confiner?: Confiner
 }
 
 export type LandListener = (x: number, y: number, z: number, color: number, tag: number) => void
@@ -117,6 +120,7 @@ export class SpriteKindSystem {
       groundAt: this.options.groundAt,
       gravity: this.options.gravity,
       land: (owner: string, x: number, y: number, z: number, color: number, tag: number) => this.listeners.get(owner)?.(x, y, z, color, tag),
+      ...(this.options.confiner ? { confiner: this.options.confiner } : {}),
     }
     if (this.additive.live > 0 || this.additive.drawCount > 0) this.additive.update(dt, host)
     if (this.normal.live > 0 || this.normal.drawCount > 0) this.normal.update(dt, host)

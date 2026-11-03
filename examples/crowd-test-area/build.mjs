@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const packages = ['game-crowd', 'game-crowd-three', 'game-characters', 'game-characters-three', 'game-characters-undead', 'game-player', 'game-audio', 'game-animals', 'game-animals-species', 'game-animals-three', 'game-props3d', 'game-infection']
+const packages = ['game-crowd', 'game-crowd-three', 'game-floorplan-three', 'game-characters', 'game-characters-three', 'game-characters-undead', 'game-player', 'game-audio', 'game-animals', 'game-animals-species', 'game-animals-three', 'game-props3d', 'game-infection']
 for (const p of [...packages, 'game-contracts']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
@@ -36,7 +36,10 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
-  alias: Object.fromEntries([...packages, 'game-contracts'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+  alias: {
+    ...Object.fromEntries([...packages, 'game-contracts'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    '@adatechnology/game-crowd-three/testing': join(pkg('game-crowd-three'), 'dist/testing.js'),
+  },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
 const bundle = result.outputFiles[0].text

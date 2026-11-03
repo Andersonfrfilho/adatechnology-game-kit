@@ -351,7 +351,7 @@
   },
   "packages/game-floorplan-three/src/lights/room-light.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 1
+      "count": 3
     }
   },
   "packages/game-floorplan-three/src/lot/gates.ts": {
@@ -406,7 +406,7 @@
   },
   "packages/game-floorplan-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 23
+      "count": 24
     }
   },
   "packages/game-floorplan-three/src/test-area/scenarios.ts": {
@@ -426,7 +426,7 @@
   },
   "packages/game-floorplan-three/src/types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 70
+      "count": 71
     }
   },
   "packages/game-floorplan-three/src/utilities/electrical.ts": {
@@ -457,6 +457,11 @@
   "packages/game-floorplan-three/tests/destruction.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 42
+    }
+  },
+  "packages/game-floorplan-three/tests/effect-lights-indoors.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
     }
   },
   "packages/game-floorplan-three/tests/exact-golden.test.ts": {
@@ -502,6 +507,11 @@
   "packages/game-floorplan-three/tests/navigation.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 15
+    }
+  },
+  "packages/game-floorplan-three/tests/room-lights-budget.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
     }
   },
   "packages/game-floorplan-three/tests/skyscraper.test.ts": {
@@ -581,7 +591,7 @@
   },
   "packages/game-urban-three/src/draw.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 22
+      "count": 27
     }
   },
   "packages/game-urban-three/src/resolvers.ts": {
@@ -596,7 +606,7 @@
   },
   "packages/game-urban-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 9
+      "count": 10
     }
   },
   "packages/game-urban-three/src/text.ts": {
@@ -734,6 +744,11 @@
       "count": 274
     }
   },
+  "packages/game-vehicles-fleet/tests/crease-queue.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
   "packages/game-vehicles-fleet/tests/digest.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -769,6 +784,11 @@
       "count": 4
     }
   },
+  "packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
   "packages/game-vehicles-three/src/build.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 17
@@ -782,6 +802,11 @@
   "packages/game-vehicles-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 19
+    }
+  },
+  "packages/game-vehicles-three/src/vehicle-lod.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 23
     }
   },
   "packages/game-vehicles-three/tests/dims.test.ts": {
@@ -854,9 +879,14 @@
       "count": 3
     }
   },
+  "packages/game-vehicles/src/destructible/enclosure.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
   "packages/game-vehicles/src/destructible/impl.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 44
+      "count": 51
     }
   },
   "packages/game-vehicles/src/destructible/item.ts": {
@@ -866,12 +896,12 @@
   },
   "packages/game-vehicles/src/destructible/model.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 7
+      "count": 15
     }
   },
   "packages/game-vehicles/src/destructible/visual.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 30
+      "count": 57
     }
   },
   "packages/game-vehicles/src/explosion.ts": {
@@ -891,7 +921,7 @@
   },
   "packages/game-vehicles/src/glass-damage.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 57
+      "count": 60
     }
   },
   "packages/game-vehicles/src/glass.ts": {
@@ -941,7 +971,7 @@
   },
   "packages/game-vehicles/src/particles.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 45
+      "count": 51
     }
   },
   "packages/game-vehicles/src/rollover.ts": {
@@ -1074,6 +1104,16 @@
       "count": 4
     }
   },
+  "packages/game-vehicles/tests/particle-materials.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "packages/game-vehicles/tests/routed-particles.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
   "packages/game-vehicles/tests/zones.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
@@ -1082,6 +1122,11 @@
   "tools/characters-catalog/tests/sheet-sources.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
+    }
+  },
+  "tools/compat-check/tests/fake-dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
     }
   },
   "tools/golden/src/exact-snapshot.ts": {

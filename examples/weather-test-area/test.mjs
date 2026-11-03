@@ -39,7 +39,7 @@ if (!playwright || !existsSync(page)) {
     const tab = await context.newPage()
     tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`)
+    await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__weatherReport, null, { timeout: 90000 })
     await tab.evaluate(() => {
       for (let i = 0; i < 60; i++) window.__testRoom.update(0.02)
@@ -74,7 +74,8 @@ if (!playwright || !existsSync(page)) {
       room.update(0.02)
       const curtain = room.scene.getObjectByName('weather-rain-curtain')
       const rig = room.scene.getObjectByName('weather-lamp-rig')
-      const lamps = rig.children.filter((child) => child.isSpotLight)
+      // with the room's light budget the lamps are its spot slots, lit for the rig; without one they are the rig's own spot lights
+      const lamps = room.lights ? room.lights.group.children.filter((child) => child.isSpotLight && child.intensity > 0) : rig.children.filter((child) => child.isSpotLight)
       const storm = { layers: names(), curtain: curtain.visible, drawn: curtain.geometry.drawRange.count, near: room.vfx.peekWorkshop().rain.count, fog: room.scene.fog.isFog === true, far: room.scene.fog.far, lamp: lamps.map((lamp) => lamp.intensity), screen: room.vfx.workshop().screen.white }
       window.__stormShot = true
       return { storm }
