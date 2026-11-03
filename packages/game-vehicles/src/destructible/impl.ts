@@ -497,7 +497,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     exploded = true
     const d = tank.def
     const spec = d.explodes ?? { energy: 8e5, radius: 5, atC: 320 }
-    out.push(ev({ type: 'explode', part: d.id, point: toWorld(d.box.center), energy: spec.energy, radius: spec.radius }))
+    out.push(ev({ type: 'explode', part: d.id, point: toWorld(d.box.center), energy: spec.energy, radius: spec.radius, ...('effect' in spec && spec.effect !== undefined ? { effect: spec.effect } : {}) }))
     tank.liters = 0
     leaks.delete(d.id)
     if (vis) kit.explode(c, { delay: 0.6 })

@@ -190,7 +190,7 @@ export const FIRE_SOUNDS: readonly SoundRecipe[] = [
     group: 'fire_ignite',
   },
   {
-    ...blast('gas_leak', [noise({ type: 'bandpass', f: [3200, 3800], q: 0.7, a: 0.08, d: { param: 'seconds' }, vol: 0.45 })], ['sdk: gas jetting from a punctured vessel'], FIRE_FALLOFF),
+    ...blast('gas_leak', [noise({ type: 'bandpass', f: [3200, 3800], q: 0.7, a: 0.08, d: { param: 'seconds' }, vol: 0.3 })], ['sdk: gas jetting from a punctured vessel'], FIRE_FALLOFF),
     vars: { seconds: 2 },
   },
   {
@@ -203,7 +203,7 @@ export const FIRE_SOUNDS: readonly SoundRecipe[] = [
     vars: { seconds: 1.2 },
   },
   { ...blast('fire_crackle', [noise({ type: 'highpass', f: [1500, 3000], d: [0.01, 0.025], vol: [1.2, 2.2] })], ['sdk: a crackle of the fire'], FIRE_FALLOFF), group: 'fire_crackle' },
-  { ...blast('fire_pop', [noise({ type: 'bandpass', f: [500, 1100], q: 1, d: [0.03, 0.06], vol: [1.4, 2.2] })], ['sdk: a log or a resin pocket popping'], FIRE_FALLOFF), group: 'fire_crackle' },
+  { ...blast('fire_pop', [noise({ type: 'bandpass', f: [500, 1100], q: 1, d: [0.03, 0.06], vol: [3, 4.5] })], ['sdk: a log or a resin pocket popping'], FIRE_FALLOFF), group: 'fire_crackle' },
 ]
 
 /** The roar of the fires: low, soft noise; `createDestructionSound` raises it with every part that burns and sprinkles crackles on it. */
