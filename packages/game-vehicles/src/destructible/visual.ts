@@ -9,6 +9,7 @@ import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
 import { warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
+import { subdivideNear } from './subdivide-near'
 
 type Obj = any
 
@@ -79,7 +80,9 @@ const WINDOW_FRAME_NEAR = 0.06
 const WINDOW_FRAME_SPAN = 0.6
 const DASHBOARD_COLOR = '#121314'
 /** The plate is cut in pieces this long, metres. */
-const COWL_CUT_SUB = 0.06
+const COWL_CUT_SUB = 0.1
+/** How far past a pane's outline the faces are split for its cut, metres. */
+const COWL_CUT_MARGIN = 0.08
 /** The body under a pane deeper than this is cut away, metres. */
 const SKIN_UNDER_PANE = 0.025
 const SKIN_EDGE_KEPT = 0.06
@@ -799,6 +802,15 @@ export class VehicleVisuals implements CreaseWork {
     const v = new THREE.Vector3()
     const toWorld = mesh.matrixWorld
     mesh.updateMatrixWorld(true)
+    // only the faces that reach the outline are split fine enough for the cut to follow it: the rest of the body keeps its own triangles
+    const xs = poly.map((p) => p[0])
+    const ys = poly.map((p) => p[1])
+    const [x0, x1, y0, y1] = [Math.min(...xs) - COWL_CUT_MARGIN, Math.max(...xs) + COWL_CUT_MARGIN, Math.min(...ys) - COWL_CUT_MARGIN, Math.max(...ys) + COWL_CUT_MARGIN]
+    subdivideNear(THREE, { mesh, maxLen: COWL_CUT_SUB, near: (corners) => {
+      const us = corners.map((c) => c.dot(u))
+      const ws = corners.map((c) => c.dot(w))
+      return Math.max(...us) >= x0 && Math.min(...us) <= x1 && Math.max(...ws) >= y0 && Math.min(...ws) <= y1
+    } })
     this.kit.cutMesh(
       mesh,
       [
@@ -810,7 +822,7 @@ export class VehicleVisuals implements CreaseWork {
         },
       ],
       42,
-      { sub: COWL_CUT_SUB },
+      {},
     )
   }
   /** The straight bars drawn round a quad pane stand off its edges: they give way to a thin dark band that lies on the glass, as on a bonded windshield. */
