@@ -99,6 +99,11 @@ export interface VehicleDestructible extends DestructibleImpl {
   detachedParts(): string[]
   /** What the damage leaves for driving: each tyre's health where it stands, the brakes, the engine and the shocks (0 gone .. 1 whole). */
   driveReport(): DriveReport
+  /**
+   * The engine ran for `seconds` at `load` (0 idle .. 1 full throttle): without coolant it heats up, steams and seizes in a few minutes;
+   * without oil it wears and seizes. Call it while the vehicle is driven. Answers the engine temperature, °C.
+   */
+  runEngine(seconds: number, load: number): number
 }
 
 export type DriveReport = {
@@ -188,6 +193,16 @@ const TYRE_FLAT_AIR = 0.2
 /** Brake fluid under this share of the system's leaves the brakes weaker; with none left only this much (the handbrake, engine braking) remains. */
 const BRAKE_FLUID_NEEDED = 0.6
 const BRAKE_NO_FLUID = 0.15
+/** An engine runs at this temperature; without coolant it climbs this many °C per second at full work, steams at, and seizes at. Under this share of oil it wears this share of its life per second. */
+const ENGINE_WORKING_C = 90
+const ENGINE_SETTLE_S = 30
+const ENGINE_HEATING = 0.5
+const ENGINE_STEAM_C = 120
+const ENGINE_SEIZE_C = 150
+const COOLANT_NEEDED = 0.4
+const OIL_NEEDED = 0.3
+const OIL_WEAR = 0.004
+const ENGINE_SEIZE_HP = 0.2
 const EXPANDED_HOLE = 1.6
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
@@ -830,7 +845,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const electric = (c.spec as any).fuel === 'electric'
     const tank = tankPart()
     const fuel = tank ? (tank.liters ?? 0) : electric ? 1 : 1
-    const engineOk = sound('engine') && !exploded && fuel > 0.05
+    const engineOk = sound('engine') && !exploded && !seized && fuel > 0.05
     const powered = sound('battery') && sound('alternator')
     const gearOk = sound('gearbox')
     const brakes = [...ps.values()].find((p) => p.def.role === 'brakes')
@@ -1002,6 +1017,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return false
   }
 
+  let engineHeat = ENGINE_WORKING_C
+  let seized = false
+  let steaming = false
   const surfaceRays = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   surfaceRays.layers.enableAll()
@@ -1200,6 +1218,32 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
+    runEngine: (seconds: number, load: number): number => {
+      const engine = [...ps.values()].find((p) => p.def.role === 'engine')
+      if (!engine || engine.lost || seized) return engineHeat
+      const share = (fluid: string): number => {
+        const list = [...ps.values()].filter((p) => p.def.contains?.fluid === fluid)
+        return list.length ? Math.min(...list.map((p) => (p.liters ?? 0) / p.def.contains!.liters)) : 1
+      }
+      const coolant = share('coolant')
+      const oil = share('oil')
+      const work = 0.4 + 0.6 * clamp(load, 0, 1)
+      // the cooling holds the engine at its working temperature while there is coolant enough; below that it climbs with the load
+      if (coolant < COOLANT_NEEDED) engineHeat += ((COOLANT_NEEDED - coolant) / COOLANT_NEEDED) * ENGINE_HEATING * work * seconds
+      else engineHeat += (ENGINE_WORKING_C - engineHeat) * Math.min(1, seconds / ENGINE_SETTLE_S)
+      // with no oil the bearings wear through
+      if (oil < OIL_NEEDED) engine.hp = Math.max(0, engine.hp - engine.def.hp * OIL_WEAR * work * seconds * ((OIL_NEEDED - oil) / OIL_NEEDED))
+      if (engineHeat >= ENGINE_STEAM_C && vis && !steaming) {
+        steaming = true
+        kit.addEmitter(c, new V3(engine.def.box.center[0], engine.def.box.center[1] + 0.4, 0), 'white', { rate: 8, s: 1 })
+      }
+      if (engineHeat >= ENGINE_SEIZE_C || engine.hp <= engine.def.hp * ENGINE_SEIZE_HP) {
+        seized = true
+        queue.push(ev({ type: 'damage', part: engine.def.id, amount: 0, hp: r2(engine.hp), damageType: 'heat' }))
+      }
+      stateCache = undefined
+      return engineHeat
+    },
     driveReport: (): DriveReport => {
       const health = (role: PartRole): number => {
         const list = [...ps.values()].filter((p) => p.def.role === role)
