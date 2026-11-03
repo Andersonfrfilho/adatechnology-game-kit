@@ -33,6 +33,26 @@ export interface TerrainMaterial {
   readonly color: readonly [number, number, number]
   /** Surface pattern a renderer draws while the stratum is intact (`TERRAIN_PATTERNS`). */
   readonly pattern?: TerrainPattern
+  /** A rigid surface cracks around a hard blow instead of only losing a bowl: lines that run out from the point (concrete, asphalt, tile, stone). */
+  readonly crack?: TerrainCrackResponse
+  /** A rigid layer a contact charge breaks right through once it has enough for the whole thickness (the scabbing of a slab): `explosive` only. */
+  readonly breach?: TerrainBreachResponse
+}
+
+export interface TerrainCrackResponse {
+  /** Metres the longest line runs for a blow of 1 MJ; it grows with the cube root of the energy. */
+  readonly reach: number
+  /** Metres wide the lines open at the point for 1 MJ, also by the cube root, never under a hairline. */
+  readonly width: number
+  /** A blow under this many joules leaves no crack (a punch on a slab). */
+  readonly thresholdJoules: number
+}
+
+export interface TerrainBreachResponse {
+  /** Joules over the cube of the layer's thickness (J/m³) that break the whole layer through: for reinforced concrete about 1 kg of TNT for 12 cm. */
+  readonly joulesPerCubedThickness: number
+  /** Radius of the breach over the thickness at that energy; it grows with the cube root of the excess. */
+  readonly radiusOverThickness: number
 }
 
 export interface TerrainFireResponse {
@@ -88,6 +108,8 @@ export interface TerrainBudget {
   readonly maxSlideCellsPerFrame: number
   /** Cells on fire at once. */
   readonly maxBurningCells: number
+  /** Stars of cracks kept; past it the oldest goes. */
+  readonly maxCracks: number
 }
 
 export interface TerrainOptions {
@@ -141,6 +163,22 @@ export interface TerrainDebris {
   readonly born: number
 }
 
+/** A star of cracks on a rigid surface. The lines themselves come from `crackLines`, drawn from the seed, so a snapshot keeps only this. */
+export interface TerrainCrack {
+  readonly id: number
+  readonly x: number
+  readonly z: number
+  /** Metres the longest line runs. */
+  reach: number
+  /** Metres wide the lines are at the point. */
+  width: number
+  rays: number
+  readonly seed: number
+  readonly material: string
+  /** Order of creation: the oldest is the one recycled. */
+  readonly born: number
+}
+
 /** What a blow did. */
 export interface TerrainBlowResult {
   readonly point: readonly [number, number, number]
@@ -162,6 +200,10 @@ export interface TerrainBlowResult {
   readonly collapsed: boolean
   /** Left a fine mark (`true`) or dug the height field (`false`). */
   readonly fine: boolean
+  /** The cracks it opened or lengthened around the point, if the surface is rigid. */
+  readonly crack?: TerrainCrack
+  /** A contact charge broke the rigid layer right through (`TerrainMaterial.breach`). */
+  readonly breached?: boolean
 }
 
 export interface TerrainRegion {
@@ -251,6 +293,9 @@ export interface Terrain {
   drainDirtyChunks(max?: number): TerrainChunk[]
   chunk(index: number): TerrainChunk
   marks(): readonly TerrainMark[]
+  cracks(): readonly TerrainCrack[]
+  /** Changes whenever a crack is added or grows, so a renderer redraws only then. */
+  readonly cracksVersion: number
   debris(): readonly TerrainDebris[]
   /** Cells on fire now, as world points. */
   burningPoints(): readonly (readonly [number, number])[]
@@ -270,4 +315,5 @@ export interface TerrainSnapshot {
   readonly scorch: readonly (readonly [number, number])[]
   readonly barBend?: readonly (readonly [number, number])[]
   readonly marks: readonly TerrainMark[]
+  readonly cracks?: readonly TerrainCrack[]
 }

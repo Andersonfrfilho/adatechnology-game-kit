@@ -28,6 +28,24 @@ describe('the ground on the screen', () => {
     expect(terrain.dirtyChunkCount).toBe(0)
   })
 
+  it('a grenade on a slab draws its cracks once, and only again when they change', () => {
+    const { view, terrain } = make('concrete_slab')
+    view.sync(CAMERA)
+    expect(view.stats().crackQuads).toBe(0)
+    terrain.strike('explosive', { x: 0, z: 0, energy: 800_000 })
+    view.sync(CAMERA)
+    const drawn = view.stats().crackQuads
+    expect(drawn).toBeGreaterThan(10)
+    const cracks = view.group.children.find((child) => child.name === 'terrain-cracks') as THREE.Mesh
+    const buffer = cracks.geometry.getAttribute('position') as THREE.BufferAttribute
+    const version = buffer.version
+    view.sync(CAMERA)
+    expect(buffer.version).toBe(version)
+    terrain.reset()
+    view.sync(CAMERA)
+    expect(view.stats().crackQuads).toBe(0)
+  })
+
   it('a dug chunk gets a mesh that follows the height, within the budget of the frame', () => {
     const { view, terrain } = make('dirt', { maxDirtyChunksPerFrame: 1 })
     view.sync(CAMERA)
