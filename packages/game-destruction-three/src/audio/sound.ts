@@ -13,6 +13,8 @@ export type SoundKeyRule = {
   readonly params?: Readonly<Record<string, number>>
   readonly volumeScale?: number
   readonly above?: { readonly volume: number; readonly sound: string }
+  /** A sound of this bank played when the engine does not know `sound` (a vehicle door without the vehicle bank registered shuts like metal). */
+  readonly fallback?: string
 }
 
 export type DestructionSoundStyle = 'art_scene' | 'game'
@@ -54,6 +56,13 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     hood_shut: { sound: 'shut_metal' },
     trunk_shut: { sound: 'shut_metal' },
     door_close: { sound: 'shut_wood', volumeScale: 0.7 },
+    // a vehicle's leaves (the vehicle bank of game-vehicles-three): a car door shuts with a padded thump and a latch, not like a fridge
+    vehicle_door_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_door_shut: { sound: 'car_door_close', fallback: 'shut_metal' },
+    vehicle_trunk_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_trunk_shut: { sound: 'car_trunk_close', fallback: 'shut_metal' },
+    vehicle_hood_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_hood_shut: { sound: 'car_hood_close', fallback: 'shut_metal' },
     drawer_open: { sound: 'slide' },
     drawer_close: { sound: 'slide' },
     lid_open: { sound: 'latch' },
@@ -144,7 +153,8 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       }
       const rule = rules[key]
       if (!rule) return
-      const sound = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
+      const wanted = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
+      const sound = rule.fallback && !engine.registry.sound(wanted) ? rule.fallback : wanted
       engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(rule.params ? { params: rule.params } : {}) })
     },
     rule: (key) => rules[key] ?? undefined,

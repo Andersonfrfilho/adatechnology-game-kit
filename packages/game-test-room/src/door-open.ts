@@ -61,6 +61,11 @@ export type RoomDoorOptions = {
   nameOf(objectId: string): string
   /** The sound class of what the leaf is made of (`impact_wood`, `impact_metal`...). */
   impactKey(objectId: string, part: string): string
+  /**
+   * The leaf's own sound key for a moment, when it has one (a car door is a padded thump with a latch, not the hollow metal of a fridge): `open` as
+   * the leaf leaves the frame, `shut` as it meets it. Left out or `undefined`, the latch, the hinge and the shut of the leaf's material play.
+   */
+  leafSound?(objectId: string, part: string, moment: 'open' | 'shut'): string | undefined
   sound(key: string, point: Vec3, volume: number): void
   onEvent(event: RoomDoorEvent): void
 }
@@ -493,11 +498,15 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       const at = u.obj.localToWorld(tmp.copy(u.grip))
       const point: Vec3 = [at.x, at.y, at.z]
       const slide = slides(u.leaf.clip, u.leaf.part)
-      const shut = options.impactKey(u.objectId, u.leaf.part).replace('impact_', 'leaf_shut_')
+      const own = (moment: 'open' | 'shut'): string | undefined => options.leafSound?.(u.objectId, u.leaf.part, moment)
+      const shut = own('shut') ?? options.impactKey(u.objectId, u.leaf.part).replace('impact_', 'leaf_shut_')
       // the latch gives as the leaf leaves the frame, the hinge sounds while it turns, the leaf meets the frame closing
       if (wasPhase === 'reach' && s.phase !== 'reach') {
+        const opening = own('open')
         if (slide) options.sound('leaf_slide', point, 0.5)
-        else {
+        else if (opening) {
+          if (was < 0.02) options.sound(opening, point, 0.5)
+        } else {
           if (was < 0.02) options.sound('leaf_latch', point, 0.5)
           options.sound(/metal|glass/.test(shut) ? 'leaf_creak_metal' : 'leaf_creak_wood', point, 0.35)
         }

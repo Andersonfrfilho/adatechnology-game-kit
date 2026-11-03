@@ -26,9 +26,23 @@ export function createAudioSink(engine: AudioEngine): EngineSink {
       playing.get(handle.id)?.stop()
       playing.delete(handle.id)
     },
-    loop(sound): LoopHandle {
+    loop(sound, options): LoopHandle {
       const loop = engine.loop(sound)
-      return { set: (state) => loop.set({ ...(state.volume === undefined ? {} : { volume: state.volume }), ...(state.frequency === undefined ? {} : { frequency: state.frequency }) }), stop: () => loop.stop() }
+      // the loop's place comes with the first set; `params.cutoff` drives the first filter
+      let position = options?.position
+      return {
+        set: (state) => {
+          position = state.position ?? position
+          const cutoff = state.params?.['cutoff']
+          loop.set({
+            ...(state.volume === undefined ? {} : { volume: state.volume }),
+            ...(state.frequency === undefined ? {} : { frequency: state.frequency }),
+            ...(position ? { position } : {}),
+            ...(cutoff === undefined ? {} : { cutoff }),
+          })
+        },
+        stop: () => loop.stop(),
+      }
     },
     setListener(listener: AudioListener) {
       engine.setListener(listener)

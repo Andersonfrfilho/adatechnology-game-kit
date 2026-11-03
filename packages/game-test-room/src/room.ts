@@ -157,6 +157,16 @@ const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1],
  * Create the test room. See `TestRoomOptions`. The room owns a renderer, scene and camera unless you pass them; with your own renderer you call
  * `room.update(dt)` every frame and render yourself.
  */
+/**
+ * The sound key of a vehicle's door, hood or trunk lid (`vehicle_door_shut`...): a car leaf has its own sounds, not those of its sheet metal. The part's
+ * role tag (`door`, `hood`, `lid`, from game-vehicles) says which; an untagged leaf counts as a door.
+ */
+const vehicleLeafKey = (spec: DestructibleSpec, part: string, moment: 'open' | 'shut'): string => {
+  const tags = spec.parts.find((p) => p.id === part)?.tags ?? []
+  const leaf = tags.includes('hood') ? 'hood' : tags.includes('lid') || tags.includes('trunk') ? 'trunk' : 'door'
+  return `vehicle_${leaf}_${moment}`
+}
+
 export function createTestRoom(options: TestRoomOptions): TestRoom {
   const THREE = options.THREE
   const locale = options.locale ?? 'en'
@@ -798,6 +808,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
+    leafSound: (objectId, part, moment) => {
+      const spec = specs.get(objectId)
+      return spec?.tags?.includes('vehicle') ? vehicleLeafKey(spec, part, moment) : undefined
+    },
     sound: playSound,
     onEvent: (ev) => {
       const vars = { name: ev.name, percent: Math.round(ev.opening * 100) }

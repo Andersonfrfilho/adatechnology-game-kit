@@ -50,7 +50,7 @@ export type { SceneLength, SceneNoise, SceneRecipeOptions, SceneTone, SceneVoice
 export { LIBRARY_BANK, LIBRARY_LOOPS, LIBRARY_SOUNDS } from './library'
 export { createAudioEngine } from './webaudio/engine'
 export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, VoiceHandle } from './webaudio/engine'
-export type { AudioLoopHandle } from './webaudio/engine-loop'
+export type { AudioLoopHandle, LoopSet } from './webaudio/engine-loop'
 export type { StartQueueOptions } from './webaudio/engine-queue'
 export { realize } from './webaudio/realize'
 export type { RealizedVoice, RealizeTarget } from './webaudio/nodes'

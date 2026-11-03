@@ -180,6 +180,13 @@ export type LoopRecipe = {
   readonly startAbove?: number
   /** Volume the gain starts at when the loop opens (`chain_loop`). */
   readonly volume?: number
+  /**
+   * Distance falloff of the loop, applied each time `set` gives a `position` (an engine, a fire, a skid heard from where it is). Left out, the loop is
+   * heard at the listener, as the team loops are. `cutoffK` also lowers the first filter's cutoff with the distance, as it does for one-shots.
+   */
+  readonly falloff?: Falloff
+  /** Stereo pan from the listener, from the `position` of each `set` (a panner after the gain). Off by default. */
+  readonly pan?: boolean
   readonly sources: readonly string[]
 }
 
