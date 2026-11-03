@@ -37,7 +37,7 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   parede sobre a fundação, cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
   e calçada) ou a casa inteira. Nada de parede de blocos soltos, cubos coloridos ou estrutura montada à parte.
 - **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
-  dono. `node tools/kit-audit/scene.mjs --check` também: abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca
+  dono. `node tools/kit-audit/scene.mjs --check` (no pre-push, não no CI: abre o navegador, ver seção 9) abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca
   de origem de um construtor do kit (`markKitOrigin` do `game-contracts`); todo construtor de peça novo marca a raiz que devolve. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
   `tools/kit-audit/allowlist.json`; ao corrigir, tire das duas listas.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
@@ -124,14 +124,27 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
 - **Listas e mapas esquecem o que saiu**: módulo de área, sistema de ferimentos, som, multidão. Se guarda uma entrada por objeto, apaga quando a raiz
   sai da cena (ex.: `wounds.untrack`). Listener e `setInterval` têm remoção no `dispose`/teardown.
 - Testes que barram a volta: `packages/game-test-room/tests/memory.test.ts` (o `clear()` libera o que tirou e preserva o cenário) e
-  `node examples/test-room/leak.mjs` no CI (job `memory-leaks`): repete explosões, vidro e carros, a troca de áreas, todas as outras áreas (armas, itens, animais, efeitos, terreno, som, plantas, cidade,
+  `node examples/test-room/leak.mjs` no pre-push (`tools/gpu/browser-checks.mjs`; não no CI, ver seção 9): repete explosões, vidro e carros, a troca de áreas, todas as outras áreas (armas, itens, animais, efeitos, terreno, som, plantas, cidade,
   clima, jogador, histórias e móveis) e a arma na mão, e falha se buffers, texturas,
   canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
   `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.
 - **Aviso na tela**: a sala mostra geometrias, texturas e heap no painel da bancada e, quando a memória sobe a cada limpeza (quatro seguidas na mesma
   área, acima do orçamento), põe uma faixa vermelha sob a ferramenta e um evento `memory_leak` no registro. Faixa vermelha na sala é vazamento a corrigir.
 
-## 8. Tudo tipado — **OBRIGATÓRIO**
+## 9. Testes de GPU e navegador: só no pre-push, nunca no CI — **OBRIGATÓRIO**
+
+Decidido pelo dono em 2026-11-03. Testes que dependem de GPU/renderização (orçamentos de quadro, `perf.mjs`, e os testes que abrem a sala de teste
+no navegador) **não rodam na pipeline de CI**. Eles rodam no pre-push, na máquina local com GPU, comparando com a main medida na mesma máquina. O CI
+fica só com build, typecheck, lint e testes que não precisam de GPU.
+
+- No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs` (a sala de teste e cada `examples/*-test-area` com `test.mjs`, `scene.mjs` e
+  `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e `tools/gpu/perf-gate.mjs` (`examples/test-room/perf.mjs` contra a main medida na
+  mesma máquina). `PRE_PUSH_BROWSER=0` e `PRE_PUSH_PERF=0` pulam uma vez, de propósito.
+- Teste novo que abre página, usa Playwright, WebGL ou mede quadro entra no `browser-checks.mjs` ou no `perf.mjs`, **nunca** num job do
+  `.github/workflows/ci.yml`. Revisão que vê Playwright/Chromium no CI barra.
+- Falha de teste de navegador no pre-push não se resolve tirando o teste: corrige a causa, como qualquer teste.
+
+## 10. Tudo tipado — **OBRIGATÓRIO**
 
 Decidido pelo dono em 2026-11-03: o kit é a base de vários jogos, e os contratos entre os pacotes (materiais, golpes, `TestableModule`) têm
 que quebrar no editor e no build, nunca no jogo.

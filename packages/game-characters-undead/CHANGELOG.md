@@ -1,5 +1,16 @@
 # @adatechnology/game-characters-undead
 
+## 0.3.0
+
+### Minor Changes
+
+- 31468ea: `undeadCrowdPack()` carries the balance table of the horde physics on each type (`balance`: `stability`, `trip` chance and `driveForce` in N; the crawler is `canFall: false`): the brute holds a file against a wall (2.5, 600 N), the runner, the blind and the charred give way first (0.8).
+
+### Patch Changes
+
+- Updated dependencies [7b77aa7]
+  - @adatechnology/game-characters@0.2.8
+
 ## 0.2.6
 
 ### Patch Changes

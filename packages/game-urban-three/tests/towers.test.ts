@@ -21,9 +21,9 @@ describe('towers drawn by the three adapter', () => {
     expect(on.plan.buildings).toHaveLength(8)
     expect(box(on.drawn.root).max.y).toBeGreaterThan(70)
     let meshes = 0, instances = 0
-    on.drawn.root.traverse((node: any) => { if (node.isMesh) meshes++; if (node.isInstancedMesh) instances += node.count })
+    on.drawn.root.traverse((node) => { if ((node as THREE.Mesh).isMesh) meshes++; if ((node as THREE.InstancedMesh).isInstancedMesh) instances += (node as THREE.InstancedMesh).count })
     let boxMeshes = 0
-    off.drawn.root.traverse((node: any) => { if (node.isMesh) boxMeshes++ })
+    off.drawn.root.traverse((node) => { if ((node as THREE.Mesh).isMesh) boxMeshes++ })
     expect(meshes).toBeGreaterThan(boxMeshes)
     expect(instances).toBeGreaterThan(on.plan.buildings.length * 100)
   })

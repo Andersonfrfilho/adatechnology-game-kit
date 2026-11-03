@@ -489,146 +489,6 @@
       "count": 8
     }
   },
-  "packages/game-interactables-three/src/merge.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-interactables-three/src/pose.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-interactables-three/src/screen.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-interactables-three/src/sway.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-interactables-three/src/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-interactables-three/tests/helpers.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-interactables-three/tests/merge.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 9
-    }
-  },
-  "packages/game-interactables-three/tests/mirrors.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-interactables-three/tests/sway.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-urban-three/src/draw.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 27
-    }
-  },
-  "packages/game-urban-three/src/resolvers.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-urban-three/src/rounded-box.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-urban-three/src/test-area/module.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 10
-    }
-  },
-  "packages/game-urban-three/src/text.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-urban-three/tests/exact-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-urban-three/tests/fake-dom.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-urban-three/tests/parts-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-urban-three/tests/patterns-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-urban-three/tests/placements.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-urban-three/tests/terrain-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-urban-three/tests/towers.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vegetation-three/src/test-area/module.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 10
-    }
-  },
-  "packages/game-vegetation-three/src/test-area/nursery.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 13
-    }
-  },
-  "packages/game-vegetation-three/src/test-area/plants.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-vegetation-three/src/test-area/scenarios.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vegetation-three/src/test-area/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-vegetation-three/tests/exact-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vegetation-three/tests/team-golden-module.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-vehicles-fleet/src/context.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
@@ -781,7 +641,7 @@
   },
   "packages/game-vehicles-three/src/vehicle-lod.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 23
+      "count": 24
     }
   },
   "packages/game-vehicles-three/tests/damage-drives.test.ts": {
@@ -871,7 +731,7 @@
   },
   "packages/game-vehicles/src/destructible/impl.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 52
+      "count": 54
     }
   },
   "packages/game-vehicles/src/destructible/item.ts": {

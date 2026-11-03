@@ -1,5 +1,23 @@
 # @adatechnology/game-floorplan
 
+## 0.3.0
+
+### Minor Changes
+
+- 81bd9c0: Engine by instance (spec 005, D5): `createFloorplan({ packs, patch, remove })` makes an engine with registries, zones and locales of its own (two engines on one page share nothing); packs are `(engine) => void` or `{ register }`. `defaultFloorplan()` is the engine behind the global `engine`, which stays exported and `@deprecated`. The package now depends on `@adatechnology/game-contracts` for `applyPatches` and `removeIds`; the IIFE bundles it.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+
 ## 0.2.2
 
 ### Patch Changes

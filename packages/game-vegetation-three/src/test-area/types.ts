@@ -1,7 +1,7 @@
 import type * as GameVegetationMain from '@adatechnology/game-vegetation'
 import type * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
 import type * as GameVegetationSpeciesMain from '@adatechnology/game-vegetation-species'
-import type { Vec3 } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, Vec3 } from '@adatechnology/game-contracts'
 
 /** The vegetation engine with its three.js adapter, as the `GameVegetation` global of the IIFE build has it. */
 export type VegetationSdk = typeof GameVegetationMain & typeof GameVegetationAdapter
@@ -28,7 +28,7 @@ export type VegetationTestOptions = {
 
 /** The part of the test room the scenarios use (the room's `ScenarioContext.room` has all of it). */
 export type VegetationRoom = {
-  spawn(item: string, position?: Vec3, rotationY?: number): { objectId: string; root: { userData: Record<string, any> } }
+  spawn(item: string, position?: Vec3, rotationY?: number): SpawnedPlant
   setTool(weaponId: string): void
   /** Lets the tool in hand finish its draw time (the room's rule: a tool cannot be used the moment it is taken). */
   waitUntilReady(): void
@@ -39,12 +39,12 @@ export type VegetationRoom = {
   world: {
     raycast(origin: Vec3, direction: Vec3, max: number): { object: string; part?: string; point: Vec3 } | null
     nearestJoint(object: string, point: Vec3, range: number, tool?: string): { id: string } | null
-    snapshot(object: string): any
-    state(object: string): any
-    part(object: string, part: string): any
+    snapshot(object: string): WorldObjectState | null
+    state(object: string): WorldObjectState | null
+    part(object: string, part: string): WorldPartState | null
     ids(): string[]
   }
-  log: { entries(filter: { type?: string; objectId?: string }): readonly any[] }
+  log: { entries(filter: { type?: string; objectId?: string }): readonly WorldLogEntry[] }
 }
 
 /** What a scenario needs of the room: the pass/fail line, time, and the room for the ones that shoot, cut and burn. */
@@ -53,3 +53,29 @@ export type VegetationContext = {
   expect(condition: boolean, label: string, data?: Record<string, unknown>): void
   step(seconds: number): void
 }
+
+/** A plant the room spawned: its id in the world and its root, which carries the destructible spec the module made (`userData.vegSpec`). */
+export type SpawnedPlant = {
+  objectId: string
+  root: { position: { x: number; y: number; z: number }; userData: { vegSpec?: DestructibleSpec } & Record<string, unknown> }
+}
+
+/** A part of an object as the destruction world reports it (the fields the scenarios read). */
+export type WorldPartState = {
+  id: string
+  status: string
+  hp: number
+  maxHp: number
+  temperature: number
+  burning: boolean
+  char?: number
+  fuel: number
+  holes?: readonly unknown[]
+  material: string
+}
+
+/** An object as the destruction world reports it: its parts and the groups they hold together in. */
+export type WorldObjectState = { parts: WorldPartState[]; groups: string[][] }
+
+/** A line of the room's log. */
+export type WorldLogEntry = { type: string; objectId?: string; data?: { joint?: string; joints?: string[]; jointsOpened?: number } & Record<string, unknown> }

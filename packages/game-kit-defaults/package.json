@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-kit-defaults",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "The default preset of the game kit (L5 composition): imports the content packs and returns the ready options the cores and adapters take by option, like Bevy's DefaultPlugins. A game that wants other content leaves it out.",
   "keywords": [

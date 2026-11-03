@@ -44,4 +44,6 @@ export {
   FIRE_SOUNDS,
 } from './audio/blast-fire'
 export type { BlastKind } from './audio/blast-fire'
+export { BLAST_FIRE_SAMPLES, blastFireSampleBank } from './audio/samples'
+export type { BlastFireSampleBankOptions, BlastFireSampleDefaults } from './audio/samples'
 export type { DestructionSound, DestructionSoundOptions, DestructionSoundStyle, SoundKeyRule } from './audio/sound'

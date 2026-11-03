@@ -22,9 +22,23 @@ const itemRows = (items: readonly { x: number; y: number; z: number; width: numb
   items.map((i) => [i.x, i.y, i.z, i.width, i.height, i.depth, i.color, i.rx, i.ry, i.rz])
 const windowRows = (windows: readonly { x: number; y: number; z: number; ry: number; width: number; height: number }[]) => windows.map((w) => [w.x, w.y, w.z, w.ry, w.width, w.height])
 
-function surfaceOf(root: any): { nodes: number; hash: string } {
+/** The fields of a node, material and light the surface reads (each is absent on the nodes that do not have it). */
+type SurfaceNode = THREE.Object3D & {
+  material?: THREE.Material & { roughness?: number; metalness?: number; flatShading?: boolean }
+  isLight?: boolean
+  color: THREE.Color
+  intensity?: number
+  distance?: number
+  decay?: number
+  angle?: number
+  penumbra?: number
+  count?: number
+}
+
+function surfaceOf(root: THREE.Object3D): { nodes: number; hash: string } {
   const extra: unknown[][] = []
-  root.traverse((node: any) => {
+  root.traverse((object) => {
+    const node = object as SurfaceNode
     const material = node.material
     extra.push([
       node.type,

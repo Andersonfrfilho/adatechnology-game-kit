@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from '../src'
+import { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, leadClipEvents, sampleClip, scaleClip, toolAnimationStep } from '../src'
 import type { AnimationClipSpec, AnimationEventSpec, AnimationPose, HostEvent, ToolRig } from '../src'
 
 const reload: AnimationClipSpec = {
@@ -73,6 +73,26 @@ describe('scaleClip and sampleClip', () => {
     expect(sampleClip(reload, 'mag', 0.25).position).toEqual([0, -0.05, 0])
     expect(sampleClip(reload, 'mag', 2).position).toEqual([0, 0, 0])
     expect(sampleClip(reload, 'slide', 0.5).position).toEqual([0, 0, 0])
+  })
+})
+
+describe('leadClipEvents', () => {
+  const clip = (events: AnimationEventSpec[]): AnimationClipSpec => ({ id: 'reload', duration: 1, keys: [{ t: 0 }, { t: 1 }], events })
+  it('fires an event its lead early, in real time after the stretch, and tells the lead it got', () => {
+    const stretched = leadClipEvents(scaleClip(clip([{ t: 0.5, type: 'sound', data: { id: 'mag_seat' }, lead: 0.1 }]), 2))
+    expect(stretched.events).toEqual([{ t: 0.9, type: 'sound', data: { id: 'mag_seat', lead: 0.1 } }])
+  })
+  it('never moves an event before 0 nor before the one written ahead of it', () => {
+    const led = leadClipEvents(clip([{ t: 0.05, type: 'sound', data: { id: 'a' }, lead: 0.2 }, { t: 0.4, type: 'sound', data: { id: 'b' } }, { t: 0.45, type: 'sound', data: { id: 'c' }, lead: 0.2 }]))
+    expect(led.events).toEqual([
+      { t: 0, type: 'sound', data: { id: 'a', lead: 0.05 } },
+      { t: 0.4, type: 'sound', data: { id: 'b' } },
+      { t: 0.4, type: 'sound', data: { id: 'c', lead: 0.04999999999999999 } },
+    ])
+  })
+  it('leaves a clip without leads as it is', () => {
+    const plain = clip([{ t: 0.3, type: 'sound', data: { id: 'a' } }])
+    expect(leadClipEvents(plain)).toBe(plain)
   })
 })
 

@@ -1,4 +1,6 @@
 import type * as THREE_NS from 'three'
+import { stepKnock } from '@adatechnology/game-contracts'
+import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
 
 export interface PlayerHooks {
@@ -31,11 +33,26 @@ export interface PlayerOptions {
   /** Height of the ground the player walks on (a crater, a heap). Default flat at 0. */
   floorAt?: (x: number, z: number) => number
   /** The feet leave the floor on a jump, or meet it again after a fall (`speed`: m/s downward at the touch). For the body's sounds. */
+  /**
+   * A body thrown by a knock hit something on its way (`obstacle`: a wall, a car, a cupboard, which stopped it) or the floor (`ground`, falling): `speed` m/s into it,
+   * `direction` the unit way it was going. For the impact on what it hit, the sound and the hurt.
+   */
+  onSlam?(event: PlayerSlam): void
   onFeet?: (event: PlayerFeetEvent) => void
 }
 
 /** What the feet did this frame: a jump, or a landing with the speed of the fall (a jump on the spot comes down at about 4.6 m/s). */
 export type PlayerFeetEvent = { readonly type: 'jump' } | { readonly type: 'land'; readonly speed: number }
+
+/** A thrown body meeting a wall or the floor (`PlayerOptions.onSlam`). */
+export interface PlayerSlam {
+  readonly against: 'obstacle' | 'ground'
+  readonly speed: number
+  readonly direction: Vec3
+}
+
+/** Slower than this (m/s) a thrown body meeting something only stops: no slam. */
+export const SLAM_MIN_SPEED = 1.5
 
 /** Below this fall speed (m/s) a touch of the floor is a step down, not a landing. */
 export const LANDING_MIN_SPEED = 1
@@ -83,6 +100,13 @@ export interface Player {
   takeWish(): [number, number]
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
   walk(forward: number, right: number): void
+  /**
+   * A blast's shove (`knockOf` of game-contracts): the body is thrown with its velocity, slides and stops against what is in the way, and, when the knock takes it off
+   * its feet, falls, lies a while and gets up. The keys do nothing until it stands again. A second knock while one is on adds its velocity.
+   */
+  knock(knock: Knock): void
+  /** The knock on now, or null: `lying` 0..1 says how far down the body is. */
+  readonly knocked: Readonly<Knock> | null
   dispose(): void
 }
 
@@ -107,6 +131,10 @@ const GRAVITY = 13
 const FLOOR_CLIMB_SPEED = 3
 const FLOOR_FALL_SPEED = 6
 const LOOK = 0.0022
+/** Height of the eye (m above the floor) of a body lying on its back, where the view turns up to (radians above the level), and how far it rolls to one side. */
+const LYING_EYE = 0.3
+const LYING_PITCH = 1.05
+const LYING_ROLL = 0.35
 
 /**
  * First-person controller: WASD, Shift, Space, mouse look with pointer lock, and a drag-to-look fallback for pages where the lock is not
@@ -152,10 +180,18 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     floorLevel += Math.max(-reach, Math.min(reach, gap))
   }
 
+  /** The knock of a blast on the body, while it lasts. */
+  let knocked: Knock | null = null
+  /** Which way the view rolls when the body falls: toward the side the shove came from. */
+  let rollSide = 1
   const apply = (): void => {
-    euler.set(pitch, yaw, 0, 'YXZ')
+    const lying = knocked?.lying ?? 0
+    // a fall eases in: the eye goes down to the floor and the view turns up to the sky, a little onto one side (on its back, thrown away from the blast)
+    const fallen = lying * lying * (3 - 2 * lying)
+    euler.set(pitch + (LYING_PITCH - pitch) * fallen, yaw, LYING_ROLL * rollSide * fallen, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + floorLevel + y - CROUCH_DROP * crouch - bend, px.z)
+    const standing = eye - CROUCH_DROP * crouch - bend
+    cam.position.set(px.x, floorLevel + y + standing + (LYING_EYE - standing) * fallen, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -341,6 +377,44 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('blur', onBlur)
   window.addEventListener('beforeunload', onBeforeUnload)
 
+  /** One step of a knock: the body flies and slides, stopped by the colliders like a walk, falls, lies and gets up; the keys wait. */
+  const stepKnocked = (dt: number): void => {
+    const k = knocked
+    if (!k) return
+    const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
+    floorUnder = floor
+    const at = { x: px.x, y, z: px.z }
+    const fromY = y
+    const fallSpeed = Math.max(0, -k.velocity[1])
+    const done = stepKnock(k, at, dt, () => floor, true)
+    const wantX = at.x - px.x
+    const wantZ = at.z - px.z
+    const fromX = px.x
+    const fromZ = px.z
+    const vx = k.velocity[0]
+    const vz = k.velocity[2]
+    move(wantX, wantZ)
+    // what stopped the body takes the speed that went into it, and the body slams into it
+    const stoppedX = Math.abs(wantX) > 1e-6 && Math.abs(px.x - fromX) < Math.abs(wantX) * 0.5
+    const stoppedZ = Math.abs(wantZ) > 1e-6 && Math.abs(px.z - fromZ) < Math.abs(wantZ) * 0.5
+    if (stoppedX) k.velocity[0] = 0
+    if (stoppedZ) k.velocity[2] = 0
+    const into = Math.hypot(stoppedX ? vx : 0, stoppedZ ? vz : 0)
+    if (into >= SLAM_MIN_SPEED) o.onSlam?.({ against: 'obstacle', speed: into, direction: [stoppedX ? vx / into : 0, 0, stoppedZ ? vz / into : 0] })
+    y = at.y
+    if (fromY > floor && y <= floor) {
+      const speed = Math.max(fallSpeed, (fromY - y) / Math.max(dt, 1e-6))
+      if (k.down && speed >= SLAM_MIN_SPEED * 0.5) o.onSlam?.({ against: 'ground', speed: Math.hypot(speed, Math.hypot(vx, vz) * 0.5), direction: [0, -1, 0] })
+      else if (speed >= LANDING_MIN_SPEED) o.onFeet?.({ type: 'land', speed })
+    }
+    vy = 0
+    walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
+    running = false
+    if (done) knocked = null
+    followFloor(dt)
+    apply()
+  }
+
   return {
     get walkIntent() {
       return walkKeys()
@@ -396,7 +470,29 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return isCrouched()
     },
     keys,
+    knock(next) {
+      if (seated) return
+      if (knocked) {
+        knocked.velocity = [knocked.velocity[0] + next.velocity[0], knocked.velocity[1] + next.velocity[1], knocked.velocity[2] + next.velocity[2]]
+        knocked.airborne ||= next.airborne
+        knocked.down ||= next.down
+      } else knocked = { ...next, velocity: [...next.velocity] }
+      if (next.down) {
+        // the view rolls to the side the shove pushes toward, seen from the facing
+        const right = Math.cos(yaw) * next.velocity[0] - Math.sin(yaw) * next.velocity[2]
+        rollSide = right >= 0 ? -1 : 1
+        crouchLatched = false
+      }
+      if (knocked.airborne) vy = Math.max(vy, knocked.velocity[1])
+    },
+    get knocked() {
+      return knocked
+    },
     update(dt) {
+      if (knocked) {
+        stepKnocked(dt)
+        return
+      }
       if (crouchPress) crouchPress.held += dt
       const crouched = isCrouched()
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
@@ -437,6 +533,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       apply()
     },
     setPose(position, yw, pt) {
+      knocked = null
       px.x = position[0]
       px.z = position[2]
       floorLevel = floorHere()
@@ -448,6 +545,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       apply()
     },
     look(position, target) {
+      knocked = null
       px.x = position[0]
       px.z = position[2]
       floorLevel = floorHere()

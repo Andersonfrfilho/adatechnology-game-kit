@@ -177,6 +177,27 @@ export interface ToolClipPlayer {
   readonly running: ReadonlyArray<{ readonly name: string; readonly time: number; readonly clip: AnimationClipSpec }>
 }
 
+/**
+ * The clip with every event that has a `lead` moved that many seconds earlier, the lead it got in `data.lead`. A led event never goes before 0
+ * nor before the event written ahead of it (a fast clip keeps its order: the lead shrinks). Run after `scaleClip`: the lead is real time, the
+ * clip's stretch does not touch it.
+ */
+export const leadClipEvents = (clip: AnimationClipSpec): AnimationClipSpec => {
+  const events = clip.events ?? []
+  if (!events.some((event) => (event.lead ?? 0) > 0)) return clip
+  let floor = 0
+  const led = events.map((event) => {
+    const lead = Math.max(0, Math.min(event.t - floor, event.lead ?? 0))
+    const t = event.t - lead
+    floor = Math.max(floor, t)
+    if (event.lead === undefined) return event
+    const moved: AnimationEventSpec = { ...event, t, data: lead > 0 ? { ...event.data, lead } : { ...event.data } }
+    delete moved.lead
+    return moved
+  })
+  return { ...clip, events: led }
+}
+
 export const createToolClipPlayer = (options: ToolClipPlayerOptions): ToolClipPlayer => {
   const { clips, rig, onEvent } = options
   let instances: Instance[] = []
@@ -223,7 +244,7 @@ export const createToolClipPlayer = (options: ToolClipPlayerOptions): ToolClipPl
       }
       const found = find(step.clip, step.variant)
       if (!found) return
-      const clip = step.duration && step.duration > 0 ? scaleClip(found.clip, step.duration) : found.clip
+      const clip = leadClipEvents(step.duration && step.duration > 0 ? scaleClip(found.clip, step.duration) : found.clip)
       const interval = options.repeatInterval?.() ?? 0.1
       instances = instances.filter((existing) => existing.name !== found.name || existing.delay > 0)
       for (let round = 0; round < (step.repeat ?? 1); round++) {

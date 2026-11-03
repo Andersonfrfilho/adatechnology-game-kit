@@ -287,13 +287,38 @@ export function installImpact(kit: Kit): void {
         if (g.userData.crease && c.smoothLater) c.smoothLater(msh)
         else if (g.userData.crease) crease(g, 42)
         else g.computeVertexNormals()
-        // the same bounds three.js computes, in two passes instead of three (computeBoundingSphere measures its own box again)
-        g.computeBoundingBox()
+        // the same bounds three.js computes, in two passes instead of three (computeBoundingSphere measures its own box again), read
+        // straight from the array: getX/getY/getZ per vertex were most of the ~56 ms of the first blast on the sedan (perf.mjs, 2026-11-03)
         const sphere = g.boundingSphere ?? (g.boundingSphere = new THREE.Sphere())
-        g.boundingBox.getCenter(sphere.center)
-        let far2 = 0
-        for (let i = 0; i < pos.count; i++) far2 = Math.max(far2, sphere.center.distanceToSquared(v.fromBufferAttribute(pos, i)))
-        sphere.radius = Math.sqrt(far2)
+        if (pos.isInterleavedBufferAttribute || pos.normalized || Object.keys(g.morphAttributes).length > 0) {
+          g.computeBoundingBox()
+          g.boundingBox.getCenter(sphere.center)
+          let far2 = 0
+          for (let i = 0; i < pos.count; i++) far2 = Math.max(far2, sphere.center.distanceToSquared(v.fromBufferAttribute(pos, i)))
+          sphere.radius = Math.sqrt(far2)
+        } else {
+          const box = g.boundingBox ?? (g.boundingBox = new THREE.Box3())
+          let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity
+          for (let i = 0; i < pos.count * 3; i += 3) {
+            const x = arr[i], y = arr[i + 1], z = arr[i + 2]
+            if (x < x0) x0 = x
+            if (y < y0) y0 = y
+            if (z < z0) z0 = z
+            if (x > x1) x1 = x
+            if (y > y1) y1 = y
+            if (z > z1) z1 = z
+          }
+          box.min.set(x0, y0, z0)
+          box.max.set(x1, y1, z1)
+          box.getCenter(sphere.center)
+          const cx = sphere.center.x, cy = sphere.center.y, cz = sphere.center.z
+          let far2 = 0
+          for (let i = 0; i < pos.count * 3; i += 3) {
+            const dx = cx - arr[i], dy = cy - arr[i + 1], dz = cz - arr[i + 2]
+            far2 = Math.max(far2, dx * dx + dy * dy + dz * dz)
+          }
+          sphere.radius = Math.sqrt(far2)
+        }
       }
     })
     const dset = new Set(c.deform)

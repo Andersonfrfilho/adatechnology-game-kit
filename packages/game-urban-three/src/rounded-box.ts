@@ -1,9 +1,11 @@
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
-type Three = any
+import type * as THREE_NS from 'three'
+
+type Three = typeof THREE_NS
 
 /** The team's rounded box: a 4x4x4 grid per face with the edge vertices pushed onto an arc of the given radius (smooth normals). A radius of 0 is a plain box. */
-export function createRoundedBox(THREE: Three, width: number, height: number, depth: number, radius: number): any {
+export function createRoundedBox(THREE: Three, width: number, height: number, depth: number, radius: number): THREE_NS.BufferGeometry {
   const T = shapeGeometries(THREE) as Three
   if (radius === 0) return new T.BoxGeometry(width, height, depth)
   const geometry = new T.BoxGeometry(2, 2, 2, 4, 4, 4)
@@ -39,7 +41,7 @@ export function createRoundedBox(THREE: Three, width: number, height: number, de
 }
 
 /** Triangle prism: the triangle `width` wide and `height` high, extruded `depth` long and centred on z. Base at y = 0. */
-export function createPrism(THREE: Three, width: number, height: number, depth: number): any {
+export function createPrism(THREE: Three, width: number, height: number, depth: number): THREE_NS.BufferGeometry {
   const shape = new THREE.Shape()
   shape.moveTo(-width / 2, 0)
   shape.lineTo(width / 2, 0)

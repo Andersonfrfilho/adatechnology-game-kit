@@ -1,5 +1,26 @@
 # @adatechnology/game-destruction
 
+## 0.14.0
+
+### Minor Changes
+
+- 3dbca8c: A shot at a vehicle lands on the drawn surface (`DestructibleImpl.surfaceRay`), not on the part's box. Hole marks belong to the panel and swing with its door, cracks start where the round landed, every drawn pane is glass, and an open door carries its rubber, inner card and edges.
+- 7b77aa7: Cost contract of `DestructibleImpl` (spec 005, D8): `describe()` and `state()` are O(1), allocation-free and cached between changes. `checkDestructible(impl, { cost: true })` measures 10 000 reads of each (new object per read, time and heap ceilings, all configurable). The character and the terrain now cache what they return; the values are the same.
+- 6489939: Assemblies by instance (spec 005, D5): `createAssemblies({ packs, patch, remove })` returns a set (`list`, `get`, `register`, `part`) that starts from a copy of the built-in walls and shares nothing with any other set. `defaultAssemblies()` is the set behind the global list; `ASSEMBLIES`, `registerAssembly`, `getAssembly` and `assemblyPart` stay exported and `@deprecated`, with the same results.
+- 3a46bd0: `DestructionOptions.chainLinksPerUpdate` (spec 005, T4b.4): at most that many primed explosives go off per `update`; the rest wait in the order of due time, older object and part order. Off by default, which keeps today's behaviour. The delay of each link is still the `chain` data of the explosive.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+
 ## 0.13.2
 
 ### Patch Changes

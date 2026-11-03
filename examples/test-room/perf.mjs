@@ -104,16 +104,18 @@ mkdirSync(outDir, { recursive: true })
 
 const SOFTWARE_GL = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox']
 const REAL_GL = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--disable-frame-rate-limit', '--no-sandbox']
+// software GL pays per pixel, so the counters mode draws a small window; PERF_VIEWPORT=WxH sets another (the budgets of each size are in VIEWPORT_BUDGETS)
+const [VIEW_WIDTH, VIEW_HEIGHT] = (process.env.PERF_VIEWPORT ?? (GPU_MODE ? '1600x900' : '320x180')).split('x').map(Number)
+const VIEWPORT = `${VIEW_WIDTH}x${VIEW_HEIGHT}`
 const { chromium } = loadPlaywright()
 // PERF_HEADED=1: a real window (X11), as a player sees it; headless Chrome composites off screen and reads several times slower on the same GPU
 const HEADED = GPU_MODE && process.env.PERF_HEADED === '1'
 const browser = await chromium.launch({
-  args: GPU_MODE ? [...REAL_GL, ...(HEADED ? ['--ozone-platform=x11', '--window-size=1600,900'] : [])] : SOFTWARE_GL,
+  args: GPU_MODE ? [...REAL_GL, ...(HEADED ? ['--ozone-platform=x11', `--window-size=${VIEW_WIDTH},${VIEW_HEIGHT}`] : [])] : SOFTWARE_GL,
   ...(HEADED ? { headless: false } : {}),
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
-// software GL pays per pixel and the counters do not depend on the size, so CI draws a small window
-const page = await browser.newPage({ viewport: GPU_MODE ? { width: 1600, height: 900 } : { width: 320, height: 180 }, deviceScaleFactor: 1 })
+const page = await browser.newPage({ viewport: { width: VIEW_WIDTH, height: VIEW_HEIGHT }, deviceScaleFactor: 1 })
 const pageErrors = []
 page.on('pageerror', (error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
@@ -121,6 +123,7 @@ if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
 await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
 await page.evaluate(installFrameRecorder)
+await page.evaluate(installDrawTap)
 await applyPixelRatio()
 await pause(2000)
 
@@ -129,7 +132,7 @@ const gpu = await page.evaluate(() => {
   const info = gl?.getExtension('WEBGL_debug_renderer_info')
   return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : 'unknown'
 })
-console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  tier=${TIER ?? 'none'}  pixelRatio=${PIXEL_RATIO || 'default'}  gpu=${gpu}`)
+console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  viewport=${VIEWPORT}  tier=${TIER ?? 'none'}  pixelRatio=${PIXEL_RATIO || 'default'}  gpu=${gpu}`)
 const calibration = process.env.PERF_CALIBRATE ? await page.evaluate(measureCalibration) : undefined
 const subsystems = calibration ? await page.evaluate(measureRoomCost) : undefined
 if (calibration) console.log(`CALIBRATION ${calibration.toFixed(2)} ms; room ${(subsystems.room / calibration).toFixed(2)}x, shadows ${(subsystems.shadows / calibration).toFixed(2)}x`)
@@ -157,11 +160,16 @@ const after = runs('warm') && SHARD !== 'warm' ? await phase('after_storm', () =
 const hordeMetrics = {}
 if (runs('horde')) for (const id of HORDE_PHASES) hordeMetrics[id] = await hordePhase(id)
 
+// `hard`: a broken contract on any machine (a shader linked in play, a page error, a light in the wrong slot, a horde that does not do what the phase is for);
+// `target`: a time or a count the machine's own speed moves (frames, long tasks, draws, buffers). PERF_TARGETS=report keeps the targets in the report and
+// out of the exit code: tools/gpu/perf-gate.mjs blocks those against main measured on the same machine instead.
+/** @type {{ text: string, kind: 'hard' | 'target' }[]} */
 const failures = []
-const fail = (text) => failures.push(text)
+const fail = (text, kind = 'target') => failures.push({ text, kind })
+const hard = (text) => fail(text, 'hard')
 for (const p of phases) {
   const programBudget = p.name === 'chain_horde' ? HORDE_BUDGET.chainPrograms : BUDGET.programsAfterLoad
-  if (p.programs > programBudget) fail(`${p.name}: ${p.programs} shader programs compiled during play (budget ${programBudget}): ${p.programNames.join(' | ')}`)
+  if (p.programs > programBudget) hard(`${p.name}: ${p.programs} shader programs compiled during play (budget ${programBudget}): ${p.programNames.join(' | ')}`)
   if (!GPU_MODE) continue
   if (p.overTwiceMedian > 0) fail(`${p.name}: ${p.overTwiceMedian} frames over twice the median (${p.p50} ms, from ${SIXTY_HZ_MS} ms up)`)
   if (p.hitches > 0) fail(`${p.name}: ${p.hitches} frames over ${BUDGET.hitchMs} ms (worst ${p.max} ms)`)
@@ -169,19 +177,21 @@ for (const p of phases) {
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
   if (p.maxFramesWaiting >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
 }
-if (slots) for (const problem of lightSlotReport.problems) fail(`light_slots: ${problem}`)
-if (slots && slots.programs > 0) fail(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
+if (slots) for (const problem of lightSlotReport.problems) hard(`light_slots: ${problem}`)
+if (slots && slots.programs > 0) hard(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
 if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
-if (pageErrors.length > 0) fail(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
+if (pageErrors.length > 0) hard(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
-for (const text of failures) console.log(`FAIL  ${text}`)
-console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken`)
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
+const REPORT_TARGETS = process.env.PERF_TARGETS === 'report'
+for (const { text, kind } of failures) console.log(`${kind === 'hard' || !REPORT_TARGETS ? 'FAIL ' : 'TARGET'}  ${text}`)
+const blocking = failures.filter((failure) => failure.kind === 'hard' || !REPORT_TARGETS)
+console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failures.length} budget(s) broken${REPORT_TARGETS ? ` (${blocking.length} hard, the rest are targets)` : ''}`)
 await browser.close()
-process.exit(failures.length === 0 ? 0 : 1)
+process.exit(blocking.length === 0 ? 0 : 1)
 
 function pause(ms) {
   return page.evaluate((delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
@@ -243,6 +253,7 @@ async function hordePhase(id) {
   await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}${process.env.PERF_QUERY ?? ''}`, { timeout: 0 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   await page.evaluate(installFrameRecorder)
+  await page.evaluate(installDrawTap)
   await applyPixelRatio()
   await page.evaluate(sampleDetailScale)
   const buffersAtStart = await page.evaluate(() => window.__glCounts.buffers)
@@ -289,17 +300,17 @@ async function playChainHorde() {
 function checkHorde(id, found) {
   const own = phases.find((p) => p.name === id)
   const crowd = found
-  if (crowd.agents === undefined) return fail(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
+  if (crowd.agents === undefined) return hard(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
   if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
   const drawAllowance = id === 'chain_horde' ? HORDE_BUDGET.damagedVehicleDraws : 0
   if (own && own.drawsPerFrame > idle.drawsPerFrame * HORDE_BUDGET.drawGrowth + drawAllowance) fail(`${id}: ${own.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}`)
   if (own && own.buffers > (id === 'dense_horde' ? HORDE_BUDGET.buffersDense : chainBuffers)) fail(`${id}: ${own.buffers} GPU buffers created during play`)
   if (id === 'dense_horde') {
-    if (!(crowd.falls_pressure > 0)) fail(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)
-    if (!(crowd.climbers > 0)) fail(`dense_horde: nobody climbed the mound (${crowd.climbers})`)
+    if (!(crowd.falls_pressure > 0)) hard(`dense_horde: no fall by pressure (${crowd.falls_pressure})`)
+    if (!(crowd.climbers > 0)) hard(`dense_horde: nobody climbed the mound (${crowd.climbers})`)
   }
   if (id === 'chain_horde') {
-    if (!(crowd.falls_chain > 0)) fail(`chain_horde: no chain fall beyond the blasts (${crowd.falls_chain})`)
+    if (!(crowd.falls_chain > 0)) hard(`chain_horde: no chain fall beyond the blasts (${crowd.falls_chain})`)
   }
   if (GPU_MODE && crowd.adaptation.settleSeconds > CONVERGE_SECONDS) fail(`${id}: the detail took ${crowd.adaptation.settleSeconds} s to settle (budget ${CONVERGE_SECONDS} s)`)
   if (GPU_MODE && crowd.adaptation.swing > MAX_SWING) fail(`${id}: the detail keeps swinging by ${crowd.adaptation.swing} after settling (budget ${MAX_SWING})`)
@@ -318,6 +329,7 @@ async function phase(name, run) {
   const queues = await page.evaluate(() => window.__testRoom.frameStats?.().budget.queues ?? [])
   result.maxFramesWaiting = Math.max(0, ...queues.map((queue) => queue.maxFramesWaiting))
   result.queues = Object.fromEntries(queues.map((queue) => [queue.id, { maxFramesWaiting: queue.maxFramesWaiting, forced: queue.forced, ranUnits: queue.ranUnits }]))
+  if (process.env.PERF_DRAWLIST) result.drawList = await page.evaluate(installDrawTap).then(() => page.evaluate(listDraws))
   if (process.env.PERF_STACKS) result.bufferStacks = await page.evaluate(() => Object.entries(window.__bufferStacks).sort((a, b) => b[1] - a[1]).slice(0, 80))
   phases.push(result)
   console.log(`PHASE ${JSON.stringify(result)}`)
@@ -481,8 +493,11 @@ async function readLightSlots() {
 }
 
 function countWebGlCalls() {
-  const counts = { programs: 0, buffers: 0, draws: 0, programNames: [] }
+  // firstUses: programs drawn with for the first time (linked earlier, at load, but never used: the driver finishes a program on its first draw, a stall in play)
+  const counts = { programs: 0, buffers: 0, draws: 0, programNames: [], firstUses: 0, firstUseNames: [] }
   window.__glCounts = counts
+  const nameOf = new WeakMap()
+  const used = new WeakSet()
   for (const Context of [WebGL2RenderingContext, WebGLRenderingContext]) {
     const proto = Context.prototype
     const wrap = (name, key) => {
@@ -498,8 +513,19 @@ function countWebGlCalls() {
     const link = proto.linkProgram
     proto.linkProgram = function (program) {
       const sources = (this.getAttachedShaders(program) ?? []).map((shader) => this.getShaderSource(shader) ?? '')
-      counts.programNames.push([...new Set(sources.join('\n').match(/#define (?:USE_\w+|NUM_\w+ \d+|DISTANCE|DEPTH_PACKING \d+|SHADOWMAP_TYPE_\w+|SHADER_NAME \w+|FLAT_SHADED|MATCAP|LAMBERT|PHONG|STANDARD|BASIC)/g) ?? [])].join(' ').replace(/#define /g, ''))
+      const name = [...new Set(sources.join('\n').match(/#define (?:USE_\w+|NUM_\w+ \d+|DISTANCE|DEPTH_PACKING \d+|SHADOWMAP_TYPE_\w+|SHADER_NAME \w+|FLAT_SHADED|MATCAP|LAMBERT|PHONG|STANDARD|BASIC)/g) ?? [])].join(' ').replace(/#define /g, '')
+      counts.programNames.push(name)
+      nameOf.set(program, name)
       return link.call(this, program)
+    }
+    const useProgram = proto.useProgram
+    proto.useProgram = function (program) {
+      if (program && !used.has(program)) {
+        used.add(program)
+        counts.firstUses++
+        counts.firstUseNames.push(`${nameOf.get(program) ?? 'unnamed'}${window.__drawing ? ` <- ${window.__drawing()}` : ''}`)
+      }
+      return useProgram.call(this, program)
     }
     wrap('createBuffer', 'buffers')
     for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) wrap(name, 'draws')
@@ -544,6 +570,47 @@ function listUploads() {
   }
 }
 
+/** Names what three.js is drawing (renderBufferDirect runs before the program is chosen): a program used for the first time is reported with the object that asked for it. */
+function installDrawTap() {
+  const webgl = window.__testRoom.webgl
+  if (webgl.__tapped) return
+  webgl.__tapped = true
+  let current = null
+  const describe = (object, material) => {
+    const path = []
+    for (let node = object; node && path.length < 4; node = node.parent) if (node.name) path.push(node.name)
+    const uniforms = material.isShaderMaterial ? `{${Object.keys(material.uniforms ?? {}).slice(0, 4).join(',')}}` : ''
+    const parents = path.length > 0 ? path.join('<') : `${object.parent?.type ?? '-'}<${object.parent?.parent?.type ?? '-'}`
+    return `${object.type}:${parents} ${material.type}:${material.name || '-'}${uniforms}${object.receiveShadow ? ' receives-shadow' : ''}`
+  }
+  window.__drawing = () => (current ? describe(current.object, current.material) : 'outside the renderer')
+  window.__drawTally = null
+  const direct = webgl.renderBufferDirect.bind(webgl)
+  webgl.renderBufferDirect = (camera, scene, geometry, material, object, group) => {
+    current = { object, material }
+    if (window.__drawTally) {
+      const key = describe(object, material)
+      window.__drawTally[key] = (window.__drawTally[key] ?? 0) + 1
+    }
+    direct(camera, scene, geometry, material, object, group)
+    current = null
+  }
+}
+
+/** One frame's draws by object and material, most first (PERF_DRAWLIST=1). */
+function listDraws() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      window.__drawTally = {}
+      requestAnimationFrame(() => {
+        const tally = window.__drawTally
+        window.__drawTally = null
+        resolve(Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 60))
+      })
+    })
+  })
+}
+
 function installFrameRecorder() {
   const frames = []
   const longTasks = []
@@ -567,7 +634,7 @@ function installFrameRecorder() {
     }
   }).observe({ type: 'long-animation-frame' })
   window.__perf = {
-    mark: () => ({ ...window.__glCounts, programNames: window.__glCounts.programNames.length, frame: frames.length, longTask: longTasks.length, slowFrame: slowFrames.length }),
+    mark: () => ({ ...window.__glCounts, programNames: window.__glCounts.programNames.length, firstUseNames: window.__glCounts.firstUseNames.length, frame: frames.length, longTask: longTasks.length, slowFrame: slowFrames.length }),
     read(name, start) {
       const counts = window.__glCounts
       const slice = frames.slice(start.frame + 2).sort((a, b) => a - b)
@@ -587,6 +654,8 @@ function installFrameRecorder() {
         programs: counts.programs - start.programs,
         buffers: counts.buffers - start.buffers,
         programNames: counts.programNames.slice(start.programNames),
+        firstUses: counts.firstUses - start.firstUses,
+        firstUseNames: counts.firstUseNames.slice(start.firstUseNames),
         drawsPerFrame: Math.round((counts.draws - start.draws) / frameCount),
         slowFrames: slowFrames.slice(start.slowFrame).slice(0, 5),
       }

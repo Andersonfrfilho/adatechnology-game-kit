@@ -1,3 +1,4 @@
+import type * as THREE_NS from 'three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, DestructibleSpec, JointSpec, PartSpec, TestableItem } from '@adatechnology/game-contracts'
 import type { Condition, PlantMesh, PlantSpec } from '@adatechnology/game-vegetation'
@@ -69,7 +70,7 @@ export type PieceMeta = {
   dx: number
 }
 
-type Three = any
+type Three = typeof THREE_NS
 type Mutable<T> = { -readonly [K in keyof T]: T[K] }
 
 /** Fraction of the volume of the shape that is solid, by destruction material (what the spec reports as `fill`). */
@@ -95,20 +96,20 @@ export function createPlants(sdk: VegetationSdk, species: SpeciesSdk, materials:
   }
 
   // ---- the 3D object ----------------------------------------------------------------------------------------------------------------------
-  function buildObject(THREE: Three, def: PlantDef): any {
+  function buildObject(THREE: Three, def: PlantDef): THREE_NS.Object3D {
     const root = markKitOrigin(new THREE.Group(), { owner: 'game-vegetation-three', kind: 'plant', id: def.base ?? def.id })
     root.name = def.id
     const segments = def.segments ?? 1
     let spacing = 0
     for (let s = 0; s < segments; s++) {
       const plant = plantFor(def, s)
-      const object: any = sdk.createPlantObject(THREE, plant, materials(THREE), { separable: true })
+      const object = sdk.createPlantObject(THREE, plant, materials(THREE), { separable: true })
       const prefix = segments > 1 ? `s${s}_` : ''
       const children = object.children.slice()
       if (s === 0 && segments > 1) {
-        const g0 = children[0].geometry
+        const g0 = (children[0] as THREE_NS.Mesh).geometry // a plant object is made of meshes
         g0.computeBoundingBox()
-        spacing = (g0.boundingBox.max.x - g0.boundingBox.min.x) * 0.9
+        spacing = (g0.boundingBox!.max.x - g0.boundingBox!.min.x) * 0.9
       }
       for (const mesh of children) {
         const piece = mesh.userData.destructionPart
@@ -147,16 +148,16 @@ export function createPlants(sdk: VegetationSdk, species: SpeciesSdk, materials:
   }
 
   // ---- the destruction spec -----------------------------------------------------------------------------------------------------------------
-  function buildSpec(root: any, def: PlantDef): DestructibleSpec {
-    const meshes: any[] = root.children.filter((c: any) => c.isMesh && c.userData.veg)
-    const byId: Record<string, any> = {}
+  function buildSpec(root: THREE_NS.Object3D, def: PlantDef): DestructibleSpec {
+    const meshes = root.children.filter((c): c is THREE_NS.Mesh => (c as THREE_NS.Mesh).isMesh === true && Boolean(c.userData.veg))
+    const byId: Record<string, THREE_NS.Mesh> = {}
     for (const m of meshes) byId[(m.userData.veg as PieceMeta).id] = m
     const parts: Mutable<PartSpec>[] = []
     for (const m of meshes) {
       const v = m.userData.veg as PieceMeta
       const g = m.geometry
       if (!g.boundingBox) g.computeBoundingBox()
-      const b = g.boundingBox
+      const b = g.boundingBox!
       const mn = [b.min.x + m.position.x, b.min.y + m.position.y, b.min.z + m.position.z]
       const mx = [b.max.x + m.position.x, b.max.y + m.position.y, b.max.z + m.position.z]
       const size: [number, number, number] = [Math.max(mx[0]! - mn[0]!, 0.02), Math.max(mx[1]! - mn[1]!, 0.02), Math.max(mx[2]! - mn[2]!, 0.02)]
@@ -286,9 +287,9 @@ export function createPlants(sdk: VegetationSdk, species: SpeciesSdk, materials:
       const item: Mutable<TestableItem> = {
         id: def.id,
         name: def.name ? (def.name[loc === 'en' ? 1 : 0] as string) : species.name(def.base ?? def.id, loc),
-        build: (THREE: unknown) => buildObject(THREE, def),
+        build: (THREE: unknown) => buildObject(THREE as Three, def), // the room hands its three.js namespace
         spec: (root: unknown) => {
-          const spec = buildSpec(root, def)
+          const spec = buildSpec(root as THREE_NS.Object3D, def)
           ;(root as { userData: Record<string, unknown> }).userData.vegSpec = spec
           return spec
         },

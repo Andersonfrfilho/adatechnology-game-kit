@@ -6,7 +6,7 @@ import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
-import type { WeaponAudio } from '../audio'
+import type { CuePlayed, WeaponAudio } from '../audio'
 import type { GunshotSpace } from '../audio/gunshot'
 import { weaponEventOf } from '../audio/host-events'
 import { soundProfileOf } from '../audio/reload-sounds'
@@ -73,7 +73,7 @@ export interface ViewmodelOptions {
   /** Where the body holds the tool now (`ModuleHost.holdFrame`): the tool is drawn there at its real size in every view; null or absent (no body), the frame of a body's right shoulder under the camera's eye. */
   bodyHold?: () => HandPose | null
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
-  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
+  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile; played?: CuePlayed }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
@@ -197,9 +197,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     audio,
     layers,
     groundAt,
-    sound: (weapon, cue, profile) => {
-      audio?.cue(cue, profile)
-      options.onSound?.({ weapon, cue, profile })
+    sound: (weapon, cue, profile, lead) => {
+      const played = audio?.cue(cue, profile, lead)
+      options.onSound?.({ weapon, cue, profile, ...(played ? { played } : {}) })
     },
     schedule: (delay, seconds, step, done) => void tasks.push({ delay, seconds, elapsed: 0, step: (progress) => step(ease(progress)), done }),
   }

@@ -21,7 +21,8 @@ export interface FxWorld {
   readonly layers: FxLayers
   groundAt(x: number, z: number): number
   /** A sound cue of a clip: the audio plays it (when there is one) and the host is told. */
-  sound(weapon: string, cue: string, profile: SoundProfile): void
+  /** A reload cue; `lead`: how early the clip fired it (seconds before the part reaches its stop). */
+  sound(weapon: string, cue: string, profile: SoundProfile, lead?: number): void
   /** Runs `step(e)` for `seconds` from `delay` seconds on, with `e` the eased progress, then `done`. */
   schedule(delay: number, seconds: number, step: (eased: number) => void, done?: () => void): void
 }

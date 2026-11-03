@@ -1,5 +1,29 @@
 # @adatechnology/game-vehicles
 
+## 0.6.0
+
+### Minor Changes
+
+- 3dbca8c: A shot at a vehicle lands on the drawn surface (`DestructibleImpl.surfaceRay`), not on the part's box. Hole marks belong to the panel and swing with its door, cracks start where the round landed, every drawn pane is glass, and an open door carries its rubber, inner card and edges.
+- cbb20a2: The kit's deferred work can share one frame budget. `engine.deferredQueue()` (voices), `renderer.deferredQueue()` (destruction events and slices), `houseRenderer.deferredQueue()` (breach paint) and `createCreaseQueue()` with `VehicleDestructibleOptions.creaseQueue` (vehicle crease, one queue for every vehicle, round robin) give a `DeferredQueue` that `@adatechnology/game-runtime` runs inside its budget. Nothing changes without a budget: the queues keep draining by themselves and `deferredStart`, `eventBudgetMs`, `breachPaintBudgetMs` and `pump()` keep their meaning and defaults. The test room runs on the scheduler, registers the voice and destruction queues, lends `host.defer` and `onFrame(fn, { phase, order })`, and gains `frameBudgetMs` and `frameStats()`.
+- f48b676: Lights go through the `LightBudget` of `game-render-three` (spec 005, D4 and D2). New optional `lights` (a `LightBudget`) on `createVfxRenderer`, `HouseRenderer.lighting` (`budget`), `createWeaponFx`, `createMeshApi` and `createThreeAdapter`, `createPersonBuilder`, `createWeatherRenderer`, `createHeadlights` (rules), `createLightning` and `createUrbanThree`: blast, fire and Workshop lights, the rooms' lights (their masks are written at `handle.slot`, which fixes the 12-entry mask), the rocket, the weapon light, the lamps, the flare, the headlights, the lightning flash (a leased hemisphere slot) and the street lights become requests or sources of the budget, so no light appears or goes while the game runs and no lit material recompiles. Without the option every package creates its own lights as before; that path is deprecated and goes in the next major, and the goldens that read light nodes stay on it. `ModuleHost` gains `lights` and `pools` (`unknown`: read them with `isLightBudget` and `isRenderPools`), the test room creates both and exposes `lights` and `webgl`. `game-urban` renames its counter to `LightAllowance`/`createLightAllowance`/`DEFAULT_LIGHT_ALLOWANCE` (the old names stay, deprecated). `game-render-three` gains `shadowSettings` and `LightLease.invalidateShadow`. `game-vehicles` takes `particleMaterials` (a structural pool) so the puffs' shader programs survive them; `game-weapons-three` takes `pools` for the flamethrower droplets and ground flames. The lint rule that forbids creating a light outside the budget is now an error.
+- 65ccb0c: `VehicleKitOptions.effects` (spec 005, A9): a function returning the host's effects world. With one, smoke, fire and dust puffs are played through it (`particle_puff`, `particle_glow`) with the colour, opacity, life and size the local puff would have had, and the kit's own cap (400) does not apply to them. Without one the kit draws its own sprites as before, with a one-time warning (deprecated). Solid debris (sparks, shards, scrap) stays local. The vehicles test area passes `host.effects`.
+
+### Patch Changes
+
+- 6168372: The rays that seat the windshield and rear window on the shell, `kit.probe` and `kit.surfaceAt` go through the triangle index of each mesh (`raycastIndexed` in `tri-index`): a ray visits only the blocks and triangles whose box it crosses instead of every triangle of the body, with the same triangle test as three.js, so the hits are the same (a test compares them ray by ray). A vehicle builds in about half the time; the vehicles test area tests no longer run past vitest's 60 s report timeout.
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-shapes-three@0.3.0
+
 ## 0.5.0
 
 ### Minor Changes

@@ -28,7 +28,8 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - [x] `game-floorplan-interactables`: `Json = unknown`; o adaptador usa os tipos reais do kit (`World`, `ObjectSpec`, `HouseholdItem`) e exporta o plano tipado (`AdapterPlan`, `PlanEntry`); `src` sem `any`
 - [ ] Casas, `any` que sobram (só nos testes, menos o post-apocalyptic): `game-floorplan-residential` 12, `game-floorplan-commercial` 13, `game-floorplan-interactables` 29, `game-floorplan-structure` 85, `game-floorplan-post-apocalyptic` 125
 - [ ] `game-floorplan-three` 536 (junto com ligar o strict)
-- [ ] Adaptadores three (`type Three = any` em `game-urban-three` e `game-vegetation-three` vira o namespace tipado do three): `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62, `game-characters-three` 66, `game-vehicles-three` 75
+- [x] Adaptadores three: `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62 (o `type Three = any` virou `typeof THREE`)
+- [ ] Adaptadores three que faltam: `game-characters-three` (resto, fora do construtor de sobreviventes), `game-vehicles-three` 75 (depois dos PRs de carro)
 - [ ] Veículos: `game-vehicles` 1.584 e `game-vehicles-fleet` 2.247 (depois que os PRs de física dos carros entrarem)
 - [ ] `tools/`: `vehicles-catalog` 14, `characters-catalog` 1, `golden` 1
 

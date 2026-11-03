@@ -1,10 +1,12 @@
-import type { ModuleScenario } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, ModuleScenario, PartSpec } from '@adatechnology/game-contracts'
 
-import type { VegetationContext, VegetationRoom } from './types'
+import type { SpawnedPlant, VegetationContext, VegetationRoom, WorldObjectState, WorldPartState } from './types'
 
-type A = any
 type V3 = [number, number, number]
-type Spawned = { objectId: string; root: { userData: Record<string, any> } }
+type Spawned = SpawnedPlant
+/** A piece at an instant (`snap`). */
+type PartSnap = { status: string; hp: number; maxHp: number; temperature: number; burning: boolean; char: number; fuel: number; holes: number; material: string }
+type Hit = NonNullable<ReturnType<VegetationRoom['world']['raycast']>>
 
 /**
  * The 13 scenarios of the Viveiro's vegetation module, literal (same objects, same tools, same sentences, in both languages). `veg_*` are the ids of the page.
@@ -15,10 +17,10 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
   const L = (pt: string, e: string): string => (en ? e : pt)
   const yn = (b: unknown): string => (b ? L('sim', 'yes') : L('não', 'no'))
 
-  const specOf = (so: Spawned): A => so.root.userData.vegSpec
-  const partSpec = (so: Spawned, pid: string): A => specOf(so).parts.filter((p: A) => p.id === pid)[0]
+  const specOf = (so: Spawned): DestructibleSpec => so.root.userData.vegSpec as DestructibleSpec // set by the module's spec()
+  const partSpec = (so: Spawned, pid: string): PartSpec => specOf(so).parts.filter((p) => p.id === pid)[0] as PartSpec
   const world = (so: Spawned, local: V3): V3 => {
-    const r = so.root as A
+    const r = so.root
     return [r.position.x + local[0], r.position.y + local[1], r.position.z + local[2]]
   }
   const norm = (v: V3): V3 => {
@@ -31,8 +33,8 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
   const center = (so: Spawned, pid: string): V3 => world(so, partSpec(so, pid).position)
 
   // Joint tools (saw, knife): the camera position from which the ray hits something within 0.45 m of the joint asked for. Aims the camera.
-  const aim = (room: VegetationRoom, so: Spawned, target: V3, standoff: number, opt: { beyond?: number; joint?: string; jointRange?: number } = {}): A => {
-    let best: A = null
+  const aim = (room: VegetationRoom, so: Spawned, target: V3, standoff: number, opt: { beyond?: number; joint?: string; jointRange?: number } = {}): { score: number; origin: V3; target: V3; hit: Hit | null } => {
+    let best: { score: number; origin: V3; target: V3; hit: Hit | null } | null = null
     for (const dir of DIRS) {
       const d = norm(dir)
       const origin: V3 = [target[0] - d[0] * standoff, target[1] - d[1] * standoff, target[2] - d[2] * standoff]
@@ -55,7 +57,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
   const AIMDIRS: V3[] = [[0, 0, -1], [0.7, 0, -0.7], [-0.7, 0, -0.7], [1, 0, 0], [-1, 0, 0], [0, -1, 0], [0.7, 0, 0.7], [-0.7, 0, 0.7], [0, 0, 1]]
   const aimPart = (room: VegetationRoom, so: Spawned, pidsIn: string | string[], gap: number, at?: V3): { origin: V3; point: V3; found: boolean; pid: string } => {
     const pids = typeof pidsIn === 'string' ? [pidsIn] : pidsIn
-    let best: A = null
+    let best: { score: number; d: V3; hit: { point: V3 }; pid: string } | null = null
     for (const pid of pids) {
       const c = at ? world(so, at) : center(so, pid)
       for (const dir of AIMDIRS) {
@@ -69,20 +71,21 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
         if (!best || score < best.score) best = { score, d, hit, pid }
       }
     }
-    if (!best) best = { score: 99, d: [0, 0, -1], hit: { point: center(so, pids[0] as string) }, pid: pids[0] }
-    const H = best.hit.point as V3
+    if (!best) best = { score: 99, d: [0, 0, -1], hit: { point: center(so, pids[0] as string) }, pid: pids[0] as string }
+    const H = best.hit.point
     const from: V3 = [H[0] - best.d[0] * gap, H[1] - best.d[1] * gap, H[2] - best.d[2] * gap]
     if (from[1] < 0.3) from[1] = 0.3
     room.look(from, [H[0] + best.d[0] * 0.3, H[1] + best.d[1] * 0.3, H[2] + best.d[2] * 0.3])
     return { origin: from, point: H, found: best.score < 99, pid: best.pid }
   }
-  const crownsOf = (so: Spawned): string[] => specOf(so).parts.filter((p: A) => /^(s\d+_)?crown\d*$/.test(p.id)).map((p: A) => p.id)
+  const crownsOf = (so: Spawned): string[] => specOf(so).parts.filter((p) => /^(s\d+_)?crown\d*$/.test(p.id)).map((p) => p.id)
   const jointPos = (so: Spawned, jid: string): V3 => {
-    const j = specOf(so).joints.filter((x: A) => x.id === jid)[0]
+    const j = (specOf(so).joints ?? []).filter((x) => x.id === jid)[0]!
     const a = partSpec(so, j.a)
     const b = partSpec(so, j.b)
-    const box = (p: A): { min: V3; max: V3 } => {
-      const h: V3 = p.shape.kind === 'box' ? p.shape.size.map((s: number) => s / 2) : [p.shape.radius, p.shape.height / 2, p.shape.radius]
+    const box = (p: PartSpec): { min: V3; max: V3 } => {
+      const sh = p.shape
+      const h: V3 = sh.kind === 'box' ? [sh.size[0] / 2, sh.size[1] / 2, sh.size[2] / 2] : [sh.radius, (sh.kind === 'cylinder' ? sh.height : sh.radius * 2) / 2, sh.radius]
       const r = p.rotation || [0, 0, 0] // only x and z (see buildSpec): Euler XYZ = Rx * Rz
       const cx = Math.cos(r[0]), sx = Math.sin(r[0]), cz = Math.cos(r[2]), sz = Math.sin(r[2])
       const mn: V3 = [Infinity, Infinity, Infinity]
@@ -102,13 +105,25 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
     const B_ = box(b)
     return world(so, [0, 1, 2].map((k) => (Math.max(A_.min[k] as number, B_.min[k] as number) + Math.min(A_.max[k] as number, B_.max[k] as number)) / 2) as V3)
   }
-  const lost = (p: A): boolean => !p || p.status === 'broken' || p.status === 'ashes' || p.status === 'melted'
+  const lost = (p: WorldPartState | PartSnap | null | undefined): boolean => !p || p.status === 'broken' || p.status === 'ashes' || p.status === 'melted'
   // The state of a piece at an instant: world.snapshot(id) gives a copy (state() / part() are live views).
-  const snap = (room: VegetationRoom, so: Spawned, pid: string): A => {
+  const snap = (room: VegetationRoom, so: Spawned, pid: string): PartSnap | null => {
     const st = room.world.snapshot(so.objectId)
-    const p = st && st.parts.filter((x: A) => x.id === pid)[0]
+    const p = st && st.parts.filter((x) => x.id === pid)[0]
     if (!p) return null
     return { status: p.status, hp: p.hp, maxHp: p.maxHp, temperature: p.temperature, burning: p.burning, char: p.char || 0, fuel: p.fuel, holes: (p.holes || []).length, material: p.material }
+  }
+  /** `snap` of a piece the scenario needs to be there (a missing one is a broken scenario, not a result). */
+  const snapAt = (room: VegetationRoom, so: Spawned, pid: string): PartSnap => {
+    const p = snap(room, so, pid)
+    if (!p) throw new Error(`game-vegetation-three: no part "${pid}" in ${so.objectId}`)
+    return p
+  }
+  /** The world's live state of an object the scenario spawned. */
+  const stateAt = (room: VegetationRoom, id: string): WorldObjectState => {
+    const st = room.world.state(id)
+    if (!st) throw new Error(`game-vegetation-three: no object ${id} in the world`)
+    return st
   }
   const logCount = (room: VegetationRoom, so: Spawned, type: string): number => room.log.entries({ type, objectId: so.objectId }).length
   // Joints opened in the log: 'detach' lines (one per joint, or several in one) plus those the 'fracture' event sums up in jointsOpened.
@@ -119,26 +134,31 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
     return n
   }
   const detachedJoint = (room: VegetationRoom, so: Spawned, jid: string): boolean =>
-    room.log.entries({ type: 'detach', objectId: so.objectId }).some((e: A) => e.data && (e.data.joint === jid || (e.data.joints || []).indexOf(jid) >= 0))
+    room.log.entries({ type: 'detach', objectId: so.objectId }).some((e) => e.data && (e.data.joint === jid || (e.data.joints || []).indexOf(jid) >= 0))
   const spawn = (room: VegetationRoom, id: string, x: number, z: number): Spawned => room.spawn(id, [x, 0, z], 0)
   // When a group comes loose, the world moves it to a new object (`obj_N`). `home` is the original object, `loose` the ones that came off.
-  const split = (room: VegetationRoom, so: Spawned): A => {
+  const split = (room: VegetationRoom, so: Spawned) => {
     const home = room.world.snapshot(so.objectId)
-    const loose = room.world.ids().filter((i) => /^obj_/.test(i)).map((i) => ({ id: i, st: room.world.snapshot(i) }))
+    if (!home) throw new Error(`game-vegetation-three: no object ${so.objectId} in the world`)
+    const loose = room.world.ids().filter((i) => /^obj_/.test(i)).flatMap((i) => {
+      const st = room.world.snapshot(i)
+      return st ? [{ id: i, st }] : []
+    })
     const anchored: Record<string, boolean> = {}
     for (const p of specOf(so).parts) if (p.anchored) anchored[p.id] = true
     const rooted: string[] = []
-    for (const g of home.groups as string[][]) if (g.some((pid) => anchored[pid])) for (const pid of g) rooted.push(pid)
-    const inLoose = (pid: string): boolean => loose.some((o) => o.st.parts.some((p: A) => p.id === pid && !lost(p)))
-    const inHome = (pid: string): boolean => home.parts.some((p: A) => p.id === pid && !lost(p))
+    for (const g of home.groups) if (g.some((pid) => anchored[pid])) for (const pid of g) rooted.push(pid)
+    const inLoose = (pid: string): boolean => loose.some((o) => o.st.parts.some((p) => p.id === pid && !lost(p)))
+    const inHome = (pid: string): boolean => home.parts.some((p) => p.id === pid && !lost(p))
     return { home, loose, rooted, inLoose, inHome, sections: home.groups.length + loose.length }
   }
 
   // Axe on the trunk until it breaks (at most `max` swings); gives the count and the state of the trunk.
-  const fell = (room: VegetationRoom, ctx: VegetationContext, so: Spawned, max: number): { swings: number; trunk: A } => {
+  const fell = (room: VegetationRoom, ctx: VegetationContext, so: Spawned, max: number): { swings: number; trunk: PartSnap } => {
     take(room, 'axe')
     let swings = 0
-    const h = partSpec(so, 'trunk').shape.height
+    const trunkShape = partSpec(so, 'trunk').shape
+    const h = trunkShape.kind === 'cylinder' ? trunkShape.height : trunkShape.kind === 'box' ? trunkShape.size[1] : trunkShape.radius * 2
     for (let i = 0; i < max; i++) {
       aimPart(room, so, 'trunk', 0.5, [0, Math.min(0.9, h / 3), 0])
       room.use()
@@ -147,7 +167,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       if (lost(room.world.part(so.objectId, 'trunk'))) break
     }
     ctx.step(5)
-    return { swings, trunk: snap(room, so, 'trunk') }
+    return { swings, trunk: snapAt(room, so, 'trunk') }
   }
 
   const sc = (id: string, ptName: string, enName: string, run: (ctx: VegetationContext) => void): ModuleScenario<VegetationContext> => ({ id: `veg_${id}`, name: L(ptName, enName), run })
@@ -166,7 +186,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       const r = fell(room, ctx, so, 60)
       const sp = split(room, so)
       const crownGone = lost(room.world.part(so.objectId, 'crown')) || !sp.inHome('crown') || sp.rooted.indexOf('crown') < 0
-      const branches: string[] = specOf(so).parts.filter((p: A) => p.tags.indexOf('branch') >= 0).map((p: A) => p.id)
+      const branches: string[] = specOf(so).parts.filter((p) => (p.tags ?? []).indexOf('branch') >= 0).map((p) => p.id)
       const branchesFree = branches.every((b) => sp.rooted.indexOf(b) < 0)
       const detach = jointsOpened(room, so)
       ctx.expect(r.trunk.status === 'broken' && r.swings >= 8 && r.swings <= 15, L(`Machado no tronco de 15 cm (hp ${Math.round(r.trunk.maxHp)}): tronco ${r.trunk.status} depois de ${r.swings} golpes (esperado: broken em 8 a 15 golpes)`, `Axe on a 15 cm trunk (hp ${Math.round(r.trunk.maxHp)}): trunk ${r.trunk.status} after ${r.swings} swings (expected: broken in 8 to 15 swings)`), { swings: r.swings, status: r.trunk.status, maxHp: r.trunk.maxHp })
@@ -196,7 +216,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
         detached = detachedJoint(room, so, jid)
       }
       ctx.step(3)
-      const trunk = snap(room, so, 'trunk')
+      const trunk = snapAt(room, so, 'trunk')
       const sp = split(room, so)
       const branchOff = sp.inLoose('branch1') && !sp.inHome('branch1')
       const restStays = sp.inHome('trunk') && sp.rooted.indexOf('trunk') >= 0
@@ -214,7 +234,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
         ctx.step(0.4)
         shots++
       }
-      const trunk = snap(room, so, 'trunk')
+      const trunk = snapAt(room, so, 'trunk')
       const sp = split(room, so)
       ctx.expect(trunk.status !== 'broken' && trunk.hp > 0, L(`${shots} tiros de 9 mm no tronco de 15 cm: tronco ${trunk.status}, hp ${Math.round(trunk.hp)}/${Math.round(trunk.maxHp)} (esperado: não quebrado)`, `${shots} 9 mm shots on the 15 cm trunk: trunk ${trunk.status}, hp ${Math.round(trunk.hp)}/${Math.round(trunk.maxHp)} (expected: not broken)`), { shots, hp: trunk.hp })
       ctx.expect(sp.loose.length === 0 && sp.inHome('trunk') && sp.rooted.indexOf('crown') >= 0, L(`A árvore continua de pé: pedaços soltos ${sp.loose.length}, copa presa ao chão ${yn(sp.rooted.indexOf('crown') >= 0)} (esperado: 0, sim)`, `The tree still stands: loose pieces ${sp.loose.length}, crown rooted ${yn(sp.rooted.indexOf('crown') >= 0)} (expected: 0, yes)`), {})
@@ -244,21 +264,21 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       take(room, 'lighter')
       const a = aimPart(room, so, crownsOf(so), 0.08)
       room.use(6)
-      const crown = snap(room, so, a.pid)
+      const crown = snapAt(room, so, a.pid)
       const lit = crown.burning || crown.temperature > 300
       let peak = 0
       let charMax = 0
       for (let t = 0; t < 18; t++) {
         ctx.step(5)
-        for (const p of room.world.state(so.objectId).parts) {
+        for (const p of stateAt(room, so.objectId).parts) {
           if (p.material === 'green_wood') {
             peak = Math.max(peak, p.temperature)
             charMax = Math.max(charMax, p.char || 0)
           }
         }
       }
-      const st = room.world.state(so.objectId)
-      const burnt = st.parts.filter((p: A) => p.material === 'foliage' && (p.burning || p.char > 0 || p.status === 'ashes')).length
+      const st = stateAt(room, so.objectId)
+      const burnt = st.parts.filter((p) => p.material === 'foliage' && (p.burning || (p.char ?? 0) > 0 || p.status === 'ashes')).length
       ctx.expect(lit, L(`Isqueiro na copa: folhagem acesa ou acima de 300 °C = ${yn(lit)} (${Math.round(crown.temperature)} °C; esperado: sim)`, `Lighter on the crown: foliage lit or above 300 C = ${yn(lit)} (${Math.round(crown.temperature)} C; expected: yes)`), { temperature: crown.temperature })
       ctx.expect(burnt > 0, L(`Depois de 90 s: ${burnt} peça(s) de folhagem queimando, carbonizada(s) ou em cinza (esperado: 1 ou mais)`, `After 90 s: ${burnt} foliage piece(s) burning, charred or ash (expected: 1+)`), { burnt })
       ctx.expect(peak > 150 || charMax > 0, L(`O fogo da folhagem passa para a madeira verde (tronco e galhos): pico de ${Math.round(peak)} °C, carbonização máxima ${pct(charMax)} (esperado: pico acima de 150 °C ou carbonização acima de 0; a madeira verde só pega fogo acima de 400 °C)`, `Foliage fire reaches the green wood (trunk and branches): peak ${Math.round(peak)} C, max char ${pct(charMax)} (expected: peak above 150 C or char above 0; green wood only ignites above 400 C)`), { peak, charMax })
@@ -269,14 +289,14 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       const so = spawn(room, 'mango_tree', 0, -6)
       take(room, 'pistol_9mm')
       const tgt = aimPart(room, so, crownsOf(so), 2.5).pid
-      const before = snap(room, so, tgt)
+      const before = snapAt(room, so, tgt)
       for (let i = 0; i < 3; i++) {
         aimPart(room, so, tgt, 2.5)
         room.use()
         ctx.step(0.6)
       }
-      const crown = snap(room, so, tgt)
-      const leaves = room.log.entries({ type: 'debris', objectId: so.objectId }).filter((e: A) => e.data && e.data.kind === 'leaves').length
+      const crown = snapAt(room, so, tgt)
+      const leaves = room.log.entries({ type: 'debris', objectId: so.objectId }).filter((e) => e.data && e.data.kind === 'leaves').length
       const hurt = crown.hp < before.hp || crown.status === 'broken'
       ctx.expect(hurt && crown.status !== 'intact', L(`Três tiros na copa: hp ${Math.round(before.hp)} para ${Math.round(crown.hp)}, estado ${crown.status} (esperado: hp menor, não intacta)`, `Three shots into the crown: hp ${Math.round(before.hp)} to ${Math.round(crown.hp)}, status ${crown.status} (expected: lower hp, not intact)`), { hp: crown.hp })
       ctx.expect(leaves > 0 || crown.holes > 0, L(`Folhas arrancadas: ${leaves} linha(s) de folhas voando, ${crown.holes} furo(s) na copa (esperado: 1 ou mais)`, `Leaves torn off: ${leaves} flying-leaf line(s), ${crown.holes} hole(s) in the crown (expected: 1+)`), { leaves, holes: crown.holes })
@@ -300,9 +320,9 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       }
       ctx.step(3)
       const sp = split(room, so)
-      let potNow = snap(room, so, 'pot')
+      let potNow: PartSnap | WorldPartState | null = snap(room, so, 'pot')
       for (const o of sp.loose) {
-        const q = o.st.parts.filter((x: A) => x.id === 'pot')[0]
+        const q = o.st.parts.filter((x) => x.id === 'pot')[0]
         if (q) potNow = q
       }
       const soilOut = sp.inLoose('soil') || !sp.inHome('soil')
@@ -333,8 +353,8 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       const a = snap(room, so, arm)
       const sp = split(room, so)
       const armOff = !a || a.status === 'broken' || (sp.inLoose(arm) && !sp.inHome(arm))
-      const stemOk = sp.inHome('stem') && sp.rooted.indexOf('stem') >= 0 && room.world.part(so.objectId, 'stem').status !== 'broken'
-      const spines = specOf(so).parts.filter((p: A) => p.tags.indexOf('thorns') >= 0)
+      const stemOk = sp.inHome('stem') && sp.rooted.indexOf('stem') >= 0 && room.world.part(so.objectId, 'stem')?.status !== 'broken'
+      const spines = specOf(so).parts.filter((p) => (p.tags ?? []).indexOf('thorns') >= 0)
       const thorny = so.root.userData.thorny === true && spines.length > 0
       const spinesOff = !sp.rooted.some((pid: string) => pid.indexOf(`${arm}_spines`) === 0)
       ctx.expect(armOff, L(`Machete na junta ${jid}: braço ${a ? a.status : 'solto como objeto próprio'} depois de ${swings} golpe(s) (esperado: solto do caule pela junta)`, `Machete on joint ${jid}: arm ${a ? a.status : 'loose as its own object'} after ${swings} swing(s) (expected: off the stem through the joint)`), { swings })
@@ -369,12 +389,12 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
         aimPart(room, so, 'trunk', 0.08, [0, 0.8, 0])
         room.use(8)
       }
-      const d0 = snap(room, dead, 'trunk')
-      const l0 = snap(room, live, 'trunk')
+      const d0 = snapAt(room, dead, 'trunk')
+      const l0 = snapAt(room, live, 'trunk')
       ctx.step(120)
-      const d = snap(room, dead, 'trunk')
-      const l = snap(room, live, 'trunk')
-      const score = (p: A): number => (p ? Math.max(p.char, p.burning ? 0.01 : 0, (p.temperature - 20) / 2000) : 0)
+      const d = snapAt(room, dead, 'trunk')
+      const l = snapAt(room, live, 'trunk')
+      const score = (p: PartSnap): number => (p ? Math.max(p.char, p.burning ? 0.01 : 0, (p.temperature - 20) / 2000) : 0)
       ctx.expect(d0.material === 'wood_soft' && l0.material === 'green_wood', L(`Materiais do tronco: árvore morta ${d0.material}, viva ${l0.material} (esperado: wood_soft, green_wood)`, `Trunk materials: dead tree ${d0.material}, living ${l0.material} (expected: wood_soft, green_wood)`), { dead: d0.material, live: l0.material })
       ctx.expect(score(d) > score(l), L(`Depois de 8 s de isqueiro e 120 s de espera: morta queimando ${yn(d.burning)}, ${Math.round(d.temperature)} °C, carbonização ${pct(d.char)}; viva queimando ${yn(l.burning)}, ${Math.round(l.temperature)} °C, carbonização ${pct(l.char)} (esperado: a morta mais queimada)`, `After 8 s of lighter and 120 s of waiting: dead burning ${yn(d.burning)}, ${Math.round(d.temperature)} C, char ${pct(d.char)}; living burning ${yn(l.burning)}, ${Math.round(l.temperature)} C, char ${pct(l.char)} (expected: dead burns more)`), { dead: score(d), live: score(l) })
     }),
@@ -390,7 +410,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       }
       ctx.step(1)
       const sp = split(room, so)
-      const all: A[] = [...sp.home.parts]
+      const all: WorldPartState[] = [...sp.home.parts]
       for (const o of sp.loose) all.push(...o.st.parts)
       const alive = all.filter((p) => !lost(p)).length
       const total = specOf(so).parts.length
@@ -403,7 +423,7 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
       const tuft = spawn(room, 'lawn_tuft', 0, -3)
       const tree = spawn(room, 'mango_tree', 4, -3)
       const noBlock = !tuft.root.userData.collider
-      const treeBlock = !!(tree.root.userData.collider && tree.root.userData.collider.kind)
+      const treeBlock = !!((tree.root.userData.collider as { kind?: string } | undefined)?.kind)
       ctx.expect(noBlock && treeBlock, L(`Colisor do SDK: touceira ${noBlock ? 'nenhum' : 'tem'}, tronco da mangueira ${treeBlock ? 'tem' : 'nenhum'} (esperado: nenhum, tem)`, `SDK collider: tuft ${noBlock ? 'none' : 'has one'}, mango trunk ${treeBlock ? 'has one' : 'none'} (expected: none, has one)`), {})
       // really walks: room.walk(to, seconds) moves the player through the room's own loop (ctx.step advances the simulation, with no host loop)
       room.look([0, 1.7, -0.5], [0, 1.7, -6])

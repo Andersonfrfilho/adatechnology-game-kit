@@ -1,5 +1,34 @@
 # @adatechnology/game-interactables-three
 
+## 0.2.0
+
+### Minor Changes
+
+- 455522d: `createCord` and `catenary` move to `@adatechnology/game-shapes-three` (spec 005, D1), so the weapons no longer reach into `game-interactables-three` for them. `game-interactables-three` keeps both exports, `@deprecated`, delegating to the new ones; they are removed in the next major.
+- 35474f0: `EffectsOptions.effects` (spec 005, A9): a function returning the host's effects world. With one, smoke, steam, fire and spark particles are played through it (`particle_puff`, `particle_glow`, `particle_streak`) with the colour, opacity, life and sizes the local pool would have given them, and `maxParticles` no longer caps them. Water stays in the local pool. Without one the pools are used as before, with a one-time warning (deprecated).
+- f48b676: Lights go through the `LightBudget` of `game-render-three` (spec 005, D4 and D2). New optional `lights` (a `LightBudget`) on `createVfxRenderer`, `HouseRenderer.lighting` (`budget`), `createWeaponFx`, `createMeshApi` and `createThreeAdapter`, `createPersonBuilder`, `createWeatherRenderer`, `createHeadlights` (rules), `createLightning` and `createUrbanThree`: blast, fire and Workshop lights, the rooms' lights (their masks are written at `handle.slot`, which fixes the 12-entry mask), the rocket, the weapon light, the lamps, the flare, the headlights, the lightning flash (a leased hemisphere slot) and the street lights become requests or sources of the budget, so no light appears or goes while the game runs and no lit material recompiles. Without the option every package creates its own lights as before; that path is deprecated and goes in the next major, and the goldens that read light nodes stay on it. `ModuleHost` gains `lights` and `pools` (`unknown`: read them with `isLightBudget` and `isRenderPools`), the test room creates both and exposes `lights` and `webgl`. `game-urban` renames its counter to `LightAllowance`/`createLightAllowance`/`DEFAULT_LIGHT_ALLOWANCE` (the old names stay, deprecated). `game-render-three` gains `shadowSettings` and `LightLease.invalidateShadow`. `game-vehicles` takes `particleMaterials` (a structural pool) so the puffs' shader programs survive them; `game-weapons-three` takes `pools` for the flamethrower droplets and ground flames. The lint rule that forbids creating a light outside the budget is now an error.
+
+### Patch Changes
+
+- Updated dependencies [15046ce]
+- Updated dependencies [3dbca8c]
+- Updated dependencies [455522d]
+- Updated dependencies [7b77aa7]
+- Updated dependencies [41b9dd4]
+- Updated dependencies [d97cf9f]
+- Updated dependencies [05fbba9]
+- Updated dependencies [351d09e]
+- Updated dependencies [b97f318]
+- Updated dependencies [f48b676]
+- Updated dependencies [24b4981]
+- Updated dependencies [fab813c]
+  - @adatechnology/game-contracts@0.22.0
+  - @adatechnology/game-shapes-three@0.3.0
+  - @adatechnology/game-render-three@0.1.0
+  - @adatechnology/game-shapes@0.2.0
+  - @adatechnology/game-interactables@0.2.14
+  - @adatechnology/game-props3d@0.3.3
+
 ## 0.1.15
 
 ### Patch Changes
