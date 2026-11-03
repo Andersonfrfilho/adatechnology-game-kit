@@ -508,7 +508,7 @@ class Renderer implements DestructionRenderer {
   private slam(p: PieceBody, hit: PieceSweepHit, speed: number): void {
     const energy = 0.5 * p.mass * speed * speed
     const direction: Vec3 = [-hit.normal[0], -hit.normal[1], -hit.normal[2]]
-    this.sound(this.impactSoundOf(hit.object), hit.point, clamp(speed / 10, 0.2, 1))
+    this.landingSound(hit.object, hit.point, clamp(speed / 10, 0.2, 1))
     this.syncBound(p.objectId)
     try {
       this.world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, energy, radius: 0.1, direction, normal: hit.normal, source: p.objectId })
