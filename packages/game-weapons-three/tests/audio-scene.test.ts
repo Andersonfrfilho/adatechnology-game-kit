@@ -69,7 +69,7 @@ describe('the reload sounds of the Cena de Arte', () => {
   })
 
   it('casing: one ring from 4200 to 5700 Hz sliding to 3800, 0.25 to 0.45 s late, 0.06 s long', () => {
-    const trace = artScene((audio) => audio.clink(), {})
+    const trace = artScene((audio) => audio.clink(), { shotModel: 'game' })
     const frequency = trace.entries.filter((entry) => entry.op === 'param' && entry.param === 'frequency' && entry.method === 'setValueAtTime')
     expect(frequency).toHaveLength(1)
     const [hz, at] = frequency[0]!.args as [number, number]

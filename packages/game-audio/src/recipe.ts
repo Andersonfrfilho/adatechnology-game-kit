@@ -183,8 +183,23 @@ export type LoopRecipe = {
   readonly sources: readonly string[]
 }
 
+/**
+ * One id that plays one of several recipes (the takes of a footstep, of a punch): `play(id)` draws a variant, never the one it played last time (unless
+ * `repeat`), and plays it at a rate drawn from `rate` (1.04 is 4% higher and 4% shorter; see `retunePlan`), so ten footsteps never sound like one.
+ */
+export type SoundSet = {
+  readonly id: string
+  /** Recipe ids, at least one. */
+  readonly variants: readonly string[]
+  /** `[min, max]` of the playback rate (pitch and speed together). Default `[1, 1]`. */
+  readonly rate?: readonly [min: number, max: number]
+  /** Allow the same variant twice in a row (default false). */
+  readonly repeat?: boolean
+}
+
 export type SoundBank = {
   readonly id: string
   readonly sounds?: readonly SoundRecipe[]
   readonly loops?: readonly LoopRecipe[]
+  readonly sets?: readonly SoundSet[]
 }
