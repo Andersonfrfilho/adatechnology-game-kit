@@ -10,6 +10,8 @@ import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleLod } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
+import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
+import type { LaneDamage } from './lane-damage'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
@@ -27,6 +29,8 @@ const itemId = (key: string): string => ITEM_OF[key] ?? key
 type Entry = { readonly key: string; readonly id: string; readonly scenario?: string }
 
 const LANE = { z: 11, from: -12, wall: 13 }
+/** A rim on the road throws a burst of sparks this often. */
+const SPARK_EVERY_S = 0.08
 /** Radians a door, hood or lid may be off its rest and still count as shut. */
 const LEAF_REST_RADIANS = 0.02
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
@@ -70,7 +74,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const entries: Entry[] = [...keys.map((key): Entry => ({ key, id: itemId(key) })), ...wrecks.map((w): Entry => ({ key: w.vehicle, id: w.key, scenario: w.scenario }))]
   const effectIds = { ...defaultEffectIds, ...options.effects }
   const soundIds = { ...defaultSoundIds, ...options.sounds }
-  const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt' }
+  const settings = { quality: 'high', paint: false, seed: 1, palette: 'auto', driving: 'arcade', surface: 'dry_asphalt', damage: 'none' as LaneDamage }
   const kits = new WeakMap<object, VehicleKit>()
   const placed = new Map<string, Placed>()
   let host: ModuleHost | null = null
@@ -326,15 +330,18 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     clearLane()
     const kit = kitFor(three)
     const vehicles = createVehiclesThree(three, { kit, fleet })
-    const built = vehicles.build('compact_hatch', { quality: 'lite', seed: settings.seed })
+    // damage needs the parts drawn: the car is built in full only then
+    const built = vehicles.build('compact_hatch', { quality: settings.damage === 'none' ? 'lite' : 'high', seed: settings.seed })
     const wall = new three.Mesh(new three.BoxGeometry(0.6, 2, 6), new three.MeshStandardMaterial({ color: 0x777777 }))
     wall.position.set(LANE.wall + 0.3, 1, LANE.z)
     const scene = host.scene as any
     scene.add(built.group, wall)
-    const mode = settings.driving === 'semi' ? 'semi' : 'arcade'
+    // damage acts through the semi driver's condition
+    const mode = settings.driving === 'semi' || settings.damage !== 'none' ? 'semi' : 'arcade'
+    const damage = settings.damage === 'none' || !built.context ? null : createLaneDamage({ kit, context: built.context as VehicleContext, frame: built.group, damage: settings.damage })
     const surfaces = createSurfaces()
     const idle = { throttle: 0, brake: 0, steer: 0, handbrake: false }
-    const state = { time: 0, exhaust: 0, ended: false, wasBlocked: false }
+    const state = { time: 0, exhaust: 0, sparks: 0, ended: false, wasBlocked: false }
     const arcade = createArcadeDriver({ length: built.length, width: built.width })
     const semi = createSemiSimDriver({}, { surfaces })
     const driver = mode === 'semi' ? semi : arcade
@@ -373,6 +380,13 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
           }
         } else {
           semi.step(input, dt, { ground: () => ({ surface: settings.surface }) })
+          const grinding = damage?.step({ dt, speed: Math.abs(lane?.speed() ?? 0), throttle: input.throttle, driver: semi }) ?? []
+          state.sparks -= dt
+          const fx = effects()
+          if (fx && state.sparks <= 0 && Math.abs(lane?.speed() ?? 0) > 0.5) {
+            state.sparks = grinding.length ? SPARK_EVERY_S : 0
+            for (const point of grinding) fx.play({ effect: effectIds.sparks, point })
+          }
           if (gap() <= 0) {
             state.ended = true
             log('crash', Math.abs((semi.state as { u: number }).u))
@@ -416,6 +430,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       case 'palette': settings.palette = String(change.value); for (const entry of placed.values()) paintOf(entry); break
       case 'driving': settings.driving = String(change.value); break
       case 'surface': settings.surface = String(change.value); break
+      case 'lane_damage': settings.damage = String(change.value) as LaneDamage; break
       default: break
     }
   }
@@ -515,6 +530,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         { kind: 'choice', id: 'palette', name: text.controls.palette, hint: text.hints.palette, options: (['auto', 'civil', 'military'] as const).map((id) => ({ id, name: text.options.palette[id] as string })), default: 'auto' },
         { kind: 'choice', id: 'driving', name: text.controls.driving, hint: text.hints.driving, options: (['arcade', 'semi'] as const).map((id) => ({ id, name: text.options.driving[id] as string })), default: 'arcade' },
         { kind: 'choice', id: 'surface', name: text.controls.surface, hint: text.hints.surface, options: surfaceIds.map((id) => ({ id, name: text.options.surface[id] ?? id })), default: 'dry_asphalt' },
+        { kind: 'choice', id: 'lane_damage', name: text.controls.lane_damage, hint: text.hints.lane_damage, options: LANE_DAMAGE.map((id) => ({ id, name: text.options.lane_damage[id] ?? id })), default: 'none' },
         { kind: 'action', id: 'repaint', name: text.actions.repaint },
         { kind: 'action', id: 'drive_lane', name: text.actions.drive_lane },
         { kind: 'action', id: 'clear_lane', name: text.actions.clear_lane },

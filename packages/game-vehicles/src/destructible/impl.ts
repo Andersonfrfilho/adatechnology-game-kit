@@ -427,7 +427,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           vis.breakLight(d, true)
           break
         case 'tyre':
-          vis.tyreFlat(d, 0.34)
+          if (status === 'broken') vis.tyreTornOff(d)
+          else vis.tyreFlat(d, 0.34)
           break
         case 'mirror':
         case 'bumper':

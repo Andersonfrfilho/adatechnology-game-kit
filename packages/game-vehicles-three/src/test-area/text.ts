@@ -3,9 +3,9 @@ export type VehiclesText = {
   group: string
   name: string
   items: Record<string, string>
-  controls: Record<'quality' | 'paint_by_seed' | 'color_seed' | 'palette' | 'driving' | 'surface', string>
-  hints: Record<'quality' | 'paint_by_seed' | 'palette' | 'driving' | 'surface', string>
-  options: { quality: Record<string, string>; palette: Record<string, string>; driving: Record<string, string>; surface: Record<string, string> }
+  controls: Record<'quality' | 'paint_by_seed' | 'color_seed' | 'palette' | 'driving' | 'surface' | 'lane_damage', string>
+  hints: Record<'quality' | 'paint_by_seed' | 'palette' | 'driving' | 'surface' | 'lane_damage', string>
+  options: { quality: Record<string, string>; palette: Record<string, string>; driving: Record<string, string>; surface: Record<string, string>; lane_damage: Record<string, string> }
   actions: Record<'repaint' | 'drive_lane' | 'clear_lane' | 'honk', string>
   layers: Record<'damageables' | 'zones' | 'axes', string>
   metrics: Record<'vehicles' | 'triangles' | 'draw_calls' | 'size_error_mm' | 'metal' | 'glass' | 'rubber' | 'fuel' | 'speed' | 'lane', string>
@@ -65,19 +65,21 @@ export const TEXT: Record<string, VehiclesText> = {
     group: 'Vehicles',
     name: 'Vehicles area',
     items: { hatch: 'Compact hatch', sedan: 'Midsize sedan', pickup: 'Midsize pickup', sport_bike: 'Sport bike', box_truck: 'Box truck', city_bus: 'City bus', battle_tank: 'Battle tank', attack_helicopter: 'Attack helicopter', sedan_burnt: 'Burnt sedan', hatch_burnt: 'Burnt hatch' },
-    controls: { quality: 'Quality', paint_by_seed: 'Paint by seed', color_seed: 'Colour seed', palette: 'Palette', driving: 'Driving', surface: 'Surface' },
+    controls: { quality: 'Quality', paint_by_seed: 'Paint by seed', color_seed: 'Colour seed', palette: 'Palette', driving: 'Driving', surface: 'Surface', lane_damage: 'Lane damage' },
     hints: {
       quality: 'High: the kit at full detail. Light: fewer segments and no interior (the light mode of the fleet); applies to the vehicles placed from now on',
       paint_by_seed: 'Off: every vehicle keeps its own paint. On: the body colour comes from the seed and the palette',
       palette: 'Auto: the palette of the vehicle group (civil, or military for the army vehicles)',
       driving: 'Arcade: the game car, simple and forgiving. Semi: a rigid body with springs, tyre friction, gears and surfaces',
       surface: 'The ground under the wheels in the semi mode (grip and aquaplaning)',
+      lane_damage: 'What the lane car starts with; it drives in the semi mode and the damage model sets its tyres, brakes and engine',
     },
     options: {
       quality: { high: 'High', lite: 'Light' },
       palette: { auto: 'Auto', civil: 'Civil', military: 'Military' },
       driving: { arcade: 'Arcade', semi: 'Semi-simulation' },
       surface: { dry_asphalt: 'Dry asphalt', wet_asphalt: 'Wet asphalt', dirt: 'Dirt', grass: 'Grass', mud: 'Mud', blood: 'Blood' },
+      lane_damage: { none: 'None', flat_tyre: 'Flat tyre (rifle round)', torn_tyre: 'Tyre torn off: rim on the road', run_flat: 'Armoured, flat tyre (run-flat)', no_brake_fluid: 'No brake fluid' },
     },
     actions: { repaint: 'Repaint with the seed', drive_lane: 'Drive the lane', clear_lane: 'Remove the lane car', honk: 'Honk the horn' },
     layers: { damageables: 'Damageable boxes by material', zones: 'Zone boxes by type', axes: 'Output frame axes' },
@@ -132,19 +134,21 @@ export const TEXT: Record<string, VehiclesText> = {
     group: 'Veículos',
     name: 'Área de veículos',
     items: { hatch: 'Hatch compacto', sedan: 'Sedã médio', pickup: 'Picape média', sport_bike: 'Moto esportiva', box_truck: 'Caminhão baú', city_bus: 'Ônibus urbano', battle_tank: 'Tanque de guerra', attack_helicopter: 'Helicóptero de ataque', sedan_burnt: 'Sedã queimado', hatch_burnt: 'Hatch queimado' },
-    controls: { quality: 'Qualidade', paint_by_seed: 'Pintar pela semente', color_seed: 'Semente da cor', palette: 'Paleta', driving: 'Direção', surface: 'Piso' },
+    controls: { quality: 'Qualidade', paint_by_seed: 'Pintar pela semente', color_seed: 'Semente da cor', palette: 'Paleta', driving: 'Direção', surface: 'Piso', lane_damage: 'Dano na pista' },
     hints: {
       quality: 'Alta: o kit com todo o detalhe. Leve: menos segmentos e sem interior (o modo leve da frota); vale para os veículos postos daqui em diante',
       paint_by_seed: 'Desligado: cada veículo mantém a própria pintura. Ligado: a cor da carroceria vem da semente e da paleta',
       palette: 'Auto: a paleta do grupo do veículo (civil, ou militar para os do exército)',
       driving: 'Arcade: o carro do jogo, simples e tolerante. Semi: corpo rígido com molas, atrito do pneu, marchas e pisos',
       surface: 'O chão sob as rodas no modo semi (aderência e aquaplanagem)',
+      lane_damage: 'Com o que o carro da pista sai; ele anda no modo semi e o modelo de dano define pneus, freio e motor',
     },
     options: {
       quality: { high: 'Alta', lite: 'Leve' },
       palette: { auto: 'Auto', civil: 'Civil', military: 'Militar' },
       driving: { arcade: 'Arcade', semi: 'Semissimulação' },
       surface: { dry_asphalt: 'Asfalto seco', wet_asphalt: 'Asfalto molhado', dirt: 'Terra', grass: 'Grama', mud: 'Lama', blood: 'Sangue' },
+      lane_damage: { none: 'Nenhum', flat_tyre: 'Pneu furado (tiro de fuzil)', torn_tyre: 'Pneu desfeito: aro no chão', run_flat: 'Blindado, pneu furado (run-flat)', no_brake_fluid: 'Sem fluido de freio' },
     },
     actions: { repaint: 'Repintar com a semente', drive_lane: 'Percorrer a pista', clear_lane: 'Tirar o carro da pista', honk: 'Buzinar' },
     layers: { damageables: 'Caixas danificáveis por material', zones: 'Caixas das zonas por tipo', axes: 'Eixos do quadro de saída' },

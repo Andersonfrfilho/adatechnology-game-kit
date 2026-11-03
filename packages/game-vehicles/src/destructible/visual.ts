@@ -101,6 +101,9 @@ const MIRROR_GLASS_PROUD = 0.001
 const MIRROR_FACE_DEPTH = 0.012
 /** A mirror's glass is a thin plate facing the rear, not any small chrome near it. */
 const MIRROR_GLASS_THIN = 0.04
+/** A wheel's radius when the model does not say, and the share of it that is the tyre's sidewall (a 65 profile). */
+const DEFAULT_WHEEL_RADIUS = 0.3
+const SIDEWALL_SHARE = 0.3
 const MIRROR_GLASS_MIN = 0.05
 /** A mirror shows what is behind it: darker than chrome, or it reads as a white square against the sky. */
 const MIRROR_GLASS_COLOR = '#59636a'
@@ -1206,6 +1209,18 @@ export class VehicleVisuals implements CreaseWork {
     const z = this.zone(p)
     if (!z) return
     for (const w of z.wheels as Obj[]) if (w.parent) this.I.flattenTire(w, k)
+  }
+  /** A tyre driven flat until it tore apart: the rubber is gone and the bare rim shows. */
+  tyreTornOff(p: PartDef): void {
+    const z = this.zone(p)
+    if (!z) return
+    for (const w of z.wheels as Obj[]) {
+      if (!w.parent || w.userData.tornOff) continue
+      w.userData.tornOff = true
+      for (const m of this.I.tireMeshes(w) as Obj[]) m.visible = false
+      // the rim comes down onto the road by the height of the sidewall it lost
+      w.position.y -= (w.userData.r ?? DEFAULT_WHEEL_RADIUS) * SIDEWALL_SHARE
+    }
   }
   /** Burning rubber: the tyre sags and goes black as it melts. */
   tyreMelt(p: PartDef, melt: number): void {
