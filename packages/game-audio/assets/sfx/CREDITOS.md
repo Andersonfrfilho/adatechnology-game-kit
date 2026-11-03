@@ -48,18 +48,28 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/debris_rain_stone_07.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/debris_rain_stone_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/debris_rain_stone_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_04.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_05.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| explosoes-fogo/explosion_big_01.ogg | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 |
+| explosoes-fogo/explosion_big_02.ogg | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_big_03.ogg | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_big_04.ogg | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 |
+| explosoes-fogo/explosion_big_05.ogg | https://freesound.org/people/craigsmith/sounds/486018/ | craigsmith | CC0 |
 | explosoes-fogo/explosion_big_06.ogg | https://opengameart.org/content/100-cc0-sfx | rubberduck | CC0 |
-| explosoes-fogo/explosion_grenade_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_02.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_03.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_04.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_05.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_06.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
+| explosoes-fogo/explosion_car_01.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 |
+| explosoes-fogo/explosion_car_02.ogg | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 |
+| explosoes-fogo/explosion_car_03.ogg | https://freesound.org/people/qubodup/sounds/843248/ | qubodup | CC0 |
+| explosoes-fogo/explosion_car_04.ogg | https://freesound.org/people/qubodup/sounds/843247/ | qubodup | CC0 |
+| explosoes-fogo/explosion_far_01.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_far_02.ogg | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_far_03.ogg | https://freesound.org/people/craigsmith/sounds/438693/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_far_04.ogg | https://freesound.org/people/Kostrava/sounds/324277/ | Kostrava | CC0 |
+| explosoes-fogo/explosion_flashbang_01.ogg | https://freesound.org/people/modusmogulus/sounds/737326/ | modusmogulus | CC0 |
+| explosoes-fogo/explosion_flashbang_02.ogg | https://freesound.org/people/modusmogulus/sounds/752628/ | modusmogulus | CC0 |
+| explosoes-fogo/explosion_grenade_01.ogg | https://freesound.org/people/modusmogulus/sounds/784163/ | modusmogulus | CC0 |
+| explosoes-fogo/explosion_grenade_02.ogg | https://freesound.org/people/felix.blume/sounds/251401/ | felix.blume | CC0 |
+| explosoes-fogo/explosion_grenade_03.ogg | https://freesound.org/people/craigsmith/sounds/674893/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_grenade_04.ogg | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_grenade_05.ogg | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 |
+| explosoes-fogo/explosion_grenade_06.ogg | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 |
 | explosoes-fogo/explosion_small_bang_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
@@ -70,8 +80,33 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/explosion_small_bang_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_10.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| explosoes-fogo/fire_crackle_01.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
+| explosoes-fogo/fire_crackle_02.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
+| explosoes-fogo/fire_crackle_03.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
+| explosoes-fogo/fire_crackle_04.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
+| explosoes-fogo/fire_crackle_05.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
+| explosoes-fogo/fire_crackle_06.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
+| explosoes-fogo/fire_crackle_07.ogg | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 |
+| explosoes-fogo/fire_crackle_08.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
+| explosoes-fogo/fire_crackle_09.ogg | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 |
+| explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
+| explosoes-fogo/fire_extinguish_02.ogg | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 |
+| explosoes-fogo/fire_ignite_01.ogg | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 |
+| explosoes-fogo/fire_ignite_02.ogg | https://freesound.org/people/hnhnh/sounds/244926/ | hnhnh | CC0 |
+| explosoes-fogo/fire_ignite_03.ogg | https://freesound.org/people/RedVulpus/sounds/457209/ | RedVulpus | CC0 |
+| explosoes-fogo/fire_ignite_04.ogg | https://freesound.org/people/GrimGrum/sounds/412558/ | GrimGrum | CC0 |
+| explosoes-fogo/fire_loop_01.ogg | https://freesound.org/people/theoneandtruelybitch/sounds/698209/ | theoneandtruelybitch | CC0 |
+| explosoes-fogo/fire_loop_02.ogg | https://freesound.org/people/snds_good/sounds/554855/ | snds_good | CC0 |
+| explosoes-fogo/fire_loop_03.ogg | https://freesound.org/people/kyles/sounds/454019/ | kyles | CC0 |
+| explosoes-fogo/fire_loop_04.ogg | https://freesound.org/people/SKrafft/sounds/681366/ | SKrafft | CC0 |
 | explosoes-fogo/fire_loop_small_01.ogg | https://opengameart.org/content/fireplace-sound-loop | PagDev | CC0 |
+| explosoes-fogo/fire_pop_01.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
+| explosoes-fogo/fire_pop_02.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
+| explosoes-fogo/fire_pop_03.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
 | explosoes-fogo/flamethrower_loop_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
+| explosoes-fogo/gas_leak_01.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 |
+| explosoes-fogo/molotov_break_ignite_01.ogg | https://freesound.org/people/craigsmith/sounds/675768/ | craigsmith | CC0 |
+| explosoes-fogo/molotov_break_ignite_02.ogg | https://freesound.org/people/craigsmith/sounds/483288/ | craigsmith | CC0 |
 | impactos/ceramic_hit_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/concrete_block_drag_close_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/concrete_block_drag_close_02.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
