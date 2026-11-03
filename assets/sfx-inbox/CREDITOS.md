@@ -203,18 +203,6 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | impactos/flesh_fruit_splat_close_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | impactos/flesh_fruit_splat_close_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | impactos/flesh_fruit_splat_close_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| explosoes-fogo/explosion_grenade_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_02.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_03.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_04.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_05.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_grenade_06.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
-| explosoes-fogo/explosion_big_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_04.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_05.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| explosoes-fogo/explosion_big_06.ogg | https://opengameart.org/content/100-cc0-sfx | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_01.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_02.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/explosion_small_bang_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
@@ -243,6 +231,52 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | explosoes-fogo/debris_rain_mixed_07.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | explosoes-fogo/fire_loop_small_01.ogg | https://opengameart.org/content/fireplace-sound-loop | PagDev | CC0 |
 | explosoes-fogo/flamethrower_loop_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
+| explosoes-fogo/explosion_grenade_01.flac | https://freesound.org/people/modusmogulus/sounds/784163/ | modusmogulus | CC0 | recorte de "Real explosion recording (new year's eve, no effects)" (explosion_grenade_03.ogg @ 0.07s (1.35s)) |
+| explosoes-fogo/explosion_grenade_02.flac | https://freesound.org/people/felix.blume/sounds/251401/ | felix.blume | CC0 | recorte de "Dynamite explosion in the mountain" (explosion_grenade_04.ogg @ 0.14s (3.52s)) |
+| explosoes-fogo/explosion_grenade_03.flac | https://freesound.org/people/craigsmith/sounds/674893/ | craigsmith | CC0 | recorte de "S16-24 Hand grenade; 3 explosions.wav" (explosion_grenade_01.ogg @ 1.80s (1.36s)) |
+| explosoes-fogo/explosion_grenade_04.flac | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 | recorte de "G33-03-Grenades Exploding.wav" (explosion_grenade_02.ogg @ 1.52s (2.08s)) |
+| explosoes-fogo/explosion_grenade_05.flac | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 | recorte de "G33-03-Grenades Exploding.wav" (explosion_grenade_02.ogg @ 10.89s (1.94s)) |
+| explosoes-fogo/explosion_grenade_06.flac | https://freesound.org/people/craigsmith/sounds/438509/ | craigsmith | CC0 | recorte de "G33-03-Grenades Exploding.wav" (explosion_grenade_02.ogg @ 14.37s (2.17s)) |
+| explosoes-fogo/explosion_big_01.flac | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 | recorte de "Big dynamite explosion in an open mine (Chile)" (explosion_big_03.ogg @ 3.25s (2.90s)) |
+| explosoes-fogo/explosion_big_02.flac | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 | recorte de "S16-23 Violent explosion and debris; 2 takes.wav" (explosion_big_01.ogg @ 1.02s (5.67s)) |
+| explosoes-fogo/explosion_big_03.flac | https://freesound.org/people/craigsmith/sounds/674910/ | craigsmith | CC0 | recorte de "S16-23 Violent explosion and debris; 2 takes.wav" (explosion_big_01.ogg @ 12.73s (6.03s)) |
+| explosoes-fogo/explosion_big_04.flac | https://freesound.org/people/felix.blume/sounds/475780/ | felix.blume | CC0 | recorte de "Big dynamite explosion in an open mine (Chile)" (explosion_big_03.ogg @ 11.04s (4.29s)) |
+| explosoes-fogo/explosion_big_05.flac | https://freesound.org/people/craigsmith/sounds/486018/ | craigsmith | CC0 | recorte de "R12-02-Large Explosions.wav" (explosion_big_02.ogg @ 56.45s (4.33s)) |
+| explosoes-fogo/explosion_far_01.flac | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 | recorte de "distant explosions" (explosion_far_04.ogg @ 42.91s (5.22s)) |
+| explosoes-fogo/explosion_far_02.flac | https://freesound.org/people/Kostrava/sounds/320788/ | Kostrava | CC0 | recorte de "distant explosions" (explosion_far_04.ogg @ 35.24s (0.88s)) |
+| explosoes-fogo/explosion_far_03.flac | https://freesound.org/people/craigsmith/sounds/438693/ | craigsmith | CC0 | recorte de "G43-14-25 Distant Explosions.wav" (explosion_far_01.ogg @ 77.94s (0.56s)) |
+| explosoes-fogo/explosion_far_04.flac | https://freesound.org/people/Kostrava/sounds/324277/ | Kostrava | CC0 | recorte de "distant explosion" (explosion_far_03.ogg @ 0.15s (6.03s)) |
+| explosoes-fogo/explosion_car_01.flac | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 | recorte de "Car fire burning tires explosion horn" (explosion_car_01.ogg @ 46.34s (1.36s)) |
+| explosoes-fogo/explosion_car_02.flac | https://freesound.org/people/%C3%91ado/sounds/843101/ | Ñado | CC0 | recorte de "Car fire burning tires explosion horn" (explosion_car_01.ogg @ 35.47s (0.81s)) |
+| explosoes-fogo/explosion_car_03.flac | https://freesound.org/people/qubodup/sounds/843248/ | qubodup | CC0 | recorte de "Explosion 2 (Burning Car rec by Ñado)" (explosion_car_03.ogg @ 0.07s (0.49s)) |
+| explosoes-fogo/explosion_car_04.flac | https://freesound.org/people/qubodup/sounds/843247/ | qubodup | CC0 | recorte de "Explosion 1 (Burning Car rec by Ñado)" (explosion_car_02.ogg @ 0.10s (0.68s)) |
+| explosoes-fogo/explosion_flashbang_01.flac | https://freesound.org/people/modusmogulus/sounds/737326/ | modusmogulus | CC0 | recorte de "Flashbang" (flashbang_01.ogg @ 0.07s (2.38s)) |
+| explosoes-fogo/explosion_flashbang_02.flac | https://freesound.org/people/modusmogulus/sounds/752628/ | modusmogulus | CC0 | recorte de "Flashbang Open Field High Quality" (flashbang_02.ogg @ 0.07s (0.24s)) |
+| explosoes-fogo/molotov_break_ignite_01.flac | https://freesound.org/people/craigsmith/sounds/675768/ | craigsmith | CC0 | recorte de "S18-08 Fire bomb; lights and hisses; fuse.wav" (molotov_break_ignite_03.ogg @ 0.65s (5.46s)) |
+| explosoes-fogo/molotov_break_ignite_02.flac | https://freesound.org/people/craigsmith/sounds/483288/ | craigsmith | CC0 | recorte de "R29-26-Molotov Cocktails through Windows and Explode.wav" (molotov_break_ignite_01.ogg @ 2.06s (4.04s)) |
+| explosoes-fogo/fire_ignite_01.flac | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 | recorte de "Bonfire Being Lit" (fire_ignite_01.ogg @ 1.42s (0.49s)) |
+| explosoes-fogo/fire_ignite_02.flac | https://freesound.org/people/hnhnh/sounds/244926/ | hnhnh | CC0 | recorte de "fire-whoosh.wav" (fire_ignite_02.ogg @ 2.29s (0.90s)) |
+| explosoes-fogo/fire_ignite_03.flac | https://freesound.org/people/RedVulpus/sounds/457209/ | RedVulpus | CC0 | recorte de "Fire-Bottle_AUDIO.mp3" (fire_ignite_04.ogg @ 1.23s (0.58s)) |
+| explosoes-fogo/fire_ignite_04.flac | https://freesound.org/people/GrimGrum/sounds/412558/ | GrimGrum | CC0 | recorte de "Combust.wav" (fire_ignite_03.ogg @ 0.56s (2.02s)) |
+| explosoes-fogo/fire_crackle_01.flac | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 | recorte de "Pinewood fire pops" (fire_crackle_03.ogg @ 13.59s (0.26s)) |
+| explosoes-fogo/fire_crackle_02.flac | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 | recorte de "Pinewood fire pops" (fire_crackle_03.ogg @ 18.62s (0.42s)) |
+| explosoes-fogo/fire_crackle_03.flac | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 | recorte de "Pinewood fire pops" (fire_crackle_03.ogg @ 4.74s (0.38s)) |
+| explosoes-fogo/fire_crackle_04.flac | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 | recorte de "Crackle (fire).wav" (fire_crackle_02.ogg @ 2.15s (0.23s)) |
+| explosoes-fogo/fire_crackle_05.flac | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 | recorte de "Pinewood fire pops" (fire_crackle_03.ogg @ 2.33s (0.42s)) |
+| explosoes-fogo/fire_crackle_06.flac | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 | recorte de "Crackle (fire).wav" (fire_crackle_02.ogg @ 7.64s (0.26s)) |
+| explosoes-fogo/fire_crackle_07.flac | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 | recorte de "fire ambience, flames, crackles, pops, burning" (fire_crackle_04.ogg @ 1.62s (0.42s)) |
+| explosoes-fogo/fire_crackle_08.flac | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 | recorte de "Crackle (fire).wav" (fire_crackle_02.ogg @ 9.62s (0.17s)) |
+| explosoes-fogo/fire_crackle_09.flac | https://freesound.org/people/deleted_user_2104797/sounds/164471/ | deleted_user_2104797 | CC0 | recorte de "Crackle (fire).wav" (fire_crackle_02.ogg @ 0.92s (0.42s)) |
+| explosoes-fogo/fire_pop_01.flac | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 | recorte de "Fire Crackling" (fire_crackle_01.ogg @ 0.86s (0.42s)) |
+| explosoes-fogo/fire_pop_02.flac | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 | recorte de "Fire Crackling" (fire_crackle_01.ogg @ 2.19s (0.42s)) |
+| explosoes-fogo/fire_pop_03.flac | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 | recorte de "Fire Crackling" (fire_crackle_01.ogg @ 0.07s (0.42s)) |
+| explosoes-fogo/fire_extinguish_01.flac | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 | recorte de "Fire Extinguisher" (fire_extinguish_03.ogg @ 0.07s (2.62s)) |
+| explosoes-fogo/fire_extinguish_02.flac | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 | recorte de "J7_fire extinguisher.mp3" (fire_extinguish_01.ogg @ 0.77s (0.52s)) |
+| explosoes-fogo/gas_leak_01.flac | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 | recorte de "FOL-gas-leak-01.wav" (gas_leak_hiss_02.ogg @ 0.0s loop 6.0s (steadiness 0.8 dB)) |
+| explosoes-fogo/fire_loop_01.flac | https://freesound.org/people/theoneandtruelybitch/sounds/698209/ | theoneandtruelybitch | CC0 | recorte de "Fire Large Roar And Hiss With Crackles.mp3" (fire_loop_large_02.ogg @ 51.0s loop 24.0s (steadiness 0.8 dB)) |
+| explosoes-fogo/fire_loop_02.flac | https://freesound.org/people/snds_good/sounds/554855/ | snds_good | CC0 | recorte de "Wood burning stove fire" (fire_loop_large_05.ogg @ 0.5s loop 24.0s (steadiness 3.4 dB)) |
+| explosoes-fogo/fire_loop_03.flac | https://freesound.org/people/kyles/sounds/454019/ | kyles | CC0 | recorte de "fire large rumbling in fireplace nearby center more roomy good detail warm with loud snaps.flac" (fire_loop_large_01.ogg @ 18.5s loop 24.0s (steadiness 2.9 dB)) |
+| explosoes-fogo/fire_loop_04.flac | https://freesound.org/people/SKrafft/sounds/681366/ | SKrafft | CC0 | recorte de "Campfire (Position 1)" (fire_loop_small_04.ogg @ 3.0s loop 24.0s (steadiness 17.4 dB)) |
 | personagem/footstep_concrete_walk_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | personagem/footstep_concrete_walk_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | personagem/footstep_concrete_walk_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
@@ -548,8 +582,8 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | veiculos/engine_start_run_stop_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/engine_start_run_stop_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_door_open_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| veiculos/car_door_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| veiculos/car_trunk_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| veiculos/car_door_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| veiculos/car_trunk_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_gear_shift_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_window_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | veiculos/car_window_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
@@ -557,14 +591,14 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/door_wood_open_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_wood_open_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_wood_open_04.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_wood_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_wood_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_wood_close_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/door_wood_close_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_wood_close_08.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_wood_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_wood_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_wood_shut_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/door_wood_shut_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_wood_shut_08.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_creak_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/door_creak_03.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
@@ -591,21 +625,21 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/door_lock_unlock_10.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_lock_unlock_11.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_knock_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/door_metal_open_close_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_metal_open_close_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/door_metal_open_close_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/door_metal_open_shut_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
+| itens-portas/door_metal_open_shut_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/door_glass_sliding_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/door_glass_sliding_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/drawer_open_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/drawer_open_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/drawer_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/drawer_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/drawer_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/drawer_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/item_pickup_generic_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
@@ -630,12 +664,12 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/item_drop_bag_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/item_drop_glass_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/item_drop_paper_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/backpack_open_close_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/backpack_open_shut_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/keys_jingle_01.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_02.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_03.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
@@ -643,17 +677,17 @@ Só **CC0** ou **CC-BY** entram no SDK; **Sonniss** e **Pixabay** só no reposit
 | itens-portas/keys_jingle_05.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_06.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
 | itens-portas/keys_jingle_07.ogg | https://opengameart.org/content/100-cc0-metal-and-wood-sfx | rubberduck | CC0 |
-| itens-portas/book_open_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
-| itens-portas/book_open_close_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_07.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/book_open_close_11.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
+| itens-portas/book_open_shut_04.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_05.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_06.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_07.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/book_open_shut_11.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/switch_click_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/switch_click_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
 | itens-portas/switch_click_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY 4.0 |
