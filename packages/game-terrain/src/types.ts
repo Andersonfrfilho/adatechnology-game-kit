@@ -245,6 +245,8 @@ export interface Terrain {
   onDeform(listener: (region: TerrainRegion) => void): () => void
   /** Moves the pieces, the sliding ground and the fire. */
   update(dt: number): void
+  /** Chunks waiting to be redrawn; every chunk at once means the floor was just laid anew (a layout, a reset). */
+  readonly dirtyChunkCount: number
   /** Takes up to the budget's chunks that changed since the last call. */
   drainDirtyChunks(max?: number): TerrainChunk[]
   chunk(index: number): TerrainChunk

@@ -153,8 +153,10 @@ export function createTerrainRenderer(THREE: ThreeLib, options: TerrainRendererO
   return {
     group,
     sync(camera) {
-      // the first picture and a floor just laid have every chunk dirty: pristine ones need no work of their own, the rest are drawn at once so that the floor never has holes
-      const limit = firstSync ? Infinity : undefined
+      // the first picture and a floor just laid (a new layout, a reset) have every chunk dirty: pristine ones need no work of their own, the rest are drawn at once, since the
+      // pristine floor is rebuilt without them in the same frame and a chunk left for later would be a hole to the sky until its turn came
+      const laidAnew = terrain.dirtyChunkCount >= terrain.chunksX * terrain.chunksZ
+      const limit = firstSync || laidAnew ? Infinity : undefined
       firstSync = false
       for (const chunk of terrain.drainDirtyChunks(limit)) {
         if (chunk.pristine) {

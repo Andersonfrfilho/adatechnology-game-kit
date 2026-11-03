@@ -17,6 +17,17 @@ describe('the ground on the screen', () => {
     expect(view.stats().pristineChunks).toBe(terrain.chunksX * terrain.chunksZ)
   })
 
+  it('a floor laid anew with mixed grounds is drawn whole in the same frame, with no chunk left as a hole', () => {
+    const { view, terrain } = make('concrete_slab', { maxDirtyChunksPerFrame: 1 })
+    view.sync(CAMERA)
+    terrain.setLayout({ surface: 'concrete_slab', zones: [{ rect: [-10, -1, 10, 1], surface: 'dirt' }] })
+    view.sync(CAMERA)
+    const { chunkMeshes, pristineChunks } = view.stats()
+    expect(chunkMeshes).toBeGreaterThan(0)
+    expect(chunkMeshes + pristineChunks).toBe(terrain.chunksX * terrain.chunksZ)
+    expect(terrain.dirtyChunkCount).toBe(0)
+  })
+
   it('a dug chunk gets a mesh that follows the height, within the budget of the frame', () => {
     const { view, terrain } = make('dirt', { maxDirtyChunksPerFrame: 1 })
     view.sync(CAMERA)

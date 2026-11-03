@@ -675,6 +675,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
       updateSlides()
       updateFire(dt)
     },
+    get dirtyChunkCount() {
+      return dirty.size
+    },
     drainDirtyChunks(max = budget.maxDirtyChunksPerFrame) {
       const taken: TerrainChunk[] = []
       for (const index of dirty) {
