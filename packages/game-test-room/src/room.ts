@@ -60,6 +60,7 @@ import type {
   TestRoomItem,
   TestRoomOptions,
   TestRoomScenario,
+  UseStatus,
 } from './types'
 
 type Vars = Record<string, string | number>
@@ -2044,30 +2045,32 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   })
 
   // ----- the trigger
-  const useTool = (dt: number, held: boolean): void => {
+  /** Pulls the trigger of the tool in hand; answers what the trigger said (`drawing` while the draw is not over yet, `ok` when it did something). */
+  const useTool = (dt: number, held: boolean): UseStatus => {
     aim()
     const cat = tool.def.category
     if (cat === 'hand') {
-      if (strikes.some((strike) => strike.key === 'hand' || strike.key === 'fists')) return
+      if (strikes.some((strike) => strike.key === 'hand' || strike.key === 'fists')) return 'cooldown'
       strikeUse({ kind: 'melee', damage: 'blunt', energy: 25, radius: 0.1, reach: 0.8, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, 'hand')
-      return
+      return 'ok'
     }
-    if (strikes.some((strike) => strike.key === toolId)) return // the blow of this tool is still on its way
+    if (strikes.some((strike) => strike.key === toolId)) return 'cooldown' // the blow of this tool is still on its way
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
     flushEvents(toolId, tool, res.recoil)
     if (res.status === 'empty') {
       if (!tool.reloading && tool.reserve > 0) startReload()
       say(t(tool.reloading ? 'hud.reloading' : 'hud.empty'))
-      return
+      return res.status
     }
     if (res.status !== 'ok') {
       if (res.status === 'reloading') say(t('hud.reloading'))
       else if (res.status === 'no_fuel') say(t('hud.no_fuel'))
       else if (res.status === 'fault' && res.fault) say(t('hud.fault', { fault: t(`fault.${res.fault}`) }))
       else if (res.status === 'safe') say(t('hud.safe'))
-      return
+      return res.status
     }
     applyUses(res, dt)
+    return res.status
   }
 
   const applyUses = (res: TriggerResult, dt: number): void => {
@@ -2186,9 +2189,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * The click with bare hands: a punch (`strikeClips.hand`, the clip plays on the body and the blow lands at its impact). With something in the hands the
    * click lets it go; E grabs and drops, the right button grabs or throws.
    */
-  const handUse = (): void => {
-    if (heldPiece) grab()
-    else useTool(FIXED_DT, false)
+  const handUse = (): UseStatus => {
+    if (!heldPiece) return useTool(FIXED_DT, false)
+    grab()
+    return 'ok'
   }
   const grab = (): boolean => {
     if (push.active) return false
@@ -3685,11 +3689,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     useItem,
     use(hold = 0) {
       if (tool.def.category === 'hand') {
-        handUse()
+        const status = handUse()
         flush()
-        return
+        return status
       }
-      useTool(FIXED_DT, false)
+      const status = useTool(FIXED_DT, false)
       flush()
       let t0 = 0
       while (t0 < hold) {
@@ -3703,6 +3707,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         t0 += FIXED_DT
       }
       releaseTrigger()
+      return status
     },
     grab,
     throwHeld,

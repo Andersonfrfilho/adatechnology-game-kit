@@ -1,6 +1,7 @@
 /** Car body shell, panels and body helpers. */
 import type { Kit } from './types'
 import { clamp } from './util'
+import { raycastIndexed } from './tri-index'
 
 export function installBody(kit: Kit): void {
   const THREE = kit.THREE
@@ -171,7 +172,7 @@ export function installBody(kit: Kit): void {
     _sr.set(p0.clone().applyMatrix4(Mw), d.clone().transformDirection(Mw))
     _sr.near = 0
     _sr.far = o.max || 20
-    const h = _sr.intersectObjects(cands, false)[0]
+    const h = raycastIndexed(THREE, _sr, cands)[0]
     if (!h) return null
     const n = h.face ? h.face.normal.clone().transformDirection(h.object.matrixWorld).transformDirection(inv) : d.clone().negate()
     if (n.dot(d) > 0) n.negate()
