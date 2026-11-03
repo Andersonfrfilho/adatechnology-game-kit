@@ -11,6 +11,7 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
+import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
@@ -47,6 +48,8 @@ const TIP_NARROW = 0.3
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
 const GENERIC_REFERENCE_RADIUS = 15
+/** Largest half size (m) of the core of a piece swept for what it runs into: a sofa sweeps a small box at its centre, not the whole of it. */
+const SWEEP_CORE = 0.15
 /** The small flame of a part that a bullet or fire primed: it burns until the part goes off. */
 const PRIMED_FIRE_RADIUS = 0.2
 
@@ -275,6 +278,8 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
+      sweep: (p, from, to) => this.sweepPiece(p, from, to),
+      onSlam: (p, hit, speed) => this.slam(p, hit, speed),
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (this.queue.length < QUEUE_CAP) this.queue.push(ev)
@@ -477,6 +482,36 @@ class Renderer implements DestructionRenderer {
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void {
     const p = this.pieceSys.get(objectId)
     if (p) this.pieceSys.impulse(p, impulse, point)
+  }
+
+  /**
+   * What a piece moving from `from` to `to` runs into: the core of its box (its thinnest half each way, at most `SWEEP_CORE`) swept through the world, the piece itself left out,
+   * so a crate thrown by a blast stops at the wall instead of passing through it. Null for a world that cannot sweep.
+   */
+  private sweepPiece(p: PieceBody, from: Vec3, to: Vec3): PieceSweepHit | null {
+    if (typeof this.world.sweepBox !== 'function') return null
+    const d: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]]
+    const travel = Math.hypot(d[0], d[1], d[2])
+    if (travel < 1e-4) return null
+    const core = Math.min(SWEEP_CORE, ...p.halfExtents)
+    const box = { min: [from[0] - core, from[1] - core, from[2] - core] as Vec3, max: [from[0] + core, from[1] + core, from[2] + core] as Vec3 }
+    const hit = this.world.sweepBox(box, d, travel, { ignore: p.objectId, spacing: Math.max(0.05, core) })
+    if (!hit) return null
+    return { object: hit.object, part: hit.part, distance: hit.distance, point: hit.point, normal: hit.normal }
+  }
+
+  /** A piece thrown into a wall: the wall takes the blow of its weight where it met it, the piece takes it too, and each sounds as its material does. */
+  private slam(p: PieceBody, hit: PieceSweepHit, speed: number): void {
+    const energy = 0.5 * p.mass * speed * speed
+    const direction: Vec3 = [-hit.normal[0], -hit.normal[1], -hit.normal[2]]
+    this.sound(this.impactSoundOf(hit.object), hit.point, clamp(speed / 10, 0.2, 1))
+    this.syncBound(p.objectId)
+    try {
+      this.world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, energy, radius: 0.1, direction, normal: hit.normal, source: p.objectId })
+      this.world.hit(p.objectId, { type: 'blunt', point: hit.point, energy, radius: 0.08, direction: hit.normal, source: 'slam' })
+    } catch {
+      // either may have left the world
+    }
   }
 
   private hardLanding(p: PieceBody, point: Vec3, speed: number): void {
@@ -1316,11 +1351,14 @@ class Renderer implements DestructionRenderer {
     const report = options.report
     const confinement = report?.find((r) => r.blast !== undefined)?.blast?.confinement ?? 1
     const energy = ev.energy * confinement
-    // the energy that got to an object after what stood in the way (`blast.shelter`); the whole of it when the blast carries no report
-    const reachOf = (objectId: string): number => report?.find((r) => r.object === objectId)?.blast?.shelter ?? 1
+    // the energy that got to an object after what stood in the way: the world's shelter of this blast when it carries one, else the cover between the centre and the
+    // object's centre (`blastReach`, always on: a wall, a car or a cupboard between them takes the push)
+    const reachOf = (objectId: string, at: Vec3): number =>
+      report?.find((r) => r.object === objectId)?.blast?.shelter ?? this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ?? 1
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
-      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
       if (!hit) return
       const spread = pc.halfExtents[0]
       const momentum = hit.speed * pc.mass
@@ -1333,7 +1371,7 @@ class Renderer implements DestructionRenderer {
   }
 
   /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */
-  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string) => number): void {
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number): void {
     const shoveable = this.o.shoveable
     if (!shoveable) return
     for (const b of [...this.bounds.values()]) {
@@ -1341,7 +1379,8 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
-      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
+      if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
       if (!hit) continue
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)

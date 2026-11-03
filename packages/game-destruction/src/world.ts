@@ -3239,6 +3239,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastProbe() {
       return { ...blastProbe }
     },
+    blastReach(point, target, options = {}) {
+      const L = vec.distance(point, target)
+      if (L < 1e-4) return 1
+      const shelter: Required<ShelterOptions> = { ...SHELTER_DEFAULTS, ...options.shelter }
+      const ignore = new Set(options.ignore ?? [])
+      const d = vec.scale(vec.sub(target, point), 1 / L)
+      let t = 1
+      for (const o of objects.values()) {
+        if (ignore.has(o.id) || raySphereMiss(point, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, L)) continue
+        for (const p of o.parts) {
+          if (isLost(p) || p.st.stripped) continue
+          const r = rayPart(o, p, point, d)
+          if (!r) continue
+          const t0 = Math.max(r.t0, 0)
+          const path = Math.min(r.t1, L) - t0
+          if (path < shelter.minPath) continue
+          // a hole the line goes through (a breached wall, an open window) lets the blast by
+          if (p.st.opening && insideOpening(o, p, toLocal(o.st.position, o.st.rotation, vec.madd(point, d, t0 + path / 2)))) continue
+          t *= Math.exp(-(p.mat.hpPerKg * p.mat.density * path * (p.mat.damageScale?.shelter ?? 1)) / shelter.k)
+          if (t < 1e-4) return 0
+        }
+      }
+      return t
+    },
     explode(point, energy, radius, source, blast) {
       blastProbe.partsTested = 0
       blastProbe.partsNear = 0

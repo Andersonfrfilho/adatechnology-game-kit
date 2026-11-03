@@ -12,6 +12,7 @@
 
 import type {
   BallisticExtras,
+  ShelterOptions,
   BlastOptions,
   DamageType,
   DebrisKind,
@@ -542,6 +543,13 @@ export interface DestructionWorld {
    * that target, and a `blast` event sums it up.
    */
   explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
+  /**
+   * The share (0..1) of a blast at `point` that reaches `target` through what stands between them: every part the straight line crosses lets
+   * `exp(-r / k)` through (`ShelterOptions`; `r` the hit points of the slab per square metre), a broken part or a hole lets it all by. Always on, whatever
+   * `BlastOptions.shelter` says: the shove of a blast (people, the player, loose things) is blocked by cover in every room. `ignore` lists objects that never
+   * block (the explosive itself, the body being shoved).
+   */
+  blastReach(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[]; readonly shelter?: ShelterOptions }): number
   /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
   blastProbe(): { partsTested: number; partsNear: number }
   /** Raycast against every part shape (world space). */

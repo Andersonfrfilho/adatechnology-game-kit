@@ -23,7 +23,7 @@ import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
-import type { GroundLayout } from '@adatechnology/game-contracts'
+import type { GroundLayout, Knock } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
@@ -302,6 +302,8 @@ export interface TestRoomOptions {
    * Default: the SDK's (`DEFAULT_BLAST_SHOVE` of game-contracts: 2 % of the energy becomes speed, 20 m/s at most, falloff `(1 - d / r)^2`).
    */
   blastShove?: BlastShoveOptions
+  /** Mass of the player's body in kg: how far a blast throws it and whether it knocks it down (default 70, the `bodyMass` of 1.75 m). */
+  playerMass?: number
   /**
    * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
    * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
@@ -389,6 +391,8 @@ export interface TestRoom {
   use(hold?: number): UseStatus
   /** Where the player's feet are. */
   readonly playerPosition: Vec3
+  /** The knock of a blast on the player while it lasts (thrown, down, getting up), or null on its feet. */
+  readonly playerKnock: Readonly<Knock> | null
   /** Grab what the camera looks at (or drop what is held). */
   grab(): boolean
   /**
