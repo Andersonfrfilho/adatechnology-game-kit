@@ -45,7 +45,7 @@ const CLASS_DISTANCES = [0, 10, 60, 120] as const
  */
 export function playWeaponAudioScenario(testCase: AudioTraceCase): AudioTrace {
   const recorder = createAudioRecorder({ currentTime: testCase.currentTime })
-  const audio = createWeaponAudio(0.6, { ...testCase.options, seed: testCase.seed, createContext: () => recorder.context })
+  const audio = createWeaponAudio(0.6, { shotModel: 'game', ...testCase.options, seed: testCase.seed, createContext: () => recorder.context })
 
   audio.shot(500, 'pistol', { distance: 20 })
   audio.event({ type: 'reload_stage', stage: 'magazine_out' as ReloadStageId, at: 0 })

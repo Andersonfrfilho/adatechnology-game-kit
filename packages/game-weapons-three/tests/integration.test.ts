@@ -95,7 +95,7 @@ describe('bench of the weapons module', () => {
     const { room } = areaRoom()
     const bench = room.bench('weapons_area')
     expect(bench?.controls().map((control) => control.id)).toEqual([
-      'condition', 'ammo_quality', 'sound_distance', 'fuse_length',
+      'condition', 'ammo_quality', 'sound_distance', 'sound_indoors', 'fuse_length',
       'fit_muzzle', 'fit_rail_top', 'fit_rail_left', 'fit_rail_right', 'fit_rail_bottom', 'fit_underbarrel', 'fit_magazine', 'fit_feed', 'fit_sling', 'fit_barrel',
       'supported_stance', 'toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel',
     ])
