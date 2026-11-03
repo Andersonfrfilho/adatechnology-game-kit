@@ -1204,6 +1204,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     explosives.clear()
     fireZones.length = 0
     burningStains.length = 0
+    // every fire sound goes with the fires (the renderer's parts are cleared below without their burn_end)
+    destructionSound?.reset()
     terrain.setLayout(defaultGround)
     for (const id of [...entries.keys()]) if (!entries.get(id)?.arena) removeEntry(id)
     clearLoose()
@@ -1601,6 +1603,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const fireZones: FireZone[] = []
   const burningStains: BurningStain[] = []
+  // a pool of fuel burning (a molotov's zone, a fuel stain on fire): the fire sound of a liquid, from when it lights to when it goes out
+  const poolFire = (point: Vec3, burning: boolean): void => playSound(burning ? 'burn_loop' : 'burn_end', point, 0.5, { fuel: 'liquid' })
+  const dropZone = (i: number): void => {
+    const [zone] = fireZones.splice(i, 1)
+    if (zone) poolFire(zone.point, false)
+  }
+  const dropStain = (i: number): void => {
+    const [stain] = burningStains.splice(i, 1)
+    if (stain) poolFire(stain.center, false)
+  }
   const stainRadius = (s: StainState): number => {
     let sum = 0
     for (const r of s.front) sum += r
@@ -1618,6 +1630,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (stainBurning(s)) continue
         const seconds = Math.max(3, Math.min(20, 4 + s.liters * 30 + stainRadius(s) * 6))
         burningStains.push({ center: [s.center[0], s.center[1], s.center[2]], remaining: seconds, acc: 0 })
+        poolFire([s.center[0], s.center[1], s.center[2]], true)
         lit = true
         log.add({
           channel: 'event',
@@ -1650,7 +1663,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const a = rnd() * Math.PI * 2
       const r = Math.sqrt(rnd()) * z.radius
       renderer.emit('fire', [z.point[0] + Math.cos(a) * r, z.point[1] + 0.05, z.point[2] + Math.sin(a) * r], [0, 1, 0], 2, 1.5)
-      if (z.remaining <= 0) fireZones.splice(i, 1)
+      if (z.remaining <= 0) dropZone(i)
     }
     if (burningStains.length) {
       const stains = fluids.stains()
@@ -1671,7 +1684,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (b.remaining <= 0 || !st) {
           fluids.clearStains(b.center, r + 0.1)
           log.add({ channel: 'event', type: 'stain_burned', text: t('ev.stain_burned'), data: { point: b.center } })
-          burningStains.splice(i, 1)
+          dropStain(i)
         }
       }
     }
@@ -2046,8 +2059,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         hit.add(r.object)
         world.extinguish(r.object, undefined, u.coolC * Math.max(u.duration, 0.05) * 6)
         fluids.clearStains(r.point, 0.5)
-        for (let i = burningStains.length - 1; i >= 0; i--) if (Math.hypot(burningStains[i].center[0] - r.point[0], burningStains[i].center[2] - r.point[2]) < 1.2) burningStains.splice(i, 1)
-        for (let i = fireZones.length - 1; i >= 0; i--) if (Math.hypot(fireZones[i].point[0] - r.point[0], fireZones[i].point[2] - r.point[2]) < 1.5) fireZones.splice(i, 1)
+        for (let i = burningStains.length - 1; i >= 0; i--) if (Math.hypot(burningStains[i].center[0] - r.point[0], burningStains[i].center[2] - r.point[2]) < 1.2) dropStain(i)
+        for (let i = fireZones.length - 1; i >= 0; i--) if (Math.hypot(fireZones[i].point[0] - r.point[0], fireZones[i].point[2] - r.point[2]) < 1.5) dropZone(i)
       }
     })
     log.coalesce(
@@ -2059,7 +2072,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const startFire = (weapon: string, at: Vec3, fire: { temperature: number; radius: number; seconds: number }, impact: boolean): void => {
     fluids.splash('fuel', [at[0], Math.max(at[1], groundAt(at[0], at[2])), at[2]], 0.5)
-    fireZones.push({ point: [at[0], Math.max(0.02, groundAt(at[0], at[2])), at[2]], radius: fire.radius, temperature: fire.temperature, remaining: fire.seconds, acc: 0 })
+    const zone: FireZone = { point: [at[0], Math.max(0.02, groundAt(at[0], at[2])), at[2]], radius: fire.radius, temperature: fire.temperature, remaining: fire.seconds, acc: 0 }
+    fireZones.push(zone)
+    poolFire(zone.point, true)
     renderer.emit('fire', at, [0, 1, 0], 24, 3)
     action('molotov_fire', t('act.molotov_fire', { weapon: toolName(weapon), seconds: num(fire.seconds, 0), radius: num(fire.radius, 1) }), { data: { weapon, impact } })
   }

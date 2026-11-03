@@ -93,6 +93,17 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.
 | explosoes-fogo/fire_loop_01.ogg | https://freesound.org/people/theoneandtruelybitch/sounds/698209/ | theoneandtruelybitch | CC0 |
 | explosoes-fogo/fire_loop_03.ogg | https://freesound.org/people/kyles/sounds/454019/ | kyles | CC0 |
 | explosoes-fogo/fire_loop_04.ogg | https://freesound.org/people/SKrafft/sounds/681366/ | SKrafft | CC0 |
+| explosoes-fogo/fire_loop_gas_01.ogg | https://freesound.org/people/DarkSidedGenXer/sounds/654360/ | DarkSidedGenXer | CC0 |
+| explosoes-fogo/fire_loop_gas_02.ogg | https://freesound.org/people/Dr.%20Macak/sounds/491300/ | Dr. Macak | CC0 |
+| explosoes-fogo/fire_loop_gas_03.ogg | https://freesound.org/people/SyntaxSeed/sounds/244230/ | SyntaxSeed | CC0 |
+| explosoes-fogo/fire_loop_gas_04.ogg | https://freesound.org/people/rombart/sounds/197800/ | rombart | CC0 |
+| explosoes-fogo/fire_loop_liquid_01.ogg | https://freesound.org/people/SGAK/sounds/87564/ | SGAK | CC0 |
+| explosoes-fogo/fire_loop_liquid_02.ogg | https://freesound.org/people/florianreichelt/sounds/563765/ | florianreichelt | CC0 |
+| explosoes-fogo/fire_loop_liquid_03.ogg | https://freesound.org/people/Aegersum/sounds/387924/ | Aegersum | CC0 |
+| explosoes-fogo/fire_loop_plastic_01.ogg | https://freesound.org/people/jc144940/sounds/178731/ | jc144940 | CC0 |
+| explosoes-fogo/fire_loop_plastic_02.ogg | https://freesound.org/people/jc144940/sounds/178733/ | jc144940 | CC0 |
+| explosoes-fogo/fire_loop_plastic_03.ogg | https://freesound.org/people/jc144940/sounds/178729/ | jc144940 | CC0 |
+| explosoes-fogo/fire_loop_plastic_04.ogg | https://freesound.org/people/jc144940/sounds/178738/ | jc144940 | CC0 |
 | explosoes-fogo/fire_loop_small_01.ogg | https://opengameart.org/content/fireplace-sound-loop | PagDev | CC0 |
 | explosoes-fogo/fire_pop_01.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
 | explosoes-fogo/fire_pop_02.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |

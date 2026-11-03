@@ -208,6 +208,48 @@ describe('blasts and fire', () => {
     expect(engineWith({ blastFarDistance: 200 }).sound.blastSound([0, 0, -120], 1, { effect: 'm67' })).toBe('explosion_grenade')
   })
 
+  it('each fuel burns with its own loop: wood, a gas jet, a fuel pool and rubber; a loop stops when its fuel is out', () => {
+    const { engine, sound } = engineWith()
+    const loops: string[] = []
+    const loop0 = engine.loop.bind(engine)
+    engine.loop = (id, o) => {
+      loops.push(id)
+      return loop0(id, o)
+    }
+    sound.onSound('burn_loop', [3, 1, 0], 0.5, { material: 'wood_hard' })
+    sound.onSound('burn_loop', [0, 0, -6], 0.5, { fuel: 'gas' })
+    sound.onSound('burn_loop', [0, 0, -4], 0.5, { fuel: 'liquid' })
+    sound.onSound('burn_loop', [2, 0.4, -4], 0.5, { material: 'rubber' })
+    expect(loops).toEqual(['fire_loop', 'fire_loop_gas', 'fire_loop_liquid', 'fire_loop_plastic'])
+    expect(sound.burningBy()).toEqual({ wood: 1, gas: 1, liquid: 1, plastic: 1 })
+    for (const id of loops) expect(engine.registry.loop(id), id).toBeDefined()
+    // the vessel bursts: only the gas jet goes out, even though the pool is nearer the point
+    sound.onSound('burn_end', [0, 0, -4.5], 0.5, { fuel: 'gas' })
+    expect(sound.burningBy()).toEqual({ wood: 1, liquid: 1, plastic: 1 })
+    expect(engine.stats().loops).toBe(3)
+    sound.reset()
+    expect(sound.burning()).toBe(0)
+    expect(engine.stats().loops).toBe(0)
+  })
+
+  it('a gas jet and a fuel pool roar without crackles; wood crackles', () => {
+    const crackles = (fuel: 'gas' | 'liquid' | 'wood'): number => {
+      const { engine, sound } = engineWith()
+      const played: string[] = []
+      const play0 = engine.play.bind(engine)
+      engine.play = (id, o) => {
+        played.push(id)
+        return play0(id, o)
+      }
+      sound.onSound('burn_loop', [0, 0, -6], 0.5, { fuel })
+      for (let i = 0; i < 300; i++) sound.update(1 / 60)
+      return played.filter((id) => id === 'fire_crackle' || id === 'fire_pop').length
+    }
+    expect(crackles('gas')).toBe(0)
+    expect(crackles('liquid')).toBe(0)
+    expect(crackles('wood')).toBeGreaterThan(5)
+  })
+
   it('adds the indoor tail to a confined blast', () => {
     const open = engineWith()
     open.sound.onSound('explode', [0, 0, -6], 1, { effect: 'm67', confinement: 1 })

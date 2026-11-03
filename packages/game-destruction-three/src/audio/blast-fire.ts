@@ -3,7 +3,7 @@
 // SDK; each recipe is built so the loudest moment is the first few milliseconds (the crack of the blast lands on the frame of the event), the body
 // and the debris follow, and every frequency and timing is a range so no two plays sound alike.
 import { sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
-import type { Falloff, Layer, LoopRecipe, SoundRecipe } from '@adatechnology/game-audio'
+import type { Falloff, FilterSpec, Layer, LoopRecipe, SoundRecipe } from '@adatechnology/game-audio'
 
 /** A blast near the listener: loud for tens of metres; lowpass cutoffs fall with distance. */
 export const BLAST_FALLOFF: Falloff = { model: 'inverse_square', k: 0.0012, cutoffK: 0.006, minGain: 0.002 }
@@ -216,6 +216,63 @@ export const FIRE_LOOP: LoopRecipe = {
   volume: 0,
   sources: ['sdk: the roar under the crackles of a fire'],
 }
+
+/**
+ * What is burning, for the sound: each fuel has its own roar (a gas jet, a fuel pool, wood, plastic) and its own share of crackles. The rules are the
+ * same for all (the level grows with how much burns, fades with distance, never clips); only the timbre comes from the fuel.
+ */
+export const FIRE_FUELS = ['wood', 'fabric', 'plastic', 'gas', 'liquid'] as const
+export type FireFuel = (typeof FIRE_FUELS)[number]
+
+/** The fuel of a burning material (`materials.json` of game-destruction). Data: a game adds its own materials through `DestructionSoundOptions.fuels`. */
+export const FIRE_FUEL_OF: Readonly<Record<string, FireFuel>> = {
+  wood_soft: 'wood',
+  wood_hard: 'wood',
+  plywood: 'wood',
+  mdf: 'wood',
+  green_wood: 'wood',
+  foliage: 'wood',
+  cactus: 'wood',
+  paper: 'fabric',
+  fabric: 'fabric',
+  leather: 'fabric',
+  foam: 'plastic',
+  plastic: 'plastic',
+  rubber: 'plastic',
+  wax: 'plastic',
+}
+
+/** The loop each fuel plays. Fabric and paper share the wood roar until they have their own. */
+export const FIRE_LOOP_OF: Readonly<Record<FireFuel, string>> = {
+  wood: 'fire_loop',
+  fabric: 'fire_loop',
+  plastic: 'fire_loop_plastic',
+  gas: 'fire_loop_gas',
+  liquid: 'fire_loop_liquid',
+}
+
+/** How much each fuel crackles (0..1): wood snaps and pops, plastic now and then, a gas jet and a fuel pool not at all. */
+export const FIRE_CRACKLE_OF: Readonly<Record<FireFuel, number>> = { wood: 1, fabric: 0.5, plastic: 0.35, gas: 0, liquid: 0 }
+
+const roar = (id: string, bank: readonly FilterSpec[], source: string): LoopRecipe => ({
+  id,
+  bus: 'world',
+  order: 'chain_loop',
+  source: { kind: 'noise', loop: true },
+  filters: { mode: 'serial', bank },
+  volume: 0,
+  sources: [source],
+})
+
+/** The synthesized roar of each fuel other than wood: the fallback of the recorded loops of the same id. */
+export const FIRE_FUEL_LOOPS: readonly LoopRecipe[] = [
+  // a gas jet: a steady, broad roar, brighter than wood and without crackles
+  roar('fire_loop_gas', [{ type: 'highpass', frequency: { set: 220 }, q: 0.7 }, { type: 'lowpass', frequency: { set: 2400 }, q: 0.6 }], 'sdk: a gas jet burning (a vessel venting into the flame)'),
+  // a fuel pool: a soft, low, rolling roar
+  roar('fire_loop_liquid', [{ type: 'highpass', frequency: { set: 90 }, q: 0.7 }, { type: 'lowpass', frequency: { set: 650 }, q: 0.9 }], 'sdk: a pool of fuel burning'),
+  // plastic and rubber: a thin sizzle over a low burn
+  roar('fire_loop_plastic', [{ type: 'bandpass', frequency: { set: 1800 }, q: 0.6 }], 'sdk: plastic and rubber melting in the fire'),
+]
 
 /** The sound of a blast family. */
 export const BLAST_SOUND_OF: Readonly<Record<BlastKind, string>> = {
