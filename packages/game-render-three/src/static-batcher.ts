@@ -40,6 +40,8 @@ type Source = {
   readonly material: Material
   readonly version: number
   readonly local: Matrix4
+  /** The mesh's world matrix when last seen unchanged: equal again, nothing moved and the local check is skipped. */
+  readonly world: Matrix4
   readonly mask: number
   readonly batch: Batch
   readonly start: number
@@ -124,9 +126,11 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     const { mesh } = source
     if (mesh.geometry !== source.geometry || mesh.material !== source.material || !isShown(mesh, root)) return true
     if ((mesh.geometry.attributes.position as BufferAttribute).version !== source.version) return true
-    if (follow) return false
-    inverse.copy(root.matrixWorld).invert()
-    return !sameMatrix(scratch.multiplyMatrices(inverse, mesh.matrixWorld), source.local)
+    if (follow || sameMatrix(mesh.matrixWorld, source.world)) return false
+    if (!sameMatrix(scratch.multiplyMatrices(inverse, mesh.matrixWorld), source.local)) return true
+    // the whole object moved, the mesh did not move within it
+    source.world.copy(mesh.matrixWorld)
+    return false
   }
 
   return {
@@ -134,6 +138,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     update() {
       if (pending.length > 0) mergeSome(performance.now() + (options.budgetMs ?? Number.POSITIVE_INFINITY))
       const before = released
+      inverse.copy(root.matrixWorld).invert()
       for (const source of sources) if (!source.released && hasChanged(source)) release(source)
       return released - before
     },
@@ -257,6 +262,7 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
       material: piece.mesh.material as Material,
       version: (piece.mesh.geometry.attributes.position as BufferAttribute).version,
       local: piece.local,
+      world: piece.mesh.matrixWorld.clone(),
       mask: piece.mesh.layers.mask,
       batch,
       start: indexOffset,
