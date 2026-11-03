@@ -153,6 +153,14 @@ const boxOf = (z: { box: { x0: number; x1: number; y0: number; y1: number; z0: n
   size: [Math.max(0.02, z.box.x1 - z.box.x0), Math.max(0.02, z.box.y1 - z.box.y0), Math.max(0.02, z.box.z1 - z.box.z0)],
 })
 
+/** Fluids of the mechanical parts, litres for a car: transmission fluid in the gearbox, brake fluid in the brake system, power steering fluid, battery acid. */
+const PART_FLUIDS: Partial<Record<PartRole, { fluid: string; liters: number }>> = {
+  gearbox: { fluid: 'transmission_fluid', liters: 6 },
+  brakes: { fluid: 'brake_fluid', liters: 0.6 },
+  steering: { fluid: 'power_steering_fluid', liters: 1 },
+  battery: { fluid: 'battery_acid', liters: 3 },
+}
+
 /** Panel material by vehicle kind: aircraft and boats are aluminium, the rest steel. */
 const skinOf = (kind: Kind): MaterialId => (kind === 'plane' || kind === 'heli' || kind === 'boat' ? 'aluminium' : 'steel')
 
@@ -723,5 +731,10 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     }
   }
   void has
+  // the fluids the mechanical parts hold in a real car, when the vehicle did not give them their own
+  for (const part of parts) {
+    const fluid = PART_FLUIDS[part.role]
+    if (fluid && !part.contains && !(kind === 'bike' && part.role === 'steering')) part.contains = { ...fluid }
+  }
   return { parts, joints, hub: hubId, hitch }
 }

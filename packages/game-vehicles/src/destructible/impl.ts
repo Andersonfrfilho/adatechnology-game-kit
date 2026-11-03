@@ -185,6 +185,9 @@ const TYRE_LEAK_PER_MM2 = 0.00026
 /** How far an empty tyre sags, and the air under which it is flat. */
 const TYRE_FLAT_SAG = 0.24
 const TYRE_FLAT_AIR = 0.2
+/** Brake fluid under this share of the system's leaves the brakes weaker; with none left only this much (the handbrake, engine braking) remains. */
+const BRAKE_FLUID_NEEDED = 0.6
+const BRAKE_NO_FLUID = 0.15
 const EXPANDED_HOLE = 1.6
 /** Parts welded to the body shell. */
 const WELDED = new Set<string>(['roof', 'pillar', 'frame', 'panel'])
@@ -511,8 +514,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       leaks.set(d.id, l)
       if (vis) {
         const pos = new V3(d.box.center[0], Math.max(0.2, (c.meta.clearance ?? 0.3) * 0.8), d.box.center[2])
+        // hot coolant also steams out of the front; every liquid runs down into a puddle of its own colour
         if (fluid === 'coolant') kit.addEmitter(c, new V3(d.box.center[0], d.box.center[1] + 0.2, d.box.center[2]), 'white', { rate: 5, s: 0.8 })
-        else if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : 1.1)
+        if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
       }
     }
     const out3 = dirToWorld(new V3(dirLocal.x * 0.5, dirLocal.y * 0.5 - 0.6, dirLocal.z * 0.5))
@@ -1206,7 +1210,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         .filter((p) => p.def.role === 'tyre')
         .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: p.lost || p.flat ? TYRE_FLAT_HEALTH : Math.min(p.hp / p.def.hp, 0.2 + 0.8 * p.air) }))
       const status = computeStatus()
-      return { tyres, brakes: Math.min(1, 1 / status.brakeFactor), engine: status.canStart ? health('engine') : 0, suspension: health('shocks') }
+      // the brakes need their fluid: a leaking system loses pressure and the pedal sinks
+      const brakeSystem = [...ps.values()].find((p) => p.def.role === 'brakes' && p.def.contains)
+      const fluidLeft = brakeSystem ? clamp((brakeSystem.liters ?? 0) / brakeSystem.def.contains!.liters / BRAKE_FLUID_NEEDED, 0, 1) : 1
+      return { tyres, brakes: Math.min(1, 1 / status.brakeFactor) * (BRAKE_NO_FLUID + (1 - BRAKE_NO_FLUID) * fluidLeft), engine: status.canStart ? health('engine') : 0, suspension: health('shocks') }
     },
     partWorldCenter: (pid) => {
       sync()
