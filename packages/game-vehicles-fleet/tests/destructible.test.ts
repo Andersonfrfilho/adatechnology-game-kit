@@ -23,7 +23,7 @@ describe('the destructible module on real fleet vehicles', () => {
     it(`${family} (${key}) follows the destruction contract`, () => {
       const item = buildVehicleItem(kit, key)
       const d = createVehicleDestructible(kit, item.vehicle, { id: `${key}_1`, frame: item.root })
-      const r = checkDestructible(d, { materials: MATERIALS })
+      const r = checkDestructible(d, { materials: MATERIALS, cost: true })
       expect(r.problems).toEqual([])
       const ids = d.describe().parts.map((p) => p.id)
       expect(new Set(ids).size).toBe(ids.length)

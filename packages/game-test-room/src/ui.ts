@@ -34,6 +34,22 @@ export interface InspectInfo {
   /** Author and licence of the thumbnail (`TestRoomItem.thumbnailCredit`). */
   thumbnailCredit?: string
   distance: number
+  /** Set when the aim rests on the floor: what the ground is there (the room's terrain) instead of an object's part. */
+  ground?: GroundInspect
+}
+
+/** The floor under the aim: its profile, the layer a blow reaches now and what has been done to it. */
+export interface GroundInspect {
+  /** Name of the ground profile (Dirt, Concrete slab). */
+  surface: string
+  /** Name of the material exposed at that point (the turf, or the soil under it once dug). */
+  material: string
+  /** Metres dug out under the untouched surface. */
+  dug: number
+  /** Metres left before the digging limit (bedrock, or the bottom of a slab). */
+  remaining: number
+  /** 0..1, how burnt the surface is. */
+  scorch: number
 }
 
 export interface HudState {
@@ -79,6 +95,8 @@ export interface UiOptions {
   onFast: (on: boolean) => void
   onQuality: (q: 'low' | 'medium' | 'high') => void
   quality: 'low' | 'medium' | 'high'
+  /** Opens the graphics screen: the button takes the place of the quality select. Absent: the select. */
+  onGraphics?: () => void
   scenarios: () => TestRoomScenario[]
   onRun: (s: TestRoomScenario) => Promise<ScenarioReport | void>
   onRunAll: () => Promise<ScenarioReport | void>
@@ -520,17 +538,22 @@ export function createUi(o: UiOptions): RoomUi {
   fullscreenBtn.title = t('ui.fullscreen.hint')
   const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
   for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
-  const qSel = mk('select')
-  for (const q of ['low', 'medium', 'high'] as const) {
-    const op = mk('option', undefined, t(`ui.quality.${q}`))
-    op.value = q
-    qSel.appendChild(op)
+  if (o.onGraphics) {
+    const g = ctl(t('ui.graphics'), () => o.onGraphics!())
+    g.dataset.testid = 'graphics-button'
+  } else {
+    const qSel = mk('select')
+    for (const q of ['low', 'medium', 'high'] as const) {
+      const op = mk('option', undefined, t(`ui.quality.${q}`))
+      op.value = q
+      qSel.appendChild(op)
+    }
+    qSel.value = o.quality
+    qSel.onchange = () => o.onQuality(qSel.value as 'low' | 'medium' | 'high')
+    const qLabel = mk('label', undefined, t('ui.quality') + ' ')
+    qLabel.appendChild(qSel)
+    controls.appendChild(qLabel)
   }
-  qSel.value = o.quality
-  qSel.onchange = () => o.onQuality(qSel.value as 'low' | 'medium' | 'high')
-  const qLabel = mk('label', undefined, t('ui.quality') + ' ')
-  qLabel.appendChild(qSel)
-  controls.appendChild(qLabel)
   const count = mk('span')
   controls.appendChild(count)
   cat.appendChild(controls)
@@ -627,6 +650,15 @@ export function createUi(o: UiOptions): RoomUi {
     insp.appendChild(mk('h3', undefined, t('ui.inspector')))
     if (!i) {
       insp.appendChild(mk('div', undefined, t('ui.aim_at_something')))
+      return
+    }
+    if (i.ground) {
+      const g = i.ground
+      insp.appendChild(mk('div', 't', `${i.object} › ${g.surface}`))
+      insp.appendChild(row(t('ins.material'), g.material))
+      insp.appendChild(row(t('ins.dug'), `${num(g.dug * 100, 0)} cm`))
+      insp.appendChild(row(t('ins.dig_limit'), `${num(g.remaining, 2)} m`))
+      if (g.scorch > 0.01) insp.appendChild(row(t('ins.char'), `${num(g.scorch * 100, 0)} %`))
       return
     }
     if (i.thumbnail) insp.appendChild(thumb(i.thumbnail, i.thumbnailCredit))

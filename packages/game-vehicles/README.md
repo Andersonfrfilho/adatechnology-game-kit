@@ -258,6 +258,12 @@ come in `Hit.ignition` (the weapons build them from the core and jacket of the a
 easiest, a full one mostly leaks); diesel takes a spark far worse than petrol. `createVehicleDestructible(kit, vehicle, { fuel: 0.1, ignition: { fillCurve, fireNear, sparkTarget } })`;
 the defaults and every number are `IgnitionRules` of `@adatechnology/game-contracts`.
 
+Cabin and smoke: `cabinEnclosure(car, { frame })` is the cabin (`meta.cabin`, from `kit.interior`) as an `Enclosure` in world space, for the host's
+`EffectSink.enclose`: a shut car keeps the smoke out and seeps only at `CABIN_LEAK` (2 % per second), more with cracked glass. It is open where a door
+or lid stands open (past 6 % of its swing), where a window shattered and where a door, glass, roof or panel was torn off or burnt away; a bullet hole
+lets smoke in at the hole at a rate that grows with its area (a 9 mm hole about 0.2 a second). `null` for a vehicle with no cabin (a bike) or one
+destroyed. `createCabinSmoke()` of `game-vehicles-three` keeps a host told every frame.
+
 ## Português
 
 Motor genérico de veículos procedurais para three.js: carrocerias, vidros, faróis, rodas, interiores, capô e compartimento do motor, **zonas de dano

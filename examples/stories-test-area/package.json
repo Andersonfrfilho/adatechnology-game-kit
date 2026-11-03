@@ -10,6 +10,7 @@
     "test": "node test.mjs"
   },
   "devDependencies": {
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-stories": "workspace:*",
     "@adatechnology/game-characters": "workspace:*",
     "@adatechnology/game-characters-people": "workspace:*",

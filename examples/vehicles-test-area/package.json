@@ -12,6 +12,7 @@
   "devDependencies": {
     "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-kit-defaults": "workspace:*",
     "@adatechnology/game-vehicles": "workspace:*",
     "@adatechnology/game-vehicles-driving": "workspace:*",
     "@adatechnology/game-vehicles-fleet": "workspace:*",

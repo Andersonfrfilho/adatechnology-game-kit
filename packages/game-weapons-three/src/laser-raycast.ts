@@ -29,6 +29,8 @@ export const createLaserRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Scene
   const now = options.now ?? ((): number => performance.now())
   const interval = 1000 / LASER_RAYCAST_HZ
   const raycaster = new THREE.Raycaster()
+  // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
+  raycaster.layers.enableAll()
   // the smoke is made of sprites and translucent solids, and the sprites need the camera to be tested at all
   raycaster.camera = camera
   let lastAt = -Infinity

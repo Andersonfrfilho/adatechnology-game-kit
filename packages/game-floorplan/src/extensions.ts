@@ -1,4 +1,4 @@
-import { FINDS_PROVIDERS, RESULT_EXTENSIONS } from './registry'
+import { registries } from './registry'
 import type { ResultExtension } from './registry'
 import { createRng } from './rng'
 import type { FindsQuery, FindStack, FloorplanOptions, Json, Plan } from './types'
@@ -24,7 +24,7 @@ function orderOf(extensions: readonly ResultExtension[]): ResultExtension[] {
 
 /** Runs the registered extensions and stores each output in `result[name]`. */
 export function runResultExtensions(plan: Plan, result: Json, seed: number | string, options: FloorplanOptions): void {
-  for (const extension of orderOf(RESULT_EXTENSIONS)) {
+  for (const extension of orderOf(registries().RESULT_EXTENSIONS)) {
     result[extension.name] = extension.run({ plan, result, seed, rng: createRng(seed, extension.seedKey), options })
   }
 }
@@ -40,7 +40,7 @@ export function findsAnswer(query: FindsQuery): readonly FindStack[] | null {
 }
 
 function answerOf(query: FindsQuery): readonly FindStack[] | null {
-  for (const provider of FINDS_PROVIDERS) {
+  for (const provider of registries().FINDS_PROVIDERS) {
     const stacks = provider.findsFor(query)
     if (stacks !== null) return stacks
   }

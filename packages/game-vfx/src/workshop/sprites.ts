@@ -1,3 +1,4 @@
+import { slideAlong } from '../enclosures'
 import { hexToRgb } from '../color'
 import { lerp } from '../vector'
 import type { MutableVec3, RandomStream } from '../random'
@@ -12,6 +13,11 @@ const BYTE_MAX = 255
 export interface DecalFromSprite {
   (x: number, y: number, z: number, size: number, color: number, options: { readonly grow: number; readonly fluid: 'blood' }): void
 }
+
+/** A sprite falling slower than this (m/s², the recipe's `g`) is carried by the air: smoke, dust, steam. */
+const CARRIED_GRAVITY = 3
+/** A carried sprite stops this share of its size off a wall it is outside of (its middle, not its edge, would touch the glass). */
+const PAD_OF_SIZE = 0.35
 
 /**
  * The Workshop's `PSys` (W179-220): a pool of sprites in typed arrays, as the page keeps them. A dead record is replaced by the last one, so the order
@@ -42,7 +48,8 @@ export class SpritePool {
   private readonly direction: MutableVec3 = { x: 0, y: 0, z: 0 }
   private readonly unit: MutableVec3 = { x: 0, y: 0, z: 0 }
 
-  constructor(readonly capacity: number, private readonly context: WorkshopContext) {
+  /** `carried`: the normal-blend pool (smoke, dust, steam), whose light sprites go round the closed spaces; the additive one (flames, sparks) does not. */
+  constructor(readonly capacity: number, private readonly context: WorkshopContext, private readonly carried = false) {
     const vectorArray = (): Float32Array => new Float32Array(capacity * FLOATS_PER_VECTOR)
     const scalarArray = (): Float32Array => new Float32Array(capacity)
     this.position = vectorArray()
@@ -124,6 +131,7 @@ export class SpritePool {
 
   update(dt: number, leaveDecal: DecalFromSprite): void {
     const { position, velocity } = this
+    const confiner = this.context.confiner
     for (let index = this.count - 1; index >= 0; index--) {
       this.life[index] -= dt
       if (this.life[index] <= 0) {
@@ -137,9 +145,26 @@ export class SpritePool {
       velocity[offset] *= factor
       velocity[offset + 1] *= factor
       velocity[offset + 2] *= factor
+      const x0 = position[offset]
+      const y0 = position[offset + 1]
+      const z0 = position[offset + 2]
       position[offset] += velocity[offset] * dt
       position[offset + 1] += velocity[offset + 1] * dt
       position[offset + 2] += velocity[offset + 2] * dt
+      // what the air carries (light sprites: smoke, dust, steam; not drops or blood, which fall) goes round the closed spaces
+      if (this.carried && confiner && !confiner.empty && Math.abs(this.gravity[index]) < CARRIED_GRAVITY) {
+        const size = this.startSize[index] * (1 + (this.growth[index] - 1) * age)
+        if (confiner.confine(x0, y0, z0, position[offset], position[offset + 1], position[offset + 2], size * PAD_OF_SIZE, dt)) {
+          const out = confiner.out
+          position[offset] = out.x
+          position[offset + 1] = out.y
+          position[offset + 2] = out.z
+          const [vx, vy, vz] = slideAlong(out, velocity[offset], velocity[offset + 1], velocity[offset + 2])
+          velocity[offset] = vx
+          velocity[offset + 1] = vy
+          velocity[offset + 2] = vz
+        }
+      }
       const mode = this.groundMode[index]
       if (mode) {
         const groundHeight = this.context.groundAt(position[offset], position[offset + 2])

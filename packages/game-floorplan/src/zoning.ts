@@ -1,27 +1,25 @@
+import { registries } from './registry'
 import { r2 } from './geometry'
 import type { FloorplanOptions, Json, Plan, TemplateDef, ZoneAdjustment, ZoneDef, ZoneViolation } from './types'
-
-const ZONES: Record<string, ZoneDef> = {}
-const PERMEABLE_GROUNDS = new Set<string>()
 
 /** Registers an urban zone (zoning rules). Returns the stored definition. */
 export function defineZone(zone: ZoneDef): ZoneDef {
   if (!zone || !zone.id) throw new Error('defineZone: id is required')
-  ZONES[zone.id] = zone
+  registries().ZONES[zone.id] = zone
   return zone
 }
-export const getZone = (id: string): ZoneDef | undefined => ZONES[id]
-export const listZones = (): ZoneDef[] => Object.values(ZONES)
+export const getZone = (id: string): ZoneDef | undefined => registries().ZONES[id]
+export const listZones = (): ZoneDef[] => Object.values(registries().ZONES)
 
 /** Marks ground types (e.g. `lawn`, `dirt`) that count towards the permeable area of a lot. */
 export function registerPermeableGround(...types: string[]): void {
-  for (const t of types) PERMEABLE_GROUNDS.add(t)
+  for (const t of types) registries().PERMEABLE_GROUNDS.add(t)
 }
 
 export function resolveZone(z: string | ZoneDef | undefined): ZoneDef | null {
   if (!z) return null
   if (typeof z === 'string') {
-    const found = ZONES[z]
+    const found = registries().ZONES[z]
     if (!found) throw new Error('Unknown zone: ' + z)
     return found
   }
@@ -77,7 +75,7 @@ export function checkLot(zoneIn: string | ZoneDef, lot: Json, plan: Json): ZoneV
   const far = m.built / area
   if (far > zone.maxFar + 1e-9) out.push({ rule: 'far', actual: r2(far), limit: zone.maxFar })
   let permeable = 0
-  for (const z of lot.zones as Json[]) if (PERMEABLE_GROUNDS.has(z.ground)) for (const p of z.parts as number[][]) permeable += (p[2] - p[0]) * (p[3] - p[1])
+  for (const z of lot.zones as Json[]) if (registries().PERMEABLE_GROUNDS.has(z.ground)) for (const p of z.parts as number[][]) permeable += (p[2] - p[0]) * (p[3] - p[1])
   const permeability = permeable / area
   if (permeability < zone.permeableMin - 1e-9) out.push({ rule: 'permeable', actual: r2(permeability), limit: zone.permeableMin })
   return out
@@ -129,14 +127,14 @@ const ADJUSTABLE_ZONES = new Set(['garden', 'backyard', 'side_yard'])
  * and side zones (largest first) into the first registered permeable ground. Reports each change.
  */
 export function enforcePermeability(lot: Json, zones: Json[], zone: ZoneDef, adjustments: ZoneAdjustment[]): void {
-  const target = [...PERMEABLE_GROUNDS][0]
+  const target = [...registries().PERMEABLE_GROUNDS][0]
   if (!target) return
   const [u0, v0, u1, v1] = lot.rect as number[]
   const area = (u1 - u0) * (v1 - v0)
   const areaOfZone = (z: Json) => (z.parts as number[][]).reduce((s, p) => s + (p[2] - p[0]) * (p[3] - p[1]), 0)
-  let permeable = zones.filter((z) => PERMEABLE_GROUNDS.has(z.ground)).reduce((s, z) => s + areaOfZone(z), 0)
+  let permeable = zones.filter((z) => registries().PERMEABLE_GROUNDS.has(z.ground)).reduce((s, z) => s + areaOfZone(z), 0)
   if (permeable / area >= zone.permeableMin) return
-  const candidates = zones.filter((z) => ADJUSTABLE_ZONES.has(z.type) && !PERMEABLE_GROUNDS.has(z.ground)).sort((a, b) => areaOfZone(b) - areaOfZone(a))
+  const candidates = zones.filter((z) => ADJUSTABLE_ZONES.has(z.type) && !registries().PERMEABLE_GROUNDS.has(z.ground)).sort((a, b) => areaOfZone(b) - areaOfZone(a))
   for (const z of candidates) {
     if (permeable / area >= zone.permeableMin) break
     adjustments.push({ field: 'ground:' + z.id, from: z.ground, to: target, reason: 'permeable_min' })

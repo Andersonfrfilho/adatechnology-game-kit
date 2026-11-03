@@ -1,5 +1,30 @@
 # @adatechnology/game-test-room
 
+## 0.20.0
+
+### Minor Changes
+
+- e413341: The inspector says what the floor under the aim is: the ground profile (Dirt, Concrete slab), the material exposed there and how deep it was dug (`terrainProfileName`, `InspectInfo.ground`).
+  A floor laid anew (opening an area, a reset) is drawn whole in the same frame instead of showing holes to the sky until every chunk had its turn (`Terrain.dirtyChunkCount`).
+
+### Patch Changes
+
+- Updated dependencies [e413341]
+- Updated dependencies [e413341]
+- Updated dependencies [379e44f]
+  - @adatechnology/game-terrain@0.2.0
+  - @adatechnology/game-terrain-three@0.2.0
+  - @adatechnology/game-contracts@0.21.0
+  - @adatechnology/game-vfx@0.6.0
+  - @adatechnology/game-vfx-three@0.4.0
+  - @adatechnology/game-audio@0.3.6
+  - @adatechnology/game-destruction@0.13.2
+  - @adatechnology/game-destruction-three@0.12.1
+  - @adatechnology/game-fluids@0.4.1
+  - @adatechnology/game-fluids-three@0.4.7
+  - @adatechnology/game-player@0.4.1
+  - @adatechnology/game-weapons@0.5.7
+
 ## 0.19.1
 
 ### Patch Changes

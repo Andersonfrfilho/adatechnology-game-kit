@@ -5,8 +5,8 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { ModuleHost } from '@adatechnology/game-contracts'
 import { createWeaponsTestModule } from '../src'
-import { createAccessoryBench } from '../src/accessory-bench'
-import { ACCESSORY_TEXT } from '../src/accessory-text'
+import { createAccessoryBench } from '../src/test-area/accessory-bench'
+import { ACCESSORY_TEXT } from '../src/test-area/accessory-text'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -157,7 +157,9 @@ describe('accessory bench: fit and remove per mount', () => {
     bench(room).set('fit_rail_right', 'laser_sight')
     run(room, 3)
     expect(room.tool.attachments.map((part) => part.id)).toEqual(expect.arrayContaining(['weapon_light', 'laser_sight']))
-    const spot = hands(room).getObjectByProperty('isSpotLight', true) as THREE.SpotLight
+    // the room lends its LightBudget: the weapon light is a source of it, and the spot lives in the budget's group (never in the weapon)
+    expect(hands(room).getObjectByProperty('isSpotLight', true)).toBeUndefined()
+    const spot = room.scene.getObjectByProperty('isSpotLight', true) as THREE.SpotLight
     expect(spot.intensity).toBe(0)
     expect(key('KeyL').defaultPrevented).toBe(true)
     run(room, 0.2)
