@@ -109,6 +109,8 @@ export interface VehicleDestructible extends DestructibleImpl {
    * at up to 80 km/h), then the bare rim grinds on the road throwing sparks. Answers how many rims are on the road.
    */
   rollFlat(meters: number, speed: number): number
+  /** Pushes the drawn body in by `depth` metres around `point` (world), along `direction`: the crumple of a crash. Drawing only. */
+  crumple(point: Vec3, direction: Vec3, depth: number): void
 }
 
 export type DriveReport = {
@@ -198,6 +200,11 @@ const FLAT_TYRE_TOWN_SPEED = 8
 const RUN_FLAT_LIFE_M = 80000
 const RUN_FLAT_SPEED = 22
 const TYRE_RUNFLAT_HEALTH = 0.6
+/** The kit's impact depth for a force: this much at none, this much more per unit of force, within these forces. */
+const CRUMPLE_BASE_M = 0.04
+const CRUMPLE_PER_FORCE_M = 0.15
+const CRUMPLE_MIN_FORCE = 0.3
+const CRUMPLE_MAX_FORCE = 1.4
 /** A bare rim on the road: the grip it has left, and the share of its strength it grinds away per metre. */
 const RIM_HEALTH = 0.05
 const RIM_GRIND_PER_M = 0.0004
@@ -1267,6 +1274,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
+    crumple: (point: Vec3, direction: Vec3, depth: number): void => {
+      if (!vis || depth <= 0) return
+      sync()
+      const force = clamp((depth - CRUMPLE_BASE_M) / CRUMPLE_PER_FORCE_M, CRUMPLE_MIN_FORCE, CRUMPLE_MAX_FORCE)
+      kit.impact(c, toLocal(point), dirToLocal(direction).normalize(), force, { maxDepth: depth })
+      stateCache = undefined
+    },
     rollFlat: (meters: number, speed: number): number => {
       for (const p of ps.values()) {
         if (p.def.role !== 'tyre' || !p.flat || p.lost) continue

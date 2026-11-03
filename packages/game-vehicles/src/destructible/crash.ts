@@ -15,9 +15,12 @@ export type CrashRules = {
   readonly minSpeed: number
   /** Heights over the contact point the blow also lands at, metres: the bumper takes it first, the front above it (hood, lights, grille) after. */
   readonly rows: readonly number[]
+  /** How far the front crushes per m/s of change of speed, metres (a car into a wall at 50 km/h folds about half a metre), and at most. */
+  readonly crushPerMs: number
+  readonly maxCrush: number
 }
 
-export const CRASH_RULES: CrashRules = { energyToDamage: 0.3, hitSpacing: 0.6, minSpeed: 1.5, rows: [0, 0.3] }
+export const CRASH_RULES: CrashRules = { energyToDamage: 0.3, hitSpacing: 0.6, minSpeed: 1.5, rows: [0, 0.3], crushPerMs: 0.035, maxCrush: 0.6 }
 
 export type CrashOptions = {
   /** Where the vehicle touched the obstacle, world space. */
@@ -67,5 +70,8 @@ export function crashVehicle(d: VehicleDestructible, crash: CrashOptions): Crash
       const point: Vec3 = [crash.point[0] + across[0] * offset, crash.point[1] + up, crash.point[2] + across[2] * offset]
       events.push(...d.hit({ type: 'blunt', point, direction: [dx / length, 0, dz / length], energy: each, radius: rules.hitSpacing / 2, ...(crash.source ? { source: crash.source } : {}) }))
     }
+  // the drawn body folds by the crush the change of speed gives, over the contact
+  const crush = Math.min(rules.maxCrush, deltaV * rules.crushPerMs)
+  d.crumple(crash.point, [dx / length, 0, dz / length], crush)
   return { deltaV, energy, events }
 }

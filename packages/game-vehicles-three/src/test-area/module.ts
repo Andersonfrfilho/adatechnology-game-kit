@@ -380,7 +380,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         state.time += dt
         // the crash run does not brake: it shows what the wall does to the car
         const braking = settings.damage !== 'into_wall' && gap() < brakeAt() && state.time > 0.5
-        const input = { ...idle, throttle: braking ? 0 : 1, brake: braking ? 1 : 0, steer: Math.sin(state.time * 1.4) * 0.15 }
+        const input = { ...idle, throttle: braking ? 0 : 1, brake: braking ? 1 : 0, steer: settings.damage === 'into_wall' ? 0 : Math.sin(state.time * 1.4) * 0.15 }
         if (mode === 'arcade') {
           const { events } = arcade.step(input, dt, { blocked: (x, z, yaw) => vehicleCorners(arcade.spec, x, z, yaw).some(([px]) => px >= LANE.wall) })
           for (const e of events) {
