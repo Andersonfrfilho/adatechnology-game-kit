@@ -42,13 +42,14 @@ type Lamp = { kind: string; fog?: boolean; inner: Array<{ material: any }>; halo
 export function createVehicleLamps(THREE: any, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
   const budget: LightBudget | null = isLightBudget(options.lights) ? options.lights : null
   const owner = options.owner ?? 'vehicle-lamps'
-  // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the decorative fog bulbs a body tags `userData.lamp = 'fog'`
-  const lamps: Lamp[] = ((built.context as { lights?: Array<Lamp & { fog?: boolean }> } | null)?.lights ?? [])
+  // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the decorative fog bulbs a body lists in `context.fogBulbs` (or tags `userData.lamp = 'fog'`)
+  const context = built.context as { lights?: Array<Lamp & { fog?: boolean }>; fogBulbs?: Array<{ material: any }> } | null
+  const lamps: Lamp[] = (context?.lights ?? [])
     .filter((l) => l && Array.isArray(l.inner))
     .map((l) => (l.fog ? { ...l, kind: 'fog' } : l))
-  const bulbs: Array<{ material: any }> = []
+  const bulbs: Array<{ material: any }> = (context?.fogBulbs ?? []).filter((o) => o?.material)
   built.group.traverse((o: any) => {
-    if (o.userData?.lamp === 'fog' && o.material) bulbs.push(o)
+    if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o)) bulbs.push(o)
   })
   if (bulbs.length) lamps.push({ kind: 'fog', inner: bulbs })
   const has = { head: lamps.some((l) => l.kind === 'headlight'), tail: lamps.some((l) => l.kind === 'taillight'), fog: lamps.some((l) => l.kind === 'fog'), indicators: false }

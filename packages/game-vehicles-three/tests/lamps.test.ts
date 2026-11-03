@@ -62,12 +62,18 @@ describe('vehicle lamps', () => {
     built.dispose()
   })
 
-  it('finds the fog lamps a body has (a SUV draws them as lamps) and none on a car without them', () => {
+  it('finds the fog lamps a body has (a SUV draws them as lamps, a hatch as bulbs) and none on a car without them', () => {
     const suv = build('midsize_suv')
     const lamps = createVehicleLamps(THREE, suv)
     expect(lamps.has.fog).toBe(true)
     lamps.dispose()
     suv.dispose()
+    // a car's decorative fog bulbs, listed by the body on its context (the drawing itself unchanged)
+    const hatch = build('compact_hatch')
+    const bulbs = createVehicleLamps(THREE, hatch)
+    expect(bulbs.has.fog).toBe(true)
+    bulbs.dispose()
+    hatch.dispose()
     const bus = build('city_bus')
     const none = createVehicleLamps(THREE, bus)
     expect(none.has.fog).toBe(false)
