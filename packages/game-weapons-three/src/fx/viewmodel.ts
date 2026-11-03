@@ -7,6 +7,7 @@ import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from
 import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
+import type { GunshotSpace } from '../audio/gunshot'
 import { weaponEventOf } from '../audio/host-events'
 import { soundProfileOf } from '../audio/reload-sounds'
 import type { SoundProfile } from '../audio/reload-sounds'
@@ -63,6 +64,10 @@ export interface ViewmodelOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Whether the shot is in a room or in the open (the tail and echoes of the gunshot). Default outdoor. */
+  soundSpace?: () => GunshotSpace
+  /** The floor material under a point (`concrete`, `wood_hard`, `soil`...), for the sound of a case landing there. Default concrete. */
+  surfaceAt?: (x: number, z: number) => string | undefined
   /** Where the world is: the distance from a point along a direction to the first surface (not the weapon in the hands), or null. The weapon in the hands comes back from a wall it would go through. */
   contact?: LaserRaycast
   /** Where the body holds the tool now (`ModuleHost.holdFrame`): the tool is drawn there at its real size in every view; null or absent (no body), the frame of a body's right shoulder under the camera's eye. */
@@ -146,7 +151,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt, options.particleLimit)
-  particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
+  particles.onBounce = (kind, hit) => {
+    if (kind === 'magazine') audio?.thud()
+    if (kind !== 'casing' || !audio) return
+    const caseType = hit?.object.userData['caseType'] as string | undefined
+    const surface = hit ? options.surfaceAt?.(hit.object.position.x, hit.object.position.z) : undefined
+    audio.casing({ ...(caseType ? { caseType } : {}), ...(surface ? { surface } : {}), ...(hit ? { speed: hit.speed, bounce: hit.bounce } : {}) })
+  }
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
   if (!options.effects) warnOnce('game-weapons-three.own-effects-world', 'game-weapons-three made an effects world of its own because the host lent none (options.effects); pass the host effects so the effects share one budget')
   const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' }, ...(options.lights ? { lights: options.lights } : {}) })
@@ -257,7 +268,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       caseType: caliber?.caseType ?? 'rifle',
       soundProfile: soundProfileOf(weapon, model.parts.family),
       kit,
-      cartridge: caliber && dims ? { dims, shape: cartridgeShape(caliber, dims) } : null,
+      cartridge: caliber && dims ? { dims, shape: cartridgeShape(caliber, dims), ...(caliber.caseType ? { caseType: caliber.caseType } : {}) } : null,
       stuckCase: null,
       nextChamber: 0,
       attachments: null,
@@ -384,7 +395,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (action.kind !== 'firearm') return
     const caliber = caliberOf(arsenal, current.def)
     if (!caliber) return
-    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance(), ...(current.suppressed ? { suppressed: true } : {}) })
+    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance(), space: options.soundSpace?.() ?? 'outdoor', ...(current.suppressed ? { suppressed: true } : {}) })
   }
 
   return {

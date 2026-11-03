@@ -301,6 +301,8 @@ export interface ModuleHost {
   locale: string
   /** Height of whatever things rest on at (x, z): the floor, a table, a counter. */
   groundAt(x: number, z: number): number
+  /** Material id of the floor at (x, z) (`concrete`, `soil`, `wood_hard`...): what a dropped case or a footstep lands on. Optional; undefined where the host does not know. */
+  surfaceAt?(x: number, z: number): string | undefined
   tool(): HostTool
   /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
   player(): PlayerState
