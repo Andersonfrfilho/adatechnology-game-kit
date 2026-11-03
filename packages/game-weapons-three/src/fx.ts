@@ -40,6 +40,8 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   const model = createViewmodel({
     layers,
     ...(options.soundDistance ? { soundDistance: options.soundDistance } : {}),
+    ...(options.soundSpace ? { soundSpace: options.soundSpace } : {}),
+    ...(options.surfaceAt ? { surfaceAt: options.surfaceAt } : {}),
     ...(options.onSound ? { onSound: options.onSound } : {}),
     THREE: options.THREE,
     scene: options.scene,
@@ -62,7 +64,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   })
   return {
     handle(event, tool) {
-      if (event.type === 'explosion' || event.type === 'player') return
+      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
       if (event.type === 'tool') {
         if (hasWeaponModel(event.weapon)) box.unequip()
         else model.unequip()

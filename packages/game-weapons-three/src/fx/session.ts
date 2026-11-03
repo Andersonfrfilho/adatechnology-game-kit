@@ -40,7 +40,7 @@ export interface Session {
   /** How the weapon sounds: the weight of its metal and what it is made of. */
   readonly soundProfile: SoundProfile
   readonly kit: ModelKit
-  readonly cartridge: { dims: CartridgeDims; shape: CartridgeShape } | null
+  readonly cartridge: { dims: CartridgeDims; shape: CartridgeShape; caseType?: string } | null
   stuckCase: THREE_NS.Object3D | null
   nextChamber: number
   /** The accessories drawn on the model, and what was fitted when they were last synced (to see a change). */

@@ -1,4 +1,4 @@
-import type { LoopRecipe, SoundBank, SoundRecipe } from './recipe'
+import type { LoopRecipe, SoundBank, SoundRecipe, SoundSet } from './recipe'
 import type { SampleSound } from './sample'
 
 export type DeepPartial<TValue> = TValue extends readonly unknown[] ? TValue : TValue extends object ? { readonly [Key in keyof TValue]?: DeepPartial<TValue[Key]> } : TValue
@@ -11,8 +11,11 @@ export type SoundRegistry = {
   remove(id: string): void
   sound(id: string): SoundRecipe | undefined
   loop(id: string): LoopRecipe | undefined
+  /** The set an id names (`SoundBank.sets`), if any; a recipe with the same id wins in `play`. */
+  set(id: string): SoundSet | undefined
   sample(id: string): SampleSound | undefined
   soundIds(): string[]
+  setIds(): string[]
   loopIds(): string[]
   sampleIds(): string[]
   /** Which bank each id came from. */
@@ -37,6 +40,7 @@ function mergeRecords(base: Record<string, unknown>, patch: Record<string, unkno
 export function createSoundRegistry(banks: readonly SoundBank[] = []): SoundRegistry {
   const sounds = new Map<string, SoundRecipe>()
   const loops = new Map<string, LoopRecipe>()
+  const sets = new Map<string, SoundSet>()
   const samples = new Map<string, SampleSound>()
   const owners = new Map<string, string>()
   const registry: SoundRegistry = {
@@ -48,6 +52,11 @@ export function createSoundRegistry(banks: readonly SoundBank[] = []): SoundRegi
       for (const loop of bank.loops ?? []) {
         loops.set(loop.id, loop)
         owners.set(loop.id, bank.id)
+      }
+      for (const set of bank.sets ?? []) {
+        if (set.variants.length === 0) throw new Error(`sound set ${set.id} has no variant`)
+        sets.set(set.id, set)
+        owners.set(set.id, bank.id)
       }
       for (const sample of bank.samples ?? []) {
         samples.set(sample.id, sample)
@@ -65,13 +74,16 @@ export function createSoundRegistry(banks: readonly SoundBank[] = []): SoundRegi
     remove(id) {
       sounds.delete(id)
       loops.delete(id)
+      sets.delete(id)
       samples.delete(id)
       owners.delete(id)
     },
     sound: (id) => sounds.get(id),
     loop: (id) => loops.get(id),
+    set: (id) => sets.get(id),
     sample: (id) => samples.get(id),
     soundIds: () => [...sounds.keys()],
+    setIds: () => [...sets.keys()],
     loopIds: () => [...loops.keys()],
     sampleIds: () => [...samples.keys()],
     bankOf: (id) => owners.get(id),

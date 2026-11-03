@@ -27,6 +27,7 @@ export type {
   Range,
   SoundBank,
   SoundRecipe,
+  SoundSet,
   Time,
 } from './recipe'
 export { planSound } from './plan'
@@ -72,6 +73,9 @@ export type { NoiseClass } from './recipes/noise-class'
 export { sceneMany, sceneNoise, sceneRecipe, sceneTone, sceneVoice } from './recipes/scene'
 export type { SceneLength, SceneNoise, SceneRecipeOptions, SceneTone, SceneVoice } from './recipes/scene'
 export { LIBRARY_BANK, LIBRARY_LOOPS, LIBRARY_SOUNDS } from './library'
+export { BODY_FALLOFF, BODY_FOLEY_BANK, BODY_FOLEY_SET_IDS, BODY_FOLEY_TAKES, FOOTSTEP_FALLOFF } from './recipes/body-foley'
+export { createSetPicker, retunePlan } from './variation'
+export type { SetPicker } from './variation'
 export { createAudioEngine, limiterCurve } from './webaudio/engine'
 export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, SampleOptions, VoiceHandle, VoiceStartEvent } from './webaudio/engine'
 export { createSampleStore, fetchLoader, inlineLoader } from './webaudio/sample-store'
