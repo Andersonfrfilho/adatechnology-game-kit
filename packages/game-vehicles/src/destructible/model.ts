@@ -60,7 +60,7 @@ export interface PartDef {
   panes?: any[]
   /** Fluid held, in litres. */
   contains?: { fluid: string; liters: number; pressurized?: boolean }
-  explodes?: { energy: number; radius: number; atC: number }
+  explodes?: { energy: number; radius: number; atC: number; /** The named explosion of game-vfx it plays (its fireball and its sound). */ effect?: string }
   /** Temperature in Celsius at which the part catches fire (none: it does not burn). */
   ignitionC?: number
   /** Parts that can be seen coming off the vehicle (the others are logical: they keep state and effects only). */
@@ -333,7 +333,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
         zoneId: id,
         visual: false,
         contains: { fluid: diesel ? 'diesel' : 'fuel', liters },
-        explodes: diesel ? undefined : { energy: 1.2e6 * (liters / 55), radius: 5 + liters / 30, atC: 320 },
+        explodes: diesel ? undefined : { energy: 1.2e6 * (liters / 55), radius: 5 + liters / 30, atC: 320, effect: 'car_fuel_tank' },
         ignitionC: diesel ? 330 : 260,
         tags: ['fuel_tank', ...tags],
       })
@@ -435,7 +435,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       visual: false,
       mechanical: true,
       contains: { fluid: diesel ? 'diesel' : 'fuel', liters },
-      explodes: diesel ? undefined : { energy: 1.2e6 * (liters / 55), radius: 5 + liters / 30, atC: 320 },
+      explodes: diesel ? undefined : { energy: 1.2e6 * (liters / 55), radius: 5 + liters / 30, atC: 320, effect: 'car_fuel_tank' },
       ignitionC: diesel ? 330 : 260,
       tags: ['fuel_tank'],
     })

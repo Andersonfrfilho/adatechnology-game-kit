@@ -7,6 +7,7 @@ import { surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
+import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -35,7 +36,8 @@ import { createLoading } from './loading'
 import { createRoomGraphics } from './graphics'
 import type { RoomGraphics } from './graphics'
 import { createLog } from './log'
-import { createRoomMetrics, ROOM_METRICS } from './metrics'
+import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
+import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
@@ -288,9 +290,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
-  const playSound = (key: string, point: Vec3, volume: number): void => {
-    destructionSound?.onSound(key, point, volume)
-    options.onSound?.(key, point, volume)
+  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
+    destructionSound?.onSound(key, point, volume, detail)
+    if (detail) options.onSound?.(key, point, volume, detail)
+    else options.onSound?.(key, point, volume)
   }
 
   // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
@@ -909,6 +912,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const letGo = (root: THREE_NS.Object3D): void => {
     const inner = wrapped.get(root)
     if (!inner) return
+    // eslint-disable-next-line kit/no-bare-remove -- the inner object belongs to the module that built it, which shows it again; removeEntry frees it when it goes
     inner.removeFromParent()
     wrapped.delete(root)
   }
@@ -1328,6 +1332,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const setAvatar = (next: RoomAvatar | null): void => {
     if (avatar === next) return
     avatar?.setView?.('third', null)
+    // eslint-disable-next-line kit/no-bare-remove -- the avatar belongs to the host that set it (the player module), which may set it again or dispose it
     avatar?.root.removeFromParent()
     avatar = next
     feetPrev = null
@@ -2871,6 +2876,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS])
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
+  // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
+  const MEMORY_CLEARS = 4
+  const memoryWatch = createMemoryWatch({
+    clears: MEMORY_CLEARS,
+    read: () => {
+      const memory = (gl as { info?: { memory?: { geometries: number; textures: number } } }).info?.memory
+      const heap = heapMB()
+      return memory ? { geometries: memory.geometries, textures: memory.textures, ...(heap === undefined ? {} : { heapMB: heap }) } : undefined
+    },
+  })
+  clearListeners.add(() => {
+    const verdict = memoryWatch.cleared(activeBench ?? undefined)
+    if (!verdict) return
+    if (!verdict.leaking) {
+      ui?.alert(null)
+      return
+    }
+    const text = t('memory.leak', { geometries: verdict.grew.geometries, textures: verdict.grew.textures, clears: MEMORY_CLEARS })
+    log.add({ channel: 'event', type: 'memory_leak', text, data: { ...verdict.after, grew: verdict.grew } })
+    ui?.alert(`⚠ ${text}`)
+  })
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
@@ -2926,6 +2952,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
     terrainView.sync(camera.position)
     showGroundFire(dt)
@@ -3196,10 +3223,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const metricRows = (): { room: MetricRow[]; module: MetricRow[] } => {
     const sampled = roomMetrics.sample()
-    const room = roomMetricIds.flatMap((id) => {
+    const room: MetricRow[] = roomMetricIds.flatMap((id): MetricRow[] => {
       const value = sampled[id]
       return value === undefined ? [] : [{ id, name: t(`metric.${id}`), text: num(value, id === 'frame_ms' ? 1 : 0) }]
     })
+    // stays on the counters line until a clear finds the memory back down
+    const leak = memoryWatch.last
+    if (leak?.leaking) room.push({ id: 'memory_leak', name: '⚠', text: t('memory.leak_short', { geometries: leak.grew.geometries, textures: leak.grew.textures, clears: MEMORY_CLEARS }) })
     const values = moduleMetrics()
     const declared = (activeBench ? benches.get(activeBench)?.metrics : undefined) ?? []
     const module = declared.map((metric) => {

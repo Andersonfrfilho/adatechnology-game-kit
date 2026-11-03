@@ -8,7 +8,9 @@ import { createAudioRecorder, diffAudioTrace } from '@adatechnology/golden-tool'
 import type { AudioTrace } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
-import { BURN_LOOP, DESTRUCTION_SOUND_BANK, DESTRUCTION_SOUND_KEYS, SCENE_SOUNDS, createDestructionSound } from '../src'
+import { EXPLOSIONS } from '@adatechnology/game-vfx'
+
+import { BLAST_KINDS, BLAST_KIND_OF, BLAST_SOUNDS, BLAST_SOUND_OF, BURN_LOOP, DESTRUCTION_SOUND_BANK, DESTRUCTION_SOUND_KEYS, SCENE_SOUNDS, createDestructionSound } from '../src'
 
 // The sounds of materials breaking against the team code: the art scene's `sfx.*` and the game's `boom`, run on a fake AudioContext under the same seed.
 const golden = resolve(dirname(fileURLToPath(import.meta.url)), '../../../tools/golden/fixtures/audio')
@@ -154,7 +156,7 @@ describe('the keys of the renderer', () => {
     expect(sound.burning()).toBe(2)
     expect(engine.stats().loops).toBe(1)
     const levels = recorder.trace().entries.filter((entry) => entry.op === 'param' && entry.method === 'setTargetAtTime').map((entry) => entry.args![0])
-    expect(levels).toEqual([0.05, 0.1])
+    expect(levels).toEqual([0.08, 0.16])
     sound.onSound('burn_end', [0, 0, 0], 0.5)
     expect(engine.stats().loops).toBe(1)
     sound.onSound('burn_end', [1, 0, 0], 0.5)
@@ -168,5 +170,112 @@ describe('the keys of the renderer', () => {
     const { engine, sound } = engineWith({ burnLoop: false })
     sound.onSound('burn_loop', [0, 0, 0], 0.5)
     expect(engine.stats().loops).toBe(0)
+  })
+})
+
+describe('blasts and fire', () => {
+  function engineWith(options?: Parameters<typeof createDestructionSound>[1]) {
+    const recorder = createAudioRecorder()
+    const engine = createAudioEngine({ seed: 3, mix: 'art_scene', createContext: () => recorder.context })
+    const sound = createDestructionSound(engine, options)
+    return { recorder, engine, sound }
+  }
+
+  it('has a recipe for every blast family, and every named explosion of the effects catalogue belongs to one', () => {
+    const { engine } = engineWith()
+    for (const kind of BLAST_KINDS) expect(engine.registry.sound(BLAST_SOUND_OF[kind]), kind).toBeDefined()
+    for (const id of ['explosion_far', 'explosion_indoor_tail', 'fire_ignite', 'gas_leak', 'fire_extinguish', 'fire_crackle', 'fire_pop']) expect(engine.registry.sound(id), id).toBeDefined()
+    for (const effect of Object.keys(EXPLOSIONS)) expect(BLAST_KIND_OF[effect], effect).toBeDefined()
+  })
+
+  it('plays the family of the explosion: a grenade, a propane cylinder, a car, a molotov and C4 each sound their own', () => {
+    const { sound } = engineWith()
+    const at: [number, number, number] = [0, 0, -6]
+    expect(sound.blastSound(at, 1, { effect: 'm67', radius: 15 })).toBe('explosion_grenade')
+    expect(sound.blastSound(at, 1, { effect: 'propane_p13', radius: 14 })).toBe('explosion_fuel')
+    expect(sound.blastSound(at, 1, { effect: 'car_fuel_tank', radius: 7 })).toBe('explosion_car')
+    expect(sound.blastSound(at, 1, { effect: 'molotov', radius: 4 })).toBe('molotov_break_ignite')
+    expect(sound.blastSound(at, 1, { effect: 'c4', radius: 18 })).toBe('explosion_big')
+    expect(sound.blastSound(at, 0.6, { radius: 2 })).toBe('explosion_grenade')
+    expect(sound.blastSound(at, 1, { radius: 20 })).toBe('explosion_big')
+  })
+
+  it('plays the far rumble past the far distance, never for a molotov', () => {
+    const { sound } = engineWith()
+    expect(sound.blastSound([0, 0, -59], 1, { effect: 'm67' })).toBe('explosion_grenade')
+    expect(sound.blastSound([0, 0, -120], 1, { effect: 'm67' })).toBe('explosion_far')
+    expect(sound.blastSound([0, 0, -120], 1, { effect: 'molotov' })).toBe('molotov_break_ignite')
+    expect(engineWith({ blastFarDistance: 200 }).sound.blastSound([0, 0, -120], 1, { effect: 'm67' })).toBe('explosion_grenade')
+  })
+
+  it('adds the indoor tail to a confined blast', () => {
+    const open = engineWith()
+    open.sound.onSound('explode', [0, 0, -6], 1, { effect: 'm67', confinement: 1 })
+    const inside = engineWith()
+    inside.sound.onSound('explode', [0, 0, -6], 1, { effect: 'm67', confinement: 2 })
+    const starts = (r: ReturnType<typeof createAudioRecorder>): number => r.trace().entries.filter((e) => e.op === 'start').length
+    expect(starts(inside.recorder)).toBeGreaterThan(starts(open.recorder))
+  })
+
+  it('keeps the explode rule of a host that chose one', () => {
+    const { engine, sound } = engineWith({ keys: { explode: { sound: 'boom' } } })
+    const played: string[] = []
+    const play = engine.play.bind(engine)
+    engine.play = (id, o) => (played.push(id), play(id, o))
+    sound.onSound('explode', [0, 0, -6], 1, { effect: 'propane_p13' })
+    expect(played).toEqual(['boom'])
+  })
+
+  it('a venting vessel leaks gas for as long as it has left', () => {
+    const { engine, sound } = engineWith()
+    const played: { id: string; seconds?: number }[] = []
+    const play = engine.play.bind(engine)
+    engine.play = (id, o) => (played.push({ id, ...(o?.params?.seconds === undefined ? {} : { seconds: o.params.seconds }) }), play(id, o))
+    sound.onSound('primed', [0, 0, -6], 0.7, { seconds: 3.5 })
+    expect(played).toEqual([{ id: 'gas_leak', seconds: 3.5 }])
+  })
+
+  it('many parts catching at once are a couple of ignitions, not one per part', () => {
+    const { engine, sound } = engineWith()
+    let started = 0
+    const play = engine.play.bind(engine)
+    engine.play = (id, o) => {
+      const voice = play(id, o)
+      if (voice && id === 'fire_ignite') started++
+      return voice
+    }
+    for (let i = 0; i < 40; i++) sound.onSound('ignite', [i * 0.1, 0, -4], 0.7)
+    expect(started).toBeLessThanOrEqual(2)
+  })
+
+  it('crackles over the fire while something burns, more with more fire, none once it is out', () => {
+    const count = (fires: number): number => {
+      const { engine, sound } = engineWith()
+      let crackles = 0
+      const play = engine.play.bind(engine)
+      engine.play = (id, o) => ((id === 'fire_crackle' || id === 'fire_pop') && crackles++, play(id, o))
+      for (let i = 0; i < fires; i++) sound.onSound('burn_loop', [i, 0, -4], 0.5)
+      for (let i = 0; i < 600; i++) sound.update(1 / 60)
+      return crackles
+    }
+    const small = count(1)
+    const large = count(30)
+    expect(small).toBeGreaterThan(5)
+    expect(large).toBeGreaterThan(small * 2)
+    const { engine, sound } = engineWith()
+    sound.onSound('burn_loop', [0, 0, -4], 0.5)
+    sound.onSound('burn_end', [0, 0, -4], 0.5)
+    let after = 0
+    const play = engine.play.bind(engine)
+    engine.play = (id, o) => (after++, play(id, o))
+    for (let i = 0; i < 120; i++) sound.update(1 / 60)
+    expect(after).toBe(0)
+  })
+
+  it('puts the loudest moment of a blast in its first milliseconds', () => {
+    for (const recipe of BLAST_SOUNDS.filter((r) => r.id !== 'explosion_far' && r.id !== 'explosion_indoor_tail')) {
+      const first = recipe.layers[0]
+      expect(first?.at ?? 0, recipe.id).toBe(0)
+    }
   })
 })
