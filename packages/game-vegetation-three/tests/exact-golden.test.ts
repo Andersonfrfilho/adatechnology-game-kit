@@ -22,7 +22,7 @@ type Root = { traverse(f: (o: unknown) => void): void }
 type Case = [string, () => Root]
 const cases: Case[] = []
 {
-  const THREE: any = THREE_NS
+  const THREE = THREE_NS
   const module = createVegetationTestModule({ locale: 'en' })
   for (const item of module.items('en')) cases.push([`item/${item.id}`, () => item.build(THREE) as Root])
   const settings = [

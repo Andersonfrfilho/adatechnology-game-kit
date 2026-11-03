@@ -36,10 +36,10 @@ const makeRoom = (): TestRoom => {
 }
 
 /** The artifact's module, evaluated as the page does: a classic script that sets a global. */
-const pageModule = (): any => {
-  const fakeWindow: any = {}
+const pageModule = (): ReturnType<typeof createVegetationTestModule> => {
+  const fakeWindow: { VegetationTestModule?: { create(options: object): ReturnType<typeof createVegetationTestModule> } } = {}
   new Function('window', pageCode)(fakeWindow)
-  return fakeWindow.VegetationTestModule.create({ GameVegetation: sdk, GameVegetationSpecies })
+  return fakeWindow.VegetationTestModule!.create({ GameVegetation: sdk, GameVegetationSpecies }) // the page's classic script sets it
 }
 const myModule = () => createVegetationTestModule({ locale: 'en', GameVegetation: sdk as never, GameVegetationSpecies: GameVegetationSpecies as never })
 
@@ -74,21 +74,21 @@ describe('team golden: the module of the Viveiro artifact against the TypeScript
   it('has the same 18 items, with the same names, in both languages', () => {
     expect(VEGETATION_ITEM_IDS).toHaveLength(18)
     for (const locale of ['en', 'pt-BR']) {
-      const want = pageModule().items(locale).map((item: { id: string; name: string; movable: boolean }) => [item.id, item.name, item.movable])
+      const want = pageModule().items(locale).map((item) => [item.id, item.name, item.movable])
       const got = myModule().items(locale).map((item) => [item.id, item.name, item.movable])
       expect(got).toEqual(want)
     }
   })
 
   it.each([...VEGETATION_ITEM_IDS])('%s has the same pieces, joints, shapes and sway clip', (id) => {
-    const want = pageModule().items('en').find((item: { id: string }) => item.id === id)
+    const want = pageModule().items('en').find((item) => item.id === id)!
     const got = myModule().items('en').find((item) => item.id === id)!
-    const wantRoot = want.build(THREE)
+    const wantRoot = want.build(THREE) as { children: { name: string; position: unknown }[] }
     const gotRoot = got.build(THREE) as { children: { name: string; position: unknown }[] }
     // the same meshes, in the same order, at the same places
-    expect(gotRoot.children.map((c) => c.name)).toEqual(wantRoot.children.map((c: { name: string }) => c.name))
-    expect(plain(gotRoot.children.map((c) => c.position))).toEqual(plain(wantRoot.children.map((c: { position: unknown }) => c.position)))
-    const wantSpec = want.spec(wantRoot)
+    expect(gotRoot.children.map((c) => c.name)).toEqual(wantRoot.children.map((c) => c.name))
+    expect(plain(gotRoot.children.map((c) => c.position))).toEqual(plain(wantRoot.children.map((c) => c.position)))
+    const wantSpec = (want.spec as (root: unknown) => unknown)(wantRoot)
     const gotSpec = (got.spec as (root: unknown) => unknown)(gotRoot)
     expect(plain(gotSpec)).toEqual(plain(wantSpec))
     expect(plain(got.animations)).toEqual(plain(want.animations))
