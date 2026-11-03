@@ -17,6 +17,7 @@ export function createAudioSink(engine: AudioEngine): EngineSink {
         ...(request.volume === undefined ? {} : { volume: request.volume }),
         ...(request.params ? { params: request.params } : {}),
         ...(request.seed === undefined ? {} : { seed: request.seed }),
+        ...(request.delay === undefined ? {} : { delay: request.delay }),
       })
       if (!handle) return null
       playing.set(handle.id, handle)

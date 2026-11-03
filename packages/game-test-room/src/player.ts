@@ -30,7 +30,15 @@ export interface PlayerOptions {
   crouchKeys?: readonly string[]
   /** Height of the ground the player walks on (a crater, a heap). Default flat at 0. */
   floorAt?: (x: number, z: number) => number
+  /** The feet leave the floor on a jump, or meet it again after a fall (`speed`: m/s downward at the touch). For the body's sounds. */
+  onFeet?: (event: PlayerFeetEvent) => void
 }
+
+/** What the feet did this frame: a jump, or a landing with the speed of the fall (a jump on the spot comes down at about 4.6 m/s). */
+export type PlayerFeetEvent = { readonly type: 'jump' } | { readonly type: 'land'; readonly speed: number }
+
+/** Below this fall speed (m/s) a touch of the floor is a step down, not a landing. */
+export const LANDING_MIN_SPEED = 1
 
 export interface Player {
   readonly yaw: number
@@ -45,6 +53,8 @@ export interface Player {
   /** Horizontal metres per second walked in the last update. */
   readonly speed: number
   readonly running: boolean
+  /** The feet are on the floor (not in a jump or a fall). */
+  readonly grounded: boolean
   /** Whether the player is crouched (a crouch key tapped or held): the eye sinks and the walk slows. */
   readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
@@ -112,6 +122,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let bend = 0
   let bendTarget = 0
   let vy = 0
+  /** The floor under the feet at the last update (0 before the first). */
+  let floorUnder = 0
   let walked = 0
   let running = false
   const px = { x: o.start[0], z: o.start[2] }
@@ -377,6 +389,9 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get running() {
       return running
     },
+    get grounded() {
+      return y <= floorUnder + 1e-3 && vy <= 0
+    },
     get crouching() {
       return isCrouched()
     },
@@ -403,13 +418,18 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       }
       // the floor under the feet: a step up is taken at once, a drop is a fall
       const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
+      floorUnder = floor
       if (y < floor && vy <= 0) y = floor
-      if (y <= floor && keys.has('Space') && !walkHeld) vy = JUMP
+      if (y <= floor && keys.has('Space') && !walkHeld) {
+        vy = JUMP
+        o.onFeet?.({ type: 'jump' })
+      }
       if (y > floor || vy > 0) {
         vy -= GRAVITY * dt
         y += vy * dt
         if (y <= floor) {
           y = floor
+          if (-vy >= LANDING_MIN_SPEED) o.onFeet?.({ type: 'land', speed: -vy })
           vy = 0
         }
       }
