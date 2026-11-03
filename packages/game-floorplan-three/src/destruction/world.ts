@@ -49,6 +49,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         const fragments = e => {
           const scene = root.parent; if (!scene || !e.fragments) return; const n = Math.min(e.fragments.length, 10);
           for (let k = 0; k < n; k++) { const f = e.fragments[k], m = new THREE.Mesh(FRAGMENT_GEO, fragmentMaterial(f.material)); m.scale.set(Math.max(0.03, f.size[0]), Math.max(0.03, f.size[1]), Math.max(0.03, f.size[2])); m.position.set(f.center[0], f.center[1], f.center[2]); m.quaternion.set(f.rotation[0], f.rotation[1], f.rotation[2], f.rotation[3]); scene.add(m); frags.push({ mesh: m, v: f.velocity.slice(), t: 0, still: false, h: m.scale.y / 2 }); }
+          // eslint-disable-next-line kit/no-bare-remove -- a fragment is the shared FRAGMENT_GEO with a cached fragmentMaterial: nothing of its own to free
           while (frags.length > 90) { const f = frags.shift(); f.mesh.removeFromParent(); }
         };
         const facetsOf = (id, fn) => { const l = facets.get(id); if (l) for (const d of l) fn(d); };
@@ -141,6 +142,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           }
           const scene = root.parent, ground = scene ? root.getWorldPosition(new THREE.Vector3()).y : 0;
           for (let i = frags.length - 1; i >= 0; i--) {
+            // eslint-disable-next-line kit/no-bare-remove -- a fragment is the shared FRAGMENT_GEO with a cached fragmentMaterial: nothing of its own to free
             const f = frags[i]; f.t += dt; if (f.t > 14) { f.mesh.removeFromParent(); frags.splice(i, 1); moved = true; continue; }
             if (f.still) continue; moved = true; f.v[1] -= 9.8 * dt; f.mesh.position.x += f.v[0] * dt; f.mesh.position.y += f.v[1] * dt; f.mesh.position.z += f.v[2] * dt; f.mesh.rotation.x += f.v[0] * dt; f.mesh.rotation.z += f.v[2] * dt;
             if (f.mesh.position.y <= ground + f.h) { f.mesh.position.y = ground + f.h; if (Math.abs(f.v[1]) > 1.5) { f.v[1] *= -0.3; f.v[0] *= 0.6; f.v[2] *= 0.6; } else f.still = true; }
