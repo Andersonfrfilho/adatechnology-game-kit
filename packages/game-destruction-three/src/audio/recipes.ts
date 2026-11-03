@@ -102,6 +102,9 @@ export const LEAF_SOUNDS: readonly SoundRecipe[] = [
   leaf('shut_soft', [tone({ f: 95, f2: 55, d: 0.12, vol: 0.35 }), noise({ type: 'lowpass', f: 500, d: 0.1, vol: 0.3 })]),
   leaf('rattle', many(5, () => noise({ type: 'bandpass', f: [1600, 2600], q: 3, d: 0.035, vol: 0.32, delay: [0, 0.45] }))),
   leaf('slide', [noise({ type: 'bandpass', f: 700, q: 2, a: 0.04, d: 0.35, vol: 0.22 }), noise({ type: 'bandpass', f: 2200, q: 5, d: 0.3, vol: 0.05 })]),
+  // an item taken in the hand: the fingers on a hard surface and the sleeve moving, or a soft thing gathered up (the kit's recordings answer these ids)
+  leaf('grab_hard', [noise({ type: 'bandpass', f: 1800, q: 3, d: 0.03, vol: 0.18 }), noise({ type: 'bandpass', f: 900, q: 1.2, a: 0.02, d: 0.14, vol: 0.08 })]),
+  leaf('grab_soft', [noise({ type: 'lowpass', f: 1400, a: 0.02, d: 0.16, vol: 0.14 })]),
 ]
 
 export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, EXPLOSION_BOOM], loops: [BURN_LOOP] }

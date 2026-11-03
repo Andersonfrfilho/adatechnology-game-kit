@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
+import { createAudioEngine, createAudioSink, loadKitSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -283,6 +283,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const ownAudio = options.audio === undefined
   const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
   const destructionSound = audio ? createDestructionSound(audio) : null
+  // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
+  if (audio && options.samplesBaseUrl !== null) {
+    void loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' }).then((bank) => {
+      if (!bank || typeof window === 'undefined') return
+      // the hand's sounds (a door, an item taken) load on the first key or click, when the page may make its AudioContext, so even the first one is the recording
+      const preload = (): void => {
+        window.removeEventListener('keydown', preload, true)
+        window.removeEventListener('pointerdown', preload, true)
+        void audio.loadSamples(['latch', 'creak_wood', 'shut_wood', 'rattle', 'grab_hard', 'grab_soft']).catch(() => undefined)
+      }
+      window.addEventListener('keydown', preload, true)
+      window.addEventListener('pointerdown', preload, true)
+    })
+  }
   const playSound = (key: string, point: Vec3, volume: number): void => {
     destructionSound?.onSound(key, point, volume)
     options.onSound?.(key, point, volume)
@@ -2237,6 +2251,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
+    // the hand closing on it: the sound starts as the hold does (criterion C1)
+    playSound(impactKey(world.materials.get(heaviestMaterial(r.object) ?? '')).replace('impact_', 'grab_'), v3(piece.root.getWorldPosition(tmpV)), 0.8)
     fire('grab', { held: true, objectId: r.object })
     return true
   }

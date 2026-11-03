@@ -1,6 +1,6 @@
 // Inlines three r160, the kit packages (contracts included), the stylesheet and src/main.js into dist/test-room.html (no CDN, no request at all).
 import { createRequire } from 'node:module'
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -135,3 +135,12 @@ const html = `${fullHtml.slice(0, at)}<script type="text/plain" id="room-area">$
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)
+
+// 4. the kit's recorded sounds (game-audio assets/sfx: the converted files and their manifest) next to the page, where the room's engine fetches them
+//    (`./sfx/`); they load on first play, so the page itself does not grow. Opened from file:// the fetch fails and the recipes play.
+const sfx = join(pkg('game-audio'), 'assets/sfx')
+if (existsSync(join(sfx, 'manifest.json'))) {
+  rmSync(join(here, 'dist/sfx'), { recursive: true, force: true })
+  cpSync(sfx, join(here, 'dist/sfx'), { recursive: true })
+  console.log('dist/sfx copied')
+}
