@@ -264,11 +264,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const topOk = (t: ArenaTop): boolean => (t.boards ? t.boards.some((b) => partStands(t.id, b.part)) : partStands(t.id, t.topPart))
   /** Whether the top holds what is at (x, z): the board there, on a top of boards. */
   const topHolds = (t: ArenaTop, x: number, z: number): boolean => (t.boards ? t.boards.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && partStands(t.id, b.part)) : topOk(t))
-  // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
+  // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object stands where it was laid (a piece holds them by its own box)
   const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
   const restingTopAt = (x: number, z: number): number => {
     let top = 0
-    for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId)) top = Math.max(top, c.top)
+    for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId) && !renderer.piece(c.objectId)) top = Math.max(top, c.top)
     return top
   }
   const sceneryTopAt = (x: number, z: number): number => {

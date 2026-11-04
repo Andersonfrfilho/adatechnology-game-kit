@@ -1208,6 +1208,7 @@ class Renderer implements DestructionRenderer {
       this.visuals.hide(pv, 'broken')
     }
     this.spawnFragments(ev, 0, { def, color, opacity, transparent })
+    this.loosenIfFootless(ev.object)
     const up: Vec3 = [0, 1, 0]
     const sizeK = clamp(ev.fragments.length / 10, 0.5, 2)
     switch (ev.style) {
@@ -1345,6 +1346,48 @@ class Renderer implements DestructionRenderer {
     nb.piece = piece
     if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
+  }
+
+  /**
+   * Furniture that lost what it stood on falls: with every leg of a table broken the top is loose, and with the legs of one side gone what is left topples. Feet are the
+   * meshes at the bottom of the object as it was whole; while the ones left still span the same floor (a cupboard with a broken door, a table missing one leg) it stands.
+   */
+  private loosenIfFootless(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b || !this.autoSplit) return
+    const left = this.meshesOf(b).filter((mv) => this.visuals.shown(mv))
+    if (left.length === 0) return
+    const body = b.piece ?? this.pieceSys.get(objectId)
+    if (body) {
+      // a piece is the box of what is left of it: the legs that broke off no longer hold it up
+      const { half, center } = this.measure(b.root, left)
+      body.halfExtents = half
+      this.pieceSys.setCenter(body, center)
+      body.mass = Math.max(0.05, this.massOf(objectId))
+      body.sleeping = false
+      return
+    }
+    if (kitOriginOf(b.root)?.kind !== 'furniture') return
+    const boxOf = (mv: MeshVis): THREE_NS.Box3 => this.visuals.worldBox(mv, new this.THREE.Box3())
+    const whole = [...b.parts.values()].flatMap((pv) => pv.meshes).map(boxOf).filter((one) => !one.isEmpty())
+    const floor = Math.min(...whole.map((one) => one.min.y))
+    const feetOf = (boxes: THREE_NS.Box3[]): THREE_NS.Box3 => boxes.filter((one) => one.min.y < floor + FEET_BAND).reduce((feet, one) => feet.union(one), new this.THREE.Box3())
+    const was = feetOf(whole)
+    const now = feetOf(left.map(boxOf).filter((one) => !one.isEmpty()))
+    const same = !now.isEmpty() && now.min.x <= was.min.x + FEET_BAND && now.max.x >= was.max.x - FEET_BAND && now.min.z <= was.min.z + FEET_BAND && now.max.z >= was.max.z - FEET_BAND
+    if (same) return
+    if (!now.isEmpty()) {
+      const box = left.map(boxOf).reduce((all, one) => all.union(one), new this.THREE.Box3())
+      const centreX = (box.min.x + box.max.x) / 2
+      const centreZ = (box.min.z + box.max.z) / 2
+      const height = box.max.y - box.min.y
+      const narrow = height >= TIP_MIN_HEIGHT && Math.min(now.max.x - now.min.x, now.max.z - now.min.z) < TIP_NARROW * height
+      if (!narrow && centreX > now.min.x && centreX < now.max.x && centreZ > now.min.z && centreZ < now.max.z) return
+    }
+    const piece = this.makePiece(objectId)
+    this.tipIfTopHeavy(b)
+    // the host stops keeping the footprint it had where it stood: it is a body that moves now
+    this.o.onLoosened?.(objectId, piece, 'apart')
   }
 
   /**

@@ -52,6 +52,10 @@ const BIG_WIDTH = 0.03
 /** The seed of the fragments' random stream (their spin and sway); `reset` takes it back here. */
 const FRAGMENT_SEED = 0x51ed270b
 
+/** Fragments asleep whose ground is looked at again each update, in turn, and how far (m) over it one may lie before it falls: the table it lay on broke. */
+const SUPPORT_CHECKS = 32
+const SUPPORT_GAP = 0.02
+
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
 
@@ -76,6 +80,7 @@ export class FragmentSystem {
   private rng = createRng(FRAGMENT_SEED)
   /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
   private tick = 0
+  private supportTurn = 0
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -293,6 +298,7 @@ export class FragmentSystem {
 
   update(dt: number): void {
     this.tick++
+    this.wakeUnsupported()
     const g = this.o.gravity
     for (let i = this.list.length - 1; i >= 0; i--) {
       const f = this.list[i]
@@ -315,6 +321,19 @@ export class FragmentSystem {
         continue
       }
       this.step(f, dt, g)
+    }
+  }
+
+  /** A few fragments asleep each update (`SUPPORT_CHECKS`, in turn) look at the ground under them again: one left over air falls. */
+  private wakeUnsupported(): void {
+    const n = this.list.length
+    for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
+      this.supportTurn = (this.supportTurn + 1) % n
+      const f = this.list[this.supportTurn]
+      if (!f.asleep || f.dying) continue
+      const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
+      const ext = Math.abs(e[1]) * f.half.x + Math.abs(e[5]) * f.half.y + Math.abs(e[9]) * f.half.z
+      if (f.mesh.position.y - ext > this.o.groundAt(f.mesh.position.x, f.mesh.position.z) + SUPPORT_GAP) this.rouse(f)
     }
   }
 

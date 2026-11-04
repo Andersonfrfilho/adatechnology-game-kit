@@ -75,6 +75,10 @@ const SIDE_BOUNCE = 0.1
  * (the piece is over a step): the edge of a table under a box's bottom is a support between its corners. On level ground the corners are enough.
  */
 const EDGE_POINTS = [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75]
+/** Sleeping pieces whose support is looked at again each update, in turn: what held one up may have broken, fallen over or been carried off. */
+const SUPPORT_CHECKS = 16
+/** A sleeping piece none of whose lowest points has a support within this many metres under it wakes and falls. */
+const SUPPORT_GAP = 0.02
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 interface Solid {
@@ -126,6 +130,7 @@ export class PieceSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
+  private supportTurn = 0
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -308,6 +313,7 @@ export class PieceSystem {
       const h = body.halfExtents
       return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: h, r: Math.hypot(h[0], h[1], h[2]) }
     })
+    this.wakeUnsupported()
     for (const b of this.list) {
       if (b.held) {
         b.velocity = [0, 0, 0]
@@ -321,6 +327,35 @@ export class PieceSystem {
       this.integrate(b, dt)
     }
     this.separate(dt)
+  }
+
+  /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */
+  private wakeUnsupported(): void {
+    const n = this.list.length
+    for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
+      this.supportTurn = (this.supportTurn + 1) % n
+      const b = this.list[this.supportTurn]
+      if (!b.sleeping || b.held || this.supported(b, false) || this.supported(b, true)) continue
+      b.sleeping = false
+      b.still = 0
+      b.calmAt = null
+    }
+  }
+
+  /**
+   * Whether a point of `b` (its corners, or with `edges` the points along its edges too) has the ground, a piece or a fixed top under it. Any point, not only the lowest:
+   * a book propped on a fallen case rests by a corner high on it while its lowest one hangs beside it.
+   */
+  private supported(b: PieceBody, edges: boolean): boolean {
+    const c = this.centerOf(b, this.p)
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    for (const [sx, sy, sz] of this.samples(b, edges)) {
+      const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
+      const x = c.x + e[0] * sx + e[4] * sy + e[8] * sz
+      const z = c.z + e[2] * sx + e[6] * sy + e[10] * sz
+      if (this.supportAt(b, x, y, z, STEP) >= y - SUPPORT_GAP) return true
+    }
+    return false
   }
 
   /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */
