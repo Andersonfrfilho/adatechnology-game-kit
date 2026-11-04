@@ -19,6 +19,8 @@ import type { VehicleSoundIds } from '../types'
 import { createCockpit } from './cockpit'
 import type { Cockpit } from './cockpit'
 import { VEHICLE_SOUND_BANK } from '../../audio'
+import { createWheelRoll } from '../../wheel-roll'
+import type { WheelRoll } from '../../wheel-roll'
 import { createProvingCrash } from './crash'
 import type { ProvingCrash } from './crash'
 import { SYSTEMS_TEXT } from './systems-text'
@@ -93,6 +95,9 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   /** The player at the wheel: the room's walking keys are held and the vehicle takes them. */
   let driving: Cockpit | null = null
   let crashes: ProvingCrash | null = null
+  /** The wheels rolling with the distance the car covers, and where it was last frame (x, z of the driver). */
+  let wheels: WheelRoll | null = null
+  let lastAt: { x: number; z: number } | null = null
   let parked: { root: { position: { x: number; z: number } }; remove(): void } | null = null
   /** The driver's seat (metres) and the side mirrors (turn of their aim, out positive). */
   const adjust = { seatForward: 0, seatHeight: 0, mirrorLeft: 0, mirrorRight: 0 }
@@ -272,6 +277,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   // ---- the vehicle ----------------------------------------------------------------------------------------------------------------------
   const removeCar = (): void => {
     if (!car) return
+    wheels = null
+    lastAt = null
     discardObject3D(car.built.group)
     car = null
   }
@@ -285,6 +292,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     built.group.add(guides)
     ;(host.scene as any).add(built.group)
     car = { built, guides, subject }
+    wheels = createWheelRoll(three, built)
     pose({ x: 0, z: TRACK.start, yaw: 0, pitch: 0, roll: 0, height: 0 }, 0)
     rig.vehicle?.reset()
     drawBoard()
@@ -337,6 +345,12 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     car.built.group.position.set(TRACK.x0 + wrapped, 0, TRACK.z + s.z)
     car.built.group.rotation.set(-s.pitch, s.yaw + Math.PI / 2, s.roll, 'YXZ')
     bendGuides(steer)
+    // the distance along the car's heading since the last frame turns the wheels (a jump to a new run starts them afresh)
+    if (lastAt) {
+      const along = (s.x - lastAt.x) * Math.cos(s.yaw) - (s.z - lastAt.z) * Math.sin(s.yaw)
+      if (Math.abs(along) < 5) wheels?.roll(along, steer)
+    }
+    lastAt = { x: s.x, z: s.z }
   }
   const frameOf = (speed: number): VehicleFrame | null => {
     if (!car) return null

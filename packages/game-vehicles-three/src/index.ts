@@ -15,6 +15,8 @@ export { createProvingModule, loadProvingModule, PROVING_AREA_ID, PROVING_TEXT }
 export type { ProvingModuleOptions, ProvingRoomLike, ProvingText } from './test-area/proving'
 export { createVehicleLamps, LAMP_RULES } from './lamps'
 export { createVehicleBody } from './body'
+export { createWheelRoll } from './wheel-roll'
+export type { WheelRoll, WheelRollThree } from './wheel-roll'
 export type { BodyEvent, BodyThree, VehicleBody, VehicleBodyOptions, WindowId } from './body'
 export type { LampSwitch, VehicleLamps } from './lamps'
 export { createVehicleDashboard, DASHBOARD_LOOK } from './dashboard'
