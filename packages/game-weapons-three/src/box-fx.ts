@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { GunshotSpace } from './audio/gunshot'
-import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool, MuzzlePose } from '@adatechnology/game-contracts'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
@@ -75,6 +75,8 @@ export interface BoxFx {
   readonly inHand: string | null
   /** Where the hands take the prop now (world space): the right around its handle, the left under the barrel of a long gun; null with nothing in the hands. */
   handTargets(): HandTargets | null
+  /** The front end of the tool in the hands (world space) where its shot, flame or foam leaves, and the way it points; null for a tool with none (a blade, a bare hand). This presentation draws no muzzle flash. */
+  muzzle(): MuzzlePose | null
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
@@ -83,6 +85,8 @@ export interface BoxFx {
 
 /** Weapons that throw the spent case out on every shot. Revolvers keep them in the cylinder; break-actions open on reload. */
 const EJECTS_ON_SHOT = new Set(['pistol', 'smg', 'carbine', 'rifle', 'sniper', 'shotgun'])
+/** What leaves from the front end of the tool: a shot, a flame, a jet of heat, the foam of an extinguisher. */
+const SPOUTS: ReadonlySet<string> = new Set(['firearm', 'flame', 'heat', 'extinguisher'])
 /** Weapons whose reload drops a magazine. */
 const DROPS_MAGAZINE = new Set(['pistol', 'smg', 'carbine', 'rifle', 'sniper'])
 /** Manual actions that cycle (pump, bolt) after each shot: the sound of the cycle. */
@@ -133,6 +137,8 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const q = new THREE.Quaternion()
   const q2 = new THREE.Quaternion()
   const pointForward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
+  // the front end of the prop in its own space (x along it)
+  const frontOf = new THREE.Vector3()
 
   const equip = (weapon: string): void => {
     if (model) hand.remove(model)
@@ -144,6 +150,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     const length = new THREE.Box3().setFromObject(model).getSize(v).x
     rear = new THREE.Box3().setFromObject(model).min.x
     lengthMetres = length
+    frontOf.copy(new THREE.Box3().setFromObject(model).getCenter(v)).setX(rear + length)
     model.quaternion.copy(pointForward)
     hand.add(model)
     inHand = def.id
@@ -257,6 +264,13 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       model = null
       inHand = null
       hold = null
+    },
+    muzzle() {
+      if (!model || !def || !SPOUTS.has(def.action.kind)) return null
+      hand.updateMatrixWorld(true)
+      const at = model.localToWorld(v.copy(frontOf))
+      const along = v2.set(1, 0, 0).applyQuaternion(model.getWorldQuaternion(q2)).normalize()
+      return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: false }
     },
     handTargets() {
       if (!model || !hold) return null

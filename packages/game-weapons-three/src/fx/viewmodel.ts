@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
-import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -101,6 +101,8 @@ export interface Viewmodel {
   setCondition(condition: string): void
   /** Where the hands take the weapon now (world space), or null with nothing in the hands. The right hand sits on the grip, the left on the forend, and goes to the magazine while it is changed. */
   handTargets(): HandTargets | null
+  /** The muzzle of the model in the hands now (the gallery's `muzzle` mark, world space) and the way the barrel points; null with nothing in the hands or a model with no muzzle. */
+  muzzle(): MuzzlePose | null
   readonly inHand: string | null
   /** The clips playing now, with the seconds each lasts. */
   readonly clips: ReadonlyArray<{ name: string; seconds: number }>
@@ -187,6 +189,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   // whether the feed clip of the weapon in the hands carries its own sound
   let feedCued = false
   const rootQuaternion = new THREE.Quaternion()
+  const muzzleAt = new THREE.Vector3()
+  const muzzleAlong = new THREE.Vector3()
 
   const world: FxWorld = {
     kit,
@@ -469,6 +473,15 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     setCondition(next) {
       condition = next
       if (session) applyCondition(kit, session.model, condition)
+    },
+    muzzle() {
+      const mark = session?.model.parts.muzzle
+      if (!session || !mark) return null
+      hand.updateMatrixWorld(true)
+      const at = worldPositionOf(session, mark, muzzleAt)
+      const along = muzzleAlong.set(1, 0, 0).applyQuaternion(session.model.root.getWorldQuaternion(rootQuaternion)).normalize()
+      const kind = session.def.action.kind
+      return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: kind === 'firearm' || kind === 'launcher' }
     },
     handTargets() {
       if (!session || !hold) return null

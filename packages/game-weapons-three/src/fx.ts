@@ -1,4 +1,4 @@
-import type { HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { HandTargets, HostEvent, HostTool, MuzzlePose } from '@adatechnology/game-contracts'
 import { createBoxFx } from './box-fx'
 import type { WeaponFxOptions } from './box-fx'
 import { hasWeaponModel } from './models'
@@ -18,6 +18,8 @@ export interface WeaponFx {
   setCondition(condition: string): void
   /** Where the hands take the weapon (world space, read every frame after `update`): the grip and the forend of the model, or the handle of the generic prop; null with nothing in the hands. */
   handTargets(): HandTargets | null
+  /** The muzzle of the weapon in the hands as drawn now (world space): the gallery model's mark, or the front of the generic prop; null for a tool that fires no shot. */
+  muzzle(): MuzzlePose | null
   /** What is drawn (casings, magazines, muzzle flash): change a field and the next event follows it. */
   readonly layers: FxLayers
   /** Weapon shown in the hands, or null. */
@@ -78,6 +80,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     },
     setCondition: (condition) => model.setCondition(condition),
     handTargets: () => model.handTargets() ?? box.handTargets(),
+    muzzle: () => (model.inHand !== null ? model.muzzle() : box.muzzle()),
     layers,
     get inHand() {
       return model.inHand ?? box.inHand
