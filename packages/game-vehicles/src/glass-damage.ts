@@ -360,6 +360,11 @@ export function installGlassDamage(kit: Kit): void {
       m.material = MATERIALS.glassEdge
       m.userData.lensRim = true
     })
+    // without its lens and its bulb the housing is a dark hollow: the reflector, a lit chrome bowl while the lamp worked, shows dull and dark
+    if (L.lensMaterial)
+      (L.reflector || []).forEach(function (m: { material: unknown }) {
+        m.material = MATERIALS.broken
+      })
     L.inner.forEach(function (m: any) {
       m.material = MATERIALS.bulbBroken
     })
