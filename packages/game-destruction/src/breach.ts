@@ -81,3 +81,47 @@ export const marksInBox = (center: Vec3, size: Vec3, rotation: Quat | undefined,
   }
   return marks
 }
+
+const JOINT_GAP = 1e-4
+
+/**
+ * The units of a wall still standing (`standing(i)`) that no longer bear on its bottom through the units under them: a unit stands while its bed
+ * overlaps a standing unit of the row below (the bottom row stands on what holds the wall). Masonry carries by bearing, and the mortar of a head
+ * joint holds next to nothing in tension, so over a hole the courses step in by the bond (half a unit a course in running bond) and the triangle
+ * above it comes down, as it does over an opening without a lintel; at the free end of a wall, all that hangs over the hole. A slab (thin along y)
+ * has no bottom row: none.
+ */
+export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims: Vec3, standing: (index: number) => boolean): number[] => {
+  if (thin === 1) return []
+  const [u, v] = planeAxes(thin)
+  const bottom = -dims[v] / 2
+  const rowOf = (y: number): number => Math.round((y - bottom) * 1e4)
+  const rows = new Map<number, number[]>()
+  for (let i = 0; i < cells.length; i++) {
+    if (!standing(i)) continue
+    const cell = cells[i]!
+    const key = rowOf(cell.center[v] - cell.size[v] / 2)
+    const row = rows.get(key)
+    if (row) row.push(i)
+    else rows.set(key, [i])
+  }
+  const held = new Set<number>()
+  const queue: number[] = []
+  for (const i of rows.get(0) ?? []) {
+    held.add(i)
+    queue.push(i)
+  }
+  const overlap = (a: UnitCell, b: UnitCell): number =>
+    Math.min(a.center[u] + a.size[u] / 2, b.center[u] + b.size[u] / 2) - Math.max(a.center[u] - a.size[u] / 2, b.center[u] - b.size[u] / 2)
+  while (queue.length > 0) {
+    const cell = cells[queue.pop()!]!
+    for (const j of rows.get(rowOf(cell.center[v] + cell.size[v] / 2)) ?? []) {
+      if (held.has(j) || overlap(cell, cells[j]!) <= JOINT_GAP) continue
+      held.add(j)
+      queue.push(j)
+    }
+  }
+  const loose: number[] = []
+  for (const row of rows.values()) for (const i of row) if (!held.has(i)) loose.push(i)
+  return loose
+}
