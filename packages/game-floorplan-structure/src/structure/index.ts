@@ -4,6 +4,7 @@ import { addBalconies } from './balconies'
 import { buildCanvasStructure } from './canvas'
 import { addChimney, addWell } from './extras'
 import { addFoundation } from './foundation'
+import { addGroundBeams } from './ground-beams'
 import { addPlatesAndPillars } from './plates'
 import { addPorches } from './porch'
 import { addPorchRoofs } from './porch-roof'
@@ -44,8 +45,9 @@ export function buildStructure(source: StructureSource, options: StructureOption
   const extras = options.extras ?? built.extras ?? {}
   if (construction.system === 'canvas') return buildCanvasStructure(construction, extras)
   const tank = options.tank !== undefined ? options.tank : (source.waterTank ?? null)
-  const context = createContext(source, construction, extras, tank, { porchRoofOnPostsOnly: options.porchRoofOnPostsOnly ?? refined, rafterRoof: options.rafterRoof ?? refined, wallPillarSpacing: wallPillarSpacingOf(options) })
+  const context = createContext(source, construction, extras, tank, { porchRoofOnPostsOnly: options.porchRoofOnPostsOnly ?? refined, rafterRoof: options.rafterRoof ?? refined, wallPillarSpacing: wallPillarSpacingOf(options), visorSections: options.visorSections === true })
   addFoundation(context)
+  if (options.groundBeams !== false) addGroundBeams(context)
   buildFloors(context)
   addBalconies(context)
   addPorchRoofs(context)

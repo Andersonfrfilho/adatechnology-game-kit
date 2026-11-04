@@ -28,8 +28,10 @@ export interface StructurePart {
   unit?: true
   /** Distance between repeated members (joists, ceiling joists). */
   spacing?: number
-  /** `plate` (timber top plate) or `bond_beam` (masonry bond beam). */
-  beamKind?: 'plate' | 'bond_beam'
+  /** `plate` (timber top plate), `bond_beam` (masonry bond beam) or `ground_beam` (the masonry ground beam, viga baldrame, buried under a ground-floor wall). */
+  beamKind?: 'plate' | 'bond_beam' | 'ground_beam'
+  /** An exterior wall (it carries the bond beam and the pillars of confined masonry). */
+  exterior?: true
   steps?: number
   door?: string
   /** Slab that is the roof (flat roof). */
@@ -283,6 +285,10 @@ export interface StructureOptions {
    * most every `spacing` metres, default `WALL_PILLAR_SPACING`). `false`: only the corner pillars. Default `true`.
    */
   wallPillars?: boolean | { spacing?: number }
+  /** A reinforced concrete ground beam (viga baldrame) under each ground-floor wall of a masonry house on strip footings (`GROUND_BEAM_DEPTH` deep). Default `true`. */
+  groundBeams?: boolean
+  /** The sections the Visor de casas 3D drew below the NBR 6118 minimum (16 cm balcony pillars), for the team's golden only. Default `false`. */
+  visorSections?: boolean
 }
 
 /** What a construction builder and the tank get to see: the generated plan, its seed and the template. */

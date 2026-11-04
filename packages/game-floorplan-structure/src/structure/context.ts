@@ -40,12 +40,16 @@ export interface BuildContext {
   rafterRoof: boolean
   /** Most metres between the pillars along a masonry wall (`StructureOptions.wallPillars`); 0: only the corner pillars. */
   wallPillarSpacing: number
+  /** `StructureOptions.visorSections`. */
+  visorSections: boolean
   floorCount: number
   isUnit: boolean
   elevation: number
   isTimber: boolean
   walls: BuildWall[]
   wallParts: Map<string, StructurePart>
+  /** The ground beam under each ground-floor masonry wall, by wall id (`addGroundBeams`). */
+  groundBeams: Map<string, StructurePart>
   carriers: Map<number, StructurePart[]>
   plates: Map<number, StructurePart[]>
   pillars: Map<number, StructurePart[]>
@@ -68,6 +72,7 @@ export interface ContextOptions {
   porchRoofOnPostsOnly: boolean
   rafterRoof: boolean
   wallPillarSpacing: number
+  visorSections: boolean
 }
 
 export function createContext(source: StructureSource, construction: Construction, extras: StructureExtras, tank: WaterTank | null, options: ContextOptions): BuildContext {
@@ -83,8 +88,8 @@ export function createContext(source: StructureSource, construction: Constructio
     source.rooms.filter((room) => room.floor === floor && !exclude.includes(room.type)).flatMap((room) => room.parts)
   const builder = new StructureBuilder()
   const context: BuildContext = {
-    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, wallPillarSpacing: options.wallPillarSpacing, floorCount, isUnit, elevation, isTimber: system.timber,
-    walls: [], wallParts: new Map(), carriers: new Map(), plates: new Map(), pillars: new Map(), porches: new Map(), base0: GROUND,
+    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, wallPillarSpacing: options.wallPillarSpacing, visorSections: options.visorSections, floorCount, isUnit, elevation, isTimber: system.timber,
+    walls: [], wallParts: new Map(), groundBeams: new Map(), carriers: new Map(), plates: new Map(), pillars: new Map(), porches: new Map(), base0: GROUND,
     houseBox: [0, 0, 0, 0], topBox: [0, 0, 0, 0], hasBasement: false,
     roof: { shape: 'slab', covering: '', material: '', pitch: 0, bearingFloor: 0, panes: [], trusses: 0 },
     level, ceilingOf, topOf, rectsOf,

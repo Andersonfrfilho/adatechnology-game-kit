@@ -54,6 +54,7 @@
     "@adatechnology/game-floorplan-residential": "workspace:^",
     "@adatechnology/game-floorplan-commercial": "workspace:^",
     "@adatechnology/game-floorplan-rural": "workspace:^",
+    "@adatechnology/game-floorplan-structure": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^"
   }
 }

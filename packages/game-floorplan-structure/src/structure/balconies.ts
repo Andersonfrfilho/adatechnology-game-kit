@@ -14,7 +14,9 @@ export function addBalconies(context: BuildContext): void {
       builder.rest(deck, base, system.joints.slab)
       continue
     }
-    const pillar = builder.add({ id: `balcony_column_${room.id}`, role: 'column', material: construction.frame.pillars, aabb: [box[0] - 0.08, box[1] - 0.08, box[0] + 0.08, box[1] + 0.08], y0: 0, y1: context.level(floor) - system.slabThickness }, { floor: 0 })
+    // a 20 cm pillar (NBR 6118); the Visor de casas 3D drew 16 cm
+    const half = context.visorSections ? 0.08 : 0.1
+    const pillar = builder.add({ id: `balcony_column_${room.id}`, role: 'column', material: construction.frame.pillars, aabb: [box[0] - half, box[1] - half, box[0] + half, box[1] + half], y0: 0, y1: context.level(floor) - system.slabThickness }, { floor: 0 })
     builder.rest(pillar, GROUND, 'rebar')
     builder.rest(deck, pillar, 'rebar')
   }

@@ -28,7 +28,7 @@ function panelSplits(input: PartsAndSupports, structure: Structure, lintelDepth?
       continue
     }
     const split = splitIntoPanels(part, structure.openings, {
-      lintelMaterial: system.timber ? construction.frame.timber : 'concrete', ...(system.timber ? {} : { lintelAssembly: 'reinforced_concrete' }), lintelJoint: system.joints.beam, wallJoint: system.joints.wall, ...(lintelDepth && !system.timber ? { lintelDepth } : {}),
+      lintelMaterial: system.timber ? construction.frame.timber : 'concrete', ...(system.timber ? {} : { lintelAssembly: 'reinforced_concrete' }), lintelJoint: system.joints.beam, wallJoint: system.joints.wall, ...(lintelDepth && !system.timber ? { lintelDepth } : {}), ...(construction.system === 'masonry' ? { sillBeam: true } : {}),
     })
     if (split.pieces.length > 1) splits.set(part.id, split)
   }
@@ -38,7 +38,21 @@ function panelSplits(input: PartsAndSupports, structure: Structure, lintelDepth?
 /** Splits the walls the way `detail` says: `coarse` keeps one part per wall, `panels` cuts them at the windows, `units` goes on to bricks and blocks. */
 export function applyPanels(input: PartsAndSupports, structure: Structure, detail: WallDetail, lintelDepth?: (span: number) => number): PartsAndSupports {
   if (detail === 'coarse') return input
-  return applySplits(input, panelSplits(input, structure, lintelDepth))
+  return onJambPillars(applySplits(input, panelSplits(input, structure, lintelDepth)))
+}
+
+const OPENING_BEAM = /_(lintel|sillbeam)_\d+$/
+const overlaps = (a: Rect, b: Rect): boolean => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
+
+/** The lintels and sill beams of the windows bear on the concrete pillars at the jambs as well as on the masonry beside them. */
+function onJambPillars(split: PartsAndSupports): PartsAndSupports {
+  const pillars = split.parts.filter((part) => part.role === 'column' && part.material === 'concrete')
+  const extra: PartsAndSupports['supports'] = []
+  for (const beam of split.parts) {
+    if (beam.role !== 'beam' || !OPENING_BEAM.test(beam.id)) continue
+    for (const pillar of pillars) if (pillar.floor === beam.floor && overlaps(pillar.aabb, beam.aabb) && pillar.y0 <= beam.y0 && pillar.y1 >= beam.y1 - 0.01) extra.push({ part: beam.id, on: pillar.id, joint: 'rebar' })
+  }
+  return extra.length ? { parts: split.parts, supports: [...split.supports, ...extra] } : split
 }
 
 export interface Sized extends PartsAndSupports {

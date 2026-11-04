@@ -15,8 +15,9 @@ describe('pillars along the masonry walls', () => {
     for (let k = 1; k < stations.length; k++) expect(stations[k]! - stations[k - 1]!).toBeLessThanOrEqual(WALL_PILLAR_SPACING + 1e-9)
     // a wall meeting it in a T gets its pillar there
     expect(pillarStations(0, 6, [2.5], WALL_PILLAR_SPACING)).toEqual([0.1, 2.5, 5.9])
-    // a pier too short for two pillars has one in its middle; one shorter than a pillar has none
-    expect(pillarStations(0, 0.5, [], WALL_PILLAR_SPACING)).toEqual([0.25])
+    // a short pier keeps a pillar at each end (a door jamb beside a corner); one too short for two has one in its middle, one shorter than a pillar none
+    expect(pillarStations(0, 0.5, [], WALL_PILLAR_SPACING).map((at) => Math.round(at * 100) / 100)).toEqual([0.1, 0.4])
+    expect(pillarStations(0, 0.3, [], WALL_PILLAR_SPACING)).toEqual([0.15])
     expect(pillarStations(0, WALL_PILLAR_SIDE / 2, [], WALL_PILLAR_SPACING)).toEqual([])
   })
 

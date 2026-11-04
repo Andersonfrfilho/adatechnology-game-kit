@@ -4,6 +4,10 @@ import type { Rect, StructureSource, WaterTank } from './types'
 type Rng = () => number
 
 const TANK_SIDE = 1.1
+/** Side of the concrete pillars of a raised tank slab, metres: NBR 6118 asks at least 19 cm. */
+export const TANK_PILLAR_SIDE = 0.2
+/** The 0.12 m pillars of the Visor de casas 3D, below the NBR 6118 minimum (`visorSections`, for the team's golden only). */
+export const VISOR_TANK_PILLAR_SIDE = 0.12
 const NOT_UNDER_TANK = ['void', 'elevator', 'stairs', 'balcony', 'porch']
 const WET_ROOMS = ['bathroom', 'kitchen', 'laundry']
 const ATTIC_CHANCE = 0.12
@@ -16,6 +20,8 @@ export interface TankPlanOptions {
   location?: (source: StructureSource, rng: Rng) => WaterTank['place']
   /** A template with its own tank (a trestle for the rural water) answers here instead. */
   custom?: (source: StructureSource, rng: Rng) => WaterTank | null
+  /** Side of the platform's concrete pillars (default `TANK_PILLAR_SIDE`; the Visor de casas 3D drew 0.12 m). */
+  pillarSide?: number
 }
 
 const DEFAULT_CAPACITIES: Record<string, number> = { budget: 500, mid: 1000, mansion: 3000 }
@@ -40,13 +46,14 @@ function bestSpot(source: StructureSource, floor: number, reference: { u: number
   return best
 }
 
-function raisedPlatform(source: StructureSource, u: number, v: number, baseY: number): NonNullable<WaterTank['platform']> {
+function raisedPlatform(source: StructureSource, spot: { u: number; v: number; baseY: number }, side: number): NonNullable<WaterTank['platform']> {
+  const { u, v, baseY } = spot
   const margin = 0.12
   const edge = Math.max(0, Math.min(u, source.w - u, v, source.d - v))
   const rise = round2(clamp(edge * 0.35 + 0.7, 1.1, 2.4))
   const thickness = 0.12
-  const reach = TANK_SIDE / 2 + margin - 0.06
-  const pillars = ([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([a, b]) => ({ u: round2(u + a * reach), v: round2(v + b * reach), side: 0.12 }))
+  const reach = TANK_SIDE / 2 + margin - side / 2
+  const pillars = ([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([a, b]) => ({ u: round2(u + a * reach), v: round2(v + b * reach), side }))
   const half = TANK_SIDE / 2 + margin
   return { aabb: [u - half, v - half, u + half, v + half].map(round2) as Rect, baseY, height: rise, thickness, topY: round2(baseY + rise + thickness), pillars, ladder: true }
 }
@@ -76,7 +83,7 @@ export function planWaterTank(source: StructureSource, rng: Rng, options: TankPl
     capacity, aabb: [u - TANK_SIDE / 2, v - TANK_SIDE / 2, u + TANK_SIDE / 2, v + TANK_SIDE / 2].map(round2) as Rect,
   }
   if (where === 'raised_slab') {
-    tank.platform = raisedPlatform(source, u, v, slabY)
+    tank.platform = raisedPlatform(source, { u, v, baseY: slabY }, options.pillarSide ?? TANK_PILLAR_SIDE)
     tank.y = tank.platform.topY
   }
   return tank

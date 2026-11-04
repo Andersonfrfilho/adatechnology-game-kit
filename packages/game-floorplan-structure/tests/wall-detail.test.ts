@@ -33,7 +33,7 @@ describe('wallDetail on a generated plan', () => {
     const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
     const pieces = spec.parts.filter((p) => p.id.startsWith(`${window.wall}_`))
     const kinds = pieces.map((p) => p.id.replace(`${window.wall}_`, '').replace(/_\d+$/, ''))
-    expect(kinds).toEqual(expect.arrayContaining(['pier', 'sill', 'lintel']))
+    expect(kinds).toEqual(expect.arrayContaining(['pier', 'sill', 'sillbeam', 'lintel']))
     const lintel = pieces.find((p) => p.id.includes('_lintel_'))!
     expect(lintel.structure!.role).toBe('beam')
     expect(lintel.reinforcement).toBeDefined()
@@ -41,8 +41,9 @@ describe('wallDetail on a generated plan', () => {
     const lintelAcross = (lintel.shape as { size: number[] }).size[0]!
     expect(lintelAcross).toBeCloseTo(window.to - window.from + 0.4, 1)
     const onPiers = (spec.joints ?? []).filter((j) => j.a === lintel.id)
-    expect(onPiers.length).toBe(2)
-    expect(onPiers.every((j) => j.b.includes('_pier_'))).toBe(true)
+    // on the piers beside the window, and on the concrete pillars at its jambs
+    expect(onPiers.filter((j) => j.b.includes('_pier_')).length).toBe(2)
+    expect(onPiers.every((j) => j.b.includes('_pier_') || j.b.startsWith('wall_column_'))).toBe(true)
   })
 
   it('bearing piers keep the role of the wall and a partition stays a partition', () => {

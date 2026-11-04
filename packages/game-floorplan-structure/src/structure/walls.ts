@@ -40,10 +40,10 @@ function addWallPart(context: BuildContext, wall: BuildWall, floor: number): voi
   const framed = system.studs !== undefined && !isRailing
   const part = builder.add(
     { id: wall.id, role: wall.role, material: wall.material, aabb: wall.box, y0, y1: Math.max(y1, y0 + 0.2) },
-    { floor, fill: context.isTimber && wall.role === 'wall' ? system.wallFill : 1, ...(framed ? { studs: system.studs } : {}), ...(isRailing ? {} : { assembly: assemblyOf(context) }) },
+    { floor, fill: context.isTimber && wall.role === 'wall' ? system.wallFill : 1, ...(framed ? { studs: system.studs } : {}), ...(isRailing ? {} : { assembly: assemblyOf(context) }), ...(wall.exterior && !isRailing ? { exterior: true as const } : {}) },
   )
   context.wallParts.set(wall.id, part)
-  const base = isRailing ? railingBase(context, wall, floor) : context.baseOf(floor)
+  const base = isRailing ? railingBase(context, wall, floor) : (context.groundBeams.get(wall.id) ?? context.baseOf(floor))
   const joint = isRailing ? 'nail' : system.joints.wall
   if (base === GROUND || (floor === 0 && !base)) builder.rest(part, GROUND, joint)
   else if (base) builder.rest(part, base, joint)

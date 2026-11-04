@@ -91,7 +91,8 @@ describe('construction systems', () => {
     expect(wood.parts.some((p) => p.id.startsWith('joist_1_'))).toBe(true)
     const masonry = buildStructure(rectangularHouse({ floors: 2 }))
     expect(masonry.parts.some((p) => p.id === 'slab_1')).toBe(true)
-    expect(masonry.parts.filter((p) => p.beamKind).every((p) => p.beamKind === 'bond_beam')).toBe(true)
+    // the bond beams on top, the ground beams under the ground-floor walls
+    expect(masonry.parts.filter((p) => p.beamKind).every((p) => p.beamKind === 'bond_beam' || p.beamKind === 'ground_beam')).toBe(true)
   })
 
   it('raised foundations stand on footings: basement, crawl space and piles', () => {

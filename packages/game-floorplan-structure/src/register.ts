@@ -11,7 +11,7 @@ import { planContents, planUtilities } from './utilities'
 import { addOutbuildingPaths, planOutbuildings } from './utilities/outbuildings'
 import type { EnergyConfig } from './utilities/electrical'
 import type { TankPlanOptions } from './water-tank'
-import { planWaterTank } from './water-tank'
+import { VISOR_TANK_PILLAR_SIDE, planWaterTank } from './water-tank'
 import { structureLayer } from './viewer-layer'
 import type { Roof, StructureOptions, WallDetail } from './types'
 
@@ -37,7 +37,7 @@ function constructionExtension(context: ResultExtensionContext): unknown {
 
 function structureExtension(context: ResultExtensionContext): unknown {
   const cache = cacheOf(context.result)
-  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: tankOf(context), wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail, ...(context.options.wallPillars !== undefined ? { wallPillars: context.options.wallPillars as StructureOptions['wallPillars'] } : {}) }
+  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: tankOf(context), wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail, ...(context.options.wallPillars !== undefined ? { wallPillars: context.options.wallPillars as StructureOptions['wallPillars'] } : {}), ...(context.options.groundBeams !== undefined ? { groundBeams: context.options.groundBeams === true } : {}), ...(context.options.visorSections === true ? { visorSections: true } : {}) }
   const { roof, ...structure } = buildStructure(context.result, options)
   cache.roof = roof
   for (const part of structure.parts) {
@@ -70,7 +70,7 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerResultExtension(
     'waterTank',
     (context) => {
-      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'] } // templates declare their own tank hooks
+      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'], ...(context.options.visorSections === true ? { pillarSide: VISOR_TANK_PILLAR_SIDE } : {}) } // templates declare their own tank hooks
       return planWaterTank(context.result as never, context.rng, tank)
     },
     { after: ['construction'], seedKey: 'caixa' },

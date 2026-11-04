@@ -146,7 +146,9 @@ const caged = (spec: PartSpec, part: StructurePart, rebar: MaterialId | null): P
 const partSpecOf = (part: StructurePart, capacity: number | undefined, detailed: boolean, rebar: MaterialId | null): PartSpec => {
   if (detailed && part.assembly) return assemblySpec(part, capacity)
   const spec = boxSpec(part, capacity)
-  return detailed ? caged(spec, part, rebar) : spec
+  const out = detailed ? caged(spec, part, rebar) : spec
+  // a ground beam is buried in the soil on its footing: part of the foundation, it holds what stands on it and never falls
+  return part.beamKind === 'ground_beam' ? { ...out, anchored: true, structure: { role: 'foundation' } } : out
 }
 
 /**
@@ -168,7 +170,10 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const walled = applyPanels(slabbed, structure, detail, slabOptions && structure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
   const panels = slabOptions && detail !== 'coarse' ? deepenBondBeams(walled, structure, slabOptions) : walled
   const sizing = { safety, redundancy, safetyOthers }
-  const sized = { ...panels, capacities: options.sized === false ? new Map<string, number>() : sizeCapacities(panels.parts, panels.supports, sizing) }
+  // a ground beam is foundation, as the anchored world sees it: what stands on it is as near the ground as what stands on the soil
+  const foundation = new Set(panels.parts.filter((part) => part.beamKind === 'ground_beam').map((part) => part.id))
+  const onFoundation = foundation.size ? panels.supports.filter((s) => !foundation.has(s.part)).map((s) => (foundation.has(s.on) ? { ...s, on: GROUND } : s)) : panels.supports
+  const sized = { ...panels, capacities: options.sized === false ? new Map<string, number>() : sizeCapacities(panels.parts.filter((part) => !foundation.has(part.id)), onFoundation, sizing) }
   const { parts, supports, capacities } = detail === 'units' ? applyUnits(sized, structure) : sized
   const specs = parts.map((part) => partSpecOf(part, capacities.get(part.id), detail !== 'coarse', structure.construction.frame.rebar))
   const margin = options.terrainMargin ?? TERRAIN_MARGIN
