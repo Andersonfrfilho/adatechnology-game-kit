@@ -218,16 +218,20 @@ describe('a wall of units shot along its base', () => {
   }
   const fell = (events: DestructionEvent[]) => events.some((e) => e.type === 'collapse' || e.type === 'fracture')
 
-  it('brings the wall down once a slot cut through it along its base takes away what it stands on', () => {
+  it('brings down the masonry a slot cut along its base takes away the bearing of, and the rest stands on either side', () => {
     const { world, events, shoot, settle } = roomWall()
     let n = 0
     for (const y of [0.25, 0.33, 0.41]) for (let x = -2; x <= 2; x += 0.08, n++) shoot(x, y)
     settle()
-    expect(fell(events)).toBe(true)
-    expect(world.part('W', 'wall')!.status).toBe('broken')
-    // it held while the slot was short
-    const first = events.findIndex((e) => e.type === 'collapse' || e.type === 'fracture')
-    expect(events.slice(0, first).filter((e) => e.type === 'chip').length).toBeGreaterThan(20)
+    // the courses over the slot step in by half a brick each: the triangle over the 4 m slot, up to about 1.3 m over it, comes down as bricks
+    const fallen = events.flatMap((e) => (e.type === 'chip' && e.units ? e.units : []))
+    expect(fallen.length).toBeGreaterThan(100)
+    expect(Math.max(...fallen.map((unit) => unit.center[1]))).toBeGreaterThan(1.2)
+    for (const unit of fallen) expect(Math.abs(unit.center[0])).toBeLessThan(2.2)
+    expect(world.part('W', 'wall')!.status).not.toBe('broken')
+    // a gap of one or two bricks holds (the units over it bear on, or are wedged between, their neighbours): the first ones fall once it is wider
+    const first = events.findIndex((e) => e.type === 'chip' && !!e.units)
+    expect(events.slice(0, first).filter((e) => e.type === 'chip').length).toBeGreaterThan(6)
   })
 
   it('keeps standing under as many rounds spread over its face', () => {

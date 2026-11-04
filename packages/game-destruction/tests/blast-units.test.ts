@@ -31,6 +31,28 @@ describe('a blast on a wall of units', () => {
     expect(loose.every((i) => grid[i]!.center[0] > 0.9 && grid[i]!.center[1] < -0.45 + 0.3)).toBe(true)
   })
 
+  it('a gap of two bricks holds: the one over it is wedged between its neighbours', () => {
+    // two units of the bottom course side by side, near the middle
+    const bottom = grid.map((cell, i) => [cell, i] as const).filter(([cell]) => cell.center[1] < -1.05 + 0.075 && Math.abs(cell.center[0]) < 0.3).slice(0, 2).map(([, i]) => i)
+    expect(bottom).toHaveLength(2)
+    expect(unsupportedCells(grid, 2, DIMS, (i) => !bottom.includes(i))).toEqual([])
+  })
+
+  it('an island of bricks with nothing under it and held on one side only comes down; one held by a corner too', () => {
+    const cells = [
+      { center: [0, -0.4625, 0] as Vec3, size: [0.23, 0.075, 0.11] as Vec3 },
+      // over it by its whole bed: stands
+      { center: [0.115, -0.3875, 0] as Vec3, size: [0.23, 0.075, 0.11] as Vec3 },
+      // over the first by a 2 cm corner: falls
+      { center: [0.21, -0.3875, 0] as Vec3, size: [0.23, 0.075, 0.11] as Vec3 },
+    ]
+    const dims: Vec3 = [2, 1, 0.11]
+    // the first one rests on the bottom of the wall (its bottom at -0.5)
+    expect(unsupportedCells(cells, 2, dims, () => true)).toEqual([2])
+    // without the first, nothing bears
+    expect(unsupportedCells(cells, 2, dims, (i) => i !== 0).sort()).toEqual([1, 2])
+  })
+
   it('a grenade beside a plastered brick wall knocks units out around it, does not open its joints, and the wall stands', () => {
     const w = wallWorld('brick_wall_plastered')
     w.world.explode([0.3, 0.5, 0.4], 200000, 15)

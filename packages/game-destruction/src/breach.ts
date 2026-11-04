@@ -83,12 +83,16 @@ export const marksInBox = (center: Vec3, size: Vec3, rotation: Quat | undefined,
 }
 
 const JOINT_GAP = 1e-4
+/** Share of the shorter of two units their bed has to overlap for one to bear on the other: a unit held by a corner does not stand. */
+const MIN_BEARING_SHARE = 0.25
 
 /**
  * The units of a wall still standing (`standing(i)`) that no longer bear on its bottom through the units under them: a unit stands while its bed
  * overlaps a standing unit of the row below (the bottom row stands on what holds the wall). Masonry carries by bearing, and the mortar of a head
  * joint holds next to nothing in tension, so over a hole the courses step in by the bond (half a unit a course in running bond) and the triangle
- * above it comes down, as it does over an opening without a lintel; at the free end of a wall, all that hangs over the hole. A slab (thin along y)
+ * above it comes down, as it does over an opening without a lintel; at the free end of a wall, all that hangs over the hole. A unit that keeps only a
+ * corner of its bed (less than `MIN_BEARING_SHARE` of a unit) does not bear: the mortar of a joint does not hold its moment. A unit between two standing
+ * units of its course is wedged by its head joints, so a gap of two units does not drop the one over it. A slab (thin along y)
  * has no bottom row: none.
  */
 export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims: Vec3, standing: (index: number) => boolean): number[] => {
@@ -113,12 +117,33 @@ export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims:
   }
   const overlap = (a: UnitCell, b: UnitCell): number =>
     Math.min(a.center[u] + a.size[u] / 2, b.center[u] + b.size[u] / 2) - Math.max(a.center[u] - a.size[u] / 2, b.center[u] - b.size[u] / 2)
-  while (queue.length > 0) {
-    const cell = cells[queue.pop()!]!
-    for (const j of rows.get(rowOf(cell.center[v] + cell.size[v] / 2)) ?? []) {
-      if (held.has(j) || overlap(cell, cells[j]!) <= JOINT_GAP) continue
-      held.add(j)
-      queue.push(j)
+  const climb = () => {
+    while (queue.length > 0) {
+      const cell = cells[queue.pop()!]!
+      for (const j of rows.get(rowOf(cell.center[v] + cell.size[v] / 2)) ?? []) {
+        const other = cells[j]!
+        if (held.has(j) || overlap(cell, other) <= Math.max(JOINT_GAP, MIN_BEARING_SHARE * Math.min(cell.size[u], other.size[u]))) continue
+        held.add(j)
+        queue.push(j)
+      }
+    }
+  }
+  // the units of each course in order along the wall: a unit between two that stand is wedged between them by its head joints (it bridges a gap of
+  // two units under it); one held on one side only would hang from its mortar, which does not hold the moment
+  for (const row of rows.values()) row.sort((a, b) => cells[a]!.center[u] - cells[b]!.center[u])
+  const touching = (a: UnitCell, b: UnitCell): boolean => Math.abs(a.center[u] + a.size[u] / 2 - (b.center[u] - b.size[u] / 2)) <= 1e-3
+  for (let wedged = true; wedged;) {
+    climb()
+    wedged = false
+    for (const row of rows.values()) {
+      for (let k = 1; k < row.length - 1; k++) {
+        const i = row[k]!
+        if (held.has(i) || !held.has(row[k - 1]!) || !held.has(row[k + 1]!)) continue
+        if (!touching(cells[row[k - 1]!]!, cells[i]!) || !touching(cells[i]!, cells[row[k + 1]!]!)) continue
+        held.add(i)
+        queue.push(i)
+        wedged = true
+      }
     }
   }
   const loose: number[] = []
