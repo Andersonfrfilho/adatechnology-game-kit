@@ -216,6 +216,8 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
   luminária) é segurado por onde está pendurado.
 - **O que estava em cima cai junto.** A peça que dorme confere o próprio apoio (algumas por quadro, em rodízio) e acorda quando o apoio some.
   Também acorda no mesmo quadro em que o apoio começa a se mexer. Nunca é teletransportada: cai pela física.
+  O contato segue a superfície do apoio: a normal é a da face do tampo inclinado, e o atrito é de Coulomb, estático enquanto o
+  ponto segura e dinâmico enquanto escorrega. Passou de `atan(μ)`, o item escorrega para o lado que tombou.
 - **Nenhum colisor sem geometria.** A colisão de um objeto quebrado é medida de novo a partir do que ainda está desenhado
   (`DestructionRenderer.shownBoxes`, por parte). A sala de teste mede o jogador contra essas caixas, nunca contra a caixa do objeto inteiro
   nem contra a pegada antiga. Cada destroço é uma peça com a própria caixa, que acompanha o corpo.
