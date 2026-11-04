@@ -1188,7 +1188,7 @@ class Renderer implements DestructionRenderer {
     for (const part of this.bounds.get(ev.object)?.parts.values() ?? []) for (const mv of part.meshes) this.visuals.clearDecals(mv, center, half, rotation)
     this.vfx.peekWorkshop()?.decals.clearInside(ev.center, [half.x, half.y, half.z], ev.rotation)
     // a puff of the unit's own dust; not the bullet impact effect, which would leave its black mark on the hole the unit left
-    this.vfx.burst('dust', ev.center, [0, 1, 0], 8, 0.8, { color })
+    this.vfx.burst('dust', ev.center, [0, 1, 0], ev.units ? Math.min(40, 8 + ev.units.length) : 8, ev.units ? 1.6 : 0.8, { color })
     this.impactSound(pv?.material ?? '', ev.center, 0.7, ev.blow)
   }
 

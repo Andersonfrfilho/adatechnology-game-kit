@@ -2,7 +2,7 @@ import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
-import { cellsOutside, cellsWithin, marksInBox, planeAxes, unitGrid } from './breach'
+import { cellsOutside, cellsWithin, clumpCells, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
@@ -87,6 +87,16 @@ const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
 const BREACH_BLAST_REACH = 0.12
+/**
+ * What a wall resists a blast with, J/m² (joules per kg that knock a unit out, times its density and thickness), for which `BREACH_BLAST_REACH` holds:
+ * the houses' 13 cm brick wall (200 J/kg, 1900 kg/m³). A stronger wall breaks over less, by the cube root (the scaled distance of a blast).
+ */
+const BLAST_REFERENCE_RESISTANCE = 200 * 1900 * 0.13
+/** The edge of what a blast knocks out of a wall of units is ragged: its radius varies by this share around the hole and from unit to unit. */
+const BLAST_EDGE_RAGGED = 0.3
+/** Out to this many times the radius of the hole, the units are loosened: they take `BLAST_EDGE_WEAR` of what knocks them out, so the next blow finishes them. */
+const BLAST_EDGE_LOOSE = 1.35
+const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
 const SEVER_BAND = 0.1
@@ -1597,7 +1607,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /**
    * Wears the joints of `p` by `amount`. `span` (metres) is how much of a joint's length the blow reaches: a joint longer than that takes only its share
-   * (a bullet loosens the mortar bed under it, not the whole bed of a ten-metre wall), so a row of shots does not bring a wall down.
+   * (a bullet loosens the mortar bed under it, not the whole bed of a ten-metre wall), so a row of shots does not bring a wall down. A blow breaks at
+   * most that stretch: however hard, it takes no more than its share of the joint's strength, so the bed of a wall gives way once blows broke it all along.
    */
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number) => {
     if (amount <= 0) return
@@ -1609,7 +1620,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // or a saw cuts it (or the part itself giving way)
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
-      j.st.hp -= span === undefined ? amount : amount * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
+      j.st.hp -= span === undefined ? amount : Math.min(amount, j.st.maxHp) * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
       if (j.st.hp <= 0) {
         j.st.hp = 0
         j.st.open = true
@@ -1950,6 +1961,96 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const reinforcement = p.spec.reinforcement
     if (reinforcement) exposeRebar(o, p, src)
     if (p.structural) solveStructure(o)
+  }
+
+  /**
+   * Metres from a blast of `energy` joules within which it breaks a wall of units through: `BREACH_BLAST_REACH` by the cube root of the kilojoules, for
+   * the reference wall, and by the cube root of how much less or more that wall resists (`BLAST_REFERENCE_RESISTANCE`).
+   */
+  const blastReachOf = (p: PartRT, energy: number): number => {
+    const perKg = p.mat.hits?.blunt?.unitJoules ?? chipEnergy
+    const resistance = Math.max(1, perKg * p.mat.density * p.thickness)
+    return BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000) * clamp(Math.cbrt(BLAST_REFERENCE_RESISTANCE / resistance), 0.3, 2)
+  }
+
+  /**
+   * A blast on a wall of units (`PartSpec.units`): the units where the wall is within its reach (`blastReachOf`) come out, the circle the sphere of
+   * that reach cuts on the wall, its edge ragged as masonry breaks along its joints; the units just past it are loosened for the next blow, and the
+   * units the hole leaves with nothing under them (`unsupportedCells`: the corner over a hole at the free end of a wall) come down with them. The rest
+   * of the wall stands. Everything that came out is one `chip` with `units`, and it adds up in `PartState.chipped`, so later shots and blasts go on
+   * cutting the same wall. Returns whether any unit came out.
+   */
+  const blastUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, dist: number, src?: string): boolean => {
+    if (!p.staged || p.st.stripped || isLost(p) || chipEnergy <= 0) return false
+    const reach = blastReachOf(p, energy)
+    if (dist >= reach) return false
+    const radius = Math.sqrt(reach * reach - dist * dist)
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objLocal(o, wp))
+    const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
+    const grid = gridOf(p)
+    const worn = (p.rt.chips ??= {})
+    const perKg = p.mat.hits?.blunt?.unitJoules ?? chipEnergy
+    const lobes = [rnd() * 2 * Math.PI, rnd() * 2 * Math.PI]
+    const out: number[] = []
+    for (let i = 0; i < grid.length; i++) {
+      const cell = grid[i]!
+      if (worn[i] === -1) continue
+      if (op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius) continue
+      const du = cell.center[u] - lp[u], dv = cell.center[v] - lp[v]
+      const angle = Math.atan2(dv, du)
+      const edge = radius * (1 + BLAST_EDGE_RAGGED * (0.5 * Math.sin(3 * angle + lobes[0]!) + 0.3 * Math.sin(5 * angle + lobes[1]!) + 0.4 * (rnd() - 0.5)))
+      const d = Math.hypot(du, dv)
+      if (d <= edge) {
+        worn[i] = -1
+        out.push(i)
+      } else if (d <= edge * BLAST_EDGE_LOOSE) {
+        const mass = p.mat.density * cell.size[0] * cell.size[1] * cell.size[2]
+        worn[i] = Math.max(worn[i] ?? 0, perKg * mass * BLAST_EDGE_WEAR)
+      }
+    }
+    if (out.length === 0) return false
+    const loose = unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))
+    for (const i of loose) worn[i] = -1
+    const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
+    const volume = (cells: readonly UnitCell[]) => cells.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0)
+    const blownMass = Math.min(p.st.mass, p.mat.density * volume(blown))
+    const fallenMass = Math.min(p.st.mass - blownMass, p.mat.density * volume(fallen))
+    const speed = clamp(Math.sqrt((2 * energy * 0.02) / Math.max(blownMass, 0.05)), 1, 12)
+    // what flies is clumps of units still held by their mortar, at most `maxFragments` of them (and a quarter of that for what comes down), so a blast
+    // costs a renderer about as many pieces as a fracture does
+    const { c, q } = partXf(o, p)
+    const chipped = (p.st.chipped ??= [])
+    const tag = `x${chipped.length}_`
+    const fragments = [
+      ...cellFragments(o, p, clumpCells(blown, p.thin, maxFragments), wp, null, speed, blownMass, tag, true),
+      ...(fallen.length > 0 ? cellFragments(o, p, clumpCells(fallen, p.thin, Math.max(2, Math.round(maxFragments / 4))), wp, null, 0.3, fallenMass, `${tag}f`, true) : []),
+    ]
+    const cells = [...blown, ...fallen]
+    const holes = localHolesOf(p)
+    p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
+    const lo: Vec3 = [Infinity, Infinity, Infinity], hi: Vec3 = [-Infinity, -Infinity, -Infinity]
+    for (const cell of cells) {
+      chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
+      for (let k = 0; k < 3; k++) {
+        lo[k] = Math.min(lo[k]!, cell.center[k]! - cell.size[k]! / 2)
+        hi[k] = Math.max(hi[k]!, cell.center[k]! + cell.size[k]! / 2)
+      }
+    }
+    p.st.mass = Math.max(0, p.st.mass - blownMass - fallenMass)
+    p.rt.removed = (p.rt.removed ?? 0) + blownMass + fallenMass
+    markDamaged(p)
+    setStage(o, p, 1, {}, src)
+    const center = toWorld(c, q, [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2])
+    const units = cells.map((cell) => ({ center: toWorld(c, q, cell.center), size: [cell.size[0], cell.size[1], cell.size[2]] as Vec3 }))
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center, size: [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]], rotation: q, fragments, units })
+    debris(o, p, p.mat.breakDebris, center, vec.normalize(vec.sub(center, wp), [0, 1, 0]), 14, 3, src)
+    if (p.spec.reinforcement) exposeRebar(o, p, src)
+    if (p.structural && !isLost(p)) {
+      solveStructure(o)
+      collapseCheck(o, src)
+    }
+    return true
   }
 
   /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */
@@ -2383,7 +2484,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         checkIgnite(o, p, src)
       }
     }
-    wearJoints(o, p, Ein * 0.5, undefined, 0, src)
+    // a blast loosens a long joint (the mortar bed of a wall) over the stretch it breaks, not all along it
+    wearJoints(o, p, Ein * 0.5, undefined, 0, src, false, 2 * BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000))
     const amount = Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1)
     if (blastFrontSpeed > 0 && dist > 0 && mat.tags?.includes('glass')) {
       frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
@@ -2393,7 +2495,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const dealt = applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     res.damage += dealt
     if (p.bend && flexure.enabled) bendByBlast(o, p, point, energy, radius, reach, src)
-    if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
+    // laid units (brick, block in their mortar) come out by the unit; a cast part (its units are of its own material) opens as one breach
+    if (p.spec.units && p.spec.units.mortar !== p.spec.material) blastUnits(o, p, wp, energy, dist, src)
+    else if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }
 
