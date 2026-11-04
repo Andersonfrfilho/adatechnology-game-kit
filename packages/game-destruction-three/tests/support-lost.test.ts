@@ -97,6 +97,33 @@ describe('what lay on a support that is gone falls', () => {
     expect(bottom(top)).toBeLessThan(0.3)
   })
 
+  it('a top left on one leg goes over and comes to rest on the floor', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const { top, breakLeg } = table(world, scene, renderer)
+    for (const i of [0, 1, 2]) breakLeg(i)
+    run(renderer, 6)
+    const piece = renderer.piece('table')
+    expect(piece).not.toBeNull()
+    expect(bottom(top)).toBeLessThan(0.05)
+    expect(piece!.sleeping).toBe(true)
+  })
+
+  it('a top left on the two legs of one long side turns over that side until it lies on the floor', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const { top, breakLeg } = table(world, scene, renderer)
+    breakLeg(0)
+    breakLeg(1)
+    run(renderer, 6)
+    const piece = renderer.piece('table')
+    expect(piece).not.toBeNull()
+    expect(bottom(top)).toBeLessThan(0.05)
+    expect(piece!.sleeping).toBe(true)
+  })
+
   it('a piece asleep on another falls when the one under it is knocked away', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
