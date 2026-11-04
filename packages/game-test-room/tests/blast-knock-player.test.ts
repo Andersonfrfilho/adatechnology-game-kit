@@ -123,4 +123,16 @@ describe('a blast on the player', () => {
     // steel holds: the body never went through it
     expect(room.playerPosition[2]).toBeGreaterThan(-3.3)
   })
+
+  // with every destruction event applied in the frame it happens the blast has taken the sheet's posts when the body arrives: the panel floats above the hip
+  it.each([-3.3, -3.4, -3.48])('the slam finds the sheet at %d m whatever the blast has done to its stand by then', (sheetZ) => {
+    const room = makeRoom({ frameBudgetMs: Infinity, debris: { eventBudgetMs: Infinity } })
+    room.look([0, 1.7, -2], [0, 1.7, -6])
+    const sheet = room.spawn('steel_sheet', [0, 0, sheetZ], 0).objectId
+    run(room, 0.5)
+    charge(room, [0, 0, -0.8], 5)
+    run(room, 3)
+    const slam = room.log.entries().find((e) => e.type === 'player_slammed' && e.data?.against === 'obstacle')
+    expect(slam?.objectId).toBe(sheet)
+  }, 20_000)
 })

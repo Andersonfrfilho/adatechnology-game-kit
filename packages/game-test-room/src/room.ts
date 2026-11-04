@@ -1371,6 +1371,53 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** How far ahead of the body (m, from its axis) a wall it slammed into is looked for, and the height of the shoulder that takes it. */
   const SLAM_REACH = PLAYER_RADIUS + 0.35
   const SLAM_SHOULDER = 1.3
+  /** A blocked step stops the body up to one step (a third of its width) short of what stopped it: the probe looks that far ahead, and a hair more. */
+  const SLAM_PROBE = PLAYER_RADIUS / 3 + 0.03
+  /** How far inside the top and the base of what stopped the body the rays run, so they never graze an edge; and how far apart the rays that sweep its height are. */
+  const SLAM_INSET = 0.05
+  const SLAM_SWEEP = 0.2
+  /**
+   * What a body thrown along `direction` (horizontal, unit) slammed into: a ray from the shoulder (the hip when lying), as far as a wall a step away.
+   * The walk stops the body by the footprint of what stands in its way, which can be deeper than the part the ray must meet (a steel sheet on its stand), can float above
+   * the hip (the same sheet once the blast took its posts) and can still be the stand's while the blast's work catches up: the nearest footprint just ahead sets the reach
+   * (its far side), and when the first ray misses, rays across its height find the part.
+   */
+  const slamHit = (feet: Vec3, direction: Vec3): RayHit | null => {
+    const [x, y, z] = feet
+    const [dx, , dz] = direction
+    const height = y + ((player.knocked?.lying ?? 0) > 0.5 ? 0.3 : SLAM_SHOULDER)
+    let nearest: { box: BodyBox; exit: number; entry: number } | null = null
+    for (const e of entries.values()) {
+      const box = inTheWay(e, x + dx * SLAM_PROBE, z + dz * SLAM_PROBE, PLAYER_RADIUS)
+      if (!box || box.top - box.base < STEP_OVER) continue
+      const [enterX, exitX] = slab(x, dx, box.minX, box.maxX)
+      const [enterZ, exitZ] = slab(z, dz, box.minZ, box.maxZ)
+      const entry = Math.max(0, enterX, enterZ)
+      const exit = Math.min(exitX, exitZ)
+      if (exit < entry || (nearest && entry >= nearest.entry)) continue
+      nearest = { box, exit, entry }
+    }
+    if (!nearest) return rayWorld([x, height, z], direction, SLAM_REACH)
+    const { box, exit } = nearest
+    const reach = Math.max(SLAM_REACH, exit)
+    const low = box.base + SLAM_INSET
+    const high = Math.max(low, box.top - SLAM_INSET)
+    const first = Math.min(Math.max(height, low), high)
+    const hit = rayWorld([x, first, z], direction, reach)
+    if (hit) return hit
+    for (let h = low; h <= high; h += SLAM_SWEEP) {
+      const swept = rayWorld([x, h, z], direction, reach)
+      if (swept) return swept
+    }
+    return null
+  }
+  /** Where a line from `origin` along `step` enters and leaves the band [min, max] of one axis (the whole line when it runs along the band). */
+  const slab = (origin: number, step: number, min: number, max: number): readonly [number, number] => {
+    if (Math.abs(step) < 1e-9) return origin > min && origin < max ? [-Infinity, Infinity] : [Infinity, -Infinity]
+    const a = (min - origin) / step
+    const b = (max - origin) / step
+    return a < b ? [a, b] : [b, a]
+  }
   /**
    * A body thrown into something firm: what it hit takes the blow of its weight (`½ m v²`, blunt, across the shoulder) and answers as its material does (drywall or a board
    * cracks or breaks, brick holds); the body falls with a thud and, when it was hard, cries out.
@@ -1380,8 +1427,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const energy = 0.5 * playerMass * event.speed * event.speed
     let hit: RayHit | null = null
     if (event.against === 'obstacle') {
-      const from: Vec3 = [x, feet + ((player.knocked?.lying ?? 0) > 0.5 ? 0.3 : SLAM_SHOULDER), z]
-      hit = rayWorld(from, event.direction, SLAM_REACH)
+      hit = slamHit([x, feet, z], event.direction)
       if (hit) world.hitPart(hit.object, hit.part, { type: 'blunt', point: hit.point, direction: event.direction, energy, radius: 0.2, ...(hit.normal ? { normal: hit.normal } : {}) })
     }
     bodySounds.slam(event.speed, [x, feet + 0.5, z])
