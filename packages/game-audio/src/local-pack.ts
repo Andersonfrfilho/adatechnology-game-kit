@@ -13,10 +13,16 @@ import type { BusId, SampleSound } from './recipe'
 export const LOCAL_PACK_LICENSES = ['CC0', 'CC-BY', 'unknown', 'proprietary'] as const
 export type LocalPackLicense = (typeof LOCAL_PACK_LICENSES)[number]
 
+/** Which sound an id plays when the SDK also has a recording for it: the pack's files (default) or the SDK's, the pack staying as the alternative. */
+export const LOCAL_PACK_PREFERENCES = ['pack', 'sdk'] as const
+export type LocalPackPreference = (typeof LOCAL_PACK_PREFERENCES)[number]
+
 export type LocalSoundEntry = {
   /** Paths or urls of the takes, relative to the pack's base. */
   readonly files: readonly string[]
   readonly license: LocalPackLicense
+  /** Default `pack`; `sdk` keeps the SDK recording when there is one (the pack's files are then not even fetched). */
+  readonly prefer?: LocalPackPreference
   /** Bus of the sound (default the bus of its catalogue category). */
   readonly bus?: BusId
   readonly gain?: number
@@ -52,6 +58,7 @@ function entryProblems(id: string, entry: unknown): string[] {
   const files = entry.files
   if (!Array.isArray(files) || files.length === 0 || !files.every((file) => typeof file === 'string' && file.length > 0)) problems.push(`${id}: files must be a non-empty list of paths`)
   if (!isLicense(entry.license)) problems.push(`${id}: license must be one of ${LOCAL_PACK_LICENSES.join(', ')}`)
+  if (entry.prefer !== undefined && !(LOCAL_PACK_PREFERENCES as readonly unknown[]).includes(entry.prefer)) problems.push(`${id}: prefer must be pack or sdk`)
   if (entry.bus !== undefined && !isBus(entry.bus)) problems.push(`${id}: unknown bus ${String(entry.bus)}`)
   if (entry.gain !== undefined && (typeof entry.gain !== 'number' || entry.gain < 0)) problems.push(`${id}: gain must be a number ≥ 0`)
   if (entry.score !== undefined && (typeof entry.score !== 'number' || entry.score < 0 || entry.score > 10)) problems.push(`${id}: score must be 0–10`)

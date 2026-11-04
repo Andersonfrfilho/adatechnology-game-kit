@@ -292,6 +292,12 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     const count = (state: SfxState): number => states.filter((each) => each === state).length
     return `${text.states.file} ${count('file')} · ${text.states.synth} ${count('synth')} · ${text.states.missing} ${count('missing')}`
   }
+  // where the chosen id's sound comes from: a local pack's file, the SDK's recording, or its synthesis
+  const sourceOf = (id: string): string => {
+    const sample = registry().sample(id)
+    if (!sample) return text.words.synth
+    return sample.sources.some((source) => source.startsWith('local:')) ? text.words.local_file : text.words.sdk_file
+  }
   // ids playing a file whose declared licence the SDK could not ship (a local pack's `unknown` / `proprietary`)
   const unlicensed = (): string => {
     const ids = registry()
@@ -321,7 +327,7 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     { id: 'source', name: text.metrics.source, read: sourceLine },
     { id: 'count', name: text.metrics.count, read: counts },
     { id: 'unlicensed', name: text.metrics.unlicensed, read: unlicensed },
-    { id: 'chosen', name: text.metrics.chosen, read: () => `${label(chosen.sound)}${registry().sample(chosen.sound) ? ` (${engine.sampleStatus(chosen.sound)})` : ''}` },
+    { id: 'chosen', name: text.metrics.chosen, read: () => `${label(chosen.sound)}${registry().sample(chosen.sound) ? ` (${engine.sampleStatus(chosen.sound)})` : ''} · ${sourceOf(chosen.sound)}` },
     { id: 'matrix', name: text.metrics.matrix, read: () => `${strikeId()} · ${text.states[stateOf(strikeId())]}${pairOf(strikeId()).a ? ` · A=${pairOf(strikeId()).a}` : ''}` },
     { id: 'ab', name: text.metrics.ab, read: () => `A ${pairOf(chosen.sound).a ?? text.words.none} · B ${pairOf(chosen.sound).b ?? text.words.none}` },
     { id: 'blind_state', name: text.metrics.blind, read: () => (!blind ? text.words.none : blind.revealed ? `X = ${blind.side}` : text.words.hidden) },

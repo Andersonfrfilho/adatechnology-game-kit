@@ -147,6 +147,19 @@ describe('applyLocalSoundPack', () => {
     expect(engine.registry.sampleIds().some((id) => id.startsWith('local_pack_staging'))).toBe(false)
   })
 
+  it('keeps the SDK recording, without fetching the pack, for an id that prefers it; uses the pack where the SDK has none', async () => {
+    const preferring: LocalSoundPack = { version: 1, sounds: { pistol_9mm: { ...PACK.sounds.pistol_9mm, prefer: 'sdk' } as LocalSoundPack['sounds'][string], pistol_45: { files: ['armas/tiro_45.wav'], license: 'unknown', prefer: 'sdk' } } }
+    const { engine, fetched } = engineWithPack()
+    const idle = manualScheduler()
+    const pack = applyLocalSoundPack(engine, preferring, { schedule: idle.schedule })
+    await idle.drain()
+    expect(pack.status('pistol_9mm')).toBe('sdk')
+    expect(engine.registry.sample('pistol_9mm')).toEqual(KIT_SHOT)
+    expect(fetched.some((url) => url.startsWith('armas/tiro_a'))).toBe(false)
+    expect(pack.status('pistol_45')).toBe('file')
+    expect((await pack.done).sdk).toEqual(['pistol_9mm'])
+  })
+
   it('shows on the sound panel which ids play a file without licence', async () => {
     const { engine } = engineWithPack()
     const idle = manualScheduler()

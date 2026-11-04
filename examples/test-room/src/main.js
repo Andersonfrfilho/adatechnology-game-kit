@@ -129,11 +129,11 @@ if (room.audio && params.get('localaudio') !== '0' && location.protocol.startsWi
       return pack.done.then((report) => {
         window.__localSoundReport = report
         const unlicensed = pack.unlicensed()
-        room.log.add({ channel: 'action', type: 'local_sound_pack', text: `local-audio: ${report.file.length} ids from files, ${report.fallback.length} on the SDK sound, ${unlicensed.length} without licence`, data: { file: report.file.length, fallback: report.fallback.length, unlicensed } })
+        room.log.add({ channel: 'action', type: 'local_sound_pack', text: `local-audio: ${report.file.length} ids from files, ${report.sdk.length} on the SDK recording by preference, ${report.fallback.length} failed (SDK sound), ${unlicensed.length} without licence`, data: { file: report.file.length, sdk: report.sdk.length, fallback: report.fallback.length, unlicensed } })
       })
     })
     .catch((error) => {
-      window.__localSoundReport = { file: [], fallback: [{ id: 'pack.json', error: String(error) }] }
+      window.__localSoundReport = { file: [], sdk: [], fallback: [{ id: 'pack.json', error: String(error) }] }
     })
 }
 

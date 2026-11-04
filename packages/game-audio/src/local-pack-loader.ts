@@ -12,11 +12,13 @@ import type { AudioEngine } from './webaudio/engine'
 export const LOCAL_PACK_BANK_ID = 'local_sound_pack'
 const STAGING_PREFIX = 'local_pack_staging:'
 
-/** `pending` while loading, `file` once the pack's files play, `fallback` when they failed and the SDK's sound stays. */
-export type LocalPackStatus = 'pending' | 'file' | 'fallback'
+/** `pending` while loading, `file` once the pack's files play, `fallback` when they failed and the SDK's sound stays, `sdk` when the entry prefers the SDK recording and there is one. */
+export type LocalPackStatus = 'pending' | 'file' | 'fallback' | 'sdk'
 
 export type LocalPackReport = {
   readonly file: readonly string[]
+  /** Ids that kept the SDK recording by preference (their files were not fetched). */
+  readonly sdk: readonly string[]
   readonly fallback: readonly { readonly id: string; readonly error: string }[]
 }
 
@@ -58,7 +60,7 @@ export function applyLocalSoundPack(engine: Engine, pack: LocalSoundPack, option
   const samples = localPackSamples(pack, options)
   const statuses = new Map<string, LocalPackStatus>(samples.map((sample) => [sample.id, 'pending']))
   const priors = new Map<string, { readonly sample?: SampleSound; readonly bank?: string }>()
-  const report: { file: string[]; fallback: { id: string; error: string }[] } = { file: [], fallback: [] }
+  const report: { file: string[]; sdk: string[]; fallback: { id: string; error: string }[] } = { file: [], sdk: [], fallback: [] }
   const queue = [...samples]
   let cancel: (() => void) | undefined
   let disposed = false
@@ -77,6 +79,12 @@ export function applyLocalSoundPack(engine: Engine, pack: LocalSoundPack, option
   }
 
   const loadOne = async (sample: SampleSound): Promise<void> => {
+    // decided when the id's turn comes, so the SDK's own bank (registered while the page loads) is already there
+    if (pack.sounds[sample.id]?.prefer === 'sdk' && engine.registry.sample(sample.id)) {
+      statuses.set(sample.id, 'sdk')
+      report.sdk.push(sample.id)
+      return
+    }
     const staging = `${STAGING_PREFIX}${sample.id}`
     engine.register({ id: LOCAL_PACK_BANK_ID, samples: [{ ...sample, id: staging }] })
     const loaded = await engine.loadSamples([staging])
