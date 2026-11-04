@@ -10,7 +10,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 const here = dirname(fileURLToPath(import.meta.url))
 const page = join(here, '../test-room/dist/test-room.html')
 const require = createRequire(import.meta.url)
-const playwright = [process.env.PLAYWRIGHT_PATH, 'playwright', '/opt/node-tools/node_modules/playwright'].filter(Boolean).map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = [process.env.PLAYWRIGHT_PATH, 'playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].filter(Boolean).map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
 if (!playwright || !existsSync(page)) {
   console.log('skipped (no playwright or no room page)')
   process.exit(0)

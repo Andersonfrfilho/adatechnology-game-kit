@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 function loadPlaywright() {
-  for (const id of ['playwright', '/opt/node-tools/node_modules/playwright']) {
+  for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
       return require(id)
     } catch {
