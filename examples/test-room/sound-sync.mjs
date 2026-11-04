@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 const { chromium } = (() => {
-  for (const id of ['playwright', '/opt/node-tools/node_modules/playwright']) {
+  for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
       return require(id)
     } catch {

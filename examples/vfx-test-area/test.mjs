@@ -21,7 +21,7 @@ if (!existsSync(dist)) {
 if (!readFileSync(dist, 'utf8').includes('VfxArea.loadInto(window.__testRoom)')) throw new Error('dist/sala-efeitos.html does not boot the area')
 
 const require = createRequire(import.meta.url)
-const { chromium } = ['playwright', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean) ?? {}
+const { chromium } = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean) ?? {}
 if (!chromium) {
   console.log('ok: bundle and room page (playwright not found: browser checks skipped)')
   process.exit(0)

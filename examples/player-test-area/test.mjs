@@ -18,7 +18,7 @@ console.log(`ok: ${existsSync(page) ? 'bundle and room page' : 'bundle (no room 
 
 // With Playwright (Chromium, software GL) at hand: the room page loads, the contract report is clean, the six scenarios pass and the bench drives the player.
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
