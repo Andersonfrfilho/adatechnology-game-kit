@@ -87,6 +87,8 @@ const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
 const BREACH_BLAST_REACH = 0.12
+/** Share of the breach reach within which a blast cuts a reinforced member through (a charge at or near contact strips it to its cage); further off it blows its concrete out block by block. */
+const MEMBER_CUT_REACH = 0.5
 /**
  * What a wall resists a blast with, J/m² (joules per kg that knock a unit out, times its density and thickness), for which `BREACH_BLAST_REACH` holds:
  * the houses' 13 cm brick wall (200 J/kg, 1900 kg/m³). A stronger wall breaks over less, by the cube root (the scaled distance of a blast).
@@ -2496,8 +2498,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     res.damage += dealt
     if (p.bend && flexure.enabled) bendByBlast(o, p, point, energy, radius, reach, src)
     // laid units (brick, block in their mortar) come out by the unit; a cast part (its units are of its own material) opens as one breach
+    const breachReach = BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
     if (p.spec.units && p.spec.units.mortar !== p.spec.material) blastUnits(o, p, wp, energy, dist, src)
-    else if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
+    // a reinforced member (a pillar, a beam) is cut through only by a charge at or near contact; further off the blast takes the concrete it reaches
+    // out of it, block by block, the bars show there and the cage holds the member to what it rests on
+    else if (p.spec.reinforcement && p.spec.units && dist > MEMBER_CUT_REACH * breachReach) blastUnits(o, p, wp, energy, dist, src)
+    else if (dist <= breachReach) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }
 

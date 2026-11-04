@@ -105,6 +105,26 @@ const assemblySpec = (part: StructurePart, capacity: number | undefined): PartSp
 /** The cage of a concrete beam or pillar (four bars in a small section, an NBR 6118 minimum) and the blocks a shot or a blow knocks out of its concrete. */
 export const MEMBER_CAGE = { spacing: 0.1, diameter: 0.008, unit: 0.1 }
 const CAGED_ROLES: ReadonlySet<PartRole> = new Set(['beam', 'column'])
+/** Concrete cover to the bars of a member, metres (NBR 6118, class I of aggressiveness: 2.5 cm, plus the stirrup). */
+const CAGE_COVER = 0.03
+/** Share of the bars' crushing load a bare cage keeps: without the concrete around them the bars buckle between the stirrups well before they yield. */
+const CAGE_BUCKLING_SHARE = 0.5
+const DEFAULT_RESIDUAL = 0.15
+
+/**
+ * What the bare cage of a concrete pillar still carries once its concrete is blown off, as the share of the pillar's `capacity` (kg) the destruction
+ * world keeps for it (`reinforcement.residualCapacity`): its perimeter bars (at most `spacing` apart, at least two a face) by the steel's crushing
+ * strength, halved for buckling between the stirrups. A pillar under a light bond beam keeps standing on its cage; a loaded one still gives way.
+ */
+export function cageResidualCapacity(size: readonly number[], reinforcement: { material: string; spacing: number; diameter: number }, capacity: number | undefined): number {
+  const [a = 0, b = 0] = [...size].sort((x, y) => x - y)
+  const perSide = (w: number): number => Math.max(2, Math.floor(Math.max(0, w - 2 * CAGE_COVER) / reinforcement.spacing) + 1)
+  const bars = 2 * perSide(a) + 2 * perSide(b) - 4
+  const steel = MATERIALS.find((m) => m.id === reinforcement.material)?.compressive ?? 0
+  const carries = bars * Math.PI * (reinforcement.diameter / 2) ** 2 * steel * CAGE_BUCKLING_SHARE
+  if (!capacity || capacity <= 0 || carries <= 0) return DEFAULT_RESIDUAL
+  return Math.min(1, Math.max(DEFAULT_RESIDUAL, carries / capacity))
+}
 
 /**
  * A concrete beam or pillar of a frame with rebar, in detail: its steel cage (`reinforcement`) and its concrete as blocks (`units`), so shots and blows
@@ -115,9 +135,10 @@ const caged = (spec: PartSpec, part: StructurePart, rebar: MaterialId | null): P
   const size = spec.shape.kind === 'box' ? spec.shape.size : null
   if (!size) return spec
   const thin = Math.min(...size)
+  const reinforcement = { material: rebar, spacing: MEMBER_CAGE.spacing, diameter: MEMBER_CAGE.diameter }
   return {
     ...spec,
-    reinforcement: { material: rebar, spacing: MEMBER_CAGE.spacing, diameter: MEMBER_CAGE.diameter },
+    reinforcement: part.role === 'column' ? { ...reinforcement, residualCapacity: cageResidualCapacity(size, reinforcement, spec.structure?.capacity) } : reinforcement,
     units: { size: [MEMBER_CAGE.unit, MEMBER_CAGE.unit, thin], bond: 'stack', mortar: 'concrete' },
   }
 }

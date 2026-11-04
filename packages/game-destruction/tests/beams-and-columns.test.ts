@@ -143,6 +143,20 @@ describe('shots: reinforced concrete', () => {
     expect(near.part().stripped).toBe(true)
     expect(types(near.events).has('expose')).toBe(true)
   })
+
+  it('a hand grenade 40 cm off a column cast around its cage (concrete blocks) is not cut: only a charge at or near contact cuts a member through (it stays, held by its cage)', () => {
+    // the pillars of the houses: concrete in 0.1 m blocks round the cage (MEMBER_CAGE of game-floorplan-structure)
+    const world = createDestruction({ seed: 1 })
+    const id = world.add({ parts: [{ ...ELEMENTS.rc_column, units: { size: [0.1, 0.1, 0.3], bond: 'stack', mortar: 'concrete' } }] })
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    const s = { world, events, part: () => world.part(id, 'e')! }
+    s.world.explode([0.55, 1.5, 0], 200000, 15)
+    expect(s.part().stripped).toBeFalsy()
+    expect(s.part().status).not.toBe('broken')
+    expect(types(s.events).has('fracture')).toBe(false)
+    expect(types(s.events).has('detach')).toBe(false)
+  })
 })
 
 describe('shots: steel I-beam', () => {
