@@ -133,9 +133,13 @@ const splinterBox = (inp: PlanInput, box: Box, limit = inp.maxFragments): Planne
   return pieces.slice(0, limit).map((p) => ({ center: p.c, size: [p.s[g], p.s[a], p.s[b]] as Vec3, q: frame(g, a, b), shape: 'splinter' as const, weight: p.s[0] * p.s[1] * p.s[2] }))
 }
 
-/** Metres of plywood one ply stands for, and how far apart the peeled layers start (times their thickness). */
+/**
+ * Metres of plywood one ply stands for, and how far apart the peeled layers start (times their thickness). A sheet is at most `PLY_SHEET` thick: a part
+ * of plywood thicker than a board (a kennel drawn as one box) is a hollow of panels, and comes apart in sheets that thin spread through its depth.
+ */
 const PLY = 0.003
 const PLY_GAP = 0.6
+const PLY_SHEET = 0.012
 
 /**
  * Plywood coming apart: the glue lines let go and the sheet splits into two or three layers that start apart from each other, each torn into ragged
@@ -150,12 +154,13 @@ const plyBreak = (inp: PlanInput, root: Box, limit: number): PlannedFragment[] =
   const along = dims[u] >= dims[v] ? u : v
   const across = along === u ? v : u
   const layers = clamp(Math.round(dims[t] / PLY / 2), 2, 3)
-  const th = dims[t] / layers
+  const pitch = dims[t] / layers
+  const th = Math.min(pitch, PLY_SHEET)
   const per = Math.max(2, Math.floor(limit / layers))
   const out: PlannedFragment[] = []
   for (let k = 0; k < layers; k++) {
     const layer: Box = { c: [root.c[0], root.c[1], root.c[2]], s: [dims[0], dims[1], dims[2]] }
-    layer.c[t] = root.c[t] + (-dims[t] / 2 + (k + 0.5) * th) * (1 + PLY_GAP)
+    layer.c[t] = root.c[t] + (-dims[t] / 2 + (k + 0.5) * pitch) * (pitch > PLY_SHEET ? 1 : 1 + PLY_GAP)
     layer.s[t] = th
     for (const cell of bsp(layer, per, [u, v], rnd)) {
       if (out.length >= limit) return out

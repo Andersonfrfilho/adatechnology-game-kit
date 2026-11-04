@@ -72,6 +72,14 @@ describe('wood comes apart by how it is made (MaterialDef.splitForm)', () => {
     expect(Math.min(...splinters.map((f) => f.size[2]))).toBeLessThan(0.006)
   })
 
+  it('a block of plywood (a kennel drawn as one box) comes apart in thin sheets through its depth, not in blocks', () => {
+    const plan = planFragments({ style: 'snap', dims: [0.6, 0.5, 0.64], thickness: 0.64, hit: [0, 0, 0], fragmentSize: [0.1, 0.4], maxFragments: 24, rnd: rng(5), form: 'plies' })
+    expect(plan.length).toBeGreaterThan(4)
+    expect(Math.max(...plan.map((p) => Math.min(...p.size)))).toBeLessThanOrEqual(0.012)
+    const depths = new Set(plan.map((p) => Math.round(p.center[1] * 100)))
+    expect(depths.size).toBeGreaterThanOrEqual(2)
+  })
+
   it('MDF crumbles: lumps and no splinters, as it has no grain', () => {
     const fragments = breakBoard([0.3, 1, 0.018], 'mdf')
     expect(fragments.some((f) => f.shape === 'splinter')).toBe(false)
