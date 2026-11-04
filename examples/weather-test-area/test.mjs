@@ -21,7 +21,7 @@ import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {

@@ -28,7 +28,7 @@ if (!existsSync(page)) {
   process.exit(2)
 }
 const { chromium } = (() => {
-  for (const id of ['playwright', '/opt/node-tools/node_modules/playwright']) {
+  for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
       return require(id)
     } catch {
