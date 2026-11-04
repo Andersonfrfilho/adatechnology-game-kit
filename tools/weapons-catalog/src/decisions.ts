@@ -81,6 +81,8 @@ export type ExplosiveDecision = {
   readonly world?: Decision<{ readonly noise: number; readonly destructionLevel: number }>
   readonly copyOf?: Decision<string>
   readonly energy?: Decision<number>
+  /** Kilograms of TNT equivalent of the charge (its mass times its relative effectiveness): the blast wave that pushes a body is read from it. */
+  readonly tnt?: Decision<number>
 }
 
 export type ModeChoice = { readonly modes: readonly string[]; readonly burst?: number }

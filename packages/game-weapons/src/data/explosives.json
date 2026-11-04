@@ -291,7 +291,7 @@
     "lethalRadius": 5,
     "injuryRadius": 16,
     "energy": 200000,
-    "tnt": 0.6,
+    "tnt": 0.7,
     "destructionLevel": 3,
     "noise": 750,
     "triggers": [
@@ -310,7 +310,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
-    "tnt": 1.0,
+    "tnt": 1,
     "destructionLevel": 2,
     "noise": 550,
     "fire": {
@@ -440,7 +440,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
-    "tnt": 0.07,
+    "tnt": 0.045,
     "destructionLevel": 2,
     "noise": 450,
     "triggers": [
