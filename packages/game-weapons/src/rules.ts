@@ -49,7 +49,13 @@ export const DEFAULT_RULES: WeaponRules = {
   // Arsenal §11: montar e desmontar exige chave de fenda ou bancada; 2/15/30 s e a troca do lança-granadas (0,8 s) são padrões aprovados pelo dono (2026-10-24)
   attachments: { fitSeconds: { field: 2, tool: 15, bench: 30 }, switchSeconds: 0.8, speedOfSound: 343 },
   // Arsenal §08: tempo de mira = 0,15 s + 0,05 s por kg. O quadril do Arsenal é ×6 (o ZombiAdA liga isso por configuração); o SDK é neutro (1)
-  aim: { base: 0.15, perKg: 0.05, hipSpread: 1 },
+  aim: {
+    base: 0.15,
+    perKg: 0.05,
+    hipSpread: 1,
+    // the iron sights close the view in a little: more for a long gun, whose sights sit farther from the eye, than for a handgun
+    ironSightZoom: { pistol: 1.1, revolver: 1.1, smg: 1.2, carbine: 1.25, shotgun: 1.15, rifle: 1.3, hunting: 1.35, dmr: 1.4, sniper: 1.4, machine_gun: 1.2, launcher: 1.15, bow: 1.15, crossbow: 1.25 },
+  },
   // Arsenal §08/§11: coronha retrátil saca mais rápido, mais recuo; os números são padrões aprovados pelo dono (2026-10-24)
   stock: {
     seconds: 0.6,

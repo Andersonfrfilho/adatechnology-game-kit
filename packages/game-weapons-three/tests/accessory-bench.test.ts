@@ -223,6 +223,22 @@ describe('accessory bench: aiming with the right mouse button', () => {
     expect(camera.fov).toBeCloseTo(fov, 5)
   })
 
+  it('zooms a gun with no optic by its iron sights (the AK-47 by the rifles\' zoom), and an RPG-7 too', () => {
+    const { room } = areaRoom()
+    const camera = room.camera as THREE.PerspectiveCamera
+    for (const [weapon, zoom] of [['ak_47', room.arsenal.rules.aim.ironSightZoom.rifle], ['glock_17', room.arsenal.rules.aim.ironSightZoom.pistol], ['rpg_7', room.arsenal.rules.aim.ironSightZoom.launcher]] as const) {
+      equip(room, weapon)
+      const fov = camera.fov
+      expect(zoom, weapon).toBeGreaterThan(1)
+      expect(mouse('mousedown', 2).defaultPrevented, weapon).toBe(true)
+      run(room, 2)
+      expect(camera.fov, weapon).toBeCloseTo((2 * Math.atan(Math.tan((fov * Math.PI) / 360) / zoom!) * 180) / Math.PI, 3)
+      mouse('mouseup', 2)
+      run(room, 2)
+      expect(camera.fov, weapon).toBeCloseTo(fov, 5)
+    }
+  })
+
   it('does nothing for a weapon that does not fire (the room keeps grabbing with the right button) and for the other buttons', () => {
     const { room } = areaRoom()
     equip(room, 'hand')

@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { BenchChange, ChoiceOption, HostTool, HostToolAttachment, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ToolCommand } from '@adatechnology/game-contracts'
 import type { Arsenal, FittedAttachment, MountKind } from '@adatechnology/game-weapons'
+import { aimZoomOf } from '@adatechnology/game-weapons'
 import { attachmentsKey } from '../attachments-key'
 import type { AccessoryText } from './accessory-text'
 
@@ -52,7 +53,8 @@ const fillText = (template: string, vars: Record<string, string>): string => tem
 
 /**
  * The accessory bench of the weapons area: a choice per mount that fits and removes what is compatible with the weapon in hand (and only that), the keys of the light (L), the laser (K),
- * the stock (V) and the launcher under the barrel (U), and the right mouse button, which aims: the camera zooms by the optic that is fitted, over the seconds the weapon takes to the sights.
+ * the stock (V) and the launcher under the barrel (U), and the right mouse button, which aims: the camera zooms by the optic that is fitted (or by the iron sights of the weapon's category,
+ * `rules.aim.ironSightZoom`), over the seconds the weapon takes to the sights.
  */
 export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryBench {
   const { arsenal, host, text } = options
@@ -145,12 +147,13 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
     return true
   }
 
-  const zoomOf = (tool: HostTool): number => {
-    const optic = (tool.attachments ?? []).map((part) => arsenal.attachments.get(part.id)?.optic).find((entry) => entry !== undefined)
-    return optic?.zoom[0] ?? 1
-  }
+  // the optic fitted, else the iron sights of the weapon's category: every gun closes the view in when it aims, not only one with a scope
+  const zoomOf = (tool: HostTool): number => aimZoomOf(arsenal, tool.weapon, tool.attachments?.map((part) => part.id))
 
-  const isFirearm = (tool: HostTool): boolean => arsenal.weapons.get(tool.weapon)?.action.kind === 'firearm'
+  const aims = (tool: HostTool): boolean => {
+    const kind = arsenal.weapons.get(tool.weapon)?.action.kind
+    return kind === 'firearm' || kind === 'launcher'
+  }
 
   const setAim = (on: boolean): void => {
     if (on === aiming) return
@@ -182,7 +185,7 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
   // only the room's own surface aims: a click on a panel, an input or an overlay is left alone
   const isOnRoom = (event: MouseEvent): boolean => Boolean(document.pointerLockElement) || event.target instanceof HTMLCanvasElement
   const onMouseDown = (event: MouseEvent): void => {
-    if (event.button !== SECONDARY_BUTTON || !isOnRoom(event) || !isFirearm(host.tool())) return
+    if (event.button !== SECONDARY_BUTTON || !isOnRoom(event) || !aims(host.tool())) return
     event.preventDefault()
     event.stopImmediatePropagation()
     setAim(true)
