@@ -58,6 +58,8 @@ const STATIC_SPAN = 3
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
+const CONTACT_MESHES = 12
 /** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
@@ -1397,6 +1399,7 @@ class Renderer implements DestructionRenderer {
     if (!b || !this.autoSplit) return
     const left = this.meshesOf(b).filter((mv) => this.visuals.shown(mv))
     if (left.length === 0) return
+    const furniture = kitOriginOf(b.root)?.kind === 'furniture'
     const body = b.piece ?? this.pieceSys.get(objectId)
     if (body) {
       // a piece is the box of what is left of it: the legs that broke off no longer hold it up
@@ -1404,10 +1407,11 @@ class Renderer implements DestructionRenderer {
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
       body.mass = Math.max(0.05, this.massOf(objectId))
+      if (furniture || body.contacts) this.setContacts(b, body, left)
       body.sleeping = false
       return
     }
-    if (kitOriginOf(b.root)?.kind !== 'furniture') return
+    if (!furniture) return
     const boxOf = (mv: MeshVis): THREE_NS.Box3 => this.visuals.worldBox(mv, new this.THREE.Box3())
     const whole = [...b.parts.values()].flatMap((pv) => pv.meshes).map(boxOf).filter((one) => !one.isEmpty())
     const floor = Math.min(...whole.map((one) => one.min.y))
@@ -1425,9 +1429,34 @@ class Renderer implements DestructionRenderer {
       if (!narrow && centreX > now.min.x && centreX < now.max.x && centreZ > now.min.z && centreZ < now.max.z) return
     }
     const piece = this.makePiece(objectId)
+    this.setContacts(b, b.piece ?? (piece as PieceBody), left)
     this.tipIfTopHeavy(b)
     // the host stops keeping the footprint it had where it stood: it is a body that moves now
     this.o.onLoosened?.(objectId, piece, 'apart')
+  }
+
+  /**
+   * The piece touches the ground by the corners of each part left of it, not by the box around them all: on one leg, or on the legs of one side, its centre of mass is off
+   * what holds it and it goes over until the top meets the floor. Past `CONTACT_MESHES` meshes it keeps the corners of its box.
+   */
+  private setContacts(b: Bound, body: PieceBody, meshes: MeshVis[]): void {
+    if (meshes.length > CONTACT_MESHES) {
+      body.contacts = undefined
+      return
+    }
+    const inv = specFrameInverse(this.THREE, b.root)
+    const m4 = new this.THREE.Matrix4()
+    const lb = new this.THREE.Box3()
+    const [cx, cy, cz] = body.localCenter
+    const points: Vec3[] = []
+    for (const mv of meshes) {
+      mv.mesh.updateWorldMatrix(true, false)
+      this.visuals.localBox(mv, lb)
+      if (lb.isEmpty()) continue
+      lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
+      for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
+    }
+    body.contacts = points.length > 0 ? points : undefined
   }
 
   /**

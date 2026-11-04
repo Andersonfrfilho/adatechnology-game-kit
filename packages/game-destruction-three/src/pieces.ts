@@ -255,8 +255,9 @@ export class PieceSystem {
     return [e[0] * lx + e[4] * ly + e[8] * lz, e[1] * lx + e[5] * ly + e[9] * lz, e[2] * lx + e[6] * ly + e[10] * lz]
   }
 
-  /** The points of the box that touch the ground, in its own frame: the 8 corners, then (with `edges`) `EDGE_POINTS` along each of its 12 edges. */
+  /** The points of the box that touch the ground, in its own frame: the 8 corners, then (with `edges`) `EDGE_POINTS` along each of its 12 edges; or the piece's own `contacts`. */
   private samples(b: PieceBody, edges: boolean): Vec3[] {
+    if (b.contacts) return b.contacts
     const [hx, hy, hz] = b.halfExtents
     const out: Vec3[] = []
     for (let i = 0; i < 8; i++) out.push([i & 1 ? hx : -hx, i & 2 ? hy : -hy, i & 4 ? hz : -hz])
@@ -502,7 +503,7 @@ export class PieceSystem {
           continue
         }
         // the points along the edges are there for the step of the ground; on other pieces only the corners stand, as everywhere else
-        const gy = i < 8 ? this.supportAt(b, px, cy, pz, rise) : Math.max(raw, this.o.staticTopAt?.(px, pz, cy, rise) ?? -Infinity)
+        const gy = i < 8 || b.contacts ? this.supportAt(b, px, cy, pz, rise) : Math.max(raw, this.o.staticTopAt?.(px, pz, cy, rise) ?? -Infinity)
         const pen = gy - cy
         if (pen > -SLOP) {
           rs.push(r)
