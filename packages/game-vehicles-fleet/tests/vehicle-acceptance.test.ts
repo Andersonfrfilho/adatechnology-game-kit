@@ -161,7 +161,7 @@ function auditModel(key: string): string[] {
     piv.rotation.set(0, 0, 0)
     item.root.updateMatrixWorld(true)
     const hung: Array<{ o: THREE.Mesh; b: THREE.Box3 }> = []
-    piv.traverse((o) => {
+    piv.traverse((o: THREE.Object3D) => {
       if (o instanceof THREE.Mesh && o.visible && !o.userData.decal && !o.userData.glass) hung.push({ o, b: new THREE.Box3().setFromObject(o).applyMatrix4(inverse) })
     })
     const midHeight = (zoneBox.y0 + zoneBox.y1) / 2
