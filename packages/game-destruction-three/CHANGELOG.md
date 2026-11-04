@@ -1,5 +1,12 @@
 # @adatechnology/game-destruction-three
 
+## 0.15.4
+
+### Patch Changes
+
+- Updated dependencies [2aae2ac]
+  - @adatechnology/game-audio@0.7.0
+
 ## 0.15.3
 
 ### Patch Changes

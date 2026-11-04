@@ -1,5 +1,12 @@
 # @adatechnology/game-characters-three
 
+## 0.9.4
+
+### Patch Changes
+
+- Updated dependencies [2aae2ac]
+  - @adatechnology/game-audio@0.7.0
+
 ## 0.9.3
 
 ### Patch Changes
