@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { HostEvent } from '@adatechnology/game-contracts'
+import type { HostEvent, Vec3 } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { makeRoom } from './helpers'
 import type { TestRoom } from '../src'
