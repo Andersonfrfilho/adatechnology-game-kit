@@ -47,6 +47,10 @@ const MU_STATIC = 0.7
 const MU_DYNAMIC = 0.6
 /** Sliding faster than this (m/s) along the surface, a contact drags with the dynamic friction; slower, it holds with the static one. */
 const SLIP_SPEED = 0.02
+/** Rolling resistance coefficient of a round piece: a can or a bottle on a hard floor (0.01-0.02; a tyre on concrete is 0.01). */
+const ROLLING_RESISTANCE = 0.015
+/** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
+const ROUND_LYING = Math.SQRT1_2
 const SLEEP_AFTER = 0.5
 /**
  * A piece on the ground that neither moves farther than `CALM_DRIFT` (m) nor turns more than `CALM_TURN` (rad) in `CALM_SLEEP_AFTER` seconds sleeps, however
@@ -155,9 +159,12 @@ export class PieceSystem {
   private readonly p: THREE_NS.Vector3
   private readonly q: THREE_NS.Quaternion
   private readonly dq: THREE_NS.Quaternion
+  private readonly nextQ: THREE_NS.Quaternion
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
+  /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
+  private surfaces: Solid[] = []
   private supportTurn = 0
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
@@ -170,6 +177,7 @@ export class PieceSystem {
     this.p = new THREE.Vector3()
     this.q = new THREE.Quaternion()
     this.dq = new THREE.Quaternion()
+    this.nextQ = new THREE.Quaternion()
     this.m = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
   }
@@ -345,6 +353,23 @@ export class PieceSystem {
       const h = body.halfExtents
       return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: h, r: Math.hypot(h[0], h[1], h[2]) }
     })
+    // what lands on a piece lands on its parts (a shelf's boards, a table's top), not on the box around them all
+    this.surfaces = this.solids.flatMap((whole): Solid[] => {
+      const parts = whole.body.partBoxes
+      if (!parts) return [whole]
+      const e = whole.e
+      return parts.map(({ center, half }) => ({
+        body: whole.body,
+        c: [
+          whole.c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2],
+          whole.c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2],
+          whole.c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2],
+        ] as Vec3,
+        e,
+        half,
+        r: Math.hypot(half[0], half[1], half[2]),
+      }))
+    })
     this.wakeUnsupported()
     for (const b of this.list) {
       if (b.held) {
@@ -397,7 +422,7 @@ export class PieceSystem {
   /** The highest top of a piece (other than `self`) under `(x, z)` that a point at height `y` stands on (at most `step` above it), -Infinity when none; the boxes of the last update. */
   topAt(x: number, z: number, y: number, step: number, self?: string): number {
     let top = -Infinity
-    for (const s of this.solids) {
+    for (const s of this.surfaces) {
       if (s.body.objectId === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
       if (t > top && t <= y + step) top = t
@@ -425,7 +450,7 @@ export class PieceSystem {
     let top = this.o.groundAt(x, z)
     let on: Solid | null = null
     let face = 1
-    for (const s of this.solids) {
+    for (const s of this.surfaces) {
       if (s.body === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
       if (t > top && t <= y + step) {
@@ -497,10 +522,18 @@ export class PieceSystem {
       gLow = Math.min(gLow, g)
       gHigh = Math.max(gHigh, g)
     }
-    const local = gHigh - gLow > STEP ? this.samples(b, true) : corners
-    const prev: Vec3[] = local.map(() => [0, 0, 0])
+    let local = b.round ? this.roundSamples(b, q) : gHigh - gLow > STEP ? this.samples(b, true) : corners
+    let prev: Vec3[] = local.map(() => [0, 0, 0])
 
     for (let s = 0; s < steps; s++) {
+      if (b.round) {
+        // a round piece touches by its lowest points as it will be turned at the end of this substep: they move round it as it rolls
+        const wl0 = Math.hypot(w[0], w[1], w[2])
+        const next = this.nextQ.copy(q)
+        if (wl0 > 1e-6) next.premultiply(this.dq.setFromAxisAngle(this.ax.set(w[0] / wl0, w[1] / wl0, w[2] / wl0), wl0 * h)).normalize()
+        local = this.roundSamples(b, next)
+        if (prev.length !== local.length) prev = local.map(() => [0, 0, 0])
+      }
       // where each point was before this substep: a point that comes at a higher ground from below it hit the side of the step
       this.m.makeRotationFromQuaternion(q)
       const e0 = this.m.elements
@@ -597,6 +630,12 @@ export class PieceSystem {
         }
       }
       if (lowest < Infinity) b.floor = lowest
+      if (b.round && ns.length > 0) {
+        const sum: Vec3 = [0, 0, 0]
+        for (const one of ns) for (let k = 0; k < 3; k++) sum[k] += one[k]
+        const len = Math.hypot(sum[0], sum[1], sum[2])
+        b.surfaceNormal = len > 1e-6 ? [sum[0] / len, sum[1] / len, sum[2] / len] : UP
+      } else if (b.round && rs.length === 0) b.surfaceNormal = UP
       if (side) {
         // the side of the step stops the piece: back out of it, and the point loses the speed it had into the side
         pos[0] -= side.dir[0] * side.back
@@ -638,7 +677,9 @@ export class PieceSystem {
       })
       // a point that slides drags with the dynamic friction, one that holds with the static one (Coulomb)
       const slipping = rs.map((r, k) => {
+        // as it moved before this substep's gravity: a thing at rest on a slope is held by the static grip, not let go by the pull it is to resist
         const pv = pointV(r)
+        pv[1] += this.o.gravity * h
         const vn = dot(pv, ns[k])
         return Math.hypot(pv[0] - vn * ns[k][0], pv[1] - vn * ns[k][1], pv[2] - vn * ns[k][2]) > SLIP_SPEED
       })
@@ -730,7 +771,8 @@ export class PieceSystem {
       const height = -low
       const wx = x1 - x0
       const wz = z1 - z0
-      unstable = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+      // a round piece lying on its side rests on a line: that is its rest, not a balancing act (it rolls if the ground slopes)
+      unstable = !b.round && (Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0)
       if (b.tipping) {
         b.tipping.seconds -= h
         // lying is measured on the box as it is turned: a top corner held from above (a board it was joined to) says nothing of how it stands
@@ -752,11 +794,15 @@ export class PieceSystem {
         if (wx <= wz) w[2] -= dirX * k
         else w[0] += dirZ * k
       }
-      // rolling / spinning resistance while touching the ground
-      const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
-      w[0] *= rd
-      w[1] *= rd
-      w[2] *= rd
+      // rolling / spinning resistance while touching the ground: a box loses its spin; a round piece rolls on, held back by its rolling resistance
+      // (a deceleration of C_RR g / r about the axis it rolls on) and a little spin about the others
+      if (b.round) this.rollingResistance(b, w, h)
+      else {
+        const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
+        w[0] *= rd
+        w[1] *= rd
+        w[2] *= rd
+      }
       const fd = Math.exp(-0.3 * h)
       v[0] *= fd
       v[2] *= fd
@@ -807,6 +853,50 @@ export class PieceSystem {
     if (!s) return false
     const top = boxTopAt(s, c.x, c.z)
     return top > -Infinity && c.y >= top - 0.01
+  }
+
+  /**
+   * The points a round piece touches the ground by as it is turned now (`q`): its rims (`contacts`), which hold it standing on an end, and the exact lowest point of each
+   * rim (of the ball), so lying on its side it rests on a line and rolls smoothly instead of over the corners of a polygon.
+   */
+  private roundSamples(b: PieceBody, q: THREE_NS.Quaternion): Vec3[] {
+    const round = b.round
+    const rims = b.contacts ?? []
+    if (!round) return rims
+    const e = this.m.makeRotationFromQuaternion(q).elements
+    // into the surface it last lay on (the world's down on the floor), in the piece's frame: on a slope it touches below its centre across the slope, not straight down
+    const n = b.surfaceNormal ?? UP
+    const down: Vec3 = [-(e[0] * n[0] + e[1] * n[1] + e[2] * n[2]), -(e[4] * n[0] + e[5] * n[1] + e[6] * n[2]), -(e[8] * n[0] + e[9] * n[1] + e[10] * n[2])]
+    if (round.kind === 'sphere') return [...rims, [down[0] * round.radius, down[1] * round.radius, down[2] * round.radius]]
+    const k = round.axis
+    const across: Vec3 = [down[0], down[1], down[2]]
+    across[k] = 0
+    const len = Math.hypot(across[0], across[1], across[2])
+    // standing on an end: the rim holds it
+    if (len < 1e-3) return rims
+    const lowest = (end: number): Vec3 => {
+      const p: Vec3 = [(across[0] / len) * round.radius, (across[1] / len) * round.radius, (across[2] / len) * round.radius]
+      p[k] = end
+      return p
+    }
+    const half = b.halfExtents[k]
+    // lying (its axis nearer level than upright) it touches by the two lowest points only: the points of the rims beside them move as it rolls and would brake it
+    return len > ROUND_LYING ? [lowest(-half), lowest(half)] : [...rims, lowest(-half), lowest(half)]
+  }
+
+  /** Slows the spin of a round piece on the ground: by `ROLLING_RESISTANCE` g / r about the axis it rolls on, and damps the rest of it (a can spinning on its rim). */
+  private rollingResistance(b: PieceBody, w: Vec3, h: number): void {
+    const round = b.round
+    if (!round) return
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    const a: Vec3 = round.kind === 'cylinder' ? [e[round.axis * 4], e[round.axis * 4 + 1], e[round.axis * 4 + 2]] : [0, 0, 0]
+    const along = round.kind === 'cylinder' ? w[0] * a[0] + w[1] * a[1] + w[2] * a[2] : 0
+    const roll: Vec3 = round.kind === 'cylinder' ? [a[0] * along, a[1] * along, a[2] * along] : [w[0], w[1], w[2]]
+    const rest: Vec3 = [w[0] - roll[0], w[1] - roll[1], w[2] - roll[2]]
+    const spin = Math.hypot(roll[0], roll[1], roll[2])
+    const slow = spin > 0 ? Math.max(0, spin - (ROLLING_RESISTANCE * this.o.gravity * h) / round.radius) / spin : 0
+    const damp = Math.exp(-3 * h)
+    for (let i = 0; i < 3; i++) w[i] = roll[i] * slow + rest[i] * damp
   }
 
   /** Half the height of the box of a piece as it is turned now. */

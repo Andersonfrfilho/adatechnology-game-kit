@@ -15,6 +15,7 @@ import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
+import { frictionOf } from './friction'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
@@ -64,6 +65,36 @@ const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
 /** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
 const CONTACT_MESHES = 12
+/** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf); one with more is landed on by its box. */
+const PART_BOX_MESHES = 64
+/** Points of the drawing looked at to tell a round piece (per mesh), how alike its two other sides must be (share of the larger) and how far past their circle a point may be. */
+const ROUND_SAMPLES = 400
+const ROUND_SIDES = 0.12
+const ROUND_SLACK = 1.12
+/** Points around each rim of a round piece (and around a ball's three great circles). */
+const RIM_POINTS = 12
+
+/** The contacts of a round piece: two rims of `RIM_POINTS` at its ends (a cylinder), or three great circles (a ball), in its frame from the centre. */
+const rimPoints = (round: NonNullable<PieceBody['round']>, half: Vec3): Vec3[] => {
+  const out: Vec3[] = []
+  const circle = (axis: 0 | 1 | 2, at: number, radius: number): void => {
+    const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
+    for (let k = 0; k < RIM_POINTS; k++) {
+      const a = (k / RIM_POINTS) * Math.PI * 2
+      const p: Vec3 = [0, 0, 0]
+      p[axis] = at
+      p[i] = Math.cos(a) * radius
+      p[j] = Math.sin(a) * radius
+      out.push(p)
+    }
+  }
+  if (round.kind === 'sphere') for (const axis of [0, 1, 2] as const) circle(axis, 0, round.radius)
+  else {
+    circle(round.axis, -half[round.axis], round.radius)
+    circle(round.axis, half[round.axis], round.radius)
+  }
+  return out
+}
 /** How far (m) over its support what is left of a broken object may be and still stand; where under its lowest boxes the support is looked for (shares of the box). */
 const BROKEN_GAP = 0.03
 const BROKEN_SAMPLES: ReadonlyArray<readonly [number, number]> = [[0.5, 0.5], [0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9]]
@@ -506,7 +537,73 @@ class Renderer implements DestructionRenderer {
     const { half, center } = this.measure(b.root, this.meshesOf(b))
     const piece = this.pieceSys.create(objectId, b.root, half, center, options.mass ?? this.massOf(objectId), options.velocity)
     b.piece = piece
+    this.fitSurface(b, piece)
     return piece
+  }
+
+  /** What the piece's surface is (the friction of the material it stands on) and whether it is round (`round`: it rolls on rings of contacts). */
+  private fitSurface(b: Bound, body: PieceBody): void {
+    // the surface it stands on is its lowest part (a sofa's feet, a can's steel), whatever most of its weight is
+    const box = new this.THREE.Box3()
+    let low = Infinity
+    let material: string | null = null
+    for (const [partId, pv] of b.parts) {
+      if (pv.gone !== 'none') continue
+      for (const mv of pv.meshes) {
+        if (!this.visuals.shown(mv)) continue
+        this.visuals.worldBox(mv, box)
+        if (box.isEmpty() || box.min.y >= low - 0.005) continue
+        low = box.min.y
+        material = this.world.part(b.id, partId)?.material ?? pv.material ?? null
+      }
+    }
+    const friction = material ? frictionOf(material, this.world.materials.get(material)) : undefined
+    body.friction = friction
+    const wasRound = body.round !== undefined
+    const round = this.roundOf(b, body)
+    body.round = round ?? undefined
+    if (round) {
+      body.contacts = rimPoints(round, body.halfExtents)
+      body.partBoxes = undefined
+    } else if (wasRound) body.contacts = undefined
+  }
+
+  /**
+   * Whether what is drawn of the piece is round about one of its axes (a can, a bottle, a plate) or all of them (a ball): its points, in its frame from the centre of
+   * mass, all lie within the circle the box's two other sides draw (a box's corners would stick out of it by sqrt 2). Null for anything else.
+   */
+  private roundOf(b: Bound, body: PieceBody): PieceBody['round'] | null {
+    const half = body.halfExtents
+    const inv = specFrameInverse(this.THREE, b.root)
+    const m4 = new this.THREE.Matrix4()
+    const p = new this.THREE.Vector3()
+    const [cx, cy, cz] = body.localCenter
+    const points: Vec3[] = []
+    for (const mv of this.meshesOf(b)) {
+      if (!this.visuals.shown(mv) || mv.host) continue
+      const pos = (mv.mesh.geometry as THREE_NS.BufferGeometry).getAttribute('position')
+      if (!pos) continue
+      mv.mesh.updateWorldMatrix(true, false)
+      m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
+      const stride = Math.max(1, Math.floor(pos.count / ROUND_SAMPLES))
+      for (let i = 0; i < pos.count; i += stride) {
+        p.fromBufferAttribute(pos, i).applyMatrix4(m4)
+        points.push([p.x - cx, p.y - cy, p.z - cz])
+      }
+    }
+    if (points.length < 12) return null
+    const fits = (axis: 0 | 1 | 2): number | null => {
+      const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
+      // the two other sides alike, and no point out past the circle they draw
+      if (Math.abs(half[i] - half[j]) > ROUND_SIDES * Math.max(half[i], half[j])) return null
+      const radius = (half[i] + half[j]) / 2
+      for (const q of points) if (Math.hypot(q[i], q[j]) > radius * ROUND_SLACK) return null
+      return radius
+    }
+    const radii = ([0, 1, 2] as const).map(fits)
+    if (radii.every((r) => r !== null)) return { kind: 'sphere', axis: 1, radius: (half[0] + half[1] + half[2]) / 3 }
+    const axis = ([0, 1, 2] as const).find((k) => radii[k] !== null)
+    return axis === undefined ? null : { kind: 'cylinder', axis, radius: radii[axis] ?? 0 }
   }
 
   pieces(): Piece[] {
@@ -1373,6 +1470,11 @@ class Renderer implements DestructionRenderer {
       old.halfExtents = half
       this.pieceSys.setCenter(old, center)
       old.mass = Math.max(0.05, this.massOf(objectId))
+      // what came off no longer touches the ground for it: its contacts are those of what is left
+      if (old.contacts || old.round) {
+        this.fitSurface(b, old)
+        if (!old.round) this.setContacts(b, old, this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
+      }
       old.sleeping = false
     } else if (kitOriginOf(b.root)?.kind === 'furniture') {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
@@ -1432,6 +1534,7 @@ class Renderer implements DestructionRenderer {
     }
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
+    this.fitSurface(nb, piece)
     if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
   }
@@ -1455,7 +1558,11 @@ class Renderer implements DestructionRenderer {
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
       body.mass = Math.max(0.05, this.massOf(objectId))
-      if (!structural) this.setContacts(b, body, left)
+      if (!structural) {
+        // what is left may be round (a can's label torn off) or not any more (a stool that lost its legs): its contacts follow
+        this.fitSurface(b, body)
+        if (!body.round) this.setContacts(b, body, left)
+      }
       body.sleeping = false
       return
     }
@@ -1577,11 +1684,13 @@ class Renderer implements DestructionRenderer {
 
   /**
    * The piece touches the ground by the corners of each part left of it, not by the box around them all: on one leg, or on the legs of one side, its centre of mass is off
-   * what holds it and it goes over until the top meets the floor. Past `CONTACT_MESHES` meshes it keeps the corners of its box.
+   * what holds it and it goes over until the top meets the floor. Past `CONTACT_MESHES` meshes it keeps the corners of its box; up to `PART_BOX_MESHES`, what lands on it lands
+   * on its parts.
    */
   private setContacts(b: Bound, body: PieceBody, meshes: MeshVis[]): void {
-    if (meshes.length > CONTACT_MESHES) {
+    if (meshes.length > PART_BOX_MESHES) {
       body.contacts = undefined
+      body.partBoxes = undefined
       return
     }
     const inv = specFrameInverse(this.THREE, b.root)
@@ -1589,14 +1698,20 @@ class Renderer implements DestructionRenderer {
     const lb = new this.THREE.Box3()
     const [cx, cy, cz] = body.localCenter
     const points: Vec3[] = []
+    const boxes: Array<{ center: Vec3; half: Vec3 }> = []
     for (const mv of meshes) {
       mv.mesh.updateWorldMatrix(true, false)
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
       lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
+      boxes.push({
+        center: [(lb.min.x + lb.max.x) / 2 - cx, (lb.min.y + lb.max.y) / 2 - cy, (lb.min.z + lb.max.z) / 2 - cz],
+        half: [Math.max(0.005, (lb.max.x - lb.min.x) / 2), Math.max(0.005, (lb.max.y - lb.min.y) / 2), Math.max(0.005, (lb.max.z - lb.min.z) / 2)],
+      })
     }
-    body.contacts = points.length > 0 ? points : undefined
+    body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
+    body.partBoxes = boxes.length > 1 ? boxes : undefined
   }
 
   /**
