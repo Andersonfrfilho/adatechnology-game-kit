@@ -1,6 +1,6 @@
 // Inlines three r160, the kit packages (contracts included), the stylesheet and src/main.js into dist/test-room.html (no CDN, no request at all).
 import { createRequire } from 'node:module'
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, rmSync, symlinkSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -153,9 +153,20 @@ if (existsSync(join(sfx, 'manifest.json'))) {
 }
 // 4b. the owner's own sounds (.sfx-local/, written by `sfx:user` from packs the kit cannot redistribute) next to the page as sfx-local/, only on the
 //     machine that has them: the folder is ignored by git, so no CI build or package carries them
+//     Or, by reference: `.sfx-local.json` (ignored by git) names a game's own sound folder and its manifest ({ "root": ".../zombiada/src",
+//     "manifest": ".../zombiada/src/jogo/sons-sdk.json" }, file paths relative to root). Nothing is copied: dist/sfx-local/ gets the manifest and a
+//     link to each folder of root, so the room plays the game's files where they are.
 const userSfx = join(root, '.sfx-local')
+const userSfxRef = join(root, '.sfx-local.json')
 rmSync(join(here, 'dist/sfx-local'), { recursive: true, force: true })
-if (existsSync(join(userSfx, 'manifest.json'))) {
+if (existsSync(userSfxRef)) {
+  const ref = JSON.parse(readFileSync(userSfxRef, 'utf8'))
+  const dir = join(here, 'dist/sfx-local')
+  mkdirSync(dir, { recursive: true })
+  cpSync(resolve(root, ref.manifest), join(dir, 'manifest.json'))
+  for (const name of readdirSync(resolve(root, ref.root))) symlinkSync(resolve(root, ref.root, name), join(dir, name))
+  console.log(`dist/sfx-local linked to ${ref.root} (the game's own sounds, by reference)`)
+} else if (existsSync(join(userSfx, 'manifest.json'))) {
   cpSync(userSfx, join(here, 'dist/sfx-local'), { recursive: true })
   console.log('dist/sfx-local copied (your sounds, local only)')
 }

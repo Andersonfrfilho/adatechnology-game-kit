@@ -16,3 +16,4 @@ shots
 .vscode
 .DS_Store
 .sfx-local
+.sfx-local.json
