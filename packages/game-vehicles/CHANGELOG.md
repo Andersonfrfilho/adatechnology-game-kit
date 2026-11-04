@@ -1,5 +1,20 @@
 # @adatechnology/game-vehicles
 
+## 0.6.1
+
+### Patch Changes
+
+- fb6d690: Explosions and fire sound like what happened. `createDestructionSound` plays the family of each explosion from its effect (grenade, big charge, fuel vessel, car, pipe bomb, rocket, flashbang, molotov; `BLAST_KIND_OF`, changeable by option), the far rumble past 60 m and the indoor tail when the blast was confined; fire has its ignition "whoomp" (at most two at once when many parts catch together), a gas leak while a punctured vessel vents, a lower roar and crackles at the burning points (`update(dt)`). The renderer sends the explosion's effect, radius and confinement with `explode` (`SoundDetail`). game-audio adds the `kit` mix (the art scene chain plus a soft limiter with a −1 dBFS ceiling), now the default: a blast with its debris no longer clips the output. The room passes the thrown explosive's id to the renderer and ticks the fire crackles.
+  A car's fuel tank names its explosion (`car_fuel_tank`), so it sounds and looks like a car going up.
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [29782fc]
+- Updated dependencies [106c0f5]
+- Updated dependencies [9a151ad]
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-shapes-three@0.3.1
+
 ## 0.6.0
 
 ### Minor Changes

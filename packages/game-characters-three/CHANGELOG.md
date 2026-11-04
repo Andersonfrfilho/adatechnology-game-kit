@@ -1,5 +1,27 @@
 # @adatechnology/game-characters-three
 
+## 0.8.1
+
+### Patch Changes
+
+- a27d5ae: A blast's shove is blocked by cover and reaches the player. `DestructionWorld.blastReach(point, target)` gives the share of a blast that gets through what stands between, vehicles included as shells crossed through both walls (always on, whatever `BlastOptions.shelter` says); the renderer cuts the push of pieces and loose furniture by it, the host lends it to the modules (`ModuleHost.blastReach`), and the people of the characters module and the horde (`CrowdBlast.reach`, shove and damage, no lethal core behind solid cover) use it. The knock of a body (`knockOf`, `stepKnock`, `bodyMass`) moved to game-contracts, and the test room's player is shoved by it: thrown, off its feet when the push passes 2.5 m/s, lies a while and gets up (the view drops to the floor and rolls, the body takes its down pose; `TestRoom.playerKnock`, `TestRoomOptions.playerMass`). A body or a piece thrown into something firm stops there instead of passing through: the room's player slams into the wall (`PlayerOptions.onSlam`; the wall takes a blunt blow of `½ m v²`, body thud and hurt cry), and the pieces of the renderer sweep their way through the world (`PieceSystemOptions.sweep`/`onSlam`): a crate thrown at a wall stops, bounces a little, and both take the blow.
+- 5ff4a45: The survivor and Bestiário builders are typed (no `@ts-nocheck`): `PersonSpec`, `PersonCharacter`, `BestSpec`, `BestPose` and the rigs are exported, `PersonBuilder.build` returns a `PersonCharacter` and `BestBuilder.build` a `THREE.Group`. A clothing entry without a colour now takes the top's material instead of none.
+- Updated dependencies [4dce01e]
+- Updated dependencies [fb6d690]
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [784a6b0]
+- Updated dependencies [5d614c6]
+- Updated dependencies [29782fc]
+- Updated dependencies [106c0f5]
+- Updated dependencies [9a151ad]
+- Updated dependencies [4145cc9]
+  - @adatechnology/game-audio@0.5.0
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-shapes-three@0.3.1
+  - @adatechnology/game-characters@0.2.9
+
 ## 0.8.0
 
 ### Minor Changes

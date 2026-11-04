@@ -1,5 +1,32 @@
 # @adatechnology/game-weapons-three
 
+## 0.13.0
+
+### Minor Changes
+
+- 672f918: Recorded firearm sounds: 231 takes cut from The Free Firearm Sound Library (CC0), the Restrained Firearms Soundpack and the Oculus Audio Pack 1 (CC BY 4.0) by `tools/sfx-sources/cut.mjs`. A shot plays the near and mid-distance takes of its calibre profile with a crossover by distance; each reload step plays its recording in the tier of the weapon's weight; a case's first bounce plays the recorded floor. Without the files the synthesized sounds play. `AnimationEventSpec.lead` fires a sound event early by real seconds, so the measured hit of each recording (`reload-sample-hits.json`) lands on the frame the part reaches its stop.
+
+### Patch Changes
+
+- Updated dependencies [4dce01e]
+- Updated dependencies [fb6d690]
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [784a6b0]
+- Updated dependencies [5d614c6]
+- Updated dependencies [29782fc]
+- Updated dependencies [106c0f5]
+- Updated dependencies [9a151ad]
+- Updated dependencies [4145cc9]
+  - @adatechnology/game-audio@0.5.0
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-shapes-three@0.3.1
+  - @adatechnology/game-floorplan-three@0.9.1
+  - @adatechnology/game-items-three@0.7.1
+  - @adatechnology/game-vfx-three@0.5.1
+  - @adatechnology/game-weapons@0.5.9
+
 ## 0.12.0
 
 ### Minor Changes

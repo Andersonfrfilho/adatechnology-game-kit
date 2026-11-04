@@ -1,5 +1,31 @@
 # @adatechnology/game-vehicles-three
 
+## 0.6.0
+
+### Minor Changes
+
+- 4145cc9: Vehicle sounds that follow what the vehicle does. `game-audio`: a loop can carry a `falloff` and `pan`, and `set` takes a `position` (level and side from the listener, duller far away) and a `cutoff` (the first filter); the sink passes `params.cutoff` and the position through. `game-vehicles-three`: `VEHICLE_SOUND_BANK` and `createVehicleSound` — the engine as loops crossfaded by RPM at the firing frequency (car, truck, bike profiles), louder and brighter under load, an RPM guessed through gears for drivers without an engine model, the starter (catching with a flare, or failing), ignition off, tyres squealing on asphalt or hissing on dirt by slip, road noise by speed, crashes light / medium / heavy by speed, and car doors, trunk and hood. The vehicles area turns the key before the lane car pulls away. `game-test-room`: a leaf of an object tagged `vehicle` plays `vehicle_<door|trunk|hood>_<open|shut>`; `game-destruction-three` maps those to the car sounds, falling back to the old latch and metal shut when the vehicle bank is not loaded (`SoundKeyRule.fallback`).
+
+### Patch Changes
+
+- Updated dependencies [4dce01e]
+- Updated dependencies [fb6d690]
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [784a6b0]
+- Updated dependencies [5d614c6]
+- Updated dependencies [29782fc]
+- Updated dependencies [106c0f5]
+- Updated dependencies [9a151ad]
+- Updated dependencies [4145cc9]
+  - @adatechnology/game-audio@0.5.0
+  - @adatechnology/game-vehicles@0.6.1
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-shapes-three@0.3.1
+  - @adatechnology/game-vehicles-driving@0.2.10
+  - @adatechnology/game-vehicles-proving@0.1.1
+
 ## 0.5.0
 
 ### Minor Changes
