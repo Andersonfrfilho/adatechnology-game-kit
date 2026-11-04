@@ -27,7 +27,8 @@ function build(event: HouseEvent): { house: House; plan: any } {
   pair(plan.windows, event.ids.windows)
   legacy.set(plan.template, event.ids.template)
   const seedKey = (id: string): string => legacy.get(id) ?? id.replace(/^backyard\.outbuilding\./, 'quintal.edicula.').replace(/\.ceiling_light$/, '.plafon')
-  return { plan, ...houseOf(plan, { seedKey }) }
+  // the team's scene has no pillars standing out of the walls (they came with the confined masonry of the kit): drawn inside the walls, as the Visor drew them
+  return { plan, ...houseOf(plan, { seedKey }, { pillars: 'hidden' }) }
 }
 
 const built = new Map<string, House>()

@@ -73,6 +73,13 @@ export interface BuildOptions {
   noPerimeter?: boolean
   /** `'meshes'`: one mesh per structural piece instead of one per group and material. */
   pieces?: 'meshes'
+  /**
+   * The concrete pillars that stand in the masonry walls (`wall_column_*`, `column_*` at the corners and `jamb_column_*` of the structure). `'shown'` (default): drawn as what they are, plastered and painted
+   * a shade off the wall and standing 2.5 cm out of each face (a 20 cm pillar in a 15 cm wall), so the frame reads from the ends of each wall, its corners
+   * and its openings, and a shot or a blow that takes their plaster off shows their concrete and bars. `'hidden'`: inside the wall, seen only where it is
+   * damaged, as the Visor de casas 3D drew the houses.
+   */
+  pillars?: 'shown' | 'hidden'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }

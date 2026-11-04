@@ -82,6 +82,14 @@ const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h:
 - Detalhe de parede (`panels`, `units`) e `buildWallSpecimen` (T2.2d): comportamento novo, sem original do time (a parede do VC3 é uma caixa por segmento, o reboco só um rótulo).
 - Instalações (T2.2e): `montarGas`, `montarEletrica`, `montarSolar`, `montarHidraulica`, `montarEdificacoes`, `caminhosEdificacoes` e `CONTEUDO` do Visor de casas 3D (L10752–11166, L9279): portados; as sete listas conferem em 900 plantas (`tests/team-golden-vc3-structure.test.ts`).
 
+## Validação estrutural (CLAUDE.md §11)
+
+- `validateStructure(plan.structure, { doors: plan.doors })` devolve as violações (`{ code, part, message }`, códigos em `STRUCTURAL_VIOLATION`):
+  caminho de carga, concreto armado pela NBR 6118 e, na alvenaria, alvenaria confinada (baldrame, pilares do piso à cinta nas pontas, cantos,
+  encontros e a cada 4 m, cinta, verga e contraverga, tijolo amarrado, reboco nas duas faces). `validateSpec(spec)` confere torres e arranha-céus.
+- Toda tipologia nova entra no `tests/construction.test.ts` do seu pacote; falha se corrige no construtor, nunca no teste. Revisão: agente
+  `engenheiro-estrutural`.
+
 ## Prédios altos (T10 §9)
 
 `buildTower(options)` monta um prédio com estrutura real: pórtico de pilares contínuos e armados, núcleo rígido de concreto (`addCore`: tubo de paredes de 35 cm com gaiola, escada de dois lances e poços de elevador dentro, `coreSize`), pele de vidro presa na borda das lajes (`addCurtainWall`: painéis de 1,5 m, vidro de 12 mm, quebram em pedaços de 0,6 m), cobertura plana (`addFlatRoof`: contrapiso com 1% até os ralos, manta de EPDM com a água da chuva, `outflow` para baixo) e andar técnico (`addMechanicalFloor`: máquinas dos elevadores, reservatório `towerWater`, chillers; tudo pesa). Cada sistema se desliga com `false` ou se configura pelos `*_DEFAULTS`. As funções `add*` servem para qualquer spec de pórtico com a `TowerGeometry` dela. Vento (desligado por padrão): `buildTower({ wind: { speed, terrain, class }, damper: true | { ratio, modalShare, material } })` dimensiona para o vento e põe o amortecedor de massa sintonizado (`addTunedMassDamper`, `DAMPER_DEFAULTS`, `damperMass`) no andar técnico; o mundo precisa de `createDestruction({ wind: {} })`.

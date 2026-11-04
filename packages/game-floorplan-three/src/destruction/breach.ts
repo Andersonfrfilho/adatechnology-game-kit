@@ -176,10 +176,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return null
     }
 
-    /** The along range of the host wall (from its start) where the pillars it draws stand: no brick of the wall is drawn there, even once the pillar's concrete is gone (its cage is left). */
-    const pillarSpans = (view: { host: string; parts: string[]; fallen: Set<string>; mask: { alongU: boolean; start: number } }): { a: number; b: number; y0: number; y1: number }[] =>
-      view.parts.filter((id: string) => id !== view.host && structure.byId.get(id)?.role === 'column').map((id: string) => {
-        const q = structure.byId.get(id)
+    /**
+     * The along range of the host wall (from its start) where pillars stand in it, drawn by the wall or by their own mesh: no brick of the wall is drawn
+     * there, even once the pillar's concrete is gone (its cage is left).
+     */
+    const pillarSpans = (view: { host: string; mask: { alongU: boolean; start: number } }): { a: number; b: number; y0: number; y1: number }[] =>
+      structure.parts.filter((q: { id: string; role: string; aabb: number[]; y0: number; y1: number }) => q.role === 'column' && wallAround(q) === view.host).map((q: { aabb: number[]; y0: number; y1: number }) => {
         const a = (view.mask.alongU ? q.aabb[0] : q.aabb[1]) - view.mask.start, b = (view.mask.alongU ? q.aabb[2] : q.aabb[3]) - view.mask.start
         return { a, b, y0: q.y0, y1: q.y1 }
       })
@@ -593,7 +595,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       drop(partId: string): void {
         let host = views.get(partId) ?? [...views.values()].find((view) => view.parts.includes(partId))
         // a wall that falls whole before any damage was drawn on it: its pillars and bond beam still stand where it was
-        if (!host && lod === 0 && riders(partId).some((id) => structure.byId.get(id)?.role === 'column')) {
+        if (!host && lod === 0 && riders(partId).length > 0) {
           host = newView(partId)
           if (host) { cut(host); views.set(partId, host) }
         }
