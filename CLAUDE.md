@@ -34,7 +34,7 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   `tools/kit-audit/rules.json`; o MCP `game-kit` (`.mcp.json`) responde `kit_owner`, `kit_origin` e `kit_audit`, e a skill `kit-origem` diz como.
 - **Parede sempre como as casas** (dono, 2026-10-29): toda parede ou muro (sala de teste, área, prévia, cena de jogo) tem o mesmo visual e o
   mesmo padrão de sustentação das paredes das casas. Use `wallPiece` do `game-floorplan-three` (a estrutura do `game-floorplan-structure`:
-  parede sobre a fundação, cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
+  parede sobre a fundação, pilares de concreto armado ao longo dela (nas pontas, nos encontros, ao lado dos vãos e a cada 4 m no máximo), cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
   e calçada) ou a casa inteira. Nada de parede de blocos soltos, cubos coloridos ou estrutura montada à parte.
 - **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
   dono. `node tools/kit-audit/scene.mjs --check` (no pre-push, não no CI: abre o navegador, ver seção 9) abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca

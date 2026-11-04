@@ -7,6 +7,7 @@ export { MEMBER_CAGE, PILE_AREA, RAFT_THICKNESS, REBAR_RATIOS, toDestructibleSpe
 export type { DestructibleSpecOptions } from './to-destructible-spec'
 export { SLAB_PANEL_DEFAULTS, applySlabPanels, beamDepthFor, beamSpan, resolveSlabPanels, slabPanelView, slabPanelsOf } from './slab-panels'
 export type { SlabPanelOptions } from './slab-panels'
+export { WALL_PILLAR_SIDE, WALL_PILLAR_SPACING, pillarStations } from './structure/wall-pillars'
 export { buildWallSpecimen } from './wall-specimen'
 export type { WallSpecimenOptions } from './wall-specimen'
 export { planWaterTank } from './water-tank'

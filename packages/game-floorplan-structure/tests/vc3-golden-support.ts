@@ -29,7 +29,7 @@ export const SINGLES = ['levels', 'construction', 'roof', 'waterTank'] as const
 export const chunksOf = (templates: string[]): [string, number, number][] => templates.flatMap((template) => [1, 6, 11, 16, 21].map((from): [string, number, number] => [template, from, from + 4]))
 
 export function generate(event: StructureEvent) {
-  return engine.generate(sdkTemplateOf.get(event.template) as string, { seed: event.seed, state: sdkStateOf.get(event.state), wallDetail: 'coarse' })
+  return engine.generate(sdkTemplateOf.get(event.template) as string, { seed: event.seed, state: sdkStateOf.get(event.state), wallDetail: 'coarse', wallPillars: false })
 }
 
 export function singlesOf(result: any): Record<(typeof SINGLES)[number], unknown> {

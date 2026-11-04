@@ -278,6 +278,11 @@ export interface StructureOptions {
   wallDetail?: WallDetail
   /** `false`: no roof (a free-standing wall, a garden wall). Default `true`. */
   roof?: boolean
+  /**
+   * Concrete pillars along the exterior masonry walls besides the corner ones (at the free ends and door jambs, beside the windows, where walls meet and at
+   * most every `spacing` metres, default `WALL_PILLAR_SPACING`). `false`: only the corner pillars. Default `true`.
+   */
+  wallPillars?: boolean | { spacing?: number }
 }
 
 /** What a construction builder and the tank get to see: the generated plan, its seed and the template. */

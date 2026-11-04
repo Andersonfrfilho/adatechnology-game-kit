@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { SLAB_PANEL_DEFAULTS, beamDepthFor, beamSpan, resolveSlabPanels, toDestructibleSpec } from '../src'
 import { TOWER_TEMPLATES, engine } from './support'
-import { breakParts, idsStarting } from './world-helpers'
+import { breakParts, idsStarting, pillarsOfOneWall } from './world-helpers'
 
 const specOf = (template: string, seed = 3, state: 'normal' | 'abandoned' = 'normal', portico: boolean | 'auto' = true) => {
   const result: any = engine.generate(template, { seed, state })
@@ -90,7 +90,7 @@ describe('towers of the plan engine: no panels, built in seconds', () => {
 })
 
 describe('progressive collapse only where real', () => {
-  it('a framed sobrado that loses one corner column keeps its slab and its roof (the beams carry the bay across); two corner columns and the bay falls', () => {
+  it('a framed sobrado that loses one corner column keeps its slab and its roof (the beams carry the bay across); the pillars of one wall and the bay falls', () => {
     const { spec } = specOf('townhouse')
     const columns = idsStarting(spec, 'column_0_')
     const panels = panelsOf(spec, 'slab_1')
@@ -98,7 +98,7 @@ describe('progressive collapse only where real', () => {
     const one = breakParts(spec, columns.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
     expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
-    const two = breakParts(spec, columns.slice(0, 2))
+    const two = breakParts(spec, pillarsOfOneWall(spec, columns, idsStarting(spec, 'wall_column_0_')))
     const down = panels.filter((id) => !two.stands(id))
     expect(down.length).toBeGreaterThan(0)
     expect(down.length).toBeLessThan(panels.length + 1)
@@ -114,13 +114,14 @@ describe('progressive collapse only where real', () => {
     expect(panelsOf(spec, 'slab_1').every((id) => fallen.stands(id))).toBe(true)
   })
 
-  it('a flat-roof house that loses one corner column keeps its slab; with all four columns lost the slab is down', () => {
+  it('a flat-roof house that loses one corner column keeps its slab; with every column of the storey lost the slab is down', () => {
     const { spec } = specOf('budget_slab_house')
     const columns = idsStarting(spec, 'column_0_')
     const panels = panelsOf(spec, 'slab_top')
     const one = breakParts(spec, columns.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
-    const all = breakParts(spec, columns)
+    // the pillars along the walls carry the slab too: every pillar of the storey lost brings it down
+    const all = breakParts(spec, columns.concat(idsStarting(spec, 'wall_column_0_')))
     expect(panels.some((id) => !all.stands(id))).toBe(true)
   })
 

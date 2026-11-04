@@ -37,7 +37,7 @@ function constructionExtension(context: ResultExtensionContext): unknown {
 
 function structureExtension(context: ResultExtensionContext): unknown {
   const cache = cacheOf(context.result)
-  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: tankOf(context), wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail }
+  const options: StructureOptions = { construction: cache.build.construction, extras: cache.build.extras ?? {}, tank: tankOf(context), wallDetail: (context.options.wallDetail ?? 'panels') as WallDetail, ...(context.options.wallPillars !== undefined ? { wallPillars: context.options.wallPillars as StructureOptions['wallPillars'] } : {}) }
   const { roof, ...structure } = buildStructure(context.result, options)
   cache.roof = roof
   for (const part of structure.parts) {

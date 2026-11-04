@@ -123,11 +123,15 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return [v.x, v.y, v.z]
     }
 
-    /** The units of a part: one cell per unit of its courses (running or stack bond), along the wall from `u0`/`v0` and up from `y0`. */
-    function cells(part: any, units: any) {
+    /**
+     * The units of a part: one cell per unit of its courses (running or stack bond), up from `y0`, along the host wall (`mask`) from the wall's start: a beam
+     * on the wall starts where the wall does, a pillar in the wall where it stands along it.
+     */
+    function cells(part: any, units: any, mask: { alongU: boolean; start: number }) {
       const [u0, v0, u1, v1] = part.aabb
-      const alongU = u1 - u0 >= v1 - v0
+      const alongU = mask.alongU
       const len = alongU ? u1 - u0 : v1 - v0
+      const offset = (alongU ? u0 : v0) - mask.start
       const [ul, uh] = units.size
       const rows = Math.max(1, Math.round((part.y1 - part.y0) / uh))
       const rowH = (part.y1 - part.y0) / rows
@@ -138,7 +142,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const shift = units.bond === 'running' && (r & 1) ? w / 2 : 0
         for (let i = 0; i < per + (shift ? 1 : 0); i++) {
           const a = Math.max(0, i * w - shift), b = Math.min(len, i * w - shift + w)
-          if (b - a > 1e-3) out.push({ a, b, y0: part.y0 + r * rowH, y1: part.y0 + (r + 1) * rowH, r, i })
+          if (b - a > 1e-3) out.push({ a: offset + a, b: offset + b, y0: part.y0 + r * rowH, y1: part.y0 + (r + 1) * rowH, r, i })
         }
       }
       return out
@@ -158,8 +162,27 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       for (const q of structure.parts) {
         if (q.id !== partId && same(q.aabb, part.aabb) && Math.abs(q.y1 - part.y0) < 0.01 && structure.meshesOf(q.id).some((it: any) => it.mesh)) return q.id
       }
+      return part.role === 'column' ? wallAround(part) : null
+    }
+
+    /** The drawn wall a pillar stands in (its centre in the wall's plan box, its height along the wall's): the pillar is under that wall's plaster. */
+    function wallAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string | null {
+      const cu = (part.aabb[0] + part.aabb[2]) / 2, cv = (part.aabb[1] + part.aabb[3]) / 2
+      for (const q of structure.parts) {
+        if (q.id === part.id || (q.role !== 'wall' && q.role !== 'partition') || !structure.meshesOf(q.id).some((it: { mesh?: unknown }) => it.mesh)) continue
+        const inside = cu >= q.aabb[0] - 1e-3 && cu <= q.aabb[2] + 1e-3 && cv >= q.aabb[1] - 1e-3 && cv <= q.aabb[3] + 1e-3
+        if (inside && Math.min(q.y1, part.y1) - Math.max(q.y0, part.y0) > 0.5) return q.id
+      }
       return null
     }
+
+    /** The along range of the host wall (from its start) where the pillars it draws stand: no brick of the wall is drawn there, even once the pillar's concrete is gone (its cage is left). */
+    const pillarSpans = (view: { host: string; parts: string[]; fallen: Set<string>; mask: { alongU: boolean; start: number } }): { a: number; b: number; y0: number; y1: number }[] =>
+      view.parts.filter((id: string) => id !== view.host && structure.byId.get(id)?.role === 'column').map((id: string) => {
+        const q = structure.byId.get(id)
+        const a = (view.mask.alongU ? q.aabb[0] : q.aabb[1]) - view.mask.start, b = (view.mask.alongU ? q.aabb[2] : q.aabb[3]) - view.mask.start
+        return { a, b, y0: q.y0, y1: q.y1 }
+      })
 
     /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
     const riders = (hostId: string): string[] =>
@@ -265,6 +288,19 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return { data, texture, w, h, alongU, start: alongU ? u0 : v0, len, y0, height: y1 - y0, rect: new THREE.Vector4(alongU ? u0 : v0, y0, len, y1 - y0) }
     }
 
+    /** A brick cut at the faces of the pillars it meets (the wall is laid against the pillar); nothing when it lies inside one. */
+    function besidePillars<T extends { a: number; b: number; y0: number; y1: number }>(c: T, pillars: readonly { a: number; b: number; y0: number; y1: number }[]): T[] {
+      let { a, b } = c
+      for (const k of pillars) {
+        if (c.y1 <= k.y0 || c.y0 >= k.y1 || b <= k.a || a >= k.b) continue
+        const centre = (a + b) / 2
+        if (centre > k.a && centre < k.b) return []
+        if (centre <= k.a) b = Math.min(b, k.a)
+        else a = Math.max(a, k.b)
+      }
+      return b - a > 1e-3 ? [{ ...c, a, b }] : []
+    }
+
     /** Distance from a point (along, y) to a box [a, b] × [c, d] (0 inside). */
     const boxDistance = (s: number, y: number, a: number, b: number, c: number, d: number) => Math.hypot(Math.max(a - s, 0, s - b), Math.max(c - y, 0, y - d))
 
@@ -300,9 +336,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       // where the plaster (or the cover) came off and the unit under it stayed: a patch of the face, ragged at the edge
       const flakes: { s: number; y: number; r: number }[] = []
       const shown: any[] = []
+      const pillars = pillarSpans(view)
       for (const id of view.parts) {
         const part = structure.byId.get(id), units = specOf(id).units, chips = view.chips.get(id), opening = view.openings.get(id), spalls = view.spalls.get(id)
-        const all = cells(part, units)
+        // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
+        const own = cells(part, units, mask)
+        const all = id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own
+        if (view.fallen.has(id)) { holes.push(...all); continue }
         const thick = mask.alongU ? part.aabb[3] - part.aabb[1] : part.aabb[2] - part.aabb[0]
         const mid = mask.alongU ? (part.aabb[1] + part.aabb[3]) / 2 : (part.aabb[0] + part.aabb[2]) / 2
         if (opening) discs.push({ s: along(opening.center), y: opening.center[1], r: opening.radius })
@@ -412,24 +452,34 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return { center: local(chip.center), along: a, up: u }
     }
 
+    /** The damage view of a wall (not yet cut): the wall and what it draws inside it (its bond beam, its pillars). Null when the wall has no mesh range. */
+    function newView(hostId: string) {
+      const items = structure.meshesOf(hostId).filter((it: any) => it.mesh)
+      if (!items.length) return null
+      const parts = [hostId, ...riders(hostId)].filter((id) => structure.byId.get(id) && specOf(id)?.units)
+      const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
+      return {
+        host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
+        chips: new Map(parts.map((id) => [id, [] as any[]])), spalls: new Map(parts.map((id) => [id, [] as any[]])), openings: new Map(), flakes: 0, fallen: new Set<string>(),
+      }
+    }
+
+    /** Moves the wall's range to the masked shells (once): from then on the wall is drawn cut where its units went. */
+    function cut(view: NonNullable<ReturnType<typeof newView>>): void {
+      if (view.saved) return
+      view.shells = view.items.map((it: any) => shell(it, view.mask))
+      // and what shows where it is cut: the units
+      for (const m of view.shells) m.userData.behind = () => view.units
+      view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
+    }
+
     /** Takes out of the wall of `partId` (or of the wall that draws it) the units the change removed, and draws the damage again. */
     function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: { center: number[]; size: number[]; rotation: number[] }; chips?: { center: number[]; size: number[]; rotation: number[] }[]; spall?: { center: number[]; radius: number } }): boolean {
       if (lod !== 0) return false
       const hostId = hostOf(partId)
       if (!hostId || !specOf(partId)?.units) return false
-      let view = views.get(hostId)
-      if (!view) {
-        const items = structure.meshesOf(hostId).filter((it: any) => it.mesh)
-        if (!items.length) return false
-        const parts = [hostId, ...riders(hostId)].filter((id) => structure.byId.get(id) && specOf(id)?.units)
-        if (!parts.includes(partId)) return false
-        const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
-        view = {
-          host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
-          chips: new Map(parts.map((id) => [id, [] as any[]])), spalls: new Map(parts.map((id) => [id, [] as any[]])), openings: new Map(), flakes: 0,
-        }
-      }
-      if (!view.chips.has(partId)) return false
+      const view = views.get(hostId) ?? newView(hostId)
+      if (!view || !view.chips.has(partId)) return false
       if (change.opening) {
         if (view.openings.has(partId)) return false
         view.openings.set(partId, { center: local(change.opening.center), radius: change.opening.radius })
@@ -441,12 +491,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         list.push({ center: local(change.spall.center), radius: change.spall.radius })
         if (list.length > MAX_FLAKES) list.shift()
       }
-      if (!view.saved) {
-        view.shells = view.items.map((it: any) => shell(it, view.mask))
-        // and what shows where it is cut: the units
-        for (const m of view.shells) m.userData.behind = () => view.units
-        view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
-      }
+      cut(view)
       views.set(hostId, view)
       // the hole a wall gets (an opening, a unit knocked out) shows at once; the plaster chipping around it fills in with the next flush
       if (opts.deferPaint && change.spall) dirty.add(view)
@@ -546,9 +591,21 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
-        const v = views.get(partId)
-        if (!v) return
-        dispose(v); views.delete(partId)
+        let host = views.get(partId) ?? [...views.values()].find((view) => view.parts.includes(partId))
+        // a wall that falls whole before any damage was drawn on it: its pillars and bond beam still stand where it was
+        if (!host && lod === 0 && riders(partId).some((id) => structure.byId.get(id)?.role === 'column')) {
+          host = newView(partId)
+          if (host) { cut(host); views.set(partId, host) }
+        }
+        if (!host) return
+        // the wall or a pillar in it broke or fell: what still stands in the view (the pillars, the bond beam on them) stays drawn, bare where the bricks went
+        host.fallen.add(partId)
+        if (host.parts.some((id: string) => !host.fallen.has(id))) {
+          dirty.delete(host); paint(host); invalidate(); invalidateShadow()
+          return
+        }
+        const v = host
+        dispose(v); views.delete(v.host)
         // the range stays collapsed (the renderer hides the part); `restore` puts it back
         if (v.saved) dropped.push(v)
       },

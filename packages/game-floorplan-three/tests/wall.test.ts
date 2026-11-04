@@ -8,16 +8,42 @@ import { wallPiece, wallPlan } from '../src'
 import { THREE } from './helpers/houses'
 import { fakeDocument } from './helpers/fake-document'
 
+/** What the tests read of a part of the structure. */
+type StructurePiece = { id: string; role: string; aabb: number[]; y0: number; y1: number }
+
 const make = () => wallPiece(THREE, { w: 10, h: 3, house: { document: fakeDocument } })
 
 describe('wallPiece', () => {
-  it('stands as a house wall: the wall on the strip footing and the bond beam on it, no roof', () => {
+  it('stands as a house wall: the wall on the strip footing, its concrete pillars and the bond beam on both, no roof', () => {
     const plan = wallPlan({ w: 10, h: 3 })
     expect(plan.construction.system).toBe('masonry')
     expect(plan.construction.foundation.type).toBe('strip_footing')
     const parts = plan.structure.parts.map((p: any) => `${p.id}:${p.role}:${p.material}`)
-    expect(parts).toEqual(['wall_0_0:wall:brick', 'plate_0_0:beam:concrete'])
-    expect(plan.structure.supports.map((s: any) => `${s.part}>${s.on}:${s.joint}`)).toEqual(['wall_0_0>ground:mortar', 'plate_0_0>wall_0_0:mortar'])
+    const pillars = ['wall_column_0_0', 'wall_column_0_1', 'wall_column_0_2', 'wall_column_0_3']
+    expect(parts).toEqual(['wall_0_0:wall:brick', 'plate_0_0:beam:concrete', ...pillars.map((id) => `${id}:column:concrete`)])
+    // one at each end of the 10 m wall, flush with it, and two between them: three spans of 3.2 m, none over 4 m
+    const centres = plan.structure.parts.filter((p: StructurePiece) => p.role === 'column').map((p: StructurePiece) => Math.round(((p.aabb[0] + p.aabb[2]) / 2) * 100) / 100)
+    expect(centres).toEqual([-4.9, -1.63, 1.63, 4.9])
+    for (const pillar of plan.structure.parts.filter((p: StructurePiece) => p.role === 'column')) {
+      expect([pillar.y0, pillar.y1]).toEqual([0, plan.structure.parts[0].y1])
+      expect(pillar.aabb[3] - pillar.aabb[1]).toBeCloseTo(0.2)
+    }
+    expect(plan.structure.supports.map((s: any) => `${s.part}>${s.on}:${s.joint}`)).toEqual([
+      'wall_0_0>ground:mortar', 'plate_0_0>wall_0_0:mortar', ...pillars.flatMap((id) => [`${id}>ground:rebar`, `plate_0_0>${id}:rebar`]),
+    ])
+  })
+
+  it('keeps the bond beam up on the pillars when the bricks under it are gone', () => {
+    const { spec } = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(spec, { id: 'target' })
+    world.hitPart(id, 'wall_0_0', { type: 'blunt', point: [0, 1.5, 0], energy: 5e7, radius: 0.05, source: 'test' })
+    for (let t = 0; t < 30; t += 0.1) world.update(0.1)
+    const state = world.state(id)!.parts
+    const status = (part: string) => state.find((p) => p.id === part)?.status
+    expect(status('wall_0_0')).toBe('broken')
+    expect(['intact', 'damaged']).toContain(status('plate_0_0'))
+    expect(state.filter((p) => p.id.startsWith('wall_column_')).every((p) => p.status === 'intact' || p.status === 'damaged')).toBe(true)
   })
 
   it('gives the spec a house gives: the plastered brick wall with its units and breach, the bond beam with rebar', () => {
@@ -138,6 +164,50 @@ describe('wallPiece', () => {
     expect(hit.part).toBe('wall_0_0')
     expect(hit.point[1]).toBeGreaterThan(drawn.min.y)
     expect(hit.point[1]).toBeLessThan(drawn.max.y)
+    follower.dispose()
+  })
+
+  it('shows the concrete of a pillar where shots knock its plaster and cover out, and lays the bricks against it, never across it', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    // the pillar at x = 1.63 (1.53 to 1.73), and the bricks on both sides of it
+    for (const [x, y] of [[1.6, 1.5], [1.65, 1.2], [1.6, 1.8], [1.35, 1.5], [1.9, 1.3]]) for (let i = 0; i < 4; i++) world.shoot([x!, y!, 5], [0, 0, -1], 3500, 7.62, 'test')
+    follower.update()
+    const units = root.getObjectByName('breach:wall_0_0') as unknown as { count: number; getMatrixAt(i: number, m: InstanceType<typeof THREE.Matrix4>): void; getColorAt(i: number, c: InstanceType<typeof THREE.Color>): void }
+    const m = new THREE.Matrix4(), p = new THREE.Vector3(), q = new THREE.Quaternion(), size = new THREE.Vector3(), colour = new THREE.Color()
+    let concrete = 0
+    let bricksAcross = 0
+    for (let i = 0; i < units.count; i++) {
+      units.getMatrixAt(i, m)
+      m.decompose(p, q, size)
+      if (Math.min(p.x + size.x / 2, 1.73) - Math.max(p.x - size.x / 2, 1.53) <= 1e-3) continue
+      units.getColorAt(i, colour)
+      if (Math.abs(colour.r - colour.b) < 0.04 && Math.abs(colour.r - colour.g) < 0.04) concrete++
+      else bricksAcross++
+    }
+    expect(concrete).toBeGreaterThan(0)
+    expect(bricksAcross).toBe(0)
+    // broken down to its cage, the pillar leaves no concrete and no brick takes its place
+    let fractured = false
+    world.on('fracture', (e) => { if ('part' in e && e.part === 'wall_column_0_2') fractured = true })
+    world.hitPart(id, 'wall_column_0_2', { type: 'blunt', point: [1.63, 1.4, 0.1], energy: 5e6, radius: 0.05, source: 'test' })
+    world.update(0.1)
+    expect(fractured).toBe(true)
+    follower.update()
+    const repainted = root.getObjectByName('breach:wall_0_0') as unknown as typeof units
+    expect(repainted).not.toBe(units)
+    let after = 0
+    for (let i = 0; i < repainted.count; i++) {
+      repainted.getMatrixAt(i, m)
+      m.decompose(p, q, size)
+      if (Math.min(p.x + size.x / 2, 1.73) - Math.max(p.x - size.x / 2, 1.53) <= 1e-3) continue
+      repainted.getColorAt(i, colour)
+      if (!(Math.abs(colour.r - colour.b) < 0.04 && Math.abs(colour.r - colour.g) < 0.04)) after++
+    }
+    expect(after).toBe(0)
     follower.dispose()
   })
 
