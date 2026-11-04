@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
-import { createPlayerAvatar } from '../src'
+import { createPlayerAvatar, toRoomAvatar } from '../src'
 import { createHeadHider } from '../src/player/head-hiding'
 import type { AvatarUpdate, PlayerAvatarOptions } from '../src'
 
@@ -31,6 +31,25 @@ describe('eye', () => {
     expect(lie.z).toBeLessThan(stand.z - 0.5)
     const down = settle({}, { down: true }, 2).eye()
     expect(down.y).toBeLessThan(0.8)
+  })
+
+  it('falls the way it is told: face down ahead of the feet, on the back behind them', () => {
+    const stand = settle().eye()
+    const forward = settle({}, { down: true, fallForward: true }, 2).eye()
+    const back = settle({}, { down: true, fallForward: false }, 2).eye()
+    // the body's front is +z: face down lays the head ahead, on the back behind
+    expect(forward.z).toBeGreaterThan(stand.z + 0.8)
+    expect(back.z).toBeLessThan(stand.z - 0.8)
+    expect(forward.y).toBeLessThan(0.6)
+    expect(back.y).toBeLessThan(0.6)
+    // the room's wrapper passes the side on (the room tells it which way a blast pushed)
+    const roomFall = (fallForward: boolean) => {
+      const room = toRoomAvatar(createPlayerAvatar(THREE))
+      for (let i = 0; i < 120; i++) room.update(1 / 60, { speed: 0, running: false, crouch: false, down: true, fallForward, armed: false, pitch: 0 })
+      return room.avatar.eye()
+    }
+    expect(roomFall(true).z).toBeGreaterThan(stand.z + 0.8)
+    expect(roomFall(false).z).toBeLessThan(stand.z - 0.8)
   })
 
   it('moves with the head turning', () => {

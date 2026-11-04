@@ -94,6 +94,11 @@ export type AvatarUpdate = {
   running?: boolean
   crouch?: boolean
   down?: boolean
+  /**
+   * Which way a body going `down` falls: true face down (pushed from behind, tripped), false on its back (pushed from the front, a blast it faced).
+   * Left out, the game's own pick by the phase of the stride.
+   */
+  fallForward?: boolean
   /** Weapon in hand: both arms follow the aim (the game's arm code). Default false. */
   armed?: boolean
   /** The camera pitch the game's `playerArmCode()` reads (`view.pitch`). */
@@ -522,10 +527,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     tilt.position.set(0, hip, 0).sub(pivot)
   }
 
-  const placeBody = (progress: number): void => {
+  const placeBody = (progress: number, forward?: boolean): void => {
     // `:74`: the whole body turns about the hip (face down or face up by the phase) and the hip drops to the ground
     const fk = progress * progress * (3 - 2 * progress)
-    const flip = fract(cycles * 1.7) >= 0.5 ? 1 : 0
+    // flip 0 turns the head to -z, behind the facing (on the back); 1 to +z (face down)
+    const flip = forward === undefined ? (fract(cycles * 1.7) >= 0.5 ? 1 : 0) : forward ? 1 : 0
     tilt.rotation.set((-DOWN.tilt + flip * 2 * DOWN.tilt) * fk, 0, Math.sin(cycles * 7) * DOWN.roll * fk, 'XYZ')
     const hip = new THREE.Vector3(0, HIP_HEIGHT, 0)
     const target = new THREE.Vector3(0, DOWN.hipY, -DOWN.hipZ + flip * DOWN.hipZFlip)
@@ -621,7 +627,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         }
       }
       if (seat?.pose === 'lie') layBody(seat.hip)
-      else placeBody(fall)
+      else placeBody(fall, state.fallForward)
       stepClip(dt, down, Boolean(state.crouch || seat))
       const cascadeDt = run && !run.clip.loop ? dt * clipCascade : dt
       const targetWithoutBob = rig.fig.position.y - bob

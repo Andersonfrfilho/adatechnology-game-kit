@@ -107,6 +107,8 @@ export interface Player {
   knock(knock: Knock): void
   /** The knock on now, or null: `lying` 0..1 says how far down the body is. */
   readonly knocked: Readonly<Knock> | null
+  /** Whether the knock that put the body down pushed it toward its facing (falls face down) rather than from the front (falls on its back). */
+  readonly knockedForward: boolean
   dispose(): void
 }
 
@@ -135,6 +137,8 @@ const LOOK = 0.0022
 const LYING_EYE = 0.3
 const LYING_PITCH = 1.05
 const LYING_ROLL = 0.35
+/** Where the view of a body fallen face down turns to: below the level, at the ground under the face (radians). */
+const LYING_PITCH_FACE_DOWN = -1.05
 
 /**
  * First-person controller: WASD, Shift, Space, mouse look with pointer lock, and a drag-to-look fallback for pages where the lock is not
@@ -182,13 +186,14 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
 
   /** The knock of a blast on the body, while it lasts. */
   let knocked: Knock | null = null
+  let knockedForward = false
   /** Which way the view rolls when the body falls: toward the side the shove came from. */
   let rollSide = 1
   const apply = (): void => {
     const lying = knocked?.lying ?? 0
     // a fall eases in: the eye goes down to the floor and the view turns up to the sky, a little onto one side (on its back, thrown away from the blast)
     const fallen = lying * lying * (3 - 2 * lying)
-    euler.set(pitch + (LYING_PITCH - pitch) * fallen, yaw, LYING_ROLL * rollSide * fallen, 'YXZ')
+    euler.set(pitch + ((knockedForward ? LYING_PITCH_FACE_DOWN : LYING_PITCH) - pitch) * fallen, yaw, LYING_ROLL * rollSide * fallen, 'YXZ')
     cam.quaternion.setFromEuler(euler)
     const standing = eye - CROUCH_DROP * crouch - bend
     cam.position.set(px.x, floorLevel + y + standing + (LYING_EYE - standing) * fallen, px.z)
@@ -481,12 +486,17 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         // the view rolls to the side the shove pushes toward, seen from the facing
         const right = Math.cos(yaw) * next.velocity[0] - Math.sin(yaw) * next.velocity[2]
         rollSide = right >= 0 ? -1 : 1
+        // pushed from behind the body pitches onto its face; from the front (the blast seen) onto its back
+        knockedForward = -Math.sin(yaw) * next.velocity[0] - Math.cos(yaw) * next.velocity[2] > 0
         crouchLatched = false
       }
       if (knocked.airborne) vy = Math.max(vy, knocked.velocity[1])
     },
     get knocked() {
       return knocked
+    },
+    get knockedForward() {
+      return knockedForward
     },
     update(dt) {
       if (knocked) {
