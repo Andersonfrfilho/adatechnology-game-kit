@@ -24,6 +24,8 @@ export function collapseRange(mesh: any, v0: number, v1: number): Float32Array {
   const a = pos.array as Float32Array
   const u = mesh.userData
   if (!u._p0) u._p0 = a.slice()
+  // what a renderer that takes the range out of the mesh (a part that comes down) draws it with; not enumerable, so it stays out of what copies userData
+  if (!u.plainPositions) Object.defineProperty(u, 'plainPositions', { value: u._p0, enumerable: false, configurable: true, writable: true })
   const list: Array<[number, number]> = (u.collapsedRanges ??= [])
   if (!list.some((r) => r[0] === v0 && r[1] === v1)) list.push([v0, v1])
   const saved = a.slice(v0 * 3, v1 * 3)

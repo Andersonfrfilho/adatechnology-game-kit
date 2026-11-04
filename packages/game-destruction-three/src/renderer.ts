@@ -18,7 +18,7 @@ import { partHintOf, specFrameInverse } from './spec'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
-import { Visuals } from './visual'
+import { showCollapsedRanges, Visuals } from './visual'
 
 let rendererCount = 0
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
@@ -1320,6 +1320,7 @@ class Renderer implements DestructionRenderer {
         if (mv.host && !mv.loose) this.visuals.extract(mv, group)
         else {
           group.attach(mv.mesh)
+          showCollapsedRanges(mv.mesh)
           mv.moved = true
         }
       }

@@ -1,6 +1,7 @@
 import { checkSpec } from '@adatechnology/game-contracts'
 import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructionEvent } from '@adatechnology/game-destruction'
+import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import { wallPiece, wallPlan } from '../src'
@@ -104,6 +105,40 @@ describe('wallPiece', () => {
     for (let i = 0; i < 4; i++) world.shoot([0, 2, 5], [0, 0, -1], 3500, 7.62, 'test')
     expect(world.part(id, 'wall_0_0')!.chipped!.length).toBeGreaterThan(chipped)
     expect(world.part(id, 'wall_0_0')!.status).toBe('damaged')
+  })
+
+  it('a wall that comes down after its holes were drawn is still drawn, whole, by the piece it becomes, where the shots still hit it', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 7 })
+    const scene = new THREE.Scene()
+    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const id = world.add(piece.spec, { id: 'target', position: [0, 0, -11] })
+    const root = piece.build(THREE)
+    root.position.set(0, 0, -11)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind(id, root)
+    const follower = piece.follow(root, world, id)!
+    // rifle rounds knock bricks out: the house draws the wall with its holes and takes the plain wall out of the mesh
+    for (let i = 0; i < 6; i++) world.shoot([-2 + i * 0.3, 1.6, -5], [0, 0, -1], 2100, 7.62, 'test')
+    follower.update()
+    // the wall loses its footing and its bond beam (the mortar knocked off with a hammer): it comes down, a piece of its own
+    expect(world.disassemble(id, 'wall_0_0~ground', 'hammer', 60)).toBe(1)
+    expect(world.disassemble(id, 'plate_0_0~wall_0_0', 'hammer', 60)).toBe(1)
+    for (let i = 0; i < 120; i++) { world.update(1 / 60); renderer.update(1 / 60); follower.update() }
+    scene.updateMatrixWorld(true)
+    // the wall itself, not its baseboard or the sidewalk drawn with it
+    let wall: THREE.Mesh | undefined
+    scene.traverse((o) => { if (o instanceof THREE.Mesh && o.name.endsWith('/wall_0_0') && o.parent?.name.startsWith('destruction-piece-')) wall = o })
+    expect(wall).toBeDefined()
+    const drawn = new THREE.Box3().setFromObject(wall!, true)
+    expect(drawn.max.x - drawn.min.x).toBeGreaterThan(9.9)
+    expect(drawn.max.y - drawn.min.y).toBeGreaterThan(2.9)
+    const hit = world.raycast([0, 1.5, -8], [0, 0, -1], 10)!
+    expect(hit.part).toBe('wall_0_0')
+    expect(hit.point[1]).toBeGreaterThan(drawn.min.y)
+    expect(hit.point[1]).toBeLessThan(drawn.max.y)
+    follower.dispose()
   })
 
   it('is drawn by the house renderer, centred on the origin, with the wall meshes labelled by part', () => {
