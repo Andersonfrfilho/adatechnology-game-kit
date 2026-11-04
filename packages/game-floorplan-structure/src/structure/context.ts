@@ -38,6 +38,8 @@ export interface BuildContext {
   porchRoofOnPostsOnly: boolean
   /** Gable roofs are built as rafters of each side plus a ridge beam, so a side falls with the wall it rests on. */
   rafterRoof: boolean
+  /** Most metres between the pillars along a masonry wall (`StructureOptions.wallPillars`); 0: only the corner pillars. */
+  wallPillarSpacing: number
   floorCount: number
   isUnit: boolean
   elevation: number
@@ -65,6 +67,7 @@ export interface BuildContext {
 export interface ContextOptions {
   porchRoofOnPostsOnly: boolean
   rafterRoof: boolean
+  wallPillarSpacing: number
 }
 
 export function createContext(source: StructureSource, construction: Construction, extras: StructureExtras, tank: WaterTank | null, options: ContextOptions): BuildContext {
@@ -80,7 +83,7 @@ export function createContext(source: StructureSource, construction: Constructio
     source.rooms.filter((room) => room.floor === floor && !exclude.includes(room.type)).flatMap((room) => room.parts)
   const builder = new StructureBuilder()
   const context: BuildContext = {
-    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, floorCount, isUnit, elevation, isTimber: system.timber,
+    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, wallPillarSpacing: options.wallPillarSpacing, floorCount, isUnit, elevation, isTimber: system.timber,
     walls: [], wallParts: new Map(), carriers: new Map(), plates: new Map(), pillars: new Map(), porches: new Map(), base0: GROUND,
     houseBox: [0, 0, 0, 0], topBox: [0, 0, 0, 0], hasBasement: false,
     roof: { shape: 'slab', covering: '', material: '', pitch: 0, bearingFloor: 0, panes: [], trusses: 0 },

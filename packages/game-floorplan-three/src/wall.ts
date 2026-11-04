@@ -21,7 +21,7 @@ export interface WallPieceOptions {
 export interface WallPiece {
   /** The plan of the wall: one storey, one exterior wall, no rooms and no roof; its `structure` is the houses' load path. */
   readonly plan: any
-  /** The destructible spec, as a house gives it (`house.structure.spec()`): the wall with its layers, units and breach on the ground, and the bond beam on it. */
+  /** The destructible spec, as a house gives it (`house.structure.spec()`): the wall with its layers, units and breach on the ground, its concrete pillars (`wall_column_*`, at the ends and every 4 m at most) and the bond beam on both. */
   readonly spec: any
   /** Draws the wall with the house renderer: meshes carry `userData.destructionPart` of their part, in the space of the spec. */
   build(THREE: any): any

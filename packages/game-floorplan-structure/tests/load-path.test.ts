@@ -4,7 +4,7 @@ import { buildStructure, logCabinConstruction, toDestructibleSpec, woodFrameCons
 import type { Construction } from '../src'
 import { engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
-import { breakParts, idsStarting } from './world-helpers'
+import { breakParts, idsStarting, pillarsOfOneWall } from './world-helpers'
 
 const specOf = (construction: Construction | undefined, porch = 0, wallDetail: 'coarse' | 'panels' = 'panels') =>
   toDestructibleSpec(buildStructure(rectangularHouse({ width: 8, depth: 6, porch, ...(construction ? { construction } : {}) }), { wallDetail }), { wallDetail })
@@ -57,7 +57,7 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     return { result, spec: toDestructibleSpec(result.structure, { portico: true }) }
   }
 
-  it('flat-roof house: one corner pillar lost and the slab stays; all four and the slab is down', () => {
+  it('flat-roof house: one corner pillar lost and the slab stays; the four corners and the wall pillars carry it; every pillar and the slab is down', () => {
     const { spec } = frameOf('budget_slab_house')
     const pillars = idsStarting(spec, 'column_0_')
     const panels = idsStarting(spec, 'slab_top_p')
@@ -65,20 +65,22 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     expect(panels.length).toBeGreaterThan(1)
     const one = breakParts(spec, pillars.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
-    const all = breakParts(spec, pillars)
+    // the pillars along the walls carry the slab too: the four corners alone do not bring it down, every pillar of the storey does
+    expect(panels.every((id) => breakParts(spec, pillars).stands(id))).toBe(true)
+    const all = breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_')))
     expect(panels.some((id) => !all.stands(id))).toBe(true)
   })
 
-  it('two storeys: one pillar lost and the slab above and the roof stay; two and part of the slab above falls; all four and the roof falls too', () => {
+  it('two storeys: one pillar lost and the slab above and the roof stay; the pillars of one wall and part of the slab above falls; every pillar and the roof falls too', () => {
     const { spec } = frameOf('townhouse')
     const pillars = idsStarting(spec, 'column_0_')
     const panels = idsStarting(spec, 'slab_1_p')
     const one = breakParts(spec, pillars.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
     expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
-    const two = breakParts(spec, pillars.slice(0, 2))
+    const two = breakParts(spec, pillarsOfOneWall(spec, pillars, idsStarting(spec, 'wall_column_0_')))
     expect(panels.some((id) => !two.stands(id))).toBe(true)
-    const all = breakParts(spec, pillars)
+    const all = breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_')))
     expect(all.stands('roof_a') && all.stands('roof_b')).toBe(false)
   })
 
@@ -89,7 +91,7 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     const pillars = idsStarting(spec, 'column_0_')
     expect(pillars.length).toBeGreaterThan(2)
     expect(breakParts(spec, pillars.slice(0, 1)).stands('roof_a')).toBe(true)
-    expect(breakParts(spec, pillars).stands('roof_a')).toBe(false)
+    expect(breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_'))).stands('roof_a')).toBe(false)
   })
 
   it('the rebar of the concrete parts is declared by the construction (steel)', () => {

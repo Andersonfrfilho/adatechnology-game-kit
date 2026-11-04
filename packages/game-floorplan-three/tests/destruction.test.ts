@@ -5,6 +5,9 @@ import { describe, expect, it } from 'vitest'
 import type { House } from '../src'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
+/** What the tests read of a part of the structure. */
+type StructurePiece = { id: string; role: string; aabb: number[]; y0: number; y1: number }
+
 // The third slice: the house bound to the destruction of its structure (a vertex range per piece, brick courses at LOD 0, spalls and the rebar cage
 // from the renderer) with a real world of @adatechnology/game-destruction and the real renderer of @adatechnology/game-destruction-three.
 function setup(options: { template?: string; seed?: number; onDamage?: (...args: any[]) => void } = {}) {
@@ -324,8 +327,18 @@ describe('a wall cut where its units came out, at full detail', () => {
     s.run(0.5)
   })
 
-  it('takes the cut wall away when the wall comes down', () => {
-    const { house, d } = breach()
+  it('keeps the pillars and the bond beam standing where the wall came down, and takes the cut wall away when they come down too', () => {
+    const { house, d, events } = breach()
+    const wall = house.structure.byId.get('wall_0_0')
+    // the concrete pillars that stand in the wall (under its plaster) and the bond beam on it
+    const inWall = house.structure.parts.filter((p: StructurePiece) => p.role === 'column' && (p.aabb[0] + p.aabb[2]) / 2 >= wall.aabb[0] && (p.aabb[0] + p.aabb[2]) / 2 <= wall.aabb[2] && (p.aabb[1] + p.aabb[3]) / 2 >= wall.aabb[1] && (p.aabb[1] + p.aabb[3]) / 2 <= wall.aabb[3])
+    expect(inWall.length).toBeGreaterThan(1)
+    expect(events.some((e: { type: string; part?: string; parts?: Array<string | { id: string }> }) => (e.type === 'fracture' && e.part === 'wall_0_0') || (e.type === 'collapse' && (e.parts ?? []).some((p) => (typeof p === 'string' ? p : p.id) === 'wall_0_0')))).toBe(true)
+    expect(events.some((e: { type: string; part?: string }) => e.type === 'fracture' && inWall.some((p: StructurePiece) => p.id === e.part))).toBe(false)
+    const units = house.group.getObjectByName('breach:wall_0_0') as unknown as { count: number } | undefined
+    expect(units?.count).toBeGreaterThan(0)
+    expect(d.statistics().breached.walls).toBe(1)
+    for (const p of house.structure.parts) if (p.id !== 'wall_0_0') d.breach.drop(p.id)
     expect(house.group.getObjectByName('breach:wall_0_0')).toBeUndefined()
     expect(house.group.getObjectByName('breach-shell')).toBeUndefined()
     expect(d.statistics().breached.walls).toBe(0)

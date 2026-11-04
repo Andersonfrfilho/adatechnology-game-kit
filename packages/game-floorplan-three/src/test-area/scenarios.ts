@@ -82,10 +82,11 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
         const laj = slabs(parts)
         // the two pillars at the ends of one side of the frame: the beams of the frame carry the loss of one pillar (house_one_pillar), and a side that loses both ends is
         // left to the one pillar between them, so the slab and the roof come down on that side
-        const first = columns[0]
-        const mate = columns.slice(1).filter((p) => Math.abs(p.position[0] - first.position[0]) < 0.5).sort((a, b) => Math.abs(b.position[2] - first.position[2]) - Math.abs(a.position[2] - first.position[2]))[0] ?? columns[1]
-        blunt(room, oid, first.id, centre(first.id), 3e6)
-        blunt(room, oid, mate.id, centre(mate.id), 3e6)
+        const first = columns.find((p) => !/^wall_column_/.test(p.id)) ?? columns[0]
+        const mate = columns.filter((p) => p !== first && !/^wall_column_/.test(p.id)).filter((p) => Math.abs(p.position[0] - first.position[0]) < 0.5).sort((a, b) => Math.abs(b.position[2] - first.position[2]) - Math.abs(a.position[2] - first.position[2]))[0] ?? columns[1]
+        // the pillars the masonry has along that wall (`wall_column_`, between the corners) go too: the side is left to the frame's pillar between the ends
+        const along = columns.filter((p) => /^wall_column_/.test(p.id) && Math.abs(p.position[0] - first.position[0]) < 0.5)
+        for (const p of [first, mate, ...along]) blunt(room, oid, p.id, centre(p.id), 3e6)
         step(90)
         const fell = collapsed(list)
         expect(laj.some((id) => fell.includes(id)), fill(T.two_slab_fell as string, { n: fell.length }))

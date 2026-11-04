@@ -31,3 +31,24 @@ export function breakParts(spec: DestructibleSpec, removed: readonly string[], s
 }
 
 export const idsStarting = (spec: DestructibleSpec, prefix: string): string[] => spec.parts.filter((p) => p.id.startsWith(prefix)).map((p) => p.id)
+
+/**
+ * The ground pillars along one exterior wall: two corner pillars on the same line (x or z) and the wall pillars between them. Losing them takes away every
+ * support of the beam over that wall, as losing two corner pillars did before the walls had pillars between the corners.
+ */
+export function pillarsOfOneWall(spec: DestructibleSpec, corners: readonly string[], wallPillars: readonly string[]): string[] {
+  const at = (id: string) => spec.parts.find((p) => p.id === id)!.position
+  for (const a of corners) {
+    for (const b of corners) {
+      if (a >= b) continue
+      const [pa, pb] = [at(a), at(b)]
+      const axis: 0 | 2 | null = Math.abs(pa[0] - pb[0]) < 0.05 ? 0 : Math.abs(pa[2] - pb[2]) < 0.05 ? 2 : null
+      if (axis === null) continue
+      const along = axis === 0 ? 2 : 0
+      const [lo, hi] = [Math.min(pa[along], pb[along]), Math.max(pa[along], pb[along])]
+      const between = wallPillars.filter((id) => Math.abs(at(id)[axis] - pa[axis]) < 0.05 && at(id)[along] > lo && at(id)[along] < hi)
+      return [a, b, ...between]
+    }
+  }
+  return corners.slice(0, 2)
+}

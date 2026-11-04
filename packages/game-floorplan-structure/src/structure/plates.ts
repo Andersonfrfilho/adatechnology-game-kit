@@ -2,6 +2,7 @@ import { GROUND } from '../types'
 import type { Rect, StructurePart } from '../types'
 import { round2, touches } from '../geometry'
 import type { BuildContext, BuildWall } from './context'
+import { addWallPillars } from './wall-pillars'
 
 const MAX_GAP_WITHIN_RUN = 3.2
 const POST_SPACING = 2.4
@@ -120,11 +121,15 @@ function addCornerPillars(context: BuildContext, walls: readonly BuildWall[], fl
   })
 }
 
-/** Plates (bond beams) over the exterior walls of a storey and, in masonry, the corner pillars; records what carries the storey above. */
+/** Plates (bond beams) over the exterior walls of a storey and, in masonry, the corner pillars and the pillars along the walls (`addWallPillars`); records what carries the storey above. */
 export function addPlatesAndPillars(context: BuildContext, floor: number): void {
   const walls = context.walls.filter((wall) => wall.floor === floor)
   const { plates, pillars } = addPlates(context, walls, floor)
-  if (context.construction.system === 'masonry') pillars.push(...addCornerPillars(context, walls, floor, plates))
+  if (context.construction.system === 'masonry') {
+    const corners = addCornerPillars(context, walls, floor, plates)
+    pillars.push(...corners)
+    if (context.wallPillarSpacing) pillars.push(...addWallPillars(context, walls, floor, plates, corners, context.wallPillarSpacing))
+  }
   context.pillars.set(floor, pillars)
   context.plates.set(floor, plates)
   const innerBearing = walls.filter((wall) => wall.role === 'wall' && !wall.exterior).map((wall) => context.wallParts.get(wall.id)!)
