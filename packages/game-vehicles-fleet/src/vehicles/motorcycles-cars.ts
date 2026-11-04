@@ -1411,7 +1411,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   function fogLamp(c: any, s: any, r: any) {
     onSurf(c.cylinder(r * 1.4, r * 1.4, 0.014, LH, 0, 0, 0), s, 0.006).castShadow = false
     onSurf(c.cylinder(r, r, 0.012, REFL, 0, 0, 0), s, 0.012).castShadow = false
-    onSurf(c.sphere(r * 0.45, MT.head, 0, 0, 0, 1, 0.5, 1), s, 0.016).castShadow = false
+    const bulb = onSurf(c.sphere(r * 0.45, MT.head, 0, 0, 0, 1, 0.5, 1), s, 0.016)
+    bulb.castShadow = false
+    // the lamp switch finds the bulb here (game-vehicles-three createVehicleLamps); kept on the context, the drawing stays as it was
+    ;(c.fogBulbs ??= []).push(bulb)
   }
 
   /* body crease (character line): thin step in the car colour that follows the side through points [x, y], with a thin shadow fillet below */

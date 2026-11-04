@@ -416,6 +416,11 @@ export interface ModuleHost {
    * that keeps its camera to itself leaves it out.
    */
   setViewCamera?(camera: unknown | null): void
+  /**
+   * Holds the walking player where it stands (true) or lets it walk again (false): the movement keys then belong to the module (a vehicle the player drives). Mouse look,
+   * the panels and the room's other keys keep working. A host without a walking player leaves it out.
+   */
+  holdPlayer?(held: boolean): void
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
   /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */

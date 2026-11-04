@@ -57,6 +57,24 @@ describe('proving ground area', () => {
     room.dispose()
   })
 
+  it('climbs the gears in order on the 0-100 run, logs each shift and shows the gear live on the board', () => {
+    const { room, module, bench } = setUp()
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    bench.set('time_scale', 1)
+    bench.act('run_test')
+    for (let i = 0; i < 900 && module.certificate('compact_hatch')?.results[0]?.verdict === 'pending'; i++) room.update(1 / 30)
+    const shifts = room.log.entries().filter((e) => e.type === 'proving_shift').map((e) => e.data as { from: number; to: number; kmh: number; rpm: number })
+    // the automatic goes up one gear at a time, each at a higher speed, the engine back under its peak after each shift
+    expect(shifts.length).toBeGreaterThanOrEqual(2)
+    shifts.forEach((s, i) => {
+      expect(s.to).toBe(s.from + 1)
+      if (i > 0) expect(s.kmh).toBeGreaterThan(shifts[i - 1]!.kmh)
+    })
+    expect(shifts[0]!.from).toBe(1)
+    room.dispose()
+  })
+
   it('certifies at once and takes the sign-off of a visual check (a refused one rejects the vehicle)', () => {
     const { room, module, bench } = setUp()
     room.openArea(PROVING_AREA_ID)
@@ -89,6 +107,47 @@ describe('proving ground area', () => {
     expect(named(room, 'proving_track')).toBeUndefined()
     expect(named(room, 'reverse_guides')).toBeUndefined()
     expect(disposed.length).toBeGreaterThan(5)
+    room.dispose()
+  })
+
+  it('lets the player drive: the keys go to the car (the room does not hear them), the key starts it, the lamps switch and F gets out', () => {
+    const { room, module, bench } = setUp()
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    const key = (code: string, down: boolean): void => void document.body.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, bubbles: true, cancelable: true }))
+    const press = (code: string): void => {
+      key(code, true)
+      key(code, false)
+    }
+    // what the room hears: a listener on the window as the room's own (bubble phase)
+    const heard: string[] = []
+    const listen = (e: KeyboardEvent): void => void heard.push(e.code)
+    window.addEventListener('keydown', listen)
+    bench.act('drive')
+    room.update(1 / 30)
+    press('KeyI')
+    key('KeyW', true)
+    for (let i = 0; i < 90; i++) room.update(1 / 30)
+    // the room never heard W: the car took it
+    expect(heard).not.toContain('KeyW')
+    expect(module.metrics!('en').find((m) => m.id === 'speed')!.read()).toBeGreaterThan(20)
+    key('KeyW', false)
+    // lamps: low beam takes two spots of the room's light budget
+    const lit = (): number => room.lights?.stats().sources ?? -1
+    const before = lit()
+    press('KeyL')
+    press('KeyL')
+    room.update(1 / 30)
+    if (before >= 0) expect(lit()).toBe(before + 2)
+    expect(room.log.entries().some((e) => String(e.text).includes('low beam'))).toBe(true)
+    press('KeyF')
+    room.update(1 / 30)
+    if (before >= 0) expect(lit()).toBe(before)
+    // out of the car, W is the room's again
+    key('KeyW', true)
+    key('KeyW', false)
+    expect(heard).toContain('KeyW')
+    window.removeEventListener('keydown', listen)
     room.dispose()
   })
 })
