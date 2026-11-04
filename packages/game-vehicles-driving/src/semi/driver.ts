@@ -10,6 +10,10 @@ const clamp = (x: number, a: number, b: number): number => Math.max(a, Math.min(
 const MAX_SUBSTEP = 1 / 240
 const FLAT_BELOW = 0.2
 const STALL_HEALTH = 0.3
+/** Clutch: engaged past this share it drags the engine; below this share of the idle, with less gas than `STALL_GAS`, the engine dies. */
+const CLUTCH_BITE = 0.7
+const STALL_RPM = 0.5
+const STALL_GAS = 0.35
 
 /** A mid-size passenger car, so a game can start from numbers that drive like a car. Every field can be replaced. */
 export const defaultSemiSpec: SemiSimSpec = {
@@ -185,7 +189,15 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
     const accelInput = reversing ? input.brake : input.throttle
     const brakeInput = clamp(reversing ? input.throttle : input.brake, 0, 1)
     const ratio = ratioOf(state.gear) * spec.finalDrive
-    state.rpm = clamp(wheelRpm * ratio, spec.engine.idleRpm, spec.engine.redlineRpm + 200)
+    // the clutch: pressed it frees the engine from the wheels; released in gear below about half the idle it drags the engine down
+    const engaged = input.clutch == null || state.gear === 0 ? 1 : 1 - clamp(input.clutch, 0, 1)
+    const coupled = wheelRpm * ratio
+    const free = spec.engine.idleRpm + clamp(accelInput, 0, 1) * (spec.engine.redlineRpm * 0.7 - spec.engine.idleRpm)
+    state.rpm = clamp(coupled * engaged + Math.max(coupled, free) * (1 - engaged), spec.engine.idleRpm, spec.engine.redlineRpm + 200)
+    if (input.clutch != null && state.gear !== 0 && state.engineOn && engaged > CLUTCH_BITE && coupled < spec.engine.idleRpm * STALL_RPM && accelInput < STALL_GAS) {
+      state.engineOn = false
+      events.push({ type: 'stall' })
+    }
     if (!state.engineOn || state.fuel <= 0) state.rpm = 0
     // engine torque: a wrecked engine fails to deliver at full throttle, and under 30% it can die uphill
     let throttle = clamp(accelInput, 0, 1)
@@ -197,12 +209,13 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       }
       throttle *= 0.5
     } else stallWatch.throttleTime = 0
-    if (!state.engineOn && accelInput > 0 && Math.abs(state.u) < 0.5 && engineHealth >= STALL_HEALTH && state.fuel > 0) state.engineOn = true
+    const starting = input.start ?? (accelInput > 0 && Math.abs(state.u) < 0.5)
+    if (!state.engineOn && starting && engineHealth >= STALL_HEALTH && state.fuel > 0) state.engineOn = true
     if (state.fuel <= 0 && state.engineOn) {
       state.engineOn = false
       events.push({ type: 'out_of_fuel' })
     }
-    const engineTorque = state.engineOn ? torqueAt(spec, state.rpm) * throttle * (0.55 + 0.45 * engineHealth) : 0
+    const engineTorque = state.engineOn ? torqueAt(spec, state.rpm) * throttle * (0.55 + 0.45 * engineHealth) * clamp(input.powerLimit ?? 1, 0, 1) * engaged : 0
     const driveForceTotal = state.gear === 0 ? 0 : ((reversing ? -1 : 1) * engineTorque * ratio * spec.efficiency) / spec.wheelRadius
     // fuel
     if (state.engineOn) {

@@ -124,3 +124,22 @@ export function stepKnock(knock: Knock, position: { x: number; y: number; z: num
   } else if (knock.lying > 0) knock.lying = Math.max(0, knock.lying - dt / RISE_SECONDS)
   return !moving && !knock.down && knock.lying === 0
 }
+
+/** Where `launchBody` leaves the throw on the body's root until the module that animates it takes it. */
+const LAUNCHED = 'launched'
+
+/**
+ * Throws a body at `velocity` (m/s, world): an occupant leaving a car through the glass, a pedestrian run over. The module that animates the body
+ * takes it on its next frame (`takeLaunch`) and moves it as it moves a body a blast knocked down: flying, landing, sliding, lying, getting up.
+ */
+export function launchBody(root: { userData: Record<string, unknown> }, velocity: Vec3): void {
+  root.userData[LAUNCHED] = [velocity[0], velocity[1], velocity[2]]
+}
+
+/** The throw `launchBody` left on the root, as a knock (knocked down, in the air), once; undefined when nothing threw it. */
+export function takeLaunch(root: { userData: Record<string, unknown> }): Knock | undefined {
+  const velocity = root.userData[LAUNCHED] as Vec3 | undefined
+  if (!velocity) return undefined
+  delete root.userData[LAUNCHED]
+  return { velocity: [velocity[0], velocity[1], velocity[2]], airborne: true, lying: 0, lieLeft: 0, down: true }
+}

@@ -24,4 +24,6 @@ export interface FleetContext {
   t(key: string, vars?: Record<string, unknown>): string
   /** Builds the label object of a part or glass pane from `fleet.labels.<key>`. */
   label(key: string): FleetLabel
+  /** The game asked for a sunroof on this vehicle (`FleetOptions.sunroofs`). */
+  hasSunroof(key: string): boolean
 }

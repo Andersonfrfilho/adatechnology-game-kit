@@ -1,8 +1,11 @@
 /**
- * The controls of a vehicle someone drives: pedals, wheel, gearbox (automatic or manual), handbrake (held or pulled), ignition, drive mode (4x2, 4x4,
- * automatic 4x4), lamps (position, low, high, fog, interior), horn, alarm and radio. It turns key codes into a `SemiInput` for the semi driver and keeps
+ * The controls of a vehicle someone drives: pedals (the clutch too), wheel, gearbox (automatic or manual), handbrake (held or pulled), ignition and
+ * starter, drive mode (4x2, 4x4, automatic 4x4), drive profile (eco, normal, sport), traction control, ABS, cruise control, lamps (position, low,
+ * high, flash, fog, interior), wipers and washer, climate and demister, horn, alarm and radio. It turns key codes into a `SemiInput` for the semi driver and keeps
  * what the cabin shows; it draws and plays nothing (an adapter reads `state` for the lamps and the sounds). Every key is an option.
  */
+import { cruiseThrottle, DEFAULT_CRUISE, DRIVE_PROFILES, tractionLimit } from './driving-aids'
+import type { DriveProfile } from './driving-aids'
 import type { SemiInput } from './semi/types'
 
 export type ControlCommand =
@@ -19,12 +22,19 @@ export type ControlCommand =
   | 'alarm'
   | 'radio'
   | 'radio_source'
+  | 'radio_track'
   | 'exit'
   | 'indicator_left'
   | 'indicator_right'
   | 'hazard'
   | 'wipers'
   | 'seatbelt'
+  | 'drive_profile'
+  | 'traction_control'
+  | 'abs'
+  | 'cruise'
+  | 'climate'
+  | 'demist'
 
 export type ControlKeyMap = {
   readonly throttle: readonly string[]
@@ -33,6 +43,10 @@ export type ControlKeyMap = {
   readonly right: readonly string[]
   readonly handbrake: readonly string[]
   readonly horn: readonly string[]
+  readonly clutch: readonly string[]
+  /** Flashes the high beam while held. */
+  readonly flash: readonly string[]
+  readonly washer: readonly string[]
 } & { readonly [command in ControlCommand]: readonly string[] }
 
 /** Keys of a keyboard (`KeyboardEvent.code`). The host keeps them from its own bindings while someone drives. */
@@ -43,6 +57,9 @@ export const DEFAULT_CONTROL_KEYS: ControlKeyMap = {
   right: ['KeyD', 'ArrowRight'],
   handbrake: ['Space'],
   horn: ['KeyH'],
+  clutch: ['KeyC'],
+  flash: ['KeyX'],
+  washer: ['KeyZ'],
   ignition: ['KeyI'],
   gearbox: ['KeyM'],
   gear_up: ['KeyE'],
@@ -56,13 +73,21 @@ export const DEFAULT_CONTROL_KEYS: ControlKeyMap = {
   alarm: ['KeyY'],
   radio: ['KeyR'],
   radio_source: ['KeyT'],
+  radio_track: ['BracketRight'],
   exit: ['KeyF'],
   indicator_left: ['Comma'],
   indicator_right: ['Period'],
   hazard: ['KeyB'],
   wipers: ['KeyO'],
   seatbelt: ['KeyJ'],
+  drive_profile: ['Digit7'],
+  traction_control: ['Digit8'],
+  abs: ['Digit9'],
+  cruise: ['Digit0'],
+  climate: ['Minus'],
+  demist: ['Equal'],
 }
+const HELD_KEYS = ['throttle', 'brake', 'left', 'right', 'handbrake', 'horn', 'clutch', 'flash', 'washer']
 
 export type Gearbox = 'automatic' | 'manual'
 export type DriveMode = '4x2' | '4x4' | 'auto'
@@ -70,7 +95,7 @@ export type LampMode = 'off' | 'position' | 'low' | 'high'
 export type AlarmState = 'off' | 'armed' | 'ringing'
 export type RadioSource = 'radio' | 'tape'
 export type Indicator = 'off' | 'left' | 'right' | 'hazard'
-export type Wipers = 'off' | 'slow' | 'fast'
+export type Wipers = 'off' | 'intermittent' | 'slow' | 'fast'
 
 export interface ControlState {
   ignition: boolean
@@ -82,22 +107,39 @@ export interface ControlState {
   driveMode: DriveMode
   /** The front axle drives now (4x4, or automatic 4x4 that felt the rear slip). */
   fourWheelEngaged: boolean
-  lamps: { mode: LampMode; fog: boolean; interior: boolean }
+  /** `flash`: the high beam lit while the flash key is held, over any mode. */
+  lamps: { mode: LampMode; fog: boolean; interior: boolean; flash: boolean }
   /** What the rear lamps show this step: brake (pedal or handbrake) and reversing. */
   brakeLights: boolean
   reverseLights: boolean
   horn: boolean
   alarm: AlarmState
-  radio: { on: boolean; source: RadioSource }
+  /** `track`: the station or the song on the tape, 0-based (`radioTracks` of them). */
+  radio: { on: boolean; source: RadioSource; track: number }
   indicator: Indicator
   /** The indicator lamps are lit this instant (they blink at `blinkHz`); `tick` is true on the step the relay clicks. */
   blinkOn: boolean
   tick: boolean
   wipers: Wipers
+  /** The washer squirts while its key is held (the wipers sweep with it). */
+  washer: boolean
   seatbelt: boolean
+  /** Clutch pedal, 0 up to 1 down (manual gearbox). */
+  clutch: number
+  profile: DriveProfile
+  tractionControl: boolean
+  abs: boolean
+  /** Cruise control: the speed it holds, m/s. */
+  cruise: { on: boolean; speed: number }
+  climate: { on: boolean; demist: boolean }
+  /** The starter turns this step. */
+  cranking: boolean
 }
 
-export type ControlEvent = { type: 'command'; command: ControlCommand; state: ControlState } | { type: 'refused'; command: ControlCommand; reason: 'no_four_wheel_drive' | 'no_fog_lamps' | 'ignition_off' }
+export type ControlEvent =
+  | { type: 'command'; command: ControlCommand; state: ControlState }
+  | { type: 'refused'; command: ControlCommand; reason: 'no_four_wheel_drive' | 'no_fog_lamps' | 'ignition_off' | 'battery_flat' | 'too_slow' }
+  | { type: 'cruise_cancelled' }
 
 export interface VehicleControlOptions {
   /** Forward gears of the gearbox. */
@@ -116,12 +158,22 @@ export interface VehicleControlOptions {
   blinkHz?: number
   /** The steering wheel coming back this far (0..1 of the lock) after a turn cancels the indicator, as the column does. Default 0.15. */
   indicatorCancel?: number
+  /** Stations or songs the radio steps through (`radio_track`). Default 3. */
+  radioTracks?: number
+  /** The driver works the clutch (C) in manual: released in gear too slowly or without gas, the engine stalls. Default false (the clutch is automated). */
+  clutchPedal?: boolean
+  /** The starter can turn the engine over (a battery with charge); asked at every crank. Default always. */
+  canCrank?: () => boolean
+  /** A crank happened (takes the battery's energy). */
+  onCrank?: () => void
+  /** Share of the torque the engine gives besides the aids (an overheated engine). Default 1. */
+  powerLimit?: () => number
   onEvent?: (event: ControlEvent) => void
 }
 
 /** What the controls read of the driver each step, and the one thing they change on it (which axles drive). */
 export interface ControlledDriver {
-  readonly spec: { fourWheelDrive: boolean }
+  readonly spec: { fourWheelDrive: boolean; abs?: boolean; upshiftFraction?: number; downshiftFraction?: number; readonly wheels?: ReadonlyArray<{ drive?: boolean }> }
   readonly state: { u: number; gear: number; slip: readonly number[]; engineOn: boolean }
 }
 
@@ -147,7 +199,7 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
   const held = new Set<string>()
   const any = (codes: readonly string[]): boolean => codes.some((c) => held.has(c))
   const commandOf = new Map<string, ControlCommand>()
-  for (const [command, codes] of Object.entries(keys)) if (!['throttle', 'brake', 'left', 'right', 'handbrake', 'horn'].includes(command)) for (const code of codes) commandOf.set(code, command as ControlCommand)
+  for (const [command, codes] of Object.entries(keys)) if (!HELD_KEYS.includes(command)) for (const code of codes) commandOf.set(code, command as ControlCommand)
   const driving = new Set<string>(Object.values(keys).flat())
 
   const state: ControlState = {
@@ -157,18 +209,29 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
     parkingBrake: false,
     driveMode: options.fourWheelDrive ? 'auto' : '4x2',
     fourWheelEngaged: false,
-    lamps: { mode: 'off', fog: false, interior: false },
+    lamps: { mode: 'off', fog: false, interior: false, flash: false },
     brakeLights: false,
     reverseLights: false,
     horn: false,
     alarm: 'off',
-    radio: { on: false, source: 'radio' },
+    radio: { on: false, source: 'radio', track: 0 },
     indicator: 'off',
     blinkOn: false,
     tick: false,
     wipers: 'off',
+    washer: false,
     seatbelt: false,
+    clutch: 0,
+    profile: 'normal',
+    tractionControl: true,
+    abs: true,
+    cruise: { on: false, speed: 0 },
+    climate: { on: false, demist: false },
+    cranking: false,
   }
+  let crankAsked = false
+  let lastSpeed = 0
+  let engineRunning = !!options.running
   const blinkHz = options.blinkHz ?? 1.5
   const cancelAt = options.indicatorCancel ?? 0.15
   let blink = 0
@@ -180,17 +243,22 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
   const emit = (event: ControlEvent): void => options.onEvent?.(event)
   const LAMPS: readonly LampMode[] = ['off', 'position', 'low']
   const MODES: readonly DriveMode[] = ['4x2', '4x4', 'auto']
+  const WIPERS: readonly Wipers[] = ['off', 'intermittent', 'slow', 'fast']
+  const PROFILES: readonly DriveProfile[] = ['eco', 'normal', 'sport']
 
   const command = (c: ControlCommand): void => {
     switch (c) {
       case 'ignition':
         state.ignition = !state.ignition
-        // the driver turning the key disarms the alarm; turning it off leaves the radio playing on the battery
+        // the driver turning the key disarms the alarm and cranks; turning it off leaves the radio playing on the battery
         if (state.ignition && state.alarm !== 'off') state.alarm = 'off'
+        if (state.ignition) crankAsked = true
+        else state.cruise.on = false
         break
       case 'gearbox':
         state.gearbox = state.gearbox === 'automatic' ? 'manual' : 'automatic'
-        state.gear = Math.max(1, state.gear)
+        // with a clutch to work, a manual starts in neutral (in gear with the clutch up it would stall at once)
+        state.gear = options.clutchPedal && state.gearbox === 'manual' && Math.abs(lastSpeed) < 0.5 ? 0 : Math.max(1, state.gear)
         break
       case 'gear_up':
       case 'gear_down':
@@ -232,6 +300,9 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
       case 'radio_source':
         state.radio.source = state.radio.source === 'radio' ? 'tape' : 'radio'
         break
+      case 'radio_track':
+        state.radio.track = (state.radio.track + 1) % Math.max(1, options.radioTracks ?? 3)
+        break
       case 'exit':
         break
       case 'indicator_left':
@@ -249,7 +320,31 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
         blink = 0
         break
       case 'wipers':
-        state.wipers = state.wipers === 'off' ? 'slow' : state.wipers === 'slow' ? 'fast' : 'off'
+        state.wipers = WIPERS[(WIPERS.indexOf(state.wipers) + 1) % WIPERS.length] as Wipers
+        break
+      case 'drive_profile':
+        state.profile = PROFILES[(PROFILES.indexOf(state.profile) + 1) % PROFILES.length] as DriveProfile
+        break
+      case 'traction_control':
+        state.tractionControl = !state.tractionControl
+        break
+      case 'abs':
+        state.abs = !state.abs
+        break
+      case 'cruise':
+        if (state.cruise.on) state.cruise.on = false
+        else if (!engineRunning) return emit({ type: 'refused', command: c, reason: 'ignition_off' })
+        else if (lastSpeed < DEFAULT_CRUISE.minSpeed) return emit({ type: 'refused', command: c, reason: 'too_slow' })
+        else state.cruise = { on: true, speed: lastSpeed }
+        break
+      case 'climate':
+        state.climate.on = !state.climate.on
+        if (!state.climate.on) state.climate.demist = false
+        break
+      case 'demist':
+        // the air conditioning dries the air: the demister runs it
+        state.climate.demist = !state.climate.demist
+        if (state.climate.demist) state.climate.on = true
         break
       case 'seatbelt':
         state.seatbelt = !state.seatbelt
@@ -298,19 +393,54 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
         }
       } else state.blinkOn = false
       state.horn = any(keys.horn)
-      // the key off: no gas reaches the engine (the pedal would start it); the brakes still work
-      const gasNow = state.ignition ? throttle : 0
+      state.lamps.flash = any(keys.flash)
+      state.washer = any(keys.washer)
+      // the clutch goes down fast and comes up as slowly as a foot lets it, so it bites on the way
+      state.clutch = ease(state.clutch, any(keys.clutch) ? 1 : 0, any(keys.clutch) ? 8 : 2.5, dt)
+      const speed = driver?.state.u ?? 0
+      lastSpeed = speed
+      // the brake, the clutch or the handbrake cancel cruise control
+      if (state.cruise.on && (brake > 0.05 || state.clutch > 0.5 || handbrake)) {
+        state.cruise.on = false
+        emit({ type: 'cruise_cancelled' })
+      }
+      // the key off: no gas reaches the engine; the brakes still work
+      const tune = DRIVE_PROFILES[state.profile]
+      let gasNow = state.ignition ? throttle * tune.throttle : 0
+      if (state.cruise.on && state.ignition) gasNow = Math.max(gasNow, cruiseThrottle(state.cruise.speed, speed))
+      // the starter: the key turned, or (automatic, key on) the gas pressed after the engine died with the car still
+      const gasStart = state.gearbox === 'automatic' && state.ignition && !engineRunning && throttle > 0 && Math.abs(speed) < 0.5
+      state.cranking = false
+      if (crankAsked || gasStart) {
+        crankAsked = false
+        if (options.canCrank && !options.canCrank()) emit({ type: 'refused', command: 'ignition', reason: 'battery_flat' })
+        else {
+          state.cranking = true
+          options.onCrank?.()
+        }
+      }
+      const driven = (driver?.state.slip ?? []).filter((_, i) => driver?.spec.wheels?.[i]?.drive ?? true)
+      const powerLimit = (state.tractionControl ? tractionLimit(driven) : 1) * (options.powerLimit?.() ?? 1)
       const reversing = state.gearbox === 'manual' ? state.gear < 0 : (driver?.state.gear ?? 1) < 0
       state.reverseLights = reversing
-      state.brakeLights = handbrake || (reversing ? gasNow > 0.05 && (driver?.state.u ?? 0) < -0.3 : brake > 0.05)
-      if (state.gearbox === 'automatic') return { throttle: gasNow, brake, steer, handbrake, horn: state.horn }
+      state.brakeLights = handbrake || (reversing ? gasNow > 0.05 && speed < -0.3 : brake > 0.05)
+      const common = { steer, handbrake, horn: state.horn, start: state.cranking, powerLimit }
+      if (state.gearbox === 'automatic') return { ...common, throttle: gasNow, brake }
       // manual: the gas drives the chosen gear either way (backwards in reverse) and the brake only brakes; the driver reads the pedals against the direction of travel
-      return state.gear < 0 ? { throttle: brake, brake: gasNow, steer, handbrake, horn: state.horn, gear: state.gear } : { throttle: gasNow, brake, steer, handbrake, horn: state.horn, gear: state.gear }
+      const pedals = state.gear < 0 ? { throttle: brake, brake: gasNow } : { throttle: gasNow, brake }
+      return { ...common, ...pedals, gear: state.gear, ...(options.clutchPedal ? { clutch: state.clutch } : {}) }
     },
     after(driver, dt) {
-      // the gas pedal started the engine (the semi driver does when it stalled): the key is on
-      if (driver.state.engineOn && !state.ignition && driver.state.u !== 0) state.ignition = true
       if (!state.ignition && driver.state.engineOn) (driver.state as { engineOn: boolean }).engineOn = false
+      engineRunning = driver.state.engineOn
+      if (!engineRunning) state.cruise.on = false
+      // the aids reach the driver: ABS on the brakes, the profile on the shift points
+      const spec = driver.spec as { abs?: boolean; upshiftFraction?: number; downshiftFraction?: number }
+      spec.abs = state.abs
+      if (spec.upshiftFraction != null) {
+        spec.upshiftFraction = DRIVE_PROFILES[state.profile].upshift
+        spec.downshiftFraction = DRIVE_PROFILES[state.profile].downshift
+      }
       if (state.driveMode === 'auto' && options.fourWheelDrive) {
         const slip = Math.max(0, ...driver.state.slip)
         if (slip > auto4.slip) {
@@ -324,6 +454,10 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
       held.clear()
       throttle = brake = steer = 0
       state.horn = false
+      state.lamps.flash = false
+      state.washer = false
+      state.clutch = 0
+      state.cruise.on = false
     },
   }
 }

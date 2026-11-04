@@ -91,6 +91,8 @@ export { sceneMany, sceneNoise, sceneRecipe, sceneTone, sceneVoice } from './rec
 export type { SceneLength, SceneNoise, SceneRecipeOptions, SceneTone, SceneVoice } from './recipes/scene'
 export { LIBRARY_BANK, LIBRARY_LOOPS, LIBRARY_SOUNDS } from './library'
 export { CABIN_BANK, CABIN_SOUNDS } from './library/cabin'
+export { RADIO_BANK, RADIO_TRACKS, radioTrack } from './library/radio'
+export type { RadioSong } from './library/radio'
 export { FOLEY_BANK, FOLEY_FALLOFF, ITEM_FOLEY, LEAF_FOLEY, LEAF_FOLEY_SETS, PICKUP_CLASSES } from './recipes/foley'
 export type { LeafFoley, PickupClass } from './recipes/foley'
 export { BODY_FALLOFF, BODY_FOLEY_BANK, BODY_FOLEY_SET_IDS, BODY_FOLEY_TAKES, FOOTSTEP_FALLOFF } from './recipes/body-foley'

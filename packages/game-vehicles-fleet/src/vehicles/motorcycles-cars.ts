@@ -1,4 +1,5 @@
 import type { FleetContext } from '../context'
+import { tagWiper } from './moving-parts'
 
 /* Group A, motorcycles and cars. Uses only the kit API.
    Cars: local car() builder, a copy of the base car builder with integrated bumpers, black pillars, per-model cut-outs
@@ -1241,8 +1242,12 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     /* wipers, antenna */
     const wy = gh.belt + 0.06,
       wx = gh.fb - 0.03
-    ;[-0.3, 0.2].forEach(function (z) {
-      c.rod(new V3(wx + 0.02, wy, z + 0.02), new V3(wx - 0.13, wy + 0.13, z - 0.36), 0.009, MT.trim)
+    ;[-0.3, 0.2].forEach(function (z, index) {
+      const spindle = new V3(wx + 0.02, wy, z + 0.02)
+      const blade = c.rod(spindle, new V3(wx - 0.13, wy + 0.13, z - 0.36), 0.009, MT.trim)
+      // the arm lies on the glass: its spindle turns about the windshield's normal
+      const along = new V3(gh.ft - gh.fb, gh.roof - gh.belt, 0).normalize()
+      tagWiper({ context: c, parts: [blade], spindle, normal: new V3(along.y, -along.x, 0), index })
     })
     if (s.fin !== false)
       c.sphere(0.1, s.roofCol ? c.paint(s.roofCol) : GLOSS, gh.rt + 0.2, roofAt(gh, gh.rt + 0.2) + 0.045, 0, 1.0, 0.45, 0.28, {

@@ -74,6 +74,14 @@ export const CABIN_SOUNDS: readonly SoundRecipe[] = [
     layers: [{ source: { kind: 'osc', wave: 'sine', frequency: { set: 880 } }, repeat: { count: 3, spacing: 0.7 }, envelope: [[0, 0.06, 'set'], [0.5, 0.0001, 'exp', 'fixed']] }],
     falloff: { model: 'none' },
   },
+  {
+    // the parking sensor: a short high beep, repeated by the cabin faster as the obstacle comes close
+    id: 'parking_beep',
+    bus: 'world',
+    duration: 0.09,
+    layers: [{ source: { kind: 'osc', wave: 'sine', frequency: { set: 2300 } }, envelope: [[0, 0.07, 'set'], [0.08, 0.0001, 'exp', 'fixed']] }],
+    falloff: { model: 'none' },
+  },
 ] as unknown as readonly SoundRecipe[]
 
 export const CABIN_BANK: SoundBank = { id: 'vehicle_cabin', sounds: CABIN_SOUNDS, loops: [] }

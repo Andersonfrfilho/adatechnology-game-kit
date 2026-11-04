@@ -24,7 +24,7 @@ import { createCrowd } from './crowd'
 import type { Crowd } from './crowd'
 import { HIT_PRESETS, hitFor, hitPresetOf } from './hits'
 import { personSpecOf } from './person-spec'
-import { bodyMass, KNOCK_CHEST, knockOf, KNOCKED_DOWN_ANGLE, stepKnock } from './knock'
+import { bodyMass, KNOCK_CHEST, knockOf, KNOCKED_DOWN_ANGLE, stepKnock, takeLaunch } from './knock'
 import type { Knock } from './knock'
 import { createScenarios } from './scenarios'
 import type { AreaContext, ScenarioDeps } from './scenarios'
@@ -262,6 +262,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
 
   const animate = (entry: Entry, dt: number): void => {
     const { root, character } = entry
+    // thrown by something else (out of a crashed car, run over): it flies and falls as from a blast
+    const launched = takeLaunch(root as unknown as { userData: Record<string, unknown> })
+    if (launched) entry.knock = launched
     if (entry.knock) {
       const rig = root.userData.rig as { fig: { rotation: { x: number } } } | undefined
       const ground = (x: number, z: number): number => host?.groundAt(x, z) ?? 0

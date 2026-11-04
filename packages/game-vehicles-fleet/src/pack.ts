@@ -27,6 +27,8 @@ export interface FleetOptions {
   vehicles?: readonly FleetVehicleId[]
   /** Vehicles to leave out. */
   exclude?: readonly FleetVehicleId[]
+  /** Vehicles that get a sliding sunroof, the cars of the hatch and sedan builder can draw one. Default none: the team's models as delivered. */
+  sunroofs?: readonly FleetVehicleId[]
   /** Register the generic damage scenarios and make the front crash the default damage (default `true`). */
   scenarios?: boolean
 }
@@ -79,6 +81,7 @@ function createContext(kit: VehicleKit, options: FleetOptions): FleetContext {
     shared,
     t,
     label: (key: string): FleetLabel => ({ key, label: t('labels.' + key) }),
+    hasSunroof: (key: string): boolean => !!options.sunroofs?.includes(key as FleetVehicleId),
     register(spec: VehicleSpec, build) {
       if (!groups.has(spec.group as string) || (only && !only.has(spec.key)) || skip.has(spec.key)) return
       kit.register({ ...spec, seedKey: legacyVehicleSeeds[spec.key] }, build)

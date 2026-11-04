@@ -65,6 +65,12 @@ export interface VehicleCondition {
 export interface SemiInput extends DriveInput {
   /** Forces a gear (1-based, 0 = neutral, -1 = reverse). Absent = automatic. */
   gear?: number
+  /** Clutch pedal, 0 released (engaged) to 1 pressed. Absent = no clutch (automatic). Released in gear at too low a speed without gas, the engine stalls. */
+  clutch?: number
+  /** The starter turns this step. When given, it is the only way the engine starts again (no gas-pedal start). */
+  start?: boolean
+  /** Share of the engine torque allowed this step, 0..1 (traction control cutting, an overheated engine in limp mode). Default 1. */
+  powerLimit?: number
 }
 
 export interface SemiGround {
