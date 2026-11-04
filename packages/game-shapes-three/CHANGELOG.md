@@ -1,5 +1,13 @@
 # @adatechnology/game-shapes-three
 
+## 0.3.1
+
+### Patch Changes
+
+- 106c0f5: No `any` in the public types: `ShapeGenerator<TParams>`, `Composer<TParams>` and `PoleShapeBuilder<TSpec>` take the params type of the entry (a registry still holds entries with different params), and `Devtools.db` is a typed `MarksDatabase`.
+- Updated dependencies [106c0f5]
+  - @adatechnology/game-shapes@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes

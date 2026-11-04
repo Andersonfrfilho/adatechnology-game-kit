@@ -1,5 +1,11 @@
 # @adatechnology/game-floorplan-residential
 
+## 6.0.1
+
+### Patch Changes
+
+- 9314e78: Typed floorplan: `Json` is now `unknown`, and the plan records (`PlanDoor`, `PlanWall`, `PlanWindow`, `PlanGate`, `LotPath`, `Lot`, `Facade`), the resolved slots, the walkability grid (`WalkGrid`), the `placeOnFloor` options and the `generate` result (`FloorplanResult`) have their own types. Template-specific fields (`config`, `building`, extension outputs) are `unknown` and narrowed by the pack that writes them. Generated plans are unchanged.
+
 ## 6.0.0
 
 ### Patch Changes

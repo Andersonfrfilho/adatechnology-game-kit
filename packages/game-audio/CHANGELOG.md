@@ -1,5 +1,33 @@
 # @adatechnology/game-audio
 
+## 0.5.0
+
+### Minor Changes
+
+- fb6d690: Explosions and fire sound like what happened. `createDestructionSound` plays the family of each explosion from its effect (grenade, big charge, fuel vessel, car, pipe bomb, rocket, flashbang, molotov; `BLAST_KIND_OF`, changeable by option), the far rumble past 60 m and the indoor tail when the blast was confined; fire has its ignition "whoomp" (at most two at once when many parts catch together), a gas leak while a punctured vessel vents, a lower roar and crackles at the burning points (`update(dt)`). The renderer sends the explosion's effect, radius and confinement with `explode` (`SoundDetail`). game-audio adds the `kit` mix (the art scene chain plus a soft limiter with a −1 dBFS ceiling), now the default: a blast with its debris no longer clips the output. The room passes the thrown explosive's id to the renderer and ticks the fire crackles.
+  A car's fuel tank names its explosion (`car_fuel_tank`), so it sounds and looks like a car going up.
+- 672f918: Recorded firearm sounds: 231 takes cut from The Free Firearm Sound Library (CC0), the Restrained Firearms Soundpack and the Oculus Audio Pack 1 (CC BY 4.0) by `tools/sfx-sources/cut.mjs`. A shot plays the near and mid-distance takes of its calibre profile with a crossover by distance; each reload step plays its recording in the tier of the weapon's weight; a case's first bounce plays the recorded floor. Without the files the synthesized sounds play. `AnimationEventSpec.lead` fires a sound event early by real seconds, so the measured hit of each recording (`reload-sample-hits.json`) lands on the frame the part reaches its stop.
+- ebb9479: Foley of the hand. `game-audio` ships `FOLEY_BANK`: doors (wooden, metal, locked rattle, slam), fridge, microwave, drawers, item pickup by material, throw, can and bottle opening, gulps, chewing and first aid, under the ids of the sound list so a recorded take under the same id replaces the synthesised one. Each recipe draws pitch, timing and level from ranges (no two plays alike) and uses `FOLEY_FALLOFF`, which falls off faster and loses its highs with distance. `LEAF_FOLEY_SETS` groups the leaf sounds by kind (`fridge`, `microwave`, `drawer`, `wood_door`, `metal_door`).
+
+  `TestableItem.sounds` (`ItemSounds`) lets an item name its leaf sound set per part, its pickup class, its opening sound and the sound of each use. The household fridges and microwave declare theirs; a vehicle's leaves are left to the vehicle bank (`game-vehicles-three`).
+
+  `createDestructionSound` registers the foley bank and plays a key without a rule that is the id of a registered sound. The test room plays a leaf's set (the item's, else a drawer for a slide, else a metal or wooden door by material; a heavy leaf slams), and now sounds when an item is picked up, thrown, opened (can tab or screw cap) and while it is drunk or eaten. The doors keys `leaf_latch`, `leaf_creak_*`, `leaf_shut_*` and `leaf_rattle` are no longer sent by the room's doors.
+
+- 784a6b0: Sound panel of the test room (categories, material × blow matrix, place and distance, A/B with blind test, C1–C10 measuring) and looping sample sounds: `SampleSound.loop` makes `engine.loop(id)` chain the takes with an equal-power crossfade, with the recipe loop standing in while the files load.
+- 5d614c6: Sounds from recorded files: `SampleSound` in a bank's `samples` (takes per layer: `close`, `far`, `tiers` light/medium/heavy, `tail.indoor`/`tail.outdoor`), `planSample` (round-robin without repeat, ±pitch, equal-power near/far crossover, distance and wall lowpass, pan), `engine.play` plays the files once loaded and the `fallback` recipe meanwhile, `loadSamples`, `sampleStatus`, `setEnvironment`, `PlayOptions.environment`/`intensity`, a zero-delay limiter per bus for sample voices, `choke` for rapid fire, `onVoiceStart` and `output()` for measuring. `sampleBankFromManifest` reads the manifest of `scripts/sfx-convert.mjs` (assets/sfx-inbox → Ogg Vorbis mono 48 kHz at −1 dBFS, CC0/CC-BY only, CREDITOS.md). `measureCriteria` measures C1–C9 on an OfflineAudioContext through the real engine, `recordOutput` records the output for C10, and `createSoundCheckModule` (testing) is the `sound_check_area` of the test room.
+- 9a151ad: `urgent` on a play (`PlayOptions`, `SoundRequest`): the voice is built at once instead of in the deferred start queue. The body's sounds use it (footsteps, jump, landing, swing, hit): at a low frame rate the queue started the hit of a knife, an axe or a bat 60 to 500 ms late, or dropped it.
+- 4145cc9: Vehicle sounds that follow what the vehicle does. `game-audio`: a loop can carry a `falloff` and `pan`, and `set` takes a `position` (level and side from the listener, duller far away) and a `cutoff` (the first filter); the sink passes `params.cutoff` and the position through. `game-vehicles-three`: `VEHICLE_SOUND_BANK` and `createVehicleSound` — the engine as loops crossfaded by RPM at the firing frequency (car, truck, bike profiles), louder and brighter under load, an RPM guessed through gears for drivers without an engine model, the starter (catching with a flare, or failing), ignition off, tyres squealing on asphalt or hissing on dirt by slip, road noise by speed, crashes light / medium / heavy by speed, and car doors, trunk and hood. The vehicles area turns the key before the lane car pulls away. `game-test-room`: a leaf of an object tagged `vehicle` plays `vehicle_<door|trunk|hood>_<open|shut>`; `game-destruction-three` maps those to the car sounds, falling back to the old latch and metal shut when the vehicle bank is not loaded (`SoundKeyRule.fallback`).
+
+### Patch Changes
+
+- 4dce01e: Recorded blasts and fire (Freesound CC0 field recordings) for the explosion and fire sounds: `blastFireSampleBank` and `BLAST_FIRE_SAMPLES` in game-destruction-three play the files under the same ids as the synthesized recipes, which stay as the fallback; the fire's roar is a crossfaded loop of recorded fires. game-audio: a looping sample sound now plays at its own `gain`, and `sfx:convert` drops manifest takes whose file is gone.
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [29782fc]
+- Updated dependencies [9a151ad]
+  - @adatechnology/game-contracts@0.23.0
+
 ## 0.4.0
 
 ### Minor Changes

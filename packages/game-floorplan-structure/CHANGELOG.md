@@ -1,5 +1,19 @@
 # @adatechnology/game-floorplan-structure
 
+## 2.0.1
+
+### Patch Changes
+
+- 9314e78: Typed floorplan: `Json` is now `unknown`, and the plan records (`PlanDoor`, `PlanWall`, `PlanWindow`, `PlanGate`, `LotPath`, `Lot`, `Facade`), the resolved slots, the walkability grid (`WalkGrid`), the `placeOnFloor` options and the `generate` result (`FloorplanResult`) have their own types. Template-specific fields (`config`, `building`, extension outputs) are `unknown` and narrowed by the pack that writes them. Generated plans are unchanged.
+- f5cc423: Tipa as instalações da casa (luz, gás, água, solar, edícula): `Json` vira `unknown`, cada instalação tem o seu tipo exportado e o `src` do pacote fica sem `any`. O `link` de um item aceita o id do fogão (botijão).
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [29782fc]
+- Updated dependencies [9a151ad]
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-destruction@0.15.0
+
 ## 2.0.0
 
 ### Patch Changes

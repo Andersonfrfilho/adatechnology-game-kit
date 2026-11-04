@@ -151,3 +151,12 @@ if (existsSync(join(sfx, 'manifest.json'))) {
   cpSync(sfx, join(here, 'dist/sfx'), { recursive: true })
   console.log('dist/sfx copied')
 }
+
+// 5. the weapon thumbnails (game-weapons-three assets/weapon-svg) next to the page: the areas of the room ask for them at `../weapon-svg/` (the site's
+//    layout), which from a server of dist/ is dist/weapon-svg; without them every weapon of the counter is a 404 in the console.
+const weaponSvg = join(pkg('game-weapons-three'), 'assets/weapon-svg')
+if (existsSync(join(weaponSvg, 'manifest.json'))) {
+  rmSync(join(here, 'dist/weapon-svg'), { recursive: true, force: true })
+  cpSync(weaponSvg, join(here, 'dist/weapon-svg'), { recursive: true })
+  console.log('dist/weapon-svg copied')
+}

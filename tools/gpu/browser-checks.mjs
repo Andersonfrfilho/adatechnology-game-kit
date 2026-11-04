@@ -42,6 +42,8 @@ const skip = (reason) => {
 }
 
 if (process.env.PRE_PUSH_BROWSER === '0') skip('PRE_PUSH_BROWSER=0')
+// a push from a CI job (the release's version bump): these checks never run on CI (CLAUDE.md section 9)
+if (process.env.CI) skip('on CI')
 
 // The page scripts load Playwright from NODE_PATH; the workspace has playwright-core inside pnpm's store
 const nodePath = (() => {

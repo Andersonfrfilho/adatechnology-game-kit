@@ -1,5 +1,21 @@
 # @adatechnology/game-interactables-three
 
+## 0.2.1
+
+### Patch Changes
+
+- fd68284: No `any` in the three.js adapters of interactables, vegetation and urban: they take three's own types (`typeof THREE`, `Object3D`, `IUniform`, `HTMLCanvasElement`). New exported types: `SwayMaterial` and `UrbanLight`.
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [29782fc]
+- Updated dependencies [106c0f5]
+- Updated dependencies [9a151ad]
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-shapes@0.2.1
+  - @adatechnology/game-shapes-three@0.3.1
+  - @adatechnology/game-interactables@0.2.15
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @adatechnology/game-urban
 
+## 0.3.1
+
+### Patch Changes
+
+- 106c0f5: No `any` in the public types: `ShapeGenerator<TParams>`, `Composer<TParams>` and `PoleShapeBuilder<TSpec>` take the params type of the entry (a registry still holds entries with different params), and `Devtools.db` is a typed `MarksDatabase`.
+- Updated dependencies [a27d5ae]
+- Updated dependencies [672f918]
+- Updated dependencies [ebb9479]
+- Updated dependencies [29782fc]
+- Updated dependencies [9314e78]
+- Updated dependencies [f5cc423]
+- Updated dependencies [9a151ad]
+  - @adatechnology/game-contracts@0.23.0
+  - @adatechnology/game-floorplan@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
