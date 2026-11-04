@@ -48,6 +48,11 @@ const createMaterials = (THREE: Three) => {
     tape: standard(0x8a8c88, 0.9, 0),
     pipe: standard(0x9a5a32, 0.35, 0.8),
     green: standard(0x3a4428, 0.75, 0.05),
+    /** Explosive finishes: the molotov's bottle, the dynamite's paper, the C4's putty and the detonator's wire. */
+    bottle: standard(0x2f5a34, 0.1, 0.1, { transparent: true, opacity: 0.72 }),
+    dynamite: standard(0x9e2a1f, 0.7, 0),
+    c4: standard(0x6d6a4c, 0.95, 0),
+    wire: standard(0xb02020, 0.5, 0),
     /** Magazine finishes named by the options. */
     bakelite: standard(0x6a2e1c, 0.6, 0),
     polyMag: standard(0x2a2a26, 0.85, 0),

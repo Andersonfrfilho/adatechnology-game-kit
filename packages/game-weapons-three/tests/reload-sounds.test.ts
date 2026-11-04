@@ -15,6 +15,7 @@ const LAYERS = new Set(['metal', 'thud', 'scene_tone', 'scene_noise', 'class'])
 
 /** The cues each family's reload makes, in order: the template its clips must follow. */
 const MAGAZINE = ['mag_release', 'mag_out', 'mag_insert', 'mag_seat']
+const SINGLE_CHAMBER: ReadonlySet<string> = new Set(['m79'])
 const TEMPLATES: Record<string, { tactical: string[]; empty: string[] }> = {
   pistol: { tactical: MAGAZINE, empty: [...MAGAZINE, 'slide_release'] },
   rifle: { tactical: MAGAZINE, empty: [...MAGAZINE, 'charging_handle_pull', 'charging_handle_release'] },
@@ -23,6 +24,7 @@ const TEMPLATES: Record<string, { tactical: string[]; empty: string[] }> = {
   belt: { tactical: ['belt_cover_open', 'belt_insert', 'belt_cover_close', 'charging_handle_pull', 'charging_handle_release'], empty: ['belt_cover_open', 'belt_insert', 'belt_cover_close', 'charging_handle_pull', 'charging_handle_release'] },
   bolt: { tactical: ['bolt_lift', 'bolt_pull', 'bolt_push', 'bolt_lock'], empty: ['bolt_lift', 'bolt_pull', 'bolt_push', 'bolt_lock'] },
   break: { tactical: ['barrels_open', 'casings_eject', 'shell_insert', 'shell_insert', 'barrels_close'], empty: ['barrels_open', 'casings_eject', 'shell_insert', 'shell_insert', 'barrels_close'] },
+  single_break: { tactical: ['barrels_open', 'casings_eject', 'shell_insert', 'barrels_close'], empty: ['barrels_open', 'casings_eject', 'shell_insert', 'barrels_close'] },
   pump: { tactical: [], empty: ['pump_back', 'pump_forward'] },
   lever: { tactical: [], empty: ['lever_open', 'lever_close'] },
   semi12: { tactical: [], empty: ['charging_handle_pull', 'charging_handle_release'] },
@@ -94,7 +96,8 @@ describe('the cues of every reload', () => {
           } else if (row.modelFamily === 'rocket') {
             expect(cues.length).toBeGreaterThanOrEqual(2)
           } else {
-            const template = TEMPLATES[row.modelFamily]
+            // a single tube (the M79) takes one grenade where a double barrel takes two shells
+            const template = row.modelFamily === 'break' && SINGLE_CHAMBER.has(row.id) ? TEMPLATES.single_break : TEMPLATES[row.modelFamily]
             expect(template, `no template for ${row.modelFamily}`).toBeDefined()
             // one by one weapons hear the rounds as the rule feeds them, not inside the clip
             const expected = run.kind === 'one_by_one' ? (template!.tactical.length === 0 ? [] : template!.tactical) : run.kind === 'empty' ? template!.empty : template!.tactical

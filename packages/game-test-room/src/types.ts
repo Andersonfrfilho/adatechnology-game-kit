@@ -172,7 +172,7 @@ export interface TestRoomOptions {
   /** `en` (default) or `pt-BR`. */
   locale?: string
   catalog: TestRoomItem[]
-  /** Weapons and tools in the hotbar: ids of the arsenal (default `DEFAULT_LOADOUT`), plus extra definitions merged into the arsenal. */
+  /** Weapons and tools in the hotbar: ids of the arsenal (default `DEFAULT_LOADOUT` with each generic gun swapped for the real weapon that stands for it, `realLoadout`), plus extra definitions merged into the arsenal. */
   loadout?: string[]
   weapons?: WeaponDef[]
   /** An existing arsenal (default `createArsenal({ locale })`). */
@@ -264,6 +264,8 @@ export interface TestRoomOptions {
   kickHeights?: readonly number[]
   /** Keys (`KeyboardEvent.code`) that kick with the arsenal's `kick` tool, whatever tool is in hand; default `['KeyK']` (Shift+V kicks too). */
   kick?: { keys?: string[] }
+  /** The weapon picker: every weapon of the arsenal by group (firearms, melee, explosives, tools) and category, a click equips it and adds it to the hotbar. `keys` open it (default `['Backquote']`, the key left of 1); `false`: no picker. */
+  toolMenu?: false | { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
@@ -466,6 +468,8 @@ export interface TestRoom {
   kick(): boolean
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
+  /** Opens or closes the weapon picker (no argument: toggles); answers whether it is open. Always false without the panels (`ui: false`) or with `toolMenu: false`. */
+  toggleToolMenu(open?: boolean): boolean
   /**
    * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.

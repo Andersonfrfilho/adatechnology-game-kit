@@ -65,6 +65,11 @@
       "file": "packages/game-weather-three/src/headlights.ts",
       "domain": "vehicles",
       "reason": "the beam cone of the headlights (light, not a car)"
+    },
+    {
+      "file": "packages/game-weapons-three/src/models/explosives.ts",
+      "domain": "items",
+      "reason": "the explosives of the weapons gallery (the molotov's bottle, the grenade, the charges): game-weapons owns the explosives, not the goods catalogue"
     }
   ],
   "pending": [

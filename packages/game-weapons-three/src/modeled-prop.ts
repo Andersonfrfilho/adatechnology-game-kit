@@ -8,7 +8,7 @@ import type { ItemModels } from './item-models'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
 import { modelKit } from './models/kit'
-import { defaultWeaponProps } from './weapon-item-model'
+import { buildThrowableModel, defaultWeaponProps } from './weapon-item-model'
 import type { WeaponProps } from './weapon-item-model'
 
 const MODEL_BODY = 'body'
@@ -18,9 +18,9 @@ const MODEL_BODY = 'body'
  * material (the hands keep the model with its pivots, `buildWeaponModelById`), every mesh naming the one rigid part (`body`) that moves it. The size of that part is left in
  * `userData.footprint` for `modeledPropSpec`.
  */
-export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, decorate?: (root: THREE_NS.Object3D) => void, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): THREE_NS.Group | undefined {
+export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'> & Partial<Pick<WeaponDef, 'action'>>, name: string, decorate?: (root: THREE_NS.Object3D) => void, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): THREE_NS.Group | undefined {
   const model = buildWeaponModelById(THREE, def.id) ?? (() => {
-    const root = props.buildItemModel(THREE, def, items)
+    const root = props.buildItemModel(THREE, def, items) ?? buildThrowableModel(THREE, def)
     return root ? { root } : undefined
   })()
   if (!model) return undefined

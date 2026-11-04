@@ -1,3 +1,4 @@
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
@@ -15,10 +16,16 @@ describe('projectileModel', () => {
     }
   })
 
-  it('has nothing for what the gallery does not draw: grenades, molotovs, charges, the weapons that fire no rocket', () => {
-    expect(projectileModel(THREE, { weapon: 'frag_grenade', explosive: 'm67', kind: 'grenade' })).toBeNull()
-    expect(projectileModel(THREE, { weapon: 'molotov', explosive: 'molotov', kind: 'molotov' })).toBeNull()
-    expect(projectileModel(THREE, { weapon: 'c4', explosive: 'c4', kind: 'charge' })).toBeNull()
+  it('draws the explosives of the gallery centred on their middle, standing axis +y, and has nothing for what it does not draw', () => {
+    for (const [weapon, explosive, kind] of [['frag_grenade', 'm67', 'grenade'], ['molotov', 'molotov', 'molotov'], ['c4', 'c4', 'charge'], ['claymore', 'claymore', 'charge'], ['dynamite', 'dynamite', 'grenade']] as const) {
+      const round = projectileModel(THREE, { weapon, explosive, kind })
+      expect(round, explosive).not.toBeNull()
+      expect(round!.axis).toEqual([0, 1, 0])
+      const centre = new THREE.Box3().setFromObject(round!.model).getCenter(new THREE.Vector3())
+      expect(centre.length(), explosive).toBeLessThan(1e-9)
+      expect(kitOriginOf(round!.model)?.owner).toBe('game-weapons-three')
+    }
+    expect(projectileModel(THREE, { weapon: 'm79', explosive: 'm79_40mm', kind: 'grenade' })).toBeNull()
     expect(projectileModel(THREE, { weapon: 'pistol_9mm', kind: 'rocket' })).toBeNull()
   })
 })

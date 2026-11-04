@@ -3,6 +3,8 @@ import { createBenchPanel } from './bench-panel'
 import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
 import { createTestTablePanel, TEST_TABLE_CSS } from './test-table-panel'
+import { createToolMenu, TOOL_MENU_CSS } from './tool-menu'
+import type { ToolMenuGroup } from './tool-menu'
 import type { TestTable } from './test-table'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
@@ -113,6 +115,8 @@ export interface UiOptions {
   onAction: (id: string) => void
   /** The room's test table: its panel goes between the inspector and the log. Absent: no panel. */
   testTable?: TestTable
+  /** The tool picker (every tool of the arsenal by tab and section) and the key that opens it, shown on its button. Absent: no picker. */
+  toolMenu?: { groups: () => readonly ToolMenuGroup[]; onPick: (toolId: string) => void; onOpen?: (open: boolean) => void; keyLabel: string }
 }
 
 export interface RoomUi {
@@ -129,6 +133,8 @@ export interface RoomUi {
   /** Open the catalogue on a group tab (its translated name), clearing the search. */
   showGroup(group: string): void
   togglePanels(): void
+  /** Opens or closes the tool picker (no argument: toggles); answers whether it is open. False without a picker. */
+  toolMenu(open?: boolean): boolean
   /** The active module's bench (null: none). */
   bench(view: BenchView | null): void
   /** Room counters and the active module's metrics, text only. */
@@ -261,7 +267,7 @@ async function toggleFullscreen(): Promise<void> {
 export function createUi(o: UiOptions): RoomUi {
   const { t } = o
   const style = mk('style')
-  style.textContent = CSS + (o.testTable ? TEST_TABLE_CSS : '')
+  style.textContent = CSS + (o.testTable ? TEST_TABLE_CSS : '') + (o.toolMenu ? TOOL_MENU_CSS : '')
   const root = mk('div', 'tr-root')
   const pos = getComputedStyle?.(o.container)?.position
   if (!pos || pos === 'static') o.container.style.position = 'relative'
@@ -304,6 +310,18 @@ export function createUi(o: UiOptions): RoomUi {
   const held = mk('div', 'tr-held')
   const hotbar = mk('div', 'tr-hotbar')
   bottom.append(held, hotbar)
+  let currentTool = ''
+  const menuOptions = o.toolMenu
+  const toolMenu = menuOptions
+    ? createToolMenu({ t, groups: menuOptions.groups, current: () => currentTool, onPick: menuOptions.onPick, ...(menuOptions.onOpen ? { onOpen: menuOptions.onOpen } : {}), thumb })
+    : null
+  if (toolMenu && menuOptions) {
+    const menuButton = mk('button', 'tr-slot tr-menu-btn')
+    menuButton.type = 'button'
+    menuButton.append(mk('b', undefined, menuOptions.keyLabel), document.createTextNode(t('ui.tool_menu')))
+    menuButton.onclick = () => toolMenu.toggle()
+    bottom.appendChild(menuButton)
+  }
   const help = mk('div', 'tr-help')
   help.textContent = t('ui.help')
 
@@ -639,7 +657,7 @@ export function createUi(o: UiOptions): RoomUi {
   }
   toggle.onclick = togglePanels
 
-  root.append(cross, ring, top, bottom, help, left, right, toggle)
+  root.append(cross, ring, top, bottom, help, left, right, toggle, ...(toolMenu ? [toolMenu.element] : []))
 
   // inspector
   const bar = (value: number, max: number, cls: string): HTMLElement => {
@@ -740,6 +758,7 @@ export function createUi(o: UiOptions): RoomUi {
     },
     flushLog,
     hud(s) {
+      currentTool = s.toolId
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))
       if (s.ammo) toolBox.append(mk('small', undefined, s.ammo))
@@ -823,6 +842,7 @@ export function createUi(o: UiOptions): RoomUi {
       renderTabs()
     },
     togglePanels,
+    toolMenu: (open) => toolMenu?.toggle(open) ?? false,
     bench: benchPanel.show,
     metrics: benchPanel.metrics,
     get benchVisible() {

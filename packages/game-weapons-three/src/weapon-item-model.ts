@@ -4,6 +4,7 @@ import type { WeaponDef } from '@adatechnology/game-weapons'
 import { drawItemWeapon } from './item-weapon-draw'
 import { DEFAULT_ITEM_MODELS } from './item-models'
 import type { ItemModels } from './item-models'
+import { buildExplosiveModel, hasExplosiveModel } from './models/explosives'
 import { buildProp, weaponProp } from './props'
 
 /** How a weapon is drawn from an item model of game-items-three: the item (default the weapon id), and the turns the laying-down rule gets wrong. */
@@ -25,6 +26,8 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['knife', { flip: true }],
   ['meat_cleaver', { flip: true }],
   ['screwdriver', { flip: true }],
+  // the Itens do Vale Cinzento hammer is a claw hammer: the head and the two-pronged claw
+  ['claw_hammer', { item: 'hammer' }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -38,8 +41,18 @@ export interface WeaponProps {
   /** `buildItemWeaponModel` with this set's overrides. */
   buildItemModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined
   /** `buildWeaponModel` with this set's overrides. */
-  buildModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group
+  buildModel(THREE: typeof THREE_NS, def: WeaponModelDef, items?: ItemModels): THREE_NS.Group
 }
+
+/** What a weapon model is drawn from: the id, the category and mass of the low-poly prop, and the action that names a throwable's explosive. */
+export type WeaponModelDef = Pick<WeaponDef, 'id' | 'category' | 'mass'> & Partial<Pick<WeaponDef, 'action'>>
+
+/** The gallery model of the explosive a throwable carries (the frag grenade's M67, the molotov, the dynamite...), or undefined for any other weapon. */
+/** Whether the gallery drew the explosive a throwable carries. */
+export const hasThrowableModel = (def: Partial<Pick<WeaponDef, 'action'>>): boolean => def.action?.kind === 'throwable' && def.action.explosive !== undefined && hasExplosiveModel(def.action.explosive)
+
+export const buildThrowableModel = (THREE: typeof THREE_NS, def: Partial<Pick<WeaponDef, 'action'>>): THREE_NS.Group | undefined =>
+  def.action?.kind === 'throwable' && def.action.explosive !== undefined ? buildExplosiveModel(THREE, def.action.explosive) : undefined
 
 export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponProps => {
   const itemModelOf = (weaponId: string, items?: ItemModels): string | undefined => {
@@ -56,7 +69,7 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
     get: (weaponId) => models.get(weaponId),
     itemModelOf,
     buildItemModel,
-    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildProp(THREE, weaponProp(def)),
+    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildThrowableModel(THREE, def) ?? buildProp(THREE, weaponProp(def)),
   }
 }
 
@@ -79,5 +92,5 @@ export const itemModelOfWeapon = (weaponId: string, items?: ItemModels): string 
  */
 export const buildItemWeaponModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => defaultWeaponProps().buildItemModel(THREE, def, items)
 
-/** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the low-poly prop the counters show otherwise. @deprecated use `createWeaponProps(...).buildModel`. */
-export const buildWeaponModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>, items?: ItemModels): THREE_NS.Group => defaultWeaponProps().buildModel(THREE, def, items)
+/** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the gallery model of a throwable's explosive, the low-poly prop the counters show otherwise. @deprecated use `createWeaponProps(...).buildModel`. */
+export const buildWeaponModel = (THREE: typeof THREE_NS, def: WeaponModelDef, items?: ItemModels): THREE_NS.Group => defaultWeaponProps().buildModel(THREE, def, items)

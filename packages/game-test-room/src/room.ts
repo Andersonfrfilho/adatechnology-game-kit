@@ -9,7 +9,7 @@ import { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } f
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
+import { createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
@@ -57,6 +57,7 @@ import { resolveStrings } from './locale'
 import { createUi } from './ui'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
+import type { ToolMenuGroup } from './tool-menu'
 import type {
   AnimationInfo,
   ModuleReport,
@@ -116,6 +117,8 @@ interface BurningStain {
 
 const FIXED_DT = 1 / 60
 /** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
+// how the picker's button names its key: the one left of 1 shows as the quote it prints on a Brazilian (ABNT2) keyboard
+const TOOL_MENU_KEY_LABELS: Readonly<Record<string, string>> = { Backquote: "'" }
 const EXPLOSIVE_EFFECT_IDS = ['m67', 'molotov', 'pipe_bomb', 'm79_40mm', 'm72_66mm', 'at4_84mm', 'dynamite', 'c4', 'claymore'] as const
 /** The fog the scene may be in while the room runs: none, the weather's linear fog and its exponential one (the weather module comes in after the load). */
 /** The most loose bodies (casings, magazines) the room lets its modules keep alive at once: the cap the weapons viewmodel had on its own. */
@@ -442,7 +445,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const loose: Piece[] = []
 
   const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1 })
-  const loadout = (options.loadout ?? DEFAULT_LOADOUT).filter((id) => arsenal.weapons.has(id))
+  // the default hotbar holds the real weapons (the Beretta 92FS, the AK-47...) where the default loadout names a generic gun; a page's own loadout is kept as it is
+  const loadout = (options.loadout ?? realLoadout(arsenal, DEFAULT_LOADOUT)).filter((id) => arsenal.weapons.has(id))
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
@@ -2340,6 +2344,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return true
   }
   const kickKeys = options.kick?.keys ?? ['KeyK']
+  const toolMenuKeys = options.toolMenu === false ? [] : (options.toolMenu?.keys ?? ['Backquote'])
+  // every weapon of the arsenal by group and section, with the silhouette of the catalogue item that equips it when a module brought one
+  const toolMenuGroups = (): ToolMenuGroup[] => {
+    const thumbnails = new Map<string, TestRoomItem>()
+    for (const item of catalog) if (item.weapon && item.thumbnail && !thumbnails.has(item.weapon)) thumbnails.set(item.weapon, item)
+    return weaponMenu(arsenal, { locale }).map((group) => ({
+      id: group.id,
+      name: group.name,
+      sections: group.sections.map((section) => ({
+        id: section.id,
+        name: section.name,
+        tools: section.weapons.map((weapon) => {
+          const item = thumbnails.get(weapon.id)
+          return { id: weapon.id, name: weapon.name, ...(weapon.maker ? { keywords: weapon.maker } : {}), ...(item?.thumbnail ? { thumbnail: item.thumbnail } : {}), ...(item?.thumbnailCredit ? { thumbnailCredit: item.thumbnailCredit } : {}) }
+        }),
+      })),
+    }))
+  }
+  const toggleToolMenu = (open?: boolean): boolean => ui?.toolMenu(open) ?? false
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
     releaseTrigger()
@@ -2818,6 +2841,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const page = Math.floor(toolIndex / 10)
       const idx = page * 10 + n
       if (idx < loadout.length) setTool(loadout[idx])
+      return
+    }
+    if (toolMenuKeys.includes(code) && !e.ctrlKey && !e.metaKey && !e.repeat) {
+      toggleToolMenu()
       return
     }
     // the kick has a key of its own (K by default); a weapon module that takes the same key first (the laser of a firearm) wins while that weapon is in hand
@@ -4056,6 +4083,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return combo ? comboOn : null
     },
     equip,
+    toggleToolMenu,
     terrain,
     openArea,
     modules: () => [...modules.values()].map((m) => ({ id: m.id, name: m.name, group: m.group, hasArea: typeof m.area === 'function' })),
@@ -4268,6 +4296,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.act(id))
       },
       ...(options.testTable !== false && arena.tops.some((x) => x.id === tableScenery) ? { testTable } : {}),
+      ...(options.toolMenu !== false
+        ? {
+            toolMenu: {
+              groups: toolMenuGroups,
+              onPick: equip,
+              // the list takes clicks: the mouse leaves the view while it is open
+              onOpen: (open: boolean) => {
+                if (open && document.pointerLockElement) document.exitPointerLock?.()
+              },
+              keyLabel: toolMenuKeys.map((key) => TOOL_MENU_KEY_LABELS[key] ?? key.replace(/^Key/, '')).join('/'),
+            },
+          }
+        : {}),
     })
     ui.hud(hudState())
     showBench()

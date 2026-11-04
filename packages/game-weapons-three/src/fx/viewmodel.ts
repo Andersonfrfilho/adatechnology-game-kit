@@ -389,7 +389,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
     const action = current.def.action
     if (action.kind === 'launcher') {
-      launchRocket(heavy(current), options.flyRocket !== false)
+      // a grenade launcher (the M79) fires no rocket and has no backblast: its grenade is the host's projectile
+      if (current.model.parts.family === 'rocket') launchRocket(heavy(current), options.flyRocket !== false)
       audio?.play('explosion', LAUNCH_VOLUME, distance())
     }
     if (action.kind !== 'firearm') return

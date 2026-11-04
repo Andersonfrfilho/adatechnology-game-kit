@@ -17,3 +17,4 @@ export { DEFAULT_TRIALS, TRIAL_KINDS, createTestTable, fitRow, rowCentres, trial
 export type { TestTable, TestTableContext, TestTableObject, TestTableOptions, TestTablePage, TrialKind, TrialTool } from './test-table'
 export type { RoomDoorEvent, RoomDoorState } from './door-open'
 export type { RoomGraphicsOptions } from './graphics'
+export type { ToolMenuGroup, ToolMenuSection, ToolMenuTool } from './tool-menu'

@@ -17,7 +17,7 @@ import { ARCHETYPE_MODELS, hasWeaponModel } from '../models'
 import type { AttachmentModelRegistry } from '../models/attachments/types'
 import { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from '../modeled-prop'
 import { BODY_ACTIONS, buildProp, weaponProp } from '../props'
-import { defaultWeaponProps } from '../weapon-item-model'
+import { defaultWeaponProps, hasThrowableModel } from '../weapon-item-model'
 import type { WeaponProps } from '../weapon-item-model'
 import type { ItemModels } from '../item-models'
 import type { WeaponProp } from '../props'
@@ -248,7 +248,7 @@ const targetProp = (id: string, name: string): WeaponProp => {
 /** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
 const weaponItem = (def: WeaponDef, name: string, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items) && !hasThrowableModel(def)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
