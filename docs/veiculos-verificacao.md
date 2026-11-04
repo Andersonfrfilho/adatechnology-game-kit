@@ -17,9 +17,19 @@ O teste automático cobre: tiro na direção de cada vidro chega no vidro; o ar 
 | `midsize_suv` | pane quarter_glass: the shots land on roof |
 | `single_engine_plane` | pane left_door_window: the fuel_tanks stands past it; pane left_door_window: the shots land on fuel_tanks; pane left_rear_window: the shots land on fuel_tanks; pane right_door_window: the fuel_tanks stands past it; pane  |
 
-## Porta aberta: faixas que ficam atravessando o vão
+## Porta aberta: nada atravessando o vão nem pendurado na porta
 
-O teste da frota mede, porta por porta, se alguma peça desenhada na lateral (vinco, friso, moldura, pintura) continua atravessando o vão com a porta aberta. Em 2026-11-02 sobram em 15 modelos: `taxi`, `entry_hatch`, `midsize_sedan`, `police_sedan`, `highway_police_sedan`, `compact_suv`, `hybrid_suv`, `midsize_suv`, `large_suv`, `compact_pickup`, `crossover_pickup`, `midsize_pickup`, `ambulance`, `boxy_hatch`, `classic_six_sedan`. O teste ainda só relata; passa a reprovar quando as portas virarem peças pré-cortadas (spec 006, fase 4).
+Corrigido em 2026-11-04 (prints do dono `bugs-1104/03` e `04`: barra na altura da janela atravessando o vão, haste vertical e placa solta embaixo da porta).
+O teste da frota agora **reprova**, porta por porta, em toda a frota:
+
+- **faixa atravessando o vão** (vinco, friso, moldura, pintura da carroceria) com a porta aberta. A faixa é cortada nas duas bordas da porta, um plano por
+  corte: a faixa desenhada com poucos triângulos longos atravessava a porta inteira num só triângulo, e o corte pelo canto de dois planos errava a borda
+  (o friso cromado do `midsize_sedan` ficava inteiro sobre a porta de trás). O forro do vão (`doorEdges`) não passa mais por cima da porta: o vão continua
+  até o teto, e a faixa ali era uma barra na altura da janela;
+- **peça da carroceria pendurada embaixo da porta**: o corte da zona da porta pegava a caixa de roda e o assoalho atrás da porta de trás (a "placa solta").
+  A porta leva a pele e o que está a até 9 cm dela; o que fica mais fundo e olha para baixo ou ao longo do carro volta para a carroceria, no lugar;
+- **friso de fechamento (a linha preta entre as portas) indo com a porta**: era a "haste vertical". Fica na carroceria e some enquanto uma das portas
+  que ele marca está aberta.
 
 ## Modelos que passam no teste automático (62)
 

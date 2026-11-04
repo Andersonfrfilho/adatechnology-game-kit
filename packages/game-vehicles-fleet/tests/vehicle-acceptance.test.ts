@@ -15,6 +15,11 @@ const HOOD_SEAM = 0.015
 const HOOD_STEP = 0.005
 /** Panes a shot along their normal does not reach yet (something drawn stands in front, or the pane is behind trim): to look at one by one, see docs/veiculos-verificacao.md. */
 const KNOWN_OPEN = new Set(['midsize_suv', 'armored_truck', 'fastback_sedan', 'battle_tank', 'fishing_boat', 'single_engine_plane', 'beetle', 'apc_6x6'])
+/** A strip drawn along the side is a ribbon up to this tall; a taller part (a wheel arch's liner) is not a strip. */
+const STRIP_TALL = 0.22
+/** The bottom of a door (this high over its zone's floor) is no deeper than this from its skin, metres: deeper is the body behind it (a wheel house, the floor). */
+const DOOR_BOTTOM = 0.25
+const DOOR_LOWER_DEPTH = 0.3
 const SHOT = { type: 'ballistic', energy: 527, caliber: 9 } as const
 
 /** Points really on the pane, whatever its outline: the middles of its largest triangles, facing out. A trim or a seal may cover some, never all. */
@@ -152,6 +157,38 @@ function auditModel(key: string): string[] {
       if (o.isMesh && o.visible) skin++
     })
     if (skin === 0) problems.push(`${id}: nothing hangs on the hinge`)
+    // what hangs on the hinge is the door: no plate of the body under it, and no shut line of the body swinging with it
+    piv.rotation.set(0, 0, 0)
+    item.root.updateMatrixWorld(true)
+    const hung: Array<{ o: THREE.Mesh; b: THREE.Box3 }> = []
+    piv.traverse((o) => {
+      if (o instanceof THREE.Mesh && o.visible && !o.userData.decal && !o.userData.glass) hung.push({ o, b: new THREE.Box3().setFromObject(o).applyMatrix4(inverse) })
+    })
+    const midHeight = (zoneBox.y0 + zoneBox.y1) / 2
+    const foot = zoneBox.y0 + DOOR_BOTTOM
+    // the skin's outer face over the lower half (the mirror stands out higher up), and how deep the lowest part of what hangs reaches behind it
+    let outer = -Infinity
+    let deepest = Infinity
+    const corner = new THREE.Vector3()
+    for (const { o } of hung) {
+      const at = o.geometry.getAttribute('position')
+      for (let i = 0; i < at.count; i++) {
+        corner.fromBufferAttribute(at, i).applyMatrix4(o.matrixWorld).applyMatrix4(inverse)
+        const across = zoneBox.side < 0 ? -corner.z : corner.z
+        if (corner.y < midHeight) outer = Math.max(outer, across)
+        if (corner.y < foot) deepest = Math.min(deepest, across)
+      }
+    }
+    if (outer - deepest > DOOR_LOWER_DEPTH) problems.push(`${id}: a piece of the body ${((outer - deepest) * 100).toFixed(0)} cm deep hangs under the door`)
+    for (const { o, b } of hung) {
+      const sz = b.getSize(new THREE.Vector3())
+      const color = (o.material as THREE.MeshStandardMaterial).color as THREE.Color | undefined
+      const dark = !!color && color.getHSL({ h: 0, s: 0, l: 0 }).l < 0.15
+      const atEdge = Math.min(Math.abs(b.getCenter(new THREE.Vector3()).x - zoneBox.x0), Math.abs(b.getCenter(new THREE.Vector3()).x - zoneBox.x1)) < 0.04
+      if (dark && atEdge && sz.x < 0.03 && sz.z < 0.03 && sz.y > (zoneBox.y1 - zoneBox.y0) * 0.4) problems.push(`${id}: the shut line swings with the door`)
+    }
+    piv.rotation.set(...(rotation as [number, number, number]))
+    item.root.updateMatrixWorld(true)
     // nothing the model draws on the side stays across the open door (a strip, a trim, a frame), except the sill it opens over
     const doorIds = new Set(doors)
     const point = new THREE.Vector3()
@@ -161,7 +198,7 @@ function auditModel(key: string): string[] {
       const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
       const s = b.getSize(new THREE.Vector3())
       const m = b.getCenter(new THREE.Vector3())
-      if (Math.sign(m.z) !== Math.sign(zoneBox.side) || Math.abs(m.z) < Math.abs(zoneBox.z0 + zoneBox.z1) / 2 - 0.1 || m.y < zoneBox.y0 + 0.25 || m.y > zoneBox.y1 + 0.1 || Math.min(s.y, s.z) > 0.15 || s.x < 0.3) return
+      if (Math.sign(m.z) !== Math.sign(zoneBox.side) || Math.abs(m.z) < Math.abs(zoneBox.z0 + zoneBox.z1) / 2 - 0.1 || m.y < zoneBox.y0 + 0.25 || m.y > zoneBox.y1 + 0.1 || s.y > STRIP_TALL || Math.min(s.y, s.z) > 0.15 || s.x < 0.3) return
       const pos = o.geometry.attributes.position
       for (let i = 0; i < pos.count; i++) {
         point.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).applyMatrix4(inverse)
@@ -187,8 +224,7 @@ describe('every model of the fleet', () => {
       for (const problem of problems) findings.push({ model: key, problem })
       if (!problems.length) passed.push(key)
       if (process.env.VEHICLE_REPORT) writeFileSync(process.env.VEHICLE_REPORT, JSON.stringify({ passed, findings }, null, 1))
-      // strips across an open door are the open work of spec 006 phase 4 (doors as pre-cut parts): reported, listed in docs/veiculos-verificacao.md, not yet failing
-      const hard = problems.filter((problem) => !problem.includes('a strip stays across the open door'))
+      const hard = problems
       if (KNOWN_OPEN.has(key)) expect(hard.every((problem) => problem.startsWith('pane ') || problem.startsWith('the hood'))).toBe(true)
       else expect(hard).toEqual([])
     })

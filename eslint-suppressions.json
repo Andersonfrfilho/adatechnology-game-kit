@@ -751,7 +751,7 @@
   },
   "packages/game-vehicles/src/destructible/visual.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 77
+      "count": 76
     }
   },
   "packages/game-vehicles/src/explosion.ts": {
