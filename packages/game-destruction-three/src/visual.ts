@@ -82,6 +82,31 @@ export class DecalKit {
 
 const tmpV = (THREE: typeof THREE_NS) => new THREE.Vector3()
 
+/**
+ * The positions a host drew a range with before it took the range out of the merged mesh to draw it another way (the house renderer collapses the range of a
+ * wall it draws with holes, `userData.collapsedRanges`, and keeps the first positions in `userData.plainPositions`): a part that leaves the mesh takes those,
+ * or it would leave as a collapsed, invisible range that still carries its decals and is still shot at.
+ */
+export function plainPositions(mesh: THREE_NS.Mesh, v0: number, v1: number): Float32Array | null {
+  const { collapsedRanges, plainPositions: plain } = mesh.userData as { collapsedRanges?: ReadonlyArray<readonly [number, number]>; plainPositions?: Float32Array }
+  if (!plain || !collapsedRanges?.some(([a, b]) => a < v1 && b > v0)) return null
+  return plain
+}
+
+/** A whole mesh that leaves with its part draws again the ranges its host collapsed (`plainPositions`): it is the part now, and the part is still there. */
+export function showCollapsedRanges(mesh: THREE_NS.Mesh): void {
+  const data = mesh.userData as { collapsedRanges?: Array<[number, number]>; plainPositions?: Float32Array }
+  const plain = data.plainPositions
+  const position = mesh.geometry?.getAttribute(POS_ATTR) as THREE_NS.BufferAttribute | undefined
+  if (!plain || !data.collapsedRanges?.length || !position) return
+  const array = position.array as Float32Array
+  for (const [v0, v1] of data.collapsedRanges) array.set(plain.subarray(v0 * 3, v1 * 3), v0 * 3)
+  data.collapsedRanges = []
+  position.needsUpdate = true
+  mesh.geometry.computeBoundingBox()
+  mesh.geometry.computeBoundingSphere()
+}
+
 /** Mesh-level visual changes: copy-on-write geometry and materials, dents, decals, char, glow, melt, hiding, restoring. */
 /** A dent reaches at least this many vertices of a mesh: fewer and the mesh cannot show its curve (it would be invisible or a sharp spike). */
 const MIN_DENT_VERTICES = 10
@@ -916,7 +941,7 @@ export class Visuals {
       const a = src.getAttribute(name) as THREE_NS.BufferAttribute
       if ((a as unknown as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute) continue
       const size = a.itemSize
-      const from = (name === POS_ATTR ? host.work : null) ?? (a.array as unknown as Float32Array)
+      const from = (name === POS_ATTR ? plainPositions(host.mesh, v0, v1) ?? host.work : null) ?? (a.array as unknown as Float32Array)
       const slice = (from as unknown as { slice(a: number, b: number): ArrayLike<number> }).slice(v0 * size, v1 * size)
       const Ctor = (a.array as unknown as { constructor: new (x: ArrayLike<number>) => ArrayLike<number> }).constructor
       geo.setAttribute(name, new this.THREE.BufferAttribute(new Ctor(slice) as never, size, a.normalized))
