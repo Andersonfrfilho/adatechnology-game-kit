@@ -179,3 +179,9 @@ if (existsSync(join(weaponSvg, 'manifest.json'))) {
   cpSync(weaponSvg, join(here, 'dist/weapon-svg'), { recursive: true })
   console.log('dist/weapon-svg copied')
 }
+
+// 6. a local sound pack of this machine (audio.local.json at the repo root, git-ignored): linked, never copied, into dist/local-audio. Then the
+//    guard fails the build if dist holds any audio that is not one of the SDK's own files, so no deploy can carry a local file.
+const localAudio = join(root, 'tools/local-audio/local-audio.mjs')
+if (process.env.LOCAL_AUDIO !== '0' && existsSync(process.env.LOCAL_AUDIO_CONFIG ?? join(root, 'audio.local.json'))) execFileSync(process.execPath, [localAudio, 'link', join(here, 'dist')], { stdio: 'inherit' })
+execFileSync(process.execPath, [localAudio, 'guard', join(here, 'dist')], { stdio: 'inherit' })

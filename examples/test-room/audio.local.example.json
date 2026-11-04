@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "root": "/absolute/path/to/your/sound/folder",
+  "sounds": {
+    "pistol_9mm": { "files": ["weapons/pistol_shot_01.wav", "weapons/pistol_shot_02.wav"], "license": "CC0", "score": 8, "note": "dry 9 mm shot" },
+    "door_wood_close": { "files": ["doors/wood_door_close.ogg"], "license": "CC-BY", "note": "author and link in your CREDITOS.md" },
+    "footstep_wood_walk": { "files": ["steps/wood_01.wav", "steps/wood_02.wav", "steps/wood_03.wav"], "license": "unknown" }
+  }
+}

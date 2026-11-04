@@ -21,6 +21,7 @@
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { blastFireSampleBank } from '@adatechnology/game-destruction-three'
+import { applyLocalSoundPack, parseLocalSoundPack } from '@adatechnology/game-audio'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
@@ -112,6 +113,27 @@ if (room.audio && params.get('sfx') !== '0' && location.protocol.startsWith('htt
     })
     .catch((error) => {
       window.__sfxReport = { loaded: [], failed: [{ url: 'sfx/manifest.json', error: String(error) }] }
+    })
+}
+
+// a local sound pack of this machine (tools/local-audio/local-audio.mjs link dist): `local-audio/pack.json` maps SDK ids to files kept outside the
+// repo; each id keeps the SDK's sound until its files decode in idle time. Absent (404) on every other machine and in every deploy; ?localaudio=0 skips it.
+if (room.audio && params.get('localaudio') !== '0' && location.protocol.startsWith('http')) {
+  const engine = room.audio
+  fetch('local-audio/pack.json')
+    .then((response) => (response.ok ? response.json() : null))
+    .then((json) => {
+      if (!json) return
+      const pack = applyLocalSoundPack(engine, parseLocalSoundPack(json))
+      window.__localSoundPack = pack
+      return pack.done.then((report) => {
+        window.__localSoundReport = report
+        const unlicensed = pack.unlicensed()
+        room.log.add({ channel: 'action', type: 'local_sound_pack', text: `local-audio: ${report.file.length} ids from files, ${report.fallback.length} on the SDK sound, ${unlicensed.length} without licence`, data: { file: report.file.length, fallback: report.fallback.length, unlicensed } })
+      })
+    })
+    .catch((error) => {
+      window.__localSoundReport = { file: [], fallback: [{ id: 'pack.json', error: String(error) }] }
     })
 }
 

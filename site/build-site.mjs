@@ -68,3 +68,6 @@ if (thumbs.size) cpSync(thumbsDir, join(out, 'thumbs'), { recursive: true })
 const html = renderLanding({ examples, packages, hasThumb: (key) => thumbs.has(key) })
 writeFileSync(join(out, 'index.html'), html)
 console.log(`site/dist ready: ${examples.length} examples, ${packages.length} packages`)
+
+// no local sound pack file (tools/local-audio) and no audio outside the SDK's own may reach the deployed site
+execFileSync(process.execPath, [join(root, 'tools/local-audio/local-audio.mjs'), 'guard', out], { stdio: 'inherit' })

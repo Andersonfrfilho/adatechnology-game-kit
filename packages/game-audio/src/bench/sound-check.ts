@@ -5,6 +5,7 @@ import type { SfxBlow, SfxEntry, SfxMaterial, SfxState } from '../catalog'
 import { CALIBRATION_ID, CALIBRATION_LOOP_ID, CALIBRATION_LOOP_SOUND, CALIBRATION_SOUND, calibrationLoader, isCalibrationUrl } from '../measure/calibration'
 import { CRITERIA, measureCriteria, recordOutput } from '../measure/criteria'
 import type { ActionCheck, CriterionId, CriterionResult } from '../measure/criteria'
+import { isShippableLicense } from '../local-pack'
 import type { LoopRecipe, SampleSound, SoundBank, SoundRecipe } from '../recipe'
 import { GAME_SFX_BANK } from '../recipes/noise-class'
 import { SAMPLE_ENVIRONMENTS } from '../sample'
@@ -291,6 +292,16 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     const count = (state: SfxState): number => states.filter((each) => each === state).length
     return `${text.states.file} ${count('file')} · ${text.states.synth} ${count('synth')} · ${text.states.missing} ${count('missing')}`
   }
+  // ids playing a file whose declared licence the SDK could not ship (a local pack's `unknown` / `proprietary`)
+  const unlicensed = (): string => {
+    const ids = registry()
+      .sampleIds()
+      .filter((id) => {
+        const license = registry().sample(id)?.license
+        return license !== undefined && !isShippableLicense(license)
+      })
+    return ids.length === 0 ? text.words.none : `${ids.length}: ${ids.join(', ')}`
+  }
   const strikeId = (): string => impactSoundId(chosen.material, chosen.blow)
   const lastLine = (): string => {
     const last = log.at(-1)
@@ -309,6 +320,7 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
   const metrics = (): ModuleMetric[] => [
     { id: 'source', name: text.metrics.source, read: sourceLine },
     { id: 'count', name: text.metrics.count, read: counts },
+    { id: 'unlicensed', name: text.metrics.unlicensed, read: unlicensed },
     { id: 'chosen', name: text.metrics.chosen, read: () => `${label(chosen.sound)}${registry().sample(chosen.sound) ? ` (${engine.sampleStatus(chosen.sound)})` : ''}` },
     { id: 'matrix', name: text.metrics.matrix, read: () => `${strikeId()} · ${text.states[stateOf(strikeId())]}${pairOf(strikeId()).a ? ` · A=${pairOf(strikeId()).a}` : ''}` },
     { id: 'ab', name: text.metrics.ab, read: () => `A ${pairOf(chosen.sound).a ?? text.words.none} · B ${pairOf(chosen.sound).b ?? text.words.none}` },

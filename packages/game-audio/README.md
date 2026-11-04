@@ -105,3 +105,38 @@ engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay
 - `onVoiceStart` reports every voice (recipe or sample, the files and takes, `requestedAt` / `startAt`): the event log the criteria measure.
 - Files: drop them in `assets/sfx-inbox/<categoria>/` with a line in its `CREDITOS.md` and run `pnpm --filter @adatechnology/game-audio sfx:convert` (ffmpeg): Ogg Vorbis mono 48 kHz, −1 dBFS peak, attack on the first ms, `manifest.json` and `CREDITOS.md`. Only CC0 and CC-BY go into the SDK.
 - Measuring: `measureCriteria({ sound, banks, loader })` renders C1–C9 through the real engine on an `OfflineAudioContext`; the test room's `?area=sound_check_area` (`createSoundCheckModule`) runs it on a button and records 3 s for C10. `CALIBRATION_SOUND` is a kit-made sample sound (no file) with every layer, for checking the path end to end.
+
+## Local sound pack (your own files, by config)
+
+A project can answer any SDK sound id with its own files, kept in its own folders and never in the SDK. A JSON config maps each id to its takes:
+
+```json
+{
+  "version": 1,
+  "baseUrl": "audio/",
+  "sounds": {
+    "pistol_9mm": { "files": ["weapons/pistol_01.ogg", "weapons/pistol_02.ogg"], "license": "CC0" },
+    "door_wood_close": { "files": ["doors/close.ogg"], "license": "CC-BY", "score": 7 }
+  }
+}
+```
+
+```ts
+import { applyLocalSoundPack, parseLocalSoundPack } from '@adatechnology/game-audio'
+
+const pack = applyLocalSoundPack(engine, parseLocalSoundPack(await (await fetch('audio/pack.json')).json()), { baseUrl: 'audio/' })
+await pack.done // { file: ids now playing your files, fallback: ids whose files failed }
+pack.unlicensed() // ids playing a file whose licence is not CC0 / CC-BY
+pack.dispose() // every id gets its previous sound back
+```
+
+- Urls are `baseUrl + file`: a folder served next to the page or any url (`https://cdn.example/sfx/`). `options.baseUrl` overrides the config's.
+- Nothing runs in the frame a sound plays: each id's files are fetched and decoded in idle time (`requestIdleCallback`, one id per slot), once per
+  url and shared by every voice. Until they decode the id plays what it played before (the SDK recording, else the synthesized recipe); a file that
+  fails leaves the id on the SDK sound for good, decided once at load.
+- `license` is `CC0`, `CC-BY`, `unknown` or `proprietary`. The sound panel (`createSoundCheckModule`, metric "File without licence") lists the ids
+  playing a file that is not CC0 / CC-BY: those may be tried locally but cannot ship.
+- `parseLocalSoundPack` validates at the boundary and throws `LocalSoundPackError` with every problem at once.
+- In this repo the test room reads `audio.local.json` at the root (git-ignored; see `examples/test-room/audio.local.example.json`, with `root` the
+  folder of the files): `tools/local-audio/local-audio.mjs link` symlinks it into `dist/local-audio/`, and `guard` / `guard-git` (build, site build,
+  pre-commit and CI) fail if a local file reaches a build or git.

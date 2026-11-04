@@ -44,7 +44,7 @@ export type SoundCheckText = {
   readonly strengths: Readonly<Record<Strength, string>>
   readonly states: Readonly<Record<SfxState, string>>
   readonly criteria: Readonly<Record<CriterionId, string>>
-  readonly metrics: Readonly<Record<'source' | 'chosen' | 'matrix' | 'last' | 'ab' | 'blind' | 'verdicts' | 'state' | 'count', string>>
+  readonly metrics: Readonly<Record<'source' | 'chosen' | 'matrix' | 'last' | 'ab' | 'blind' | 'verdicts' | 'state' | 'count' | 'unlicensed', string>>
   readonly run: Readonly<Record<'idle' | 'measuring' | 'done' | 'failed' | 'recording' | 'recorded', string>>
   readonly words: Readonly<Record<'none' | 'hidden' | 'prefers' | 'approved', string>>
   /** Where the voice came from: the kit's file, the owner's file, the synthesized recipe. */
@@ -128,7 +128,7 @@ const PT: SoundCheckText = {
   strengths: { light: 'leve', medium: 'médio', heavy: 'forte' },
   states: { file: 'A', synth: 'S', missing: 'F' },
   criteria: { C1: 'C1 Sincronia', C2: 'C2 Certo p/ ação', C3: 'C3 Distância', C4: 'C4 Posição', C5: 'C5 Variação', C6: 'C6 Volume', C7: 'C7 Intensidade', C8: 'C8 Cauda', C9: 'C9 Rajada', C10: 'C10 Escuta' },
-  metrics: { source: '1 · Fonte do que tocou', chosen: '1 · Escolhido', matrix: '2 · Matriz', last: 'Último tocado', ab: '4 · A × B', blind: '4 · X', verdicts: '4 · Preferências', state: '5 · Medição', count: '1 · Catálogo' },
+  metrics: { source: '1 · Fonte do que tocou', chosen: '1 · Escolhido', matrix: '2 · Matriz', last: 'Último tocado', ab: '4 · A × B', blind: '4 · X', verdicts: '4 · Preferências', state: '5 · Medição', count: '1 · Catálogo', unlicensed: '1 · Arquivo sem licença' },
   run: { idle: 'parada', measuring: 'medindo…', done: 'pronta', failed: 'falhou', recording: 'gravando…', recorded: 'gravação baixada' },
   words: { none: '—', hidden: '? (revele)', prefers: 'prefere', approved: 'aprovado pelo dono' },
   sources: { sdk: 'SDK', user: 'seu som', synth: 'sintetizado' },
@@ -202,7 +202,7 @@ const EN: SoundCheckText = {
   environments: { indoor: 'indoor', outdoor: 'outdoor' },
   strengths: { light: 'light', medium: 'medium', heavy: 'heavy' },
   criteria: { C1: 'C1 Sync', C2: 'C2 Right sound', C3: 'C3 Distance', C4: 'C4 Position', C5: 'C5 Variation', C6: 'C6 Level', C7: 'C7 Strength', C8: 'C8 Tail', C9: 'C9 Burst', C10: 'C10 Listening' },
-  metrics: { source: '1 · Source of what played', chosen: '1 · Chosen', matrix: '2 · Matrix', last: 'Last played', ab: '4 · A × B', blind: '4 · X', verdicts: '4 · Preferences', state: '5 · Measurement', count: '1 · Catalogue' },
+  metrics: { source: '1 · Source of what played', chosen: '1 · Chosen', matrix: '2 · Matrix', last: 'Last played', ab: '4 · A × B', blind: '4 · X', verdicts: '4 · Preferences', state: '5 · Measurement', count: '1 · Catalogue', unlicensed: '1 · File without licence' },
   run: { idle: 'idle', measuring: 'measuring…', done: 'done', failed: 'failed', recording: 'recording…', recorded: 'recording downloaded' },
   words: { none: '—', hidden: '? (reveal)', prefers: 'prefers', approved: 'approved by the owner' },
   sources: { sdk: 'SDK', user: 'your sound', synth: 'synthesized' },
