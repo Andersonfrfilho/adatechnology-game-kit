@@ -48,7 +48,8 @@ describe('a headlight hit', () => {
     for (let i = 0; i < 4 && !broke; i++) broke = shot().some((e) => e.type === 'fracture')
     expect(broke).toBe(true)
     expect(L.broken).toBeTruthy()
-    expect(L.lens.every((m) => !m.visible)).toBe(true)
+    // the lens is gone but for its jagged edge in the bezel
+    expect(L.lens.every((m) => !m.visible || (m as unknown as { userData: { lensRim?: boolean } }).userData.lensRim)).toBe(true)
   })
   it('of glass (an older car) shatters at the first round and goes dark', () => {
     const { part, shot, lamp, bulbBroken } = car('beetle')
