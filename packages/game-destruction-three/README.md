@@ -140,7 +140,7 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 | Vertex dents / melt noise on meshes over 20k vertices | yes | skipped |
 
 - Particles are two fixed-size ring buffers (additive 40 %, normal 60 %), one draw call each; dead particles cost a loop iteration, nothing else.
-- Fragments share one box geometry, six shard geometries, six of each wood shape (sliver, broken board, MDF lump, plywood veneer; 20 to 60 triangles each) and one material per source material id and colour; they shrink away instead of fading.
+- Fragments share one box geometry, six shard geometries, six of each wood shape (sliver, broken board, MDF lump, plywood veneer; 20 to 100 triangles each) and one material per source material id and colour; they shrink away instead of fading.
 - Decals share one disc geometry and one material; a mesh keeps at most 48 and the renderer 600.
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.
 - The explosion light is created on the first explosion (one light in the scene afterwards, intensity 0 at rest) so plan for the one-time shader recompile.

@@ -92,20 +92,22 @@ export function buildLumpGeometry(THREE: typeof THREE_NS, seed: number): THREE_N
 }
 
 /** Points along each long edge of a peeled sheet of veneer. */
-const VENEER_EDGE = 6
+const VENEER_EDGE = 11
 
 /**
- * A sheet of veneer peeled off plywood in the unit box (thin along z): long edges torn along the grain in a zigzag and the short ends broken across in
- * a few teeth, extruded to its thickness.
+ * A sheet of veneer peeled off plywood in the unit box (thin along z): long edges torn along the grain in fine teeth (now and then a deeper notch) and
+ * the short ends broken across with a sliver standing out, extruded to its thickness.
  */
 export function buildVeneerGeometry(THREE: typeof THREE_NS, seed: number): THREE_NS.BufferGeometry {
   const rnd = createRng(9000 + seed)
   const shape = new THREE.Shape()
   const outline: Array<[number, number]> = []
-  for (let i = 0; i <= VENEER_EDGE; i++) outline.push([-0.5 + i / VENEER_EDGE, 0.5 - rnd() * 0.3])
-  outline.push([0.5 - rnd() * 0.15, 0], [0.5, -0.5 + rnd() * 0.2])
-  for (let i = VENEER_EDGE; i >= 0; i--) outline.push([-0.5 + i / VENEER_EDGE, -0.5 + rnd() * 0.3])
-  outline.push([-0.5 + rnd() * 0.2, 0])
+  // the long edges tear along the grain in fine teeth; each short end breaks across with one long sliver of veneer standing out
+  const edge = (y: number, inward: number): number => y - inward * (rnd() * 0.16 + (rnd() < 0.15 ? 0.12 : 0))
+  for (let i = 0; i <= VENEER_EDGE; i++) outline.push([-0.5 + i / VENEER_EDGE, edge(0.5, 1)])
+  outline.push([0.5 - rnd() * 0.12, 0.2 * rnd()], [0.5, -0.1 + 0.2 * rnd()], [0.5 - rnd() * 0.12, -0.25 * rnd()])
+  for (let i = VENEER_EDGE; i >= 0; i--) outline.push([-0.5 + i / VENEER_EDGE, edge(-0.5, -1)])
+  outline.push([-0.5 + rnd() * 0.12, -0.2 * rnd()], [-0.5, 0.1 * rnd()], [-0.5 + rnd() * 0.12, 0.25 * rnd()])
   shape.moveTo(outline[0][0], outline[0][1])
   for (let i = 1; i < outline.length; i++) shape.lineTo(outline[i][0], outline[i][1])
   shape.closePath()
@@ -114,9 +116,9 @@ export function buildVeneerGeometry(THREE: typeof THREE_NS, seed: number): THREE
   return geometry
 }
 
-/** Share of a broken board's length its torn end takes, and how many strands of fibre the end splits into across its width. */
-const TORN_END = 0.22
-const TORN_STRANDS = 5
+/** Share of a broken board's length its torn end takes, and how many strands of fibre (at least, at most) the end splits into across its width. */
+const TORN_END = 0.24
+const TORN_STRANDS: readonly [number, number] = [4, 7]
 
 /** Pushes the two triangles of the quad a-b-c-d, wound so that it faces where (b - a) x (c - b) points. */
 const pushQuad = (out: number[], quad: ReadonlyArray<readonly number[]>): void => {
@@ -124,26 +126,51 @@ const pushQuad = (out: number[], quad: ReadonlyArray<readonly number[]>): void =
   pushTriangle(out, quad[0], quad[2], quad[3])
 }
 
+/** Uneven cuts of [-0.5, 0.5] into `count` widths, each between a third and twice the mean. */
+const unevenCuts = (count: number, rnd: () => number): number[] => {
+  const shares = Array.from({ length: count }, () => 0.35 + 1.65 * rnd())
+  const total = shares.reduce((sum, share) => sum + share, 0)
+  const cuts = [-0.5]
+  for (const share of shares) cuts.push(cuts[cuts.length - 1] + share / total)
+  cuts[cuts.length - 1] = 0.5
+  return cuts
+}
+
 /**
  * The stub of a wooden board broken across, in the unit box, long along x: the sound part of the board, and at its +x end the break, torn into strands
- * of fibre of uneven lengths that come to points, not a clean saw cut. About 60 triangles.
+ * of fibre of uneven widths and lengths that bend a little and fray before they come to points, not a clean saw cut. 58 to 94 triangles.
  */
 export function buildBrokenBoardGeometry(THREE: typeof THREE_NS, seed: number): THREE_NS.BufferGeometry {
   const rnd = createRng(10000 + seed)
   const end = 0.5 - TORN_END
   const positions: number[] = []
   const lo = -0.5, hi = 0.5
-  // the sound part of the board: a box from the far end to where the break starts (its face at the break is hidden by the strands)
+  // the sound part of the board: a box from the far end to where the break starts (its face at the break is closed by the strands)
   pushQuad(positions, [[lo, lo, hi], [end, lo, hi], [end, hi, hi], [lo, hi, hi]])
   pushQuad(positions, [[lo, hi, lo], [end, hi, lo], [end, lo, lo], [lo, lo, lo]])
   pushQuad(positions, [[lo, hi, hi], [end, hi, hi], [end, hi, lo], [lo, hi, lo]])
   pushQuad(positions, [[lo, lo, lo], [end, lo, lo], [end, lo, hi], [lo, lo, hi]])
   pushQuad(positions, [[lo, lo, lo], [lo, lo, hi], [lo, hi, hi], [lo, hi, lo]])
-  for (let k = 0; k < TORN_STRANDS; k++) {
-    const y0 = lo + k / TORN_STRANDS, y1 = lo + (k + 1) / TORN_STRANDS
-    const tip = [end + TORN_END * (0.25 + 0.75 * rnd()), y0 + (y1 - y0) * rnd(), (rnd() - 0.5) * 0.6]
+  const count = TORN_STRANDS[0] + Math.floor(rnd() * (TORN_STRANDS[1] - TORN_STRANDS[0] + 1))
+  const cuts = unevenCuts(count, rnd)
+  for (let k = 0; k < count; k++) {
+    const y0 = cuts[k], y1 = cuts[k + 1]
+    const length = TORN_END * (0.15 + 0.85 * rnd())
+    // halfway out the strand has narrowed and strays a little sideways and up or down; then it comes to a point off its middle
+    const midX = end + length * (0.35 + 0.3 * rnd())
+    const narrow = 0.55 + 0.35 * rnd()
+    const shiftY = (rnd() - 0.5) * (y1 - y0) * 0.6
+    const shiftZ = (rnd() - 0.5) * 0.5
+    const cy = (y0 + y1) / 2 + shiftY, hy = ((y1 - y0) / 2) * narrow, hz = 0.5 * (0.4 + 0.5 * rnd())
     const base = [[end, y0, lo], [end, y1, lo], [end, y1, hi], [end, y0, hi]]
-    for (let i = 0; i < 4; i++) pushTriangle(positions, base[i], base[(i + 1) % 4], tip)
+    const clampZ = (z: number): number => Math.max(lo, Math.min(hi, z))
+    const mid = [[midX, cy - hy, clampZ(shiftZ - hz)], [midX, cy + hy, clampZ(shiftZ - hz)], [midX, cy + hy, clampZ(shiftZ + hz)], [midX, cy - hy, clampZ(shiftZ + hz)]]
+    const tip = [end + length, y0 + (y1 - y0) * rnd(), clampZ(shiftZ + (rnd() - 0.5) * 0.4)]
+    for (let i = 0; i < 4; i++) {
+      const next = (i + 1) % 4
+      pushQuad(positions, [base[i], base[next], mid[next], mid[i]])
+      pushTriangle(positions, mid[i], mid[next], tip)
+    }
   }
   return faceted(THREE, positions)
 }
