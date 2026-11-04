@@ -28,7 +28,7 @@ import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
-import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -311,6 +311,8 @@ export interface TestRoomOptions {
    * The numbers of the shove an explosion gives to what is around it: loose items, furniture, and the bodies of the modules (people), which read them from `ModuleHost.blastShove`.
    * Default: the SDK's (`DEFAULT_BLAST_SHOVE` of game-contracts: 2 % of the energy becomes speed, 20 m/s at most, falloff `(1 - d / r)^2`).
    */
+  /** The body the blast wave pushes (the player's area, the charge read from a blast without one): `knockOf` of `game-contracts`. Default `DEFAULT_BLAST_IMPULSE`. */
+  blastImpulse?: BlastImpulseOptions
   blastShove?: BlastShoveOptions
   /** Mass of the player's body in kg: how far a blast throws it and whether it knocks it down (default 70, the `bodyMass` of 1.75 m). */
   playerMass?: number

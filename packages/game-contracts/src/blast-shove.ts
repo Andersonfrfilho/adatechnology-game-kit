@@ -28,6 +28,13 @@ export interface BlastSource {
   readonly energy: number
   readonly radius: number
   readonly reach?: number
+  /**
+   * Kilograms of TNT equivalent of the charge. With it a body is pushed by the blast wave itself (`blast-impulse`), and the shove of loose items keeps this module's rule; without it the body
+   * takes the charge from `energy` by `BlastImpulseOptions.tntPerJoule`.
+   */
+  readonly tnt?: number
+  /** Inside this radius (metres) the blast is lethal: a body there that the blast reaches (not behind cover) goes down, wounded, wherever the wave pushed it. */
+  readonly lethalRadius?: number
 }
 
 /** What a blast does to one body: how fast it leaves (m/s), the unit direction it leaves in, and how far from the centre it was. */

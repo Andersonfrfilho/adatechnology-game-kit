@@ -98,6 +98,8 @@ export interface PartSpec {
     radius: number
     /** Inside this radius (metres) the blast is lethal to a body; from here to `radius` it only hurts, less with distance. Without it a body takes the energy falling off over `radius`. */
     lethalRadius?: number
+    /** Kilograms of TNT equivalent of the burst: the blast wave that pushes bodies is read from it (`knockOf`). */
+    tnt?: number
     atC?: number
     /**
      * Chain reaction: what sets the part off before it is destroyed and the seconds from that to the blast (a number, or `[min, max]` drawn
@@ -718,7 +720,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; lethalRadius?: number; effect?: string })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; lethalRadius?: number; tnt?: number; effect?: string })
   /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
@@ -746,8 +748,10 @@ export type DestructionEvent =
    * One unit of a wall of units (`PartSpec.units`: a brick, a block) came out under shots or blows: `center` in world space, `size` in the part's own
    * axes and `rotation` the part's world rotation (the box of the unit that left), `fragments` the unit itself. The part stays: draw the gap, do not hide it.
    * With `torn`, nothing left the part but what a blow tore off its face (splinters of wood, lumps of MDF): the hole and the marks around it stay drawn.
+   * With `units`, a blast knocked many units out at once: each one's box (`center` in world space, `size` in the part's axes, turned by `rotation`), and
+   * `center` and `size` are the box around them all.
    */
-  | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[]; torn?: true })
+  | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[]; torn?: true; units?: readonly { center: Vec3; size: Vec3 }[] })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
   /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */

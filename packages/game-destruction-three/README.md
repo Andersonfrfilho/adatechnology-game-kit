@@ -104,7 +104,7 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 |---|---|---|
 | `dent` | vertices within `dent.radius` pushed in by `depth * (1 - (d/r)^2)^2` (skipped on `low` for meshes over 20k vertices); sparks on metal | `impact_*` |
 | `hole` | dark disc decal on the surface (and on the exit side of a through hole); a crack star on transparent materials; sparks on metal | `impact_*` |
-| `crack` | star of jagged lines, white on glass, dark otherwise | `impact_*` |
+| `crack` | star of jagged white lines on glass (transparent materials) only; an opaque body draws no lines, its damage shows as chips, holes and dents | `impact_*` |
 | `ricochet` | sparks along the reflected direction | `ricochet` |
 | `debris` | a burst of the requested kind (`sparks`, `dust`, `shards`, `splinters`, `chips`, `fibers`, `leaves`, `drips`, `ash`, `smoke`, `steam`) | |
 | `fracture` | part hidden; fragments (boxes, thin irregular prisms for shards) with gravity, ground bounce, settling, sleep and shrink-away; debris burst by style | `shatter_glass`, `crumble`, `splinter`, `impact_*` |

@@ -5,7 +5,7 @@ import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } f
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
-import { bodyMass, KNOCK_CHEST, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
+import { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -567,7 +567,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const ev of batch) {
       if (ev.type === 'leak') puncture(ev)
       else if (ev.type === 'ignite') igniteNear(ev.point, 0.9)
-      else if (ev.type === 'explode') emitHost({ type: 'explosion', source: ev.object, point: ev.point, energy: ev.energy, radius: ev.radius, cause: 'part', ...(ev.effect !== undefined ? { explosive: ev.effect } : {}) })
+      else if (ev.type === 'explode') {
+        emitHost({
+          type: 'explosion',
+          source: ev.object,
+          point: ev.point,
+          energy: ev.energy,
+          radius: ev.radius,
+          cause: 'part',
+          ...(ev.effect !== undefined ? { explosive: ev.effect } : {}),
+          ...(ev.tnt !== undefined ? { tnt: ev.tnt } : {}),
+          ...(ev.lethalRadius !== undefined ? { lethalRadius: ev.lethalRadius } : {}),
+        })
+      }
       fire('event', ev)
       options.onEvent?.(ev)
     }
@@ -1378,17 +1390,30 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       data: { against: event.against, speed: event.speed, energy, ...(hit ? { object: hit.object, part: hit.part } : {}) },
     })
   }
-  const knockPlayer = (event: { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly source: string }): void => {
+  const knockPlayer = (event: Extract<HostEvent, { type: 'explosion' }>): void => {
     if (seating.seat) return
     const feet: Vec3 = [player.x, player.feet, player.z]
-    const reach = world.blastReach(event.point, [feet[0], feet[1] + KNOCK_CHEST, feet[2]], event.source ? { ignore: [event.source] } : {})
-    const knock = knockOf({ point: event.point, energy: event.energy, radius: event.radius, reach }, feet, playerMass, options.blastShove)
+    const chest: Vec3 = [feet[0], feet[1] + KNOCK_CHEST, feet[2]]
+    const reach = world.blastReach(event.point, chest, event.source ? { ignore: [event.source] } : {})
+    const blast = {
+      point: event.point,
+      energy: event.energy,
+      radius: event.radius,
+      reach,
+      ...(event.tnt !== undefined ? { tnt: event.tnt } : {}),
+      ...(event.lethalRadius !== undefined ? { lethalRadius: event.lethalRadius } : {}),
+    }
+    const knock = knockOf(blast, feet, playerMass, options.blastShove, options.blastImpulse)
     if (!knock) return
     player.knock(knock)
     const speed = Math.hypot(knock.velocity[0], knock.velocity[1], knock.velocity[2])
-    action(knock.down ? 'player_knocked_down' : 'player_shoved', t(knock.down ? 'act.knocked_down' : 'act.player_shoved', { speed: num(speed, 1), reach: num(reach * 100, 0) }), {
-      data: { speed, reach, down: knock.down, source: event.source },
-    })
+    const distance = Math.hypot(chest[0] - event.point[0], chest[1] - event.point[1], chest[2] - event.point[2])
+    const data = { speed, reach, distance, down: knock.down, wounded: Boolean(knock.wounded), stunSeconds: knock.stunSeconds ?? 0, source: event.source }
+    const values = { speed: num(speed, 1), reach: num(reach * 100, 0), distance: num(distance, 1), stun: num(knock.stunSeconds ?? 0, 1) }
+    if (knock.wounded) action('player_wounded', t(speed >= KNOCK_DOWN_SPEED ? 'act.player_thrown_wounded' : 'act.player_wounded', values), { data })
+    else if (knock.down) action('player_knocked_down', t('act.knocked_down', values), { data })
+    else if (speed > 0) action('player_shoved', t('act.player_shoved', values), { data })
+    else action('player_stunned', t('act.player_stunned', values), { data })
   }
   const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
   let feetPrev: [number, number] | null = null

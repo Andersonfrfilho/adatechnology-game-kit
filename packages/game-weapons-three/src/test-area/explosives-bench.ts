@@ -71,7 +71,7 @@ export interface ExplosivesBench {
   vessel(): VesselView | undefined
   /** The wall of the scene, the zombie and the survivor, as the aftermath reads them. */
   /** The last explosion the host told (a part of the world or a thrown explosive): where, how strong and how far; undefined before the first, and after the area is cleared. */
-  lastBlast(): { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly cause: string; readonly explosive?: string } | undefined
+  lastBlast(): { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly cause: string; readonly explosive?: string; readonly tnt?: number } | undefined
   witnesses(): Array<{ kind: 'person' | 'wall' | 'object'; id: string; itemId: string; distance: number; alive?: boolean; vitality?: number; broken?: number; marks?: number; pieces?: number }>
 }
 
@@ -690,7 +690,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
       }
       offs.push(
         lent.on((event) => {
-          if (event.type === 'explosion') lastBlast = { point: event.point, energy: event.energy, radius: event.radius, cause: event.cause, ...(event.explosive === undefined ? {} : { explosive: event.explosive }) }
+          if (event.type === 'explosion') lastBlast = { point: event.point, energy: event.energy, radius: event.radius, cause: event.cause, ...(event.explosive === undefined ? {} : { explosive: event.explosive }), ...(event.tnt === undefined ? {} : { tnt: event.tnt }) }
         }),
       )
       offs.push(lent.onFrame(frame))

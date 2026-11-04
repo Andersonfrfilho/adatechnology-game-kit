@@ -1,4 +1,5 @@
-import { blastShove } from './blast-shove'
+import { blastBodySpeed, DEFAULT_BLAST_IMPULSE } from './blast-impulse'
+import type { BlastImpulseOptions } from './blast-impulse'
 import type { BlastShoveOptions, BlastSource } from './blast-shove'
 import type { Vec3 } from './destruction'
 
@@ -8,6 +9,12 @@ export const KNOCK_DOWN_SPEED = 2.5
 export const KNOCKED_DOWN_ANGLE = 1.35
 /** Seconds the body lies after it lands: this plus the landing speed times `STAND_UP_PER_SPEED`. */
 const LIE_SECONDS = 1.6
+/** Seconds a body floored by its wounds (inside the lethal radius) lies before it gets up, when it is not dead. */
+const WOUNDED_LIE_SECONDS = 6
+/** The share of the blast that has to get through for its fragments to reach a body: behind cover that stops half of it the fragments stop too. */
+export const FRAGMENT_COVER = 0.5
+/** Seconds a body is stunned at the edge of the lethal radius (the ringing ears, the dizziness); it falls with the square of the way to the edge of the blast. */
+const STUN_SECONDS = 4
 const STAND_UP_PER_SPEED = 0.25
 const FALL_SECONDS = 0.25
 const RISE_SECONDS = 0.6
@@ -28,20 +35,57 @@ export interface Knock {
   lieLeft: number
   /** Knocked off its feet by this blast. */
   down: boolean
+  /** Floored by its wounds: inside the lethal radius and not behind cover. It lies longer and falls where it stood. */
+  wounded?: boolean
+  /** Seconds of stun the blast gave the body: dizziness and ringing ears. */
+  stunSeconds?: number
+  /** The horizontal unit direction away from the blast, even when the push is too weak to move the body: the way it falls. */
+  away?: Vec3
 }
 
 /** The mass of a body in kg from its height (m) and its build (1 = average): 70 kg at 1.75 m. */
 export const bodyMass = (height: number, build = 1): number => 70 * (height / 1.75) ** 2 * build
 
 /**
- * What a blast does to a body standing at `feet`: the shove of `game-contracts` taken at the chest, a hop when it goes up, and a fall when it is strong enough. Undefined when the blast does not
- * reach it. The numbers are the host's (`ModuleHost.blastShove`), the same ones that throw its loose items.
+ * What a blast does to a body standing at `feet`, of `mass` kg. Undefined when the blast does not reach it or does nothing to it.
+ *
+ * The body is pushed by the blast wave (`blastBodySpeed`, from the charge `blast.tnt`, or from `energy` by `tntPerJoule`), taken at the chest and cut by `reach`, the share that got through
+ * cover. It is floored when that push is `KNOCK_DOWN_SPEED` or more, or when it stands inside `lethalRadius` with the blast reaching it (the fragments and the overpressure fell it where it
+ * stands). It is stunned for a while inside the radius. `options` are the shove numbers of the host's loose items; only their `minSpeed` applies to a body.
  */
-export function knockOf(blast: BlastSource, feet: Vec3, mass: number, options?: BlastShoveOptions): Knock | undefined {
-  const hit = blastShove(blast, { position: [feet[0], feet[1] + CHEST, feet[2]], mass }, options)
-  if (!hit) return undefined
-  const [dx, dy, dz] = hit.direction
-  return { velocity: [dx * hit.speed, Math.max(0, dy * hit.speed), dz * hit.speed], airborne: dy > 0, lying: 0, lieLeft: 0, down: hit.speed >= KNOCK_DOWN_SPEED }
+export function knockOf(blast: BlastSource, feet: Vec3, mass: number, options?: BlastShoveOptions, impulse: BlastImpulseOptions = {}): Knock | undefined {
+  const o = { ...DEFAULT_BLAST_IMPULSE, ...impulse }
+  const chest: Vec3 = [feet[0], feet[1] + CHEST, feet[2]]
+  const dx = chest[0] - blast.point[0]
+  const dy = chest[1] - blast.point[1]
+  const dz = chest[2] - blast.point[2]
+  const distance = Math.hypot(dx, dy, dz)
+  if (!(blast.radius > 0) || distance > blast.radius) return undefined
+  const reach = Math.max(0, Math.min(1, blast.reach ?? 1))
+  const tnt = blast.tnt ?? blast.energy * o.tntPerJoule
+  let speed = blastBodySpeed(tnt, distance, mass, reach, o)
+  const minSpeed = impulse.minSpeed ?? options?.minSpeed ?? o.minSpeed
+  if (speed < minSpeed) speed = 0
+  const struck = reach >= FRAGMENT_COVER
+  const wounded = struck && blast.lethalRadius !== undefined && distance <= blast.lethalRadius
+  const edge = 1 - distance / blast.radius
+  const stunSeconds = struck ? STUN_SECONDS * edge * edge * reach : 0
+  if (speed === 0 && !wounded && stunSeconds < 0.25) return undefined
+  // straight above or below the centre there is no "away": the push goes up
+  const horizontal = Math.hypot(dx, dz)
+  const away: Vec3 = horizontal > 1e-4 ? [dx / horizontal, o.lift, dz / horizontal] : [0, 1, 0]
+  const length = Math.hypot(away[0], away[1], away[2])
+  const velocity: [number, number, number] = [(away[0] / length) * speed, (away[1] / length) * speed, (away[2] / length) * speed]
+  return {
+    velocity,
+    airborne: velocity[1] > 0.5,
+    lying: 0,
+    lieLeft: wounded ? WOUNDED_LIE_SECONDS : 0,
+    away: horizontal > 1e-4 ? [dx / horizontal, 0, dz / horizontal] : [0, 0, 0],
+    down: speed >= KNOCK_DOWN_SPEED || wounded,
+    ...(wounded ? { wounded } : {}),
+    ...(stunSeconds >= 0.25 ? { stunSeconds } : {}),
+  }
 }
 
 /**
@@ -70,14 +114,12 @@ export function stepKnock(knock: Knock, position: { x: number; y: number; z: num
   }
   const moving = horizontal > 0.05 || knock.airborne
   if (knock.down) {
-    if (moving) knock.lying = Math.min(1, knock.lying + dt / FALL_SECONDS)
-    else {
-      knock.lying = 1
-      if (alive) {
-        knock.lieLeft = knock.lieLeft > 0 ? knock.lieLeft : LIE_SECONDS + Math.hypot(v[0], v[2]) * STAND_UP_PER_SPEED
-        knock.lieLeft -= dt
-        if (knock.lieLeft <= 0) knock.down = false
-      }
+    // a body floored where it stands (its wounds, not the push) still takes the time of a fall to reach the ground
+    if (moving || knock.lying < 1) knock.lying = Math.min(1, knock.lying + dt / FALL_SECONDS)
+    else if (alive) {
+      knock.lieLeft = knock.lieLeft > 0 ? knock.lieLeft : LIE_SECONDS + Math.hypot(v[0], v[2]) * STAND_UP_PER_SPEED
+      knock.lieLeft -= dt
+      if (knock.lieLeft <= 0) knock.down = false
     }
   } else if (knock.lying > 0) knock.lying = Math.max(0, knock.lying - dt / RISE_SECONDS)
   return !moving && !knock.down && knock.lying === 0

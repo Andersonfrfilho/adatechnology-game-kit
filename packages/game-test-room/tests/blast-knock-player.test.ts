@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { HostEvent } from '@adatechnology/game-contracts'
+import type { HostEvent, Vec3 } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { makeRoom } from './helpers'
 import type { TestRoom } from '../src'
@@ -36,18 +36,31 @@ const grenade = (room: TestRoom, before?: () => void) => {
   return { explosion: explosions[0], feet, shove, bodyDown }
 }
 
-describe('a blast shoves the player', () => {
-  it('throws the player away from the centre, off its feet when close, and the player gets up again', () => {
+/** A charge of `tnt` kg set off at `at` (a part that bursts when it is destroyed, as a gas bottle): the blast reaches the player like any other. */
+const charge = (room: TestRoom, at: Vec3, tnt: number, lethalRadius = 0) => {
+  room.world.add(
+    { parts: [{ id: 'charge', material: 'steel', shape: { kind: 'box', size: [0.2, 0.2, 0.2] }, position: [0, 0.1, 0], explodes: { energy: tnt * 830_000, radius: 15, lethalRadius, tnt } }] },
+    { id: 'probe_charge', position: at },
+  )
+  // set it off: the part is destroyed and bursts
+  room.world.hitPart('probe_charge', 'charge', { type: 'blunt', point: [at[0], at[1] + 0.1, at[2]], direction: [0, -1, 0], energy: 1e9, radius: 0.2 })
+}
+const entry = (room: TestRoom, ...types: string[]) => room.log.entries().find((e) => types.includes(e.type))
+
+describe('a blast on the player', () => {
+  it('a grenade 3 m away fells the player where they stand, wounded and stunned: it does not throw them, and they get up again', () => {
     const room = makeRoom()
-    const { explosion, feet, shove } = grenade(room)
+    const near = () => room.look([0, 1.7, -2], [0, 1.7, -6])
+    const { explosion, feet } = grenade(room, near)
     expect(explosion).toBeDefined()
-    expect(shove).toBeDefined()
-    expect(shove!.data?.speed).toBeGreaterThan(0)
+    expect(explosion!.tnt).toBeCloseTo(0.24)
+    const hit = entry(room, 'player_wounded')
+    expect(hit).toBeDefined()
+    expect(Number(hit!.data?.stunSeconds)).toBeGreaterThan(1)
+    expect(hit!.data?.down).toBe(true)
     const now = room.playerPosition
-    const before = Math.hypot(feet![0]! - explosion!.point[0], feet![2]! - explosion!.point[2])
-    const after = Math.hypot(now[0] - explosion!.point[0], now[2] - explosion!.point[2])
-    expect(after).toBeGreaterThan(before)
-    run(room, 10)
+    expect(Math.hypot(now[0] - feet![0]!, now[2] - feet![2]!)).toBeLessThan(0.3)
+    run(room, 12)
     expect(room.playerKnock).toBeNull()
   })
 
@@ -59,48 +72,55 @@ describe('a blast shoves the player', () => {
       room.setAvatar({ root: new THREE.Group(), update: (_dt, state) => void (state.down && (forward = state.fallForward)) })
       // the grenade lies near z = -5: looking at -z the body faces it, at +z turns its back
       grenade(room, () => room.look([0, 1.7, -3.2], target as [number, number, number]))
-      return { state: { fallForward: forward }, room }
+      return { forward, room }
     }
     const facing = fell([0, 1.7, -8])
     const turned = fell([0, 1.7, 2])
-    expect(facing.room.log.entries().some((e) => e.type === 'player_knocked_down')).toBe(true)
-    expect(turned.room.log.entries().some((e) => e.type === 'player_knocked_down')).toBe(true)
-    expect(facing.state?.fallForward).toBe(false)
-    expect(turned.state?.fallForward).toBe(true)
+    expect(entry(facing.room, 'player_wounded', 'player_knocked_down')).toBeDefined()
+    expect(entry(turned.room, 'player_wounded', 'player_knocked_down')).toBeDefined()
+    expect(facing.forward).toBe(false)
+    expect(turned.forward).toBe(true)
   })
 
-  it('a brick wall between the blast and the player takes most of the push', () => {
-    // the player stands 3 m from where the grenade lies; in the second room a brick wall goes up between them
-    const near = (room: TestRoom) => () => room.look([0, 1.7, -2], [0, 1.7, -6])
-    const openRoom = makeRoom()
-    const open = grenade(openRoom, near(openRoom))
+  it('a brick wall between the blast and the player stops the fragments: no wounds', () => {
     const room = makeRoom()
-    const covered = grenade(room, () => {
-      near(room)()
+    grenade(room, () => {
+      room.look([0, 1.7, -2], [0, 1.7, -6])
       room.world.add({ parts: [{ id: 'wall', material: 'brick', shape: { kind: 'box', size: [8, 3, 0.25] }, position: [0, 1.5, -3.2] }] }, { id: 'probe_wall' })
     })
-    expect(open.shove?.data?.down).toBe(true)
-    expect(open.shove?.data?.reach).toBe(1)
-    const coveredSpeed = Number(covered.shove?.data?.speed ?? 0)
-    expect(coveredSpeed).toBeLessThan(Number(open.shove!.data!.speed) * 0.5)
+    expect(entry(room, 'player_wounded', 'player_knocked_down')).toBeUndefined()
+  })
+
+  it('a big charge close throws the player; the same charge far only stuns', () => {
+    const near = makeRoom()
+    near.look([0, 1.7, 0], [0, 1.7, -6])
+    charge(near, [0, 0, 1.2], 5)
+    run(near, 0.2)
+    const thrown = entry(near, 'player_knocked_down')
+    expect(thrown).toBeDefined()
+    expect(Number(thrown!.data?.speed)).toBeGreaterThan(3)
+    const far = makeRoom()
+    far.look([0, 1.7, 0], [0, 1.7, -6])
+    charge(far, [0, 0, 12], 5)
+    run(far, 0.2)
+    expect(entry(far, 'player_knocked_down', 'player_wounded')).toBeUndefined()
   })
 
   it('a body thrown into a wall slams into it: the wall takes the blow, the player hits it and stops', () => {
     const room = makeRoom()
-    const near = () => room.look([0, 1.7, -2], [0, 1.7, -6])
-    let sheet = ''
-    const result = grenade(room, () => {
-      near()
-      // a steel sheet right behind the player, where the blast throws it
-      sheet = room.spawn('steel_sheet', [0, 0, -1.3], 0).objectId
-    })
-    expect(result.shove?.type).toBe('player_knocked_down')
+    room.look([0, 1.7, -2], [0, 1.7, -6])
+    // a steel sheet right behind the player, where the blast throws it
+    const sheet = room.spawn('steel_sheet', [0, 0, -3.3], 0).objectId
+    run(room, 0.5)
+    charge(room, [0, 0, -0.8], 5)
+    run(room, 3)
+    expect(entry(room, 'player_knocked_down')).toBeDefined()
     const slam = room.log.entries().find((e) => e.type === 'player_slammed' && e.data?.against === 'obstacle')
     expect(slam).toBeDefined()
     expect(slam!.objectId).toBe(sheet)
     const steel = room.world.part(sheet, 'sheet')!
     expect(steel.hp).toBeLessThan(steel.maxHp)
     // steel holds: the body never went through it
-    expect(room.playerPosition[2]).toBeLessThan(-1.3)
+    expect(room.playerPosition[2]).toBeGreaterThan(-3.3)
   })
 })

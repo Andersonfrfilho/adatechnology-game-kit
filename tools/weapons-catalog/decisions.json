@@ -1398,6 +1398,11 @@
         },
         "source": "arsenal",
         "reason": "Pavio de 4 s (Arsenal §13 e Galeria; o jogo usa 3,5 s e é rejeitado); massa de cerca de 400 g na Galeria."
+      },
+      "tnt": {
+        "value": 0.24,
+        "source": "reference",
+        "reason": "TNT equivalente: 180 g de Composição B (fator 1,33 sobre o TNT)."
       }
     },
     "molotov": {
@@ -1475,6 +1480,11 @@
         },
         "source": "sdk",
         "reason": "Espoleta de 3 s da pipe_bomb do SDK."
+      },
+      "tnt": {
+        "value": 0.15,
+        "source": "reference",
+        "reason": "TNT equivalente: Cerca de 0,3 kg de pólvora confinada no cano (fator perto de 0,5)."
       }
     },
     "propane_p13": {
@@ -1534,6 +1544,11 @@
         },
         "source": "game",
         "reason": "Vazamento e voo do casco do Laboratório de Explosões (SC.p13 L894-911): jato branco de 0 a 0,8 s, maçarico de 0,8 a 1,4 s, casco sobe a 13 m/s com rastro de fogo de 1,8 s. Massa: 15 kg de casco + 13 kg de gás; 13 kg / 0,54 kg/l = 24 l. Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage 68173-68180: tiro faz vazar e explode em 1,4 s; explosão por perto explode em 0,25 a 0,6 s (0,25 + R·0,35). O atraso do fogo (1,4 s) é derivado do vazamento: o jogo não trata fogo, o Arsenal §13 diz \"explode com tiro ou fogo\"."
+      },
+      "tnt": {
+        "value": 1.5,
+        "source": "reference",
+        "reason": "TNT equivalente: Ruptura de um botijão de 13 kg de propano (BLEVE): a energia de expansão equivale a cerca de 1,5 kg de TNT; o resto é bola de fogo."
       }
     },
     "dynamite": {
@@ -1571,6 +1586,11 @@
         },
         "source": "reference",
         "reason": "Dono (2026-10-24), Q7: a espoleta da dinamite é pavio de segurança, que queima cerca de 131 s/m com ±10% (Chemring Safety Fuze, https://www.chemring.com/~/media/Files/C/Chemring-V3/documents/energetics/heds/safety-fuze-apr22.pdf; Primetake 9504, https://www.primetake.com/wp-content/uploads/sites/5/2016/03/9504.pdf; 30 CFR 57.6502). Pavio padrão de 0,03 m (cerca de 4 s); o jogo pode pôr um mais longo para armadilhas com atraso."
+      },
+      "tnt": {
+        "value": 0.25,
+        "source": "reference",
+        "reason": "TNT equivalente: Um banana de dinamite de 190 g (fator perto de 1,3)."
       }
     },
     "c4": {
@@ -1606,6 +1626,11 @@
         },
         "source": "gallery",
         "reason": "Bloco de 0,57 kg (Galeria)."
+      },
+      "tnt": {
+        "value": 0.76,
+        "source": "reference",
+        "reason": "TNT equivalente: Bloco M112 de 0,57 kg de C4 (fator 1,34)."
       }
     },
     "claymore": {
@@ -1651,6 +1676,11 @@
         "value": 102400,
         "source": "derived",
         "reason": "Q4: o raio letal de 15 m é de um cone e não de uma esfera, então a escala de Hopkinson não vale; usa o mesmo valor da dinamite (102 kJ) até o dono decidir."
+      },
+      "tnt": {
+        "value": 0.9,
+        "source": "reference",
+        "reason": "TNT equivalente: 0,68 kg de C4 da M18A1 (fator 1,34); o sopro sai para todos os lados, os estilhaços no cone."
       }
     },
     "flashbang": {
@@ -1690,6 +1720,11 @@
         },
         "source": "reference",
         "reason": "Atordoa por 4 s (Arsenal §13). Dono (2026-10-24), Q7: atraso real da M84 de 1,0 a 2,3 s depois de soltar a alavanca, sorteado por arremesso com a semente da regra (https://en.wikipedia.org/wiki/M84_stun_grenade ; pesquisa de mercado SAM.gov https://sam.gov/opp/ec681d45302a4afb8e4c4b6f4ea50cd1/view ; GlobalSecurity XM84)."
+      },
+      "tnt": {
+        "value": 0.01,
+        "source": "reference",
+        "reason": "TNT equivalente: Cerca de 5 g de pó de flash."
       }
     },
     "m79_40mm": {
@@ -1718,6 +1753,11 @@
         ],
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "tnt": {
+        "value": 0.045,
+        "source": "reference",
+        "reason": "TNT equivalente: Granada M406 de 40 mm: 32 g de Composição B."
       }
     },
     "m72_66mm": {
@@ -1746,6 +1786,11 @@
         ],
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "tnt": {
+        "value": 0.45,
+        "source": "reference",
+        "reason": "TNT equivalente: Ogiva HEAT do M72 de cerca de 0,3 kg de octol (fator perto de 1,5)."
       }
     },
     "at4_84mm": {
@@ -1774,6 +1819,11 @@
         ],
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "tnt": {
+        "value": 0.7,
+        "source": "reference",
+        "reason": "TNT equivalente: Ogiva HEAT do AT4 de 0,44 kg de octol."
       }
     },
     "pg7v": {
@@ -1802,6 +1852,11 @@
         ],
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "tnt": {
+        "value": 0.45,
+        "source": "reference",
+        "reason": "TNT equivalente: Ogiva PG-7V de 0,33 kg de A-IX-1."
       }
     },
     "carl_gustaf_84mm": {
@@ -1842,6 +1897,11 @@
         "value": "at4_84mm",
         "source": "derived",
         "reason": "Q5: raios, ruído e nível do AT4."
+      },
+      "tnt": {
+        "value": 0.6,
+        "source": "reference",
+        "reason": "TNT equivalente: Ogiva HEAT de 84 mm de cerca de 0,4 kg de octol."
       }
     },
     "fuel_barrel": {
@@ -1895,6 +1955,11 @@
         },
         "source": "game",
         "reason": "Fogo residual de fogoRes do jogo (2 m, 12 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage: tiro vaza e explode em 1,2 s (o Laboratório SC.barril também, t>1,2); explosão por perto em 0,2 a 0,4 s (0,2 + R·0,2). Fogo = vazamento (derivado)."
+      },
+      "tnt": {
+        "value": 1.0,
+        "source": "reference",
+        "reason": "TNT equivalente: Tambor de 200 L de combustível que rompe: a explosão do vapor equivale a cerca de 1 kg de TNT; o resto é fogo."
       }
     },
     "car_fuel_tank": {
@@ -1952,6 +2017,11 @@
         },
         "source": "game",
         "reason": "Fogo residual de fogoRes do jogo (2,2 m, 30 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage: carro com hp abaixo de 300 de 600 (metade do dano, `shotDamageFraction` 0,5) pega fogo e explode em 3 + R·5 s (3 a 8 s; Laboratório SC.carro usa 3 s); explosão forte (dano acima de 400) em 0,6 s. A faixa de explosão média (dano 200 a 400, 3 a 8 s) não foi portada: toda explosão no raio usa 0,6 s."
+      },
+      "tnt": {
+        "value": 0.5,
+        "source": "reference",
+        "reason": "TNT equivalente: Tanque de carro que rompe: cerca de 0,5 kg de TNT de vapor; o resto é fogo."
       }
     },
     "fuel_pump": {
@@ -2001,6 +2071,11 @@
         },
         "source": "lab",
         "reason": "Fogo residual do Laboratório (1,1 m, 14 s); temperatura do molotov do SDK. Reação em cadeia: Laboratório SC.posto (sources/efeitos__laboratorio-explosoes.js 968-995): tiro na bomba 1 explode em 1,0 s; a bomba vizinha 0,4 s depois (cadeia 0,4 s); a terceira 0,4 s depois do carro. Fogo = vazamento (derivado)."
+      },
+      "tnt": {
+        "value": 0.5,
+        "source": "reference",
+        "reason": "TNT equivalente: Bomba de combustível: cerca de 0,5 kg de TNT de vapor."
       }
     },
     "fuel_station_tank": {
@@ -2048,6 +2123,11 @@
         },
         "source": "lab",
         "reason": "Fogo residual do Laboratório (3,2 m, 20 s); temperatura do molotov do SDK. Reação em cadeia: Laboratório SC.posto: o tanque subterrâneo sobe 2,0 s depois da última bomba (2,3 s para 4,3 s). Enterrado, não leva tiro (sem \"shot\")."
+      },
+      "tnt": {
+        "value": 20,
+        "source": "reference",
+        "reason": "TNT equivalente: Tanque do posto: a nuvem de vapor que explode equivale a dezenas de kg de TNT; 20 kg é a estimativa baixa."
       }
     },
     "vog_25": {
@@ -2087,6 +2167,11 @@
         "value": "m79_40mm",
         "source": "derived",
         "reason": "Decisão do dono (2026-10-24): raios do `m79_40mm` salvo fonte. Munição real do GP-25: https://en.wikipedia.org/wiki/VOG-25"
+      },
+      "tnt": {
+        "value": 0.07,
+        "source": "reference",
+        "reason": "TNT equivalente: Granada VOG-25 de 40 mm: 48 g de A-IX-2."
       }
     }
   },
