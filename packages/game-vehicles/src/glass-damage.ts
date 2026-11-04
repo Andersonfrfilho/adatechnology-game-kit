@@ -17,6 +17,20 @@ export function crackedGlassMaterial(THREE: any, texture: unknown): any {
   })
 }
 
+/** What `crackLight` reads of a lamp the kit drew (`c.lights`) and of its vehicle. */
+type LampMesh = { material: unknown; position: { clone(): unknown } }
+type CrackedLamp = {
+  lens: LampMesh[]
+  inner: LampMesh[]
+  halo?: Array<{ visible: boolean }>
+  group: { position: { clone(): unknown } } | null
+  tint: string
+  broken: unknown
+  cracked?: boolean
+  dark?: boolean
+}
+type CrackedLampHost = { toEffects(p: unknown): unknown; dirToEffects(d: unknown): unknown }
+
 export function installGlassDamage(kit: Kit): void {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
@@ -344,10 +358,28 @@ export function installGlassDamage(kit: Kit): void {
       h.visible = false
     })
     const p = L.group ? L.group.position.clone() : L.inner[0] ? L.inner[0].position.clone() : new V3()
-    I.burst(c, 'lens', c.toEffects(p), 10, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.4, variant: L.tint === 'red' ? 'red' : 'clear' })
-    I.burst(c, 'plastic', c.toEffects(p), 2, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.0 })
+    // glass bursts into many small shards; a plastic lens breaks out in fewer, larger pieces. Either way they land and stay on the ground
+    const glass = L.lensMaterial !== 'plastic'
+    I.burst(c, 'lens', c.toEffects(p), glass ? 10 : 5, { dir: c.dirToEffects(dir.clone().negate()), speed: glass ? 1.4 : 1.1, variant: L.tint === 'red' ? 'red' : 'clear' })
+    I.burst(c, 'plastic', c.toEffects(p), glass ? 2 : 5, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.0 })
   }
   kit.breakLight = breakLight
+  /* A lamp whose lens is holed or cracked but still in place (polycarbonate, acrylic): the lens shows the cracks and sheds a few chips; a round
+     through it wrecks the bulb or LED behind it, so the lamp goes dark. */
+  function crackLight(c: CrackedLampHost, L: CrackedLamp, dir: { clone(): { negate(): unknown } }, pierced: boolean): void {
+    if (!L || L.broken) return
+    if (!L.cracked) {
+      L.cracked = true
+      for (const m of L.lens) if (m.material && !Array.isArray(m.material)) m.material = I.crackLens(m.material)
+    }
+    const p = L.group ? L.group.position.clone() : L.inner[0] ? L.inner[0].position.clone() : new V3()
+    I.burst(c, 'lens', c.toEffects(p), 3, { dir: c.dirToEffects(dir.clone().negate()), speed: 0.9, variant: L.tint === 'red' ? 'red' : 'clear' })
+    if (!pierced || L.dark) return
+    L.dark = true
+    for (const m of L.inner) m.material = MATERIALS.bulbBroken
+    for (const h of L.halo ?? []) h.visible = false
+  }
+  kit.crackLight = crackLight
 
-  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight })
+  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight })
 }

@@ -2837,6 +2837,8 @@ export function installCarsExtra(fx: FleetContext): void {
   fx.register(
     {
       key: 'classic_six_sedan',
+      // glass headlight lenses, as on cars of its time: they shatter (a modern car's are polycarbonate)
+      headlightLens: 'glass',
       group: 'cars',
       name: trl('vehicles.classic_six_sedan.name'),
       inspired: trl('vehicles.classic_six_sedan.inspired'),
