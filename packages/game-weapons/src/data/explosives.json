@@ -6,6 +6,7 @@
     "lethalRadius": 5,
     "injuryRadius": 15,
     "energy": 200000,
+    "tnt": 0.24,
     "destructionLevel": 2,
     "noise": 500,
     "fuse": 4,
@@ -51,6 +52,7 @@
     "lethalRadius": 3,
     "injuryRadius": 10,
     "energy": 43200,
+    "tnt": 0.15,
     "destructionLevel": 2,
     "noise": 450,
     "fuse": 3,
@@ -70,6 +72,7 @@
     "lethalRadius": 5,
     "injuryRadius": 14,
     "energy": 200000,
+    "tnt": 1.5,
     "destructionLevel": 2,
     "noise": 550,
     "fire": {
@@ -116,6 +119,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
+    "tnt": 0.25,
     "destructionLevel": 3,
     "noise": 600,
     "fuseLength": 0.03,
@@ -138,6 +142,7 @@
     "lethalRadius": 6,
     "injuryRadius": 18,
     "energy": 345600,
+    "tnt": 0.76,
     "destructionLevel": 3,
     "noise": 700,
     "triggers": [
@@ -161,6 +166,7 @@
       "length": 50
     },
     "energy": 102400,
+    "tnt": 0.9,
     "destructionLevel": 1,
     "noise": 500,
     "triggers": [
@@ -184,6 +190,7 @@
     "lethalRadius": 0,
     "injuryRadius": 10,
     "energy": 0,
+    "tnt": 0.01,
     "destructionLevel": 0,
     "noise": 400,
     "fuseRange": [
@@ -208,6 +215,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
+    "tnt": 0.045,
     "destructionLevel": 2,
     "noise": 450,
     "triggers": [
@@ -226,6 +234,7 @@
     "lethalRadius": 5,
     "injuryRadius": 15,
     "energy": 200000,
+    "tnt": 0.45,
     "destructionLevel": 3,
     "noise": 700,
     "triggers": [
@@ -244,6 +253,7 @@
     "lethalRadius": 5,
     "injuryRadius": 16,
     "energy": 200000,
+    "tnt": 0.7,
     "destructionLevel": 3,
     "noise": 750,
     "triggers": [
@@ -262,6 +272,7 @@
     "lethalRadius": 5,
     "injuryRadius": 16,
     "energy": 200000,
+    "tnt": 0.45,
     "destructionLevel": 3,
     "noise": 750,
     "triggers": [
@@ -280,6 +291,7 @@
     "lethalRadius": 5,
     "injuryRadius": 16,
     "energy": 200000,
+    "tnt": 0.6,
     "destructionLevel": 3,
     "noise": 750,
     "triggers": [
@@ -298,6 +310,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
+    "tnt": 1.0,
     "destructionLevel": 2,
     "noise": 550,
     "fire": {
@@ -331,6 +344,7 @@
     "lethalRadius": 5,
     "injuryRadius": 14,
     "energy": 200000,
+    "tnt": 0.5,
     "destructionLevel": 2,
     "noise": 550,
     "fire": {
@@ -368,6 +382,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
+    "tnt": 0.5,
     "destructionLevel": 3,
     "noise": 700,
     "fire": {
@@ -397,6 +412,7 @@
     "lethalRadius": 12,
     "injuryRadius": 30,
     "energy": 2764800,
+    "tnt": 20,
     "destructionLevel": 3,
     "noise": 700,
     "fire": {
@@ -424,6 +440,7 @@
     "lethalRadius": 4,
     "injuryRadius": 12,
     "energy": 102400,
+    "tnt": 0.07,
     "destructionLevel": 2,
     "noise": 450,
     "triggers": [

@@ -1,3 +1,4 @@
+import { blastBodySpeed, DEFAULT_BLAST_IMPULSE } from '@adatechnology/game-contracts'
 import type { DestructionEvent, ModuleScenario, Vec3 } from '@adatechnology/game-contracts'
 import { EXPLOSIVES_AREA_ID } from './explosives-bench'
 import type { ExplosivesBench, ExplosivesRoom } from './explosives-bench'
@@ -36,6 +37,10 @@ const CHEST = 1.1
 const MIDDLE = 0.3
 /** The heavy, free furniture of the area that the blast also reaches (a table too heavy to grab, not fixed). */
 const HEAVY_ITEMS = ['camp_table']
+/** Mass (kg) of a person of the area, the slowing of a body sliding on the ground (m/s², `stepKnock`), and the slack (m) a body may move beyond the wave's push (a step, a fall). */
+const PERSON_MASS = 70
+const GROUND_FRICTION = 7
+const PERSON_SLACK = 0.4
 
 interface Placed {
   readonly kind: string
@@ -151,7 +156,8 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
       for (const row of sheltered) {
         expect(row.outward < SHELTERED_MOST, fillText(text.push_sheltered, { what: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), cover: (row.cover * 100).toFixed(0), moved: Math.max(0, row.outward).toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, cover: row.cover } })
       }
-      const reached = inReach.filter((row) => row.cover >= SHELTERED)
+      // a person is not a loose thing: the blast wave decides how far it goes (checked below)
+      const reached = inReach.filter((row) => row.cover >= SHELTERED && row.kind !== 'survivor')
       const movedAway = reached.filter((row) => row.outward >= MOVED)
       const least = reached.length === 0 ? 0 : Math.min(...reached.map((row) => row.outward))
       expect(reached.length > 0 && movedAway.length === reached.length, fillText(text.push_outward, { moved: movedAway.length, n: reached.length, least: least.toFixed(2) }), { rows: reached.map((row) => ({ kind: row.kind, distance: row.distance, outward: row.outward })), torn: rows.filter(torn).map((row) => row.objectId) })
@@ -162,8 +168,17 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const far = ofKind[ofKind.length - 1]!
         expect(near.outward > far.outward, fillText(text.push_falloff, { what: things[kind] ?? kind, near: near.outward.toFixed(2), nearDistance: near.distance.toFixed(1), far: far.outward.toFixed(2), farDistance: far.distance.toFixed(1) }), { near: near.outward, far: far.outward })
       }
-      for (const row of reached.filter((entry) => entry.kind === 'zombie' || entry.kind === 'survivor')) {
+      // the horde keeps the shove of its own physics (the team's horde bench): a zombie in reach is thrown
+      for (const row of reached.filter((entry) => entry.kind === 'zombie')) {
         expect(row.outward >= MOVED, fillText(text.push_person, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: row.outward.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward } })
+      }
+      // a person is pushed by the blast wave itself (`blastBodySpeed`): never farther than that push slides a body on the ground, so a grenade does not throw a person
+      for (const row of inReach.filter((entry) => entry.kind === 'survivor')) {
+        const from = origin.get(row.objectId) ?? row.from
+        const chest = Math.hypot(from[0] - blast.point[0], from[1] + CHEST - blast.point[1], from[2] - blast.point[2])
+        const speed = blastBodySpeed(blast.tnt ?? blast.energy * DEFAULT_BLAST_IMPULSE.tntPerJoule, chest, PERSON_MASS, row.cover)
+        const most = (speed * speed) / (2 * GROUND_FRICTION) + PERSON_SLACK
+        expect(row.outward <= most, fillText(text.push_person_wave, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: Math.max(0, row.outward).toFixed(2), most: most.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, speed, most } })
       }
       // a torn table is still moved by the blast, whichever way its root went among its pieces
       const table = rows.find((row) => HEAVY_ITEMS.includes(row.kind) && row.distance < blast.radius * 0.85)

@@ -14,6 +14,8 @@ export interface Detonation {
   /** Seconds on the clock of the body. */
   readonly at: number
   readonly energy: number
+  /** Kilograms of TNT equivalent of the charge (`ExplosiveDef.tnt`), when it says. */
+  readonly tnt?: number
   readonly lethalRadius: number
   readonly injuryRadius: number
   readonly noise: number
@@ -189,6 +191,7 @@ export class ExplosiveBody {
       direction: this.facing,
       at,
       energy: def.energy,
+      ...(def.tnt !== undefined ? { tnt: def.tnt } : {}),
       lethalRadius: def.lethalRadius,
       injuryRadius: def.injuryRadius,
       noise: def.noise,

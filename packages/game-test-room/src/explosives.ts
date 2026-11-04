@@ -328,7 +328,17 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     if (onPlayer.zone !== 'none') {
       action('blast_player', translate('act.blast_player', { weapon: weaponName, zone: translate(`blast.zone.${onPlayer.zone}`), distance: format(onPlayer.distance, 1), stun: format(onPlayer.stunSeconds, 1) }), { data: { ...onPlayer } })
     }
-    context.emitHost({ type: 'explosion', source: projectile.weapon, point: detonation.point, energy: detonation.energy, radius: reach, cause: detonation.cause, explosive: detonation.explosive })
+    context.emitHost({
+      type: 'explosion',
+      source: projectile.weapon,
+      point: detonation.point,
+      energy: detonation.energy,
+      radius: reach,
+      cause: detonation.cause,
+      explosive: detonation.explosive,
+      lethalRadius: detonation.lethalRadius,
+      ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}),
+    })
     if (detonation.fire) context.startFire(projectile.weapon, detonation.point, detonation.fire, detonation.cause === 'impact')
   }
 
