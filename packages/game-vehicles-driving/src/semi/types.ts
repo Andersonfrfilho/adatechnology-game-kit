@@ -20,6 +20,8 @@ export interface SemiSimSpec {
   centreHeight: number
   wheels: readonly SemiWheel[]
   wheelRadius: number
+  /** Radius of the bare rim, metres, when a wheel loses its tyre. Default `RIM_RADIUS_SHARE` of `wheelRadius`. */
+  rimRadius?: number
   fourWheelDrive: boolean
   /** Air drag: `0.5 * 1.2 * Cd * A`, in kg/m. */
   drag: number
@@ -56,6 +58,8 @@ export interface SemiSimSpec {
 export interface VehicleCondition {
   /** Health of each wheel in the order of `spec.wheels`. Under 0.2 the tyre is flat. */
   tyres?: readonly number[]
+  /** Which wheels have lost their tyre, in the order of `spec.wheels`: the bare rim runs on the road (smaller, metal on asphalt). */
+  rims?: readonly boolean[]
   engine?: number
   suspension?: number
   /** How much of the brake force is left, 0..1: worn or broken brakes, no brake fluid. */

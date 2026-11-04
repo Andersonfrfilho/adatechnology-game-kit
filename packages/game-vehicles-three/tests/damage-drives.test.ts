@@ -48,5 +48,19 @@ describe('damage that changes the driving', () => {
     const driver: any = createSemiSimDriver({}, { surfaces: createSurfaces() })
     const condition = conditionFromDamage(driver.spec, report)
     expect(condition.tyres!.filter((h) => h < 0.2)).toHaveLength(1)
+    expect(condition.rims!.filter(Boolean)).toHaveLength(0)
+  })
+  it('a tyre worn off its rim reaches the driver as a bare rim, and the car pulls to that side with the wheel straight', () => {
+    const car = sedan()
+    car.hit({ type: 'ballistic', point: car.partWorldCenter('tyre_front_left'), part: 'tyre_front_left', direction: [0, 0, 1], energy: 3500, caliber: 7.8 })
+    car.rollFlat(5000, 8)
+    const driver = createSemiSimDriver({}, { surfaces: createSurfaces() })
+    const condition = conditionFromDamage(driver.spec, car.driveReport())
+    // the semi driver's wheel 0 is the front left one
+    expect(condition.rims).toEqual([true, false, false, false])
+    driver.condition = condition
+    driver.state.u = 50 / 3.6
+    for (let t = 0; t < 30 && driver.state.x < 50; t += 1 / 60) driver.step({ throttle: 0.3, brake: 0, steer: 0, handbrake: false }, 1 / 60)
+    expect(driver.state.z).toBeLessThan(-1.5)
   })
 })

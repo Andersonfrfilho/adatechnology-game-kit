@@ -36,6 +36,8 @@ type Entry = { readonly key: string; readonly id: string; readonly scenario?: st
 const LANE = { z: 11, from: -12, wall: 13 }
 /** A rim on the road throws a burst of sparks this often. */
 const SPARK_EVERY_S = 0.08
+/** The lane damages of a tyre. */
+const TYRE_DAMAGE: ReadonlySet<LaneDamage> = new Set<LaneDamage>(['flat_tyre', 'torn_tyre', 'run_flat'])
 /** Radians a door, hood or lid may be off its rest and still count as shut. */
 const LEAF_REST_RADIANS = 0.02
 const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44aaff, rubber: 0xff9900, fuel: 0xff3300 }
@@ -393,7 +395,9 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         // the crash run does not brake: it shows what the wall does to the car
         const braking = settings.damage !== 'into_wall' && gap() < brakeAt() && state.time > 0.5
         const moving = state.time > LANE_START_S
-        const input = { ...idle, throttle: braking || !moving ? 0 : 1, brake: braking ? 1 : 0, steer: settings.damage === 'into_wall' || !moving ? 0 : Math.sin(state.time * 1.4) * 0.15 }
+        // a run on a damaged tyre holds the wheel straight: the pull to the side of the tyre is the car's, not the driver's weave
+        const straight = settings.damage === 'into_wall' || TYRE_DAMAGE.has(settings.damage) || !moving
+        const input = { ...idle, throttle: braking || !moving ? 0 : 1, brake: braking ? 1 : 0, steer: straight ? 0 : Math.sin(state.time * 1.4) * 0.15 }
         if (mode === 'arcade') {
           const { events } = arcade.step(input, dt, { blocked: (x, z, yaw) => vehicleCorners(arcade.spec, x, z, yaw).some(([px]) => px >= LANE.wall) })
           for (const e of events) {

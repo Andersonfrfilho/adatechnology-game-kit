@@ -9,6 +9,17 @@ const G = 9.81
 const clamp = (x: number, a: number, b: number): number => Math.max(a, Math.min(b, x))
 const MAX_SUBSTEP = 1 / 240
 const FLAT_BELOW = 0.2
+/**
+ * A wheel without its tyre (chosen by the physics of a bare rim on asphalt): the rim is about seven tenths of the wheel's radius (the sidewall is gone),
+ * steel or aluminium sliding on asphalt holds about 0.4 of the load (rubber 1.05), and the flange gouging the road drags like a coefficient of 0.25
+ * against the 0.015 of a tyre: the corner drops, grips less and brakes, so the car pulls to that side and loses speed. A flat tyre sags this much, metres,
+ * and drags six times a whole one.
+ */
+const RIM_RADIUS_SHARE = 0.7
+const RIM_FRICTION = 0.4
+const RIM_ROLLING = 0.25
+const FLAT_SAG = 0.05
+const FLAT_ROLLING = 6
 const STALL_HEALTH = 0.3
 
 /** A mid-size passenger car, so a game can start from numbers that drive like a car. Every field can be replaced. */
@@ -215,7 +226,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
     let sumN = 0
     let sumNA = 0
     let sumNB = 0
-    const wheelState: Array<{ n: number; grip: number; surface: string; bog: boolean; flat: boolean }> = []
+    const wheelState: Array<{ n: number; grip: number; surface: string; bog: boolean; flat: boolean; rim: boolean }> = []
     let bogging = false
     for (let i = 0; i < n; i++) {
       const w = spec.wheels[i] as (typeof spec.wheels)[number]
@@ -223,19 +234,21 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       const wz = state.z - w.x * sn + w.z * cs
       const ground = world.ground ? world.ground(wx, wz) : {}
       const surface = surfaces.get(contamination && contamination.left > 0 && surfaces.get(contamination.id).grip < surfaces.get(ground.surface ?? 'dry_asphalt').grip ? contamination.id : (ground.surface ?? 'dry_asphalt'))
+      const tyreHealth = cond.tyres ? clamp(cond.tyres[i] ?? 1, 0, 1) : 1
+      const rim = !!cond.rims?.[i]
+      const flat = rim || tyreHealth < FLAT_BELOW
+      const radius = rim ? (spec.rimRadius ?? spec.wheelRadius * RIM_RADIUS_SHARE) : flat ? spec.wheelRadius - FLAT_SAG : spec.wheelRadius
       const top = state.height + w.x * state.pitch - w.z * state.roll
-      const length = top - (ground.height ?? 0) - spec.wheelRadius
+      const length = top - (ground.height ?? 0) - radius
       const compression = ride - length
       const rate = -(state.heightRate + w.x * state.pitchRate - w.z * state.rollRate)
       const k = spec.suspension.spring * (0.5 + 0.5 * suspensionHealth)
       const c = spec.suspension.damper * (0.5 + 0.5 * suspensionHealth)
       const load = Math.max(0, k * compression + c * rate)
-      const tyreHealth = cond.tyres ? clamp(cond.tyres[i] ?? 1, 0, 1) : 1
-      const flat = tyreHealth < FLAT_BELOW
       const bog = !!surface.bogs && !spec.fourWheelDrive
       if (bog) bogging = true
-      const grip = surfaceGrip(surface, state.u) * (flat ? 0.5 : 1)
-      wheelState.push({ n: load, grip, surface: surface.id, bog, flat })
+      const grip = surfaceGrip(surface, state.u) * (rim ? RIM_FRICTION / spec.tyre.friction : flat ? 0.5 : 1)
+      wheelState.push({ n: load, grip, surface: surface.id, bog, flat, rim })
       sumN += load
       sumNA += load * w.x
       sumNB += load * w.z
@@ -275,7 +288,7 @@ export function createSemiSimDriver(specification: Partial<SemiSimSpec> = {}, op
       if (locked || lockedByBrake) fl += moving ? -Math.sign(vl) * capacity * (lockedByBrake ? SLIDING_GRIP : 1) : 0
       else if (brakeShare > 0 && moving) fl += -Math.sign(vl) * brakeShare
       if (brakeShare > 0 && moving) brakeWork += Math.min(brakeShare, capacity) * Math.abs(vl) * dt
-      const rolling = ws.bog && accelInput > 0 ? spec.bogResistance : spec.rolling * (ws.flat ? 6 : 1)
+      const rolling = ws.bog && accelInput > 0 ? spec.bogResistance : ws.rim ? RIM_ROLLING : spec.rolling * (ws.flat ? FLAT_ROLLING : 1)
       // lateral: slip angle into a saturating curve, separate from the longitudinal one
       const alpha = Math.atan2(vc, Math.abs(vl) + 0.5)
       let fc = -Math.tanh((spec.tyre.corneringStiffness * alpha)) * capacity

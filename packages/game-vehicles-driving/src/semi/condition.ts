@@ -7,6 +7,8 @@ export type DamagedTyre = {
   readonly z: number
   /** 0 flat or gone, 1 whole. */
   readonly health: number
+  /** The tyre is gone and the rim is on the road. */
+  readonly rim?: boolean
 }
 
 export type DamageReport = {
@@ -27,10 +29,11 @@ export function conditionFromDamage(spec: Pick<SemiSimSpec, 'wheels'>, report: D
         best = tyre
       }
     }
-    return best?.health ?? 1
+    return best
   })
   return {
-    tyres,
+    tyres: tyres.map((tyre) => tyre?.health ?? 1),
+    rims: tyres.map((tyre) => !!tyre?.rim),
     ...(report.brakes != null ? { brakes: report.brakes } : {}),
     ...(report.engine != null ? { engine: report.engine } : {}),
     ...(report.suspension != null ? { suspension: report.suspension } : {}),

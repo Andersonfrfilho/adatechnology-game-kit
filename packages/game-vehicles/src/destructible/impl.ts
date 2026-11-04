@@ -114,7 +114,8 @@ export interface VehicleDestructible extends DestructibleImpl {
 }
 
 export type DriveReport = {
-  readonly tyres: ReadonlyArray<{ readonly x: number; readonly z: number; readonly health: number }>
+  /** `rim`: the tyre is torn off and the bare rim is on the road. */
+  readonly tyres: ReadonlyArray<{ readonly x: number; readonly z: number; readonly health: number; readonly rim: boolean }>
   readonly brakes: number
   readonly engine: number
   readonly suspension: number
@@ -1350,7 +1351,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       }
       const tyres = [...ps.values()]
         .filter((p) => p.def.role === 'tyre')
-        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: tyreHealth(p) }))
+        .map((p) => ({ x: p.def.box.center[0], z: p.def.box.center[2], health: tyreHealth(p), rim: p.lost }))
       const status = computeStatus()
       // the brakes need their fluid: a leaking system loses pressure and the pedal sinks
       const brakeSystem = [...ps.values()].find((p) => p.def.role === 'brakes' && p.def.contains)

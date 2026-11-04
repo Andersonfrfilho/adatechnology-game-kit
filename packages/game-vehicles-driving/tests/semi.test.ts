@@ -143,6 +143,32 @@ describe('semi-simulation driver', () => {
     expect(flatRight).toBeLessThan(straight - 0.01)
   })
 
+  it('pulls hard to a wheel that lost its tyre, drops that corner and drags, with the wheel held straight', () => {
+    // 50 m from 50 km/h at a light throttle, the wheel straight: the sideways drift, the heading and the speed left
+    const run = (condition: { tyres: number[]; rims?: boolean[] }) => {
+      const d = createSemiSimDriver({})
+      d.state.u = 50 / 3.6
+      d.condition = condition
+      for (let t = 0; t < 30 && d.state.x < 50; t += DT) d.step({ ...coast, throttle: 0.3 }, DT)
+      return { drift: d.state.z, yaw: d.state.yaw, kmh: d.state.u * 3.6 }
+    }
+    const whole = run({ tyres: [1, 1, 1, 1] })
+    const flat = run({ tyres: [0.1, 1, 1, 1] })
+    const rim = run({ tyres: [0.05, 1, 1, 1], rims: [true, false, false, false] })
+    expect(Math.abs(whole.drift)).toBeLessThan(0.01)
+    // wheel 0 is the front left (z < 0): the drag on the bare rim turns the nose left and the car goes off to the left, much more than on a flat tyre
+    expect(flat.drift).toBeLessThan(-0.3)
+    expect(rim.drift).toBeLessThan(flat.drift * 2)
+    expect(rim.drift).toBeLessThan(-1.5)
+    expect(rim.yaw).toBeGreaterThan(0.05)
+    expect(rim.kmh).toBeLessThan(whole.kmh - 3)
+    // standing, the corner on the rim sits lower: the body rolls to the left (negative roll is the left side down)
+    const standing = createSemiSimDriver({})
+    standing.condition = { tyres: [0.05, 1, 1, 1], rims: [true, false, false, false] }
+    for (let t = 0; t < 3; t += DT) standing.step(coast, DT)
+    expect(standing.state.roll).toBeLessThan(-0.01)
+  })
+
   it('rolls more with a damaged suspension', () => {
     const roll = (suspension: number) => {
       const d = atSpeed(60)
