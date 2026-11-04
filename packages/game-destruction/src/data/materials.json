@@ -127,6 +127,7 @@
  },
  {
   "id": "wood_soft",
+  "splitForm": "slivers",
   "density": 500,
   "hpPerKg": 90,
   "penetration": 9,
@@ -172,6 +173,7 @@
  },
  {
   "id": "wood_hard",
+  "splitForm": "slivers",
   "density": 750,
   "hpPerKg": 140,
   "penetration": 14,
@@ -216,6 +218,7 @@
  },
  {
   "id": "plywood",
+  "splitForm": "plies",
   "density": 600,
   "hpPerKg": 70,
   "penetration": 7,
@@ -263,6 +266,7 @@
  },
  {
   "id": "mdf",
+  "splitForm": "granules",
   "density": 750,
   "hpPerKg": 45,
   "penetration": 6,
@@ -774,6 +778,7 @@
  },
  {
   "id": "green_wood",
+  "splitForm": "slivers",
   "density": 650,
   "hpPerKg": 5,
   "penetration": 10,

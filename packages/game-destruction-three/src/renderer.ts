@@ -279,6 +279,7 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       max: this.maxFragments,
       life: o.fragmentLife ?? 12,
+      formOf: (id) => this.world.materials.get(id)?.splitForm,
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.pieceSys = new PieceSystem(THREE, {

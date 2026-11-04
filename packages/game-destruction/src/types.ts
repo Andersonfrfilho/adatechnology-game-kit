@@ -116,6 +116,13 @@ export interface MaterialThermal {
   smoke?: 'white' | 'grey' | 'black'
 }
 
+/**
+ * How a wood-based material comes apart (`MaterialDef.splitForm`): `slivers` (solid wood: pointed splinters of many sizes along the grain, with
+ * ragged ends), `plies` (plywood: thin splinters, and the veneer sheets peel apart in layers), `granules` (MDF, particle board: no grain, crumbly
+ * lumps and dust).
+ */
+export type SplitForm = 'slivers' | 'plies' | 'granules'
+
 /** What one kind of blow does to a material where it lands (`MaterialDef.hits`). */
 export interface MaterialHit {
   /**
@@ -166,6 +173,11 @@ export interface MaterialDef {
   fracture: FractureStyle
   /** Fragment size range in metres (default `[0.04, 0.2]`). */
   fragmentSize?: [number, number]
+  /**
+   * How a wood-based material comes apart when it breaks and where a blow tears it (see `SplitForm`); the renderer draws its splinters, sheets and lumps
+   * by it. Omit for a material that is not made of wood fibre.
+   */
+  splitForm?: SplitForm
   /**
    * Thickness of one sheet, in metres, for a material that comes in sheets (paper). A `tear` part much thicker than a sheet is a stack of them (a book,
    * a ream, a magazine) and comes apart as thin loose scraps (`Fragment.inner` for the pages) instead of slabs as thick as the part.

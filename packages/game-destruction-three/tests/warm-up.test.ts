@@ -17,12 +17,12 @@ describe('warm-up probes', () => {
     expect(firstMaterials.length).toBe(first.children.length)
   })
 
-  it('draws every shared piece of a fragment once: the box, the six shards, the bullet-hole disc, opaque and glass', () => {
+  it('draws every shared piece of a fragment once: the box, the six shards, the six wood splinters, MDF lumps, plywood veneers and broken board ends, the bullet-hole disc, opaque and glass', () => {
     const renderer = createDestructionRenderer(THREE, { scene: new THREE.Scene(), world: new FakeWorld().asWorld() })
     const group = renderer.warmUpProbes().group as THREE.Group
     const fragmentMeshes = group.children.slice(3) as THREE.Mesh[]
     const geometries = new Set(fragmentMeshes.map((mesh) => mesh.geometry))
-    expect(geometries.size).toBe(8)
+    expect(geometries.size).toBe(8 + 4 * 6)
     expect(fragmentMeshes.filter((mesh) => (mesh.material as THREE.Material).transparent)).toHaveLength(7)
     const again = (renderer.warmUpProbes().group as THREE.Group).children.slice(3) as THREE.Mesh[]
     expect(new Set(again.map((mesh) => mesh.geometry))).toEqual(geometries)

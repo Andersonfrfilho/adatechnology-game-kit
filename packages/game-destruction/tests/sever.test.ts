@@ -21,7 +21,8 @@ describe('a long wooden part breaks where it is hit', () => {
     expect(n).toBeLessThan(w.part(id, 'b')!.maxHp / 10)
     const slabs = f!.fragments.filter((x) => x.shape === 'slab')
     expect(slabs).toHaveLength(2)
-    const ends = slabs.map((s) => [s.center[1] - s.size[1] / 2, s.center[1] + s.size[1] / 2]).sort((a, b) => a[0] - b[0])
+    // a stub of wood lies long along its own x (its torn end at +x), whatever axis of the board that is: its length is its longest side
+    const ends = slabs.map((s) => [s.center[1] - Math.max(...s.size) / 2, s.center[1] + Math.max(...s.size) / 2]).sort((a, b) => a[0] - b[0])
     expect(ends[0][0]).toBeCloseTo(-1, 2)
     expect(ends[1][1]).toBeCloseTo(1, 2)
     // the gap between the stubs is where the shots went
@@ -60,7 +61,8 @@ describe('an MDF board also breaks where it is hit', () => {
     expect(f).toBeDefined()
     const slabs = f!.fragments.filter((x) => x.shape === 'slab')
     expect(slabs).toHaveLength(2)
-    const ends = slabs.map((s) => [s.center[1] - s.size[1] / 2, s.center[1] + s.size[1] / 2]).sort((a, b) => a[0] - b[0])
+    // a stub of wood lies long along its own x (its torn end at +x), whatever axis of the board that is: its length is its longest side
+    const ends = slabs.map((s) => [s.center[1] - Math.max(...s.size) / 2, s.center[1] + Math.max(...s.size) / 2]).sort((a, b) => a[0] - b[0])
     expect(ends[0][1]).toBeLessThanOrEqual(-0.5)
     expect(ends[1][0]).toBeGreaterThanOrEqual(-0.5)
     expect(f!.fragments.some((x) => x.shape === 'chunk' && Math.abs(x.center[1] + 0.5) < 0.1)).toBe(true)
