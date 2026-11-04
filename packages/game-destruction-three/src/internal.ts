@@ -109,8 +109,17 @@ export interface PieceBody extends Piece {
    * stands on that leg's foot, so it goes over, and lands on the edge of the top.
    */
   contacts?: Vec3[]
+  /** The boxes of its parts (its frame, from the centre of mass), what other pieces land on instead of its box: a shelf's boards, a table's top and legs. */
+  partBoxes?: Array<{ readonly center: Vec3; readonly half: Vec3 }>
   /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
   friction?: PieceFriction
+  /**
+   * A round piece (a can, a bottle, a ball, a plate on its edge): `cylinder` round about its own `axis` (0 x, 1 y, 2 z of its frame) or a `sphere`. It touches the ground by
+   * points around its rims (`contacts`), so it rolls, and the ground holds it back only by rolling resistance, not by the grip that stops a box from turning.
+   */
+  /** The normal of the surface a round piece last lay on: where it touches is across it from the centre. */
+  surfaceNormal?: Vec3
+  round?: { readonly kind: 'cylinder' | 'sphere'; readonly axis: 0 | 1 | 2; readonly radius: number }
 }
 
 export interface Bound {

@@ -88,10 +88,11 @@ describe('an explosion shoves what is around it', () => {
     expect(seen).toEqual({ maxSpeed: 0.1 })
   })
 
-  it('a thrown item stops against what stands in its way (a steel sheet) instead of flying through it, and bounces back a little', () => {
+  it('a thrown item stops against what stands in its way (a brick column) instead of flying through it, and bounces back a little', () => {
     const room = roomWith({ maxCarryKg: 3 })
     const bucket = room.spawn('plastic_bucket', [0, 0, -4.5], 0)
-    room.spawn('steel_sheet', [0, 0, -3.6], 0)
+    // a column, not the steel sheet on its stand: the bucket rolls low, under the sheet's 60 cm of clearance
+    room.spawn('brick_column', [0, 0, -3.6], 0)
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     room.renderer.explode([0, 0.3, -5.5], 200000, 15, { visual: false })
     let farthest = -Infinity
