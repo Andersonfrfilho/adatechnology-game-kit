@@ -18,7 +18,8 @@ const houseEvents = golden.events.filter((event) => event.type === 'house').map(
 
 /** The new plan with the legacy ids the page's plan had: the seeded draws of the renderer key on them (`seedKey`). */
 function build(event: HouseEvent): { house: House; plan: any } {
-  const plan = planOf(event.template, event.seed, event.state)
+  // the team's sections (the 12 cm pillars of the raised tank), below the NBR 6118 minimum the kit now builds
+  const plan = planOf(event.template, event.seed, event.state, { visorSections: true })
   const legacy = new Map<string, string>()
   const pair = (now: any[], before: string[]): void => now.forEach((entry, index) => { if (before[index] !== undefined) legacy.set(entry.id, before[index] as string) })
   pair(plan.items, event.ids.items)
@@ -41,7 +42,8 @@ describe('team golden: the scene of the Visor de casas 3D', () => {
 
   it('draws the same plan ids in the same order (so the legacy id map above is by position)', () => {
     for (const event of houseEvents) {
-      const plan = planOf(event.template, event.seed, event.state)
+      // the team's sections (the 12 cm pillars of the raised tank), below the NBR 6118 minimum the kit now builds
+  const plan = planOf(event.template, event.seed, event.state, { visorSections: true })
       expect(plan.rooms).toHaveLength(event.ids.rooms.length)
       expect(plan.doors).toHaveLength(event.ids.doors.length)
       expect(plan.windows).toHaveLength(event.ids.windows.length)

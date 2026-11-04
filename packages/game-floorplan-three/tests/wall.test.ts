@@ -14,22 +14,22 @@ type StructurePiece = { id: string; role: string; aabb: number[]; y0: number; y1
 const make = () => wallPiece(THREE, { w: 10, h: 3, house: { document: fakeDocument } })
 
 describe('wallPiece', () => {
-  it('stands as a house wall: the wall on the strip footing, its concrete pillars and the bond beam on both, no roof', () => {
+  it('stands as a house wall: the wall on its ground beam, its concrete pillars and the bond beam on both, no roof', () => {
     const plan = wallPlan({ w: 10, h: 3 })
     expect(plan.construction.system).toBe('masonry')
     expect(plan.construction.foundation.type).toBe('strip_footing')
     const parts = plan.structure.parts.map((p: any) => `${p.id}:${p.role}:${p.material}`)
     const pillars = ['wall_column_0_0', 'wall_column_0_1', 'wall_column_0_2', 'wall_column_0_3']
-    expect(parts).toEqual(['wall_0_0:wall:brick', 'plate_0_0:beam:concrete', ...pillars.map((id) => `${id}:column:concrete`)])
+    expect(parts).toEqual(['ground_beam_0:beam:concrete', 'wall_0_0:wall:brick', 'plate_0_0:beam:concrete', ...pillars.map((id) => `${id}:column:concrete`)])
     // one at each end of the 10 m wall, flush with it, and two between them: three spans of 3.2 m, none over 4 m
     const centres = plan.structure.parts.filter((p: StructurePiece) => p.role === 'column').map((p: StructurePiece) => Math.round(((p.aabb[0] + p.aabb[2]) / 2) * 100) / 100)
     expect(centres).toEqual([-4.9, -1.63, 1.63, 4.9])
     for (const pillar of plan.structure.parts.filter((p: StructurePiece) => p.role === 'column')) {
-      expect([pillar.y0, pillar.y1]).toEqual([0, plan.structure.parts[0].y1])
+      expect([pillar.y0, pillar.y1]).toEqual([0, plan.structure.parts.find((p: StructurePiece) => p.id === 'wall_0_0').y1])
       expect(pillar.aabb[3] - pillar.aabb[1]).toBeCloseTo(0.2)
     }
     expect(plan.structure.supports.map((s: any) => `${s.part}>${s.on}:${s.joint}`)).toEqual([
-      'wall_0_0>ground:mortar', 'plate_0_0>wall_0_0:mortar', ...pillars.flatMap((id) => [`${id}>ground:rebar`, `plate_0_0>${id}:rebar`]),
+      'ground_beam_0>ground:rebar', 'wall_0_0>ground_beam_0:mortar', 'plate_0_0>wall_0_0:mortar', ...pillars.flatMap((id) => [`${id}>ground:rebar`, `plate_0_0>${id}:rebar`]),
     ])
   })
 
@@ -53,7 +53,9 @@ describe('wallPiece', () => {
     expect(wall.units).toBeTruthy()
     expect(wall.breach).toBeTruthy()
     expect(spec.parts.find((p: any) => p.id === 'plate_0_0').reinforcement).toBeTruthy()
-    expect(spec.joints.map((j: any) => j.id)).toEqual(expect.arrayContaining(['wall_0_0~ground', 'plate_0_0~wall_0_0']))
+    expect(spec.joints.map((j: any) => j.id)).toEqual(expect.arrayContaining(['ground_beam_0~ground', 'wall_0_0~ground_beam_0', 'plate_0_0~wall_0_0']))
+    // the ground beam is buried foundation: anchored, it never falls
+    expect(spec.parts.find((p: { id: string }) => p.id === 'ground_beam_0')).toMatchObject({ anchored: true, structure: { role: 'foundation' } })
     const report = checkSpec(spec, { materials: createDestruction({ seed: 1 }).materials.keys() })
     expect(report.problems).toEqual([])
   })
@@ -64,8 +66,8 @@ describe('wallPiece', () => {
     const id = world.add(piece.spec, { id: 'target' })
     const root = piece.build(THREE)
     const follower = piece.follow(root, world, id)!
-    // the drawn wall: 10 m along x centred on the origin, 3 m high, 15 cm thick (the structure's part reaches past its ends by half the thickness)
-    const wall = new THREE.Box3(new THREE.Vector3(-5, 0, -0.075), new THREE.Vector3(5, 3, 0.075))
+    // the drawn wall: 10 m along x centred on the origin, 3 m high, 15 cm thick, 20 cm at its pillars (the structure's part reaches past its ends by half the thickness)
+    const wall = new THREE.Box3(new THREE.Vector3(-5, 0, -0.1), new THREE.Vector3(5, 3, 0.1))
     const rifle = (x: number, y: number) => world.shoot([x, y, 5], [0, 0, -1], 2100, 7.62, 'test')
     for (const [x, y] of [[-4.97, 2.97], [-4.9, 2.85], [-4.97, 1.5], [-4.85, 1.5], [4.97, 2.97], [4.95, 0.6]]) for (let i = 0; i < 4; i++) rifle(x!, y!)
     follower.update()
@@ -149,7 +151,7 @@ describe('wallPiece', () => {
     for (let i = 0; i < 6; i++) world.shoot([-2 + i * 0.3, 1.6, -5], [0, 0, -1], 2100, 7.62, 'test')
     follower.update()
     // the wall loses its footing and its bond beam (the mortar knocked off with a hammer): it comes down, a piece of its own
-    expect(world.disassemble(id, 'wall_0_0~ground', 'hammer', 60)).toBe(1)
+    expect(world.disassemble(id, 'wall_0_0~ground_beam_0', 'hammer', 60)).toBe(1)
     expect(world.disassemble(id, 'plate_0_0~wall_0_0', 'hammer', 60)).toBe(1)
     for (let i = 0; i < 120; i++) { world.update(1 / 60); renderer.update(1 / 60); follower.update() }
     scene.updateMatrixWorld(true)

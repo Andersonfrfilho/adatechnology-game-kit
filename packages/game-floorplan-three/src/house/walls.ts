@@ -6,7 +6,8 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installHouseWalls(K: Kernel, shared: Shared): void {
   const { EPS, Y0, boxC, bx, cursor, effectiveHeight, pieceRecord, structurePiece, wallColor } = K;
-  const sh = K.sh as (color: number, factor: number) => number;
+  // `sh` is installed after this module: read it when called
+  const sh = (color: number, factor: number): number => (K.sh as (c: number, f: number) => number)(color, factor);
   function wallBox(alongU, L, a, b, ya, yb, th, cL, cH, mL, mH) {
     if (yb - ya < 1e-4 || b - a < 1e-4) return;
     if (alongU) { bx(mL, a, ya, L - th / 2, b, yb, L, cL); bx(mH, a, ya, L, b, yb, L + th / 2, cH); }
@@ -31,6 +32,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
   function walls() {
     const R = shared.ctx.r, cut = shared.ctx.cut, nA = R.floors.length, vMin = Math.min(...R.walls.map(w => (w.axis === 'u' ? w.v0 : Math.min(w.v0, w.v1))));
     const corners = new Map();
+    const looks = new Map<string, { mat: string; color: number; top: number }>();
     // (CTX.colliders is zeroed on rebuild: here only the walls are added, after the lot wall and gates)
     for (const w of R.walls) {
       const f = w.floor; cursor.group = 'f' + f; cursor.pc = pieceOf(w);
@@ -39,6 +41,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       const hh = cut ? Math.min(h, 1.2) : h, L = alongU ? w.v0 : w.u0, s0 = Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1), s1 = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1);
       const front = alongU && Math.abs(L - vMin) < 0.05;
       const sideL = sideOf(w.sides[0], front), sideH = sideOf(w.sides[1], front);
+      if (w.id) { const face = sideL.exterior ? sideL : sideH; looks.set(w.id, { mat: face.mat, color: face.color, top: y0 + hh }); }
       shared.ctx.colliders.push({ type: 'wall', piece: w.id, f, x0: alongU ? s0 : L - th / 2, z0: alongU ? L - th / 2 : s0, x1: alongU ? s1 : L + th / 2, z1: alongU ? L + th / 2 : s1 });
       if (w.type === 'railing') { // guardrail: glass between two rails and posts
         const c0 = shared.ctx.colors.metal != null ? shared.ctx.colors.metal : 0x8a8e92;
@@ -64,17 +67,26 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
     }
     cursor.pc = null;
     for (const e of corners.values()) if (e.axes.size === 2 && e.n === 2) { cursor.group = 'f' + e.f; bx(e.color.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, e.color.color); }
-    if (shared.ctx.showPillars) wallPillars();
+    if (shared.ctx.showPillars) wallPillars(looks);
   }
   // the pillars of confined masonry that stand in the walls: along them, at the corners and at the jambs of the wide doors
   const PILLAR_IN_WALL = /^(wall_column_|column_\d|jamb_column_)/;
-  // the concrete pillars in the walls, drawn as their own pieces: plastered, a shade off the facade, out of the wall's faces by what they are deeper than it
-  function wallPillars() {
-    const colour = sh(shared.ctx.colors.facade != null ? shared.ctx.colors.facade : 0xe8e2d4, 0.93);
-    for (const e of Object.values<StructurePart>(shared.ctx.structureIndex)) {
+  /** The wall a pillar stands in (its centre in the wall's plan box, on its storey). */
+  const wallOf = (pillar: StructurePart, parts: readonly StructurePart[]): StructurePart | undefined => {
+    const u = (pillar.aabb[0] + pillar.aabb[2]) / 2, v = (pillar.aabb[1] + pillar.aabb[3]) / 2;
+    return parts.find((q) => (q.role === 'wall' || q.role === 'partition') && q.assembly !== undefined && q.floor === pillar.floor && u >= q.aabb[0] - 1e-3 && u <= q.aabb[2] + 1e-3 && v >= q.aabb[1] - 1e-3 && v <= q.aabb[3] + 1e-3);
+  };
+  // the concrete pillars in the walls: plastered, a shade off the facade, out of the wall's faces by what they are deeper than it; drawn as part of the wall
+  // they stand in, so the breach of the wall cuts their plaster with its own and shows their concrete and bars where it is gone
+  function wallPillars(looks: ReadonlyMap<string, { mat: string; color: number; top: number }>) {
+    const parts = Object.values<StructurePart>(shared.ctx.structureIndex);
+    for (const e of parts) {
       if (e.role !== 'column' || !PILLAR_IN_WALL.test(e.id)) continue;
-      cursor.group = 'f' + e.floor; cursor.pc = structurePiece(e.id);
-      bx('plaster', e.aabb[0], e.y0, e.aabb[1], e.aabb[2], e.y1, e.aabb[3], colour);
+      const host = wallOf(e, parts);
+      const look = host && looks.get(host.id);
+      if (!host || !look) continue;
+      cursor.group = 'f' + e.floor; cursor.pc = structurePiece(host.id);
+      bx(look.mat, e.aabb[0], e.y0, e.aabb[1], e.aabb[2], Math.min(e.y1, look.top), e.aabb[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
     }
     cursor.pc = null;
   }
