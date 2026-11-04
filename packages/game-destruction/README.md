@@ -263,6 +263,14 @@ panels), `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_p
   that is a fracture. So a 9 mm burst never leaves stage 1 on plastered brick (it does not even go through), a rifle never breaches reinforced
   concrete, a sledgehammer opens plastered brick after ~47 swings and a C4 or RPG opens reinforced concrete at once. The engine stays in joules: the
   game tunes energies, `breach: { radius, blastFactor }` and each assembly's `breach.area`.
+- **A blast on a wall of units** (brick or block laid in its mortar, `units.mortar` other than the part's material) does not wait for the breach: the
+  units within the circle its reach cuts on the wall come out at once, one `chip` with every unit in `units`. The reach is `0.12 m x cbrt(kJ)` for the
+  houses' 13 cm brick wall and shrinks with the cube root of how much more the wall resists (joules per kg to knock a unit out x density x thickness), so
+  a frag grenade (200 kJ) 40 cm from the room's wall takes about 1.9 m² of its 28 m², and the edge is ragged as the bricks come out. The units just past
+  the edge are loosened for the next blow; the units the hole leaves without bearing (`unsupportedCells`: the courses over it step in half a brick each,
+  and at a free end all that hangs over the hole) come down too. The part stays at stage 1, so later shots and blasts keep cutting it. A blast wears a
+  joint only over the stretch it breaks (`2 x reach`), at most that share of the joint's strength, so it does not drop a whole wall from one point.
+  A cast part (concrete, whose `units` are only how it breaks) still opens one breach.
 - **Reinforced concrete.** At 0 hp the concrete crumbles (`fracture`, in panels when `units` is set) but the part does not go: it becomes its rebar cage
   (`PartState.stripped`, `expose` with the bars in world space, stage 3), still part of the structure with `capacity x residualCapacity` (default 0.15).
   A bare cage under load is overloaded in seconds (`overloadRate`), so the frame fails progressively: `expose`, `stress`, the cage is lost (`expose` with

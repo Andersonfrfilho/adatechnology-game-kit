@@ -34,6 +34,12 @@ const FLAME_MINIMUM = 200
 const FLAME_REACH = 0.6
 /** How far a blast above the ground still reaches it, as a share of its radius. */
 const BLAST_HEIGHT_REACH = 0.35
+/**
+ * Metres of ground the fireball of a 1 MJ blast blackens, growing with the cube root of the energy (a frag grenade, 200 kJ: about 0.7 m), and the share of
+ * the material's darkest char (`TerrainFireResponse.maxScorch`) it leaves at the centre, fading to the edge: concrete only soots, turf chars.
+ */
+const BLAST_SOOT_REACH = 1.2
+const BLAST_SOOT = 0.9
 /** Share of a blow's energy that throws the pieces. */
 const THROW_SHARE = 0.02
 /** Side of a square of ground that burns as one, in metres. */
@@ -503,6 +509,26 @@ export function createTerrain(options: TerrainOptions): Terrain {
     }
   }
 
+  /** The soot of a blast's fireball within `radius` of (x, z): darkest at the centre, by what each material takes (`fire.maxScorch`); it lights nothing. */
+  function soot(x: number, z: number, radius: number): void {
+    if (radius <= 0) return
+    const column0 = clampIndex(Math.floor((x - radius - x0) / cellSize), columns)
+    const column1 = clampIndex(Math.ceil((x + radius - x0) / cellSize), columns)
+    const row0 = clampIndex(Math.floor((z - radius - z0) / cellSize), rows)
+    const row1 = clampIndex(Math.ceil((z + radius - z0) / cellSize), rows)
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const distance = Math.hypot(x0 + column * cellSize - x, z0 + row * cellSize - z)
+        const response = distance < radius ? vertexMaterial(column, row).fire : undefined
+        if (!response) continue
+        const index = row * stride + column
+        const before = scorch[index]!
+        scorch[index] = Math.max(before, response.maxScorch * BLAST_SOOT * Math.sqrt(1 - distance / radius))
+        if (scorch[index] !== before) touchVertex(column, row)
+      }
+    }
+  }
+
   function burnVertex(column: number, row: number, seconds: number): void {
     const index = row * stride + column
     const material = vertexMaterial(column, row)
@@ -612,7 +638,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
         const above = Math.max(0, y - heightAt(x, z))
         const reach = (hit.radius ?? 1) * BLAST_HEIGHT_REACH
         if (above >= reach) return null
-        return strike('explosive', { x, z, energy: hit.energy * (1 - above / reach) ** 2 })
+        const share = (1 - above / reach) ** 2
+        soot(x, z, BLAST_SOOT_REACH * Math.cbrt((hit.energy * share) / 1e6))
+        return strike('explosive', { x, z, energy: hit.energy * share })
       }
       case 'fire':
       case 'heat':

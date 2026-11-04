@@ -411,7 +411,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** Takes out of the wall of `partId` (or of the wall that draws it) the units the change removed, and draws the damage again. */
-    function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: { center: number[]; size: number[]; rotation: number[] }; spall?: { center: number[]; radius: number } }): boolean {
+    function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: { center: number[]; size: number[]; rotation: number[] }; chips?: { center: number[]; size: number[]; rotation: number[] }[]; spall?: { center: number[]; radius: number } }): boolean {
       if (lod !== 0) return false
       const hostId = hostOf(partId)
       if (!hostId || !specOf(partId)?.units) return false
@@ -433,6 +433,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         view.openings.set(partId, { center: local(change.opening.center), radius: change.opening.radius })
       }
       if (change.chip) view.chips.get(partId).push(chipBox(change.chip, view.mask.alongU))
+      for (const chip of change.chips ?? []) view.chips.get(partId).push(chipBox(chip, view.mask.alongU))
       if (change.spall) {
         const list = view.spalls.get(partId)
         list.push({ center: local(change.spall.center), radius: change.spall.radius })
@@ -536,7 +537,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
        */
       chip(event: any): boolean {
         if (event.torn) return false
-        return draw(event.part, { chip: { center: event.center, size: event.size ?? [0, 0, 0], rotation: event.rotation ?? [0, 0, 0, 1] } })
+        const rotation = event.rotation ?? [0, 0, 0, 1]
+        // a blast's units come in one event and are painted once
+        if (event.units?.length) return draw(event.part, { chips: event.units.map((unit: { center: number[]; size: number[] }) => ({ center: unit.center, size: unit.size, rotation })) })
+        return draw(event.part, { chip: { center: event.center, size: event.size ?? [0, 0, 0], rotation } })
       },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {

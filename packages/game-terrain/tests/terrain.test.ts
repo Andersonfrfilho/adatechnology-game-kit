@@ -371,3 +371,26 @@ describe('layout, ray and snapshot', () => {
     expect(terrain.applyHit({ type: 'explosive', point: [0, 0.2, 0], energy: GRENADE, radius: 8 })!.radius).toBeGreaterThan(0.3)
   })
 })
+
+describe('the soot of a blast', () => {
+  it('a grenade on the floor blackens the ground around it by its material, fading out, and lights nothing', () => {
+    const blast = (surface: string) => {
+      const terrain = make(surface)
+      terrain.applyHit({ type: 'explosive', point: [0, 0.3, 0], energy: 200_000, radius: 15 })
+      return terrain
+    }
+    const slab = blast('concrete_slab')
+    const lawn = blast('lawn')
+    // concrete only soots (its darkest char is 0.45), turf takes more
+    expect(slab.columnAt(0, 0).scorch).toBeGreaterThan(0.2)
+    expect(slab.columnAt(0, 0).scorch).toBeLessThanOrEqual(0.45)
+    expect(lawn.columnAt(0, 0).scorch).toBeGreaterThan(slab.columnAt(0, 0).scorch)
+    expect(slab.columnAt(0.4, 0).scorch).toBeLessThan(slab.columnAt(0, 0).scorch)
+    expect(slab.columnAt(1.5, 0).scorch).toBe(0)
+    expect(lawn.stats().burning).toBe(0)
+    // up in the air it does not reach the floor
+    const high = make('concrete_slab')
+    high.applyHit({ type: 'explosive', point: [0, 8, 0], energy: 200_000, radius: 15 })
+    expect(high.columnAt(0, 0).scorch).toBe(0)
+  })
+})
