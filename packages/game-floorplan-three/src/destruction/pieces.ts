@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- port of the team's closure: dead locals and shapes stay as delivered */
 import { assemblyPart, getAssembly } from '@adatechnology/game-destruction';
-import { DENSITY, MEMBER_CAGE, toDestructibleSpec } from '@adatechnology/game-floorplan-structure';
+import { DENSITY, MEMBER_CAGE, cageResidualCapacity, toDestructibleSpec } from '@adatechnology/game-floorplan-structure';
 import type { Kernel, Shared } from '../kernel-types.js';
 import { panelViewOf } from './panels.js';
 
@@ -90,7 +90,9 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
               // Concrete slabs, beams, pillars and stairs are not walls: they keep their box and take the rebar of reinforced concrete (the renderer draws the cage when the concrete spalls).
               if (pc.role !== 'wall' && pc.role !== 'partition') {
                 const def = getAssembly(pc.assembly || (pc.material === 'concrete' && ['slab', 'beam', 'column', 'stair'].includes(pc.role) ? 'reinforced_concrete' : ''));
-                const out = def && def.reinforcement && !sp.reinforcement ? { ...sp, reinforcement: { ...def.reinforcement } } : sp;
+                // the bare cage of a pillar carries what its bars carry (a pillar under a light bond beam stands on its cage when a blast takes its concrete)
+                const cage = def && def.reinforcement ? (pc.role === 'column' && sp.shape.kind === 'box' ? { ...def.reinforcement, residualCapacity: cageResidualCapacity(sp.shape.size, def.reinforcement, sp.structure?.capacity) } : { ...def.reinforcement }) : null;
+                const out = cage && !sp.reinforcement ? { ...sp, reinforcement: cage } : sp;
                 // a concrete beam or pillar is made of blocks a shot or a blow knocks out where it lands, showing its bars there (MEMBER_CAGE of the structure package)
                 if (out.reinforcement && !out.units && pc.material === 'concrete' && (pc.role === 'beam' || pc.role === 'column') && sp.shape.kind === 'box') {
                   return { ...out, units: { size: [MEMBER_CAGE.unit, MEMBER_CAGE.unit, Math.min(...sp.shape.size)], bond: 'stack', mortar: 'concrete' } };
