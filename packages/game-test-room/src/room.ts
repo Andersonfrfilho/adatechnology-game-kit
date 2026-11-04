@@ -3528,7 +3528,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       crouching: false,
       speed: player.speed,
       running: player.running,
-      cameraMode: 'first',
+      cameraMode,
     }),
     configureTool(settings) {
       const condition = settings[SETTING_IDS.condition]
