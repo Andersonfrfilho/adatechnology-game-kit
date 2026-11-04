@@ -236,6 +236,11 @@ export interface TestRoomOptions {
   audio?: AudioEngine | false
   /** Where the kit's recorded sound files (game-audio `assets/sfx/`) are served, for the room's engine (default `./sfx/`); `null` plays the recipes only. */
   samplesBaseUrl?: string | null
+  /**
+   * Where the owner's own sounds are served (`sfx:user` of game-audio writes them to `.sfx-local/`, kept out of git), default `./sfx-local/`; `null`
+   * leaves them out. They load after the kit's: a sound the kit lacks plays the owner's file, and one the kit has keeps the kit's in front.
+   */
+  userSamplesBaseUrl?: string | null
   /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
   environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
