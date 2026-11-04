@@ -208,7 +208,19 @@ export type HostEvent =
    * Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off.
    * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
    */
-  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
+  | {
+      type: 'explosion'
+      source: string
+      point: Vec3
+      energy: number
+      radius: number
+      cause: string
+      explosive?: string
+      /** Kilograms of TNT equivalent of the charge, when the explosive says it: the blast wave that pushes bodies is read from it (`knockOf`). */
+      tnt?: number
+      /** Inside this radius (metres) the blast is lethal to a body it reaches. */
+      lethalRadius?: number
+    }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
   /**

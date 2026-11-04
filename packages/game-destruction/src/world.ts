@@ -2068,7 +2068,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     if (ex) {
-      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
+      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.tnt !== undefined ? { tnt: ex.tnt } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
       blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), source: src })
     }
     partLost(o, p, src)

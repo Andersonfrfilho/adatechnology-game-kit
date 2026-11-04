@@ -57,6 +57,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   }
   if (extras?.cone && lab.cone) record.cone = { halfAngleDeg: Math.round((lab.cone.half * 180) / Math.PI), length: lab.cone.len }
   record.energy = decision.energy?.value ?? hopkinsonEnergy(lethalRadius, inputs.decisions.energyScale.value)
+  if (decision.tnt) record.tnt = decision.tnt.value
   record.destructionLevel = arsenal?.destructionLevel ?? world?.destructionLevel
   record.noise = arsenal?.noise ?? world?.noise
   if (extras?.fuse !== undefined) record.fuse = extras.fuse

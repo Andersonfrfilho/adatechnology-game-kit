@@ -55,6 +55,11 @@ export interface ExplosiveDef {
   readonly cone?: { readonly halfAngleDeg: number; readonly length: number }
   /** Joules. */
   readonly energy: number
+  /**
+   * Kilograms of TNT equivalent of the charge (the explosive's mass times its relative effectiveness; for a gas bottle or a tank, the equivalent of its burst). The blast wave that pushes a
+   * body is read from it (`knockOf` of `game-contracts`); without it the body takes the charge from `energy`.
+   */
+  readonly tnt?: number
   /** What the blast tears down: 0 nothing, 1 light, 2 walls, 3 structures. */
   readonly destructionLevel: 0 | 1 | 2 | 3
   /** Audible distance in metres. */
