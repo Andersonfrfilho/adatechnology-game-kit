@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import type { EngineSink } from '@adatechnology/game-audio'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { createArsenal } from '@adatechnology/game-weapons'
+import { createArsenal, genericWeapons } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
@@ -51,7 +51,7 @@ export interface WeaponsTestModuleOptions {
   props?: WeaponProps
 }
 
-/** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
+/** Prefix of the item ids of the weapon props (`weapon_beretta_92fs`). */
 export const WEAPON_ITEM_PREFIX = 'weapon_'
 // must not start with WEAPON_ITEM_PREFIX: hosts and tests tell the props apart by it
 export const COUNTER_ITEM_ID = 'counter_weapons'
@@ -322,7 +322,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   // the module's own audio, made when first needed (it makes no context until the first sound); when the host lends a sound engine, `attach` makes one on that engine instead
   let audio: WeaponAudio | null | undefined
   const ownAudio = (): WeaponAudio | null => (audio === undefined ? (audio = options.sound === false ? null : createWeaponAudio(undefined, { ...seedOption, ...(options.samples ? { samples: options.samples } : {}) })) : audio)
-  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
+  // the generic guns (the `9 mm service pistol`) are not laid out nor listed: the real weapon that stands for each is (the hands still take them by id)
+  const generics = genericWeapons(arsenal)
+  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id) && !generics.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
     const thumbnail = thumbnailBase === false ? undefined : weaponThumbnailUrl(key, thumbnailBase)

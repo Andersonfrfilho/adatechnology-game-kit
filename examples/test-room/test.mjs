@@ -91,7 +91,7 @@ if (runs('views')) {
       const all = Object.values(lists).flat()
       const room = window.__testRoom
       const spawnable = {}
-      for (const id of ['weapon_pistol_9mm', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
+      for (const id of ['weapon_beretta_92fs', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
         try {
           spawnable[id] = !!room.spawn(id, [0, 0, -5], 0)
         } catch {
