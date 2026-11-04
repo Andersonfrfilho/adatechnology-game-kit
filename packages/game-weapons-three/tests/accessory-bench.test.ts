@@ -283,6 +283,30 @@ describe('accessory bench: supported', () => {
   })
 })
 
+describe('accessory bench: player held', () => {
+  it('leaves L, K, U and V alone while another module holds the player (someone at the wheel)', () => {
+    let held = true
+    const commands: unknown[] = []
+    const host = {
+      camera: new THREE.PerspectiveCamera(),
+      bench: undefined,
+      tool: () => ({ weapon: 'colt_m4a1', category: 'rif', ammo: 0, capacity: 0, reserve: 0, reloading: false, attachments: [{ id: 'weapon_light', slot: 'rail_left', on: false }] }),
+      command: (request: unknown) => (commands.push(request), { ok: true }),
+      playerHeld: () => held,
+      onFrame: () => () => undefined,
+      on: () => () => undefined,
+      log: () => undefined,
+    }
+    const standalone = createAccessoryBench({ arsenal: createArsenal({ rules: { faults: false } }), host: host as unknown as ModuleHost, text: ACCESSORY_TEXT.en! })
+    for (const code of ['KeyL', 'KeyK', 'KeyU', 'KeyV']) expect(key(code).defaultPrevented).toBe(false)
+    expect(commands).toEqual([])
+    held = false
+    expect(key('KeyL').defaultPrevented).toBe(true)
+    expect(commands.length).toBeGreaterThan(0)
+    standalone.dispose()
+  })
+})
+
 describe('accessory bench: words', () => {
   it('names the accessories in the language of the room', () => {
     const { room } = areaRoom('pt-BR')
