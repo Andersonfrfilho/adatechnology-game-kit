@@ -83,8 +83,8 @@ describe('every piece of furniture of the catalogue, its feet broken', () => {
       const piece = renderer.piece(o)
       if (piece && !piece.sleeping) return false
       const others = [...drawn].filter(([other]) => other !== o).flatMap(([, b]) => b)
-      const low = Math.min(...boxes.map((b) => b[1]))
-      return !boxes.filter((b) => b[1] < low + 0.03).some((b) => rests(b, others))
+      // any of its parts may be what it rests by: a tap lies on the rim of the tub by its spout, its lowest knob over the basin
+      return !boxes.some((b) => rests(b, others))
     }).map(([o]) => o)
     expect(floating).toEqual([])
     // (2) a ray through where each broken foot stood meets only what is drawn

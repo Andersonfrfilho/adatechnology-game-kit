@@ -81,6 +81,12 @@ export interface PartVis {
   gone: 'none' | 'broken' | 'melted' | 'ashes'
 }
 
+/** Coulomb friction coefficients of a piece's surface: what holds it still and what drags it while it slides. */
+export interface PieceFriction {
+  readonly static: number
+  readonly dynamic: number
+}
+
 export interface PieceBody extends Piece {
   /** `localCenter` as a vector (kept in sync with it). */
   centerV: THREE_NS.Vector3
@@ -103,6 +109,8 @@ export interface PieceBody extends Piece {
    * stands on that leg's foot, so it goes over, and lands on the edge of the top.
    */
   contacts?: Vec3[]
+  /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
+  friction?: PieceFriction
 }
 
 export interface Bound {

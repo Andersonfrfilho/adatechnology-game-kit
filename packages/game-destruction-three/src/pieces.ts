@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { PieceBody } from './internal'
+import type { PieceBody, PieceFriction } from './internal'
 import { clamp } from './math'
 
 export interface PieceSystemOptions {
@@ -42,7 +42,11 @@ const SLAM_BOUNCE = 0.2
 const SLAM_FLOOR_NORMAL = 0.7
 
 const SUB_DT = 1 / 120
-const MU = 0.7
+/** Coulomb friction of a piece when no material says otherwise: what holds it still (static) and what drags it while it slides (dynamic). */
+const MU_STATIC = 0.7
+const MU_DYNAMIC = 0.6
+/** Sliding faster than this (m/s) along the surface, a contact drags with the dynamic friction; slower, it holds with the static one. */
+const SLIP_SPEED = 0.02
 const SLEEP_AFTER = 0.5
 /**
  * A piece on the ground that neither moves farther than `CALM_DRIFT` (m) nor turns more than `CALM_TURN` (rad) in `CALM_SLEEP_AFTER` seconds sleeps, however
@@ -93,6 +97,9 @@ interface Solid {
   r: number
 }
 
+/** The axis of the box whose face the last `boxTopAt` line left through (its top there): the face a point on that spot stands on. */
+let topFace = 1
+
 /** Height where the vertical line through `(x, z)` leaves the top of a box, or -Infinity when it misses the box. */
 const boxTopAt = (s: Solid, x: number, z: number): number => {
   const e = s.e
@@ -110,11 +117,29 @@ const boxTopAt = (s: Solid, x: number, z: number): number => {
     let a = (-h - p) / d, b = (h - p) / d
     if (a > b) [a, b] = [b, a]
     t0 = Math.max(t0, a)
-    t1 = Math.min(t1, b)
+    if (b < t1) {
+      t1 = b
+      topFace = k
+    }
     if (t0 > t1) return -Infinity
   }
   return s.c[1] + t1
 }
+
+const UP: Vec3 = [0, 1, 0]
+
+/** The outward normal of face `axis` of a box on its upper side: the surface of a tilted table top under a point. */
+const faceNormal = (s: Solid, axis: number): Vec3 => {
+  const e = s.e
+  const sign = e[axis * 4 + 1] < 0 ? -1 : 1
+  return [sign * e[axis * 4], sign * e[axis * 4 + 1], sign * e[axis * 4 + 2]]
+}
+
+/** The friction of two surfaces against each other: the geometric mean of each one's coefficients. */
+const pairFriction = (a: PieceFriction | undefined, b: PieceFriction | null): PieceFriction => ({
+  static: Math.sqrt((a?.static ?? MU_STATIC) * (b?.static ?? MU_STATIC)),
+  dynamic: Math.sqrt((a?.dynamic ?? MU_DYNAMIC) * (b?.dynamic ?? MU_DYNAMIC)),
+})
 
 /**
  * Light rigid-body physics for loose pieces: gravity, the 8 corners of the local box against the ground with an impulse (restitution, friction,
@@ -134,6 +159,9 @@ export class PieceSystem {
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
   private supportTurn = 0
+  /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
+  private supportNormal: Vec3 = UP
+  private supportFriction: PieceFriction | null = null
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -395,12 +423,21 @@ export class PieceSystem {
   /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */
   private supportAt(self: PieceBody, x: number, y: number, z: number, step: number): number {
     let top = this.o.groundAt(x, z)
+    let on: Solid | null = null
+    let face = 1
     for (const s of this.solids) {
       if (s.body === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
-      if (t > top && t <= y + step) top = t
+      if (t > top && t <= y + step) {
+        top = t
+        on = s
+        face = topFace
+      }
     }
     const fixed = this.o.staticTopAt?.(x, z, y, step) ?? -Infinity
+    if (fixed >= top) on = null
+    this.supportNormal = on ? faceNormal(on, face) : UP
+    this.supportFriction = on?.body.friction ?? null
     return Math.max(top, fixed)
   }
 
@@ -491,7 +528,12 @@ export class PieceSystem {
       const e = this.m.elements
       const rs: Vec3[] = []
       const ids: number[] = []
+      // per contact: the normal of the surface under it and the friction of the two surfaces
+      const ns: Vec3[] = []
+      const mus: PieceFriction[] = []
       let maxPen = 0
+      // the normal of the surface under the deepest point: the piece is pushed out along it (straight up on the floor, across a tilted top)
+      let penNormal: Vec3 = UP
       const rise = STEP + Math.max(0, -v[1]) * h * 2
       // the side of a step of the ground: how far back the piece goes (metres along -dir) and the point that hit it
       let side: { back: number; dir: [number, number]; r: Vec3 } | null = null
@@ -514,6 +556,8 @@ export class PieceSystem {
             if (floor !== undefined && floor - cy > -SLOP && floor < raw - STEP) {
               rs.push(r)
               ids.push(i)
+              ns.push(UP)
+              mus.push(pairFriction(b.friction, null))
               maxPen = Math.max(maxPen, floor - cy)
             }
             continue
@@ -536,12 +580,19 @@ export class PieceSystem {
           continue
         }
         // the points along the edges are there for the step of the ground; on other pieces only the corners stand, as everywhere else
+        this.supportNormal = UP
+        this.supportFriction = null
         const gy = i < 8 || b.contacts ? this.supportAt(b, px, cy, pz, rise) : Math.max(raw, this.o.staticTopAt?.(px, pz, cy, rise) ?? -Infinity)
         const pen = gy - cy
         if (pen > -SLOP) {
           rs.push(r)
           ids.push(i)
-          if (pen > maxPen) maxPen = pen
+          ns.push(this.supportNormal)
+          mus.push(pairFriction(b.friction, this.supportFriction))
+          if (pen > maxPen) {
+            maxPen = pen
+            penNormal = this.supportNormal
+          }
           lowest = Math.min(lowest, gy)
         }
       }
@@ -555,7 +606,11 @@ export class PieceSystem {
       contactedLast = rs.length > 0
       if (contactedLast) touched = true
       if (!contactedLast) continue
-      pos[1] += Math.max(0, maxPen - SLOP * 0.5)
+      // a point `maxPen` under a surface of normal n is `maxPen * n.y` inside it, along n
+      const out = Math.max(0, maxPen - SLOP * 0.5) * penNormal[1]
+      pos[0] += penNormal[0] * out
+      pos[1] += penNormal[1] * out
+      pos[2] += penNormal[2] * out
       let impact = 0
       for (const r of rs) impact = Math.max(impact, -(v[1] + w[2] * r[0] - w[0] * r[2]))
       const restitution = impact > 2 ? 0.25 : 0
@@ -574,84 +629,81 @@ export class PieceSystem {
       // Contact impulses, solved together: each point keeps the impulse it has given so far (pushing only, never pulling) and the friction it has
       // given (within the paper's grip times that push), and every pass corrects them. Points spread unevenly under the box (a table's edge under
       // half of it) then share the weight as they should, instead of the first ones handled kicking the box into a spin.
-      const goal = rs.map((r) => {
-        const vy = v[1] + (w[2] * r[0] - w[0] * r[2])
-        return vy < 0 ? -restitution * vy : 0
+      // the velocity of a point of the piece: v + w x r
+      const pointV = (r: Vec3): Vec3 => [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
+      const dot = (a: Vec3, c: Vec3): number => a[0] * c[0] + a[1] * c[1] + a[2] * c[2]
+      const goal = rs.map((r, k) => {
+        const vn = dot(pointV(r), ns[k])
+        return vn < 0 ? -restitution * vn : 0
+      })
+      // a point that slides drags with the dynamic friction, one that holds with the static one (Coulomb)
+      const slipping = rs.map((r, k) => {
+        const pv = pointV(r)
+        const vn = dot(pv, ns[k])
+        return Math.hypot(pv[0] - vn * ns[k][0], pv[1] - vn * ns[k][1], pv[2] - vn * ns[k][2]) > SLIP_SPEED
       })
       // the step moved the piece at the speed it had before the contacts: what they took from it along the ground is taken from the move too, so
       // a push the floor's grip holds does not creep the piece along
       const vx0 = v[0]
       const vz0 = v[2]
       // warm start: each point starts from what it gave in the last substep (a resting box carries its weight from the first pass)
-      if (!b.warm || b.warm.length !== WARM_SLOTS * 3) b.warm = new Float64Array(WARM_SLOTS * 3)
+      if (!b.warm || b.warm.length !== WARM_SLOTS * 4) b.warm = new Float64Array(WARM_SLOTS * 4)
       const warm = b.warm
-      const accN = ids.map((id) => (id < WARM_SLOTS ? warm[id * 3] : 0))
-      const accT = ids.map((id): [number, number] => (id < WARM_SLOTS ? [warm[id * 3 + 1], warm[id * 3 + 2]] : [0, 0]))
-      for (let k = 0; k < rs.length; k++) {
-        const r = rs[k]
-        const jn = accN[k]
-        const [fx, fz] = accT[k]
-        if (jn === 0 && fx === 0 && fz === 0) continue
-        v[0] += fx * invM
-        v[1] += jn * invM
-        v[2] += fz * invM
-        // r x (fx, jn, fz)
-        const dw = this.mulInvInertiaWith(b, e, r[1] * fz - r[2] * jn, r[2] * fx - r[0] * fz, r[0] * jn - r[1] * fx)
+      const accN = ids.map((id) => (id < WARM_SLOTS ? warm[id * 4] : 0))
+      const accT = ids.map((id): Vec3 => (id < WARM_SLOTS ? [warm[id * 4 + 1], warm[id * 4 + 2], warm[id * 4 + 3]] : [0, 0, 0]))
+      /** Gives the piece the impulse `j` (world) at `r`. */
+      const push = (r: Vec3, j: Vec3): void => {
+        v[0] += j[0] * invM
+        v[1] += j[1] * invM
+        v[2] += j[2] * invM
+        const dw = this.mulInvInertiaWith(b, e, r[1] * j[2] - r[2] * j[1], r[2] * j[0] - r[0] * j[2], r[0] * j[1] - r[1] * j[0])
         w[0] += dw[0]
         w[1] += dw[1]
         w[2] += dw[2]
       }
+      /** The mass the piece shows to an impulse along the unit `d` at `r`: 1 / (1/m + (I^-1 (r x d) x r) . d). */
+      const reach = (r: Vec3, d: Vec3): number => {
+        const a = this.mulInvInertiaWith(b, e, r[1] * d[2] - r[2] * d[1], r[2] * d[0] - r[0] * d[2], r[0] * d[1] - r[1] * d[0])
+        return invM + (a[1] * r[2] - a[2] * r[1]) * d[0] + (a[2] * r[0] - a[0] * r[2]) * d[1] + (a[0] * r[1] - a[1] * r[0]) * d[2]
+      }
+      for (let k = 0; k < rs.length; k++) {
+        const n = ns[k]
+        const t = accT[k]
+        if (accN[k] !== 0 || t[0] !== 0 || t[1] !== 0 || t[2] !== 0) push(rs[k], [n[0] * accN[k] + t[0], n[1] * accN[k] + t[1], n[2] * accN[k] + t[2]])
+      }
       for (let it = 0; it < SOLVER_PASSES; it++) {
         for (let k = 0; k < rs.length; k++) {
           const r = rs[k]
-          // normal impulse (n = +y): r x n = (-rz, 0, rx)
-          const vy = v[1] + (w[2] * r[0] - w[0] * r[2])
-          const a = this.mulInvInertiaWith(b, e, -r[2], 0, r[0])
-          const denom = invM + (a[2] * r[0] - a[0] * r[2])
-          const total = Math.max(0, accN[k] + (goal[k] - vy) / denom)
+          const n = ns[k]
+          // the push along the normal of the surface (a tilted top pushes across it, not straight up)
+          const vn = dot(pointV(r), n)
+          const total = Math.max(0, accN[k] + (goal[k] - vn) / reach(r, n))
           const j = total - accN[k]
           accN[k] = total
-          if (j !== 0) {
-            v[1] += j * invM
-            w[0] += a[0] * j
-            w[1] += a[1] * j
-            w[2] += a[2] * j
+          if (j !== 0) push(r, [n[0] * j, n[1] * j, n[2] * j])
+          // friction in the plane of the surface, up to the static or dynamic coefficient times the push the point gives
+          const pv = pointV(r)
+          const pn = dot(pv, n)
+          const vt: Vec3 = [pv[0] - pn * n[0], pv[1] - pn * n[1], pv[2] - pn * n[2]]
+          const speed = Math.hypot(vt[0], vt[1], vt[2])
+          const f: Vec3 = [accT[k][0], accT[k][1], accT[k][2]]
+          if (speed > 1e-6) {
+            const d: Vec3 = [vt[0] / speed, vt[1] / speed, vt[2] / speed]
+            const jt = speed / reach(r, d)
+            f[0] -= d[0] * jt
+            f[1] -= d[1] * jt
+            f[2] -= d[2] * jt
+          } else if (f[0] === 0 && f[1] === 0 && f[2] === 0) continue
+          const most = (slipping[k] ? mus[k].dynamic : mus[k].static) * accN[k]
+          const fl = Math.hypot(f[0], f[1], f[2])
+          if (fl > most) {
+            f[0] *= most / fl
+            f[1] *= most / fl
+            f[2] *= most / fl
           }
-          // friction in the contact plane, up to MU times the push the point gives
-          const vx = v[0] + (w[1] * r[2] - w[2] * r[1])
-          const vz = v[2] + (w[0] * r[1] - w[1] * r[0])
-          const vt = Math.hypot(vx, vz)
-          if (vt < 1e-6 && accT[k][0] === 0 && accT[k][1] === 0) continue
-          let fx = accT[k][0]
-          let fz = accT[k][1]
-          if (vt > 1e-6) {
-            const tx = vx / vt
-            const tz = vz / vt
-            // r x t with t = (tx, 0, tz) -> (ry*tz, rz*tx - rx*tz, -ry*tx)
-            const at = this.mulInvInertiaWith(b, e, r[1] * tz, r[2] * tx - r[0] * tz, -r[1] * tx)
-            const cx = at[1] * r[2] - at[2] * r[1]
-            const cz = at[0] * r[1] - at[1] * r[0]
-            const jt = vt / (invM + cx * tx + cz * tz)
-            fx -= tx * jt
-            fz -= tz * jt
-          }
-          const most = MU * accN[k]
-          const f = Math.hypot(fx, fz)
-          if (f > most) {
-            fx *= most / f
-            fz *= most / f
-          }
-          const dx = fx - accT[k][0]
-          const dz = fz - accT[k][1]
-          accT[k] = [fx, fz]
-          if (dx === 0 && dz === 0) continue
-          v[0] += dx * invM
-          v[2] += dz * invM
-          // r x f with f = (dx, 0, dz)
-          const dw = this.mulInvInertiaWith(b, e, r[1] * dz, r[2] * dx - r[0] * dz, -r[1] * dx)
-          w[0] += dw[0]
-          w[1] += dw[1]
-          w[2] += dw[2]
+          const dj: Vec3 = [f[0] - accT[k][0], f[1] - accT[k][1], f[2] - accT[k][2]]
+          accT[k] = f
+          if (dj[0] !== 0 || dj[1] !== 0 || dj[2] !== 0) push(r, dj)
         }
       }
       pos[0] += (v[0] - vx0) * h
@@ -660,9 +712,10 @@ export class PieceSystem {
       for (let k = 0; k < rs.length; k++) {
         const id = ids[k]
         if (id >= WARM_SLOTS) continue
-        warm[id * 3] = accN[k]
-        warm[id * 3 + 1] = accT[k][0]
-        warm[id * 3 + 2] = accT[k][1]
+        warm[id * 4] = accN[k]
+        warm[id * 4 + 1] = accT[k][0]
+        warm[id * 4 + 2] = accT[k][1]
+        warm[id * 4 + 3] = accT[k][2]
       }
       // Support check. The corner contacts above are relative to the centre of mass, so they already give a torque when the centre of mass is
       // outside the support. What they cannot do is end a balancing act: a tall thin piece on its edge (or a single corner) is in equilibrium
@@ -748,6 +801,14 @@ export class PieceSystem {
     return b.calm >= CALM_SLEEP_AFTER
   }
 
+  /** Whether the centre `c` of `upper` is over the top of `lower`'s box (as it was at the start of the update). */
+  private onTopOf(upper: PieceBody, lower: PieceBody, c: THREE_NS.Vector3): boolean {
+    const s = this.solids.find((one) => one.body === lower)
+    if (!s) return false
+    const top = boxTopAt(s, c.x, c.z)
+    return top > -Infinity && c.y >= top - 0.01
+  }
+
   /** Half the height of the box of a piece as it is turned now. */
   private halfHeight(b: PieceBody): number {
     const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
@@ -775,6 +836,8 @@ export class PieceSystem {
         if (Math.abs(ca.y - cb.y) > ra + rb) continue
         // one lies on the other (a book on a shelf): the corners hold them apart, a sideways push would slide it off
         if (Math.abs(ca.y - cb.y) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9) continue
+        // or on a tilted top (a table going over): the one above is over the other's top, whatever their boxes' heights
+        if (this.onTopOf(b, a, cb) || this.onTopOf(a, b, ca)) continue
         const rh = (Math.max(a.halfExtents[0], a.halfExtents[2]) + Math.max(b.halfExtents[0], b.halfExtents[2])) * 0.8
         let dx = cb.x - ca.x
         let dz = cb.z - ca.z
