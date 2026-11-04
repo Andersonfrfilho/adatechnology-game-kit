@@ -100,6 +100,8 @@ export type VfxRendererStats = Readonly<Record<string, number>>
 
 export interface VfxRenderer extends EffectSink {
   readonly world: VfxWorld
+  /** The one group every effect draws under (added to `scene`): what a warmup of the effects draws alone. */
+  readonly root: THREE_NS.Group
   /** Steps the world, then redraws everything from it. Call once per frame (a shared world is stepped here, nowhere else). */
   update(dt: number): void
   /** Meshes that use the materials of the solid particles, to render once so that the first effect does not build their shader programs in the middle of a frame. */

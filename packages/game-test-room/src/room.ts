@@ -3630,6 +3630,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let handle: number | null = null
     return {
       id: `vfx:${id}`,
+      // the room was drawn in every fog state just before: each frame of a blast draws the effects alone
+      root: () => vfx.root,
       play() {
         handle = vfx.play({ effect: id, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] })
       },
