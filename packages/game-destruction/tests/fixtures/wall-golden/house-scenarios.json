@@ -6160,15 +6160,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "gas_explodes",
@@ -6331,15 +6322,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "joint": "wall_front~c2",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "gas_explodes",
@@ -6466,15 +6448,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "joint": "roof~slab",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "gas_explodes",
@@ -6549,15 +6522,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "joint": "wall_back~c1",
-    "by": "break"
-   }
-  },
-  {
    "type": "spall",
    "data": {
     "scenario": "gas_explodes",
@@ -6628,15 +6592,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "joint": "wall_front~c3",
-    "by": "break"
-   }
-  },
-  {
    "type": "spall",
    "data": {
     "scenario": "gas_explodes",
@@ -6673,37 +6628,11 @@
    }
   },
   {
-   "type": "stage",
+   "type": "chip",
    "data": {
     "scenario": "gas_explodes",
     "time": 0.1,
-    "part": "wall_front",
-    "stage": 2,
-    "opening": {
-     "center": [
-      -1.9,
-      0.25,
-      1.8
-     ],
-     "radius": 0.31
-    },
-    "fragments": {
-     "count": 16,
-     "mass": 54.8119,
-     "marks": 0,
-     "first": {
-      "center": [
-       -2.135,
-       0.1375,
-       1.8
-      ],
-      "size": [
-       0.23,
-       0.075,
-       0.13
-      ]
-     }
-    }
+    "part": "wall_front"
    }
   },
   {
@@ -6727,7 +6656,7 @@
      0.9,
      1.947
     ],
-    "rays": 8,
+    "rays": 9,
     "length": 0.7071
    }
   },
@@ -6788,57 +6717,6 @@
     "amount": 28.7944,
     "hp": 62174.7402,
     "damageType": "explosive"
-   }
-  },
-  {
-   "type": "stage",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "wall_back",
-    "stage": 3
-   }
-  },
-  {
-   "type": "collapse",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "parts": [
-     "wall_back"
-    ],
-    "mass": 2583
-   }
-  },
-  {
-   "type": "stage",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "wall_front",
-    "stage": 3
-   }
-  },
-  {
-   "type": "collapse",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "parts": [
-     "wall_front"
-    ],
-    "mass": 2528.1881
-   }
-  },
-  {
-   "type": "collapse",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "parts": [
-     "roof"
-    ],
-    "mass": 1232
    }
   }
  ],

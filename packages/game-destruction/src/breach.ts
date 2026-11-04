@@ -81,3 +81,80 @@ export const marksInBox = (center: Vec3, size: Vec3, rotation: Quat | undefined,
   }
   return marks
 }
+
+const JOINT_GAP = 1e-4
+
+/**
+ * The units of a wall still standing (`standing(i)`) that no longer bear on its bottom through the units under them: a unit stands while its bed
+ * overlaps a standing unit of the row below (the bottom row stands on what holds the wall). Masonry carries by bearing, and the mortar of a head
+ * joint holds next to nothing in tension, so over a hole the courses step in by the bond (half a unit a course in running bond) and the triangle
+ * above it comes down, as it does over an opening without a lintel; at the free end of a wall, all that hangs over the hole. A slab (thin along y)
+ * has no bottom row: none.
+ */
+export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims: Vec3, standing: (index: number) => boolean): number[] => {
+  if (thin === 1) return []
+  const [u, v] = planeAxes(thin)
+  const bottom = -dims[v] / 2
+  const rowOf = (y: number): number => Math.round((y - bottom) * 1e4)
+  const rows = new Map<number, number[]>()
+  for (let i = 0; i < cells.length; i++) {
+    if (!standing(i)) continue
+    const cell = cells[i]!
+    const key = rowOf(cell.center[v] - cell.size[v] / 2)
+    const row = rows.get(key)
+    if (row) row.push(i)
+    else rows.set(key, [i])
+  }
+  const held = new Set<number>()
+  const queue: number[] = []
+  for (const i of rows.get(0) ?? []) {
+    held.add(i)
+    queue.push(i)
+  }
+  const overlap = (a: UnitCell, b: UnitCell): number =>
+    Math.min(a.center[u] + a.size[u] / 2, b.center[u] + b.size[u] / 2) - Math.max(a.center[u] - a.size[u] / 2, b.center[u] - b.size[u] / 2)
+  while (queue.length > 0) {
+    const cell = cells[queue.pop()!]!
+    for (const j of rows.get(rowOf(cell.center[v] + cell.size[v] / 2)) ?? []) {
+      if (held.has(j) || overlap(cell, cells[j]!) <= JOINT_GAP) continue
+      held.add(j)
+      queue.push(j)
+    }
+  }
+  const loose: number[] = []
+  for (const row of rows.values()) for (const i of row) if (!held.has(i)) loose.push(i)
+  return loose
+}
+
+/**
+ * At most `cap` clumps of `cells` (part-local units of a wall): the units binned on a square grid of the wall plane, each bin the box around its units.
+ * Masonry a blast throws comes out in clumps of a few units held by their mortar, not one by one.
+ */
+export const clumpCells = (cells: readonly UnitCell[], thin: number, cap: number): UnitCell[] => {
+  if (cells.length <= cap) return [...cells]
+  const [u, v] = planeAxes(thin)
+  let lo0 = Infinity, lo1 = Infinity, hi0 = -Infinity, hi1 = -Infinity
+  for (const cell of cells) {
+    lo0 = Math.min(lo0, cell.center[u] - cell.size[u] / 2)
+    hi0 = Math.max(hi0, cell.center[u] + cell.size[u] / 2)
+    lo1 = Math.min(lo1, cell.center[v] - cell.size[v] / 2)
+    hi1 = Math.max(hi1, cell.center[v] + cell.size[v] / 2)
+  }
+  let side = Math.sqrt(((hi0 - lo0) * (hi1 - lo1)) / cap)
+  for (;;) {
+    const bins = new Map<string, { lo: Vec3; hi: Vec3 }>()
+    for (const cell of cells) {
+      const key = `${Math.floor((cell.center[u] - lo0) / side)}:${Math.floor((cell.center[v] - lo1) / side)}`
+      const bin = bins.get(key) ?? { lo: [Infinity, Infinity, Infinity] as Vec3, hi: [-Infinity, -Infinity, -Infinity] as Vec3 }
+      for (let k = 0; k < 3; k++) {
+        bin.lo[k] = Math.min(bin.lo[k]!, cell.center[k]! - cell.size[k]! / 2)
+        bin.hi[k] = Math.max(bin.hi[k]!, cell.center[k]! + cell.size[k]! / 2)
+      }
+      bins.set(key, bin)
+    }
+    if (bins.size <= cap) {
+      return [...bins.values()].map(({ lo, hi }) => ({ center: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2] as Vec3, size: [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]] as Vec3 }))
+    }
+    side *= 1.25
+  }
+}
