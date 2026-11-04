@@ -1,5 +1,12 @@
 # @adatechnology/game-floorplan-three
 
+## 0.9.3
+
+### Patch Changes
+
+- Updated dependencies [157b90d]
+  - @adatechnology/game-render-three@0.2.0
+
 ## 0.9.2
 
 ### Patch Changes

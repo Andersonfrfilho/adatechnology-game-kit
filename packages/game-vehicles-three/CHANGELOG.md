@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles-three
 
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies [157b90d]
+  - @adatechnology/game-render-three@0.2.0
+
 ## 0.6.2
 
 ### Patch Changes
