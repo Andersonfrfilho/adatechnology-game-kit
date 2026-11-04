@@ -31,6 +31,9 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
+      # which browser suites the pre-push runs for a diff (tools/gpu/select-suites.mjs): pure Node, no page and no GPU
+      - run: pnpm --filter @adatechnology/gpu-tools test
+
   # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
   # dist), instead of each job spending two minutes on its own `pnpm build`.
   build:
