@@ -2,15 +2,37 @@
  * What a door takes off the body the first time it opens, cut so that nothing of it stays across the opening or hangs under the door: the strip along
  * the side is cut at the door's two edges, the skin keeps only the depth of a door, and the shut line drawn on the body is told apart from the door's trim.
  */
-import type * as THREE_NS from 'three'
-
-type Three = typeof THREE_NS
-type Mesh = THREE_NS.Mesh<THREE_NS.BufferGeometry, THREE_NS.Material | THREE_NS.Material[]>
-type Geometry = THREE_NS.BufferGeometry
+// The core package does not import three.js: these are the few parts of the host's `THREE` this file uses, by shape.
+type Matrix4 = { multiplyMatrices(a: Matrix4, b: Matrix4): Matrix4 }
+type Vector3 = { x: number; y: number; z: number; set(x: number, y: number, z: number): Vector3; applyMatrix4(m: Matrix4): Vector3; fromBufferAttribute(a: Attribute, i: number): Vector3 }
+type Attribute = { readonly array: ArrayLike<number> & { subarray?(a: number, b: number): ArrayLike<number> }; readonly itemSize: number; readonly count: number }
+type Geometry = {
+  readonly index: unknown
+  readonly attributes: Record<string, Attribute>
+  getAttribute(name: string): Attribute
+  setAttribute(name: string, attribute: Attribute): unknown
+  toNonIndexed(): Geometry
+  clone(): Geometry
+  dispose(): void
+  computeBoundingBox(): void
+  computeBoundingSphere(): void
+}
+type Object3D = { readonly position: { copy(v: unknown): unknown }; readonly quaternion: { copy(q: unknown): unknown }; readonly scale: { copy(v: unknown): unknown }; readonly matrixWorld: Matrix4 }
+type Mesh = Object3D & { geometry: Geometry; material: unknown; castShadow: boolean; receiveShadow: boolean; parent: { add(o: Mesh): unknown } | null }
+type Box3 = { isEmpty(): boolean; getSize(target: Vector3): Vector3; getCenter(target: Vector3): Vector3 }
+type Triangle = { a: Vector3; b: Vector3; c: Vector3; set(a: Vector3, b: Vector3, c: Vector3): Triangle; getArea(): number; getNormal(target: Vector3): Vector3 }
+type Three = {
+  readonly Vector3: new () => Vector3
+  readonly Matrix4: new () => Matrix4
+  readonly Triangle: new () => Triangle
+  readonly BufferGeometry: new () => Geometry
+  readonly Float32BufferAttribute: new (array: Float32Array, itemSize: number) => Attribute
+  readonly Mesh: new (geometry: Geometry, material: unknown) => Mesh
+}
 /** A cut of the kit's `cutMesh`: a negative distance is what it takes away. */
 type CutTest = { readonly sdf: (x: number, y: number, z: number) => number }
 /** What the strip cut needs of the vehicle kit. */
-export type StripCutKit = {
+type StripCutKit = {
   readonly THREE: Three
   cutMesh(mesh: Mesh, tests: CutTest[], smoothDeg: number, options: Record<string, never>): unknown
 }
@@ -32,9 +54,9 @@ const SLIVER_AREA = 1e-10
 
 export type StripCutParams = {
   /** The strip on the body (a mesh), cut in place: it keeps what is before and after the door. */
-  readonly strip: Mesh
-  /** From the strip's own coordinates to the vehicle's. */
-  readonly toVehicle: THREE_NS.Matrix4
+  readonly strip: unknown
+  /** From the strip's own coordinates to the vehicle's (a `THREE.Matrix4`). */
+  readonly toVehicle: unknown
   /** The door's edges along the vehicle's length. */
   readonly x0: number
   readonly x1: number
@@ -42,14 +64,14 @@ export type StripCutParams = {
 
 export type SkinSplitResult = {
   /** The triangles within a door's depth of its outer surface, or null when there are none. */
-  readonly skin: Geometry | null
+  readonly skin: unknown
   /** The rest: what the cut took from inside the body (the wheel house behind a rear door, the floor), or null. */
-  readonly deep: Geometry | null
+  readonly deep: unknown
 }
 
 export type DoorSeamParams = {
   /** The mesh's box in the vehicle's coordinates. */
-  readonly box: THREE_NS.Box3
+  readonly box: unknown
   /** The door's zone box and side. */
   readonly zone: { readonly x0: number; readonly x1: number; readonly y0: number; readonly y1: number }
   readonly side: number
@@ -61,8 +83,11 @@ export type DoorSeamParams = {
  * Cuts the part of a strip over a door out of it and answers that part as a new mesh in the strip's frame. Each cut is along one plane: a strip drawn
  * with few, long triangles crosses both edges of the door in one triangle, and the corner of two planes put in one cut lands the edge at the wrong place.
  */
-export function cutStripOverDoor(kit: StripCutKit, params: StripCutParams): Mesh {
-  const { strip, toVehicle, x0, x1 } = params
+export function cutStripOverDoor(vehicleKit: unknown, params: StripCutParams): unknown {
+  const kit = vehicleKit as StripCutKit
+  const strip = params.strip as Mesh
+  const toVehicle = params.toVehicle as Matrix4
+  const { x0, x1 } = params
   const THREE = kit.THREE
   const at = new THREE.Vector3()
   const along = (x: number, y: number, z: number): number => at.set(x, y, z).applyMatrix4(toVehicle).x
@@ -86,7 +111,7 @@ export function cutStripOverDoor(kit: StripCutKit, params: StripCutParams): Mesh
  * The triangles of two geometries with the same attributes in one non-indexed geometry. The cut keeps the slivers of no area it makes at an edge as they
  * are, so they are left out here: a point of one would stay over the door.
  */
-export function joinTriangles(THREE: Three, first: Geometry, second: Geometry): Geometry {
+function joinTriangles(THREE: Three, first: Geometry, second: Geometry): Geometry {
   const a = first.index ? first.toNonIndexed() : first
   const b = second.index ? second.toNonIndexed() : second
   const flags = [...solidTriangles(THREE, a), ...solidTriangles(THREE, b)]
@@ -125,7 +150,10 @@ function solidTriangles(THREE: Three, geometry: Geometry): boolean[] {
  * Splits the pieces cut for a door's skin into what is the door (within `depth` of the outer surface at each height) and what the cut reached inside the
  * body. `toVehicle` gives each piece's matrix to the vehicle's coordinates; `side` is the sign of the door's side across the vehicle.
  */
-export function splitDoorSkin(THREE: Three, pieces: Mesh[], toVehicle: (mesh: Mesh) => THREE_NS.Matrix4, side: number, depth: number): SkinSplitResult[] {
+export function splitDoorSkin(three: unknown, meshes: readonly unknown[], toVehicleOf: (mesh: unknown) => unknown, side: number, depth: number): SkinSplitResult[] {
+  const THREE = three as Three
+  const pieces = meshes as readonly Mesh[]
+  const toVehicle = toVehicleOf as (mesh: Mesh) => Matrix4
   const v = new THREE.Vector3()
   const corners = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
   const triangle = new THREE.Triangle()
@@ -176,19 +204,22 @@ export function splitDoorSkin(THREE: Three, pieces: Mesh[], toVehicle: (mesh: Me
 
 export type DeepSkinParams = {
   /** From world coordinates to the vehicle's. */
-  readonly toVehicle: THREE_NS.Matrix4
+  readonly toVehicle: unknown
   readonly side: number
   readonly depth: number
 }
 
 /** Splits each piece cut for a door (see `splitDoorSkin`): the piece keeps the door's skin, and what lay deeper goes back to the body, where it was, as a mesh of its own. */
-export function leaveDeepSkinOnBody(THREE: Three, pieces: Mesh[], params: DeepSkinParams): void {
-  const { toVehicle, side, depth } = params
-  const split = splitDoorSkin(THREE, pieces, (mesh) => new THREE.Matrix4().multiplyMatrices(toVehicle, mesh.matrixWorld), side, depth)
+export function leaveDeepSkinOnBody(three: unknown, meshes: readonly unknown[], params: DeepSkinParams): void {
+  const THREE = three as Three
+  const pieces = meshes as readonly Mesh[]
+  const toVehicle = params.toVehicle as Matrix4
+  const { side, depth } = params
+  const split = splitDoorSkin(THREE, pieces, (mesh) => new THREE.Matrix4().multiplyMatrices(toVehicle, (mesh as Mesh).matrixWorld), side, depth)
   split.forEach(({ skin, deep }, i) => {
     const piece = pieces[i]!
     if (!deep || !skin || !piece.parent) return
-    const body = new THREE.Mesh(deep, piece.material)
+    const body = new THREE.Mesh(deep as Geometry, piece.material)
     body.position.copy(piece.position)
     body.quaternion.copy(piece.quaternion)
     body.scale.copy(piece.scale)
@@ -196,7 +227,7 @@ export function leaveDeepSkinOnBody(THREE: Three, pieces: Mesh[], params: DeepSk
     body.receiveShadow = piece.receiveShadow
     piece.parent.add(body)
     piece.geometry.dispose()
-    piece.geometry = skin
+    piece.geometry = skin as Geometry
   })
 }
 
@@ -224,8 +255,10 @@ function pickTriangles(THREE: Three, geometry: Geometry, flags: boolean[], wante
 }
 
 /** The shut line the body draws at a door's edge: the gap of a closed door, gone while the door stands open, never a rod swinging with it. */
-export function isDoorSeam(THREE: Three, params: DoorSeamParams): boolean {
-  const { box, zone, side, dark } = params
+export function isDoorSeam(three: unknown, params: DoorSeamParams): boolean {
+  const THREE = three as Three
+  const box = params.box as Box3
+  const { zone, side, dark } = params
   if (!dark || box.isEmpty()) return false
   const size = box.getSize(new THREE.Vector3())
   const centre = box.getCenter(new THREE.Vector3())

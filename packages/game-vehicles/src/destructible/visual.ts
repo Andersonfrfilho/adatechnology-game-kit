@@ -11,7 +11,6 @@ import { raycastIndexed, warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
 import { subdivideNear } from './subdivide-near'
 import { cutStripOverDoor, isDoorSeam, leaveDeepSkinOnBody } from './door-open'
-import type { StripCutKit } from './door-open'
 
 type Obj = any
 
@@ -599,7 +598,7 @@ export class VehicleVisuals implements CreaseWork {
       const toVehicle = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)
       // the part over the door is the same strip, cut at the door's two edges, and it goes with the door; each cut is a plane across the strip,
       // exact without subdividing (and a painted livery keeps its texture)
-      const over = cutStripOverDoor(this.kit as unknown as StripCutKit, { strip: o, toVehicle, x0, x1 })
+      const over: Obj = cutStripOverDoor(this.kit, { strip: o, toVehicle, x0, x1 })
       over.position.copy(o.position)
       over.quaternion.copy(o.quaternion)
       over.scale.copy(o.scale)
