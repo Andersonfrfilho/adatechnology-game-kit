@@ -2357,7 +2357,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         name: section.name,
         tools: section.weapons.map((weapon) => {
           const item = thumbnails.get(weapon.id)
-          return { id: weapon.id, name: weapon.name, ...(weapon.maker ? { keywords: weapon.maker } : {}), ...(item?.thumbnail ? { thumbnail: item.thumbnail } : {}), ...(item?.thumbnailCredit ? { thumbnailCredit: item.thumbnailCredit } : {}) }
+          return { id: weapon.id, name: weapon.name, ...(weapon.maker || weapon.tags ? { keywords: [weapon.maker, ...(weapon.tags ?? [])].filter(Boolean).join(' ') } : {}), ...(item?.thumbnail ? { thumbnail: item.thumbnail } : {}), ...(item?.thumbnailCredit ? { thumbnailCredit: item.thumbnailCredit } : {}) }
         }),
       })),
     }))

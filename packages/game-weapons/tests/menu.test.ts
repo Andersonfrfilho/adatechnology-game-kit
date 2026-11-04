@@ -40,6 +40,9 @@ describe('weaponMenu', () => {
   it('names each section by its category and sorts it by name', () => {
     const pistols = menu[0]?.sections.find((section) => section.id === 'pistol')
     expect(pistols?.name).toBe('Pistola')
+    const pdw = menu[0]?.sections.find((section) => section.id === 'pdw')
+    expect(pdw?.name).toBe('PDW (arma de defesa pessoal)')
+    expect(pdw?.weapons.map((weapon) => weapon.id).sort()).toEqual(['fn_p90', 'hk_mp7a1'])
     const names = pistols?.weapons.map((weapon) => weapon.name) ?? []
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'pt-BR')))
   })

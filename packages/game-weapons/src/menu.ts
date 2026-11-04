@@ -14,6 +14,8 @@ export interface WeaponMenuEntry {
   readonly name: string
   /** The maker of a brand weapon (Glock, Taurus, Heckler & Koch...), so a search by maker finds it. */
   readonly maker?: string
+  /** The tags of the weapon (`pdw`, `explosive`...), so a search by them finds it. */
+  readonly tags?: readonly string[]
   /** The section it is listed in (its category, or `flame` for a flamethrower filed as a launcher). */
   readonly category: string
 }
@@ -47,7 +49,7 @@ export const WEAPON_MENU_GROUPS: readonly WeaponMenuGroupDef[] = [
   {
     id: 'firearms',
     name: { en: 'Firearms', 'pt-BR': 'Armas de fogo' },
-    categories: ['pistol', 'revolver', 'smg', 'carbine', 'rifle', 'dmr', 'hunting', 'sniper', 'shotgun', 'machine_gun', 'bow', 'crossbow'],
+    categories: ['pistol', 'revolver', 'smg', 'pdw', 'carbine', 'rifle', 'dmr', 'hunting', 'sniper', 'shotgun', 'machine_gun', 'bow', 'crossbow'],
   },
   { id: 'melee', name: { en: 'Melee weapons', 'pt-BR': 'Armas brancas' }, categories: ['melee_blade', 'melee_blunt', 'hand'] },
   { id: 'explosives', name: { en: 'Explosives', 'pt-BR': 'Explosivos' }, categories: ['throwable', 'launcher'] },
@@ -56,8 +58,11 @@ export const WEAPON_MENU_GROUPS: readonly WeaponMenuGroupDef[] = [
 
 const OTHER_GROUP: WeaponMenuGroupDef = { id: 'other', name: { en: 'Other', 'pt-BR': 'Outros' }, categories: [] }
 
-// a flamethrower is filed as a launcher (it is carried like one) but fires a flame: it is listed with the flames
-const sectionOf = (def: WeaponDef): string => (def.category === 'launcher' && def.action.kind === 'flame' ? 'flame' : def.category)
+// a flamethrower is filed as a launcher (it is carried like one) but fires a flame: it is listed with the flames; a personal defence weapon (tag `pdw`: the P90, the MP7) has a section of its own
+const sectionOf = (def: WeaponDef): string => {
+  if (def.category === 'launcher' && def.action.kind === 'flame') return 'flame'
+  return def.tags?.includes('pdw') ? 'pdw' : def.category
+}
 
 const nameIn = (def: WeaponMenuGroupDef, locale: string): string => def.name[locale] ?? def.name.en ?? def.id
 
@@ -73,7 +78,7 @@ export function weaponMenu(arsenal: Arsenal, options: WeaponMenuOptions = {}): W
     if (options.exclude?.(def) || generics.has(def.id)) continue
     const category = sectionOf(def)
     const list = bySection.get(category) ?? []
-    list.push({ id: def.id, name: capitalize(arsenal.name(def.id)), category, ...(def.maker ? { maker: def.maker } : {}) })
+    list.push({ id: def.id, name: capitalize(arsenal.name(def.id)), category, ...(def.maker ? { maker: def.maker } : {}), ...(def.tags?.length ? { tags: def.tags } : {}) })
     bySection.set(category, list)
   }
   const listed = new Set(groups.flatMap((group) => group.categories))

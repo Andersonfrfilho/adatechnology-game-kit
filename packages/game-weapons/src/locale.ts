@@ -23,7 +23,7 @@ const modesEn = { single: 'single action', semi: 'semi-automatic', burst: 'burst
 const categoriesEn = {
   pistol: 'pistol', revolver: 'revolver', smg: 'submachine gun', rifle: 'rifle', carbine: 'carbine', sniper: 'sniper rifle', shotgun: 'shotgun',
   bow: 'bow', crossbow: 'crossbow', melee_blunt: 'blunt melee', melee_blade: 'bladed melee', flame: 'flame', heat: 'heat', throwable: 'throwable',
-  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand', dmr: 'marksman rifle', hunting: 'hunting rifle', machine_gun: 'machine gun', launcher: 'launcher',
+  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand', dmr: 'marksman rifle', hunting: 'hunting rifle', machine_gun: 'machine gun', launcher: 'launcher', pdw: 'PDW (personal defence weapon)',
 }
 const faultsEn = { misfire: 'misfire', stovepipe: 'stovepipe', double_feed: 'double feed', failure_to_extract: 'failure to extract' }
 const conditionsEn = { new: 'new', used: 'used', worn: 'worn', rusty: 'rusty' }
@@ -80,7 +80,7 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       pistol: 'pistola', revolver: 'revólver', smg: 'submetralhadora', rifle: 'fuzil', carbine: 'carabina', sniper: 'fuzil de precisão', shotgun: 'espingarda',
       bow: 'arco', crossbow: 'besta', melee_blunt: 'corpo a corpo contundente', melee_blade: 'corpo a corpo cortante', flame: 'chama', heat: 'calor',
       throwable: 'arremessável', tool: 'ferramenta', extinguisher: 'extintor', hand: 'mão', dmr: 'fuzil de precisão semiautomático', hunting: 'arma de caça',
-      machine_gun: 'metralhadora', launcher: 'lançador',
+      machine_gun: 'metralhadora', launcher: 'lançador', pdw: 'PDW (arma de defesa pessoal)',
     },
     explosives: {
       m67: 'Granada M67', molotov: 'Coquetel molotov', pipe_bomb: 'Bomba caseira', propane_p13: 'Botijão de gás P13', dynamite: 'Dinamite', c4: 'C4 com detonador',
