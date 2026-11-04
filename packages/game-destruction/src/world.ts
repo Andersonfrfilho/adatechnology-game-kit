@@ -1778,6 +1778,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const worn = (p.rt.chips ??= {})
     const cut = (p.rt.craters ??= {})
     const out: UnitCell[] = []
+    const wholeBefore = Object.values(worn).filter((w) => w === -1).length
     const shot = kind === 'ballistic'
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
@@ -1840,6 +1841,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       emit({ ...base(o, src), type: 'chip', part: p.spec.id, center, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q, fragments })
       debris(o, p, p.mat.breakDebris, center, vec.scale(dir ?? [0, 1, 0], -1), 6, 2, src)
     }
+    // what the units that came out held up and nothing else holds comes down
+    if (Object.values(worn).filter((w) => w === -1).length > wholeBefore) dropUnsupported(o, p, src)
     if (p.spec.reinforcement) exposeRebar(o, p, src)
     for (const cell of out) addBreach(o, p, toWorld(c, q, cell.center), cell.size[u] * cell.size[v], energy, dir, src)
     if (p.structural && !isLost(p)) {
@@ -1960,6 +1963,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     setStage(o, p, 1, {}, src)
     setStage(o, p, 2, { opening: { center: worldCenter, radius }, fragments }, src)
     debris(o, p, p.mat.breakDebris, worldCenter, vec.scale(dir ?? [0, 1, 0], -1), 14, 3, src)
+    dropUnsupported(o, p, src)
     const reinforcement = p.spec.reinforcement
     if (reinforcement) exposeRebar(o, p, src)
     if (p.structural) solveStructure(o)
@@ -2053,6 +2057,46 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       collapseCheck(o, src)
     }
     return true
+  }
+
+  /**
+   * The units of a wall of laid units (brick or block in its mortar) that a removal left with no bearing down to the bottom of the wall (`unsupportedCells`):
+   * an island of bricks over the edge of a hole, a unit held by a corner. They come down as debris (one `chip` with `units`, the pieces clumped as they
+   * fall), leave the part (`PartState.chipped`, so shots and rays pass where they were) and their marks go with them. Returns how many units fell.
+   */
+  const dropUnsupported = (o: ObjRT, p: PartRT, src?: string): number => {
+    if (!p.spec.units || p.spec.units.mortar === p.spec.material || p.st.stripped || isLost(p)) return 0
+    const [u, v] = planeAxes(p.thin)
+    const grid = gridOf(p)
+    const worn = (p.rt.chips ??= {})
+    const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
+    const opened = (cell: UnitCell): boolean => !!op && !!p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius
+    const loose = unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !opened(grid[i]!))
+    if (loose.length === 0) return 0
+    for (const i of loose) worn[i] = -1
+    const fallen = loose.map((i) => grid[i]!)
+    const mass = Math.min(p.st.mass, p.mat.density * fallen.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0))
+    const { c, q } = partXf(o, p)
+    const chipped = (p.st.chipped ??= [])
+    const lo: Vec3 = [Infinity, Infinity, Infinity], hi: Vec3 = [-Infinity, -Infinity, -Infinity]
+    for (const cell of fallen) {
+      for (let k = 0; k < 3; k++) {
+        lo[k] = Math.min(lo[k]!, cell.center[k]! - cell.size[k]! / 2)
+        hi[k] = Math.max(hi[k]!, cell.center[k]! + cell.size[k]! / 2)
+      }
+    }
+    const center = toWorld(c, q, [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2])
+    const fragments = cellFragments(o, p, clumpCells(fallen, p.thin, Math.max(2, Math.round(maxFragments / 4))), vec.add(center, [0, 1, 0]), null, 0.3, mass, `u${chipped.length}_`, true)
+    const holes = localHolesOf(p)
+    p.st.holes = p.st.holes.filter((_, k) => !fallen.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
+    for (const cell of fallen) chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
+    p.st.mass = Math.max(0, p.st.mass - mass)
+    p.rt.removed = (p.rt.removed ?? 0) + mass
+    markDamaged(p)
+    const units = fallen.map((cell) => ({ center: toWorld(c, q, cell.center), size: [cell.size[0], cell.size[1], cell.size[2]] as Vec3 }))
+    emit({ ...base(o, src), type: 'chip', part: p.spec.id, center, size: [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]], rotation: q, fragments, units })
+    debris(o, p, p.mat.breakDebris, center, [0, -1, 0], 6, 1, src)
+    return loose.length
   }
 
   /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */

@@ -271,6 +271,10 @@ panels), `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_p
   and at a free end all that hangs over the hole) come down too. The part stays at stage 1, so later shots and blasts keep cutting it. A blast wears a
   joint only over the stretch it breaks (`2 x reach`), at most that share of the joint's strength, so it does not drop a whole wall from one point.
   A cast part (concrete, whose `units` are only how it breaks) still opens one breach.
+- **Bricks that lose their bearing fall.** After every unit a shot, a blow, a breach or a blast takes out of a wall of laid units, the load path of each
+  unit left is followed down to the bottom of the wall: a unit stands while its bed overlaps a standing unit of the course below by at least a quarter
+  of a unit, or while it is wedged between two standing units of its own course (a gap of two bricks holds). The rest (an island over a hole, a strip
+  between two slots, a brick held by a corner) comes down as debris in one `chip` with `units`.
 - **Reinforced concrete.** At 0 hp the concrete crumbles (`fracture`, in panels when `units` is set) but the part does not go: it becomes its rebar cage
   (`PartState.stripped`, `expose` with the bars in world space, stage 3), still part of the structure with `capacity x residualCapacity` (default 0.15).
   A bare cage under load is overloaded in seconds (`overloadRate`), so the frame fails progressively: `expose`, `stress`, the cage is lost (`expose` with
