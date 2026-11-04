@@ -149,7 +149,9 @@ describe('exposed rebar', () => {
     world.emit({ type: 'expose', object: 'o1', part: 'wall', bars })
     renderer.update(0.016)
     expect(renderer.rebarCount()).toBe(3)
-    const cage = scene.children.find((c): c is THREE.InstancedMesh => c instanceof THREE.InstancedMesh)!
+    const cages: THREE.InstancedMesh[] = []
+    scene.traverse((c) => { if (c instanceof THREE.InstancedMesh && c.name === 'rebar-cage') cages.push(c) })
+    const cage = cages[0]!
     expect(cage.count).toBe(3)
     const m = new THREE.Matrix4()
     cage.getMatrixAt(0, m)
@@ -160,21 +162,60 @@ describe('exposed rebar', () => {
     expect(new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion).x).toBeCloseTo(1, 6)
   })
 
-  it('a second expose replaces the first, an empty one removes the cage, restore clears it', () => {
+  const cagesIn = (scene: THREE.Scene): THREE.InstancedMesh[] => {
+    const cages: THREE.InstancedMesh[] = []
+    scene.traverse((c) => { if (c instanceof THREE.InstancedMesh && c.name === 'rebar-cage') cages.push(c) })
+    return cages
+  }
+
+  it('a second expose replaces the first, and restore clears it', () => {
     const { scene, world, renderer } = setup()
     world.emit({ type: 'expose', object: 'o1', part: 'wall', bars: bars.slice(0, 1) })
     world.emit({ type: 'expose', object: 'o1', part: 'wall', bars })
     renderer.update(0.016)
     expect(renderer.rebarCount()).toBe(3)
-    expect(scene.children.filter((c) => c instanceof THREE.InstancedMesh)).toHaveLength(1)
-    world.emit({ type: 'expose', object: 'o1', part: 'wall', bars: [] })
-    renderer.update(0.016)
-    expect(renderer.rebarCount()).toBe(0)
-    world.emit({ type: 'expose', object: 'o1', part: 'wall', bars })
-    renderer.update(0.016)
+    expect(cagesIn(scene)).toHaveLength(1)
     renderer.restore('o1')
     expect(renderer.rebarCount()).toBe(0)
-    expect(scene.children.some((c) => c instanceof THREE.InstancedMesh)).toBe(false)
+    expect(cagesIn(scene)).toHaveLength(0)
+  })
+
+  it('a cage that gives way comes down: its bars fall to the ground and stay there as steel debris with a body', () => {
+    const { scene, world, renderer } = setup()
+    world.emit({ type: 'expose', object: 'o1', part: 'wall', bars })
+    renderer.update(0.016)
+    world.emit({ type: 'expose', object: 'o1', part: 'wall', bars: [] })
+    for (let t = 0; t < 30; t += 1 / 60) renderer.update(1 / 60)
+    expect(renderer.rebarCount()).toBe(0)
+    expect(cagesIn(scene)).toHaveLength(0)
+    const fallen: THREE.Mesh[] = []
+    scene.traverse((c) => { if (c instanceof THREE.Mesh && c.name === 'fragment' && kitOriginOf(c)?.id === 'steel') fallen.push(c) })
+    expect(fallen).toHaveLength(3)
+    for (const bar of fallen) {
+      // lying on the ground, not where it hung (the bars were 0.5 to 1.5 m up)
+      expect(bar.position.y).toBeLessThan(0.05)
+      const along = new THREE.Vector3(0, 1, 0).applyQuaternion(bar.quaternion)
+      expect(Math.abs(along.y)).toBeLessThan(0.2)
+    }
+    // still there long after the fragments' life, and solid
+    const solids = renderer.solidsNear(0, 1, 2).filter((box) => box.loose)
+    expect(new Set(solids.map((box) => box.objectId))).toEqual(new Set(['o1']))
+    expect(solids.length).toBeGreaterThanOrEqual(3)
+    for (const box of solids) expect(box.max[1]).toBeLessThan(0.05)
+  })
+
+  it('the bars of a part that comes down with its piece go with it', () => {
+    const { scene, world, renderer, wall } = setup()
+    world.emit({ type: 'expose', object: 'o1', part: 'wall', bars })
+    renderer.update(0.016)
+    const cage = cagesIn(scene)[0]!
+    expect(cage.parent).toBe(wall.parent)
+    wall.parent!.position.y -= 1
+    wall.parent!.updateMatrixWorld(true)
+    const m = new THREE.Matrix4()
+    cage.getMatrixAt(0, m)
+    m.premultiply(cage.matrixWorld)
+    expect(new THREE.Vector3().setFromMatrixPosition(m).y).toBeCloseTo(0, 6)
   })
 })
 

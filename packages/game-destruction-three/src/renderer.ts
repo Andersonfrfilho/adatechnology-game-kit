@@ -23,6 +23,9 @@ import { showCollapsedRanges, Visuals } from './visual'
 let rendererCount = 0
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
 const COLLAPSE_CLOUD_KG = 1000
+/** Colour of bare rebar (the cages' material) and of a bar that came down; the steel of a bar weighs this much per cubic metre when the catalogue has no steel. */
+const REBAR_COLOR = 0x74665c
+const STEEL_DENSITY = 7850
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
@@ -860,7 +863,8 @@ class Renderer implements DestructionRenderer {
         this.onChip(ev)
         break
       case 'expose':
-        this.cages.set(`${ev.object}|${ev.part}`, ev.bars)
+        if (ev.bars.length > 0) this.cages.set(`${ev.object}|${ev.part}`, ev.bars, this.bounds.get(ev.object)?.root)
+        else this.dropCage(ev.object, ev.part)
         if (ev.bars.length > 0) {
           const [a, b] = ev.bars[0] as [Vec3, Vec3]
           this.playEvent({ kind: 'expose' }, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2])
@@ -1257,6 +1261,27 @@ class Renderer implements DestructionRenderer {
     this.splitLoose(ev.object)
   }
 
+  /**
+   * The cage of a part gave way (`expose` with no bars): nothing holds its bars any more, so each comes down where it is, as steel debris that stays on the
+   * ground with a body (`FragmentSystem.spawn` with `lasting`), not as bars left standing in the air.
+   */
+  private dropCage(objectId: string, partId: string): void {
+    const bars = this.cages.take(`${objectId}|${partId}`)
+    if (bars.length === 0) return
+    const radius = this.cages.barRadius
+    const density = this.world.materials.get('steel')?.density ?? STEEL_DENSITY
+    const material = this.fragments.materialFor('steel', REBAR_COLOR, false)
+    const rnd = createRng(hashString(`${objectId}|${partId}`))
+    bars.forEach((bar, i) => {
+      const fragment: Fragment = {
+        id: `${partId}#bar${i}`, part: partId, material: 'steel', shape: 'chunk', center: bar.center, size: [2 * radius, bar.length, 2 * radius], rotation: bar.rotation,
+        velocity: [(rnd() - 0.5) * 0.4, 0, (rnd() - 0.5) * 0.4], angularVelocity: [(rnd() - 0.5) * 1.5, (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 1.5],
+        mass: density * Math.PI * radius * radius * bar.length,
+      }
+      this.fragments.spawn(fragment, material, objectId, this.maxFragments, true)
+    })
+  }
+
   /** Turn every loose group of the object (a detach, a collapse) into a piece of its own. */
   private splitLoose(objectId: string): void {
     if (!this.autoSplit) return
@@ -1315,6 +1340,8 @@ class Renderer implements DestructionRenderer {
       if (!pv) continue
       from.parts.delete(p.id)
       nb.parts.set(p.id, pv)
+      // its bare bars go with it
+      this.cages.move(`${from.id}|${p.id}`, `${newId}|${p.id}`, group)
       for (const mv of pv.meshes) {
         // a part drawn by a range of a merged mesh leaves its faces behind: it gets a mesh of its own
         if (mv.host && !mv.loose) this.visuals.extract(mv, group)

@@ -184,7 +184,11 @@ export class FragmentSystem {
    * bigger than the budget (every live fragment was made in this same frame) does not make the rest at all, so a blast never builds a thousand meshes only to fade them
    * out. Returns null when the fragment was not made.
    */
-  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): THREE_NS.Mesh | null {
+  /**
+   * Throws `f` into the scene, within `maxAllowed` live fragments (the oldest small ones make room first). A `lasting` fragment (a steel bar) is debris that
+   * stays: it has a body the player and the pieces run into, however thin it is, and it never fades.
+   */
+  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number, lasting = false): THREE_NS.Mesh | null {
     if (this.list.length >= maxAllowed) {
       let alive = 0
       let oldest: Live | undefined
@@ -231,9 +235,9 @@ export class FragmentSystem {
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
       body: null,
       born: this.tick,
-      life: Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
+      life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
     }
-    if (f.shape !== 'shard' && isBig(f.size)) {
+    if (lasting || (f.shape !== 'shard' && isBig(f.size))) {
       live.body = {
         mass: f.mass,
         push: (x, z) => {
