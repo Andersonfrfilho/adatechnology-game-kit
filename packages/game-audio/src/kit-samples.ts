@@ -40,7 +40,7 @@ export const KIT_SAMPLE_ALIASES: Readonly<Record<string, string>> = {
 }
 
 /** The numbers of a sound the files do not say: the bus of its folder, a little pitch spread. */
-export function kitSampleDefaults(sound: SfxManifestSound): SampleDefaults | undefined {
+export function kitSampleDefaults(sound: { readonly id: string; readonly category: string }): SampleDefaults | undefined {
   const bus = VOICE_IDS.test(sound.id) ? 'voices' : KIT_CATEGORY_BUS[sound.category]
   if (!bus) return undefined
   return { bus, pitch: sound.category === 'ambiente' || /_loop/.test(sound.id) ? 0 : 0.04 }

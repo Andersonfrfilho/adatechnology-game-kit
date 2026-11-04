@@ -59,7 +59,7 @@ export type SampleBankOptions = {
   readonly baseUrl?: string
   /** Numbers per sound id, or one function; a sound with neither is left out (it has no bus). */
   readonly sounds?: Readonly<Record<string, SampleDefaults>>
-  readonly defaults?: (sound: SfxManifestSound) => SampleDefaults | undefined
+  readonly defaults?: (sound: { readonly id: string; readonly category: string }) => SampleDefaults | undefined
 }
 
 /** The strength suffixes of a sound id (`kick_hit_heavy`): takes of the tiers of `kick_hit`, from these intensities. */
@@ -80,19 +80,29 @@ export function splitTier(id: string): { readonly base: string; readonly tier?: 
   return match ? { base: match[1] as string, tier: match[2] as string } : { base: id }
 }
 
-const refsOf = (entries: readonly SfxFileEntry[] | undefined, baseUrl: string): SampleRef[] => (entries ?? []).map((entry) => ({ url: `${baseUrl}${entry.file}` }))
+/** What `sampleBankFromManifest` reads of a manifest: the sounds, their layers and where each file came from (any licence string). */
+export type SfxManifestLike = {
+  readonly sounds: readonly {
+    readonly id: string
+    readonly category: string
+    readonly layers: Partial<Readonly<Record<SfxLayer, readonly { readonly file: string; readonly source: string; readonly author: string; readonly license: string }[]>>>
+  }[]
+}
+
+const refsOf = (entries: readonly { readonly file: string }[] | undefined, baseUrl: string): SampleRef[] => (entries ?? []).map((entry) => ({ url: `${baseUrl}${entry.file}` }))
 
 /** A bank of sample sounds from a manifest. */
-export function sampleBankFromManifest(manifest: SfxManifest, options: SampleBankOptions): SoundBank {
+export function sampleBankFromManifest(manifest: SfxManifestLike, options: SampleBankOptions): SoundBank {
   const baseUrl = options.baseUrl ?? ''
   const samples: SampleSound[] = []
   // `<id>_light`, `_medium`, `_heavy` are the tiers of `<id>`, gathered under it
-  const tiersOf = new Map<string, SfxManifestSound[]>()
+  type Sound = SfxManifestLike['sounds'][number]
+  const tiersOf = new Map<string, Sound[]>()
   for (const sound of manifest.sounds) {
     const { base, tier } = splitTier(sound.id)
     if (tier) tiersOf.set(base, [...(tiersOf.get(base) ?? []), sound])
   }
-  const bases = new Map<string, SfxManifestSound>()
+  const bases = new Map<string, Sound>()
   for (const sound of manifest.sounds) {
     if (!splitTier(sound.id).tier) bases.set(sound.id, sound)
   }

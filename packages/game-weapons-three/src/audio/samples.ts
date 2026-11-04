@@ -4,7 +4,7 @@
 // of its cue in the tier of the weapon's weight (light pistols, medium rifles, heavy shotguns); a brass case landing plays the bounces of its floor
 // (Oculus Audio Pack 1, CC BY 4.0: concrete, grass, metal). Without the files the synthesized sounds play.
 import { sampleBankFromManifest } from '@adatechnology/game-audio'
-import type { SampleDefaults, SampleSound, SfxManifest, SfxManifestSound, SoundBank } from '@adatechnology/game-audio'
+import type { SampleDefaults, SampleSound, SfxManifest, SoundBank } from '@adatechnology/game-audio'
 
 import hitData from '../data/reload-sample-hits.json'
 import profiles from '../data/gunshot-profiles.json'
@@ -63,7 +63,7 @@ export const CUES_IN_SAMPLE: Readonly<Record<string, string>> = { mag_release: '
 const isGunshot = (id: string): boolean => GUNSHOT_SAMPLE_IDS.includes(id)
 
 /** The numbers of a sound of the manifest: a gunshot, a case landing or a reload step (`armas` only). */
-export function weaponSampleDefaults(sound: SfxManifestSound, overrides: WeaponSampleOptions['sounds'] = {}): SampleDefaults | undefined {
+export function weaponSampleDefaults(sound: { readonly id: string; readonly category: string }, overrides: WeaponSampleOptions['sounds'] = {}): SampleDefaults | undefined {
   if (sound.category !== 'armas') return undefined
   const base = sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
   return { ...base, ...overrides[sound.id] }

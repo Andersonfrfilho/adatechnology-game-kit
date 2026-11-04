@@ -16,3 +16,6 @@ examples/audio-test-area/shots/body-reel/
 
 # the firearm takes cut by tools/sfx-sources/cut.mjs from the libraries it names (rerun it to get them back); only the converted .ogg ship
 assets/sfx-inbox/armas/*.wav
+
+# the owner's own sounds (packs the kit cannot redistribute), converted by `pnpm --filter @adatechnology/game-audio sfx:user`: local only
+.sfx-local/

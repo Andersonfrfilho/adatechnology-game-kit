@@ -72,6 +72,8 @@ export type VoiceStartEvent = {
   readonly kind: 'recipe' | 'sample'
   /** The sample sound this recipe stood in for while its files were not loaded. */
   readonly fallbackOf?: string
+  /** The bank the played id is registered in (`kit_samples`, `user_samples`, a recipe bank...). */
+  readonly bank?: string
   readonly requestedAt: number
   readonly startAt: number
   readonly outputLatency: number
@@ -333,10 +335,12 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       noise: () => noiseBuffer(store, audio, mix.noise.seconds),
       time,
     })
+    const recipeBank = registry.bankOf(plan.id)
     announce({
       id: plan.id,
       kind: 'recipe',
       ...(fallbackOf ? { fallbackOf } : {}),
+      ...(recipeBank ? { bank: recipeBank } : {}),
       requestedAt,
       startAt: time,
       outputLatency: latencyOf(audio),
@@ -452,9 +456,11 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     const time = requestedAt + (playOptions.delay ?? 0)
     const chokeList = sample.choke ? choked(sample.id) : undefined
     const realized = realizeSample(plan, { context: audio, output: sampleOutput(plan.bus), buffer: (url) => sampleStore.buffer(url), time })
+    const sampleBank = registry.bankOf(plan.id)
     announce({
       id: plan.id,
       kind: 'sample',
+      ...(sampleBank ? { bank: sampleBank } : {}),
       requestedAt,
       startAt: time,
       outputLatency: latencyOf(audio),

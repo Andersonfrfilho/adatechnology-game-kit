@@ -15,6 +15,7 @@ import { fetchLoader } from '../webaudio/sample-store'
 import type { SampleLoader } from '../webaudio/sample-store'
 import type { EngineSink } from '../webaudio/sink'
 import type { AudioScenarioLike } from './module'
+import { USER_SOUND_PREFIX, soundSourceOf } from '../user-samples'
 import { soundCheckTextOf } from './sound-check-locale'
 import type { SoundCheckText } from './sound-check-locale'
 
@@ -131,9 +132,15 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     if (category === CALIBRATION_CATEGORY) return registry().sampleIds().filter((id) => !entryOf(id))
     return catalog.filter((entry) => entry.category === category).map((entry) => entry.id)
   }
+  const sourceOfId = (id: string): string => {
+    const state = stateOf(id)
+    if (state !== 'file') return text.states[state]
+    const own = registry().sample(`${USER_SOUND_PREFIX}${id}`) ? ' +seu' : ''
+    return `${text.states.file} ${text.sources[soundSourceOf({ kind: 'sample', bank: registry().bankOf(id) })]}${own}`
+  }
   const label = (id: string): string => {
     const entry = entryOf(id)
-    return `${id}${entry ? ` · P${entry.priority}` : ''} · ${text.states[stateOf(id)]}`
+    return `${id}${entry ? ` · P${entry.priority}` : ''} · ${sourceOfId(id)}`
   }
   const soundOptions = (): ChoiceOption[] => soundsOf(chosen.category).map((id) => ({ id, name: label(id) }))
 
@@ -171,6 +178,13 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     if (!b) return
     if (engine.sampleStatus(b) !== 'ready') await engine.loadSamples([b])
     playId(b, { delay })
+  }
+  // the owner's take of the chosen sound (`user:<id>`), loaded first: it has no recipe to stand in while it loads
+  const playUser = async (): Promise<void> => {
+    const own = `${USER_SOUND_PREFIX}${chosen.sound}`
+    if (!registry().sample(own)) return
+    if (engine.sampleStatus(own) !== 'ready') await engine.loadSamples([own])
+    playId(own)
   }
   const playA = (delay = 0): void => void playId(pairOf(chosen.sound).a, { delay })
 
@@ -245,6 +259,7 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     { kind: 'choice', id: 'category', name: text.controls.category, options: [...SFX_CATEGORIES, CALIBRATION_CATEGORY].map((id) => ({ id, name: text.categories[id] ?? id })), default: chosen.category },
     { kind: 'choice', id: 'sound', name: text.controls.sound, hint: text.hints.sound, options: soundOptions(), default: chosen.sound },
     { kind: 'action', id: 'play', name: text.controls.play },
+    { kind: 'action', id: 'play_user', name: text.controls.play_user, hint: text.hints.play_user },
     { kind: 'choice', id: 'material', name: text.controls.material, options: SFX_MATERIALS.map(([id]) => ({ id, name: text.materials[id] })), default: chosen.material },
     { kind: 'choice', id: 'blow', name: text.controls.blow, options: SFX_BLOWS.map((id) => ({ id, name: text.blows[id] })), default: chosen.blow },
     { kind: 'action', id: 'strike', name: text.controls.strike, hint: text.hints.strike },
@@ -283,8 +298,16 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
     const files = last.layers?.map((layer) => layer.url.split('/').pop()).join('+') ?? ''
     return `${last.kind}:${last.fallbackOf ? `${last.fallbackOf}→` : ''}${last.id}${last.tier ? `/${last.tier}` : ''} ${files}`.trim()
   }
+  /** Who answered the last voice: the SDK's file, the owner's file or the synthesized recipe, with the file played. */
+  const sourceLine = (): string => {
+    const last = log.at(-1)
+    if (!last) return text.words.none
+    const file = last.layers?.find((layer) => layer.role === 'close')?.url.split('/').pop() ?? last.id
+    return `${text.sources[soundSourceOf(last)]} · ${last.id.replace(USER_SOUND_PREFIX, '')} · ${file}`
+  }
 
   const metrics = (): ModuleMetric[] => [
+    { id: 'source', name: text.metrics.source, read: sourceLine },
     { id: 'count', name: text.metrics.count, read: counts },
     { id: 'chosen', name: text.metrics.chosen, read: () => `${label(chosen.sound)}${registry().sample(chosen.sound) ? ` (${engine.sampleStatus(chosen.sound)})` : ''}` },
     { id: 'matrix', name: text.metrics.matrix, read: () => `${strikeId()} · ${text.states[stateOf(strikeId())]}${pairOf(strikeId()).a ? ` · A=${pairOf(strikeId()).a}` : ''}` },
@@ -298,6 +321,7 @@ export function createSoundCheckModule(options: SoundCheckModuleOptions = {}): S
 
   const act = (id: string): void => {
     if (id === 'play') play()
+    else if (id === 'play_user') void playUser()
     else if (id === 'strike') playId(preferred(strikeId()))
     else if (id === 'burst') for (let index = 0; index < 20; index++) playId(preferred(chosen.sound), { delay: index * 0.06 })
     else if (id === 'play_a') playA()

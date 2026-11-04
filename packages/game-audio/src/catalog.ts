@@ -64,6 +64,10 @@ export const SFX_CATALOG: readonly SfxEntry[] = [
     ['casing_drop_terra_rifle', 1],
     ['casing_drop_terra_shell', 1],
     ['rocket_fire', 2],
+    ['smg_45_auto', 2, 'sfx_pistol'],
+    ['weapon_draw', 2],
+    ['suppressor_attach', 3],
+    ['suppressor_detach', 3],
   ]),
   ...entries('explosoes-fogo', [
     ['explosion_grenade', 1, 'boom'],
@@ -78,6 +82,10 @@ export const SFX_CATALOG: readonly SfxEntry[] = [
     ['fire_extinguish', 2, 'hiss'],
     ['gas_leak_hiss', 2],
     ['structure_collapse', 2, 'crumble'],
+    ['grenade_bounce', 1],
+    ['c4_plant', 2],
+    ['c4_beep', 2],
+    ['c4_disarm', 2],
   ]),
   ...entries('personagem', [
     ['footstep_concrete_walk', 1, 'sfx_step'],
@@ -94,6 +102,18 @@ export const SFX_CATALOG: readonly SfxEntry[] = [
     ['bite', 1, 'sfx_flesh'],
     ['body_fall', 1],
     ['player_hurt', 2],
+    ['footstep_tile_walk', 1, 'sfx_step'],
+    ['footstep_water_walk', 1, 'sfx_step'],
+    ['footstep_grate_walk', 2, 'sfx_step'],
+    ['footstep_duct_walk', 3, 'sfx_step'],
+    ['ladder_climb', 2],
+    ['swim', 2],
+    ['zombie_groan', 1],
+    ['zombie_alert', 1],
+    ['zombie_attack', 1],
+    ['zombie_pain', 1],
+    ['zombie_claw_hit', 1, 'sfx_flesh'],
+    ['zombie_claw_miss', 2],
   ]),
   ...entries('veiculos', [
     ['engine_loop_car', 1],
@@ -122,6 +142,7 @@ export const SFX_CATALOG: readonly SfxEntry[] = [
     ['thunder_near', 2],
     ['thunder_far', 2],
     ['water_splash', 2],
+    ['helicopter_loop', 3],
   ]),
 ]
 

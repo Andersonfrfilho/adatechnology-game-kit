@@ -47,7 +47,8 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "sfx:convert": "node scripts/sfx-convert.mjs"
+    "sfx:convert": "node scripts/sfx-convert.mjs",
+    "sfx:user": "node scripts/sfx-user.mjs"
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^"

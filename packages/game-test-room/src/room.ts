@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine, createAudioSink, loadKitSamples } from '@adatechnology/game-audio'
+import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
@@ -308,7 +308,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   if (audio && options.samplesBaseUrl !== null) {
-    void loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' }).then((bank) => {
+    void loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' }).then(async (bank) => {
+      // the owner's own sounds after the kit's, so each one the kit has keeps the kit's recording in front
+      if (options.userSamplesBaseUrl !== null) {
+        const own = await loadUserSamples(audio, { baseUrl: options.userSamplesBaseUrl ?? './sfx-local/' })
+        if (own) log.add({ channel: 'event', type: 'user_sounds', text: `sons do dono: ${own.playing.length} tocando, ${own.behindKit.length} atrás do SDK`, data: { playing: own.playing, behindKit: own.behindKit } })
+      }
       if (!bank || typeof window === 'undefined') return
       // the hand's sounds (a door, an item taken) load on the first key or click, when the page may make its AudioContext, so even the first one is the recording
       const preload = (): void => {

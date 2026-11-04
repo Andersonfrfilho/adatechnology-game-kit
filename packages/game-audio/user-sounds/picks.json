@@ -1,0 +1,1192 @@
+{
+ "version": 1,
+ "author": "Valve",
+ "license": "Valve, sem licença",
+ "note": "Só os nomes dos arquivos. Os sons não entram no git nem no npm: o script sfx:user converte da pasta do dono para .sfx-local/.",
+ "picks": [
+  {
+   "id": "helicopter_loop",
+   "role": "primary",
+   "category": "ambiente",
+   "label": "Helicóptero",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/valve/sound/apache/ap_rotor1.wav",
+    "Counter-Strike/cstrike/sound/ambience/copter.wav",
+    "Counter-Strike/valve/sound/apache/ap_rotor2.wav",
+    "Counter-Strike/valve/sound/apache/ap_rotor3.wav"
+   ],
+   "score": 8.0,
+   "loop": true
+  },
+  {
+   "id": "thunder_near",
+   "role": "primary",
+   "category": "ambiente",
+   "label": "Trovão perto",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/de_torn/torn_thndrstrike.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "wind_loop",
+   "role": "primary",
+   "category": "ambiente",
+   "label": "Vento",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/de_torn/tk_windStreet.wav",
+    "Counter-Strike/cstrike/sound/de_torn/torn_Templewind.wav"
+   ],
+   "score": 7.2,
+   "loop": true
+  },
+  {
+   "id": "dry_fire",
+   "role": "primary",
+   "category": "armas",
+   "label": "Gatilho seco",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/dryfire1.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "gunshot_far_rifle",
+   "role": "primary",
+   "category": "armas",
+   "label": "Tiroteio de fuzil ao longe",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/mgun_burst3.wav",
+    "ambience/mgun_burst4.wav",
+    "ambience/mgun_burst2.wav",
+    "ambience/mgun_burst1.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "revolver_44_50ae",
+   "role": "primary",
+   "category": "armas",
+   "label": "Tiro .50 AE (Desert Eagle)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/deagle-1.wav",
+    "weapons/deagle-2.wav"
+   ],
+   "score": 8.6
+  },
+  {
+   "id": "rifle_auto_burst",
+   "role": "primary",
+   "category": "armas",
+   "label": "Rajada de fuzil / metralhadora",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/m249-2.wav",
+    "weapons/m249-1.wav",
+    "weapons/famas-burst.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "smg_45_auto",
+   "role": "primary",
+   "category": "armas",
+   "label": "Submetralhadora .45 (UMP-45, MAC-10)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/ump45-1.wav",
+    "weapons/mac10-2.wav",
+    "weapons/mac10-1.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "smg_9mm_auto",
+   "role": "primary",
+   "category": "armas",
+   "label": "Submetralhadora 9 mm (MP5)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/mp5-1.wav",
+    "weapons/mp5-2.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "suppressor_attach",
+   "role": "primary",
+   "category": "armas",
+   "label": "Rosquear o supressor",
+   "pack": "13cs16weapons",
+   "files": [
+    "m4a1_silencer_on.wav",
+    "usp_silencer_on.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "suppressor_detach",
+   "role": "primary",
+   "category": "armas",
+   "label": "Tirar o supressor",
+   "pack": "13cs16weapons",
+   "files": [
+    "usp_silencer_off.wav",
+    "m4a1_silencer_off.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "weapon_draw",
+   "role": "primary",
+   "category": "armas",
+   "label": "Sacar a arma",
+   "pack": "13cs16weapons",
+   "files": [
+    "elite_deploy.wav",
+    "m249_draw.wav",
+    "awp_draw.wav",
+    "de_deploy.wav"
+   ],
+   "score": 9.9
+  },
+  {
+   "id": "c4_beep",
+   "role": "primary",
+   "category": "explosoes-fogo",
+   "label": "C4: bipe/clique do timer",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/c4_click.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "c4_disarm",
+   "role": "primary",
+   "category": "explosoes-fogo",
+   "label": "C4: desarmar",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/c4_disarmed.wav",
+    "weapons/c4_disarm.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "c4_plant",
+   "role": "primary",
+   "category": "explosoes-fogo",
+   "label": "C4: plantar",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/c4_plant.wav"
+   ],
+   "score": 9.5
+  },
+  {
+   "id": "grenade_bounce",
+   "role": "primary",
+   "category": "explosoes-fogo",
+   "label": "Granada quicando no chão",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/weapons/grenade_hit2.wav",
+    "Counter-Strike/cstrike/sound/weapons/grenade_hit1.wav",
+    "Counter-Strike/cstrike/sound/weapons/grenade_hit3.wav",
+    "Counter-Strike/cstrike/sound/weapons/he_bounce-1.wav"
+   ],
+   "score": 8.9
+  },
+  {
+   "id": "structure_collapse",
+   "role": "primary",
+   "category": "explosoes-fogo",
+   "label": "Concreto/teto desabando",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/bustconcrete1.wav",
+    "debris/bustconcrete2.wav",
+    "debris/bustceiling.wav"
+   ],
+   "score": 7.8
+  },
+  {
+   "id": "item_pickup_metal",
+   "role": "primary",
+   "category": "itens-portas",
+   "label": "Pegar arma/munição",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "items/gunpickup3.wav",
+    "items/gunpickup4.wav",
+    "items/gunpickup1.wav",
+    "items/ammopickup1.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "footstep_duct_walk",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Passo em duto de metal",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/pl_duct2.wav",
+    "player/pl_duct1.wav",
+    "player/pl_duct3.wav",
+    "player/pl_duct4.wav"
+   ],
+   "score": 6.4
+  },
+  {
+   "id": "footstep_grate_walk",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Passo em grade metálica",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_grate3.wav",
+    "Counter-Strike/cstrike/sound/player/pl_grate4.wav",
+    "Counter-Strike/cstrike/sound/player/pl_grate1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_grate2.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "footstep_tile_walk",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Passo em azulejo",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_tile4.wav",
+    "Counter-Strike/cstrike/sound/player/pl_tile2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_tile1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_tile3.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "footstep_water_walk",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Passo na água rasa",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_slosh4.wav",
+    "Counter-Strike/cstrike/sound/player/pl_slosh1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_slosh2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_slosh3.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "knife_stab",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Faca acertando o corpo",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/knife_hit3.wav",
+    "weapons/knife_hit1.wav",
+    "weapons/knife_hit2.wav",
+    "weapons/knife_hit4.wav"
+   ],
+   "score": 9.9
+  },
+  {
+   "id": "ladder_climb",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Subir escada de mão",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_ladder3.wav",
+    "Counter-Strike/cstrike/sound/player/pl_ladder2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_ladder1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_ladder4.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "swim",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Nadar",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/pl_swim4.wav",
+    "player/pl_swim2.wav",
+    "player/pl_swim3.wav",
+    "player/pl_swim1.wav"
+   ],
+   "score": 7.6
+  },
+  {
+   "id": "zombie_alert",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Zumbi: alerta",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/zo_alert30.wav",
+    "zombie/zo_alert10.wav",
+    "zombie/zo_alert20.wav"
+   ],
+   "score": 6.9
+  },
+  {
+   "id": "zombie_attack",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Zumbi: atacar",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/zo_attack2.wav",
+    "zombie/zo_attack1.wav"
+   ],
+   "score": 6.5
+  },
+  {
+   "id": "zombie_claw_hit",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Zumbi: garra acertando",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/claw_strike1.wav",
+    "zombie/claw_strike3.wav",
+    "zombie/claw_strike2.wav"
+   ],
+   "score": 7.8
+  },
+  {
+   "id": "zombie_claw_miss",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Zumbi: garra no ar",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/claw_miss1.wav",
+    "zombie/claw_miss2.wav"
+   ],
+   "score": 6.0
+  },
+  {
+   "id": "zombie_pain",
+   "role": "primary",
+   "category": "personagem",
+   "label": "Zumbi: dor",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/zo_pain2.wav",
+    "zombie/zo_pain1.wav"
+   ],
+   "score": 7.0
+  },
+  {
+   "id": "ambience_construction",
+   "role": "fallback",
+   "category": "ambiente",
+   "label": "Martelo (obra)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/hammer.wav"
+   ],
+   "score": 6.1
+  },
+  {
+   "id": "ambience_night",
+   "role": "fallback",
+   "category": "ambiente",
+   "label": "Grilos (noite)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/cricket.wav",
+    "ambience/crickets.wav"
+   ],
+   "score": 7.7
+  },
+  {
+   "id": "rain_loop",
+   "role": "fallback",
+   "category": "ambiente",
+   "label": "Chuva (loop)",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/ambience/rain.wav"
+   ],
+   "score": 9.6,
+   "loop": true
+  },
+  {
+   "id": "water_river_loop",
+   "role": "fallback",
+   "category": "ambiente",
+   "label": "Cachoeira/água corrente",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/waterfall1.wav",
+    "ambience/waterfall2.wav",
+    "ambience/waterfall3.wav"
+   ],
+   "score": 7.8,
+   "loop": true
+  },
+  {
+   "id": "bolt_pull_medium",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: ferrolho de rifle de ação manual",
+   "pack": "13cs16weapons",
+   "files": [
+    "boltdown.wav",
+    "boltup.wav",
+    "scout_bolt.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "casing_drop_concreto",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Cápsula caindo no chão",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/sshell1.wav",
+    "weapons/sshell2.wav",
+    "weapons/sshell3.wav",
+    "player/pl_shell1.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "charging_handle_pull_light",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Engatilhar arma",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "items/guncock1.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "charging_handle_pull_medium",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: puxar ferrolho/corrediça",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/aug_boltpull.wav",
+    "weapons/boltpull1.wav",
+    "weapons/de_slideback.wav",
+    "weapons/fiveseven_slideback.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "cylinder_close_light",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Revólver: tambor/cão",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/357_reload1.wav",
+    "weapons/357_cock1.wav"
+   ],
+   "score": 8.9
+  },
+  {
+   "id": "mag_out_medium",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: tirar carregador (P90 (submetralhadora))",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/aug_clipout.wav",
+    "weapons/clipout1.wav",
+    "weapons/elite_clipout.wav",
+    "weapons/famas_clipout.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "mag_seat_medium",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga genérica",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/aug_clipin.wav",
+    "weapons/clipin1.wav",
+    "weapons/famas_clipin.wav",
+    "weapons/galil_clipin.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "pistol_45",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: USP (.45 ACP)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/usp_unsil-1.wav",
+    "weapons/usp_unsil-2.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "pistol_9mm",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro 9 mm (Glock, Beretta)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/elite_fire.wav",
+    "weapons/glock18-2.wav",
+    "weapons/elite-1.wav",
+    "weapons/glock18-1.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "pump_back_heavy",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: bombear (pump) (Benelli M3 (pump))",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/m3_pump.wav"
+   ],
+   "score": 9.5
+  },
+  {
+   "id": "revolver_38_357",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro de revólver .357",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/357_shot1.wav",
+    "weapons/357_shot2.wav"
+   ],
+   "score": 5.7
+  },
+  {
+   "id": "rifle_308_3006",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: G3SG1 (7.62x51 (.308))",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/g3sg1-1.wav",
+    "weapons/scout_fire-1.wav"
+   ],
+   "score": 9.3
+  },
+  {
+   "id": "rifle_5_56",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: FAMAS (5.56 NATO)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/galil-1.wav",
+    "weapons/galil-2.wav",
+    "weapons/aug-1.wav",
+    "weapons/aug-2.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "rifle_7_62x39",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: AK-47 (7.62x39)",
+   "pack": "13cs16weapons",
+   "files": [
+    "ak47-1.wav",
+    "ak47-2.wav"
+   ],
+   "score": 9.4
+  },
+  {
+   "id": "shell_insert_heavy",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: inserir cartucho 12 (Benelli M3 (pump))",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/m3_insertshell.wav",
+    "weapons/xm1014_insertshell.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "shotgun_12",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: Benelli M4 (semi) (12 ga)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/xm1014-1.wav",
+    "weapons/m3-1.wav"
+   ],
+   "score": 9.1
+  },
+  {
+   "id": "slide_release_medium",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Recarga: soltar ferrolho/corrediça (Steyr AUG)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/aug_boltslap.wav",
+    "weapons/elite_sliderelease.wav",
+    "weapons/fiveseven_sliderelease.wav",
+    "weapons/glock_sliderelease.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "sniper_338_300wm",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: AWP / AI Arctic Warfare (.338 Lapua)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/awp1.wav"
+   ],
+   "score": 8.7
+  },
+  {
+   "id": "suppressed_pistol",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: USP com supressor (.45 ACP)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/usp1.wav",
+    "weapons/usp2.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "suppressed_rifle",
+   "role": "fallback",
+   "category": "armas",
+   "label": "Tiro: M4A1 com supressor (5.56 NATO)",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/m4a1-1.wav",
+    "weapons/m4a1-2.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "explosion_big",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Explosão de morteiro",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/mortarhit.wav"
+   ],
+   "score": 7.6
+  },
+  {
+   "id": "explosion_far",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Artilharia distante",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/biggun1.wav",
+    "ambience/biggun3.wav",
+    "ambience/biggun2.wav",
+    "ambience/distantmortar1.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "explosion_flashbang",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Granada de luz (flashbang)",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/weapons/flashbang-1.wav",
+    "Counter-Strike/cstrike/sound/weapons/flashbang-2.wav"
+   ],
+   "score": 5.7
+  },
+  {
+   "id": "explosion_grenade",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Explosão (granada/bomba)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/explode3.wav",
+    "weapons/explode4.wav",
+    "weapons/explode5.wav"
+   ],
+   "score": 9.8
+  },
+  {
+   "id": "fire_loop",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Fogo queimando",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/rocketflame1.wav",
+    "ambience/burning1.wav",
+    "ambience/flameburst1.wav",
+    "ambience/burning3.wav"
+   ],
+   "score": 8.5,
+   "loop": true
+  },
+  {
+   "id": "gas_leak",
+   "role": "fallback",
+   "category": "explosoes-fogo",
+   "label": "Vapor/gás escapando",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/rocket_steam1.wav",
+    "ambience/steamburst1.wav",
+    "ambience/steamjet1.wav"
+   ],
+   "score": 9.2
+  },
+  {
+   "id": "flesh_fruit_splat",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Corpo esmagado/queda alta",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "common/bodysplat.wav"
+   ],
+   "score": 7.2
+  },
+  {
+   "id": "furniture_push_wood",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Arrastar caixa/móvel",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/pushbox1.wav",
+    "debris/pushbox2.wav",
+    "debris/pushbox3.wav"
+   ],
+   "score": 7.8
+  },
+  {
+   "id": "glass_blunt_medium",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Batida em vidro",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/glass1.wav",
+    "debris/glass2.wav",
+    "debris/glass3.wav",
+    "debris/glass4.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "glass_shatter",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Vidro quebrando",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/valve/sound/debris/bustglass1.wav",
+    "Counter-Strike/valve/sound/debris/bustglass2.wav",
+    "Counter-Strike/valve/sound/debris/bustglass3.wav"
+   ],
+   "score": 8.3
+  },
+  {
+   "id": "impact_generic_light",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala acertando superfície",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/bullet_hit1.wav",
+    "weapons/bullet_hit2.wav"
+   ],
+   "score": 5.7
+  },
+  {
+   "id": "masonry_blunt",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Batida em concreto",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/concrete2.wav",
+    "debris/concrete1.wav",
+    "debris/concrete3.wav"
+   ],
+   "score": 7.3
+  },
+  {
+   "id": "masonry_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala em concreto/alvenaria",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/weapons/ric_conc-1.wav",
+    "Counter-Strike/cstrike/sound/weapons/ric_conc-2.wav"
+   ],
+   "score": 5.7
+  },
+  {
+   "id": "metal_blunt_medium",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Batida em metal",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/metal2.wav",
+    "debris/metal3.wav",
+    "debris/metal4.wav",
+    "debris/metal5.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "ricochet_metal",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Ricochete em metal",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/valve/sound/weapons/ric2.wav",
+    "Counter-Strike/valve/sound/weapons/ric1.wav",
+    "Counter-Strike/valve/sound/weapons/ric3.wav",
+    "Counter-Strike/valve/sound/weapons/ric4.wav"
+   ],
+   "score": 9.3
+  },
+  {
+   "id": "rubble_falling",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Destroços pequenos caindo",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/debris1.wav",
+    "weapons/debris2.wav",
+    "weapons/debris3.wav",
+    "ambience/sandfall1.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "soft_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Carne/corpo (gore)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/xbow_hitbod2.wav",
+    "debris/flesh1.wav",
+    "debris/flesh2.wav",
+    "debris/flesh3.wav"
+   ],
+   "score": 8.4
+  },
+  {
+   "id": "wood_blunt_medium",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Batida em madeira",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/wood4.wav",
+    "debris/wood2.wav",
+    "debris/wood1.wav",
+    "debris/wood3.wav"
+   ],
+   "score": 7.2
+  },
+  {
+   "id": "wood_hit",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Flecha/virote acertando madeira",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/xbow_hit2.wav",
+    "weapons/xbow_hit1.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "door_lock_unlock",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Destrancar trinco",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "buttons/latchunlocked1.wav",
+    "buttons/latchunlocked2.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "door_locked_rattle",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Porta trancada (tentar abrir)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "buttons/latchlocked1.wav",
+    "buttons/latchlocked2.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "door_metal_open_shut",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Porta deslizando/abrindo (mecânica)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "doors/doormove1.wav",
+    "doors/doormove10.wav",
+    "doors/doormove2.wav",
+    "doors/doormove3.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "item_drop_metal",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Largar arma no chão",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "items/weapondrop1.wav"
+   ],
+   "score": 9.6
+  },
+  {
+   "id": "lever_pull",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Alavanca",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "buttons/lever1.wav",
+    "buttons/lever2.wav",
+    "buttons/lever3.wav",
+    "buttons/lever4.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "switch_click",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Interruptor/botão",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "buttons/blip2.wav",
+    "buttons/button1.wav",
+    "buttons/button10.wav",
+    "buttons/button11.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "water_drip",
+   "role": "fallback",
+   "category": "itens-portas",
+   "label": "Gotejar",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "ambience/drips.wav"
+   ],
+   "score": 7.6
+  },
+  {
+   "id": "blunt_hit_metal",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Pé-de-cabra: acertar metal",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/cbar_hit1.wav",
+    "weapons/cbar_hit2.wav"
+   ],
+   "score": 7.7
+  },
+  {
+   "id": "body_fall",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Corpo caindo",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "common/bodydrop2.wav",
+    "common/bodydrop4.wav",
+    "common/bodydrop3.wav",
+    "common/bodydrop1.wav"
+   ],
+   "score": 7.9
+  },
+  {
+   "id": "footstep_concrete_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em concreto",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_step1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_step2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_step3.wav",
+    "Counter-Strike/cstrike/sound/player/pl_step4.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "footstep_dirt_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em terra",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_dirt1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_dirt2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_dirt3.wav",
+    "Counter-Strike/cstrike/sound/player/pl_dirt4.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "footstep_generic_alt",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo de NPC",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "common/npc_step1.wav",
+    "common/npc_step2.wav",
+    "common/npc_step3.wav",
+    "common/npc_step4.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "footstep_metal_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em metal",
+   "pack": "CS1.6_Realistic_Sound-Pack_Ver.2",
+   "files": [
+    "Counter-Strike/cstrike/sound/player/pl_metal1.wav",
+    "Counter-Strike/cstrike/sound/player/pl_metal2.wav",
+    "Counter-Strike/cstrike/sound/player/pl_metal3.wav",
+    "Counter-Strike/cstrike/sound/player/pl_metal4.wav"
+   ],
+   "score": 10.0
+  },
+  {
+   "id": "knife_slash",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Faca: golpe no ar",
+   "pack": "weapons_fb311",
+   "files": [
+    "weapons/knife_slash1.wav",
+    "weapons/knife_slash2.wav"
+   ],
+   "score": 9.7
+  },
+  {
+   "id": "land_concrete",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Pulo / aterrissar",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/pl_jump1.wav",
+    "player/pl_jumpland2.wav",
+    "player/pl_jump2.wav"
+   ],
+   "score": 7.4
+  },
+  {
+   "id": "player_breath_run",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Respiração",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/breathe1.wav",
+    "player/breathe2.wav"
+   ],
+   "score": 7.7
+  },
+  {
+   "id": "player_hurt_male",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Dor do jogador",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/pl_pain6.wav",
+    "player/pl_pain4.wav",
+    "player/pl_pain7.wav",
+    "player/pl_pain5.wav"
+   ],
+   "score": 8.0
+  },
+  {
+   "id": "swing_whoosh_alt",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Golpe no ar (whoosh)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "weapons/cbar_miss1.wav",
+    "zombie/claw_miss1.wav",
+    "zombie/claw_miss2.wav"
+   ],
+   "score": 7.4
+  },
+  {
+   "id": "zombie_groan",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Zumbi: gemido parado",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "zombie/zo_idle1.wav",
+    "zombie/zo_idle3.wav",
+    "zombie/zo_idle2.wav",
+    "zombie/zo_idle4.wav"
+   ],
+   "score": 6.9
+  }
+ ]
+}

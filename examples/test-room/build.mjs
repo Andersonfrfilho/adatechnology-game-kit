@@ -151,6 +151,14 @@ if (existsSync(join(sfx, 'manifest.json'))) {
   cpSync(sfx, join(here, 'dist/sfx'), { recursive: true })
   console.log('dist/sfx copied')
 }
+// 4b. the owner's own sounds (.sfx-local/, written by `sfx:user` from packs the kit cannot redistribute) next to the page as sfx-local/, only on the
+//     machine that has them: the folder is ignored by git, so no CI build or package carries them
+const userSfx = join(root, '.sfx-local')
+rmSync(join(here, 'dist/sfx-local'), { recursive: true, force: true })
+if (existsSync(join(userSfx, 'manifest.json'))) {
+  cpSync(userSfx, join(here, 'dist/sfx-local'), { recursive: true })
+  console.log('dist/sfx-local copied (your sounds, local only)')
+}
 
 // 5. the weapon thumbnails (game-weapons-three assets/weapon-svg) next to the page: the areas of the room ask for them at `../weapon-svg/` (the site's
 //    layout), which from a server of dist/ is dist/weapon-svg; without them every weapon of the counter is a 404 in the console.
