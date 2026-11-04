@@ -81,7 +81,52 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     renderer.render(scene, camera)
   }
 
+  /**
+   * Hides every drawable of the scene outside `root` and returns the undo. An object with a light under it stays: the lights are what the programs
+   * are keyed by, and hiding one would warm programs for a light count the game never draws.
+   */
+  function drawOnly(scene: Scene, root: Object3D): () => void {
+    const hidden: Object3D[] = []
+    const visit = (object: Object3D): void => {
+      if (object === root || !object.visible) return
+      const drawable = object as Object3D & { isMesh?: boolean; isPoints?: boolean; isLine?: boolean; isSprite?: boolean }
+      if (drawable.isMesh === true || drawable.isPoints === true || drawable.isLine === true || drawable.isSprite === true) {
+        if (!holdsLight(object) && !holdsObject(object, root)) {
+          object.visible = false
+          hidden.push(object)
+          return
+        }
+      }
+      for (const child of object.children) visit(child)
+    }
+    for (const child of scene.children) visit(child)
+    return () => hidden.forEach((object) => (object.visible = true))
+  }
+
+  function holdsLight(object: Object3D): boolean {
+    let found = false
+    object.traverse((each) => {
+      if ((each as { isLight?: boolean }).isLight === true) found = true
+    })
+    return found
+  }
+
+  function holdsObject(object: Object3D, target: Object3D): boolean {
+    for (let at: Object3D | null = target; at !== null; at = at.parent) if (at === object) return true
+    return false
+  }
+
   function playEffect(renderer: WarmupRenderer, scene: Scene, camera: Camera, effect: EffectWarmup, target: WarmupOptions['target']): void {
+    const root = effect.root?.()
+    const restore = root === null || root === undefined ? (): void => undefined : drawOnly(scene, root)
+    try {
+      playFrames(renderer, scene, camera, effect, target)
+    } finally {
+      restore()
+    }
+  }
+
+  function playFrames(renderer: WarmupRenderer, scene: Scene, camera: Camera, effect: EffectWarmup, target: WarmupOptions['target']): void {
     effect.play()
     try {
       for (let frame = 0; frame < (effect.frames ?? DEFAULT_EFFECT_FRAMES); frame++) {

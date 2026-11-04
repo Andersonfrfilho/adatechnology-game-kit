@@ -26,6 +26,11 @@ export interface EffectWarmup {
   stop(): void
   /** Frames to render. Default 3. */
   readonly frames?: number
+  /**
+   * Where the effect draws. Given, only that subtree (and the lights) is drawn while the effect plays: its programs and buffers are what the frames
+   * are for, and the rest of the scene was already drawn in every fog state. Without it the whole scene is drawn each frame.
+   */
+  readonly root?: () => Object3D | null | undefined
 }
 
 export interface WarmupOptions {

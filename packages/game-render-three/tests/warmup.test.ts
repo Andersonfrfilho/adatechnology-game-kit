@@ -110,6 +110,28 @@ describe('ProgramWarmup.warmUp', () => {
     expect(renderer.initTexture).toHaveBeenCalledWith(texture)
   })
 
+  it('draws an effect with a root alone: the rest of the scene is hidden for its frames (lights and what holds them stay), then shown again', () => {
+    const scene = new THREE.Scene()
+    const room = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    lamp.add(new THREE.PointLight())
+    const off = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    off.visible = false
+    const effects = new THREE.Group()
+    const puff = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    effects.add(puff)
+    scene.add(room, lamp, off, effects)
+    const { renderer } = fakeRenderer()
+    const warmup = createProgramWarmup(THREE)
+    warmup.registerEffect({ id: 'm67', frames: 1, root: () => effects, play: vi.fn(), step: vi.fn(), stop: vi.fn() })
+    const seen: string[] = []
+    renderer.render.mockImplementation(() => seen.push([room, lamp, off, puff].map((object) => (object.visible ? '1' : '0')).join('')))
+    warmup.warmUp(renderer, scene, new THREE.PerspectiveCamera())
+    // the scene in its fog state, then the blast's frame: the room hidden, the lamp (a light under it) and the effect drawn
+    expect(seen).toEqual(['1101', '0101'])
+    expect([room.visible, lamp.visible, off.visible, puff.visible]).toEqual([true, true, false, true])
+  })
+
   it('refuses an instanced shadow caster with a depth material but no distance material', () => {
     const scene = new THREE.Scene()
     const { renderer } = fakeRenderer()

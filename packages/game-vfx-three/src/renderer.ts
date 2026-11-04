@@ -140,6 +140,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   }
 
   return {
+    root,
     world,
     play(request) {
       followCamera()
