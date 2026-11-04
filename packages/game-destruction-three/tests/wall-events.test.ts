@@ -90,20 +90,20 @@ describe('the mark of a round by material', () => {
     expect(mesh.children.some((c) => c.renderOrder === 2)).toBe(true)
   })
 
-  it('an opaque brittle body cracks a hand around the hit in a shade of its colour; glass cracks as far as the event says, in white', () => {
-    const tub = piece('ceramic', 0xe0ddd6)
-    tub.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] })
-    tub.renderer.update(0.016)
-    const lines = tub.mesh.children.find((c) => (c as THREE.LineSegments).isLineSegments) as THREE.LineSegments
-    lines.geometry.computeBoundingSphere()
-    expect(lines.geometry.boundingSphere!.radius).toBeLessThan(0.13)
-    expect((lines.material as THREE.LineBasicMaterial).color.getHex()).toBe(new THREE.Color(0xe0ddd6).multiplyScalar(0.45).getHex())
+  it('an opaque body draws no crack lines (its damage is chips, holes and dents); glass cracks as far as the event says, in white', () => {
+    for (const material of ['ceramic', 'wood', 'concrete']) {
+      const body = piece(material, 0xe0ddd6)
+      body.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] })
+      body.renderer.update(0.016)
+      expect(body.mesh.children.some((c) => (c as THREE.LineSegments).isLineSegments)).toBe(false)
+    }
     const pane = piece('glass', 0xffffff)
     pane.world.emit({ type: 'crack', object: 'o1', part: 'p', crack: { point: [0, 0, 0.025], normal: [0, 0, 1], length: 0.4, rays: 7 }, worldPoint: [0, 0, 0.025] })
     pane.renderer.update(0.016)
     const glass = pane.mesh.children.find((c) => (c as THREE.LineSegments).isLineSegments) as THREE.LineSegments
     glass.geometry.computeBoundingSphere()
     expect(glass.geometry.boundingSphere!.radius).toBeGreaterThan(0.2)
+    expect((glass.material as THREE.LineBasicMaterial).color.getHex()).toBe(0xe8f4ff)
   })
 })
 

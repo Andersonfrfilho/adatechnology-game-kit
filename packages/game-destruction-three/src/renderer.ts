@@ -25,8 +25,6 @@ let rendererCount = 0
 const COLLAPSE_CLOUD_KG = 1000
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
-/** Metres the cracks around a hit reach on an opaque body (glass cracks as far as the event says). */
-const OPAQUE_CRACK = 0.1
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
 const WOOD_RIM = 1.5
 const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
@@ -1087,16 +1085,12 @@ class Renderer implements DestructionRenderer {
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
     const def = this.world.materials.get(pv.material)
-    const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-    const mv = this.nearestMesh(pv, wp)
-    if (mv) {
-      // glass cracks right across in white lines; an opaque body (a ceramic tub, a concrete slab) cracks a hand around the hit, in a dark shade of
-      // its own colour, not black lines over the whole piece
-      const glass = !!def?.visual?.transparent
-      const own = this.partColor(pv, def) ?? fallbackColor(pv.material, def)
-      const color = glass ? 0xe8f4ff : new this.THREE.Color(own).multiplyScalar(0.45).getHex()
-      const length = glass ? ev.crack.length : Math.min(ev.crack.length, OPAQUE_CRACK)
-      this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
+    // only glass shows a crack as lines (the break runs inside a clear body); an opaque body shows its damage as chips, holes and dents, never lines drawn over it
+    if (def?.visual?.transparent) {
+      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const mv = this.nearestMesh(pv, wp)
+      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, 0xe8f4ff, seed)
     }
     this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
