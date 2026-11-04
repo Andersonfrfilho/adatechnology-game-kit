@@ -421,6 +421,8 @@ export interface ModuleHost {
    * the panels and the room's other keys keep working. A host without a walking player leaves it out.
    */
   holdPlayer?(held: boolean): void
+  /** True while a module holds the player (`holdPlayer(true)`): the keys then belong to that module, and another module's own keys (a weapon's accessories) stay out of its way. */
+  playerHeld?(): boolean
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
   /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */

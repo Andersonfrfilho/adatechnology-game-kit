@@ -3328,6 +3328,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Scenarios and modules
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const extraScenarios: TestRoomScenario[] = [...(options.scenarios ?? [])]
+  /** A module holds the player (`holdPlayer`): the keys are that module's while it lasts. */
+  let moduleHeld = false
   const moduleCheck = (ok: boolean, text: string, data: Record<string, unknown>, itemId?: string): void => {
     log.add({ channel: 'check', type: ok ? 'pass' : 'fail', text: `${ok ? '✓' : '✗'} ${text}`, itemId, data: { ok, ...data } })
   }
@@ -3459,7 +3461,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     loading,
     addView: (view) => moduleViews.add(view),
     setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
-    holdPlayer: (held) => player.setWalkHeld(held),
+    holdPlayer: (held) => {
+      moduleHeld = held
+      player.setWalkHeld(held)
+    },
+    playerHeld: () => moduleHeld,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     blastReach: (point, target, ignore) => world.blastReach(point, target, ignore ? { ignore } : {}),
     tool: () => ({

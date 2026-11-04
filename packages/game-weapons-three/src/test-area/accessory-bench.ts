@@ -171,6 +171,8 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
   }
 
   const onKeyDown = (event: KeyboardEvent): void => {
+    // someone else holds the player (at the wheel of a vehicle): L, K, U and V are theirs
+    if (host.playerHeld?.()) return
     if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || TEXT_FIELDS.has((event.target as HTMLElement | null)?.tagName ?? '')) return
     const handled = event.code === ACCESSORY_KEYS.light ? act(ACTION_IDS.light) : event.code === ACCESSORY_KEYS.laser ? act(ACTION_IDS.laser) : event.code === ACCESSORY_KEYS.underbarrel ? act(ACTION_IDS.underbarrel) : event.code === ACCESSORY_KEYS.stock && toggleStock()
     if (!handled) return
