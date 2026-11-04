@@ -1,5 +1,17 @@
 # @adatechnology/game-test-room
 
+## 0.23.0
+
+### Minor Changes
+
+- The body falls the way the blast pushed it: on its back when it faced the blast, face down when the blast was behind it (`AvatarUpdate.fallForward`, `RoomAvatarState.fallForward`, `player.knockedForward`; `toRoomAvatar` passes it on). The first-person view lying face down looks at the ground; on the back, at the sky.
+
+### Patch Changes
+
+- e522e32: Fire sounds by fuel: wood, fabric, plastic/rubber, a gas jet and a pool of fuel each play their own roar (`FIRE_FUEL_OF`, `FIRE_LOOP_OF`, `FIRE_CRACKLE_OF`, recorded loops with synthesized fallbacks); a gas jet and a fuel pool do not crackle. The renderer sends the burning material, a venting vessel burns as gas until it bursts, and `DestructionSound.reset()` puts every fire sound out. The test room gives a molotov's pool and a burning fuel stain the liquid fire sound and resets the fires on clear.
+- Updated dependencies [e522e32]
+  - @adatechnology/game-destruction-three@0.15.0
+
 ## 0.22.0
 
 ### Minor Changes
