@@ -43,21 +43,22 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           }
           return b.isEmpty() ? null : [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z]; };
         const parts = [], byId = new Map(), supports = E0.supports.map(a => Object.assign({}, a));
-        for (const e of E0.parts) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
+        for (const e of E0.parts) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
         const base = parts.length, view = shared.ctx.panelView || panelViewOf(null, false), panelIds = new Set(view.panels.map(e => e.id)); // the panels are pieces of the structure, not of the plan
         for (const [id, pc] of shared.ctx.pieces) { // tagged pieces that do not come from the plan: windows, doors, tank, pipes, wiring, cylinder, walls
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill : 0.15)), meshes: meshes.get(id).length, extra: true };
-          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null) p[k] = pc[k];
+          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }
         const inside = (p, q, m) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
         for (const p of parts.slice(base)) { // what is fitted into a wall or slab falls with it (a joint that does not carry)
-          if (!/^(window|window_pane|door|jamb|pipe|water_tank)/.test(p.id)) continue;
+          if (!/^(window|window_pane|door|jamb|pipe|water_tank|baseboard)/.test(p.id)) continue;
           const target = /^water_tank/.test(p.id) ? ['slab'] : ['wall', 'partition'];
           let m = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
-          if (m) supports.push({ part: p.id, on: m.id, joint: /^(window|jamb)/.test(p.id) ? 'glue' : 'clip', bears: false, extra: true });
+          // a tile of the baseboard is set in tile adhesive on the wall: glued, it comes off with the wall
+          if (m) supports.push({ part: p.id, on: m.id, joint: /^(window|jamb|baseboard)/.test(p.id) ? 'glue' : 'clip', bears: false, extra: true });
         }
         // The spec is made from the pieces of the plan (the slabs whole), and the structure cuts them into panels; the house is then bound to the panels: a floor, a
         // ceiling and a roof slab are drawn tile by tile in the panel they lie on (house/floors), and the slab they were cut from is not a piece any more.
@@ -66,7 +67,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           const gone = new Set(view.replaced);
           parts.splice(0, parts.length, ...parts.filter(p => !gone.has(p.id)));
           for (const id of gone) byId.delete(id);
-          for (const e of view.panels) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
+          for (const e of view.panels) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
           supports.splice(0, supports.length, ...supports.filter(s => !gone.has(s.part) && !gone.has(s.on)), ...view.supports.filter(s => byId.has(s.part) && (byId.has(s.on) || s.on === 'ground')).map(a => Object.assign({}, a)));
         }
         const structure: any = {
@@ -82,7 +83,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
             // what a part holds, what makes it explode and how thin its wall is (the water tank, the gas cylinder) comes from the piece; the structure package's spec does not carry it
             spec.parts = spec.parts.map(sp => {
               const pc0 = byId.get(sp.id); if (!pc0) return sp;
-              const extra: any = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags']) if (pc0[k] != null && sp[k] == null) extra[k] = pc0[k];
+              const extra: any = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags', 'units']) if (pc0[k] != null && sp[k] == null) extra[k] = pc0[k];
               return Object.keys(extra).length ? { ...sp, ...extra } : sp;
             });
             spec.parts = spec.parts.map(sp => {
