@@ -25,11 +25,14 @@ describe('recorded blasts and fire', () => {
     for (const id of samples.keys()) expect(recipes.has(id), id).toBe(true)
   })
 
-  it('the fire roar loops over several recorded fires; the one-shots do not loop', () => {
-    const fire = samples.get('fire_loop')!
-    expect(fire.loop).toBeTruthy()
-    expect(fire.close.length).toBeGreaterThanOrEqual(3)
-    for (const [id, sample] of samples) if (id !== 'fire_loop') expect(sample.loop, id).toBeUndefined()
+  it('each fuel roars over several recorded fires, crossfaded in a loop; the one-shots do not loop', () => {
+    const loops = ['fire_loop', 'fire_loop_gas', 'fire_loop_liquid', 'fire_loop_plastic']
+    for (const id of loops) {
+      const fire = samples.get(id)!
+      expect(fire.loop, id).toBeTruthy()
+      expect(fire.close.length, id).toBeGreaterThanOrEqual(3)
+    }
+    for (const [id, sample] of samples) if (!loops.includes(id)) expect(sample.loop, id).toBeUndefined()
   })
 
   it('a blast fades with distance like its recipe, and only blasts and fire are taken from the manifest', () => {

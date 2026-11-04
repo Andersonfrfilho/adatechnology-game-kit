@@ -31,6 +31,10 @@ export interface SoundDetail {
   readonly confinement?: number
   /** `primed`: seconds until the vessel bursts (the gas leak lasts that long). */
   readonly seconds?: number
+  /** `burn_loop` / `burn_end`: the material burning (`wood_hard`, `rubber`...), which picks the fire's sound. */
+  readonly material?: string
+  /** `burn_loop` / `burn_end`: the fuel itself, when it is not a material (a gas jet, a pool of fuel). Wins over `material`. */
+  readonly fuel?: 'wood' | 'fabric' | 'plastic' | 'gas' | 'liquid'
 }
 
 export interface RendererOptions {

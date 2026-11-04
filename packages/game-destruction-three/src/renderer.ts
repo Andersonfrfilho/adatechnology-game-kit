@@ -839,7 +839,7 @@ class Renderer implements DestructionRenderer {
         this.startFire(ev)
         this.activate(ev.object, ev.part)
         this.sound('ignite', ev.point, 0.7)
-        this.sound('burn_loop', ev.point, 0.5)
+        this.sound('burn_loop', ev.point, 0.5, this.burning(ev.object, ev.part))
         break
       case 'primed':
         // a bullet or fire sets the part burning until its delay runs out; a blast nearby only waits for the explosion
@@ -849,7 +849,7 @@ class Renderer implements DestructionRenderer {
           this.activate(ev.object, ev.part)
           // the vessel is venting until it bursts: the gas leak for as long as the delay, and the flame it feeds
           this.sound('primed', ev.point, 0.7, { seconds: ev.delay })
-          this.sound('burn_loop', ev.point, 0.5)
+          this.sound('burn_loop', ev.point, 0.5, { fuel: 'gas' })
         }
         break
       case 'spall':
@@ -875,15 +875,15 @@ class Renderer implements DestructionRenderer {
           this.stopFire(`${ev.object}|${ev.part}`)
           this.vfx.burst('steam', f.point, [0, 1, 0], 14, 1.2)
         }
-        if (f || primed) this.sound('burn_end', f?.point ?? this.rootPoint(ev.object), 0.5)
+        if (f || primed) this.sound('burn_end', f?.point ?? this.rootPoint(ev.object), 0.5, primed ? { fuel: 'gas' } : this.burning(ev.object, ev.part))
         this.activate(ev.object, ev.part)
         this.sound('extinguish', f?.point ?? this.rootPoint(ev.object), 0.6)
         break
       }
       case 'burnout': {
         this.stopFire(`${ev.object}|${ev.part}`)
-        this.primedBurning.delete(`${ev.object}|${ev.part}`)
-        this.sound('burn_end', ev.point, 0.5)
+        const primed = this.primedBurning.delete(`${ev.object}|${ev.part}`)
+        this.sound('burn_end', ev.point, 0.5, primed ? { fuel: 'gas' } : this.burning(ev.object, ev.part))
         this.vfx.burst('ash', ev.point, [0, 1, 0], 16, 1)
         this.vfx.burst('smoke', ev.point, [0, 1, 0], 6, 0.8, { color: SMOKE_TONES.grey })
         const pv = this.partVis(ev.object, ev.part)
@@ -951,7 +951,8 @@ class Renderer implements DestructionRenderer {
         break
       }
       case 'explode':
-        this.primedBurning.delete(`${ev.object}|${ev.part}`)
+        // the vessel that vented into its flame bursts: the gas jet ends with it
+        if (this.primedBurning.delete(`${ev.object}|${ev.part}`)) this.sound('burn_end', ev.point, 0.5, { fuel: 'gas' })
         this.onExplode(ev)
         break
       case 'destroyed':
@@ -967,6 +968,12 @@ class Renderer implements DestructionRenderer {
   private sound(key: string, point: Vec3, volume: number, detail?: SoundDetail): void {
     if (detail) this.o.onSound?.(key, point, volume, detail)
     else this.o.onSound?.(key, point, volume)
+  }
+
+  /** What a burning part is made of, for the fire's sound. */
+  private burning(objectId: string, partId: string): SoundDetail | undefined {
+    const material = this.partVis(objectId, partId)?.material || this.world.part(objectId, partId)?.material
+    return material ? { material } : undefined
   }
 
   private partVis(objectId: string, partId: string): PartVis | null {

@@ -2,8 +2,8 @@ import type { Vec3 } from '@adatechnology/game-contracts'
 import { FOLEY_BANK, GAME_SFX_BANK } from '@adatechnology/game-audio'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
-import { BIG_BLAST_RADIUS, BLAST_FAR_DISTANCE, BLAST_KIND_OF, BLAST_SOUND_OF } from './blast-fire'
-import type { BlastKind } from './blast-fire'
+import { BIG_BLAST_RADIUS, BLAST_FAR_DISTANCE, BLAST_KIND_OF, BLAST_SOUND_OF, FIRE_CRACKLE_OF, FIRE_FUEL_OF, FIRE_LOOP_OF } from './blast-fire'
+import type { BlastKind, FireFuel } from './blast-fire'
 import { DESTRUCTION_SOUND_BANK } from './recipes'
 import type { SoundDetail } from '../types'
 
@@ -174,8 +174,14 @@ export type DestructionSoundOptions = {
   readonly fire?: { readonly perFire?: number; readonly max?: number }
   /** Burn loop on or off (default on). */
   readonly burnLoop?: boolean
-  /** The fire loop played while something burns (default `fire_loop`; `burn_loop` is the art scene's bright one). */
+  /** The loop of the wood fire (default `fire_loop`; `burn_loop` is the art scene's bright one). */
   readonly fireLoop?: string
+  /** Adds to or changes `FIRE_FUEL_OF`: which fuel a burning material sounds like. */
+  readonly fuels?: Readonly<Record<string, FireFuel>>
+  /** Adds to or changes `FIRE_LOOP_OF`: the loop of each fuel. */
+  readonly fireLoops?: Partial<Readonly<Record<FireFuel, string>>>
+  /** The fuel of a fire whose material is not in the table (default `wood`). */
+  readonly defaultFuel?: FireFuel
   /** Crackles per second over the fire loop: `base + perSqrtFire × √(parts burning)`, at most `max` (default 2, 3, 14). `false` turns them off. */
   readonly crackles?: false | { readonly base?: number; readonly perSqrtFire?: number; readonly max?: number; readonly volume?: number }
   /** Adds to or changes `BLAST_KIND_OF`: which family a named explosion (`effect`) sounds like. */
@@ -199,6 +205,10 @@ export type DestructionSound = {
   rule(key: string, detail?: SoundDetail): SoundKeyRule | undefined
   /** Parts burning now. */
   readonly burning: () => number
+  /** Parts burning now, by fuel. */
+  readonly burningBy: () => Readonly<Partial<Record<FireFuel, number>>>
+  /** Puts every fire sound out (the scene was cleared); the engine and the bank stay. */
+  reset(): void
   dispose(): void
 }
 
@@ -227,34 +237,59 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
   // a blast takes its family's sound unless the host chose the explode rule itself (a style or a key of its own)
   const blastByKind = options.style !== 'game' && !(options.keys && 'explode' in options.keys)
   const channel = engine.channel({ seed: options.seed ?? 1 })
-  let loop: AudioLoopHandle | undefined
-  let burning = 0
-  // where the fires are, for the crackles: one point per part burning
-  const fires: Vec3[] = []
+  const fuelOf: Readonly<Record<string, FireFuel>> = { ...FIRE_FUEL_OF, ...options.fuels }
+  const loopOf: Readonly<Record<FireFuel, string>> = { ...FIRE_LOOP_OF, ...(options.fireLoop ? { wood: fireLoop, fabric: fireLoop } : {}), ...options.fireLoops }
+  const defaultFuel = options.defaultFuel ?? 'wood'
+  // one loop per sound (fuels that share a loop share its level); a loop stops when nothing of its fuels burns
+  const loops = new Map<string, AudioLoopHandle>()
+  // where the fires are and what burns there: the crackles come from the points whose fuel crackles
+  const fires: { readonly point: Vec3; readonly fuel: FireFuel }[] = []
   let nextCrackle = 0
+
+  const fuelFor = (detail: SoundDetail | undefined): FireFuel => detail?.fuel ?? (detail?.material !== undefined ? fuelOf[detail.material] : undefined) ?? defaultFuel
 
   const setFire = (): void => {
     if (options.burnLoop === false) return
-    if (burning <= 0) {
-      loop?.stop()
-      loop = undefined
-      return
+    const count = new Map<string, number>()
+    for (const f of fires) {
+      const id = loopOf[f.fuel]
+      count.set(id, (count.get(id) ?? 0) + 1)
     }
-    loop ??= engine.loop(fireLoop)
-    loop.set({ volume: Math.min(fire.max, fire.perFire * burning) })
+    for (const [id, handle] of loops) {
+      if (count.has(id)) continue
+      handle.stop()
+      loops.delete(id)
+    }
+    for (const [id, n] of count) {
+      let handle = loops.get(id)
+      if (!handle) {
+        handle = engine.loop(id)
+        loops.set(id, handle)
+      }
+      handle.set({ volume: Math.min(fire.max, fire.perFire * n) })
+    }
   }
 
-  const forget = (point: Vec3): void => {
+  // the nearest fire of that fuel goes out (any fuel when the end does not say)
+  const forget = (point: Vec3, fuel: FireFuel | undefined): void => {
     let best = -1
     let bestD = Infinity
     fires.forEach((f, i) => {
-      const d = (f[0] - point[0]) ** 2 + (f[1] - point[1]) ** 2 + (f[2] - point[2]) ** 2
+      if (fuel !== undefined && f.fuel !== fuel) return
+      const d = (f.point[0] - point[0]) ** 2 + (f.point[1] - point[1]) ** 2 + (f.point[2] - point[2]) ** 2
       if (d < bestD) {
         bestD = d
         best = i
       }
     })
-    if (best >= 0) fires.splice(best, 1)
+    if (best < 0 && fuel !== undefined) forget(point, undefined)
+    else if (best >= 0) fires.splice(best, 1)
+  }
+
+  const reset = (): void => {
+    for (const handle of loops.values()) handle.stop()
+    loops.clear()
+    fires.length = 0
   }
 
   const blastSound = (point: Vec3, volume: number, detail?: SoundDetail): string => {
@@ -269,14 +304,12 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
   return {
     onSound(key, point, volume, detail) {
       if (key === 'burn_loop') {
-        burning += 1
-        fires.push(point)
+        fires.push({ point, fuel: fuelFor(detail) })
         setFire()
         return
       }
       if (key === 'burn_end') {
-        if (burning > 0) burning -= 1
-        forget(point)
+        forget(point, detail?.fuel ?? (detail?.material !== undefined ? fuelOf[detail.material] : undefined))
         setFire()
         return
       }
@@ -309,13 +342,17 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
     },
     update(dt) {
       if (!crackles || fires.length === 0 || options.burnLoop === false) return
+      // only the fuels that crackle count: a gas jet or a fuel pool roars without snapping
+      const weight = fires.reduce((sum, f) => sum + FIRE_CRACKLE_OF[f.fuel], 0)
+      if (weight <= 0) return
       nextCrackle -= dt
       // at most a few crackles per frame, even after a long one
       for (let i = 0; i < 4 && nextCrackle <= 0; i++) {
-        const rate = Math.min(crackles.max, crackles.base + crackles.perSqrtFire * Math.sqrt(fires.length))
+        const rate = Math.min(crackles.max, crackles.base * Math.min(1, weight) + crackles.perSqrtFire * Math.sqrt(weight))
         nextCrackle += (0.4 + channel.random() * 1.2) / rate
-        const at = fires[Math.floor(channel.random() * fires.length)] as Vec3
-        engine.play(channel.random() < 0.18 ? 'fire_pop' : 'fire_crackle', { position: at, volume: crackles.volume })
+        let pick = channel.random() * weight
+        const at = fires.find((f) => (pick -= FIRE_CRACKLE_OF[f.fuel]) <= 0) ?? (fires[fires.length - 1] as (typeof fires)[number])
+        engine.play(channel.random() < 0.18 ? 'fire_pop' : 'fire_crackle', { position: at.point, volume: crackles.volume })
       }
       if (nextCrackle < 0) nextCrackle = 0
     },
@@ -324,12 +361,13 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       for (const k of detail?.keys ?? []) if (k in rules) return rules[k] ?? undefined
       return rules[key] ?? undefined
     },
-    burning: () => burning,
-    dispose() {
-      loop?.stop()
-      loop = undefined
-      burning = 0
-      fires.length = 0
+    burning: () => fires.length,
+    burningBy: () => {
+      const by: Partial<Record<FireFuel, number>> = {}
+      for (const f of fires) by[f.fuel] = (by[f.fuel] ?? 0) + 1
+      return by
     },
+    reset,
+    dispose: reset,
   }
 }

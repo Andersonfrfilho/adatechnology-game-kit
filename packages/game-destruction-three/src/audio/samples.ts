@@ -30,6 +30,10 @@ export const BLAST_FIRE_SAMPLES: Readonly<Record<string, BlastFireSampleDefaults
   gas_leak: fire(0.5),
   // the roar: recorded fires chained with a crossfade (the level comes from `createDestructionSound`, by how much burns)
   fire_loop: { bus: 'world', gain: 4, loop: { crossfade: 1 } },
+  // each fuel has its own roar: a gas jet (burners and torches), a pool of fuel, plastic and rubber sizzling under the flames
+  fire_loop_gas: { bus: 'world', gain: 6, loop: { crossfade: 1 } },
+  fire_loop_liquid: { bus: 'world', gain: 3.5, loop: { crossfade: 1 } },
+  fire_loop_plastic: { bus: 'world', gain: 1, loop: { crossfade: 0.6 } },
 }
 
 export type BlastFireSampleBankOptions = {
