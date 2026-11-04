@@ -82,7 +82,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   const shocks = createShockLayer(THREE, pools.shocks)
   const sprites = createSpriteLayer(THREE, world.sprites(), options.pointScale ?? 700)
   const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI, options.lights)
-  const marks = createMarkLayer(THREE, { ground: pools.ground, createCanvas: options.createCanvas, rockGeometry, plateGeometry, ...options.markLimits })
+  const marks = createMarkLayer(THREE, { ground: pools.ground, ...(world.hostGroundAt ? { heightAt: world.hostGroundAt } : {}), createCanvas: options.createCanvas, rockGeometry, plateGeometry, ...options.markLimits })
   root.add(puffs.mesh, sparks.mesh, glows.mesh, chunks.rocks, chunks.plates, shocks.group, lights.group, sprites.additive, sprites.normal, marks.group)
   const stopMarks = world.onMarks((event) => marks.handle(event))
   const overlay = options.overlay ? createScreenOverlay(options.overlay) : undefined

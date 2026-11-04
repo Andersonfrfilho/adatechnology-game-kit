@@ -4,7 +4,14 @@ import { createMarkTextures } from './canvas'
 import type { MarkTextures } from './canvas'
 import type { CanvasLike, ThreeLib } from './types'
 
-const MAX_CONFORM_STEPS = 48
+/** Grid lines per metre of mark radius on flat ground (the team's Explosion Lab density). */
+const FLAT_STEPS_PER_METRE = 8
+const MAX_FLAT_STEPS = 48
+/** On ground that dips under the mark (a crater the host's terrain dug): a grenade's bowl (about 0.4 m) needs cells of ten centimetres or the mark cuts across it. */
+const DUG_STEPS_PER_METRE = 20
+const MAX_DUG_STEPS = 64
+/** Height spread under a mark, in metres, past which the ground counts as dug. */
+const FLAT_TOLERANCE = 0.002
 const MIN_CONFORM_STEPS = 16
 const BLOOD_GROW_RATE = 1.2
 const BLOOD_START_GROWTH = 0.05
@@ -44,6 +51,8 @@ export interface MarkLayer {
 
 export interface MarkLayerOptions {
   readonly ground: GroundField | undefined
+  /** Height of the host's own ground a scorch or dirt mark is laid on; default the `ground` field, else flat at 0. A host with its own terrain passes it here so a mark lines the crater instead of lying flat over it (with a finer grid where the ground dips under the mark). */
+  readonly heightAt?: (x: number, z: number) => number
   readonly createCanvas: (() => CanvasLike) | undefined
   readonly rockGeometry: THREE_NS.BufferGeometry
   readonly plateGeometry: THREE_NS.BufferGeometry
@@ -132,9 +141,22 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     if (spareGeometries.length > MAX_SPARE_GROUND_GEOMETRIES) spareGeometries.shift()!.dispose()
   }
 
+  const heightAt = options.heightAt ?? ((x: number, z: number): number => options.ground?.heightAt(x, z) ?? 0)
+  /** Samples the ground across the mark: flat ground keeps the light grid, a bowl gets the fine one. */
+  function groundDipsUnder(x: number, z: number, radius: number): boolean {
+    const centre = heightAt(x, z)
+    for (const share of [0.25, 0.5, 0.75]) {
+      for (let ray = 0; ray < 8; ray++) {
+        const angle = (ray / 8) * Math.PI * 2
+        if (Math.abs(heightAt(x + Math.cos(angle) * radius * share, z + Math.sin(angle) * radius * share) - centre) > FLAT_TOLERANCE) return true
+      }
+    }
+    return false
+  }
   function conform(mark: ScorchMark | DirtMark, material: THREE_NS.Material): void {
     const radius = mark.radius
-    const steps = Math.max(MIN_CONFORM_STEPS, Math.min(MAX_CONFORM_STEPS, Math.round(radius * 8)))
+    const dug = options.heightAt !== undefined && groundDipsUnder(mark.x, mark.z, radius)
+    const steps = Math.max(MIN_CONFORM_STEPS, Math.min(dug ? MAX_DUG_STEPS : MAX_FLAT_STEPS, Math.round(radius * (dug ? DUG_STEPS_PER_METRE : FLAT_STEPS_PER_METRE))))
     if (groundMarks.length >= maxGroundMarks) evictOldestGroundMark()
     const geometry = takeSpare((steps + 1) * (steps + 1)) ?? new THREE.PlaneGeometry(2, 2, steps, steps).rotateX(-Math.PI / 2)
     const grid = geometry.attributes.position!
@@ -147,7 +169,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
       const localZ = Math.fround(Math.floor(index / (steps + 1)) * cell - 1) * radius
       const worldX = mark.x + localX * cos - localZ * sin
       const worldZ = mark.z + localX * sin + localZ * cos
-      grid.setXYZ(index, worldX, (options.ground?.heightAt(worldX, worldZ) ?? 0) + mark.lift, worldZ)
+      grid.setXYZ(index, worldX, heightAt(worldX, worldZ) + mark.lift, worldZ)
     }
     grid.needsUpdate = true
     geometry.computeVertexNormals()

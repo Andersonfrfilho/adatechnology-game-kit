@@ -93,3 +93,25 @@ describe('the ground marks are warmed with the other programs', () => {
     layer.dispose()
   })
 })
+
+describe('a scorch lines the crater the host dug', () => {
+  it('lays every vertex on the host height, so the bowl stays visible under the mark', () => {
+    const bowl = (x: number, z: number): number => -Math.max(0, 0.25 * (1 - Math.hypot(x, z) / 0.8))
+    const layer = createMarkLayer(THREE, {
+      ground: undefined, heightAt: bowl, createCanvas: createFakeCanvas, rockGeometry: new THREE.DodecahedronGeometry(0.5, 0), plateGeometry: new THREE.BoxGeometry(1, 1, 1),
+    })
+    layer.handle({ type: 'add', mark: { kind: 'scorch', x: 0, z: 0, radius: 1, variant: 0, lift: 0.01, rotation: 0 } })
+    const plane = (layer.group.children as THREE.Mesh[]).find((child) => child.geometry?.type === 'PlaneGeometry')!
+    const position = plane.geometry.getAttribute('position')
+    let deepest = 0
+    for (let index = 0; index < position.count; index++) {
+      const x = position.getX(index)
+      const z = position.getZ(index)
+      expect(position.getY(index)).toBeCloseTo(bowl(x, z) + 0.01, 5)
+      deepest = Math.min(deepest, position.getY(index))
+    }
+    // the grid is fine enough to reach near the bottom of a 0.8 m bowl, not a flat disc over it
+    expect(deepest).toBeLessThan(-0.2)
+    layer.dispose()
+  })
+})
