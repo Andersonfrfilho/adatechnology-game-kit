@@ -79,6 +79,9 @@ const EDGE_POINTS = [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75]
 const SUPPORT_CHECKS = 16
 /** A sleeping piece none of whose lowest points has a support within this many metres under it wakes and falls. */
 const SUPPORT_GAP = 0.02
+/** A piece moving faster than this (m/s) or turning faster than this (rad/s) wakes what lies asleep on it. */
+const WAKE_ABOVE_SPEED = 0.05
+const WAKE_ABOVE_SPIN = 0.1
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 interface Solid {
@@ -326,6 +329,10 @@ export class PieceSystem {
       }
       if (b.sleeping) continue
       this.integrate(b, dt)
+      if (b.sleeping) continue
+      const v = b.velocity
+      const w = b.angularVelocity
+      if (Math.hypot(v[0], v[1], v[2]) > WAKE_ABOVE_SPEED || Math.hypot(w[0], w[1], w[2]) > WAKE_ABOVE_SPIN) this.wakeAbove(b)
     }
     this.separate(dt)
   }
@@ -357,6 +364,32 @@ export class PieceSystem {
       if (this.supportAt(b, x, y, z, STEP) >= y - SUPPORT_GAP) return true
     }
     return false
+  }
+
+  /** The highest top of a piece (other than `self`) under `(x, z)` that a point at height `y` stands on (at most `step` above it), -Infinity when none; the boxes of the last update. */
+  topAt(x: number, z: number, y: number, step: number, self?: string): number {
+    let top = -Infinity
+    for (const s of this.solids) {
+      if (s.body.objectId === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
+      const t = boxTopAt(s, x, z)
+      if (t > top && t <= y + step) top = t
+    }
+    return top
+  }
+
+  /** What lay asleep on `b` (a box over its top) wakes at once when `b` moves: a can on a table that goes over goes with it. */
+  private wakeAbove(b: PieceBody): void {
+    const below = this.solids.find((s) => s.body === b)
+    if (!below) return
+    const top = below.c[1] + below.half[0] * Math.abs(below.e[1]) + below.half[1] * Math.abs(below.e[5]) + below.half[2] * Math.abs(below.e[9])
+    for (const s of this.solids) {
+      const o = s.body
+      if (!o.sleeping || o.held || o === b) continue
+      if (s.c[1] < below.c[1] || s.c[1] - s.r > top + STEP || Math.hypot(s.c[0] - below.c[0], s.c[2] - below.c[2]) > s.r + below.r) continue
+      o.sleeping = false
+      o.still = 0
+      o.calmAt = null
+    }
   }
 
   /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */

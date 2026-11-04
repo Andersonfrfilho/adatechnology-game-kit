@@ -163,3 +163,91 @@ describe('a fragment asleep over a ground that dropped', () => {
     expect(mesh.position.y).toBeLessThan(0.1)
   })
 })
+
+describe('after a break nothing is left over air, and nothing collides where nothing is drawn', () => {
+  /** A stand of any kind (no furniture mark): a board on four posts, each a part. */
+  const stand = (world: FakeWorld, scene: THREE.Scene, renderer: ReturnType<typeof createDestructionRenderer>, lift = 0) => {
+    const ids = ['post_0', 'post_1', 'post_2', 'post_3']
+    world.addObject('stand', [partState('board', 'wood', { mass: 6 }), ...ids.map((id) => partState(id, 'wood', { mass: 1 }))])
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.5))
+    board.position.y = lift + 0.615
+    const posts = ids.map((_, i) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.6, 0.04))
+      post.position.set(i & 1 ? 0.36 : -0.36, lift + 0.3, i & 2 ? 0.21 : -0.21)
+      return post
+    })
+    const root = new THREE.Group()
+    root.add(board, ...posts)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('stand', root, { parts: { board, ...Object.fromEntries(ids.map((id, i) => [id, posts[i]!])) } })
+    const breakPost = (i: number): void => {
+      world.part('stand', ids[i]!)!.status = 'broken'
+      world.emit({ type: 'fracture', object: 'stand', part: ids[i]!, point: [0, lift + 0.3, 0], style: 'splinter', fragments: [] })
+    }
+    return { board, breakPost }
+  }
+
+  it('what is left of any object that stood on the floor and lost its footing falls, and the check after the break finds nothing left to fix', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const checked: Array<[string, boolean]> = []
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
+    const { board, breakPost } = stand(world, scene, renderer)
+    for (let i = 0; i < 4; i++) breakPost(i)
+    run(renderer, 4)
+    expect(checked.length).toBeGreaterThan(0)
+    expect(checked.every(([id, released]) => id === 'stand' && !released)).toBe(true)
+    expect(renderer.piece('stand')).not.toBeNull()
+    expect(bottom(board)).toBeLessThan(0.02)
+  })
+
+  it('one that hangs (nothing under it before the break either) is left to what holds it', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const checked: Array<[string, boolean]> = []
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
+    const { breakPost } = stand(world, scene, renderer, 1.2)
+    breakPost(0)
+    run(renderer, 1)
+    expect(checked).toEqual([['stand', false]])
+    expect(renderer.piece('stand')).toBeNull()
+  })
+
+  it('the drawn boxes of an object leave out what broke', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const { breakPost } = stand(world, scene, renderer)
+    expect(renderer.shownBoxes('stand')).toHaveLength(5)
+    breakPost(0)
+    breakPost(1)
+    run(renderer, 0.1)
+    const boxes = renderer.shownBoxes('stand')
+    expect(boxes).toHaveLength(3)
+    // no box is left low where the two front posts were
+    expect(boxes.filter((box) => box[1] < 0.1 && box[2] < -0.1)).toEqual([])
+  })
+
+  it('a can asleep on a crate wakes in the same update the crate is shoved', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    world.addObject('crate', [partState('body', 'wood', { mass: 3 })])
+    const crateMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4))
+    crateMesh.position.y = 0.2
+    const crate = new THREE.Group()
+    crate.add(crateMesh)
+    scene.add(crate)
+    crate.updateMatrixWorld(true)
+    renderer.bind('crate', crate, { parts: { body: crateMesh } })
+    renderer.makePiece('crate')
+    run(renderer, 2)
+    const { piece } = can(world, scene, renderer, 'can', [0, 0.41, 0])
+    run(renderer, 3)
+    expect(piece.sleeping).toBe(true)
+    renderer.impulse('crate', [8, 0, 0], [0, 0.35, 0])
+    renderer.update(1 / 60)
+    expect(piece.sleeping).toBe(false)
+  })
+})

@@ -78,6 +78,13 @@ export interface RendererOptions {
   /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
   onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
   /**
+   * After each break of a bound object (a part broke, came off, burned out or the object fell apart) the renderer checks it on the next update: what is left of an object that
+   * is not a piece must stand on something (the ground, a fixed top, a piece). One left over air is made a piece on the spot and falls (`released` true); either way the host
+   * hears of it, so it measures the object's collision again from what is drawn (`shownBoxes`) and can log the fix. Structures (`structure`, `room`, `ground`) answer to their
+   * own load path and are not checked.
+   */
+  onBrokenChecked?: (objectId: string, released: boolean) => void
+  /**
    * Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out.
    * An impact or a break also sends `detail.keys`, the keys to try before `key`, most specific first (`impact_concrete_ballistic`, `impact_concrete`, `impact_masonry_ballistic`, `impact_masonry`).
    * An explosion sends its named effect, radius and confinement; `primed` sends the seconds of its leak.
@@ -189,6 +196,11 @@ export interface DestructionRenderer {
   /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
   wakeRegion(x: number, z: number, radius: number): void
   piece(objectId: string): Piece | null
+  /**
+   * World boxes (`[minX, minY, minZ, maxX, maxY, maxZ]`) of the meshes of the object still drawn (of one part, with `partId`): what is broken, burned out or came off is not in
+   * them. Empty when nothing is left.
+   */
+  shownBoxes(objectId: string, partId?: string): Array<[number, number, number, number, number, number]>
   /**
    * World boxes of what is drawn around (x, z) within `radius`: each drawn mesh of a fixed object (meshes wider than 3 m and parts inside a merged
    * mesh are left out: walls, floors, roofs), of every piece and of the big fragments, with the object's id and its piece, if it is one. A turned mesh
