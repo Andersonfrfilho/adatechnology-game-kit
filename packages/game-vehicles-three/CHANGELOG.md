@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles-three
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [6b44b4e]
+  - @adatechnology/game-audio@0.6.0
+
 ## 0.6.0
 
 ### Minor Changes
