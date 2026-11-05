@@ -1,16 +1,18 @@
 // @ts-check
 // node tools/sfx-sources/cut.mjs --ffl <FreeFirearmsSFXLibrary checkout> --rfs <restrained-firearms-soundpack checkout> --oap <Meta-open-sound checkout>
-//   [--out assets/sfx-inbox/armas] [--dry-run]
+//   [--out <inbox>/armas] [--dry-run]   (the inbox is the originals folder outside git: packages/game-audio/scripts/sfx-dir.mjs)
 //
 // Cuts the recorded tracks that tools/sfx-sources/firearms.json names into one file per take for the sound inbox: every track holds a few
 // repetitions of the same shot or action, separated by silence. A take starts a few ms before its attack and ends when it fades into the room
 // noise (or at the cap of its kind), with a short fade-out. It writes `<id>_<close|far>_<nn>.wav` (mechanics: `<id>_<nn>.wav`) in 48 kHz mono and
-// the matching lines of assets/sfx-inbox/CREDITOS.md (`arquivo | link | autor | licença`, one per file). Then run
+// the matching lines of the inbox's CREDITOS.md (`arquivo | link | autor | licença`, one per file). Then run
 // `pnpm --filter @adatechnology/game-audio sfx:convert --only armas`. Needs ffmpeg.
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { kitSfxInbox } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -21,7 +23,7 @@ const BLOCK = 96
 /** @param {string[]} argv */
 function parseArgs(argv) {
   /** @type {{ ffl: string | null, rfs: string | null, oap: string | null, out: string, credits: string, dryRun: boolean }} */
-  const args = { ffl: null, rfs: null, oap: null, out: join(root, 'assets/sfx-inbox/armas'), credits: join(root, 'assets/sfx-inbox/CREDITOS.md'), dryRun: false }
+  const args = { ffl: null, rfs: null, oap: null, out: join(kitSfxInbox(root), 'armas'), credits: join(kitSfxInbox(root), 'CREDITOS.md'), dryRun: false }
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index]
     const value = () => {

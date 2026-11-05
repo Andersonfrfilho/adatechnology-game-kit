@@ -3,21 +3,24 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import type { SfxManifest } from '@adatechnology/game-audio'
+import { hasKitSfx, kitSfxDir } from '../../game-audio/scripts/sfx-dir.mjs'
 import { BLAST_FIRE_SAMPLES, blastFireSampleBank, DESTRUCTION_SOUND_BANK } from '../src/index'
 
-const sfx = join(dirname(fileURLToPath(import.meta.url)), '../../game-audio/assets/sfx')
-const manifest = JSON.parse(readFileSync(join(sfx, 'manifest.json'), 'utf8')) as SfxManifest
+// the manifest (id -> path) is in the kit; the files are in the game's repository, on this machine only when it is linked (sfx-dir.mjs)
+const manifestDir = join(dirname(fileURLToPath(import.meta.url)), '../../game-audio/assets/sfx')
+const manifest = JSON.parse(readFileSync(join(manifestDir, 'manifest.json'), 'utf8')) as SfxManifest
+const files = kitSfxDir()
 
 describe('recorded blasts and fire', () => {
   const bank = blastFireSampleBank(manifest, { baseUrl: '' })
   const samples = new Map((bank.samples ?? []).map((sample) => [sample.id, sample]))
 
-  it('every id of the table has recorded takes in the kit manifest, and every file is there', () => {
-    for (const id of Object.keys(BLAST_FIRE_SAMPLES)) {
-      const sample = samples.get(id)
-      expect(sample, id).toBeDefined()
-      for (const ref of sample!.close) expect(existsSync(join(sfx, ref.url)), ref.url).toBe(true)
-    }
+  it('every id of the table has recorded takes in the kit manifest', () => {
+    for (const id of Object.keys(BLAST_FIRE_SAMPLES)) expect(samples.get(id), id).toBeDefined()
+  })
+
+  it.skipIf(!hasKitSfx())('every file of those takes is in the linked sound folder', () => {
+    for (const id of Object.keys(BLAST_FIRE_SAMPLES)) for (const ref of samples.get(id)!.close) expect(existsSync(join(files, ref.url)), ref.url).toBe(true)
   })
 
   it('every recorded id keeps a synthesized recipe of the same id as its fallback', () => {

@@ -14,8 +14,21 @@ coverage
 examples/test-room/base
 examples/audio-test-area/shots/body-reel/
 
-# the firearm takes cut by tools/sfx-sources/cut.mjs from the libraries it names (rerun it to get them back); only the converted .ogg ship
-assets/sfx-inbox/armas/*.wav
+# the kit ships no audio (the SDK is public): the files live in the game's repository (ZombiAdA assets/sfx and assets/sfx-originais) and git holds
+# only packages/game-audio/assets/sfx/manifest.json (id -> path) and CREDITOS.md. Local copies or links, by packages/game-audio/scripts/sfx-dir.mjs:
+.sfx/
+.sfx-inbox/
+# and no audio file anywhere in the tree (guard-git checks the same in CI and pre-commit)
+*.ogg
+*.oga
+*.wav
+*.wave
+*.mp3
+*.flac
+*.m4a
+*.aif
+*.aiff
+*.opus
 
 # the owner's own sounds (packs the kit cannot redistribute), converted by `pnpm --filter @adatechnology/game-audio sfx:user`: local only
 .sfx-local/
