@@ -114,6 +114,25 @@ engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay
   Only CC0 and CC-BY (the kit and the game are public).
 - Measuring: `measureCriteria({ sound, banks, loader })` renders C1–C9 through the real engine on an `OfflineAudioContext`; the test room's `?area=sound_check_area` (`createSoundCheckModule`) runs it on a button and records 3 s for C10. `CALIBRATION_SOUND` is a kit-made sample sound (no file) with every layer, for checking the path end to end.
 
+## Fitted copies of the recordings (`@adatechnology/game-audio/fitted`)
+
+Where the files are not on the machine (CI, the published site, a clean clone) or have not loaded yet, a recorded id plays its **fitted copy**:
+numbers measured from each take by `tools/sfx-sources/fit.mjs`, not audio. Each take becomes a recipe of white noise through twelve bandpass bands
+(63 Hz to 12.5 kHz), each band with its own gain curve, plus the ringing partials as sines; the takes of an id form a set, and a loop keeps its
+average band gains. Through the real engine they land 3 to 8 dB from the recording (mean band error over time) where the hand-made recipes were 14
+to 28 dB away.
+
+```ts
+import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
+
+registerFittedSounds(engine) // after the game's own banks: the fitted set replaces the older recipe of the same id, its recorded takes stay
+```
+
+- `KIT_SAMPLE_ALIASES` are answered too (`shut_wood` plays the fitted `door_wood_shut`), and the bare id of tiered recordings plays the medium tier.
+- `FITTED_KEEPS_RECIPE` (`fire_extinguish`, `gas_leak`) keep their recipes, which read params; `{ replace: false }` keeps every older recipe.
+- Vehicles are not fitted: their loops follow the engine's RPM.
+- After new recordings: `node tools/sfx-sources/fit.mjs` (ffmpeg, the files where `scripts/sfx-dir.mjs` finds them) rewrites `src/data/fitted-sfx.json`.
+
 ## Local sound pack (your own files, by config)
 
 A project can answer any SDK sound id with its own files, kept in its own folders and never in the SDK. A JSON config maps each id to its takes:

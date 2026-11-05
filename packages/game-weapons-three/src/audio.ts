@@ -38,11 +38,11 @@ export type { ReloadCueId, SoundProfile } from './audio/reload-sounds'
 export { CASING_SAMPLE, casingSampleId, CUES_IN_SAMPLE, GUNSHOT_SAMPLE, GUNSHOT_SAMPLE_IDS, RELOAD_SAMPLE, RELOAD_SAMPLE_HITS, WEIGHT_INTENSITY, weaponSampleBank, weaponSampleDefaults } from './audio/samples'
 export type { WeaponSampleOptions } from './audio/samples'
 
-/** What a reload cue played: its recording, nothing (another cue's recording carries it), or the synthesized steps. */
-export type CuePlayed = 'sample' | 'carried' | 'synth'
+/** What a reload cue played: its recording, the recording's fitted copy (game-audio/fitted, while the files load or where they are missing), nothing (another cue's recording carries it), or the synthesized steps. */
+export type CuePlayed = 'sample' | 'fitted' | 'carried' | 'synth'
 
 /** What sounded for a shot: the recorded takes (`sample`, with the take of each layer) or the synthesized layers (`synth`). */
-export type GunshotPlayed = { readonly kind: 'synth' } | { readonly kind: 'sample'; readonly id: string; readonly layers: readonly { readonly role: string; readonly take: number; readonly rate: number }[] }
+export type GunshotPlayed = { readonly kind: 'synth' } | { readonly kind: 'fitted'; readonly id: string } | { readonly kind: 'sample'; readonly id: string; readonly layers: readonly { readonly role: string; readonly take: number; readonly rate: number }[] }
 
 /** What a shot adds to the energy and the category: where the listener is and how the weapon is set. */
 export type ShotExtras = Pick<ShotSoundInput, 'caliber' | 'distance' | 'volume' | 'suppressed' | 'indoors'> & {
@@ -67,7 +67,7 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
   /** Told each gunshot played (profile, take, pitch, space, distance), so a host can log what sounded. */
   readonly onGunshot?: (shot: Gunshot, input: GunshotInput, played: GunshotPlayed) => void
   /** Told each case that lands (floor, case type, sample id). */
-  readonly onCasing?: (sound: CasingSound, played: 'sample' | 'synth') => void
+  readonly onCasing?: (sound: CasingSound, played: 'sample' | 'fitted' | 'synth') => void
   /** Seed of the noise buffer, of the start point in it and of the casing pitch: same seed, same sound. Default 1. */
   readonly seed?: number
   /** Replaces or adds mechanical sounds by id. */
@@ -172,6 +172,9 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     void loadSamples()
     return false
   }
+  // the fitted copy of a recording (`registerFittedSounds` of game-audio/fitted on the host engine): a set under the sample's id, played while the
+  // files load or where they are not on the machine, closer to the recording than the synthesized layers
+  const fittedReady = (id: string): boolean => sampleIds.has(id) && engine.registry.sound(id) === undefined && engine.registry.set(id) !== undefined
 
   // a filtered noise burst with a fast attack and an exponential tail
   const burst = (config: Burst): void => {
@@ -240,6 +243,11 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       options.onCasing?.(sound, 'sample')
       return
     }
+    if (recorded && fittedReady(recorded)) {
+      if ((input.bounce ?? 0) === 0) channel.play(recorded, { volume: Math.min(1, Math.max(0.2, (input.speed ?? 1.5) / 2.5)) })
+      options.onCasing?.(sound, 'fitted')
+      return
+    }
     for (const voice of sound.voices) playCasingVoice(voice)
     options.onCasing?.(sound, 'synth')
   }
@@ -265,7 +273,9 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
         const pitch = 1 + (channel.random() * 2 - 1) * pitchSpread
         const shot = computeGunshot({ ...base, take, pitch }, options.gunshot)
         const recorded = shot.samples.close
-        if (shot.audible && sampleReady(recorded)) {
+        const sample = shot.audible && sampleReady(recorded)
+        const fitted = shot.audible && !sample && fittedReady(recorded)
+        if (sample || fitted) {
           // the recording carries the crack, the body, the action and the field's echo; a room still adds its own tail
           const occlusion = Math.min(1, Math.max(0, extras.occlusion ?? 0))
           const handle = channel.play(recorded, {
@@ -277,7 +287,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
           })
           if (base.space === 'indoor') for (const voice of shot.voices) if (voice.group === 'tail') playGunshotVoice(voice, extras)
           const layers = handle?.kind === 'sample' ? handle.plan.layers.map((layer) => ({ role: layer.role, take: layer.take, rate: layer.rate })) : []
-          options.onGunshot?.(shot, { ...base, take, pitch }, { kind: 'sample', id: recorded, layers })
+          options.onGunshot?.(shot, { ...base, take, pitch }, fitted ? { kind: 'fitted', id: recorded } : { kind: 'sample', id: recorded, layers })
           return
         }
         for (const voice of shot.voices) playGunshotVoice(voice, extras)
@@ -299,10 +309,11 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     cue(id, profile, lead = 0) {
       // a step the recording of another cue already carries (the release button, the magazine sliding in) stays silent
       const carriedBy = CUES_IN_SAMPLE[id]
-      if (carriedBy && sampleReady(carriedBy)) return 'carried'
-      if (sampleReady(id)) {
+      if (carriedBy && (sampleReady(carriedBy) || fittedReady(carriedBy))) return 'carried'
+      const recorded = sampleReady(id)
+      if (recorded || fittedReady(id)) {
         channel.play(id, { intensity: WEIGHT_INTENSITY[(profile ?? DEFAULT_SOUND_PROFILE).weight] })
-        return 'sample'
+        return recorded ? 'sample' : 'fitted'
       }
       // the synthesized steps hit at their start: they wait the lead the clip gave the recording
       for (const entry of reloadCueSteps(id, profile, cueTable)) step(lead > 0 ? { ...entry, at: entry.at + lead } : entry)

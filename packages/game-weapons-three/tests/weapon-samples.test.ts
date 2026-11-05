@@ -5,7 +5,9 @@ import { join } from 'node:path'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createToolClipPlayer } from '@adatechnology/game-contracts'
+import { createSoundRegistry } from '@adatechnology/game-audio'
 import type { AudioEngine, PlayOptions, SampleStatus, SfxManifest, SoundBank } from '@adatechnology/game-audio'
+import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { CaliberDef } from '@adatechnology/game-weapons'
 
@@ -30,8 +32,10 @@ const fakeEngine = (ready: ReadonlySet<string>) => {
   let loads = 0
   let calls = 0
   const random = () => ((calls = (calls * 9301 + 49297) % 233280), calls / 233280)
+  const registry = createSoundRegistry()
   const engine = {
-    register: (bank: SoundBank) => void banks.push(bank),
+    registry,
+    register: (bank: SoundBank) => void (banks.push(bank), registry.register(bank)),
     channel: () => ({ random, play: (id: string, options: PlayOptions = {}) => (plays.push({ id, options }), null), plan: () => null }),
     sampleStatus: (id: string): SampleStatus => (ready.has(id) ? 'ready' : 'none'),
     loadSamples: async () => {
@@ -130,6 +134,27 @@ describe('createWeaponAudio with samples', () => {
     audio.cue('pump_back', { weight: 'heavy', material: 'steel' }, 0.094)
     expect(fake.plays.length).toBeGreaterThan(0)
     for (const play of fake.plays) expect(play.options.delay ?? 0).toBeGreaterThanOrEqual(0.094 - 1e-9)
+  })
+})
+
+describe('the fitted copies of the recordings', () => {
+  it('play under the recorded id while the files load, instead of the synthesized layers, and say so', () => {
+    const fake = fakeEngine(new Set())
+    const shots: string[] = []
+    const cases: string[] = []
+    const audio = createWeaponAudio(0.6, { engine: fake.engine, samples: { manifest }, onGunshot: (_shot, _input, played) => void shots.push(played.kind), onCasing: (_sound, played) => void cases.push(played) })
+    registerFittedSounds(fake.engine)
+    audio.shot(500, 'pistol', { caliber: caliber('9x19') })
+    expect(fake.plays.map((play) => play.id)).toEqual(['pistol_9mm'])
+    expect(shots).toEqual(['fitted'])
+    fake.plays.length = 0
+    expect(audio.cue('mag_seat', { weight: 'light', material: 'polymer' })).toBe('fitted')
+    expect(fake.plays.map((play) => play.id)).toEqual(['mag_seat'])
+    fake.plays.length = 0
+    audio.casing({ caseType: 'pistol', surface: 'concrete', bounce: 0 })
+    expect(fake.plays.map((play) => play.id)).toEqual(['casing_drop_concreto'])
+    expect(cases).toEqual(['fitted'])
+    expect(fake.loads()).toBe(1)
   })
 })
 

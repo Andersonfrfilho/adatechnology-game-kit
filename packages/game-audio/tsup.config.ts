@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup'
 // the `GameAudio` global, so a plain-script page needs only this file.
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/testing.ts'],
+    entry: ['src/index.ts', 'src/testing.ts', 'src/fitted.ts'],
     format: ['esm'],
     dts: true,
     // one copy of the registries and module state, shared by the root and the ./testing entries

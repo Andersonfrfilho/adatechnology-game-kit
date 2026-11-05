@@ -104,6 +104,7 @@ interface Text {
   soundCue: string
   /** Appended to `soundCue`: the recording played, or the cue sounds inside the next one's recording. */
   cueRecorded: string
+  cueFitted: string
   cueCarried: string
   gunshotSound: string
   /** Appended to `gunshotSound` when the recording played: which take near and far. */
@@ -141,6 +142,7 @@ const TEXT: Record<string, Text> = {
     reloadClip: 'Reload of {weapon}: {kind}, clip {clip} ({seconds} s)',
     soundCue: 'Sound: {cue} ({weapon})',
     cueRecorded: ' · recorded',
+    cueFitted: ' · fitted copy of the recording',
     cueCarried: ' · inside the next recording',
     gunshotSound: 'Shot sound: {profile}, take {take}/4, pitch {pitch}, {space}, {distance} m{far}',
     gunshotRecorded: ' · recorded take {takes}',
@@ -176,6 +178,7 @@ const TEXT: Record<string, Text> = {
     reloadClip: 'Recarga de {weapon}: {kind}, clipe {clip} ({seconds} s)',
     soundCue: 'Som: {cue} ({weapon})',
     cueRecorded: ' · gravação',
+    cueFitted: ' · cópia medida da gravação',
     cueCarried: ' · dentro da gravação seguinte',
     gunshotSound: 'Som do tiro: {profile}, tomada {take}/4, tom {pitch}, {space}, {distance} m{far}',
     gunshotRecorded: ' · gravação, tomada {takes}',
@@ -413,20 +416,20 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
           engine: lentEngine,
           ...(options.samples ? { samples: options.samples } : {}),
           onGunshot: (shot, input, played) => {
-            const recorded = played.kind === 'sample' && played.layers.length > 0 ? fill(text.gunshotRecorded, { takes: played.layers.map((layer) => `${layer.role} ${layer.take + 1}`).join(', ') }) : ''
+            const recorded = played.kind === 'sample' && played.layers.length > 0 ? fill(text.gunshotRecorded, { takes: played.layers.map((layer) => `${layer.role} ${layer.take + 1}`).join(', ') }) : played.kind === 'fitted' ? text.cueFitted : ''
             lent.log(
               fill(text.gunshotSound, { profile: shot.profile, take: String(shot.take + 1), pitch: `${shot.pitch >= 1 ? '+' : ''}${((shot.pitch - 1) * 100).toFixed(1)} %`, space: text.spaces[input.space ?? 'outdoor'], distance: String(Math.round(input.distance ?? 0)), far: shot.closeMix < 1 ? ` (${Math.round((1 - shot.closeMix) * 100)} % far)` : '' }) + recorded,
               { profile: shot.profile, take: shot.take, pitch: shot.pitch, space: input.space ?? 'outdoor', distance: input.distance ?? 0, closeMix: shot.closeMix, delay: shot.delay, samples: shot.samples, played },
               'sound',
             )
           },
-          onCasing: (sound, played) => lent.log(fill(text.casingSound, { case: sound.kind, surface: text.surfaces[sound.surface] }) + (played === 'sample' ? text.cueRecorded : ''), { case: sound.kind, surface: sound.surface, sample: sound.sample, played }, 'sound'),
+          onCasing: (sound, played) => lent.log(fill(text.casingSound, { case: sound.kind, surface: text.surfaces[sound.surface] }) + (played === 'sample' ? text.cueRecorded : played === 'fitted' ? text.cueFitted : ''), { case: sound.kind, surface: sound.surface, sample: sound.sample, played }, 'sound'),
         })
       }
       let simulatedMs = 0
       const offClock = lent.onFrame((dt) => (simulatedMs += dt * 1000))
       const created = createWeaponFx({
-        onSound: ({ weapon, cue, profile, played }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }) + (played === 'sample' ? text.cueRecorded : played === 'carried' ? text.cueCarried : ''), { weapon, cue, weight: profile.weight, material: profile.material, ...(played ? { played } : {}) }, 'sound'),
+        onSound: ({ weapon, cue, profile, played }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }) + (played === 'sample' ? text.cueRecorded : played === 'fitted' ? text.cueFitted : played === 'carried' ? text.cueCarried : ''), { weapon, cue, weight: profile.weight, material: profile.material, ...(played ? { played } : {}) }, 'sound'),
         THREE: lent.THREE as typeof THREE_NS,
         scene: lent.scene as THREE_NS.Scene,
         camera: lent.camera as THREE_NS.Camera,
