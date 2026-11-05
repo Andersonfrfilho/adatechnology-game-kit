@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { AttachmentDef, FittedAttachment } from '@adatechnology/game-weapons'
-import type { WeaponModel } from '../index'
+import type { WeaponModel } from '../types'
 import type { ModelKit } from '../kit'
 import type { MountFrame } from './mount-frames'
 
