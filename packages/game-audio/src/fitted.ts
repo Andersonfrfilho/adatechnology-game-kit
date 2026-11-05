@@ -30,9 +30,13 @@ export type FittedSound = {
   readonly loop?: { readonly bands: readonly { readonly band: number; readonly gain: number }[] }
   readonly sources: readonly string[]
 }
+/** A band: its centre, its Q and how many bandpass biquads in series (2 makes the skirts fall 12 dB an octave instead of 6). */
+export type FittedBand = { readonly frequency: number; readonly q: number; readonly stages?: number }
 export type FittedData = {
   readonly rate: number
-  readonly bands: readonly { readonly frequency: number; readonly q: number }[]
+  readonly bands: readonly FittedBand[]
+  /** The bands of the loops (a parallel bank of single biquads); the take bands when left out. */
+  readonly loopBands?: readonly FittedBand[]
   readonly sounds: readonly FittedSound[]
 }
 
@@ -63,16 +67,19 @@ export function fittedBus(sound: { readonly id: string; readonly category: strin
 /** The id of take `index` (from 1) of a sound: `door_wood_shut~2`. */
 export const fittedTakeId = (id: string, index: number): string => `${id}~${index}`
 
-/** The gain curve of a layer: exponential ramps through its points, down to the 0.001 floor at the end. */
+/** The lowest point of a curve (-80 dB): an exponential ramp cannot reach 0. */
+const FLOOR = 0.0001
+
+/** The gain curve of a layer: exponential ramps through its points, down to the floor at the end. */
 function envelopeOf(points: FittedLayer['env'], duration: number): Envelope {
   const envelope: [number, number, 'set' | 'exp'][] = []
   let last = -1
   for (const [time, value] of points) {
     if (time <= last) continue
-    envelope.push([time, Math.max(0.001, value), envelope.length === 0 ? 'set' : 'exp'])
+    envelope.push([time, Math.max(FLOOR, value), envelope.length === 0 ? 'set' : 'exp'])
     last = time
   }
-  const out: Envelope = [...envelope, ...(last < duration ? [[duration, 0.001, 'exp', 'fixed'] as const] : [])]
+  const out: Envelope = [...envelope, ...(last < duration ? [[duration, FLOOR, 'exp', 'fixed'] as const] : [])]
   return out
 }
 
@@ -83,10 +90,11 @@ export function fittedTakeRecipe(sound: FittedSound, take: FittedTake, index: nu
     const envelope = envelopeOf(layer.env, take.duration)
     if (layer.wave && layer.frequency) return { gain: layer.gain, source: { kind: 'osc', wave: layer.wave, frequency: { set: layer.frequency } }, envelope }
     const band = data.bands[layer.band ?? 0] ?? { frequency: 1000, q: 1.6 }
+    const stage = { type: 'bandpass' as const, frequency: { set: band.frequency }, q: band.q }
     return {
       gain: layer.gain,
       source: { kind: 'noise', offset: 'random', loop: true },
-      filters: { mode: 'serial', bank: [{ type: 'bandpass', frequency: { set: band.frequency }, q: band.q }] },
+      filters: { mode: 'serial', bank: Array.from({ length: Math.max(1, band.stages ?? 1) }, () => stage) },
       envelope,
     }
   })
@@ -113,7 +121,7 @@ export function fittedLoopRecipe(sound: FittedSound, data: FittedData = FITTED_S
     filters: {
       mode: 'parallel',
       bank: sound.loop.bands.map(({ band, gain }) => {
-        const spec = data.bands[band] ?? { frequency: 1000, q: 1.6 }
+        const spec = (data.loopBands ?? data.bands)[band] ?? { frequency: 1000, q: 1.6 }
         return { type: 'bandpass' as const, frequency: { set: spec.frequency }, q: spec.q, level: gain }
       }),
     },

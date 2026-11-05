@@ -118,9 +118,9 @@ engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay
 
 Where the files are not on the machine (CI, the published site, a clean clone) or have not loaded yet, a recorded id plays its **fitted copy**:
 numbers measured from each take by `tools/sfx-sources/fit.mjs`, not audio. Each take becomes a recipe of white noise through twelve bandpass bands
-(63 Hz to 12.5 kHz), each band with its own gain curve, plus the ringing partials as sines; the takes of an id form a set, and a loop keeps its
-average band gains. Through the real engine they land 3 to 8 dB from the recording (mean band error over time) where the hand-made recipes were 14
-to 28 dB away.
+(63 Hz to 12.5 kHz, two biquads in series each), each band with its own gain curve down to -80 dB, plus the ringing partials as sines; the
+takes of an id form a set, and a loop keeps its average band gains. Through the real engine, over the 136 one-shot sounds measured, they land a
+median 2.8 dB from the recording (mean band error over time; the pistol 2.7, a punch 1.7) where the hand-made recipes were 26 dB away.
 
 ```ts
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
