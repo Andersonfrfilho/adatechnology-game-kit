@@ -31,7 +31,7 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
-      # a local sound pack (tools/local-audio) never enters git: no local config, no local-audio folder, no audio outside the SDK's sfx folders
+      # a local sound pack (tools/local-audio) never enters git: no local config, no local-audio folder, and no audio file at all (the sounds live in the game's repository; the kit keeps only the manifest)
       - run: node tools/local-audio/local-audio.mjs guard-git
 
       # which browser suites the pre-push runs for a diff (tools/gpu/select-suites.mjs): pure Node, no page and no GPU
