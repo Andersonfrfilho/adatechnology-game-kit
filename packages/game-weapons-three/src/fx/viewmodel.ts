@@ -299,6 +299,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (model.parts.stockMove && onTool?.stock === 'collapsed') rig.setPartPose('stock', collapsedStockPose(model.parts.stockMove))
     applyCondition(kit, model, condition)
     lastAmmo = options.tool?.().ammo ?? 0
+    // the recorded shots and reload steps load as the weapon comes to the hands, so the first shot already plays its recording
+    void audio?.loadSamples()
     hand.updateMatrixWorld(true)
     hold = holdOfModel(THREE, model, 1)
     hold = { ...hold, works: handWorkOf(THREE, model, weapon, hold.right) }
