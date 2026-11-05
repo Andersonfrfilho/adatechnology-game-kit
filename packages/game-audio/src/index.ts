@@ -71,8 +71,8 @@ export type {
   UserSoundPicks,
   UserSoundRole,
 } from './user-samples'
-export { KIT_CATEGORY_BUS, KIT_SAMPLE_ALIASES, kitSampleBank, kitSampleDefaults, loadKitSamples, withAliases } from './kit-samples'
-export type { KitSampleBankOptions, LoadKitSamplesOptions } from './kit-samples'
+export { KIT_CATEGORY_BUS, KIT_SAMPLE_ALIASES, kitSampleBank, kitSampleDefaults, loadKitSamples, pointSamples, withAliases } from './kit-samples'
+export type { KitSampleBankOptions, LoadKitSamplesOptions, PointSamplesOptions, SampleFiles } from './kit-samples'
 export { LOCAL_PACK_LICENSES, LOCAL_PACK_PREFERENCES, LocalSoundPackError, isShippableLicense, localPackSamples, parseLocalSoundPack } from './local-pack'
 export type { LocalPackLicense, LocalPackPreference, LocalPackSampleOptions, LocalSoundEntry, LocalSoundPack } from './local-pack'
 export { LOCAL_PACK_BANK_ID, applyLocalSoundPack, defaultIdleScheduler } from './local-pack-loader'

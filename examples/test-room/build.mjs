@@ -132,9 +132,9 @@ const boot = `(function () {
     shown.remove()
   }).catch(failed)
 })()`
-// the kit's recorded sounds: the manifest (id -> path) is in game-audio, the files are outside git, in the game's repository (ZombiAdA assets/sfx),
-// found by sfx-dir.mjs (.sfx-local.json "kit" or KIT_SFX_DIR). On a machine without them (CI, a clean clone) the manifest keeps only the takes that
-// exist, so every sound plays its synthesized recipe and the build does not fail.
+// the kit's recorded sounds: the manifest (id -> path) and the files are in game-audio (assets/sfx); sfx-dir.mjs may point at another folder
+// (.sfx-local.json "kit" or KIT_SFX_DIR, a game's set). The manifest keeps only the takes that exist there, so a missing file plays its fitted copy
+// and the build does not fail.
 const sfxManifestDir = join(pkg('game-audio'), 'assets/sfx')
 const sfxDir = kitSfxDir(root)
 const sfxManifestFull = existsSync(join(sfxManifestDir, 'manifest.json')) ? JSON.parse(readFileSync(join(sfxManifestDir, 'manifest.json'), 'utf8')) : null
@@ -160,8 +160,8 @@ writeFileSync(join(here, 'dist/test-room.html'), html)
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)
 
 // 4. the kit's recorded sounds next to the page, where the room's engine fetches them (`./sfx/`); they load on first play, so the page itself does
-//    not grow. dist/sfx gets the manifest of the files present and a link to each category folder of the game's sound folder (never a copy, so no
-//    deploy of dist carries them). Opened from file://, or without the files, the recipes play.
+//    not grow. dist/sfx gets the manifest of the files present and a link to each category folder of the sound folder (no copy of 33 MB per
+//    build). Opened from file://, or without the files, the fitted copies play.
 rmSync(join(here, 'dist/sfx'), { recursive: true, force: true })
 if (sfxManifest) {
   mkdirSync(join(here, 'dist/sfx'), { recursive: true })

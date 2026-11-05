@@ -1,7 +1,7 @@
 # Créditos dos sons
 
-Gerado por `scripts/sfx-convert.mjs` a partir do `CREDITOS.md` dos originais. Os arquivos ficam fora do kit (ZombiAdA `assets/sfx/`); aqui só as referências.
-Só CC0 e CC-BY (o kit e o jogo são públicos); quem usa um som CC-BY credita o autor abaixo.
+Gerado por `scripts/sfx-convert.mjs` a partir do `CREDITOS.md` dos originais. Pasta: `packages/game-audio/assets/sfx` (os sons padrão do kit).
+Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um jogo pode apontar qualquer som para os seus arquivos (`pointSamples`).
 
 | arquivo | fonte | autor | licença |
 |---|---|---|---|
