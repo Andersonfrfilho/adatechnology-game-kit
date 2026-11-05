@@ -34,7 +34,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const mirrorsCopy = MIRRORS.map((E, i) => Object.assign({ i }, E)), gs = closeScene(shared.mats);
         for (const fo of shared.ctx.leaves) { // door leaves: loose groups with the origin at the hinge, inside the floor group
           const parent = gs['f' + fo.floor] || (gs['f' + fo.floor] = new THREE.Group()); fo.gs = [];
-          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.set(...gd.pos); parent.add(g); fo.gs.push(g); }
+          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.fromArray(gd.pos); parent.add(g); fo.gs.push(g); }
           applyLeaf(fo);
         }
         if (shared.ctx.iv) ivAssemble(shared.ctx.iv, gs);

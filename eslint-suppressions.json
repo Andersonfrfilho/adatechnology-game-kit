@@ -284,11 +284,6 @@
       "count": 6
     }
   },
-  "packages/game-floorplan-three/src/kernel/geometry.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
   "packages/game-floorplan-three/src/lights/decor.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2

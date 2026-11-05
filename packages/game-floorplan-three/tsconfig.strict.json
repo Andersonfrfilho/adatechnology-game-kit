@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "include": [],
+  "files": ["src/kernel-types.ts", "src/kernel/geometry.ts", "src/kernel/noise.ts", "src/kernel/close-scene.ts"]
+}
