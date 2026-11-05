@@ -162,3 +162,11 @@ export interface BuiltModel {
   group: THREE_NS.Group
   parts: ModelParts
 }
+
+/** A weapon model: `root` (the page's `wr`) holds `inner` (what the builder made, fitted to the real length); `parts` are pivots and marks inside `inner`. */
+export interface WeaponModel {
+  readonly id: string
+  readonly root: THREE_NS.Group
+  readonly inner: THREE_NS.Group
+  readonly parts: ModelParts
+}

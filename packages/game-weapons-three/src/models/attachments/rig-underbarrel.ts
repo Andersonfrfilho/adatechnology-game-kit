@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { WeaponDef } from '@adatechnology/game-weapons'
-import type { WeaponModel } from '../index'
+import type { WeaponModel } from '../types'
 import { mountFrame } from './mount-frames'
 
 const LAUNCHER_INTERFACES: ReadonlySet<string> = new Set(['m203', 'gp25', 'ag36'])
