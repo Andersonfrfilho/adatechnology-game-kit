@@ -2179,6 +2179,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const cutAt = axis < 0 ? undefined : p.rt.cutAt ?? (origin ? hitLocal[axis] : undefined)
     const plan = unitPlan.length > 0 ? unitPlan : planFragments({
       style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd, sheet: p.mat.sheet,
+      ...(p.mat.splitForm ? { form: p.mat.splitForm } : {}),
       ...(cutAt !== undefined ? { cut: { at: cutAt, gap: SEVER_BAND } } : {}),
     })
     const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
@@ -2348,7 +2349,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (let i = 0; i < n; i++) {
       // out of the entry (back towards the shooter or the fist), or out of the exit along the shot
       const back = !exit || i % 3 === 2
-      const len = scale * (fibre ? 1.2 + 1.2 * rnd() : 3 + 4 * rnd()), w = scale * (0.8 + 0.8 * rnd()), t = scale * (fibre ? 0.7 + 0.6 * rnd() : 0.4 + 0.4 * rnd())
+      // plywood tears thin flat splinters off its face veneer; solid wood thicker ones; MDF short lumps
+      const plies = p.mat.splitForm === 'plies'
+      const len = scale * (fibre ? 1.2 + 1.2 * rnd() : 3 + 4 * rnd()), w = scale * (0.8 + 0.8 * rnd()), t = scale * (fibre ? 0.7 + 0.6 * rnd() : plies ? 0.15 + 0.15 * rnd() : 0.4 + 0.4 * rnd())
       const size: Vec3 = [w, w, w]
       size[along] = len
       size[(along + 1) % 3] = w

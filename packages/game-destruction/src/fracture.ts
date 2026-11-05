@@ -1,5 +1,5 @@
 import { quat } from './math'
-import type { Fragment, FractureStyle, Quat, Vec3 } from './types'
+import type { Fragment, FractureStyle, Quat, SplitForm, Vec3 } from './types'
 
 /** A fragment in the part's local space (centre, size in the fragment's own axes, orientation relative to the part). */
 export interface PlannedFragment {
@@ -32,6 +32,8 @@ export interface PlanInput {
    * wide that comes apart in splinters. Used by `splinter` (a board, a batten, a beam).
    */
   cut?: { at: number; gap: number }
+  /** How the wood-based material comes apart (`MaterialDef.splitForm`): slivers of many sizes, peeling plies, or crumbly lumps. */
+  form?: SplitForm
 }
 
 interface Box {
@@ -84,7 +86,28 @@ const frame = (ax: number, ay: number, az: number, angle = 0): Quat => {
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 
-/** Long splinters along the grain (`grain`, default the longest axis) out of `box`. */
+/** Cut `box` into `count` pieces of uneven length along `axis`: each piece takes a random share between a quarter and seven quarters of the mean. */
+const splitAlong = (box: Box, count: number, axis: number, rnd: () => number): Box[] => {
+  const shares = Array.from({ length: count }, () => 0.25 + 1.5 * rnd())
+  const total = shares.reduce((sum, share) => sum + share, 0)
+  const out: Box[] = []
+  let from = box.c[axis] - box.s[axis] / 2
+  for (const share of shares) {
+    const length = (box.s[axis] * share) / total
+    const c: Vec3 = [box.c[0], box.c[1], box.c[2]]
+    const size: Vec3 = [box.s[0], box.s[1], box.s[2]]
+    c[axis] = from + length / 2
+    size[axis] = length
+    out.push({ c, s: size })
+    from += length
+  }
+  return out
+}
+
+/**
+ * Splinters along the grain (`grain`, default the longest axis) out of `box`: the cross-section is split into strands of uneven width, and each strand
+ * breaks along the grain at uneven points, so the splinters come out long and short, thick and thin, never a stack of equal slats.
+ */
 const splinterBox = (inp: PlanInput, box: Box, limit = inp.maxFragments): PlannedFragment[] => {
   const { rnd } = inp
   const dims = box.s
@@ -94,15 +117,70 @@ const splinterBox = (inp: PlanInput, box: Box, limit = inp.maxFragments): Planne
   const w = Math.max(fmin * 1.5, 0.01)
   const c = clamp(Math.round((dims[a] * dims[b]) / (w * w)), 3, Math.max(3, Math.floor(limit / 2)))
   const maxLen = fmax * 4
-  const cells = bsp(box, c, [a, b], rnd)
+  const cells: Box[] = []
+  // some strands split again unevenly across: thin needles beside thick splinters
+  for (const cell of bsp(box, c, [a, b], rnd)) {
+    const wide = cell.s[a] >= cell.s[b] ? a : b
+    if (rnd() < 0.4 && cell.s[wide] > fmin * 0.5) for (const part of splitAlong(cell, 2, wide, rnd)) cells.push(part)
+    else cells.push(cell)
+  }
   const pieces: Box[] = []
   for (const cell of cells) {
-    const extra = rnd() < 0.4 ? 1 : 0
+    const extra = Math.floor(rnd() * 3)
     const k = Math.max(1, Math.ceil(dims[g] / maxLen)) + extra
-    for (const p of bsp(cell, k, [g], rnd)) pieces.push(p)
+    for (const p of splitAlong(cell, k, g, rnd)) pieces.push(p)
   }
   return pieces.slice(0, limit).map((p) => ({ center: p.c, size: [p.s[g], p.s[a], p.s[b]] as Vec3, q: frame(g, a, b), shape: 'splinter' as const, weight: p.s[0] * p.s[1] * p.s[2] }))
 }
+
+/**
+ * Metres of plywood one ply stands for, and how far apart the peeled layers start (times their thickness). A sheet is at most `PLY_SHEET` thick: a part
+ * of plywood thicker than a board (a kennel drawn as one box) is a hollow of panels, and comes apart in sheets that thin spread through its depth.
+ */
+const PLY = 0.003
+const PLY_GAP = 0.6
+const PLY_SHEET = 0.012
+
+/**
+ * Plywood coming apart: the glue lines let go and the sheet splits into two or three layers that start apart from each other, each torn into ragged
+ * sheets, and about one piece in three a thin splinter along the face grain.
+ */
+const plyBreak = (inp: PlanInput, root: Box, limit: number): PlannedFragment[] => {
+  const { rnd } = inp
+  const dims = root.s
+  const sorted = [0, 1, 2].sort((x, y) => dims[x] - dims[y])
+  const t = sorted[0]
+  const [u, v] = [sorted[1], sorted[2]].sort((x, y) => x - y)
+  const along = dims[u] >= dims[v] ? u : v
+  const across = along === u ? v : u
+  const layers = clamp(Math.round(dims[t] / PLY / 2), 2, 3)
+  const pitch = dims[t] / layers
+  const th = Math.min(pitch, PLY_SHEET)
+  const per = Math.max(2, Math.floor(limit / layers))
+  const out: PlannedFragment[] = []
+  for (let k = 0; k < layers; k++) {
+    const layer: Box = { c: [root.c[0], root.c[1], root.c[2]], s: [dims[0], dims[1], dims[2]] }
+    layer.c[t] = root.c[t] + (-dims[t] / 2 + (k + 0.5) * pitch) * (pitch > PLY_SHEET ? 1 : 1 + PLY_GAP)
+    layer.s[t] = th
+    for (const cell of bsp(layer, per, [u, v], rnd)) {
+      if (out.length >= limit) return out
+      if (rnd() < 0.35) {
+        const strand = cell.s[across] * (0.15 + 0.2 * rnd())
+        out.push({ center: cell.c, size: [cell.s[along], strand, th * 0.7], q: frame(along, across, t), shape: 'splinter', weight: cell.s[along] * strand * th })
+      } else {
+        out.push({ center: cell.c, size: [cell.s[u], cell.s[v], th], q: frame(u, v, t, (rnd() - 0.5) * 0.5), shape: 'scrap', weight: cell.s[u] * cell.s[v] * th })
+      }
+    }
+  }
+  return out
+}
+
+/** Crumbly lumps of a board with no grain (MDF): `count` lumps of uneven size out of `box`. */
+const granules = (inp: PlanInput, box: Box, count: number): PlannedFragment[] =>
+  bsp(box, count, [0, 1, 2], inp.rnd).map((b) => ({ center: b.c, size: b.s, q: quat.identity(), shape: 'chunk' as const, weight: b.s[0] * b.s[1] * b.s[2] }))
+
+/** Lumps the broken edge of an MDF board crumbles into, besides its slabs. */
+const CRUMBS = 6
 
 /** Broken across at `at` along the longest axis: a stub each side and splinters (lumps for `snap`) out of the band `gap` wide between them. */
 const severAt = (inp: PlanInput, root: Box, at: number, gap: number): PlannedFragment[] => {
@@ -111,22 +189,30 @@ const severAt = (inp: PlanInput, root: Box, at: number, gap: number): PlannedFra
   const half = dims[L] / 2
   const lo = clamp(at - gap / 2, -half, half), hi = clamp(at + gap / 2, -half, half)
   const out: PlannedFragment[] = []
-  const stub = (from: number, to: number) => {
+  // a stub of wood with fibre is laid long along its own x with the break at +x, so the renderer can tear that end into strands
+  const fibrous = inp.form === 'slivers' || inp.form === 'plies'
+  const [a, b] = [0, 1, 2].filter((i) => i !== L)
+  const stub = (from: number, to: number, breakAtEnd: boolean) => {
     if (to - from < 0.02) return
     const c: Vec3 = [root.c[0], root.c[1], root.c[2]], sz: Vec3 = [dims[0], dims[1], dims[2]]
     c[L] = (from + to) / 2
     sz[L] = to - from
-    out.push({ center: c, size: sz, q: quat.identity(), shape: 'slab', weight: sz[0] * sz[1] * sz[2] })
+    const weight = sz[0] * sz[1] * sz[2]
+    if (fibrous) out.push({ center: c, size: [sz[L], sz[a], sz[b]], q: frame(L, a, b, breakAtEnd ? 0 : Math.PI), shape: 'slab', weight })
+    else out.push({ center: c, size: sz, q: quat.identity(), shape: 'slab', weight })
   }
-  stub(-half, lo)
-  stub(hi, half)
+  stub(-half, lo, true)
+  stub(hi, half, false)
   const band: Box = { c: [root.c[0], root.c[1], root.c[2]], s: [dims[0], dims[1], dims[2]] }
   band.c[L] = (lo + hi) / 2
   band.s[L] = Math.max(hi - lo, 0.01)
   // a snapping board (MDF, plastic) crumbles in the band; the splinters of a splintering one lie along the grain when it runs across the cut,
   // else they are short slivers of the band
-  if (inp.style === 'snap') {
-    for (const b of bsp(band, Math.max(3, Math.min(6, inp.maxFragments - out.length)), [0, 1, 2], inp.rnd)) out.push({ center: b.c, size: b.s, q: quat.identity(), shape: 'chunk', weight: b.s[0] * b.s[1] * b.s[2] })
+  const room = inp.maxFragments - out.length
+  if (inp.style === 'snap' && inp.form === 'plies') for (const p of plyBreak(inp, band, Math.max(3, room))) out.push(p)
+  else if (inp.style === 'snap' && inp.form === 'granules') for (const p of granules(inp, band, clamp(room, 3, 12))) out.push(p)
+  else if (inp.style === 'snap') {
+    for (const b of bsp(band, Math.max(3, Math.min(6, room)), [0, 1, 2], inp.rnd)) out.push({ center: b.c, size: b.s, q: quat.identity(), shape: 'chunk', weight: b.s[0] * b.s[1] * b.s[2] })
   } else for (const p of splinterBox(inp, band, Math.max(3, inp.maxFragments - out.length))) out.push(p)
   return out
 }
@@ -166,8 +252,19 @@ export const planFragments = (inp: PlanInput): PlannedFragment[] => {
 
   if (style === 'snap') {
     if (inp.cut) return severAt(inp, root, inp.cut.at, inp.cut.gap)
+    if (inp.form === 'plies') return plyBreak(inp, root, maxFragments)
     const n = Math.min(maxFragments, 2 + Math.floor(rnd() * 3))
     for (const b of bsp(root, n, [0, 1, 2], rnd)) out.push({ center: b.c, size: b.s, q: idq, shape: 'slab', weight: b.s[0] * b.s[1] * b.s[2] })
+    if (inp.form !== 'granules') return out
+    // the broken edges of an MDF board crumble: lumps out of a band around the point it broke at, sharing the mass with the slabs
+    const crumbs = Math.min(CRUMBS, maxFragments - out.length)
+    if (crumbs <= 0) return out
+    const band: Box = { c: [0, 0, 0], s: [0, 0, 0] }
+    for (let i = 0; i < 3; i++) {
+      band.s[i] = Math.min(dims[i], Math.max(fmin, dims[i] * 0.2))
+      band.c[i] = clamp(inp.hit[i], -dims[i] / 2 + band.s[i] / 2, dims[i] / 2 - band.s[i] / 2)
+    }
+    for (const p of granules(inp, band, crumbs)) out.push({ ...p, weight: p.weight * 0.5 })
     return out
   }
   if (style === 'crumble' || style === 'none') {

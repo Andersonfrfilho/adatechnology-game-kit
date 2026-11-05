@@ -1,8 +1,9 @@
 import type * as THREE_NS from 'three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import type { Fragment } from '@adatechnology/game-destruction'
+import type { Fragment, SplitForm } from '@adatechnology/game-destruction'
 
 import { pushFittedBoxes } from './fitted-boxes'
+import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
 
@@ -40,7 +41,19 @@ export interface FragmentSystemOptions {
   max: number
   /** Seconds a resting fragment stays before it fades (0 = forever), or a rule that gives it per fragment. */
   life: number | FragmentLifeRule
+  /** How a material comes apart (`MaterialDef.splitForm`): MDF lumps and plywood veneer get shapes of their own. Default: none. */
+  formOf?: (materialId: string) => SplitForm | undefined
 }
+
+const BUILDERS: Record<Exclude<SharedShape, 'shard'>, (THREE: typeof THREE_NS, seed: number) => THREE_NS.BufferGeometry> = {
+  sliver: buildSliverGeometry,
+  lump: buildLumpGeometry,
+  veneer: buildVeneerGeometry,
+  board: buildBrokenBoardGeometry,
+}
+
+/** The shared shapes a fragment can take besides the box: glass shards, wood splinters, MDF lumps, plywood veneer and the torn stub of a broken board. */
+type SharedShape = 'shard' | 'sliver' | 'lump' | 'veneer' | 'board'
 
 /** Thickest scrap that flies as a sheet (m), its air drag (1/s) and how hard it sways (m/s²). */
 const SHEET_MAX = 0.004
@@ -71,6 +84,7 @@ export class FragmentSystem {
   /** The mesh box of a fragment before its scale. */
   private readonly unitBox = { min: { x: -0.5, y: -0.5, z: -0.5 }, max: { x: 0.5, y: 0.5, z: 0.5 } }
   private shardGeos: THREE_NS.BufferGeometry[] = []
+  private readonly shapeGeos = new Map<Exclude<SharedShape, 'shard'>, THREE_NS.BufferGeometry[]>()
   private readonly materials = new Map<string, THREE_NS.Material>()
   private readonly q: THREE_NS.Quaternion
   private readonly dq: THREE_NS.Quaternion
@@ -139,6 +153,36 @@ export class FragmentSystem {
     return g
   }
 
+  private sharedGeometry(shape: Exclude<SharedShape, 'shard'>, seed: number): THREE_NS.BufferGeometry {
+    const idx = seed % FRAGMENT_SHAPE_VARIANTS
+    let variants = this.shapeGeos.get(shape)
+    if (!variants) {
+      variants = []
+      this.shapeGeos.set(shape, variants)
+    }
+    let g = variants[idx]
+    if (!g) {
+      g = BUILDERS[shape](this.THREE, idx)
+      variants[idx] = g
+    }
+    return g
+  }
+
+  /**
+   * The geometry a fragment is drawn with: a splinter is a pointed, frayed sliver; MDF breaks in lumps, plywood peels in ragged veneer, the stub of a broken
+   * board ends in torn strands at +x; the rest are boxes.
+   */
+  private geometryOf(f: Fragment): THREE_NS.BufferGeometry {
+    const seed = hashString(f.id)
+    if (f.shape === 'shard') return this.shardGeometry(seed)
+    if (f.shape === 'splinter') return this.sharedGeometry('sliver', seed)
+    const form = this.o.formOf?.(f.material)
+    if (f.shape === 'chunk' && form === 'granules') return this.sharedGeometry('lump', seed)
+    if (f.shape === 'scrap' && form === 'plies') return this.sharedGeometry('veneer', seed)
+    if (f.shape === 'slab' && (form === 'slivers' || form === 'plies')) return this.sharedGeometry('board', seed)
+    return this.box
+  }
+
   private markGeometry: THREE_NS.CircleGeometry | null = null
   private markMaterial: THREE_NS.MeshBasicMaterial | null = null
 
@@ -149,15 +193,20 @@ export class FragmentSystem {
   }
 
   /**
-   * Meshes, never put in a scene by this class, that draw every shared piece of a fragment once: the box, the six shards, the bullet-hole disc, and the opaque and
+   * Meshes, never put in a scene by this class, that draw every shared piece of a fragment once: the box, the six shards, the wood splinters, MDF lumps and plywood veneer, the bullet-hole disc, and the opaque and
    * glass materials. A host draws them at load so the first blast does not upload these buffers in the middle of a frame.
    */
   warmMeshes(): THREE_NS.Mesh[] {
     const opaque = this.materialFor('warm', 0x808080, false)
     const glass = this.materialFor('warm', 0x808080, true)
     const geometries = [this.box, ...Array.from({ length: SHARD_SHAPES }, (_, index) => this.shardGeometry(index))]
+    const wood = (['sliver', 'lump', 'veneer', 'board'] as const).flatMap((shape) => Array.from({ length: FRAGMENT_SHAPE_VARIANTS }, (_, index) => this.sharedGeometry(shape, index)))
     const { geometry, material } = this.markParts()
-    return [...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]), new this.THREE.Mesh(geometry, material)]
+    return [
+      ...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]),
+      ...wood.map((shared) => new this.THREE.Mesh(shared, opaque)),
+      new this.THREE.Mesh(geometry, material),
+    ]
   }
 
   /**
@@ -206,7 +255,7 @@ export class FragmentSystem {
         oldest.dying = true
       }
     }
-    const geo = f.shape === 'shard' ? this.shardGeometry(hashString(f.id)) : this.box
+    const geo = this.geometryOf(f)
     const mesh = new this.THREE.Mesh(geo, material)
     mesh.position.set(f.center[0], f.center[1], f.center[2])
     mesh.quaternion.set(f.rotation[0], f.rotation[1], f.rotation[2], f.rotation[3]).normalize()
@@ -457,6 +506,8 @@ export class FragmentSystem {
     this.markMaterial?.dispose()
     for (const g of this.shardGeos) g?.dispose()
     this.shardGeos = []
+    for (const variants of this.shapeGeos.values()) for (const g of variants) g?.dispose()
+    this.shapeGeos.clear()
     for (const m of this.materials.values()) m.dispose()
     this.materials.clear()
   }

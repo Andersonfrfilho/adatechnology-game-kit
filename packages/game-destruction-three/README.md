@@ -107,7 +107,7 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 | `crack` | star of jagged white lines on glass (transparent materials) only; an opaque body draws no lines, its damage shows as chips, holes and dents | `impact_*` |
 | `ricochet` | sparks along the reflected direction | `ricochet` |
 | `debris` | a burst of the requested kind (`sparks`, `dust`, `shards`, `splinters`, `chips`, `fibers`, `leaves`, `drips`, `ash`, `smoke`, `steam`) | |
-| `fracture` | part hidden; fragments (boxes, thin irregular prisms for shards) with gravity, ground bounce, settling, sleep and shrink-away; debris burst by style | `shatter_glass`, `crumble`, `splinter`, `impact_*` |
+| `fracture` | part hidden; fragments (boxes, thin irregular prisms for shards; by the material's `splitForm`: pointed frayed slivers for wood splinters, a torn end on the stub of a broken board, irregular lumps for MDF, ragged veneer for plywood sheets) with gravity, ground bounce, settling, sleep and shrink-away; debris burst by style | `shatter_glass`, `crumble`, `splinter`, `impact_*` |
 | `spall` | opaque patch (disc decal) in the colour of the part's core material where a coat came off, under the holes; sits on the face of the mesh the point is nearest to (the thin axis of its world box) | |
 | `stage` (2, with `fragments`) | the unit-sized fragments of the breach fly out with the same physics as `fracture` fragments, the holes of `Fragment.marks` ride on them as dark discs, a dust burst; the part stays drawn (cutting the opening in its faces is left to the house renderer) | `crumble`, `impact_*` |
 | `expose` | the bars as instanced cylinders (radius 4 mm), one mesh per part, replaced by each new `expose`; empty `bars` removes the cage; `renderer.rebarCount()` | |
@@ -140,7 +140,7 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 | Vertex dents / melt noise on meshes over 20k vertices | yes | skipped |
 
 - Particles are two fixed-size ring buffers (additive 40 %, normal 60 %), one draw call each; dead particles cost a loop iteration, nothing else.
-- Fragments share one box geometry, six shard geometries and one material per source material id and colour; they shrink away instead of fading.
+- Fragments share one box geometry, six shard geometries, six of each wood shape (sliver, broken board, MDF lump, plywood veneer; 20 to 100 triangles each) and one material per source material id and colour; they shrink away instead of fading.
 - Decals share one disc geometry and one material; a mesh keeps at most 48 and the renderer 600.
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.
 - The explosion light is created on the first explosion (one light in the scene afterwards, intensity 0 at rest) so plan for the one-time shader recompile.
