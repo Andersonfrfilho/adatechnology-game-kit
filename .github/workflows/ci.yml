@@ -34,6 +34,9 @@ jobs:
       # a local sound pack (tools/local-audio) never enters git: no local config, no local-audio folder, no audio outside the SDK's sfx folders
       - run: node tools/local-audio/local-audio.mjs guard-git
 
+      # which browser suites the pre-push runs for a diff (tools/gpu/select-suites.mjs): pure Node, no page and no GPU
+      - run: pnpm --filter @adatechnology/gpu-tools test
+
   # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
   # dist), instead of each job spending two minutes on its own `pnpm build`.
   build:

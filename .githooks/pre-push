@@ -1,9 +1,9 @@
 #!/bin/sh
 # Runs what CI runs, before the push leaves the machine: build, typecheck and lint of the whole workspace, then the tests of the packages this
 # branch changed and of the packages that depend on them. Tests run one package at a time, as CI does (in parallel the long golden loops miss
-# vitest's 5 s timeout). Skip once with `git push --no-verify`; `PRE_PUSH_ALL=1 git push` tests every package. Last, when the branch touched something
-# drawn or an example, the checks that open pages in a browser run here and not on CI (CLAUDE.md, "Testes de GPU e navegador"): the test room and the
-# example areas, the origin and cost of every drawn piece, the memory cycles (tools/gpu/browser-checks.mjs; PRE_PUSH_BROWSER=0 skips), then the frame
+# vitest's 5 s timeout). Skip once with `git push --no-verify`; `PRE_PUSH_ALL=1 git push` tests every package. Last, the checks that open pages in a
+# browser run here and not on CI (CLAUDE.md, "Testes de GPU e navegador"): only the suites whose pages the branch changes, printed with the reason
+# (tools/gpu/browser-checks.mjs and select-suites.mjs; PRE_PUSH_BROWSER=all runs them all, PRE_PUSH_BROWSER=0 skips), then, on every push, the frame
 # budgets on this machine's GPU against origin/main measured on the same machine (tools/gpu/perf-gate.mjs; skipped without a GPU or with PRE_PUSH_PERF=0).
 set -e
 git fetch -q origin main 2>/dev/null || true
@@ -19,18 +19,18 @@ if [ -n "$PRE_PUSH_ALL" ] || [ -z "$base" ]; then
 else
   # The workspace folders touched since the base (pnpm's own `[ref]` filter finds nothing inside a git worktree, so list them here).
   dirs=$(git diff --name-only "$base" HEAD | grep -E '^(packages|tools|examples)/[^/]+/' | cut -d/ -f1-2 | sort -u)
-  [ -z "$dirs" ] && { echo "pre-push: no package changed"; exit 0; }
-  touches_drawing=$(echo "$dirs" | grep -E -- '-three$|game-render|game-runtime|game-test-room|examples/test-room' || true)
-  touches_pages=$(echo "$dirs" | grep -E -- '-three$|game-render|game-runtime|game-test-room|game-audio|^examples/|tools/kit-audit' || true)
   filters=""
   for dir in $dirs; do [ -f "$dir/package.json" ] && filters="$filters --filter ...{./$dir}"; done
   # only folders without a package (tools/kit-audit): with no filter, `pnpm run test` is the root script, every package
-  [ -z "$filters" ] && { echo "pre-push: no package changed"; exit 0; }
-  echo "pre-push: tests of the packages changed since $(git rev-parse --short "$base") and their dependents"
-  # shellcheck disable=SC2086
-  pnpm $filters --workspace-concurrency=1 run test
+  if [ -z "$filters" ]; then
+    echo "pre-push: no package changed"
+  else
+    echo "pre-push: tests of the packages changed since $(git rev-parse --short "$base") and their dependents"
+    # shellcheck disable=SC2086
+    pnpm $filters --workspace-concurrency=1 run test
+  fi
 fi
 
-# CI opens no page and has no GPU: the pages and the frame times of what the branch draws are checked here
-if [ -n "$PRE_PUSH_ALL" ] || [ -n "${touches_pages:-}" ]; then node tools/gpu/browser-checks.mjs; fi
-if [ -n "$PRE_PUSH_ALL" ] || [ -n "${touches_drawing:-}" ]; then node tools/gpu/perf-gate.mjs; fi
+# CI opens no page and has no GPU: the pages of what the branch changes, and the frame times of every push, are checked here
+node tools/gpu/browser-checks.mjs
+node tools/gpu/perf-gate.mjs
