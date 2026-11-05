@@ -140,6 +140,11 @@ export interface BuildOptions {
    * damaged, as the Visor de casas 3D drew the houses.
    */
   pillars?: 'shown' | 'hidden'
+  /**
+   * `'tiles'` (default): the outer baseboard is laid tile by tile and the sidewalk slab by slab, each a piece that breaks on its own (`BASEBOARD_TILES`,
+   * `SIDEWALK_SLABS`). `'band'`: one strip of each per face, as the Visor de casas 3D drew them (still destructible, as a whole).
+   */
+  baseboard?: 'tiles' | 'band'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }

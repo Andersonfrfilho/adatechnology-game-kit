@@ -3,11 +3,18 @@ import type { HouseRecord, HouseWall, Kernel, KernelHouseBaseboard, Shared } fro
 
 /**
  * The outer baseboard is a band of glazed ceramic tiles (cerâmica esmaltada, 8 mm, on 4 mm of tile adhesive: 12 mm out of the plaster), the usual barrado of a
- * facade, which takes the splashes of rain and the knocks at foot height. Each band is a piece of its own (`baseboard:<wall>:<side>`), glued to the wall,
- * laid in tiles of `length` (its units, set in mortar): a shot craters or knocks out the tile it hits (the wall shows behind), a kick or a blast cracks
- * the glaze, and a blast close enough shatters the band.
+ * facade, which takes the splashes of rain and the knocks at foot height. Each tile is a piece of its own (`baseboard:<wall>:<side>:<n>`, `length` long with a
+ * `joint` of grout between tiles), glued to the wall: a shot craters the tile it hits, more shots or a kick crack and shatter that tile and the wall shows
+ * behind it, a blast breaks the tiles it reaches, and a tile comes off when its wall goes. `BuildOptions.baseboard: 'band'` draws it as one strip per face
+ * (the Visor de casas 3D's drawing), still ceramic.
  */
-export const BASEBOARD_TILES = { length: 0.6, material: 'ceramic', mortar: 'mortar', density: 2300 } as const;
+export const BASEBOARD_TILES = { length: 0.6, joint: 0.003, material: 'ceramic', density: 2300 } as const;
+
+/**
+ * The protective sidewalk around the walls is cast concrete (4.5 cm on the ground, 60 cm wide) cut by expansion joints every `length` metres: each slab is a
+ * piece resting on the ground, so a blast cracks, chips and breaks the slabs it reaches and a shot marks the one it hits.
+ */
+export const SIDEWALK_SLABS = { length: 1.2, joint: 0.01, material: 'concrete', density: 2400 } as const;
 
 export function installHouseBaseboard(K: Kernel, shared: Shared): void {
   const { Y0, bx, cursor, pieceRecord, sideOf } = K;
@@ -28,19 +35,24 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
     };
     for (const A of ws) for (const [side, sd] of [[A.w.sides[0], -1], [A.w.sides[1], 1]] as const) {
       if (!sideOf(side, false).exterior) continue;
-      const strip = (k: number, y1: number, y2: number, o0: number, o1: number, mat: string, c: number, piece?: string): void => { // k = extra clearance at convex corners; o0..o1 = offset from the outer face; piece = id of the destructible band
+      const strip = (k: number, y1: number, y2: number, o0: number, o1: number, mat: string, c: number, piece?: string, laid: { readonly length: number; readonly joint: number; readonly material: string; readonly density: number } = BASEBOARD_TILES): void => { // k = extra clearance at convex corners; o0..o1 = offset from the outer face; piece = id prefix of its pieces, laid = how
         const ea = junction(A, A.a, sd) > 0 ? A.th / 2 + k : junction(A, A.a, sd) < 0 ? -A.th / 2 : 0, eb = junction(A, A.b, sd) > 0 ? A.th / 2 + k : junction(A, A.b, sd) < 0 ? -A.th / 2 : 0;
         const s0 = A.a - ea, s1 = A.b + eb, f0 = A.L + sd * (A.th / 2 + o0), f1 = A.L + sd * (A.th / 2 + o1), lo = Math.min(f0, f1), hi = Math.max(f0, f1);
         if (s1 - s0 < 1e-3) return;
-        if (piece) cursor.pc = pieceRecord(piece, BASEBOARD_TILES.material, null, {
-          floor: 0, mass: Math.round((s1 - s0) * (y2 - y1) * (hi - lo) * BASEBOARD_TILES.density * 100) / 100, tags: ['baseboard'],
-          units: { size: [BASEBOARD_TILES.length, y2 - y1, hi - lo], bond: 'stack', mortar: BASEBOARD_TILES.mortar },
-        });
-        if (A.au) bx(mat, s0, y1, lo, s1, y2, hi, c); else bx(mat, lo, y1, s0, hi, y2, s1, c);
+        const box = (a, b) => { if (A.au) bx(mat, a, y1, lo, b, y2, hi, c); else bx(mat, lo, y1, a, hi, y2, b, c); };
+        const tag = laid === BASEBOARD_TILES ? 'baseboard' : 'sidewalk';
+        const tile = (id, a, b) => { cursor.pc = pieceRecord(id, laid.material, null, { floor: 0, mass: Math.round((b - a) * (y2 - y1) * (hi - lo) * laid.density * 100) / 100, tags: [tag] }); box(a, b); };
+        if (!piece) box(s0, s1);
+        else if (shared.ctx.baseboardBand) tile(piece, s0, s1);
+        else {
+          // whole tiles from the start of the run, the last one cut to what is left, the grout joint between them
+          const n = Math.max(1, Math.round((s1 - s0) / laid.length)), w = (s1 - s0) / n, j = laid.joint / 2;
+          for (let i = 0; i < n; i++) tile(`${piece}:${i}`, s0 + i * w + (i > 0 ? j : 0), s0 + (i + 1) * w - (i < n - 1 ? j : 0));
+        }
         cursor.pc = null;
       };
       strip(t, y0, y0 + ht, 0, t, 'plaster', color, A.w.id ? `baseboard:${A.w.id}:${sd < 0 ? 0 : 1}` : undefined); // baseboard (35 cm band of ceramic tiles) with closed corners
-      strip(W, y0, y0 + 0.045, 0, W, 'sidewalk', cal);      // 60 cm protective sidewalk with filled corners
+      strip(W, y0, y0 + 0.045, 0, W, 'sidewalk', cal, A.w.id ? `sidewalk:${A.w.id}:${sd < 0 ? 0 : 1}` : undefined, SIDEWALK_SLABS); // 60 cm protective sidewalk with filled corners
     }
   }
   const defined: KernelHouseBaseboard = { baseboardAndSidewalk };
