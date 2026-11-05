@@ -168,6 +168,16 @@ describe('carrying and drinking', () => {
     expect(room.throwHeld()).toBe(false)
   })
 
+  it('taking an item plays one sound: the hand on what it is made of (criterion C1), not two at once', () => {
+    const sounds: string[] = []
+    const room = makeRoom({ onSound: (k) => sounds.push(k) })
+    room.spawn('coffee_cup', [0, 0, -3], 0)
+    room.look([0, 1.0, -1.8], [0, 0.05, -3])
+    expect(room.grab()).toBe(true)
+    const hand = sounds.filter((k) => k.startsWith('item_pickup_') || k.startsWith('grab_'))
+    expect(hand).toEqual(['item_pickup_glass'])
+  })
+
   it('does not grab what is too heavy or not a body', () => {
     const room = makeRoom()
     room.spawn('concrete_block', [0, 0, -2.5], 0)

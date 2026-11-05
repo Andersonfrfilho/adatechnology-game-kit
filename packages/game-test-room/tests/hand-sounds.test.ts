@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { LEAF_FOLEY_SETS } from '@adatechnology/game-audio'
+import { LEAF_FOLEY_SETS, kitSampleBank } from '@adatechnology/game-audio'
+import type { SfxManifest } from '@adatechnology/game-audio'
 import { createDestruction } from '@adatechnology/game-destruction'
-import { leafFoleyOf, openSoundOf, pickupClassOf, pickupSoundOf, useSoundOf } from '../src/hand-sounds'
+import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupClassOf, pickupSoundOf, useSoundOf } from '../src/hand-sounds'
 
 const materials = createDestruction().materials
 
@@ -29,5 +32,10 @@ describe('hand sounds', () => {
     expect(useSoundOf(undefined, 'eat')).toBe('eat_chew')
     expect(useSoundOf({ uses: { drink: 'can_drink' } }, 'drink')).toBe('can_drink')
     expect(useSoundOf(undefined, 'pour')).toBeUndefined()
+  })
+  it('every hand sound the room preloads has recorded takes in the manifest (a file of its id or an alias to one)', () => {
+    const manifest = JSON.parse(readFileSync(join(__dirname, '../../game-audio/assets/sfx/manifest.json'), 'utf8')) as SfxManifest
+    const recorded = new Set((kitSampleBank(manifest).samples ?? []).map((sound) => sound.id))
+    for (const id of HAND_RECORDED_IDS) expect(recorded.has(id), id).toBe(true)
   })
 })

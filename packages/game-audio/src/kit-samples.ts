@@ -37,6 +37,15 @@ export const KIT_SAMPLE_ALIASES: Readonly<Record<string, string>> = {
   // an item taken in the hand (game-destruction-three grab_* keys)
   grab_hard: 'item_pickup_generic',
   grab_soft: 'item_pickup_leather',
+  // the hand foley of the test room (game-audio FOLEY_BANK) whose id is not a file id: a wooden leaf shut and slammed, an item picked up by material.
+  // The metal door stays on its recipe (two of its takes run 10 s), and so do the fridge, the microwave and paper (no file for them).
+  door_wood_close: 'door_wood_shut',
+  door_wood_slam: 'door_slam_wood',
+  item_pickup_metal: 'item_pickup_generic',
+  item_pickup_plastic: 'item_pickup_generic',
+  item_pickup_glass: 'item_pickup_generic',
+  item_pickup_wood: 'item_pickup_generic',
+  item_pickup_fabric: 'item_pickup_leather',
 }
 
 /** The numbers of a sound the files do not say: the bus of its folder, a little pitch spread. */

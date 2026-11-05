@@ -51,3 +51,25 @@ export const USE_SOUND_EVERY = 0.55
 
 /** The sound a use repeats, if any. */
 export const useSoundOf = (sounds: ItemSounds | undefined, useId: string): string | undefined => sounds?.uses?.[useId] ?? USE_SOUNDS[useId]
+
+/**
+ * The hand's sounds that have recordings (the takes of `KIT_SAMPLE_ALIASES` or a file of the same id): loaded on the first key or click, so even the
+ * first door opened or item taken plays the recording. The pickup is one sound, the item's class, picked up with the hand closing on it (criterion C1).
+ */
+export const HAND_RECORDED_IDS: readonly string[] = [
+  'door_wood_open',
+  'door_creak',
+  'door_wood_close',
+  'door_wood_slam',
+  'door_locked_rattle',
+  'item_pickup_metal',
+  'item_pickup_plastic',
+  'item_pickup_glass',
+  'item_pickup_wood',
+  'item_pickup_fabric',
+  'drink_gulp',
+  // the old leaf keys still played by a leaf without a set (a vehicle's, whose bank falls back to them)
+  'latch',
+  'shut_wood',
+  'rattle',
+]
