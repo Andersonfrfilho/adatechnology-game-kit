@@ -1,8 +1,8 @@
-import { createVehicleCamera, mirrorPoses } from '@adatechnology/game-camera'
+import { createVehicleCamera, defaultEye, mirrorPoses } from '@adatechnology/game-camera'
 import type { MirrorPose, VehicleCameraMode, VehicleFrame, VehicleThreeLib } from '@adatechnology/game-camera'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
-import { CABIN_BANK, LIBRARY_BANK } from '@adatechnology/game-audio'
+import { CABIN_BANK, LIBRARY_BANK, RADIO_BANK } from '@adatechnology/game-audio'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
 import { createSemiSimDriver } from '@adatechnology/game-vehicles-driving'
 import type { SemiDriver } from '@adatechnology/game-vehicles-driving'
@@ -18,6 +18,13 @@ import type { VehicleSound } from '../../audio/vehicle-sound'
 import type { VehicleSoundIds } from '../types'
 import { createCockpit } from './cockpit'
 import type { Cockpit } from './cockpit'
+import { VEHICLE_SOUND_BANK } from '../../audio'
+import { createWheelRoll } from '../../wheel-roll'
+import type { WheelRoll } from '../../wheel-roll'
+import { createProvingCrash } from './crash'
+import type { ProvingCrash } from './crash'
+import { SYSTEMS_TEXT } from './systems-text'
+import type { SystemsText } from './systems-text'
 import { fillText, PROVING_TEXT } from './text'
 import type { ProvingText } from './text'
 
@@ -30,6 +37,10 @@ export interface ProvingModuleOptions {
   locale?: string
   /** Vehicles offered on the bench, by catalogue id. */
   vehicles: readonly string[]
+  /** Catalogue id of the person thrown out of a crash without a belt (a person item of the characters module); without it the crash only logs. */
+  occupant?: string
+  /** Catalogue id of the car parked behind for the parking sensors (a vehicle item of the vehicles module). Default `sedan` (the vehicles module's midsize sedan). */
+  parkedCar?: string
   /** The proving subject of a vehicle (`fleetProvingSubject` of game-vehicles-fleet); `mass` is the kit's own when it has one. Null hides the vehicle. */
   subject(id: string, mass: number | undefined): ProvingSubject | null
   /** The vehicle's name on the bench and the board (default: the id). */
@@ -59,9 +70,12 @@ const MIRROR_RECTS: Record<string, { x: number; y: number; width: number; height
  * on the same semi-simulation driver the headless runner uses, with the vehicle cameras of `game-camera` (chase, cockpit, hood) taking over the room's view, the rear-view and side mirrors
  * and the reversing camera with its guide lines as extra views of the host, a board by the track with the vehicle's certificate, and the sign-off of the visual checks.
  */
+const ADJUST_KEYS = { seat_forward: 'seatForward', seat_height: 'seatHeight', mirror_left: 'mirrorLeft', mirror_right: 'mirrorRight' } as const
+
 export function createProvingModule(options: ProvingModuleOptions): TestableModule & { certificates(): ProvingCertificate[]; certificate(id: string): ProvingCertificate | undefined } {
   const locale = options.locale ?? 'pt-BR'
   const text: ProvingText = PROVING_TEXT[locale] ?? (PROVING_TEXT['pt-BR'] as ProvingText)
+  const sysText: SystemsText = SYSTEMS_TEXT[locale] ?? (SYSTEMS_TEXT['pt-BR'] as SystemsText)
   const tests = options.tests ?? createProvingTests()
   const vehicles = options.vehicles
   const sounds = { ...defaultSoundIds, ...options.sounds }
@@ -80,6 +94,17 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   let parking: { driver: SemiDriver; time: number } | null = null
   /** The player at the wheel: the room's walking keys are held and the vehicle takes them. */
   let driving: Cockpit | null = null
+  let crashes: ProvingCrash | null = null
+  /** The wheels rolling with the distance the car covers, and where it was last frame (x, z of the driver). */
+  let wheels: WheelRoll | null = null
+  let lastAt: { x: number; z: number } | null = null
+  let parked: { root: { position: { x: number; z: number } }; remove(): void } | null = null
+  /** The driver's seat (metres) and the side mirrors (turn of their aim, out positive). */
+  const adjust = { seatForward: 0, seatHeight: 0, mirrorLeft: 0, mirrorRight: 0 }
+  const aimed = (pose: MirrorPose): MirrorPose => {
+    const turn = pose.id === 'left' ? adjust.mirrorLeft : pose.id === 'right' ? -adjust.mirrorRight : 0
+    return turn ? { ...pose, look: [pose.look[0] + turn, pose.look[1], pose.look[2]] } : pose
+  }
   let gearbox: 'automatic' | 'manual' = 'automatic'
   let lastGear: number | null = null
   let driveClock = 0
@@ -252,6 +277,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   // ---- the vehicle ----------------------------------------------------------------------------------------------------------------------
   const removeCar = (): void => {
     if (!car) return
+    wheels = null
+    lastAt = null
     discardObject3D(car.built.group)
     car = null
   }
@@ -265,6 +292,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     built.group.add(guides)
     ;(host.scene as any).add(built.group)
     car = { built, guides, subject }
+    wheels = createWheelRoll(three, built)
     pose({ x: 0, z: TRACK.start, yaw: 0, pitch: 0, roll: 0, height: 0 }, 0)
     rig.vehicle?.reset()
     drawBoard()
@@ -317,11 +345,20 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     car.built.group.position.set(TRACK.x0 + wrapped, 0, TRACK.z + s.z)
     car.built.group.rotation.set(-s.pitch, s.yaw + Math.PI / 2, s.roll, 'YXZ')
     bendGuides(steer)
+    // the distance along the car's heading since the last frame turns the wheels (a jump to a new run starts them afresh)
+    if (lastAt) {
+      const along = (s.x - lastAt.x) * Math.cos(s.yaw) - (s.z - lastAt.z) * Math.sin(s.yaw)
+      if (Math.abs(along) < 5) wheels?.roll(along, steer)
+    }
+    lastAt = { x: s.x, z: s.z }
   }
   const frameOf = (speed: number): VehicleFrame | null => {
     if (!car) return null
     const g = car.built.group
-    return { x: g.position.x, y: g.position.y, z: g.position.z, yaw: g.rotation.y, pitch: -g.rotation.x, roll: g.rotation.z, speed, length: car.built.length, width: car.built.width, height: car.built.height, ...(car.built.driverEye ? { eye: car.built.driverEye } : {}) }
+    const size = { length: car.built.length, width: car.built.width, height: car.built.height }
+    // the seat moves the eyes: forward along the car and up
+    const [ex, ey, ez] = car.built.driverEye ?? defaultEye(size)
+    return { x: g.position.x, y: g.position.y, z: g.position.z, yaw: g.rotation.y, pitch: -g.rotation.x, roll: g.rotation.z, speed, ...size, eye: [ex, ey + adjust.seatHeight, ez + adjust.seatForward] }
   }
 
   // ---- cameras and mirrors --------------------------------------------------------------------------------------------------------------
@@ -416,19 +453,26 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       built: car.built,
       subject: car.subject,
       place: [0, 0, 0],
+      kit: kitFor(three),
+      obstacles: () => (parked ? [[parked.root.position.x, parked.root.position.z] as const] : []),
       gauge: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.gauge,
       needle: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.amber,
       // the engine's own sound turns the key (starter, catch, idle by RPM)
       sounds: { starter: '' },
       onExit: () => stopDriving(),
       onEvent: (event) => {
-        if (event.type === 'refused') return host?.log(text.cabin.refused[event.reason] ?? event.reason)
+        if (event.type === 'refused') return host?.log(text.cabin.refused[event.reason] ?? sysText.refused[event.reason as keyof SystemsText['refused']] ?? event.reason)
+        if (event.type === 'sound') return
+        if (event.type !== 'command') {
+          if (event.type === 'out_of_fuel' || event.type === 'stall' || event.type === 'seized') engine?.stop([car?.built.group.position.x ?? 0, 0.5, car?.built.group.position.z ?? 0])
+          return host?.log(sysText.events[event.type as keyof SystemsText['events']] ?? event.type, { vehicle: settings.vehicle, ...event }, 'proving_system')
+        }
         const st = event.state
         const line = cabinLine(event.command, st)
         if (line) host?.log(line)
         if (event.command === 'ignition' && car) {
           const at: [number, number, number] = [car.built.group.position.x, 0.5, car.built.group.position.z]
-          if (st.ignition) engine?.start(at)
+          if (st.ignition && driving?.systems.canCrank() !== false) engine?.start(at)
           else engine?.stop(at)
         }
         if (event.command === 'gearbox') {
@@ -448,7 +492,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     stopEngine()
     // the engine is off until the key turns (I): the sound cranks, catches and idles by the RPM
     engine = createVehicleSound(host.audio, { sounds })
-    host.bench?.sheet?.({ kicker: text.name, title: fillText(text.log.drive, name(settings.vehicle)), body: text.cabin.keys })
+    host.bench?.sheet?.({ kicker: text.name, title: fillText(text.log.drive, name(settings.vehicle)), body: `${text.cabin.keys} · ${sysText.keys} · ${sysText.bodyKeys}` })
     host.log(fillText(text.log.drive, name(settings.vehicle)))
   }
   const onOff = (on: boolean): string => (on ? text.cabin.on : text.cabin.off)
@@ -467,13 +511,102 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       case 'interior_light': return `${c.interior}: ${onOff(st.lamps.interior)}`
       case 'alarm': return `${c.alarm}: ${c.alarmStates[st.alarm]}`
       case 'radio':
-      case 'radio_source': return `${c.radio}: ${st.radio.on ? c.sources[st.radio.source] : c.off}`
+      case 'radio_source':
+      case 'radio_track': return `${c.radio}: ${st.radio.on ? `${c.sources[st.radio.source]} · ${fillText(sysText.track, st.radio.track + 1)}` : c.off}`
       case 'indicator_left':
       case 'indicator_right':
       case 'hazard': return `${c.indicator}: ${c.indicators[st.indicator]}`
-      case 'wipers': return `${c.wipers}: ${c.wiperModes[st.wipers]}`
+      case 'wipers': return `${c.wipers}: ${sysText.wiperModes[st.wipers]}`
+      case 'drive_profile': return `${sysText.profile}: ${sysText.profiles[st.profile]}`
+      case 'traction_control': return `${sysText.traction}: ${onOff(st.tractionControl)}`
+      case 'abs': return `${sysText.abs}: ${onOff(st.abs)}`
+      case 'cruise': return st.cruise.on ? fillText(sysText.cruiseSet, Math.round(st.cruise.speed * 3.6)) : `${sysText.cruise}: ${c.off}`
+      case 'climate': return `${sysText.climate}: ${onOff(st.climate.on)}`
+      case 'demist': return `${sysText.demist}: ${onOff(st.climate.demist)}`
       case 'seatbelt': return `${c.seatbelt}: ${onOff(st.seatbelt)}`
       default: return null
+    }
+  }
+  /** The bench's tests of the car's systems, on the car being driven (the driving seat opens if nobody is in it). */
+  const systemsAction = (id: keyof SystemsText['actions']): void => {
+    if (!driving) startDriving()
+    const cockpit = driving
+    if (!cockpit) return
+    const d = cockpit.driver
+    const done = (key: keyof SystemsText['done']): void => host?.log(sysText.done[key], { vehicle: settings.vehicle, action: key }, 'proving_system')
+    switch (id) {
+      case 'puncture': {
+        const tyres = d.spec.wheels.map((_, i) => d.condition.tyres?.[i] ?? 1)
+        tyres[0] = 0
+        d.condition = { ...d.condition, tyres }
+        return done('puncture')
+      }
+      case 'fit_spare': {
+        const flat = d.spec.wheels.findIndex((_, i) => (d.condition.tyres?.[i] ?? 1) < 0.2)
+        const event = cockpit.systems.fitSpare(d, Math.max(0, flat))
+        host?.log(sysText.events[event.type], { vehicle: settings.vehicle, ...event }, 'proving_system')
+        return
+      }
+      case 'refuel':
+        d.refuel(d.spec.tank.capacity)
+        return done('refuel')
+      case 'empty_tank':
+        d.state.fuel = Math.min(d.state.fuel, d.spec.tank.capacity * 0.04)
+        return done('empty_tank')
+      case 'drain_battery':
+        // below what the starter needs (a quarter): the key clicks and nothing turns
+        cockpit.systems.charge(-(cockpit.systems.state.charge - 0.15))
+        return done('drain_battery')
+      case 'jump_start':
+        cockpit.systems.charge(1)
+        return done('jump_start')
+      case 'break_radiator':
+        cockpit.radiator = 0.05
+        return done('break_radiator')
+      case 'remote_lock':
+      case 'remote_unlock': {
+        const lock = id === 'remote_lock'
+        cockpit.body?.lock(lock)
+        // the remote arms the alarm with a chirp and blinks the hazards once; unlocking disarms it
+        cockpit.controls.state.alarm = lock ? 'armed' : 'off'
+        host?.audio?.play?.({ sound: 'alarm_chirp', position: [car?.built.group.position.x ?? 0, 1, car?.built.group.position.z ?? 0] })
+        host?.log(sysText.remote[lock ? 'locked' : 'unlocked'], { vehicle: settings.vehicle, locked: lock }, 'proving_system')
+        return
+      }
+      case 'crash_wall': {
+        const g = car?.built.group as { position: { x: number; y: number; z: number }; rotation: { y: number } } | undefined
+        if (!g || !host) return
+        crashes ??= createProvingCrash(host, options.occupant)
+        const speed = d.state.u
+        const ejection = crashes.crash({ car: { position: g.position, rotationY: g.rotation.y }, u: d.state.u, w: d.state.w, belted: cockpit.controls.state.seatbelt, destructible: cockpit.destructible })
+        d.state.u = d.state.w = d.state.yawRate = 0
+        const kmh = Math.round(Math.abs(speed) * 3.6)
+        const belted = cockpit.controls.state.seatbelt
+        host.log(ejection ? fillText(sysText.crash.ejected, kmh, sysText.crash.exits[ejection.exit]) : fillText(belted ? sysText.crash.stayed : sysText.crash.mild, kmh), { vehicle: settings.vehicle, kmh, belted: cockpit.controls.state.seatbelt, ejection }, 'proving_crash')
+        return
+      }
+      case 'park_behind': {
+        // a car parked three metres behind the bumper: backing up, the sensors beep faster as it comes close
+        const g = car?.built.group as { position: { x: number; z: number }; rotation: { y: number } } | undefined
+        if (!g || !host) return
+        parked?.remove()
+        const back = (car?.built.length ?? 4.5) / 2 + 3 + 2.3
+        const at: [number, number, number] = [g.position.x - Math.sin(g.rotation.y) * back, 0, g.position.z - Math.cos(g.rotation.y) * back]
+        const placed = host.addObject?.(options.parkedCar ?? 'sedan', { position: at, rotationY: g.rotation.y })
+        parked = placed ? { root: placed.root as { position: { x: number; z: number } }, remove: placed.remove } : null
+        host.log(placed ? sysText.parking.placed : sysText.parking.none, { vehicle: settings.vehicle }, 'proving_system')
+        return
+      }
+      case 'force_door': {
+        // a locked door forced open: with the alarm armed, it goes off
+        const body = cockpit.body
+        if (!body) return
+        if (body.locked) body.lock(false)
+        body.toggle('door_front_left')
+        if (cockpit.controls.state.alarm === 'armed') cockpit.controls.state.alarm = 'ringing'
+        host?.log(sysText.remote.forced, { vehicle: settings.vehicle, alarm: cockpit.controls.state.alarm }, 'proving_system')
+        return
+      }
     }
   }
   const gearName = (gear: number): string => (gear < 0 ? 'R' : gear === 0 ? 'N' : String(gear))
@@ -485,6 +618,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     }
     if (change.kind === 'action') {
       if (change.id === 'drive') return driving ? stopDriving() : startDriving()
+      if (change.id in sysText.actions) return systemsAction(change.id as keyof SystemsText['actions'])
       if (change.id === 'run_test' || change.id === 'run_all' || change.id === 'reverse_park') stopDriving()
       if (change.id === 'run_test') {
         queue = []
@@ -530,6 +664,12 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       case 'camera':
         settings.camera = String(change.value)
         applyCamera()
+        break
+      case 'seat_forward':
+      case 'seat_height':
+      case 'mirror_left':
+      case 'mirror_right':
+        adjust[ADJUST_KEYS[change.id]] = Number(change.value)
         break
       case 'time_scale':
         settings.timeScale = Number(change.value)
@@ -582,7 +722,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     if (car) engine?.update({ dt, position: [car.built.group.position.x, 0.5, car.built.group.position.z], speed, throttle: run ? 1 : (driving?.throttle ?? 0), rpm: driving ? driving.driver.state.rpm : undefined })
     const f = frameOf(speed)
     if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera, f, dt)
-    if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, m.pose, f)
+    if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, aimed(m.pose), f)
     void steer
     const key = `${host.bench?.layer('mirrors')}|${host.bench?.layer('reverse_camera')}`
     if (key !== mirrorKey) {
@@ -604,6 +744,10 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   const counts = (verdict: 'pass' | 'fail' | 'pending'): number => certificateOf(settings.vehicle)?.results.filter((r) => r.verdict === verdict).length ?? 0
 
   const teardown = (): void => {
+    crashes?.dispose()
+    crashes = null
+    parked?.remove()
+    parked = null
     stopDriving()
     stopEngine()
     for (const m of rig.mirrors) m.remove()
@@ -637,9 +781,14 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       { kind: 'choice', id: 'vehicle', name: text.controls.vehicle, hint: text.hints.vehicle, options: vehicles.map((id) => ({ id, name: name(id) })), default: settings.vehicle },
       { kind: 'choice', id: 'test', name: text.controls.test, hint: text.hints.test, options: measured.map((id) => ({ id, name: text.tests[id] ?? id })), default: settings.test },
       { kind: 'choice', id: 'camera', name: text.controls.camera, hint: text.hints.camera, options: (['room', 'chase', 'cockpit', 'hood'] as const).map((id) => ({ id, name: text.cameras[id] })), default: settings.camera },
+      { kind: 'number', id: 'seat_forward', name: sysText.adjust.seat_forward, min: -0.2, max: 0.2, step: 0.02, default: 0 },
+      { kind: 'number', id: 'seat_height', name: sysText.adjust.seat_height, min: -0.1, max: 0.1, step: 0.01, default: 0 },
+      { kind: 'number', id: 'mirror_left', name: sysText.adjust.mirror_left, min: -0.3, max: 0.3, step: 0.02, default: 0 },
+      { kind: 'number', id: 'mirror_right', name: sysText.adjust.mirror_right, min: -0.3, max: 0.3, step: 0.02, default: 0 },
       { kind: 'number', id: 'time_scale', name: text.controls.time_scale, hint: text.hints.time_scale, min: 1, max: 20, step: 1, default: settings.timeScale },
       { kind: 'choice', id: 'visual_check', name: text.controls.visual_check, hint: text.hints.visual_check, options: VISUAL_CHECKS.map((id) => ({ id, name: text.tests[id] ?? id })), default: settings.visual },
       { kind: 'action', id: 'drive', name: text.actions.drive },
+      ...(Object.keys(sysText.actions) as Array<keyof SystemsText['actions']>).map((id): ModuleControl => ({ kind: 'action', id, name: sysText.actions[id] })),
       { kind: 'choice', id: 'gearbox', name: text.controls.gearbox, hint: text.hints.gearbox, options: (['automatic', 'manual'] as const).map((id) => ({ id, name: text.gearbox[id] })), default: gearbox },
       { kind: 'action', id: 'run_test', name: text.actions.run_test },
       { kind: 'action', id: 'run_all', name: text.actions.run_all },
@@ -673,6 +822,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       rig.vehicle = createVehicleCamera(three as VehicleThreeLib)
       lent.audio?.register?.(LIBRARY_BANK)
       lent.audio?.register?.(CABIN_BANK)
+      lent.audio?.register?.(VEHICLE_SOUND_BANK)
+      lent.audio?.register?.(RADIO_BANK)
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       const stopClear = lent.onClear?.(() => {

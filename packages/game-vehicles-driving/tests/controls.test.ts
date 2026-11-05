@@ -145,7 +145,8 @@ describe('vehicle controls', () => {
     expect(controls.state.alarm).toBe('off')
     controls.command('radio')
     controls.command('radio_source')
-    expect(controls.state.radio).toEqual({ on: true, source: 'tape' })
+    expect(controls.state.radio).toEqual({ on: true, source: 'tape', track: 0 })
+    controls.command('wipers')
     controls.command('wipers')
     controls.command('wipers')
     expect(controls.state.wipers).toBe('fast')
@@ -154,9 +155,9 @@ describe('vehicle controls', () => {
   })
 
   it('takes only its own keys, and every key can be changed', () => {
-    const controls = createVehicleControls({ gears: 5, keys: { horn: ['KeyZ'] } })
-    expect(controls.key('KeyX', true)).toBe(false)
-    expect(controls.key('KeyZ', true)).toBe(true)
+    const controls = createVehicleControls({ gears: 5, keys: { horn: ['Semicolon'] } })
+    expect(controls.key('Backslash', true)).toBe(false)
+    expect(controls.key('Semicolon', true)).toBe(true)
     controls.input(1 / 60)
     expect(controls.state.horn).toBe(true)
     expect(controls.key('KeyH', true)).toBe(false)

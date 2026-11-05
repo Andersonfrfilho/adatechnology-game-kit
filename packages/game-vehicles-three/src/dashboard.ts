@@ -29,6 +29,15 @@ export type DashboardReading = {
   temperature?: number
   /** Fuel, 0 (empty) to 1 (full); leave out while the vehicle has no fuel model. */
   fuel?: number
+  /** Cruise control holding a speed. */
+  cruise?: boolean
+  /** Drive profile shown by its letter (E economy, S sport; nothing for normal). */
+  profile?: 'eco' | 'normal' | 'sport'
+  /** The aids switched off light their amber lamps. */
+  tractionOff?: boolean
+  absOff?: boolean
+  /** The alternator does not keep up (the battery drains with the engine running). */
+  charging?: boolean
 }
 
 /** The scale of the dials and how often the faces are redrawn. */
@@ -250,6 +259,8 @@ export function createVehicleDashboard(THREE: ThreeLib, built: BuiltVehicle, opt
         lamp(g, 104, 214, r.highBeam, DASHBOARD_LOOK.blue, beam)
         lamp(g, 152, 214, r.lowBeam || r.fog, r.fog ? DASHBOARD_LOOK.amber : DASHBOARD_LOOK.green, beam)
         bar(g, 40, r.fuel, false, 'F')
+        lamp(g, 104, 244, !!r.cruise, DASHBOARD_LOOK.green, letter('CRZ'))
+        if (r.profile && r.profile !== 'normal') lamp(g, 152, 244, true, r.profile === 'eco' ? DASHBOARD_LOOK.green : DASHBOARD_LOOK.amber, letter(r.profile === 'eco' ? 'E' : 'S'))
       } else {
         dial(g, r.rpm / 1000, Math.ceil(redline / 1000) + 1, 1, redline / 1000, (v) => String(Math.round(v)))
         g.fillStyle = DASHBOARD_LOOK.marks
@@ -258,7 +269,9 @@ export function createVehicleDashboard(THREE: ThreeLib, built: BuiltVehicle, opt
         g.fillText(r.gear < 0 ? 'R' : r.gear === 0 ? 'N' : String(r.gear), SIZE / 2, SIZE / 2 + 54)
         lamp(g, 86, 178, r.parkingBrake, DASHBOARD_LOOK.red, ring('P'))
         lamp(g, 128, 214, r.ignition && !r.seatbelt, DASHBOARD_LOOK.red, belt)
-        lamp(g, 170, 178, warn, DASHBOARD_LOOK.red, letter('+−'))
+        lamp(g, 170, 178, warn || (r.engineOn && r.charging === false), DASHBOARD_LOOK.red, letter('+−'))
+        lamp(g, 104, 244, r.ignition && !!r.tractionOff, DASHBOARD_LOOK.amber, letter('TC'))
+        lamp(g, 152, 244, r.ignition && !!r.absOff, DASHBOARD_LOOK.amber, letter('ABS'))
         lamp(g, 86, 214, warn, DASHBOARD_LOOK.red, letter('OIL'))
         lamp(g, 170, 214, r.fourWheel, DASHBOARD_LOOK.green, letter('4x4'))
         bar(g, SIZE - 40, r.temperature, true, 'T')

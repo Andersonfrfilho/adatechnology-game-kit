@@ -21,7 +21,8 @@ export function createModule(options = {}) {
     nameOf: (id) => (locale.startsWith('pt') ? fleetCard(id)?.name : undefined),
     createKit: (THREE) => {
       const kit = createVehicleKit({ THREE, locale })
-      installFleet(kit)
+      // the proving ground shows the sunroof the fleet can draw on two of its cars
+      installFleet(kit, { sunroofs: ['fastback_sedan', 'turbo_hatch'] })
       return kit
     },
     ...options,

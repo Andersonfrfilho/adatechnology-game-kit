@@ -157,7 +157,7 @@ function loadSteps(room, options, lang) {
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
   custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
   // the proving ground: a fleet vehicle runs the measured tests on a track, with the vehicle cameras, the mirrors and the certificate board (its own area is `?area=vehicles_proving`; it builds nothing until opened)
-  custom('vehicles_proving', () => loadProvingModule(room, { locale: lang }))
+  custom('vehicles_proving', () => loadProvingModule(room, { locale: lang, occupant: 'person_nurse' }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)

@@ -1,4 +1,5 @@
 import type { FleetContext } from '../context'
+import { markSunroof, tagWiper } from './moving-parts'
 
 /* Cars added after the first batch (cars group). Uses only the kit API.
    Small hatch, compact hatches, sedan and muscle coupe (parody names).
@@ -1126,13 +1127,24 @@ export function installCarsExtra(fx: FleetContext): void {
           [-0.3, 0.42, -0.36],
           [0.2, 0.42, -0.36],
         ]
-    ).forEach(function (q) {
+    ).forEach(function (q, index) {
       const p0 = new V3(gh.fb, gh.belt, q[0]).addScaledVector(wd, 0.07).addScaledVector(wn, 0.035),
         p1 = p0.clone().addScaledVector(wd, q[1] * 0.42)
       p1.z += q[2]
-      c.rod(p0, p1, 0.009, MT.trim)
-      c.cylinder(0.018, 0.018, 0.03, MT.trim, p0.x, p0.y, p0.z)
+      const blade = c.rod(p0, p1, 0.009, MT.trim)
+      const cap = c.cylinder(0.018, 0.018, 0.03, MT.trim, p0.x, p0.y, p0.z)
+      tagWiper({ context: c, parts: [blade, cap], spindle: p0, normal: wn, index })
     })
+    /* sliding sunroof: a tinted pane over the dark opening, in the front half of the roof */
+    if (s.sunroof) {
+      const sx = gh.rt + (gh.ft - gh.rt) * 0.62,
+        sl = 0.62,
+        sw = 2 * (halfAt(gh.Wg, T, gh.roof) - 0.24),
+        sy = roofAt(gh, sx),
+        tilt = Math.atan2(roofAt(gh, sx + 0.3) - roofAt(gh, sx - 0.3), 0.6)
+      c.roundBox(sl, 0.008, sw, 0.01, PLASTIC, sx, sy + 0.004, 0, { rot: [0, 0, tilt] }).castShadow = false
+      markSunroof(c.roundBox(sl + 0.03, 0.012, sw + 0.03, 0.01, MT.tint, sx, sy + 0.013, 0, { rot: [0, 0, tilt] }), sl * 0.85)
+    }
     if (s.fin !== false)
       c.sphere(0.1, s.roofCol ? c.paint(s.roofCol) : GLOSS, gh.rt + 0.2, roofAt(gh, gh.rt + 0.2) + 0.045, 0, 1.0, 0.45, 0.28, {
         tl: PI / 2,
@@ -2226,6 +2238,7 @@ export function installCarsExtra(fx: FleetContext): void {
     function (c) {
       const hex = '#8c2b2b'
       car(c, {
+        sunroof: fx.hasSunroof('turbo_hatch'),
         W: 1.751,
         col: hex,
         shelf: 0.42,
@@ -2521,6 +2534,7 @@ export function installCarsExtra(fx: FleetContext): void {
     function (c) {
       const hex = '#5a5f66'
       car(c, {
+        sunroof: fx.hasSunroof('fastback_sedan'),
         W: 1.799,
         col: hex,
         bottomY: 0.2,
