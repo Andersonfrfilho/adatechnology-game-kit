@@ -1187,6 +1187,352 @@
     "zombie/zo_idle4.wav"
    ],
    "score": 6.9
+  },
+  {
+   "id": "ricochet_stone",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Ricochete em pedra/concreto",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/ricochetes/ricochete_bala_concreto_1.wav",
+    "src/efeitos/audio/ricochetes/ricochete_bala_concreto_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "ricochet_metal",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Ricochete em metal",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/ricochetes/ricochete_bala_metal_1.wav",
+    "src/efeitos/audio/ricochetes/ricochete_bala_metal_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "glass_shatter",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Vidro quebrando",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/destruicao/quebra_vidro_estilhaco_1.wav",
+    "src/efeitos/audio/destruicao/quebra_vidro_estilhaco_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "crumble",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Concreto/alvenaria esfarelando",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/destruicao/quebra_concreto_alvenaria_1.wav",
+    "src/efeitos/audio/destruicao/quebra_concreto_alvenaria_2.wav"
+   ],
+   "score": 5.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "crack",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Madeira rachando",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/destruicao/quebra_madeira_caixote_1.wav",
+    "src/efeitos/audio/destruicao/quebra_madeira_caixote_2.wav",
+    "src/mapa/audio/portas/porta_madeira_quebrar.wav"
+   ],
+   "score": 6.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "masonry_blade",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Faca na parede",
+   "pack": "zombiada",
+   "files": [
+    "src/armas-itens/audio/melee/faca_impacto_parede.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "metal_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala no capacete/metal",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/impactos/impacto_bala_capacete.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "soft_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala em carne/colete",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/impactos/impacto_bala_carne_1.wav",
+    "src/sobreviventes/audio/impactos/impacto_bala_carne_2.wav",
+    "src/sobreviventes/audio/impactos/impacto_bala_carne_3.wav",
+    "src/sobreviventes/audio/impactos/impacto_bala_colete_kevlar.wav",
+    "src/sobreviventes/audio/impactos/impacto_headshot_critico_1.wav",
+    "src/sobreviventes/audio/impactos/impacto_headshot_critico_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "wood_blunt",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Chute em porta de madeira",
+   "pack": "zombiada",
+   "files": [
+    "src/mapa/audio/portas/porta_arrombar_chute.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "drag_masonry",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Arrastar objeto pesado",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/destruicao/arraste_objeto_pesado_1.wav",
+    "src/efeitos/audio/destruicao/arraste_objeto_pesado_2.wav"
+   ],
+   "score": 5.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_dirt_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em terra",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_terra_1.wav",
+    "src/sobreviventes/audio/passos/passo_terra_2.wav",
+    "src/sobreviventes/audio/passos/passo_terra_3.wav",
+    "src/sobreviventes/audio/passos/passo_terra_4.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_metal_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em metal",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_metal_1.wav",
+    "src/sobreviventes/audio/passos/passo_metal_2.wav",
+    "src/sobreviventes/audio/passos/passo_metal_3.wav",
+    "src/sobreviventes/audio/passos/passo_metal_4.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_wood_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em madeira",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_madeira_tabua_1.wav",
+    "src/sobreviventes/audio/passos/passo_madeira_tabua_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_carpet_alt",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em carpete",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_carpete_tecido_1.wav",
+    "src/sobreviventes/audio/passos/passo_carpete_tecido_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_duct_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em duto de metal",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_duto_metal_1.wav",
+    "src/sobreviventes/audio/passos/passo_duto_metal_2.wav"
+   ],
+   "score": 5.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_water_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo na água rasa",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_agua_rasa_1.wav",
+    "src/sobreviventes/audio/passos/passo_agua_rasa_2.wav",
+    "src/sobreviventes/audio/passos/passo_agua_rasa_3.wav",
+    "src/sobreviventes/audio/passos/passo_agua_rasa_4.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_grate_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em grade metálica",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_grade_1.wav",
+    "src/sobreviventes/audio/passos/passo_grade_2.wav",
+    "src/sobreviventes/audio/passos/passo_grade_3.wav",
+    "src/sobreviventes/audio/passos/passo_grade_4.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_tile_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em azulejo",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/passos/passo_piso_azulejo_1.wav",
+    "src/sobreviventes/audio/passos/passo_piso_azulejo_2.wav",
+    "src/sobreviventes/audio/passos/passo_piso_azulejo_3.wav",
+    "src/sobreviventes/audio/passos/passo_piso_azulejo_4.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "knife_slash",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Faca cortando corpo",
+   "pack": "zombiada",
+   "files": [
+    "src/armas-itens/audio/melee/faca_corte_corpo_1.wav",
+    "src/armas-itens/audio/melee/faca_corte_corpo_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "knife_stab",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Facada perfurante",
+   "pack": "zombiada",
+   "files": [
+    "src/armas-itens/audio/melee/faca_facada_perfurante.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "blunt_hit_metal",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Pé de cabra em superfície sólida",
+   "pack": "zombiada",
+   "files": [
+    "src/armas-itens/audio/melee/pe_de_cabra_impacto_solido.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "metal_blunt_medium",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Metal amassando",
+   "pack": "zombiada",
+   "files": [
+    "src/efeitos/audio/destruicao/quebra_metal_amassamento_1.wav",
+    "src/efeitos/audio/destruicao/quebra_metal_amassamento_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "body_fall",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Corpo caindo no chão",
+   "pack": "zombiada",
+   "files": [
+    "src/sobreviventes/audio/impactos/sobrevivente_queda_chao_pesado.wav",
+    "src/sobreviventes/audio/impactos/sobrevivente_queda_dano_1.wav",
+    "src/sobreviventes/audio/impactos/sobrevivente_queda_dano_2.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
+  },
+  {
+   "id": "footstep_glass_walk",
+   "role": "fallback",
+   "category": "personagem",
+   "label": "Passo em vidro quebrado",
+   "pack": "zombiada",
+   "files": [
+    "src/zumbis-personagens/audio/reacoes/zumbi_passo_vidro_estilhaco.wav"
+   ],
+   "score": 7.0,
+   "author": "zombiada",
+   "license": "uso local"
   }
  ]
 }
