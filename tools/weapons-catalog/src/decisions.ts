@@ -233,6 +233,10 @@ export type Decisions = {
   readonly conditions: Decision<Readonly<Record<string, string>>>
   readonly modelChambers: Decision<{ readonly default: number }>
   readonly reliability: Readonly<Record<string, Decision<number>>>
+  /** Models of weapons the Gallery draws outside its weapon table (its explosives, `buildExp`), by weapon id: the builder and its options as the model data keeps them. */
+  readonly weaponModels: Readonly<Record<string, Decision<{ readonly builder: string; readonly caliber: string; readonly length: number; readonly barrel: number; readonly options: Readonly<Record<string, unknown>> }>>>
+  /** Tags a weapon carries beyond its category (`pdw`: a personal defence weapon), by weapon id. */
+  readonly weaponTags: Readonly<Record<string, Decision<readonly string[]>>>
 }
 
 export const loadDecisions = (): Decisions => JSON.parse(readFileSync(DECISIONS_PATH, 'utf8')) as Decisions
