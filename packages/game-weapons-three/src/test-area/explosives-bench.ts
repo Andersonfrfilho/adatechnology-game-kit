@@ -35,7 +35,11 @@ export interface ExplosivesRoom {
     /** The share of a blast at `point` that reaches `target` through the cover between them (game-destruction `blastReach`). */
     blastReach?(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[] }): number
   }
-  readonly renderer: { impulse(objectId: string, impulse: Vec3, point?: Vec3): void }
+  readonly renderer: {
+    impulse(objectId: string, impulse: Vec3, point?: Vec3): void
+    /** World boxes of what is drawn around (x, z) (game-destruction-three `solidsNear`). */
+    solidsNear?(x: number, z: number, radius: number): ReadonlyArray<{ readonly objectId: string; readonly min: Vec3; readonly max: Vec3 }>
+  }
   readonly vfx: {
     spawn(kind: string, point: Vec3, velocity: Vec3, options?: { color?: number; size?: number; life?: number; alpha?: number }): void
     burst(kind: string, point: Vec3, normal: Vec3, count: number, speed?: number): void
