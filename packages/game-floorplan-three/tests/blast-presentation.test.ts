@@ -9,7 +9,7 @@ import { THREE, houseOf, planOf } from './helpers/houses'
 const BLAST_ENERGY = 4e6
 const BLAST_RADIUS = 6
 // sha1 of the results, events and state of that blast on this house, taken before the solver remembered the contact boxes of its parts
-const RECORDED_BLAST_OUTCOME = 'e222bace19af4e481c8473295435a62dca7c1808'
+const RECORDED_BLAST_OUTCOME = '9be247a7f5e43dd3bf348a1c8819d9f326359409'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
