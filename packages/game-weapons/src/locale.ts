@@ -23,7 +23,7 @@ const modesEn = { single: 'single action', semi: 'semi-automatic', burst: 'burst
 const categoriesEn = {
   pistol: 'pistol', revolver: 'revolver', smg: 'submachine gun', rifle: 'rifle', carbine: 'carbine', sniper: 'sniper rifle', shotgun: 'shotgun',
   bow: 'bow', crossbow: 'crossbow', melee_blunt: 'blunt melee', melee_blade: 'bladed melee', flame: 'flame', heat: 'heat', throwable: 'throwable',
-  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand', dmr: 'marksman rifle', hunting: 'hunting rifle', machine_gun: 'machine gun', launcher: 'launcher',
+  tool: 'tool', extinguisher: 'extinguisher', hand: 'hand', dmr: 'marksman rifle', hunting: 'hunting rifle', machine_gun: 'machine gun', launcher: 'launcher', pdw: 'PDW (personal defence weapon)',
 }
 const faultsEn = { misfire: 'misfire', stovepipe: 'stovepipe', double_feed: 'double feed', failure_to_extract: 'failure to extract' }
 const conditionsEn = { new: 'new', used: 'used', worn: 'worn', rusty: 'rusty' }
@@ -42,6 +42,10 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       utility_knife: 'Utility knife', claw_hammer: 'Claw hammer', extinguisher: 'Fire extinguisher',
       boito_double_barrel: 'Boito double-barrel', hunting_rifle_30_06: '.30-06 hunting rifle', m2_flamethrower: 'M2 flamethrower', improvised_flamethrower: 'Improvised flamethrower',
       m79: 'M79 grenade launcher',
+      m203: 'M203 grenade launcher', gp_25: 'GP-25 grenade launcher', ag36: 'AG36 grenade launcher', flashbang: 'Flashbang', dynamite: 'Dynamite',
+      c4: 'C4 charge', claymore: 'Claymore mine', tactical_knife: 'Tactical knife', meat_cleaver: 'Meat cleaver', hatchet: 'Hatchet', nail_bat: 'Nail bat',
+      iron_pipe: 'Iron pipe', pickaxe: 'Pickaxe', sickle: 'Sickle', police_baton: 'Police baton', cast_iron_skillet: 'Cast iron skillet',
+      improvised_spear: 'Improvised spear', chainsaw: 'Chainsaw', recurve_bow: 'Recurve bow', m134: 'M134 Minigun',
     },
     modes: modesEn,
     categories: categoriesEn,
@@ -66,13 +70,17 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       pry_bar: 'alavanca', hacksaw: 'serra de arco', utility_knife: 'estilete', claw_hammer: 'martelo de unha', extinguisher: 'extintor',
       boito_double_barrel: 'Boito (2 canos)', hunting_rifle_30_06: 'Rifle de caça .30-06', m2_flamethrower: 'Lança-chamas M2', improvised_flamethrower: 'Lança-chamas caseiro',
       m79: 'Lança-granadas M79',
+      m203: 'Lança-granadas M203', gp_25: 'Lança-granadas GP-25', ag36: 'Lança-granadas AG36', flashbang: 'granada de luz', dynamite: 'dinamite',
+      c4: 'C4 com detonador', claymore: 'mina Claymore', tactical_knife: 'faca tática', meat_cleaver: 'cutelo', hatchet: 'machadinha', nail_bat: 'taco com pregos',
+      iron_pipe: 'cano de ferro', pickaxe: 'picareta', sickle: 'foice', police_baton: 'cassetete', cast_iron_skillet: 'frigideira de ferro',
+      improvised_spear: 'lança improvisada', chainsaw: 'motosserra', recurve_bow: 'arco recurvo', m134: 'Minigun M134',
     },
     modes: { single: 'tiro único', semi: 'semiautomático', burst: 'rajada', auto: 'automático', pump: 'repetição', bolt: 'ferrolho', lever: 'alavanca', break: 'basculante', volley: 'salva' },
     categories: {
       pistol: 'pistola', revolver: 'revólver', smg: 'submetralhadora', rifle: 'fuzil', carbine: 'carabina', sniper: 'fuzil de precisão', shotgun: 'espingarda',
       bow: 'arco', crossbow: 'besta', melee_blunt: 'corpo a corpo contundente', melee_blade: 'corpo a corpo cortante', flame: 'chama', heat: 'calor',
       throwable: 'arremessável', tool: 'ferramenta', extinguisher: 'extintor', hand: 'mão', dmr: 'fuzil de precisão semiautomático', hunting: 'arma de caça',
-      machine_gun: 'metralhadora', launcher: 'lançador',
+      machine_gun: 'metralhadora', launcher: 'lançador', pdw: 'PDW (arma de defesa pessoal)',
     },
     explosives: {
       m67: 'Granada M67', molotov: 'Coquetel molotov', pipe_bomb: 'Bomba caseira', propane_p13: 'Botijão de gás P13', dynamite: 'Dinamite', c4: 'C4 com detonador',

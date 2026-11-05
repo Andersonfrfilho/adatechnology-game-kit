@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import type { EngineSink } from '@adatechnology/game-audio'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { createArsenal } from '@adatechnology/game-weapons'
+import { createArsenal, genericWeapons } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
@@ -17,7 +17,7 @@ import { ARCHETYPE_MODELS, hasWeaponModel } from '../models'
 import type { AttachmentModelRegistry } from '../models/attachments/types'
 import { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from '../modeled-prop'
 import { BODY_ACTIONS, buildProp, weaponProp } from '../props'
-import { defaultWeaponProps } from '../weapon-item-model'
+import { defaultWeaponProps, hasThrowableModel } from '../weapon-item-model'
 import type { WeaponProps } from '../weapon-item-model'
 import type { ItemModels } from '../item-models'
 import type { WeaponProp } from '../props'
@@ -51,7 +51,7 @@ export interface WeaponsTestModuleOptions {
   props?: WeaponProps
 }
 
-/** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
+/** Prefix of the item ids of the weapon props (`weapon_beretta_92fs`). */
 export const WEAPON_ITEM_PREFIX = 'weapon_'
 // must not start with WEAPON_ITEM_PREFIX: hosts and tests tell the props apart by it
 export const COUNTER_ITEM_ID = 'counter_weapons'
@@ -248,7 +248,7 @@ const targetProp = (id: string, name: string): WeaponProp => {
 /** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
 const weaponItem = (def: WeaponDef, name: string, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items) && !hasThrowableModel(def)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
@@ -322,7 +322,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   // the module's own audio, made when first needed (it makes no context until the first sound); when the host lends a sound engine, `attach` makes one on that engine instead
   let audio: WeaponAudio | null | undefined
   const ownAudio = (): WeaponAudio | null => (audio === undefined ? (audio = options.sound === false ? null : createWeaponAudio(undefined, { ...seedOption, ...(options.samples ? { samples: options.samples } : {}) })) : audio)
-  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
+  // the generic guns (the `9 mm service pistol`) are not laid out nor listed: the real weapon that stands for each is (the hands still take them by id)
+  const generics = genericWeapons(arsenal)
+  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id) && !generics.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
     const thumbnail = thumbnailBase === false ? undefined : weaponThumbnailUrl(key, thumbnailBase)

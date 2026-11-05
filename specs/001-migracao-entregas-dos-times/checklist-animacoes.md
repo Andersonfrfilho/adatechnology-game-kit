@@ -1,6 +1,6 @@
 # Checklist das animações por arma
 
-Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (114):
+Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (115):
 
 - **mão de apoio**: as duas mãos existem, ficam na frente do olho, dentro da vista e a até 12 cm do modelo na mão.
 - **dedo no gatilho**: com peça de gatilho no modelo, o indicador direito repousa estendido, vai ao gatilho e puxa a cada tiro (metralhadora e lança-chamas seguram o gatilho), e volta; sem peça de gatilho a empunhadura é a normal (—).
@@ -99,6 +99,7 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | M60 (`m60`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
 | Browning M2 .50 (`browning_m2`) | ✓ | — | ✓ | ✓ | ✓ 10,00 s / 10,00 s | ✓ | n/a | ✓ |
 | Remington 700 (.300 WM) (`remington_700_300wm`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 2,10 s | ✓ | n/a | ✓ |
+| M79 grenade launcher (`m79`) | ✓ | ✓ | ✓ | — | ✓ 2,00 s / — | ✓ | n/a | ✓ |
 | HK MP5SD3 (`hk_mp5sd3`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 2,60 s | ✓ | n/a | ✓ |
 | FN ParaFAL (`fn_parafal`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,70 s / 3,50 s | ✓ | n/a | ✓ |
 | Taurus T4 (civil) (`taurus_t4_civil`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 3,10 s | ✓ | n/a | ✓ |
@@ -166,7 +167,6 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Utility knife (`utility_knife`): tool, tool
 - Claw hammer (`claw_hammer`): tool, tool
 - Fire extinguisher (`extinguisher`): extinguisher, extinguisher
-- M79 grenade launcher (`m79`): launcher, launcher
 - M203 grenade launcher (`m203`): launcher, launcher
 - GP-25 grenade launcher (`gp_25`): launcher, launcher
 - AG36 grenade launcher (`ag36`): launcher, launcher

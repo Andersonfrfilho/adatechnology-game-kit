@@ -1,5 +1,6 @@
 import { itemModels } from '@adatechnology/game-items-three'
 import { describe, expect, it, vi } from 'vitest'
+import { genericWeapons } from '@adatechnology/game-weapons'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
@@ -36,7 +37,9 @@ describe('weapons test area', () => {
     const { room } = roomWithWeapons()
     const placed = room.openArea('weapons_area')
     const weapons = placed.filter((o) => o.itemId.startsWith(WEAPON_ITEM_PREFIX))
-    const laid = [...room.arsenal.weapons.values()].filter((def) => !['hand', 'kick', 'shove', 'fists'].includes(def.id) && !(def.id in ARCHETYPE_MODELS))
+    const generics = genericWeapons(room.arsenal)
+    const laid = [...room.arsenal.weapons.values()].filter((def) => !['hand', 'kick', 'shove', 'fists'].includes(def.id) && !(def.id in ARCHETYPE_MODELS) && !generics.has(def.id))
+    expect(weapons.some((o) => o.itemId === `${WEAPON_ITEM_PREFIX}pistol_22`)).toBe(false)
     expect(weapons.map((o) => o.itemId).sort()).toEqual(laid.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`).sort())
     expect(weapons.length).toBeGreaterThan(100)
     expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBeLessThanOrEqual(8)

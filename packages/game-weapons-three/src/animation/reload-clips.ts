@@ -66,10 +66,18 @@ function revolverReload(kind: ReloadKind): Draft {
   return { tweens: [turn('crane', 'x', 0, 0.22, 0, -1.25), turn('crane', 'x', 1.05, 0.2, -1.25, 0)], events, end: 1.3 }
 }
 
-/** Break action: the barrels fold down, both cases drop, two shells go in and the barrels close: 1.2 s. */
-const breakReload = (): Draft => ({
+/** Break action: the barrels fold down, the cases drop, a shell goes in each chamber (two on a double barrel, one on a single tube) and the barrels close: 1.2 s. */
+const breakReload = (chambers: number): Draft => ({
   tweens: [turn('barrels', 'z', 0, 0.2, 0, -0.5), turn('barrels', 'z', 1.0, 0.15, -0.5, 0)],
-  events: [sound(0, 'barrels_open'), cue(0.25, 'eject_casing', { from: 'breech', down: false }), sound(0.25, 'casings_eject'), cue(0.65, 'move_in', { from: 'breech' }), sound(0.65, 'shell_insert'), sound(0.8, 'shell_insert'), sound(1.13, 'barrels_close')],
+  events: [
+    sound(0, 'barrels_open'),
+    cue(0.25, 'eject_casing', { from: 'breech', down: false }),
+    sound(0.25, 'casings_eject'),
+    cue(0.65, 'move_in', { from: 'breech' }),
+    sound(0.65, 'shell_insert'),
+    ...(chambers > 1 ? [sound(0.8, 'shell_insert')] : []),
+    sound(1.13, 'barrels_close'),
+  ],
   end: 1.2,
 })
 
@@ -157,7 +165,7 @@ function draftFor(context: ClipContext, kind: ReloadKind): Draft | undefined {
   if (family === 'rocket' || family === 'flame') return heavyReload(context)
   if (parts.mag) return magazineReload(context, kind)
   if (family === 'revolver' && parts.crane) return revolverReload(kind)
-  if (family === 'break' && parts.barrels) return breakReload()
+  if (family === 'break' && parts.barrels) return breakReload(parts.breech?.length ?? 2)
   if (family === 'belt' && parts.cover && parts.belt) return beltReload(context)
   if (isTube(context)) return tubeReload(context, kind)
   if (family === 'bolt') return boltReload(context)

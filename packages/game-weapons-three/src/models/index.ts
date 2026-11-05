@@ -3,6 +3,7 @@ import type * as THREE_NS from 'three'
 import { WEAPONS } from '@adatechnology/game-weapons'
 import data from '../data/models.json'
 import { buildBreakAction } from './break-action'
+import { buildBreakLauncher } from './break-launcher'
 import { deriveFrames } from './attachments/mount-frames'
 import { buildBullpup } from './bullpup'
 import { modelKit } from './kit'
@@ -21,7 +22,7 @@ export type { ModelFamily, ModelOptions, ModelParts } from './types'
 
 /** One weapon of the gallery as `data/models.json` keeps it: the builder, the measures in mm and the builder's options. */
 export interface ModelEntry {
-  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'm2' | 'm134' | 'launcher'
+  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'breakLauncher' | 'm2' | 'm134' | 'launcher'
   readonly caliber: string
   readonly length: number
   readonly barrel: number
@@ -61,6 +62,7 @@ const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOpti
   bullpup: buildBullpup,
   p90: (kit) => buildP90(kit),
   break: buildBreakAction,
+  breakLauncher: buildBreakLauncher,
   m2: (kit) => buildM2(kit),
   m134: (kit) => buildM134(kit),
   launcher: buildLauncher,

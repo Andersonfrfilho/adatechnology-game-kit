@@ -1285,7 +1285,10 @@
         ]
       }
     ],
-    "fitted": []
+    "fitted": [],
+    "tags": [
+      "pdw"
+    ]
   },
   {
     "id": "kriss_vector",
@@ -6503,7 +6506,10 @@
     "fitted": [],
     "stock": {
       "kind": "retract"
-    }
+    },
+    "tags": [
+      "pdw"
+    ]
   },
   {
     "id": "hk_g36",

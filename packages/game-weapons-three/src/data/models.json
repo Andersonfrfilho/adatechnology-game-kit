@@ -1547,5 +1547,20 @@
     "options": {
       "rpm": 3000
     }
+  },
+  "m79": {
+    "builder": "breakLauncher",
+    "caliber": "40×46",
+    "length": 730,
+    "barrel": 356,
+    "options": {
+      "stock": "fixed",
+      "wood": 1,
+      "mag": "none",
+      "hg": "wood",
+      "hgFrac": 0.4,
+      "br": 0.022,
+      "hR": 0.05
+    }
   }
 }
