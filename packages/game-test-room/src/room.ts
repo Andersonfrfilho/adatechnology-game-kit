@@ -363,6 +363,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
       groundAt,
       marklessAt: (x, z) => terrain.waterAt(x, z) !== null,
+      // the dirt crater of the effects only where the ground is loose; rock, asphalt and a slab keep the soot and the bowl the terrain itself dug
+      cratersAt: (x, z) => terrain.material(terrain.columnAt(x, z).material).reposeDegrees !== undefined,
     }),
   })
   const renderer = createDestructionRenderer(THREE, {

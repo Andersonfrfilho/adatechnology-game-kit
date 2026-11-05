@@ -283,7 +283,7 @@ function composeAfterEffects(context: Context): void {
   const { core, def, random, x, y, z } = context
   const mark = def.mark
   const keepsMarks = !core.marklessAt?.(x, z)
-  if (keepsMarks && mark.crater && mark.dent && y < 1.2) {
+  if (keepsMarks && mark.crater && mark.dent && y < 1.2 && (core.cratersAt?.(x, z) ?? true)) {
     core.emit({ type: 'crater', x, z, radius: mark.crater, depth: mark.dent })
     core.trace?.crater?.(x, z, mark.crater, mark.dent)
     addCrater(core.marks, core.ground, random, { x, z, radius: mark.crater, depth: mark.dent, marks: core.layers.mark })

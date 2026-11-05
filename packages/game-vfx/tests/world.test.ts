@@ -106,6 +106,16 @@ describe('createVfx', () => {
     expect(requests).toContainEqual({ type: 'ignite', point: [3, 0.1, 4], radius: 4 })
   })
 
+  it('on hard ground a blast leaves only soot: no dirt crater, no request to dig', () => {
+    const { world, requests } = makeWorld({ cratersAt: (x) => x < 0 })
+    world.explosion('test_blast', [3, 0.1, 4])
+    expect(requests.some((request) => request.type === 'crater')).toBe(false)
+    expect(world.pools().marks.entries.some((mark) => mark.kind === 'dirt')).toBe(false)
+    expect(world.pools().marks.entries.some((mark) => mark.kind === 'scorch')).toBe(true)
+    world.explosion('test_blast', [-3, 0.1, 4])
+    expect(requests.some((request) => request.type === 'crater')).toBe(true)
+  })
+
   it('a blast above the ground leaves no marks and digs nothing', () => {
     const { world, requests } = makeWorld()
     world.explosion('test_blast', [0, 5, 0])

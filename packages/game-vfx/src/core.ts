@@ -48,5 +48,7 @@ export interface VfxCore {
   groundAt(x: number, z: number): number
   /** A surface that keeps no mark here (`VfxOptions.marklessAt`). */
   marklessAt?: (x: number, z: number) => boolean
+  /** Ground a blast opens a dirt crater in (`VfxOptions.cratersAt`). */
+  cratersAt?: (x: number, z: number) => boolean
   emit(request: VfxSideRequest): void
 }
