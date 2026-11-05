@@ -270,6 +270,8 @@ if (runs('hands')) {
     await page.evaluate(() => {
       const r = window.__testRoom
       r.setDebugCamera(null)
+      // what the first-person steps put in the room goes: the wardrobe of shove-wall stands 0.7 m ahead of the close-ups and pushes the weapon back off the wall
+      r.clear()
       r.resume()
       r.setCameraMode('first')
       window.C = {
