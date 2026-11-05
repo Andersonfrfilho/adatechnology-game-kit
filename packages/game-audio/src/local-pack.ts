@@ -85,7 +85,7 @@ const CATALOG = new Map([...SFX_CATALOG, ...SFX_IMPACTS].map((entry) => [entry.i
 const busOf = (id: string, entry: LocalSoundEntry): BusId => {
   if (entry.bus) return entry.bus
   const category = CATALOG.get(id)?.category ?? ''
-  return kitSampleDefaults({ id, category, layers: {} })?.bus ?? 'world'
+  return kitSampleDefaults({ id, category })?.bus ?? 'world'
 }
 
 export type LocalPackSampleOptions = {
