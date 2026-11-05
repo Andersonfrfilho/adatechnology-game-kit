@@ -39,6 +39,10 @@ export type PlannedSampleLayer = {
   readonly gain: number
   readonly rate: number
   readonly at: number
+  /** Seconds into the file (the take's trim). */
+  readonly offset?: number
+  /** Seconds of the file played (the take's trim). */
+  readonly duration?: number
 }
 
 export type SamplePlan = {
@@ -158,7 +162,16 @@ export function planSample(sound: SampleSound, input: SamplePlanInput): SamplePl
     const index = pickTake(refs.length, input.memory?.get(key), input.random)
     input.memory?.set(key, index)
     const ref = refs[index] as SampleRef
-    layers.push({ role, url: ref.url, take: index, gain: gain * (ref.gain ?? 1) * level, rate, at })
+    layers.push({
+      role,
+      url: ref.url,
+      take: index,
+      gain: gain * (ref.gain ?? 1) * level,
+      rate,
+      at,
+      ...(ref.offset === undefined ? {} : { offset: ref.offset }),
+      ...(ref.duration === undefined ? {} : { duration: ref.duration }),
+    })
   }
   take('close', close, gains.close, 0)
   take('far', far, gains.far, 0)

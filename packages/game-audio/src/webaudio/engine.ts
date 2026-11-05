@@ -608,6 +608,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
           register: loopHost.register,
           unregister: loopHost.unregister,
           muted: (bus) => busSettings.get(bus)?.muted === true,
+          listener: () => listener,
+          ...(options.distance ? { distance: options.distance } : {}),
         },
         loopOptions.volume,
       )

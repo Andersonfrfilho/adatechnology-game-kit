@@ -3,6 +3,9 @@ import type { SamplePlan } from '../sample'
 import { gainNode, voiceOf } from './nodes'
 import type { RealizedVoice } from './nodes'
 
+/** Seconds a trimmed take fades out over at its cut. */
+export const TRIM_FADE = 0.04
+
 export type SampleTarget = {
   readonly context: BaseAudioContext
   readonly output: AudioNode
@@ -47,7 +50,18 @@ export function realizeSample(plan: SamplePlan, target: SampleTarget): RealizedS
     const gain = gainNode(context as AudioContext, layer.gain)
     source.connect(gain)
     gain.connect(head)
-    source.start(target.time + layer.at)
+    const at = target.time + layer.at
+    const offset = Math.max(0, Math.min(layer.offset ?? 0, buffer.duration))
+    if (layer.duration === undefined) source.start(at, offset)
+    else {
+      // a take cut out of a longer file fades over its last 40 ms (of the clock: the rate shortens it)
+      const duration = Math.max(0, Math.min(layer.duration, buffer.duration - offset))
+      const end = at + duration / layer.rate
+      const fade = Math.min(TRIM_FADE, (end - at) / 4)
+      gain.gain.setValueAtTime(layer.gain, end - fade)
+      gain.gain.linearRampToValueAtTime(0, end)
+      source.start(at, offset, duration)
+    }
     sources.push(source)
   }
   const realized = voiceOf(sources)
@@ -70,6 +84,10 @@ export function realizeSample(plan: SamplePlan, target: SampleTarget): RealizedS
 /** Seconds a sample plan lasts with its buffers (the longest layer, at its rate). */
 export function sampleLength(plan: SamplePlan, seconds: (url: string) => number | undefined): number {
   let length = 0
-  for (const layer of plan.layers) length = Math.max(length, layer.at + (seconds(layer.url) ?? 0) / layer.rate)
+  for (const layer of plan.layers) {
+    const file = seconds(layer.url) ?? 0
+    const played = layer.duration === undefined ? file - (layer.offset ?? 0) : Math.min(layer.duration, file - (layer.offset ?? 0))
+    length = Math.max(length, layer.at + Math.max(0, played) / layer.rate)
+  }
   return length
 }

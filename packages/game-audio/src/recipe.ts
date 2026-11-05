@@ -211,12 +211,41 @@ export type SoundBank = {
   readonly sets?: readonly SoundSet[]
   /** Sounds played from recorded files (see `sample.ts`). A sample and a recipe may share an id: the sample plays once its files are loaded. */
   readonly samples?: readonly SampleSound[]
+  /**
+   * Ids of this bank that play the takes of a sample sound registered by another bank (a manifest's file id), resolved when the id is looked up, so
+   * the order the banks register in does not matter. A sample of the alias's own id, when one is registered, wins.
+   */
+  readonly sampleAliases?: readonly SampleAlias[]
+}
+
+/**
+ * One id answered by the takes of another sample sound (`file`): `engine_car_low` by `engine_loop_car_idle`. The other numbers replace the file's;
+ * `offset` and `duration` trim every take (one recording holding the start, the run and the stop gives each its own id). The recipe or loop of `id`
+ * stays as the fallback while the files load or where they are missing.
+ */
+export type SampleAlias = {
+  readonly id: string
+  readonly file: string
+  readonly offset?: number
+  readonly duration?: number
+  readonly loop?: SampleSound['loop']
+  readonly baseFrequency?: number
+  readonly gain?: number
+  readonly pitch?: number
+  readonly falloff?: Falloff
 }
 
 // ----- sounds from recorded files (planned by `planSample` in sample.ts; the types live here so the bank has them without an import cycle)
 
 /** One take: a file and its own trim (linear gain, default 1). */
-export type SampleRef = { readonly url: string; readonly gain?: number }
+export type SampleRef = {
+  readonly url: string
+  readonly gain?: number
+  /** Seconds into the file the take starts at (default 0). A looping take starts there the first time round. */
+  readonly offset?: number
+  /** Seconds of the file the take plays (default to its end); a trimmed one-shot fades out over its last 40 ms, so the cut does not click. */
+  readonly duration?: number
+}
 
 /** Where a sound happens: a closed room rings short and dense, the open field long and thin. */
 export type SampleEnvironment = 'indoor' | 'outdoor'
@@ -279,6 +308,11 @@ export type SampleSound = {
    * (or of the same id) plays. `play(id)` still plays one take as a one-shot.
    */
   readonly loop?: boolean | { readonly crossfade?: number }
+  /**
+   * The frequency the recording of a loop sounds at (an engine's firing frequency at the RPM it was recorded at): `set({ frequency })` then plays
+   * the takes at `frequency / baseFrequency`, gliding, as an oscillator loop follows it. Without it the loop keeps the pitch of its files.
+   */
+  readonly baseFrequency?: number
   /** A recipe id the engine plays while the files are not loaded yet (or failed): the synthesized sound stays as the fallback. */
   readonly fallback?: string
   /** Where each file came from: `"freesound:123456 autor CC0"`, or `"sdk"` for files the kit made. */

@@ -25,6 +25,7 @@ export type {
   OscSource,
   ParamRef,
   Range,
+  SampleAlias,
   SoundBank,
   SoundRecipe,
   SoundSet,
@@ -87,7 +88,7 @@ export { LOOP_SMOOTHING, LOOP_START_ABOVE, createLoopState } from './loops'
 export type { LoopAction, LoopState } from './loops'
 export { DEFAULT_MIX, MIX_PROFILES, busGain, resolveMix } from './mix'
 export type { BusSetting, MixProfile } from './mix'
-export { createSoundRegistry } from './bank'
+export { aliasSample, createSoundRegistry } from './bank'
 export type { DeepPartial, SoundRegistry } from './bank'
 export { GAME_SFX_BANK, GAME_SFX_CLASSES, GAME_SFX_FALLBACK, noiseClassRecipe } from './recipes/noise-class'
 export type { NoiseClass } from './recipes/noise-class'
@@ -106,10 +107,10 @@ export { createAudioEngine, limiterCurve } from './webaudio/engine'
 export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, SampleOptions, VoiceHandle, VoiceStartEvent } from './webaudio/engine'
 export { createSampleStore, fetchLoader, inlineLoader } from './webaudio/sample-store'
 export type { SampleLoadReport, SampleLoader, SampleStatus, SampleStore } from './webaudio/sample-store'
-export { realizeSample, sampleLength } from './webaudio/realize-sample'
+export { realizeSample, sampleLength, TRIM_FADE } from './webaudio/realize-sample'
 export type { RealizedSampleVoice, SampleTarget } from './webaudio/realize-sample'
 export type { AudioLoopHandle, LoopSet } from './webaudio/engine-loop'
-export { CROSSFADE_STEPS, DEFAULT_LOOP_CROSSFADE, equalPowerIn, loopCrossfade } from './webaudio/sample-loop'
+export { CROSSFADE_STEPS, DEFAULT_LOOP_CROSSFADE, equalPowerIn, loopCrossfade, loopRate } from './webaudio/sample-loop'
 export type { SampleLoopHost } from './webaudio/sample-loop'
 export type { StartQueueOptions } from './webaudio/engine-queue'
 export { realize } from './webaudio/realize'
