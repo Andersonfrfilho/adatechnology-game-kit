@@ -103,7 +103,15 @@ engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay
 - Each play: a take drawn among all but the last one (round-robin, never twice in a row), the rate ± `pitch` (default 4 %), the level by `falloff`, a lowpass by distance (`cutoffK`) and behind a wall (`occlusion`), the pan.
 - Sample voices of a bus go through a zero-delay limiter (ceiling −1 dBFS); `choke: { voices }` fades the oldest plays of a sound for rapid fire.
 - `onVoiceStart` reports every voice (recipe or sample, the files and takes, `requestedAt` / `startAt`): the event log the criteria measure.
-- Files: drop them in `assets/sfx-inbox/<categoria>/` with a line in its `CREDITOS.md` and run `pnpm --filter @adatechnology/game-audio sfx:convert` (ffmpeg): Ogg Vorbis mono 48 kHz, −1 dBFS peak, attack on the first ms, `manifest.json` and `CREDITOS.md`. Only CC0 and CC-BY go into the SDK.
+- **No audio ships in the kit.** `assets/sfx/manifest.json` is only the references (sound id → path, with source, author and licence) and
+  `assets/sfx/CREDITOS.md` the credits; the files live in the game's repository (ZombiAdA `assets/sfx/<categoria>/`, originals in
+  `assets/sfx-originais/`). A game serves that folder and passes it as `baseUrl`; a take whose file is missing plays the recipe of its id.
+- On this machine, `scripts/sfx-dir.mjs` says where the files are: `KIT_SFX_DIR` / `KIT_SFX_INBOX`, or `.sfx-local.json` at the repo root (ignored
+  by git) `{ "kit": "../zombiada/assets/sfx", "inbox": "../zombiada/assets/sfx-originais" }`, or `.sfx/` and `.sfx-inbox/`. The test room links
+  them into `dist/sfx/`; the tests that read files skip without them; CI fails on any audio file tracked by git.
+- New files: the original in `<inbox>/<categoria>/` with a line in its `CREDITOS.md`, then `pnpm --filter @adatechnology/game-audio sfx:convert`
+  (ffmpeg): Ogg Vorbis mono 48 kHz, −1 dBFS peak, attack on the first ms, written to the game's folder, with the manifest and credits updated here.
+  Only CC0 and CC-BY (the kit and the game are public).
 - Measuring: `measureCriteria({ sound, banks, loader })` renders C1–C9 through the real engine on an `OfflineAudioContext`; the test room's `?area=sound_check_area` (`createSoundCheckModule`) runs it on a button and records 3 s for C10. `CALIBRATION_SOUND` is a kit-made sample sound (no file) with every layer, for checking the path end to end.
 
 ## Local sound pack (your own files, by config)

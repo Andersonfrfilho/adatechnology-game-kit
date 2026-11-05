@@ -4,7 +4,7 @@
 //   link <dist>   points `<dist>/local-audio/files` at `root` (a symlink, never a copy) and writes `<dist>/local-audio/pack.json` for the page;
 //   guard <dir>   fails when <dir> holds an audio file that is not one of the SDK's own (`packages/game-audio/assets/sfx/manifest.json`) or a copied
 //                 `local-audio` folder (the symlink is allowed: it is not followed and no deploy dereferences it);
-//   guard-git     fails when git tracks or stages the config, a `local-audio/` folder or an audio file outside the SDK's sfx folders.
+//   guard-git     fails when git tracks or stages the config, a `local-audio/` folder or any audio file (the kit ships none).
 import { execFileSync } from 'node:child_process'
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -14,8 +14,6 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CONFIG = process.env.LOCAL_AUDIO_CONFIG ?? join(REPO, 'audio.local.json')
 const AUDIO = /\.(wav|ogg|mp3|flac|aif|aiff|m4a|opus)$/i
 const LOCAL_DIR = 'local-audio'
-// the SDK's own sound folders: converted files and the credited inbox
-const SDK_AUDIO = [/^packages\/game-audio\/assets\/sfx\//, /^assets\/sfx-inbox\//, /^packages\/game-audio\/tests\/fixtures\//]
 
 /** @param {string} message */
 const fail = (message) => {
@@ -85,7 +83,8 @@ function guardGit() {
   return tracked.flatMap((file) => {
     if (/(^|\/)audio\.local\.json$/.test(file)) return [`${file}: the local config is tracked`]
     if (/(^|\/)dist\/local-audio\/|^local-audio\//.test(file)) return [`${file}: a local-audio folder is tracked`]
-    if (AUDIO.test(file) && !SDK_AUDIO.some((pattern) => pattern.test(file))) return [`${file}: audio outside the SDK's sfx folders`]
+    // the kit ships no audio at all (the SDK is public; the files live in the game's repository): no path of git may hold one
+    if (AUDIO.test(file)) return [`${file}: audio in git (the kit ships none: the files go to the game's assets/sfx, the kit keeps only the manifest)`]
     return []
   })
 }

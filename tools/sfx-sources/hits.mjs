@@ -10,9 +10,17 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { hasKitSfx, kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
-const sfx = join(root, 'packages/game-audio/assets/sfx')
+// the manifest is in the kit; the files are outside git (packages/game-audio/scripts/sfx-dir.mjs)
+const manifestDir = join(root, 'packages/game-audio/assets/sfx')
+const sfx = kitSfxDir(root)
+if (!hasKitSfx(root)) {
+  console.error(`hits: no sound files at ${sfx} (set .sfx-local.json "kit" or KIT_SFX_DIR to the game's assets/sfx)`)
+  process.exit(1)
+}
 const target = join(root, 'packages/game-weapons-three/src/data/reload-sample-hits.json')
 const RATE = 48000
 const BLOCK = 96
@@ -42,7 +50,7 @@ const median = (values) => {
 }
 
 /** @type {{ sounds: { id: string, category: string, layers: Record<string, { file: string }[]> }[] }} */
-const manifest = JSON.parse(readFileSync(join(sfx, 'manifest.json'), 'utf8'))
+const manifest = JSON.parse(readFileSync(join(manifestDir, 'manifest.json'), 'utf8'))
 const spec = JSON.parse(readFileSync(join(here, 'firearms.json'), 'utf8'))
 /** @type {Map<string, number[]>} */
 const byCue = new Map()

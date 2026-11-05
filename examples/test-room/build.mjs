@@ -5,6 +5,8 @@ import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
+import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
 const pkg = (name) => join(root, 'packages', name)
@@ -130,9 +132,23 @@ const boot = `(function () {
     shown.remove()
   }).catch(failed)
 })()`
-// the recorded sounds of game-audio's sfx the modules use (the weapons' shots and reload steps), inlined as data urls: the page still makes no request
-const sfxDir = join(pkg('game-audio'), 'assets/sfx')
-const sfxManifest = existsSync(join(sfxDir, 'manifest.json')) ? JSON.parse(readFileSync(join(sfxDir, 'manifest.json'), 'utf8')) : null
+// the kit's recorded sounds: the manifest (id -> path) is in game-audio, the files are outside git, in the game's repository (ZombiAdA assets/sfx),
+// found by sfx-dir.mjs (.sfx-local.json "kit" or KIT_SFX_DIR). On a machine without them (CI, a clean clone) the manifest keeps only the takes that
+// exist, so every sound plays its synthesized recipe and the build does not fail.
+const sfxManifestDir = join(pkg('game-audio'), 'assets/sfx')
+const sfxDir = kitSfxDir(root)
+const sfxManifestFull = existsSync(join(sfxManifestDir, 'manifest.json')) ? JSON.parse(readFileSync(join(sfxManifestDir, 'manifest.json'), 'utf8')) : null
+/** The manifest with only the takes whose file is on this machine (a sound left with no take is dropped). */
+const presentSfx = (manifest) => ({
+  ...manifest,
+  sounds: manifest.sounds
+    .map((sound) => ({ ...sound, layers: Object.fromEntries(Object.entries(sound.layers).map(([layer, takes]) => [layer, takes.filter((entry) => existsSync(join(sfxDir, entry.file)))]).filter(([, takes]) => takes.length > 0)) }))
+    .filter((sound) => Object.keys(sound.layers).length > 0),
+})
+const sfxManifest = sfxManifestFull ? presentSfx(sfxManifestFull) : null
+const sfxTakes = sfxManifest ? sfxManifest.sounds.reduce((count, sound) => count + Object.values(sound.layers).flat().length, 0) : 0
+console.log(sfxTakes > 0 ? `sfx: ${sfxTakes} recorded takes from ${sfxDir}` : `sfx: no recorded files at ${sfxDir} (the recipes play; see packages/game-audio/scripts/sfx-dir.mjs)`)
+// the ones the modules use (the weapons' shots and reload steps) inlined as data urls: the page still makes no request
 const SFX_CATEGORIES = new Set(['armas'])
 const sfxSounds = (sfxManifest?.sounds ?? []).filter((sound) => SFX_CATEGORIES.has(sound.category))
 const sfxFiles = Object.fromEntries(sfxSounds.flatMap((sound) => Object.values(sound.layers).flat()).map((entry) => [entry.file, `data:audio/ogg;base64,${readFileSync(join(sfxDir, entry.file)).toString('base64')}`]))
@@ -143,13 +159,17 @@ mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)
 
-// 4. the kit's recorded sounds (game-audio assets/sfx: the converted files and their manifest) next to the page, where the room's engine fetches them
-//    (`./sfx/`); they load on first play, so the page itself does not grow. Opened from file:// the fetch fails and the recipes play.
-const sfx = join(pkg('game-audio'), 'assets/sfx')
-if (existsSync(join(sfx, 'manifest.json'))) {
-  rmSync(join(here, 'dist/sfx'), { recursive: true, force: true })
-  cpSync(sfx, join(here, 'dist/sfx'), { recursive: true })
-  console.log('dist/sfx copied')
+// 4. the kit's recorded sounds next to the page, where the room's engine fetches them (`./sfx/`); they load on first play, so the page itself does
+//    not grow. dist/sfx gets the manifest of the files present and a link to each category folder of the game's sound folder (never a copy, so no
+//    deploy of dist carries them). Opened from file://, or without the files, the recipes play.
+rmSync(join(here, 'dist/sfx'), { recursive: true, force: true })
+if (sfxManifest) {
+  mkdirSync(join(here, 'dist/sfx'), { recursive: true })
+  writeFileSync(join(here, 'dist/sfx/manifest.json'), `${JSON.stringify(sfxManifest, null, 2)}\n`)
+  if (existsSync(join(sfxManifestDir, 'CREDITOS.md'))) cpSync(join(sfxManifestDir, 'CREDITOS.md'), join(here, 'dist/sfx/CREDITOS.md'))
+  const categories = new Set(sfxManifest.sounds.flatMap((sound) => Object.values(sound.layers).flat().map((entry) => entry.file.split('/')[0])))
+  for (const category of categories) symlinkSync(join(sfxDir, category), join(here, 'dist/sfx', category), 'dir')
+  console.log(`dist/sfx: manifest${categories.size > 0 ? ` and links to ${[...categories].join(', ')}` : ' only'}`)
 }
 // 4b. the owner's own sounds (.sfx-local/, written by `sfx:user` from packs the kit cannot redistribute) next to the page as sfx-local/, only on the
 //     machine that has them: the folder is ignored by git, so no CI build or package carries them
@@ -159,8 +179,10 @@ if (existsSync(join(sfx, 'manifest.json'))) {
 const userSfx = join(root, '.sfx-local')
 const userSfxRef = join(root, '.sfx-local.json')
 rmSync(join(here, 'dist/sfx-local'), { recursive: true, force: true })
-if (existsSync(userSfxRef)) {
-  const ref = JSON.parse(readFileSync(userSfxRef, 'utf8'))
+const userRef = existsSync(userSfxRef) ? JSON.parse(readFileSync(userSfxRef, 'utf8')) : null
+// `.sfx-local.json` may hold only the kit's folder ("kit", "inbox"): the game's own sounds need "root" and "manifest"
+if (userRef && typeof userRef.root === 'string' && typeof userRef.manifest === 'string') {
+  const ref = userRef
   const dir = join(here, 'dist/sfx-local')
   mkdirSync(dir, { recursive: true })
   cpSync(resolve(root, ref.manifest), join(dir, 'manifest.json'))

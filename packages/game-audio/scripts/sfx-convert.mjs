@@ -1,18 +1,24 @@
 // @ts-check
-// pnpm --filter @adatechnology/game-audio sfx:convert [--inbox <dir>] [--out <dir>] [--game-out <dir>] [--only <categoria>] [--dry-run]
+// pnpm --filter @adatechnology/game-audio sfx:convert [--inbox <dir>] [--files <dir>] [--out <dir>] [--game-out <dir>] [--only <categoria>] [--dry-run]
 //
-// Converts the files the sound team drops in assets/sfx-inbox/<categoria>/ (wav, ogg, mp3, flac, aif) to what the SDK ships:
+// The kit ships no audio (the SDK is public): the originals and the converted files live in the game's repository (ZombiAdA assets/sfx-originais and
+// assets/sfx), found through packages/game-audio/scripts/sfx-dir.mjs (`.sfx-local.json` or KIT_SFX_INBOX / KIT_SFX_DIR). Only the manifest and the
+// credits are written into the kit. `--out <dir>` puts the files, the manifest and the credits together in one folder.
+//
+// Converts the files the sound team drops in <inbox>/<categoria>/ (wav, ogg, mp3, flac, aif) to what the kit plays:
 //   - Ogg Vorbis q6, 48 kHz, mono (a name with `_loop` keeps stereo: rain, fire and engine loops may be stereo);
 //   - the silence before the attack cut (criterion C1: the sound starts on its first millisecond), loops untouched;
 //   - normalized to a peak of −1 dBFS, measured again after encoding;
-//   - packages/game-audio/assets/sfx/<categoria>/<nome>.ogg, plus manifest.json (every take of every sound, layer by layer) and CREDITOS.md.
-// Every file needs its line in assets/sfx-inbox/CREDITOS.md: `arquivo | link da página | autor | licença`. Only CC0 and CC-BY go into the SDK (the
+//   - <files>/<categoria>/<nome>.ogg, plus packages/game-audio/assets/sfx/manifest.json (every take of every sound, layer by layer) and CREDITOS.md.
+// Every file needs its line in <inbox>/CREDITOS.md: `arquivo | link da página | autor | licença`. Only CC0 and CC-BY go into the SDK (the
 // files are redistributed on npm); Sonniss and Pixabay files go to --game-out (the game's own repository) or are skipped; anything else is refused.
 // Needs ffmpeg (with libvorbis) and ffprobe on the PATH, and the package built (it reads the file-name rules from dist).
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { kitSfxDir, kitSfxInbox } from './sfx-dir.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const packageDir = resolve(here, '..')
@@ -33,8 +39,9 @@ const CATEGORIES = ['armas', 'impactos', 'explosoes-fogo', 'personagem', 'veicul
 
 /** @param {string[]} argv */
 function parseArgs(argv) {
-  /** @type {{ inbox: string, out: string, gameOut: string | null, only: string | null, dryRun: boolean }} */
-  const args = { inbox: join(root, 'assets/sfx-inbox'), out: join(packageDir, 'assets/sfx'), gameOut: null, only: null, dryRun: false }
+  /** @type {{ inbox: string, out: string, files: string | null, gameOut: string | null, only: string | null, dryRun: boolean }} */
+  const args = { inbox: kitSfxInbox(root), out: join(packageDir, 'assets/sfx'), files: null, gameOut: null, only: null, dryRun: false }
+  let outGiven = false
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index]
     const value = () => {
@@ -43,12 +50,17 @@ function parseArgs(argv) {
       return next
     }
     if (flag === '--inbox') args.inbox = resolve(value())
-    else if (flag === '--out') args.out = resolve(value())
+    else if (flag === '--out') {
+      args.out = resolve(value())
+      outGiven = true
+    } else if (flag === '--files') args.files = resolve(value())
     else if (flag === '--game-out') args.gameOut = resolve(value())
     else if (flag === '--only') args.only = value()
     else if (flag === '--dry-run') args.dryRun = true
     else throw new Error(`unknown flag ${flag}`)
   }
+  // the files go to the game's folder unless --out keeps everything in one place
+  if (!args.files) args.files = outGiven ? args.out : kitSfxDir(root)
   return args
 }
 
@@ -178,15 +190,14 @@ const listFiles = (dir) => (existsSync(dir) ? readdirSync(dir).filter((name) => 
 
 /**
  * @param {Manifest} manifest
- * @param {string} outDir
  */
-function creditsMarkdown(manifest, outDir) {
+function creditsMarkdown(manifest) {
   const rows = manifest.sounds.flatMap((sound) => Object.values(sound.layers).flat()).sort((a, b) => a.file.localeCompare(b.file))
   return [
     '# Créditos dos sons',
     '',
-    `Gerado por \`scripts/sfx-convert.mjs\` a partir de \`assets/sfx-inbox/CREDITOS.md\`. Pasta: \`${relative(root, outDir)}\`.`,
-    'Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo.',
+    `Gerado por \`scripts/sfx-convert.mjs\` a partir do \`CREDITOS.md\` dos originais. Os arquivos ficam fora do kit (ZombiAdA \`assets/sfx/\`); aqui só as referências.`,
+    'Só CC0 e CC-BY (o kit e o jogo são públicos); quem usa um som CC-BY credita o autor abaixo.',
     '',
     '| arquivo | fonte | autor | licença |',
     '|---|---|---|---|',
@@ -214,6 +225,8 @@ async function main() {
 
   /** @type {Record<string, Manifest>} */
   const manifests = {}
+  /** The folder the files of each manifest are in. @type {Record<string, string>} */
+  const filesOf = {}
   /** @param {string} outDir */
   const manifestOf = (outDir) => {
     const existing = manifests[outDir]
@@ -248,14 +261,16 @@ async function main() {
         continue
       }
       const outDir = gameOnly && args.gameOut ? args.gameOut : args.out
+      const filesDir = gameOnly && args.gameOut ? args.gameOut : /** @type {string} */ (args.files)
+      filesOf[outDir] = filesDir
       const stem = basename(name, extname(name)).toLowerCase().replace(/[^a-z0-9_]+/g, '_')
       const relativeFile = `${category}/${stem}.ogg`
       const parsed = audio.parseSfxName(stem)
       if (args.dryRun) {
-        console.log(`· ${category}/${name} → ${relative(root, join(outDir, relativeFile))} (${parsed.id} ${parsed.layer} ${parsed.take}, ${license})`)
+        console.log(`· ${category}/${name} → ${relative(root, join(filesDir, relativeFile))} (${parsed.id} ${parsed.layer} ${parsed.take}, ${license})`)
         continue
       }
-      const facts = convert(input, join(outDir, relativeFile))
+      const facts = convert(input, join(filesDir, relativeFile))
       const manifest = manifestOf(outDir)
       let sound = manifest.sounds.find((entry) => entry.id === parsed.id)
       if (!sound) {
@@ -274,7 +289,7 @@ async function main() {
     // a take whose file is gone (replaced or renamed in the inbox) leaves the manifest and the credits, and so does a sound left with no take
     for (const sound of manifest.sounds) {
       for (const [layer, takes] of Object.entries(sound.layers)) {
-        const kept = (takes ?? []).filter((entry) => existsSync(join(outDir, entry.file)))
+        const kept = (takes ?? []).filter((entry) => existsSync(join(filesOf[outDir] ?? outDir, entry.file)))
         if (kept.length > 0) sound.layers[layer] = kept
         else delete sound.layers[layer]
       }
@@ -282,7 +297,7 @@ async function main() {
     manifest.sounds = manifest.sounds.filter((sound) => Object.keys(sound.layers).length > 0)
     manifest.sounds.sort((a, b) => a.id.localeCompare(b.id))
     writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-    writeFileSync(join(outDir, 'CREDITOS.md'), creditsMarkdown(manifest, outDir))
+    writeFileSync(join(outDir, 'CREDITOS.md'), creditsMarkdown(manifest))
   }
   console.log(`${converted} arquivo(s) convertido(s)`)
   for (const problem of problems) console.error(`✗ ${problem}`)
