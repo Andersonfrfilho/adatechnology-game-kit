@@ -433,8 +433,10 @@ function main() {
   /** @type {{ sounds: { id: string, category: string, layers: Record<string, { file: string, source: string, author: string, license: string }[]> }[] }} */
   const manifest = JSON.parse(readFileSync(join(root, 'packages/game-audio/assets/sfx/manifest.json'), 'utf8'))
   /** @type {{ sounds: unknown[] }} */
-  const previous = existsSync(out) && only ? JSON.parse(readFileSync(out, 'utf8')) : { sounds: [] }
-  const kept = /** @type {{ id: string }[]} */ (previous.sounds).filter((sound) => !only?.has(sound.id))
+  const previous = existsSync(out) ? JSON.parse(readFileSync(out, 'utf8')) : { sounds: [] }
+  // A copy measured from a take that is not in the manifest (a game's own recording, measured once) stays; the rest is measured again.
+  const inManifest = new Set(manifest.sounds.map((sound) => sound.id))
+  const kept = /** @type {{ id: string }[]} */ (previous.sounds).filter((sound) => (only ? !only.has(sound.id) : !inManifest.has(sound.id)))
   const sounds = []
   for (const sound of manifest.sounds) {
     if (only && !only.has(sound.id)) continue
