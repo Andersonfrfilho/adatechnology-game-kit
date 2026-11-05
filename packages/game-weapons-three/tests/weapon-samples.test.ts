@@ -9,7 +9,7 @@ import type { AudioEngine, PlayOptions, SampleStatus, SfxManifest, SoundBank } f
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { CaliberDef } from '@adatechnology/game-weapons'
 
-import { buildWeaponModelById } from '../src'
+import { buildWeaponModelById, createWeaponFx } from '../src'
 import { CUES_IN_SAMPLE, GUNSHOT_SAMPLE_IDS, RELOAD_CUE_IDS, RELOAD_SAMPLE_HITS, SPEED_OF_SOUND, createWeaponAudio, weaponSampleBank } from '../src/audio'
 import { GUNSHOT_IDS } from '../src/audio/recipes'
 import { buildToolClips } from '../src/animation/clip-set'
@@ -167,5 +167,17 @@ describe('the reload clips follow the recordings', () => {
       const times = clip.events!.map((event) => event.t)
       expect(times).toEqual([...times].sort((a, b) => a - b))
     }
+  })
+
+  it('loads the recordings as the weapon comes to the hands, before the first shot', () => {
+    const fake = fakeEngine(new Set())
+    const audio = createWeaponAudio(0.6, { engine: fake.engine, samples: { manifest } })
+    const weapon = 'glock_17'
+    const tool = { weapon, category: 'handgun', ammo: 10, capacity: 17, reserve: 40, reloading: false }
+    const fx = createWeaponFx({ THREE, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(), arsenal, groundAt: () => 0, audio, tool: () => tool })
+    expect(fake.loads()).toBe(0)
+    fx.handle({ type: 'tool', weapon }, tool)
+    expect(fake.loads()).toBe(1)
+    fx.dispose()
   })
 })
