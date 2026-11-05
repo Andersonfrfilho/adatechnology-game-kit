@@ -34,12 +34,14 @@ export const MODEL_ENTRIES: Readonly<Record<string, ModelEntry>> = data as Recor
 
 /**
  * The model each generic archetype wears: the one of the first brand weapon (lowest id) that points to it with `archetype` and fires the same way (a rocket launcher that points to
- * `shotgun_pump_12` does not lend its tube to the shotgun). An archetype nothing points to, the melee weapons and the bow keep their simple prop.
+ * `shotgun_pump_12` does not lend its tube to the shotgun), a weapon of its own before a variant of another (`variantOf`): a variant added later never changes what the generic looks like.
+ * An archetype nothing points to, the melee weapons and the bow keep their simple prop.
  */
 export const ARCHETYPE_MODELS: Readonly<Record<string, string>> = (() => {
   const actionOf = new Map(WEAPONS.map((def) => [def.id, def.action.kind]))
   const chosen: Record<string, string> = {}
-  for (const def of [...WEAPONS].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+  const order = (def: (typeof WEAPONS)[number]): string => `${def.variantOf ? 1 : 0}${def.id}`
+  for (const def of [...WEAPONS].sort((a, b) => (order(a) < order(b) ? -1 : 1))) {
     const { archetype } = def
     if (!archetype || !(def.id in MODEL_ENTRIES) || archetype in MODEL_ENTRIES || archetype in chosen) continue
     if (actionOf.get(archetype) === def.action.kind) chosen[archetype] = def.id

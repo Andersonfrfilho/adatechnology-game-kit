@@ -1552,6 +1552,123 @@
       "rpm": 3000
     }
   },
+  "aks_74u": {
+    "builder": "rifle",
+    "caliber": "5,45×39",
+    "length": 730,
+    "barrel": 206,
+    "options": {
+      "stock": "fold",
+      "mag": "curved",
+      "hg": "poly",
+      "hgFrac": 0.42,
+      "gas": 1,
+      "charge": 1,
+      "brake": 1,
+      "ak": 1,
+      "rod": 1,
+      "rpm": 700,
+      "magMat": "bakelite",
+      "stockLen": 0.22
+    },
+    "variantOf": "ak_74"
+  },
+  "fn_scar_l": {
+    "builder": "rifle",
+    "caliber": "5,56×45",
+    "length": 889,
+    "barrel": 351,
+    "options": {
+      "tan": 1,
+      "stock": "fold",
+      "mag": "box",
+      "magLen": 1.05,
+      "hg": "rail",
+      "hgFrac": 0.7,
+      "hR": 0.07,
+      "rail": 1,
+      "scope": 2,
+      "charge": 1,
+      "rpm": 625
+    },
+    "variantOf": "fn_scar_h"
+  },
+  "m1_garand": {
+    "builder": "rifle",
+    "caliber": ".30-06",
+    "length": 1100,
+    "barrel": 610,
+    "options": {
+      "wood": 1,
+      "stock": "trad",
+      "mag": "internal",
+      "fore": 0.55,
+      "gas": 1,
+      "charge": 1,
+      "bayo": 1
+    },
+    "variantOf": "sks"
+  },
+  "accuracy_l96a1": {
+    "builder": "rifle",
+    "caliber": "7,62×51",
+    "length": 1180,
+    "barrel": 660,
+    "options": {
+      "olive": 1,
+      "stock": "skeleton",
+      "stockLen": 0.34,
+      "mag": "box",
+      "magLen": 0.6,
+      "hg": "poly",
+      "hgFrac": 0.3,
+      "scope": 3,
+      "bolt": 1,
+      "bipod": 1,
+      "brake": 1,
+      "round": 1
+    },
+    "variantOf": "accuracy_awm"
+  },
+  "mossberg_590": {
+    "builder": "rifle",
+    "caliber": "12 ga",
+    "length": 1003,
+    "barrel": 508,
+    "options": {
+      "stock": "fixed",
+      "mag": "none",
+      "tube": 1,
+      "pump": 1,
+      "hg": "none",
+      "br": 0.0105,
+      "hR": 0.055,
+      "noFH": 1,
+      "heat": 1,
+      "bayo": 1
+    },
+    "variantOf": "mossberg_500"
+  },
+  "fn_m240b": {
+    "builder": "rifle",
+    "caliber": "7,62×51",
+    "length": 1245,
+    "barrel": 630,
+    "options": {
+      "stock": "fixed",
+      "mag": "belt",
+      "hg": "poly",
+      "hgFrac": 0.35,
+      "bipod": 1,
+      "carry": 1,
+      "hR": 0.085,
+      "br": 0.011,
+      "charge": 1,
+      "rail": 1,
+      "heat": 1,
+      "rpm": 750
+    }
+  },
   "m79": {
     "builder": "breakLauncher",
     "caliber": "40×46",

@@ -9,6 +9,10 @@
    "source": "generated",
    "file": "generated/accuracy_awm.svg"
   },
+  "accuracy_l96a1": {
+   "source": "generated",
+   "file": "generated/accuracy_l96a1.svg"
+  },
   "ag36": {
    "source": "generated",
    "file": "generated/ag36.svg"
@@ -32,6 +36,10 @@
   "akm": {
    "source": "generated",
    "file": "generated/akm.svg"
+  },
+  "aks_74u": {
+   "source": "generated",
+   "file": "generated/aks_74u.svg"
   },
   "anti_materiel_50": {
    "source": "generated",
@@ -217,6 +225,10 @@
    "source": "generated",
    "file": "generated/fn_five_seven.svg"
   },
+  "fn_m240b": {
+   "source": "generated",
+   "file": "generated/fn_m240b.svg"
+  },
   "fn_m249": {
    "source": "generated",
    "file": "generated/fn_m249.svg"
@@ -244,6 +256,10 @@
   "fn_scar_h": {
    "source": "generated",
    "file": "generated/fn_scar_h.svg"
+  },
+  "fn_scar_l": {
+   "source": "generated",
+   "file": "generated/fn_scar_l.svg"
   },
   "frag_grenade": {
    "source": "generated",
@@ -393,6 +409,10 @@
    "source": "generated",
    "file": "generated/m14_ebr.svg"
   },
+  "m1_garand": {
+   "source": "generated",
+   "file": "generated/m1_garand.svg"
+  },
   "m203": {
    "source": "generated",
    "file": "generated/m203.svg"
@@ -460,6 +480,10 @@
   "mossberg_500_cruiser": {
    "source": "generated",
    "file": "generated/mossberg_500_cruiser.svg"
+  },
+  "mossberg_590": {
+   "source": "generated",
+   "file": "generated/mossberg_590.svg"
   },
   "nail_bat": {
    "source": "generated",

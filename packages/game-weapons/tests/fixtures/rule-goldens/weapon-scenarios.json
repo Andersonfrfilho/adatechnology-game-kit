@@ -1398,6 +1398,74 @@
 {"step":"fault","status":"cooldown>ok>fault","shots":1,"rounds":1,"uses":"","ammo":199,"reserve":600,"heat":0.3,"events":"fault:stovepipe@1.48 shot:auto:1/1@1.48"},
 {"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":199,"reserve":600,"heat":0.3,"events":"clear:stovepipe:start@4.6 clear:stovepipe:end@5.8","status":"none"}
 ]},
+{"id":"aks_74u","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:auto","status":"ok>cooldown","shots":8,"rounds":8,"uses":"","ammo":22,"reserve":90,"heat":9,"events":"shot:auto:1/1×8@1-1.6"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":21,"reserve":90,"heat":5.5,"events":"mode:semi@4.6 shot:semi:1/1@4.6"},
+{"step":"empty","status":"empty","shots":21,"rounds":21,"uses":"","ammo":0,"reserve":90,"heat":12,"events":"shot:semi:1/1×21@7.6-21.6 empty@22.3"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":60,"heat":0,"events":"reload:start:empty@25.3 stage:magazine_out@25.3 stage:magazine_in@27.17 stage:charge@27.68 reload:end:empty@28.7"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":58,"heat":0,"events":"reload:start:tactical@86.7 stage:magazine_out@86.7 stage:magazine_in@88.13 reload:end:tactical@89.3"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":56,"heat":0,"events":"reload:start:tactical@148.1 stage:magazine_out@148.1 stage:magazine_in@149.53 reload:end:tactical@150.7"},
+{"step":"fault","status":"fault","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"fault:misfire@0.98"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":29,"reserve":90,"heat":0,"events":"clear:misfire:start@4.6 clear:misfire:end@5.8","status":"none"}
+]},
+{"id":"fn_scar_l","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:auto","status":"ok>cooldown","shots":7,"rounds":7,"uses":"","ammo":23,"reserve":90,"heat":7.2,"events":"shot:auto:1/1×7@1-1.58"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":22,"reserve":90,"heat":3.8,"events":"mode:semi@4.6 shot:semi:1/1@4.6"},
+{"step":"empty","status":"empty","shots":22,"rounds":22,"uses":"","ammo":0,"reserve":90,"heat":11.4,"events":"shot:semi:1/1×22@7.6-22.3 empty@23"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":60,"heat":0,"events":"reload:start:empty@26 stage:magazine_out@26 stage:magazine_in@27.43 stage:charge@27.82 reload:end:empty@28.6"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":58,"heat":0,"events":"reload:start:tactical@87.4 stage:magazine_out@87.4 stage:magazine_in@88.83 reload:end:tactical@90"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":56,"heat":0,"events":"reload:start:tactical@148.8 stage:magazine_out@148.8 stage:magazine_in@150.23 reload:end:tactical@151.4"},
+{"step":"fault","status":"fault","shots":0,"rounds":0,"uses":"","ammo":30,"reserve":90,"heat":0,"events":"fault:misfire@0.98"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":29,"reserve":90,"heat":0,"events":"clear:misfire:start@4.6 clear:misfire:end@5.8","status":"none"}
+]},
+{"id":"m1_garand","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":24,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":24,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"shot:semi:1/1@1"},
+{"step":"empty","status":"empty","shots":7,"rounds":7,"uses":"","ammo":0,"reserve":24,"heat":0.5,"events":"shot:semi:1/1×7@4-8.2 empty@8.9"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":16,"heat":0,"events":"reload:start:empty@11.9 stage:round_in@11.9 stage:charge@13.86 reload:end:empty@14.1"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":14,"heat":0,"events":"reload:start:tactical@73.3 stage:round_in@73.3 reload:end:tactical@75.5"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":12,"heat":0,"events":"reload:start:tactical@134.7 stage:round_in@134.7 reload:end:tactical@136.9"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"fault:stovepipe@1 shot:semi:1/1@1"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"clear:stovepipe:start@4 clear:stovepipe:end@5.2","status":"none"}
+]},
+{"id":"accuracy_l96a1","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":10,"reserve":30,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":10,"reserve":30,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:bolt","status":"ok","shots":1,"rounds":1,"uses":"","ammo":9,"reserve":30,"heat":0,"events":"shot:bolt:1/1@1 cycle:start@1 cycle:end@1.82"},
+{"step":"empty","status":"empty","shots":9,"rounds":9,"uses":"","ammo":0,"reserve":30,"heat":0,"events":"shot:bolt:1/1@4 cycle:start@4 cycle:end@4.82 shot:bolt:1/1@5.4 cycle:start@5.4 cycle:end@6.22 shot:bolt:1/1@6.8 cycle:start@6.8 cycle:end@7.62 shot:bolt:1/1@8.2 cycle:start@8.2 cycle:end@9.02 shot:bolt:1/1@9.6 cycle:start@9.6 cycle:end@10.42 shot:bolt:1/1@11 cycle:start@11 cycle:end@11.82 shot:bolt:1/1@12.4 cycle:start@12.4 cycle:end@13.22 shot:bolt:1/1@13.8 cycle:start@13.8 cycle:end@14.62 shot:bolt:1/1@15.2 cycle:start@15.2 empty@15.9 cycle:end@16.02"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":10,"reserve":20,"heat":0,"events":"reload:start:empty@18.9 stage:magazine_out@18.9 stage:magazine_in@20.66 stage:bolt_open@20.82 stage:bolt_close@21.75 reload:end:empty@22.1"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":10,"reserve":19,"heat":0,"events":"reload:start:tactical@80.3 stage:magazine_out@80.3 stage:magazine_in@82.06 stage:bolt_open@82.22 stage:bolt_close@83.15 reload:end:tactical@83.5"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":10,"reserve":18,"heat":0,"events":"reload:start:tactical@141.7 stage:magazine_out@141.7 stage:magazine_in@143.46 stage:bolt_open@143.62 stage:bolt_close@144.55 reload:end:tactical@144.9"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":9,"reserve":30,"heat":0,"events":"fault:failure_to_extract@1 shot:bolt:1/1@1 cycle:start@1 cycle:end@1.82"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":9,"reserve":30,"heat":0,"events":"clear:failure_to_extract:start@4 clear:failure_to_extract:end@5.2","status":"none"}
+]},
+{"id":"mossberg_590","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":24,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":24,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:pump","status":"ok","shots":9,"rounds":1,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"shot:pump:9/1@1 cycle:start@1 cycle:end@1.5"},
+{"step":"empty","status":"empty","shots":63,"rounds":7,"uses":"","ammo":0,"reserve":24,"heat":6.4,"events":"shot:pump:9/1@4 cycle:start@4 cycle:end@4.5 shot:pump:9/1@4.7 cycle:start@4.7 cycle:end@5.2 shot:pump:9/1@5.4 cycle:start@5.4 cycle:end@5.9 shot:pump:9/1@6.1 cycle:start@6.1 cycle:end@6.6 shot:pump:9/1@6.8 cycle:start@6.8 cycle:end@7.3 shot:pump:9/1@7.5 cycle:start@7.5 cycle:end@8 shot:pump:9/1@8.2 cycle:start@8.2 cycle:end@8.7 empty@8.9"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":16,"heat":0,"events":"reload:start:empty@11.9 stage:round_in@11.9 feed×8@12.45-16.3 stage:pump_cycle@16.9 reload:end:empty@17.58"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":14,"heat":0,"events":"reload:start:tactical@73.3 stage:round_in@73.3 reload:end:tactical@73.85"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":8,"reserve":12,"heat":0,"events":"reload:start:one_by_one@134.7 stage:round_in@134.7 feed×2@135.25-135.8 reload:end:one_by_one@135.8"},
+{"step":"fault","status":"ok","shots":9,"rounds":1,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"fault:failure_to_extract@1 shot:pump:9/1@1 cycle:start@1 cycle:end@1.5"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":7,"reserve":24,"heat":0,"events":"clear:failure_to_extract:start@4 clear:failure_to_extract:end@5.2","status":"none"}
+]},
+{"id":"fn_m240b","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":300,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":300,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:auto","status":"ok>cooldown","shots":8,"rounds":8,"uses":"","ammo":92,"reserve":300,"heat":9,"events":"shot:auto:1/1×8@1-1.56"},
+{"step":"empty","status":"empty","shots":92,"rounds":92,"uses":"","ammo":0,"reserve":300,"heat":113.8,"events":"shot:auto:1/1×92@4.58-19.12 empty×22@19.13-20.2"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":200,"heat":0,"events":"reload:start:empty@23.2 stage:cover_open@23.2 stage:belt_swap@24.3 stage:cover_close@28.14 stage:charge@29.51 reload:end:empty@31.7"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":184,"heat":0,"events":"reload:start:tactical@85.8 stage:cover_open@85.8 stage:belt_swap@86.9 stage:cover_close@90.74 stage:charge@92.11 reload:end:tactical@94.3"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":168,"heat":0,"events":"reload:start:tactical@148.4 stage:cover_open@148.4 stage:belt_swap@149.5 stage:cover_close@153.34 stage:charge@154.71 reload:end:tactical@156.9"},
+{"step":"fault","status":"fault","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":300,"heat":0,"events":"fault:misfire@0.98"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":99,"reserve":300,"heat":0,"events":"clear:misfire:start@4.6 clear:misfire:end@5.8","status":"none"}
+]},
 {"id":"rpg_7","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
 {"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},

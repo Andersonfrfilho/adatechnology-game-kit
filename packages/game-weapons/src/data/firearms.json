@@ -7517,5 +7517,520 @@
       }
     ],
     "fitted": []
+  },
+  {
+    "id": "aks_74u",
+    "name": "AKS-74U",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_45x39",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 735,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.66,
+        0.4
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 2.7,
+    "dimensions": {
+      "length": 0.73,
+      "barrel": 0.206,
+      "emptyMass": 2.7,
+      "lengthCollapsed": 0.49
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "ak_74",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "left"
+    }
+  },
+  {
+    "id": "fn_scar_l",
+    "name": "FN SCAR-L",
+    "maker": "FN",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 625,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 870,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.43,
+        0.24
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.29,
+    "dimensions": {
+      "length": 0.889,
+      "barrel": 0.351,
+      "emptyMass": 3.29,
+      "lengthCollapsed": 0.635
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "fn_scar_h",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "acog_4x",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
+  },
+  {
+    "id": "m1_garand",
+    "name": "M1 Garand",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "30_06",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 8,
+      "reload": 2.2,
+      "muzzleSpeed": 865,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        2.28,
+        1.22
+      ],
+      "range": 350,
+      "family": "top_load_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.2,
+        "clear": 1.2
+      }
+    },
+    "mass": 4.31,
+    "dimensions": {
+      "length": 1.1,
+      "barrel": 0.61,
+      "emptyMass": 4.31
+    },
+    "archetype": "rifle_7_62x39",
+    "variantOf": "sks",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "accuracy_l96a1",
+    "name": "Accuracy L96A1",
+    "maker": "Accuracy",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 10,
+      "reload": 3.2,
+      "muzzleSpeed": 840,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.64,
+        0.27
+      ],
+      "range": 800,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3.2,
+        "cycle": 0.82,
+        "clear": 1.2
+      }
+    },
+    "mass": 6.5,
+    "dimensions": {
+      "length": 1.18,
+      "barrel": 0.66,
+      "emptyMass": 6.5
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "accuracy_awm",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ]
+  },
+  {
+    "id": "mossberg_590",
+    "name": "Mossberg 590",
+    "maker": "Mossberg",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 8,
+      "chamber": 1,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.62,
+        0.91
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.3,
+    "dimensions": {
+      "length": 1.003,
+      "barrel": 0.508,
+      "emptyMass": 3.3
+    },
+    "archetype": "shotgun_pump_12",
+    "variantOf": "mossberg_500",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "fn_m240b",
+    "name": "FN M240B",
+    "maker": "FN",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 750,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 100,
+      "reload": 8.5,
+      "muzzleSpeed": 853,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        0.77,
+        0.41
+      ],
+      "range": 350,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 8.5,
+        "clear": 1.2
+      }
+    },
+    "mass": 12.5,
+    "dimensions": {
+      "length": 1.245,
+      "barrel": 0.63,
+      "emptyMass": 12.5
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ]
   }
 ]

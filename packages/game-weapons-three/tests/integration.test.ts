@@ -143,13 +143,14 @@ describe('bench of the weapons module', () => {
 })
 
 describe('models of the archetypes', () => {
-  it('each generic archetype wears the model of the first brand weapon (lowest id) that points to it and fires the same way', () => {
+  it('each generic archetype wears the model of the first brand weapon (lowest id, its own before a variant) that points to it and fires the same way', () => {
     const byId = new Map(WEAPONS.map((def) => [def.id, def]))
     expect(Object.keys(ARCHETYPE_MODELS).length).toBeGreaterThanOrEqual(13)
     for (const [archetype, source] of Object.entries(ARCHETYPE_MODELS)) {
       expect(MODEL_ENTRIES[source], source).toBeDefined()
-      const pointers = WEAPONS.filter((def) => def.archetype === archetype && def.id in MODEL_ENTRIES && def.action.kind === byId.get(archetype)?.action.kind).map((def) => def.id)
-      expect(source, archetype).toBe([...pointers].sort()[0])
+      // a variant added later (variantOf) never changes what the generic looks like
+      const pointers = WEAPONS.filter((def) => def.archetype === archetype && def.id in MODEL_ENTRIES && def.action.kind === byId.get(archetype)?.action.kind).map((def) => `${def.variantOf ? 1 : 0}${def.id}`)
+      expect(source, archetype).toBe([...pointers].sort()[0]?.slice(1))
     }
     expect(ARCHETYPE_MODELS.pistol_9mm).toBe('beretta_92fs')
     expect(ARCHETYPE_MODELS.shotgun_pump_12).toBe('cbc_pump_military_3_0')

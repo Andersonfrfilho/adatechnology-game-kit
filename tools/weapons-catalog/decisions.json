@@ -3096,6 +3096,24 @@
       },
       "source": "reference",
       "reason": "vz. 61: 270 mm com a coronha de arame dobrada por cima do corpo. https://en.wikipedia.org/wiki/%C5%A0korpion"
+    },
+    "aks_74u": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "left",
+        "lengthCollapsed": 0.49
+      },
+      "source": "reference",
+      "reason": "AKS-74U: 490 mm com a coronha dobrada para a esquerda. https://en.wikipedia.org/wiki/AKS-74U"
+    },
+    "fn_scar_l": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right",
+        "lengthCollapsed": 0.635
+      },
+      "source": "reference",
+      "reason": "SCAR-L: a coronha recolhe e dobra para a direita; 635 mm dobrada. https://en.wikipedia.org/wiki/FN_SCAR"
     }
   },
   "integral": {
@@ -5637,6 +5655,297 @@
       },
       "source": "reference",
       "reason": "Criação (o M134 só casa em base64/SVG do jogo): três modos pelo acessório. Na mão com caixa (padrão), na mão com a mochila de munição (500) e montado no tripé (`tripod`, apoio como a M2). https://en.wikipedia.org/wiki/M134_Minigun"
+    },
+    "AKS-74U": {
+      "value": {
+        "id": "aks_74u",
+        "name": "AKS-74U",
+        "of": "AK-74",
+        "caliber": "5_45x39",
+        "caliberText": "5,45×39",
+        "capacity": "30",
+        "length": 730,
+        "barrel": 206,
+        "emptyMass": 2.7,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.22,
+          "rpm": 700
+        },
+        "reloadFrom": "AK-74",
+        "muzzleSpeed": 735,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "730 mm com a coronha aberta, 490 mm dobrada. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 206,5 mm. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,7 kg. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "o carregador de 30 do AK-74. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "650 a 735 tiros/min. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "735 m/s (o cano curto). https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do AK-74: o mesmo carregador."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/AKS-74U"
+    },
+    "FN SCAR-L": {
+      "value": {
+        "id": "fn_scar_l",
+        "name": "FN SCAR-L",
+        "of": "FN SCAR-H",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 889,
+        "barrel": 351,
+        "emptyMass": 3.29,
+        "options": {
+          "rpm": 625
+        },
+        "reloadFrom": "FN SCAR-H",
+        "muzzleSpeed": 870,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "SCAR-L STD: 889 mm com a coronha aberta. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 351 mm. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,29 kg. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "625 tiros/min. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "870 m/s. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do FN SCAR-H: o mesmo corpo, carregador por baixo."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "M1 Garand": {
+      "value": {
+        "id": "m1_garand",
+        "name": "M1 Garand",
+        "of": "SKS",
+        "caliber": "30_06",
+        "caliberText": ".30-06",
+        "capacity": "8",
+        "length": 1100,
+        "barrel": 610,
+        "emptyMass": 4.31,
+        "reloadFrom": "SKS",
+        "muzzleSpeed": 865,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1100 mm. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 610 mm. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "4,31 a 5,3 kg; o menor, sem nada. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "clipe en bloc de 8. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "865 m/s. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SKS: fuzil semiautomático de madeira carregado por cima com o clipe (o en bloc entra inteiro, a SKS usa pente; a mesma sequência de cima)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/M1_Garand"
+    },
+    "Accuracy L96A1": {
+      "value": {
+        "id": "accuracy_l96a1",
+        "name": "Accuracy L96A1",
+        "of": "Accuracy AWM",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "10",
+        "length": 1180,
+        "barrel": 660,
+        "emptyMass": 6.5,
+        "reloadFrom": "Accuracy AWM",
+        "muzzleSpeed": 840,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1180 mm. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 660 mm. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "6,5 kg. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 10. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "840 m/s. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Accuracy AWM: o mesmo fuzil de ferrolho do mesmo fabricante."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+    },
+    "Mossberg 590": {
+      "value": {
+        "id": "mossberg_590",
+        "name": "Mossberg 590",
+        "of": "Mossberg 500",
+        "caliber": "12ga_00buck",
+        "caliberText": "12 ga",
+        "capacity": "8+1",
+        "length": 1003,
+        "barrel": 508,
+        "emptyMass": 3.3,
+        "options": {
+          "heat": 1,
+          "bayo": 1
+        },
+        "reloadFrom": "Mossberg 500",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1003 mm com o cano de 20 pol. https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 20 pol. (508 mm). https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,3 kg. https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tubo de 8 mais 1 na câmara (cano de 20 pol.). https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Mossberg 500: o mesmo tubo carregado cartucho a cartucho."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Mossberg_500"
+    },
+    "FN M240B": {
+      "value": {
+        "id": "fn_m240b",
+        "name": "FN M240B",
+        "category": "mtr",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "100",
+        "length": 1245,
+        "barrel": 630,
+        "emptyMass": 12.5,
+        "options": {
+          "stock": "fixed",
+          "mag": "belt",
+          "hg": "poly",
+          "hgFrac": 0.35,
+          "bipod": 1,
+          "carry": 1,
+          "hR": 0.085,
+          "br": 0.011,
+          "charge": 1,
+          "rail": 1,
+          "heat": 1,
+          "rpm": 750
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 853,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1245 mm. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 630 mm. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "12,5 kg. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "fita de 100. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "650 a 950 tiros/min; 750 o meio da faixa de uso. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "853 m/s. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da M60, como a do FN MAG de que o M240B é a versão americana: metralhadora de fita 7,62×51."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/M240_machine_gun"
     }
   },
   "gp25Mount": {
