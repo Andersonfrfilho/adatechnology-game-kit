@@ -26,6 +26,7 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
 import { createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
+import { placeInView } from './view-hold'
 import type { FxLayers } from './layers'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRocketLight, flameJet, launchRocket, type HeavyContext } from './heavy'
@@ -72,6 +73,8 @@ export interface ViewmodelOptions {
   contact?: LaserRaycast
   /** Where the body holds the tool now (`ModuleHost.holdFrame`): the tool is drawn there at its real size in every view; null or absent (no body), the frame of a body's right shoulder under the camera's eye. */
   bodyHold?: () => HandPose | null
+  /** Whether the view is the player's own eye (first person): the gun is then held at the hip in the view at its real size (`VIEW_HOLD`: the barrel parallel to the aim, the grip low and right, where the hand reaches) instead of on the body. */
+  firstPerson?: () => boolean
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile; played?: CuePlayed }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
@@ -355,12 +358,22 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (!session) return
     const family = session.model.parts.family
     session.holderScale = 1
+    if (options.firstPerson?.()) {
+      placeInView({ THREE, hand, holder, camera, right: hold?.right ?? null, rear: modelRear, kind: family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long' })
+      lift = 0
+      pullFromWall(dt)
+      return
+    }
+    hand.scale.set(1, 1, 1)
     placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
     hand.updateMatrixWorld(true)
     lift += (liftToKeepInView() - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
     if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
     hand.updateMatrixWorld(true)
-    if (!options.contact) return
+    pullFromWall(dt)
+  }
+  const pullFromWall = (dt: number): void => {
+    if (!options.contact || !session) return
     ahead.set(0, 0, -1).applyQuaternion(camera.quaternion)
     if (reach === 0) reach = Math.max(0.01, measureReach(session))
     const free = options.contact(camera.position, ahead, WALL_PULL.probe)

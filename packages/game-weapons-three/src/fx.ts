@@ -58,6 +58,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.raycast ? { raycast: options.raycast } : {}),
     ...(options.contact ? { contact: options.contact } : {}),
     ...(options.bodyHold ? { bodyHold: options.bodyHold } : {}),
+    ...(options.firstPerson ? { firstPerson: options.firstPerson } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
     ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
     ...(options.particleLimit ? { particleLimit: options.particleLimit } : {}),

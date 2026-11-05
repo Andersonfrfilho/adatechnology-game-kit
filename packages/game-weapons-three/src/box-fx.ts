@@ -54,6 +54,8 @@ export interface WeaponFxOptions {
   contact?: LaserRaycast
   /** Where the body holds the tool (`ModuleHost.holdFrame`): third person draws it there at its real size. */
   bodyHold?: () => HandPose | null
+  /** Whether the view is the player's own eye: the gallery's guns are then framed in the view (`VIEW_HOLD`) instead of held on the body. */
+  firstPerson?: () => boolean
   /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
   /** The most casings and magazines alive at once (`host.particleLimit`), read at each spawn; without it the viewmodel keeps a cap of its own. */
