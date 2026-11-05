@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { ModelKit } from './kit'
-import type { WeaponModel } from './index'
+import type { WeaponModel } from './types'
 
 type Substitution = ReadonlyMap<THREE_NS.Material, THREE_NS.Material>
 

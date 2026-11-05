@@ -16,9 +16,9 @@ import { partRegistry } from './part-registry'
 import { buildPistol } from './pistol'
 import { buildRevolver } from './revolver'
 import { buildRifle } from './rifle'
-import type { BuiltModel, ModelOptions, ModelParts } from './types'
+import type { BuiltModel, ModelOptions, ModelParts, WeaponModel } from './types'
 
-export type { ModelFamily, ModelOptions, ModelParts } from './types'
+export type { ModelFamily, ModelOptions, ModelParts, WeaponModel } from './types'
 
 /** One weapon of the gallery as `data/models.json` keeps it: the builder, the measures in mm and the builder's options. */
 export interface ModelEntry {
@@ -46,14 +46,6 @@ export const ARCHETYPE_MODELS: Readonly<Record<string, string>> = (() => {
   }
   return chosen
 })()
-
-/** A weapon model: `root` (the page's `wr`) holds `inner` (what the builder made, fitted to the real length); `parts` are pivots and marks inside `inner`. */
-export interface WeaponModel {
-  readonly id: string
-  readonly root: THREE_NS.Group
-  readonly inner: THREE_NS.Group
-  readonly parts: ModelParts
-}
 
 const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOptions) => BuiltModel> = {
   pistol: buildPistol,

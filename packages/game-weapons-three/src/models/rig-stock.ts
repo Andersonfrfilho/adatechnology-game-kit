@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { WeaponDef } from '@adatechnology/game-weapons'
-import type { WeaponModel } from './index'
+import type { WeaponModel } from './types'
 import type { StockMove } from './types'
 
 const FOLD_AXIS_BY_SIDE: Readonly<Record<string, 'x' | 'y' | 'z'>> = { right: 'y', left: 'y', under: 'z', over: 'z' }
