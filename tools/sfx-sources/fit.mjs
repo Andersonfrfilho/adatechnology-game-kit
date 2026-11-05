@@ -4,7 +4,7 @@
 // The recorded sounds, measured into numbers the synthesizer can play: when the files are not on the machine (CI, the published site, a clean
 // clone) or not loaded yet, a sound of the kit plays these instead of the old hand-made recipes, so it stays close to the recording.
 //
-// Each take is split by the same bandpass chains the engine will play (12 bands, 63 Hz to 12.5 kHz, two WebAudio biquads each), and the power of
+// Each take is split by the same bandpass chains the engine will play (14 bands, 35 Hz to 17 kHz, two WebAudio biquads each: the low rumble of a shot and its bright crack included), and the power of
 // each band is followed in 2.5 ms steps. The bands overlap, so the gains are solved jointly (non-negative least squares against what white noise
 // through each chain measures in every band). Each band becomes one layer: noise through its chain with a gain curve of a few points (exponential
 // ramps down to -80 dB, within 1.5 dB of the measured curve where the sound is loud), scaled to carry the energy measured, out to the tail 70 dB
@@ -25,10 +25,10 @@ const HOP = 120 // 2.5 ms
 /** Band centres (Hz) and their Q: a third of an octave apart, 50 Hz to 16 kHz (26 bands). */
 // Two biquads in series per band: the skirts fall 12 dB an octave, so a loud thump at 63 Hz does not hiss at 2 kHz. (Third-octave bands were
 // tried: narrow noise flickers in short frames and smears the attack of a shot; they measured further from the recordings.)
-export const FIT_BANDS = [63, 125, 200, 320, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500].map((frequency) => ({ frequency, q: 1.6, stages: 2 }))
+export const FIT_BANDS = [35, 63, 125, 200, 320, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500, 17000].map((frequency) => ({ frequency, q: 1.6, stages: 2 }))
 /** A loop plays through a parallel bank of single biquads: its bands. */
 export const LOOP_BANDS = [63, 125, 200, 320, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500].map((frequency) => ({ frequency, q: 1.6, stages: 1 }))
-const MAX_LAYERS = 14
+const MAX_LAYERS = 16
 const MAX_PARTIALS = 2
 const MAX_TAKES = 4
 const MAX_SECONDS = 6
@@ -95,6 +95,36 @@ const chainOf = (band) => {
     for (let stage = 0; stage < band.stages; stage++) out = filter(out, f)
     return out
   }
+}
+
+/**
+ * The same chain with every other stage run backwards in time: the same magnitude (so the cross matrix holds), but the ringing spreads both ways
+ * instead of trailing after the hit.
+ * @param {BandSpec} band @returns {(input: Float32Array) => Float32Array}
+ */
+const balancedChainOf = (band) => {
+  const f = bandpass(band.frequency, band.q)
+  return (input) => {
+    let out = input
+    for (let stage = 0; stage < band.stages; stage++) out = stage % 2 === 1 ? filter(out.slice().reverse(), f).reverse() : filter(out, f)
+    return out
+  }
+}
+
+/**
+ * The power of a band over time without the filter's own ringing. Up to the loudest frame, the geometric mean of the forward chain (which
+ * rings on past the hit) and the balanced one (which spreads part of the attack before the start, where it is lost): each errs the other way,
+ * by a few dB, on a shot's boom. After it, the lower of the two: the balanced chain does not trail the hit, so a low end is not measured as
+ * lasting longer than it does.
+ * @param {Float32Array} signal @param {BandSpec} band @returns {Float64Array}
+ */
+function bandTrack(signal, band) {
+  const window = windowOf(band.frequency)
+  const forward = powerTrack(chainOf(band)(signal), window)
+  const balanced = powerTrack(balancedChainOf(band)(signal), window)
+  let loudest = 0
+  for (let frame = 1; frame < forward.length; frame++) if ((forward[frame] ?? 0) > (forward[loudest] ?? 0)) loudest = frame
+  return forward.map((value, frame) => (frame <= loudest ? Math.sqrt(value * (balanced[frame] ?? value)) : Math.min(value, balanced[frame] ?? value)))
 }
 
 /** @param {BandSpec[]} bands @returns {Bank} */
@@ -292,7 +322,7 @@ function fft(re, im) {
  */
 export function fitTake(full) {
   const signal = full.length > MAX_SECONDS * RATE ? full.subarray(0, MAX_SECONDS * RATE) : full
-  const measured = TAKE_BANK.chains.map((chain, b) => powerTrack(chain(signal), windowOf(FIT_BANDS[b]?.frequency ?? 1000)))
+  const measured = FIT_BANDS.map((band) => bandTrack(signal, band))
   const gains = solveGains(measured, TAKE_BANK.M)
   const frames = gains[0]?.length ?? 0
   const amplitude = gains.map((track) => Array.from(track, (x) => Math.sqrt(Math.max(0, x))))
