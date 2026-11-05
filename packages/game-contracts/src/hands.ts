@@ -47,3 +47,10 @@ export interface MuzzlePose {
 
 /** Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). */
 export type MuzzleSource = () => MuzzlePose | null
+
+/**
+ * The layer of what the first-person view draws over the world (three.js `Object3D.layers`): the tool in the hands and the arms that hold it. A host with a first-person view draws
+ * the world without this layer, then this layer alone over it with the depth cleared and its own field of view (`ModuleHost.setViewmodelFov`), as shooters draw the weapon in the hands:
+ * it never goes into a wall, and the gun and the arms are framed by the lens chosen for them. Seen from outside (third person) nothing is on it.
+ */
+export const FIRST_PERSON_LAYER = 9

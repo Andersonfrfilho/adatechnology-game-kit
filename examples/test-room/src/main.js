@@ -25,7 +25,7 @@ import { applyLocalSoundPack, parseLocalSoundPack } from '@adatechnology/game-au
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { terrainLotsGround } from '@adatechnology/game-terrain-three'
-import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
+import { createFirstPersonArms, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
@@ -80,6 +80,8 @@ const room = createTestRoom({
   ...(params.get('lights') ? { lightSizes: { point: Number(params.get('lights').split(',')[0]), spot: Number(params.get('lights').split(',')[1]) } } : {}),
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   strikeCombo: PUNCH_COMBO,
+  // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
+  firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),
   strikeComboOn: params.get('combo') === '1',
   // the default page has every ground to try, in lots before the wall; a page that asked for something in particular has the plain floor its tests expect
   ...(deferred && !params.get('area') && !items && !params.get('scenario') && !params.get('scene') ? { ground: terrainLotsGround(locale) } : {}),

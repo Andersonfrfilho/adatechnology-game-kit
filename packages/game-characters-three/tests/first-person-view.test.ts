@@ -202,6 +202,25 @@ describe('setView', () => {
     expect(calls).toEqual(['before', 'after'])
     expect((mesh.material as THREE.Material).colorWrite).toBe(true)
   })
+
+  it('hides the arms too for a view that draws arms of its own (`arms`), and only then', () => {
+    const avatar = settle()
+    const arms: THREE.Object3D[] = []
+    for (const arm of avatar.rig.arms) (arm.g as unknown as THREE.Object3D).traverse((o) => { if ((o as THREE.Mesh).isMesh) arms.push(o) })
+    expect(arms.length).toBeGreaterThan(4)
+    const drawn = (): boolean[] => arms.map((object) => {
+      before(object, viewCamera)
+      const shown = materialsOf(object).every((material) => material.colorWrite)
+      after(object, viewCamera)
+      return shown
+    })
+    avatar.setView('first', viewCamera)
+    expect(drawn().every(Boolean)).toBe(true)
+    avatar.setView('first', viewCamera, { arms: true })
+    expect(drawn().some(Boolean)).toBe(false)
+    avatar.setView('third', viewCamera, { arms: true })
+    expect(drawn().every(Boolean)).toBe(true)
+  })
 })
 
 describe('lens', () => {

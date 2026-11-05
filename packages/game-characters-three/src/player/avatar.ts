@@ -126,6 +126,9 @@ export type PlayPoseOptions = {
   blend?: number
 }
 
+/** How the first-person view draws the body: `arms` hides the body's arms from the eye too, for a view that draws arms of its own (the first-person arms of the viewmodel). */
+export type AvatarViewOptions = { readonly arms?: boolean }
+
 /** The colours the body was drawn with, for whatever has to match it (the first-person arms): skin, shirt, trousers and shoes as 0xRRGGBB, and whether the sleeves cover the forearms. */
 export type PlayerAvatarColors = { skin: number; shirt: number; trousers: number; shoes: number; longSleeves: boolean }
 
@@ -143,7 +146,7 @@ export type PlayerAvatar = {
    */
   eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
   /** In 'first' with a camera, the head and neck are not drawn for that camera only (shadows, mirrors and every other camera still see them); 'third' draws them. */
-  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null): void
+  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null, options?: AvatarViewOptions): void
   play(clip: string | PoseClip, options?: PlayPoseOptions): void
   stop(): void
   readonly playing: string | null
@@ -271,6 +274,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   eyeSocket.position.set(BUILDER_EYE[0] + eyeOffset[0], BUILDER_EYE[1] + eyeOffset[1], BUILDER_EYE[2] + eyeOffset[2])
   ;(rig.headG as unknown as THREE_NS.Object3D).children[0]!.add(eyeSocket)
   const headHider = createHeadHider([rig.headG as unknown as THREE_NS.Object3D, ...(rig.neck ? [rig.neck as unknown as THREE_NS.Object3D] : [])])
+  // the body's arms, from the shoulders: hidden from the eye when the view draws arms of its own (`AvatarViewOptions.arms`)
+  const armsHider = createHeadHider(rig.arms.map((arm) => arm.g as unknown as THREE_NS.Object3D))
   const eyeLocal = new THREE.Vector3()
   let bob = 0 // the vertical bob the gait adds to the hips target, taken off the eye by `1 - eyeBob`
   let hipWithoutBob: number | null = null // the hips' cascade run again on the target with no bob, so the bob left after smoothing can be told apart
@@ -665,7 +670,10 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       root.updateWorldMatrix(true, false)
       return root.localToWorld(out.copy(eyeLocal))
     },
-    setView: (mode, camera) => headHider.setView(mode, camera),
+    setView: (mode, camera, viewOptions) => {
+      headHider.setView(mode, camera)
+      armsHider.setView(viewOptions?.arms ? mode : 'third', camera)
+    },
     play(clip, playOptions = {}) {
       const found = typeof clip === 'string' ? clips.get(clip) : clip
       if (!found) throw new Error(`Unknown pose clip: ${String(clip)}`)

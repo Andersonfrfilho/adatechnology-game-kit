@@ -4,7 +4,7 @@ import type { PoseClip } from '@adatechnology/game-characters'
 import type { HandTargets } from '@adatechnology/game-contracts'
 
 import type { ReachView } from './arm-reach'
-import type { AvatarItemUsePose, PlayerAvatar } from './avatar'
+import type { AvatarItemUsePose, AvatarViewOptions, PlayerAvatar } from './avatar'
 import type { AvatarViewMode } from './head-hiding'
 import type { THREE_NS } from '../three'
 
@@ -16,8 +16,8 @@ export type RoomAvatarLike = {
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /** Where the body's eyes are after its pose (`RoomAvatar.eye`): the room draws the body in both views and puts the first-person camera there. */
   eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
-  /** Hides the head and neck from `camera` in first person (`RoomAvatar.setView`). */
-  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null): void
+  /** Hides the head and neck from `camera` in first person, and the arms with `arms` (`RoomAvatar.setView`). */
+  setView(mode: AvatarViewMode, camera: THREE_NS.Object3D | null, options?: AvatarViewOptions): void
   /** Brings the body's hands to the tool in them, in both views; `view` keeps them in the first-person view (`RoomAvatar.reach`). */
   reach(targets: HandTargets | null, view?: ReachView | null): void
   /** Plays a strike on the body (the only source of it, in both views) and answers the seconds to its impact (`RoomAvatar.strike`). */
@@ -120,7 +120,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     root: avatar.root,
     avatar,
     eye: (out) => avatar.eye(out),
-    setView: (mode, camera) => avatar.setView(mode, camera),
+    setView: (mode, camera, options) => avatar.setView(mode, camera, options),
     update: (dt, state) => {
       stepGuard(dt, state)
       updateFeet(state)

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 
+import { toWorldLens, VIEW_HOLD } from '../src'
 import { createWeaponsTestModule } from '../src/testing'
 
 vi.setConfig({ testTimeout: 30_000 })
@@ -31,11 +32,14 @@ const tracerStart = (scene: THREE.Scene): THREE.Vector3 | null => {
   return start
 }
 
-// a gun fires once it is drawn (and a minigun once its barrels spin): pull until it does
-const fireWhenReady = (room: { use(): string; update(dt: number): void }): string => {
-  let status = room.use()
+// a gun fires once it is drawn (and a minigun once its barrels spin): pull until it does; the view the shot left from is kept (its kick turns the view after)
+let shotView: THREE.PerspectiveCamera | null = null
+const fireWhenReady = (room: { use(): string; update(dt: number): void; readonly camera: THREE.Camera }): string => {
+  let status = ''
   for (let i = 0; i < 240 && status !== 'ok'; i++) {
-    room.update(1 / 60)
+    if (i > 0) room.update(1 / 60)
+    shotView = (room.camera as THREE.PerspectiveCamera).clone()
+    shotView.updateMatrixWorld(true)
     status = room.use()
   }
   return status
@@ -59,7 +63,9 @@ describe('the shot leaves the muzzle of the model in the hands', () => {
         expect(fireWhenReady(room), weapon).toBe('ok')
         const mark = markOf(room.scene)
         expect(mark, weapon).not.toBeNull()
-        expect(tracerStart(room.scene)?.distanceTo(mark!), `${view} ${weapon}`).toBeLessThan(0.002)
+        // in first person the gun is drawn through its lens: the tracer leaves where the world sees the muzzle as drawn, through the view the shot left from (its kick turns it after)
+        const seen = view === 'first' ? toWorldLens(shotView!, mark!.clone(), shotView!.fov, VIEW_HOLD[weapon === 'glock_17' ? 'handgun' : 'long'].fov) : mark!
+        expect(tracerStart(room.scene)?.distanceTo(seen), `${view} ${weapon}`).toBeLessThan(0.002)
         expect(emit.mock.calls.some(([kind]) => kind === 'flash'), weapon).toBe(false)
         for (let i = 0; i < 30; i++) room.update(1 / 60)
       }

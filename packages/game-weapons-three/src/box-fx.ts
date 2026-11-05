@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { GunshotSpace } from './audio/gunshot'
+import { FIRST_PERSON_LAYER } from '@adatechnology/game-contracts'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool, MuzzlePose } from '@adatechnology/game-contracts'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
@@ -11,6 +12,7 @@ import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { IN_HAND_NODE_NAME } from './laser-raycast'
 import { createEyeFrame, placeOnBody } from './fx/body-hold'
+import { placeInView, toWorldLens, VIEW_HOLD } from './fx/view-hold'
 import { holdOfProp, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
 import type { ItemModels } from './item-models'
@@ -56,6 +58,12 @@ export interface WeaponFxOptions {
   bodyHold?: () => HandPose | null
   /** Whether the view is the player's own eye: the gallery's guns are then framed in the view (`VIEW_HOLD`) instead of held on the body. */
   firstPerson?: () => boolean
+  /** The lens the host draws the first-person layer with (`ModuleHost.setViewmodelFov`): the gun in the hands sets the one of its family, and null when it leaves the view. */
+  viewmodelFov?: (degrees: number | null) => void
+  /** How far the gun is brought to the eye, 0 at the hip to 1 aimed down the sights. */
+  aim?: () => number
+  /** How the body moves, for the bob of the step and the sway of the gun in the view. */
+  motion?: () => { readonly speed: number; readonly running: boolean }
   /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
   /** The most casings and magazines alive at once (`host.particleLimit`), read at each spawn; without it the viewmodel keeps a cap of its own. */
@@ -141,6 +149,16 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const pointForward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
   // the front end of the prop in its own space (x along it)
   const frontOf = new THREE.Vector3()
+  // first person: the tool and the arms are drawn on the first-person layer through the lens of a tool in one hand (`VIEW_HOLD.tool`), carried point up
+  const restBox = new THREE.Box3()
+  const noMotion = new THREE.Vector3()
+  let inLens = false
+  const setLens = (on: boolean): void => {
+    if (on !== inLens) options.viewmodelFov?.(on ? VIEW_HOLD.tool.fov : null)
+    inLens = on
+    const layer = on ? FIRST_PERSON_LAYER : 0
+    hand.traverse((node) => node.layers.set(layer))
+  }
 
   const equip = (weapon: string): void => {
     if (model) hand.remove(model)
@@ -149,6 +167,8 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     def = arsenal.weapons.get(weapon) ?? null
     if (!def || BODY_ACTIONS.has(def.id)) return
     model = buildWeaponModel(THREE, def, options.items)
+    restBox.setFromObject(model)
+    inLens = false
     const length = new THREE.Box3().setFromObject(model).getSize(v).x
     rear = new THREE.Box3().setFromObject(model).min.x
     lengthMetres = length
@@ -263,6 +283,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   return {
     unequip() {
       if (model) hand.remove(model)
+      if (inLens) setLens(false)
       model = null
       inHand = null
       hold = null
@@ -271,6 +292,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       if (!model || !def || !SPOUTS.has(def.action.kind)) return null
       hand.updateMatrixWorld(true)
       const at = model.localToWorld(v.copy(frontOf))
+      if (inLens) toWorldLens(camera, at, (camera as THREE_NS.PerspectiveCamera).fov ?? 72, VIEW_HOLD.tool.fov)
       const along = v2.set(1, 0, 0).applyQuaternion(model.getWorldQuaternion(q2)).normalize()
       return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: false }
     },
@@ -293,7 +315,13 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     update(dt) {
       kick *= Math.exp(-dt * 14)
       dip += ((reloading ? 1 : 0) - dip) * Math.min(1, dt * 8)
-      if (inHand && model) {
+      if (inHand && model && options.firstPerson?.()) {
+        setLens(true)
+        placeInView({ THREE, hand, holder: model, camera, right: hold?.right ?? null, box: restBox, kind: 'tool', aim: 0, offset: noMotion })
+        hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
+        hand.updateMatrixWorld(true)
+      } else if (inHand && model) {
+        if (inLens) setLens(false)
         const handgun = def?.category === 'pistol' || def?.category === 'revolver'
         placeOnBody({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), rear, lengthMetres, handgun, right: hold?.right ?? null, left: hold?.left ?? null })
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))

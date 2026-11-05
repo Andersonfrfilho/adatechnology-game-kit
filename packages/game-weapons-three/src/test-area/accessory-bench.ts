@@ -43,6 +43,8 @@ export interface AccessoryBenchOptions {
 export interface AccessoryBench {
   /** Gives it a change of the bench (a choice of accessory for a mount, a button); false when the change is not one of its own. */
   handleChange(change: BenchChange): boolean
+  /** How far the weapon is brought to the eye by the right button: 0 at the hip, 1 aimed (it eases over the weapon's time to the sights). */
+  readonly aimProgress: number
   dispose(): void
 }
 
@@ -218,6 +220,9 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
   })
 
   return {
+    get aimProgress() {
+      return aimProgress
+    },
     handleChange(change) {
       if (change.kind === 'action') return act(change.id)
       if (change.kind === 'control' && change.id === SUPPORTED_CONTROL_ID && typeof change.value === 'boolean') {

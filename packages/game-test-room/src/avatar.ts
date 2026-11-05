@@ -71,7 +71,7 @@ export interface RoomAvatar {
    */
   eye?(out?: THREE_NS.Vector3): THREE_NS.Vector3
   /** Hides the head and neck from `camera` while the view is `first` (shadows, mirrors and other cameras keep seeing them). */
-  setView?(mode: CameraMode, camera: THREE_NS.Object3D | null): void
+  setView?(mode: CameraMode, camera: THREE_NS.Object3D | null, options?: { readonly arms?: boolean }): void
   /**
    * Plays the strike `clipId` (on the body, in both views) and answers the seconds until its impact, or null when this avatar has no such clip. The room then waits that long
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
