@@ -76,7 +76,16 @@ export interface WeaponRules {
     readonly speedOfSound: number
   }
   /** Time to raise the weapon to the sights (`base` + `perKg` × mass) and how much worse the hip is: `hipSpread` times the spread when not aiming (1: no difference). */
-  readonly aim: { readonly base: number; readonly perKg: number; readonly hipSpread: number }
+  readonly aim: {
+    readonly base: number
+    readonly perKg: number
+    readonly hipSpread: number
+    /**
+     * How much the view closes in while aiming down the iron sights, by weapon category (1 no change): the eye settles on the sights and the field narrows. A fitted optic gives its
+     * own magnification instead. A category left out does not zoom.
+     */
+    readonly ironSightZoom: Readonly<Record<string, number>>
+  }
   /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
   readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }
   /**
