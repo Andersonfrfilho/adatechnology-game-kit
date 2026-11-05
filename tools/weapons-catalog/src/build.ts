@@ -92,8 +92,13 @@ export const buildCatalog = (): CatalogFiles => {
   const models = {
     ...buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context),
     ...Object.fromEntries(creations.map((created) => [created.firearm.id, created.model])),
+    ...Object.fromEntries(Object.entries(decisions.weaponModels).map(([id, decision]) => [id, decision.value])),
   }
-  const mountedFirearms = allFirearms.map((firearm) => withMounts(firearm, models, decisions))
+  const mountedFirearms = allFirearms.map((firearm) => {
+    const mounted = withMounts(firearm, models, decisions)
+    const tags = decisions.weaponTags[firearm.id]?.value
+    return tags ? { ...mounted, tags: [...tags] } : mounted
+  })
   return {
     [OUTPUT_PATHS.calibers]: serialize(calibers),
     [OUTPUT_PATHS.firearms]: serialize(mountedFirearms),
