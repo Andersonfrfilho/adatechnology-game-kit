@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -36,6 +36,13 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/**
+ * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
+ * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
+ */
+const STRUCTURAL_EVENTS: ReadonlySet<DestructionEventType> = new Set<DestructionEventType>([
+  'fracture', 'detach', 'collapse', 'settle', 'destroyed', 'expose', 'stage', 'hole', 'ignite', 'primed', 'extinguish', 'burnout', 'leak', 'explode',
+])
 /** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
 const MIN_FRAGMENTS_PER_SLICE = 8
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
@@ -298,7 +305,7 @@ class Renderer implements DestructionRenderer {
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
-      if (this.queue.length < QUEUE_CAP) this.queue.push(ev)
+      if (this.queue.length < QUEUE_CAP || STRUCTURAL_EVENTS.has(ev.type)) this.queue.push(ev)
     })
   }
 
