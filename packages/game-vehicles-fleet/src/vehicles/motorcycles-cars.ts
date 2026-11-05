@@ -4647,6 +4647,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   fx.register(
     {
       key: 'beetle',
+      // glass headlight lenses, as on cars of its time: they shatter (a modern car's are polycarbonate)
+      headlightLens: 'glass',
       group: 'cars',
       name: trl('vehicles.beetle.name'),
       inspired: trl('vehicles.beetle.inspired'),

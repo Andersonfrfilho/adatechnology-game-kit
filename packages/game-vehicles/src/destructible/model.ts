@@ -6,7 +6,7 @@
  * Everything here is pure data derived from the built vehicle: no meshes are created or touched.
  */
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'
-import type { VehicleContext, VehicleKit } from '../api'
+import type { HeadlightLens, VehicleContext, VehicleKit } from '../api'
 import { clamp, strHash } from '../util'
 import type { ArmourLevel } from './armour'
 
@@ -124,6 +124,9 @@ const MECHANICS: Record<Kind, Array<'battery' | 'alternator' | 'gearbox' | 'brak
 /** Chance (percent) that a vehicle of the kind has a tow hitch when neither the spec nor the options say. */
 const HITCH_CHANCE: Record<Kind, number> = { car: 30, truck: 60, bus: 0, tractor: 100, quad: 40, bike: 0, tank: 0, boat: 0, plane: 0, heli: 0 }
 
+/** A glass headlight lens shatters at about the energy of a pistol round, joules; polycarbonate or acrylic takes some three before it comes apart. */
+const GLASS_LENS_HP = 320
+const PLASTIC_LENS_HP = 900
 const STEEL_KG_M2 = 7
 const ALU_KG_M2 = 3.2
 
@@ -228,7 +231,7 @@ function paneBox(c: any, pane: any, inverse: any): LocalBox {
 export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: ModelOptions = {}): VehicleModel {
   const kind = kindOf(c)
   const m = c.meta
-  const spec = c.spec as { fuel?: string; hitch?: boolean }
+  const spec = c.spec as { fuel?: string; hitch?: boolean; headlightLens?: HeadlightLens }
   const t = kit.t
   const skin = skinOf(kind)
   const armoured = options.armour ?? null
@@ -311,7 +314,11 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       continue
     }
     if (role === 'light') {
-      add({ id, role, name: label, material: 'glass', box, mass: 1.2 + 4 * area, hp: 320, zoneId: id, visual: true, tags: ['light', ...tags] })
+      // the lens decides how the lamp breaks: a glass one (the headlights of older cars) shatters at the first round or blow; polycarbonate (headlights since
+      // the 1990s) and the acrylic of every taillight take a hole and crack, and only come apart after a few rounds or a hard blow
+      const lens = /^head/.test(id) ? (spec.headlightLens ?? 'polycarbonate') : 'acrylic'
+      const glassLens = lens === 'glass'
+      add({ id, role, name: label, material: glassLens ? 'glass' : 'plastic', box, mass: 1.2 + 4 * area, hp: glassLens ? GLASS_LENS_HP : PLASTIC_LENS_HP, zoneId: id, visual: true, tags: ['light', `lens_${lens}`, ...tags] })
       continue
     }
     if (role === 'bumper') {

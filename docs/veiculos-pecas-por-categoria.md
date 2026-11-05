@@ -15,7 +15,7 @@ Junto com esta lista valem `CLAUDE.md` §7 (regras dos veículos), `criterios-fi
 | Janelas das portas e vidros laterais | vidro temperado | vão com a porta | estilhaça inteiro no primeiro tiro; blindado trinca e fica | todo vidro desenhado é peça de vidro (nunca responde como o aço da cabine) |
 | Retrovisores | plástico e espelho | vão com a porta | quebra, pende, solta | espelho embutido na carcaça, sem nada saltado; um retrovisor só por lado |
 | Para-choques | plástico | fixos | racham, soltam, derretem no fogo | — |
-| Faróis e lanternas | vidro/plástico | fixos | lente quebra, apagam | — |
+| Faróis e lanternas | farol: policarbonato (carro desde os anos 1990, padrão) ou vidro (`headlightLens: 'glass'`: Fusca, Opala); lanterna: acrílico | fixos | vidro estilhaça no primeiro tiro ou golpe firme; policarbonato e acrílico furam e trincam (lascas), e soltam depois de uns três tiros de pistola ou um golpe forte; tiro que atravessa a lente apaga a lâmpada; estilhaços ficam no chão | lente trincada e lâmpada apagada depois do tiro; farol de vidro sem lente depois do primeiro tiro |
 | Rodas e pneus | aço/alumínio e borracha | giram | pneu murcha no tiro, queima | — |
 | Tanque | aço/plástico | fixo | vaza pelo furo; incendeia só com faísca, fogo ou explosão | — |
 | Motor, bateria, radiador | aço, plástico, alumínio | fixos | dano mecânico, vazamento, faísca | — |

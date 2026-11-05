@@ -477,6 +477,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     wear(p, amount, out)
     syncZone(p)
     if (p.hp <= 0) lose(p, 'broken', out, cause)
+    else if (p.def.role === 'light') vis?.crackLight(p.def, dtype === 'ballistic')
     if (p.def.role === 'tyre' && !p.flat && p.hp < p.def.hp * 0.6 && !p.lost) {
       p.flat = true
       vis?.tyreFlat(p.def, 0.24)

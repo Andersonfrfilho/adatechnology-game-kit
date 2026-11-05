@@ -1201,11 +1201,18 @@ export class VehicleVisuals implements CreaseWork {
       }
     }
   }
+  /** The lens of a light is holed or cracked and stays; `pierced`: a round went through it to the bulb, and the lamp goes dark. */
+  crackLight(p: PartDef, pierced: boolean): void {
+    const z = this.zone(p)
+    if (!z) return
+    for (const L of z.lights as Obj[]) this.kit.crackLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0), pierced)
+  }
   /** The lens of a light breaks and its unit stays (damaged) or goes (destroyed). */
   breakLight(p: PartDef, gone: boolean): void {
     const z = this.zone(p)
     if (!z) return
     for (const L of z.lights as any[]) {
+      L.lensMaterial = p.material
       this.kit.breakLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0))
       if (gone) {
         if (L.group) L.group.visible = false

@@ -17,6 +17,20 @@ export function crackedGlassMaterial(THREE: any, texture: unknown): any {
   })
 }
 
+/** What `crackLight` reads of a lamp the kit drew (`c.lights`) and of its vehicle. */
+type LampMesh = { material: unknown; position: { clone(): unknown } }
+type CrackedLamp = {
+  lens: LampMesh[]
+  inner: LampMesh[]
+  halo?: Array<{ visible: boolean }>
+  group: { position: { clone(): unknown } } | null
+  tint: string
+  broken: unknown
+  cracked?: boolean
+  dark?: boolean
+}
+type CrackedLampHost = { toEffects(p: unknown): unknown; dirToEffects(d: unknown): unknown }
+
 export function installGlassDamage(kit: Kit): void {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
@@ -335,8 +349,22 @@ export function installGlassDamage(kit: Kit): void {
     if (!L || L.broken) return
     L.broken = true
     L.lens.forEach(function (m: any) {
-      m.visible = false
+      // a lens broken by a hit leaves its jagged edge in the bezel, as a broken pane does; a lamp broken by the zone's band keeps the old look
+      const rim = L.lensMaterial ? glassRim(m.geometry, c.rand) : null
+      if (!rim) {
+        m.visible = false
+        return
+      }
+      m.geometry.dispose()
+      m.geometry = rim
+      m.material = MATERIALS.glassEdge
+      m.userData.lensRim = true
     })
+    // without its lens and its bulb the housing is a dark hollow: the reflector, a lit chrome bowl while the lamp worked, shows dull and dark
+    if (L.lensMaterial)
+      (L.reflector || []).forEach(function (m: { material: unknown }) {
+        m.material = MATERIALS.broken
+      })
     L.inner.forEach(function (m: any) {
       m.material = MATERIALS.bulbBroken
     })
@@ -344,10 +372,41 @@ export function installGlassDamage(kit: Kit): void {
       h.visible = false
     })
     const p = L.group ? L.group.position.clone() : L.inner[0] ? L.inner[0].position.clone() : new V3()
-    I.burst(c, 'lens', c.toEffects(p), 10, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.4, variant: L.tint === 'red' ? 'red' : 'clear' })
-    I.burst(c, 'plastic', c.toEffects(p), 2, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.0 })
+    // glass bursts into many small shards; a plastic lens breaks out in fewer, larger pieces. Either way they land and stay on the ground
+    const glass = L.lensMaterial !== 'plastic'
+    I.burst(c, 'lens', c.toEffects(p), glass ? 10 : 5, { dir: c.dirToEffects(dir.clone().negate()), speed: glass ? 1.4 : 1.1, variant: L.tint === 'red' ? 'red' : 'clear' })
+    I.burst(c, 'plastic', c.toEffects(p), glass ? 2 : 5, { dir: c.dirToEffects(dir.clone().negate()), speed: 1.0 })
   }
   kit.breakLight = breakLight
+  /* A cracked polycarbonate or acrylic lens turns hazy white along its cracks (crazing): the crack texture on a lens dense enough to show it. */
+  const crazedCache = new Map<unknown, unknown>()
+  const CRAZED_OPACITY = 0.6
+  function crazed(material: unknown): unknown {
+    const known = crazedCache.get(material)
+    if (known) return known
+    const m = I.crackLens(material).clone()
+    m.opacity = Math.max(m.opacity ?? 1, CRAZED_OPACITY)
+    m.transparent = true
+    m.userData.shared = true
+    crazedCache.set(material, m)
+    return m
+  }
+  /* A lamp whose lens is holed or cracked but still in place (polycarbonate, acrylic): the lens shows the cracks and sheds a few chips; a round
+     through it wrecks the bulb or LED behind it, so the lamp goes dark. */
+  function crackLight(c: CrackedLampHost, L: CrackedLamp, dir: { clone(): { negate(): unknown } }, pierced: boolean): void {
+    if (!L || L.broken) return
+    if (!L.cracked) {
+      L.cracked = true
+      for (const m of L.lens) if (m.material && !Array.isArray(m.material)) m.material = crazed(m.material)
+    }
+    const p = L.group ? L.group.position.clone() : L.inner[0] ? L.inner[0].position.clone() : new V3()
+    I.burst(c, 'lens', c.toEffects(p), 3, { dir: c.dirToEffects(dir.clone().negate()), speed: 0.9, variant: L.tint === 'red' ? 'red' : 'clear' })
+    if (!pierced || L.dark) return
+    L.dark = true
+    for (const m of L.inner) m.material = MATERIALS.bulbBroken
+    for (const h of L.halo ?? []) h.visible = false
+  }
+  kit.crackLight = crackLight
 
-  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight })
+  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight })
 }

@@ -87,8 +87,12 @@ export interface VehicleSpec {
   /** Fuel id (a key of `configure({ fuels })`) or `'electric'` / `'none'`. */
   fuel?: string
   build?: BuildFunction
+  /** What the headlights' lenses are made of (default `polycarbonate`, the lens of cars since the 1990s; `glass` on older ones): glass shatters, polycarbonate cracks. */
+  headlightLens?: HeadlightLens
   [key: string]: any
 }
+
+export type HeadlightLens = 'glass' | 'polycarbonate'
 
 /** Builds the geometry of a vehicle into the context. */
 export type BuildFunction = (c: VehicleContext, kit: VehicleKit) => void
