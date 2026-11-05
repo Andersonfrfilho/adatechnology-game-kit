@@ -42,7 +42,7 @@ async function bundleMain(full) {
     legalComments: 'none',
     define: { __ROOM_FULL__: String(full) },
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
-    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
+    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })
   return result.outputFiles[0].text
 }
