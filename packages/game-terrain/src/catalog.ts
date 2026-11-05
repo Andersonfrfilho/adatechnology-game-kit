@@ -1,4 +1,4 @@
-import type { TerrainMaterial, TerrainProfile } from './types'
+import type { TerrainBlow, TerrainMaterial, TerrainProfile } from './types'
 
 // Specific energies are what the marks of real blows imply: a 500 J pistol round leaves about 120 cm³ in soil and 3 cm³ in concrete, an 800 kJ grenade a 1.3 m crater in soil and a 25 cm spall on a slab.
 // Cracks run about a metre from a grenade on a slab and half that on asphalt; a contact charge breaks a reinforced slab right through at about 1 kg of TNT (4.2 MJ) for 12 cm,
@@ -52,10 +52,10 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'gravel',
     debris: 'chips',
-    rimShare: 0.3,
+    rimShare: 0.15,
     reposeDegrees: 38,
     color: [0.27, 0.25, 0.22],
-    pattern: 'stone',
+    pattern: 'gravel',
     hits: {
       ballistic: { specificEnergy: 8e6, aspect: 0.4 },
       blunt: { specificEnergy: 8e6, aspect: 0.2, thresholdJoules: 200 },
@@ -63,6 +63,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
       explosive: { specificEnergy: 1e7, aspect: 0.35 },
     },
     fire: { maxScorch: 0.3, scorchPerSecond: 0.06 },
+    scatters: true,
   },
   {
     id: 'asphalt',
@@ -147,7 +148,86 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     },
     fire: { maxScorch: 0.4, scorchPerSecond: 0.06 },
   },
+  {
+    id: 'mud',
+    debris: 'clods',
+    rimShare: 0.15,
+    reposeDegrees: 18,
+    color: [0.11, 0.075, 0.04],
+    pattern: 'mud',
+    hits: {
+      ballistic: { specificEnergy: 1.2e6, aspect: 0.7 },
+      blunt: { specificEnergy: 3e5, aspect: 0.3, thresholdJoules: 15 },
+      slash: { specificEnergy: 5e4, aspect: 0.5 },
+      explosive: { specificEnergy: 1.5e6, aspect: 0.4 },
+    },
+    fire: { maxScorch: 0.15, scorchPerSecond: 0.03 },
+    footing: { sink: 0.07, drag: 0.6, prints: true },
+    splash: 'mud',
+    splats: true,
+  },
+  {
+    id: 'clay',
+    debris: 'chips',
+    color: [0.47, 0.27, 0.14],
+    pattern: 'clay',
+    hits: {
+      ballistic: { specificEnergy: 1e7, aspect: 0.2, minRadius: 0.03 },
+      blunt: { specificEnergy: 1.5e7, aspect: 0.15, thresholdJoules: 100 },
+      slash: { specificEnergy: 6e7, aspect: 0.3, thresholdJoules: 30 },
+      explosive: { specificEnergy: 8e6, aspect: 0.25 },
+    },
+    fire: { maxScorch: 0.35, scorchPerSecond: 0.05 },
+    cracks: 4,
+  },
+  {
+    id: 'snow',
+    debris: 'dust',
+    rimShare: 0.4,
+    reposeDegrees: 38,
+    color: [0.82, 0.85, 0.88],
+    pattern: 'snow',
+    hits: {
+      ballistic: { specificEnergy: 1.5e6, aspect: 1 },
+      blunt: { specificEnergy: 3e5, aspect: 0.3, thresholdJoules: 10 },
+      slash: { specificEnergy: 5e4, aspect: 0.6 },
+      explosive: { specificEnergy: 1.5e6, aspect: 0.5 },
+    },
+    fire: { maxScorch: 0, scorchPerSecond: 0, burnsAway: 0.015 },
+    footing: { sink: 0.08, drag: 0.7, prints: true },
+  },
+  {
+    id: 'cobble',
+    debris: 'blocks',
+    color: [0.2, 0.19, 0.18],
+    pattern: 'cobble',
+    hits: {
+      ballistic: { specificEnergy: 2.5e8, aspect: 0.12, minRadius: 0.015 },
+      blunt: { specificEnergy: 5e7, aspect: 0.12, thresholdJoules: 250 },
+      slash: { specificEnergy: 2e9, aspect: 0.2, thresholdJoules: 1500 },
+      explosive: { specificEnergy: 1.5e7, aspect: 0.2 },
+    },
+    fire: { maxScorch: 0.4, scorchPerSecond: 0.06 },
+    units: { length: 0.3, width: 0.2, looseJoules: 4000 },
+  },
+  {
+    id: 'paver',
+    debris: 'blocks',
+    color: [0.36, 0.33, 0.3],
+    pattern: 'paver',
+    hits: {
+      ballistic: { specificEnergy: 1.5e8, aspect: 0.14, minRadius: 0.018 },
+      blunt: { specificEnergy: 4e7, aspect: 0.12, thresholdJoules: 150 },
+      slash: { specificEnergy: 1e9, aspect: 0.2, thresholdJoules: 800 },
+      explosive: { specificEnergy: 1.2e7, aspect: 0.2 },
+    },
+    fire: { maxScorch: 0.45, scorchPerSecond: 0.08 },
+    units: { length: 0.2, width: 0.2, looseJoules: 2500 },
+  },
 ]
+
+/** How far a blow is held back by the water it crosses before it reaches the bed: a round slows fast in water; a blast is pushed down by it. */
+const WATER_BLOW_SHARE: Record<TerrainBlow, number> = { ballistic: 0.5, slash: 0.3, blunt: 0.5, explosive: 1 }
 
 export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'lawn', strata: [{ material: 'turf', thickness: 0.05 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
@@ -159,6 +239,13 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'tile_floor', strata: [{ material: 'ceramic', thickness: 0.008 }, { material: 'mortar', thickness: 0.03 }, { material: 'concrete', thickness: 0.1, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'wood_floor', strata: [{ material: 'wood_hard', thickness: 0.022 }, { material: 'mortar', thickness: 0.03 }, { material: 'concrete', thickness: 0.1, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'stone_paving', strata: [{ material: 'stone', thickness: 0.08 }, { material: 'gravel', thickness: 0.2 }, { material: 'soil', thickness: 1.2 }] },
+  { id: 'mud', strata: [{ material: 'mud', thickness: 0.5 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
+  { id: 'gravel_bed', strata: [{ material: 'gravel', thickness: 0.3 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
+  { id: 'dry_clay', strata: [{ material: 'clay', thickness: 0.35 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
+  { id: 'snow', strata: [{ material: 'snow', thickness: 0.3 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
+  { id: 'cobblestone', strata: [{ material: 'cobble', thickness: 0.12 }, { material: 'sand', thickness: 0.06 }, { material: 'gravel', thickness: 0.2 }, { material: 'soil', thickness: 1.2 }] },
+  { id: 'paver_floor', strata: [{ material: 'paver', thickness: 0.08 }, { material: 'sand', thickness: 0.05 }, { material: 'gravel', thickness: 0.15 }, { material: 'soil', thickness: 1.2 }] },
+  { id: 'shallow_water', water: { liquid: 'water', depth: 0.3, drag: 0.65, blowShare: WATER_BLOW_SHARE }, strata: [{ material: 'mud', thickness: 0.15 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
 ]
 
 /** About twelve grenades (200 kJ) on the same spot of bare bars. */

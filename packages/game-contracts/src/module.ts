@@ -138,6 +138,8 @@ export interface AreaPlacement {
 export interface GroundZone {
   readonly rect: readonly [number, number, number, number]
   readonly surface: string
+  /** Sign a renderer lays on the front edge of the zone (the side of +z). */
+  readonly label?: string
 }
 
 /** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */

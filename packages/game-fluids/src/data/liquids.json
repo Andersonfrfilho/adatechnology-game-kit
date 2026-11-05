@@ -420,5 +420,18 @@
       "drink",
       "sticky"
     ]
+  },
+  {
+    "id": "mud",
+    "color": 4008988,
+    "opacity": 0.95,
+    "stainColor": 3811866,
+    "viscosity": 40,
+    "density": 1600,
+    "dryTime": 900,
+    "gloss": 0.4,
+    "tags": [
+      "dirty"
+    ]
   }
 ]

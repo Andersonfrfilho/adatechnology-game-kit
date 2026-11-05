@@ -9,7 +9,7 @@ const MARK_REACH = 1.5
 const MARK_TEXTURE_SIZE = 64
 const MARK_DARKEN = 0.85
 /** How a piece of each kind is stretched: a shard is a flake, a splinter a long sliver. */
-const PIECE_SHAPE: Record<TerrainDebrisKind, readonly [number, number, number]> = { clods: [1, 0.85, 1], chips: [1, 0.6, 0.8], shards: [1.3, 0.2, 1], splinters: [0.3, 0.25, 2.4], dust: [1, 0.8, 1] }
+const PIECE_SHAPE: Record<TerrainDebrisKind, readonly [number, number, number]> = { clods: [1, 0.85, 1], chips: [1, 0.6, 0.8], shards: [1.3, 0.2, 1], splinters: [0.3, 0.25, 2.4], dust: [1, 0.8, 1], blocks: [1, 0.42, 0.65] }
 
 /** A pock as an alpha disc: dark in the middle, a broken lighter ring where the surface chipped. */
 function createMarkTexture(THREE: ThreeLib): THREE_NS.DataTexture {

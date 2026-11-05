@@ -49,7 +49,7 @@ import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
-import { createTerrain, createTerrainImpl, DEFAULT_PROFILE, type TerrainBlowResult } from '@adatechnology/game-terrain'
+import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
@@ -141,6 +141,9 @@ const KICK_HEIGHT = 0.6
 /** Object id of the floor in the destruction world. */
 const GROUND_ID = 'room_ground'
 const TERRAIN_CELL = 0.1
+const GROUND_SPLASH_MAX_LITRES = 3
+/** Metres per second a body has to hit the water at for a splash. */
+const WATER_ENTRY_SPEED = 1.5
 /** A huge arena gets coarser cells, not more memory. */
 const TERRAIN_MAX_CELLS = 1000
 const GROUND_BURST_MAX = 28
@@ -350,6 +353,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       profile: quality,
       ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
       groundAt,
+      marklessAt: (x, z) => terrain.waterAt(x, z) !== null,
     }),
   })
   const renderer = createDestructionRenderer(THREE, {
@@ -405,8 +409,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const material = terrain.material(result.removed[0]?.material ?? result.exposed)
     const def = world.materials.get(material.id)
     const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
-    renderer.emit(material.debris === 'clods' ? 'dust' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
+    renderer.emit(material.debris === 'clods' ? 'dust' : material.debris === 'blocks' ? 'chips' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
+    const litres = Math.min(GROUND_SPLASH_MAX_LITRES, 0.1 + result.radius * 2)
+    // water on water leaves no stain: a burst of drops and the rings the terrain already drew
+    if (result.water) renderer.emit('foam', [result.point[0], result.water.level + 0.05, result.point[2]], [0, 1, 0], Math.max(6, size * 2), 2 + result.radius * 4)
+    else if (material.splash) fluids.splash(material.splash, [result.point[0], result.point[1] + 0.05, result.point[2]], litres, [0, 1.5 + result.radius * 3, 0])
     playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
   }
   terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
@@ -677,7 +685,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     footing: (x, z, radius, feet) => footing(x, z, radius, feet),
     blockers,
     limit: arenaSize,
-    floorAt: terrain.heightAt,
+    floorAt: terrain.footAt,
+    speedAt: terrain.walkFactorAt,
     start: arena.playerStart,
     crouchKeys: options.crouch?.keys,
     onSlam: (event) => slamPlayer(event),
@@ -2842,6 +2851,43 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const e of entries.values()) if (e.piece) { check(e.piece); land(e.piece) }
     for (const p of loose) { check(p); land(p) }
   }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Water on the ground: what displaces more than it weighs floats, the rest goes to the bed
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  const inWater = new Set<string>()
+  const floatPiece = (piece: Piece, dt: number): void => {
+    if (piece.held) return
+    const box = tmpBox.setFromObject(piece.root)
+    const centre = box.getCenter(tmpV)
+    const here = terrain.waterAt(centre.x, centre.z)
+    if (!here || box.min.y >= here.level) {
+      inWater.delete(piece.objectId)
+      return
+    }
+    const size = box.getSize(tmpV2)
+    const volume = piece.halfExtents[0] * piece.halfExtents[1] * piece.halfExtents[2] * 8
+    if (!inWater.has(piece.objectId)) {
+      inWater.add(piece.objectId)
+      const speed = -piece.velocity[1]
+      if (speed > WATER_ENTRY_SPEED) {
+        renderer.emit('foam', [centre.x, here.level + 0.05, centre.z], [0, 1, 0], Math.min(GROUND_BURST_MAX, Math.ceil(piece.mass)), speed * 0.5)
+        terrain.ripple(centre.x, centre.z, Math.max(size.x, size.z))
+      }
+    }
+    const lift = waterLift({ mass: piece.mass, volume, submerged: (here.level - box.min.y) / Math.max(1e-3, size.y) })
+    // a floater already at its line stays asleep; one held under by what lay on it, or that fell in, wakes
+    if (piece.sleeping && !(lift.floats && lift.acceleration > 9.81 * 1.1)) return
+    piece.sleeping = false
+    const keep = Math.exp(-lift.drag * dt)
+    piece.velocity = [piece.velocity[0] * keep, (piece.velocity[1] + lift.acceleration * dt) * keep, piece.velocity[2] * keep]
+    piece.angularVelocity = [piece.angularVelocity[0] * keep, piece.angularVelocity[1] * keep, piece.angularVelocity[2] * keep]
+  }
+  const updateWater = (dt: number): void => {
+    for (const e of entries.values()) if (e.piece) floatPiece(e.piece, dt)
+    for (const p of loose) floatPiece(p, dt)
+  }
+  const footprints = createFootprints(terrain)
   const prevVy = new Map<string, number>()
   const tmpBox = new THREE.Box3()
 
@@ -3172,6 +3218,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     showGroundFire(dt)
     vfx.update(dt)
     updateImpacts()
+    updateWater(dt)
+    if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
     filmBridge.update(dt)
     film.update(dt)
@@ -3905,7 +3953,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const openArea = (area: string): SpawnedObject[] => {
     clear()
     const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
-    if (mod?.ground) terrain.setLayout(mod.ground)
+    terrain.setLayout(mod?.ground ?? { surface: DEFAULT_PROFILE })
     const label = mod?.group ?? S.groups[area] ?? area
     ui?.showGroup(label)
     activeBench = mod && benches.has(mod.id) ? mod.id : lastBench()

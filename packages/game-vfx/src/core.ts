@@ -46,5 +46,7 @@ export interface VfxCore {
   readonly spawned: { puffs: number; sparks: number; chunks: number; lights: number }
   readonly clock: { time: number; lastBlast: number; lod: number; forcedLod: number | null }
   groundAt(x: number, z: number): number
+  /** A surface that keeps no mark here (`VfxOptions.marklessAt`). */
+  marklessAt?: (x: number, z: number) => boolean
   emit(request: VfxSideRequest): void
 }

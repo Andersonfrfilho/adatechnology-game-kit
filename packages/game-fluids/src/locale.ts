@@ -36,6 +36,7 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       paint: 'paint',
       bleach: 'bleach',
       honey: 'honey',
+      mud: 'mud',
     },
     events: {
       fill: 'filled',
@@ -78,6 +79,7 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       paint: 'tinta',
       bleach: 'água sanitária',
       honey: 'mel',
+      mud: 'lama',
     },
     events: {
       fill: 'encheu',

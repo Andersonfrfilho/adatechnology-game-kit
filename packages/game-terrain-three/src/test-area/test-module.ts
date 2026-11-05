@@ -1,29 +1,34 @@
 import type * as THREE_NS from 'three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import type { DestructibleSpec, GroundLayout, ModuleArea, ModuleHost, TestableItem, TestableModule } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, GroundLayout, ModuleArea, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import { locale as localeTable } from './locale'
 
 type ThreeLib = typeof THREE_NS
 
-/** The strips of the area, side by side, one of each ground. */
-export const TERRAIN_STRIPS = ['dirt', 'lawn', 'sand', 'road', 'concrete_slab', 'suspended_slab', 'wood_floor', 'tile_floor', 'stone_paving'] as const
-const STRIP_WIDTH = 3
-const STRIP_Z0 = 4
-const STRIP_Z1 = 13
-const stripRect = (index: number): readonly [number, number, number, number] => {
-  const x0 = (index - TERRAIN_STRIPS.length / 2) * STRIP_WIDTH
-  return [x0, STRIP_Z0, x0 + STRIP_WIDTH, STRIP_Z1]
+/** The lots of the area, side by side in two rows, one of each ground: soft ones in the back row, built ones in front. */
+export const TERRAIN_STRIPS = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay', 'gravel_bed', 'snow', 'shallow_water', 'road', 'cobblestone', 'paver_floor', 'stone_paving', 'concrete_slab', 'suspended_slab', 'tile_floor', 'wood_floor'] as const
+const LOT_WIDTH = 3.4
+const LOT_DEPTH = 3.8
+const LOTS_PER_ROW = 8
+/** Between the target wall and the table of the room: what the player sees on arriving, and clear of the furniture. */
+const LOTS_Z1 = -1.4
+const lotRect = (index: number): readonly [number, number, number, number] => {
+  const row = Math.floor(index / LOTS_PER_ROW)
+  const x0 = ((index % LOTS_PER_ROW) - LOTS_PER_ROW / 2) * LOT_WIDTH
+  // the first row is the far one
+  const z1 = LOTS_Z1 - (1 - row) * LOT_DEPTH
+  return [x0, z1 - LOT_DEPTH, x0 + LOT_WIDTH, z1]
 }
-export const TERRAIN_AREA_GROUND: GroundLayout = {
-  surface: 'concrete_slab',
-  zones: TERRAIN_STRIPS.map((surface, index) => ({ rect: stripRect(index), surface })),
+
+/** A lot of each ground, with its sign. A host lays it to give a room every ground to try (`createTestRoom`'s `ground`). */
+export function terrainLotsGround(locale = 'en'): GroundLayout {
+  const text = localeTable(locale)
+  return { surface: 'concrete_slab', zones: TERRAIN_STRIPS.map((surface, index) => ({ rect: lotRect(index), surface, label: text.surfaces[surface] })) }
 }
+export const TERRAIN_AREA_GROUND: GroundLayout = terrainLotsGround()
 
 const WEIGHT_SIDE = 0.32
 const WEIGHT_HEIGHT = 4
-const LABEL_Y = 0.02
-const LABEL_WIDTH = 2.6
-const LABEL_HEIGHT = 0.5
 
 function weightSpec(): DestructibleSpec {
   return { name: 'Weight', parts: [{ id: 'block', material: 'concrete', shape: { kind: 'box', size: [WEIGHT_SIDE, WEIGHT_SIDE, WEIGHT_SIDE] }, position: [0, WEIGHT_SIDE / 2, 0] }], joints: [] }
@@ -39,78 +44,27 @@ function buildWeight(THREE: ThreeLib): THREE_NS.Object3D {
   return root
 }
 
-function buildLabel(THREE: ThreeLib, text: string, x: number): THREE_NS.Object3D | null {
-  if (typeof document === 'undefined') return null
-  const canvas = document.createElement('canvas')
-  canvas.width = 512
-  canvas.height = 96
-  const context = canvas.getContext('2d')
-  if (!context) return null
-  context.fillStyle = 'rgba(0,0,0,0.55)'
-  context.fillRect(0, 0, 512, 96)
-  context.fillStyle = '#fff'
-  context.font = 'bold 54px sans-serif'
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.fillText(text, 256, 50)
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(LABEL_WIDTH, LABEL_HEIGHT), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }))
-  // read from the start of the area, looking along +z
-  markKitOrigin(mesh, { owner: 'game-terrain-three', kind: 'room' })
-  mesh.rotation.set(-Math.PI / 2, 0, Math.PI)
-  mesh.position.set(x, LABEL_Y, STRIP_Z0 - LABEL_HEIGHT)
-  return mesh
-}
-
 /**
- * The ground bench: a strip of each surface side by side to shoot, blow up, burn and drop weights on. Opening the area lays the strips (`ground`) and drops a concrete block
+ * The ground bench: a lot of each surface side by side to shoot, blow up, burn and drop weights on. Opening the area lays the lots with their signs (`ground`) and drops a concrete block
  * on each from four metres.
  */
 export function createTerrainTestModule(options: { readonly locale?: string } = {}): TestableModule {
-  let labels: THREE_NS.Object3D[] = []
   const text = localeTable(options.locale ?? 'en')
   return {
     id: 'terrain',
     name: text.name,
     group: text.group,
-    ground: TERRAIN_AREA_GROUND,
+    ground: terrainLotsGround(options.locale ?? 'en'),
     items(): TestableItem[] {
       return [{ id: 'terrain_weight', name: text.weight, build: (THREE) => buildWeight(THREE as ThreeLib), spec: weightSpec, movable: true }]
     },
     area(): ModuleArea {
-      for (const label of labels) label.visible = true
       return {
         placements: TERRAIN_STRIPS.map((_, index) => {
-          const [x0] = stripRect(index)
-          return { item: 'terrain_weight', position: [x0 + STRIP_WIDTH / 2, WEIGHT_HEIGHT, STRIP_Z1 - 1.2] }
+          const [x0, z0] = lotRect(index)
+          return { item: 'terrain_weight', position: [x0 + LOT_WIDTH / 2, WEIGHT_HEIGHT, z0 + 1.2] }
         }),
-        view: { eye: [0, 1.7, 1.5], target: [0, 0, 8] },
-      }
-    },
-    attach(host: ModuleHost): () => void {
-      const THREE = host.THREE as ThreeLib
-      const scene = host.scene as THREE_NS.Scene
-      labels = TERRAIN_STRIPS.flatMap((surface, index) => {
-        const [x0] = stripRect(index)
-        const label = buildLabel(THREE, text.surfaces[surface], x0 + STRIP_WIDTH / 2)
-        if (!label) return []
-        label.visible = false
-        scene.add(label)
-        return [label]
-      })
-      const stop = host.onClear?.(() => {
-        for (const label of labels) label.visible = false
-      })
-      return () => {
-        stop?.()
-        // each label is built for this attach (its own plane, material and canvas texture): freed when the area goes
-        for (const label of labels) {
-          label.removeFromParent()
-          const mesh = label as THREE_NS.Mesh<THREE_NS.BufferGeometry, THREE_NS.MeshBasicMaterial>
-          mesh.geometry.dispose()
-          mesh.material.map?.dispose()
-          mesh.material.dispose()
-        }
-        labels = []
+        view: { eye: [0, 1.7, 1.5], target: [0, 0, -6] },
       }
     },
   }
