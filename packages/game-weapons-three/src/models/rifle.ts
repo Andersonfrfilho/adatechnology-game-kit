@@ -5,6 +5,7 @@ import { captured, recordFitting } from './capture'
 import { rail } from './details'
 import { buildFittings } from './rifle-fittings'
 import { buildForend } from './rifle-forend'
+import { buildG36Lower, buildG36Receiver, buildG36Top, fillG36Magazine } from './rifle-g36'
 import { buildGrip, buildMagazine } from './rifle-controls'
 import { buildStock } from './rifle-stock'
 import type { RifleContext } from './rifle-context'
@@ -18,7 +19,8 @@ function buildReceiver(context: RifleContext): void {
   const { M, box, cylinderX, cylinderY, cylinderZ, sphere } = kit
   const receiverMaterial = o.tan ? M.tan : M.metal
   const middle = (x0 + x1) / 2
-  if (o.round) {
+  if (o.g36) buildG36Receiver(context)
+  else if (o.round) {
     cylinderX(group, hR * 0.36, RL, M.steel, middle, by, 0, 20)
     cylinderX(group, hR * 0.32, 0.05, M.steel, x0 - 0.01, by, 0, 18)
   } else if (o.ar) {
@@ -53,7 +55,7 @@ function buildReceiver(context: RifleContext): void {
     sphere(bolt, 0.0065, M.metal, ejectX + 0.04, ejectY + 0.004, wR / 2 + 0.028, 1)
   }
   if (o.ar) box(group, 0.012, 0.016, 0.006, receiverMaterial, ejectX - 0.03, ejectY + 0.004, wR / 2 + 0.004)
-  if (o.rail) rail(kit, group, x0 - 0.005, RL + 0.07, hR / 2 + (o.ar ? 0 : 0.003), 0, wR * 0.68)
+  if (o.rail && !o.g36) rail(kit, group, x0 - 0.005, RL + 0.07, hR / 2 + (o.ar ? 0 : 0.003), 0, wR * 0.68)
 }
 
 /** Barrel with its jacket, gas tube and muzzle device. */
@@ -125,6 +127,11 @@ export function buildRifle(kit: ModelKit, options: ModelOptions): BuiltModel {
   buildForend(context)
   const gripX = buildGrip(context)
   const magazineX = buildMagazine(context, gripX)
+  if (options.g36) {
+    buildG36Lower(context, gripX, magazineX)
+    buildG36Top(context)
+    if (options.magMat === 'smoke') fillG36Magazine(context)
+  }
   parts.stockMeshes = context.isTraditional ? [] : captured(group, () => buildStock(context, magazineX))
   if (context.isTraditional) buildStock(context, magazineX)
   buildFittings(context, gripX)

@@ -1333,19 +1333,20 @@
     "length": 999,
     "barrel": 480,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
+      "hgFrac": 0.7,
       "carry": 1,
-      "scope": 2
+      "gripAt": 0.05
     }
   },
   "hk_g36k": {
@@ -1354,19 +1355,20 @@
     "length": 860,
     "barrel": 318,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
+      "hgFrac": 0.78,
       "carry": 1,
-      "scope": 2
+      "gripAt": 0.05
     }
   },
   "hk_g36c": {
@@ -1375,18 +1377,20 @@
     "length": 720,
     "barrel": 228,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
-      "rail": 1
+      "hgFrac": 0.8,
+      "rail": 1,
+      "gripAt": 0.05
     }
   },
   "fn_m249": {

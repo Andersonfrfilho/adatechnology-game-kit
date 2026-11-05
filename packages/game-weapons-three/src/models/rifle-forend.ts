@@ -1,5 +1,6 @@
 import { rail, vents } from './details'
 import type { RifleContext } from './rifle-context'
+import { buildG36Handguard } from './rifle-g36'
 
 const PI = Math.PI
 
@@ -7,6 +8,10 @@ const PI = Math.PI
 export function buildForend(context: RifleContext): void {
   const { kit, group, options: o, furniture: furn, length: L, receiverEnd: x1, receiverHeight: hR, receiverWidth: wR, barrelRadius: r, barrelY: by } = context
   const { M, box } = kit
+  if (o.g36) {
+    buildG36Handguard(context)
+    return
+  }
   const hasLongScope = (o.scope ?? 0) >= 3
   if (!context.isTraditional && o.hg !== 'none') {
     const handguardLength = (L - x1) * (o.hgFrac || 0.5)

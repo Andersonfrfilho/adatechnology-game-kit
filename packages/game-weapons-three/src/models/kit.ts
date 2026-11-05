@@ -56,6 +56,7 @@ const createMaterials = (THREE: Three) => {
     /** Magazine finishes named by the options. */
     bakelite: standard(0x6a2e1c, 0.6, 0),
     polyMag: standard(0x2a2a26, 0.85, 0),
+    smoke: standard(0x3a3b36, 0.35, 0, { transparent: true, opacity: 0.72 }),
   }
   // shared by every model of this kit: a model put away (discardObject3D of game-shapes-three) must not free them, or the next one uploads them again
   markShared(...Object.values(materials))

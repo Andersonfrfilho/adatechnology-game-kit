@@ -3042,6 +3042,7 @@
     },
     "hk_g36": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.758
       },
@@ -3050,6 +3051,7 @@
     },
     "hk_g36k": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.615
       },
@@ -3058,6 +3060,7 @@
     },
     "hk_g36c": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.5
       },
@@ -5662,6 +5665,84 @@
       },
       "source": "gallery: buildExp(\"m79\") of Galeria 3D do Arsenal (explosivos), rifle({ L: 730, B: 356, stock: \"fixed\", wood: 1, mag: \"none\", hg: \"wood\", hgFrac: 0.4, br: 0.022, hR: 0.05 })",
       "reason": "The M79 is drawn by the gallery among its explosives; the SDK builds it with the same rifle options and a break-action hinge (breakLauncher), so it loads one grenade at the breech as the real one opens."
+    },
+    "hk_g36": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 999,
+        "barrel": 480,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.7,
+          "carry": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the rifle: long slotted handguard, carry handle with its 3.5x optic and the red dot over it; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "hk_g36k": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 860,
+        "barrel": 318,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.78,
+          "carry": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the short rifle: the G36's carry handle and optics over a shorter barrel and handguard; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "hk_g36c": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 720,
+        "barrel": 228,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.8,
+          "rail": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the compact: no carry handle but a long top rail on two risers ending in the front sight, a short handguard with a rail underneath for the vertical grip; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
     }
   },
   "weaponTags": {
