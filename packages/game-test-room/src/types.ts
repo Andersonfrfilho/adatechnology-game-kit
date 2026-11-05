@@ -170,6 +170,13 @@ export interface SceneryTap {
   rotationY?: number
 }
 
+/** What the room needs of first-person arms: a root it puts in the scene, and the pose of each frame (the eye, the hand targets of the tool and the stance, how fast the body moves). */
+export interface RoomFirstPersonArms {
+  readonly root: THREE_NS.Object3D
+  update(dt: number, state: { camera: THREE_NS.Object3D; targets?: HandTargets | null; stance?: string; speed?: number; running?: boolean; crouch?: boolean }): void
+  dispose(): void
+}
+
 export interface TestRoomOptions {
   THREE: ThreeNamespace
   /** Element the bench fills (canvas + HUD). */
@@ -254,6 +261,11 @@ export interface TestRoomOptions {
   ui?: boolean
   /** The player's body (see `TestRoom.setAvatar`). */
   avatar?: RoomAvatar
+  /**
+   * Arms drawn for the first-person view (the viewmodel arms, `createFirstPersonArms` of game-characters-three fits it): in first person the room hides the body's arms from the eye, draws
+   * these on `FIRST_PERSON_LAYER` with the tool in the hands, and brings their hands to the tool's grips. Absent: the body's arms are the ones seen.
+   */
+  firstPersonArms?: RoomFirstPersonArms
   /** The view the room starts in (default `first`; the V key and `TestRoom.setCameraMode` change it). */
   cameraMode?: CameraMode
   /**

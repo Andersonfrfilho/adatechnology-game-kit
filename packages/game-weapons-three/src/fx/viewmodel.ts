@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { createToolClipPlayer, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
+import { createToolClipPlayer, FIRST_PERSON_LAYER, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
@@ -26,7 +26,8 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
 import { createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
-import { placeInView } from './view-hold'
+import { placeInView, toWorldLens, VIEW_HOLD } from './view-hold'
+import type { ViewHoldKind } from './view-hold'
 import type { FxLayers } from './layers'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRocketLight, flameJet, launchRocket, type HeavyContext } from './heavy'
@@ -75,6 +76,12 @@ export interface ViewmodelOptions {
   bodyHold?: () => HandPose | null
   /** Whether the view is the player's own eye (first person): the gun is then held at the hip in the view at its real size (`VIEW_HOLD`: the barrel parallel to the aim, the grip low and right, where the hand reaches) instead of on the body. */
   firstPerson?: () => boolean
+  /** The lens the host draws the first-person layer with (`ModuleHost.setViewmodelFov`): the gun in the hands sets the one of its family, and null when it leaves the view. */
+  viewmodelFov?: (degrees: number | null) => void
+  /** How far the gun is brought to the eye, 0 at the hip to 1 aimed down the sights. */
+  aim?: () => number
+  /** How the body moves, for the bob of the step and the sway of the gun in the view. */
+  motion?: () => { readonly speed: number; readonly running: boolean }
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile; played?: CuePlayed }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
@@ -149,6 +156,12 @@ const indexCurl = (turn: number, sinceShot: number): number => {
   return Math.max(ready + (TRIGGER_FINGER.pulled - ready) * pull, held)
 }
 
+/**
+ * How the gun moves in the first-person view: it lags the turn of the view (`sway` metres per radian a second, up to `swayMax`, caught up at `swayRate`) and bobs with the step (`bobX`
+ * across and `bobY` down at full walking speed, `run` times that running, `frequency` radians per metre walked).
+ */
+export const VIEW_MOTION = { sway: 0.006, swayMax: 0.02, swayRate: 9, bobX: 0.006, bobY: 0.008, run: 1.6, fullSpeed: 4, frequency: 3.2 } as const
+
 export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const { THREE, scene, camera, arsenal, groundAt, audio } = options
   const kit = modelKit(THREE)
@@ -156,6 +169,12 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt, options.particleLimit)
+  // the casings and the magazines leave the gun as drawn through its lens, into the world
+  const spawnParticle = particles.spawn.bind(particles)
+  particles.spawn = (object, velocity, particleOptions) => {
+    if (lens) toWorldLens(camera, object.position, worldFovOf(), lens.fov)
+    spawnParticle(object, velocity, particleOptions)
+  }
   particles.onBounce = (kind, hit) => {
     if (!audio || (kind !== 'casing' && kind !== 'magazine')) return
     const surface = hit ? options.surfaceAt?.(hit.object.position.x, hit.object.position.z) : undefined
@@ -169,7 +188,19 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
   if (!options.effects) warnOnce('game-weapons-three.own-effects-world', 'game-weapons-three made an effects world of its own because the host lent none (options.effects); pass the host effects so the effects share one budget')
   const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' }, ...(options.lights ? { lights: options.lights } : {}) })
-  const effects = createEffects(THREE, options.effects ?? ownVfx, random)
+  // in first person the gun is drawn through its own lens, and the world draws the flash and the smoke: they start where the world sees the muzzle of the gun as drawn
+  const worldSink: EffectSink | undefined = options.effects ?? ownVfx
+  const lensSink: EffectSink | undefined = worldSink
+    ? {
+        play: (request) => {
+          if (!lens || !request.point) return worldSink.play(request)
+          const at = toWorldLens(camera, lensPoint.set(...request.point), worldFovOf(), lens.fov)
+          return worldSink.play({ ...request, point: [at.x, at.y, at.z] })
+        },
+        stop: (handle) => worldSink.stop(handle),
+      }
+    : undefined
+  const effects = createEffects(THREE, lensSink, random)
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
@@ -220,6 +251,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
 
   const release = (): void => {
     if (!session) return
+    if (lens) options.viewmodelFov?.(null)
+    lens = null
+    lensLayer = -1
     session.attachments?.dispose()
     // the model is built for this equip (buildWeaponModelById): put away, it frees its own geometry and materials
     discardObject3D(session.model.root)
@@ -262,6 +296,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const modelBox = new THREE.Box3().setFromObject(model.root)
     const length = modelBox.getSize(new THREE.Vector3()).x
     modelRear = modelBox.min.x
+    restBox.copy(modelBox)
+    // the new model is drawn on the layer of the view it is in (`setLens` puts it there)
+    lens = null
+    lensLayer = -1
     holder.add(model.root)
     const caliber = caliberOf(arsenal, def)
     const dims = caliber?.cartridge
@@ -329,6 +367,45 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let pull = 0
   // how far the weapon is raised to keep the hands on it in view
   let lift = 0
+  const restBox = new THREE.Box3()
+  // first person: the lens the gun and the arms are drawn with (`VIEW_HOLD`), null on the body; the layer the gun is on now
+  let lens: { readonly kind: ViewHoldKind; readonly fov: number } | null = null
+  let lensLayer = -1
+  const lensPoint = new THREE.Vector3()
+  const worldFovOf = (): number => (camera as THREE_NS.PerspectiveCamera).fov ?? 72
+  const setLens = (kind: ViewHoldKind | null): void => {
+    const fov = kind ? VIEW_HOLD[kind].fov : null
+    if ((lens?.fov ?? null) !== fov) options.viewmodelFov?.(fov)
+    lens = kind && fov !== null ? { kind, fov } : null
+    const layer = lens ? FIRST_PERSON_LAYER : 0
+    // an accessory fitted later (a light, a laser) joins the layer too: the gun's tree is small, walked every frame it is in the view
+    if (layer === lensLayer && !lens) return
+    lensLayer = layer
+    hand.traverse((node) => node.layers.set(layer))
+  }
+  // the bob of the step and the sway of the gun behind the turn of the view, in the eye's frame; aimed, they shrink to a fifth
+  const motion = { phase: 0, swayX: 0, swayY: 0, lastYaw: Number.NaN, lastPitch: Number.NaN }
+  const motionEuler = new THREE.Euler(0, 0, 0, 'YXZ')
+  const motionOffset = new THREE.Vector3()
+  const viewMotion = (dt: number, aim: number): THREE_NS.Vector3 => {
+    const moving = options.motion?.() ?? { speed: 0, running: false }
+    const calm = 1 - 0.8 * Math.max(0, Math.min(1, aim))
+    motionEuler.setFromQuaternion(camera.quaternion, 'YXZ')
+    const turnYaw = Number.isNaN(motion.lastYaw) || dt <= 0 ? 0 : Math.atan2(Math.sin(motionEuler.y - motion.lastYaw), Math.cos(motionEuler.y - motion.lastYaw)) / dt
+    const turnPitch = Number.isNaN(motion.lastPitch) || dt <= 0 ? 0 : (motionEuler.x - motion.lastPitch) / dt
+    motion.lastYaw = motionEuler.y
+    motion.lastPitch = motionEuler.x
+    const follow = Math.min(1, dt * VIEW_MOTION.swayRate)
+    motion.swayX += (Math.max(-VIEW_MOTION.swayMax, Math.min(VIEW_MOTION.swayMax, turnYaw * VIEW_MOTION.sway)) - motion.swayX) * follow
+    motion.swayY += (Math.max(-VIEW_MOTION.swayMax, Math.min(VIEW_MOTION.swayMax, -turnPitch * VIEW_MOTION.sway)) - motion.swayY) * follow
+    const stride = Math.min(1, moving.speed / VIEW_MOTION.fullSpeed) * (moving.running ? VIEW_MOTION.run : 1)
+    motion.phase += dt * moving.speed * VIEW_MOTION.frequency
+    return motionOffset.set(
+      (motion.swayX + Math.sin(motion.phase) * VIEW_MOTION.bobX * stride) * calm,
+      (motion.swayY - Math.abs(Math.cos(motion.phase)) * VIEW_MOTION.bobY * stride) * calm,
+      0,
+    )
+  }
   const ahead = new THREE.Vector3()
   const up = new THREE.Vector3()
   const seen = new THREE.Vector3()
@@ -364,11 +441,15 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const family = session.model.parts.family
     session.holderScale = 1
     if (options.firstPerson?.()) {
-      placeInView({ THREE, hand, holder, camera, right: hold?.right ?? null, rear: modelRear, kind: family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long' })
+      const kind: ViewHoldKind = family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long'
+      const aim = options.aim?.() ?? 0
+      placeInView({ THREE, hand, holder, camera, right: hold?.right ?? null, box: restBox, kind, aim, offset: viewMotion(dt, aim) })
+      setLens(kind)
       lift = 0
-      pullFromWall(dt)
+      pull = 0
       return
     }
+    setLens(null)
     hand.scale.set(1, 1, 1)
     placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
     hand.updateMatrixWorld(true)
@@ -498,6 +579,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (!session || !mark) return null
       hand.updateMatrixWorld(true)
       const at = worldPositionOf(session, mark, muzzleAt)
+      if (lens) toWorldLens(camera, at, worldFovOf(), lens.fov)
       const along = muzzleAlong.set(1, 0, 0).applyQuaternion(session.model.root.getWorldQuaternion(rootQuaternion)).normalize()
       const kind = session.def.action.kind
       return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: kind === 'firearm' || kind === 'launcher' }

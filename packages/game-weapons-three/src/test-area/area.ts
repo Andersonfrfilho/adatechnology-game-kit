@@ -446,6 +446,10 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
         ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         firstPerson: () => lent.player().cameraMode === 'first',
+        // the lens of the gun in first person, how far it is brought to the eye (the right button) and how the body moves (the bob and the sway follow it)
+        ...(lent.setViewmodelFov ? { viewmodelFov: (degrees: number | null) => lent.setViewmodelFov?.(degrees) } : {}),
+        aim: () => accessories.aimProgress,
+        motion: () => ({ speed: lent.player().speed, running: lent.player().running }),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(lent.particleLimit ? { particleLimit: lent.particleLimit } : {}),
         ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),
