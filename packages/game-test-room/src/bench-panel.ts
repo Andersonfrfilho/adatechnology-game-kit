@@ -189,6 +189,27 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
 
   let playhead: { node: HTMLElement; metric: string; end: number } | null = null
 
+  const sheetImage = (image: NonNullable<BenchSheet['image']>): HTMLElement => {
+    const figure = mk('figure', 'tr-sheet-image')
+    const picture = mk('img')
+    picture.src = image.url
+    picture.alt = image.alt
+    picture.loading = 'lazy'
+    picture.referrerPolicy = 'no-referrer'
+    figure.appendChild(picture)
+    if (image.credit || image.page) {
+      const caption = mk('figcaption', 'sub', image.credit ?? '')
+      if (image.page) {
+        const link = mk('a', undefined, image.credit ? ' ↗' : image.page)
+        link.href = image.page
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        caption.appendChild(link)
+      }
+      figure.appendChild(caption)
+    }
+    return figure
+  }
   const sheetCard = (sheet: BenchSheet): HTMLElement => {
     const card = mk('div', 'tr-sheet')
     if (sheet.kicker) card.appendChild(mk('div', 'sub', sheet.kicker))
@@ -240,6 +261,7 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
       playhead = { node: head, metric, end }
       card.appendChild(strip)
     }
+    if (sheet.image) card.appendChild(sheetImage(sheet.image))
     if (sheet.note) card.appendChild(mk('p', 'sub', sheet.note))
     return card
   }

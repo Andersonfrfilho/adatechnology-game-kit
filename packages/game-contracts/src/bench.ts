@@ -111,6 +111,8 @@ export interface BenchSheet {
   readonly steps?: readonly { readonly at: string; readonly text: string }[]
   readonly swatches?: readonly { readonly color: string; readonly name: string }[]
   readonly note?: string
+  /** A picture of the real thing the card is about, with its author and licence: the host shows it on the card, linked to `page`. */
+  readonly image?: { readonly url: string; readonly alt: string; readonly credit?: string; readonly page?: string }
   /** A strip of named segments (seconds), with tick marks and a playhead that follows the module metric `metric`. */
   readonly timeline?: {
     readonly segments: readonly { readonly name: string; readonly start: number; readonly end: number; readonly color: string }[]
