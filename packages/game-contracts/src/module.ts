@@ -7,7 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
-import type { HandPose, HandTargetSource } from './hands'
+import type { HandPose, HandTargetSource, MuzzleSource } from './hands'
 import type { GaitId, SurfaceId } from './foley'
 import type { ContainerSpec } from './fluids'
 import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
@@ -407,6 +407,11 @@ export interface ModuleHost {
    * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
    */
   setHandTargets?(source: HandTargetSource | null): () => void
+  /**
+   * Lends the host the muzzle of the tool the module draws in the hands: the host reads `source` at each shot and puts the tracer (and, unless the module draws one, the flash) there, at the
+   * muzzle of the model and not at a guess in front of the eye. Pass null (or call the returned function) to let go. A host that draws no shot effects leaves it out.
+   */
+  setMuzzleSource?(source: MuzzleSource | null): () => void
   /**
    * Where the player's body holds a tool now (world space), in every view (the weapon is the body's own): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
    * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size. Null for a host with no body (the module puts the same pocket under the camera's eye);

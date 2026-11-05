@@ -490,6 +490,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       })
       const offFrame = lent.onFrame((dt) => created.update(dt))
       const offHands = lent.setHandTargets?.(() => created.handTargets())
+      const offMuzzle = lent.setMuzzleSource?.(() => created.muzzle())
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
         accessories.dispose()
@@ -498,6 +499,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         offFrame()
         offClock()
         offHands?.()
+        offMuzzle?.()
         created.dispose()
         audio?.dispose()
         fx = null

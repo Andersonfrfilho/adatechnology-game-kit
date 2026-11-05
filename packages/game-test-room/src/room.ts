@@ -20,7 +20,7 @@ import { createFramePacer, createGeometryPool, createLightBudget, createMaterial
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
@@ -1592,6 +1592,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   // ----- the first-person arms: where the tool in the hands asks them to be (a module lends it), else the carried item, else nothing
   let handSource: HandTargetSource | null = null
+  // the muzzle of the weapon a module draws in the hands (`setMuzzleSource`): the shots' tracers and flash leave from there
+  let muzzleSource: MuzzleSource | null = null
   // a second camera the room can be drawn from without moving the player's: the arms stay where the player's eye puts them
   let debugView: THREE_NS.PerspectiveCamera | null = null
   let lastHand: { stance: string; triggerFinger: number | null; targets: HandTargets | null } = { stance: 'relaxed', triggerFinger: null, targets: null }
@@ -1743,6 +1745,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return rng / 4294967296
   }
 
+  /** Where a shot leaves: the muzzle of the weapon drawn in the hands when a module lends it, else a point ahead of the eye, low and right, where a gun would be. */
+  const muzzlePose = (): { position: Vec3; drawsFlash: boolean } => {
+    const lent = muzzleSource?.()
+    return lent ? { position: [...lent.position], drawsFlash: lent.drawsFlash } : { position: muzzle(), drawsFlash: false }
+  }
   const muzzle = (): Vec3 => {
     aim()
     const e = camera.matrixWorld.elements
@@ -1967,9 +1974,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const fireShots = (shots: Shot[], recoil: [number, number]): void => {
     if (shots.length === 0) return
     const w = toolName()
-    const m = muzzle()
-    renderer.emit('flash', m, [aimD[0], aimD[1], aimD[2]], 1, 0)
-    renderer.emit('sparks', m, [aimD[0], aimD[1], aimD[2]], 4, 6)
+    const { position: m, drawsFlash } = muzzlePose()
+    // the module that draws the weapon draws its own flash at the muzzle: a second one here would be off the barrel
+    if (!drawsFlash) {
+      renderer.emit('flash', m, [aimD[0], aimD[1], aimD[2]], 1, 0)
+      renderer.emit('sparks', m, [aimD[0], aimD[1], aimD[2]], 4, 6)
+    }
     let hits = 0
     let first: RayHit | null = null
     let energy = 0
@@ -2035,7 +2045,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const cone = u.kind === 'flame' ? u.cone : false
     const rays = fireRays({ origin: u.origin, direction: u.direction, range: u.range, cone, radius: u.radius })
     let target: RayHit | null = null
-    const m = muzzle()
+    const m = muzzlePose().position
     withoutHeld(() => {
       for (const d of rays) {
         const r = world.raycast(u.origin, d, u.range)
@@ -2235,7 +2245,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const extinguishUse = (u: Extract<Use, { kind: 'extinguish' }>): void => {
     const w = toolName()
     const rays = fireRays({ origin: u.origin, direction: u.direction, range: u.range, cone: true, radius: 0.6 })
-    const m = muzzle()
+    const m = muzzlePose().position
     renderer.emit('foam', m, [u.direction[0], u.direction[1], u.direction[2]], 8, u.range * 1.2)
     const hit = new Set<string>()
     withoutHeld(() => {
@@ -3657,6 +3667,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       handSource = source
       return () => {
         if (handSource === source) handSource = null
+      }
+    },
+    setMuzzleSource(source) {
+      muzzleSource = source
+      return () => {
+        if (muzzleSource === source) muzzleSource = null
       }
     },
     log(text, data, type) {

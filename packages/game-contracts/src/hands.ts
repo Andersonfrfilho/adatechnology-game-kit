@@ -35,3 +35,15 @@ export interface HandTargets {
 
 /** Read every frame by whoever draws the arms; answers null while nothing is held. */
 export type HandTargetSource = () => HandTargets | null
+
+/** The muzzle of the tool in the hands as it is drawn now (world space): where a shot's flash and tracer leave, and which way the barrel points. */
+export interface MuzzlePose {
+  readonly position: Vec3
+  /** Unit vector along the barrel, out of the muzzle. */
+  readonly direction: Vec3
+  /** The module draws the muzzle flash itself: the host draws none of its own. */
+  readonly drawsFlash: boolean
+}
+
+/** Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). */
+export type MuzzleSource = () => MuzzlePose | null
