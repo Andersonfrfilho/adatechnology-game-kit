@@ -2003,6 +2003,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  tools/audio-pipeline: {}
+
   tools/characters-catalog:
     devDependencies:
       '@adatechnology/game-weapons':

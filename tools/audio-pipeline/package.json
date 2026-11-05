@@ -1,0 +1,14 @@
+{
+  "name": "@adatechnology/audio-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Ferramenta de extração, marcação de metadados ada-technology e catalogação de áudio para jogos do AdA Technology Game Kit.",
+  "type": "module",
+  "scripts": {
+    "clean": "node clean-audio.mjs",
+    "extract": "node src/pipeline.mjs --extract",
+    "tag": "node src/pipeline.mjs --tag",
+    "all": "node src/pipeline.mjs --all"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "_comment": "Configuração local do pipeline de áudio do AdA Technology Game Kit. Copie para audio.config.local.json para caminhos locais.",
+  "organization": "ada-technology",
+  "metadata": {
+    "artist": "ada-technology",
+    "copyright": "Copyright (c) ada-technology",
+    "comment": "Efeitos sonoros do nosso game - AdA Technology Game Kit",
+    "encoder": "ada-technology-game-kit"
+  },
+  "sources": {
+    "cs_pack": "/home/miyazaki/Downloads/CS1.6_Realistic_Sound-Pack_Ver.2.zip",
+    "all_sounds": "/home/miyazaki/Downloads/all-sounds-20250411.zip",
+    "weapons_rar": "/home/miyazaki/Downloads/weapons_fb311.rar",
+    "weapons_7z": "/home/miyazaki/Downloads/13cs16weapons.7z"
+  },
+  "targets": {
+    "game": "/home/miyazaki/Documents/personal/zombiada/src",
+    "local_storage": "./tools/audio-pipeline/storage"
+  }
+}
