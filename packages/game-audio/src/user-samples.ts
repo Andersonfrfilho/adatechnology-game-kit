@@ -34,6 +34,10 @@ export type UserSoundPick = {
   /** 0–10: how well the files fit the sound (rate, clipping, band). */
   readonly score: number
   readonly loop?: boolean
+  /** Who made the files, when the pack is not the list's `author`. */
+  readonly author?: string
+  /** Their licence, when not the list's `license`. */
+  readonly license?: string
 }
 
 export type UserSoundPicks = {

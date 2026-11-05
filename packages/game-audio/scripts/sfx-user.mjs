@@ -20,7 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const packageDir = resolve(here, '..')
 const root = resolve(packageDir, '../..')
 
-/** @typedef {{ id: string, role: 'primary' | 'fallback', category: string, label: string, pack: string, files: string[], score: number, loop?: boolean }} Pick */
+/** @typedef {{ id: string, role: 'primary' | 'fallback', category: string, label: string, pack: string, files: string[], score: number, loop?: boolean, author?: string, license?: string }} Pick */
 /** @typedef {{ version: 1, author: string, license: string, picks: Pick[] }} Picks */
 
 /** @param {string} name */
@@ -85,6 +85,9 @@ function main() {
   const listings = new Map()
   /** @type {{ id: string, category: string, role: string, label: string, layers: { close: object[] } }[]} */
   const sounds = []
+  // picks of one id from several packs are one sound: the first pick's role and label, takes numbered on so no file overwrites another
+  /** @type {Map<string, { id: string, category: string, role: string, label: string, layers: { close: object[] } }>} */
+  const soundsByKey = new Map()
   const missing = []
   for (const pick of picks.picks) {
     const dir = packDir(from, pick.pack)
@@ -94,8 +97,10 @@ function main() {
     }
     if (!listings.has(dir)) listings.set(dir, walk(dir))
     const files = listings.get(dir) ?? []
-    /** @type {object[]} */
-    const takes = []
+    const key = `${pick.category}/${pick.id}`
+    const sound = soundsByKey.get(key) ?? { id: pick.id, category: pick.category, role: pick.role, label: pick.label, layers: { close: [] } }
+    const takes = sound.layers.close
+    const before = takes.length
     pick.files.forEach((wanted) => {
       const found = files.find((file) => file === wanted || file.endsWith(`/${wanted}`))
       if (!found) {
@@ -113,11 +118,14 @@ function main() {
         peak: facts.peak,
         seconds: facts.seconds,
         source: `${pick.pack}/${found}`,
-        author: picks.author,
-        license: picks.license,
+        author: pick.author ?? picks.author,
+        license: pick.license ?? picks.license,
       })
     })
-    if (takes.length > 0) sounds.push({ id: pick.id, category: pick.category, role: pick.role, label: pick.label, layers: { close: takes } })
+    if (takes.length > before && !soundsByKey.has(key)) {
+      soundsByKey.set(key, sound)
+      sounds.push(sound)
+    }
   }
   rmSync(temp, { recursive: true, force: true })
   writeFileSync(join(out, 'manifest.json'), `${JSON.stringify({ version: 1, sounds }, null, 2)}\n`)
