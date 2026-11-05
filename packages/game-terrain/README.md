@@ -12,7 +12,7 @@ terrain.heightAt(x, z) // what things stand on
 
 ## What it does
 
-- **Profiles** (`TERRAIN_PROFILES`, replace or add through `profiles`): `lawn` (turf 5 cm, soil 1.5 m, rock), `dirt`, `sand`, `road` (asphalt 5 cm, gravel, soil), `concrete_slab` (12 cm with rebar at 3 cm), `tile_floor` (tile, mortar, slab), `wood_floor`, `stone_paving`, `mud`, `gravel_bed`, `dry_clay`, `snow`, `cobblestone`, `paver_floor`, `shallow_water`.
+- **Profiles** (`TERRAIN_PROFILES`, replace or add through `profiles`): `lawn` (turf 5 cm, soil 1.5 m, rock), `dirt`, `sand`, `road` (asphalt 5 cm, gravel, soil), `concrete_slab` (12 cm with rebar at 3 cm), `tile_floor` (tile, mortar, slab), `wood_floor`, `stone_paving`, `mud`, `gravel_bed`, `dry_clay`, `snow`, `cobblestone`, `paver_floor`, `shallow_water`, `bedrock` (bare rock).
 - **Digging**: a blow removes `energy / specificEnergy` cubic metres (`TERRAIN_MATERIALS`, per blow type: ballistic, blunt, slash, explosive) as a bowl with the shape of the material. It takes the top stratum and spends what is left on the next. The strata end at the digging limit: **a slab is never pierced**, and a crater has a floor.
 - **Bars**: bare bars bend with each blow and give way at `yieldJoules`. A slab on the ground stays the floor; `suspended_slab` (`TerrainProfile.drop`) opens onto the floor below.
 - **Fine marks**: a bowl under 1.5 cells stays a mark, not a change of the height field. Blows on the same mark grow it until it is dug in.

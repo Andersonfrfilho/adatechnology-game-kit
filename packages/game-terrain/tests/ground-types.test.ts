@@ -96,6 +96,23 @@ describe('the new grounds', () => {
   }
 })
 
+describe('bare rock', () => {
+  it('a blast only spalls it and a shot leaves a chip, where dirt takes a crater', () => {
+    const rock = on('bedrock')
+    const dirt = on('dirt')
+    const blast = rock.strike('explosive', { x: 0, z: 0, energy: GRENADE })
+    expect(blast.depth).toBeLessThan(dirt.strike('explosive', { x: 0, z: 0, energy: GRENADE }).depth / 5)
+    expect(blast.exposed).toBe('stone')
+    expect(on('bedrock').strike('ballistic', { x: 0, z: 0, energy: PISTOL }).fine).toBe(true)
+  })
+  it('fire only blackens it a little', () => {
+    const rock = on('bedrock')
+    rock.burn({ x: 0, z: 0, radius: 0.5, temperature: 900, seconds: 30 })
+    expect(rock.columnAt(0, 0).scorch).toBeLessThan(0.41)
+    expect(rock.heightAt(0, 0)).toBe(0)
+  })
+})
+
 describe('shallow water', () => {
   const pool = () => createTerrain({ bounds: [-10, -10, 10, 10], layout: { surface: 'dirt', zones: [{ rect: [-4, -4, 4, 4], surface: 'shallow_water' }] }, seed: 3 })
 
