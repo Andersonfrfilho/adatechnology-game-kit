@@ -162,6 +162,8 @@ export interface VfxWorld {
   screen(): Readonly<ScreenState>
   stats(): VfxStats
   pools(): VfxPoolsView
+  /** The host's own ground height (`VfxOptions.groundAt`), or undefined when the effects land on the vfx `ground` field: what a renderer lays the scorch and dirt marks on, so they line a crater the host's terrain dug. */
+  readonly hostGroundAt: ((x: number, z: number) => number) | undefined
   /** The live lingering fires, oldest first. */
   fires(): readonly Fire[]
   /** Hears every mark the moment it is made, and when they are cleared. Returns the function that stops listening. */
@@ -284,6 +286,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
   }
 
   return {
+    hostGroundAt: options.groundAt,
     play(id, point, playOptions = {}) {
       if (!(id in effects)) return null
       const seed = playOptions.seed ?? (randomMode === 'shared' ? undefined : Math.imul(++handles.events, AUTO_SEED) + (options.seed ?? 0))

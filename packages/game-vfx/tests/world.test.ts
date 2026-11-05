@@ -341,3 +341,14 @@ describe('the wind', () => {
     expect(drift([6, 0, 0])).toBeGreaterThan(drift([-6, 0, 0]))
   })
 })
+
+describe('the world tells a renderer where the ground is', () => {
+  it('answers the host terrain height, so the marks follow a crater', () => {
+    const world = createVfx({ groundAt: (x, z) => -0.1 * Math.hypot(x, z) })
+    expect(world.hostGroundAt?.(3, 4)).toBeCloseTo(-0.5)
+  })
+
+  it('has no host height when the effects land on their own ground field', () => {
+    expect(createVfx().hostGroundAt).toBeUndefined()
+  })
+})
