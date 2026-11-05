@@ -20,11 +20,10 @@ assets/sfx-inbox/armas/*.wav
 # the owner's own sounds (packs the kit cannot redistribute), converted by `pnpm --filter @adatechnology/game-audio sfx:user`: local only
 .sfx-local/
 .sfx-local.json
-
 # Local audio configuration and raw storage (never committed)
 *.audio.local.json
 audio.config.local.json
 audio.local.json
+/local-audio/
 tools/audio-pipeline/storage/
 tools/audio-pipeline/*.local.*
-

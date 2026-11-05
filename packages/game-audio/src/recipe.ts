@@ -283,4 +283,6 @@ export type SampleSound = {
   readonly fallback?: string
   /** Where each file came from: `"freesound:123456 autor CC0"`, or `"sdk"` for files the kit made. */
   readonly sources: readonly string[]
+  /** The licence of the files when one is declared (a local pack's entry); the sound panel lists those that are not CC0 / CC-BY. */
+  readonly license?: string
 }

@@ -17,3 +17,5 @@ shots
 .DS_Store
 .sfx-local
 .sfx-local.json
+audio.local.json
+**/local-audio/

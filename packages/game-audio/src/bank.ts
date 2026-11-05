@@ -9,6 +9,8 @@ export type SoundRegistry = {
   /** Merged into the recipe by id (objects merge, arrays such as `layers` are replaced); an unknown id is ignored. */
   patch(id: string, patch: DeepPartial<SoundRecipe> | DeepPartial<LoopRecipe> | DeepPartial<SampleSound>): void
   remove(id: string): void
+  /** Drops only the sample sound of an id; a recipe or loop of the same id stays. */
+  removeSample(id: string): void
   sound(id: string): SoundRecipe | undefined
   loop(id: string): LoopRecipe | undefined
   /** The set an id names (`SoundBank.sets`), if any; a recipe with the same id wins in `play`. */
@@ -77,6 +79,10 @@ export function createSoundRegistry(banks: readonly SoundBank[] = []): SoundRegi
       sets.delete(id)
       samples.delete(id)
       owners.delete(id)
+    },
+    removeSample(id) {
+      samples.delete(id)
+      if (!sounds.has(id) && !loops.has(id) && !sets.has(id)) owners.delete(id)
     },
     sound: (id) => sounds.get(id),
     loop: (id) => loops.get(id),

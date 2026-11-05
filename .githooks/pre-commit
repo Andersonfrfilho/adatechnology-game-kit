@@ -1,4 +1,6 @@
 #!/bin/sh
+# A local sound pack (tools/local-audio) never enters git: the config, a local-audio folder or audio outside the SDK's sfx folders stops the commit.
+node tools/local-audio/local-audio.mjs guard-git || exit 1
 # Fast check on what is being committed: eslint on the staged JS/TS files. Skip once with `git commit --no-verify`.
 files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|mjs|cjs)$' | grep -v '^specs/')
 [ -z "$files" ] && exit 0

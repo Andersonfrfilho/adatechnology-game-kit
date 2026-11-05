@@ -31,6 +31,9 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
+      # a local sound pack (tools/local-audio) never enters git: no local config, no local-audio folder, no audio outside the SDK's sfx folders
+      - run: node tools/local-audio/local-audio.mjs guard-git
+
   # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
   # dist), instead of each job spending two minutes on its own `pnpm build`.
   build:
