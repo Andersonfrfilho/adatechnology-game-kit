@@ -3,7 +3,7 @@ import { RELOAD_STAGES } from '@adatechnology/game-weapons'
 import type { ReloadKind } from '@adatechnology/game-weapons'
 import { ROOT, composeClip, cue, move, renamed, sound, stage, turn } from './clip-builder'
 import type { Tween } from './clip-builder'
-import { BOLT_TRAVEL, BOLT_TURN, LEVER_TURN, PUMP_TRAVEL, strokeOf } from './context'
+import { BOLT_TRAVEL, BOLT_TURN, LEVER_TURN, PUMP_TRAVEL, REVOLVING, strokeOf } from './context'
 import type { ClipContext } from './context'
 import { boltStroke } from './cycle-clips'
 import { magazineSwap } from './magazine-clips'
@@ -164,7 +164,7 @@ function draftFor(context: ClipContext, kind: ReloadKind): Draft | undefined {
   const { parts, family } = context
   if (family === 'rocket' || family === 'flame') return heavyReload(context)
   if (parts.mag) return magazineReload(context, kind)
-  if (family === 'revolver' && parts.crane) return revolverReload(kind)
+  if (REVOLVING.has(family) && parts.crane) return revolverReload(kind)
   if (family === 'break' && parts.barrels) return breakReload(parts.breech?.length ?? 2)
   if (family === 'belt' && parts.cover && parts.belt) return beltReload(context)
   if (isTube(context)) return tubeReload(context, kind)
@@ -198,7 +198,7 @@ export const FEED_SECONDS = 0.4
 /** One more round goes in while a tube, a top-loaded or a revolver loads round by round. */
 export function feedClip(context: ClipContext): AnimationClipSpec | undefined {
   const { family } = context
-  if (family === 'revolver') return composeClip('feed', [], [cue(0, 'move_in', { from: 'chambers', next: true }), sound(0.1, 'shell_insert')], 0.24)
+  if (REVOLVING.has(family)) return composeClip('feed', [], [cue(0, 'move_in', { from: 'chambers', next: true }), sound(0.1, 'shell_insert')], 0.24)
   if (family === 'bolt' || family === 'semiint') return composeClip('feed', [], [cue(0, 'move_in', { from: 'topLoad' }), sound(0.2, 'shell_insert')], FEED_SECONDS)
   if (isTube(context)) return composeClip('feed', [], [cue(0, 'move_in', { from: 'loadPort' }), sound(0.2, 'shell_insert')], FEED_SECONDS)
   return undefined

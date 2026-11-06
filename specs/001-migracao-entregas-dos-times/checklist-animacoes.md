@@ -1,6 +1,6 @@
 # Checklist das animações por arma
 
-Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (115):
+Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (137):
 
 - **mão de apoio**: as duas mãos existem, ficam na frente do olho, dentro da vista e a até 12 cm do modelo na mão.
 - **dedo no gatilho**: com peça de gatilho no modelo, o indicador direito repousa estendido, vai ao gatilho e puxa a cada tiro (metralhadora e lança-chamas seguram o gatilho), e volta; sem peça de gatilho a empunhadura é a normal (—).
@@ -121,12 +121,34 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | PP-19 Bizon (`pp19_bizon`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,50 s / 2,50 s | ✓ | n/a | ✓ |
 | vz. 61 Škorpion (`vz61`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
 | M134 Minigun (`m134`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
+| AKS-74U (`aks_74u`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 3,40 s | ✓ | n/a | ✓ |
+| FN SCAR-L (`fn_scar_l`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 2,60 s | ✓ | n/a | ✓ |
+| M1 Garand (`m1_garand`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,20 s / 2,20 s | ✓ | n/a | ✓ |
+| Accuracy L96A1 (`accuracy_l96a1`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,20 s / 3,20 s | ✓ | n/a | ✓ |
+| Mossberg 590 (`mossberg_590`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 5,68 s | ✓ | n/a | ✓ |
+| FN M240B (`fn_m240b`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
+| SIG Sauer P320 (`sig_sauer_p320`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
+| HK USP (`hk_usp`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
+| Walther P99 (`walther_p99`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,80 s / 1,80 s | ✓ | n/a | ✓ |
+| Colt Python (`colt_python`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,00 s / 6,00 s | ✓ | n/a | ✓ |
+| FN PS90 (`fn_ps90`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,00 s / 3,00 s | ✓ | n/a | ✓ |
+| B&T MP9 (`bt_mp9`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
+| MP40 (`mp40`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,90 s / 2,90 s | ✓ | n/a | ✓ |
+| FAMAS (`famas`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 3,40 s | ✓ | n/a | ✓ |
+| IWI Tavor (`iwi_tavor`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 3,40 s | ✓ | n/a | ✓ |
+| L85A2 (`l85a2`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 3,40 s | ✓ | n/a | ✓ |
+| Winchester 1887 (`winchester_1887`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 4,15 s | ✓ | n/a | ✓ |
+| PPSh-41 (`ppsh_41`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,90 s / 2,90 s | ✓ | n/a | ✓ |
+| Mauser Kar98k (`mauser_kar98k`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
+| MG42 (`mg42`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
+| VSS Vintorez (`vss_vintorez`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 3,40 s | ✓ | n/a | ✓ |
 | RPG-7 (`rpg_7`) | ✓ | ✓ | ✓ | — | ✓ 4,50 s / — | ✓ | n/a | ✓ |
 | M72 LAW (`m72_law`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |
 | AT4 (`at4`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |
 | Carl Gustaf M4 (`carl_gustaf_m4`) | ✓ | ✓ | ✓ | — | ✓ 1,05 s / — | ✓ | n/a | ✓ |
 | M2 flamethrower (`m2_flamethrower`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
 | Improvised flamethrower (`improvised_flamethrower`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
+| M32 multiple grenade launcher (Milkor MGL) (`m32_mgl`) | ✓ | ✓ | ✓ | — | ✓ 9,20 s / — | ✓ | n/a | ✓ |
 
 ## Sem gatilho no modelo
 
@@ -174,6 +196,8 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Dynamite (`dynamite`): throwable, throwable
 - C4 charge (`c4`): throwable, throwable
 - Claymore mine (`claymore`): throwable, throwable
+- Semtex charge (`semtex`): throwable, throwable
+- M18 colored smoke grenade (`smoke_grenade`): throwable, throwable
 - Tactical knife (`tactical_knife`): melee_blade, melee
 - Meat cleaver (`meat_cleaver`): melee_blade, melee
 - Hatchet (`hatchet`): melee_blade, melee
@@ -186,6 +210,9 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Improvised spear (`improvised_spear`): melee_blade, melee
 - Chainsaw (`chainsaw`): melee_blade, melee
 - Recurve bow (`recurve_bow`): bow, firearm
+- KA-BAR combat knife (`kabar`): melee_blade, melee
+- Katana (`katana`): melee_blade, melee
+- Brass knuckles (`brass_knuckles`): melee_blunt, melee
 
 ## Prévias
 

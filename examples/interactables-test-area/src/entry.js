@@ -39,7 +39,22 @@ import { createModule as createPlayerModule } from '../../player-test-area/src/e
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
 
+/** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
+/** @typedef {import('@adatechnology/game-test-room').ModuleReport} ModuleReport */
+/** @typedef {Parameters<TestRoom['loadModule']>[0]} RoomModule */
+/** @typedef {typeof import('three')} ThreeLib */
+/** What `createFurnitureArea` takes: the kit packages and the contents of the containers, each optional (the bundled ones by default). */
+/** @typedef {Partial<Parameters<typeof create>[0]>} FurnitureOptions */
+/** The options of `loadInto`: the furniture area's, plus `<step>: false` to leave a module out. */
+/** @typedef {FurnitureOptions & { readonly [step: string]: unknown }} LoadOptions */
+/** @typedef {{ index: number; total: number; key: string; name: string; done?: boolean }} LoadProgress */
+/** @typedef {{ key: string; prepare: () => { name: string; load: () => unknown } }} LoadStep */
+/** The keys the other modules' reports go under in the furniture report (`REPORT_KEYS`). */
+/** @typedef {'weapons' | 'explosives' | 'itemsArea' | 'characters' | 'animals' | 'vfx' | 'terrain' | 'audio' | 'soundCheck' | 'weather' | 'floorplan' | 'vehicles' | 'vehicles_proving' | 'vegetation' | 'urban' | 'player' | 'crowd' | 'stories'} SubReportKey */
+/** @typedef {ModuleReport & { readonly [key in SubReportKey]?: ModuleReport }} FurnitureReport */
+
 /** The pool of the goods catalog each household piece draws its contents from (the key of the house pools, or a container of the catalog). */
+/** @type {Readonly<Record<string, string>>} */
 const CONTENT_KEYS = {
   fridge: 'geladeira',
   fridge_compact: 'geladeira',
@@ -57,16 +72,17 @@ const CONTENT_KEYS = {
 }
 
 /** The wear an item shows by how far it is through its shelf life. */
-const wearOf = (/** @type {{ shelfLife: number; }} */ item, /** @type {{ ageDays: number | undefined; }} */ data) => (item.shelfLife && data?.ageDays !== undefined ? (data.ageDays >= item.shelfLife ? 2 : data.ageDays >= item.shelfLife * 0.5 ? 1 : 0) : 0)
+const wearOf = (/** @type {{ shelfLife?: number }} */ item, /** @type {{ ageDays?: number } | undefined} */ data) => (item.shelfLife && data?.ageDays !== undefined ? (data.ageDays >= item.shelfLife ? 2 : data.ageDays >= item.shelfLife * 0.5 ? 1 : 0) : 0)
 
 /**
  * `fillContainers` for the furniture area: rolls what the piece holds with the goods catalog, puts the stacks in its slots and draws each as the real item (the model of the team
  * where there is one), at the slot, in its real size. The same seed always fills the same.
+ * @param {{ catalog?: ReturnType<typeof createGoodsItems>; seed?: number }} [options]
  */
 export function createItemContents(options = {}) {
   const catalog = options.catalog ?? createGoodsItems()
   const provider = createGoodsFindsProvider(catalog)
-  return (THREE, group, spec, type) => {
+  return /** @type {NonNullable<FurnitureOptions['fillContainers']>} */ ((THREE, group, spec, type) => {
     const key = CONTENT_KEYS[type]
     if (!key) return
     for (const container of spec.containers ?? []) {
@@ -77,7 +93,7 @@ export function createItemContents(options = {}) {
       contents.forEach((stack, index) => {
         if (!stack) return
         const item = catalog.get(stack.type)
-        const drawn = buildItem(THREE, item, { wear: wearOf(item, stack.data) })
+        const drawn = buildItem(THREE, item, { wear: wearOf(item, /** @type {{ ageDays?: number } | undefined} */ (stack.data)) })
         const slot = slots[index]
         drawn.root.position.set(slot.pos[0], slot.pos[1], slot.pos[2])
         drawn.root.name = `contents_${container.id}_${index}`
@@ -85,10 +101,13 @@ export function createItemContents(options = {}) {
         group.add(drawn.root)
       })
     }
-  }
+  })
 }
 
-/** The module for `room.loadModule`. Pass your own copies of the packages through `options` to use them instead of the bundled ones. */
+/**
+ * The module for `room.loadModule`. Pass your own copies of the packages through `options` to use them instead of the bundled ones.
+ * @param {FurnitureOptions} [options]
+ */
 export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
@@ -99,6 +118,7 @@ export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, 
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /** Short labels of each loading step, for the modules that are not created before they load (pt-BR, en). */
+/** @type {Readonly<Record<string, readonly string[]>>} */
 const STEP_LABELS = {
   vehicles: ['Veículos', 'Vehicles'],
   vehicles_proving: ['Banco de provas', 'Proving ground'],
@@ -109,12 +129,22 @@ const STEP_LABELS = {
  * The loading steps of `loadInto`, in order. A step creates its module only when it is its turn (`prepare()` returns `{ name, load }`, `load()` returns the module's report),
  * so the modules still see the room as the ones before them left it. A module that is created shows its own `name`; the others a short label.
  * The furniture area is the last step and its report is the base of the whole one.
+ * @param {TestRoom} room
+ * @param {LoadOptions} options
+ * @param {string} lang
+ * @returns {LoadStep[]}
  */
 function loadSteps(room, options, lang) {
-  const on = (/** @type {string | number} */ key) => options[key] !== false
-  const label = (/** @type {string | number} */ key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
+  const on = (/** @type {string} */ key) => options[key] !== false
+  const label = (/** @type {string} */ key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
+  /** @type {LoadStep[]} */
   const steps = []
-  const mod = (/** @type {string} */ key, create, /** @type {{ (): void; (): void; } | undefined} */ before) => {
+  /**
+   * @param {string} key
+   * @param {() => RoomModule} create
+   * @param {() => void} [before]
+   */
+  const mod = (key, create, before) => {
     if (!on(key)) return
     steps.push({
       key,
@@ -125,7 +155,7 @@ function loadSteps(room, options, lang) {
       },
     })
   }
-  const custom = (key, load) => {
+  const custom = (/** @type {string} */ key, /** @type {() => unknown} */ load) => {
     if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
   }
   // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
@@ -135,21 +165,21 @@ function loadSteps(room, options, lang) {
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
-  const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((/** @type {{ id: string; }} */ p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
+  const person = (/** @type {unknown} */ THREE) => createPersonBuilder(/** @type {ThreeLib} */ (THREE), { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((/** @type {{ id: string; }} */ p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
   mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
-  mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(room.world))
+  mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(/** @type {Parameters<typeof registerBodyMaterial>[0]} */ (/** @type {unknown} */ (room.world))))
   mod('animals', () => createAnimalsModule({ locale: lang }))
   mod('vfx', () => createVfxTestModule({ locale: lang }))
   mod('terrain', () => createTerrainTestModule({ locale: lang }))
   // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
-  const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
+  const radio = (/** @type {unknown} */ THREE) => buildItem(/** @type {ThreeLib} */ (THREE), /** @type {Parameters<typeof buildItem>[1]} */ (createGoodsItems().items.get('portable_radio'))).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
   // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
   // the source is the same portable radio; the wall that muffles it is a wall of the houses (wallPiece: the houses' structure and renderer)
-  mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(THREE, { w: 4, h: 2.6 }).build(THREE) }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang, room.vfx), rigItem: 'sedan' }) }))
+  mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(/** @type {ThreeLib} */ (THREE), { w: 4, h: 2.6 }).build(/** @type {ThreeLib} */ (THREE)) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, room.effects), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
@@ -161,7 +191,7 @@ function loadSteps(room, options, lang) {
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
-  mod('urban', () => createUrbanModule({ locale: lang, effects: room.vfx }))
+  mod('urban', () => createUrbanModule({ locale: lang, effects: room.effects }))
   // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
   mod('player', () => createPlayerModule({ locale: lang }))
   // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body
@@ -180,28 +210,35 @@ function loadSteps(room, options, lang) {
 }
 
 /** The key a module's report goes under (the items module's is `itemsArea`). */
+/** @type {Readonly<Record<string, string>>} */
 const REPORT_KEYS = { items: 'itemsArea' }
 
-const langOf = (options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+const langOf = (/** @type {{ readonly locale?: string }} */ options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
 
+/**
+ * @param {ReadonlyArray<[string, unknown]>} results
+ * @returns {FurnitureReport}
+ */
 function assemble(results) {
-  const base = results.find(([key]) => key === 'furniture')[1]
+  const base = /** @type {ModuleReport} */ (/** @type {[string, unknown]} */ (results.find(([key]) => key === 'furniture'))[1])
   return { ...base, ...Object.fromEntries(results.filter(([key, report]) => key !== 'furniture' && report).map(([key, report]) => [REPORT_KEYS[key] ?? key, report])) }
 }
 
 /**
  * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound, weather, houses, vehicles, vegetation, urban, player, crowd and stories modules (the furniture bench stays the one the panel shows).
  * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `explosives`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather`, `floorplan`, `vehicles`, `vegetation`, `urban`, `player`, `crowd` and `stories`.
+ * @param {TestRoom} room
+ * @param {LoadOptions} [options]
  */
 export function loadInto(room, options = {}) {
   const lang = langOf(options)
-  const results = loadSteps(room, options, lang).map((step) => [step.key, step.prepare().load()])
+  const results = loadSteps(room, options, lang).map((step) => /** @type {[string, unknown]} */ ([step.key, step.prepare().load()]))
   return assemble(results)
 }
 
 /** Waits for the browser to paint (a frame, then a task); falls back to a timer where frames do not run (a hidden tab). */
 const nextPaint = () =>
-  new Promise((resolve) => {
+  /** @type {Promise<void>} */ (new Promise((resolve) => {
     let done = false
     const finish = () => {
       if (done) return
@@ -210,16 +247,19 @@ const nextPaint = () =>
     }
     globalThis.requestAnimationFrame?.(() => setTimeout(finish, 0))
     setTimeout(finish, 100)
-  })
+  }))
 
 /**
  * Same as `loadInto`, but yields to the browser before each module so a loading screen can paint and move. `onProgress({ index, total, key, name })` is called before each step
  * (`index` counts from 1; `index === total` is the furniture area); once more with `index: total + 1` and `done: true` at the end. Resolves to the same report as `loadInto`.
+ * @param {TestRoom} room
+ * @param {LoadOptions & { onProgress?: (progress: LoadProgress) => void }} [options]
  */
 export async function loadIntoAsync(room, options = {}) {
   const { onProgress, ...rest } = options
   const lang = langOf(rest)
   const steps = loadSteps(room, rest, lang)
+  /** @type {Array<[string, unknown]>} */
   const results = []
   for (const [i, step] of steps.entries()) {
     const { name, load } = step.prepare()

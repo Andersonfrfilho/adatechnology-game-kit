@@ -35,7 +35,7 @@ describe('the outer baseboard', () => {
       expect(tile.mass).toBeGreaterThan(5.4)
       expect(tile.mass).toBeLessThan(6.1)
     }
-    const glued = piece.spec.joints.filter((j: { a: string }) => j.a.startsWith('baseboard:'))
+    const glued = piece.spec.joints!.filter((j: { a: string }) => j.a.startsWith('baseboard:'))
     expect(glued.length).toBe(34)
     expect(glued.every((j: { kind: string; b: string }) => j.kind === 'glue' && j.b === 'wall_0_0')).toBe(true)
   })
@@ -92,7 +92,7 @@ describe('the sidewalk at the foot of the wall', () => {
     const slabs = (piece.spec.parts as Part[]).filter((p) => p.id.startsWith('sidewalk:wall_0_0:1:'))
     expect(slabs.length).toBe(Math.round(10 / SIDEWALK_SLABS.length))
     expect(slabs.every((p) => p.material === 'concrete')).toBe(true)
-    expect(piece.spec.joints.filter((j: { a: string; b: string }) => j.a.startsWith('sidewalk:') && j.b === 'ground').length).toBe(slabs.length * 2)
+    expect(piece.spec.joints!.filter((j: { a: string; b: string }) => j.a.startsWith('sidewalk:') && j.b === 'ground').length).toBe(slabs.length * 2)
     const world = createDestruction({ seed: 1 })
     const id = world.add(piece.spec, { id: 'target' })
     const events: Event[] = []

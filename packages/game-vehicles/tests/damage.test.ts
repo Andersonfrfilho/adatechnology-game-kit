@@ -16,7 +16,7 @@ afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
 const kit = makeKit()
 registerCaseScenario(kit)
-const G = golden as unknown as Record<string, any>
+const G = golden as unknown as Record<string, { health?: Record<string, number>; flags?: Record<string, boolean>; sc?: string }>
 
 describe('the same zone and band always give the same vertices', () => {
   it('builds identical vehicles twice (same key, state and zone state)', () => {

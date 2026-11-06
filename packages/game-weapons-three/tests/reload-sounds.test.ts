@@ -91,7 +91,7 @@ describe('the cues of every reload', () => {
             expect(cue.at).toBeLessThanOrEqual(run.seconds + 1e-6)
           }
           expect(cues.map((cue) => cue.at)).toEqual([...cues.map((cue) => cue.at)].sort((a, b) => a - b))
-          if (row.modelFamily === 'revolver') {
+          if (row.modelFamily === 'revolver' || row.modelFamily === 'cylinder') {
             expect(cues.map((cue) => cue.id)).toEqual(REVOLVER(run.clip!.name === 'reload_one_by_one' ? 'one_by_one' : run.kind))
           } else if (row.modelFamily === 'rocket') {
             expect(cues.length).toBeGreaterThanOrEqual(2)

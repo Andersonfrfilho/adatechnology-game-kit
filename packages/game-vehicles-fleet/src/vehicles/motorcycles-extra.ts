@@ -1,4 +1,6 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { Group, Material, Mesh, Object3D, TorusGeometry } from 'three'
+import type { BodyOptions, SloftOptions } from './surface-types'
+import type { HeadlightOptions, VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Motorcycles added after the first batch (group F). Uses only the kit API.
@@ -6,6 +8,31 @@ import type { FleetContext } from '../context'
    The common motorcycle parts (superellipse loft, fork, handlebar, indicators, plate) are local copies of those in the first motorcycles-and-cars file,
    because there they live inside the file closure. New local helpers: fatWheel (closed-disc wheel with a wide tyre),
    moreSpokes (extra spokes on a core alloy wheel), drumHub (drum brake hub), grab (parts created in a stretch). */
+/** A motorcycle handlebar: material, rise and sweep back, tube radius, mirrors (on unless false), their stalk height, offset and size, and the hand guards' material. */
+interface HandlebarOptions {
+  mat?: Material
+  rise?: number
+  back?: number
+  r?: number
+  mirrors?: boolean
+  stalk?: number
+  mOut?: number
+  mH?: number
+  mW?: number
+  guards?: Material | false | null
+}
+/** A single-cylinder engine (`singleEngine`): where it sits, its tilt, scale, fins and the materials of the fins, block and cover. */
+interface SingleEngineOptions {
+  x: number
+  y: number
+  tilt?: number
+  fin?: Material
+  k?: number
+  mat?: Material
+  fins?: number
+  cover?: Material
+}
+
 export function installMotorcyclesExtra(fx: FleetContext): void {
   const kit = fx.kit
   const THREE = kit.THREE
@@ -40,15 +67,15 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
 
   /* ================= local geometry (copy of the first motorcycles-and-cars file) ================= */
   /* superellipse loft. x axis: stations [x, top, base, width, p, zc]; y axis: [y, xFront, xRear, width, p, zc] */
-  function sloft(st: any, o: any) {
+  function sloft(st: number[][], o?: SloftOptions | null) {
     o = o || {}
     if (kit.lod.on) o = Object.assign({}, o, { seg: Math.max(kit.lod.minLoftSegments, Math.round((o.seg || 24) * kit.lod.loftSegmentFraction)) })
     const seg = o.seg || 24,
-      pos: any = [],
+      pos: number[] = [],
       idx = [],
       ring = seg + 1,
       axisY = o.axis === 'y'
-    st.forEach(function (s: any) {
+    st.forEach(function (s) {
       const a0 = s[1],
         b0 = s[2],
         cc = (a0 + b0) / 2,
@@ -92,14 +119,14 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), o.crease || 60)
   }
-  function body(c: VehicleContext, st: number[][], mat: any, o?: any) {
+  function body(c: VehicleContext, st: number[][], mat: Material, o?: BodyOptions | null) {
     o = o || {}
     const m = c.add(sloft(st, o), mat, 0, 0, 0, o.parent)
     if (o.def !== false) c.deform.push(m)
     return m
   }
   /* half width of the loft (x axis) at position x and height y: to glue texts and trim to the side */
-  function loftHalf(st: any, x: number, y: number) {
+  function loftHalf(st: readonly (readonly number[])[], x: number, y: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -116,7 +143,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return 0
   }
   /* half width of a loft on the y axis at height y and position x (stations [y, xFront, xRear, width, p]) */
-  function yHalf(st: any, y: number, x: number) {
+  function yHalf(st: readonly (readonly number[])[], y: number, x: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -133,7 +160,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return 0
   }
   /* fender arch over the wheel. cx, cy centre; r inner radius; a0..a1 angles (0 = front); w width; t bulge */
-  function fenderGeo(cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, zc: number, o?: any) {
+  function fenderGeo(cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, zc: number, o?: { na?: number; rf?: (a: number) => number; p?: number; drop?: number } | null) {
     o = o || {}
     const na = kit.lod.on ? 10 : o.na || 22,
       nu = kit.lod.on ? 5 : 10,
@@ -161,18 +188,18 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), 70)
   }
-  function fender(c: VehicleContext, cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, mat: any, o?: any) {
+  function fender(c: VehicleContext, cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, mat: Material, o?: Parameters<typeof fenderGeo>[8]) {
     const f = c.add(fenderGeo(cx, cy, r, a0, a1, w, t, 0, o), mat, 0, 0, 0)
     c.deform.push(f)
     return f
   }
-  function lamp(c: VehicleContext, o: any) {
+  function lamp(c: VehicleContext, o: HeadlightOptions & { roll?: number; pitch?: number }) {
     const L = kit.headlight(c, o)
     if (o.roll) L.group.rotation.x = o.roll
     if (o.pitch) L.group.rotation.z = o.pitch
     return L
   }
-  function drlOn(L: any, w: number, h: number, y: number, d: number, z?: any) {
+  function drlOn(L: { group: Object3D; inner: Object3D[] }, w: number, h: number, y: number, d: number, z?: number) {
     const m = new THREE.Mesh(G.roundedBox(0.01, h, w, Math.min(0.005, h * 0.4)), DRL)
     m.position.set((d || 0.06) / 2 + 0.004, y || 0, z || 0)
     m.castShadow = false
@@ -180,7 +207,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     L.inner.push(m)
     return m
   }
-  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: any, low: any, o?: any) {
+  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: Material, low: Material, o?: { split?: number; lowK?: number; gaiter?: boolean; clamp?: Material } | null) {
     o = o || {}
     ;[1, -1].forEach(function (s) {
       const a = new V3(top[0], top[1], s * zg),
@@ -194,7 +221,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       rot: [0, 0, Math.atan2(axle[0] - top[0], top[1] - axle[1])],
     })
   }
-  function handlebar(c: VehicleContext, x: number, y: number, half: number, o: any) {
+  function handlebar(c: VehicleContext, x: number, y: number, half: number, o?: HandlebarOptions | null) {
     o = o || {}
     const mat = o.mat || MT.trim,
       rise = o.rise || 0.03,
@@ -250,7 +277,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
     return c.vehicle.children.slice(n0)
   }
-  function blinker(c: VehicleContext, x: number, y: number, z: number, front: boolean, o?: any) {
+  function blinker(c: VehicleContext, x: number, y: number, z: number, front: boolean, o?: { flush?: boolean; r?: number }) {
     o = o || {}
     if (o.flush) {
       const f = c.roundBox(0.03, 0.025, 0.05, 0.01, MT.amber, x, y, z, { rot: [0, 0, 0] })
@@ -275,7 +302,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
   }
   /* air-cooled single-cylinder engine (crankcase, side covers, inclined finned cylinder, head) */
-  function singleEngine(c: VehicleContext, o: any) {
+  function singleEngine(c: VehicleContext, o: SingleEngineOptions) {
     const x = o.x,
       y = o.y,
       tilt = o.tilt || 0.3,
@@ -314,23 +341,23 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }
-  function bikeMeta(c: VehicleContext, o: any) {
+  function bikeMeta(c: VehicleContext, o: Record<string, unknown>) {
     Object.assign(c.meta, { kind: 'bike', clearance: 0.25, bodyHeight: 0.6, belt: 0.88 }, o)
   }
   /* meshes created since mark n0 (without wheels, headlights, taillights or glass, which already have their own zone) */
-  function grab(c: VehicleContext, n0: any) {
+  function grab(c: VehicleContext, n0: number): Object3D[] {
     const Ls = new Set()
     ;(c.lights || []).forEach(function (L) {
       if (L.group) Ls.add(L.group)
     })
-    return c.vehicle.children.slice(n0).filter(function (o: any) {
-      return c.wheels.indexOf(o) < 0 && !Ls.has(o) && !o.userData.glass
+    return c.vehicle.children.slice(n0).filter(function (o: Object3D) {
+      return c.wheels.indexOf(o as Group) < 0 && !Ls.has(o) && !o.userData.glass
     })
   }
   /* extra spokes on a core alloy wheel (spokedWheel cast has 5): n spokes from angle a0 */
-  function moreSpokes(g: any, n: number, a0: number, mat?: any, thick?: any) {
+  function moreSpokes(g: Group, n: number, a0: number, mat?: Material, thick?: number) {
     const r = g.userData.r,
-      tire = g.children[0].geometry.parameters.tube,
+      tire = ((g.children[0] as Mesh).geometry as TorusGeometry).parameters.tube,
       sl = r - tire * 2
     for (let j = 0; j < n; j++) {
       const a = a0 + (j / n) * PI * 2,
@@ -341,7 +368,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     }
   }
   /* drum brake hub (work motorcycle) */
-  function drumHub(g: any, r: number, side: number) {
+  function drumHub(g: Group, r: number, side: number) {
     const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.07, 20), ENG)
     d.rotation.x = PI / 2
     d.position.z = (side || 1) * 0.02
@@ -353,7 +380,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   }
 
   /* closed-disc wheel (Lakester) with a wide low-profile tyre, made by lathe. Registers as a core wheel. */
-  function fatWheel(c: VehicleContext, x: number, r: number, w: number, rimR: number, o: any) {
+  function fatWheel(c: VehicleContext, x: number, r: number, w: number, rimR: number, o?: { disc?: Material; slot?: Material; disc2?: boolean; label?: string }) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, 0)
@@ -426,7 +453,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   }
 
   /* zones: the automatic motorcycle ones already exist; here we only hand the right parts to each */
-  function zoneParts(c: VehicleContext, map: any) {
+  function zoneParts(c: VehicleContext, map: Record<string, Object3D[] | undefined>) {
     Object.keys(map).forEach(function (id) {
       if (map[id] && map[id].length) c.zone(id, null, null, map[id])
     })
@@ -480,7 +507,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       kit.spokedWheel(c, XF, RF, 0.03, { cast: true, disc: true, label: trl('labels.front_tire') })
       const rw = kit.spokedWheel(c, XR, RR, 0.04, { cast: true, label: trl('labels.rear_tire') })
       drumHub(rw, 0.07, -1)
-      const Z = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
+      const Z: Record<string, Object3D[]> = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
       let n0
       /* engine lying under the floor: crankcase, finned cylinder pointing forward, variator cover on the left */
       n0 = c.vehicle.children.length
@@ -785,7 +812,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       dsk.rotation.x = PI / 2
       dsk.position.z = -0.07
       rw.add(dsk)
-      const Z = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
+      const Z: Record<string, Object3D[]> = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
       let n0
       /* black diamond frame */
       c.tube(
@@ -1099,7 +1126,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       ;[fw, rw].forEach(function (g) {
         moreSpokes(g, 5, 0.22)
       })
-      const Z = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
+      const Z: Record<string, Object3D[]> = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
       let n0
       /* twin-cylinder engine (barely shows, under the fairing) and radiator behind the wheel */
       n0 = c.vehicle.children.length
@@ -1404,7 +1431,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         R = 0.3245
       fatWheel(c, XF, R, 0.16, 0.235, { label: trl('labels.front_tire'), disc2: true })
       fatWheel(c, XR, R, 0.24, 0.235, { label: trl('labels.rear_tire') })
-      const Z = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
+      const Z: Record<string, Object3D[]> = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
       let n0
       /* black softail frame: neck, spine, cradle under the engine, triangulated swingarm */
       const HD = [0.49, 0.915]
@@ -1696,7 +1723,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       const rw = kit.spokedWheel(c, XR, RR, 0.047, { spokes: 36, label: trl('labels.rear_tire') })
       drumHub(fw, 0.075, 1)
       drumHub(rw, 0.085, -1)
-      const Z = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
+      const Z: Record<string, Object3D[]> = { fairing: [], handlebar: [], fuel_tank: [], seat: [], engine: [], exhaust: [] }
       let n0
       c.tube(
         [
@@ -1830,7 +1857,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       ;[1, -1].forEach(function (s) {
         blinker(c, -0.88, 0.76, s * 0.15, false)
       })
-      Z.seat = grab(c, n0).filter(function (m: any) {
+      Z.seat = grab(c, n0).filter(function (m) {
         return cargoBoxParts.indexOf(m) < 0
       })
       kit.taillight(c, { style: 'vertical', x: -0.9, y: 0.775, z: 0, w: 0.12, h: 0.07, d: 0.06, side: 1, label: trl('labels.taillight') })

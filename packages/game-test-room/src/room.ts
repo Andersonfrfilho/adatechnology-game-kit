@@ -10,7 +10,7 @@ import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, s
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
+import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
@@ -21,7 +21,7 @@ import { createFramePacer, createGeometryPool, createLightBudget, createMaterial
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
@@ -34,6 +34,7 @@ import { createExplosives } from './explosives'
 import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
+import { createDualReload } from './dual-reload'
 import { createLoading } from './loading'
 import { createRoomGraphics } from './graphics'
 import type { RoomGraphics } from './graphics'
@@ -50,7 +51,7 @@ import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
-import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult } from '@adatechnology/game-terrain'
+import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
@@ -118,6 +119,9 @@ interface BurningStain {
 
 const FIXED_DT = 1 / 60
 /** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
+// the left hand's tool (a tool in each hand): its blows wait on a key of their own and its random streams start from a seed of their own
+const LEFT_HAND_KEY = '#L'
+const OFF_HAND_SEED = 11
 // how the picker's button names its key: the one left of 1 shows as the quote it prints on a Brazilian (ABNT2) keyboard
 const TOOL_MENU_KEY_LABELS: Readonly<Record<string, string>> = { Backquote: "'" }
 const EXPLOSIVE_EFFECT_IDS = ['m67', 'molotov', 'pipe_bomb', 'm79_40mm', 'm72_66mm', 'at4_84mm', 'dynamite', 'c4', 'claymore'] as const
@@ -148,6 +152,14 @@ const TERRAIN_CELL = 0.1
 const GROUND_SPLASH_MAX_LITRES = 3
 /** Metres per second a body has to hit the water at for a splash. */
 const WATER_ENTRY_SPEED = 1.5
+/** Seconds between two looks at what stands still on the ground. */
+const LOAD_EVERY = 0.2
+/** Metres over the ground a body can be and still stand on it. */
+const RESTING_GAP = 0.06
+const PLAYER_FOOTPRINT = 0.25
+/** Metres per second under which a body counts as standing still. */
+const RESTING_SPEED = 0.3
+const GRAVITY_EARTH = 9.81
 /** A huge arena gets coarser cells, not more memory. */
 const TERRAIN_MAX_CELLS = 1000
 const GROUND_BURST_MAX = 28
@@ -488,6 +500,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return s
   }
   let tool = toolState(toolId)
+  // a tool in the left hand too (`rules.dualWield` of the arsenal): a state of its own, apart from `tools`, so two of the same weapon count their rounds apart
+  let offToolId: string | null = null
+  let offTool: WeaponState | null = null
+  let offHeld = false
+  let offFirst = false
+  // the hand that fired last: Q (fire mode) and B (safety) act on its weapon with a tool in each hand
+  let firedHand: ToolHand = 'R'
 
   const catalogMap = new Map<string, TestRoomItem>()
   for (const i of options.catalog) catalogMap.set(i.id, i)
@@ -728,8 +747,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         releaseTrigger()
       },
       secondary: () => {
+        // with a tool in each hand the right button is the left hand's trigger
+        if (offTool && !heldEntry) {
+          offHeld = true
+          offFirst = true
+          return
+        }
         if (heldEntry) throwHeld()
         else grab()
+      },
+      secondaryUp: () => {
+        if (!offHeld) return
+        offHeld = false
+        releaseTrigger('L')
       },
       key: (code, down, e) => onKey(code, down, e),
       wheel: (dir) => cycleTool(dir),
@@ -1365,6 +1395,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const listener of [...resetListeners]) listener()
     tools.clear()
     tool = toolState(toolId)
+    // a scenario starts from one tool in the right hand
+    dualReload.cancel()
+    offTool = null
+    offToolId = null
+    firedHand = 'R'
     if (pristineWorld) {
       for (const id of world.ids()) world.remove(id)
       world.load(pristineWorld)
@@ -1691,13 +1726,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const aimTurn = new THREE.Quaternion()
   const aimEuler = new THREE.Euler(0, 0, 0, 'YXZ')
   /** The pocket of the body's right shoulder, turned to the aim, in both views (`ModuleHost.holdFrame`); null for no body or a body that names no shoulder. */
-  const bodyHoldFrame = (): HandPose | null => {
-    const shoulder = avatar?.shoulder?.('R')
+  const bodyHoldFrame = (hand: ToolHand = 'R'): HandPose | null => {
+    const shoulder = avatar?.shoulder?.(hand)
     if (!shoulder) return null
     shoulder.getWorldPosition(pocketAt)
-    // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint
-    pocketAt.x -= Math.cos(player.yaw) * SHOULDER_POCKET_IN
-    pocketAt.z += Math.sin(player.yaw) * SHOULDER_POCKET_IN
+    // the view's right at this yaw is (cos, 0, -sin): the pocket is that much inside the joint (toward the right of the view for the left shoulder)
+    const inward = hand === 'L' ? -SHOULDER_POCKET_IN : SHOULDER_POCKET_IN
+    pocketAt.x -= Math.cos(player.yaw) * inward
+    pocketAt.z += Math.sin(player.yaw) * inward
     aimTurn.setFromEuler(aimEuler.set(player.pitch, player.yaw, 0, 'YXZ'))
     return { position: [pocketAt.x, pocketAt.y, pocketAt.z], quaternion: [aimTurn.x, aimTurn.y, aimTurn.z, aimTurn.w] }
   }
@@ -1831,18 +1867,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** Where a shot leaves: the muzzle of the weapon drawn in the hands when a module lends it, else a point ahead of the eye, low and right, where a gun would be. */
-  const muzzlePose = (): { position: Vec3; drawsFlash: boolean } => {
-    const lent = muzzleSource?.()
-    return lent ? { position: [...lent.position], drawsFlash: lent.drawsFlash } : { position: muzzle(), drawsFlash: false }
+  const muzzlePose = (hand: ToolHand = 'R'): { position: Vec3; drawsFlash: boolean } => {
+    const lent = muzzleSource?.(hand)
+    return lent ? { position: [...lent.position], drawsFlash: lent.drawsFlash } : { position: muzzle(hand), drawsFlash: false }
   }
-  const muzzle = (): Vec3 => {
+  const muzzle = (hand: ToolHand = 'R'): Vec3 => {
     aim()
     const e = camera.matrixWorld.elements
-    // right = x axis, up = y axis of the camera
+    // right = x axis, up = y axis of the camera; the left hand's gun is as far to the left
+    const side = hand === 'L' ? -0.16 : 0.16
     return [
-      aimO[0] + aimD[0] * 0.45 + e[0] * 0.16 - e[4] * 0.1,
-      aimO[1] + aimD[1] * 0.45 + e[1] * 0.16 - e[5] * 0.1,
-      aimO[2] + aimD[2] * 0.45 + e[2] * 0.16 - e[6] * 0.1,
+      aimO[0] + aimD[0] * 0.45 + e[0] * side - e[4] * 0.1,
+      aimO[1] + aimD[1] * 0.45 + e[1] * side - e[5] * 0.1,
+      aimO[2] + aimD[2] * 0.45 + e[2] * side - e[6] * 0.1,
     ]
   }
 
@@ -2058,10 +2095,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  const fireShots = (shots: Shot[], recoil: [number, number]): void => {
+  const fireShots = (shots: Shot[], recoil: [number, number], id = toolId, hand: ToolHand = 'R'): void => {
     if (shots.length === 0) return
-    const w = toolName()
-    const { position: m, drawsFlash } = muzzlePose()
+    const w = toolName(id)
+    const { position: m, drawsFlash } = muzzlePose(hand)
     // the module that draws the weapon draws its own flash at the muzzle: a second one here would be off the barrel
     if (!drawsFlash) {
       renderer.emit('flash', m, [aimD[0], aimD[1], aimD[2]], 1, 0)
@@ -2101,7 +2138,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       objectId: f?.object,
       itemId: f ? entryOf(f.object)?.so.itemId : undefined,
       part: f?.part,
-      data: { weapon: toolId, shots: shots.length, hits, energyJ: Math.round(energy), caliberMm: shots[0].caliber, distanceM: f ? Math.round(f.distance * 100) / 100 : null },
+      data: { weapon: id, shots: shots.length, hits, energyJ: Math.round(energy), caliberMm: shots[0].caliber, distanceM: f ? Math.round(f.distance * 100) / 100 : null, ...(hand === 'L' ? { hand } : {}) },
     })
   }
 
@@ -2220,7 +2257,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const kickLeg = options.kickLeg ?? 'alternate'
   let nextLeg: 'left' | 'right' = 'right'
   const punchHand = options.punchHand ?? 'alternate'
-  const punchTools = new Set(options.punchTools ?? ['hand', 'fists'])
+  const punchTools = new Set(options.punchTools ?? ['hand', 'fists', 'brass_knuckles'])
   let nextHand: 'left' | 'right' = 'right'
   // the combo (an ability the page gives, `strikeCombo`): while it is on, each blow of its tools is its next step, and a pause longer than `reset` starts it over
   const combo = options.strikeCombo
@@ -2235,17 +2272,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     action('combo', t(on ? 'act.combo.on' : 'act.combo.off', { name }), { data: { combo: combo.id, on } })
     say(t(on ? 'act.combo.on' : 'act.combo.off', { name }))
   }
-  const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+  /** `side` is a blow of the left hand's tool (a tool in each hand): that hand strikes, and the blow waits on a key of its own. */
+  const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId, side?: { readonly hand: 'left'; readonly key: string }): void => {
     const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
     const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
     const clip = step ? step.clip : strikeClips[id]
     // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way) or the one of its combo step, whatever the avatar does with them
     const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
-    const hand = step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
-    const side = leg ? { leg } : hand ? { hand } : undefined
-    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, side) ?? null)
+    const hand = side ? side.hand : step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
+    const limb = leg ? { leg } : hand ? { hand } : undefined
+    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, limb) ?? null)
     if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
-    if (!step && hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
+    if (!step && !side && hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
     if (step && stepIndex !== null) {
       comboNext = (stepIndex + 1) % combo!.steps.length
       comboAt = simTime
@@ -2267,7 +2305,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}), ...(hand ? { hand } : {}), ...(step ? { combo: combo!.id, step: stepIndex } : {}) },
     })
     strikes.push({
-      key: id,
+      key: side?.key ?? id,
       remaining: seconds,
       ...(swing && seconds > lead ? { swing, lead } : {}),
       land: () => {
@@ -2409,20 +2447,54 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // ----- the trigger
   /** Pulls the trigger of the tool in hand; answers what the trigger said (`drawing` while the draw is not over yet, `ok` when it did something). */
-  const useTool = (dt: number, held: boolean): UseStatus => {
+  /** The tool of a hand: the right one is the tool in hand, the left one is there only with a tool in each hand. */
+  const toolOf = (hand: ToolHand): { readonly id: string; readonly state: WeaponState } | null =>
+    hand === 'L' ? (offTool && offToolId ? { id: offToolId, state: offTool } : null) : { id: toolId, state: tool }
+  const dualReload = createDualReload(
+    {
+      needs: (hand) => {
+        const state = toolOf(hand)?.state
+        return state !== undefined && (state.def.action.kind === 'firearm' || state.def.action.kind === 'launcher') && state.ammo < state.capacity && state.reserve > 0
+      },
+      startReload: (hand) => startReload(hand),
+      reloading: (hand) => toolOf(hand)?.state.reloading ?? false,
+      stow: (hand, on, seconds) => {
+        const slot = toolOf(hand)
+        if (!slot) return
+        if (on) slot.state.release()
+        emitHost({ type: 'stow', weapon: slot.id, on, duration: seconds, ...(hand === 'L' ? { hand } : {}) })
+        action('stow', t(on ? 'act.stow' : 'act.unstow', { weapon: toolName(slot.id), hand: t(hand === 'L' ? 'hand.left' : 'hand.right') }), { data: { weapon: slot.id, hand, on, seconds } })
+      },
+    },
+    () => arsenal.rules.dualWield.stowSeconds,
+  )
+  /** The key a blow of the hand's tool waits on: the left hand's own, so two machetes swing apart. */
+  const strikeKeyOf = (id: string, hand: ToolHand): string => (hand === 'L' ? `${id}${LEFT_HAND_KEY}` : id)
+  const useTool = (dt: number, held: boolean, hand: ToolHand = 'R'): UseStatus => {
     aim()
-    const cat = tool.def.category
+    const slot = toolOf(hand)
+    if (!slot) return 'cooldown'
+    const { id, state } = slot
+    // with a tool in each hand a magazine change takes both hands: one works the magazine, the other weapon is tucked away
+    if (offTool && dualReload.busy) {
+      if (!held) say(t('hud.reloading'))
+      return 'reloading'
+    }
+    const cat = state.def.category
     if (cat === 'hand') {
       if (strikes.some((strike) => strike.key === 'hand' || strike.key === 'fists')) return 'cooldown'
       strikeUse({ kind: 'melee', damage: 'blunt', energy: 25, radius: 0.1, reach: 0.8, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, 'hand')
       return 'ok'
     }
-    if (strikes.some((strike) => strike.key === toolId)) return 'cooldown' // the blow of this tool is still on its way
-    const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
-    flushEvents(toolId, tool, res.recoil)
+    if (strikes.some((strike) => strike.key === strikeKeyOf(id, hand))) return 'cooldown' // the blow of this tool is still on its way
+    const res = state.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
+    flushEvents(id, state, res.recoil, hand)
     if (res.status === 'empty') {
-      if (!tool.reloading && tool.reserve > 0) startReload()
-      say(t(tool.reloading ? 'hud.reloading' : 'hud.empty'))
+      if (!state.reloading && state.reserve > 0) {
+        if (offTool) dualReload.start([hand, hand === 'R' ? 'L' : 'R'])
+        else startReload(hand)
+      }
+      say(t(state.reloading ? 'hud.reloading' : 'hud.empty'))
       return res.status
     }
     if (res.status !== 'ok') {
@@ -2432,16 +2504,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       else if (res.status === 'safe') say(t('hud.safe'))
       return res.status
     }
-    applyUses(res, dt)
+    firedHand = hand
+    applyUses(res, dt, hand)
     return res.status
   }
 
-  const applyUses = (res: TriggerResult, dt: number): void => {
-    if (res.shots.length) fireShots(res.shots, res.recoil)
+  const applyUses = (res: TriggerResult, dt: number, hand: ToolHand = 'R'): void => {
+    const id = toolOf(hand)?.id ?? toolId
+    if (res.shots.length) fireShots(res.shots, res.recoil, id, hand)
     for (const u of res.uses) {
       switch (u.kind) {
         case 'melee':
-          strikeUse(u)
+          if (hand === 'L') strikeUse(u, id, { hand: 'left', key: strikeKeyOf(id, hand) })
+          else strikeUse(u)
           break
         case 'flame':
           heatRays(u, 'fire')
@@ -2471,15 +2546,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** The trigger goes up: a grenade being cooked leaves the hand now, with the fuse that is left (or has already gone off in it). */
-  const releaseTrigger = (): void => {
-    if (!tool.cooking) {
-      tool.release()
+  const releaseTrigger = (hand: ToolHand = 'R'): void => {
+    const slot = toolOf(hand)
+    if (!slot) return
+    if (!slot.state.cooking) {
+      slot.state.release()
       return
     }
     aim()
-    const res = tool.release([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]])
-    flushEvents(toolId, tool)
-    if (res) applyUses(res, 0)
+    const res = slot.state.release([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]])
+    flushEvents(slot.id, slot.state, undefined, hand)
+    if (res) applyUses(res, 0, hand)
   }
 
   /** The kick key (K, Shift+V) and the kick button: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). False when there is no kick or it is not ready. */
@@ -2511,8 +2588,48 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }))
   }
   const toggleToolMenu = (open?: boolean): boolean => ui?.toolMenu(open) ?? false
+  /** Lets the left hand go: back to one tool, in the right hand, held and aimed as usual. */
+  const dropOffTool = (): void => {
+    if (!offTool) return
+    releaseTrigger('L')
+    offTool = null
+    offToolId = null
+    offHeld = false
+    offFirst = false
+    dualReload.cancel()
+    firedHand = 'R'
+    tool.setStance({ dualWield: false })
+    action('tool_left', t('act.tool_left_off'), { data: { hand: 'L' } })
+    emitHost({ type: 'tool', weapon: '', hand: 'L' })
+  }
+  /**
+   * Puts one of `id` in the left hand, beside the tool in the right (a pistol in each hand); false, and nothing changes, when the arsenal's `rules.dualWield` does not take the weapon
+   * or the tool in the right. `null` lets the left hand go.
+   */
+  const setOffTool = (id: string | null): boolean => {
+    if (id === null) {
+      dropOffTool()
+      return true
+    }
+    if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
+    if (!canDualWield(arsenal, id) || !canDualWield(arsenal, toolId)) return false
+    if (offTool) releaseTrigger('L')
+    const state = arsenal.create(id, { seed: OFF_HAND_SEED, reserve: 999, ...toolSettings })
+    state.setFuseLength(fuseLength)
+    state.refill()
+    state.setStance({ dualWield: true })
+    tool.setStance({ dualWield: true })
+    offTool = state
+    offToolId = id
+    dualReload.cancel()
+    action('tool_left', t('act.tool_left', { weapon: toolName(id) }), { data: { weapon: id, hand: 'L' } })
+    state.draw()
+    flushEvents(id, state, undefined, 'L')
+    return true
+  }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
+    dropOffTool()
     releaseTrigger()
     toolId = id
     const i = loadout.indexOf(id)
@@ -3002,6 +3119,33 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const p of loose) floatPiece(p, dt)
   }
   const footprints = createFootprints(terrain)
+
+  // weight standing still: what rests on bare bars bends them, and a slab over a void gives way under what its bars cannot hold
+  let loadClock = 0
+  const restingLoad = (piece: Piece): TerrainLoad | null => {
+    // what is still weighs on the ground under it, through whatever it rests on (a stack, a shelf); what is falling does not yet
+    if (piece.held || Math.hypot(piece.velocity[0], piece.velocity[1], piece.velocity[2]) > RESTING_SPEED) return null
+    const box = tmpBox.setFromObject(piece.root)
+    const centre = box.getCenter(tmpV)
+    return { x: centre.x, z: centre.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
+  }
+  const updateLoads = (dt: number): void => {
+    loadClock += dt
+    if (loadClock < LOAD_EVERY) return
+    loadClock = 0
+    const loads: TerrainLoad[] = []
+    const [px, py, pz] = player.position
+    if (py - terrain.heightAt(px, pz) <= RESTING_GAP) loads.push({ x: px, z: pz, radius: PLAYER_FOOTPRINT, newtons: playerMass * GRAVITY_EARTH })
+    for (const e of entries.values()) {
+      const load = e.piece ? restingLoad(e.piece) : null
+      if (load) loads.push(load)
+    }
+    for (const p of loose) {
+      const load = restingLoad(p)
+      if (load) loads.push(load)
+    }
+    if (loads.length > 0 && terrain.bear(loads)) action('ground_gave_way', t('act.ground_gave_way'))
+  }
   const prevVy = new Map<string, number>()
   const tmpBox = new THREE.Box3()
 
@@ -3048,15 +3192,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyR':
         if (heldPiece) heldYaw += Math.PI / 8
         else {
-          startReload()
+          reloadHands()
           say(t('hud.reloading'))
         }
         break
-      case 'KeyQ': {
-        tool.cycleMode()
-        flushEvents(toolId, tool)
+      case 'KeyQ':
+        cycleToolMode()
         break
-      }
       case 'KeyX':
         clearToolFault()
         break
@@ -3114,6 +3256,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!arsenal.weapons.has(weaponId)) return
     if (!loadout.includes(weaponId)) loadout.push(weaponId)
     setTool(weaponId)
+  }
+  /**
+   * The weapon picker: a click puts the weapon in hand (one weapon); a Shift+click (`second`) puts one in the left hand too (two of it, or, with one in each hand already, this one in
+   * the left). A weapon that does not go one in each hand (`rules.dualWield`) is equipped alone, and the HUD says why.
+   */
+  const pickTool = (weaponId: string, pick: { readonly second: boolean } = { second: false }): void => {
+    if (!arsenal.weapons.has(weaponId)) return
+    if (!pick.second) {
+      equip(weaponId)
+      return
+    }
+    if (!canDualWield(arsenal, weaponId)) {
+      equip(weaponId)
+      say(t('hud.no_dual', { weapon: toolName(weaponId) }))
+      return
+    }
+    if (!offTool || !canDualWield(arsenal, toolId)) equip(weaponId)
+    setOffTool(weaponId)
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -3337,6 +3497,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     vfx.update(dt)
     updateImpacts()
     updateWater(dt)
+    updateLoads(dt)
     if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
     filmBridge.update(dt)
@@ -3344,6 +3505,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const [id, s] of tools) {
       s.update(dt)
       flushEvents(id, s)
+    }
+    if (offTool && offToolId) {
+      offTool.update(dt)
+      flushEvents(offToolId, offTool, undefined, 'L')
+      dualReload.step(dt)
     }
     if (audio) {
       // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
@@ -3397,6 +3563,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       } else if (useHeld) useTool(dt, !useFirst)
       useFirst = false
     }
+    // the right button with a tool in each hand: the left hand's trigger
+    if ((offHeld || offFirst) && offTool && !isPaused && !push.active) {
+      useTool(dt, !offFirst, 'L')
+      offFirst = false
+    }
     if (!isPaused) followHeld(dt)
   }
 
@@ -3427,12 +3598,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hudAimHit = undefined
     }
   }
+  const ammoText = (state: WeaponState): string => {
+    const kind = state.def.action.kind
+    if (kind === 'firearm') return `${state.ammo}/${state.capacity}${state.reserve ? ` · ${state.reserve}` : ''}`
+    return kind === 'hand' || kind === 'melee' || kind === 'tool' ? '' : `${num(state.ammo, 0)}`
+  }
   const readHudState = (): HudState => {
     const page = Math.floor(toolIndex / 10)
     const slots = loadout.slice(page * 10, page * 10 + 10).map((id) => arsenal.name(id))
-    const ammo = tool.def.action.kind === 'firearm' ? `${tool.ammo}/${tool.capacity}${tool.reserve ? ` · ${tool.reserve}` : ''}` : tool.def.action.kind === 'hand' ? '' : tool.def.action.kind === 'melee' || tool.def.action.kind === 'tool' ? '' : `${num(tool.ammo, 0)}`
+    const left = offTool ? ammoText(offTool) : ''
+    const ammo = `${ammoText(tool)}${left ? ` | ${t('hud.left')} ${left}` : ''}`
     return {
-      toolName: toolName(),
+      toolName: offToolId ? `${toolName()} + ${toolName(offToolId)}` : toolName(),
       toolId,
       ammo,
       slots,
@@ -3650,26 +3827,61 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (event.type === 'explosion') knockPlayer(event)
     for (const listener of hostListeners) listener(event)
   }
-  function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
+  function flushEvents(id: string, state: WeaponState, recoil?: [number, number], hand: ToolHand = 'R'): void {
     const phase = state.phase
     for (const event of state.drain()) {
       const hostEvent = toHostEvent(id, event, { ...(recoil ? { recoil } : {}), phase })
-      if (hostEvent) emitHost(hostEvent)
+      if (hostEvent) emitHost(hand === 'L' ? ({ ...hostEvent, hand } as HostEvent) : hostEvent)
     }
   }
-  function startReload(): void {
-    tool.reload()
-    flushEvents(toolId, tool)
+  /** Reloads the tool of a hand. With a tool in each hand one hand holds the other weapon: a reload waits while the other one runs, and R reloads the right, then the left. */
+  /** Reloads the tool of a hand; answers whether the reload started. */
+  function startReload(hand: ToolHand = 'R'): boolean {
+    const slot = toolOf(hand)
+    if (!slot) return false
+    const started = slot.state.reload()
+    flushEvents(slot.id, slot.state, undefined, hand)
+    return started
   }
+  /**
+   * R: the tool in hand reloads. With one in each hand a hand is needed for the magazine: the left weapon is tucked against the body, the left hand changes the right one's magazine,
+   * the left weapon comes back; then the right one is tucked and the right hand changes the left one's (`dualReload`). Neither fires meanwhile.
+   */
+  function reloadHands(): void {
+    if (!offTool) {
+      startReload()
+      return
+    }
+    dualReload.start(['R', 'L'])
+  }
+  /** The hand whose weapon Q and B act on: the one that fired last (the right one with a single tool). */
+  const commandHand = (): ToolHand => (offTool ? firedHand : 'R')
+  /** X clears a stuck weapon: the one of the hand that fired last when it is stuck, else the other one. */
   function clearToolFault(): void {
-    if (!tool.clearFault()) return
-    flushEvents(toolId, tool)
-    say(t('hud.clearing'))
+    const order: ToolHand[] = offTool ? [firedHand, firedHand === 'R' ? 'L' : 'R'] : ['R']
+    for (const hand of order) {
+      const slot = toolOf(hand)
+      if (!slot?.state.fault || !slot.state.clearFault()) continue
+      flushEvents(slot.id, slot.state, undefined, hand)
+      say(t('hud.clearing'))
+      return
+    }
   }
   function toggleSafety(): void {
-    tool.setSafety(!tool.safety)
-    flushEvents(toolId, tool)
-    say(t(tool.safety ? 'hud.safety_on' : 'hud.safety_off'))
+    const hand = commandHand()
+    const slot = toolOf(hand)
+    if (!slot) return
+    slot.state.setSafety(!slot.state.safety)
+    flushEvents(slot.id, slot.state, undefined, hand)
+    say(`${t(slot.state.safety ? 'hud.safety_on' : 'hud.safety_off')}${offTool ? ` (${toolName(slot.id)}, ${t(hand === 'L' ? 'hand.left' : 'hand.right')})` : ''}`)
+  }
+  function cycleToolMode(): void {
+    const hand = commandHand()
+    const slot = toolOf(hand)
+    if (!slot) return
+    slot.state.cycleMode()
+    flushEvents(slot.id, slot.state, undefined, hand)
+    if (offTool) say(`${toolName(slot.id)} (${t(hand === 'L' ? 'hand.left' : 'hand.right')}): ${slot.state.mode}`)
   }
   function runToolCommand(request: ToolCommand): ToolCommandResult {
     // the room is the bench: every accessory can be fitted here, whatever it needs (a tool, a workbench)
@@ -3692,6 +3904,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         return { ok: false, reason: 'unknown' }
     }
   }
+  const hostToolOf = (id: string, state: WeaponState): HostTool => ({
+    weapon: id,
+    category: state.def.category,
+    ammo: state.ammo,
+    capacity: state.capacity,
+    reserve: state.reserve,
+    reloading: state.reloading,
+    mode: state.mode,
+    ...(state.fault ? { fault: state.fault } : {}),
+    safety: state.safety,
+    heat: state.heatLevel,
+    attachments: state.attachments.map((part) => ({ id: part.id, mount: part.mount, ...(part.integral ? { integral: true } : {}), ...(part.on === undefined ? {} : { on: part.on }) })),
+    stock: state.stock,
+    suppressed: state.suppressed,
+    underbarrelActive: state.underbarrelActive,
+    mass: state.mass,
+    aimSeconds: state.aimSeconds,
+  })
   const host: ModuleHost = {
     THREE,
     scene,
@@ -3718,22 +3948,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     blastReach: (point, target, ignore) => world.blastReach(point, target, ignore ? { ignore } : {}),
     tool: () => ({
-      weapon: toolId,
-      category: tool.def.category,
-      ammo: tool.ammo,
-      capacity: tool.capacity,
-      reserve: tool.reserve,
-      reloading: tool.reloading,
-      mode: tool.mode,
-      ...(tool.fault ? { fault: tool.fault } : {}),
-      safety: tool.safety,
-      heat: tool.heatLevel,
-      attachments: tool.attachments.map((part) => ({ id: part.id, mount: part.mount, ...(part.integral ? { integral: true } : {}), ...(part.on === undefined ? {} : { on: part.on }) })),
-      stock: tool.stock,
-      suppressed: tool.suppressed,
-      underbarrelActive: tool.underbarrelActive,
-      mass: tool.mass,
-      aimSeconds: tool.aimSeconds,
+      ...hostToolOf(toolId, tool),
+      ...(dualReload.stowed('R') ? { stowed: true } : {}),
+      ...(offTool && offToolId ? { offHand: { ...hostToolOf(offToolId, offTool), ...(dualReload.stowed('L') ? { stowed: true } : {}) } } : {}),
     }),
     command(request) {
       const result = runToolCommand(request)
@@ -3770,7 +3987,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     onFrame(update, frameOptions) {
       return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: `module.frame#${moduleFrameCount++}` })
     },
-    holdFrame: () => bodyHoldFrame(),
+    holdFrame: (hand) => bodyHoldFrame(hand),
     reachFor(reach) {
       if (!avatar) {
         reach.onGrip?.()
@@ -4187,6 +4404,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluids,
     film: filmBridge,
     vfx: vfx.world,
+    effects: vfx,
     fluidRenderer: fluidView,
     audio,
     environment,
@@ -4202,6 +4420,29 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     clear,
     resetAll,
     setTool,
+    setOffTool,
+    get offTool() {
+      return offTool
+    },
+    useOff(hold = 0) {
+      if (!offTool) return 'cooldown'
+      const status = useTool(FIXED_DT, false, 'L')
+      flush()
+      let t0 = 0
+      while (t0 < hold) {
+        useTool(FIXED_DT, true, 'L')
+        directStep = true
+        try {
+          runHeadless(() => scheduler.advance(FIXED_DT))
+        } finally {
+          directStep = false
+        }
+        t0 += FIXED_DT
+      }
+      releaseTrigger('L')
+      return status
+    },
+    reload: () => reloadHands(),
     useItem,
     use(hold = 0) {
       if (tool.def.category === 'hand') {
@@ -4505,7 +4746,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         ? {
             toolMenu: {
               groups: toolMenuGroups,
-              onPick: equip,
+              onPick: pickTool,
+              currentLeft: () => offToolId,
               // the list takes clicks: the mouse leaves the view while it is open
               onOpen: (open: boolean) => {
                 if (open && document.pointerLockElement) document.exitPointerLock?.()

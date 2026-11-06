@@ -103,7 +103,7 @@ export type PunchHand = 'alternate' | 'left' | 'right'
 export type CameraMode = 'first' | 'third'
 
 /** Which clip a melee tool plays before its blow lands (`TestRoomOptions.strikeClips`). */
-export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
+export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', brass_knuckles: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
 /** The first-person stance of the tools that choose one (`TestRoomOptions.handStances`). */
 export const DEFAULT_HAND_STANCES: Readonly<Record<string, string>> = { fists: 'fists' }
 

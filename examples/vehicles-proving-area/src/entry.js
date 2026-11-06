@@ -8,7 +8,7 @@ import { PROVING_AREA_ID, createProvingModule } from '@adatechnology/game-vehicl
 
 export { createProvingModule, PROVING_AREA_ID }
 
-const langOf = (options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+const langOf = (/** @type {{ locale?: string }} */ options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
 
 /** Every land vehicle of the kit's fleet (the boats and the aircraft wait for their rooms). */
 export const LAND_VEHICLES = Object.entries(fleetGroups).filter(([group]) => group !== 'water' && group !== 'air').flatMap(([, ids]) => ids)
@@ -22,7 +22,7 @@ const TRUNK_FINDS = ['car_jack', 'first_aid_kit']
 export function createCarStock(catalog = createGoodsItems()) {
   const container = GOODS_CONTAINERS.find((c) => c.id === 'car_trunk')
   const [min, max] = container?.count ?? [0, 3]
-  return (compartment, vehicle) => {
+  return (/** @type {string} */ compartment, /** @type {string} */ vehicle) => {
     const random = rng(`${vehicle}:car_trunk`)
     const count = min + Math.floor(random() * (max - min + 1))
     const pool = [...GLOVEBOX_FINDS, ...TRUNK_FINDS].filter((id) => catalog.has(id))
@@ -33,7 +33,10 @@ export function createCarStock(catalog = createGoodsItems()) {
   }
 }
 
-/** The module for the room's locale with the kit's fleet as its content, keeping the certificates on `window.__provingCertificates` (by vehicle id) for a page or a test to read. */
+/**
+ * The module for the room's locale with the kit's fleet as its content, keeping the certificates on `window.__provingCertificates` (by vehicle id) for a page or a test to read.
+ * @param {Partial<Parameters<typeof createProvingModule>[0]>} [options]
+ */
 export function createModule(options = {}) {
   const locale = langOf(options)
   const certificates = (globalThis.__provingCertificates ??= {})
@@ -51,21 +54,26 @@ export function createModule(options = {}) {
     },
     ...options,
     locale,
-    onCertificate: (/** @type {{ vehicle: string | number; }} */ c) => {
+    onCertificate: (/** @type {import('@adatechnology/game-vehicles-proving').ProvingCertificate} */ c) => {
       certificates[c.vehicle] = c
       options.onCertificate?.(c)
     },
   })
 }
 
-/** Loads the proving ground into the room without opening it (the full room page). */
+/**
+ * Loads the proving ground into the room without opening it (the full room page).
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createProvingModule>[0]>} [options]
+ */
 export function loadModule(room, options = {}) {
   return room.loadModule(createModule(options))
 }
 
 /**
  * Loads it and opens its area. Returns the room's module report.
- * @param {{ openArea: (arg0: string) => void; }} room
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createProvingModule>[0]>} [options]
  */
 export function loadInto(room, options = {}) {
   const report = loadModule(room, options)

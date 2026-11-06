@@ -82,7 +82,11 @@
       "Rossi",
       "Browning",
       "Knight's",
-      "Thompson"
+      "Thompson",
+      "Walther",
+      "B&T",
+      "IWI",
+      "Mauser"
     ],
     "source": "gallery",
     "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
@@ -1350,6 +1354,150 @@
         "source": "reference",
         "reason": "Aro de 12,07 mm, estojo de 53,3 mm e cartucho de 66,5 mm. https://en.wikipedia.org/wiki/.45-70"
       }
+    },
+    "7_62x25": {
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Cartucho de pistola de garrafa a 488 m/s (supersônico): sem linha no Arsenal; o nível \"alto\" do §04 tem 300 m no §12, o mesmo do .357 Magnum."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "7.62×25 mm Tokarev",
+          "bulletGrams": 5.5,
+          "muzzleSpeed": 488,
+          "dragPer100m": 0.12,
+          "kind": "fmj",
+          "diameter": 7.85,
+          "id": "7_62x25"
+        },
+        "source": "reference",
+        "reason": "Projétil FMJ de 5,5 g; 488 m/s da PPSh-41 (a página da arma); diâmetro do projétil 7,85 mm; arrasto de 0,12 igual ao da 5,7×28 e da 4,6×30 (derivado: projétil leve e fino). https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 9.95,
+          "overallLength": 35.2,
+          "caseLength": 25.0,
+          "projectileDiameter": 7.85
+        },
+        "source": "reference",
+        "reason": "Aro de 9,95 mm, estojo de 25,0 mm e cartucho de 35,2 mm. https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      }
+    },
+    "7_92x57": {
+      "noise": {
+        "value": 420,
+        "source": "derived",
+        "reason": "Cartucho de fuzil de potência alta, sem linha no Arsenal: o mesmo nível do .308 e do .30-06 do §12 (420 m)."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "7.92×57 mm Mauser",
+          "bulletGrams": 11.7,
+          "muzzleSpeed": 760,
+          "dragPer100m": 0.08,
+          "kind": "fmj",
+          "diameter": 8.22,
+          "id": "7_92x57"
+        },
+        "source": "reference",
+        "reason": "Projétil de 11,7 g (RWS DK); 760 m/s do Kar98k (a página da arma); diâmetro do projétil 8,22 mm; arrasto de 0,08 igual ao do .30-06 (derivado: mesma classe de projétil). https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 11.95,
+          "overallLength": 82.0,
+          "caseLength": 57.0,
+          "projectileDiameter": 8.22
+        },
+        "source": "reference",
+        "reason": "Aro de 11,95 mm, estojo de 57,0 mm e cartucho de 82,0 mm. https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      }
+    },
+    "9x39": {
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Cartucho de fuzil derivado do 7,62×39, sem linha no Arsenal: o mesmo nível do 7,62×39 do §12 (300 m), antes do silenciador integral da arma."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/9%C3%9739mm"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "9×39 mm SP-5",
+          "bulletGrams": 16.1,
+          "muzzleSpeed": 290,
+          "dragPer100m": 0.2,
+          "kind": "fmj",
+          "diameter": 9.27,
+          "id": "9x39"
+        },
+        "source": "reference",
+        "reason": "Projétil SP-5 de 16,1 g a 290 m/s (subsônico); diâmetro do projétil 9,27 mm; arrasto de 0,2 igual ao do 9×19 (derivado: projétil pesado e lento). https://en.wikipedia.org/wiki/9%C3%9739mm"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 11.33,
+          "overallLength": 56.0,
+          "caseLength": 38.7,
+          "projectileDiameter": 9.27
+        },
+        "source": "reference",
+        "reason": "Aro de 11,33 mm, estojo de 38,7 mm e cartucho de 56,0 mm. https://en.wikipedia.org/wiki/9%C3%9739mm"
+      }
     }
   },
   "energyScale": {
@@ -2173,6 +2321,119 @@
         "source": "reference",
         "reason": "TNT equivalente: Granada VOG-25 de 40 mm: 48 g de A-IX-2."
       }
+    },
+    "semtex": {
+      "sources": {
+        "value": {
+          "lab": "c4"
+        },
+        "source": "design",
+        "reason": "Blast radii of the Laboratory profile of the C4: the same family of plastic explosive, set the same way."
+      },
+      "name": {
+        "value": "Semtex charge",
+        "source": "design",
+        "reason": "Name in English; pt-BR lives in the locale."
+      },
+      "kind": {
+        "value": "blast",
+        "source": "derived",
+        "reason": "A blast charge, like the C4."
+      },
+      "triggers": {
+        "value": [
+          "remote",
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Set down and fired by a remote detonator, or by the safety fuse of its detonator (the C4 takes the remote only)."
+      },
+      "extras": {
+        "value": {
+          "mass": 0.5,
+          "fuseLength": 0.23,
+          "burnRate": 131,
+          "burnTolerance": 0.1
+        },
+        "source": "reference",
+        "reason": "A 500 g block (Semtex is sold in blocks of 0.5 kg, https://en.wikipedia.org/wiki/Semtex). The timed detonation is a safety fuse of 0.23 m burning 131 s/m (the rate of the dynamite entry), about 30 s, scattered by 10%."
+      },
+      "energy": {
+        "value": 377400,
+        "source": "derived",
+        "reason": "TNT equivalent times the energy per kilogram of TNT the C4 entry uses (345600 J for 0.76 kg): 0.83 x 454737 J."
+      },
+      "tnt": {
+        "value": 0.83,
+        "source": "reference",
+        "reason": "500 g of Semtex-H times its relative effectiveness factor of 1.66 (PETN and RDX, https://en.wikipedia.org/wiki/Semtex) = 0.83 kg of TNT."
+      },
+      "world": {
+        "value": {
+          "noise": 700,
+          "destructionLevel": 3
+        },
+        "source": "derived",
+        "reason": "The noise and the tearing-down level of the C4 entry (Arsenal §13): the same charge class."
+      }
+    },
+    "smoke_grenade": {
+      "sources": {
+        "value": {},
+        "source": "design",
+        "reason": "The Laboratory has no profile for a canister that does not blast."
+      },
+      "name": {
+        "value": "M18 colored smoke grenade",
+        "source": "design",
+        "reason": "Name in English; pt-BR lives in the locale."
+      },
+      "kind": {
+        "value": "smoke",
+        "source": "derived",
+        "reason": "It makes smoke and does not explode."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "The pull-ring M201A1 igniter lights the filling after its delay."
+      },
+      "radii": {
+        "value": {
+          "lethal": 0,
+          "injury": 0
+        },
+        "source": "derived",
+        "reason": "No blast: the filling burns."
+      },
+      "world": {
+        "value": {
+          "noise": 30,
+          "destructionLevel": 0
+        },
+        "source": "derived",
+        "reason": "The hiss of the burning filling is heard a few tens of metres away; it tears nothing down."
+      },
+      "extras": {
+        "value": {
+          "mass": 0.54,
+          "fuseRange": [
+            1.0,
+            2.3
+          ],
+          "smoke": {
+            "color": 4177738,
+            "seconds": [
+              50,
+              90
+            ]
+          }
+        },
+        "source": "reference",
+        "reason": "M18: 19 oz (0.54 kg), M201A1 igniter delay of 1.0 to 2.3 s, a cloud of coloured smoke for 50 to 90 s; the green variant (G940, 0x3FBF4A) is the default colour (https://en.wikipedia.org/wiki/M18_smoke_grenade)."
+      }
     }
   },
   "archetypes": {
@@ -2295,6 +2556,26 @@
       "value": "rifle_7_62x39",
       "source": "derived",
       "reason": "Metralhadora 7,62: arquétipo 7,62×39."
+    },
+    "smg:7_62x25": {
+      "value": "smg_9mm",
+      "source": "derived",
+      "reason": "Submetralhadora de 7,62×25: sem arquétipo mais quente, o mais próximo é o de 9 mm; o coice da arma sai da energia do calibre sobre o peso, então já escala."
+    },
+    "sniper:7_92x57": {
+      "value": "rifle_bolt_308",
+      "source": "derived",
+      "reason": "Fuzil de ferrolho em 7,92×57: arquétipo .308 de ferrolho (mesma classe de energia)."
+    },
+    "machine_gun:7_92x57": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Metralhadora 7,92×57: arquétipo de metralhadora de 7,62 (alcance de 350 m); o coice escala pela energia do calibre."
+    },
+    "dmr:9x39": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Fuzil de 9×39 de alcance de 400 m: arquétipo de fuzil de 7,62×39 (350 m), não o .308 de ferrolho de 800 m."
     }
   },
   "semiRate": {
@@ -3042,6 +3323,7 @@
     },
     "hk_g36": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.758
       },
@@ -3050,6 +3332,7 @@
     },
     "hk_g36k": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.615
       },
@@ -3058,6 +3341,7 @@
     },
     "hk_g36c": {
       "value": {
+        "kind": "fold",
         "foldAxis": "left",
         "lengthCollapsed": 0.5
       },
@@ -3093,6 +3377,42 @@
       },
       "source": "reference",
       "reason": "vz. 61: 270 mm com a coronha de arame dobrada por cima do corpo. https://en.wikipedia.org/wiki/%C5%A0korpion"
+    },
+    "aks_74u": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "left",
+        "lengthCollapsed": 0.49
+      },
+      "source": "reference",
+      "reason": "AKS-74U: 490 mm com a coronha dobrada para a esquerda. https://en.wikipedia.org/wiki/AKS-74U"
+    },
+    "fn_scar_l": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right",
+        "lengthCollapsed": 0.635
+      },
+      "source": "reference",
+      "reason": "SCAR-L: a coronha recolhe e dobra para a direita; 635 mm dobrada. https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "bt_mp9": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right",
+        "lengthCollapsed": 0.303
+      },
+      "source": "reference",
+      "reason": "MP9: 303 mm com a coronha dobrada para a direita. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+    },
+    "mp40": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "under",
+        "lengthCollapsed": 0.63
+      },
+      "source": "reference",
+      "reason": "MP40: 630 mm com a coronha de metal dobrada por baixo. https://en.wikipedia.org/wiki/MP_40"
     }
   },
   "integral": {
@@ -3186,6 +3506,19 @@
       ],
       "source": "reference",
       "reason": "A alça de transporte do G36K leva a mesma mira integrada do G36. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "vss_vintorez": {
+      "value": [
+        {
+          "id": "integral_suppressor",
+          "mount": "muzzle",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "O VSS tem o silenciador integral em volta do cano, sem boca para outro acessório; não sai. https://en.wikipedia.org/wiki/VSS_Vintorez"
     }
   },
   "arsenalFeatures": {
@@ -4480,6 +4813,32 @@
       "reason": "AG36: cerca de 350 mm, cano de 280 mm e 1,5 kg (https://en.wikipedia.org/wiki/AG36); munição `m79_40mm` (decisão do dono). Velocidade de 76 m/s, massa carregada (+0,23 kg), recarga e coice do M79 (derivados)."
     }
   },
+  "multiLaunchers": {
+    "m32_mgl": {
+      "value": {
+        "id": "m32_mgl",
+        "name": "M32 multiple grenade launcher (Milkor MGL)",
+        "projectile": "m79_40mm",
+        "magazine": 6,
+        "length": 0.778,
+        "lengthCollapsed": 0.565,
+        "barrel": 0.3,
+        "emptyMass": 5.3,
+        "mass": 6.68,
+        "speed": 75,
+        "kick": 0.8,
+        "recoilBase": "shotgun_double_12",
+        "backblast": 0,
+        "reload": 9.2,
+        "stock": {
+          "kind": "fold",
+          "foldAxis": "over"
+        }
+      },
+      "source": "reference",
+      "reason": "Milkor MGL, the M32 of the US Marine Corps: 778 mm with the stock out and 565 mm folded, 300 mm barrel, 5.3 kg empty, 75 m/s, a six-round spring-driven revolving cylinder for 40×46 mm grenades (https://en.wikipedia.org/wiki/Milkor_MGL); ammunition `m79_40mm` (the same 40×46 grenade of the M79). Loaded mass = empty + 6 grenades of 0.23 kg. Recoil: the M79 kick (1.6, 2.7 kg) scaled by the mass ratio (2.7/5.3), derived. Reload of the whole cylinder derived, there is no maker figure: the frame opens and the cylinder is wound once (about 2 s, the M79 breech cycle), then six grenades are put in one by one at about 1.2 s each."
+    }
+  },
   "creations": {
     "HK MP5SD3": {
       "value": {
@@ -5634,6 +5993,998 @@
       },
       "source": "reference",
       "reason": "Criação (o M134 só casa em base64/SVG do jogo): três modos pelo acessório. Na mão com caixa (padrão), na mão com a mochila de munição (500) e montado no tripé (`tripod`, apoio como a M2). https://en.wikipedia.org/wiki/M134_Minigun"
+    },
+    "AKS-74U": {
+      "value": {
+        "id": "aks_74u",
+        "name": "AKS-74U",
+        "of": "AK-74",
+        "caliber": "5_45x39",
+        "caliberText": "5,45×39",
+        "capacity": "30",
+        "length": 730,
+        "barrel": 206,
+        "emptyMass": 2.7,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.22,
+          "rpm": 700
+        },
+        "reloadFrom": "AK-74",
+        "muzzleSpeed": 735,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "730 mm com a coronha aberta, 490 mm dobrada. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 206,5 mm. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,7 kg. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "o carregador de 30 do AK-74. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "650 a 735 tiros/min. https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "735 m/s (o cano curto). https://en.wikipedia.org/wiki/AKS-74U"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do AK-74: o mesmo carregador."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/AKS-74U"
+    },
+    "FN SCAR-L": {
+      "value": {
+        "id": "fn_scar_l",
+        "name": "FN SCAR-L",
+        "of": "FN SCAR-H",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 889,
+        "barrel": 351,
+        "emptyMass": 3.29,
+        "options": {
+          "rpm": 625
+        },
+        "reloadFrom": "FN SCAR-H",
+        "muzzleSpeed": 870,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "SCAR-L STD: 889 mm com a coronha aberta. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 351 mm. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,29 kg. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "625 tiros/min. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "870 m/s. https://en.wikipedia.org/wiki/FN_SCAR"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do FN SCAR-H: o mesmo corpo, carregador por baixo."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "M1 Garand": {
+      "value": {
+        "id": "m1_garand",
+        "name": "M1 Garand",
+        "of": "SKS",
+        "caliber": "30_06",
+        "caliberText": ".30-06",
+        "capacity": "8",
+        "length": 1100,
+        "barrel": 610,
+        "emptyMass": 4.31,
+        "reloadFrom": "SKS",
+        "muzzleSpeed": 865,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1100 mm. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 610 mm. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "4,31 a 5,3 kg; o menor, sem nada. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "clipe en bloc de 8. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "865 m/s. https://en.wikipedia.org/wiki/M1_Garand"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SKS: fuzil semiautomático de madeira carregado por cima com o clipe (o en bloc entra inteiro, a SKS usa pente; a mesma sequência de cima)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/M1_Garand"
+    },
+    "Accuracy L96A1": {
+      "value": {
+        "id": "accuracy_l96a1",
+        "name": "Accuracy L96A1",
+        "of": "Accuracy AWM",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "10",
+        "length": 1180,
+        "barrel": 660,
+        "emptyMass": 6.5,
+        "reloadFrom": "Accuracy AWM",
+        "muzzleSpeed": 840,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1180 mm. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 660 mm. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "6,5 kg. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 10. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "840 m/s. https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Accuracy AWM: o mesmo fuzil de ferrolho do mesmo fabricante."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Accuracy_International_Arctic_Warfare"
+    },
+    "Mossberg 590": {
+      "value": {
+        "id": "mossberg_590",
+        "name": "Mossberg 590",
+        "of": "Mossberg 500",
+        "caliber": "12ga_00buck",
+        "caliberText": "12 ga",
+        "capacity": "8+1",
+        "length": 1003,
+        "barrel": 508,
+        "emptyMass": 3.3,
+        "options": {
+          "heat": 1,
+          "bayo": 1
+        },
+        "reloadFrom": "Mossberg 500",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1003 mm com o cano de 20 pol. https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 20 pol. (508 mm). https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,3 kg. https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tubo de 8 mais 1 na câmara (cano de 20 pol.). https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Mossberg 500: o mesmo tubo carregado cartucho a cartucho."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Mossberg_500"
+    },
+    "FN M240B": {
+      "value": {
+        "id": "fn_m240b",
+        "name": "FN M240B",
+        "category": "mtr",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "100",
+        "length": 1245,
+        "barrel": 630,
+        "emptyMass": 12.5,
+        "options": {
+          "stock": "fixed",
+          "mag": "belt",
+          "hg": "poly",
+          "hgFrac": 0.35,
+          "bipod": 1,
+          "carry": 1,
+          "hR": 0.085,
+          "br": 0.011,
+          "charge": 1,
+          "rail": 1,
+          "heat": 1,
+          "rpm": 750
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 853,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1245 mm. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 630 mm. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "12,5 kg. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "fita de 100. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "650 a 950 tiros/min; 750 o meio da faixa de uso. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "853 m/s. https://en.wikipedia.org/wiki/M240_machine_gun"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da M60, como a do FN MAG de que o M240B é a versão americana: metralhadora de fita 7,62×51."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/M240_machine_gun"
+    },
+    "SIG Sauer P320": {
+      "value": {
+        "id": "sig_sauer_p320",
+        "name": "SIG Sauer P320",
+        "of": "SIG Sauer P226",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "17",
+        "length": 203,
+        "barrel": 120,
+        "emptyMass": 0.83,
+        "options": {
+          "rail": 1
+        },
+        "reloadFrom": "SIG Sauer P226",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "P320 Full Size: 203 mm. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 4,7 pol. (120 mm). https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "833 g sem carregador. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 17 no 9×19. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SIG Sauer P226: a mesma pistola de carregador do mesmo fabricante."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+    },
+    "HK USP": {
+      "value": {
+        "id": "hk_usp",
+        "name": "HK USP",
+        "of": "SIG Sauer P226",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "15",
+        "length": 194,
+        "barrel": 108,
+        "emptyMass": 0.77,
+        "options": {
+          "rail": 1
+        },
+        "reloadFrom": "SIG Sauer P226",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "USP 9 mm: 194 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 108 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "770 g sem carregador (9 mm). https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 15 no 9×19. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SIG Sauer P226 (pistola de carregador de 9 mm, a mesma sequência)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+    },
+    "Walther P99": {
+      "value": {
+        "id": "walther_p99",
+        "name": "Walther P99",
+        "of": "Glock 17",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "15",
+        "length": 180,
+        "barrel": 102,
+        "emptyMass": 0.63,
+        "reloadFrom": "Glock 17",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "180 mm. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 102 mm. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "630 g sem carregador. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 15 no 9×19 (a primeira geração). https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Glock 17: pistola de polímero e percussor lançado, a mesma sequência."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Walther_P99"
+    },
+    "Colt Python": {
+      "value": {
+        "id": "colt_python",
+        "name": "Colt Python",
+        "of": "S&W 686",
+        "caliber": "357mag",
+        "caliberText": ".357 Magnum",
+        "capacity": "6",
+        "length": 292,
+        "barrel": 152,
+        "emptyMass": 1.23,
+        "reloadFrom": "S&W 686",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "292 mm com o cano de 6 pol. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 6 pol. (152 mm), o mais comum. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "1,23 kg (43,5 oz) com o cano de 6 pol. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tambor de 6. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do S&W 686: revólver .357 de tambor que abre para o lado."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Colt_Python"
+    },
+    "FN PS90": {
+      "value": {
+        "id": "fn_ps90",
+        "name": "FN PS90",
+        "of": "FN P90",
+        "caliber": "5_7x28",
+        "caliberText": "5,7×28",
+        "capacity": "50",
+        "length": 668,
+        "barrel": 407,
+        "emptyMass": 2.86,
+        "options": {
+          "rpm": 120
+        },
+        "modes": {
+          "modes": [
+            "semi"
+          ]
+        },
+        "reloadFrom": "FN P90",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "668 mm. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 407 mm (16 pol., exigido para a versão civil). https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,86 kg sem carregador. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "o carregador de 50 do P90. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "semiautomática apenas (a versão civil do P90): o ritmo é o do dedo. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do FN P90: o mesmo carregador horizontal por cima."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FN_PS90"
+    },
+    "B&T MP9": {
+      "value": {
+        "id": "bt_mp9",
+        "name": "B&T MP9",
+        "of": "Uzi",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30",
+        "length": 523,
+        "barrel": 130,
+        "emptyMass": 1.4,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.2,
+          "rail": 1,
+          "rpm": 1100
+        },
+        "reloadFrom": "Uzi",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "523 mm com a coronha aberta, 303 mm dobrada. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 130 mm. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "1,4 kg sem carregador. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 na empunhadura. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "900 a 1100 tiros/min. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Uzi: o carregador entra pela empunhadura, como na Uzi."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+    },
+    "MP40": {
+      "value": {
+        "id": "mp40",
+        "name": "MP40",
+        "of": "Thompson M1A1",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "32",
+        "length": 833,
+        "barrel": 251,
+        "emptyMass": 4.0,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.24,
+          "wood": 0,
+          "round": 1,
+          "rpm": 550
+        },
+        "reloadFrom": "Thompson M1A1",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "833 mm com a coronha aberta, 630 mm dobrada. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 251 mm. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "4,0 kg. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador reto de 32. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "500 a 550 tiros/min. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Thompson M1A1: submetralhadora de carregador reto por baixo, ferrolho aberto."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/MP_40"
+    },
+    "FAMAS": {
+      "value": {
+        "id": "famas",
+        "name": "FAMAS",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "25",
+        "length": 757,
+        "barrel": 488,
+        "emptyMass": 3.61,
+        "options": {
+          "look": "famas",
+          "rpm": 1000
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 960,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "757 mm. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 488 mm. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,61 kg sem carregador. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 25. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "900 a 1000 tiros/min. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "960 m/s. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FAMAS"
+    },
+    "IWI Tavor": {
+      "value": {
+        "id": "iwi_tavor",
+        "name": "IWI Tavor",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 720,
+        "barrel": 460,
+        "emptyMass": 3.27,
+        "options": {
+          "look": "tavor",
+          "rail": 1,
+          "rpm": 850
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 910,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "TAR-21: 720 mm. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 460 mm. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,27 kg. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "750 a 900 tiros/min. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "910 m/s. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/IWI_Tavor"
+    },
+    "L85A2": {
+      "value": {
+        "id": "l85a2",
+        "name": "L85A2",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 785,
+        "barrel": 518,
+        "emptyMass": 3.82,
+        "options": {
+          "look": "sa80",
+          "rail": 1,
+          "rpm": 700
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 940,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "785 mm. https://en.wikipedia.org/wiki/SA80"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 518 mm. https://en.wikipedia.org/wiki/SA80"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,82 kg sem a luneta e o carregador. https://en.wikipedia.org/wiki/SA80"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/SA80"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "610 a 775 tiros/min. https://en.wikipedia.org/wiki/SA80"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "940 m/s. https://en.wikipedia.org/wiki/SA80"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/SA80"
+    },
+    "Winchester 1887": {
+      "value": {
+        "id": "winchester_1887",
+        "name": "Winchester 1887",
+        "of": "Winchester 1894",
+        "caliber": "12ga_00buck",
+        "caliberText": "12 ga",
+        "capacity": "5",
+        "length": 1016,
+        "barrel": 508,
+        "emptyMass": 3.6,
+        "options": {
+          "br": 0.012,
+          "tube": 1,
+          "m1887": 1
+        },
+        "reloadFrom": "Winchester 1894",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "a versão de cano de 20 pol. (riot): 1016 mm; a de caça tinha 30 ou 32 pol. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 20 pol. (508 mm). https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "cerca de 3,6 kg. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tubo de 4 mais 1 na câmara. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Winchester 1894: alavanca e carga pelo lado, cartucho a cartucho."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+    },
+    "PPSh-41": {
+      "value": {
+        "id": "ppsh_41",
+        "name": "PPSh-41",
+        "of": "Thompson M1A1",
+        "caliber": "7_62x25",
+        "caliberText": "7,62×25",
+        "capacity": "71/35",
+        "length": 843,
+        "barrel": 269,
+        "emptyMass": 3.63,
+        "options": {
+          "rpm": 1250
+        },
+        "reloadFrom": "Thompson M1A1",
+        "muzzleSpeed": 488,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "843 mm. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 269 mm. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,63 kg sem o carregador. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tambor de 71 ou carregador curvo de 35. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "1 250 tiros/min. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "488 m/s. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Thompson M1A1: submetralhadora de ferrolho aberto com tambor ou carregador por baixo."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/PPSh-41"
+    },
+    "Mauser Kar98k": {
+      "value": {
+        "id": "mauser_kar98k",
+        "name": "Mauser Kar98k",
+        "of": "Mosin-Nagant 91/30",
+        "caliber": "7_92x57",
+        "caliberText": "7,92×57",
+        "capacity": "5",
+        "length": 1110,
+        "barrel": 600,
+        "emptyMass": 3.7,
+        "reloadFrom": "Mosin-Nagant 91/30",
+        "muzzleSpeed": 760,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1110 mm. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 600 mm. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,7 a 4,1 kg; o menor. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador interno de 5, carregado por clipe. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "760 m/s. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Mosin-Nagant 91/30: fuzil de ferrolho de carregador interno carregado por cima com clipe."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Karabiner_98k"
+    },
+    "MG42": {
+      "value": {
+        "id": "mg42",
+        "name": "MG42",
+        "of": "M60",
+        "caliber": "7_92x57",
+        "caliberText": "7,92×57",
+        "capacity": "50",
+        "length": 1220,
+        "barrel": 530,
+        "emptyMass": 11.6,
+        "options": {
+          "rpm": 1200
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 740,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1220 mm. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 530 mm. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "11,6 kg. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "fita de 50 (há também a de 250 e o tambor de 50). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "1 200 tiros/min (900 a 1 500 conforme o ferrolho). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "740 m/s (cartucho s.S.). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da M60: metralhadora de fita com tampa do alimentador por cima."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/MG_42"
+    },
+    "VSS Vintorez": {
+      "value": {
+        "id": "vss_vintorez",
+        "name": "VSS Vintorez",
+        "of": "SVD Dragunov",
+        "caliber": "9x39",
+        "caliberText": "9×39",
+        "capacity": "10/20/30",
+        "length": 894,
+        "barrel": 200,
+        "emptyMass": 2.6,
+        "options": {
+          "rpm": 850
+        },
+        "reloadFrom": "AK-47",
+        "muzzleSpeed": 295,
+        "noise": 75,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "894 mm. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 200 mm sob o silenciador integral. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,6 kg sem carregador e sem luneta. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregadores de 10, 20 e 30. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "800 a 900 tiros/min; fica o meio, 850. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "280 a 310 m/s (subsônico); fica o meio, 295. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do AK-47: carregador de caixa que entra por baixo em ângulo, como o do VSS."
+          },
+          "noise": {
+            "source": "derived",
+            "reason": "O silenciador integral entra nos números base: calibre 9×39 (300 m) × 0,4 (ruído −60%) × 0,625 (subsônica −75% no total, porque 295 m/s < 343 m/s) = 75 m, a mesma conta da MP5SD3."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/VSS_Vintorez"
     }
   },
   "gp25Mount": {
@@ -5662,6 +7013,246 @@
       },
       "source": "gallery: buildExp(\"m79\") of Galeria 3D do Arsenal (explosivos), rifle({ L: 730, B: 356, stock: \"fixed\", wood: 1, mag: \"none\", hg: \"wood\", hgFrac: 0.4, br: 0.022, hR: 0.05 })",
       "reason": "The M79 is drawn by the gallery among its explosives; the SDK builds it with the same rifle options and a break-action hinge (breakLauncher), so it loads one grenade at the breech as the real one opens."
+    },
+    "hk_g36": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 999,
+        "barrel": 480,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.7,
+          "carry": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the rifle: long slotted handguard, carry handle with its 3.5x optic and the red dot over it; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "hk_g36k": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 860,
+        "barrel": 318,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.78,
+          "carry": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the short rifle: the G36's carry handle and optics over a shorter barrel and handguard; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "hk_g36c": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,56×45",
+        "length": 720,
+        "barrel": 228,
+        "options": {
+          "g36": 1,
+          "stock": "g36",
+          "stockLen": 0.25,
+          "mag": "box",
+          "curve": 0.04,
+          "magLen": 1.1,
+          "magMat": "smoke",
+          "hR": 0.085,
+          "wR": 0.042,
+          "sel": 1,
+          "rpm": 750,
+          "hgFrac": 0.8,
+          "rail": 1,
+          "gripAt": 0.05
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the compact: no carry handle but a long top rail on two risers ending in the front sight, a short handguard with a rail underneath for the vertical grip; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "sig_sauer_p320": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 203,
+        "barrel": 120,
+        "options": {
+          "design": "p320",
+          "rel": 0.8
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The P320 inherited the P226 model and came out the same as the other pistols. The SDK draws the pistol: modular polymer frame with a straight grip, slide with forward and rear serrations, squared guard and accessory rail."
+    },
+    "hk_usp": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 194,
+        "barrel": 108,
+        "options": {
+          "design": "usp",
+          "rel": 0.8
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The USP inherited the P226 model. The SDK draws the pistol: squared slide front, polymer frame with the hooked trigger guard and the long rail, thick grip with strap ridges and the external hammer."
+    },
+    "walther_p99": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 180,
+        "barrel": 102,
+        "options": {
+          "design": "p99",
+          "rel": 0.7
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The P99 inherited the Glock 17 model. The SDK draws the pistol: slide with the cocking cut-outs, sculpted grip with backstrap, dimples and front strap ridges, rail."
+    },
+    "colt_python": {
+      "value": {
+        "builder": "revolver",
+        "caliber": ".357 Magnum",
+        "length": 292,
+        "barrel": 152,
+        "options": {
+          "python": 1,
+          "chambers": 6
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The Python inherited the S&W 686 model. The SDK draws the revolver: ventilated rib along the barrel, full-length underlug, wood grip with its medallion, swing-out cylinder."
+    },
+    "mp40": {
+      "value": {
+        "builder": "mp40",
+        "caliber": "9×19",
+        "length": 833,
+        "barrel": 251,
+        "options": {
+          "mag": "box",
+          "stock": "fold",
+          "stockLen": 0.24,
+          "rpm": 550
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The MP40 inherited the Thompson (a thin rod with the magazine floating apart and no pistol grip). The SDK draws the real one: tubular receiver about 40 mm thick, the straight magazine in a well under the front of the receiver (the support hand holds it), the Bakelite housing and the black grip, the ribbed barrel with the rest bar under the muzzle and the metal stock that folds under."
+    },
+    "bt_mp9": {
+      "value": {
+        "builder": "mp9",
+        "caliber": "9×19",
+        "length": 523,
+        "barrel": 130,
+        "options": {
+          "mag": "box",
+          "stock": "fold",
+          "stockLen": 0.2,
+          "rail": 1,
+          "rpm": 1100
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The MP9 inherited the Uzi (it looked like a MAC-10 with a wire stock). The SDK draws the real one: compact polymer block, the magazine in the pistol grip, the vertical foregrip in front of the trigger guard, the top rail and the skeletal stock that folds to the right."
+    },
+    "fn_ps90": {
+      "value": {
+        "builder": "ps90",
+        "caliber": "5,7×28",
+        "length": 668,
+        "barrel": 407,
+        "options": {
+          "rpm": 120
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The PS90 inherited the FN P90 model (a block of boxes). The SDK draws the civilian rifle: thumbhole stock with the rounded olive body, the translucent magazine on top under the integrated optic housing, and the 407 mm barrel with its flash hider sticking out of the front."
+    },
+    "ppsh_41": {
+      "value": {
+        "builder": "ppsh",
+        "caliber": "7,62×25",
+        "length": 843,
+        "barrel": 269,
+        "options": {
+          "mag": "drum",
+          "rpm": 1250
+        }
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The PPSh-41 inherited the Thompson (a rifle body with a box magazine). The SDK draws the real one: wooden stock and body in one piece, the stamped receiver, the perforated barrel jacket ending in the slanted muzzle brake, the 71-round drum under the receiver and the tangent rear sight."
+    },
+    "mauser_kar98k": {
+      "value": {
+        "builder": "kar98",
+        "caliber": "7,92×57",
+        "length": 1110,
+        "barrel": 600,
+        "options": {}
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The Kar98k inherited the Mosin-Nagant. The SDK draws the real one: long bolt action with the turned-down bolt handle, the full wooden stock with the finger groove and the pistol-grip curve, a single barrel band, the nose cap with the bayonet lug and the 5-round internal magazine flush with the stock."
+    },
+    "mg42": {
+      "value": {
+        "builder": "mg42",
+        "caliber": "7,92×57",
+        "length": 1220,
+        "barrel": 530,
+        "options": {
+          "rpm": 1200
+        }
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The MG42 inherited the M60. The SDK draws the real one: the perforated rectangular barrel shroud with the big barrel-change opening, the conical muzzle booster, the front bipod, the belt feed tray on the left and the brown butt with the pistol grip."
+    },
+    "vss_vintorez": {
+      "value": {
+        "builder": "vss",
+        "caliber": "9×39",
+        "length": 894,
+        "barrel": 200,
+        "options": {}
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The VSS inherited the SVD. The SDK draws the real one: the thick integral suppressor covering the barrel, the AK-like receiver with its top cover, the skeletal wooden stock with its two cut-outs and the 10-round box magazine."
+    },
+    "m32_mgl": {
+      "value": {
+        "builder": "mgl",
+        "caliber": "40×46",
+        "length": 778,
+        "barrel": 300,
+        "options": {}
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (Milkor MGL, Armémuseum, CC BY 4.0), lote 1, part C",
+      "reason": "The MGL is a revolver-type launcher, not a break-action: the SDK draws the large six-chamber cylinder with its swing-out frame, the short barrel with its front grip, the collimator sight on top, the pistol grip and the folding stock."
     }
   },
   "weaponTags": {

@@ -97,5 +97,53 @@
       "lab",
       "reference"
     ]
+  },
+  {
+    "id": "semtex",
+    "name": "Semtex charge",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "semtex",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 0,
+      "noise": 0
+    },
+    "mass": 0.5,
+    "tags": [
+      "explosive",
+      "placed"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "smoke_grenade",
+    "name": "M18 colored smoke grenade",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "smoke_grenade",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 15,
+      "noise": 0
+    },
+    "mass": 0.54,
+    "tags": [
+      "explosive",
+      "smoke"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import type { Mesh, Object3D } from 'three'
 import { digest } from './helpers/digest'
 import { makeFleetKit } from './helpers/kit'
 
-function firstMeshPositions(root: any): { array: Float32Array } {
+function firstMeshPositions(root: Object3D): { array: Float32Array } {
   let found: { array: Float32Array } | undefined
-  root.traverse((node: any) => {
-    if (!found && node.geometry?.attributes?.position?.count > 3) found = node.geometry.attributes.position
+  root.traverse((obj) => {
+    const node = obj as Mesh
+    if (!found && node.geometry?.attributes?.position?.count > 3) found = node.geometry.attributes.position as unknown as { array: Float32Array }
   })
   if (!found) throw new Error('no mesh with positions')
   return found

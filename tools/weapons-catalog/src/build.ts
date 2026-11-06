@@ -8,7 +8,7 @@ import type { CaliberRecord } from './build-calibers'
 import { buildExplosives } from './build-explosives'
 import { buildFirearm, caliberOf, firearmId } from './build-firearms'
 import type { WeaponRecord } from './build-firearms'
-import { buildFlamethrower, buildGrenadeLauncher, buildRocketLauncher, buildUnderbarrelLauncher } from './build-launchers'
+import { buildFlamethrower, buildGrenadeLauncher, buildMultiLauncher, buildRocketLauncher, buildUnderbarrelLauncher } from './build-launchers'
 import { buildMounts } from './build-mounts'
 import { buildModels } from './build-models'
 import { loadDecisions } from './decisions'
@@ -87,7 +87,8 @@ export const buildCatalog = (): CatalogFiles => {
   const creations = buildCreations(gallery.weapons, context)
   const allFirearms = [...firearms, ...variants, buildGrenadeLauncher(context), ...creations.map((created) => created.firearm)]
   const underbarrel = Object.values(decisions.underbarrelLaunchers).map((decision) => buildUnderbarrelLauncher(decision.value, context))
-  assertUniqueIds([...archetypes, ...allFirearms, ...launchers, ...underbarrel])
+  const multiLaunchers = Object.values(decisions.multiLaunchers).map((decision) => buildMultiLauncher(decision.value, context))
+  assertUniqueIds([...archetypes, ...allFirearms, ...launchers, ...underbarrel, ...multiLaunchers])
   const variantNames = new Map(Object.values(decisions.variants).map((decision) => [decision.value.id, decision.value.of]))
   const models = {
     ...buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context),
@@ -102,7 +103,7 @@ export const buildCatalog = (): CatalogFiles => {
   return {
     [OUTPUT_PATHS.calibers]: serialize(calibers),
     [OUTPUT_PATHS.firearms]: serialize(mountedFirearms),
-    [OUTPUT_PATHS.launchers]: serialize([...launchers, ...underbarrel]),
+    [OUTPUT_PATHS.launchers]: serialize([...launchers, ...underbarrel, ...multiLaunchers]),
     [OUTPUT_PATHS.explosives]: serialize(explosives),
     [OUTPUT_PATHS.models]: serialize(models),
     [OUTPUT_PATHS.attachments]: serialize(buildAttachments(arsenal.accessories, decisions)),

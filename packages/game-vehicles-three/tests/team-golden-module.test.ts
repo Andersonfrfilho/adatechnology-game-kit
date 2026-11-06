@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
+import type { TestableModule } from '@adatechnology/game-contracts'
 import * as GameVehicles from '@adatechnology/game-vehicles'
 import * as GameVehiclesFleet from '@adatechnology/game-vehicles-fleet'
 
@@ -37,14 +38,14 @@ const makeRoom = (): TestRoom => {
 }
 
 /** The page's module, evaluated as the page does: a classic script that finds the three globals on `window` (the kit gets the fake document the Node run needs). */
-const pageModule = (): any => {
-  const fakeWindow: any = {
+const pageModule = (): TestableModule => {
+  const fakeWindow: Record<string, unknown> = {
     THREE,
     GameVehicles: { ...GameVehicles, createVehicleKit: (options: Record<string, unknown>) => GameVehicles.createVehicleKit({ ...options, document: fakeDocument } as never) },
     GameVehiclesFleet,
   }
   new Function('window', pageModuleCode)(fakeWindow)
-  return fakeWindow.MODULO_VEICULOS
+  return fakeWindow.MODULO_VEICULOS as TestableModule
 }
 
 const summary = async (room: TestRoom, id: string): Promise<{ checks: { label: string; ok: boolean }[]; lines: Record<string, number> }> => {

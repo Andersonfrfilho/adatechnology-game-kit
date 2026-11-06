@@ -1,8 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false
-  },
   "include": ["src", "tests", "tsup.config.ts"]
 }

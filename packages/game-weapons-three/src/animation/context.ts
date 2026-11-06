@@ -14,6 +14,9 @@ export const KICK_BY_CASE: Record<CaseType, number> = { shell: 1.6, big: 2.4, ti
 
 export const kickOf = (context: ClipContext): number => context.parts.kick ?? KICK_BY_CASE[context.caseType]
 
+/** Families whose cylinder turns a sixth with each shot and swings out to reload (a revolver, and the MGL that is held as a long gun). */
+export const REVOLVING: ReadonlySet<ModelFamily> = new Set(['revolver', 'cylinder'])
+
 /** Families whose slide or bolt blows back with each shot. */
 export const BLOWBACK: ReadonlySet<ModelFamily> = new Set(['pistol', 'rifle', 'semiint', 'semi12', 'p90', 'belt'])
 export const HAS_CYCLE: ReadonlySet<ModelFamily> = new Set(['pump', 'bolt', 'boltmag', 'lever'])

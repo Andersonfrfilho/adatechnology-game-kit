@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
 const require = createRequire(import.meta.url)
+/** @type {typeof import('playwright')} */
 const { chromium } = (() => {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -56,14 +57,15 @@ const page = await browser.newPage()
 await page.setContent('<html><body></body></html>')
 await page.addScriptTag({ content: bundle.outputFiles[0].text })
 
+/** @typedef {[number, string, number?, number?]} ReelEvent when (seconds), the sound id, its volume and its distance */
 /** Renders a timeline [[seconds, id, volume?, distance?]] and answers the samples and the peak of each id. */
-const render = (seconds, timeline) =>
+const render = (/** @type {number} */ seconds, /** @type {ReelEvent[]} */ timeline) =>
   page.evaluate(
     async ([total, events]) => {
       const { BODY_FOLEY_BANK, createAudioEngine } = window.reel
       const rate = 48000
       const ctx = new OfflineAudioContext(1, Math.ceil(total * rate), rate)
-      const engine = createAudioEngine({ banks: [BODY_FOLEY_BANK], createContext: () => ctx, seed: 5 })
+      const engine = createAudioEngine({ banks: [BODY_FOLEY_BANK], createContext: () => /** @type {AudioContext} the engine draws the same graph into an offline context; its option is typed for the live one */ (/** @type {unknown} */ (ctx)), seed: 5 })
       engine.setListener({ position: [0, 1.7, 0], yaw: 0 })
       for (const [at, id, volume = 1, distance = 1.5] of events) engine.play(id, { delay: at, volume, position: [0, 0, -distance] })
       const buffer = await ctx.startRendering()
@@ -78,7 +80,7 @@ const render = (seconds, timeline) =>
       })
       return { samples: Array.from(data), peaks }
     },
-    [seconds, timeline],
+    /** @type {[number, ReelEvent[]]} */ ([seconds, timeline]),
   )
 
 const wav = (/** @type {number[]} */ samples, rate = 48000) => {
@@ -101,14 +103,16 @@ const wav = (/** @type {number[]} */ samples, rate = 48000) => {
 
 const { SURFACE_IDS, SWING_LEAD_SECONDS } = await page.evaluate(() => ({ SURFACE_IDS: [...window.reel.SURFACE_IDS], SWING_LEAD_SECONDS: { ...window.reel.SWING_LEAD_SECONDS } }))
 const dbfs = (/** @type {number} */ peak) => (peak > 0 ? Math.round(20 * Math.log10(peak) * 10) / 10 : -Infinity)
+/** @type {Record<string, { id: string; peakDbfs: number }[]>} */
 const report = {}
-const save = async (name, seconds, timeline) => {
+const save = async (/** @type {string} */ name, /** @type {number} */ seconds, /** @type {ReelEvent[]} */ timeline) => {
   const { samples, peaks } = await render(seconds, timeline)
   writeFileSync(join(OUT, `${name}.wav`), wav(samples))
   report[name] = peaks.map((p) => ({ id: p.id, peakDbfs: dbfs(p.peak) }))
 }
 
 for (const surface of SURFACE_IDS) {
+  /** @type {ReelEvent[]} */
   const timeline = []
   for (let i = 0; i < 6; i++) timeline.push([0.2 + i * 0.55, `footstep_${surface}_walk`, 0.3])
   for (let i = 0; i < 6; i++) timeline.push([3.9 + i * 0.33, `footstep_${surface}_run`, 0.6])
@@ -117,11 +121,12 @@ for (const surface of SURFACE_IDS) {
 await save(
   'landings',
   SURFACE_IDS.length * 2.4 + 0.5,
-  SURFACE_IDS.flatMap((surface, i) => [
+  SURFACE_IDS.flatMap((surface, i) => /** @type {ReelEvent[]} */ ([
     [0.2 + i * 2.4, `land_${surface}_light`, 0.9],
     [1.3 + i * 2.4, `land_${surface}_heavy`, 1],
-  ]),
+  ])),
 )
+/** @type {[import('@adatechnology/game-contracts').BlowId, string | null, string[]][]} */
 const BLOWS = [
   ['punch', 'punch_swing', ['punch_hit_object', 'punch_hit_body', 'punch_hit_face']],
   ['kick', 'kick_swing', ['kick_hit_object', 'kick_hit']],
@@ -130,6 +135,7 @@ const BLOWS = [
   ['blunt', 'blunt_swing', ['blunt_hit_object', 'blunt_hit']],
   ['chop', 'axe_swing', ['axe_hit_object', 'axe_chop']],
 ]
+/** @type {ReelEvent[]} */
 const blows = []
 let t = 0.2
 for (const [blow, swing, hits] of BLOWS) {
@@ -144,7 +150,7 @@ const BODY = ['jump', 'cloth_rustle', 'player_hurt', 'bite', 'grab', 'body_fall'
 await save(
   'body',
   BODY.length * 1.6 + 0.6,
-  BODY.map((id, i) => [0.2 + i * 1.6, id, 0.9]),
+  BODY.map((id, i) => /** @type {ReelEvent} */ ([0.2 + i * 1.6, id, 0.9])),
 )
 await browser.close()
 

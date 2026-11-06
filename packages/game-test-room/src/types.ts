@@ -23,7 +23,7 @@ import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
-import type { GroundLayout, Knock } from '@adatechnology/game-contracts'
+import type { EffectSink, GroundLayout, Knock } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
@@ -287,7 +287,7 @@ export interface TestRoomOptions {
   toolMenu?: false | { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
-  /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
+  /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */
   punchTools?: readonly string[]
   /**
    * A strike combo the player has (an ability, such as `PUNCH_COMBO` of game-characters-people): while it is on (N, the combo button or `setStrikeCombo`), each blow of its
@@ -411,9 +411,25 @@ export interface TestRoom {
   readonly film: FilmBridge
   /** The room's one effects world (what `host.effects` draws into): the weather moves its wind. */
   readonly vfx: VfxWorld
+  /**
+   * The room's effect sink, the same one modules get as `host.effects`: an effect asked for by request (`play({ id, at, ... })`). Give this, not `vfx`, to whatever is
+   * built before the module loads and wants an `EffectSink` (the vehicle kit's `effects`): `vfx.play` takes an id and a point, so a request there plays nothing.
+   */
+  readonly effects: EffectSink
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
   readonly tool: WeaponState
+  /**
+   * Puts one of a weapon in the left hand beside the tool in hand (a pistol in each hand: the left mouse button fires the right one, the right button the left one, and neither aims).
+   * False, and nothing changes, when the arsenal's `rules.dualWield` does not take the weapon or the tool in hand; `null` lets the left hand go. `setTool` also lets it go.
+   */
+  setOffTool(weaponId: string | null): boolean
+  /** The tool in the left hand (its own rounds and reload), or null with one tool. */
+  readonly offTool: WeaponState | null
+  /** `use` for the tool in the left hand, as the right mouse button does with a tool in each hand; `cooldown` with nothing there. */
+  useOff(hold?: number): UseStatus
+  /** The R key: reloads the tool in hand and, with one in each hand, the left one after the right one (one hand holds the other weapon meanwhile). */
+  reload(): void
   /** Play an item use on the held item (`drink`, `pour`...). Returns false when nothing is held or the use does not apply. */
   useItem(useId: string): boolean
   /**

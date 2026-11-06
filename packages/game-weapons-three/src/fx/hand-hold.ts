@@ -146,6 +146,10 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
   if (handgun) {
     // both hands on a handgun: the left wraps the grip from its side, under the fingers of the right
     left = { part: root, offset: gripAt.clone().addScaledVector(up, -HAND_HOLD.supportDown).add(V(THREE, 0, 0, -side)), quaternion: gripFrame(THREE, up, -1) }
+  } else if (parts.foreGrip) {
+    const foreUp = V(THREE, 0, 1, 0).applyQuaternion(parts.foreGrip.quaternion)
+    const foreAt = toRoot(parts.foreGrip.position.x, parts.foreGrip.position.y, parts.foreGrip.position.z)
+    left = { part: root, offset: foreAt.addScaledVector(foreUp, HAND_HOLD.gripUp).add(V(THREE, 0, 0, -side)), quaternion: gripFrame(THREE, foreUp, -1) }
   } else if (parts.pump) {
     const box = new THREE.Box3().setFromObject(parts.pump)
     const center = box.getCenter(new THREE.Vector3())
@@ -201,7 +205,26 @@ export function holdOfProp(THREE: Three, group: THREE_NS.Object3D, category: str
   // a long gun's head is its barrel: the left hand under it
   const long = head && ['smg', 'carbine', 'rifle', 'sniper', 'shotgun', 'crossbow', 'flame'].includes(category)
   const headSize = head ? size(head) : null
-  const left: HandAnchor | null =
-    long && head && headSize ? { part: group, offset: head.position.clone().add(V(THREE, -headSize.x * 0.15, -headSize.y / 2 - HAND_HOLD.palm, 0)), quaternion: forendFrame(THREE) } : null
+  const support = group.getObjectByName('support')
+  const left: HandAnchor | null = support
+    ? { part: group, offset: support.position.clone().add(V(THREE, 0, handleSize.y / 2 + 0.002, 0)), quaternion: wrap }
+    : long && head && headSize ? { part: group, offset: head.position.clone().add(V(THREE, -headSize.x * 0.15, -headSize.y / 2 - HAND_HOLD.palm, 0)), quaternion: forendFrame(THREE) } : null
   return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: HAND_HOLD.forend }
+}
+
+/** The same point of the tool for the other hand: across the tool's middle plane (its z = 0), the hand mirrored with it (a left hand is the mirror image of a right one). */
+export const mirrorAnchor = (anchor: HandAnchor): HandAnchor => {
+  const q = anchor.quaternion.clone()
+  q.set(-q.x, -q.y, q.z, q.w)
+  return { part: anchor.part, offset: anchor.offset.clone().setZ(-anchor.offset.z), quaternion: q }
+}
+
+/**
+ * The hold of a tool held in one hand with another tool in the other hand: in the right hand only its right grip; in the left hand the left hand on the mirror of that grip. The supporting
+ * hand of a two-hand hold (a forend, the hand wrapped under a pistol's) is the other tool's now.
+ */
+export const oneHandHold = (hold: Hold, hand: 'R' | 'L'): Hold => {
+  const works = hold.works?.filter((work) => work.hand === 'R')
+  if (hand === 'R') return { ...hold, left: null, leftMagazine: null, ...(works ? { works } : {}) }
+  return { ...hold, right: null, left: hold.right ? mirrorAnchor(hold.right) : null, leftMagazine: null, gripLeft: hold.grip, works: [] }
 }

@@ -8,6 +8,8 @@ import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
+import { SHOWCASE, SHOWCASE_PEDESTAL_ID, createWeaponShowcase, showcaseControls, showcasePedestalItem } from './showcase'
+import { showcaseTextOf } from './showcase-text'
 import { createWeaponAudio } from '../audio'
 import type { WeaponAudio, WeaponSampleOptions } from '../audio'
 import { createWeaponFx } from '../fx'
@@ -17,7 +19,7 @@ import { ARCHETYPE_MODELS, hasWeaponModel } from '../models'
 import type { AttachmentModelRegistry } from '../models/attachments/types'
 import { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from '../modeled-prop'
 import { BODY_ACTIONS, buildProp, weaponProp } from '../props'
-import { defaultWeaponProps, hasThrowableModel } from '../weapon-item-model'
+import { defaultWeaponProps, hasHandheldModel, hasThrowableModel } from '../weapon-item-model'
 import type { WeaponProps } from '../weapon-item-model'
 import type { ItemModels } from '../item-models'
 import type { WeaponProp } from '../props'
@@ -251,7 +253,7 @@ const targetProp = (id: string, name: string): WeaponProp => {
 /** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
 const weaponItem = (def: WeaponDef, name: string, items?: ItemModels, props: WeaponProps = defaultWeaponProps()): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items) && !hasThrowableModel(def)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !props.itemModelOf(def.id, items) && !hasThrowableModel(def) && !hasHandheldModel(def)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
@@ -320,6 +322,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const locale = options.locale ?? 'pt-BR'
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
+  const showcaseText = showcaseTextOf(locale)
   const accessoryText = accessoryTextOf(locale)
   const seedOption = options.seed === undefined ? {} : { seed: options.seed }
   // the module's own audio, made when first needed (it makes no context until the first sound); when the host lends a sound engine, `attach` makes one on that engine instead
@@ -370,6 +373,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     items: () => [
       ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id), options.items, options.props), def.id)),
       counterItem(text.counter),
+      showcasePedestalItem(showcaseText.pedestal),
       ...TARGETS.map((target) => targetItem(target.id, text.targets[target.id] ?? target.id)),
       ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
       ...mountedM134.map((item) => withThumbnail(item, MOUNTED_M134.weaponId)),
@@ -379,6 +383,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       placements: [
         ...weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),
         ...mountedM134.map((item) => ({ item: item.id, position: MOUNTED_M134.at, rotationY: MOUNTED_M134.rotationY, asleep: true })),
+        { item: SHOWCASE_PEDESTAL_ID, position: SHOWCASE.at, surface: { halfSize: [SHOWCASE.size / 2, SHOWCASE.size / 2], height: SHOWCASE.height } },
       ],
       view: { eye: [-3.4, 1.9, 9.2], target: [-9, 0.9, 1.6] },
     }),
@@ -403,6 +408,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       { kind: 'boolean', id: 'sound_indoors', name: text.soundIndoors, hint: text.soundIndoorsHint, default: false },
       { kind: 'number', id: 'fuse_length', name: text.fuseLength, hint: text.fuseLengthHint, unit: 'm', min: 0.01, max: FUSE_LENGTH_MAX, step: 0.01, default: arsenal.explosives.get('dynamite')?.fuseLength ?? DEFAULT_FUSE_LENGTH },
       ...accessoryControls(accessoryText),
+      ...showcaseControls(arsenal, showcaseText, locale),
     ],
     layers: (): ModuleLayer[] => [...(['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })), ...accessoryLayers(accessoryText)],
     metrics: (): ModuleMetric[] => [
@@ -450,7 +456,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
         // the weapon against a wall asks as often as the laser, on the clock of the simulation (so a fast-forwarded room measures as often per frame)
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
-        ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
+        ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null, leftBodyHold: () => lent.holdFrame?.('L') ?? null } : {}),
         firstPerson: () => lent.player().cameraMode === 'first',
         // the lens of the gun in first person, how far it is brought to the eye (the right button) and how the body moves (the bob and the sway follow it)
         ...(lent.setViewmodelFov ? { viewmodelFov: (degrees: number | null) => lent.setViewmodelFov?.(degrees) } : {}),
@@ -468,8 +474,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       fx = created
       const camera = lent.camera as THREE_NS.Camera
       const accessories = createAccessoryBench({ arsenal, host: lent, text: accessoryText })
+      const showcase = createWeaponShowcase({ arsenal, host: lent, text: showcaseText })
       const offBench = lent.bench?.onChange((change: BenchChange) => {
-        if (accessories.handleChange(change)) return
+        if (accessories.handleChange(change) || showcase.handleChange(change)) return
         if (change.kind === 'layer') {
           if (change.id === 'attachments') created.layers.attachments = change.on
           else if (change.id === 'beams') created.layers.beams = change.on
@@ -508,10 +515,11 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       })
       const offFrame = lent.onFrame((dt) => created.update(dt))
       const offHands = lent.setHandTargets?.(() => created.handTargets())
-      const offMuzzle = lent.setMuzzleSource?.(() => created.muzzle())
+      const offMuzzle = lent.setMuzzleSource?.((hand) => created.muzzle(hand))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
         accessories.dispose()
+        showcase.dispose()
         offBench?.()
         offEvents()
         offFrame()

@@ -4,7 +4,7 @@ import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
 import { createTestTablePanel, TEST_TABLE_CSS } from './test-table-panel'
 import { createToolMenu, TOOL_MENU_CSS } from './tool-menu'
-import type { ToolMenuGroup } from './tool-menu'
+import type { ToolMenuGroup, ToolMenuPick } from './tool-menu'
 import type { TestTable } from './test-table'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
@@ -116,7 +116,7 @@ export interface UiOptions {
   /** The room's test table: its panel goes between the inspector and the log. Absent: no panel. */
   testTable?: TestTable
   /** The tool picker (every tool of the arsenal by tab and section) and the key that opens it, shown on its button. Absent: no picker. */
-  toolMenu?: { groups: () => readonly ToolMenuGroup[]; onPick: (toolId: string) => void; onOpen?: (open: boolean) => void; keyLabel: string }
+  toolMenu?: { groups: () => readonly ToolMenuGroup[]; onPick: (toolId: string, pick: ToolMenuPick) => void; onOpen?: (open: boolean) => void; keyLabel: string; currentLeft?: () => string | null }
 }
 
 export interface RoomUi {
@@ -171,6 +171,8 @@ const CSS = `
 .tr-prog b{display:block;font-weight:500;margin-bottom:3px}
 .tr-sheet{margin-top:8px;padding:8px;border:1px solid #2a2e36;border-radius:6px;font-size:12px;line-height:1.4}
 .tr-sheet h4{margin:2px 0 4px;font-size:13px}.tr-sheet p{margin:4px 0}
+/* the picture of a sheet floats over the scene, top centre, next to what it shows: the bench panel is too short to hold it */
+.tr-sheet-image{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:min(400px,42vw);z-index:5;margin:0;padding:6px;background:rgba(18,20,24,.92);border:1px solid #2a2e36;border-radius:6px;pointer-events:auto}.tr-sheet-image img{display:block;width:100%;max-height:200px;object-fit:contain;background:#f4f4f2;border-radius:4px}.tr-sheet-image figcaption{margin-top:3px;font-size:11px}.tr-sheet-image a{color:#8ab4f8}
 .tr-facts{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:4px 0}.tr-facts dt{opacity:.7}.tr-facts dd{margin:0}
 .tr-steps{margin:4px 0;padding-left:16px}.tr-swatches{display:flex;flex-wrap:wrap;gap:6px}.tr-swatch i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 .tr-timeline{position:relative;height:22px;margin:8px 0;background:#1b1e24;border-radius:4px;overflow:hidden}
@@ -313,7 +315,7 @@ export function createUi(o: UiOptions): RoomUi {
   let currentTool = ''
   const menuOptions = o.toolMenu
   const toolMenu = menuOptions
-    ? createToolMenu({ t, groups: menuOptions.groups, current: () => currentTool, onPick: menuOptions.onPick, ...(menuOptions.onOpen ? { onOpen: menuOptions.onOpen } : {}), thumb })
+    ? createToolMenu({ t, groups: menuOptions.groups, current: () => currentTool, onPick: menuOptions.onPick, ...(menuOptions.onOpen ? { onOpen: menuOptions.onOpen } : {}), ...(menuOptions.currentLeft ? { currentLeft: menuOptions.currentLeft } : {}), thumb })
     : null
   if (toolMenu && menuOptions) {
     const menuButton = mk('button', 'tr-slot tr-menu-btn')

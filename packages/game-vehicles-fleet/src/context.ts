@@ -1,4 +1,6 @@
 import type { VehicleContext, VehicleKit, VehicleSpec } from '@adatechnology/game-vehicles'
+import type { WaterAirKit } from './vehicles/water-air'
+import type { PlanesKit } from './vehicles/planes-extra'
 
 /** Label of a part or a glass pane: a locale key (`fleet.labels.<key>`) with its translated text. */
 export interface FleetLabel {
@@ -9,9 +11,9 @@ export interface FleetLabel {
 /** Helpers that one vehicle file exposes to the files installed after it (the water and air builders). */
 export interface FleetShared {
   /** Hull, wing, fuselage, propeller, rotor and navigation light builders (set by the water/air file). */
-  EA?: any
+  EA?: WaterAirKit
   /** Helpers of the plane file used by the helicopter file. */
-  GH?: any
+  GH?: PlanesKit
 }
 
 /** What every vehicle file receives when it is installed. */

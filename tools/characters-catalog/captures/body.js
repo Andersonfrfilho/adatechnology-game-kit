@@ -8,11 +8,12 @@
   const slices = globalThis.__SLICES
   const { BEST, bakeBody } = new Function('THREE', `${slices.best}\nreturn { BEST, bakeBody }`)(THREE)
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {Record<string, GoldenScene>} */
   const scenes = {}
   const LODS = [1, 0.5, 0.28]
   const DECAYS = [0, 1, 2, 3]
   const SEEDS = [1, 2, 3, 4, 5]
-  const fnv = (array) => {
+  const fnv = (/** @type {ArrayLike<number>} */ array) => {
     let hash = 0x811c9dc5
     for (let index = 0; index < array.length; index++) {
       hash = Math.imul(hash ^ (Math.round(array[index] * 1e4) | 0), 0x01000193) >>> 0

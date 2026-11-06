@@ -15,11 +15,16 @@ import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
 
 export { CLIMATES, WEATHER_STATES, createWeather, createWeatherTestModule, createWeatherVisual }
 
-/** The vehicles of the fleet for the lamp rig: one kit for the room's three.js, the fleet installed. */
+/**
+ * The vehicles of the fleet for the lamp rig: one kit for the room's three.js, the fleet installed.
+ * @param {unknown} THREE the room's three.js (the module hands it on untyped)
+ * @param {string} [locale]
+ */
 export function createRigVehicles(THREE, locale = 'pt-BR') {
-  const kit = createVehicleKit({ THREE, locale })
+  const three = /** @type {typeof import('three')} */ (THREE)
+  const kit = createVehicleKit({ THREE: three, locale })
   installFleet(kit)
-  return createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
+  return createVehiclesThree(three, { kit, fleet: defaultVehicleFleet() })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weather area. Returns the room's module report. */

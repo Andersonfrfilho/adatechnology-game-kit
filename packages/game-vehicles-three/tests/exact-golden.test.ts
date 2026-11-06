@@ -25,8 +25,8 @@ installFleet(kit)
 const vehicles = createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 const cases: Array<[string, () => Root]> = []
 for (const keys of Object.values(fleetGroups)) {
-  for (const key of keys) cases.push([`${key}/lite`, () => (vehicles.build(key, { quality: 'lite', seed: 7 }) as any).group])
-  cases.push([`${keys[0]}/high`, () => (vehicles.build(keys[0] as string, { quality: 'high', seed: 7 }) as any).group])
+  for (const key of keys) cases.push([`${key}/lite`, () => vehicles.build(key, { quality: 'lite', seed: 7 }).group])
+  cases.push([`${keys[0]}/high`, () => vehicles.build(keys[0] as string, { quality: 'high', seed: 7 }).group])
 }
 
 const recorded: Record<string, { hash: string; objects: number }> = (() => {

@@ -8,6 +8,8 @@ export interface PlayerHooks {
   primaryDown(): void
   primaryUp(): void
   secondary(): void
+  /** The secondary button released (a trigger held on it, with a tool in each hand). */
+  secondaryUp?(): void
   key(code: string, down: boolean, event: KeyboardEvent): void
   wheel(direction: 1 | -1): void
 }
@@ -338,6 +340,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     o.hooks.primaryDown()
   }
   const onMouseUp = (e: MouseEvent): void => {
+    if (e.button === 2) {
+      o.hooks.secondaryUp?.()
+      return
+    }
     if (e.button !== 0) return
     if (holdTimer) clearTimeout(holdTimer)
     if (dragging) {

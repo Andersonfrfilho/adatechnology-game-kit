@@ -247,7 +247,7 @@ describe('wallPiece', () => {
     const { spec } = make()
     const world = createDestruction({ seed: 1 })
     const id = world.add(spec, { id: 'w' })
-    const beam = spec.parts.find((p: { id: string }) => p.id === 'plate_0_0')
+    const beam = spec.parts.find((p: { id: string }) => p.id === 'plate_0_0')!
     const [x0, y0, z0] = beam.position
     const end = x0 + (beam.shape as { size: number[] }).size[0]! / 2 - 1
     // two columns of blocks across the whole depth of the beam, a metre from its end: its section is gone there
@@ -268,7 +268,7 @@ describe('wallPiece', () => {
     const { spec } = make()
     const world = createDestruction({ seed: 1 })
     const id = world.add(spec, { id: 'w' })
-    const pillar = spec.parts.find((p: { id: string }) => p.id === 'wall_column_0_3')
+    const pillar = spec.parts.find((p: { id: string }) => p.id === 'wall_column_0_3')!
     const [x0, y0, z0] = pillar.position
     const top = y0 + (pillar.shape as { size: number[] }).size[1]! / 2
     for (const y of [top - 0.15, top - 0.25]) for (const x of [x0 - 0.05, x0 + 0.05]) for (let k = 0; k < 2; k++) {

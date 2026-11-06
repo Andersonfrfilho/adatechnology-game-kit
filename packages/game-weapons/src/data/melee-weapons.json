@@ -197,5 +197,68 @@
     "tags": [
       "silent"
     ]
+  },
+  {
+    "id": "kabar",
+    "name": "KA-BAR combat knife",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 48,
+      "radius": 0.03,
+      "reach": 0.55,
+      "rpm": 100,
+      "noise": 1
+    },
+    "mass": 0.32,
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "katana",
+    "name": "Katana",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 230,
+      "radius": 0.04,
+      "reach": 1.1,
+      "rpm": 70,
+      "noise": 5
+    },
+    "mass": 1.1,
+    "tags": [
+      "two_handed"
+    ],
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "brass_knuckles",
+    "name": "Brass knuckles",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 32,
+      "radius": 0.04,
+      "reach": 0.6,
+      "rpm": 120,
+      "noise": 5
+    },
+    "mass": 0.15,
+    "tags": [
+      "fists"
+    ],
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]

@@ -145,7 +145,8 @@ An `explosion` moves the loose items, the heavy furniture that is not fixed, and
 The room makes **one** effects world (`game-vfx` and its `game-vfx-three` layer) and steps it once per frame, after the destruction renderer. The destruction
 renderer draws into it, every module gets it as `host.effects` (an `EffectSink`: `play({ effect: 'm67', point })`, `catalog()`), grenades and rockets play the
 profile of their explosive (`explosive` is on the `explosion` host event), the camera shakes and the screen flashes through an overlay in the container, and the
-`particles` metric counts its pools. Without a DOM nothing is drawn on the screen. `TestRoom.applyCamera()` wraps a host's own `render`; the room's loop does it itself.
+`particles` metric counts its pools. The same sink is `room.effects`, for what a page builds before its module loads (the vehicle kit's `effects`); `room.vfx` is the
+world under it, whose `play` takes an id and a point, so a request given to it plays nothing. Without a DOM nothing is drawn on the screen. `TestRoom.applyCamera()` wraps a host's own `render`; the room's loop does it itself.
 `craters: true` swaps the floor for a deformable patch that big explosions dig into.
 
 A module that declares `controls`, `layers` or `metrics` (see `@adatechnology/game-contracts`) gets a bench: `loadModule` checks it with

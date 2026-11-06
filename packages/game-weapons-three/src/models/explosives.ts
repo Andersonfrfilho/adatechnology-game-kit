@@ -70,6 +70,32 @@ const flashbang: ExplosiveBuilder = (kit, group) => {
   kit.mark(group, 0, 0.065, 0).name = 'handle'
 }
 
+// The M18 smoke canister (reference photo, Wikimedia Commons): 63.5 mm across, 146 mm with the fuze, olive drab with the colour band, the M201A1 fuze on top with its spoon and pull ring.
+const smokeGrenade: ExplosiveBuilder = (kit, group) => {
+  const { M, cylinderY, box, torus, THREE } = kit
+  cylinderY(group, 0.0318, 0.118, M.olive, 0, 0.059, 0, 24)
+  cylinderY(group, 0.0324, 0.026, M.smokeBand, 0, 0.032, 0, 24)
+  cylinderY(group, 0.0334, 0.006, M.olive, 0, 0.118, 0, 24)
+  cylinderY(group, 0.0335, 0.003, M.dark, 0, 0.0015, 0, 24)
+  cylinderY(group, 0.0155, 0.022, M.metal, 0, 0.134, 0, 14)
+  box(group, 0.012, 0.074, 0.008, M.metal, 0.0205, 0.095, 0, 0.04)
+  box(group, 0.03, 0.006, 0.008, M.metal, 0.005, 0.146, 0, 0.0)
+  torus(group, new THREE.TorusGeometry(0.0095, 0.0017, 6, 14), M.steel, -0.016, 0.145, 0)
+  kit.mark(group, 0, 0.059, 0).name = 'handle'
+}
+
+// A 500 g block of Semtex-H (reference photo): putty in a loose wrap, with the detonator pushed into the top and its leads; 0.16 x 0.045 x 0.047 m (1.5 g/cm3).
+const semtex: ExplosiveBuilder = (kit, group) => {
+  const { M, box, cylinderX, cylinderY } = kit
+  box(group, 0.16, 0.045, 0.047, M.semtex, 0, 0.0225, 0)
+  box(group, 0.163, 0.048, 0.05, M.cellophane, 0, 0.0245, 0)
+  box(group, 0.07, 0.001, 0.03, M.white, 0.02, 0.0462, 0)
+  cylinderY(group, 0.0035, 0.04, M.steelL, 0.05, 0.062, 0, 8)
+  cylinderX(group, 0.0012, 0.12, M.wire, 0.1, 0.075, 0.004, 4)
+  cylinderX(group, 0.0012, 0.12, M.metal, 0.1, 0.075, -0.004, 4)
+  kit.mark(group, 0, 0.0225, 0).name = 'handle'
+}
+
 // the explosives of game-weapons each builder draws (the gallery's keys: granada, molotov, pipe, dyn, c4, claymore, flash)
 const BUILDERS: Readonly<Record<string, ExplosiveBuilder>> = {
   m67: grenade,
@@ -79,6 +105,8 @@ const BUILDERS: Readonly<Record<string, ExplosiveBuilder>> = {
   c4,
   claymore,
   flashbang,
+  smoke_grenade: smokeGrenade,
+  semtex,
 }
 
 /** The explosive ids of game-weapons the gallery drew (`m67`, `molotov`, `pipe_bomb`, `dynamite`, `c4`, `claymore`, `flashbang`). */

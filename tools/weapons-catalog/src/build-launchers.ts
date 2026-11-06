@@ -1,6 +1,6 @@
 import type { WeaponRecord } from './build-firearms'
 import type { GalleryWeaponRow } from './extract-gallery'
-import type { UnderbarrelLauncherDecision } from './decisions'
+import type { MultiLauncherDecision, UnderbarrelLauncherDecision } from './decisions'
 import type { WeaponContext } from './weapon-context'
 import { reloadOf } from './weapon-context'
 import { slugOf } from './weapon-rules'
@@ -132,5 +132,32 @@ export const buildUnderbarrelLauncher = (decision: UnderbarrelLauncherDecision, 
     archetype: decision.recoilBase,
     tags: ['underbarrel'],
     sources: ['arsenal', 'reference', 'derived'],
+  }
+}
+
+/** A launcher with a revolving cylinder (the Milkor MGL / M32): the M79 rule (40 mm grenade, no backblast) with a cylinder of several rounds that loads in one go. */
+export const buildMultiLauncher = (decision: MultiLauncherDecision, context: WeaponContext): WeaponRecord => {
+  const { minArmDistance } = context.decisions.launcherCommon.value
+  return {
+    id: decision.id,
+    name: decision.name,
+    category: 'launcher',
+    action: {
+      kind: 'launcher',
+      projectile: decision.projectile,
+      magazine: decision.magazine,
+      reload: decision.reload,
+      timings: { draw: context.drawSeconds, reload: decision.reload, clear: context.decisions.timings.clear.value },
+      family: 'revolver',
+      speed: decision.speed,
+      minArmDistance,
+      backblast: decision.backblast,
+      recoil: recoilFrom(decision.recoilBase, decision.kick, context),
+    },
+    mass: decision.mass,
+    dimensions: { length: decision.length, ...(decision.lengthCollapsed === undefined ? {} : { lengthCollapsed: decision.lengthCollapsed }), barrel: decision.barrel, emptyMass: decision.emptyMass },
+    archetype: decision.recoilBase,
+    ...(decision.stock ? { stock: decision.stock } : {}),
+    sources: ['reference', 'derived'],
   }
 }

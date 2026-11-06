@@ -1,5 +1,6 @@
 import { buttpad, swivel } from './details'
 import type { RifleContext } from './rifle-context'
+import { buildG36Stock } from './rifle-g36'
 
 /** The stock by kind, in the order the page draws them. `magazineX` places the magazine well plate of the one-piece stock. */
 export function buildStock(context: RifleContext, magazineX: number): void {
@@ -34,6 +35,8 @@ export function buildStock(context: RifleContext, magazineX: number): void {
     box(group, 0.034, 0.11, 0.036, furn, 0.02, -0.025, 0)
     box(group, S * 0.55, 0.032, 0.03, furn, S * 0.35, 0, 0)
     buttpad(kit, group, 0.003, -0.025, 0.11, 0.036)
+  } else if (o.stock === 'g36') {
+    buildG36Stock(context)
   } else if (o.stock === 'fold') {
     box(group, S, 0.006, 0.006, M.metal, S / 2, 0.01, 0.012)
     box(group, S, 0.006, 0.006, M.metal, S / 2, -0.04, 0.012, -0.12)

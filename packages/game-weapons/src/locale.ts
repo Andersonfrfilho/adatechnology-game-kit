@@ -46,12 +46,13 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       c4: 'C4 charge', claymore: 'Claymore mine', tactical_knife: 'Tactical knife', meat_cleaver: 'Meat cleaver', hatchet: 'Hatchet', nail_bat: 'Nail bat',
       iron_pipe: 'Iron pipe', pickaxe: 'Pickaxe', sickle: 'Sickle', police_baton: 'Police baton', cast_iron_skillet: 'Cast iron skillet',
       improvised_spear: 'Improvised spear', chainsaw: 'Chainsaw', recurve_bow: 'Recurve bow', m134: 'M134 Minigun',
+      semtex: 'Semtex charge', smoke_grenade: 'M18 smoke grenade', kabar: 'KA-BAR combat knife', katana: 'Katana', brass_knuckles: 'Brass knuckles',
     },
     modes: modesEn,
     categories: categoriesEn,
     explosives: {
       m67: 'M67 fragmentation grenade', molotov: 'Molotov cocktail', pipe_bomb: 'Pipe bomb', propane_p13: 'P13 propane cylinder', dynamite: 'Dynamite', c4: 'C4 charge',
-      claymore: 'Claymore mine', flashbang: 'Flashbang', m79_40mm: '40 mm grenade', m72_66mm: '66 mm HEAT rocket', at4_84mm: '84 mm HEAT rocket',
+      claymore: 'Claymore mine', flashbang: 'Flashbang', semtex: 'Semtex charge', smoke_grenade: 'M18 colored smoke grenade', m79_40mm: '40 mm grenade', m72_66mm: '66 mm HEAT rocket', at4_84mm: '84 mm HEAT rocket',
       pg7v: 'PG-7V rocket', carl_gustaf_84mm: '84 mm HE/HEAT round', fuel_barrel: 'Fuel barrel', car_fuel_tank: 'Car fuel tank',
       fuel_pump: 'Fuel pump', fuel_station_tank: 'Fuel station tank',
     },
@@ -74,6 +75,7 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
       c4: 'C4 com detonador', claymore: 'mina Claymore', tactical_knife: 'faca tática', meat_cleaver: 'cutelo', hatchet: 'machadinha', nail_bat: 'taco com pregos',
       iron_pipe: 'cano de ferro', pickaxe: 'picareta', sickle: 'foice', police_baton: 'cassetete', cast_iron_skillet: 'frigideira de ferro',
       improvised_spear: 'lança improvisada', chainsaw: 'motosserra', recurve_bow: 'arco recurvo', m134: 'Minigun M134',
+      semtex: 'Semtex com detonador', smoke_grenade: 'granada de fumaça M18', kabar: 'faca KA-BAR', katana: 'espada katana', brass_knuckles: 'soco inglês',
     },
     modes: { single: 'tiro único', semi: 'semiautomático', burst: 'rajada', auto: 'automático', pump: 'repetição', bolt: 'ferrolho', lever: 'alavanca', break: 'basculante', volley: 'salva' },
     categories: {
@@ -84,7 +86,7 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
     },
     explosives: {
       m67: 'Granada M67', molotov: 'Coquetel molotov', pipe_bomb: 'Bomba caseira', propane_p13: 'Botijão de gás P13', dynamite: 'Dinamite', c4: 'C4 com detonador',
-      claymore: 'Mina Claymore', flashbang: 'Granada de luz', m79_40mm: 'Granada de 40 mm', m72_66mm: 'Foguete HEAT de 66 mm', at4_84mm: 'Foguete HEAT de 84 mm',
+      claymore: 'Mina Claymore', flashbang: 'Granada de luz', semtex: 'Semtex com detonador', smoke_grenade: 'Granada de fumaça M18', m79_40mm: 'Granada de 40 mm', m72_66mm: 'Foguete HEAT de 66 mm', at4_84mm: 'Foguete HEAT de 84 mm',
       pg7v: 'Foguete PG-7V', carl_gustaf_84mm: 'Projétil de 84 mm (HE/HEAT)', fuel_barrel: 'Barril de combustível', car_fuel_tank: 'Tanque de combustível do carro',
       fuel_pump: 'Bomba de combustível', fuel_station_tank: 'Tanque do posto de gasolina',
     },

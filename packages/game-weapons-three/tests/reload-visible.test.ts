@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { sampleClip } from '@adatechnology/game-contracts'
-import { arsenal, setup, step, keyR } from './support/reload-room'
+import { arsenal, disposeRooms, setup, step, keyR } from './support/reload-room'
 import { buildToolClips } from '../src/animation/clip-set'
 import { hasWeaponModel, buildWeaponModelById } from '../src/models'
+
+afterEach(disposeRooms)
 
 // What the eye must see in a reload, measured on the clips and on the room with the weapon in the hands: the slide that moves, one visit of the hand and one sound per round.
 

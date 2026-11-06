@@ -1,11 +1,25 @@
 import type { ModelKit } from './kit'
 import { heatify } from './kit'
 import { rail, scope } from './details'
+import { buildFamasLook, buildSa80Look, buildTavorLook } from './bullpup-looks'
+import type { BullpupLook } from './bullpup-looks'
 import type { BuiltModel, ModelOptions, ModelParts } from './types'
+
+const LOOKS: Readonly<Record<string, (look: BullpupLook) => void>> = { famas: buildFamasLook, tavor: buildTavorLook, sa80: buildSa80Look }
+
+/** The FAMAS, the Tavor and the L85A2 each have a body of their own; they keep the grip, magazine, bolt and muzzle anchors of this family. */
+function buildBullpupLook(kit: ModelKit, options: ModelOptions, draw: (look: BullpupLook) => void): BuiltModel {
+  const group = kit.group()
+  const parts: ModelParts = { family: 'rifle', stroke: 0.06, glow: [] }
+  draw({ kit, group, parts, length: (options.L ?? 0) / 1000 })
+  return { group, parts }
+}
 
 /** Port of the gallery's `bullpup`: the rifle (AUG) or, with `shot`, the twin-tube pump shotgun (KSG). */
 export function buildBullpup(kit: ModelKit, options: ModelOptions): BuiltModel {
   const { M, box, cylinderX } = kit
+  const look = options.look ? LOOKS[options.look] : undefined
+  if (look) return buildBullpupLook(kit, options, look)
   const group = kit.group()
   const L = (options.L ?? 0) / 1000
   const barrel = (options.B ?? 0) / 1000

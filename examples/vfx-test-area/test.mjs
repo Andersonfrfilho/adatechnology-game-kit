@@ -21,7 +21,7 @@ if (!existsSync(dist)) {
 if (!readFileSync(dist, 'utf8').includes('VfxArea.loadInto(window.__testRoom)')) throw new Error('dist/sala-efeitos.html does not boot the area')
 
 const require = createRequire(import.meta.url)
-const { chromium } = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean) ?? {}
+const { chromium } = /** @type {Partial<typeof import('playwright')>} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean) ?? {})
 if (!chromium) {
   console.log('ok: bundle and room page (playwright not found: browser checks skipped)')
   process.exit(0)
@@ -32,12 +32,13 @@ mkdirSync(shots, { recursive: true })
  * @type {boolean[]}
  */
 const results = []
-const check = (name, ok, detail) => {
+const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
   results.push(ok)
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail !== undefined ? '  ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''}`)
 }
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+/** @type {string[]} */
 const external = []
 /**
  * @type {string[]}
@@ -53,7 +54,7 @@ async function open(query = '') {
   })
   const page = await context.newPage()
   page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
-  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
+  page.on('pageerror', (/** @type {Error} */ e) => errors.push(`pageerror: ${e.message}`))
   await page.goto(pathToFileURL(dist).href + query, { timeout: 180000 })
   await page.waitForFunction(() => window.__vfxReport, null, { timeout: 90000 })
   return page
@@ -63,7 +64,7 @@ for (const lang of ['pt-BR', 'en']) {
   const page = await open(`?lang=${lang}`)
   const bench = await page.evaluate(() => {
     const r = window.__vfxReport
-    const b = window.__testRoom.bench('vfx')
+    const b = /** @type {RoomBench} */ (window.__testRoom.bench('vfx'))
     return { ok: r.ok, problems: r.problems, controls: b ? b.controls().map((c) => c.id) : [], layers: b ? b.layers().length : 0 }
   })
   check(`[${lang}] module loaded, bench declared (7 controls, 6 layers)`, bench.ok && bench.problems.length === 0 && bench.controls.length === 7 && bench.layers === 6, bench)
@@ -79,8 +80,8 @@ for (const lang of ['pt-BR', 'en']) {
     await page.evaluate(() => {
       const room = window.__testRoom
       room.clear()
-      room.bench('vfx').set('distance', 12)
-      room.bench('vfx').set('effect', 'm67')
+      ;/** @type {RoomBench} */ (room.bench('vfx')).set('distance', 12)
+      ;/** @type {RoomBench} */ (room.bench('vfx')).set('effect', 'm67')
       for (let i = 0; i < 25; i++) room.update(0.02)
     })
     await page.waitForTimeout(400)
@@ -89,7 +90,7 @@ for (const lang of ['pt-BR', 'en']) {
       const room = window.__testRoom
       room.clear()
       room.look([2.5, 1.6, 4], [0, 1, 0])
-      room.bench('vfx').set('effect', 'blood_hit')
+      ;/** @type {RoomBench} */ (room.bench('vfx')).set('effect', 'blood_hit')
       for (let i = 0; i < 12; i++) room.update(0.02)
     })
     await page.waitForTimeout(400)

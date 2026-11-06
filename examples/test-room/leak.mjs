@@ -17,6 +17,8 @@ import { execFileSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
+/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take */
+/** @type {Record<string, LeakPhase>} */
 const PHASES = {
   // the blasts: the chain of P13 bottles, a grenade among bodies, the gas of a house, a gas bottle under the barbecue
   explosions: { scenarios: ['explosives_p13_chain', 'grenade_by_radius', 'house_gas_explodes', 'furniture_gas_bottle_explodes'] },
@@ -40,6 +42,7 @@ const ONLY = process.env.LEAK_PHASE
 // LEAK_SCENARIOS=a;b  replaces the scenarios of the phase, to find which one keeps memory
 if (ONLY && process.env.LEAK_SCENARIOS && PHASES[ONLY]) PHASES[ONLY] = { scenarios: process.env.LEAK_SCENARIOS.split(';') }
 
+/** @returns {typeof import('playwright')} */
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -95,13 +98,16 @@ if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')],
 mkdirSync(join(here, 'dist'), { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+/** @type {{ budget: typeof BUDGET; rounds: number; phases: Record<string, unknown> }} */
 const report = { budget: BUDGET, rounds: ROUNDS, phases: {} }
 let failed = 0
 
 /** The JS heap that is really kept: the sum of a heap snapshot's nodes (taking one runs a full GC first). */
+/** @param {import('playwright').CDPSession} cdp */
 async function heapMB(cdp) {
+  /** @type {string[]} */
   const chunks = []
-  const onChunk = (e) => chunks.push(e.chunk)
+  const onChunk = (/** @type {{ chunk: string }} */ e) => chunks.push(e.chunk)
   cdp.on('HeapProfiler.addHeapSnapshotChunk', onChunk)
   await cdp.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false })
   cdp.off('HeapProfiler.addHeapSnapshotChunk', onChunk)
@@ -116,6 +122,7 @@ async function heapMB(cdp) {
 for (const [name, phase] of Object.entries(PHASES)) {
   if (ONLY && ONLY !== name) continue
   const page = await browser.newPage({ viewport: { width: 640, height: 360 } })
+  /** @type {string[]} */
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(INSTRUMENT)
@@ -125,7 +132,7 @@ for (const [name, phase] of Object.entries(PHASES)) {
   const cycle = () =>
     page.evaluate(async (p) => {
       const room = window.__testRoom
-      if (p.scenarios) await room.runScenarios(room.scenarios.filter((s) => p.scenarios.includes(s.id)))
+      if (p.scenarios) await room.runScenarios(room.scenarios.filter((s) => /** @type {string[]} */ (p.scenarios).includes(s.id)))
       if (p.hands) {
         const ids = [...room.arsenal.weapons.keys()]
         const kinds = new Map()
@@ -133,7 +140,7 @@ for (const [name, phase] of Object.entries(PHASES)) {
           const kind = room.arsenal.weapons.get(id)?.action?.kind ?? 'other'
           if (!kinds.has(kind)) kinds.set(kind, id)
         }
-        for (const camera of ['first', 'third']) {
+        for (const camera of /** @type {const} */ (['first', 'third'])) {
           room.setCameraMode(camera)
           for (const id of kinds.values()) {
             room.equip(id)

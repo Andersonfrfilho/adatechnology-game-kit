@@ -4,6 +4,7 @@ import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
 import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
+import type { HouseDestruction, HouseStructure } from './destruction/types.js'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { HouseDestructionRenderer } from './adapter-shapes.js'
 import type { AdapterOptions, FloorplanAdapter, HouseholdKit } from '@adatechnology/game-floorplan-interactables'
@@ -243,9 +244,9 @@ export interface House {
   electrical: ElectricalInfo | null
   gutters: GutterInfo | null
   /** The structure of the house (`game-floorplan-structure`): its parts and `spec()`, the destructible spec. */
-  structure: any
+  structure: HouseStructure
   /** The adapter to the destruction world (`destruction` option). */
-  destruction: any
+  destruction: HouseDestruction
   update(dt: number, time?: number, focus?: HousePoint): void
   show(options?: { floor?: number; cut?: boolean; lot?: boolean }): void
   target(eye: Eye, options?: HouseTargetOptions): InteractionTarget | null

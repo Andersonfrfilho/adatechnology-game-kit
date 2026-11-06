@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+/** @type {typeof import('playwright')} */
 const { chromium } = (() => {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -37,6 +38,7 @@ mkdirSync(outDir, { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}${base.includes('?') ? '&' : '?'}ui=0&table=0`, { timeout: 180000 })
@@ -45,19 +47,19 @@ await page.waitForFunction(() => window.__testRoom && window.__furnitureReport, 
 // helpers inside the page
 await page.evaluate(() => {
   const room = window.__testRoom
-  const A = (window.__audit = {})
+  const A = (window.__audit = /** @type {RoomAudit} */ ({}))
   A.spawnAt = [-7, 0, -6]
   A.fresh = (/** @type {string} */ id, extra = []) => {
     room.clear()
     room.setDebugCamera(null)
     const so = room.spawn(id, A.spawnAt, 0)
-    const others = extra.map(([eid, pos]) => room.spawn(eid, pos, 0))
+    const others = /** @type {[string, Vec3][]} */ (extra).map(([eid, pos]) => room.spawn(eid, pos, 0))
     A.so = so
     so.root.updateMatrixWorld(true)
     const b0 = new window.__THREE.Box3().setFromObject(so.root)
     A.box0 = { min: b0.min.toArray(), max: b0.max.toArray() }
     A.others = others
-    A.start = room.root ? null : [so.root.position.x, so.root.position.y, so.root.position.z]
+    A.start = /** @type {{ root?: unknown }} */ (/** @type {unknown} */ (room)).root ? null : [so.root.position.x, so.root.position.y, so.root.position.z]
     room.log.clear()
     return { objectId: so.objectId, movable: so.movable }
   }
@@ -69,7 +71,7 @@ await page.evaluate(() => {
     const st = room.world.state(A.so.objectId)
     if (!st) return { gone: true }
     const parts = st.parts
-    const count = (/** @type {string} */ k) => parts.reduce((n, p) => n + (p[k]?.length ?? 0), 0)
+    const count = (/** @type {'holes' | 'dents' | 'cracks'} */ k) => parts.reduce((n, p) => n + (p[k]?.length ?? 0), 0)
     const p = A.so.root.position
     const q = A.so.root.quaternion
     const tilt = (2 * Math.acos(Math.min(1, Math.abs(q.w))) * 180) / Math.PI
@@ -77,11 +79,11 @@ await page.evaluate(() => {
       holes: count('holes'),
       dents: count('dents'),
       cracks: count('cracks'),
-      broken: parts.filter((/** @type {{ status: string; }} */ x) => x.status !== 'intact' && x.status !== 'damaged').map((x) => `${x.id}:${x.status}`),
-      damaged: parts.filter((/** @type {{ hp: number; maxHp: number; }} */ x) => x.hp < x.maxHp).length,
+      broken: parts.filter((x) => x.status !== 'intact' && x.status !== 'damaged').map((x) => `${x.id}:${x.status}`),
+      damaged: parts.filter((x) => x.hp < x.maxHp).length,
       burning: parts.filter((x) => x.burning).length,
-      charred: parts.filter((/** @type {{ char: number; }} */ x) => x.char > 0.05).length,
-      melted: parts.filter((/** @type {{ melt: number; }} */ x) => x.melt > 0.05).length,
+      charred: parts.filter((x) => x.char > 0.05).length,
+      melted: parts.filter((x) => x.melt > 0.05).length,
       maxTemp: Math.round(Math.max(...parts.map((x) => x.temperature))),
       pieces: st.groups.length,
       destroyed: st.destroyed,
@@ -90,6 +92,7 @@ await page.evaluate(() => {
     }
   }
   A.events = () => {
+    /** @type {Record<string, number>} */
     const by = {}
     for (const e of room.log.entries()) by[`${e.channel}:${e.type}`] = (by[`${e.channel}:${e.type}`] ?? 0) + 1
     return by
@@ -100,19 +103,21 @@ await page.evaluate(() => {
     const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2]
     const size = Math.max(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2])
     const d = Math.max(dist, size * 2.2)
-    room.setDebugCamera({ position: [c[0] + d * 0.6, c[1] + d * 0.45, c[2] + d * 0.75], target: c, fov: 50 })
+    room.setDebugCamera({ position: [c[0] + d * 0.6, c[1] + d * 0.45, c[2] + d * 0.75], target: /** @type {Vec3} */ (c), fov: 50 })
   }
 })
 
 const sleep = (/** @type {number} */ ms) => page.waitForTimeout(ms)
 /**
  * Run `act` in the page, then sample the metrics every 100 ms for `seconds` (frame time at the peak, the most fragments and particles).
- * @param {{ (k: string): number; (): number; (): number; (): number; (): number; (): number; }} act
+ * @param {(k: string) => number} act
+ * @param {number} [seconds]
  * @param {string | undefined} [arg]
  */
 async function measure(act, seconds = 2.5, arg) {
   const before = await page.evaluate(() => window.__audit.metrics())
-  const cost = await page.evaluate(act, arg)
+  const cost = await page.evaluate(/** @type {(k: unknown) => number} */ (act), arg)
+  /** @type {Record<string, number>} */
   const peak = {}
   for (let t = 0; t < seconds * 10; t++) {
     await sleep(100)
@@ -122,25 +127,32 @@ async function measure(act, seconds = 2.5, arg) {
   return { before, peak, cost }
 }
 
+/** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
+/** @typedef {Record<string, unknown> & { seconds?: number }} AuditStep */
+/** @type {{ itemId: string; steps: Record<string, AuditStep>; errors: string[]; info?: Record<string, unknown> }} */
 const report = { itemId, steps: {}, errors }
+/** @param {string} name @param {() => Promise<AuditStep>} fn */
 async function step(name, fn) {
   if (only.length && !only.includes(name)) return
   const t0 = Date.now()
   try {
     report.steps[name] = await fn()
   } catch (e) {
-    report.steps[name] = { error: String(e.message ?? e) }
+    report.steps[name] = { error: String(/** @type {Error} */ (e).message ?? e) }
   }
   report.steps[name].seconds = Math.round((Date.now() - t0) / 100) / 10
   console.log(name, JSON.stringify(report.steps[name]))
 }
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(outDir, `${name}.png`), timeout: 180000 })
-const snap = async (/** @type {string} */ name, /** @type {undefined} */ dist) => {
+/** @param {string} name @param {number} [dist] */
+const snap = async (name, dist) => {
   await page.evaluate((d) => window.__audit.look3q(d), dist)
   await sleep(300)
   await shot(name)
 }
-const fresh = (/** @type {(string | number[])[][] | undefined} */ extra) => page.evaluate(([id, ex]) => window.__audit.fresh(id, ex), [itemId, extra ?? []])
+/** @param {[string, Vec3][]} [extra] */
+const fresh = (extra) => page.evaluate(([id, ex]) => window.__audit.fresh(id, ex), /** @type {[string, [string, Vec3][]]} */ ([itemId, extra ?? []]))
+/** @param {string} name @param {unknown} m @param {number} [dist] */
 const result = async (name, m, dist) => {
   const out = { state: await page.evaluate(() => window.__audit.state()), events: await page.evaluate(() => window.__audit.events()), perf: m }
   await snap(name, dist)
@@ -149,7 +161,8 @@ const result = async (name, m, dist) => {
 
 const info = await fresh()
 report.info = { ...info, ...(await page.evaluate(() => {
-  const st = window.__testRoom.world.state(window.__audit.so.objectId)
+  const st = /** @type {NonNullable<ReturnType<TestRoom['world']['state']>>} */ (window.__testRoom.world.state(window.__audit.so.objectId))
+  /** @type {Record<string, number>} */
   const mats = {}
   for (const p of st.parts) mats[p.material] = Math.round(((mats[p.material] ?? 0) + p.mass) * 100) / 100
   return { parts: st.parts.length, massKg: Math.round(st.parts.reduce((m, p) => m + p.mass, 0) * 10) / 10, materials: mats, clips: (window.__testRoom.animations?.() ?? null) }
@@ -161,7 +174,7 @@ const trial = (/** @type {string} */ kind) => async () => {
   await fresh()
   const m = await measure((/** @type {string} */ k) => {
     const t = performance.now()
-    window.__testRoom.testTable.trial(k, window.__audit.so.objectId)
+    window.__testRoom.testTable.trial(/** @type {Parameters<TestRoom['testTable']['trial']>[0]} */ (k), window.__audit.so.objectId)
     return Math.round((performance.now() - t) * 10) / 10
   }, kind === 'fire' ? 4 : 2.5, kind)
   return result(`trial-${kind}`, m)
@@ -173,13 +186,13 @@ const shotAt = (/** @type {number} */ h, /** @type {string} */ weapon) => async 
     const A = window.__audit
     const room = window.__testRoom
     const b = A.box()
-    const y = b.min[1] + (b.max[1] - b.min[1]) * hh
+    const y = b.min[1] + (b.max[1] - b.min[1]) * /** @type {number} */ (hh)
     const cx = (b.min[0] + b.max[0]) / 2
-    room.setTool(w)
+    room.setTool(/** @type {string} */ (w))
     room.look([cx, y, b.max[2] + 3], [cx, y, (b.min[2] + b.max[2]) / 2])
   }, [h, weapon])
   // the weapon is drawn first (the arsenal's draw time), as a player does
-  await page.waitForFunction(() => { const t = window.__testRoom.tool; return !t._phase || t._phase.id !== "draw" }, null, { timeout: 30000 }).catch(() => {})
+  await page.waitForFunction(() => { const t = /** @type {{ _phase?: { id: string } }} */ (/** @type {unknown} */ (window.__testRoom.tool)); return !t._phase || t._phase.id !== "draw" }, null, { timeout: 30000 }).catch(() => {})
   await sleep(1500)
   const m = await measure(() => {
     const t = performance.now()
@@ -206,7 +219,7 @@ await step('chute', async () => {
     room.setTool('kick')
     room.look([cx, 1.6, b.max[2] + 0.5], [cx, y, (b.min[2] + b.max[2]) / 2])
   })
-  await page.waitForFunction(() => { const t = window.__testRoom.tool; return !t._phase || t._phase.id !== "draw" }, null, { timeout: 30000 }).catch(() => {})
+  await page.waitForFunction(() => { const t = /** @type {{ _phase?: { id: string } }} */ (/** @type {unknown} */ (window.__testRoom.tool)); return !t._phase || t._phase.id !== "draw" }, null, { timeout: 30000 }).catch(() => {})
   await sleep(1500)
   const m = await measure(() => {
     const t = performance.now()
@@ -226,7 +239,7 @@ await step('pegar_e_jogar', async () => {
     const b = A.box()
     const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2]
     room.setTool('hand')
-    room.look([c[0], 1.6, b.max[2] + 1.2], c)
+    room.look([c[0], 1.6, b.max[2] + 1.2], /** @type {Vec3} */ (c))
     return { grabbed: room.grab() }
   })
   await sleep(600)
@@ -245,7 +258,7 @@ await step('usar', async () => {
     const A = window.__audit
     const b = A.box()
     const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2]
-    room.look([c[0], 1.6, b.max[2] + 1.2], c)
+    room.look([c[0], 1.6, b.max[2] + 1.2], /** @type {Vec3} */ (c))
     const info = room.animations()
     const ids = info?.clips?.map((x) => x.id) ?? []
     if (ids[0]) room.playAnimation(ids[0], A.so.objectId)
@@ -302,7 +315,8 @@ await step('empurrado_por_objeto', async () => {
 await step('persistencia', async () => {
   await fresh()
   await page.evaluate(() => window.__testRoom.testTable.trial('blast', window.__audit.so.objectId))
-  const samples = []
+  /** @type {{ s: number }[]} */
+const samples = []
   for (const s of [1, 10, 30, 60, 120]) {
     const wait = s - (samples.at(-1)?.s ?? 0)
     await sleep(wait * 1000)

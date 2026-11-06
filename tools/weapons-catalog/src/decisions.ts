@@ -66,6 +66,7 @@ export type ExplosiveExtras = {
   readonly mass?: number
   readonly stunSeconds?: number
   readonly cone?: boolean
+  readonly smoke?: { readonly color: number; readonly seconds: readonly [number, number] }
   readonly fireTemperature?: number
   readonly fireFrom?: 'game' | 'lab'
   readonly leak?: { readonly fluid: string; readonly liters: number; readonly pressurized?: boolean; readonly igniteDelay?: number; readonly hissSeconds?: number }
@@ -80,6 +81,8 @@ export type ExplosiveDecision = {
   readonly extras?: Decision<ExplosiveExtras>
   readonly world?: Decision<{ readonly noise: number; readonly destructionLevel: number }>
   readonly copyOf?: Decision<string>
+  /** Blast radii of an explosive the Laboratory has no profile for (a smoke canister: none). */
+  readonly radii?: Decision<{ readonly lethal: number; readonly injury: number }>
   readonly energy?: Decision<number>
   /** Kilograms of TNT equivalent of the charge (its mass times its relative effectiveness): the blast wave that pushes a body is read from it. */
   readonly tnt?: Decision<number>
@@ -142,6 +145,28 @@ export type UnderbarrelLauncherDecision = {
   readonly reloadFrom: string
 }
 
+/** A grenade launcher with a revolving cylinder (the Milkor MGL / M32): the M79 rule, a magazine of several rounds, and the reload time of the whole cylinder. */
+export type MultiLauncherDecision = {
+  readonly id: string
+  readonly name: string
+  readonly projectile: string
+  readonly magazine: number
+  readonly length: number
+  /** Metres with the stock folded, when the weapon has one that folds. */
+  readonly lengthCollapsed?: number
+  /** The stock when it moves: how (`fold`, `retract`) and, for a fold, to which side. */
+  readonly stock?: { readonly kind: StockKind; readonly foldAxis?: 'right' | 'left' | 'under' | 'over' }
+  readonly barrel: number
+  readonly emptyMass: number
+  readonly mass: number
+  readonly speed: number
+  readonly kick: number
+  readonly recoilBase: string
+  readonly backblast: number
+  /** Seconds to load the whole cylinder. */
+  readonly reload: number
+}
+
 export type NumberNote = { readonly source: DataSource | 'owner'; readonly reason: string }
 
 /** A weapon the team pages do not have: a Gallery-style row (measures in mm and kg) built from public data, with where each number comes from. */
@@ -182,6 +207,8 @@ export type Decisions = {
   readonly gp25Mount: Decision<{ readonly requiresOption: string }>
   /** Grenade launchers that go under a barrel, by id. */
   readonly underbarrelLaunchers: Readonly<Record<string, Decision<UnderbarrelLauncherDecision>>>
+  /** Grenade launchers with a revolving cylinder, by id. */
+  readonly multiLaunchers: Readonly<Record<string, Decision<MultiLauncherDecision>>>
   /** Thread of the muzzle by weapon id: what a suppressor or a brake screws on. */
   readonly threads: Readonly<Record<string, Decision<{ readonly interface: string }>>>
   /** Places the Gallery options do not show, by weapon id (§06 notes, §17 slots, grenade launcher mounts). */

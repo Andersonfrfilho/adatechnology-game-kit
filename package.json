@@ -13,7 +13,7 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
-    "typecheck:scripts": "tsc -p tsconfig.scripts.checked.json",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json",
     "check:items": "pnpm --filter \"@adatechnology/game-items-goods...\" build && node packages/game-items-goods/scripts/check-items.mjs",
     "lint": "eslint .",
     "clean": "pnpm -r exec rm -rf dist",

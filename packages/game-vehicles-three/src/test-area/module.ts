@@ -1,3 +1,4 @@
+import type * as THREE_NS from 'three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
@@ -45,17 +46,17 @@ const MATERIAL_COLOURS: Record<string, number> = { metal: 0xcccccc, glass: 0x44a
 const LANE_START_S = 1.2
 const ZONE_COLOURS: Record<string, number> = { door: 0x55dd55, hood: 0xdddd33, lid: 0xdd9933, bumper: 0xdd55dd, glass: 0x44aaff, light: 0xffffff, wheel: 0xff7733 }
 
-type Three = any
+type Three = typeof THREE_NS
 /** Parts whose bottom is above this (m, from the ground) are overhead: the player walks under them (the helicopter's rotor, the tank's gun). */
 const BODY_HEIGHT = 1.7
 type Placed = {
-  readonly root: any
+  readonly root: THREE_NS.Group
   readonly key: string
   /** The damage scenario built into a wreck (its size is not the design size, so it is left out of the size error). */
   readonly scenario?: string
   readonly item: VehicleItem
   readonly index: number
-  paint?: any
+  paint?: THREE_NS.MeshStandardMaterial
   /** Near in full, far fused (`createVehicleLod`); none in the light quality, which is fused already. */
   lod?: VehicleLod
   /** Hit: its damage only exists on the full model. */
@@ -65,7 +66,7 @@ type Placed = {
   size?: { length: number; width: number; height: number }
   /** What the walking player bumps into, in the root's own space: the box of the parts low enough to hit a body (a rotor overhead is walked under). */
   footprint?: Footprint
-  helpers: any[]
+  helpers: THREE_NS.Object3D[]
 }
 
 /**
@@ -89,13 +90,13 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   // the cabins hold the room's smoke out: through a shut car it does not pass, it gets in only by an open door, a broken window or a bullet hole
   const cabins = createCabinSmoke()
   let host: ModuleHost | null = null
-  let three: Three = null
+  let three: Three | null = null
   let counter = 0
   let helpersShown = ''
-  let axes: any[] = []
+  let axes: THREE_NS.Object3D[] = []
   let lane: Lane | null = null
 
-  type Lane = { car: any; group: any; wall: any; mode: 'arcade' | 'semi'; step(dt: number): void; speed(): number; distance(): number; done: boolean; stopped: number }
+  type Lane = { car: ReturnType<ReturnType<typeof createVehiclesThree>['build']>; group: THREE_NS.Object3D; wall: THREE_NS.Mesh<THREE_NS.BoxGeometry, THREE_NS.MeshStandardMaterial>; mode: 'arcade' | 'semi'; step(dt: number): void; speed(): number; distance(): number; done: boolean; stopped: number }
 
   const effects = (): EffectsLike | undefined => host?.effects
   // the sounds are asked of the host's shared engine by id (the sink may be absent, and then the module is silent)
@@ -134,14 +135,15 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     delete entry.lod
     const color = fleet.colorFromSeed(settings.seed + entry.index, paletteFor(entry.key))
     if (!entry.paint) {
-      const vehicle = entry.item.vehicle as unknown as { vehicle: any }
+      const vehicle = entry.item.vehicle as unknown as { vehicle: THREE_NS.Object3D }
       const primary = primaryPaint(entry.item.vehicle)
       if (!primary) return
       entry.paint = primary.clone()
-      vehicle.vehicle.traverse((mesh: any) => {
+      vehicle.vehicle.traverse((obj) => {
+        const mesh = obj as THREE_NS.Mesh
         if (!mesh.isMesh) return
-        if (Array.isArray(mesh.material)) mesh.material = mesh.material.map((m: any) => (m === primary ? entry.paint : m))
-        else if (mesh.material === primary) mesh.material = entry.paint
+        if (Array.isArray(mesh.material)) mesh.material = mesh.material.map((m) => (m === primary ? entry.paint! : m))
+        else if (mesh.material === primary) mesh.material = entry.paint!
       })
     }
     entry.paint.color.set(color)
@@ -246,28 +248,29 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   }
 
   // ---- measuring and the layers ----------------------------------------------------------------------------------------------------------
-  const rootMatrix = (entry: Placed): any => {
-    const m = new three.Matrix4().copy(entry.root.matrixWorld).invert()
-    return m.multiply((entry.item.vehicle as unknown as { vehicle: any }).vehicle.matrixWorld)
+  const rootMatrix = (entry: Placed): THREE_NS.Matrix4 => {
+    const m = new three!.Matrix4().copy(entry.root.matrixWorld).invert()
+    return m.multiply((entry.item.vehicle as unknown as { vehicle: THREE_NS.Object3D }).vehicle.matrixWorld)
   }
   const measure = (entry: Placed): { length: number; width: number; height: number } => {
     if (entry.size) return entry.size
     entry.root.updateMatrixWorld(true)
-    const inverse = new three.Matrix4().copy(entry.root.matrixWorld).invert()
-    const bounds = new three.Box3()
-    const low = new three.Box3()
-    const piece = new three.Box3()
-    const matrix = new three.Matrix4()
-    entry.root.traverse((mesh: any) => {
+    const inverse = new three!.Matrix4().copy(entry.root.matrixWorld).invert()
+    const bounds = new three!.Box3()
+    const low = new three!.Box3()
+    const piece = new three!.Box3()
+    const matrix = new three!.Matrix4()
+    entry.root.traverse((obj) => {
+        const mesh = obj as THREE_NS.Mesh
       if (!mesh.isMesh || !mesh.geometry || mesh.userData.ghost) return
-      for (let p = mesh; p; p = p.parent) if (p.visible === false) return
+      for (let p: THREE_NS.Object3D | null = mesh; p; p = p.parent) if (p.visible === false) return
       if (mesh.userData.helper) return
       mesh.geometry.computeBoundingBox()
-      piece.copy(mesh.geometry.boundingBox).applyMatrix4(matrix.multiplyMatrices(inverse, mesh.matrixWorld))
+      piece.copy(mesh.geometry.boundingBox!).applyMatrix4(matrix.multiplyMatrices(inverse, mesh.matrixWorld))
       bounds.union(piece)
       if (piece.min.y < BODY_HEIGHT) low.union(piece)
     })
-    const size = bounds.getSize(new three.Vector3())
+    const size = bounds.getSize(new three!.Vector3())
     entry.size = { length: size.z, width: size.x, height: size.y }
     if (!low.isEmpty()) entry.footprint = { minX: low.min.x, maxX: low.max.x, minZ: low.min.z, maxZ: low.max.z }
     return entry.size
@@ -286,8 +289,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     if (!host?.bench || !three) return
     clearHelpers()
     const kit = [...placed.values()][0] && ((([...placed.values()][0] as Placed).root.userData.kit as VehicleKit | undefined) ?? undefined)
-    const mark = (entry: Placed, box: any, color: number): void => {
-      const helper = new three.Box3Helper(box, color)
+    const mark = (entry: Placed, box: THREE_NS.Box3, color: number): void => {
+      const helper = new three!.Box3Helper(box, color)
       helper.userData.helper = true
       entry.root.add(helper)
       entry.helpers.push(helper)
@@ -297,7 +300,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         if (!entry.root.parent) continue
         entry.root.updateMatrixWorld(true)
         const matrix = rootMatrix(entry)
-        if (host.bench.layer('damageables')) for (const d of kit.damageables(entry.item.vehicle, matrix) as { material: string; box: any }[]) mark(entry, d.box, MATERIAL_COLOURS[d.material] ?? 0xffffff)
+        if (host.bench.layer('damageables')) for (const d of kit.damageables(entry.item.vehicle, matrix) as { material: string; box: THREE_NS.Box3 }[]) mark(entry, d.box, MATERIAL_COLOURS[d.material] ?? 0xffffff)
         if (host.bench.layer('zones')) {
           for (const zone of (entry.item.vehicle as unknown as { zones: { type: string; box?: { x0: number; y0: number; z0: number; x1: number; y1: number; z1: number } }[] }).zones ?? []) {
             if (!zone.box || zone.type === 'internal') continue
@@ -312,7 +315,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const right = new three.ArrowHelper(new three.Vector3(-1, 0, 0), new three.Vector3(0, 0.05, 0), 3, 0xff3333)
       const up = new three.ArrowHelper(new three.Vector3(0, 1, 0), new three.Vector3(0, 0.05, 0), 3, 0x33cc33)
       for (const arrow of [front, right, up]) {
-        ;(host.scene as any).add(arrow)
+        ;(host.scene as THREE_NS.Object3D).add(arrow)
         axes.push(arrow)
       }
     }
@@ -347,7 +350,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     const built = vehicles.build('compact_hatch', { quality: settings.damage === 'none' ? 'lite' : 'high', seed: settings.seed })
     const wall = new three.Mesh(new three.BoxGeometry(0.6, 2, 6), new three.MeshStandardMaterial({ color: 0x777777 }))
     wall.position.set(LANE.wall + 0.3, 1, LANE.z)
-    const scene = host.scene as any
+    const scene = host.scene as THREE_NS.Object3D
     scene.add(built.group, wall)
     // damage acts through the semi driver's condition
     const mode = settings.driving === 'semi' || settings.damage !== 'none' ? 'semi' : 'arcade'
@@ -509,9 +512,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     let drawCalls = 0
     let triangles = 0
     for (const entry of placed.values()) {
-      entry.root.traverse((mesh: any) => {
+      entry.root.traverse((obj) => {
+        const mesh = obj as THREE_NS.Mesh
         if (!mesh.isMesh || mesh.userData.helper) return
-        for (let p = mesh; p; p = p.parent) if (p.visible === false) return
+        for (let p: THREE_NS.Object3D | null = mesh; p; p = p.parent) if (p.visible === false) return
         drawCalls += 1
         const g = mesh.geometry
         triangles += (g.index ? g.index.count : g.attributes.position.count) / 3
@@ -598,12 +602,12 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     scenarios: (): ModuleScenario<VehiclesContext>[] => createScenarios({ text, locale }),
     attach(lent) {
       host = lent
-      three = lent.THREE
+      three = lent.THREE as Three
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       const stopBlocker = lent.addBlocker?.(blocked)
       const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_CREASE])
-      if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three, new three.DataTexture(new Uint8Array(4), 1, 1)))
+      if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three!, new three!.DataTexture(new Uint8Array(4), 1, 1)))
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       lent.audio?.register?.(VEHICLE_SOUND_BANK)

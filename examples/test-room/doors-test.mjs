@@ -7,43 +7,45 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const { chromium } = createRequire(import.meta.url)('playwright') // NODE_PATH points at it, as in test.mjs
+const { chromium } = /** @type {typeof import('playwright')} */ (createRequire(import.meta.url)('playwright')) // NODE_PATH points at it, as in test.mjs
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
 const base = process.argv[2] && process.argv[2] !== '-' ? process.argv[2] : pathToFileURL(join(here, 'dist/test-room.html')).href
-const modes = process.argv[3] ? [process.argv[3]] : ['first', 'third']
+const modes = /** @type {import('@adatechnology/game-test-room').CameraMode[]} the camera given on the command line, or both */ (process.argv[3] ? [process.argv[3]] : ['first', 'third'])
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?scene=doors&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((/** @type {{ itemId: string; }} */ s) => s.itemId === 'sedan'), null, { timeout: 240000 })
 await page.waitForTimeout(1500)
 
+/** @type {string[]} */
 const failures = []
-const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
+const check = (/** @type {unknown} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
   if (!ok) failures.push(label)
 }
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `doors-${name}.png`), timeout: 180000 })
-const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
+const look = (/** @type {Vec3} */ eye, /** @type {Vec3} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
 /** Looks from where the player stands now (it walked to the handle) at a point. */
-const lookFromHere = (target) => page.evaluate((t) => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], t) }, target)
+const lookFromHere = (/** @type {Vec3} */ target) => page.evaluate((t) => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], t) }, target)
 /** The world box of a spawned object: [min, max]. */
-const boxOf = (objectId) => page.evaluate((/** @type {string} */ o) => { const r = window.__testRoom; const s = r.spawned().find((x) => x.objectId === o); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.toArray(), b.max.toArray()] }, objectId)
+const boxOf = (/** @type {string} */ objectId) => page.evaluate((/** @type {string} */ o) => { const r = window.__testRoom; const s = /** @type {SpawnedObject} */ (r.spawned().find((x) => x.objectId === o)); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.toArray(), b.max.toArray()] }, objectId)
 /** A shot from a step back, the whole leaf in the frame (the shots from the handle are too close to judge its line), then the player goes back where it stood. */
-const overview = async (name, eye, target) => {
+const overview = async (/** @type {string} */ name, /** @type {Vec3} */ eye, /** @type {Vec3} */ target) => {
   const at = await page.evaluate(() => window.__testRoom.playerPosition)
   await look(eye, target)
   await page.waitForTimeout(300)
   await shot(name)
   await look([at[0], 1.7, at[2]], target)
 }
-const camera = (/** @type {string} */ mode) => page.evaluate((/** @type {string} */ m) => window.__testRoom.setCameraMode(m), mode)
+const camera = (/** @type {import('@adatechnology/game-test-room').CameraMode} */ mode) => page.evaluate((/** @type {import('@adatechnology/game-test-room').CameraMode} */ m) => window.__testRoom.setCameraMode(m), mode)
 const ids = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z] })))
 const idOf = (/** @type {string} */ item, n = 0) => ids.filter((/** @type {{ item: string; }} */ s) => s.item === item)[n]
-const opening = (objectId, part) => page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [objectId, part])
+const opening = (/** @type {string} */ objectId, /** @type {string} */ part) => page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [objectId, part])
 const door = () => page.evaluate(() => window.__testRoom.door)
 const lastAction = (/** @type {string} */ type) => page.evaluate((/** @type {string} */ t) => window.__testRoom.log.entries().filter((e) => e.type === t).length, type)
 /** A tap of E (shorter than the push hold), then waits for the hand to let go. */
@@ -117,7 +119,7 @@ for (const mode of modes) {
   const blockedBefore = await lastAction('door_blocked')
   await tapE()
   await waitIdle()
-  const bst = await page.evaluate((/** @type {string} */ o) => window.__testRoom.leaves(o).map((p) => [p, window.__testRoom.leafOpening(o, p)]), bl.id)
+  const bst = await page.evaluate((/** @type {string} */ o) => window.__testRoom.leaves(o).map((p) => /** @type {[string, number]} */ ([p, window.__testRoom.leafOpening(o, p)])), bl.id)
   const moved = bst.filter(([, v]) => v > 0)
   check((await lastAction('door_blocked')) > blockedBefore && moved.length === 1 && moved[0][1] < 0.9, `the door hits the barbecue and stops at ${moved.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-blocked`)
@@ -130,6 +132,7 @@ for (const mode of modes) {
   // the microwave on the table
   const mw = idOf('microwave')
   const [mwMin, mwMax] = await boxOf(mw.id)
+  /** @type {Vec3} */
   const mwFront = [(mwMin[0] + mwMax[0]) / 2 - 0.08, (mwMin[1] + mwMax[1]) / 2, mwMax[2]]
   await look([mwFront[0], 1.6, mwFront[2] + 0.8], mwFront)
   await tapE()
@@ -151,7 +154,7 @@ for (const mode of modes) {
   await page.waitForTimeout(500)
   await shot(`${mode}-car-opening`)
   await waitIdle()
-  const carOpen = await page.evaluate(([o, list]) => list.map((/** @type {string | undefined} */ p) => [p, window.__testRoom.leafOpening(o, p)]).filter(([, v]) => v > 0), [car.id, carLeaves])
+  const carOpen = await page.evaluate(([o, list]) => list.map((p) => /** @type {[string, number]} */ ([p, window.__testRoom.leafOpening(o, p)])).filter(([, v]) => v > 0), /** @type {[string, string[]]} */ ([car.id, carLeaves]))
   check(cst?.objectId === car.id && carOpen.length === 1, `E opens one door of the car (aimed ${carAim}): ${carOpen.map(([p, v]) => `${p} ${v.toFixed(2)}`).join(', ')}`)
   await shot(`${mode}-car-open`)
   await overview(`${mode}-car-open-overview`, [car.at[0] - 2.5, 1.8, car.at[2] - 4.2], [car.at[0], 0.8, car.at[2] - 0.6])

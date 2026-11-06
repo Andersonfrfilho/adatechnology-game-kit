@@ -5,16 +5,16 @@ import { makeFleetKit } from './helpers/kit'
 
 /** One round at a part of the sedan: through, lodged or stopped, and the hole it leaves. */
 function fire(part: string, from: number[], round: { energy: number; caliber: number; steelMm: number; piercing: number }, armour: 'IIIA' | 'III' | null = null) {
-  const kit: any = makeFleetKit('en')
-  const item: any = buildVehicleItem(kit, 'midsize_sedan')
-  const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root, armour })
+  const kit = makeFleetKit('en')
+  const item = buildVehicleItem(kit, 'midsize_sedan')
+  const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root, armour })
   const t = d.partWorldCenter(part)
   const dir = [t[0] - from[0], t[1] - from[1], t[2] - from[2]]
   const n = Math.hypot(...dir)
-  const u = dir.map((v) => v / n)
-  const size = d.describe().parts.find((p: any) => p.id === part).shape.size
+  const u = dir.map((v) => v / n) as [number, number, number]
+  const size = (d.describe().parts.find((p) => p.id === part)!.shape as { size: readonly number[] }).size
   const events = d.hit({ type: 'ballistic', point: [t[0] - u[0] * size[0] * 0.5, t[1] - u[1] * size[1] * 0.5, t[2] - u[2] * size[2] * 0.5], direction: u, energy: round.energy, caliber: round.caliber, penetration: { steel: round.steelMm }, piercing: round.piercing })
-  const e = events.find((e: any) => e.type === 'hole' && e.part === part)
+  const e = events.find((e) => e.type === 'hole' && e.part === part) as { hole: { through: boolean; diameter: number }; energyLeft?: number } | undefined
   return e && ({ ...e.hole, energyLeft: e.energyLeft }) as { through: boolean; diameter: number; energyLeft?: number } | undefined
 }
 
@@ -54,18 +54,18 @@ describe('kinds of round against a car', () => {
 
 describe('a round at the door mirror', () => {
   const shootMirror = (round: { energy: number; caliber: number; steelMm: number; piercing: number }) => {
-    const kit: any = makeFleetKit('en')
-    const item: any = buildVehicleItem(kit, 'midsize_sedan')
-    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    const kit = makeFleetKit('en')
+    const item = buildVehicleItem(kit, 'midsize_sedan')
+    const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
     const glassLeft = (): number => {
       let n = 0
-      item.root.traverse((m: any) => { if (m.userData.mirrorGlass && m.visible) n++ })
+      item.root.traverse((m) => { if (m.userData.mirrorGlass && m.visible) n++ })
       return n
     }
     const before = glassLeft()
     const t = d.partWorldCenter('mirror_left')
     const events = d.hit({ type: 'ballistic', point: [t[0], t[1], t[2] - 0.05], direction: [0, 0, 1], energy: round.energy, caliber: round.caliber, penetration: { steel: round.steelMm }, piercing: round.piercing })
-    return { shattered: before - glassLeft(), torn: events.some((e: any) => e.type === 'detach') }
+    return { shattered: before - glassLeft(), torn: events.some((e) => e.type === 'detach') }
   }
   it('a pistol round shatters the glass and leaves the housing on', () => {
     expect(shootMirror(FMJ_9)).toEqual({ shattered: 1, torn: false })
@@ -77,17 +77,17 @@ describe('a round at the door mirror', () => {
 
 describe('a shot aimed at a mirror', () => {
   it('lands on the mirror, not on the body behind it', () => {
-    const kit: any = makeFleetKit('en')
-    const item: any = buildVehicleItem(kit, 'midsize_sedan')
-    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    const kit = makeFleetKit('en')
+    const item = buildVehicleItem(kit, 'midsize_sedan')
+    const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
     d.partWorldCenter('roof')
     item.root.updateMatrixWorld(true)
     const glasses: THREE.Vector3[] = []
-    item.root.traverse((m: any) => { if (m.userData.mirrorGlass) glasses.push(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3())) })
+    item.root.traverse((m) => { if (m.userData.mirrorGlass) glasses.push(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3())) })
     expect(glasses.length).toBeGreaterThan(0)
     const parts = glasses.map((at) => {
-      const hits = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((dir) => d.surfaceRay({ origin: [at.x - dir[0]! * 3, at.y, at.z - dir[2]! * 3], direction: dir, maxDistance: 3.2 }))
-      return hits.find((h: any) => h && Math.abs(h.distance - 3) < 0.08)?.part
+      const hits = ([[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as [number, number, number][]).map((dir) => d.surfaceRay!({ origin: [at.x - dir[0]! * 3, at.y, at.z - dir[2]! * 3], direction: dir, maxDistance: 3.2 }))
+      return hits.find((h) => h && Math.abs(h.distance - 3) < 0.08)?.part
     })
     for (const part of parts) expect(part).toMatch(/^mirror_/)
   })
