@@ -11,7 +11,7 @@ import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { IN_HAND_NODE_NAME } from './laser-raycast'
-import { BODY_HOLD, createEyeFrame, placeOnBody } from './fx/body-hold'
+import { BODY_HOLD, createEyeFrame, placeOnBody, placeStowed } from './fx/body-hold'
 import { placeInView, toWorldLens, VIEW_HOLD } from './fx/view-hold'
 import { holdOfProp, oneHandHold, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
@@ -91,6 +91,8 @@ export interface BoxFx {
   readonly inHand: string | null
   /** Where the hands take the prop now (world space): the right around its handle, the left under the barrel of a long gun; null with nothing in the hands. */
   handTargets(): HandTargets | null
+  /** Where the other hand goes to change this tool's magazine with a tool in each hand; the props have no magazine well drawn: null. */
+  supportTarget(): HandPose | null
   /** The front end of the tool in the hands (world space) where its shot, flame or foam leaves, and the way it points; null for a tool with none (a blade, a bare hand). This presentation draws no muzzle flash. */
   muzzle(): MuzzlePose | null
   /** Casings and magazines currently on the floor or in the air. */
@@ -193,6 +195,25 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const handPoint = (x: number, y: number, z: number, out: THREE_NS.Vector3): THREE_NS.Vector3 => {
     if (!model) return out.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     return out.set(x, y, z).applyQuaternion(camera.quaternion).add(model.getWorldPosition(v2))
+  }
+
+  // put away against the body (`HostTool.stowed`) to free the hand for the other tool's magazine: 0 in the hand to 1 tucked in the belt
+  let stowK = 0
+  const stowFrom = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() }
+  const stow = (dt: number): void => {
+    const want = options.tool?.().stowed === true ? 1 : 0
+    const seconds = Math.max(0.05, arsenal.rules.dualWield.stowSeconds)
+    stowK = want > stowK ? Math.min(want, stowK + dt / seconds) : Math.max(want, stowK - dt / seconds)
+    if (stowK <= 0 || !model) return
+    stowFrom.position.copy(hand.position)
+    stowFrom.quaternion.copy(hand.quaternion)
+    const holderAt = model.position.clone()
+    placeStowed({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), anchor: heldAnchor(heldHold()), ...(side === 'L' ? { mirror: true } : {}) })
+    const k = stowK * stowK * (3 - 2 * stowK)
+    hand.position.lerpVectors(stowFrom.position, hand.position, k)
+    hand.quaternion.slerpQuaternions(stowFrom.quaternion, hand.quaternion.clone(), k)
+    model.position.lerpVectors(holderAt, model.position, k)
+    hand.updateMatrixWorld(true)
   }
 
   const throwBody = (kind: Body['kind'], mesh: THREE_NS.Mesh, from: THREE_NS.Vector3, velocity: THREE_NS.Vector3, radius: number): void => {
@@ -298,6 +319,9 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       inHand = null
       hold = null
     },
+    supportTarget() {
+      return null
+    },
     muzzle() {
       if (!model || !def || !SPOUTS.has(def.action.kind)) return null
       hand.updateMatrixWorld(true)
@@ -346,6 +370,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
         q.setFromEuler(new THREE.Euler(0.14 * kick - 0.25 * dip, 0, 0.6 * dip))
         hand.quaternion.multiply(q)
       }
+      stow(dt)
       for (const body of [...bodies]) {
         stepBody(body, dt)
         if (body.age > LIFETIME_S) removeBody(body)

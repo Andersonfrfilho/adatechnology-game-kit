@@ -225,6 +225,10 @@ export type HostEvent =
       /** Inside this radius (metres) the blast is lethal to a body it reaches. */
       lethalRadius?: number
     }
+  /**
+   * With a tool in each hand, the tool of `hand` is put away against the body (`on`) to free that hand for the other tool, or taken back in hand; `duration` is the seconds the move takes.
+   */
+  | { type: 'stow'; weapon: string; on: boolean; duration?: number; hand?: ToolHand }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
   /**
@@ -255,6 +259,11 @@ export interface HostTool {
   suppressed?: boolean
   /** True while the trigger and the reload go to the launcher under the barrel. */
   underbarrelActive?: boolean
+  /**
+   * True while the tool is put away against the body (tucked in the belt, under the arm) to free its hand for the tool in the other hand: a magazine changed with the free hand, with a
+   * tool in each hand. It does not fire then; the host says when it goes and comes back with a `stow` event.
+   */
+  stowed?: boolean
   /** Kg: the tool with what is on it. */
   mass?: number
   /** Seconds to bring the tool to the sights, with what is on it. */

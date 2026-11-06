@@ -26,6 +26,8 @@ export interface HandTargets {
   scale?: number
   /** Fingers of the right hand that curl by themselves, 0 extended to 1 fully curled (the index finger of a trigger hand); the others follow `grip`. */
   fingers?: { index?: number }
+  /** The same for the left hand (its index on the trigger of a tool of its own, with a tool in each hand); absent, the left hand's fingers all follow `gripL`. */
+  fingersL?: { index?: number }
   /**
    * Where the elbows go: `view` puts them on screen beside the hand, out to the side, as a tool held out in front (default); `body` lets them hang down and back by the body, as an item
    * carried close (a can, a bottle), where an elbow out to the side would lift it above the shoulder.

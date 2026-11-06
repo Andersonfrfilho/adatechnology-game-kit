@@ -5,6 +5,7 @@ import { hasWeaponModel } from './models'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import { createViewmodel } from './fx/viewmodel'
+import { blendPose, HAND_HOLD } from './fx/hand-hold'
 
 export type { WeaponFxOptions } from './box-fx'
 export type { FxLayers } from './fx/layers'
@@ -112,6 +113,9 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     else delete own.bodyHold
     return own
   }
+  // how far each free hand is at the other weapon's magazine well (0 on its own weapon, 1 on the well)
+  let supportL = 0
+  let supportR = 0
   const leftHeld = (): boolean => (left?.model.inHand ?? left?.box.inHand ?? null) !== null
   const right = createHandFx(options, layers, 'R', leftHeld)
   const { box, model } = right
@@ -138,6 +142,13 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
       model.update(dt)
       left?.box.update(dt)
       left?.model.update(dt)
+      // the free hand goes to the magazine well of the weapon being reloaded while the other weapon is tucked away, and comes back to its own as that one is drawn
+      const now = options.tool?.()
+      const toRight = now?.offHand?.stowed === true && now.reloading
+      const toLeft = now?.stowed === true && now.offHand?.reloading === true
+      const follow = Math.min(1, dt * HAND_HOLD.magRate)
+      supportL += ((toRight ? 1 : 0) - supportL) * follow
+      supportR += ((toLeft ? 1 : 0) - supportR) * follow
     },
     setCondition: (condition) => {
       model.setCondition(condition)
@@ -149,7 +160,15 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
       const other = left.model.handTargets() ?? left.box.handTargets()
       if (!own) return other
       if (!other) return own
-      return { ...own, L: other.L ?? null, ...(other.gripL === undefined ? {} : { gripL: other.gripL }) }
+      const merged: HandTargets = { ...own, L: other.L ?? null, ...(other.gripL === undefined ? {} : { gripL: other.gripL }), ...(other.fingersL ? { fingersL: other.fingersL } : {}) }
+      // a magazine change with a tool in each hand: the free hand leaves its tucked weapon for the other one's magazine well
+      const wellR = supportL > 1e-3 ? (model.inHand !== null ? model.supportTarget() : box.supportTarget()) : null
+      if (wellR && merged.L) merged.L = blendPose(options.THREE, merged.L, wellR, supportL)
+      const wellL = supportR > 1e-3 ? (left.model.inHand !== null ? left.model.supportTarget() : left.box.supportTarget()) : null
+      if (wellL && merged.R) merged.R = blendPose(options.THREE, merged.R, wellL, supportR)
+      if (supportL > 0.5) merged.gripL = HAND_HOLD.forend
+      if (supportR > 0.5) delete merged.fingers
+      return merged
     },
     muzzle: (hand) => {
       const pair = hand === 'L' ? left : right
