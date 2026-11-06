@@ -71,8 +71,8 @@
     "id": "dust",
     "additive": false,
     "life": [
-      1,
-      2
+      2,
+      5
     ],
     "size": [
       0.08,
@@ -139,8 +139,8 @@
     "id": "chips",
     "additive": false,
     "life": [
-      0.8,
-      1.5
+      2,
+      4
     ],
     "size": [
       0.025,

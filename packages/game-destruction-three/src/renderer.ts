@@ -36,6 +36,10 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/** Seconds the grit of a broken hard face keeps falling (least, most), how often a pinch of it at first, and how many places at once. */
+const TRICKLE_SECONDS: readonly [number, number] = [2, 5]
+const TRICKLE_EVERY = 0.25
+const TRICKLE_MAX = 24
 /**
  * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
  * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
@@ -217,6 +221,8 @@ class Renderer implements DestructionRenderer {
   private readonly queue: DestructionEvent[] = []
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
+  /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
+  private readonly trickles: Array<{ point: Vec3; normal: Vec3; color: number | undefined; left: number; total: number; next: number }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -592,6 +598,7 @@ class Renderer implements DestructionRenderer {
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.updateActive(dt)
     this.updateLeaks(dt)
+    this.updateTrickles(dt)
     this.pieceSys.update(dt)
     this.fragments.update(dt)
     this.ground.update(dt)
@@ -1160,9 +1167,37 @@ class Renderer implements DestructionRenderer {
     // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
     if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
     else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
+    if (core !== undefined) this.trickleFrom(ev.point, [normal.x, normal.y, normal.z], core)
     // a drawing that shows the coat coming off itself (the house renderer cuts its plaster and draws the bricks under it) takes no flat patch
     if ((mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
     this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
+  }
+
+  /** Grit and dust go on falling from where a blow broke a hard face (masonry, concrete) for `TRICKLE_SECONDS`, a pinch at a time and less and less. */
+  private trickleFrom(point: Vec3, normal: Vec3, color: number | undefined): void {
+    if (this.trickles.length >= TRICKLE_MAX) this.trickles.shift()
+    const total = TRICKLE_SECONDS[0] + (TRICKLE_SECONDS[1] - TRICKLE_SECONDS[0]) * this.rng()
+    this.trickles.push({ point: [point[0], point[1], point[2]], normal, color, left: total, total, next: TRICKLE_EVERY })
+  }
+
+  private updateTrickles(dt: number): void {
+    for (let i = this.trickles.length - 1; i >= 0; i--) {
+      const t = this.trickles[i]!
+      t.left -= dt
+      t.next -= dt
+      if (t.left <= 0) {
+        this.trickles.splice(i, 1)
+        continue
+      }
+      if (t.next > 0) continue
+      // falling off the face, slower as the loose grit runs out
+      const share = t.left / t.total
+      t.next = TRICKLE_EVERY / Math.max(share, 0.25)
+      const out: Vec3 = [t.normal[0] * 0.2, -1, t.normal[2] * 0.2]
+      const options = t.color !== undefined ? { color: t.color } : undefined
+      this.vfx.burst('chips', t.point, out, this.low ? 1 : 2, 0.3, options)
+      if (this.rng() < 0.5) this.vfx.burst('dust', t.point, out, 1, 0.2, options)
+    }
   }
 
   /**
@@ -1202,6 +1237,8 @@ class Renderer implements DestructionRenderer {
       const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
+    // a unit knocked out of masonry or concrete leaves a broken edge that goes on crumbling
+    if (def?.visual?.innerColor !== undefined || pv?.material === 'concrete' || pv?.material === 'brick') this.trickleFrom(ev.center, [0, 0, 0], color)
     // what a blow tore off a face leaves the hole it made where it is
     if (ev.torn) {
       this.impactSound(pv?.material ?? '', ev.center, 0.5, ev.blow)
@@ -1892,6 +1929,7 @@ class Renderer implements DestructionRenderer {
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     this.leaks.length = 0
+    this.trickles.length = 0
     for (const id of [...this.bounds.keys()]) if (this.bounds.has(id)) this.restore(id)
     // anything left of a split object whose home is gone
     for (const b of [...this.bounds.values()]) {
