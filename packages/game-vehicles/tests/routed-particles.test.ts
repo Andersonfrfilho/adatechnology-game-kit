@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { ParticleEffectRequest } from '../src'
 import { makeKit } from './helpers/kit'
 
-const world = () => ({ effects: new THREE.Group(), particles: [] as any[], rand: () => 0.5 })
+const world = () => ({ effects: new THREE.Group(), particles: [] as unknown[], rand: () => 0.5 })
 const sink = () => {
   const requests: ParticleEffectRequest[] = []
   return { requests, effects: () => ({ play: (request: ParticleEffectRequest) => void requests.push(request) }) }
@@ -12,8 +12,8 @@ const sink = () => {
 describe('puffs through the host effects world', () => {
   it('a puff goes to the effects world with the colour, opacity, life and size of the local one, and nothing is drawn locally', () => {
     const { requests, effects } = sink()
-    const routed: any = makeKit({ effects }, false)
-    const local: any = makeKit({}, false)
+    const routed = makeKit({ effects }, false)
+    const local = makeKit({}, false)
     const c = world()
     const options = { variant: 'black', s: 0.75, life: 3.2 }
     const puff = local.spawn(world(), 'smoke', new THREE.Vector3(1, 2, 3), new THREE.Vector3(0, 1, 0), options)
@@ -33,7 +33,7 @@ describe('puffs through the host effects world', () => {
 
   it('takes the colour and opacity the exhaust asks for and the fire goes to the additive kind', () => {
     const { requests, effects } = sink()
-    const kit: any = makeKit({ effects }, false)
+    const kit = makeKit({ effects }, false)
     const c = world()
     kit.spawn(c, 'smoke', new THREE.Vector3(), new THREE.Vector3(0, 1, 0), { col: '#3f4245', op: 0.42, s: 0.4, life: 1.5 })
     kit.spawn(c, 'fire', new THREE.Vector3(), new THREE.Vector3(0, 1, 0), { s: 0.6, life: 0.7 })
@@ -43,7 +43,7 @@ describe('puffs through the host effects world', () => {
 
   it('carries the position and velocity of the vehicle group to the world', () => {
     const { requests, effects } = sink()
-    const kit: any = makeKit({ effects }, false)
+    const kit = makeKit({ effects }, false)
     const c = world()
     c.effects.position.set(10, 0, 0)
     c.effects.rotation.y = Math.PI / 2
@@ -54,7 +54,7 @@ describe('puffs through the host effects world', () => {
   })
 
   it('without a host effects world the puff is drawn locally with its cap, as before', () => {
-    const kit: any = makeKit({ effects: () => undefined }, false)
+    const kit = makeKit({ effects: () => undefined }, false)
     const c = world()
     for (let k = 0; k < 450; k++) kit.spawn(c, 'smoke', new THREE.Vector3(), new THREE.Vector3(0, 1, 0), {})
     expect(c.particles).toHaveLength(400)
@@ -62,7 +62,7 @@ describe('puffs through the host effects world', () => {
 
   it('solid particles stay local even with an effects world', () => {
     const { requests, effects } = sink()
-    const kit: any = makeKit({ effects }, false)
+    const kit = makeKit({ effects }, false)
     const c = world()
     kit.spawn(c, 'spark', new THREE.Vector3(), new THREE.Vector3(1, 1, 0), { life: 0.1 })
     expect(requests).toHaveLength(0)

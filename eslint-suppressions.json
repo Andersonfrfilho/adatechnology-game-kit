@@ -234,67 +234,7 @@
       "count": 1
     }
   },
-  "packages/game-vehicles/tests/crease.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-vehicles/tests/cut.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
   "packages/game-vehicles/tests/damage.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vehicles/tests/demo.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vehicles/tests/destructible.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vehicles/tests/helpers/cases.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-vehicles/tests/helpers/digest.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-vehicles/tests/helpers/fake-dom.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-vehicles/tests/legacy-seeds.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-vehicles/tests/lod.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-vehicles/tests/particle-materials.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-vehicles/tests/routed-particles.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-vehicles/tests/zones.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
