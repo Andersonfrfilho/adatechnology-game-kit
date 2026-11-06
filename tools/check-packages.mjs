@@ -90,6 +90,7 @@ function checkDeclaredEqualsImported(directory, manifest, report) {
 
 // "Everything is typed" (CLAUDE.md section 10): no package turns the strict checks off and no source file opts out with @ts-nocheck.
 // The ones below predate the rule; each is removed from its list when the package is fixed, and nothing new may be added.
+/** @type {Set<string>} */
 const STRICT_OFF_KNOWN = new Set([])
 /** @type {Set<string>} */
 const TS_NOCHECK_KNOWN = new Set([])
