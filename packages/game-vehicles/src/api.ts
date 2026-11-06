@@ -3,6 +3,7 @@
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
 import type { LodSettings } from './lod'
+import type { BuildContext } from './types'
 import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
@@ -31,8 +32,11 @@ export interface Band {
   color: string
 }
 
-/** Where a vehicle is built: the context returned by {@link VehicleKit.build}. */
-export interface VehicleContext {
+/** Where a vehicle is built: the context returned by {@link VehicleKit.build}, with the builders of {@link BuildContext}. */
+export type VehicleContext = BuildContext & VehicleContextFields
+
+/** The fields of a built vehicle's context. */
+export interface VehicleContextFields {
   /** Add this to the scene. */
   root: ThreeObject
   /** The vehicle itself (a child of `root`); zones, parts and meshes live here. */

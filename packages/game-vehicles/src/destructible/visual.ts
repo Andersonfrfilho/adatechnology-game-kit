@@ -5,6 +5,9 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
+import type { Vector3 } from 'three'
+
+import type { BuildContext } from '../types'
 import type { VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
 import { raycastIndexed, warmTriIndex } from '../tri-index'
@@ -222,7 +225,7 @@ export class VehicleVisuals implements CreaseWork {
     return p.zoneId ? (this.kit.zonesOf(this.c) as any[]).find((z) => z.id === p.zoneId) : undefined
   }
   private nameHood() {
-    const c: any = this.c
+    const c: BuildContext = this.c
     if (!c.hood) return null
     const z = (this.kit.zonesOf(this.c) as any[]).find((q) => q.type === 'hood')
     const id = z ? z.id : this.model.parts.find((p) => p.role === 'hood')?.id
@@ -1373,7 +1376,7 @@ export class VehicleVisuals implements CreaseWork {
     if (v.lengthSq() < 1e-4) v.set(0, 0, 1)
     return v.normalize()
   }
-  private fling(obj: Obj, v: any, w: any, trail: number): void {
+  private fling(obj: Obj, v: Vector3, w: any, trail: number): void {
     const piece = this.I.fling(this.c, obj, v, w)
     if (piece) piece.trail = trail
   }
@@ -1381,7 +1384,7 @@ export class VehicleVisuals implements CreaseWork {
   detach(p: PartDef, o: DetachOptions): boolean {
     if (this.gone.has(p.id)) return false
     const V3 = this.THREE.Vector3
-    const c: any = this.c
+    const c: BuildContext = this.c
     const out = this.outward(p, o.away)
     const gentle = o.by === 'tool'
     const speed = gentle ? 0.7 : 3.2
@@ -1523,7 +1526,7 @@ export class VehicleVisuals implements CreaseWork {
   }
   /** The corner of a vehicle that lost a wheel settles on its brake: tilt and lower the body. */
   private sag(w: Obj): void {
-    const c: any = this.c
+    const c: BuildContext = this.c
     const m = c.meta
     if (m.kind === 'plane' || m.kind === 'heli' || m.kind === 'boat') return
     const r = w.userData.r || 0.3

@@ -1,4 +1,8 @@
 /** Boxes of the triangles of a geometry, grouped in blocks, so a region query visits the few triangles near it instead of every one. */
+import type { Vector3 } from 'three'
+
+import type { Three } from './types'
+
 
 export const TRI_BLOCK = 32
 
@@ -182,7 +186,7 @@ export type IndexedHit = {
 /** Slack on a block's box, metres: a hit on its very edge is not lost to rounding. */
 const BLOCK_SLACK = 1e-6
 
-type RayScratch = { inverse: any; local: any; box: any; a: any; b: any; c: any; point: any; world: any; sphere: any }
+type RayScratch = { inverse: any; local: any; box: any; a: any; b: any; c: Vector3; point: any; world: any; sphere: any }
 const scratch = new WeakMap<object, RayScratch>()
 function scratchOf(THREE: any): RayScratch {
   let s = scratch.get(THREE)
@@ -214,7 +218,7 @@ function indexable(THREE: any, mesh: any): boolean {
   return supports(geo)
 }
 
-function raycastMesh(THREE: any, raycaster: any, mesh: any, out: IndexedHit[]): void {
+function raycastMesh(THREE: Three, raycaster: any, mesh: any, out: IndexedHit[]): void {
   const geo = mesh.geometry
   const s = scratchOf(THREE)
   if (geo.boundingSphere === null) geo.computeBoundingSphere()

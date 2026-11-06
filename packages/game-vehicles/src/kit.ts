@@ -3,7 +3,7 @@ import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStrings } from './locale'
 import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import type { VehicleKit, VehicleKitOptions } from './api'
 import { installMaterials } from './materials'
 import { installGeometry } from './geometry'
@@ -217,7 +217,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
 
   /* ================= assembly ================= */
-  function defaultDamage(c: any) {
+  function defaultDamage(c: BuildContext) {
     const kd = c.meta.kind
     if (kd === 'plane') {
       kit.zoneImpact(c, 'front', 1.2)
@@ -322,7 +322,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     return c
   }
   /** Releases the geometries of a built vehicle (shared particle geometries and materials are kept). */
-  kit.dispose = function (c: any) {
+  kit.dispose = function (c: BuildContext) {
     const shared = Object.values(I.PARTICLE_GEOMETRIES)
     c.root.traverse(function (o: any) {
       if (o.isSprite) {

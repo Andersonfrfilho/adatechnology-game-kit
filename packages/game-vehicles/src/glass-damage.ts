@@ -1,9 +1,11 @@
 /** Glass cracks, shattering and tempered or laminated breakage textures. */
-import type { Kit } from './types'
+import type { Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector3 } from 'three'
+
+import type { BuildContext, Kit, Three } from './types'
 import { clamp } from './util'
 
 /** The material of a pane with cracks drawn on it. A host warms its program at load with any texture: the first crack is in the middle of a blast. */
-export function crackedGlassMaterial(THREE: any, texture: unknown): any {
+export function crackedGlassMaterial(THREE: Three, texture: Texture): MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: 0xffffff,
     map: texture,
@@ -18,18 +20,17 @@ export function crackedGlassMaterial(THREE: any, texture: unknown): any {
 }
 
 /** What `crackLight` reads of a lamp the kit drew (`c.lights`) and of its vehicle. */
-type LampMesh = { material: unknown; position: { clone(): unknown } }
+type LampMesh = Mesh
 type CrackedLamp = {
   lens: LampMesh[]
   inner: LampMesh[]
   halo?: Array<{ visible: boolean }>
-  group: { position: { clone(): unknown } } | null
+  group: Object3D | null
   tint: string
   broken: unknown
   cracked?: boolean
   dark?: boolean
 }
-type CrackedLampHost = { toEffects(p: unknown): unknown; dirToEffects(d: unknown): unknown }
 
 export function installGlassDamage(kit: Kit) {
   const THREE = kit.THREE
@@ -41,7 +42,7 @@ export function installGlassDamage(kit: Kit) {
 
   /* ================= glass: cracks and shattering ================= */
   /* The point of the pane nearest the hit, on the triangle under it: a pane has few vertices, the web starts where the round landed. */
-  function glassUV(c: any, msh: any, pLocal: any) {
+  function glassUV(c: BuildContext, msh: any, pLocal: any) {
     const pos = msh.geometry.attributes.position
     const uv = msh.geometry.attributes.uv
     if (!uv) return [0.5, 0.5]
@@ -132,7 +133,7 @@ export function installGlassDamage(kit: Kit) {
   }
   // a 2D context that draws nothing: every call and gradient is a no-op
   const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
-  function crackGlass(c: any, msh: any, p: any, force: number, sc?: any) {
+  function crackGlass(c: BuildContext, msh: any, p: any, force: number, sc?: any) {
     const G = msh.userData.glass
     // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
     // seeded result after it) stays the same as when the hidden canvas was still drawn on
@@ -210,7 +211,7 @@ export function installGlassDamage(kit: Kit) {
     if (!r.geo.attributes.position.count) return null
     return crease(r.geo, 60)
   }
-  function shatterGlass(c: any, msh: any, force: number, dir: any) {
+  function shatterGlass(c: BuildContext, msh: any, force: number, dir: any) {
     const G = msh.userData.glass
     if (G.broken) return
     G.broken = true
@@ -336,7 +337,7 @@ export function installGlassDamage(kit: Kit) {
       c.vehicle.add(sm)
     }
   }
-  function hitGlass(c: any, msh: any, p: any, dir: any, force: number) {
+  function hitGlass(c: BuildContext, msh: any, p: Vector3, dir: any, force: number) {
     const G = msh && msh.userData.glass
     if (!G || G.broken) return
     if (G.type === 'laminated') {
@@ -345,7 +346,7 @@ export function installGlassDamage(kit: Kit) {
     } else shatterGlass(c, msh, force, dir)
   }
   kit.hitGlass = hitGlass
-  function breakLight(c: any, L: any, dir: any) {
+  function breakLight(c: BuildContext, L: any, dir: any) {
     if (!L || L.broken) return
     L.broken = true
     L.lens.forEach(function (m: any) {
@@ -379,9 +380,9 @@ export function installGlassDamage(kit: Kit) {
   }
   kit.breakLight = breakLight
   /* A cracked polycarbonate or acrylic lens turns hazy white along its cracks (crazing): the crack texture on a lens dense enough to show it. */
-  const crazedCache = new Map<unknown, unknown>()
+  const crazedCache = new Map<Material, Material>()
   const CRAZED_OPACITY = 0.6
-  function crazed(material: unknown): unknown {
+  function crazed(material: Material): Material {
     const known = crazedCache.get(material)
     if (known) return known
     const m = I.crackLens(material).clone()
@@ -393,7 +394,7 @@ export function installGlassDamage(kit: Kit) {
   }
   /* A lamp whose lens is holed or cracked but still in place (polycarbonate, acrylic): the lens shows the cracks and sheds a few chips; a round
      through it wrecks the bulb or LED behind it, so the lamp goes dark. */
-  function crackLight(c: CrackedLampHost, L: CrackedLamp, dir: { clone(): { negate(): unknown } }, pierced: boolean): void {
+  function crackLight(c: BuildContext, L: CrackedLamp, dir: Vector3, pierced: boolean): void {
     if (!L || L.broken) return
     if (!L.cracked) {
       L.cracked = true

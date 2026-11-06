@@ -1,7 +1,7 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
 import type { Matrix4, Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { smooth } from './util'
 import { liveTriIndex, touchTriIndex } from './tri-index'
 
@@ -93,7 +93,7 @@ export function installZoneDent(kit: Kit) {
     return g
   }
   /* meshes this zone may dent: shell (c.deform), paint, its own parts and, with anyMesh, any mesh */
-  function dentTargets(c: any, z: any, inv: Matrix4) {
+  function dentTargets(c: BuildContext, z: any, inv: Matrix4) {
     const dset = new Set(c.deform)
     const out: any = []
     c.vehicle.traverse(function (o: any) {
@@ -124,7 +124,7 @@ export function installZoneDent(kit: Kit) {
     return r
   }
   /* dents: [{ u, v (centre, absolute tangent coordinates), ru, rv (radii in m), depth }], crease: { v, w, depth } */
-  function zoneDent(c: any, z: any, dents: any, dirty: any, opt: any) {
+  function zoneDent(c: BuildContext, z: any, dents: any, dirty: any, opt: any) {
     opt = opt || {}
     const B = z.box
     const d = z.dir
@@ -280,7 +280,7 @@ export function installZoneDent(kit: Kit) {
     return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
   }
   /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
-  function cutPanel(c: any, z: any, rect: number[], keep: any, dirty: any, o?: any) {
+  function cutPanel(c: BuildContext, z: any, rect: number[], keep: any, dirty: any, o?: any) {
     o = o || {}
     const B = z.box
     const d = z.dir
@@ -364,7 +364,7 @@ export function installZoneDent(kit: Kit) {
     return pieces
   }
   /* groups meshes into a pivot (in c.vehicle coordinates) keeping the world position */
-  function pivotOf(c: any, objs: any, at: Vector3) {
+  function pivotOf(c: BuildContext, objs: any, at: Vector3) {
     const piv = new THREE.Group()
     piv.position.copy(at)
     piv.userData.rigid = true

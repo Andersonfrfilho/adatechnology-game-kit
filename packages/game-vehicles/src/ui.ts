@@ -1,5 +1,5 @@
 /** Damage-map widgets (SVG top-down map, band buttons, legend, health bar, scenario buttons). Optional: nothing else depends on it. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 const SVGNS = 'http://www.w3.org/2000/svg'
 /** Label colour on each band tile (dark on light bands, light on dark ones). */
@@ -44,7 +44,7 @@ export function installUi(kit: Kit): void {
    * Top-down damage map (SVG). `host`: element; `c`: context from `kit.build`; `o`: `{ selected (zone id), onSelect(id) }`.
    * External zones are drawn on the vehicle outline, internal zones in a strip of blocks below.
    */
-  function damageMap(host: any, c: any, o?: any): any {
+  function damageMap(host: any, c: BuildContext, o?: any): any {
     o = o || {}
     const sel = o.selected
     host.innerHTML = ''
@@ -208,7 +208,7 @@ export function installUi(kit: Kit): void {
   }
 
   /** Overall health bar. `els`: `{ text, bar }` (elements). Returns `{ health, band, name }`. */
-  function healthBar(els: { text?: any; bar?: any }, c: any): any {
+  function healthBar(els: { text?: any; bar?: any }, c: BuildContext): any {
     const O = kit.zoneOverall(c)
     if (els.text) els.text.textContent = T('health') + ' ' + O.health + '% · ' + O.name
     if (els.bar) {

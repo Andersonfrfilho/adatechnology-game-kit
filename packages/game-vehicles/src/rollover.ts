@@ -1,5 +1,7 @@
 /** Rollover physics and the rolled-over state. */
-import type { Kit } from './types'
+import type { Vector3 } from 'three'
+
+import type { BuildContext, Kit } from './types'
 import { hash } from './util'
 
 export function installRollover(kit: Kit) {
@@ -13,7 +15,7 @@ export function installRollover(kit: Kit) {
   /* Rolls the vehicle sideways around the longitudinal axis (x). s = +1 falls to the right, -1 to the left.
      The support comes from the real shape: the convex hull (y, z) of all visible meshes (except decals, particles and thin rods),
      plus meta.rollRest [[y, z]...] and meta.rollTop if declared. The contact point stays still on the ground while the vehicle turns. */
-  function rollMeshes(c: any) {
+  function rollMeshes(c: BuildContext) {
     const list: any = []
     const thin: any = []
     c.root.updateMatrixWorld(true)
@@ -59,7 +61,7 @@ export function installRollover(kit: Kit) {
     lo.pop()
     return lo.concat(up)
   }
-  kit.roll = function (c: any, s: number) {
+  kit.roll = function (c: BuildContext, s: number) {
     if (c.rollState || c.flipped) return false
     s = s || 1
     const m = c.meta
@@ -116,7 +118,7 @@ export function installRollover(kit: Kit) {
     if (c.hood) c.hood.target = 0
     return true
   }
-  function rollContact(c: any, A: any, q: any) {
+  function rollContact(c: BuildContext, A: any, q: any) {
     const m = c.meta
     const list: any = []
     const dy = A.cen[0] - q[0]
@@ -137,7 +139,7 @@ export function installRollover(kit: Kit) {
         if (h) list.push([h.p, new V3(0, 0, -sd)])
       })
     }
-    list.forEach(function (e: any) {
+    list.forEach(function (e: Vector3[]) {
       I.impact(c, e[0], e[1], f, { noStain: true, maxDepth: 0.1 })
       const pf = c.toEffects(e[0])
       pf.y = Math.max(0.03, pf.y)
@@ -150,7 +152,7 @@ export function installRollover(kit: Kit) {
     if (m.kind === 'boat') I.burst(c, 'water', c.toEffects(list[0][0]).setY(0.05), 30, { speed: 3 })
   }
   /* lowest y (in the c.root frame) of all supporting meshes, vertex by vertex */
-  function exactMinY(c: any, list: any) {
+  function exactMinY(c: BuildContext, list: any) {
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.root.matrixWorld).invert()
     const M = new THREE.Matrix4()
@@ -168,7 +170,7 @@ export function installRollover(kit: Kit) {
     })
     return mn
   }
-  function finishRoll(c: any) {
+  function finishRoll(c: BuildContext) {
     const A = c.rollState
     const m = c.meta
     c.rollState = null
@@ -242,7 +244,7 @@ export function installRollover(kit: Kit) {
     })
     if (mot && m.kind !== 'boat') kit.addEmitter(c, mot.pos.clone().add(new V3(0, -0.3, 0)), 'black', { rate: 4 })
   }
-  function tickRoll(c: any, dt: number) {
+  function tickRoll(c: BuildContext, dt: number) {
     const A = c.rollState
     A.t += dt
     const p = Math.min(1, A.t / A.dur)

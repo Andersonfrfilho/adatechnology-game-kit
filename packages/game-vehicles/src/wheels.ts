@@ -1,5 +1,5 @@
 /** Spoked wheels and track assemblies. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 export function installWheels(kit: Kit) {
   const THREE = kit.THREE
@@ -10,7 +10,7 @@ export function installWheels(kit: Kit) {
 
   /* ================= special wheels ================= */
   /* Spoked wheel for motorcycle/bicycle. o: { spokes, knobby, disc, cast (5-spoke alloy), z, label } */
-  kit.spokedWheel = function (c: any, x: any, r: any, tireR: any, o: any) {
+  kit.spokedWheel = function (c: BuildContext, x: any, r: any, tireR: any, o: any) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, o.z || 0)
@@ -69,7 +69,7 @@ export function installWheels(kit: Kit) {
     return g
   }
   /* Simple track (tank). o: { x0 (drive wheel, rear), x1 (idler wheel, front), z, w, r (road wheels), n, top, mat } */
-  kit.tracks = function (c: any, o: any) {
+  kit.tracks = function (c: BuildContext, o: any) {
     const x0 = o.x0
     const x1 = o.x1
     const z = o.z

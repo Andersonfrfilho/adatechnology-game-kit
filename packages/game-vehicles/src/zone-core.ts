@@ -1,7 +1,7 @@
 /** Zone core: bands, effects text, box helpers and part lookups. */
 import type { Box3, Matrix4 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
 
 /** A zone box in `c.vehicle` coordinates. */
@@ -102,12 +102,12 @@ export function installZoneCore(kit: Kit) {
   function boxIntersects(B: any, b3: any) {
     return b3.max.x >= B.x0 && b3.min.x <= B.x1 && b3.max.y >= B.y0 && b3.min.y <= B.y1 && b3.max.z >= B.z0 && b3.min.z <= B.z1
   }
-  function worldInverseOf(c: any) {
+  function worldInverseOf(c: BuildContext) {
     c.root.updateMatrixWorld(true)
     return new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
   }
   /* box of an object in c.vehicle coordinates */
-  function localBox(c: any, o: any, inv: Matrix4) {
+  function localBox(c: BuildContext, o: any, inv: Matrix4) {
     inv = inv || worldInverseOf(c)
     const bb = new THREE.Box3()
     const tmp = new THREE.Box3()
@@ -129,7 +129,7 @@ export function installZoneCore(kit: Kit) {
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_|_$/g, '')
   }
-  function wheelInfo(c: any) {
+  function wheelInfo(c: BuildContext) {
     const ws = c.wheels.filter(function (w: any) {
       return w.parent
     })
@@ -151,12 +151,12 @@ export function installZoneCore(kit: Kit) {
     })
     return { list: ws, xf: xf, xr: xr, rf: rf, rr: rr }
   }
-  function partsOf(c: any, kind: any) {
+  function partsOf(c: BuildContext, kind: any) {
     return c.parts.filter(function (p: any) {
       return p.kind === kind
     })
   }
-  function lightCenter(c: any, L: any, inv: any) {
+  function lightCenter(c: BuildContext, L: any, inv: Matrix4) {
     if (L.group) return localBox(c, L.group, inv).getCenter(new V3())
     const bb = new THREE.Box3()
     L.lens.concat(L.inner).forEach(function (m: any) {
@@ -164,7 +164,7 @@ export function installZoneCore(kit: Kit) {
     })
     return bb.isEmpty() ? new V3() : bb.getCenter(new V3())
   }
-  function lightBoxOf(c: any, L: any, inv: any) {
+  function lightBoxOf(c: BuildContext, L: any, inv: Matrix4) {
     if (L.group) return localBox(c, L.group, inv)
     const bb = new THREE.Box3()
     L.lens.concat(L.inner).forEach(function (m: any) {
@@ -172,14 +172,14 @@ export function installZoneCore(kit: Kit) {
     })
     return bb
   }
-  function hideObj(c: any, o: any) {
+  function hideObj(c: BuildContext, o: any) {
     if (!o) return
     o.visible = false
     c.parts.forEach(function (p: any) {
       if (p.obj === o) p.done = true
     })
   }
-  function shown(c: any, o: any) {
+  function shown(c: BuildContext, o: any) {
     for (let q = o; q && q !== c.vehicle; q = q.parent) if (q.visible === false) return false
     return !!o
   }

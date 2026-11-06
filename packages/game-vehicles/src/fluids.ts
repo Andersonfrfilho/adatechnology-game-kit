@@ -1,7 +1,7 @@
 /** Fluid types (oil, stains, rain...) and the splat/puddle system. */
 import type { Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
 
 /** Colour of the puddle each car fluid leaves: coolant green, brake fluid amber, transmission and power steering fluid red, washer fluid blue, battery acid a pale stain. */
@@ -41,7 +41,7 @@ export function installFluids(kit: Kit) {
   /* Liquid splat: a flat stain glued to the surface, irregular outline, satellite drops and a trickle that runs down,
      thins and ends in a bulb. The trickle stops when the volume runs out. Glossy when fresh, dries matte in the fluid type's time.
      o: { fluid (key of kit.fluidTypes; default config.defaultSplat), glass, obj (mesh to attach to; the trickle follows its curve) } */
-  kit.splat = function (c: any, p: Vector3, n: Vector3, r: number, o: any) {
+  kit.splat = function (c: BuildContext, p: Vector3, n: Vector3, r: number, o: any) {
     o = o || {}
     n = n.clone().normalize()
     const fdef = kit.fluidTypes[o.fluid || kit.config.defaultSplat] || kit.fluidTypes.stain
@@ -229,7 +229,7 @@ export function installFluids(kit: Kit) {
     g.setIndex(idx)
     return g
   }
-  function puddle(c: any, kind: string, pLocal: any, maxR: any) {
+  function puddle(c: BuildContext, kind: string, pLocal: Vector3, maxR: any) {
     const q = c.toEffects(pLocal)
     const oily = kind === 'oil' || kind === 'diesel'
     const mat =
@@ -400,7 +400,7 @@ export function installFluids(kit: Kit) {
     }
     return evap
   }
-  function updateFluids(c: any, dt: any) {
+  function updateFluids(c: BuildContext, dt: any) {
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]
       f.t += dt
@@ -482,7 +482,7 @@ export function installFluids(kit: Kit) {
   }
   kit.updateFluids = updateFluids
   /* The wiper (glass only) and rain clean only fresh stains (less than half dry) of the types with wipeable. */
-  kit.wipe = function (c: any, mode: string) {
+  kit.wipe = function (c: BuildContext, mode: string) {
     let n = 0
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]

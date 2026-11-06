@@ -1,5 +1,5 @@
 /** Soft body warp (sculpting) used for panel deformation. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp, smooth } from './util'
 
 export function installWarp(kit: Kit) {
@@ -34,7 +34,7 @@ export function installWarp(kit: Kit) {
     f.sec = sec
     return f
   }
-  function applyWarp(c: any, Wf: any) {
+  function applyWarp(c: BuildContext, Wf: any) {
     c.root.updateMatrixWorld(true)
     const gInv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
     const rel = new THREE.Matrix4()

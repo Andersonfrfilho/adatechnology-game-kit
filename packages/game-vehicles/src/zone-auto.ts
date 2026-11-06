@@ -1,5 +1,5 @@
 /** Automatic zone derivation for each vehicle family. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { legacyGlassId, legacyLightId } from './legacy-seeds'
 
 const REAR_GLASS_KEYS = ['rear_window', 'window_rear', 'quarter_glass']
@@ -12,7 +12,7 @@ export function installZoneAuto(kit: Kit) {
   const matchers = kit.matchers
 
   /* ---- automatic derivation by vehicle type ---- */
-  function autoZones(c: any) {
+  function autoZones(c: BuildContext) {
     const m = c.meta
     let Z: any = []
     const inv = I.worldInverseOf(c)

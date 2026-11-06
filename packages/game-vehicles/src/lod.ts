@@ -3,7 +3,7 @@
  * (frota-leve.js lines 21-65, 232-257, 1205-1221, 14155-14170). Every number is a setting; with `on` false nothing changes, so every golden
  * of the full-detail build stays byte for byte the same.
  */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 export interface LodSettings {
   /** Light mode is active for the builds that run now. Set by `kit.build(key, state, zones, { lod: true })`. */
@@ -133,7 +133,7 @@ const INTERIOR_FUNCTIONS = ['interior', 'engineBay', 'seat', 'dashboard', 'steer
  */
 export function installLod(kit: Kit): void {
   const lod: LodSettings = kit.lod
-  const meshesOf = (c: any): Set<any> => {
+  const meshesOf = (c: BuildContext): Set<any> => {
     const set = new Set<any>()
     c.vehicle.traverse((o: any) => {
       if (o.isMesh) set.add(o)

@@ -1,7 +1,7 @@
 /** Headlights and taillights in several styles, with beams and glow. */
 import type { MeshStandardMaterial } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
 
 export function installLights(kit: Kit) {
@@ -13,7 +13,7 @@ export function installLights(kit: Kit) {
   const { MATERIALS, mergeGeometries, roundedBoxGeometry, taper } = I
 
   /* ================= headlights, taillights, grilles ================= */
-  function lampGroup(c: any, x: number, y: number, z: number, rotY: number) {
+  function lampGroup(c: BuildContext, x: number, y: number, z: number, rotY: number) {
     const g = new THREE.Group()
     g.position.set(x, y, z)
     g.rotation.y = rotY || 0
@@ -94,12 +94,12 @@ export function installLights(kit: Kit) {
         lens.push(L)
         return L
       },
-      glow: function (geo: any, mat: any, x: any, y: any, z: any) {
+      glow: function (geo: any, mat: MeshStandardMaterial, x: any, y: any, z: any) {
         const m = gm(g, geo, mat, x, y, z)
         inner.push(m)
         return m
       },
-      proj: function (y: any, z: any, r: any, mat: any) {
+      proj: function (y: any, z: any, r: any, mat: MeshStandardMaterial) {
         const bz = gm(g, new THREE.CylinderGeometry(r * 1.3, r * 1.45, 0.03, 18), refl, d / 2 - 0.03, y, z)
         bz.rotation.z = -PI / 2
         if (refl !== MATERIALS.reflector) inner.push(bz)
@@ -111,7 +111,7 @@ export function installLights(kit: Kit) {
     }
   }
   /* Headlight. o: { style: round|dround|rect|slim|split|wedge|ledbar|truck, x, y, z, w, h, d, side (+1 right / -1 left), yaw, mat, label } */
-  kit.headlight = function (c: any, o: any) {
+  kit.headlight = function (c: BuildContext, o: any) {
     const st = o.style || 'rect'
     const w = o.w || 0.32
     const h = o.h || 0.12
@@ -187,7 +187,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* Taillight. o: { style: wrap|bar|vertical|L|round2, x, y, z, w, h, d, side, wrap (length of the wrap-around) } */
-  kit.taillight = function (c: any, o: any) {
+  kit.taillight = function (c: BuildContext, o: any) {
     const st = o.style || 'wrap'
     const w = o.w || 0.3
     const h = o.h || 0.14
@@ -257,7 +257,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* light bar from end to end (ledbar at the front, bar at the rear). face: +1 front, -1 rear */
-  kit.lightBar = function (c: any, x: any, y: any, z0: number, z1: number, h: number, face: number, mat: any) {
+  kit.lightBar = function (c: BuildContext, x: any, y: any, z0: number, z1: number, h: number, face: number, mat: any) {
     const len = Math.abs(z1 - z0)
     const zc = (z0 + z1) / 2
     const f = face || 1
@@ -275,7 +275,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* Generic emblem (chrome circle with a bar), never a real logo */
-  kit.emblem = function (c: any, x: number, y: number, z: number, r: any, parent: any) {
+  kit.emblem = function (c: BuildContext, x: number, y: number, z: number, r: any, parent: any) {
     r = r || 0.045
     const g = new THREE.Group()
     g.position.set(x, y, z)
@@ -290,7 +290,7 @@ export function installLights(kit: Kit) {
     return g
   }
   /* Grille. o: { style: bars|mesh|big|seven|closed|truck, x, y, z, w, h, col, emblem } */
-  kit.grille = function (c: any, o: any) {
+  kit.grille = function (c: BuildContext, o: any) {
     const st = o.style || 'bars'
     const w = o.w || 0.6
     const h = o.h || 0.16

@@ -1,7 +1,8 @@
 /** Impact resolution: direction, surface lookup, deformation, shards and sparks. */
 import type { MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { VehiclePart } from './api'
+import type { BuildContext, Kit } from './types'
 import { clamp, hash, markDecal } from './util'
 import { raycastIndexed } from './tri-index'
 
@@ -25,7 +26,7 @@ export function installImpact(kit: Kit) {
   }
   /* The bumper comes loose on the side of the hit and hangs from the other side (does not fly): the real part rotates around the attached end,
      without swapping the geometry, and the angle is limited so the loose end touches the ground without going through it (and does not become a pole on a tall vehicle). */
-  function hangBumper(c: any, o: any, p: any) {
+  function hangBumper(c: BuildContext, o: any, p: any) {
     if (!o || o.userData.hung || !o.parent || c.meta.noBumper) return
     o.userData.hung = true
     const di = c.deform.indexOf(o)
@@ -54,18 +55,18 @@ export function installImpact(kit: Kit) {
     piv.rotation.y = -0.1 * sx * att
   }
   /* fuel of the tank that was hit: the part label wins ("diesel"), otherwise the vehicle sheet */
-  function tankFuel(c: any, pt: any) {
+  function tankFuel(c: BuildContext, pt: any) {
     const lb = (pt.label || '').toLowerCase()
     const fu = c.spec && c.spec.fuel
     if (pt.fuel === 'diesel' || kit.matchers.diesel.test(lb)) return 'diesel'
     if ((pt.fuel === 'gasoline' || kit.matchers.fuel.test(lb)) && fu !== 'diesel') return 'gasoline'
     return fu === 'diesel' ? 'diesel' : fu === 'electric' || fu === 'none' ? null : 'gasoline'
   }
-  function hurtEngine(c: any, h: number) {
+  function hurtEngine(c: BuildContext, h: number) {
     c.engineHealth = Math.min(c.engineHealth == null ? 1 : c.engineHealth, h)
   }
   kit.hurtEngine = hurtEngine
-  function igniteFuel(c: any, pd: any) {
+  function igniteFuel(c: BuildContext, pd: any) {
     if (!pd || pd.kind !== 'gasoline' || pd.fire) return
     pd.fire = true
     for (let k = 0; k < 3; k++) {
@@ -76,7 +77,7 @@ export function installImpact(kit: Kit) {
     I.burst(c, 'spark', new V3(pd.x0, 0.1, pd.z0), 14, { speed: 2.5 })
   }
   kit.igniteFuel = igniteFuel
-  function applyPart(c: any, pt: any, force: number, dir: any, p: any) {
+  function applyPart(c: BuildContext, pt: VehiclePart, force: number, dir: Vector3, p: Vector3) {
     const k = pt.kind
     const o = pt.obj
     const m = c.meta
@@ -157,7 +158,7 @@ export function installImpact(kit: Kit) {
   const _ray = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _ray.layers.enableAll()
-  function findSurface(c: any, p: any, dir: Vector3) {
+  function findSurface(c: BuildContext, p: Vector3, dir: Vector3) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const o = p.clone().addScaledVector(dir, -1.2).applyMatrix4(Mw)
@@ -183,7 +184,7 @@ export function installImpact(kit: Kit) {
     }
     return null
   }
-  function scratches(c: any, p: Vector3, dir: Vector3, force: number) {
+  function scratches(c: BuildContext, p: Vector3, dir: Vector3, force: number) {
     const d = dir.clone().normalize()
     const t1 = new V3().crossVectors(d, Math.abs(d.y) > 0.9 ? new V3(1, 0, 0) : new V3(0, 1, 0)).normalize()
     const t2 = new V3().crossVectors(d, t1)
@@ -219,7 +220,7 @@ export function installImpact(kit: Kit) {
     soot.lookAt(soot.position.clone().sub(d))
   }
   /* Impact at point p (c.vehicle coordinates), direction dir (into the vehicle), force 0.3..1.4. Returns the parts hit. */
-  function impact(c: any, p: Vector3, dir: Vector3, force: number, opts?: any) {
+  function impact(c: BuildContext, p: Vector3, dir: Vector3, force: number, opts?: any) {
     opts = opts || {}
     dir = dir.clone().normalize()
     const m = c.meta
@@ -410,7 +411,7 @@ export function installImpact(kit: Kit) {
   const _pr = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _pr.layers.enableAll()
-  function probe(c: any, o: Vector3, d: Vector3, far: number) {
+  function probe(c: BuildContext, o: Vector3, d: Vector3, far: number) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const inv = new THREE.Matrix4().copy(Mw).invert()
@@ -427,7 +428,7 @@ export function installImpact(kit: Kit) {
     return null
   }
   kit.probe = probe
-  function zoneImpact(c: any, zone: string, force: number) {
+  function zoneImpact(c: BuildContext, zone: string, force: number) {
     const m = c.meta
     const mid = m.clearance + (m.bodyHeight || 0.6) * 0.5
     let p

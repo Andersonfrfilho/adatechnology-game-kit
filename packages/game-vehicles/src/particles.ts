@@ -1,7 +1,7 @@
 /** Particle system: smoke, fire, sparks, shards, dust and water. */
 import type { Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { warnOnce } from '@adatechnology/game-contracts'
 import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
@@ -136,7 +136,7 @@ export function installParticles(kit: Kit) {
   const WIND = new V3(-0.45, 0, 0.16)
   const PARTICLE_LIFE: any = { spark: 0.6, dust: 1.6, smoke: 2.8, fire: 0.7, water: 1.2, droplet: 1.0 }
   const TRANSIENT_TYPES: any = { spark: 1, dust: 1, smoke: 1, fire: 1, water: 1, droplet: 1 }
-  function killParticle(c: any, i: number) {
+  function killParticle(c: BuildContext, i: number) {
     const P = c.particles[i]
     c.effects.remove(P.m)
     if (P.own) {
@@ -147,7 +147,7 @@ export function installParticles(kit: Kit) {
   }
   /* Particle in the sibling group c.effects (vehicle world coordinates). type: spark|shard|cube|lens|scrap|plastic|dust|smoke|fire|water|droplet */
   /* The effects world draws the puff and its budget caps it: positions and velocities go from the vehicle's effects group to the world. */
-  function routeParticle(c: any, effects: any, type: string, pos: any, vel: any, o: any) {
+  function routeParticle(c: BuildContext, effects: any, type: string, pos: Vector3, vel: any, o: any) {
     c.effects.updateWorldMatrix(true, false)
     const at = pos.clone().applyMatrix4(c.effects.matrixWorld)
     const to = vel.clone().transformDirection(c.effects.matrixWorld).multiplyScalar(vel.length())
@@ -167,7 +167,7 @@ export function installParticles(kit: Kit) {
     )
     return null
   }
-  kit.spawn = function (c: any, type: string, pos: Vector3, vel: any, o: any) {
+  kit.spawn = function (c: BuildContext, type: string, pos: Vector3, vel: any, o: any) {
     o = o || {}
     const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
     if (effects) return routeParticle(c, effects, type, pos, vel, o)
@@ -224,7 +224,7 @@ export function installParticles(kit: Kit) {
   const _q = new THREE.Quaternion()
   const _z = new V3(0, 0, 1)
   const _t = new V3()
-  function tickParticles(c: any, dt: number) {
+  function tickParticles(c: BuildContext, dt: number) {
     for (let i = c.particles.length - 1; i >= 0; i--) {
       const P = c.particles[i]
       if (P.rest) continue
@@ -304,7 +304,7 @@ export function installParticles(kit: Kit) {
       }
     }
   }
-  function burst(c: any, type: any, pFx: any, n: number, o: any) {
+  function burst(c: BuildContext, type: any, pFx: any, n: number, o: any) {
     o = o || {}
     const d = o.dir || new V3(0, 1, 0)
     const spd = o.speed || 2
@@ -324,7 +324,7 @@ export function installParticles(kit: Kit) {
   }
   kit.burst = burst
   /* Continuous emitter. p in c.vehicle (or in the vehicle world with o.world). kind: white|black|fire|exhaust (exhaust follows c.engineHealth) */
-  kit.addEmitter = function (c: any, p: any, kind: string, o: any) {
+  kit.addEmitter = function (c: BuildContext, p: any, kind: string, o: any) {
     o = o || {}
     if (
       c.emitters.some(function (e: any) {
@@ -353,7 +353,7 @@ export function installParticles(kit: Kit) {
     return ['#141414', 0.66]
   }
   kit.exhaustLook = exhaustLook
-  function tickEmit(c: any, dt: number) {
+  function tickEmit(c: BuildContext, dt: number) {
     c.emitters.forEach(function (e: any) {
       if (e.kind === 'exhaust') {
         const h = c.engineHealth == null ? 1 : c.engineHealth

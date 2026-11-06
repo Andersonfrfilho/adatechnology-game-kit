@@ -2,7 +2,7 @@
 import type { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
 import type { MaterialOptions } from './materials'
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { TRI_BLOCK, triIndexOf } from './tri-index'
 
 export function installZoneDecals(kit: Kit) {
@@ -57,7 +57,7 @@ export function installZoneDecals(kit: Kit) {
     m.quaternion.copy(_zq2.multiply(_zq))
     m.position.copy(p).addScaledVector(n, 0.004)
   }
-  function decalMesh(c: any, geo: any, mat: MeshStandardMaterial, p: any, n: any, ang: number, obj?: any) {
+  function decalMesh(c: BuildContext, geo: any, mat: MeshStandardMaterial, p: any, n: Vector3, ang: number, obj?: any) {
     const m = c.add(geo, mat, 0, 0, 0)
     m.castShadow = false
     m.receiveShadow = false
@@ -83,7 +83,7 @@ export function installZoneDecals(kit: Kit) {
     return new THREE.ShapeGeometry(s)
   }
   /* torn metal: a dark hole with a sharp edge of metal teeth that bend outward */
-  function tearDecal(c: any, p: any, n: any, r: number, rnd: any, obj: any) {
+  function tearDecal(c: BuildContext, p: any, n: any, r: number, rnd: any, obj: any) {
     const N = 13
     const pts: any = []
     for (let k = 0; k < N; k++) {
@@ -132,7 +132,7 @@ export function installZoneDecals(kit: Kit) {
   const STROKE_REACH = 0.6 /* scratchPath: 0.08 above the surface + 0.2 of ray + up to 0.25 along the stroke + the 0.02 of the box test */
   const _pv = new V3()
   const _pm = new THREE.Matrix4()
-  function decalRegion(c: any, z: any) {
+  function decalRegion(c: BuildContext, z: any) {
     const B = z.box
     const lo = [0, 1, 2].map(function (k) {
       return I.boxLo(B, k) - STROKE_REACH
@@ -166,7 +166,7 @@ export function installZoneDecals(kit: Kit) {
     return { lo, hi }
   }
   /* the candidates of a decal call with the heavy meshes cut down to the region of the zone (the others stay as they are) */
-  function regionCands(c: any, z: any, cands: any) {
+  function regionCands(c: BuildContext, z: any, cands: any) {
     if (!cands.some(heavy)) return cands
     const R = decalRegion(c, z)
     const Mw = c.vehicle.matrixWorld
@@ -316,7 +316,7 @@ export function installZoneDecals(kit: Kit) {
     for (let i = 0; i < hits.length; i++) if (hits[i].object.proxyOf) hits[i].object = hits[i].object.proxyOf
     return hits
   }
-  function zoneCands(c: any, z: any, inv: any, glassToo?: any) {
+  function zoneCands(c: BuildContext, z: any, inv: Matrix4, glassToo?: any) {
     const out: any = []
     c.vehicle.traverse(function (o: any) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || o.isSprite) return
@@ -332,7 +332,7 @@ export function installZoneDecals(kit: Kit) {
   }
   /* decals only on bodywork: shell, paint, parts of the zone itself (or any mesh with anyMesh/part) */
   const _dsetC = new WeakMap()
-  function skinOK(c: any, z: any, o: any, ow: any) {
+  function skinOK(c: BuildContext, z: any, o: any, ow: any) {
     if (ow === z || z.anyMesh || z.type === 'part' || z.type === 'wheel') return true
     if (c.paints && c.paints.has(o.material)) return true
     let ds = _dsetC.get(c.deform)
@@ -346,7 +346,7 @@ export function installZoneDecals(kit: Kit) {
     const a = Math.abs(d.x) >= Math.abs(d.y) && Math.abs(d.x) >= Math.abs(d.z) ? 0 : Math.abs(d.y) >= Math.abs(d.z) ? 1 : 2
     return a
   }
-  function zoneSurf(c: any, z: any, n: number, rnd: any, cands: any, o?: any) {
+  function zoneSurf(c: BuildContext, z: any, n: number, rnd: any, cands: any, o?: any) {
     o = o || {}
     const out = []
     const B = z.box
@@ -388,7 +388,7 @@ export function installZoneDecals(kit: Kit) {
   const _rt = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _rt.layers.enableAll()
-  function scratchPath(c: any, s: any, len: number, ang: number, cands: any, B: any) {
+  function scratchPath(c: BuildContext, s: any, len: number, ang: number, cands: any, B: any) {
     const n = s.n.clone().normalize()
     const t = Math.abs(n.y) < 0.9 ? new V3().crossVectors(new V3(0, 1, 0), n) : new V3().crossVectors(new V3(1, 0, 0), n)
     t.normalize().applyAxisAngle(n, ang || 0)
@@ -453,7 +453,7 @@ export function installZoneDecals(kit: Kit) {
     g.computeVertexNormals()
     return g
   }
-  function scratchDecal(c: any, s: any, len: number, wd: number, mat: MeshStandardMaterial, ang: number, cands: any, B: any, pts?: any) {
+  function scratchDecal(c: BuildContext, s: any, len: number, wd: number, mat: MeshStandardMaterial, ang: number, cands: any, B: any, pts?: any) {
     pts = pts || scratchPath(c, s, len, ang, cands, B)
     if (!pts) return null
     const m = c.add(ribbonGeo(pts, wd, mat === DAMAGE_MATERIALS.deep ? 0.0038 : 0.003), mat, 0, 0, 0)
@@ -468,7 +468,7 @@ export function installZoneDecals(kit: Kit) {
     return m
   }
   /* scratches, chipped paint (grey primer and metal), rust and torn metal */
-  function zoneDecals(c: any, z: any, spec: any, cands: any) {
+  function zoneDecals(c: BuildContext, z: any, spec: any, cands: any) {
     const R = c.rand
     const need =
       (spec.fine || 0) +

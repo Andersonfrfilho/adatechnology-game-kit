@@ -1,7 +1,7 @@
 /** Armoured vehicle details (plating, hatches, add-on armour) and the applyArmor helper. */
 import type { MeshStandardMaterial } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp, hash } from './util'
 
 export function installArmor(kit: Kit) {
@@ -17,7 +17,7 @@ export function installArmor(kit: Kit) {
     return makeMaterial(h, { metalness: 0.5, roughness: 0.55 })
   })
   kit.steelMaterial = STEEL_MATERIAL
-  function jerryCan(c: any, x: number, y: number, z: number, col: string) {
+  function jerryCan(c: BuildContext, x: number, y: number, z: number, col: string) {
     c.roundBox(0.34, 0.44, 0.16, 0.04, makeMaterial(col, { roughness: 0.5 }), x, y, z)
     c.tube(
       [
@@ -32,7 +32,7 @@ export function installArmor(kit: Kit) {
     c.cylinder(0.025, 0.025, 0.05, MATERIALS.trim, x + 0.12, y + 0.24, z)
   }
   kit.jerryCan = jerryCan
-  function applyArmor(c: any) {
+  function applyArmor(c: BuildContext) {
     const m = c.meta
     const k = m.kind
     if (k === 'bike') {

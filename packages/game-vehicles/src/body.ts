@@ -1,7 +1,7 @@
 /** Car body shell, panels and body helpers. */
 import type { BufferGeometry } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
 import { raycastIndexed } from './tri-index'
 
@@ -17,7 +17,7 @@ export function installBody(kit: Kit) {
     return (Wg / 2) * (T ? 1 - T.k * clamp((y - T.belt) / (T.top - T.belt), 0, 1) : 1)
   }
   kit.halfAt = halfAt
-  function shell(c: any, o: any) {
+  function shell(c: BuildContext, o: any) {
     const items = o.items.slice()
     if (o.arches)
       o.arches
@@ -158,7 +158,7 @@ export function installBody(kit: Kit) {
   const _sr = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _sr.layers.enableAll()
-  kit.surfaceAt = function (c: any, org: any, dir: any, o: any) {
+  kit.surfaceAt = function (c: BuildContext, org: any, dir: any, o: any) {
     o = o || {}
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
@@ -181,7 +181,7 @@ export function installBody(kit: Kit) {
     return { p: h.point.clone().applyMatrix4(inv), n: n, obj: h.object }
   }
   /* x of the skin at the front (front = true) or at the rear, at height y and side z; falls back to profX(items) if the ray finds nothing */
-  kit.surfaceX = function (c: any, y: any, z: any, front: boolean, items: any) {
+  kit.surfaceX = function (c: BuildContext, y: any, z: any, front: boolean, items: any) {
     const m = c.meta
     const sg = front === false ? -1 : 1
     const x0 = sg > 0 ? (m.front || 3) + 2 : (m.rear || -3) - 2

@@ -83,3 +83,6 @@ export interface Kit {
   _: KitShared
   [key: string]: any
 }
+
+/** The object a vehicle is built in (`kit.build` returns it): the groups, the parts, the zones and the builders `add`, `roundBox`, `part`, ... */
+export type BuildContext = InstanceType<KitShared['BuildContext']>

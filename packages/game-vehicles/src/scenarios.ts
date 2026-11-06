@@ -1,5 +1,5 @@
 /** Damage scenarios and the scenario registry. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 
 export function installScenarios(kit: Kit) {
@@ -28,7 +28,7 @@ export function installScenarios(kit: Kit) {
   /* fire and soot */
   kit.flagEffects.burnt = { order: 40, settle: true, apply: I.burntFx }
   const BODY_TYPES = { panel: 1, door: 1, roof: 1, lid: 1, hood: 1, bumper: 1 }
-  kit.zoneScenario = function (c: any, name: any) {
+  kit.zoneScenario = function (c: BuildContext, name: any) {
     const Zs = I.zonesOf(c)
     const m = c.meta
     const F = m.front
@@ -76,7 +76,7 @@ export function installScenarios(kit: Kit) {
     return { health: health, flags: flags, scenario: sc }
   }
   /* overall health (weighted average) */
-  kit.zoneOverall = function (c: any) {
+  kit.zoneOverall = function (c: BuildContext) {
     const Zs = I.zonesOf(c)
     let s = 0
     let w = 0
@@ -112,7 +112,7 @@ export function installScenarios(kit: Kit) {
     return { health: h, band: I.bandOf(h), name: kit.bands[I.bandOf(h)].name }
   }
   /* zone of point p (c.vehicle coordinates), with the optional mesh that was hit */
-  kit.zoneAt = function (c: any, p: any, obj: any) {
+  kit.zoneAt = function (c: BuildContext, p: any, obj: any) {
     const Zs = I.zonesOf(c)
     const own = obj ? I.ownerOf(c, obj) : null
     if (own) return own
@@ -134,7 +134,7 @@ export function installScenarios(kit: Kit) {
     return best
   }
   /* impact at a point: takes health from the zones near the point, according to the force (0.3..1.4) */
-  kit.zoneDamageAt = function (c: any, p: any, dir: any, force: number, obj: any) {
+  kit.zoneDamageAt = function (c: BuildContext, p: any, dir: any, force: number, obj: any) {
     const Zs = I.zonesOf(c)
     const main = kit.zoneAt(c, p, obj)
     const Rr = 0.35 + 0.35 * force
@@ -151,7 +151,7 @@ export function installScenarios(kit: Kit) {
     return { main: main ? main.id : null, list: out }
   }
   /* point and direction of the impacts by side (Front, Rear, Left side and Right side buttons) */
-  kit.zonePoint = function (c: any, zone: string) {
+  kit.zonePoint = function (c: BuildContext, zone: string) {
     const m = c.meta
     const mid = m.clearance + (m.bodyHeight || 0.6) * 0.5
     let p

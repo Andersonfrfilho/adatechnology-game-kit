@@ -1,5 +1,5 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 export function installZoneDerive(kit: Kit) {
   const THREE = kit.THREE
@@ -22,7 +22,7 @@ export function installZoneDerive(kit: Kit) {
       } as Record<string, any>)[d] || null
     )
   }
-  function resolveObjs(c: any, list: any, z: any) {
+  function resolveObjs(c: BuildContext, list: any, z: any) {
     const out: any = []
     ;(list || []).forEach(function (o: any) {
       if (!o) return
@@ -50,7 +50,7 @@ export function installZoneDerive(kit: Kit) {
     })
     return out
   }
-  function deriveZones(c: any) {
+  function deriveZones(c: BuildContext) {
     const m = c.meta
     let list: any = []
     const byId: any = {}
@@ -249,7 +249,7 @@ export function installZoneDerive(kit: Kit) {
     return list
   }
   /* more readable top-down map for cars: door on the edge, side glass inward, roof in the middle */
-  function carMap(c: any, list: any) {
+  function carMap(c: BuildContext, list: any) {
     const m = c.meta
     const W = m.width || 1.7
     const hw = W / 2
@@ -283,12 +283,12 @@ export function installZoneDerive(kit: Kit) {
         z.map = [Math.max(B.x0, m.rear - 0.02), Math.min(B.x1, m.front + 0.02), Math.max(B.z0, -hw), Math.min(B.z1, hw)]
     })
   }
-  function zonesOf(c: any) {
+  function zonesOf(c: BuildContext) {
     if (!c.zones) c.zones = deriveZones(c)
     return c.zones
   }
   kit.zonesOf = zonesOf
-  function ownerOf(c: any, o: any) {
+  function ownerOf(c: BuildContext, o: any) {
     const own = c.zoneOwners
     if (!own) return null
     for (let q = o; q && q !== c.vehicle; q = q.parent) if (own.has(q)) return own.get(q)

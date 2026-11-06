@@ -1,7 +1,7 @@
 /** Glass panes: windshield quads, side windows and ghost glass. */
 import type { Mesh, Object3D } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 export function installGlass(kit: Kit) {
   const THREE = kit.THREE
@@ -14,7 +14,7 @@ export function installGlass(kit: Kit) {
   I.paneSeals = paneSeals
 
   /* ================= glass ================= */
-  kit.addGlass = function (c: any, geo: any, label: any, type?: any, o?: any) {
+  kit.addGlass = function (c: BuildContext, geo: any, label: any, type?: any, o?: any) {
     o = o || {}
     if (!geo.attributes.uv || o.reuv) o.aspect = uvProject(geo, o.uvAxes)
     const m = c.add(geo, o.mat || MATERIALS.glass)
@@ -46,7 +46,7 @@ export function installGlass(kit: Kit) {
     return m
   }
   /* registers a ready mesh (roundBox, sphere...) as glass; type "laminated" cracks, "tempered" shatters */
-  kit.asGlass = function (c: any, mesh: any, label: any, type: any, o: any) {
+  kit.asGlass = function (c: BuildContext, mesh: any, label: any, type: any, o: any) {
     o = o || {}
     const i = c.deform.indexOf(mesh)
     if (i >= 0) c.deform.splice(i, 1)
@@ -56,12 +56,12 @@ export function installGlass(kit: Kit) {
     if (o.reuv !== false) o.reuv = true
     return kit.addGlass(c, geo, label, type, Object.assign({ mat: mesh.material }, o))
   }
-  kit.sideWindows = function (c: any, polys: any, Wg: number, T: any, label: any, o: any) {
+  kit.sideWindows = function (c: BuildContext, polys: any, Wg: number, T: any, label: any, o: any) {
     o = o || {}
     ;(o.sides || [1, -1]).forEach(function (s: number) {
       polys.forEach(function (poly: number[][], i: any) {
         const shp = pathShape(
-          poly.map(function (p: any) {
+          poly.map(function (p) {
             return [p[0], p[1], 0.035]
           }),
         )
@@ -130,7 +130,7 @@ export function installGlass(kit: Kit) {
     const ht = I.halfAt(Wg, T, t[1]) - sd
     return { pb: pb, pt: pt, L: L, u: [ux, uy], n: [nx, ny], ins: ins, b: b, t: t, hb: hb, ht: ht, which: which, bev: bev, Wg: Wg, T: T }
   }
-  kit.glassQuad = function (c: any, q: any, label: any, o: any) {
+  kit.glassQuad = function (c: BuildContext, q: any, label: any, o: any) {
     o = o || {}
     const NX = 10
     const NY = 8

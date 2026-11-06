@@ -1,7 +1,7 @@
 /** Per-zone damage for separate parts: lights, wheels, glass, internals, rotors and landing gear. */
 import type { Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp, hash, rng } from './util'
 
 export function installDamageParts(kit: Kit) {
@@ -13,20 +13,20 @@ export function installDamageParts(kit: Kit) {
   const { MATERIALS } = I
 
   /* ---- glass ---- */
-  function glassPt(c: any, g: any, rnd: any) {
+  function glassPt(c: BuildContext, g: any, rnd: any) {
     g.geometry.computeBoundingBox()
     const bb = g.geometry.boundingBox.clone().applyMatrix4(g.matrix)
     const s = bb.getSize(new V3())
     return new V3(bb.min.x + s.x * (0.3 + rnd() * 0.4), bb.min.y + s.y * (0.3 + rnd() * 0.4), bb.min.z + s.z * (0.3 + rnd() * 0.4))
   }
-  function glassIn(c: any, g: any) {
+  function glassIn(c: BuildContext, g: any) {
     const p = glassPt(c, g, function () {
       return 0.5
     })
     const m = c.meta
     return new V3((m.front + m.rear) / 2 - p.x, 0, -p.z).normalize()
   }
-  function glassBand(c: any, z: any, g: any, b: number) {
+  function glassBand(c: BuildContext, z: any, g: any, b: number) {
     const G = g.userData.glass
     if (!G || !g.parent) return
     const R = c.rand
@@ -87,7 +87,7 @@ export function installDamageParts(kit: Kit) {
     crackLensCache.set(mat, m2)
     return m2
   }
-  function lightBand(c: any, z: any, Lt: any, b: number) {
+  function lightBand(c: BuildContext, z: any, Lt: any, b: number) {
     if (!Lt || Lt.broken === 'gone') return
     const dir = new V3(Lt.kind === 'taillight' ? 1 : -1, 0, 0)
     if (b === 1) {
@@ -155,7 +155,7 @@ export function installDamageParts(kit: Kit) {
       t.geometry.computeBoundingSphere()
     })
   }
-  function wheelBand(c: any, z: any, w: any, b: number) {
+  function wheelBand(c: BuildContext, z: any, w: any, b: number) {
     if (!w || !w.parent) return
     const r = w.userData.r || 0.3
     const s = w.position.z >= 0 ? 1 : -1
@@ -201,7 +201,7 @@ export function installDamageParts(kit: Kit) {
     }
   }
   /* ---- aircraft landing gear: dented sags, destroyed breaks the front leg (nose on the ground), torn off = belly landing ---- */
-  function gearBand(c: any, z: any, b: number) {
+  function gearBand(c: BuildContext, z: any, b: number) {
     const R = c.rand
     const ws = z.wheels.filter(function (w: any) {
       return w.parent
@@ -303,7 +303,7 @@ export function installDamageParts(kit: Kit) {
     c.effects.add(mk)
   }
   /* ---- internal zones: engine, radiator, tank, battery, underbody ---- */
-  function internalBand(c: any, z: any, b: number) {
+  function internalBand(c: BuildContext, z: any, b: number) {
     const m = c.meta
     const p = z.pos ? z.pos.clone() : I.boxCenter(z.box)
     const sub = z.sub || z.id
@@ -352,7 +352,7 @@ export function installDamageParts(kit: Kit) {
     }
   }
   /* ---- hood ---- */
-  function hoodBand(c: any, z: any, b: number, dirty: any) {
+  function hoodBand(c: BuildContext, z: any, b: number, dirty: any) {
     const H = c.hood && z.owned.indexOf(c.hood.piv) >= 0 ? c.hood : null
     if (!H) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -416,7 +416,7 @@ export function installDamageParts(kit: Kit) {
     } else I.zoneDecals(c, z, { deep: 3, chip: 3 }, I.zoneCands(c, z, I.worldInverseOf(c)))
   }
   /* ---- bumper ---- */
-  function bumperBand(c: any, z: any, b: number, dirty: any) {
+  function bumperBand(c: BuildContext, z: any, b: number, dirty: any) {
     const o = z.owned[0]
     if (!o || !o.parent) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -462,7 +462,7 @@ export function installDamageParts(kit: Kit) {
     })
   }
   /* ---- loose parts (bike, rotor, weapon, skid) ---- */
-  function partBand(c: any, z: any, b: number, dirty: any) {
+  function partBand(c: BuildContext, z: any, b: number, dirty: any) {
     const objs = z.owned.filter(function (o: any) {
       return o.parent
     })
@@ -530,7 +530,7 @@ export function installDamageParts(kit: Kit) {
   }
   /* bent tail cone: everything behind the crease (cone, fin, tail rotor) rotates downward around it.
      Meshes that cross the crease bend per vertex; whole parts behind it rotate as a rigid body. */
-  function bendAft(c: any, z: any, kx: any, ky: any, ang: number, dirty: any) {
+  function bendAft(c: BuildContext, z: any, kx: any, ky: any, ang: number, dirty: any) {
     const inv = I.worldInverseOf(c)
     const q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 0, 1), ang)
     const K = new V3(kx, ky, 0)

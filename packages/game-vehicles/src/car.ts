@@ -1,7 +1,7 @@
 /** The generic car builder: shell, glasshouse, lights, wheels, interior and engine bay in one call. */
 import type { MeshStandardMaterial, Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 export function installCar(kit: Kit) {
   const THREE = kit.THREE
@@ -26,7 +26,7 @@ export function installCar(kit: Kit) {
        hood           { motor, front } | true | false   (engine bay under an opening hood)
        wheels         [[x, radius, width, options], ...]
        bodyBumper, mirrorCol, noAntenna, plateRearY   misc. options */
-  kit.car = function (c: any, s: any) {
+  kit.car = function (c: BuildContext, s: any) {
     const W = s.W
     const gh = s.gh
     const bev = 0.05
@@ -164,7 +164,7 @@ export function installCar(kit: Kit) {
   }
   /* Underbody visible when rolled over: axles, arms, oil pan, differential (rear-wheel drive), exhaust with muffler, tank, spare wheel.
      o: { W, bottomY, wheels: [[x, r, w]..], motor, spare (true = spare wheel under the rear) } */
-  kit.underbody = function (c: any, o: any) {
+  kit.underbody = function (c: BuildContext, o: any) {
     const m = c.meta
     const W = o.W
     const by = o.bottomY
@@ -248,7 +248,7 @@ export function installCar(kit: Kit) {
     })
     return ug
   }
-  kit.carDetails = function (c: any, s: any) {
+  kit.carDetails = function (c: BuildContext, s: any) {
     const m = c.meta
     const W = m.width
     const by = s.bottomY
@@ -354,7 +354,7 @@ export function installCar(kit: Kit) {
   }
   /* Fender flare: an arched strip over the wheel arch, on both sides.
      x, y: wheel centre; r: arch radius; z: half width where it attaches; o: { w (strip width), t (thickness), mat, a0 (start angle), sides } */
-  kit.archFlare = function (c: any, x: any, y: any, r: number, z: number, o: any) {
+  kit.archFlare = function (c: BuildContext, x: any, y: any, r: number, z: number, o: any) {
     o = o || {}
     const w = o.w || 0.07
     const t = o.t || 0.03

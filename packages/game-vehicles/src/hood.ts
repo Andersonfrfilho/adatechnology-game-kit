@@ -1,7 +1,7 @@
 /** Hoods, engine bays and hinge helpers. */
 import type { MeshStandardMaterial, Vector3 } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 
 /** How far a hood drawn from the hull is raised over the hull, metres. */
 const HOOD_LIFT = 0.008
@@ -15,7 +15,7 @@ export function installHood(kit: Kit) {
 
   /* ================= hood and engine bay ================= */
   /* Hood made from the skin cut out of the hull (shell holes with a tag). o: { x0 (hinge), col, open (rad), hole (extra hole, e.g. blower) } */
-  kit.makeHood = function (c: any, geo: any, o: any) {
+  kit.makeHood = function (c: BuildContext, geo: any, o: any) {
     o = o || {}
     if (!geo || !geo.attributes.position.count) return null
     if (o.hole) geo = cutGeometry(geo, [o.hole]).geo
@@ -67,7 +67,7 @@ export function installHood(kit: Kit) {
     return c.hood
   }
   /* Turns any set of meshes into a hinged hood (tractor, truck). pivot in c.vehicle; axis "z" (front rises). */
-  kit.hinge = function (c: any, objs: any, pivot: Vector3, o: any) {
+  kit.hinge = function (c: BuildContext, objs: any, pivot: Vector3, o: any) {
     o = o || {}
     const piv = new THREE.Group()
     piv.position.copy(pivot)
@@ -96,7 +96,7 @@ export function installHood(kit: Kit) {
     return c.hood
   }
   /* Engine bay. o: { x0 (firewall), x1 (front), zw (half width), floor, top (free height under the hood), motor: gasoline|diesel|electric|v8 (with blower)|v8_na (naturally aspirated V8), axle (axle x, strut towers), col, frunk } */
-  kit.engineBay = function (c: any, o: any) {
+  kit.engineBay = function (c: BuildContext, o: any) {
     const x0 = o.x0
     const x1 = o.x1
     const zw = o.zw

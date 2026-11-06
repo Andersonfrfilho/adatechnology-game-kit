@@ -1,7 +1,7 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
 import type { Mesh } from 'three'
 
-import type { Kit } from './types'
+import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
 
@@ -12,7 +12,7 @@ export function installZoneApply(kit: Kit) {
   const { RUST, crease } = I
 
   /* ---- applying all zones ---- */
-  function fadePaint(c: any) {
+  function fadePaint(c: BuildContext) {
     const cache2 = new Map()
     c.vehicle.traverse(function (o: any) {
       if (!o.isMesh || !c.paints || !c.paints.has(o.material)) return
@@ -30,7 +30,7 @@ export function installZoneApply(kit: Kit) {
       o.material = nm2
     })
   }
-  function abandonFx(c: any) {
+  function abandonFx(c: BuildContext) {
     fadePaint(c)
     I.hurtEngine(c, 0.45)
     const inv = I.worldInverseOf(c)
@@ -40,7 +40,7 @@ export function installZoneApply(kit: Kit) {
       I.zoneDecals(c, z, { rust: 3 }, I.zoneCands(c, z, inv))
     })
   }
-  function burntFx(c: any) {
+  function burntFx(c: BuildContext) {
     I.burnAll(c)
     const m = c.meta
     const ep = I.enginePos(c)
@@ -53,7 +53,7 @@ export function installZoneApply(kit: Kit) {
     })
     c.burnt = true
   }
-  function settleDrops(c: any) {
+  function settleDrops(c: BuildContext) {
     const D = c.zoneDrops
     if (!D || !D.length || (['boat', 'plane', 'heli'].indexOf(c.meta.kind) >= 0 && c.meta.kind !== 'plane')) return
     const WH = I.wheelInfo(c)
@@ -118,7 +118,7 @@ export function installZoneApply(kit: Kit) {
     c.vehicle.rotation.x += -Math.asin(clamp(Bz, -0.5, 0.5))
     c.vehicle.position.y += t - A * xc - Bz * zc
   }
-  kit.applyZones = function (c: any, zs: any) {
+  kit.applyZones = function (c: BuildContext, zs: any) {
     const Zs = I.zonesOf(c)
     zs = zs || {}
     const H = zs.health || {}

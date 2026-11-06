@@ -5,6 +5,7 @@
  *
  * Everything here is pure data derived from the built vehicle: no meshes are created or touched.
  */
+import type { BuildContext } from '../types'
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'
 import type { HeadlightLens, VehicleContext, VehicleKit } from '../api'
 import { clamp, strHash } from '../util'
@@ -219,7 +220,7 @@ const floorPan = (b: LocalBox): LocalBox => ({
 
 /** Builds the part and joint model of a built vehicle. */
 /** A pane's box in the vehicle's space. */
-function paneBox(c: any, pane: any, inverse: any): LocalBox {
+function paneBox(c: BuildContext, pane: any, inverse: any): LocalBox {
   pane.geometry.computeBoundingBox()
   const box = pane.geometry.boundingBox.clone().applyMatrix4(pane.matrixWorld)
   box.applyMatrix4(inverse)
