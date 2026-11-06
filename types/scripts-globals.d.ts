@@ -206,6 +206,12 @@ declare global {
   /** An object the room spawned (`room.spawned()`) the script knows is there. */
   type SpawnedObject = ReturnType<TestRoom['spawned']>[number]
 
+  /** The room's avatar when it is the player's body (`toRoomAvatar(createPlayerAvatar(THREE))`): it keeps the player's avatar. */
+  type PlayerRoomAvatar = import('@adatechnology/game-test-room').RoomAvatar & { readonly avatar: ReturnType<typeof import('@adatechnology/game-characters-three').createPlayerAvatar> }
+
+  /** A room with its sound engine on, as the sound scripts open it (`room.audio`). */
+  type AudioRoom = TestRoom & { readonly audio: NonNullable<TestRoom['audio']> }
+
   /** A bench of the room (`room.bench(id)`) the scripts know is there. */
   type RoomBench = NonNullable<ReturnType<TestRoom['bench']>>
 
@@ -252,6 +258,32 @@ declare global {
     }
     // What the test scripts keep on the page between two `evaluate` calls
     __lastZ?: number
+    // What the sound probe (`examples/test-room/sound-probe.mjs`) records on the page
+    __soundStarts: { kind: string; at: number; when: number; wall: number }[]
+    __soundCalls: { readonly type: string; readonly id?: string; readonly wall: number; readonly [field: string]: unknown }[]
+    __soundRecording?: { rec: MediaRecorder; chunks: Blob[]; ctx: BaseAudioContext; startedWall: number; startedCtx: number }
+    __frames: number
+    /** What the impact sound audit (`examples/test-room/sound-audit-impacts.mjs`) keeps on the page: the sounds and events of a hit, and its helpers. */
+    __snd: {
+      sounds: { id: string; t: number; volume: number; played: boolean; position: number[] | null }[]
+      events: { type: string; t: number; damageType?: unknown; style?: unknown }[]
+      so?: SpawnedObject
+      at: Vec3
+      fresh(material: string): string
+      aim(tool: string, distance?: number, y?: number): void
+      material(): (string | undefined)[] | undefined
+    }
+    __roomLines: { line: string; wall: number }[]
+    /** Set by the weather test once the storm picture is taken. */
+    __stormShot?: boolean
+    /** The hooks of the first-person body prototype (`examples/player-test-area/first-person-body.mjs`). */
+    __proto: {
+      readonly neckFound: number
+      readonly headMeshes: number
+      eye(): THREE.Vector3
+      hide(way: string): void
+      nearest(camera: THREE.Camera): { at: string; d: number }[]
+    }
     /** The memory warnings of the room counted across the cycles of `leak.mjs`. */
     __memoryWarnings?: number
     /** What `leak.mjs` counts in the page: live GL objects, canvases, listeners and intervals. */

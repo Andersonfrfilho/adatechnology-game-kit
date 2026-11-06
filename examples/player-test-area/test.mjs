@@ -30,7 +30,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {unknown} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -69,7 +69,7 @@ if (!playwright || !existsSync(page)) {
     // the body: it exists, the area starts in third person and shows it, V toggles the view, the avatar area plays a clip and logs it, a grab plays the Bestiário clip
     const bodyAt = () => tab.evaluate(() => {
       const r = window.__testRoom
-      return { has: !!r.avatar, mode: r.cameraMode, visible: r.avatar?.root.visible, parent: !!r.avatar?.root.parent, playing: r.avatar?.avatar.playing ?? null }
+      return { has: !!r.avatar, mode: r.cameraMode, visible: r.avatar?.root.visible, parent: !!r.avatar?.root.parent, playing: /** @type {PlayerRoomAvatar | null} */ (r.avatar)?.avatar.playing ?? null }
     })
     const first = await bodyAt()
     check(`[${lang}] the room has the player body and starts in third person with it shown`, first.has && first.mode === 'third' && first.visible && first.parent, first)
@@ -83,41 +83,42 @@ if (!playwright || !existsSync(page)) {
     const body = await tab.evaluate(() => {
       const r = window.__testRoom
       r.openArea('avatar_area') // the room reads the counters of the area opened last
-      const bench = r.bench('avatar_area')
+      const bench = /** @type {RoomBench} */ (r.bench('avatar_area'))
       bench.act('camera_first')
       const afterFirst = r.cameraMode
       bench.act('camera_third')
       bench.act('crouch')
       bench.act('play_grabbed_bitten_human')
       for (let i = 0; i < 60 * 5; i++) r.update(1 / 60)
-      const metrics = /** @type {NumericMetrics} */ (r.metrics().module)
+      const metrics = r.metrics().module
       const lines = r.log.entries().filter((/** @type {{ text: string; }} */ e) => e.text.startsWith('{"type":"avatar"')).map((/** @type {{ text: string; }} */ e) => JSON.parse(e.text).action)
       bench.act('stop_clip')
       bench.act('stand')
       for (let i = 0; i < 30; i++) r.update(1 / 60)
       // the strikes: each clip plays, fires its one impact and it is logged as JSON
+      /** @type {{ id: string; impacts: number; t: number; playing: string | null }[]} */
       const strikes = []
       for (const id of ['punch_right', 'shove_two_hands', 'front_kick', 'recoil_rifle', 'recoil_pistol']) {
         const before = r.log.entries().length
         bench.act(`play_${id}`)
         for (let i = 0; i < 60; i++) r.update(1 / 60)
         const impacts = r.log.entries().slice(before).map((e) => e.text).filter((/** @type {string} */ t) => t.startsWith('{"type":"avatar"')).map((/** @type {string} */ t) => JSON.parse(t)).filter((/** @type {{ action: string; }} */ x) => x.action === 'impact')
-        strikes.push({ id, impacts: impacts.length, t: impacts[0]?.t, playing: r.avatar.avatar.playing })
+        strikes.push({ id, impacts: impacts.length, t: impacts[0]?.t, playing: /** @type {PlayerRoomAvatar} the player's body */ (r.avatar).avatar.playing })
         for (let i = 0; i < 60; i++) r.update(1 / 60)
       }
       r.openArea('player_area')
       // the gameplay link: the player module's grab plays the clip, a push frees it; a knock-down lays the body down
-      const player = r.bench('player_area')
+      const player = /** @type {RoomBench} */ (r.bench('player_area'))
       player.act('grab')
       r.update(1 / 30)
-      const grabbed = r.avatar.avatar.playing
+      const grabbed = /** @type {PlayerRoomAvatar} the player's body */ (r.avatar).avatar.playing
       for (let i = 0; i < 6; i++) {
         player.act('push')
         r.update(1 / 30)
         r.update(1 / 30)
       }
       for (let i = 0; i < 30; i++) r.update(1 / 30)
-      const released = r.avatar.avatar.playing
+      const released = /** @type {PlayerRoomAvatar} the player's body */ (r.avatar).avatar.playing
       player.act('knock')
       for (let i = 0; i < 20; i++) r.update(1 / 30)
       const down = r.avatarState().down
@@ -132,7 +133,7 @@ if (!playwright || !existsSync(page)) {
       await tab.evaluate(({ id, t }) => {
         const r = window.__testRoom
         r.openArea('avatar_area')
-        const bench = r.bench('avatar_area')
+        const bench = /** @type {RoomBench} */ (r.bench('avatar_area'))
         bench.act(id.startsWith('recoil') ? 'armed_on' : 'armed_off')
         for (let i = 0; i < 20; i++) r.update(1 / 60)
         bench.act(`play_${id}`)

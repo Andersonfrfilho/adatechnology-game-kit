@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+/** @type {typeof import('playwright')} */
 const { chromium } = (() => {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -26,21 +27,22 @@ const opt = (/** @type {string} */ name, /** @type {string} */ dflt) => {
 const outDir = opt('out', join(here, 'shots/sound-audit'))
 const base = opt('url', pathToFileURL(join(here, 'dist/test-room.html')).href)
 const materials = JSON.parse(readFileSync(join(here, '../../packages/game-destruction/src/data/materials.json'), 'utf8'))
-const all = (Array.isArray(materials) ? materials : (materials.materials ?? Object.values(materials))).map((m) => m.id)
+const all = (Array.isArray(materials) ? materials : (materials.materials ?? Object.values(materials))).map((/** @type {{ id: string }} */ m) => m.id)
 const only = opt('only', '').split(',').filter(Boolean)
 const ids = only.length ? all.filter((/** @type {string} */ m) => only.includes(m)) : all
 mkdirSync(outDir, { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--autoplay-policy=no-user-gesture-required'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}${base.includes('?') ? '&' : '?'}ui=0&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__furnitureReport, null, { timeout: 600000 })
 
-await page.evaluate((mats) => {
-  const room = window.__testRoom
-  const A = (window.__snd = { sounds: [], events: [] })
+await page.evaluate((/** @type {string[]} */ mats) => {
+  const room = /** @type {AudioRoom} */ (window.__testRoom)
+  const A = (window.__snd = /** @type {Window['__snd']} the helpers are set below */ (/** @type {unknown} */ ({ sounds: [], events: [] })))
   room.audio.unlock()
   const play = room.audio.play.bind(room.audio)
   room.audio.play = (id, o) => {
@@ -49,9 +51,9 @@ await page.evaluate((mats) => {
     return v
   }
   room.world.on('*', (e) => {
-    if (['dent', 'hole', 'crack', 'fracture', 'chip', 'stage', 'ricochet', 'damage'].includes(e.type)) { if (A.so && e.object !== A.so.objectId) return; A.events.push({ type: e.type, t: performance.now(), damageType: e.damageType, style: e.style }) }
+    if (['dent', 'hole', 'crack', 'fracture', 'chip', 'stage', 'ricochet', 'damage'].includes(e.type)) { if (A.so && e.object !== A.so.objectId) return; A.events.push({ type: e.type, t: performance.now(), damageType: /** @type {{ damageType?: unknown }} */ (e).damageType, style: /** @type {{ style?: unknown }} */ (e).style }) }
   })
-  const tone = (m) => {
+  const tone = (/** @type {string} */ m) => {
     let h = 0
     for (const c of m) h = (h * 31 + c.charCodeAt(0)) >>> 0
     return 0x404040 + (h & 0x7f7f7f)
@@ -65,7 +67,8 @@ await page.evaluate((mats) => {
         id: `slab_${m}`,
         name: m,
         movable: false,
-        build: (T) => {
+        build: (/** @type {unknown} */ three) => {
+          const T = /** @type {typeof import('three')} the room lends its three.js */ (three)
           const g = new T.Group()
           const mesh = new T.Mesh(new T.BoxGeometry(0.8, 1, 0.1), new T.MeshStandardMaterial({ color: tone(m) }))
           mesh.position.y = 0.5
@@ -77,7 +80,7 @@ await page.evaluate((mats) => {
       })),
   })
   A.at = [-7, 0, -6]
-  A.fresh = (m) => {
+  A.fresh = (/** @type {string} */ m) => {
     room.clear()
     room.setDebugCamera(null)
     A.so = room.spawn(`slab_${m}`, A.at, 0)
@@ -89,7 +92,7 @@ await page.evaluate((mats) => {
     room.setTool(tool)
     room.look([A.at[0], 1.6, A.at[2] + dist], [A.at[0], y, A.at[2]])
   }
-  A.material = () => room.world.state(A.so.objectId)?.parts.map((p) => p.material)
+  A.material = () => room.world.state(/** @type {SpawnedObject} */ (A.so).objectId)?.parts.map((p) => p.material)
 }, all)
 
 const sleep = (/** @type {number} */ ms) => page.waitForTimeout(ms)
@@ -98,15 +101,16 @@ const collect = () =>
     const A = window.__snd
     const t0 = A.events[0]?.t ?? A.sounds[0]?.t ?? 0
     return {
-      events: A.events.map((/** @type {{ t: number; }} */ e) => ({ ...e, t: Math.round(e.t - t0) })),
+      events: A.events.map((e) => ({ ...e, t: Math.round(e.t - t0) })),
       // only what sounded at the slab (a blast also reaches the room's scenery)
-      sounds: A.sounds.filter((/** @type {{ position: number[]; }} */ s) => !s.position || Math.hypot(s.position[0] - A.at[0], s.position[2] - A.at[2]) < 1.5).map((/** @type {{ t: number; volume: number; }} */ s) => ({ ...s, t: Math.round(s.t - t0), volume: Math.round(s.volume * 100) / 100 })),
+      sounds: A.sounds.filter((s) => !s.position || Math.hypot(s.position[0] - A.at[0], s.position[2] - A.at[2]) < 1.5).map((s) => ({ ...s, t: Math.round(s.t - t0), volume: Math.round(s.volume * 100) / 100 })),
       others: A.sounds.length,
       parts: A.material(),
-      stats: window.__testRoom.audio.stats(),
+      stats: /** @type {AudioRoom} */ (window.__testRoom).audio.stats(),
     }
   })
 
+/** @param {string} m @param {string} kind */
 async function act(m, kind) {
   await page.evaluate((mm) => window.__snd.fresh(mm), m)
   await sleep(300)
@@ -120,20 +124,22 @@ async function act(m, kind) {
       return window.__testRoom.use(0)
     })
   } else {
-    await page.evaluate((/** @type {string} */ k) => window.__testRoom.testTable.trial(k, window.__snd.so.objectId), kind)
+    await page.evaluate((/** @type {string} */ k) => window.__testRoom.testTable.trial(/** @type {Parameters<import('@adatechnology/game-test-room').TestRoom['testTable']['trial']>[0]} */ (k), /** @type {SpawnedObject} */ (window.__snd.so).objectId), kind)
   }
   await sleep(kind === 'blast' ? 2500 : 1200)
   return collect()
 }
 
+/** @type {{ url: string; at: string; materials: Record<string, unknown>; errors: string[] }} */
 const report = { url: base, at: new Date().toISOString(), materials: {}, errors }
 for (const m of ids) {
+  /** @type {Record<string, { error?: string; events?: { type: string; damageType?: unknown }[]; sounds?: { id: string; t: number }[] }>} */
   const r = {}
   for (const kind of ['shot', 'punch', 'kick', 'stab', 'blast']) {
     try {
       r[kind] = await act(m, kind)
     } catch (e) {
-      r[kind] = { error: String(e.message ?? e) }
+      r[kind] = { error: String(/** @type {Error} */ (e).message ?? e) }
     }
     if (kind === 'shot') {
       await page.evaluate(() => window.__testRoom.setDebugCamera({ position: [-6.2, 1.1, -4.9], target: [-7, 0.55, -6], fov: 50 }))
@@ -142,8 +148,8 @@ for (const m of ids) {
     }
   }
   report.materials[m] = r
-  const tally = (list) => Object.entries(list.reduce((a, x) => ((a[x] = (a[x] ?? 0) + 1), a), {})).map(([k, n]) => (n > 1 ? `${k}x${n}` : k)).join(' ')
-  const brief = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.error ?? `ev[${tally((v.events ?? []).map((/** @type {{ type: string; damageType: string; }} */ e) => e.type + (e.damageType ? ':' + e.damageType : '')))}] snd[${tally((v.sounds ?? []).map((s) => s.id))}] first=${v.sounds?.[0]?.t ?? '-'}ms`]))
+  const tally = (/** @type {string[]} */ list) => Object.entries(list.reduce((a, x) => ((a[x] = (a[x] ?? 0) + 1), a), /** @type {Record<string, number>} */ ({}))).map(([k, n]) => (n > 1 ? `${k}x${n}` : k)).join(' ')
+  const brief = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.error ?? `ev[${tally((v.events ?? []).map((e) => e.type + (e.damageType ? ':' + e.damageType : '')))}] snd[${tally((v.sounds ?? []).map((s) => s.id))}] first=${v.sounds?.[0]?.t ?? '-'}ms`]))
   console.log(m, JSON.stringify(brief))
 }
 writeFileSync(join(outDir, 'report.json'), JSON.stringify(report, null, 1))

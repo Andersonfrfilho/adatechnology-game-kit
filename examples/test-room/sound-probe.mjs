@@ -10,7 +10,8 @@ const require = createRequire(import.meta.url)
 const { chromium } = /** @type {typeof import('playwright')} */ (require('playwright'))
 
 const args = process.argv.slice(2)
-const flag = (/** @type {string} */ name, /** @type {string | number} */ fallback) => {
+/** @template {string | number} T @param {string} name @param {T} fallback @returns {string | T} */
+const flag = (name, fallback) => {
   const i = args.indexOf(name)
   return i >= 0 ? args[i + 1] : fallback
 }
@@ -24,20 +25,21 @@ const page = await browser.newPage({ viewport: { width: Number(flag('--w', 960))
 page.on('pageerror', (e) => console.error('pageerror', e.message))
 await page.addInitScript(() => {
   // every node start, in context time, with the context time at the call: the delay a sound really has
+  /** @type {Window['__soundStarts']} */
   const starts = []
   window.__soundStarts = starts
   for (const Node of [AudioBufferSourceNode, OscillatorNode]) {
-    const start = Node.prototype.start
-    Node.prototype.start = function (when, ...rest) {
+    const start = /** @type {(this: AudioScheduledSourceNode, when?: number, ...rest: unknown[]) => void} */ (Node.prototype.start)
+    Node.prototype.start = /** @type {AudioScheduledSourceNode['start']} */ (/** @this {AudioScheduledSourceNode} @param {number} [when] @param {...unknown} rest */ function (when, ...rest) {
       starts.push({ kind: Node.name, at: this.context.currentTime, when: when ?? 0, wall: performance.now() })
       return start.call(this, when, ...rest)
-    }
+    })
   }
   // the output goes to a recorder too
-  const connect = AudioNode.prototype.connect
-  AudioNode.prototype.connect = function (target, ...rest) {
+  const connect = /** @type {(this: AudioNode, target: AudioNode | AudioParam, ...rest: unknown[]) => AudioNode | void} */ (AudioNode.prototype.connect)
+  AudioNode.prototype.connect = /** @type {AudioNode['connect']} */ (/** @this {AudioNode} @param {AudioNode | AudioParam} target @param {...unknown} rest */ function (target, ...rest) {
     if (target instanceof AudioDestinationNode) {
-      const ctx = target.context
+      const ctx = /** @type {AudioContext & { __tap?: MediaStreamAudioDestinationNode }} the room's live context */ (target.context)
       if (!ctx.__tap) {
         ctx.__tap = ctx.createMediaStreamDestination()
         const rec = new MediaRecorder(ctx.__tap.stream, { mimeType: 'audio/webm;codecs=opus' })
@@ -52,7 +54,7 @@ await page.addInitScript(() => {
       connect.call(this, ctx.__tap)
     }
     return connect.call(this, target, ...rest)
-  }
+  })
 })
 console.log('open', plan.query)
 await page.goto(`${url}?${plan.query ?? ''}`, { timeout: 180000 })
@@ -60,14 +62,15 @@ await page.waitForFunction(() => window.__testRoom && window.__testRoom.audio, n
 console.log('room up')
 // the context, the mix chain and the recorder exist before the first action, so its first milliseconds are on the recording
 await page.evaluate(() => {
-  const engine = window.__testRoom.audio
+  const engine = /** @type {NonNullable<import('@adatechnology/game-test-room').TestRoom['audio']>} the page waited for it */ (window.__testRoom.audio)
   engine.unlock?.()
   engine.warmUp?.()
 })
 await page.waitForTimeout(plan.settle ?? 4000)
 await page.evaluate(() => {
   const room = window.__testRoom
-  const engine = room.audio
+  const engine = /** @type {NonNullable<typeof room.audio>} */ (room.audio)
+  /** @type {Window['__soundCalls']} */
   const calls = []
   window.__soundCalls = calls
   const ctxTime = () => window.__soundRecording?.ctx.currentTime ?? null
@@ -104,8 +107,8 @@ const t0 = await page.evaluate(() => performance.now())
 for (const step of plan.steps) {
   if (step.wait) await page.waitForTimeout(step.wait)
   if (step.mark) await page.evaluate((m) => window.__soundCalls.push({ type: 'mark', id: m, wall: performance.now() }), step.mark)
-  if (step.set) await page.evaluate(({ bench, set }) => Object.entries(set).forEach(([k, v]) => window.__testRoom.bench(bench).set(k, v)), step)
-  if (step.act) await page.evaluate(({ bench, act }) => window.__soundCalls.push({ type: 'act', id: act, ok: window.__testRoom.bench(bench).act(act), wall: performance.now() }), step)
+  if (step.set) await page.evaluate(({ bench, set }) => Object.entries(set).forEach(([k, v]) => /** @type {RoomBench} */ (window.__testRoom.bench(bench)).set(k, v)), step)
+  if (step.act) await page.evaluate(({ bench, act }) => window.__soundCalls.push({ type: 'act', id: act, ok: /** @type {RoomBench} */ (window.__testRoom.bench(bench)).act(act), wall: performance.now() }), step)
   if (step.eval) await page.evaluate(step.eval)
   if (step.shot) await page.screenshot({ path: join(out, step.shot), timeout: 180000 })
 }

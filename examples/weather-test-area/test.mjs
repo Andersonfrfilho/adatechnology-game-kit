@@ -70,16 +70,16 @@ if (!playwright || !existsSync(page)) {
       const room = window.__testRoom
       const bench = /** @type {RoomBench} */ (room.bench('weather_area'))
       const run = (/** @type {number} */ seconds) => { for (let t = 0; t < seconds; t += 0.05) room.update(0.05) }
-      const names = () => room.bench('weather_area').layers().map((layer) => layer.id)
+      const names = () => /** @type {RoomBench} */ (room.bench('weather_area')).layers().map((layer) => layer.id)
       bench.set('state', 'storm')
       run(8)
       room.look([0, 1.7, 4], [0, 1.2, -8])
       room.update(0.02)
-      const curtain = room.scene.getObjectByName('weather-rain-curtain')
-      const rig = room.scene.getObjectByName('weather-lamp-rig')
+      const curtain = /** @type {import('three').Mesh} the storm's rain curtain */ (room.scene.getObjectByName('weather-rain-curtain'))
+      const rig = /** @type {import('three').Object3D} */ (room.scene.getObjectByName('weather-lamp-rig'))
       // with the room's light budget the lamps are its spot slots, lit for the rig; without one they are the rig's own spot lights
-      const lamps = room.lights ? room.lights.group.children.filter((child) => child.isSpotLight && child.intensity > 0) : rig.children.filter((child) => child.isSpotLight)
-      const storm = { layers: names(), curtain: curtain.visible, drawn: curtain.geometry.drawRange.count, near: room.vfx.peekWorkshop().rain.count, fog: room.scene.fog.isFog === true, far: room.scene.fog.far, lamp: lamps.map((lamp) => lamp.intensity), screen: room.vfx.workshop().screen.white }
+      const lamps = /** @type {import('three').SpotLight[]} */ (room.lights ? room.lights.group.children.filter((child) => /** @type {import('three').SpotLight} */ (child).isSpotLight && /** @type {import('three').SpotLight} */ (child).intensity > 0) : rig.children.filter((child) => /** @type {import('three').SpotLight} */ (child).isSpotLight))
+      const storm = { layers: names(), curtain: curtain.visible, drawn: curtain.geometry.drawRange.count, near: /** @type {NonNullable<ReturnType<typeof room.vfx.peekWorkshop>>} the storm made the workshop */ (room.vfx.peekWorkshop()).rain.count, fog: /** @type {import('three').Fog} */ (room.scene.fog).isFog === true, far: /** @type {import('three').Fog} */ (room.scene.fog).far, lamp: lamps.map((lamp) => lamp.intensity), screen: room.vfx.workshop().screen.white }
       window.__stormShot = true
       return { storm }
     })
@@ -92,11 +92,11 @@ if (!playwright || !existsSync(page)) {
       bench.set('state', 'fog')
       for (let t = 0; t < 30; t += 0.05) room.update(0.05)
       const engine = room.vfx.workshop()
-      const fog = room.scene.fog
-      const heat = (() => { bench.set('state', 'extreme_heat'); for (let t = 0; t < 2; t += 0.05) room.update(0.05); return room.scene.getObjectByName('weather-heat-haze').visible })()
+      const fog = /** @type {import('three').FogExp2} */ (room.scene.fog)
+      const heat = (() => { bench.set('state', 'extreme_heat'); for (let t = 0; t < 2; t += 0.05) room.update(0.05); return /** @type {import('three').Object3D} */ (room.scene.getObjectByName('weather-heat-haze')).visible })()
       bench.set('state', 'fog')
       for (let t = 0; t < 20; t += 0.05) room.update(0.05)
-      return { exp2: fog.isFogExp2 === true || room.scene.fog.isFogExp2 === true, density: room.scene.fog.density, sprites: engine.normal.count, curtain: room.scene.getObjectByName('weather-rain-curtain').visible, heat }
+      return { exp2: fog.isFogExp2 === true || /** @type {import('three').FogExp2} */ (room.scene.fog).isFogExp2 === true, density: /** @type {import('three').FogExp2} */ (room.scene.fog).density, sprites: engine.normal.count, curtain: /** @type {import('three').Object3D} */ (room.scene.getObjectByName('weather-rain-curtain')).visible, heat }
     })
     await tab.waitForTimeout(200)
     await tab.screenshot({ path: join(shots, `weather-fog-${lang}.png`) })
