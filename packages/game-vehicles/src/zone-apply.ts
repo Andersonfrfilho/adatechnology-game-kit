@@ -1,5 +1,5 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
-import type { HSL, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { HSL, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

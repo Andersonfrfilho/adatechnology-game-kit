@@ -1,5 +1,5 @@
 /** Truck cab and chassis builders. */
-import type { ColorRepresentation } from 'three'
+import type { ColorRepresentation } from './three-types'
 
 import type { HeadlightOptions, GrilleOptions } from './lights'
 import type { BuildContext, Kit } from './types'

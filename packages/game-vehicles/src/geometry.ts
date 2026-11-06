@@ -1,5 +1,5 @@
 /** Geometry helpers: rounded boxes, lofts, creasing, subdivision, merging and convex hulls. */
-import type { BufferGeometry, Vector3 } from 'three'
+import type { BufferGeometry, Vector3 } from './three-types'
 
 import type { Kit } from './types'
 import { clamp } from './util'

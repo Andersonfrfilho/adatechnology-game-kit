@@ -4,7 +4,7 @@ import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStr
 import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
 import type { BuildContext, Kit, SceneNode } from './types'
-import type { Material } from 'three'
+import type { Material } from './three-types'
 
 import type { BuildFunction, BuildZoneState, DamageZone, KitConfiguration, Plugin, ScenarioResult, VehicleKit, VehicleKitOptions, VehicleSpec } from './api'
 import { installMaterials } from './materials'

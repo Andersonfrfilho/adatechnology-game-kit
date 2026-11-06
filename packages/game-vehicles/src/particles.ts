@@ -1,5 +1,5 @@
 /** Particle system: smoke, fire, sparks, shards, dust and water. */
-import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, Vector3 } from 'three'
+import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, Vector3 } from './three-types'
 
 import type { VehicleEmitter } from './api'
 import type { ParticleEffects } from './routed-particles'

@@ -1,5 +1,5 @@
 /** Cabin interior: seats, steering wheel, dashboard and bus rows. */
-import type { ColorRepresentation, Material, MeshStandardMaterial, Object3D } from 'three'
+import type { ColorRepresentation, Material, MeshStandardMaterial, Object3D } from './three-types'
 
 import type { BuildContext, Kit } from './types'
 

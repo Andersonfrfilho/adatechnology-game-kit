@@ -1,5 +1,5 @@
 /** Shared materials, studio environment map, paint colours and text textures. */
-import type * as THREE_NS from 'three'
+import type { THREE_NS } from './three-types'
 
 import type { Kit } from './types'
 

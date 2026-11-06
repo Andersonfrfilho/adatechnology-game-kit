@@ -1,5 +1,5 @@
-import type * as THREE_NS from 'three'
-import type { BufferGeometry, Material, Object3D } from 'three'
+import type { THREE_NS } from './three-types'
+import type { BufferGeometry, Material, Object3D } from './three-types'
 
 import type { installArmor } from './armor'
 import type { installContext } from './context'

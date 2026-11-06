@@ -4,7 +4,7 @@
  * of the full-detail build stays byte for byte the same.
  */
 import type { BuildContext, Kit, SceneNode, Three } from './types'
-import type { Curve, ExtrudeGeometryOptions, Object3D, Shape, Vector2, Vector3 } from 'three'
+import type { Curve, ExtrudeGeometryOptions, Object3D, Shape, Vector2, Vector3 } from './three-types'
 
 export interface LodSettings {
   /** Light mode is active for the builds that run now. Set by `kit.build(key, state, zones, { lod: true })`. */

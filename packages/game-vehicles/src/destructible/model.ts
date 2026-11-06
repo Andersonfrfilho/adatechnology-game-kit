@@ -5,7 +5,7 @@
  *
  * Everything here is pure data derived from the built vehicle: no meshes are created or touched.
  */
-import type { Matrix4, Mesh, Object3D } from 'three'
+import type { Matrix4, Mesh, Object3D } from '../three-types'
 
 import type { BuildContext } from '../types'
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'

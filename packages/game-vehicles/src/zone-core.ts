@@ -1,5 +1,5 @@
 /** Zone core: bands, effects text, box helpers and part lookups. */
-import type { Box3, Matrix4, Mesh, Object3D, Vector3 } from 'three'
+import type { Box3, Matrix4, Mesh, Object3D, Vector3 } from './three-types'
 
 import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit } from './types'

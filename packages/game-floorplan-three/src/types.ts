@@ -5,7 +5,7 @@ import type { Messages } from './locale.js'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
 import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
-import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
+import type { HouseDestructionRenderer } from './adapter-shapes.js'
 import type { AdapterOptions, FloorplanAdapter, HouseholdKit } from '@adatechnology/game-floorplan-interactables'
 import type { BoxCollider, BuildContext, DoorLeaf, ElectricalInfo, Eye, GutterInfo, HouseInstance, HouseInteractives, HouseLabel, HouseRecord, HouseRoom, InteractionTarget, CarModel, InteractablesRefs, KitInteractionTarget, ReflectorClass, Three, VegetationLibs, EffectLighting, MaterialTable, RoomLighting, TypeTable, InteractiveState, KitTargetOptions, LightRequest, MirrorState, SavedHouseState, SolarInfo, StairRecord, VegetationInfo, WaterApi } from './kernel-types.js'
 
@@ -90,7 +90,7 @@ export interface HouseRendererOptions {
   /** The world of `@adatechnology/game-destruction`; the house registers itself in it on first need. */
   destruction?: DestructionWorld
   /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
-  destructionRenderer?: DestructionRenderer
+  destructionRenderer?: HouseDestructionRenderer
   /** The lights of effects (a blast, a fire, a flare) light the room where their point is, and the rooms either side of an open door or window next to it (see `effectLights` and `lighting`). Default true; false keeps them off every house surface. */
   effectLightsIndoors?: boolean
   /** Milliseconds per frame the house may spend repainting damaged walls (chipped plaster, holes); events of one frame are painted together. Default `Infinity` (all of them at the frame's flush); a game loop sets a few ms. */

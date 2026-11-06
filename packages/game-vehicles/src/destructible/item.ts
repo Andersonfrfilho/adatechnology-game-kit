@@ -1,4 +1,4 @@
-import type { Group } from 'three'
+import type { Group } from '../three-types'
 
 import type { VehicleContext, VehicleKit } from '../api'
 import type { BuildState } from '../api'

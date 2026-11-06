@@ -1,5 +1,5 @@
 /** Glass cracks, shattering and tempered or laminated breakage textures. */
-import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector2, Vector3 } from 'three'
+import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector2, Vector3 } from './three-types'
 
 import type { VehicleLamp } from './api'
 import type { BuildContext, Kit, Three } from './types'

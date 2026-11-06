@@ -1,5 +1,5 @@
 /** Hoods, engine bays and hinge helpers. */
-import type { BufferGeometry, ColorRepresentation, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import type { LabelArgument } from './context'
 import type { CutTest } from './geometry'
