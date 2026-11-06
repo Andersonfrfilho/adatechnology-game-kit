@@ -1,5 +1,5 @@
 /** Damage-map widgets (SVG top-down map, band buttons, legend, health bar, scenario buttons). Optional: nothing else depends on it. */
-import type { DamageZone } from './api'
+import type { Band, DamageMapOptions, DamageZone, OverallHealth, ScenarioDefinition } from './api'
 import type { BuildContext, Kit } from './types'
 
 const SVGNS = 'http://www.w3.org/2000/svg'
@@ -15,16 +15,16 @@ export function installUi(kit: Kit): void {
     if (override[key] != null) return override[key]
     return kit.t('ui.' + key)
   }
-  function el(tag: string, cls?: string | null, txt?: string | null): any {
+  function el(tag: string, cls?: string | null, txt?: string | null): HTMLElement {
     const e = document.createElement(tag)
     if (cls) e.className = cls
     if (txt != null) e.textContent = txt
     return e
   }
-  function sv(tag: string, attrs?: Record<string, any>, parent?: any): any {
-    const e = document.createElementNS(SVGNS, tag)
+  function sv(tag: string, attrs?: Record<string, string | number>, parent?: Element | null): SVGElement {
+    const e = document.createElementNS(SVGNS, tag) as SVGElement
     Object.keys(attrs || {}).forEach(function (k) {
-      e.setAttribute(k, (attrs as any)[k])
+      e.setAttribute(k, (attrs as Record<string, string>)[k])
     })
     if (parent) parent.appendChild(e)
     return e
@@ -45,9 +45,9 @@ export function installUi(kit: Kit): void {
    * Top-down damage map (SVG). `host`: element; `c`: context from `kit.build`; `o`: `{ selected (zone id), onSelect(id) }`.
    * External zones are drawn on the vehicle outline, internal zones in a strip of blocks below.
    */
-  function damageMap(host: any, c: BuildContext, o?: any): any {
+  function damageMap(host: HTMLElement, c: BuildContext, o?: DamageMapOptions | null): SVGElement | null {
     o = o || {}
-    const sel = o.selected
+    const sel = o!.selected
     host.innerHTML = ''
     const Z = c.zones
     const ext = Z.filter(function (z: DamageZone) {
@@ -107,7 +107,7 @@ export function installUi(kit: Kit): void {
     )
     const tf = sv('text', { x: (W / 2).toFixed(1), y: 13, class: 'dm-front', 'text-anchor': 'middle' }, svg)
     tf.textContent = T('front')
-    function node(z: any, x: number, y: number, wd: number, ht: number, parent: any) {
+    function node(z: DamageZone, x: number, y: number, wd: number, ht: number, parent: Element) {
       const b = kit.bandOf(z.health)
       const g = sv(
         'g',
@@ -138,7 +138,7 @@ export function installUi(kit: Kit): void {
     }
     ext
       .slice()
-      .sort(function (a: any, b: any) {
+      .sort(function (a: DamageZone, b: DamageZone) {
         return (b.map[1] - b.map[0]) * (b.map[3] - b.map[2]) - (a.map[1] - a.map[0]) * (a.map[3] - a.map[2])
       })
       .forEach(function (z: DamageZone) {
@@ -163,13 +163,14 @@ export function installUi(kit: Kit): void {
         t.textContent = z.name.length > mc ? z.name.slice(0, mc - 1) + '…' : z.name
       })
     }
-    svg.querySelectorAll('.zn').forEach(function (g: any) {
+    svg.querySelectorAll('.zn').forEach(function (g) {
       function pick() {
-        if (o.onSelect) o.onSelect(g.getAttribute('data-id'))
+        if (o!.onSelect) o!.onSelect(g.getAttribute('data-id')!)
       }
       g.addEventListener('click', pick)
-      g.addEventListener('keydown', function (e: any) {
-        if (e.key === 'Enter' || e.key === ' ') {
+      g.addEventListener('keydown', function (e: Event) {
+        const key = (e as KeyboardEvent).key
+        if (key === 'Enter' || key === ' ') {
           e.preventDefault()
           pick()
         }
@@ -179,12 +180,12 @@ export function installUi(kit: Kit): void {
   }
 
   /** One button per band; `onPick(targetHealth, bandIndex)`. Returns the buttons. */
-  function bandButtons(host: any, onPick?: (health: number, band: number) => void): any[] {
+  function bandButtons(host: HTMLElement, onPick?: (health: number, band: number) => void): HTMLButtonElement[] {
     host.innerHTML = ''
-    return kit.bands.map(function (B: any, i: number) {
-      const b = el('button', null, B.name)
+    return kit.bands.map(function (B: Band, i: number) {
+      const b = el('button', null, B.name) as HTMLButtonElement
       b.type = 'button'
-      b.dataset.b = i
+      b.dataset.b = String(i)
       b.style.setProperty('--band', B.color)
       b.addEventListener('click', function () {
         if (onPick) onPick(B.health, i)
@@ -195,9 +196,9 @@ export function installUi(kit: Kit): void {
   }
 
   /** Band legend with the health ranges. */
-  function legend(host: any): void {
+  function legend(host: HTMLElement): void {
     host.innerHTML = ''
-    kit.bands.forEach(function (B: any, i: number, A: any[]) {
+    kit.bands.forEach(function (B: Band, i: number, A: Band[]) {
       const gone = i === A.length - 1
       const sp = el('span', gone ? 'gone' : null)
       const sw = el('i')
@@ -209,7 +210,7 @@ export function installUi(kit: Kit): void {
   }
 
   /** Overall health bar. `els`: `{ text, bar }` (elements). Returns `{ health, band, name }`. */
-  function healthBar(els: { text?: any; bar?: any }, c: BuildContext): any {
+  function healthBar(els: { text?: HTMLElement | null; bar?: HTMLElement | null }, c: BuildContext): OverallHealth {
     const O = kit.zoneOverall(c)
     if (els.text) els.text.textContent = T('health') + ' ' + O.health + '% · ' + O.name
     if (els.bar) {
@@ -220,10 +221,10 @@ export function installUi(kit: Kit): void {
   }
 
   /** One button per registered scenario; `onRun(id)`. */
-  function scenarioButtons(host: any, onRun: (id: string) => void): any[] {
+  function scenarioButtons(host: HTMLElement, onRun: (id: string) => void): HTMLButtonElement[] {
     host.innerHTML = ''
-    return kit.scenarios.map(function (S: any) {
-      const b = el('button', null, S.name)
+    return kit.scenarios.map(function (S: ScenarioDefinition) {
+      const b = el('button', null, S.name) as HTMLButtonElement
       b.type = 'button'
       b.dataset.sc = S.id
       b.addEventListener('click', function () {

@@ -336,12 +336,7 @@
   },
   "packages/game-vehicles/src/types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-vehicles/src/ui.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 26
+      "count": 1
     }
   },
   "packages/game-vehicles/src/util.ts": {
@@ -362,11 +357,6 @@
   "packages/game-vehicles/src/zone-apply.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 11
-    }
-  },
-  "packages/game-vehicles/src/zone-core.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 21
     }
   },
   "packages/game-vehicles/src/zone-derive.ts": {

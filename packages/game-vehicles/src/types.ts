@@ -30,6 +30,8 @@ import type { installZoneCore } from './zone-core'
 import type { installZoneDecals } from './zone-decals'
 import type { installZoneDent } from './zone-dent'
 import type { installZoneDerive } from './zone-derive'
+import type { createMatchers, resolveStrings } from './locale'
+import type { clamp, hash, smooth } from './util'
 
 /** The three.js namespace the host passes (typed by `@types/three`; the package binds to no version at runtime). */
 export type Three = typeof THREE_NS
@@ -73,13 +75,14 @@ export interface Kit {
   THREE: Three
   V3: Three['Vector3']
   PI: number
-  document: any
-  strings: any
+  /** The page's document (the canvases of the glass, lamp and smoke textures); a host with no DOM never draws them. */
+  document: Document
+  strings: ReturnType<typeof resolveStrings>
   t: (key: string, vars?: Record<string, unknown>) => string
-  matchers: any
-  hash: any
-  clamp: any
-  smooth: any
+  matchers: ReturnType<typeof createMatchers>
+  hash: typeof hash
+  clamp: typeof clamp
+  smooth: typeof smooth
   /** Helpers shared between modules (not public). */
   _: KitShared
   [key: string]: any

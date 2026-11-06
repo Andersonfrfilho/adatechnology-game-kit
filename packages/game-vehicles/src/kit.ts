@@ -58,7 +58,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     lod,
     V3: THREE.Vector3,
     PI: Math.PI,
-    document: doc,
+    document: doc as Document,
     particleMaterials: opts.particleMaterials,
     effects: opts.effects,
     strings,
