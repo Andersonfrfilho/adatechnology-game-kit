@@ -1,4 +1,5 @@
-import type { VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
+import type { LabelArgument, VehicleContext, VehicleKit, VehiclePart } from '@adatechnology/game-vehicles'
+import type { Material, Mesh, Object3D, Vector3 } from 'three'
 import type { FleetContext } from '../context'
 
 /* Heavy group: trucks, buses, armoured truck and tractor. Uses only the kit API.
@@ -8,6 +9,49 @@ import type { FleetContext } from '../context'
    - chassis: rails, dual-wheel rear axles, fenders, tank, batteries, side guards and rear bumper
    - boxBody: cargo box (or the armoured box of the cash truck)
    - mirrorBay: mirrored engine bay for a rear engine (city bus) */
+/** A truck cab (`cabOver`, `cabFront`): model, front x, width, length, roof, belt, bottom and floor heights, front axle and wheel, paint,
+ * interior and trim colours, glass and its label and type, and the bumper. */
+interface CabOptions {
+  model: string
+  f: number
+  W: number
+  len: number
+  roof: number
+  belt: number
+  bot: number
+  floor: number
+  ax: number
+  wr: number
+  ww: number
+  col: string
+  int?: string
+  trim?: string
+  glass?: Material | null
+  glassLabel?: LabelArgument
+  glassType?: string
+  bumperY: number
+  bumperH: number
+}
+/** A truck chassis (`chassis`): front and rear x, width, rail height, axles, wheel, the tank, guards, lights, and extras (tag axle, single tyres, mud flaps, AdBlue, rear bar). */
+interface ChassisOptions {
+  f: number
+  rear: number
+  W: number
+  railY: number
+  axles: readonly number[]
+  wr: number
+  ww: number
+  tankX: number
+  tankSide?: number
+  guards?: readonly number[]
+  lightsY?: number
+  tag?: boolean
+  single?: boolean
+  mud?: boolean
+  adblue?: boolean
+  bar?: boolean
+}
+
 export function installHeavy(fx: FleetContext): void {
   const kit = fx.kit
   const THREE = kit.THREE
@@ -27,7 +71,7 @@ export function installHeavy(fx: FleetContext): void {
   const REFL_R = CM('#b3261e', { roughness: 0.4, emissive: new THREE.Color('#2a0402'), emissiveIntensity: 0.3 }),
     REFL_W = CM('#e8e8e2', { roughness: 0.4 })
 
-  function lerp2(a: any, b: number[], t: number) {
+  function lerp2(a: number[], b: number[], t: number) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
   }
   function armorPlus(fn: (c: VehicleContext, Z: VehicleKit) => void) {
@@ -36,11 +80,11 @@ export function installHeavy(fx: FleetContext): void {
       fn(c, Z)
     }
   }
-  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: number, y: number, z: number) {
     c.cylinder(0.08, 0.065, 0.12, MT.steel, x, y, z, 'x')
     c.cylinder(0.07, 0.07, 0.012, MT.head, x + 0.065, y, z, 'x')
   }
-  function sandbags(c: VehicleContext, x0: number, x1: number, y: any, z: any, along: string) {
+  function sandbags(c: VehicleContext, x0: number, x1: number, y: number, z: number, along: string) {
     const bag = CM('#6e6248', { roughness: 0.95 })
     if (along === 'z') {
       for (let zz = x0; zz <= x1 + 1e-6; zz += 0.42) {
@@ -55,7 +99,7 @@ export function installHeavy(fx: FleetContext): void {
     }
   }
   /* truck wheel: steel disc with ventilation holes */
-  function truckWheel(c: VehicleContext, x: number, z: number, r: number, w: number, o: any) {
+  function truckWheel(c: VehicleContext, x: number, z: number, r: number, w: number, o?: { rim?: Material; noPart?: boolean; label?: LabelArgument; inner?: boolean }) {
     o = o || {}
     const g = c.wheel(x, z, r, w, { rim: o.rim || RIM_W, spokes: 0, rimR: 0.56, noPart: o.noPart, label: o.label })
     const s = z >= 0 ? 1 : -1,
@@ -83,7 +127,7 @@ export function installHeavy(fx: FleetContext): void {
   function engineNoLatch(c: VehicleContext) {
     c.parts.forEach(function (p) {
       if (p.kind !== 'engine') return
-      p.onHit = function (c2: VehicleContext, pt: any, force: number) {
+      p.onHit = function (c2: VehicleContext, pt: VehiclePart, force: number) {
         kit.addEmitter(c2, pt.pos.clone().add(new V3(0, 0.35, 0)), 'black')
         kit.puddle(c2, 'oil', pt.pos.clone().setY(Math.max(0.2, c2.meta.clearance || 0.3)), 0.6 + force * 0.3)
       }
@@ -94,8 +138,8 @@ export function installHeavy(fx: FleetContext): void {
   const CHR = CM('#e2e6e9', { metalness: 0.55, roughness: 0.2, emissive: new THREE.Color('#3a4046'), emissiveIntensity: 1 })
   /* the rear of the shell sits a few centimetres behind the last profile point (rounded corners and subdivision):
      plates and flat texts that carDetails puts behind would be hidden inside the shell; push outward */
-  function rearOut(c: VehicleContext, n0: any, rr: number, gap: number) {
-    c.vehicle.children.slice(n0).forEach(function (o: any) {
+  function rearOut(c: VehicleContext, n0: number, rr: number, gap: number) {
+    c.vehicle.children.slice(n0).forEach(function (o: Mesh) {
       if (o.isMesh && o.geometry.type === 'PlaneGeometry' && o.position.x < rr + 0.06) o.position.x = Math.min(o.position.x, rr - gap)
     })
   }
@@ -104,7 +148,7 @@ export function installHeavy(fx: FleetContext): void {
   /* objs: cab meshes (direct children of c.g). The cab rotates around a transverse axis at the front, bottom.
      Instead of re-parenting the meshes (which would take away their rigid dent following), each one gets the
      tilt in its own matrix: the dent and the click ray keep working. */
-  function tiltCab(c: VehicleContext, objs: any, pivot: any, o: any) {
+  function tiltCab(c: VehicleContext, objs: readonly Object3D[], pivot: Vector3, o?: { len?: number; open?: number; camSpan?: number }) {
     o = o || {}
     const h = kit.hinge(c, [], pivot, { len: -(o.len || 1.8), open: o.open || 0.9, sign: -1, zw: 0.7, label: trl('labels.tilting_cab') })
     const piv = h.piv,
@@ -123,9 +167,9 @@ export function installHeavy(fx: FleetContext): void {
       }
       return M
     }
-    objs.forEach(function (ob: any) {
+    objs.forEach(function (ob) {
       if (ob === piv) return
-      ob.updateMatrix = function () {
+      ob.updateMatrix = function (this: Object3D) {
         this.matrix.compose(this.position, this.quaternion, this.scale)
         const t = tm()
         if (t) this.matrix.premultiply(t)
@@ -152,7 +196,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= cab-over cab ================= */
   /* o: { model: delivery|constellation|atego, f (front), W, len, roof, belt, bot (cab base), floor, ax (front axle), wr, ww, col, int, glass, sideCol } */
-  function cabOver(c: VehicleContext, o: any) {
+  function cabOver(c: VehicleContext, o: CabOptions) {
     const f = o.f,
       W = o.W,
       len = o.len,
@@ -342,7 +386,7 @@ export function installHeavy(fx: FleetContext): void {
   }
 
   /* front bumper, low headlights and front wheels (they do not tilt) */
-  function cabFront(c: VehicleContext, o: any, _cab: any) {
+  function cabFront(c: VehicleContext, o: CabOptions, _cab: unknown) {
     const f = o.f,
       W = o.W,
       md = o.model,
@@ -415,7 +459,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= chassis ================= */
   /* o: { f, rear, W, railY, axles:[x..], wr, ww, tankX, tankSide (-1 left), guards: [x0, x1] , bar: true, mud: true, lightsY } */
-  function chassis(c: VehicleContext, o: any) {
+  function chassis(c: VehicleContext, o: ChassisOptions) {
     const f = o.f,
       rear = o.rear,
       W = o.W,
@@ -427,7 +471,7 @@ export function installHeavy(fx: FleetContext): void {
       c.roundBox(f - rear - 0.1, 0.24, 0.09, 0.02, MT.trim, (f + rear) / 2, ry, z)
     })
     for (let x = rear + 0.3; x < f - 0.3; x += 1.3) c.roundBox(0.1, 0.18, 0.78, 0.02, MT.trim, x, ry, 0)
-    o.axles.forEach(function (ax: any, i: number) {
+    o.axles.forEach(function (ax, i: number) {
       c.cylinder(0.08, 0.08, W - 0.5, MT.trim, ax, wr, 0, 'z')
       if (!o.tag || i === 0) c.sphere(0.2, MT.trim, ax, wr, 0, 1, 1, 0.9)
       ;[1, -1].forEach(function (s) {
@@ -494,17 +538,17 @@ export function installHeavy(fx: FleetContext): void {
       [1, -1].forEach(function (s) {
         ;[0.48, 0.78].forEach(function (y) {
           c.roundBox(
-            o.guards[1] - o.guards[0],
+            o.guards![1] - o.guards![0],
             0.08,
             0.03,
             0.01,
             CM('#9a9d9f', { metalness: 0.5 }),
-            (o.guards[0] + o.guards[1]) / 2,
+            (o.guards![0] + o.guards![1]) / 2,
             y,
             s * (W / 2 - 0.04),
           )
         })
-        for (let gx = o.guards[0] + 0.1; gx < o.guards[1]; gx += 1.0)
+        for (let gx = o.guards![0] + 0.1; gx < o.guards![1]; gx += 1.0)
           c.roundBox(0.06, 0.4, 0.04, 0.01, MT.trim, gx, 0.63, s * (W / 2 - 0.07))
       })
     /* rear bumper with a reflective strip */
@@ -540,7 +584,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= box body ================= */
   /* o: { x0 (front), x1 (rear), y0, y1, W, col, armored, label } */
-  function boxBody(c: VehicleContext, o: any) {
+  function boxBody(c: VehicleContext, o: { x0: number; x1: number; y0: number; y1: number; W: number; col: string; armored?: boolean; label?: string }) {
     const x0 = o.x0,
       x1 = o.x1,
       y0 = o.y0,
@@ -623,12 +667,12 @@ export function installHeavy(fx: FleetContext): void {
   }
 
   /* mirrored engine bay (rear engine): built with engineBay and rotated 180 degrees around a vertical axis at xm */
-  function mirrorBay(c: VehicleContext, o: any, xm: number) {
+  function mirrorBay(c: VehicleContext, o: Parameters<VehicleKit['engineBay']>[1], xm: number) {
     const n0 = c.vehicle.children.length,
       np = c.parts.length
     kit.engineBay(c, o)
     const q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), PI)
-    c.vehicle.children.slice(n0).forEach(function (ob: any) {
+    c.vehicle.children.slice(n0).forEach(function (ob: Object3D) {
       ob.position.x = 2 * xm - ob.position.x
       ob.position.z = -ob.position.z
       ob.quaternion.premultiply(q)
@@ -931,7 +975,7 @@ export function installHeavy(fx: FleetContext): void {
       m.front = f + 0.24
       m.length = m.front - rear
       c.part('fuel_tank', trl('labels.cargo_tank_20_000_l'), tk, new V3(tx, ty, 0), 2.2, {
-        onHit: function (c2: VehicleContext, pt: any, force: number) {
+        onHit: function (c2: VehicleContext, pt: VehiclePart, force: number) {
           const pd = kit.puddle(c2, 'gasoline', new V3(tx, 1.0, 0), 1.8 + force)
           if (force >= 0.9) {
             kit.igniteFuel(c2, pd)
@@ -1040,7 +1084,7 @@ export function installHeavy(fx: FleetContext): void {
       const hatch = kit.holeBox(
         [f - 0.3, 0.8, -0.6],
         [f + 0.4, 1.2, 0.6],
-        function (n: any) {
+        function (n: Vector3) {
           return n.x > 0.6
         },
         'lid',
@@ -1050,7 +1094,7 @@ export function installHeavy(fx: FleetContext): void {
         kit.holeSide(door, { side: 1 }),
         kit.holeSide(drvW, { side: -1 }),
         hatch,
-        kit.holeBox([rr - 0.3, 1.95, -0.9], [rr + 0.3, 2.62, 0.9], function (n: any) {
+        kit.holeBox([rr - 0.3, 1.95, -0.9], [rr + 0.3, 2.62, 0.9], function (n: Vector3) {
           return n.x < -0.6
         }),
       ].concat(
@@ -1221,7 +1265,7 @@ export function installHeavy(fx: FleetContext): void {
       c.vehicle.add(lid)
       c.deform.push(lid)
       const lidObjs = [lid]
-      c.vehicle.children.slice(nD).forEach(function (o: any) {
+      c.vehicle.children.slice(nD).forEach(function (o: Mesh) {
         const p = o.position
         if (o !== lid && p.x > f - 0.05 && Math.abs(p.z) < 0.62 && p.y > 0.8 && p.y < 1.22) lidObjs.push(o)
       })
@@ -1358,7 +1402,7 @@ export function installHeavy(fx: FleetContext): void {
       const hatch = kit.holeBox(
         [rr - 0.3, 0.64, -0.95],
         [rr + 0.3, 1.4, 0.95],
-        function (n: any) {
+        function (n: Vector3) {
           return n.x < -0.6
         },
         'lid',
@@ -1369,7 +1413,7 @@ export function installHeavy(fx: FleetContext): void {
         kit.holeSide(dF, { side: 1 }),
         kit.holeSide(dM, { side: 1 }),
         kit.holeSide(drv, { side: -1 }),
-        kit.holeBox([rr - 0.3, 2.0, -0.85], [rr + 0.3, 2.75, 0.85], function (n: any) {
+        kit.holeBox([rr - 0.3, 2.0, -0.85], [rr + 0.3, 2.75, 0.85], function (n: Vector3) {
           return n.x < -0.6
         }),
       ].concat(
@@ -1617,9 +1661,9 @@ export function installHeavy(fx: FleetContext): void {
         [
           [dF, 'front_door', trl('labels.front_door'), 'porta_dianteira'],
           [dM, 'middle_door', trl('labels.middle_door'), 'porta_central'],
-        ] as [unknown, string, string, string][]
+        ] as [number[][], string, string, string][]
       ).forEach(function (P) {
-        const d: any = P[0]
+        const d = P[0]
         c.zone(P[1], P[2], [d[0][0] - 0.05, d[1][0] + 0.05, 0.3, 2.78, W / 2 - 0.3, W / 2 + 0.25], null, {
           type: 'panel',
           side: 1,
@@ -1952,7 +1996,7 @@ export function installHeavy(fx: FleetContext): void {
         c.sphere(0.035, MT.postRed, -0.6, 1.72, p[1] * (p[0] + 0.05))
       })
       /* operator station: seat, wheel, dashboard and levers (without the platform); the arch and canopy have their own zone */
-      const stationParts = c.vehicle.children.slice(stationCount).filter(function (o: any) {
+      const stationParts = c.vehicle.children.slice(stationCount).filter(function (o: Mesh) {
         return !(o.isMesh && o.position.y < 1.16 && Math.abs(o.position.x + 0.7) < 0.01)
       })
       /* rear fenders with a flat top, lights and work lights */

@@ -44,16 +44,6 @@
       "count": 3
     }
   },
-  "packages/game-vehicles-fleet/src/pack.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vehicles-fleet/src/vehicles/heavy.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 30
-    }
-  },
   "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 15
