@@ -26,7 +26,7 @@ import type {
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
 } from './types'
-import { ignitionChance, resolveIgnitionRules, sparkTargetFactor } from '@adatechnology/game-contracts'
+import { bodyImpulse, DEFAULT_BLAST_IMPULSE, ignitionChance, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
 
 /** Hit points removed per joule (before the material's `damageScale`). */
 /** Metres: a ductile part this thin or thinner dishes around a bullet hole. */
@@ -100,6 +100,18 @@ const BLAST_REFERENCE_RESISTANCE = 200 * 1900 * 0.13
 const BLAST_EDGE_RAGGED = 0.3
 /** Out to this many times the radius of the hole, the units are loosened: they take `BLAST_EDGE_WEAR` of what knocks them out, so the next blow finishes them. */
 const BLAST_EDGE_LOOSE = 1.35
+/**
+ * Pressure-impulse curve at which an unreinforced infill panel (the masonry between two pillars and under the bond beam) fails as a whole:
+ * `(P - PANEL_PRESSURE) * (I - PANEL_IMPULSE) >= PANEL_PI` with the reflected peak pressure P (Pa) and the reflected impulse I (Pa·s) the face takes at the middle
+ * of the panel. Read from the iso-damage curves of brick walls (UFC 3-340-02, Glasstone and Dolan table 5.139: heavy damage from about 70 kPa when the
+ * load lasts): 4.8 kg of TNT 4 m off brings the panel down, a grenade 2 m off or the same 4.8 kg 6 m off only cracks it.
+ */
+const PANEL_PRESSURE = 70_000
+const PANEL_IMPULSE = 150
+const PANEL_PI = 6e6
+/** Where the panel is read, as shares of its span and height from its middle, and how many of them must pass `PANEL_PI` for the panel to fail. */
+const PANEL_POINTS: readonly (readonly [number, number])[] = [[0, 0], [-0.3, 0], [0.3, 0], [0, -0.3], [0, 0.3]]
+const PANEL_POINTS_LOADED = 4
 const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
@@ -2077,6 +2089,71 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     }
     if (out.length === 0) return false
+    return knockOutUnits(o, p, wp, energy, out, src)
+  }
+
+  /**
+   * A blast on the infill of a confined wall (`PANEL_PI`): the reflected pressure and impulse at the middle of the bay the charge faces (between the two
+   * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
+   * pillars and the bond beam around it are parts of their own and stay. Returns whether the panel came out.
+   */
+  const blastPanel = (o: ObjRT, p: PartRT, point: Vec3, energy: number, src?: string): boolean => {
+    if (!p.staged || p.st.stripped || isLost(p) || !p.spec.units || p.spec.units.mortar === p.spec.material || p.spec.reinforcement) return false
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objLocal(o, point))
+    const half = p.dims[u] / 2
+    // the pillars standing in this wall, as positions along it
+    const posts: number[] = []
+    for (const m of o.parts) {
+      if (m === p || !m.spec.reinforcement || isLost(m) || m.spec.shape.kind !== 'box') continue
+      const mp = toLocal(p.pos, p.q, m.pos)
+      if (Math.abs(mp[p.thin]) > p.dims[p.thin] + 0.15 || Math.abs(mp[u]) > half + 0.15 || m.dims[v] < p.dims[v] * 0.5) continue
+      posts.push(mp[u])
+    }
+    let from = -half, to = half
+    for (const x of posts) {
+      if (x <= lp[u] && x > from) from = x
+      if (x >= lp[u] && x < to) to = x
+    }
+    if (to - from < 0.2) return false
+    // a panel fails in bending across its span: the wave has to load most of it, not one place (a grenade close to it breaks a hole there instead)
+    const tnt = energy * DEFAULT_BLAST_IMPULSE.tntPerJoule
+    const centre = objLocal(o, point)
+    const span = to - from, height = p.dims[v]
+    let loaded = 0
+    for (const [fu, fv] of PANEL_POINTS) {
+      const at: Vec3 = [0, 0, 0]
+      at[u] = (from + to) / 2 + fu * span
+      at[v] = fv * height
+      at[p.thin] = Math.sign(lp[p.thin]) * p.dims[p.thin] / 2
+      const r = vec.distance(toWorld(p.pos, p.q, at), centre)
+      const side = sideOnOverpressure(tnt, r)
+      // reflected peak pressure of a shock meeting a wall head on (Rankine-Hugoniot, air as an ideal gas)
+      const reflected = 2 * side + (6 * side * side) / (side + 7 * 101325)
+      const impulse = bodyImpulse(tnt, r)
+      if (reflected > PANEL_PRESSURE && impulse > PANEL_IMPULSE && (reflected - PANEL_PRESSURE) * (impulse - PANEL_IMPULSE) >= PANEL_PI) loaded++
+    }
+    if (loaded < PANEL_POINTS_LOADED) return false
+    const grid = gridOf(p)
+    const worn = (p.rt.chips ??= {})
+    const out: number[] = []
+    for (let i = 0; i < grid.length; i++) {
+      const cell = grid[i]!
+      if (worn[i] === -1) continue
+      if (cell.center[u] - cell.size[u] / 2 >= from - 1e-6 && cell.center[u] + cell.size[u] / 2 <= to + 1e-6) out.push(i)
+    }
+    if (out.length === 0) return false
+    for (const i of out) worn[i] = -1
+    return knockOutUnits(o, p, point, energy, out, src)
+  }
+
+  /** Takes the units `out` (indices of the part's grid) out of a wall of units: they fly from `wp` as clumps, what they leave with nothing under it comes down, and one `chip` says so. */
+  const knockOutUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, out: readonly number[], src?: string): boolean => {
+    const [u, v] = planeAxes(p.thin)
+    const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
+    const grid = gridOf(p)
+    const worn = (p.rt.chips ??= {})
+    for (const i of out) worn[i] = -1
     const loose = unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))
     for (const i of loose) worn[i] = -1
     const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
@@ -2641,7 +2718,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     res.damage += dealt
     if (p.bend && flexure.enabled) bendByBlast(o, p, point, energy, radius, reach, src)
     // laid units (brick, block in their mortar) come out by the unit; a cast part (its units are of its own material) opens as one breach
-    if (p.spec.units && p.spec.units.mortar !== p.spec.material) blastUnits(o, p, wp, energy, dist, src)
+    if (p.spec.units && p.spec.units.mortar !== p.spec.material) {
+      blastPanel(o, p, point, energy, src)
+      if (!isLost(p)) blastUnits(o, p, wp, energy, dist, src)
+    }
     // a reinforced member (a pillar, a beam) is cut through only by a charge at or near contact; further off the blast takes the concrete it reaches
     // out of it, block by block, the bars show there and the cage holds the member to what it rests on
     else if (farMember) blastUnits(o, p, wp, energy, dist, src)
