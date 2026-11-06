@@ -24,7 +24,7 @@ export function createModule(options = {}) {
 
 /**
  * Swaps the stories the module runs: `{ people?, stories, life?, actions?, playerBase?, days? }`.
- * @param {string} content
+ * @param {string | Parameters<ReturnType<typeof createStoriesTestModule>['load']>[0]} content the JSON text or the parsed object
  */
 export function loadContent(content) {
   if (!current) throw new Error('StoriesArea: load the module first')

@@ -13,12 +13,14 @@ const base = process.argv[2] ?? pathToFileURL(join(here, 'dist/test-room.html'))
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?scene=push&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((/** @type {{ itemId: string; }} */ s) => s.itemId === 'wardrobe'), null, { timeout: 180000 })
 await page.waitForTimeout(1500)
 
+/** @type {string[]} */
 const failures = []
 const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
@@ -28,11 +30,11 @@ const state = () =>
   page.evaluate(() => {
     const r = window.__testRoom
     const at = (/** @type {string} */ id) => r.spawned().find((/** @type {{ itemId: string; }} */ s) => s.itemId === id)?.root.position
-    return { push: r.push.state, player: [r.playerPosition[0], r.playerPosition[2]], nightstand: at('nightstand')?.z, bbq: at('bbq')?.z, wardrobe: at('wardrobe')?.z }
+    return { push: r.push.state, player: [r.playerPosition[0], r.playerPosition[2]], nightstand: /** @type {number} the scene spawned it */ (at('nightstand')?.z), bbq: /** @type {number} */ (at('bbq')?.z), wardrobe: /** @type {number} */ (at('wardrobe')?.z) }
   })
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `push-${name}.png`), timeout: 180000 })
-const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
-const camera = (/** @type {string} */ mode) => page.evaluate((/** @type {string} */ m) => window.__testRoom.setCameraMode(m), mode)
+const look = (/** @type {[number, number, number]} */ eye, /** @type {[number, number, number]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
+const camera = (/** @type {import('@adatechnology/game-test-room').CameraMode} */ mode) => page.evaluate((/** @type {import('@adatechnology/game-test-room').CameraMode} */ m) => window.__testRoom.setCameraMode(m), mode)
 /** Holds E until the ring has gone `until` of the way (real seconds of a slow GL run). */
 const holdUntil = async (/** @type {{ (): boolean; (): boolean; (): boolean; }} */ test) => {
   await page.keyboard.down('KeyE')
@@ -43,7 +45,7 @@ const ringShown = () => page.evaluate(() => {
   return ring ? getComputedStyle(ring).display !== 'none' : false
 })
 
-for (const mode of ['first', 'third']) {
+for (const mode of /** @type {const} */ (['first', 'third'])) {
   console.log(`--- ${mode} person`)
   await camera(mode)
   // the light piece: the ring, then walking with it

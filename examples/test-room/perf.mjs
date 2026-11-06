@@ -253,7 +253,7 @@ function nextFrames(count) {
 
 /** The metrics of the module the room shows (the crowd area is the active bench), by id. */
 function readHorde() {
-  return page.evaluate(() => window.__testRoom.metrics().module)
+  return page.evaluate(() => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module))
 }
 
 // the horde phases: a page of their own, the bench state in the URL, the crowd baked at load (`eager`), the measurement from the first frame the room is ready
@@ -288,11 +288,11 @@ async function waitForHorde(condition, seconds) {
 }
 
 async function playDenseHorde() {
-  await page.waitForFunction((/** @type {number} */ n) => window.__testRoom.metrics().module.agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
+  await page.waitForFunction((/** @type {number} */ n) => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module).agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
   // gpu mode plays the 30 s of the plan; software GL plays until the horde has done what the phase is for (falls by pressure, climbers) or the timeout
   if (GPU_MODE) await pause(HORDE_BUDGET.denseSeconds * 1000)
   else await waitForHorde(() => {
-    const m = window.__testRoom.metrics().module
+    const m = /** @type {NumericMetrics} */ (window.__testRoom.metrics().module)
     return (m.falls_pressure ?? 0) > 0 && (m.climbers ?? 0) > 0
   }, HORDE_BUDGET.denseSeconds)
 }
@@ -372,7 +372,7 @@ function sampleDetailScale() {
   let started
   let peak = 0
   setInterval(() => {
-    const { agents, detail_scale: scale } = window.__testRoom.metrics().module
+    const { agents, detail_scale: scale } = /** @type {NumericMetrics} */ (window.__testRoom.metrics().module)
     // the clock starts when the horde stopped growing: while it spawns the detail is following the load, not settling
     if (scale === undefined || !(agents > 0) || (agents > peak && (peak = agents))) return
     started ??= performance.now()

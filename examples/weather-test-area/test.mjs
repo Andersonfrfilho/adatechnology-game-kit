@@ -21,7 +21,7 @@ import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
@@ -33,7 +33,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -54,11 +54,11 @@ if (!playwright || !existsSync(page)) {
       const report = window.__weatherReport
       const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => ['storm', 'blend', 'determinism', 'dry_ground'].some((id) => s.id.endsWith(id)))
       const result = await room.runScenarios(scenarios)
-      const bench = room.bench('weather_area')
-      const before = room.metrics().module
+      const bench = /** @type {RoomBench} */ (room.bench('weather_area'))
+      const before = /** @type {NumericMetrics} */ (room.metrics().module)
       bench.set('state', 'storm')
       for (let i = 0; i < 400; i++) room.update(0.1)
-      const after = room.metrics().module
+      const after = /** @type {NumericMetrics} */ (room.metrics().module)
       const wind = room.vfx.wind()
       const loops = room.audio ? room.audio.stats().loops : -1
       return { wind, loops, thunder: room.audio ? room.audio.registry.sound('thunder') !== undefined : false, ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), before, after }
@@ -68,7 +68,7 @@ if (!playwright || !existsSync(page)) {
     // the picture: the storm draws the rain curtain, the near rain, the linear fog and a lit lamp rig; the fog weather the exponential fog, mist and ash
     const picture = await tab.evaluate(() => {
       const room = window.__testRoom
-      const bench = room.bench('weather_area')
+      const bench = /** @type {RoomBench} */ (room.bench('weather_area'))
       const run = (/** @type {number} */ seconds) => { for (let t = 0; t < seconds; t += 0.05) room.update(0.05) }
       const names = () => room.bench('weather_area').layers().map((layer) => layer.id)
       bench.set('state', 'storm')
@@ -87,7 +87,7 @@ if (!playwright || !existsSync(page)) {
     await tab.screenshot({ path: join(shots, `weather-storm-${lang}.png`) })
     const mist = await tab.evaluate(() => {
       const room = window.__testRoom
-      const bench = room.bench('weather_area')
+      const bench = /** @type {RoomBench} */ (room.bench('weather_area'))
       for (let t = 0; t < 12; t += 0.05) room.update(0.05)
       bench.set('state', 'fog')
       for (let t = 0; t < 30; t += 0.05) room.update(0.05)

@@ -149,8 +149,8 @@ for (const lang of languages) {
     room.spawn('animal_cow', [3, 0, -3], 0)
     room.update(1 / 30)
     const before = room.audio.stats()
-    const groan = room.bench('characters_area').act('voice')
-    const moo = room.bench('animals_area').act('call')
+    const groan = /** @type {RoomBench} */ (room.bench('characters_area')).act('voice')
+    const moo = /** @type {RoomBench} */ (room.bench('animals_area')).act('call')
     const after = room.audio.stats()
     room.clear()
     return { groan, moo, peak: after.peak, voices: after.voices, registered: ['groan_walker', 'scream', 'cow_moo', 'hen_cluck'].every((id) => room.audio.registry.sound(id) !== undefined), before: before.voices }
@@ -163,7 +163,7 @@ for (const lang of languages) {
     const loaded = window.__furnitureReport.weapons
     room.setTool('colt_m4a1')
     for (let i = 0; i < 40; i++) room.update(0.02)
-    const bench = room.bench('weapons_area')
+    const bench = /** @type {RoomBench} */ (room.bench('weapons_area'))
     const accepted = bench ? bench.set('fit_muzzle', 'suppressor') : false
     for (let i = 0; i < 800; i++) room.update(0.02)
     const result = { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, controls: bench ? bench.controls().map((c) => c.id).filter((/** @type {string} */ id) => id.startsWith('fit_')).length : 0, accepted, suppressed: room.tool.suppressed }
@@ -214,7 +214,7 @@ for (const lang of languages) {
   check(`[${lang}] the floorplan module is loaded too (5 specimens, 7 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 5 && floorplan.scenarios === 7, floorplan)
   const effects = await page.evaluate(() => {
     const loaded = window.__furnitureReport.vfx
-    const bench = window.__testRoom.bench('vfx')
+    const bench = /** @type {RoomBench} */ (window.__testRoom.bench('vfx'))
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], controls: bench ? bench.controls().length : 0, layers: bench ? bench.layers().length : 0 }
   })
   check(`[${lang}] the effects bench is loaded too (7 controls, 6 layers)`, effects.module === 'vfx' && effects.ok && effects.problems.length === 0 && effects.controls === 7 && effects.layers === 6, effects)
@@ -224,8 +224,8 @@ for (const lang of languages) {
   const sky = await page.evaluate((/** @type {number} */ NEUTRAL_FOG_NEAR) => {
     const room = window.__testRoom
     const report = window.__furnitureReport
-    const weather = room.bench('weather_area')
-    const audio = room.bench('audio_area')
+    const weather = /** @type {RoomBench} */ (room.bench('weather_area'))
+    const audio = /** @type {RoomBench} */ (room.bench('audio_area'))
     weather.set('state', 'storm')
     audio.set('sound', 'bench_ping')
     audio.act('play')

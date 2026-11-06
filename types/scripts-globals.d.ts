@@ -22,6 +22,12 @@ declare global {
   var Casa3DSDK: TeamHouses
   /** The houses area bundle of the old room page (`sala-de-testes/area-casas`). */
   var HouseArea: { loadInto(room: TestRoom): unknown }
+  /** The proving ground's certificates by vehicle id (`examples/vehicles-proving-area/src/entry.js`), for a page or a test to read. */
+  var __provingCertificates: Record<string, import('@adatechnology/game-vehicles-proving').ProvingCertificate> | undefined
+  /** The page's three.js, when the page exposes it (`window.__THREE`). */
+  var __THREE: typeof THREE | undefined
+  /** The room page's build flag (`examples/test-room/build.mjs` defines it): true on the default page, false on the bare room the areas build over. */
+  const __ROOM_FULL__: boolean
   /** The furniture builders the house renderer takes (`window.Moveis3DSDK`). */
   var Moveis3DSDK: unknown
   /** What the recorder cut out of the sources for the capture (`tools/characters-catalog/src/golden/chrome-goldens.ts`). */
@@ -186,6 +192,23 @@ declare global {
     count?: number
   }
 
+  /** A module's metrics (`room.metrics().module`) as the checks read them: numbers; a text one (`context`) is read with `typeof`. */
+  type NumericMetrics = { readonly [name: string]: number }
+
+  /** The state of an object of the room's world the script knows is there (`room.world.state(id)`). */
+  type WorldObjectState = NonNullable<ReturnType<TestRoom['world']['state']>>
+
+  /** A room drawn with WebGL, as every test page is (`room.webgl`). */
+  type GlRoom = TestRoom & { readonly webgl: NonNullable<TestRoom['webgl']> }
+
+  /** A point or a direction as the room takes them: x, y, z. */
+  type Vec3 = [number, number, number]
+  /** An object the room spawned (`room.spawned()`) the script knows is there. */
+  type SpawnedObject = ReturnType<TestRoom['spawned']>[number]
+
+  /** A bench of the room (`room.bench(id)`) the scripts know is there. */
+  type RoomBench = NonNullable<ReturnType<TestRoom['bench']>>
+
   /** The report `loadInto` of an area's entry returns. */
   type AreaReport<Dir extends AreaEntryDir> = ReturnType<AreaEntries[Dir]['loadInto']>
   type AreaEntryDir = keyof AreaEntries
@@ -202,6 +225,9 @@ declare global {
     'vegetation-test-area': typeof import('../examples/vegetation-test-area/src/entry.js')
     'vehicles-test-area': typeof import('../examples/vehicles-test-area/src/entry.js')
     'weapons-test-area': typeof import('../examples/weapons-test-area/src/entry.js')
+    'vehicles-proving-area': typeof import('../examples/vehicles-proving-area/src/entry.js')
+    'player-test-area': typeof import('../examples/player-test-area/src/entry.js')
+    'crowd-test-area': typeof import('../examples/crowd-test-area/src/entry.js')
   }
 
   interface Window {
@@ -210,6 +236,28 @@ declare global {
     /** The room of a deferred page, before its areas are open. */
     __bootRoom?: TestRoom
     __THREE: typeof THREE
+    // What the room page (`examples/test-room/src/main.js`) publishes as its sounds load and its scenarios run
+    __sfxReport?: import('@adatechnology/game-audio').SampleLoadReport
+    __localSoundPack?: ReturnType<typeof import('@adatechnology/game-audio').applyLocalSoundPack>
+    __localSoundReport?: import('@adatechnology/game-audio').LocalPackReport
+    __testRoomReport?: Awaited<ReturnType<TestRoom['runScenarios']>>
+    /** The default page's start, run by its boot script once the teams' content is loaded. */
+    __roomStart?: () => Promise<void>
+    /** What `examples/audio-test-area/body-reel.mjs` puts on its page: the body sounds and the engine that plays them. */
+    reel: {
+      readonly BODY_FOLEY_BANK: typeof import('@adatechnology/game-audio').BODY_FOLEY_BANK
+      readonly createAudioEngine: typeof import('@adatechnology/game-audio').createAudioEngine
+      readonly SURFACE_IDS: typeof import('@adatechnology/game-contracts').SURFACE_IDS
+      readonly SWING_LEAD_SECONDS: typeof import('@adatechnology/game-contracts').SWING_LEAD_SECONDS
+    }
+    // What the test scripts keep on the page between two `evaluate` calls
+    __lastZ?: number
+    /** The memory warnings of the room counted across the cycles of `leak.mjs`. */
+    __memoryWarnings?: number
+    /** What `leak.mjs` counts in the page: live GL objects, canvases, listeners and intervals. */
+    __leakCount: () => Record<string, number>
+    /** The stories area bundle (its `loadContent` takes a game's content). */
+    StoriesArea: AreaEntries['stories-test-area']
     // What each area's `loadInto` returned, as its build.mjs boot line keeps it.
     __itemsReport: AreaReport<'items-test-area'>
     __floorplanReport: AreaReport<'floorplan-test-area'>
@@ -223,6 +271,9 @@ declare global {
     __vegetationReport: AreaReport<'vegetation-test-area'>
     __vehiclesReport: AreaReport<'vehicles-test-area'>
     __weaponsReport: AreaReport<'weapons-test-area'>
+    __provingReport: AreaReport<'vehicles-proving-area'>
+    __playerReport: AreaReport<'player-test-area'>
+    __crowdReport: AreaReport<'crowd-test-area'>
   }
 }
 export {}

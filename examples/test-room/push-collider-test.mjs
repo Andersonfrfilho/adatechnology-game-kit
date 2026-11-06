@@ -13,12 +13,14 @@ const base = process.argv[2] ?? pathToFileURL(join(here, 'dist/test-room.html'))
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?table=0&pushForce=2000`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom?.world.has('shelf'), null, { timeout: 180000 })
 await page.waitForTimeout(1500)
 
+/** @type {string[]} */
 const failures = []
 const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
@@ -26,10 +28,10 @@ const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
 }
 const state = () => page.evaluate(() => {
   const r = window.__testRoom
-  return { shelfZ: r.world.state('shelf').position[2], shelfX: r.world.state('shelf').position[0], playerZ: r.playerPosition[2], push: r.push.state }
+  return { shelfZ: /** @type {WorldObjectState} */ (r.world.state('shelf')).position[2], shelfX: /** @type {WorldObjectState} */ (r.world.state('shelf')).position[0], playerZ: r.playerPosition[2], push: r.push.state }
 })
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `push-collider-${name}.png`), timeout: 180000 })
-const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
+const look = (/** @type {[number, number, number]} */ eye, /** @type {[number, number, number]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
 
 const start = await state()
 const oldZ = start.shelfZ
@@ -39,7 +41,7 @@ await look([x, 1.7, oldZ + 1], [x, 1.2, oldZ])
 await page.keyboard.down('KeyE')
 await page.waitForFunction(() => window.__testRoom.push.state?.phase === 'push', null, { timeout: 60000 })
 await page.keyboard.down('KeyW')
-await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.world.state('shelf').position[2] < z - 2.5, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => /** @type {WorldObjectState} */ (window.__testRoom.world.state('shelf')).position[2] < z - 2.5, oldZ, { timeout: 60000 })
 await page.keyboard.up('KeyW')
 await page.keyboard.up('KeyE')
 await page.waitForTimeout(800)
@@ -72,7 +74,7 @@ await page.evaluate(([x2, z]) => window.__testRoom.look([x2, 1.7, z + 0.9], [x2,
 await page.keyboard.down('KeyE')
 await page.waitForFunction(() => window.__testRoom.push.state?.phase === 'push', null, { timeout: 60000 })
 await page.keyboard.down('KeyS')
-await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.world.state('shelf').position[2] > z, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => /** @type {WorldObjectState} */ (window.__testRoom.world.state('shelf')).position[2] > z, oldZ, { timeout: 60000 })
 await page.keyboard.up('KeyS')
 await page.keyboard.up('KeyE')
 await page.waitForTimeout(500)

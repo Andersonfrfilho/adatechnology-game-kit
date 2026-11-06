@@ -22,7 +22,7 @@ import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
@@ -34,7 +34,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -49,7 +49,7 @@ if (!playwright || !existsSync(page)) {
       const room = window.__testRoom
       for (let i = 0; i < 90; i++) room.update(0.02)
     })
-    const shown = await tab.evaluate(() => window.__testRoom.metrics().module)
+    const shown = await tab.evaluate(() => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module))
     await tab.waitForTimeout(400)
     await tab.screenshot({ path: join(shots, `items-${lang}.png`) })
     check(`[${lang}] the area opens with every item on the shelves`, shown.items > 350 && shown.draw_calls > shown.items && /^[1-9]\d*\/\d+$/.test(String(shown.modeled)), shown)
@@ -63,7 +63,7 @@ if (!playwright || !existsSync(page)) {
       bench.set('seed', 3)
       bench.act('roll_finds')
       for (let i = 0; i < 30; i++) room.update(0.02)
-      return { ok: report.ok, problems: report.problems, items: report.items.length, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), finds: room.metrics().module.finds }
+      return { ok: report.ok, problems: report.problems, items: report.items.length, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), finds: /** @type {NumericMetrics} */ (room.metrics().module).finds }
     })
     check(`[${lang}] contract report is clean, 7 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 7 && state.failed === 0 && state.items > 350, state)
     await context.close()

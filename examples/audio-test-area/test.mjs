@@ -22,7 +22,7 @@ import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
@@ -34,7 +34,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -55,7 +55,7 @@ if (!playwright || !existsSync(page)) {
       const report = window.__audioReport
       const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => ['panning', 'distance', 'determinism', 'limiter'].some((id) => s.id.endsWith(id)))
       const result = await room.runScenarios(scenarios)
-      const bench = room.bench('audio_area')
+      const bench = /** @type {RoomBench} */ (room.bench('audio_area'))
       bench.set('sound', 'sfx_pistol')
       bench.set('distance', '40')
       bench.act('play')
@@ -63,7 +63,7 @@ if (!playwright || !existsSync(page)) {
       bench.set('loop_level', 0.3)
       bench.act('voice_storm')
       for (let i = 0; i < 20; i++) room.update(0.02)
-      const metrics = room.metrics().module
+      const metrics = /** @type {NumericMetrics} */ (room.metrics().module)
       return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), metrics }
     })
     check(`[${lang}] contract report is clean, 4 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 4 && state.failed === 0, state)
