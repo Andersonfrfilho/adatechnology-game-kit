@@ -1,5 +1,29 @@
 # @adatechnology/game-test-room
 
+## 0.28.0
+
+### Minor Changes
+
+- 49b8d77: The first-person viewmodel, as shooters draw the weapon in the hands. `FIRST_PERSON_LAYER` and `ModuleHost.setViewmodelFov` (game-contracts) give a host a layer it draws over the world with the depth cleared and the lens of the tool. The test room draws it (its world camera leaves the layer out), takes first-person arms of its own (`firstPersonArms`: `createFirstPersonArms` of game-characters-three fits it) whose hands go to the tool's grips, and hides the body's arms from the eye (`setView(mode, camera, { arms: true })`). The weapons module puts the gun in the hands on the layer: held at the hip by kind (`VIEW_HOLD`: long gun, handgun, launcher, a tool in one hand carried point up), drawn through a lens per kind, brought to the eye by the right button (the sights on the line of the eye), with the sway behind the turn of the view and the bob of the step (`VIEW_MOTION`); the flash, the smoke, the casings and the tracer leave the muzzle as drawn (`toWorldLens`). The kick of a shot now comes back: 70 % of each kick returns within about a quarter of a second (`recoilReturn` of the room's player). Third person is unchanged: the body shoulders the gun.
+
+### Patch Changes
+
+- a92327a: The muzzle flash and the tracer leave the tip of the barrel as the screen shows it, in both views, at the hip and aimed, a shot or a burst. The flash was played on the clip's event, before the frame posed the gun with its kick, and the tracer stayed where the round left while the kick moved the gun away (13 to 70 px on screen, more in a burst). The flash is now played once the clips have posed the gun (`FxWorld.afterPose`), and a tracer from a muzzle a module draws keeps its start on that muzzle while it lives. `muzzle-screen.test.ts` measures every firearm with a model and fails past 6 px.
+- Updated dependencies [6c569dd]
+- Updated dependencies [49b8d77]
+  - @adatechnology/game-weapons@0.8.0
+  - @adatechnology/game-contracts@0.27.0
+  - @adatechnology/game-destruction@0.18.1
+  - @adatechnology/game-audio@0.9.1
+  - @adatechnology/game-destruction-three@0.17.1
+  - @adatechnology/game-fluids@0.5.2
+  - @adatechnology/game-fluids-three@0.4.14
+  - @adatechnology/game-player@0.5.5
+  - @adatechnology/game-runtime@0.2.5
+  - @adatechnology/game-terrain@0.3.2
+  - @adatechnology/game-terrain-three@0.4.2
+  - @adatechnology/game-vfx-three@0.7.2
+
 ## 0.27.0
 
 ### Minor Changes

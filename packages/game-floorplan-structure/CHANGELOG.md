@@ -1,5 +1,13 @@
 # @adatechnology/game-floorplan-structure
 
+## 2.1.2
+
+### Patch Changes
+
+- Updated dependencies [49b8d77]
+  - @adatechnology/game-contracts@0.27.0
+  - @adatechnology/game-destruction@0.18.1
+
 ## 2.1.1
 
 ### Patch Changes

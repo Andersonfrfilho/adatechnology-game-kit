@@ -1,5 +1,25 @@
 # @adatechnology/game-weapons-three
 
+## 0.17.0
+
+### Minor Changes
+
+- 6c569dd: Barrel heat is physical. `WeaponState.heat` is now the barrel temperature above ambient in °C: each round adds `share × muzzle energy / (barrel mass × 490 J/(kg·K))` (the whole shell for a shotgun), the barrel mass is its length times kg per metre of the category divided over the barrels a rotary gun has (`dimensions.barrels`, the M134 has 6; `dimensions.barrelMass` overrides it for a heavy or quick-change barrel), and it cools by Newton's law with `τ = 30 s + 250 s/kg × mass`, integrated exactly. An M4 reaches the warning after about 130 rounds of rapid fire instead of one magazine; a pistol or a bolt rifle at a bolt pace never does. `rules.heat` is now data in °C (`cap` 900, `displayMax` 750, `faultFrom` 350, `faultSpan` 200, `specificHeat`, `barrelShare`, `barrelKilogramsPerMetre`, `barrelFallback`, `cooling`, `visual.smokeFrom` 250 / `smokeSpan` 300 / `glowFrom` 450 / `glowSpan` 300); `perShot`, `decayBase` and `decayPerPoint` left the main rules and live in `rules.heat.gallery`, which `GALLERY_HEAT` sets so the recorded Galeria runs stay reproducible. New exports: `roundsToWarningOf`, `roundsToWarning`, `barrelMassOf`, `coolingTimeConstant`, `decayHeat`. `decayHeat` and `heatPerRound` take the barrel mass. In `game-weapons-three` the viewmodel smoke reads `visual.smokeSpan`, and the test area bench shows the barrel temperature in °C plus the new `rounds_to_warning` metric (rounds to the warning at the weapon's own rate of fire, from cold).
+- f876baa: The minigun is carried at the hip, by its handles: a model can name where its hands go (`holdRight`, `holdLeft`) and how the body carries it (`carry: 'hip'`). The M134 names its right spade grip and the carry handle on top; in first person it is held low and to the right (`VIEW_HOLD.hip`, no sights to bring to the eye), in third person at the right hip, outside the body (`BODY_HOLD.hipGrip`). Every other weapon is held as before.
+- 49b8d77: The first-person viewmodel, as shooters draw the weapon in the hands. `FIRST_PERSON_LAYER` and `ModuleHost.setViewmodelFov` (game-contracts) give a host a layer it draws over the world with the depth cleared and the lens of the tool. The test room draws it (its world camera leaves the layer out), takes first-person arms of its own (`firstPersonArms`: `createFirstPersonArms` of game-characters-three fits it) whose hands go to the tool's grips, and hides the body's arms from the eye (`setView(mode, camera, { arms: true })`). The weapons module puts the gun in the hands on the layer: held at the hip by kind (`VIEW_HOLD`: long gun, handgun, launcher, a tool in one hand carried point up), drawn through a lens per kind, brought to the eye by the right button (the sights on the line of the eye), with the sway behind the turn of the view and the bob of the step (`VIEW_MOTION`); the flash, the smoke, the casings and the tracer leave the muzzle as drawn (`toWorldLens`). The kick of a shot now comes back: 70 % of each kick returns within about a quarter of a second (`recoilReturn` of the room's player). Third person is unchanged: the body shoulders the gun.
+
+### Patch Changes
+
+- a92327a: The muzzle flash and the tracer leave the tip of the barrel as the screen shows it, in both views, at the hip and aimed, a shot or a burst. The flash was played on the clip's event, before the frame posed the gun with its kick, and the tracer stayed where the round left while the kick moved the gun away (13 to 70 px on screen, more in a burst). The flash is now played once the clips have posed the gun (`FxWorld.afterPose`), and a tracer from a muzzle a module draws keeps its start on that muzzle while it lives. `muzzle-screen.test.ts` measures every firearm with a model and fails past 6 px.
+- Updated dependencies [6c569dd]
+- Updated dependencies [49b8d77]
+  - @adatechnology/game-weapons@0.8.0
+  - @adatechnology/game-contracts@0.27.0
+  - @adatechnology/game-items-three@0.7.5
+  - @adatechnology/game-audio@0.9.1
+  - @adatechnology/game-floorplan-three@0.10.2
+  - @adatechnology/game-vfx-three@0.7.2
+
 ## 0.16.0
 
 ### Minor Changes

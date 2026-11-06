@@ -1,5 +1,16 @@
 # @adatechnology/game-weapons
 
+## 0.8.0
+
+### Minor Changes
+
+- 6c569dd: Barrel heat is physical. `WeaponState.heat` is now the barrel temperature above ambient in °C: each round adds `share × muzzle energy / (barrel mass × 490 J/(kg·K))` (the whole shell for a shotgun), the barrel mass is its length times kg per metre of the category divided over the barrels a rotary gun has (`dimensions.barrels`, the M134 has 6; `dimensions.barrelMass` overrides it for a heavy or quick-change barrel), and it cools by Newton's law with `τ = 30 s + 250 s/kg × mass`, integrated exactly. An M4 reaches the warning after about 130 rounds of rapid fire instead of one magazine; a pistol or a bolt rifle at a bolt pace never does. `rules.heat` is now data in °C (`cap` 900, `displayMax` 750, `faultFrom` 350, `faultSpan` 200, `specificHeat`, `barrelShare`, `barrelKilogramsPerMetre`, `barrelFallback`, `cooling`, `visual.smokeFrom` 250 / `smokeSpan` 300 / `glowFrom` 450 / `glowSpan` 300); `perShot`, `decayBase` and `decayPerPoint` left the main rules and live in `rules.heat.gallery`, which `GALLERY_HEAT` sets so the recorded Galeria runs stay reproducible. New exports: `roundsToWarningOf`, `roundsToWarning`, `barrelMassOf`, `coolingTimeConstant`, `decayHeat`. `decayHeat` and `heatPerRound` take the barrel mass. In `game-weapons-three` the viewmodel smoke reads `visual.smokeSpan`, and the test area bench shows the barrel temperature in °C plus the new `rounds_to_warning` metric (rounds to the warning at the weapon's own rate of fire, from cold).
+
+### Patch Changes
+
+- Updated dependencies [49b8d77]
+  - @adatechnology/game-contracts@0.27.0
+
 ## 0.7.1
 
 ### Patch Changes
