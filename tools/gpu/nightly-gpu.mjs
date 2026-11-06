@@ -2,7 +2,7 @@
 // @ts-check
 // The daily GPU run on main (dono, 2026-11-06): the suites that open the whole room (test-room, scene, cost, leak) and the frame budgets
 // (perf-gate.mjs) left the pre-push, which now runs only the areas a branch touches. Once a day, early in the morning, this script checks out the
-// newest origin/main in its own worktree, waits until the machine is idle and on the charger, builds it and runs the whole battery, comparing the
+// newest origin/main in its own worktree, waits until the machine is idle, on the charger and with no push in flight, builds it and runs the whole battery, comparing the
 // frame times against the last main that passed here, on this same machine. Each run writes a folder per date with the logs and a STATUS file, and a
 // failure raises a desktop notice. Scheduled by the user systemd timer in tools/gpu/systemd/ (install-nightly.sh).
 //   node tools/gpu/nightly-gpu.mjs              run now; it waits for an idle machine first, then takes the GPU lock of the pre-push for the whole run
@@ -61,14 +61,18 @@ const notify = (title, body) => {
 
 const sleep = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
 
-/** Waits for the charger and a quiet machine, so the frame times compare with the last run; gives up after WAIT_MINUTES. */
+/** Whether some session is pushing: a push waiting on the GPU lock keeps the load low, so the load alone would let the daily run take the lock first. */
+const pushing = () => spawnSync('pgrep', ['-f', 'git push'], { encoding: 'utf8' }).status === 0
+
+/** Waits for the charger, no push in flight and a quiet machine, so the frame times compare with the last run; gives up after WAIT_MINUTES. */
 async function waitUntilIdle() {
   const deadline = Date.now() + WAIT_MINUTES * 60_000
   for (;;) {
     const battery = batterySkipReason({})
     const load = loadavg()[0] ?? 0
-    if (!battery && load < MAX_LOAD) return null
-    if (Date.now() > deadline) return battery ?? `load ${load.toFixed(2)} stayed over ${MAX_LOAD} for ${WAIT_MINUTES} min`
+    const push = pushing()
+    if (!battery && !push && load < MAX_LOAD) return null
+    if (Date.now() > deadline) return battery ?? (push ? `a push was still running after ${WAIT_MINUTES} min` : `load ${load.toFixed(2)} stayed over ${MAX_LOAD} for ${WAIT_MINUTES} min`)
     await sleep(POLL_MS)
   }
 }
