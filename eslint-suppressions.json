@@ -84,11 +84,6 @@
       "count": 50
     }
   },
-  "packages/game-vehicles-fleet/src/vehicles/suv-pickup-van.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 98
-    }
-  },
   "packages/game-vehicles-fleet/src/vehicles/water-air.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 94

@@ -1,5 +1,5 @@
-import type { Object3D } from 'three'
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Vector2, Vector3 } from 'three'
+import type { CarSpec, GrilleOptions, LabelArgument, SceneNode, VehicleContext, VehicleMeta, VehiclePart } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* SUVs, pickups, bigfoot and vans group. Uses only the kit API.
@@ -30,10 +30,105 @@ export function installSuvPickupVan(fx: FleetContext): void {
   const RIMSIL = CM('#b9bec2', { metalness: 0.75, roughness: 0.3 }),
     RIMGUN = CM('#55595d', { metalness: 0.7, roughness: 0.35 })
 
+  /** sculpt(): the hull mesh to round and the shape of the rounding (tuck at the sill, shoulder, nose and tail, crown of the hood), and what to leave out or deform too. */
+  interface SculptOptions {
+    low: Mesh
+    bottom?: number
+    top?: number
+    tuck?: number
+    peak?: number
+    sh?: number
+    Rf?: number
+    Rr?: number
+    pf?: number
+    pr?: number
+    bowF?: number
+    bowR?: number
+    Rb?: number
+    crown?: number
+    crownX?: number
+    skip?: Object3D[]
+    extra?: Mesh[]
+  }
+  /** fenderFlares(): width and depth of the frame, its material, how far it reaches inside the arch, and the trapezoid (Jeep type) outline. */
+  interface FlareOptions {
+    w?: number
+    d?: number
+    mat?: Material
+    inner?: number
+    trap?: boolean
+  }
+  /** cargoBed(): the hull to cut, the bed's inner ends (x0 rear, x1 front), floor and top, body width and the wheel arches [x, y, r]. */
+  interface CargoBedOptions {
+    low: Mesh
+    x0: number
+    x1: number
+    floor: number
+    top: number
+    W: number
+    arches?: readonly (readonly number[])[]
+  }
+
+  /** The spec of a body built here: the kit's car spec, with its wheel arches [x, y, r]. */
+  type BodySpec = CarSpec & { arches: readonly number[][] }
+  /** suvBuild(): flares and skirts (on unless false), the hooks before and after sculpt(), sculpt's own options and the roof [x0, x1, top]. */
+  interface SuvBuildOptions {
+    flares?: boolean
+    flare?: FlareOptions
+    skirt?: boolean
+    pre?(c: VehicleContext, m: VehicleMeta, extra: Mesh[]): void
+    post?(c: VehicleContext, m: VehicleMeta, F: (v: Vector3) => void, low: Mesh): void
+    sculpt?: Partial<SculptOptions>
+    roof?: readonly number[]
+  }
+  /** pickupBuild(): where the bed starts (x of its front wall) and its floor, the flares, the hooks, sculpt's options and the tailgate handle (on unless false). */
+  interface PickupBuildOptions {
+    bedFront: number
+    floor: number
+    flares?: boolean
+    flare?: FlareOptions
+    pre?(c: VehicleContext, m: VehicleMeta, extra: Mesh[]): void
+    post?(c: VehicleContext, m: VehicleMeta, F: (v: Vector3) => void): void
+    sculpt?: Partial<SculptOptions>
+    handle?: boolean
+  }
+  /** What a part does when hit, in place of (or after) the default: the context, the part, the force, the direction and the point. */
+  type PartHit = (c: VehicleContext, p0: VehiclePart, f: number, dir: Vector3, p: Vector3) => void
+  /** A van (`van`): real measures (width, length, wheelbase, front overhang and the profile insets, wheel radius, track), colour, belt and roof heights,
+   * nose, cab and roof cap, the windshield's base and top [x, y], the sliding door [x0, x1], lamps, grille and trim, the windows behind the cab, and the model's own extra. */
+  interface VanSpec {
+    W: number
+    L: number
+    WB: number
+    oF: number
+    dF?: number
+    dR?: number
+    wr: number
+    track: number
+    col: string
+    amb?: boolean
+    belt: number
+    roof: number
+    nose: number
+    capX: number
+    wb: readonly number[]
+    wt: readonly number[]
+    cabBack: number
+    slide: readonly number[]
+    rim?: Material
+    hl?: CarSpec['hl']
+    tl?: CarSpec['tl']
+    grille?: CarSpec['grille']
+    seams?: readonly number[]
+    handles?: readonly number[]
+    rearSide?: readonly { side: number; p: number[][]; label: LabelArgument }[]
+    rearWin?: { y0: number; y1: number; z0: number; z1: number }
+    extra?(c: VehicleContext, m: VehicleMeta, A: ReturnType<typeof axles>, ext: Mesh[]): void
+  }
   /* ================= local utilities ================= */
   /* Real wheelbases and overhangs. The profile (lower) sits dF/dR inside the real measurement: the skin has a 5 cm chamfer and
      bumpers and taillights stick out a little from the profile. dF/dR were tuned by measuring the finished model. */
-  function axles(WB: number, oF: number, L: number, dF: any, dR: any) {
+  function axles(WB: number, oF: number, L: number, dF?: number | null, dR?: number | null) {
     const xf = WB / 2,
       oR = L - WB - oF
     dF = dF == null ? 0.08 : dF
@@ -65,14 +160,14 @@ export function installSuvPickupVan(fx: FleetContext): void {
 
   /* Rounds the body. Deforms per vertex the lower hull, the hood, the bumpers and the long parts glued to the side;
      the other parts below the waist follow as a rigid body. o: { low (hull mesh), tuck, sh, peak, pf, pr, Rf, Rr, bowF, bowR, Rb, top, extra:[meshes] } */
-  function sculpt(c: VehicleContext, o: any) {
+  function sculpt(c: VehicleContext, o: SculptOptions) {
     const m = c.meta,
       W = m.width,
-      by = o.bottom != null ? o.bottom : m.clearance,
-      top = o.top != null ? o.top : m.belt
+      by = (o.bottom != null ? o.bottom : m.clearance)!,
+      top = (o.top != null ? o.top : m.belt)!
     const Wg = (m.glasshouse && m.glasshouse.Wg) || W,
       front = m.front,
-      rear = m.rear
+      rear = m.rear!
     const tuck = o.tuck == null ? 0.045 : o.tuck,
       peak = o.peak || 0.45
     const B = o.sh != null ? o.sh : clamp(1 - (Wg + 0.06) / W!, 0, 0.06)
@@ -91,7 +186,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const t = clamp((y - by) / (top - by), 0, 1)
       return t < peak ? 1 - tuck * Math.pow(1 - t / peak, 2) : 1 - B * Math.pow((t - peak) / (1 - peak), 2)
     }
-    function F(v: any) {
+    function F(v: Vector3) {
       const a = smooth((v.x - (front! - Rf)) / Rf),
         b = smooth((rear + Rr - v.x) / Rr),
         zz = clamp(v.z / hw, -1, 1) * clamp(v.z / hw, -1, 1)
@@ -107,7 +202,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       rel = new THREE.Matrix4(),
       inv = new THREE.Matrix4(),
       v = new V3()
-    function warp(msh: any) {
+    function warp(msh: Mesh) {
       rel.multiplyMatrices(gInv, msh.matrixWorld)
       inv.copy(rel).invert()
       const g = msh.geometry,
@@ -124,17 +219,17 @@ export function installSuvPickupVan(fx: FleetContext): void {
       g.computeBoundingBox()
     }
     const skip = new Set<Object3D>((c.glass as Object3D[]).concat(c.wheels)),
-      warpSet = new Set([o.low].concat(o.extra || []))
+      warpSet = new Set<Mesh>([o.low].concat(o.extra || []))
     if (o.skip)
-      o.skip.forEach(function (x: any) {
+      o.skip.forEach(function (x) {
         skip.add(x)
       })
     if (m.frontBumper) warpSet.add(m.frontBumper)
     if (m.rearBumper) warpSet.add(m.rearBumper)
     if (c.hood && c.hood.piv) {
       skip.add(c.hood.piv)
-      c.hood.piv.children.forEach(function (h: any) {
-        if (h.isMesh) warpSet.add(h)
+      c.hood.piv.children.forEach(function (h: SceneNode) {
+        if (h.isMesh) warpSet.add(h as Mesh)
       })
     }
     c.deform.forEach(function (d) {
@@ -149,7 +244,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
     const bb = new THREE.Box3(),
       cen = new V3(),
       sz = new V3()
-    c.vehicle.children.slice().forEach(function (ob: any) {
+    c.vehicle.children.slice().forEach(function (o3: Object3D) {
+      const ob = o3 as SceneNode & Mesh
       if (skip.has(ob) || warpSet.has(ob)) return
       if (ob.isMesh) {
         const g = ob.geometry
@@ -177,13 +273,13 @@ export function installSuvPickupVan(fx: FleetContext): void {
   }
 
   /* Wheel arch frame (black plastic) on both sides. a = [x, y, r] of the arch. */
-  function fenderFlares(c: VehicleContext, arches: any, W: number, by: number, o: any) {
+  function fenderFlares(c: VehicleContext, arches: readonly (readonly number[])[], W: number, by: number, o?: FlareOptions | null) {
     o = o || {}
     const wd = o.w || 0.075,
       dp = o.d || 0.045,
       mat = o.mat || CLAD,
-      out: any = []
-    arches.forEach(function (a: any) {
+      out: Mesh[] = []
+    arches.forEach(function (a) {
       /* the frame also covers the skin chamfer at the arch edge (otherwise a light ring shows between the tyre and the frame) */
       const a0 = Math.asin(clamp((by - a[1]) / a[2], -1, 1)) - 0.02,
         r0 = a[2] - (o.inner == null ? 0.055 : o.inner),
@@ -222,8 +318,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
     return out
   }
   /* Side skirt between the wheel arches (black plastic). */
-  function skirt(c: VehicleContext, x0: number, x1: number, y: any, h: number, W: number, mat?: any) {
-    const out: any = []
+  function skirt(c: VehicleContext, x0: number, x1: number, y: number, h: number, W: number, mat?: Material) {
+    const out: Mesh[] = []
     /* subdivided: sculpt() curves the side, and a box with vertices only at the ends would sink into the skin in the middle */
     ;[1, -1].forEach(function (s) {
       out.push(c.roundBox(x1 - x0, h, 0.05, 0.02, mat || CLAD, (x0 + x1) / 2, y, s * (W / 2 + 0.006), { sub: 0.2 }))
@@ -231,7 +327,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     return out
   }
   /* Cuts the bed into the hull and lines it. o: { low, x0 (inner rear), x1 (inner front), floor, top, W, arches } */
-  function cargoBed(c: VehicleContext, o: any) {
+  function cargoBed(c: VehicleContext, o: CargoBedOptions) {
     const W = o.W,
       hw = W / 2 - 0.075,
       L = o.x1 - o.x0,
@@ -245,7 +341,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     })
     c.roundBox(0.025, h, 2 * hw, 0.01, LINER, o.x0 + 0.012, o.floor + h / 2, 0)
     c.roundBox(0.03, h + 0.05, 2 * hw + 0.02, 0.01, c.paint(c.meta.color), o.x1 - 0.015, o.floor + (h + 0.05) / 2, 0)
-    ;(o.arches || []).forEach(function (a: any) {
+    ;(o.arches || []).forEach(function (a) {
       if (a[0] < o.x0 - 0.3 || a[0] > o.x1 + 0.3) return
       const tt = a[1] + a[2] + 0.04 - o.floor
       if (tt <= 0.02) return
@@ -264,18 +360,18 @@ export function installSuvPickupVan(fx: FleetContext): void {
   }
   /* x of the skin (front, +x) or the rear (-x) at point (y, z), measured by a ray on the already sculpted mesh.
      fX() comes from the profile before sculpt() and is off by a few cm where the nose corner is rounded. */
-  function skinX(c: VehicleContext, msh: any, y: number, z: number, rear?: any) {
+  function skinX(c: VehicleContext, msh: Object3D, y: number, z: number, rear?: boolean) {
     c.root.updateMatrixWorld(true)
     const o = c.vehicle.localToWorld(new V3(rear ? -9 : 9, y, z || 0)),
       d = new V3(rear ? 1 : -1, 0, 0).transformDirection(c.vehicle.matrixWorld)
     const hit = new THREE.Raycaster(o, d, 0, 20).intersectObject(msh, false)[0]
     return hit ? c.vehicle.worldToLocal(hit.point.clone()).x : null
   }
-  function grille(c: VehicleContext, s: any, style: string, w: number, h: number, y: number, o: any) {
+  function grille(c: VehicleContext, s: CarSpec, style: string, w: number, h: number, y: number, o?: Partial<GrilleOptions> | null) {
     const x = kit.profX(s.lower, y, true)
     return kit.grille(c, Object.assign({ style: style, x: x + 0.03, y: y, w: w, h: h, col: s.col, emblem: false }, o || {}))
   }
-  function fog(c: VehicleContext, s: any, y: any, z: number, r: number) {
+  function fog(c: VehicleContext, s: CarSpec, y: number, z: number, r: number) {
     const x = kit.profX(s.lower, s.bottomY + 0.14, true) + 0.09
     ;[1, -1].forEach(function (sd) {
       c.roundBox(0.04, r * 2.6, r * 3.2, 0.015, MT.housing, x, y, sd * z)
@@ -306,12 +402,12 @@ export function installSuvPickupVan(fx: FleetContext): void {
     })
   }
   /* Shark-fin antenna at the end of the roof */
-  function dorsalFin(c: VehicleContext, x: any, col?: string) {
+  function dorsalFin(c: VehicleContext, x: number, col?: string) {
     const m = c.meta,
       g = c.roundBox(0.16, 0.06, 0.05, 0.025, col ? c.paint(col) : GLOSS, x, m.top! + 0.02, 0, { taper: { sx: 0.35, shift: -0.05 } })
     return g
   }
-  function runningBoard(c: VehicleContext, x0: number, x1: number, y: any, W: number, dz: any) {
+  function runningBoard(c: VehicleContext, x0: number, x1: number, y: number, W: number, dz?: number | null) {
     dz = dz == null ? 0.04 : dz
     ;[1, -1].forEach(function (s) {
       c.roundBox(x1 - x0, 0.04, 0.16, 0.015, MT.alu, (x0 + x1) / 2, y, s * (W / 2 + dz))
@@ -335,13 +431,13 @@ export function installSuvPickupVan(fx: FleetContext): void {
     )
     c.roundBox(0.16, 0.12, 0.12, 0.04, MT.trim, xb + 0.04, yt + 0.04, z - s * 0.08)
   }
-  function winch(c: VehicleContext, x: any, y: any) {
+  function winch(c: VehicleContext, x: number, y: number) {
     c.cylinder(0.08, 0.08, 0.5, MT.trim, x, y, 0, 'z')
     c.cylinder(0.07, 0.07, 0.3, CM('#7a1d17'), x, y, 0, 'z')
     c.roundBox(0.12, 0.1, 0.1, 0.02, MT.steel, x + 0.08, y, 0)
     c.part('winch', trl('labels.winch'), null, new V3(x, y, 0), 0.5)
   }
-  function ledBar(c: VehicleContext, x: any, y: any, w: number) {
+  function ledBar(c: VehicleContext, x: number, y: number, w: number) {
     c.roundBox(0.1, 0.1, w, 0.03, MT.housing, x, y, 0)
     const L = kit.lightBar(c, x + 0.04, y, -w / 2 + 0.04, w / 2 - 0.04, 0.05, 1)
     ;[-w / 2 + 0.1, w / 2 - 0.1].forEach(function (z) {
@@ -387,16 +483,17 @@ export function installSuvPickupVan(fx: FleetContext): void {
   const BV = 0.05 /* the extruded hull has a 5 cm chamfer: the skin sits 5 cm outside the profile */
   const GLOSS = CM('#0b0c0e', { roughness: 0.16, metalness: 0.55 }),
     SILL = CM('#141517', { roughness: 0.8 })
-  function fX(s: any, y: number) {
+  function fX(s: CarSpec, y: number) {
     return kit.profX(s.lower, y, true) + BV
   }
-  function rX(s: any, y: number) {
+  function rX(s: CarSpec, y: number) {
     return kit.profX(s.lower, y, false) - BV
   }
   /* Rear plate and texts on the lid: the core puts the plate 2.5 cm inside the chamfer. Takes it to the skin. */
   function plateOutside(c: VehicleContext) {
     const m = c.meta
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o3: Object3D) {
+      const o = o3 as SceneNode & Mesh<BufferGeometry, MeshStandardMaterial>
       if (
         o.isMesh &&
         o.geometry.type === 'PlaneGeometry' &&
@@ -420,16 +517,16 @@ export function installSuvPickupVan(fx: FleetContext): void {
     })
   }
   /* Thin panel glued to the side of the glasshouse (follows the taper T). poly in [x, y]; mat; o.off distance from the skin */
-  function applique(c: VehicleContext, poly: any, mat: any, o?: any) {
+  function applique(c: VehicleContext, poly: readonly (readonly number[])[], mat: Material, o?: { off?: number; sides?: number[] } | null) {
     o = o || {}
     const m = c.meta,
       Wg = m.glasshouse.Wg,
       T = m.tumble,
       off = o.off || 0.017,
-      out: any = []
+      out: Mesh[] = []
     ;(o.sides || [1, -1]).forEach(function (s: number) {
       const shp = kit.geo.pathShape(
-        poly.map(function (p: any) {
+        poly.map(function (p) {
           return [p[0], p[1], p[2] || 0]
         }),
       )
@@ -457,16 +554,16 @@ export function installSuvPickupVan(fx: FleetContext): void {
       yb: b + 0.06,
       yt: r - 0.075,
       top: r + 0.02,
-      back: function (y: any) {
+      back: function (y: number) {
         return lx(gh.rb, gh.rt, y)
       },
-      win: function (y: any) {
+      win: function (y: number) {
         return lx(gh.rb, gh.rt, y) + 0.0975
       },
     }
   }
   /* Wide black C (or D) pillar, with a small triangular quarter window. xp = pillar that separates the quarter window; vig = [xv (rear tip at the top), yv (lower tip on the pillar)] */
-  function pillarC(c: VehicleContext, xp: number, quarterWindow: number[], mat?: any) {
+  function pillarC(c: VehicleContext, xp: number, quarterWindow: number[] | null, mat?: Material) {
     const E = glasshouse(c),
       yt = E.top - 0.03,
       b = E.b + 0.012
@@ -508,7 +605,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     return out
   }
   /* Wide C pillar in the bodywork colour (no quarter window): xb/xt = front edge at the bottom and top (sloped like the real door). */
-  function paintedPillar(c: VehicleContext, xb: number, xt: number, col: string, o?: any) {
+  function paintedPillar(c: VehicleContext, xb: number, xt: number, col: string, o?: { mat?: Material; edge?: Material } | null) {
     o = o || {}
     const E = glasshouse(c),
       yt = E.top - 0.025,
@@ -541,7 +638,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     return out
   }
   /* Black B pillar (window trim). */
-  function pillarB(c: VehicleContext, x: number, mat?: any) {
+  function pillarB(c: VehicleContext, x: number, mat?: Material) {
     const E = glasshouse(c)
     return applique(
       c,
@@ -571,7 +668,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       { off: 0.016 },
     )
     ;[1, -1].forEach(function (s) {
-      const z = function (y: any) {
+      const z = function (y: number) {
         return s * (kit.halfAt(c.meta.glasshouse.Wg, c.meta.tumble, y) + 0.024)
       }
       c.tube(
@@ -601,7 +698,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
       inv = new THREE.Matrix4(),
       v = new V3(),
       done = new Set()
-    c.vehicle.traverse(function (ob: any) {
+    c.vehicle.traverse(function (o3: Object3D) {
+      const ob = o3 as SceneNode & Mesh
       if (!ob.isMesh || done.has(ob.geometry)) return
       done.add(ob.geometry)
       rel.multiplyMatrices(gInv, ob.matrixWorld)
@@ -628,7 +726,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     c.glass.forEach(function (gm) {
       const G = gm.userData.glass
       if (G && G.outline)
-        G.outline.forEach(function (q: any) {
+        G.outline.forEach(function (q: Vector2) {
           q.y -= dy(q.x, q.y)
         })
     })
@@ -658,9 +756,9 @@ export function installSuvPickupVan(fx: FleetContext): void {
     crackWindshield(c, 0.95)
   }
   /* Wraps the default effect of a part (to limit hanging off the bumper, half-open hood...) */
-  function setOnHit(pt: any, fn: any) {
+  function setOnHit(pt: VehiclePart | null | undefined, fn: PartHit) {
     if (!pt) return
-    pt.onHit = function (c: VehicleContext, p0: any, f: any, dir: any, p: any) {
+    pt.onHit = function (c: VehicleContext, p0: VehiclePart, f: number, dir: Vector3, p: Vector3) {
       const keep = p0.onHit
       p0.onHit = null
       kit.applyPart(c, p0, f, dir, p)
@@ -674,10 +772,11 @@ export function installSuvPickupVan(fx: FleetContext): void {
       if (!L.group || L.group.userData.recessed) return
       L.group.userData.recessed = true
       /* the core housing box is solid and hides projectors and LEDs: pulls its front back 4 cm so the core shows through the lens */
-      L.group.children.slice().forEach(function (h: any) {
+      L.group.children.slice().forEach(function (o3: Object3D) {
+        const h = o3 as SceneNode & Mesh
         if (!h.isMesh || h.material !== MT.housing || h.geometry.type !== 'BoxGeometry' || Math.abs(h.position.x) > 1e-3) return
         h.geometry.computeBoundingBox()
-        const bb = h.geometry.boundingBox,
+        const bb = h.geometry.boundingBox!,
           d = bb.max.x - bb.min.x
         if (d < 0.06) return
         const k = (d - 0.042) / d
@@ -704,18 +803,19 @@ export function installSuvPickupVan(fx: FleetContext): void {
   /* Headliner (and saloon light panel): the core does not put it in the roof zone, and with the roof torn off a light plate
      was left loose over the cabin. Goes away with the roof when torn off, together with what is
      mounted on top of the roof (extra: beacon, roof lights), which would otherwise float. */
-  function roofLining(c: VehicleContext, extra: any) {
+  function roofLining(c: VehicleContext, extra?: Object3D[] | null) {
     const m = c.meta,
       yb = (m.glasshouse ? m.glasshouse.belt : m.belt) + 0.25,
       bb = new THREE.Box3(),
       sz = new V3(),
       ce = new V3(),
-      gl = new Set(c.glass),
-      list: any = []
+      gl = new Set<Object3D>(c.glass),
+      list: Object3D[] = []
     const cols = [m.color, m.roofCol].filter(Boolean).map(function (h) {
       return new THREE.Color(h).getHex()
     })
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o3: Object3D) {
+      const o = o3 as SceneNode & Mesh<BufferGeometry, MeshStandardMaterial>
       if (
         !o.isMesh ||
         gl.has(o) ||
@@ -727,7 +827,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         return
       if (o.material.color && cols.indexOf(o.material.color.getHex()) >= 0) return
       o.geometry.computeBoundingBox()
-      bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrix)
+      bb.copy(o.geometry.boundingBox!).applyMatrix4(o.matrix)
       bb.getSize(sz)
       bb.getCenter(ce)
       if (sz.x > 0.5 && sz.z > 0.6 && sz.y < 0.08 && ce.y > yb) list.push(o)
@@ -738,13 +838,13 @@ export function installSuvPickupVan(fx: FleetContext): void {
       c.zone('roof', null, null, null, {
         onBand: function (c: VehicleContext, b: number) {
           if (b >= 4)
-            list.concat(extra).forEach(function (o: any) {
+            list.concat(extra!).forEach(function (o) {
               o.visible = false
             })
         },
       })
   }
-  function finishing(c: VehicleContext, extra?: any) {
+  function finishing(c: VehicleContext, extra?: Object3D[]) {
     plateOutside(c)
     sill(c)
     recessedLamps(c)
@@ -753,13 +853,13 @@ export function installSuvPickupVan(fx: FleetContext): void {
   }
 
   /* ================= SUVs ================= */
-  function suvBuild(c: VehicleContext, s: any, o: any) {
+  function suvBuild(c: VehicleContext, s: BodySpec, o?: SuvBuildOptions | null) {
     o = o || {}
     const n0 = c.deform.length
     kit.car(c, s)
     const low = c.deform[n0],
       m = c.meta
-    let extra: any = []
+    let extra: Mesh[] = []
     if (o.flares !== false) extra = extra.concat(fenderFlares(c, s.arches, s.W, s.bottomY, o.flare))
     if (o.skirt !== false) {
       const a = s.arches
@@ -772,7 +872,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     finishing(c)
     return low
   }
-  function suvArmor(xSn?: any) {
+  function suvArmor(xSn?: number) {
     return function (c: VehicleContext) {
       const m = c.meta
       kit.applyArmor(c)
@@ -820,7 +920,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         col = '#b8b3a6',
         R = A.R,
         F = A.F
-      const s = {
+      const s: BodySpec = {
         W: 1.72,
         col: col,
         bottomY: 0.3,
@@ -870,7 +970,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       suvBuild(c, s, {
         roof: [0.025, -0.3, R + 0.27],
         flare: { w: 0.06, d: 0.035 },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           /* glossy black band between the headlights, chrome trim from end to end below it */
           c.roundBox(0.05, 0.095, 1.0, 0.02, GLOSS, fX(s, 0.835) - 0.02, 0.835, 0)
           c.roundBox(0.03, 0.014, 1.36, 0.006, MT.chrome, fX(s, 0.79) - 0.004, 0.79, 0)
@@ -890,7 +990,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           roofBars(c, 0.64, 0.035, 0.015)
           dorsalFin(c, R + 0.42)
         },
-        post: function (c: VehicleContext, _m: any) {
+        post: function (c: VehicleContext, _m) {
           pillarB(c, -0.12)
           noGlass(c, trl('labels.quarter_glass'))
           paintedPillar(c, -1.0, -0.9, col)
@@ -935,7 +1035,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const A = axles(2.64, 0.93, 4.46, 0.07, 0.1),
         col = '#7d8389',
         R = A.R
-      const s = {
+      const s: BodySpec = {
         W: 1.785,
         col: col,
         bottomY: 0.32,
@@ -985,7 +1085,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       suvBuild(c, s, {
         roof: [0.06, -0.25, A.R + 0.6],
         flare: { w: 0.085, d: 0.04 },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           /* thin upper grille between the headlights */
           c.roundBox(0.05, 0.05, 0.86, 0.018, GLOSS, fX(s, 0.84) - 0.015, 0.84, 0)
           c.roundBox(0.03, 0.012, 0.8, 0.005, MT.chrome, fX(s, 0.815), 0.815, 0)
@@ -1004,7 +1104,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           roofBars(c, 0.66, 0.04, 0.016)
           dorsalFin(c, R + 0.62)
         },
-        post: function (c: VehicleContext, m: any) {
+        post: function (c: VehicleContext, m) {
           pillarB(c, -0.18)
           beltline(c, -0.3, 0.06, col)
           pillarC(c, -1.12, [-1.4, 1.22], c.paint(col))
@@ -1038,14 +1138,14 @@ export function installSuvPickupVan(fx: FleetContext): void {
               { seg: 30, rs: 8 },
             )
           })
-          c.roundBox(0.7, 0.18, 1.1, 0.03, CM('#4a4f55', { metalness: 0.5, roughness: 0.5 }), -1.05, m.clearance + 0.1, 0)
-          c.part('battery', trl('labels.hybrid_battery'), null, new V3(-1.05, m.clearance + 0.2, 0), 0.9)
+          c.roundBox(0.7, 0.18, 1.1, 0.03, CM('#4a4f55', { metalness: 0.5, roughness: 0.5 }), -1.05, m.clearance! + 0.1, 0)
+          c.part('battery', trl('labels.hybrid_battery'), null, new V3(-1.05, m.clearance! + 0.2, 0), 0.9)
           c.zone(
             'battery',
             trl('labels.hybrid_battery_high_voltage'),
-            [-1.42, -0.68, m.clearance - 0.08, m.clearance + 0.3, -0.58, 0.58],
+            [-1.42, -0.68, m.clearance! - 0.08, m.clearance! + 0.3, -0.58, 0.58],
             null,
-            { fxKey: 'battery', sub: 'battery', pos: new V3(-1.05, m.clearance + 0.15, 0) },
+            { fxKey: 'battery', sub: 'battery', pos: new V3(-1.05, m.clearance! + 0.15, 0) },
           )
         },
       })
@@ -1089,7 +1189,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         col = '#6b1f24',
         R = A.R,
         F = A.F
-      const s = {
+      const s: BodySpec = {
         W: 1.77,
         col: col,
         roofCol: '#101112',
@@ -1140,7 +1240,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       suvBuild(c, s, {
         roof: [0.04, -0.2, R + 0.5],
         flare: { w: 0.075, d: 0.04, trap: true },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           kit.emblem(c, fX(s, 0.97) - 0.03, 0.975, 0, 0.032)
           /* wide lower intake and fog lights in niches */
           c.roundBox(0.05, 0.16, 1.2, 0.04, MT.trim, fX(s, 0.52) - 0.02, 0.52, 0)
@@ -1159,7 +1259,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           roofBars(c, 0.64, 0.04, 0.016)
           dorsalFin(c, R + 0.55)
         },
-        post: function (c: VehicleContext, m: any, F: any, low: any) {
+        post: function (c: VehicleContext, m, F, low) {
           /* seven-slot grille between the headlights (the Jeep signature): each slot has a chrome frame and a dark back.
          Measured on the already sculpted skin: the nose is rounded at the top and the profile formula left the slots 3 cm inside the bodywork. */
           const gy = 0.83,
@@ -1239,7 +1339,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const A = axles(2.745, 0.88, 4.795, 0.1, 0.075),
         col = '#3b4639',
         R = A.R
-      const s = {
+      const s: BodySpec = {
         W: 1.79,
         col: col,
         bottomY: 0.44,
@@ -1290,7 +1390,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       suvBuild(c, s, {
         flare: { w: 0.08, d: 0.035 },
         roof: [0.03, -0.3, A.R + 0.28],
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           /* large chrome trapezoid grille, from the hood to the bumper, wider at the bottom, with horizontal slats,
          joined to the headlights by a chrome bar (it is not the straight truck box of the "big" style) */
           const gx = fX(s, 0.82) - 0.012,
@@ -1315,7 +1415,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           roofBars(c, 0.66, 0.06, 0.018)
           dorsalFin(c, R + 0.5)
         },
-        post: function (c: VehicleContext, _m: any) {
+        post: function (c: VehicleContext, _m) {
           /* waist line that rises 8 cm to the rear and a rear quarter window with an upward "kick"; D pillar in the car colour */
           pillarB(c, -0.2)
           beltline(c, -0.3, 0.08, col)
@@ -1334,12 +1434,12 @@ export function installSuvPickupVan(fx: FleetContext): void {
   )
 
   /* ================= pickups ================= */
-  function pickupBuild(c: VehicleContext, s: any, o: any) {
+  function pickupBuild(c: VehicleContext, s: BodySpec, o: PickupBuildOptions) {
     const n0 = c.deform.length
     kit.car(c, s)
     const low = c.deform[n0],
       m = c.meta
-    let extra: any = []
+    let extra: Mesh[] = []
     cargoBed(c, { low: low, x0: m.rear! + 0.06, x1: o.bedFront, floor: o.floor, top: s.gh.belt, W: s.W, arches: s.arches })
     if (o.flares !== false) extra = extra.concat(fenderFlares(c, s.arches, s.W, s.bottomY, o.flare))
     if (o.pre) o.pre(c, m, extra)
@@ -1352,8 +1452,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
     pickupZones(c)
     return low
   }
-  function rollBar(c: VehicleContext, x: number, yb: number, yt: number, z: number, mat: any) {
-    const ms = []
+  function rollBar(c: VehicleContext, x: number, yb: number, yt: number, z: number, mat: Material) {
+    const ms: Mesh[] = []
     ;[z, -z].forEach(function (zz) {
       ms.push(
         c.rod(new V3(x, yb, zz), new V3(x, yt - 0.06, zz * 0.95), 0.032, mat),
@@ -1437,7 +1537,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const A = axles(2.737, 0.8, 4.474, 0.07, 0.07),
         col = '#a4321f'
       /* short sloping hood, low front with thin headlights joined by a black bar, thin honeycomb grille; short low bed */
-      const s = {
+      const s: BodySpec = {
         W: 1.715,
         col: col,
         bottomY: 0.33,
@@ -1475,7 +1575,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         bedFront: -1.02,
         floor: 0.62,
         flare: { w: 0.05, d: 0.03 },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           c.roundBox(0.05, 0.07, 0.96, 0.02, GLOSS, fX(s, 0.725) - 0.015, 0.725, 0)
           kit.emblem(c, fX(s, 0.725) + 0.012, 0.725, 0, 0.032)
           c.roundBox(0.04, 0.15, 0.86, 0.03, MT.trim, fX(s, 0.6) - 0.02, 0.6, 0)
@@ -1483,7 +1583,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           fog(c, s, 0.46, 0.64, 0.03)
           rollBar(c, -1.08, 1.0, 1.32, 0.72, MT.trim)
         },
-        post: function (c: VehicleContext, _m: any) {
+        post: function (c: VehicleContext, _m) {
           const tx = rX(s, 0.9)
           c.text('ESTRADA', 0.34, 0.06, tx - 0.008, 0.9, 0.42, '-x', { fg: '#d7d9db', size: 0.7 })
           trackWidth(c, 1.49, 1.5)
@@ -1528,7 +1628,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const A = axles(2.99, 0.94, 4.945, 0.07, 0.08),
         col = '#d6d4ce'
       /* sloped SUV front; two-level headlight: thin white DRL at hood line, dark main headlight recessed in the bumper; split tailgate */
-      const s = {
+      const s: BodySpec = {
         W: 1.82,
         col: col,
         bottomY: 0.4,
@@ -1568,7 +1668,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         floor: 0.72,
         handle: false,
         flare: { w: 0.065, d: 0.035 },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           /* dark niches in the bumper with the recessed main headlight */
           ;[1, -1].forEach(function (sd) {
             const hx = fX(s, 0.72),
@@ -1597,7 +1697,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
             c.text('4x4', 0.18, 0.08, -0.5, 0.6, sd * (s.W / 2 + 0.012), sd > 0 ? '+z' : '-z', { fg: '#2a2a2a', size: 0.7 })
           })
         },
-        post: function (c: VehicleContext, _m: any) {
+        post: function (c: VehicleContext, _m) {
           /* rear lid that opens like a door: marked vertical division and two handles */
           pillarB(c, -0.06)
           const tx = rX(s, 0.9)
@@ -1649,7 +1749,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       const A = axles(3.085, 0.93, 5.325, 0.07, 0.17),
         col = '#9a9283'
       /* long straight hood, tall vertical front, dark trapezoid grille with a thick chrome frame down to the bumper; all-terrain tyres filling the arches */
-      const s = {
+      const s: BodySpec = {
         W: 1.795,
         col: col,
         bottomY: 0.46,
@@ -1687,7 +1787,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         bedFront: -1.2,
         floor: 0.8,
         flare: { w: 0.09, d: 0.035 },
-        pre: function (c: VehicleContext, _m: any) {
+        pre: function (c: VehicleContext, _m) {
           /* trapezoid mouth that widens downward to the bumper corners (Hilux 2021) */
           const gx = fX(s, 0.8) - 0.012,
             gy = 0.8,
@@ -1714,11 +1814,12 @@ export function installSuvPickupVan(fx: FleetContext): void {
             c.text('4x4', 0.2, 0.09, -2.4, 0.95, sd * (s.W / 2 + 0.012), sd > 0 ? '+z' : '-z', { fg: '#222', size: 0.7 })
           })
         },
-        post: function (c: VehicleContext, _m: any) {
+        post: function (c: VehicleContext, _m) {
           /* chrome rear bumper with a step (light chrome: the scene has no environment map) */
           /* front plate in front of the grille frame (otherwise the chrome edge cuts the plate in half) */
           const gfx = fX(s, 0.8) + 0.04
-          c.vehicle.children.forEach(function (o: any) {
+          c.vehicle.children.forEach(function (o3: Object3D) {
+            const o = o3 as SceneNode & Mesh<BufferGeometry, MeshStandardMaterial>
             if (
               o.isMesh &&
               o.geometry.type === 'PlaneGeometry' &&
@@ -1780,7 +1881,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         tr = 0.79,
         wz = 1.38,
         ww = 0.9 /* wr = hub height; tr = tyre radius (the lugs add 4.6 cm) */
-      const s = {
+      const s: BodySpec = {
         W: W,
         col: col,
         bottomY: 1.55,
@@ -1819,7 +1920,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       cargoBed(c, { low: low, x0: m.rear! + 0.06, x1: -0.42, floor: 1.78, top: 2.25, W: W, arches: [] })
       c.roundBox(0.08, 0.08, W + 0.1, 0.03, MT.chrome, m.front! + 0.06, 1.72, 0)
       const stripe = c.paint('#e9e7e1')
-      const ex: any = []
+      const ex: Mesh[] = []
       ;[1, -1].forEach(function (sd) {
         ex.push(c.roundBox(4.6, 0.08, 0.01, 0.004, stripe, -0.15, 2.17, sd * (W / 2 + 0.006), { sub: 0.15 }))
       })
@@ -2017,7 +2118,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           return p.obj === m.rearBumper
         })
       ;[bpt, bptR].forEach(function (pt) {
-        setOnHit(pt, function (c: VehicleContext, p0: any) {
+        setOnHit(pt, function (c: VehicleContext, p0) {
           const o = p0.obj
           if (o && o.userData.hung && o.parent && o.parent !== c.vehicle) {
             o.parent.rotation.x = clamp(o.parent.rotation.x, -0.22, 0.22)
@@ -2076,7 +2177,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
      · tall headlights on the corner of the short hood, small grille between them; mirrored "AMBULANCE" on the hood;
      side    · red and yellow stripe from end to end, blue star of life, saloon windows, beacon at the front of the roof;
      rear    · doors with windows, vertical taillights, red and amber lights high on the corners. */
-  function van(c: VehicleContext, P: any) {
+  function van(c: VehicleContext, P: VanSpec) {
     const W = P.W,
       T = { belt: P.belt, top: P.roof + 0.02, k: 0.055 },
       col = P.col,
@@ -2110,12 +2211,12 @@ export function installSuvPickupVan(fx: FleetContext): void {
     const holes = [kit.holeSide(cab), kit.holeQuad(q), kit.holeTop(P.wb[0] + 0.1, F - 0.2, W / 2 - 0.15, 0.8, 'hood')]
     const winS = (P.rearSide || []).slice(),
       winR = P.rearWin
-    winS.forEach(function (w: any) {
+    winS.forEach(function (w) {
       holes.push(kit.holeSide(w.p, { side: w.side }))
     })
     if (winR)
       holes.push(
-        kit.holeBox([R - 0.2, winR.y0, -winR.z1], [R + 0.2, winR.y1, winR.z1], function (n: any, ce: any) {
+        kit.holeBox([R - 0.2, winR.y0, -winR.z1], [R + 0.2, winR.y1, winR.z1], function (n: Vector3, ce: Vector3) {
           return n.x < -0.6 && Math.abs(ce.z) > winR.z0
         }),
       )
@@ -2137,7 +2238,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     kit.sideWindows(c, [cab], W, T, function () {
       return lbl('cab_window')
     })
-    winS.forEach(function (w: any, _i: any) {
+    winS.forEach(function (w) {
       kit.sideWindows(
         c,
         [w.p],
@@ -2275,7 +2376,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
       c.roundBox(0.012, P.roof - 0.95, 0.006, 0.003, MT.dark, x, (P.roof - 0.5 + 0.45) / 2, W / 2 + 0.003)
     })
     c.roundBox(0.04, 0.12, 0.03, 0.012, MT.trim, P.slide[1] - 0.12, 1.3, W / 2 + 0.012)
-    const ext: any = []
+    const ext: Mesh[] = []
     ;[1, -1].forEach(function (sd) {
       ext.push(
         c.roundBox(A.xf - A.xr - 2 * P.wr - 0.3, 0.12, 0.03, 0.012, MT.trim, (A.xf + A.xr) / 2, 0.62, sd * (W / 2 + 0.008), { sub: 0.2 }),
@@ -2335,7 +2436,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
       fxKey: 'lid',
       dir: 'front',
     })
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o3: Object3D) {
+      const o = o3 as SceneNode & Mesh<BufferGeometry, MeshStandardMaterial>
       if (
         o.isMesh &&
         o.geometry.type === 'PlaneGeometry' &&
@@ -2394,7 +2496,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         grille: { style: 'truck', w: 0.84, h: 0.28, y: 0.86 },
         seams: [1.62, 0.44],
         handles: [0.6],
-        extra: function (c: VehicleContext, m: any, _A: any) {
+        extra: function (c: VehicleContext, m) {
           const fx = kit.profX(m.vanLow, 0.86, true)
           kit.emblem(c, fx + 0.1, 0.86, 0, 0.1)
           /* tall black bumper from end to end, honeycomb central intake and fog lights */
@@ -2417,7 +2519,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           })
           c.roundBox(0.3, 0.06, 0.06, 0.02, MT.trim, 0.0, 0.3, 0.7)
           /* cargo in the box: shelves and boxes (seen through the cab window and the partition) */
-          const cx0 = m.rear + 0.2
+          const cx0 = m.rear! + 0.2
           ;[1, -1].forEach(function (sd) {
             c.roundBox(2.6, 0.03, 0.4, 0.01, MT.steel, cx0 + 1.4, 1.4, sd * 0.75)
             c.roundBox(2.6, 0.03, 0.4, 0.01, MT.steel, cx0 + 1.4, 1.9, sd * 0.75)
@@ -2427,10 +2529,11 @@ export function installSuvPickupVan(fx: FleetContext): void {
             [cx0 + 0.9, 0.82, -0.3, '#7a5c3a'],
             [cx0 + 0.6, 1.18, -0.3, '#8a6a44'],
             [cx0 + 1.6, 0.82, 0.0, '#6d5232'],
-          ].forEach(function (b) {
+          ].forEach(function (q) {
+            const b = q as [number, number, number, string]
             c.roundBox(0.5, 0.4, 0.5, 0.02, CM(b[3], { roughness: 0.9 }), b[0], b[1], b[2])
           })
-          c.part('cargo', trl('labels.cargo_box'), null, new V3(m.rear + 1.4, 1.2, 0), 1.3)
+          c.part('cargo', trl('labels.cargo_box'), null, new V3(m.rear! + 1.4, 1.2, 0), 1.3)
         },
       })
       c.meta.armor = function (c: VehicleContext) {
@@ -2528,15 +2631,15 @@ export function installSuvPickupVan(fx: FleetContext): void {
           },
         ],
         rearWin: { y0: 1.55, y1: 2.05, z0: 0.12, z1: 0.82 },
-        extra: function (c: VehicleContext, m: any, A: any, ext: any) {
+        extra: function (c: VehicleContext, m, A, ext) {
           const fx = kit.profX(
             [
               [m.rear, 0.44],
               [m.rear, 2.4],
               [1.72, 1.32],
-              [m.front - 0.14, 1.12],
+              [m.front! - 0.14, 1.12],
               [m.front, 0.8],
-              [m.front - 0.03, 0.42],
+              [m.front! - 0.03, 0.42],
             ],
             0.98,
             true,
@@ -2565,12 +2668,12 @@ export function installSuvPickupVan(fx: FleetContext): void {
             blu = c.paint('#1d4f9a')
           ;[1, -1].forEach(function (sd) {
             ext.push(
-              c.roundBox(m.front - m.rear - 0.45, 0.16, 0.01, 0.005, rd, (m.front + m.rear) / 2 - 0.1, 1.1, sd * (W / 2 + 0.006), {
+              c.roundBox(m.front! - m.rear! - 0.45, 0.16, 0.01, 0.005, rd, (m.front! + m.rear!) / 2 - 0.1, 1.1, sd * (W / 2 + 0.006), {
                 sub: 0.15,
               }),
             )
             ext.push(
-              c.roundBox(m.front - m.rear - 0.45, 0.05, 0.01, 0.004, yl, (m.front + m.rear) / 2 - 0.1, 0.98, sd * (W / 2 + 0.006), {
+              c.roundBox(m.front! - m.rear! - 0.45, 0.05, 0.01, 0.004, yl, (m.front! + m.rear!) / 2 - 0.1, 0.98, sd * (W / 2 + 0.006), {
                 sub: 0.15,
               }),
             )
@@ -2620,10 +2723,10 @@ export function installSuvPickupVan(fx: FleetContext): void {
               .multiply(new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), PI / 2))
             tm.scale.x = -1
           }
-          c.text('RESGATE', 0.8, 0.18, m.rear - 0.012, 2.22, 0, '-x', { fg: red })
-          c.roundBox(0.03, 0.12, 1.9, 0.01, rd, m.rear - 0.008, 1.1, 0)
+          c.text('RESGATE', 0.8, 0.18, m.rear! - 0.012, 2.22, 0, '-x', { fg: red })
+          c.roundBox(0.03, 0.12, 1.9, 0.01, rd, m.rear! - 0.008, 1.1, 0)
           /* front beacon and rear lights */
-          const beaconBar = [c.roundBox(0.3, 0.08, 1.5, 0.03, MT.trim, 0.6, m.top + 0.04, 0)]
+          const beaconBar = [c.roundBox(0.3, 0.08, 1.5, 0.03, MT.trim, 0.6, m.top! + 0.04, 0)]
           ;[-0.5, -0.17, 0.17, 0.5].forEach(function (z, i) {
             const lamp = c.roundBox(
               0.24,
@@ -2632,7 +2735,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
               0.04,
               i % 2 ? MT.tail : CM('#f2f2f2', { emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0.6 }),
               0.6,
-              m.top + 0.13,
+              m.top! + 0.13,
               z,
             )
             // a beacon lamp: the lamps of the vehicle flash it with the others of its side (`game-vehicles-three` createVehicleLamps)
@@ -2648,23 +2751,23 @@ export function installSuvPickupVan(fx: FleetContext): void {
               0.04,
               CM('#e8e8e8', { transparent: true, opacity: 0.3, depthWrite: false, roughness: 0.05 }),
               0.6,
-              m.top + 0.13,
+              m.top! + 0.13,
               0,
             ),
           )
-          c.part('siren', trl('labels.beacon_and_siren'), null, new V3(0.6, m.top + 0.12, 0), 0.6)
-          c.zone('beacon', trl('labels.beacon_and_siren'), [0.4, 0.8, m.top - 0.02, m.top + 0.25, -0.85, 0.85], beaconBar, {
+          c.part('siren', trl('labels.beacon_and_siren'), null, new V3(0.6, m.top! + 0.12, 0), 0.6)
+          c.zone('beacon', trl('labels.beacon_and_siren'), [0.4, 0.8, m.top! - 0.02, m.top! + 0.25, -0.85, 0.85], beaconBar, {
             type: 'part',
             dir: 'up',
             weight: 0.4,
           })
           ;[1, -1].forEach(function (sd) {
-            c.roundBox(0.1, 0.14, 0.2, 0.04, MT.tail, m.rear + 0.06, m.top + 0.02, sd * 0.78)
-            c.roundBox(0.08, 0.1, 0.14, 0.03, MT.amber, m.rear + 0.06, m.top - 0.18, sd * 0.85)
+            c.roundBox(0.1, 0.14, 0.2, 0.04, MT.tail, m.rear! + 0.06, m.top! + 0.02, sd * 0.78)
+            c.roundBox(0.08, 0.1, 0.14, 0.03, MT.amber, m.rear! + 0.06, m.top! - 0.18, sd * 0.85)
           })
           /* saloon: stretcher, side seat, cabinets, oxygen and monitor */
           const fl = 0.62,
-            sx = m.rear + 0.25
+            sx = m.rear! + 0.25
           c.roundBox(2.6, 0.03, W - 0.2, 0.01, CM('#5c6b78', { roughness: 0.8 }), sx + 1.3, fl, 0)
           c.roundBox(1.9, 0.06, 0.56, 0.02, MT.chrome, sx + 1.2, fl + 0.38, 0.32)
           ;[0.25, 1.95].forEach(function (dx) {
@@ -2700,7 +2803,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
             0.01,
             CM('#efefe8', { emissive: new THREE.Color('#7c7f86'), emissiveIntensity: 0.25 }),
             sx + 1.2,
-            m.top - 0.06,
+            m.top! - 0.06,
             0,
           )
           lightPanel.castShadow = false
