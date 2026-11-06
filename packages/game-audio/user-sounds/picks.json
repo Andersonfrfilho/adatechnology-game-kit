@@ -1533,6 +1533,81 @@
    "score": 7.0,
    "author": "zombiada",
    "license": "uso local"
+  },
+  {
+   "id": "glass_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala no vidro",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/glass1.wav",
+    "debris/glass2.wav",
+    "debris/glass3.wav",
+    "debris/glass4.wav"
+   ],
+   "score": 7.0,
+   "author": "Valve (Half-Life)",
+   "license": "uso local"
+  },
+  {
+   "id": "glass_blade",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Faca no vidro (próximo: faca na parede)",
+   "pack": "weapons",
+   "files": [
+    "knife/knife_hitwall1.wav"
+   ],
+   "score": 7.0,
+   "author": "Valve (Counter-Strike: Source)",
+   "license": "uso local"
+  },
+  {
+   "id": "ceramic_bullet",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Bala na cerâmica (próximo: vidro e concreto)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/glass3.wav",
+    "debris/glass4.wav",
+    "debris/concrete1.wav"
+   ],
+   "score": 7.0,
+   "author": "Valve (Half-Life)",
+   "license": "uso local"
+  },
+  {
+   "id": "plaster_puff",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Gesso (próximo: concreto com pó)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "debris/concrete1.wav",
+    "debris/concrete2.wav",
+    "debris/concrete3.wav"
+   ],
+   "score": 7.0,
+   "author": "Valve (Half-Life)",
+   "license": "uso local"
+  },
+  {
+   "id": "sand_hit",
+   "role": "fallback",
+   "category": "impactos",
+   "label": "Areia (próximo: passo na terra)",
+   "pack": "all-sounds-20250411",
+   "files": [
+    "player/pl_dirt1.wav",
+    "player/pl_dirt2.wav",
+    "player/pl_dirt3.wav",
+    "player/pl_dirt4.wav"
+   ],
+   "score": 7.0,
+   "author": "Valve (Half-Life)",
+   "license": "uso local"
   }
  ]
 }
