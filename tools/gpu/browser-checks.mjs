@@ -7,6 +7,7 @@
 // run (tools/gpu/select-suites.mjs, from the diff against origin/main); the list and the reason are printed first.
 //   node tools/gpu/browser-checks.mjs
 //   PRE_PUSH_BROWSER=0          skip on purpose
+//   on battery they skip with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs them anyway
 //   PRE_PUSH_BROWSER=all        every suite, whatever the branch changed (also PRE_PUSH_ALL=1)
 //   BROWSER_CHECKS=areas,scene,leak   only these groups (default: all three)
 import { execFileSync, spawnSync } from 'node:child_process'
@@ -15,6 +16,7 @@ import { createRequire } from 'node:module'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { batterySkipReason } from './power.mjs'
 import { readWorkspace, selectSuites, SUITES } from './select-suites.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -29,6 +31,9 @@ const skip = (reason) => {
 if (process.env.PRE_PUSH_BROWSER === '0') skip('PRE_PUSH_BROWSER=0')
 // a push from a CI job (the release's version bump): these checks never run on CI (CLAUDE.md section 9)
 if (process.env.CI) skip('on CI')
+// on battery the GPU throttles and an hour of suites drains it: they run on the charger only, the push is not blocked (tools/gpu/power.mjs)
+const onBattery = batterySkipReason()
+if (onBattery) skip(onBattery)
 
 // The page scripts load Playwright from NODE_PATH; the workspace has playwright-core inside pnpm's store
 const nodePath = (() => {

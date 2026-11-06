@@ -140,6 +140,9 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
 - No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs` (a sala de teste e cada `examples/*-test-area` com `test.mjs`, `scene.mjs` e
   `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e `tools/gpu/perf-gate.mjs` (`examples/test-room/perf.mjs` contra a main medida na
   mesma máquina). `PRE_PUSH_BROWSER=0` e `PRE_PUSH_PERF=0` pulam uma vez, de propósito.
+- **Só no carregador** (dono, 2026-11-06: nenhum push fica bloqueado). `tools/gpu/power.mjs` lê `/sys/class/power_supply`: no carregador (Mains ou
+  USB-C online, ou desktop sem bateria) os dois rodam; na bateria são pulados com aviso (`pre-push: ... skipped: on battery ...`) e o push segue.
+  Bateria de dispositivo (mouse, fone) não conta; sem a pasta (fora do Linux) roda. `PRE_PUSH_ON_BATTERY=1` roda mesmo na bateria.
 - **O pre-push roda só as suítes de navegador do que a branch muda** (dono, 2026-11-04: a bateria inteira levava 60-90 min e, com várias sessões na
   mesma trava de GPU, bloqueava a noite). `tools/gpu/select-suites.mjs` lê o diff contra a `origin/main` e imprime que suítes vão rodar e por quê:
   - cada `examples/<área>` roda quando muda a própria pasta ou um pacote que a página carrega (o `package.json` e os `@adatechnology/*` importados em

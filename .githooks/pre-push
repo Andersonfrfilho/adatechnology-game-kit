@@ -5,6 +5,7 @@
 # browser run here and not on CI (CLAUDE.md, "Testes de GPU e navegador"): only the suites whose pages the branch changes, printed with the reason
 # (tools/gpu/browser-checks.mjs and select-suites.mjs; PRE_PUSH_BROWSER=all runs them all, PRE_PUSH_BROWSER=0 skips), then, on every push, the frame
 # budgets on this machine's GPU against origin/main measured on the same machine (tools/gpu/perf-gate.mjs; skipped without a GPU or with PRE_PUSH_PERF=0).
+# Both GPU steps run on the charger only: on battery they are skipped with a message and the push goes on (tools/gpu/power.mjs; PRE_PUSH_ON_BATTERY=1 runs them).
 set -e
 git fetch -q origin main 2>/dev/null || true
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
