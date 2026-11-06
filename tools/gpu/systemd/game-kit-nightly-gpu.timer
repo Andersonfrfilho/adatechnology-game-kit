@@ -1,0 +1,11 @@
+# Once a day, early in the morning; a missed run (machine off or asleep) runs at the next boot.
+[Unit]
+Description=game-kit: GPU daily run on main
+
+[Timer]
+OnCalendar=*-*-* 04:30
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

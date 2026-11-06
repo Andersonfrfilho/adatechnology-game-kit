@@ -52,6 +52,10 @@ export const BASE_PACKAGES = [
   '@adatechnology/game-test-room',
   '@adatechnology/game-destruction',
   '@adatechnology/game-destruction-three',
+  '@adatechnology/game-audio',
+  '@adatechnology/game-player',
+  '@adatechnology/game-vfx',
+  '@adatechnology/game-vfx-three',
 ]
 /** The share of the area pages a package must be loaded by to count as base. */
 export const BASE_SHARE = 0.75
@@ -171,4 +175,21 @@ export const selectSuites = (workspace, changed) => {
   }
   const suites = SUITES.filter((suite) => reasons.has(suite.id)).map((suite) => ({ id: suite.id, reasons: reasons.get(suite.id) ?? [] }))
   return { all: false, reason: suites.length ? 'the branch changes what these pages load' : 'the branch changes nothing a page loads', suites }
+}
+
+/**
+ * The suites that open the whole test room (the room's scenarios, where every drawn piece comes from, what it costs, the memory cycles): they run once a
+ * day on this machine (tools/gpu/nightly-gpu.mjs, decided by the owner on 2026-11-06), not before a push. A push runs the example areas its changes load.
+ */
+export const NIGHTLY_SUITES = /** @type {const} */ (['test-room', 'scene', 'cost', 'leak'])
+
+/**
+ * The part of a selection this run opens and the part left to the nightly run (`nightly` true: everything here).
+ * @param {{ readonly suites: readonly SelectedSuite[] }} selection @param {boolean} nightly
+ * @returns {{ run: readonly SelectedSuite[], left: string[] }}
+ */
+export const splitForPush = (selection, nightly) => {
+  const roomWide = /** @type {readonly string[]} */ (NIGHTLY_SUITES)
+  if (nightly) return { run: selection.suites, left: [] }
+  return { run: selection.suites.filter((picked) => !roomWide.includes(picked.id)), left: selection.suites.filter((picked) => roomWide.includes(picked.id)).map((picked) => picked.id) }
 }

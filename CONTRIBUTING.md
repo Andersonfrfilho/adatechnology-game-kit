@@ -54,8 +54,27 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 
 - `pre-commit`: eslint on the staged JS/TS files (a second or two).
 - `pre-push`: `pnpm build`, `pnpm -r typecheck`, `pnpm lint`, then the tests of the packages the branch changed since `origin/main` and of the
-  packages that depend on them, one package at a time as CI runs them. `PRE_PUSH_ALL=1 git push` tests every package.
+  packages that depend on them, one package at a time as CI runs them. `PRE_PUSH_ALL=1 git push` tests every package. Then the browser suites of the
+  example areas the branch changes (`tools/gpu/browser-checks.mjs`), on the charger only.
 - Either hook can be skipped once with `--no-verify`.
+
+### GPU daily run
+
+The suites that open the whole test room (`test-room`, `scene`, `cost`, `leak`) and the frame budgets (`tools/gpu/perf-gate.mjs`) run once a day on
+`main`, not on every push: `tools/gpu/nightly-gpu.mjs` checks out the newest `origin/main` in `~/.cache/adatechnology-game-kit/nightly-worktree`, waits
+until the machine is idle and on the charger, builds it and runs them under the GPU lock, comparing the frame times with the last `main` that passed on
+this machine. Each run writes `~/Documents/personal/adatechnology-game-kit-shots/nightly/YYYY-MM-DD/` (`summary.md`, one log per step, `STATUS`) and a
+failure raises a desktop notice. From the main checkout:
+
+```sh
+sh tools/gpu/systemd/install-nightly.sh       # turn it on: user systemd timer, every day at 04:30 (a missed run runs at the next boot)
+sh tools/gpu/systemd/install-nightly.sh now   # run it now, as the timer would (journalctl --user -u game-kit-nightly-gpu -f)
+sh tools/gpu/systemd/install-nightly.sh off   # turn it off
+systemctl --user list-timers game-kit-nightly-gpu.timer   # when it runs next
+```
+
+`NIGHTLY_MAX_LOAD`, `NIGHTLY_WAIT_MIN`, `NIGHTLY_REF` and `NIGHTLY_REPORTS` change the load it waits below, how long it waits, the ref it measures and
+where the reports go.
 
 ## Changesets and commits
 

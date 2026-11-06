@@ -38,9 +38,11 @@ test('a leaf package runs the areas that load it and the room, not the others', 
 
 test('a package runs the areas of the packages that depend on it', () => {
   // game-vfx is drawn by game-vfx-three, which vfx-test-area loads
-  const ids = idsFor(['packages/game-vfx/src/burst.ts'])
-  assert.ok(ids.includes('vfx-test-area'))
-  assert.ok(!ids.includes('audio-test-area'))
+  assert.ok(idsFor(['packages/game-vfx/src/burst.ts']).includes('vfx-test-area'))
+  // the animals are loaded by the animals area only: the sound area (which loads the test room, and through it the effects) does not run
+  const animals = idsFor(['packages/game-animals/src/species.ts'])
+  assert.ok(animals.includes('animals-test-area'))
+  assert.ok(!animals.includes('audio-test-area'))
 })
 
 test('an example folder runs only its own suite; tools/kit-audit runs scene and cost', () => {
@@ -56,4 +58,12 @@ test('every area of the battery has a suite, and the room suites open the room p
 
 test('the base list holds every package three in four area pages load (the graph rule)', () => {
   for (const name of basePackagesOf(workspace)) assert.ok(BASE_PACKAGES.includes(name), `${name} is loaded by most areas: add it to BASE_PACKAGES`)
+})
+
+test('a push leaves the suites that open the whole room to the nightly run', async () => {
+  const { splitForPush, NIGHTLY_SUITES } = await import('../select-suites.mjs')
+  const selection = { suites: [{ id: 'weapons-test-area', reasons: ['game-weapons'] }, { id: 'test-room', reasons: ['game-weapons'] }, { id: 'scene', reasons: [] }, { id: 'leak', reasons: [] }] }
+  assert.deepEqual(splitForPush(selection, false), { run: [{ id: 'weapons-test-area', reasons: ['game-weapons'] }], left: ['test-room', 'scene', 'leak'] })
+  assert.deepEqual(splitForPush(selection, true).run.map((picked) => picked.id), ['weapons-test-area', 'test-room', 'scene', 'leak'])
+  assert.deepEqual([...NIGHTLY_SUITES], ['test-room', 'scene', 'cost', 'leak'])
 })

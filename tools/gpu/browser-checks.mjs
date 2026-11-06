@@ -10,6 +10,7 @@
 //   on battery they skip with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs them anyway
 //   PRE_PUSH_BROWSER=all        every suite, whatever the branch changed (also PRE_PUSH_ALL=1)
 //   BROWSER_CHECKS=areas,scene,leak   only these groups (default: all three)
+//   GPU_SCOPE=nightly           also the suites that open the whole room (test-room, scene, cost, leak); a push leaves them to tools/gpu/nightly-gpu.mjs
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -17,7 +18,7 @@ import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
-import { readWorkspace, selectSuites, SUITES } from './select-suites.mjs'
+import { readWorkspace, selectSuites, splitForPush, SUITES } from './select-suites.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
@@ -78,10 +79,12 @@ const selection =
   changed === null
     ? { all: true, reason: forced ? 'PRE_PUSH_BROWSER=all' : 'no merge base with origin/main', suites: SUITES.map((suite) => ({ id: suite.id, reasons: [] })) }
     : selectSuites(readWorkspace(root), changed)
-const chosen = new Set(selection.suites.filter((picked) => groups.has(SUITES.find((suite) => suite.id === picked.id)?.group ?? '')).map((picked) => picked.id))
+const { run: forThisRun, left: leftToNightly } = splitForPush(selection, process.env.GPU_SCOPE === 'nightly')
+const chosen = new Set(forThisRun.filter((picked) => groups.has(SUITES.find((suite) => suite.id === picked.id)?.group ?? '')).map((picked) => picked.id))
 console.log(`pre-push: browser suites: ${chosen.size} of ${SUITES.length} (${selection.all ? `all: ${selection.reason}` : selection.reason})`)
-for (const picked of selection.suites) if (chosen.has(picked.id) && !selection.all) console.log(`pre-push:   ${picked.id}: ${picked.reasons.join(', ')}`)
-const skipped = SUITES.filter((suite) => !chosen.has(suite.id)).map((suite) => suite.id)
+for (const picked of forThisRun) if (chosen.has(picked.id) && !selection.all) console.log(`pre-push:   ${picked.id}: ${picked.reasons.join(', ')}`)
+if (leftToNightly.length) console.log(`pre-push:   left to the daily run (tools/gpu/nightly-gpu.mjs): ${leftToNightly.join(', ')}`)
+const skipped = SUITES.filter((suite) => !chosen.has(suite.id) && !leftToNightly.includes(suite.id)).map((suite) => suite.id)
 if (skipped.length) console.log(`pre-push:   skipped: ${skipped.join(', ')}`)
 if (chosen.size === 0) skip('nothing the branch changed is loaded by a page')
 if (!hasPlaywright) skip('playwright not found (set NODE_PATH)')
