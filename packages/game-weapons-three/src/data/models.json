@@ -1669,6 +1669,80 @@
       "rpm": 750
     }
   },
+  "sig_sauer_p320": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 203,
+    "barrel": 120,
+    "options": {
+      "design": "p320",
+      "rel": 0.8
+    }
+  },
+  "hk_usp": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 194,
+    "barrel": 108,
+    "options": {
+      "design": "usp",
+      "rel": 0.8
+    }
+  },
+  "walther_p99": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 180,
+    "barrel": 102,
+    "options": {
+      "design": "p99",
+      "rel": 0.7
+    }
+  },
+  "colt_python": {
+    "builder": "revolver",
+    "caliber": ".357 Magnum",
+    "length": 292,
+    "barrel": 152,
+    "options": {
+      "python": 1,
+      "chambers": 6
+    }
+  },
+  "fn_ps90": {
+    "builder": "ps90",
+    "caliber": "5,7×28",
+    "length": 668,
+    "barrel": 407,
+    "options": {
+      "rpm": 120
+    }
+  },
+  "bt_mp9": {
+    "builder": "mp9",
+    "caliber": "9×19",
+    "length": 523,
+    "barrel": 130,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.2,
+      "rail": 1,
+      "rpm": 1100
+    }
+  },
+  "mp40": {
+    "builder": "mp40",
+    "caliber": "9×19",
+    "length": 833,
+    "barrel": 251,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.24,
+      "rpm": 550
+    }
+  },
   "famas": {
     "builder": "bullpup",
     "caliber": "5,56×45",
