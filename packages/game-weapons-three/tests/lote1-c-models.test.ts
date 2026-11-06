@@ -79,9 +79,25 @@ describe('the melee weapons the kit added: the item models, lent to the weapons'
     expect(handle.position.x - support.position.x).toBeCloseTo(0.11, 3)
   })
 
-  it('lies the brass knuckles 12 cm across the ring row', () => {
+  it('wears the brass knuckles in the hand: the ring row along the knuckles (z), the rings facing forward (thin along x), the palm bar below the rings', () => {
     const model = build('brass_knuckles')
     const size = sizeOf(model)
-    expect(Math.max(size.x, size.z)).toBeCloseTo(0.12, 2)
+    expect(size.z).toBeCloseTo(0.12, 2)
+    expect(size.x).toBeLessThan(0.03)
+    expect(size.x).toBeLessThan(size.y)
+    expect(size.y).toBeLessThan(size.z)
+    // the palm bar is the one thin cylinder (its box is long along z and low): it lies under the middle of the ring row
+    model.updateMatrixWorld(true)
+    let bar = Infinity
+    let ringsTop = -Infinity
+    model.traverse((node) => {
+      const mesh = node as THREE.Mesh
+      if (!mesh.isMesh) return
+      const box = new THREE.Box3().setFromObject(mesh)
+      const thin = box.getSize(new THREE.Vector3())
+      if (thin.z > 0.1 && thin.y < 0.02) bar = Math.min(bar, box.getCenter(new THREE.Vector3()).y)
+      ringsTop = Math.max(ringsTop, box.max.y)
+    })
+    expect(bar).toBeLessThan(ringsTop - 0.02)
   })
 })
