@@ -2177,8 +2177,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const unitPlan = p.spec.units ? unitFragmentPlan(p, maxFragments * UNIT_FRAGMENT_FACTOR) : []
     const axis = style === 'splinter' || style === 'snap' ? severAxis(p) : -1
     const cutAt = axis < 0 ? undefined : p.rt.cutAt ?? (origin ? hitLocal[axis] : undefined)
+    // wood plans its splinters, sheets and lumps on a stream of its own: how a board comes apart never moves the cracks and spalls the world draws after it
+    const planRnd = p.mat.splitForm ? splitStream(o.id, p.spec.id, hitLocal) : rnd
     const plan = unitPlan.length > 0 ? unitPlan : planFragments({
-      style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd, sheet: p.mat.sheet,
+      style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd: planRnd, sheet: p.mat.sheet,
       ...(p.mat.splitForm ? { form: p.mat.splitForm } : {}),
       ...(cutAt !== undefined ? { cut: { at: cutAt, gap: SEVER_BAND } } : {}),
     })
@@ -2836,6 +2838,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       h ^= h >>> 15
     }
     return h | 0
+  }
+
+  /**
+   * The stream a wood part plans its break on: read off the world's stream without drawing from it (so a save carries it), and mixed with the object,
+   * the part and where it was hit.
+   */
+  const splitStream = (objectId: string, partId: string, hit: Vec3): (() => number) => {
+    const codes = Array.from(`${objectId}|${partId}`, (char) => char.charCodeAt(0) / 1000)
+    const stream = createRng(seedOf(rng.state() / 1000, ...codes, hit[0], hit[1], hit[2]))
+    return () => stream.next()
   }
 
   /** One fragment of a part the blast broke flies on: a low-energy hit on the first part or impl it reaches within its throw. */

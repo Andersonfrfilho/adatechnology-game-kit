@@ -13,6 +13,7 @@ export interface ArenaObject {
   colors?: Record<string, number>
   build?: SceneryObject['build']
   follow?: SceneryObject['follow']
+  warmUpProbes?: SceneryObject['warmUpProbes']
   label?: string
   top?: SceneryObject['top']
   spout?: SceneryObject['spout']
@@ -155,7 +156,7 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
     if (!position) throw new Error(`game-test-room: scenery "${id}" is new, so it needs a position`)
     merged.set(id, { ...obj, position })
   }
-  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, follow: o.follow, label: o.label, top: o.top, spout: o.spout, free: o.free, pushable: o.pushable }))
+  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, follow: o.follow, warmUpProbes: o.warmUpProbes, label: o.label, top: o.top, spout: o.spout, free: o.free, pushable: o.pushable }))
 }
 
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
