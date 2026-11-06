@@ -259,19 +259,9 @@
       "count": 3
     }
   },
-  "packages/game-vehicles/src/fluids.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
   "packages/game-vehicles/src/hood.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 6
-    }
-  },
-  "packages/game-vehicles/src/impact.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
     }
   },
   "packages/game-vehicles/src/interior.ts": {

@@ -118,13 +118,12 @@ export interface VehiclePart {
 /** A part label: a plain string, or a locale key (`parts.<key>`) with an optional text override. */
 export type PartLabel = string | { key: string; label?: string }
 
-/** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
-/** A part turning on its own every frame (a wheel, a rotor, a propeller): `v` radians per second about `axis`, slowing by `decay` per second. */
 /** A mesh the rollover rests on, with its matrix into the vehicle frame (`rollMeshes`). */
 export interface RollMesh {
   o: Mesh
   M: Matrix4
 }
+
 /** A rollover in progress (`kit.roll`): time and duration, side, the support hull S ([y, z]), the contact point and the fall target. */
 export interface RollState {
   t: number
@@ -143,6 +142,7 @@ export interface RollState {
   thin: RollMesh[]
   y0: number
 }
+
 /** A part thrown by an explosion (`fling`): its holder, linear and angular velocity, radius, whether it landed and how long it keeps burning. */
 export interface FlyingPiece {
   o: Group
@@ -152,6 +152,8 @@ export interface FlyingPiece {
   landed: boolean
   trail: number
 }
+
+/** A part turning on its own every frame (a wheel, a rotor, a propeller): `v` radians per second about `axis`, slowing by `decay` per second. */
 export interface VehicleSpin {
   o: Object3D
   axis: 'x' | 'y' | 'z'
@@ -173,6 +175,7 @@ export interface VehicleEmitter {
   gap: number
 }
 
+/** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
 export interface VehicleLamp {
   group: ThreeObject | null
   lens: ThreeObject[]
@@ -411,6 +414,10 @@ export interface ParticleMaterials {
 export interface ImpactOptions {
   /** Do not leave a stain. */
   noStain?: boolean
+  /** No sparks, scrap or splashes. */
+  noFx?: boolean
+  /** Deepest dent in metres (the default comes from the width and the force). */
+  maxDepth?: number
   [key: string]: any
 }
 

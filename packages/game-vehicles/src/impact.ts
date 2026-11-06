@@ -1,10 +1,14 @@
 /** Impact resolution: direction, surface lookup, deformation, shards and sparks. */
-import type { MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
-import type { VehiclePart } from './api'
+import type { ImpactOptions, VehiclePart } from './api'
+import type { Puddle } from './fluids'
 import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, hash, markDecal } from './util'
 import { raycastIndexed } from './tri-index'
+
+/** The dent of one impact: point, direction into the body, radius, depth, ripple phase and the body centre it never crosses. */
+type DentSpot = { p: Vector3; dir: Vector3; R: number; depth: number; ph: number; C: Vector3 }
 
 export function installImpact(kit: Kit) {
   const THREE = kit.THREE
@@ -15,7 +19,7 @@ export function installImpact(kit: Kit) {
 
   /* ================= impact ================= */
   /* Dent field: smooth falloff (smoothstep), low-frequency ripple (<= 0.015), never crosses the centre plane. */
-  function dentField(v: Vector3, H: any) {
+  function dentField(v: Vector3, H: DentSpot) {
     const d = v.distanceTo(H.p)
     if (d >= H.R) return 0
     const t = 1 - d / H.R
@@ -26,19 +30,19 @@ export function installImpact(kit: Kit) {
   }
   /* The bumper comes loose on the side of the hit and hangs from the other side (does not fly): the real part rotates around the attached end,
      without swapping the geometry, and the angle is limited so the loose end touches the ground without going through it (and does not become a pole on a tall vehicle). */
-  function hangBumper(c: BuildContext, o: any, p: Vector3) {
+  function hangBumper(c: BuildContext, o: Mesh | null | undefined, p: Vector3) {
     if (!o || o.userData.hung || !o.parent || c.meta.noBumper) return
     o.userData.hung = true
     const di = c.deform.indexOf(o)
     if (di >= 0) c.deform.splice(di, 1)
     o.updateMatrix()
     o.geometry.computeBoundingBox()
-    const bb = o.geometry.boundingBox.clone().applyMatrix4(o.matrix)
+    const bb = o.geometry.boundingBox!.clone().applyMatrix4(o.matrix)
     const wz = (bb.max.z - bb.min.z) * 0.97
     const hh = (bb.max.y - bb.min.y) / 2
     if (wz < 0.2) return
     const att = p.z >= (bb.min.z + bb.max.z) / 2 ? -1 : 1
-    const par = o.parent
+    const par = o.parent!
     const sx = o.position.x >= 0 ? 1 : -1
     const zc = (bb.min.z + bb.max.z) / 2
     const piv = new THREE.Group()
@@ -55,7 +59,7 @@ export function installImpact(kit: Kit) {
     piv.rotation.y = -0.1 * sx * att
   }
   /* fuel of the tank that was hit: the part label wins ("diesel"), otherwise the vehicle sheet */
-  function tankFuel(c: BuildContext, pt: any) {
+  function tankFuel(c: BuildContext, pt: { label?: string; fuel?: string }) {
     const lb = (pt.label || '').toLowerCase()
     const fu = c.spec && c.spec.fuel
     if (pt.fuel === 'diesel' || kit.matchers.diesel.test(lb)) return 'diesel'
@@ -66,7 +70,7 @@ export function installImpact(kit: Kit) {
     c.engineHealth = Math.min(c.engineHealth == null ? 1 : c.engineHealth, h)
   }
   kit.hurtEngine = hurtEngine
-  function igniteFuel(c: BuildContext, pd: any) {
+  function igniteFuel(c: BuildContext, pd: Puddle | null | undefined) {
     if (!pd || pd.kind !== 'gasoline' || pd.fire) return
     pd.fire = true
     for (let k = 0; k < 3; k++) {
@@ -129,7 +133,7 @@ export function installImpact(kit: Kit) {
       }
     } else if (k === 'propeller' || k === 'rotor' || k === 'tail_rotor') {
       if (o) {
-        o.children.forEach(function (ch: any, i: number) {
+        o.children.forEach(function (ch: Object3D, i: number) {
           if (ch.type === 'Group') {
             ch.rotation.z += -0.15 - hash(i, 1, 1) * 0.25
             ch.rotation.x += i % 2 ? 0.2 : -0.2
@@ -220,7 +224,7 @@ export function installImpact(kit: Kit) {
     soot.lookAt(soot.position.clone().sub(d))
   }
   /* Impact at point p (c.vehicle coordinates), direction dir (into the vehicle), force 0.3..1.4. Returns the parts hit. */
-  function impact(c: BuildContext, p: Vector3, dir: Vector3, force: number, opts?: any) {
+  function impact(c: BuildContext, p: Vector3, dir: Vector3, force: number, opts?: ImpactOptions | null) {
     opts = opts || {}
     dir = dir.clone().normalize()
     const m = c.meta
@@ -229,7 +233,7 @@ export function installImpact(kit: Kit) {
     const R0 = (0.55 + 0.45 * force) * (air ? 1.25 : 1)
     /* depth: up to 18% of the width, never more than 0.3 m nor 35% of the dent radius; meta.stiff (0..1) hardens armour */
     const maxD = Math.min(0.18 * Wref, 0.26, R0 * 0.32, opts.maxDepth || 9) * (1 - 0.85 * clamp(m.stiff || 0, 0, 1))
-    const H = {
+    const H: DentSpot = {
       p: p,
       dir: dir,
       R: R0,
@@ -360,7 +364,7 @@ export function installImpact(kit: Kit) {
       w.subVectors(o.position, o.userData.pos0)
       if (w.length() > maxD) o.position.copy(o.userData.pos0).add(w.setLength(maxD))
     })
-    const hit: any = []
+    const hit: VehiclePart[] = []
     c.parts.forEach(function (pt) {
       if (pt.done) return
       if (pt.pos.distanceTo(p) < H.R * pt.reach + 0.1) {
@@ -399,7 +403,7 @@ export function installImpact(kit: Kit) {
       }
       scratches(c, surf.p, surf.n.clone().negate(), force)
     }
-    hit.forEach(function (pt: any) {
+    hit.forEach(function (pt) {
       c.log.push(pt)
     })
     return hit
