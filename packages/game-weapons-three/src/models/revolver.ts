@@ -1,5 +1,6 @@
 import type { ModelKit } from './kit'
 import { heatify } from './kit'
+import { buildPythonRevolver } from './revolver-python'
 import type { BuiltModel, ModelOptions, ModelParts } from './types'
 
 const PI = Math.PI
@@ -7,6 +8,7 @@ const DEFAULT_CHAMBERS = 6
 
 /** Port of the gallery's `revolver`: frame, swing-out crane with the cylinder (six chambers, or as many as the weapon holds), barrel, hammer, grip and trigger. */
 export function buildRevolver(kit: ModelKit, options: ModelOptions): BuiltModel {
+  if (options.python) return buildPythonRevolver(kit, options)
   const { M, box, cylinderX } = kit
   const group = kit.group()
   const parts: ModelParts = { family: 'revolver', kick: options.cal === '.44 Magnum' ? 1.5 : 0.9, glow: [] }
