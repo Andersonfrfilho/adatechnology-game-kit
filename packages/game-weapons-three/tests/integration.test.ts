@@ -75,7 +75,7 @@ describe('sound in the hands and in the area', () => {
     expect(heard()).toContain('empty')
   })
 
-  it('an explosion is heard from where the camera is: the farther, the quieter', () => {
+  it('an explosion in a room that lends its engine is played by the room, recorded, not a second synthesized burst from the area', () => {
     const { room, module } = areaRoom()
     const play = vi.spyOn(module.audio!, 'play')
     room.look([0, 1.7, 5], [0, 1.2, -11])
@@ -83,10 +83,7 @@ describe('sound in the hands and in the area', () => {
     equip(room, 'frag_grenade')
     room.use()
     run(room, 5)
-    expect(play).toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number))
-    const [, volume, distance] = play.mock.calls[0] as [string, number, number]
-    expect(volume).toBeGreaterThan(0.4)
-    expect(distance).toBeGreaterThan(0)
+    expect(play).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number))
   })
 })
 
