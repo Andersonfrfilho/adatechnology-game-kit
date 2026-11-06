@@ -201,7 +201,7 @@
   },
   "packages/game-floorplan-three/src/house/doors.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     }
   },
   "packages/game-floorplan-three/src/interactables/bridge.ts": {
@@ -257,16 +257,6 @@
   "packages/game-floorplan-three/src/navigation/floor-navigator.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 9
-    }
-  },
-  "packages/game-floorplan-three/src/roof/roofs.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 10
-    }
-  },
-  "packages/game-floorplan-three/src/roof/slabs.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
     }
   },
   "packages/game-floorplan-three/src/test-area/module.ts": {

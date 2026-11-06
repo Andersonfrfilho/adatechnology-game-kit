@@ -7,7 +7,11 @@
  * checked with `strict` by `tsconfig.strict.json`.
  */
 import type * as THREE_NS from 'three'
+import type { FloorplanResultFields, PlanDoor, PlanWall, PlanWindow, Rect, ResultGate, ResultLot, ResultRoom } from '@adatechnology/game-floorplan'
+import type { Outbuilding, Utilities } from '@adatechnology/game-floorplan-structure'
 import type { Props3d } from '@adatechnology/game-props3d'
+
+export type { Rect }
 
 export type Three = typeof THREE_NS
 export type Vec3 = [number, number, number]
@@ -390,6 +394,8 @@ export interface HouseItem {
   doorOpen?: boolean
   hose?: number[][]
   assembly?: unknown
+  /** Storeys a stair connects, or the id of the item this one serves. */
+  link?: { from: number; to: number } | string
   [extra: string]: unknown
 }
 
@@ -425,6 +431,341 @@ export interface KernelFurnitureExtraTypes {
   extraTypes(T: TypeTable, props: Props3d): void
 }
 
+/** What has plan rectangles: its `parts`, or its own `u0..v1` when it has none (a room, a lot zone). */
+export interface RoomRects {
+  parts?: readonly Rect[] | null
+  u0: number
+  v0: number
+  u1: number
+  v1: number
+}
+
+/** A room of the house record; the open areas of a plugin may be marked `outdoor`, and the rooms of an outbuilding name it. */
+export type HouseRoom = ResultRoom & { outdoor?: boolean; outbuilding?: unknown; [extra: string]: unknown }
+
+/** A wall of the house record, with the structure fields the structure extension adds (`id`, `material`, `role`). */
+export interface HouseWall extends PlanWall {
+  id?: string
+  material?: string
+  role?: string
+  outbuilding?: string
+}
+
+/** The house record the renderer draws: the `generate` result of `game-floorplan`, with the fields the plugins add to its rooms, walls and items. */
+export interface HouseRecord extends Omit<FloorplanResultFields, 'rooms' | 'walls' | 'doors' | 'windows' | 'items' | 'stateItems'> {
+  rooms: HouseRoom[]
+  walls: HouseWall[]
+  doors: HouseDoor[]
+  windows: HouseWindow[]
+  items: HouseItem[]
+  stateItems: HouseItem[]
+  /** Utilities of `game-floorplan-structure` (empty until its extension ran). */
+  utilities?: Partial<Utilities>
+  /** Walk-in yard buildings of `game-floorplan-structure`. */
+  outbuildings?: Outbuilding[]
+  [extension: string]: unknown
+}
+
+/** A door of the house record; an outbuilding's door names it, and has no stair steps or type of its own. */
+export interface HouseDoor extends Omit<PlanDoor, 'type' | 'steps'> {
+  type?: string
+  steps?: number
+  outbuilding?: string
+}
+
+/** A window of the house record; an outbuilding's window names it. */
+export interface HouseWindow extends PlanWindow {
+  outbuilding?: string
+}
+
+/** Colour and material of one face of a wall, and whether it faces outside. */
+export interface WallSide {
+  color: Hex
+  mat: string
+  exterior: boolean
+}
+
+/** What `house/helpers` puts on the kernel: the house's storeys, rooms and their rectangles and colours. */
+export interface KernelHouseHelpers {
+  OPEN_ROOM_TYPES: Set<string>
+  NO_CEILING: Set<string>
+  /** An open area has no roof or ceiling. */
+  OPEN_AREA(c: { type: string; outdoor?: boolean }): boolean
+  EPS: number
+  /** Floor height of storey `f` (clamped to the storeys there are). */
+  Y0(f: number): number
+  /** A colour by value (`0xrrggbb`) or by palette role; null when the role has no colour. */
+  colorOf(v: unknown): Hex | null
+  rectsOf(c: RoomRects): readonly Rect[]
+  roomAt(f: number, u: number, v: number): HouseRoom | null
+  /** Rectangle `a` minus `b`. */
+  subRect(a: Rect, b: Rect): Rect[]
+  subRects(rs: readonly Rect[], holes: readonly Rect[]): readonly Rect[]
+  wallColor(c: HouseRoom | null | undefined): Hex
+  floorColor(c: HouseRoom | null | undefined): Hex
+  /** Plan rectangle of a stair (front = local +z). */
+  stairFootprint(m: { x: number; z: number; ry: number; w: number; d: number }): Rect
+  /** A wall a little taller than the storey pitch stops at the next floor. */
+  effectiveHeight(f: number, h: number): number
+}
+
+/** A flight of stairs between two storeys, once (the house record repeats the stair item on both): its plan box, the landing under its first steps when
+ * another flight stands below it, and the flat top of a flight with none above (`LP` long). */
+export interface Flight {
+  m: HouseItem
+  from: number
+  to: number
+  rect: Rect
+  landing?: Rect
+  top?: Rect
+  LP?: number
+}
+
+/** A piece of a slab tile and the rectangle it covers (`null`: not part of the structure). */
+export type Tile = [PieceRecord | null, Rect]
+
+/** What `house/floors` puts on the kernel. */
+export interface KernelHouseFloors {
+  flights(): Flight[]
+  floorsAndSlabs(): void
+  /** A slab tile cut at the borders of its panels, each part tagged with its own panel. */
+  tilesOf(parent: string | null | undefined, rc: Rect): Tile[]
+  panelAt(parent: string, x: number, z: number): PieceRecord | null
+}
+
+/** A stair drawn in the house (`ctx.stairs`): its item, storeys, foot height, rise and plan box, and where its landing starts (share of its depth). */
+export interface StairRecord {
+  m: HouseItem
+  f: number
+  to: number
+  y0: number
+  H: number
+  rect: Rect
+  landingPoint: number
+}
+
+/** What `house/stairs` puts on the kernel. */
+export interface KernelHouseStairs {
+  buildStairs(): void
+  elevator(): void
+}
+
+/** What `house/baseboard` puts on the kernel. */
+export interface KernelHouseBaseboard {
+  /** External baseboard and protective sidewalk around the ground floor, closing the outer corners. */
+  baseboardAndSidewalk(): void
+}
+
+/** A unit of an apartment building: its corner and whether it is turned. */
+export interface BuildingUnit {
+  u: number
+  v: number
+  ry: number
+}
+
+/** The apartment building of a record (`r.building`, from the apartment template's `building`). */
+export interface ApartmentBuilding {
+  ceilingHeight: number
+  unit: { w: number; d: number }
+  units: BuildingUnit[]
+  corridor: Rect
+  hall: Rect
+  elevator: { rect: Rect }
+  stairs: { rect: Rect }
+}
+
+/** What `house/building` puts on the kernel. */
+export interface KernelHouseBuilding {
+  /** The apartment building around the unit: stacked storeys, hall, stair and elevator; the chosen unit highlighted. */
+  building(): void
+}
+
+/** What `house/outbuildings` puts on the kernel. */
+export interface KernelHouseOutbuildings {
+  /** Use -> [room type, colour role, name]. */
+  OUTBUILDING_USE: Record<string, [string, string, string]>
+  /** The record with the outbuildings' rooms, walls, doors, windows and items in its own lists (and every wall named). */
+  applyOutbuildings(r: HouseRecord): HouseRecord
+  outbuildings(): void
+}
+
+/** What `house/windows` puts on the kernel. */
+export interface KernelHouseWindows {
+  FRAME_COLORS: Record<string, Hex>
+  SILL_COLORS: Record<string, Hex>
+  windows(): void
+}
+
+/** A box collider of the house (`ctx.colliders`): a wall, door, board, lot wall or gate on storey `f` (`-1`: the lot); `off` while a door is open. */
+export interface BoxCollider {
+  type: string
+  f: number
+  x0: number
+  z0: number
+  x1: number
+  z1: number
+  piece?: string
+  off?: boolean
+  [extra: string]: unknown
+}
+
+/** Material, colour and top of the outer face of a wall (the pillars in it take them). */
+export interface WallLook {
+  mat: string
+  color: Hex
+  top: number
+}
+
+/** What `house/walls` puts on the kernel. */
+export interface KernelHouseWalls {
+  /** Both halves of a wall stretch, each in its side's colour and material. */
+  wallBox(alongU: boolean, L: number, a: number, b: number, ya: number, yb: number, th: number, cL: Hex, cH: Hex, mL: string, mH: string): void
+  sideOf(id: string, frontLine: boolean): WallSide
+  pieceOf(w: HouseWall): PieceRecord | null
+  /** The wall segment of the line closest to `c` (door lintels belong to it). */
+  nearestWall(f: number, axis: string, L: number, c: number): HouseWall | null
+  walls(): void
+  wallPillars(looks: ReadonlyMap<string, WallLook>): void
+}
+
+/** A door leaf group: its name and where its hinge stands. */
+export interface LeafGroup {
+  name: string
+  pos: number[]
+}
+
+/** A door of the house as it moves (`ctx.leaves`): its state, its leaf groups and handles, and its collider. */
+export interface DoorLeaf {
+  id: string
+  floor: number
+  type: string
+  open: boolean
+  t: number
+  blockedFlag: boolean
+  locked: boolean
+  handleNames: string[]
+  hT: number
+  cx: number
+  cz: number
+  visH: number
+  groups: LeafGroup[]
+  col: BoxCollider | null
+  minScale?: number
+  rot?: number
+  [extra: string]: unknown
+}
+
+/** What `house/doors` puts on the kernel. */
+export interface KernelHouseDoors {
+  /** The two faces in a door gap, from the wall beside it. */
+  doorLineSides(p: HouseDoor): [WallSide, WallSide]
+  doors(): void
+}
+
+/** A roof rectangle of the house (`ctx.roofRects`): where it is and, once drawn, the geometry the solar panels rest on. */
+export interface RoofRect {
+  f: number
+  r: Rect
+  touchesU?: number[]
+  slab?: boolean
+  outbuilding?: string
+  yb?: number
+  tp?: number
+  gable?: boolean
+  alongX?: boolean
+  exterior?: Rect
+  rm?: number
+}
+
+/** What `roof/tiles` puts on the kernel. */
+export interface KernelRoofTiles {
+  R_STYLE(): string
+  /** Tile relief on a roof plane (colonial rows or fibre cement waves). */
+  tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string): void
+  /** Ridge or hip cap along a line. */
+  ridge(a: readonly number[], b: readonly number[], type: string, roofColor: Hex): void
+  /** The structure piece of the roof plane under the point (or the nearest). */
+  pieceOfPane(x: number, z: number): PieceRecord | null
+}
+
+/** What `roof/rect` puts on the kernel. */
+export interface KernelRoofRect {
+  /** A gable or hipped cover over a rectangle, with its eave band, soffit and fascia; `touchesU` = sides (x0, z0, x1, z1) against an upper storey. */
+  roofRect(type: string, X0: number, Z0: number, X1: number, Z1: number, yb: number, roofColor: Hex, gable: boolean, F: unknown, touchesU?: number[]): void
+}
+
+/** Gutter settings of a house (`ctx.gutter`), drawn from its seed. */
+export interface GutterConfig {
+  on: boolean
+  rnd: () => number
+  color: Hex
+  bad: boolean
+  fallback: boolean
+  ncond?: number
+  nbuz?: number
+  bz?: Set<string>
+}
+
+/** Cell grid of a storey's roof: `O(j, i)` = covered, `U(j, i)` = the upper storey stands there, `full` = a whole block covered, `pe` = height of a block's eave. */
+export interface RoofGrid {
+  O(j: number, i: number): boolean
+  U(j: number, i: number): boolean
+  full(i0: number, i1: number, j0: number, j1: number): boolean
+  pe(x0: number, z0: number, x1: number, z1: number): number
+}
+
+/** What `roof/gutters` puts on the kernel. */
+export interface KernelRoofGutters {
+  gutterConfig(): GutterConfig
+  gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[]): void
+  /** Floor drain with a grate; with `px`, `pz`, the pipe from the downpipe's foot. */
+  drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void
+}
+
+/** What `roof/slabs` puts on the kernel. */
+export interface KernelRoofSlabs {
+  /** Flat roof: a plate per cell, the parapet only on the outer perimeter. */
+  slabs(f: number, xs: readonly number[], zs: readonly number[], O: RoofGrid['O'], U: RoofGrid['U'], nx: number, nz: number, full: RoofGrid['full'], pe: RoofGrid['pe'], C: Record<string, Hex>): void
+}
+
+/** What `roof/roofs` puts on the kernel. */
+export interface KernelRoofRoofs {
+  roofs(): void
+}
+
+/** What `lot/terrain` puts on the kernel. */
+export interface KernelLotTerrain {
+  terrain(): void
+  /** Stretches `[x0, x1]` of a lot wall line that do not go through a room of the house. */
+  freeSpans(alongU: boolean, L: number, a: number, b: number): [number, number][]
+}
+
+/** What `lot/perimeter` puts on the kernel. */
+export interface KernelLotPerimeter {
+  perimeter(): void
+  paths(): void
+}
+
+/** What `lot/gates` puts on the kernel. */
+export interface KernelLotGates {
+  /** Which way a sliding gate opens: +1 to the right when it fits in the lot, otherwise -1. */
+  slideDirection(g: ResultGate, lt: ResultLot): number
+  gates(): void
+}
+
+/** What `lights/decor` puts on the kernel. */
+export interface KernelLightsDecor {
+  /** Extra lamps by class and seed: table lamp, floor lamp beside the sofa, sconces beside the mirror, outdoor lamp at the entrance. */
+  decorLights(api: FurnitureApi): void
+}
+
+/** The item a builder draws for (its id and room). */
+export interface ItemRef {
+  id: string
+  room: string | null
+  [extra: string]: unknown
+}
+
 /** What `kernel/noise` puts on the kernel. */
 export interface KernelNoise {
   _h2(x: number, z: number): number
@@ -440,7 +781,7 @@ export interface KernelCloseScene {
 }
 
 /** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor {
   [member: string]: any
 }
 

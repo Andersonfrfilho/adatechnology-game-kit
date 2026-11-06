@@ -57,7 +57,8 @@
     "@adatechnology/game-floorplan-residential": "workspace:^"
   },
   "peerDependencies": {
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "@adatechnology/game-floorplan": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
@@ -78,5 +79,10 @@
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-floorplan-rural": "workspace:^",
     "@adatechnology/game-floorplan-post-apocalyptic": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@adatechnology/game-floorplan": {
+      "optional": true
+    }
   }
 }
