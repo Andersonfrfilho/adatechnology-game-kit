@@ -308,29 +308,59 @@ const penetrationOf = (mat: MaterialDef, table: Readonly<Record<string, number>>
   return v === undefined ? undefined : v * (mat.penetrationScale ?? 1)
 }
 /** Share of its capacity a structural part still has: a bare rebar cage keeps the reinforcement's residual, a breached part loses what left it. */
-const capacityScale = (p: PartRT): number => {
+/** Share of its hit points a part that gave at its cut keeps: it stands, as damaged as the shots left it. */
+const GIVE_AT_CUT_HP = 0.5
+const capacityScale = (p: PartRT, borne?: BorneAt, through?: ThroughAt): number => {
   const residual = p.spec.reinforcement?.residualCapacity ?? RESIDUAL_CAPACITY
   if (p.st.stripped) return residual
-  const kept = Math.min(p.rt.removed ? 1 - p.rt.removed / p.mass0 : 1, 1 - sectionLoss(p))
+  const kept = Math.min(p.rt.removed ? 1 - p.rt.removed / p.mass0 : 1, sectionKept(p, residual, borne, through))
   // the cage keeps its share where the concrete is gone
   return Math.max(p.spec.reinforcement ? residual : 0.05, kept)
 }
 /**
  * Largest share of the cross-section the units knocked out of a part took at one place along its length (`PartState.chipped`): a column with half its
  * width shot away at one height carries half. A wall, a partition or a column carries its load down, so its section is across at one height (a wall
- * with a slot shot along its base stands on what is left of it); any other part's length runs along the longer of the two axes of its face.
+ * with a slot shot along its base stands on what is left of it); any other part's length runs along the longer of the two axes of its face. Where `borne`
+ * says a lying part rests on what is under it (a bond beam on its wall), its load goes straight down there and a section shot away at that place takes
+ * nothing from what it carries.
  */
-const sectionLoss = (p: PartRT): number => {
+type BorneAt = (local: Vec3, along: number) => boolean
+/** Share of a standing part's load that goes through the place `local` along `along` (part space): what rests on it, and its own weight above that place. */
+type ThroughAt = (local: Vec3, along: number) => number
+/**
+ * The section a part still has for what it carries: at each place a shot took units out, what is left of the section over the share of the load that
+ * goes through there (`through`; a column cut just under its top carries the little that is above the cut), the cage's `residual` at least where the
+ * concrete is gone. The smallest of them; 1 when nothing was taken out.
+ */
+const sectionKept = (p: PartRT, residual: number, borne?: BorneAt, through?: ThroughAt): number => {
+  let kept = 1
+  forEachSection(p, borne, (c, along, gone) => {
+    const share = through?.(c.center, along) ?? 1
+    if (share <= 0) return
+    kept = Math.min(kept, Math.max(p.spec.reinforcement ? residual : 0, 1 - gone) / share)
+  })
+  return kept
+}
+const sectionLoss = (p: PartRT, borne?: BorneAt): number => {
+  let worst = 0
+  forEachSection(p, borne, (_c, _along, gone) => {
+    worst = Math.max(worst, gone)
+  })
+  return Math.min(1, worst)
+}
+/** Calls `visit` with each place along a part's length where units were taken out, the axis of its length and the share of the section gone there. */
+const forEachSection = (p: PartRT, borne: BorneAt | undefined, visit: (c: { readonly center: Vec3 }, along: number, gone: number) => void): void => {
   const cells = p.st.chipped
-  if (!cells?.length) return 0
+  if (!cells?.length) return
   const [u, v] = planeAxes(p.thin)
   const role = p.spec.structure?.role
   const up = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === v ? 1 : 0)) as Vec3)
   const upright = Math.abs(up[1]) > 0.7 ? v : Math.abs(rotateVec(p.q, [0, 0, 0].map((_, k) => (k === u ? 1 : 0)) as Vec3)[1]) > 0.7 ? u : -1
   const along = (role === 'wall' || role === 'partition' || role === 'column') && upright >= 0 ? upright : p.dims[u] >= p.dims[v] ? u : v
   const across = along === u ? v : u
-  let worst = 0
+  const lying = along !== upright || upright < 0
   for (const c of cells) {
+    if (lying && borne?.(c.center, along)) continue
     // the pieces whose span along the length overlaps this one's centre: what is gone across the section there (overlapping pieces count once)
     const spans: Array<[number, number]> = []
     for (const d of cells) if (Math.abs(d.center[along] - c.center[along]) < d.size[along] / 2 + 1e-6) spans.push([d.center[across] - d.size[across] / 2, d.center[across] + d.size[across] / 2])
@@ -341,9 +371,8 @@ const sectionLoss = (p: PartRT): number => {
       gone += b - Math.max(a, end)
       end = b
     }
-    worst = Math.max(worst, gone / Math.max(p.dims[across], 1e-6))
+    visit(c, along, Math.min(1, gone / Math.max(p.dims[across], 1e-6)))
   }
-  return Math.min(1, worst)
 }
 const isLost = (p: PartRT) => p.st.status === 'broken' || p.st.status === 'melted' || p.st.status === 'ashes'
 const clone = <T>(v: T): T => structuredClone(v)
@@ -638,6 +667,34 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return box
   }
 
+  /**
+   * The share of a standing part's load that goes through a place along its height: what rests on it plus its own weight above that place, over all it
+   * carries. Undefined for a lying part (its length is across the load).
+   */
+  const throughOf = (p: PartRT): ThroughAt | undefined => {
+    const load = p.st.load ?? 0
+    if (load <= 0) return undefined
+    const above = Math.max(0, load - p.st.mass)
+    const up = rotateVec(p.q, [0, 1, 0])
+    return (local, along) => {
+      const axis: Vec3 = [0, 0, 0]
+      axis[along] = 1
+      const sign = Math.sign(rotateVec(p.q, axis)[1])
+      // only an upright length carries its load down through a section
+      if (Math.abs(up[1]) < 0.7 && Math.abs(rotateVec(p.q, axis)[1]) < 0.7) return 1
+      const half = p.dims[along] / 2
+      const share = clamp((half - sign * local[along]) / Math.max(p.dims[along], 1e-6), 0, 1)
+      return (above + p.st.mass * share) / load
+    }
+  }
+
+  /** Where a part rests on its supports: a place along its length (part space) over the contact of one of them. */
+  const borneOn = (p: PartRT, supports: readonly PartRT[]): BorneAt | undefined => {
+    if (supports.length === 0) return undefined
+    const boxes = supports.map((support) => contactBox(p, support))
+    return (local, along) => boxes.some(([lo, hi]) => local[along] >= lo[along] - SUPPORT_TOLERANCE && local[along] <= hi[along] + SUPPORT_TOLERANCE)
+  }
+
   const measureContact = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
     const A = aabbOf(p.spec.shape, p.pos, p.q), B = aabbOf(support.spec.shape, support.pos, support.q)
     const lo: Vec3 = [0, 0, 0], hi: Vec3 = [0, 0, 0]
@@ -872,7 +929,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
-      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p))
+      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p, borneOn(p, (lowerOf.get(i) ?? []).map((k) => parts[k])), throughOf(p)))
       if (p.bend) {
         p.bendLoad = p.st.mass + bending[i]
         const bent = restFlexure(o, p, lowerOf.get(i) ?? [])
@@ -2099,6 +2156,33 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return loose.length
   }
 
+  /**
+   * A reinforced concrete part with a place shot away gives there, not as a whole: what rests on it no longer bears on it (the bond beam on a pillar cut
+   * under its top goes on resting on its wall and the other pillars), and the part stays as it is, the concrete above the cut held by the cage. Returns
+   * false when nothing rested on it, for the whole part to break as before.
+   */
+  const giveAtCut = (o: ObjRT, p: PartRT, src?: string): boolean => {
+    if (!p.spec.reinforcement || !p.spec.units || !p.st.chipped?.length || sectionLoss(p) <= 0) return false
+    const opened: JointRT[] = []
+    for (const j of o.byPart.get(p.spec.id) ?? []) {
+      if (j.st.open) continue
+      const onIt = (j.bears === 'a_on_b' && j.spec.b === p.spec.id) || (j.bears === 'b_on_a' && j.spec.a === p.spec.id)
+      if (!onIt) continue
+      j.st.open = true
+      j.st.openedBy = 'break'
+      opened.push(j)
+    }
+    if (opened.length === 0) return false
+    p.st.hp = Math.max(p.st.hp, p.st.maxHp * GIVE_AT_CUT_HP)
+    markDamaged(p)
+    solveStructure(o)
+    recomputeGroups(o)
+    detachEvents(o, opened, 'break', src)
+    exposeRebar(o, p, src)
+    collapseCheck(o, src)
+    return true
+  }
+
   /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */
   const stripPart = (o: ObjRT, p: PartRT, reinforcement: NonNullable<PartSpec['reinforcement']>, src?: string) => {
     const bars = rebarBars(p.dims, p.thin, reinforcement.spacing)
@@ -2168,6 +2252,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       hingeDrop(o, p, src)
       return
     }
+    if (!force && giveAtCut(o, p, src)) return
     const ex = p.spec.explodes
     const style = force ?? (p.snap ? 'snap' : p.mat.fracture === 'none' ? 'snap' : p.mat.fracture)
     const { c, q } = partXf(o, p)

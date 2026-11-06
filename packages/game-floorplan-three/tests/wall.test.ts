@@ -100,7 +100,13 @@ describe('wallPiece', () => {
     world.on('*', (e) => events.push(e))
     grenade(world, x)
     for (let i = 0; i < 20; i++) world.update(0.1)
-    expect(events.filter((e) => e.type === 'collapse' || e.type === 'detach' || e.type === 'fracture')).toEqual([])
+    // the glazed tiles of the baseboard (and the sidewalk slabs) glued at the foot of the wall are finish, not structure: the ones by the blast break off
+    const finish = (part: string): boolean => part.startsWith('baseboard:') || part.startsWith('sidewalk:')
+    const structural = events.filter((e) => (e.type === 'collapse' || e.type === 'detach' || e.type === 'fracture') && !(('part' in e && finish(String(e.part))) || ('parts' in e && (e.parts as string[]).some(finish))))
+    expect(structural).toEqual([])
+    const tiles = world.state(id)!.parts.filter((part) => part.id.startsWith('baseboard:'))
+    const near = tiles.filter((tile) => Math.abs((piece.spec.parts.find((p: { id: string }) => p.id === tile.id)?.position[0] ?? 99) - x) < 0.5)
+    expect(near.some((tile) => tile.status !== 'intact')).toBe(true)
     const wall = world.part(id, 'wall_0_0')!
     expect(wall.status).toBe('damaged')
     const units = blown(events)
@@ -160,8 +166,10 @@ describe('wallPiece', () => {
     scene.traverse((o) => { if (o instanceof THREE.Mesh && o.name.endsWith('/wall_0_0') && o.parent?.name.startsWith('destruction-piece-')) wall = o })
     expect(wall).toBeDefined()
     const drawn = new THREE.Box3().setFromObject(wall!, true)
-    expect(drawn.max.x - drawn.min.x).toBeGreaterThan(9.9)
-    expect(drawn.max.y - drawn.min.y).toBeGreaterThan(2.9)
+    // whole in the frame of the piece it became (a wall with no footing tips over as it falls: its box in the world leans)
+    const own = new THREE.Box3().setFromBufferAttribute(wall!.geometry.getAttribute('position') as THREE.BufferAttribute).applyMatrix4(wall!.matrix)
+    expect(own.max.x - own.min.x).toBeGreaterThan(9.9)
+    expect(own.max.y - own.min.y).toBeGreaterThan(2.9)
     const hit = world.raycast([0, 1.5, -8], [0, 0, -1], 10)!
     expect(hit.part).toBe('wall_0_0')
     expect(hit.point[1]).toBeGreaterThan(drawn.min.y)
@@ -233,5 +241,47 @@ describe('wallPiece', () => {
     expect(breach.some((mesh) => mesh.instanced)).toBe(true)
     expect(breach.some((mesh) => !mesh.instanced)).toBe(true)
     probes.dispose()
+  })
+
+  it('a bond beam shot through at one end stays on its wall: the concrete goes there, its bars show there, the rest of it is whole', () => {
+    const { spec } = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(spec, { id: 'w' })
+    const beam = spec.parts.find((p: { id: string }) => p.id === 'plate_0_0')
+    const [x0, y0, z0] = beam.position
+    const end = x0 + beam.shape.size[0] / 2 - 1
+    // two columns of blocks across the whole depth of the beam, a metre from its end: its section is gone there
+    for (const x of [end, end - 0.1]) for (const y of [y0 - 0.1, y0, y0 + 0.1]) for (let k = 0; k < 2; k++) {
+      world.shoot([x, y, z0 + 5], [0, 0, -1], 3300, 7.62, 'test')
+      world.update(1 / 30)
+    }
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    for (let t = 0; t < 10; t += 1 / 30) world.update(1 / 30)
+    const part = world.part(id, 'plate_0_0')!
+    expect(part.status).toBe('damaged')
+    expect((part as { stripped?: boolean }).stripped).toBeFalsy()
+    expect(events.filter((e) => e.type === 'fracture' && e.part === 'plate_0_0')).toEqual([])
+  })
+
+  it('a pillar shot through under its top gives there, not as a whole: it stands, and the bond beam rests on the wall and the other pillars', () => {
+    const { spec } = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(spec, { id: 'w' })
+    const pillar = spec.parts.find((p: { id: string }) => p.id === 'wall_column_0_3')
+    const [x0, y0, z0] = pillar.position
+    const top = y0 + pillar.shape.size[1] / 2
+    for (const y of [top - 0.15, top - 0.25]) for (const x of [x0 - 0.05, x0 + 0.05]) for (let k = 0; k < 2; k++) {
+      world.shoot([x, y, z0 + 5], [0, 0, -1], 3300, 7.62, 'test')
+      world.update(1 / 30)
+    }
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    for (let t = 0; t < 10; t += 1 / 30) world.update(1 / 30)
+    const part = world.part(id, 'wall_column_0_3')!
+    expect(part.status).toBe('damaged')
+    expect((part as { stripped?: boolean }).stripped).toBeFalsy()
+    expect(events.filter((e) => e.type === 'fracture' && e.part === 'wall_column_0_3')).toEqual([])
+    expect(['intact', 'damaged']).toContain(world.part(id, 'plate_0_0')!.status)
   })
 })

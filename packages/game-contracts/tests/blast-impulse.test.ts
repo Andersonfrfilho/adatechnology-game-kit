@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bodyImpulse, blastBodySpeed, knockOf, sideOnImpulse, KNOCK_DOWN_SPEED } from '../src'
+import { bodyImpulse, blastBodySpeed, knockOf, sideOnImpulse, sideOnOverpressure, KNOCK_DOWN_SPEED } from '../src'
 
 const feet = (x: number) => [x, 0, 0] as [number, number, number]
 const at = (tnt: number, lethalRadius: number, radius: number) => ({ point: [0, 0.1, 0] as [number, number, number], energy: 0, radius, tnt, lethalRadius })
@@ -43,5 +43,15 @@ describe('the blast wave on a body', () => {
     const fromEnergy = knockOf({ point: [0, 0.1, 0], energy: 200000, radius: 15 }, feet(3), 70)
     const fromTnt = knockOf(at(0.24, 0, 15), feet(3), 70)
     expect(fromEnergy?.velocity[0]).toBeCloseTo(fromTnt!.velocity[0], 6)
+  })
+})
+
+describe('sideOnOverpressure', () => {
+  it('reads the Kinney and Graham fit: about 45 to 55 kPa at 4 m from a kilogram of TNT, falling with distance, and the same at the same scaled distance', () => {
+    expect(sideOnOverpressure(1, 4) / 1000).toBeGreaterThan(40)
+    expect(sideOnOverpressure(1, 4) / 1000).toBeLessThan(60)
+    expect(sideOnOverpressure(1, 2)).toBeGreaterThan(sideOnOverpressure(1, 4))
+    expect(sideOnOverpressure(8, 8)).toBeCloseTo(sideOnOverpressure(1, 4), 6)
+    expect(sideOnOverpressure(0, 4)).toBe(0)
   })
 })
