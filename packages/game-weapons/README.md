@@ -63,14 +63,25 @@ result.rounds // cartridges spent: a shell is one, a burst is several
 result.roundTimes // seconds after the start of the call at which each round left the barrel
 if (result.fault) rifle.clearFault() // 1.2 s; `rifle.fault` stays set until it ends
 rifle.setSafety(true) // the trigger answers `safe`
-rifle.heatLevel // 0..1, from the barrel heat (`rifle.heat`, up to 140)
+rifle.heat // barrel temperature above ambient in °C (up to `rules.heat.cap`, 900)
+rifle.heatLevel // 0..1: that temperature over `rules.heat.displayMax` (750 °C)
 for (const event of rifle.drain()) animate(event) // draw, shot, misfire, cycle, reload (+ stages, feed), empty, mode, fault, clear, safety
 ```
 
 Each cartridge rolls its own fault from a second generator (`seed ^ 0x6a09e667`), so the spread of a seed does not change when faults are on. The chance is
-`condition × faultFactor × (1 + max(0, heat − 60) / 40)` (new 0.3%, used 1.5%, worn 5%, rusty 12%), and reloaded ammunition adds a misfire chance of 8%.
+`condition × faultFactor × (1 + max(0, heat − 350) / 200)` (new 0.3%, used 1.5%, worn 5%, rusty 12%), and reloaded ammunition adds a misfire chance of 8%.
 A revolver or break-action only misfires (the round is spent, no jam); a pump, bolt or lever fails to extract; the rest stovepipe or double feed.
-A bow or crossbow has no cartridge: it adds no heat and never jams. Everything is a number you can change with `rules` (`faults: false` turns jams off,
+A bow or crossbow has no cartridge: it adds no heat and never jams.
+
+**Barrel heat is physical** (`rules.heat`): a round adds `share × E / (m × c)` °C, with `E` the muzzle energy of the whole round (every pellet of a shell), `c` = 490 J/(kg·K)
+(steel), `share` the fraction of that energy that ends in the barrel (`barrelShare`, by case type: 0.48 rifle, shell and big, 0.3 pistol and tiny) and `m` the barrel mass: its
+length (`dimensions.barrel`) × kg per metre of the category (`barrelKilogramsPerMetre`: pistol 1, revolver 1.4, smg 1.2, carbine and rifle 1.6, dmr, sniper and hunting 2.4,
+machine gun 3, shotgun 1.1) × `dimensions.barrels` (a rotary gun shares the heat: the M134 has 6). `dimensions.barrelMass` replaces length × kg per metre for a heavy or
+quick-change barrel. The barrel cools by Newton's law, `dT/dt = −T/τ` with `τ = 30 s + 250 s/kg × m`, integrated exactly. From cold an M4 reaches the warning
+(`faultFrom`, 350 °C) after about 130 rounds of rapid fire, an FN MAG or PKM after 200 to 300 at 100 rounds a minute, an M134 after more than 1100, and a pistol or a bolt
+rifle at a bolt pace never does. Past it the fault chance grows to double at 550 °C (`faultSpan` 200); smoke starts at 250 °C and the red glow at 450 °C
+(`rules.heat.visual`). `roundsToWarningOf(arsenal, weaponId)` gives the rounds to the warning at the weapon's listed rate (the test room bench shows it). `GALLERY_HEAT`
+keeps the abstract units of the Galeria 3D do Arsenal (`rules.heat.gallery`) for the recorded runs. Everything is a number you can change with `rules` (`faults: false` turns jams off,
 `faultChance` takes a function), and the order of the reload steps is in `RELOAD_STAGES`.
 
 Real models point to a generic `archetype` for the handling numbers (spread, bloom, range, recoil); `patch`, `remove` and `include` change the shipped

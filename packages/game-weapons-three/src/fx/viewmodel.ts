@@ -41,7 +41,10 @@ import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
 import type { Hold } from './hand-hold'
 
 const PI = Math.PI
-const HEAT_DISPLAY_MAX_FALLBACK = 120
+const HEAT_DISPLAY_MAX_FALLBACK = 750
+/** Wisps per second and extra thickness at full smoke level (the barrel at `smokeFrom + smokeSpan` or hotter). */
+const SMOKE_WISPS_PER_SECOND = 10
+const SMOKE_THICKNESS_GAIN = 1.7
 /** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres or its own length when longer, at `rate` per second; the world is probed `probe` metres ahead. */
 export const WALL_PULL = { margin: 0.03, max: 1.2, rate: 14, probe: 3 }
 /** The grips of the hands stay above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
@@ -557,10 +560,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         }
         secondsSinceShot += dt
         if (tool && tool.heat !== undefined && tool.heat * heatMax > visual.smokeFrom && secondsSinceShot < visual.smokeSeconds && session.model.parts.muzzle) {
-          smokeDebt += dt * (tool.heat * heatMax - visual.smokeFrom) * 0.1
+          const smokeLevel = Math.min(1, (tool.heat * heatMax - visual.smokeFrom) / visual.smokeSpan)
+          smokeDebt += dt * smokeLevel * SMOKE_WISPS_PER_SECOND
           while (smokeDebt > 1) {
             smokeDebt -= 1
-            const k = 0.5 + (tool.heat * heatMax - visual.smokeFrom) / 60
+            const k = 0.5 + smokeLevel * SMOKE_THICKNESS_GAIN
             effects.smoke(worldPositionOf(session, session.model.parts.muzzle, new THREE.Vector3()), new THREE.Vector3((random() - 0.5) * 0.015, 0.07 + random() * 0.08, (random() - 0.5) * 0.015), 0.004 * k, 1.2 + random() * 0.6, Math.min(0.18, 0.06 + k * 0.04))
           }
         }

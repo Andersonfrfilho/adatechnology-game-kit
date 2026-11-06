@@ -97,7 +97,7 @@ describe('bench of the weapons module', () => {
       'supported_stance', 'toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel',
     ])
     expect(bench?.layers().map((layer) => layer.id)).toEqual(['muzzle_flash', 'casings', 'magazines', 'attachments', 'beams'])
-    expect(Object.keys(room.metrics().module).sort()).toEqual(['accessories_fitted', 'aim_time', 'casings_live', 'heat', 'magazines_live', 'suppressed', 'weapon_mass'])
+    expect(Object.keys(room.metrics().module).sort()).toEqual(['accessories_fitted', 'aim_time', 'casings_live', 'heat', 'magazines_live', 'rounds_to_warning', 'suppressed', 'weapon_mass'])
   })
 
   it('weapon condition and ammo quality reach the rule, and the metal shows the wear', () => {

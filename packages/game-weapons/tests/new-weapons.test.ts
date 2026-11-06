@@ -120,7 +120,7 @@ describe('the weapons T1.7.5 added', () => {
 describe('the M134 in its three modes', () => {
   it('is 7.62×51 with the real measures, 3000 rpm by default and a box of belt in the hands', () => {
     const def = defOf('m134')
-    expect(def.dimensions).toEqual({ length: 0.801, barrel: 0.559, emptyMass: 39 })
+    expect(def.dimensions).toEqual({ length: 0.801, barrel: 0.559, emptyMass: 39, barrels: 6, barrelMass: 2 })
     expect(def.action).toMatchObject({ caliber: '7_62x51', rpm: 3000, rpmRange: [2000, 6000], modes: ['auto'], family: 'belt', magazine: 200 })
     expect(def.fitted).toEqual([])
     expect(arsenal.create('m134').capacity).toBe(200)

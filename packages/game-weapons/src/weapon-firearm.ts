@@ -153,7 +153,7 @@ export abstract class WeaponFirearm extends WeaponAttachments {
       res.shots.push(shot)
     }
     this._ammo -= 1
-    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, cal, this.rules.heat) * this.load.heatFactor)
+    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound({ action: a, caliber: cal, energy: energy * pellets, barrelMass: this.barrelMass, rules: this.rules.heat }) * this.load.heatFactor)
     this.readyAt = t + 60 / a.rpm
     this.extra = Math.min(bloomNow + (a.bloomDeg ?? 0), a.spreadDeg * (BLOOM_CAP - 1))
     this.extraClock = t

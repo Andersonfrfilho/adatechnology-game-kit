@@ -7477,7 +7477,9 @@
     "dimensions": {
       "length": 0.801,
       "barrel": 0.559,
-      "emptyMass": 39
+      "emptyMass": 39,
+      "barrels": 6,
+      "barrelMass": 2
     },
     "archetype": "rifle_7_62x39",
     "sources": [

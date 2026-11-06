@@ -1,6 +1,6 @@
 import type { AttachmentId, AttachmentInstall, MountKind, StatModifier, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
-import type { AmmoCore, AmmoJacket, CaseType, FireMode, WeaponDef } from './types'
+import type { AmmoCore, AmmoJacket, CaseType, FireMode, WeaponCategory, WeaponDef } from './types'
 
 export type FaultId = 'misfire' | 'stovepipe' | 'double_feed' | 'failure_to_extract'
 
@@ -20,7 +20,7 @@ export interface AmmoQualityDef {
 export interface FaultContext {
   readonly def: WeaponDef
   readonly condition: ConditionDef
-  /** Heat of the weapon, 0 to `rules.heat.cap`. */
+  /** Barrel temperature above ambient in °C. */
   readonly heat: number
 }
 
@@ -32,21 +32,40 @@ export interface WeaponRules {
   readonly ammoQualities: readonly AmmoQualityDef[]
   readonly defaultAmmoQuality: string
   readonly faultChance: (context: FaultContext) => number
+  /** Barrel temperature above ambient, in °C. A round adds `share x muzzle energy / (barrel mass x specificHeat)`; the barrel cools by Newton's law with a time constant that grows with its mass. */
   readonly heat: {
+    /** Highest temperature above ambient the barrel can reach. */
     readonly cap: number
+    /** The temperature the display shows as full (`heatLevel` 1). */
     readonly displayMax: number
-    readonly decayBase: number
-    readonly decayPerPoint: number
+    /** The warning: from here the weapon is hot enough to fail (the fault chance grows by `1 / faultSpan` per °C). */
     readonly faultFrom: number
     readonly faultSpan: number
-    readonly perShot: Readonly<Record<CaseType, number>>
+    /** J/(kg·K) of the barrel steel. */
+    readonly specificHeat: number
+    /** Fraction of the muzzle energy of a round that ends as heat in the barrel, by cartridge case. */
+    readonly barrelShare: Readonly<Record<CaseType, number>>
+    /** Barrel kg per metre of barrel length, by category. */
+    readonly barrelKilogramsPerMetre: Readonly<Partial<Record<WeaponCategory, number>>>
+    /** What a weapon with no barrel length or no listed category is given. */
+    readonly barrelFallback: { readonly metres: number; readonly kilogramsPerMetre: number }
+    /** Cooling time constant in seconds: `baseSeconds + secondsPerKilogram x barrel mass`. */
+    readonly cooling: { readonly baseSeconds: number; readonly secondsPerKilogram: number }
+    /** °C a rocket launch adds to the tube. */
     readonly perRocket: number
-    /** What the player sees of the heat: wisps of smoke only while the barrel is above `smokeFrom` and for `smokeSeconds` after the last shot; the red glow from `glowFrom` over `glowSpan` points. */
+    /** What the player sees of the heat: wisps of smoke only while the barrel is above `smokeFrom` and for `smokeSeconds` after the last shot, thicker over `smokeSpan` °C; the red glow from `glowFrom` over `glowSpan` °C. */
     readonly visual: {
       readonly smokeFrom: number
+      readonly smokeSpan: number
       readonly smokeSeconds: number
       readonly glowFrom: number
       readonly glowSpan: number
+    }
+    /** The abstract units the Galeria 3D do Arsenal recorded (a fixed amount per case and linear cooling); when present they replace the physical model, so the recorded runs stay reproducible. */
+    readonly gallery?: {
+      readonly perShot: Readonly<Record<CaseType, number>>
+      readonly decayBase: number
+      readonly decayPerPoint: number
     }
   }
   /** Each shot in the last `window` seconds raises the noise radius by `step`, up to `cap`. */
