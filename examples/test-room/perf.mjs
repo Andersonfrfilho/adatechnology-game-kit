@@ -255,7 +255,7 @@ async function pullUntilItGoes(id, aim) {
       const room = window.__testRoom
       room.look(/** @type {Vec3} */ (view.eye), /** @type {Vec3} */ (view.target))
       const status = room.use()
-      return { id: /** @type {{ id?: string }} */ (/** @type {unknown} */ (room.tool))?.id ?? weapon, status }
+      return { id: room.tool?.def.id ?? weapon, status }
     }, /** @type {[string, PerfAim]} */ ([id, aim]))
     if (fired.id !== id || !NOT_YET.includes(fired.status) || Date.now() > deadline) return fired
     await nextFrames(2)
@@ -328,7 +328,10 @@ async function playChainHorde() {
   await pause(GPU_MODE ? 6000 : 1000)
   chainSetupBuffers = await page.evaluate(() => window.__glCounts.buffers)
   await fireAndSettle(CHAIN_THROWN, { gapMs: 300, aim })
-  await page.evaluate(([view]) => /** @type {unknown} */ (window.__testRoom.equip('rifle_5_56')) && window.__testRoom.look(/** @type {Vec3} */ (view.eye), /** @type {Vec3} */ (view.target)), [aim])
+  await page.evaluate(([view]) => {
+    window.__testRoom.equip('rifle_5_56')
+    window.__testRoom.look(/** @type {Vec3} */ (view.eye), /** @type {Vec3} */ (view.target))
+  }, [aim])
   await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push('the rifle never got ready'))
   for (let shot = 0; shot < 10; shot++) {
     await page.evaluate(() => window.__testRoom.use())

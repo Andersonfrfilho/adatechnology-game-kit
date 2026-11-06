@@ -49,7 +49,6 @@ import { createFurnitureArea as create } from './area.js'
 /** @typedef {FurnitureOptions & { readonly [step: string]: unknown }} LoadOptions */
 /** @typedef {{ index: number; total: number; key: string; name: string; done?: boolean }} LoadProgress */
 /** @typedef {{ key: string; prepare: () => { name: string; load: () => unknown } }} LoadStep */
-/** @typedef {NonNullable<Parameters<typeof createVehicleBuilder>[2]>} VehicleEffects */
 /** The keys the other modules' reports go under in the furniture report (`REPORT_KEYS`). */
 /** @typedef {'weapons' | 'explosives' | 'itemsArea' | 'characters' | 'animals' | 'vfx' | 'terrain' | 'audio' | 'soundCheck' | 'weather' | 'floorplan' | 'vehicles' | 'vehicles_proving' | 'vegetation' | 'urban' | 'player' | 'crowd' | 'stories'} SubReportKey */
 /** @typedef {ModuleReport & { readonly [key in SubReportKey]?: ModuleReport }} FurnitureReport */
@@ -161,9 +160,6 @@ function loadSteps(room, options, lang) {
   }
   // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
   const sfx = globalThis.__kitSfx
-  // KNOWN BUG (typing found it): the vehicle kits want an `EffectSink` (`play(request)`) and `room.vfx` is the effects world (`play(id, point)`), so their smoke, dust
-  // and fire go nowhere. The cast keeps today's behaviour; the fix (the room's effect sink) comes in its own change.
-  const roomPuffs = /** @type {VehicleEffects} */ (/** @type {unknown} */ (room.vfx))
   const samples = sfx ? { manifest: sfx.manifest, url: (/** @type {string | number} */ file) => sfx.files[file] ?? file } : undefined
   mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels, ...(samples ? { samples } : {}) }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
@@ -183,7 +179,7 @@ function loadSteps(room, options, lang) {
   // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
   // the source is the same portable radio; the wall that muffles it is a wall of the houses (wallPiece: the houses' structure and renderer)
   mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(/** @type {ThreeLib} */ (THREE), { w: 4, h: 2.6 }).build(/** @type {ThreeLib} */ (THREE)) }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, roomPuffs), rigItem: 'sedan' }) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, room.effects), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
@@ -195,7 +191,7 @@ function loadSteps(room, options, lang) {
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
   // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
-  mod('urban', () => createUrbanModule({ locale: lang, effects: roomPuffs }))
+  mod('urban', () => createUrbanModule({ locale: lang, effects: room.effects }))
   // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
   mod('player', () => createPlayerModule({ locale: lang }))
   // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body

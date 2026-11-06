@@ -206,7 +206,9 @@ for (const lang of languages) {
     const after = room.world.part(so.objectId, 'shell')?.liters ?? 0
     const leaked = room.log.entries({ type: 'leak' }).length
     const wet = room.fluids.stains().length + room.fluids.streams().length
-    const parts = /** @type {WorldObjectState} */ (room.world.state(so.objectId)).parts.filter((p) => p.status === 'broken' || /** @type {string} */ (p.status) === 'detached').length
+    // in one piece: no part broken and no part come off (a part that comes off is a group of its own; 'detached' is not a part status)
+    const state = /** @type {WorldObjectState} */ (room.world.state(so.objectId))
+    const parts = state.parts.filter((p) => p.status === 'broken').length + Math.max(0, state.groups.length - 1)
     room.setTool('hand')
     room.clear()
     return { before, after, leaked, wet, parts }

@@ -23,7 +23,7 @@ import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
-import type { GroundLayout, Knock } from '@adatechnology/game-contracts'
+import type { EffectSink, GroundLayout, Knock } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
@@ -411,6 +411,11 @@ export interface TestRoom {
   readonly film: FilmBridge
   /** The room's one effects world (what `host.effects` draws into): the weather moves its wind. */
   readonly vfx: VfxWorld
+  /**
+   * The room's effect sink, the same one modules get as `host.effects`: an effect asked for by request (`play({ id, at, ... })`). Give this, not `vfx`, to whatever is
+   * built before the module loads and wants an `EffectSink` (the vehicle kit's `effects`): `vfx.play` takes an id and a point, so a request there plays nothing.
+   */
+  readonly effects: EffectSink
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
   readonly tool: WeaponState

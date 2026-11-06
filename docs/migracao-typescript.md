@@ -43,10 +43,10 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
   `tsconfig.scripts.checked.json` saiu: o check pega o `include` inteiro, então um script novo já entra checado.
 - [x] O que cada página de teste põe no `window` para os scripts (sala, relatórios das áreas, showroom, sondas de som, perf, auditoria) tem tipo em
   `types/scripts-globals.d.ts`; a página que atribui e o script que lê quebram juntos
-- Achados tipando os scripts (a corrigir em PR próprio): os kits de veículo das áreas urbana e de clima recebem `room.vfx` (o mundo de efeitos,
-  `play(id, ponto)`) onde esperam um `EffectSink` (`play(pedido)`), e a fumaça, a poeira e o fogo desses carros somem; o `perf.mjs` lê
-  `room.tool.id`, que não existe (é `def.id`), e o aviso de arma errada nunca dispara; o teste da área de móveis conta peças `'detached'`, que não é
-  um status de peça
+- Achados tipando os scripts (corrigidos no #213): os kits de veículo das áreas urbana e de clima recebiam `room.vfx` (o mundo de efeitos,
+  `play(id, ponto)`) onde esperam um `EffectSink` (`play(pedido)`), e a fumaça, a poeira e o fogo desses carros sumiam (agora recebem `room.effects`);
+  o `perf.mjs` lia `room.tool.id`, que não existe (é `def.id`), e o aviso de arma errada nunca disparava; o teste da área de móveis contava peças
+  `'detached'`, que não é um status de peça
 
 ### Regras
 - [x] Regra "tudo tipado" no `CLAUDE.md` (seção 8)
