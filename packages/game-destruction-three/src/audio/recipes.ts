@@ -6,7 +6,8 @@ import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/g
 
 import { BLAST_SOUNDS, FIRE_FUEL_LOOPS, FIRE_LOOP, FIRE_SOUNDS } from './blast-fire'
 
-const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars']): SoundRecipe => sceneRecipe(id, layers, line, vars ? { vars } : {})
+const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars'], group?: string): SoundRecipe =>
+  sceneRecipe(id, layers, line, { ...(vars ? { vars } : {}), ...(group ? { group } : {}) })
 
 const boomLayers = (big: boolean): Layer[] => [
   noise({ f: 1200, f2: 120, d: 1.8, vol: 2, wet: 1.2 }),
@@ -28,7 +29,8 @@ export const SCENE_SOUNDS: readonly SoundRecipe[] = [
     [noise({ type: 'bandpass', f: 850, q: 1, d: 0.25, vol: 0.9, wet: 0.3 }), tone({ f: 210, f2: 90, d: 0.1, vol: 0.6 }), noise({ type: 'highpass', f: 2000, d: 0.04, vol: 0.5 })],
     'L1360 wood',
   ),
-  scene('thunk', [noise({ type: 'bandpass', f: 700, q: 2, d: 0.07, vol: 0.4 })], 'L1361 thunk'),
+  // many parts coming loose at once share the `debris_knock` voices (game-audio voice-groups.json)
+  scene('thunk', [noise({ type: 'bandpass', f: 700, q: 2, d: 0.07, vol: 0.4 })], 'L1361 thunk', undefined, 'debris_knock'),
   scene('ping', [tone({ f: [2600, 3500], f2: 1400, d: 0.14, vol: 0.18, wet: 0.3 })], 'L1362 ping'),
   scene('clang', [tone({ f: [520, 720], f2: 480, d: 0.5, vol: 0.35, wet: 0.4 }), tone({ f: 1370, f2: 1300, d: 0.3, vol: 0.15 }), noise({ type: 'highpass', f: 2000, d: 0.05, vol: 0.5 })], 'L1363 clang'),
   scene('chip', [noise({ type: 'bandpass', f: 1600, q: 1.2, d: 0.06, vol: 0.5 })], 'L1364 chip'),
@@ -40,7 +42,8 @@ export const SCENE_SOUNDS: readonly SoundRecipe[] = [
   // `thud(x, z, v)`: `v` is the `scale` param (default 1)
   scene('thud', [tone({ f: 75, f2: 38, d: 0.22, vol: { param: 'scale', scale: 0.6 } }), noise({ f: 420, d: 0.16, vol: { param: 'scale', scale: 0.45 } })], 'L1358 thud', { scale: 1 }),
   // `hiss(x, z, d)`: `seconds` is the param `d` (default 1.2)
-  scene('hiss', [noise({ type: 'highpass', f: 3500, a: 0.05, d: { param: 'seconds' }, vol: 0.35 })], 'L1366 hiss', { seconds: 1.2 }),
+  // every melting part shares one `sizzle` voice
+  scene('hiss', [noise({ type: 'highpass', f: 3500, a: 0.05, d: { param: 'seconds' }, vol: 0.35 })], 'L1366 hiss', { seconds: 1.2 }, 'sizzle'),
   scene('boom', boomLayers(false), 'L1367 boom'),
   scene('boom_big', boomLayers(true), 'L1367 boom (big)'),
   scene('burst', [noise({ f: 700, f2: 120, d: 0.7, vol: 1.4, wet: 0.5 }), noise({ type: 'highpass', f: 3000, a: 0.05, d: 1.2, vol: 0.4, delay: 0.1 })], 'L1357 burst'),
