@@ -37,7 +37,7 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   parede sobre a fundação, pilares de concreto armado ao longo dela (nas pontas, nos encontros, ao lado dos vãos e a cada 4 m no máximo), cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
   e calçada) ou a casa inteira. Nada de parede de blocos soltos, cubos coloridos ou estrutura montada à parte.
 - **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
-  dono. `node tools/kit-audit/scene.mjs --check` (no pre-push, não no CI: abre o navegador, ver seção 9) abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca
+  dono. `node tools/kit-audit/scene.mjs --check` (na rodada diária de GPU, não no CI: abre o navegador, ver seção 9) abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca
   de origem de um construtor do kit (`markKitOrigin` do `game-contracts`); todo construtor de peça novo marca a raiz que devolve. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
   `tools/kit-audit/allowlist.json`; ao corrigir, tire das duas listas.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
@@ -124,7 +124,7 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
 - **Listas e mapas esquecem o que saiu**: módulo de área, sistema de ferimentos, som, multidão. Se guarda uma entrada por objeto, apaga quando a raiz
   sai da cena (ex.: `wounds.untrack`). Listener e `setInterval` têm remoção no `dispose`/teardown.
 - Testes que barram a volta: `packages/game-test-room/tests/memory.test.ts` (o `clear()` libera o que tirou e preserva o cenário) e
-  `node examples/test-room/leak.mjs` no pre-push (`tools/gpu/browser-checks.mjs`; não no CI, ver seção 9): repete explosões, vidro e carros, a troca de áreas, todas as outras áreas (armas, itens, animais, efeitos, terreno, som, plantas, cidade,
+  `node examples/test-room/leak.mjs` na rodada diária de GPU (`tools/gpu/nightly-gpu.mjs`; não no CI, ver seção 9): repete explosões, vidro e carros, a troca de áreas, todas as outras áreas (armas, itens, animais, efeitos, terreno, som, plantas, cidade,
   clima, jogador, histórias e móveis) e a arma na mão, e falha se buffers, texturas,
   canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
   `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.
@@ -137,9 +137,18 @@ Decidido pelo dono em 2026-11-03. Testes que dependem de GPU/renderização (or�
 no navegador) **não rodam na pipeline de CI**. Eles rodam no pre-push, na máquina local com GPU, comparando com a main medida na mesma máquina. O CI
 fica só com build, typecheck, lint e testes que não precisam de GPU.
 
-- No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs` (a sala de teste e cada `examples/*-test-area` com `test.mjs`, `scene.mjs` e
-  `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e `tools/gpu/perf-gate.mjs` (`examples/test-room/perf.mjs` contra a main medida na
-  mesma máquina). `PRE_PUSH_BROWSER=0` e `PRE_PUSH_PERF=0` pulam uma vez, de propósito.
+- No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs`, só com as suítes das áreas que a branch muda (`examples/*-test-area` com o seu
+  `test.mjs`). `PRE_PUSH_BROWSER=0` pula uma vez, de propósito.
+- **Rodada diária na main** (dono, 2026-11-06: com várias sessões na mesma trava de GPU, a bateria inteira em cada push deixava os pushes horas na fila).
+  As suítes que abrem a sala inteira (`test-room`, `scene.mjs` e `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e o
+  `tools/gpu/perf-gate.mjs` (`examples/test-room/perf.mjs`) saíram do push e rodam uma vez por dia, às 04:30, por `tools/gpu/nightly-gpu.mjs`: num worktree
+  próprio da `origin/main` mais nova, espera a máquina ficar ociosa e no carregador, faz build e roda tudo sob a mesma trava (`GPU_SCOPE=nightly`), com o
+  desempenho comparado com a última main aprovada nesta mesma máquina (`~/.cache/adatechnology-game-kit/nightly-state.json`). O relatório fica em
+  `~/Documents/personal/adatechnology-game-kit-shots/nightly/AAAA-MM-DD/` (`summary.md`, um `.log` por etapa e `STATUS`), e a falha abre um aviso na
+  área de trabalho. **Main com a rodada diária vermelha é a primeira coisa a corrigir no dia.** Ligar, desligar e rodar na mão:
+  `sh tools/gpu/systemd/install-nightly.sh` (liga o timer do systemd do usuário), `... off` e `... now` (ou `node tools/gpu/nightly-gpu.mjs`), sempre a
+  partir do checkout principal. Uma branch que precisa da bateria inteira antes do merge roda `GPU_SCOPE=nightly PRE_PUSH_BROWSER=all node
+  tools/gpu/browser-checks.mjs` e `node tools/gpu/perf-gate.mjs` na mão.
 - **Só no carregador** (dono, 2026-11-06: nenhum push fica bloqueado). `tools/gpu/power.mjs` lê `/sys/class/power_supply`: no carregador (Mains ou
   USB-C online, ou desktop sem bateria) os dois rodam; na bateria são pulados com aviso (`pre-push: ... skipped: on battery ...`) e o push segue.
   Bateria de dispositivo (mouse, fone) não conta; sem a pasta (fora do Linux) roda. `PRE_PUSH_ON_BATTERY=1` roda mesmo na bateria.
@@ -155,7 +164,7 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
     toda área por eles), `tools/gpu`, `.githooks`, `package.json` da raiz, `pnpm-lock.yaml`, `pnpm-workspace.yaml` e `tsconfig.base.json`. Caminho
     que o mapa não conhece também roda tudo;
   - **não roda nenhuma:** `.md`, `docs/`, `specs/`, `site/`, `.changeset/`, `.github/`, `test-support/`, `packages/*/tests/` e a configuração de lint.
-  - `PRE_PUSH_BROWSER=all` (ou `PRE_PUSH_ALL=1`) força a bateria inteira. O `perf-gate.mjs` roda em **todo** push, mude o que mudar.
+  - `PRE_PUSH_BROWSER=all` (ou `PRE_PUSH_ALL=1`) força todas as áreas; as suítes da sala inteira só entram com `GPU_SCOPE=nightly`.
   - Área nova entra em `AREAS` do `select-suites.mjs`; pacote novo é achado sozinho pelo `package.json` e pelos imports das páginas.
 - Teste novo que abre página, usa Playwright, WebGL ou mede quadro entra no `browser-checks.mjs` ou no `perf.mjs`, **nunca** num job do
   `.github/workflows/ci.yml`. Revisão que vê Playwright/Chromium no CI barra.

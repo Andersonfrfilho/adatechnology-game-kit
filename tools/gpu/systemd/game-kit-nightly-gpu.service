@@ -1,0 +1,13 @@
+# The GPU daily run on main (tools/gpu/nightly-gpu.mjs, which takes the GPU lock of the pre-push once the machine is idle), at low CPU and IO priority.
+# Installed by tools/gpu/systemd/install-nightly.sh, which fills @REPO@, @NODE@ and @NODE_PATH@.
+[Unit]
+Description=game-kit: GPU daily run on main (browser suites and frame budgets)
+
+[Service]
+Type=oneshot
+Environment=PATH=@NODE_PATH@:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=@REPO@
+ExecStart=@NODE@ @REPO@/tools/gpu/nightly-gpu.mjs
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=8h
