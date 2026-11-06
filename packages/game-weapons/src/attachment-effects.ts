@@ -7,7 +7,9 @@ export interface LoadoutContext {
   readonly supported: boolean
   readonly stock: 'collapsed' | 'extended'
   readonly caliber: CaliberDef | null
-  readonly rules: Pick<WeaponRules, 'attachments' | 'aim' | 'stock'>
+  readonly rules: Pick<WeaponRules, 'attachments' | 'aim' | 'stock'> & Partial<Pick<WeaponRules, 'dualWield'>>
+  /** One hand with another weapon in the other: `rules.dualWield` makes the spread and the recoil worse. */
+  readonly dualWield?: boolean
 }
 
 export interface Loadout {
@@ -29,6 +31,9 @@ export interface Loadout {
   readonly light: (NonNullable<AttachmentDef['light']> & { readonly id: AttachmentId }) | undefined
   readonly laser: (NonNullable<AttachmentDef['laser']> & { readonly id: AttachmentId }) | undefined
 }
+
+/** No weapon in the other hand: the numbers as they are. */
+const ONE_HAND = { spread: 1, recoil: 1 } as const
 
 type Catalogue = ReadonlyMap<AttachmentId, AttachmentDef>
 type Condition = NonNullable<StatModifier['when']>
@@ -150,12 +155,13 @@ export const resolveLoadout = (def: WeaponDef, fitted: readonly FittedAttachment
 
   const mass = read('mass', def.mass + parts.reduce((total, part) => total + part.mass, 0) - factory.reduce((total, part) => total + part.mass, 0))
   const hipFactor = context.aiming ? 1 : 1 + (context.rules.aim.hipSpread - 1) * read('hipSpreadExcess', 1)
+  const dual = context.dualWield && context.rules.dualWield ? context.rules.dualWield : ONE_HAND
   let action: WeaponAction = def.action
   if (firearm) {
     const baseNoise = firearm.noise ?? context.caliber?.noise
     const effects: ActionEffects = {
-      spread: read('spread', firearm.spreadDeg) * hipFactor,
-      recoil: [read('recoilVertical', firearm.recoil[0]), read('recoilHorizontal', firearm.recoil[1])],
+      spread: read('spread', firearm.spreadDeg) * hipFactor * dual.spread,
+      recoil: [read('recoilVertical', firearm.recoil[0]) * dual.recoil, read('recoilHorizontal', firearm.recoil[1]) * dual.recoil],
       range: read('range', firearm.range),
       noise: baseNoise === undefined ? undefined : read('noise', baseNoise),
       speed,

@@ -2,8 +2,11 @@ import type * as THREE_NS from 'three'
 
 import type { HandAnchor } from './hand-hold'
 
-/** How a tool is held in the first-person view: a pistol or a revolver, a rocket launcher, a long gun, or a tool in one hand (a blade, a bat, a grenade, a lighter). */
-export type ViewHoldKind = 'handgun' | 'launcher' | 'long' | 'tool'
+/**
+ * How a tool is held in the first-person view: a pistol or a revolver, a rocket launcher, a long gun, a tool in one hand (a blade, a bat, a grenade, a lighter), or a gun in one hand
+ * with another in the other hand (`dual`, held out to its side; the left one is its mirror).
+ */
+export type ViewHoldKind = 'handgun' | 'launcher' | 'long' | 'tool' | 'dual'
 
 type Hold = {
   /** The right hand's grip at the hip, from the eye (x right, y up, -z ahead, metres). */
@@ -26,6 +29,8 @@ export const VIEW_HOLD: Readonly<Record<ViewHoldKind, Hold>> = {
   handgun: { grip: [0.13, -0.15, -0.33], fov: 76, sights: { distance: 0.42, fromRear: 0.02 } },
   launcher: { grip: [0.2, -0.14, -0.3], fov: 84, sights: { distance: 0.18, fromRear: 0.25 } },
   tool: { grip: [0.21, -0.31, -0.36], fov: 84, sights: { distance: 0.3, fromRear: 0.1 }, tilt: 0.3 },
+  // the lens of the long guns and the tools: a gun beside a blade in the other hand is drawn through the same one
+  dual: { grip: [0.19, -0.2, -0.4], fov: 84, sights: { distance: 0.42, fromRear: 0.02 } },
 }
 
 /** A gun with no grip anchor: the rear of its bore, from the eye. */
@@ -48,6 +53,8 @@ export type ViewHoldPlacement = {
   readonly aim: number
   /** Added to the holder, in the eye's frame: the bob of the step and the sway. */
   readonly offset: THREE_NS.Vector3
+  /** The tool in the left hand: the grip is at the mirror of the right hand's, across the middle of the view (`right` is then the anchor the left hand holds). */
+  readonly mirror?: boolean
 }
 
 const scratch = { grip: null as THREE_NS.Vector3 | null, hip: null as THREE_NS.Vector3 | null, aimed: null as THREE_NS.Vector3 | null, tilt: null as THREE_NS.Quaternion | null }
@@ -69,11 +76,12 @@ export function placeInView(placement: ViewHoldPlacement): void {
   hand.updateMatrixWorld(true)
   scratch.hip ??= new THREE.Vector3()
   const hip = scratch.hip
+  const side = placement.mirror ? -1 : 1
   if (right) {
     scratch.grip ??= new THREE.Vector3()
     const grip = hand.worldToLocal(right.part.localToWorld(scratch.grip.copy(right.offset)))
-    hip.set(hold.grip[0] - grip.x, hold.grip[1] - grip.y, hold.grip[2] - grip.z)
-  } else hip.set(NO_GRIP_REAR[0], NO_GRIP_REAR[1], NO_GRIP_REAR[2] + box.min.x)
+    hip.set(side * hold.grip[0] - grip.x, hold.grip[1] - grip.y, hold.grip[2] - grip.z)
+  } else hip.set(side * NO_GRIP_REAR[0], NO_GRIP_REAR[1], NO_GRIP_REAR[2] + box.min.x)
   // aimed: the top of the gun (its sights) on the line of the eye, `fromRear` along it at `distance` ahead; the holder turns model (x, y, z) to the eye's (z, y, -x)
   const k = ease(Math.max(0, Math.min(1, placement.aim)))
   if (k > 0) {

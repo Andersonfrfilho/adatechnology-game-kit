@@ -20,6 +20,8 @@ export abstract class WeaponAttachments extends WeaponCommands {
   protected stockState: StockState = 'extended'
   protected aiming = false
   protected supportedStance = false
+  /** In one hand with another weapon in the other (`rules.dualWield`). */
+  protected dualStance = false
   /** Magazine changes so far: a dual coupler makes every second one fast. */
   protected reloadCount = 0
   protected readonly catalogue: ReadonlyMap<AttachmentId, AttachmentDef>
@@ -77,7 +79,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
 
   private resolve(): Loadout {
     const supported = this.supportedStance
-    return resolveLoadout(this.def, this.fitted, this.catalogue, { aiming: this.aiming, supported, stock: this.stockState, caliber: this.caliber, rules: this.rules })
+    return resolveLoadout(this.def, this.fitted, this.catalogue, { aiming: this.aiming, supported, stock: this.stockState, caliber: this.caliber, rules: this.rules, dualWield: this.dualStance })
   }
 
   /** Takes the numbers of the accessories on the weapon: the action, the capacity (what no longer fits goes back to the reserve) and the draw time. */
@@ -271,9 +273,13 @@ export abstract class WeaponAttachments extends WeaponCommands {
   setStance(stance: WeaponStance): void {
     const aiming = stance.aiming ?? this.aiming
     const supported = stance.supported ?? this.supportedStance
-    if (aiming === this.aiming && supported === this.supportedStance) return
-    this.aiming = aiming
+    const dual = stance.dualWield ?? this.dualStance
+    // a weapon in each hand is held out, never to the eye
+    const aimed = dual ? false : aiming
+    if (aimed === this.aiming && supported === this.supportedStance && dual === this.dualStance) return
+    this.aiming = aimed
     this.supportedStance = supported
+    this.dualStance = dual
     this.applyLoad()
   }
 
