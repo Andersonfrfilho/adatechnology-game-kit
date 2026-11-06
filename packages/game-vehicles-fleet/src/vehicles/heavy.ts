@@ -1777,8 +1777,10 @@ export function installHeavy(fx: FleetContext): void {
       c.cylinder(0.36, 0.38, 0.1, plate, -1.3, 3.13, 0)
       c.cylinder(0.3, 0.3, 0.05, MT.steel, -1.3, 3.2, 0)
       c.roundBox(0.2, 0.08, 1.3, 0.03, MT.trim, bx0 - 0.25, 3.13, 0)
-      ;[-0.45, 0, 0.45].forEach(function (z) {
-        c.roundBox(0.14, 0.08, 0.3, 0.03, MT.amber, bx0 - 0.25, 3.2, z)
+      ;[-0.45, 0, 0.45].forEach(function (z, i) {
+        const lamp = c.roundBox(0.14, 0.08, 0.3, 0.03, MT.amber, bx0 - 0.25, 3.2, z)
+        lamp.userData.lamp = 'beacon'
+        lamp.userData.beaconSide = i % 2
       })
       c.rod(new V3(-2.5, 3.08, 0.6), new V3(-2.5, 3.6, 0.6), 0.008, MT.trim)
       c.rod(new V3(-2.8, 3.08, -0.6), new V3(-2.8, 3.4, -0.6), 0.01, MT.trim)

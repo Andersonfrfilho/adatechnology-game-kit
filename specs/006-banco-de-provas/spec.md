@@ -41,6 +41,19 @@ relatórios de salas futuras (`reports`), sem mexer no núcleo.
 | 6 | Desempenho | Quadros por segundo e memória por veículo na sala, com orçamento (CLAUDE.md §7). |
 | 7 | Água e ar | Flutuação e estabilidade (barcos), decolagem, voo e pouso (aeronaves). |
 
+## Sistemas do carro na cabine (lista do dono)
+
+Fases 1 a 4 (mescladas em 2026-11-04): controles, painel, bateria e temperatura, estepe, embreagem, auxílios, carroceria, ejeção sem cinto, sensor de ré.
+Fase 5 (2026-11-05), no SDK e ligada na área `vehicles_proving`:
+
+| O quê | Onde | Na sala |
+|---|---|---|
+| Ligação direta: sem a chave, a ignição recusa; segurar I descasca e junta os fios (8 s) e o motor de partida gira; alarme armado dispara no primeiro toque | `game-vehicles-driving` `createVehicleControls({ hasKey: false })` | bancada "Tirar a chave"; segurar I |
+| Sirene (contínua e rápida) e giroflex, só em veículo de emergência, gastando bateria | `createVehicleControls({ emergency })`, `DEFAULT_LOADS.siren/beacon`; lâmpadas marcadas `userData.lamp = 'beacon'` na frota (as viaturas da polícia, a da rodoviária, a moto da rodoviária, a `ambulance` e o `armored_truck`), piscadas por `createVehicleLamps` | `;` sirene, `'` giroflex |
+| Porta-luvas e porta-malas como compartimentos (vagas, peso, só alcançados abertos) | `createVehicleStorage`, `GLOVEBOX`, `trunkFor(litros)` | `/` porta-luvas, 6 porta-malas; bancada "Ver o porta-luvas", "Ver o porta-malas", "Tirar um item" (cai no chão como item do catálogo) |
+| O que tem dentro: o recipiente `car_trunk` do time de itens (0 a 3: mapa, lanterna, chave no porta-luvas; macaco e kit de primeiros socorros no porta-malas) | `examples/vehicles-proving-area/src/entry.js` `createCarStock` | ao entrar no carro |
+| Para-brisa embaçando por dentro (respiração, roupa molhada, frio e chuva no vidro; desembaçador com motor quente, ar-condicionado e vidro aberto limpam; limpador não) | `createWindshieldFog` (`game-vehicles-driving`), película `createWindshieldMist` (`game-vehicles-three`) | bancada "Tempo: frio e chuva"; métrica "Vidro embaçado"; `=` desembaçador |
+
 ## Provas que barram a volta
 
 - `packages/game-vehicles-proving/tests/proving.test.ts`, `game-camera/tests/vehicle.test.ts`, `game-test-room/tests/module-views.test.ts`,

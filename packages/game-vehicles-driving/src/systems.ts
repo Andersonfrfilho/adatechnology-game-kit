@@ -22,6 +22,9 @@ export interface ElectricalLoads {
   readonly alarm: number
   readonly brakeLights: number
   readonly climate: number
+  /** An emergency vehicle's siren amplifier and its beacon (light bar). */
+  readonly siren: number
+  readonly beacon: number
 }
 
 export interface VehicleSystemsOptions {
@@ -50,7 +53,7 @@ export interface VehicleSystemsOptions {
   spares?: number
 }
 
-export const DEFAULT_LOADS: ElectricalLoads = { position: 20, low: 110, high: 130, fog: 110, interior: 10, radio: 25, wipers: 60, indicators: 42, horn: 60, alarm: 5, brakeLights: 42, climate: 180 }
+export const DEFAULT_LOADS: ElectricalLoads = { position: 20, low: 110, high: 130, fog: 110, interior: 10, radio: 25, wipers: 60, indicators: 42, horn: 60, alarm: 5, brakeLights: 42, climate: 180, siren: 100, beacon: 70 }
 
 export type SystemsEvent = { type: 'battery_flat' } | { type: 'overheating' } | { type: 'seized' } | { type: 'spare_fitted'; wheel: number } | { type: 'no_spare' }
 
@@ -132,6 +135,8 @@ export function createVehicleSystems(options: VehicleSystemsOptions = {}): Vehic
     if (c.alarm !== 'off') w += loads.alarm
     if (c.brakeLights) w += loads.brakeLights
     if (c.climate.on) w += loads.climate
+    if (c.siren !== 'off') w += loads.siren
+    if (c.beacon) w += loads.beacon
     return w
   }
 

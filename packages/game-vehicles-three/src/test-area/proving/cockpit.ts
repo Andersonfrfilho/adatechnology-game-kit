@@ -2,13 +2,15 @@
  * The player at the wheel of the proving ground's vehicle: the keyboard read into the vehicle controls of `game-vehicles-driving` (pedals, wheel, gearbox,
  * handbrake, ignition, drive mode, lamps, indicators, wipers, belt, horn, alarm and radio), the semi driver stepped with them, the car's systems
  * (`createVehicleSystems`: battery, coolant, spare tyre) stepped after it, the lamps of the built vehicle
- * switched (`createVehicleLamps`) and the cabin sounds asked of the host. The driving keys are taken before the room sees them (capture phase), so W does
+ * switched (`createVehicleLamps`, the beacon of an emergency vehicle flashing with them), the glovebox and the trunk holding items (`createVehicleStorage`), the
+ * glass misting up inside by the weather and the people in it (`createWindshieldFog`, drawn by `createWindshieldMist`) and the cabin sounds asked of the host.
+ * Without the key (`hasKey: false`) the ignition key held hotwires the car. The driving keys are taken before the room sees them (capture phase), so W does
  * not also walk and F gets the driver out instead of the room's own use. Everything is removed by `stop`.
  */
 import { RADIO_TRACKS } from '@adatechnology/game-audio'
 import type { ModuleHost } from '@adatechnology/game-contracts'
-import { bumperDistance, createSemiSimDriver, createVehicleControls, createVehicleSystems, parkingBeepInterval } from '@adatechnology/game-vehicles-driving'
-import type { ControlEvent, SemiDriver, SemiEvent, SystemsEvent, VehicleControls, VehicleSystems } from '@adatechnology/game-vehicles-driving'
+import { bumperDistance, createSemiSimDriver, createVehicleControls, createVehicleStorage, createVehicleSystems, createWindshieldFog, GLOVEBOX, parkingBeepInterval, trunkFor } from '@adatechnology/game-vehicles-driving'
+import type { CompartmentSpec, ControlEvent, SemiDriver, SemiEvent, StorageAccess, StorageStack, SystemsEvent, VehicleControls, VehicleStorage, VehicleSystems, WindshieldFog } from '@adatechnology/game-vehicles-driving'
 import { subjectSpec } from '@adatechnology/game-vehicles-proving'
 import type { ProvingSubject } from '@adatechnology/game-vehicles-proving'
 
@@ -22,10 +24,32 @@ import { createVehicleDashboard } from '../../dashboard'
 import type { VehicleDashboard } from '../../dashboard'
 import { createVehicleLamps } from '../../lamps'
 import type { VehicleLamps } from '../../lamps'
+import { createWindshieldMist } from '../../windshield-mist'
+import type { MistThree, WindshieldMist } from '../../windshield-mist'
 
 /** The cabin's sounds; an empty name stays silent (the starter, when the host's engine sound turns the key itself). */
-export type CockpitSounds = { horn: string; blinker: string; starter: string; alarm: string; chirp: string; wiper: string; chime: string; radio: string; beep: string }
-export const DEFAULT_COCKPIT_SOUNDS: CockpitSounds = { horn: 'horn', blinker: 'blinker_tick', starter: 'starter_crank', alarm: 'car_alarm', chirp: 'alarm_chirp', wiper: 'wiper_swish', chime: 'seatbelt_chime', radio: 'radio_static', beep: 'parking_beep' }
+export type CockpitSounds = { horn: string; blinker: string; starter: string; alarm: string; chirp: string; wiper: string; chime: string; radio: string; beep: string; wail: string; yelp: string; spark: string; glovebox: string }
+export const DEFAULT_COCKPIT_SOUNDS: CockpitSounds = {
+  horn: 'horn',
+  blinker: 'blinker_tick',
+  starter: 'starter_crank',
+  alarm: 'car_alarm',
+  chirp: 'alarm_chirp',
+  wiper: 'wiper_swish',
+  chime: 'seatbelt_chime',
+  radio: 'radio_static',
+  beep: 'parking_beep',
+  wail: 'siren_wail',
+  yelp: 'siren_yelp',
+  spark: 'hotwire_spark',
+  glovebox: 'glovebox_latch',
+}
+
+/** The weather around the car, for the mist on its glass: air temperature (°C) and rain on the glass (0..1). */
+export interface CockpitWeather {
+  outsideC: number
+  rain: number
+}
 
 /** What the cockpit reports: a control used or refused, the engine (stall, out of fuel) and the systems (flat battery, overheating, spare). */
 export type CockpitEvent = ControlEvent | SemiEvent | SystemsEvent | BodyEvent
@@ -58,12 +82,23 @@ export interface Cockpit {
   readonly dashboard: VehicleDashboard | null
   /** The gas this step, 0..1 (what the engine's sound loads by). */
   readonly throttle: number
+  /** The glovebox and the trunk (only those the vehicle has: no trunk without a lid). */
+  readonly storage: VehicleStorage
+  /** What reaches the glovebox and the trunk now (the driver is seated). */
+  access(): StorageAccess
+  /** The glass misting up inside, and its look on the panes. */
+  readonly fog: WindshieldFog
+  readonly mist: WindshieldMist
+  /** The weather the mist reads; change it at will. */
+  weather: CockpitWeather
+  /** The vehicle has a siren and a beacon. */
+  readonly emergency: boolean
   step(dt: number): void
   stop(): void
 }
 
 export function createCockpit(o: {
-  THREE: Parameters<typeof createVehicleLamps>[0] & Parameters<typeof createVehicleDashboard>[0] & BodyThree
+  THREE: Parameters<typeof createVehicleLamps>[0] & Parameters<typeof createVehicleDashboard>[0] & BodyThree & MistThree
   /** World points (x, z) the parking sensors see: obstacles near the bumpers. */
   obstacles?: () => ReadonlyArray<readonly [number, number]>
   /** The vehicle kit: with it the car gets its damage model, whose hinges the doors, hood and lid open on. */
@@ -76,6 +111,13 @@ export function createCockpit(o: {
   built: BuiltVehicle
   subject: ProvingSubject
   sounds?: Partial<CockpitSounds>
+  /** The driver has the key. Default true; without it the ignition key held hotwires the car. */
+  hasKey?: boolean
+  /** What the glovebox and the trunk hold when the driver gets in (the host's items), by compartment id. */
+  stock?: (compartment: string) => readonly StorageStack[]
+  /** Trunk size, litres. Default 450. */
+  trunkLitres?: number
+  weather?: CockpitWeather
   place: [number, number, number]
   onEvent?: (event: CockpitEvent) => void
   onExit: () => void
@@ -85,6 +127,8 @@ export function createCockpit(o: {
   const driver = createSemiSimDriver(spec)
   driver.place(o.place[0], o.place[1], o.place[2])
   const lamps = createVehicleLamps(o.THREE, o.built, { lights: o.host.lights, owner: 'proving-ground' })
+  const mist = createWindshieldMist(o.THREE, o.built)
+  const fog = createWindshieldFog()
   const audio = o.host.audio
   // the cluster: the speedometer to the next 20 km/h over the vehicle's top speed, the rev counter to its red line
   const top = o.subject.stats.maxSpeedKmh
@@ -99,11 +143,26 @@ export function createCockpit(o: {
   let beepAgain = 0
   let bar = 0
   let exitAsked = false
+  let sirenAgain = 0
+  let sparkAgain = 0
+  let wiresBefore = 0
   let gas = 0
   const systems = createVehicleSystems()
   const context = o.built.context as VehicleContext | null
   const destructible: VehicleDestructible | null = o.kit && context ? createVehicleDestructible(o.kit, context, { id: 'driven', frame: o.built.group }) : null
   const body = destructible ? createVehicleBody(o.built, { THREE: o.THREE, clips: destructible.animations() }) : null
+  // the glovebox behind the dashboard of a vehicle with doors, the trunk behind its lid
+  const compartments: CompartmentSpec[] = []
+  if (!body || body.parts.some((p) => p.startsWith('door'))) compartments.push(GLOVEBOX)
+  if (body?.parts.includes('lid')) compartments.push(trunkFor(o.trunkLitres))
+  const storage = createVehicleStorage({ compartments })
+  for (const c of compartments) storage.stock(c.id, o.stock?.(c.id) ?? [])
+  const access = (): StorageAccess => ({
+    seated: true,
+    frontDoorOpen: (body?.openness('door_front_left') ?? 0) >= 0.5 || (body?.openness('door_front_right') ?? 0) >= 0.5,
+    gloveboxOpen: controls.state.glovebox,
+    lid: body?.openness('lid') ?? 0,
+  })
   const bodyEvents = (events: readonly BodyEvent[]): void => {
     for (const event of events) {
       if (event.type === 'sound') play(event.key, 0.9)
@@ -120,6 +179,8 @@ export function createCockpit(o: {
     fogLamps: lamps.has.fog,
     clutchPedal: true,
     radioTracks: RADIO_TRACKS.length,
+    hasKey: o.hasKey,
+    emergency: lamps.has.beacon,
     onEvent: (event) => {
       if (event.type === 'command') {
         if (event.command === 'ignition' && !event.state.ignition) driver.state.engineOn = false
@@ -130,6 +191,8 @@ export function createCockpit(o: {
           bar = 0
         }
         if (event.command === 'exit') exitAsked = true
+        if (event.command === 'siren') sirenAgain = 0
+        if (event.command === 'glovebox') play(sounds.glovebox, 0.8)
       }
       o.onEvent?.(event)
     },
@@ -167,6 +230,12 @@ export function createCockpit(o: {
 
   const cockpit: Cockpit = {
     radiator: 1,
+    storage,
+    access,
+    fog,
+    mist,
+    weather: { ...(o.weather ?? { outsideC: 25, rain: 0 }) },
+    emergency: lamps.has.beacon,
     driver,
     controls,
     systems,
@@ -197,7 +266,25 @@ export function createCockpit(o: {
         reverse: s.reverseLights,
         left: s.blinkOn && (s.indicator === 'left' || s.indicator === 'hazard'),
         right: s.blinkOn && (s.indicator === 'right' || s.indicator === 'hazard'),
+        beacon: s.beacon && powered ? s.beaconSide : null,
       })
+      // the glass mists by the people inside (the driver), the weather and the rain on it; the windows and the demister clear it
+      const w = cockpit.weather
+      const windows = body ? body.windows.reduce((sum, id) => sum + body.window(id), 0) / Math.max(1, body.windows.length) : 0
+      const warm = systems.state.temperature
+      const cabinC = s.climate.on ? 22 : w.outsideC + (driver.state.engineOn ? 3 + 5 * Math.min(1, warm * 2) : 2)
+      mist.set(fog.step({ dt, occupants: 1, outsideC: w.outsideC, cabinC, rain: w.rain, speed: Math.abs(driver.state.u), windows, climate: s.climate, engineWarm: driver.state.engineOn ? Math.min(1, warm * 2) : 0 }).fog)
+      // the siren: its tone again as it ends; the wires sparking while the hotwire key is held
+      if (s.siren !== 'off' && powered && (sirenAgain -= dt) <= 0) {
+        play(s.siren === 'wail' ? sounds.wail : sounds.yelp)
+        sirenAgain = s.siren === 'wail' ? 2.95 : 1.95
+      }
+      const working = s.hotwire.progress > wiresBefore
+      wiresBefore = s.hotwire.progress
+      if (working && (sparkAgain -= dt) <= 0) {
+        play(sounds.spark, 0.7)
+        sparkAgain = 0.45 + 0.4 * ((s.hotwire.progress * 7) % 1)
+      }
       dashboard?.update(
         {
           kmh: Math.abs(driver.state.u) * 3.6,
@@ -277,6 +364,8 @@ export function createCockpit(o: {
       target?.removeEventListener('blur', blur)
       controls.release()
       lamps.dispose()
+      mist.dispose()
+      storage.clear()
       dashboard?.dispose()
       body?.dispose()
       destructible?.dispose?.()

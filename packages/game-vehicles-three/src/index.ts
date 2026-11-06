@@ -21,3 +21,5 @@ export type { BodyEvent, BodyThree, VehicleBody, VehicleBodyOptions, WindowId } 
 export type { LampSwitch, VehicleLamps } from './lamps'
 export { createVehicleDashboard, DASHBOARD_LOOK } from './dashboard'
 export type { DashboardOptions, DashboardReading, VehicleDashboard } from './dashboard'
+export { createWindshieldMist, MIST_RULES } from './windshield-mist'
+export type { MistThree, WindshieldMist } from './windshield-mist'

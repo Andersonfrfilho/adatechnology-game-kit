@@ -1,7 +1,8 @@
 /**
  * The controls of a vehicle someone drives: pedals (the clutch too), wheel, gearbox (automatic or manual), handbrake (held or pulled), ignition and
  * starter, drive mode (4x2, 4x4, automatic 4x4), drive profile (eco, normal, sport), traction control, ABS, cruise control, lamps (position, low,
- * high, flash, fog, interior), wipers and washer, climate and demister, horn, alarm and radio. It turns key codes into a `SemiInput` for the semi driver and keeps
+ * high, flash, fog, interior), wipers and washer, climate and demister, horn, alarm and radio, the hotwire of a car without its key (the ignition key held
+ * strips and joins the wires under the column), the siren and the beacon of an emergency vehicle, and the glovebox lid. It turns key codes into a `SemiInput` for the semi driver and keeps
  * what the cabin shows; it draws and plays nothing (an adapter reads `state` for the lamps and the sounds). Every key is an option.
  */
 import { cruiseThrottle, DEFAULT_CRUISE, DRIVE_PROFILES, tractionLimit } from './driving-aids'
@@ -35,6 +36,9 @@ export type ControlCommand =
   | 'cruise'
   | 'climate'
   | 'demist'
+  | 'siren'
+  | 'beacon'
+  | 'glovebox'
 
 export type ControlKeyMap = {
   readonly throttle: readonly string[]
@@ -47,6 +51,8 @@ export type ControlKeyMap = {
   /** Flashes the high beam while held. */
   readonly flash: readonly string[]
   readonly washer: readonly string[]
+  /** Held without the key (`hasKey: false`): strips and joins the wires under the column until the engine turns over. */
+  readonly hotwire: readonly string[]
 } & { readonly [command in ControlCommand]: readonly string[] }
 
 /** Keys of a keyboard (`KeyboardEvent.code`). The host keeps them from its own bindings while someone drives. */
@@ -60,6 +66,7 @@ export const DEFAULT_CONTROL_KEYS: ControlKeyMap = {
   clutch: ['KeyC'],
   flash: ['KeyX'],
   washer: ['KeyZ'],
+  hotwire: ['KeyI'],
   ignition: ['KeyI'],
   gearbox: ['KeyM'],
   gear_up: ['KeyE'],
@@ -86,8 +93,11 @@ export const DEFAULT_CONTROL_KEYS: ControlKeyMap = {
   cruise: ['Digit0'],
   climate: ['Minus'],
   demist: ['Equal'],
+  siren: ['Semicolon'],
+  beacon: ['Quote'],
+  glovebox: ['Slash'],
 }
-const HELD_KEYS = ['throttle', 'brake', 'left', 'right', 'handbrake', 'horn', 'clutch', 'flash', 'washer']
+const HELD_KEYS = ['throttle', 'brake', 'left', 'right', 'handbrake', 'horn', 'clutch', 'flash', 'washer', 'hotwire']
 
 export type Gearbox = 'automatic' | 'manual'
 export type DriveMode = '4x2' | '4x4' | 'auto'
@@ -96,6 +106,8 @@ export type AlarmState = 'off' | 'armed' | 'ringing'
 export type RadioSource = 'radio' | 'tape'
 export type Indicator = 'off' | 'left' | 'right' | 'hazard'
 export type Wipers = 'off' | 'intermittent' | 'slow' | 'fast'
+/** The siren's tone: the slow rise and fall, or the fast warble of a junction. */
+export type Siren = 'off' | 'wail' | 'yelp'
 
 export interface ControlState {
   ignition: boolean
@@ -134,12 +146,22 @@ export interface ControlState {
   climate: { on: boolean; demist: boolean }
   /** The starter turns this step. */
   cranking: boolean
+  /** Without the key: how far the wires under the column are (0 untouched, 1 joined: the ignition is live), and whether they are joined now. */
+  hotwire: { progress: number; done: boolean }
+  siren: Siren
+  /** The beacon (light bar) is on, and which of its two sides is lit this instant (it alternates at `beaconHz`). */
+  beacon: boolean
+  beaconSide: 0 | 1
+  /** The glovebox lid is open. */
+  glovebox: boolean
 }
 
 export type ControlEvent =
   | { type: 'command'; command: ControlCommand; state: ControlState }
-  | { type: 'refused'; command: ControlCommand; reason: 'no_four_wheel_drive' | 'no_fog_lamps' | 'ignition_off' | 'battery_flat' | 'too_slow' }
+  | { type: 'refused'; command: ControlCommand; reason: 'no_four_wheel_drive' | 'no_fog_lamps' | 'ignition_off' | 'battery_flat' | 'too_slow' | 'no_key' | 'no_siren' }
   | { type: 'cruise_cancelled' }
+  /** The wires under the column: stripped (first touch), joined (the ignition is live and the starter turns). */
+  | { type: 'hotwire'; stage: 'started' | 'joined' }
 
 export interface VehicleControlOptions {
   /** Forward gears of the gearbox. */
@@ -168,6 +190,14 @@ export interface VehicleControlOptions {
   onCrank?: () => void
   /** Share of the torque the engine gives besides the aids (an overheated engine). Default 1. */
   powerLimit?: () => number
+  /** The driver has the key. Default true. Without it the ignition refuses and the hotwire key (held) joins the wires. */
+  hasKey?: boolean
+  /** Seconds of the hotwire key held to strip and join the wires. Default 8. */
+  hotwireSeconds?: number
+  /** The vehicle has a siren and a beacon (an emergency vehicle). Default false: both refuse. */
+  emergency?: boolean
+  /** The beacon's sides swap this many times a second. Default 2.5. */
+  beaconHz?: number
   onEvent?: (event: ControlEvent) => void
 }
 
@@ -228,7 +258,16 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
     cruise: { on: false, speed: 0 },
     climate: { on: false, demist: false },
     cranking: false,
+    hotwire: { progress: 0, done: false },
+    siren: 'off',
+    beacon: false,
+    beaconSide: 0,
+    glovebox: false,
   }
+  const hasKey = options.hasKey !== false
+  const hotwireSeconds = Math.max(0.1, options.hotwireSeconds ?? 8)
+  const beaconHz = options.beaconHz ?? 2.5
+  let beaconClock = 0
   let crankAsked = false
   let lastSpeed = 0
   let engineRunning = !!options.running
@@ -245,10 +284,13 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
   const MODES: readonly DriveMode[] = ['4x2', '4x4', 'auto']
   const WIPERS: readonly Wipers[] = ['off', 'intermittent', 'slow', 'fast']
   const PROFILES: readonly DriveProfile[] = ['eco', 'normal', 'sport']
+  const SIRENS: readonly Siren[] = ['off', 'wail', 'yelp']
 
   const command = (c: ControlCommand): void => {
     switch (c) {
       case 'ignition':
+        // without the key only the joined wires make the ignition live; pulled apart, they cut it, and joined again they make it live
+        if (!hasKey && !state.hotwire.done) return emit({ type: 'refused', command: c, reason: 'no_key' })
         state.ignition = !state.ignition
         // the driver turning the key disarms the alarm and cranks; turning it off leaves the radio playing on the battery
         if (state.ignition && state.alarm !== 'off') state.alarm = 'off'
@@ -349,6 +391,21 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
       case 'seatbelt':
         state.seatbelt = !state.seatbelt
         break
+      case 'siren':
+        if (!options.emergency) return emit({ type: 'refused', command: c, reason: 'no_siren' })
+        state.siren = SIRENS[(SIRENS.indexOf(state.siren) + 1) % SIRENS.length] as Siren
+        // the siren never sounds with the lights off
+        if (state.siren !== 'off') state.beacon = true
+        break
+      case 'beacon':
+        if (!options.emergency) return emit({ type: 'refused', command: c, reason: 'no_siren' })
+        state.beacon = !state.beacon
+        if (!state.beacon) state.siren = 'off'
+        beaconClock = 0
+        break
+      case 'glovebox':
+        state.glovebox = !state.glovebox
+        break
     }
     emit({ type: 'command', command: c, state })
   }
@@ -392,6 +449,25 @@ export function createVehicleControls(options: VehicleControlOptions): VehicleCo
           else if (turned && way < cancelAt) state.indicator = 'off'
         }
       } else state.blinkOn = false
+      // the beacon's two sides take turns
+      if (state.beacon) {
+        beaconClock += dt
+        state.beaconSide = (Math.floor(beaconClock * beaconHz) % 2) as 0 | 1
+      }
+      // no key: the ignition key held strips the wires, then joins them; the ignition goes live and the starter turns. An armed alarm goes off at the first touch.
+      if (!hasKey && !state.hotwire.done && !state.ignition && any(keys.hotwire)) {
+        if (state.hotwire.progress === 0) {
+          if (state.alarm === 'armed') state.alarm = 'ringing'
+          emit({ type: 'hotwire', stage: 'started' })
+        }
+        state.hotwire.progress = Math.min(1, state.hotwire.progress + dt / hotwireSeconds)
+        if (state.hotwire.progress >= 1) {
+          state.hotwire.done = true
+          state.ignition = true
+          crankAsked = true
+          emit({ type: 'hotwire', stage: 'joined' })
+        }
+      }
       state.horn = any(keys.horn)
       state.lamps.flash = any(keys.flash)
       state.washer = any(keys.washer)

@@ -2920,6 +2920,11 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             }
           },
         })
+        // the red and the blue halves of the bar are beacon lamps, flashed in turn by the vehicle's lamps
+        beacon[1].userData.lamp = 'beacon'
+        beacon[1].userData.beaconSide = 0
+        beacon[2].userData.lamp = 'beacon'
+        beacon[2].userData.beaconSide = 1
         c.meta.top = top + 0.15
         c.meta.roof.y = Math.max(c.meta.roof.y, top + 0.15)
         /* push bumper (push bar) */
@@ -4360,7 +4365,9 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         c.roundBox(0.5, 0.018, 0.006, 0.002, c.paint('#f2c21a'), -0.7, 0.825, z)
         c.text('PRF', 0.2, 0.08, -0.7, 0.73, z + s * 0.002, f, { fg: '#1f3f8f', size: 0.85 })
         c.text(trl('texts.federal_highway_police'), 0.3, 0.035, 0.24, 1.0, s * 0.3, f, { fg: '#f4f2ea', w: 1024, h: 120, size: 0.8 })
-        c.roundBox(0.05, 0.05, 0.04, 0.012, s > 0 ? MT.blue : MT.tail, 0.62, 0.95, s * 0.3, { def: true })
+        const flasher = c.roundBox(0.05, 0.05, 0.04, 0.012, s > 0 ? MT.blue : MT.tail, 0.62, 0.95, s * 0.3, { def: true })
+        flasher.userData.lamp = 'beacon'
+        flasher.userData.beaconSide = s > 0 ? 1 : 0
       })
       c.cylinder(0.04, 0.045, 0.06, MT.trim, 0.66, 0.66, 0.36, 'x')
     }
