@@ -30,7 +30,7 @@ describe('texts', () => {
 
   it('translates every name except the ones that are the same word in both languages', () => {
     const same = keysOfItems.filter((key) => GOODS_STRINGS.en[key] === GOODS_STRINGS['pt-BR'][key])
-    expect(same.sort()).toEqual(['item.dvd', 'item.ketchup', 'item.power_bank', 'item.shampoo'])
+    expect(same.sort()).toEqual(['item.dvd', 'item.katana', 'item.ketchup', 'item.power_bank', 'item.shampoo'])
   })
 
   it('picks the locale by language and falls back to the key', () => {

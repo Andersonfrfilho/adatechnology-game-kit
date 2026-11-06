@@ -10,6 +10,9 @@ import { bandage } from './bandage'
 import { amoxicillin } from './amoxicillin'
 import { crowbar } from './crowbar'
 import { hammer } from './hammer'
+import { brassKnuckles } from './brass-knuckles'
+import { kabar } from './kabar'
+import { katana } from './katana'
 import { machete } from './machete'
 import { axe } from './axe'
 import { nailBat } from './nail-bat'
@@ -375,6 +378,9 @@ const BUILDERS: Readonly<Record<string, ItemModelBuilder>> = {
   slingshot: slingshot,
   knife: knife,
   tactical_knife: tacticalKnife,
+  kabar: kabar,
+  katana: katana,
+  brass_knuckles: brassKnuckles,
   arrows_and_bolts: arrowsAndBolts,
   sickle: sickle,
   cast_iron_skillet: castIronSkillet,

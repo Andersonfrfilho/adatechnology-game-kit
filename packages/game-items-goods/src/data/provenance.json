@@ -2370,5 +2370,20 @@
     "vc3": [
       "oculos"
     ]
+  },
+  "kabar": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "katana": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
+  },
+  "brass_knuckles": {
+    "created": true,
+    "idSource": "decision",
+    "sizeSource": "REF"
   }
 }

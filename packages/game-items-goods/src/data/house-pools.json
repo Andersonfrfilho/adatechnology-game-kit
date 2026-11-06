@@ -623,6 +623,32 @@
         "isTakeable": true,
         "weight": 0.8,
         "isSupply": true
+      },
+      {
+        "type": "katana",
+        "item": "katana",
+        "name": "Katana",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.3,
+        "isSupply": false
+      },
+      {
+        "type": "soco_ingles",
+        "item": "brass_knuckles",
+        "name": "Soco inglês",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.3,
+        "isSupply": false
       }
     ],
     "comoda": [
@@ -703,6 +729,32 @@
         "isTakeable": true,
         "weight": 0.7,
         "isSupply": true
+      },
+      {
+        "type": "faca_kabar",
+        "item": "kabar",
+        "name": "Faca KA-BAR",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.93,
+        "isSupply": false
+      },
+      {
+        "type": "soco_ingles",
+        "item": "brass_knuckles",
+        "name": "Soco inglês",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.3,
+        "isSupply": false
       }
     ],
     "criado": [
@@ -770,6 +822,32 @@
         "isTakeable": true,
         "weight": 0.7,
         "isSupply": true
+      },
+      {
+        "type": "faca_kabar",
+        "item": "kabar",
+        "name": "Faca KA-BAR",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.93,
+        "isSupply": false
+      },
+      {
+        "type": "soco_ingles",
+        "item": "brass_knuckles",
+        "name": "Soco inglês",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.3,
+        "isSupply": false
       }
     ],
     "gaveteiro": [
@@ -823,6 +901,19 @@
         "viewerCategory": "arma_improvisada",
         "isTakeable": true,
         "weight": 0.5,
+        "isSupply": false
+      },
+      {
+        "type": "faca_kabar",
+        "item": "kabar",
+        "name": "Faca KA-BAR",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.93,
         "isSupply": false
       }
     ],
@@ -1226,6 +1317,19 @@
         "isTakeable": true,
         "weight": 1,
         "isSupply": true
+      },
+      {
+        "type": "faca_kabar",
+        "item": "kabar",
+        "name": "Faca KA-BAR",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.93,
+        "isSupply": false
       }
     ],
     "estante_ferr": [
@@ -1293,6 +1397,19 @@
         "isTakeable": true,
         "weight": 1.5,
         "isSupply": true
+      },
+      {
+        "type": "faca_kabar",
+        "item": "kabar",
+        "name": "Faca KA-BAR",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.93,
+        "isSupply": false
       }
     ],
     "correio": [
@@ -1415,6 +1532,19 @@
         "viewerCategory": "utensilio",
         "isTakeable": false,
         "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "katana",
+        "item": "katana",
+        "name": "Katana",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.3,
         "isSupply": false
       }
     ]
