@@ -1,7 +1,24 @@
 /** Headlights and taillights in several styles, with beams and glow. */
-import type { BufferGeometry, MeshStandardMaterial } from 'three'
+import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, MeshStandardMaterial, Object3D, Sprite, SpriteMaterial } from 'three'
 
+import type { VehicleLamp } from './api'
 import type { BuildContext, Kit } from './types'
+
+/** Where a lamp or a grille sits and how big it is (`c.vehicle` coordinates, metres); `side` +1 right, -1 left (default: the sign of `z`). */
+type LampPlacement = { x: number; y: number; z: number; w?: number; h?: number; d?: number; side?: number; label?: string; noPart?: boolean; reach?: number; halo?: boolean }
+export type HeadlightOptions = LampPlacement & {
+  style?: 'round' | 'dround' | 'rect' | 'slim' | 'split' | 'wedge' | 'ledbar' | 'truck'
+  yaw?: number
+  /** the material that glows (default `MATERIALS.head`) */
+  mat?: MeshStandardMaterial
+  lens?: MeshStandardMaterial
+}
+export type TaillightOptions = LampPlacement & {
+  style?: 'wrap' | 'bar' | 'vertical' | 'L' | 'round2'
+  /** length of the wrap-around */
+  wrap?: number
+}
+export type GrilleOptions = { x: number; y: number; z?: number; w?: number; h?: number; style?: 'bars' | 'mesh' | 'big' | 'seven' | 'closed' | 'truck'; col?: ColorRepresentation; emblem?: boolean }
 import { clamp } from './util'
 
 export function installLights(kit: Kit) {
@@ -21,7 +38,7 @@ export function installLights(kit: Kit) {
     c.vehicle.add(g)
     return g
   }
-  function gm(g: any, geo: BufferGeometry, mat: MeshStandardMaterial, x?: any, y?: any, z?: any) {
+  function gm(g: Object3D, geo: BufferGeometry, mat: Material, x?: number, y?: number, z?: number) {
     const m = new THREE.Mesh(geo, mat)
     m.position.set(x || 0, y || 0, z || 0)
     m.castShadow = false
@@ -39,12 +56,12 @@ export function installLights(kit: Kit) {
     return geo
   }
   /* additive halo of the headlight/taillight (sprite without raycast) */
-  let haloTex: any = null
+  let haloTex: CanvasTexture | null = null
   function glowTexture() {
     if (haloTex) return haloTex
     const cv = document.createElement('canvas')
     cv.width = cv.height = 64
-    const x: any = cv.getContext('2d')
+    const x = cv.getContext('2d') as CanvasRenderingContext2D
     const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32)
     gr.addColorStop(0, 'rgba(255,255,255,1)')
     gr.addColorStop(0.18, 'rgba(255,255,255,0.55)')
@@ -55,8 +72,8 @@ export function installLights(kit: Kit) {
     haloTex = new THREE.CanvasTexture(cv)
     return haloTex
   }
-  const haloMats: any = {}
-  function halo(parent: any, x: number, y: number, z: number, size: number, hex: any, op: number) {
+  const haloMats: Record<string, SpriteMaterial> = {}
+  function halo(parent: Object3D, x: number, y: number, z: number, size: number, hex: string, op: number): Sprite {
     const key = hex + op
     if (!haloMats[key])
       haloMats[key] = new THREE.SpriteMaterial({
@@ -78,15 +95,15 @@ export function installLights(kit: Kit) {
     return sp
   }
   kit.halo = halo
-  function lampKit(g: any, d: number, inner: any, lens: any, lensMat: MeshStandardMaterial, refl?: any) {
+  function lampKit(g: Object3D, d: number, inner: Object3D[], lens: Object3D[], lensMat: MeshStandardMaterial, refl?: MeshStandardMaterial) {
     refl = refl || MATERIALS.reflector
     return {
-      housing: function (w: any, h: number, y?: any, z?: any, geoFn?: any) {
+      housing: function (w: number, h: number, y?: number, z?: number, geoFn?: (geo: BufferGeometry) => void) {
         const geo = roundedBoxGeometry(d, h, w, Math.min(0.03, h * 0.4))
         if (geoFn) geoFn(geo)
         return gm(g, geo, MATERIALS.housing, 0, y || 0, z || 0)
       },
-      lens: function (w: number, h: number, y?: any, z?: any, geoFn?: any) {
+      lens: function (w: number, h: number, y?: number, z?: number, geoFn?: (geo: BufferGeometry) => void) {
         const geo = roundedBoxGeometry(0.03, h + 0.006, w + 0.006, Math.min(0.025, h * 0.4))
         if (geoFn) geoFn(geo)
         const L = gm(g, geo, lensMat, d / 2 - 0.004, y || 0, z || 0)
@@ -94,13 +111,13 @@ export function installLights(kit: Kit) {
         lens.push(L)
         return L
       },
-      glow: function (geo: BufferGeometry, mat: MeshStandardMaterial, x: any, y: any, z: any) {
+      glow: function (geo: BufferGeometry, mat: MeshStandardMaterial, x: number, y: number, z: number) {
         const m = gm(g, geo, mat, x, y, z)
         inner.push(m)
         return m
       },
-      proj: function (y: any, z: any, r: any, mat: MeshStandardMaterial) {
-        const bz = gm(g, new THREE.CylinderGeometry(r * 1.3, r * 1.45, 0.03, 18), refl, d / 2 - 0.03, y, z)
+      proj: function (y: number, z: number, r: number, mat: MeshStandardMaterial) {
+        const bz = gm(g, new THREE.CylinderGeometry(r * 1.3, r * 1.45, 0.03, 18), refl!, d / 2 - 0.03, y, z)
         bz.rotation.z = -PI / 2
         if (refl !== MATERIALS.reflector) inner.push(bz)
         const e = gm(g, new THREE.SphereGeometry(r, 14, 10), mat, d / 2 - 0.022, y, z)
@@ -111,15 +128,15 @@ export function installLights(kit: Kit) {
     }
   }
   /* Headlight. o: { style: round|dround|rect|slim|split|wedge|ledbar|truck, x, y, z, w, h, d, side (+1 right / -1 left), yaw, mat, label } */
-  kit.headlight = function (c: BuildContext, o: any) {
+  kit.headlight = function (c: BuildContext, o: HeadlightOptions) {
     const st = o.style || 'rect'
     const w = o.w || 0.32
     const h = o.h || 0.12
     const d = o.d || 0.09
     const s = o.side || (o.z >= 0 ? 1 : -1)
     const g = lampGroup(c, o.x, o.y, o.z, -s * (o.yaw || 0))
-    const inner: any = []
-    const lens: any = []
+    const inner: Object3D[] = []
+    const lens: Object3D[] = []
     const B = o.mat || MATERIALS.head
     const K = lampKit(g, d, inner, lens, o.lens || MATERIALS.lens, MATERIALS.reflectorLit)
     if (st === 'round' || st === 'dround') {
@@ -177,7 +194,7 @@ export function installLights(kit: Kit) {
       K.glow(roundedBoxGeometry(0.012, h * 0.42, 0.014, 0.005), MATERIALS.led, d / 2 - 0.014, -h * 0.14, s * w * 0.26)
       K.lens(w, h, 0, 0, wf)
     }
-    const L: any = { group: g, inner: inner, lens: lens, kind: 'headlight', tint: 'clear', broken: false }
+    const L: VehicleLamp = { group: g, inner: inner, lens: lens, kind: 'headlight', tint: 'clear', broken: false }
     if (o.halo !== false) L.halo = [halo(g, d / 2 + 0.03, 0, 0, Math.max(w, h) * 1.9 + 0.12, '#ffe7b8', 0.55)]
     c.lights.push(L)
     if (!o.noPart) {
@@ -187,7 +204,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* Taillight. o: { style: wrap|bar|vertical|L|round2, x, y, z, w, h, d, side, wrap (length of the wrap-around) } */
-  kit.taillight = function (c: BuildContext, o: any) {
+  kit.taillight = function (c: BuildContext, o: TaillightOptions) {
     const st = o.style || 'wrap'
     const w = o.w || 0.3
     const h = o.h || 0.14
@@ -195,8 +212,8 @@ export function installLights(kit: Kit) {
     const s = o.side || (o.z >= 0 ? 1 : -1)
     const ls = -s
     const g = lampGroup(c, o.x, o.y, o.z, PI)
-    const inner: any = []
-    const lens: any = []
+    const inner: Object3D[] = []
+    const lens: Object3D[] = []
     const K = lampKit(g, d, inner, lens, MATERIALS.lensRed)
     if (st === 'round2') {
       ;[-1, 1].forEach(function (q) {
@@ -247,7 +264,7 @@ export function installLights(kit: Kit) {
         side.castShadow = false
       }
     }
-    const L: any = { group: g, inner: inner, lens: lens, kind: 'taillight', tint: 'red', broken: false }
+    const L: VehicleLamp = { group: g, inner: inner, lens: lens, kind: 'taillight', tint: 'red', broken: false }
     if (o.halo !== false) L.halo = [halo(g, d / 2 + 0.03, 0, 0, Math.max(w, h) * 1.5 + 0.08, '#ff2a1a', 0.4)]
     c.lights.push(L)
     if (!o.noPart) {
@@ -257,7 +274,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* light bar from end to end (ledbar at the front, bar at the rear). face: +1 front, -1 rear */
-  kit.lightBar = function (c: BuildContext, x: number, y: number, z0: number, z1: number, h: number, face: number, mat: any) {
+  kit.lightBar = function (c: BuildContext, x: number, y: number, z0: number, z1: number, h: number, face: number, mat?: Material | null) {
     const len = Math.abs(z1 - z0)
     const zc = (z0 + z1) / 2
     const f = face || 1
@@ -275,7 +292,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* Generic emblem (chrome circle with a bar), never a real logo */
-  kit.emblem = function (c: BuildContext, x: number, y: number, z: number, r: any, parent: any) {
+  kit.emblem = function (c: BuildContext, x: number, y: number, z: number, r?: number | null, parent?: Object3D | null) {
     r = r || 0.045
     const g = new THREE.Group()
     g.position.set(x, y, z)
@@ -290,7 +307,7 @@ export function installLights(kit: Kit) {
     return g
   }
   /* Grille. o: { style: bars|mesh|big|seven|closed|truck, x, y, z, w, h, col, emblem } */
-  kit.grille = function (c: BuildContext, o: any) {
+  kit.grille = function (c: BuildContext, o: GrilleOptions) {
     const st = o.style || 'bars'
     const w = o.w || 0.6
     const h = o.h || 0.16

@@ -249,11 +249,6 @@
       "count": 25
     }
   },
-  "packages/game-vehicles/src/damage-parts.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 31
-    }
-  },
   "packages/game-vehicles/src/damageables.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -322,11 +317,6 @@
   "packages/game-vehicles/src/kit.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 16
-    }
-  },
-  "packages/game-vehicles/src/lights.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 38
     }
   },
   "packages/game-vehicles/src/locale.ts": {
