@@ -13,9 +13,13 @@ import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-
 import type * as Vegetation from '@adatechnology/game-vegetation'
 import type * as VegetationThree from '@adatechnology/game-vegetation/three'
 import type * as VegetationSpecies from '@adatechnology/game-vegetation-species'
+import type * as Interactables from '@adatechnology/game-interactables'
+import type { Effects, Screen, ThreeAdapter } from '@adatechnology/game-interactables-three'
+import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
 
 import type { Translate } from './locale.js'
-import type { HouseFleetDamageable, HouseRendererOptions } from './types.js'
+import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
+import type { HouseFleetDamageable, HouseRendererOptions, LightingOptions } from './types.js'
 
 export type { Rect }
 
@@ -1161,7 +1165,7 @@ export interface KernelInteractionDoors {
 
 /** What `interaction/target` puts on the kernel. */
 export interface KernelInteractionTarget {
-  targetOf(o: Eye | null | undefined, opt?: { strike?: (meshes: THREE_NS.Mesh[]) => THREE_NS.Intersection | null | undefined; interactives?: unknown }): InteractionTarget | null
+  targetOf(o: Eye | null | undefined, opt?: { strike?: (meshes: THREE_NS.Mesh[]) => THREE_NS.Intersection | null | undefined; interactives?: KitTargetOptions }): InteractionTarget | null
 }
 
 /** A drawing call of a builder, recorded to split an item into its moving pieces: the primitive and its arguments after the frame. */
@@ -1190,6 +1194,219 @@ export interface KernelInteractionFittings {
   putSwitch(c: HouseRoom, p: HouseDoor): boolean
 }
 
+/** A built house as the room lighting reads it (`House` is one). */
+export interface LitHouse {
+  group?: THREE_NS.Object3D | null
+  house: THREE_NS.Object3D
+  lights: { list: LightRequest[] }
+  r: HouseRecord
+  y0(f: number): number
+  lightOn(room: unknown): boolean
+  internal?: { doorState?: Map<string, boolean> }
+}
+
+/** A rectangle of a light box in world x/z: `[x0, z0, x1, z1]`. */
+export type BoxRect = [number, number, number, number]
+
+/** What a room light lit in the last update: the room (or outdoor lamp) key, its boxes, its y band, the exclusion box and its distance. */
+export interface LightCrate {
+  k: unknown
+  rects: BoxRect[]
+  y: [number, number]
+  exterior: boolean
+  exclusion: BoxRect | null
+  d: number
+}
+
+/** The room lights of `lighting()`: one light per slot, given every frame to the rooms closest to the focus. */
+export interface RoomLighting {
+  lights: readonly (LightHandle | THREE_NS.PointLight)[]
+  crates: (LightCrate | null)[]
+  n: number
+  shadows: number
+  stats: { rooms: number; external: number; shadows: number; shadowChanged: boolean }
+  /** Strength of the fake indirect light inside each box. */
+  indirect(v: number): void
+  invalidate(): void
+  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined, focus: { x: number; y: number; z: number }, op?: { floorMax?: number; focusHouse?: LitHouse; focusRoom?: unknown }): RoomLighting['stats']
+  dispose(): void
+}
+
+/** The masks of the effect lights of a budget (`effectLights`). */
+export interface EffectLighting {
+  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined): void
+}
+
+/** The uniforms of the room masks, shared by every lit material. */
+export interface RoomMaskUniforms {
+  uRB0: { value: Float32Array }
+  uRB1: { value: Float32Array }
+  uRB2: { value: Float32Array }
+  uRBY: { value: Float32Array }
+  uREx: { value: Float32Array }
+  uIndK: { value: number }
+}
+
+/** What `lights/room-light` puts on the kernel. */
+export interface KernelLightsRoomLight {
+  MAX_LIGHTS: number
+  EMPTY: BoxRect
+  LZU: RoomMaskUniforms
+  /** Applies the per-room light mask to a lit material (Lambert, Phong, Standard); idempotent. */
+  roomLightMask<M extends THREE_NS.Material | null | undefined>(m: M): M
+  lighting(o?: LightingOptions): RoomLighting
+  effectLights(o?: { budget?: LightBudget; ours?: readonly number[] }): EffectLighting
+}
+
+/** The interactables kit the game injected (`cfg.interactives`), bound: the modules, the adapter of the plan and the three.js side. */
+export interface InteractablesRefs {
+  GI: typeof Interactables
+  HH: unknown
+  GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): ThreeAdapter }
+  A: FloorplanAdapter
+  gfx: ThreeAdapter
+  items: boolean
+  effects: boolean
+  effectSink: unknown
+  camera: unknown
+  onEvent: ((event: Interactables.WorldEvent, pub: unknown) => void) | null
+  onSeat: ((seat: KitSeat | null, event: Interactables.WorldEvent) => void) | null
+}
+
+/** A kit object of the house: its plan entry, where it is drawn, its moving parts and its spec. */
+export interface KitEntry {
+  id: string
+  type: string
+  entry: PlanEntry
+  floor: number
+  group: string
+  root: THREE_NS.Group
+  parts: Record<string, THREE_NS.Object3D>
+  spec: Interactables.ObjectSpec
+  /** The TV screen mesh, which swaps material. */
+  screen: THREE_NS.Mesh | null
+  pos: Vec3
+  ry: number
+  origin: string
+}
+
+/** The kit lamps of a room, its switches and whether it is lit (`ef`: some lamp on and powered). */
+export interface KitRoomState {
+  id: string
+  lamps: string[]
+  ef: boolean
+  switches: string[]
+}
+
+/** Where the player sits or lies in the kit. */
+export interface KitSeat {
+  object: string
+  seatInfo: string
+  pose: string
+  eye: Vec3
+  yaw: number
+  pitch: number
+  exitPoint: Vec3
+  floor: number
+  type: string | null
+}
+
+/** The kit side of a house (`h.IV`). */
+export interface InteractablesState {
+  k: InteractablesRefs
+  plane: AdapterPlan
+  world: Interactables.World
+  water: WaterNetwork
+  entries: Map<string, KitEntry>
+  roots: KitEntry[]
+  replace: Set<string>
+  roomStates: Map<string, KitRoomState>
+  lampRoom: Map<string, string>
+  anim: Map<string, { object: string; part: string; target: number; t0: number }>
+  screens: Map<string, Screen>
+  efx: Effects | null
+  items: THREE_NS.Mesh | null
+  itemsDirty: boolean
+  itemsT: number
+  dirty: boolean
+  list: null
+  listT: number
+  t: number
+  circuits: { id: string; room?: string; outlets: string[]; switches: string[]; lamps: string[] }[]
+  switchRooms: Set<string>
+  warnings: string[]
+  tBuild: number
+  mats: Record<string, THREE_NS.Material | undefined>
+  added?: AddResult
+  focus?: { x: number; y: number; z: number } | null
+  isBlocked?: BlockedFn
+  pub?: Record<string, unknown>
+}
+
+/** A house being built or played, as the kit side reads it (the per-house state `enter(h)` swaps in). */
+export interface HouseInstance {
+  IV?: InteractablesState | null
+  state: { iv?: Interactables.WorldState }
+  lodCurrent?: number
+  houseGroup: THREE_NS.Group
+  ctx: { r: HouseRecord }
+  [extra: string]: unknown
+}
+
+/** What `interactables/kit` puts on the kernel. */
+export interface KernelInteractablesKit {
+  IVK: InteractablesRefs | null
+  VEG: VegetationLibs | null
+  vegMaterials(): VegetationThree.VegetationMaterials
+}
+
+/** What `interactables/bridge` puts on the kernel. */
+export interface KernelInteractablesBridge {
+  IV_MATERIAL: Record<string, string>
+  IV_WIRE: Record<string, Hex>
+  IV_DOOR: RegExp
+  ivGroup(e: { floor: number }): string
+  ivAccumulate(mat: string, g: THREE_NS.BufferGeometry, ox: number, oy: number, oz: number, ry: number, color: Hex | null): void
+  ivBuild(h: HouseInstance, water: WaterNetwork): InteractablesState
+  ivRoomEffective(IV: InteractablesState, S: KitRoomState): boolean
+  ivDraw(IV: InteractablesState, ent: PlanEntry, type: string, item: PlanEntry['item']): Interactables.ObjectSpec
+  ivCords(IV: InteractablesState): void
+  ivAssemble(IV: InteractablesState, gs: Record<string, THREE_NS.Group>): void
+  ivScreen(IV: InteractablesState, E: KitEntry): void
+  ivEvent(h: HouseInstance, e: Interactables.WorldEvent): void
+  ivSeat(IV: InteractablesState): KitSeat | null
+  ivUpdate(h: HouseInstance, dt: number, time?: number, focus?: { x: number; y: number; z: number } | null): void
+  IV_SHAPE: Record<string, [string, number, number, number, number, number][]>
+  ivItems(IV: InteractablesState, h: HouseInstance): void
+  ivTarget(IV: InteractablesState, o: Eye, opt?: KitTargetOptions): KitInteractionTarget | null
+  ivRoomLight(IV: InteractablesState, roomId: string, on: boolean): void
+  ivParts(IV: InteractablesState, parts: Record<string, unknown>, tagDamage: (type: string) => unknown): void
+  ivDispose(h: HouseInstance): void
+  ivPublish(h: HouseInstance): Record<string, unknown>
+}
+
+/** A kit object as an interaction target. */
+export interface KitTarget extends TargetRef {
+  kit: true
+  id: string
+  type: string
+  object: KitEntry
+  item: Interactables.Interactable
+  floor: number
+  pos: number[]
+  text(): string
+}
+
+/** The best kit target of an eye. */
+export type KitInteractionTarget = InteractionTarget & { target: KitTarget }
+
+/** Options of the kit target: reach, cone and a filter of the candidates. */
+export interface KitTargetOptions {
+  reach?: number
+  cone?: number
+  exclude?: (E: KitEntry, k: Interactables.Interactable) => boolean
+}
+
 /** What `kernel/noise` puts on the kernel. */
 export interface KernelNoise {
   _h2(x: number, z: number): number
@@ -1205,7 +1422,7 @@ export interface KernelCloseScene {
 }
 
 /** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge {
   [member: string]: any
 }
 

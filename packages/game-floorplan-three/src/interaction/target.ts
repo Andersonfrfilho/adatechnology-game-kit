@@ -5,7 +5,7 @@ type TargetOptions = NonNullable<Parameters<KernelInteractionTarget['targetOf']>
 
 export function installInteractionTarget(K: Kernel, shared: Shared): void {
   const { doorText, toggleDoor, visibleChain, wallBlocks } = K;
-  const ivTarget = (...a: any[]): any => K.ivTarget(...a);
+  const ivTarget = (...a: Parameters<Kernel['ivTarget']>): ReturnType<Kernel['ivTarget']> => K.ivTarget(...a);
   // interaction target of whoever is at o = {x, y, z, yaw, pitch, floor} (eye, in house coordinates): the best among doors (by distance and angle) and items (anchor, reach, angle or aim ray).
   // opts.hit(meshes) receives the visible meshes of the moving pieces and returns the first intersection (THREE) or nothing: the app casts its own camera ray (aim at the screen centre).
   function targetOf(o: Eye | null | undefined, opt?: TargetOptions): InteractionTarget | null {

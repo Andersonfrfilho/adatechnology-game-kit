@@ -191,30 +191,10 @@
   },
   "packages/game-floorplan-three/src/interactables/bridge.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 11
-    }
-  },
-  "packages/game-floorplan-three/src/interactables/kit.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/interaction/state.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-floorplan-three/src/interaction/target.ts": {
-    "@typescript-eslint/no-explicit-any": {
       "count": 2
     }
   },
   "packages/game-floorplan-three/src/kernel-types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/lights/room-light.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
     }

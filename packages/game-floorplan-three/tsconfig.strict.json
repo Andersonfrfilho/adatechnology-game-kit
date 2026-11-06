@@ -18,5 +18,8 @@
     "src/interaction/target.ts",
     "src/interaction/state.ts",
     "src/interaction/items.ts",
-    "src/interaction/fittings.ts"]
+    "src/interaction/fittings.ts",
+    "src/lights/room-light.ts",
+    "src/interactables/kit.ts",
+    "src/interactables/bridge.ts"]
 }

@@ -5,8 +5,8 @@ import type { InteractivePiece, InteractiveState, Kernel, KernelInteractionState
 
 export function installInteractionState(K: Kernel, shared: Shared): void {
   const { THREE, cfg, colliderChanged, invalidateShadow, invalidate, UV_SCALE, applyPart, texture } = K;
-  const ivRoomEffective = (...a: any[]): any => K.ivRoomEffective(...a);
-  const ivRoomLight = (...a: any[]): any => K.ivRoomLight(...a);
+  const ivRoomEffective = (...a: Parameters<Kernel['ivRoomEffective']>): ReturnType<Kernel['ivRoomEffective']> => K.ivRoomEffective(...a);
+  const ivRoomLight = (...a: Parameters<Kernel['ivRoomLight']>): ReturnType<Kernel['ivRoomLight']> => K.ivRoomLight(...a);
   // ---------------- 60 interaction (moving parts, doors, lights, object collision) ----------------
   // ===== interaction: free flight, object collision, handles, switches, curtains, gates and cabinets =====
   // Moving pieces are drawn as "ix:..." groups (one mesh per material) and then wrapped in two nodes:
