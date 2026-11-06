@@ -1376,7 +1376,7 @@ export class VehicleVisuals implements CreaseWork {
     if (v.lengthSq() < 1e-4) v.set(0, 0, 1)
     return v.normalize()
   }
-  private fling(obj: Obj, v: Vector3, w: any, trail: number): void {
+  private fling(obj: Obj, v: Vector3, w: number, trail: number): void {
     const piece = this.I.fling(this.c, obj, v, w)
     if (piece) piece.trail = trail
   }

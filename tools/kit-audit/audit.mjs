@@ -16,7 +16,10 @@ const root = resolve(here, '../..')
 /** Primitives: a three.js geometry built on the spot, or a box/cylinder/sphere part of a destructible spec. */
 const PRIMITIVE = /new\s+[\w$.]+\.(Box|Cylinder|Sphere|Cone|Capsule|Plane|Torus)Geometry\s*\(|kind:\s*['"](box|cylinder|sphere)['"]/
 
-/** Words of a stretch of code: identifiers split on camelCase, `_` and `-`, lower case, without accents. */
+/**
+ * Words of a stretch of code: identifiers split on camelCase, `_` and `-`, lower case, without accents.
+ * @param {string} text
+ */
 export function wordsOf(text) {
   return new Set(
     text
@@ -30,7 +33,7 @@ export function wordsOf(text) {
 }
 
 /** Owner of a file: `game-weather-three` for a package, `examples/weather-test-area` for an example. */
-const ownerOf = (file) => {
+const ownerOf = (/** @type {string} */ file) => {
   const parts = relative(root, file).split('/')
   return parts[0] === 'packages' ? parts[1] : `${parts[0]}/${parts[1]}`
 }
@@ -73,11 +76,11 @@ export function audit(options = {}) {
       for (const [domain, rule] of Object.entries(rules.domains)) {
         if (options.domains?.length && !options.domains.includes(domain)) continue
         if (rule.owners.includes(owner)) continue
-        const hits = rule.words.filter((word) => words.has(word))
+        const hits = rule.words.filter((/** @type {string} */ word) => words.has(word))
         if (hits.length === 0) continue
         const path = relative(root, file)
-        const allowed = allowlist.find((entry) => entry.file === path && entry.domain === domain)
-        const known = pending.find((entry) => entry.file === path && entry.domain === domain)
+        const allowed = allowlist.find((/** @type {{ file: string; domain: string; }} */ entry) => entry.file === path && entry.domain === domain)
+        const known = pending.find((/** @type {{ file: string; domain: string; }} */ entry) => entry.file === path && entry.domain === domain)
         findings.push({ file: path, line: index + 1, owner, domain, words: hits, code: line.trim().slice(0, 160), use: rule.use, owners: rule.owners, ...(allowed ? { allowed: allowed.reason } : {}), ...(known ? { pending: known.fix } : {}) })
       }
     })
@@ -101,7 +104,7 @@ export function group(findings) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {
   const args = process.argv.slice(2)
-  const valuesOf = (flag) => args.flatMap((arg, index) => (arg === flag ? [args[index + 1]] : []))
+  const valuesOf = (/** @type {string} */ flag) => args.flatMap((arg, index) => (arg === flag ? [args[index + 1]] : []))
   const findings = audit({ packages: valuesOf('--package'), domains: valuesOf('--domain') })
   const grouped = group(findings)
   const open = grouped.filter((entry) => !entry.allowed && !entry.pending)

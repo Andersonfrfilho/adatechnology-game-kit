@@ -69,7 +69,7 @@ const render = (seconds, timeline) =>
       const buffer = await ctx.startRendering()
       const data = buffer.getChannelData(0)
       // the peak of each event: the loudest sample from its start to the next event
-      const peaks = events.map(([at, id], i) => {
+      const peaks = events.map(([at, id], /** @type {number} */ i) => {
         const from = Math.floor(at * rate)
         const to = Math.min(data.length, Math.floor((events[i + 1]?.[0] ?? total) * rate))
         let peak = 0
@@ -81,7 +81,7 @@ const render = (seconds, timeline) =>
     [seconds, timeline],
   )
 
-const wav = (samples, rate = 48000) => {
+const wav = (/** @type {number[]} */ samples, rate = 48000) => {
   const buffer = Buffer.alloc(44 + samples.length * 2)
   buffer.write('RIFF', 0)
   buffer.writeUInt32LE(36 + samples.length * 2, 4)
@@ -95,12 +95,12 @@ const wav = (samples, rate = 48000) => {
   buffer.writeUInt16LE(16, 34)
   buffer.write('data', 36)
   buffer.writeUInt32LE(samples.length * 2, 40)
-  samples.forEach((s, i) => buffer.writeInt16LE(Math.round(Math.max(-1, Math.min(1, s)) * 32767), 44 + i * 2))
+  samples.forEach((/** @type {number} */ s, /** @type {number} */ i) => buffer.writeInt16LE(Math.round(Math.max(-1, Math.min(1, s)) * 32767), 44 + i * 2))
   return buffer
 }
 
 const { SURFACE_IDS, SWING_LEAD_SECONDS } = await page.evaluate(() => ({ SURFACE_IDS: [...window.reel.SURFACE_IDS], SWING_LEAD_SECONDS: { ...window.reel.SWING_LEAD_SECONDS } }))
-const dbfs = (peak) => (peak > 0 ? Math.round(20 * Math.log10(peak) * 10) / 10 : -Infinity)
+const dbfs = (/** @type {number} */ peak) => (peak > 0 ? Math.round(20 * Math.log10(peak) * 10) / 10 : -Infinity)
 const report = {}
 const save = async (name, seconds, timeline) => {
   const { samples, peaks } = await render(seconds, timeline)

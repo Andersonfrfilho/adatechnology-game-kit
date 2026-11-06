@@ -683,7 +683,7 @@ export function installGeometry(kit: Kit) {
     uvProject: uvProject,
   }
   /* Ready-made holes for shell({ holes }) and geo.cut */
-  kit.holeTop = function (x0: number, x1: number, z: number, yMin: number, tag: any) {
+  kit.holeTop = function (x0: number, x1: number, z: number, yMin: number, tag: string) {
     return {
       tag: tag,
       sel: function (n: any, ce: any) {
@@ -746,7 +746,7 @@ export function installGeometry(kit: Kit) {
       },
     }
   }
-  kit.holeBox = function (min: number[], max: number[], sel: any, tag: any) {
+  kit.holeBox = function (min: number[], max: number[], sel: any, tag: string) {
     return {
       tag: tag,
       sel: sel || null,
@@ -755,7 +755,7 @@ export function installGeometry(kit: Kit) {
       },
     }
   }
-  kit.holeWhere = function (sel: any, tag: any) {
+  kit.holeWhere = function (sel: any, tag: string) {
     return {
       tag: tag,
       sel: sel,

@@ -10,7 +10,7 @@ export function installWheels(kit: Kit) {
 
   /* ================= special wheels ================= */
   /* Spoked wheel for motorcycle/bicycle. o: { spokes, knobby, disc, cast (5-spoke alloy), z, label } */
-  kit.spokedWheel = function (c: BuildContext, x: any, r: any, tireR: any, o: any) {
+  kit.spokedWheel = function (c: BuildContext, x: number, r: number, tireR: any, o: any) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, o.z || 0)

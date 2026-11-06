@@ -52,7 +52,7 @@ export function installExplosion(kit: Kit) {
     return fuse
   }
   /* explosion damage on the tank (sum). Returns "fire", "explosion" or null */
-  kit.blastDamage = function (c: BuildContext, amount: any) {
+  kit.blastDamage = function (c: BuildContext, amount: number) {
     c.tankDamage = (c.tankDamage || 0) + amount
     if (c.tankDamage > 400 && !c.exploded && (!c.blast || c.blast.phase === 'fire')) {
       c.blast = { phase: 'fire', t: 0, T: 0.6 }

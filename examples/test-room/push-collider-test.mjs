@@ -20,7 +20,7 @@ await page.waitForFunction(() => window.__testRoom?.world.has('shelf'), null, { 
 await page.waitForTimeout(1500)
 
 const failures = []
-const check = (ok, label) => {
+const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
   if (!ok) failures.push(label)
 }
@@ -28,7 +28,7 @@ const state = () => page.evaluate(() => {
   const r = window.__testRoom
   return { shelfZ: r.world.state('shelf').position[2], shelfX: r.world.state('shelf').position[0], playerZ: r.playerPosition[2], push: r.push.state }
 })
-const shot = (name) => page.screenshot({ path: join(shots, `push-collider-${name}.png`), timeout: 180000 })
+const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `push-collider-${name}.png`), timeout: 180000 })
 const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
 
 const start = await state()
@@ -39,7 +39,7 @@ await look([x, 1.7, oldZ + 1], [x, 1.2, oldZ])
 await page.keyboard.down('KeyE')
 await page.waitForFunction(() => window.__testRoom.push.state?.phase === 'push', null, { timeout: 60000 })
 await page.keyboard.down('KeyW')
-await page.waitForFunction((z) => window.__testRoom.world.state('shelf').position[2] < z - 2.5, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.world.state('shelf').position[2] < z - 2.5, oldZ, { timeout: 60000 })
 await page.keyboard.up('KeyW')
 await page.keyboard.up('KeyE')
 await page.waitForTimeout(800)
@@ -50,11 +50,11 @@ await page.evaluate(() => { window.__lastZ = undefined })
 // walk from before the old place, through it, up to the shelf
 await look([x, 1.7, oldZ + 1.5], [x, 1.7, moved.shelfZ - 8])
 await page.keyboard.down('KeyW')
-await page.waitForFunction((z) => window.__testRoom.playerPosition[2] <= z, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.playerPosition[2] <= z, oldZ, { timeout: 60000 })
 const through = await state()
 await shot('through-old-place')
 check(Math.abs(through.playerZ - oldZ) < 1.5, `the player crosses where the shelf stood (z ${through.playerZ.toFixed(2)})`)
-await page.waitForFunction((z) => window.__testRoom.playerPosition[2] < z - 1, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.playerPosition[2] < z - 1, oldZ, { timeout: 60000 })
 await page.waitForFunction(() => {
   const r = window.__testRoom
   const was = window.__lastZ
@@ -72,7 +72,7 @@ await page.evaluate(([x2, z]) => window.__testRoom.look([x2, 1.7, z + 0.9], [x2,
 await page.keyboard.down('KeyE')
 await page.waitForFunction(() => window.__testRoom.push.state?.phase === 'push', null, { timeout: 60000 })
 await page.keyboard.down('KeyS')
-await page.waitForFunction((z) => window.__testRoom.world.state('shelf').position[2] > z, oldZ, { timeout: 60000 })
+await page.waitForFunction((/** @type {number} */ z) => window.__testRoom.world.state('shelf').position[2] > z, oldZ, { timeout: 60000 })
 await page.keyboard.up('KeyS')
 await page.keyboard.up('KeyE')
 await page.waitForTimeout(500)

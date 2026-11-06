@@ -492,7 +492,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return Math.hypot(dx, dy, dz)
   }
   const vol = (d: PartDef): number => d.box.size[0] * d.box.size[1] * d.box.size[2]
-  const locate = (v: any, tol: number, skip?: (p: PState) => boolean): PState | null => {
+  const locate = (v: number, tol: number, skip?: (p: PState) => boolean): PState | null => {
     let best: PState | null = null
     let bd = Infinity
     for (const d of model.parts) {
@@ -691,7 +691,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   // ---- hits ----------------------------------------------------------------------------------------------------------------------------
-  const normalOf = (d: PartDef, v: any): any => faceNormal(d, v)
+  const normalOf = (d: PartDef, v: number): any => faceNormal(d, v)
   const ballistic = (h: Hit, out: DestructionEvent[]): void => {
     sync()
     const M = toFrameMatrix()
@@ -1078,7 +1078,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     return true
   }
   /** The part a drawn mesh belongs to: its pane, the door hanging it, the piece drawn for it, else the smallest box of bodywork at the point. */
-  const partOfSurface = (o: any, v: any): PState | null => {
+  const partOfSurface = (o: any, v: number): PState | null => {
     const pane = paneParts().get(o)
     if (pane) return ps.get(pane) ?? null
     for (let q = o; q && q !== c.vehicle; q = q.parent) {

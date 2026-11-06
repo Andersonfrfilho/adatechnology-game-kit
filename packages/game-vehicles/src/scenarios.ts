@@ -29,7 +29,7 @@ export function installScenarios(kit: Kit) {
   /* fire and soot */
   kit.flagEffects.burnt = { order: 40, settle: true, apply: I.burntFx }
   const BODY_TYPES = { panel: 1, door: 1, roof: 1, lid: 1, hood: 1, bumper: 1 }
-  kit.zoneScenario = function (c: BuildContext, name: any) {
+  kit.zoneScenario = function (c: BuildContext, name: string) {
     const Zs = I.zonesOf(c)
     const m = c.meta
     const F = m.front
@@ -99,7 +99,7 @@ export function installScenarios(kit: Kit) {
     if (st.length) {
       const w3 = st.slice(0, 3)
       const m3 =
-        w3.reduce(function (a: any, b: any) {
+        w3.reduce(function (a: number, b: number) {
           return a + b
         }, 0) / w3.length
       h = Math.min(h, Math.round(st[0] + 30), Math.round(m3 + 22))

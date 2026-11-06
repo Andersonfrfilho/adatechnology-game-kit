@@ -18,7 +18,10 @@ export function createModule(options = {}) {
   return current
 }
 
-/** Swaps the stories the module runs: `{ people?, stories, life?, actions?, playerBase?, days? }`. */
+/**
+ * Swaps the stories the module runs: `{ people?, stories, life?, actions?, playerBase?, days? }`.
+ * @param {string} content
+ */
 export function loadContent(content) {
   if (!current) throw new Error('StoriesArea: load the module first')
   current.load(typeof content === 'string' ? JSON.parse(content) : content)

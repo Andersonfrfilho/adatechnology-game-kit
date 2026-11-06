@@ -257,7 +257,7 @@ export function installLights(kit: Kit) {
     return L
   }
   /* light bar from end to end (ledbar at the front, bar at the rear). face: +1 front, -1 rear */
-  kit.lightBar = function (c: BuildContext, x: any, y: any, z0: number, z1: number, h: number, face: number, mat: any) {
+  kit.lightBar = function (c: BuildContext, x: number, y: number, z0: number, z1: number, h: number, face: number, mat: any) {
     const len = Math.abs(z1 - z0)
     const zc = (z0 + z1) / 2
     const f = face || 1

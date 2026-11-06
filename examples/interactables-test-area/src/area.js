@@ -42,12 +42,12 @@ const sanitize = (id) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
-const round = (n, d = 4) => Math.round(n * 10 ** d) / 10 ** d
+const round = (/** @type {number} */ n, d = 4) => Math.round(n * 10 ** d) / 10 ** d
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // Geometry of the recorded primitives (axis-aligned boxes in the frame they were drawn in)
 // ---------------------------------------------------------------------------------------------------------------------------------------
-const rotX = (v, a) => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)]
+const rotX = (/** @type {number[]} */ v, /** @type {number} */ a) => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)]
 const rotY = (v, a) => [v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], -v[0] * Math.sin(a) + v[2] * Math.cos(a)]
 const rotZ = (v, a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a), v[2]]
 
@@ -92,8 +92,8 @@ function describePrimitive(fn, a) {
 }
 
 const unionBox = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[3], b[3]), Math.max(a[4], b[4]), Math.max(a[5], b[5])]
-const boxVolume = (b) => Math.max(1e-9, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]))
-const boxGap = (a, b) => {
+const boxVolume = (/** @type {number[]} */ b) => Math.max(1e-9, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]))
+const boxGap = (/** @type {number[]} */ a, /** @type {number[]} */ b) => {
   const dx = Math.max(0, a[0] - b[3], b[0] - a[3])
   const dy = Math.max(0, a[1] - b[4], b[1] - a[4])
   const dz = Math.max(0, a[2] - b[5], b[2] - a[5])
@@ -165,6 +165,12 @@ const NOOP = { part: (_id, _pivot, _ry, draw) => draw(), box() {}, cylinder() {}
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // Analysis: object spec -> destruction pieces, joints, animations
 // ---------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * @param {string} type
+ * @param {{ destruction: { material: string; }; }} spec
+ * @param {string} key
+ * @param {number[]} box
+ */
 function materialFor(type, spec, key, box) {
   const body = spec.destruction?.material ?? 'plastic'
   const over = KEY_OVERRIDES[type]?.[key]
@@ -185,7 +191,7 @@ function clusterStatics(type, spec, statics) {
   const max = MAX_PIECES[type] ?? DEFAULT_MAX_PIECES
   let pieces = statics.map((p, i) => ({ indices: [i], box: p.aabb.slice(), vol: p.vol, keys: new Set([p.key]), area: { [p.key]: p.vol } }))
   const glassy = (p) => p.keys.has('glass') || p.keys.has('emissive')
-  const size = (p) => Math.max(p.box[3] - p.box[0], p.box[4] - p.box[1], p.box[5] - p.box[2])
+  const size = (/** @type {{ box: number[]; }} */ p) => Math.max(p.box[3] - p.box[0], p.box[4] - p.box[1], p.box[5] - p.box[2])
   const merge = (a, b) => {
     a.indices.push(...b.indices)
     a.box = unionBox(a.box, b.box)
@@ -193,7 +199,7 @@ function clusterStatics(type, spec, statics) {
     for (const k of b.keys) a.keys.add(k)
     for (const [k, v] of Object.entries(b.area)) a.area[k] = (a.area[k] ?? 0) + v
   }
-  const absorb = (small) => {
+  const absorb = (/** @type {{ box: number[]; }} */ small) => {
     let best = null
     let bestScore = Infinity
     for (const q of pieces) {
@@ -207,7 +213,7 @@ function clusterStatics(type, spec, statics) {
     }
     if (!best) return false
     merge(best, small)
-    pieces = pieces.filter((p) => p !== small)
+    pieces = pieces.filter((/** @type {{ box: number[]; }} */ p) => p !== small)
     return true
   }
   // 1. specks (screws, hinges, handles): smaller than 2 cm in every direction
@@ -215,10 +221,10 @@ function clusterStatics(type, spec, statics) {
   // 2. cap the count
   while (pieces.length > max) {
     const cand = pieces.filter((p) => !glassy(p) || pieces.filter(glassy).length > 3)
-    const small = (cand.length ? cand : pieces).reduce((m, p) => (boxVolume(p.box) < boxVolume(m.box) ? p : m))
+    const small = (cand.length ? cand : pieces).reduce((/** @type {{ box: number[]; }} */ m, /** @type {{ box: number[]; }} */ p) => (boxVolume(p.box) < boxVolume(m.box) ? p : m))
     if (!absorb(small)) break
   }
-  return pieces.sort((a, b) => boxVolume(b.box) - boxVolume(a.box))
+  return pieces.sort((/** @type {{ box: number[]; }} */ a, /** @type {{ box: number[]; }} */ b) => boxVolume(b.box) - boxVolume(a.box))
 }
 
 function partMotionPose(motion, ry, GT) {
@@ -268,7 +274,7 @@ function buildAnimations(spec, ids, GT, present) {
         parts.map((p) => {
           const f0 = Math.max(0, Math.min(1, (t - p.start) / (p.end - p.start)))
           const f = closing ? 1 - f0 : f0
-          return [p.id, { position: p.pose.position.map((v) => round(v * f)), rotation: p.pose.rotation.map((v) => round(v * f)) }]
+          return [p.id, { position: p.pose.position.map((/** @type {number} */ v) => round(v * f)), rotation: p.pose.rotation.map((/** @type {number} */ v) => round(v * f)) }]
         }),
       ),
     }))
@@ -293,7 +299,7 @@ function analyse(hh, type, GT) {
   const clusters = clusterStatics(type, spec, rec.statics)
 
   const used = new Set()
-  const unique = (base) => {
+  const unique = (/** @type {string} */ base) => {
     let id = base
     for (let n = 2; used.has(id); n++) id = `${base}_${n}`
     used.add(id)
@@ -318,7 +324,7 @@ function analyse(hh, type, GT) {
       const lo = [Infinity, Infinity, Infinity]
       const hi = [-Infinity, -Infinity, -Infinity]
       let len = 0
-      w.points.forEach((q, i) => {
+      w.points.forEach((/** @type {number[]} */ q, /** @type {number} */ i) => {
         for (let k = 0; k < 3; k++) {
           lo[k] = Math.min(lo[k], q[k] - r)
           hi[k] = Math.max(hi[k], q[k] + r)
@@ -395,7 +401,7 @@ function analyse(hh, type, GT) {
     }
   edges.sort((x, y) => x.gap - y.gap || Math.min(boxVolume(y.a.box), boxVolume(y.b.box)) - Math.min(boxVolume(x.a.box), boxVolume(x.b.box)))
   const uf = new Map(pieces.map((p) => [p.id, p.id]))
-  const find = (x) => (uf.get(x) === x ? x : (uf.set(x, find(uf.get(x))), uf.get(x)))
+  const find = (/** @type {string | undefined} */ x) => (uf.get(x) === x ? x : (uf.set(x, find(uf.get(x))), uf.get(x)))
   const kindOf = (a, b) => (a.material.includes('glass') || b.material.includes('glass') ? 'clip' : bodyKind)
   for (const e of edges) {
     if ((degree.get(e.a.id) ?? 0) >= 5 || (degree.get(e.b.id) ?? 0) >= 5) continue
@@ -442,19 +448,24 @@ function analyse(hh, type, GT) {
  * @returns {import('@adatechnology/game-contracts').TestableModule<any>}
  */
 export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, locale: defaultLocale = 'en' }) {
-  const isEn = (l) => (l ?? defaultLocale) === 'en'
+  const isEn = (/** @type {string} */ l) => (l ?? defaultLocale) === 'en'
   const households = {}
-  const household = (loc) => {
+  const household = (/** @type {string} */ loc) => {
     const key = isEn(loc) ? 'en' : 'pt-BR'
     return (households[key] ??= HHP.createHousehold({ locale: key, region: key === 'en' ? 'us' : 'br' }))
   }
   const analyses = {}
-  const analysis = (loc, type) => {
+  const analysis = (/** @type {string} */ loc, /** @type {string} */ type) => {
     const key = `${isEn(loc) ? 'en' : 'pt-BR'}:${type}`
     return (analyses[key] ??= analyse(household(loc), type, GT))
   }
   const adapters = new WeakMap()
 
+  /**
+     * @param {object} THREE
+     * @param {string} loc
+     * @param {string} type
+     */
   function build(THREE, loc, type) {
     const a = analysis(loc, type)
     let gfx = adapters.get(THREE)
@@ -493,7 +504,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   function fluidOf(loc, type, a) {
     const f = FLUIDS[type]
     if (!f) return undefined
-    const basin = a.pieces.find((p) => p.material === 'ceramic') ?? a.pieces[0]
+    const basin = a.pieces.find((/** @type {{ material: string; }} */ p) => p.material === 'ceramic') ?? a.pieces[0]
     const part = a.destructible.parts.find((p) => p.id === basin.id)
     const top = part.position[1] + part.shape.size[1] / 2
     return {
@@ -516,6 +527,9 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     name: isEn(defaultLocale) ? 'Furniture and objects' : 'Móveis e objetos',
     ground: { surface: 'tile_floor' },
     group: isEn(defaultLocale) ? 'Furniture & objects' : 'Móveis e objetos',
+    /**
+     * @param {string} loc
+     */
     items(loc) {
       const hh = household(loc)
       return hh.types.map((t) => {
@@ -523,7 +537,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         const item = {
           id: t.id,
           name: t.name,
-          build: (THREE) => build(THREE, loc, t.id),
+          build: (/** @type {object} */ THREE) => build(THREE, loc, t.id),
           spec: a.destructible,
         }
         if (a.animations.length) item.animations = a.animations
@@ -536,7 +550,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         return item
       })
     },
-    scenarios: (loc) => buildScenarios(isEn(loc) ? 'en' : 'pt-BR', (type) => analysis(loc, type)),
+    scenarios: (/** @type {string} */ loc) => buildScenarios(isEn(loc) ? 'en' : 'pt-BR', (/** @type {string} */ type) => analysis(loc, type)),
   }
   return area
 }

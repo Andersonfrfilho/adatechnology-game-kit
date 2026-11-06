@@ -25,9 +25,12 @@ if (!playwright || !existsSync(page)) {
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+  /**
+     * @type {string[]}
+     */
   const errors = []
   let failed = 0
-  const check = (name, ok, detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -35,7 +38,7 @@ if (!playwright || !existsSync(page)) {
     const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
     const tab = await context.newPage()
     await tab.route(/^https?:/, (route) => route.abort())
-    tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__playerReport, null, { timeout: 90000 })
@@ -47,7 +50,7 @@ if (!playwright || !existsSync(page)) {
     const state = await tab.evaluate(async () => {
       const room = window.__testRoom
       const report = window.__playerReport
-      const scenarios = room.scenarios.filter((s) => s.id.startsWith('player_'))
+      const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('player_'))
       const result = await room.runScenarios(scenarios)
       const bench = room.bench('player_area')
       bench.act('hurt')
@@ -88,7 +91,7 @@ if (!playwright || !existsSync(page)) {
       bench.act('play_grabbed_bitten_human')
       for (let i = 0; i < 60 * 5; i++) r.update(1 / 60)
       const metrics = r.metrics().module
-      const lines = r.log.entries().filter((e) => e.text.startsWith('{"type":"avatar"')).map((e) => JSON.parse(e.text).action)
+      const lines = r.log.entries().filter((/** @type {{ text: string; }} */ e) => e.text.startsWith('{"type":"avatar"')).map((/** @type {{ text: string; }} */ e) => JSON.parse(e.text).action)
       bench.act('stop_clip')
       bench.act('stand')
       for (let i = 0; i < 30; i++) r.update(1 / 60)
@@ -98,7 +101,7 @@ if (!playwright || !existsSync(page)) {
         const before = r.log.entries().length
         bench.act(`play_${id}`)
         for (let i = 0; i < 60; i++) r.update(1 / 60)
-        const impacts = r.log.entries().slice(before).map((e) => e.text).filter((t) => t.startsWith('{"type":"avatar"')).map((t) => JSON.parse(t)).filter((x) => x.action === 'impact')
+        const impacts = r.log.entries().slice(before).map((e) => e.text).filter((/** @type {string} */ t) => t.startsWith('{"type":"avatar"')).map((/** @type {string} */ t) => JSON.parse(t)).filter((/** @type {{ action: string; }} */ x) => x.action === 'impact')
         strikes.push({ id, impacts: impacts.length, t: impacts[0]?.t, playing: r.avatar.avatar.playing })
         for (let i = 0; i < 60; i++) r.update(1 / 60)
       }
@@ -121,7 +124,7 @@ if (!playwright || !existsSync(page)) {
       return { afterFirst, metrics, lines, grabbed, released, down, strikes }
     })
     check(`[${lang}] the avatar area: camera buttons, a clip plays, events and actions are JSON lines in the log`, body.afterFirst === 'first' && body.metrics.clip === 'grabbed_bitten_human' && body.lines.includes('play_clip') && body.lines.includes('clip_event'), { afterFirst: body.afterFirst, clip: body.metrics.clip, last_event: body.metrics.last_event, lines: [...new Set(body.lines)] })
-    check(`[${lang}] the five attack clips play and fire exactly one impact each`, body.strikes.length === 5 && body.strikes.every((x) => x.impacts === 1), body.strikes)
+    check(`[${lang}] the five attack clips play and fire exactly one impact each`, body.strikes.length === 5 && body.strikes.every((/** @type {{ impacts: number; }} */ x) => x.impacts === 1), body.strikes)
     check(`[${lang}] the player's grab plays grabbed_bitten_human, the release stops it, a knock-down lays the body down`, body.grabbed === 'grabbed_bitten_human' && body.released === null && body.down === true, { grabbed: body.grabbed, released: body.released, down: body.down })
     await tab.screenshot({ path: join(shots, `player-third-${lang}.png`) })
     // one capture per strike, taken on the frame of its impact (rifle and pistol with the armed arms)

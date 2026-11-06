@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
 
 const args = process.argv.slice(2)
-const flag = (name, fallback) => {
+const flag = (/** @type {string} */ name, /** @type {string | number} */ fallback) => {
   const i = args.indexOf(name)
   return i >= 0 ? args[i + 1] : fallback
 }
@@ -41,6 +41,9 @@ await page.addInitScript(() => {
       if (!ctx.__tap) {
         ctx.__tap = ctx.createMediaStreamDestination()
         const rec = new MediaRecorder(ctx.__tap.stream, { mimeType: 'audio/webm;codecs=opus' })
+        /**
+           * @type {Blob[]}
+           */
         const chunks = []
         rec.ondataavailable = (e) => chunks.push(e.data)
         window.__soundRecording = { rec, chunks, ctx, startedWall: performance.now(), startedCtx: ctx.currentTime }
@@ -123,11 +126,11 @@ const result = await page.evaluate(async () => {
   return { frames: window.__frames, calls: window.__soundCalls, starts: window.__soundStarts, lines: window.__roomLines, audio }
 })
 if (result.audio) writeFileSync(join(out, `${plan.name ?? 'probe'}.webm`), Buffer.from(result.audio.base64, 'base64'))
-const rel = (w) => Math.round(w - t0)
+const rel = (/** @type {number} */ w) => Math.round(w - t0)
 const report = {
-  calls: result.calls.map((c) => ({ ...c, t: rel(c.wall) })),
-  lines: (result.lines ?? []).map((l) => ({ ...l, t: rel(l.wall) })),
-  starts: result.starts.filter((s) => s.wall >= t0).map((s) => ({ ...s, t: rel(s.wall), lateMs: Math.round((Math.max(s.when, s.at) - s.at) * 1000) })),
+  calls: result.calls.map((/** @type {{ wall: number; }} */ c) => ({ ...c, t: rel(c.wall) })),
+  lines: (result.lines ?? []).map((/** @type {{ wall: number; }} */ l) => ({ ...l, t: rel(l.wall) })),
+  starts: result.starts.filter((/** @type {{ wall: number; }} */ s) => s.wall >= t0).map((/** @type {{ wall: number; when: number; at: number; }} */ s) => ({ ...s, t: rel(s.wall), lateMs: Math.round((Math.max(s.when, s.at) - s.at) * 1000) })),
   recordingStartsAt: result.audio ? rel(result.audio.startedWall) : null,
   frames: result.frames,
 }

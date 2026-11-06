@@ -181,7 +181,7 @@ export function installBody(kit: Kit) {
     return { p: h.point.clone().applyMatrix4(inv), n: n, obj: h.object }
   }
   /* x of the skin at the front (front = true) or at the rear, at height y and side z; falls back to profX(items) if the ray finds nothing */
-  kit.surfaceX = function (c: BuildContext, y: any, z: any, front: boolean, items: any) {
+  kit.surfaceX = function (c: BuildContext, y: number, z: number, front: boolean, items: any) {
     const m = c.meta
     const sg = front === false ? -1 : 1
     const x0 = sg > 0 ? (m.front || 3) + 2 : (m.rear || -3) - 2

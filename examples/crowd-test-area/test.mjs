@@ -25,9 +25,12 @@ if (!playwright || !existsSync(page)) {
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+  /**
+     * @type {string[]}
+     */
   const errors = []
   let failed = 0
-  const check = (name, ok, detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -35,7 +38,7 @@ if (!playwright || !existsSync(page)) {
     const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
     const tab = await context.newPage()
     await tab.route(/^https?:/, (route) => route.abort())
-    tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__crowdReport, null, { timeout: 90000 })
@@ -50,7 +53,7 @@ if (!playwright || !existsSync(page)) {
     const state = await tab.evaluate(async () => {
       const room = window.__testRoom
       const report = window.__crowdReport
-      const scenarios = room.scenarios.filter((s) => s.id.startsWith('crowd_'))
+      const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('crowd_'))
       const result = await room.runScenarios(scenarios)
       const bench = room.bench('crowd_area')
       bench.act('hit')

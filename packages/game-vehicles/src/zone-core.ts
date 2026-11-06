@@ -152,7 +152,7 @@ export function installZoneCore(kit: Kit) {
     })
     return { list: ws, xf: xf, xr: xr, rf: rf, rr: rr }
   }
-  function partsOf(c: BuildContext, kind: any) {
+  function partsOf(c: BuildContext, kind: string) {
     return c.parts.filter(function (p) {
       return p.kind === kind
     })

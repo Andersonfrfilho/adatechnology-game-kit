@@ -29,15 +29,32 @@ if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')],
 const shotsDir = join(here, 'shots')
 mkdirSync(shotsDir, { recursive: true })
 
+/**
+ * @type {{ name: string; ok: boolean; detail: string[] | undefined; }[]}
+ */
 const results = []
+/**
+ * @param {string} name
+ * @param {boolean} ok
+ * @param {string[] | undefined} [detail]
+ */
 function check(name, ok, detail) {
   results.push({ name, ok: !!ok, detail })
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail !== undefined ? '  ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''}`)
 }
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+/**
+ * @type {string[]}
+ */
 const external = []
+/**
+ * @type {string[]}
+ */
 const consoleErrors = []
+/**
+ * @param {{ width: number; height: number; }} viewport
+ */
 async function openPage(viewport, extra = {}) {
   const context = await browser.newContext({ viewport, ...extra })
   // block (and record) everything that is not the file itself
@@ -48,10 +65,10 @@ async function openPage(viewport, extra = {}) {
     return route.abort()
   })
   const page = await context.newPage()
-  page.on('request', (r) => {
+  page.on('request', (/** @type {{ url: () => string; }} */ r) => {
     if (!/^(file|data|blob|about):/.test(r.url())) external.push(r.url())
   })
-  page.on('console', (m) => {
+  page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => {
     if (m.type() === 'error') consoleErrors.push(m.text())
   })
   page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
@@ -95,7 +112,7 @@ check('fridge closed: container not accessible', fr.closed === false)
 check('fridge door opens: container accessible', fr.open === true, { sweepLimit: fr.sweep })
 check('HUD prompt is localized while aiming at an item', /Pegar/.test(fr.prompt) && !/prompt\./.test(fr.prompt), fr.prompt)
 await page.keyboard.press('KeyF')
-const fr2 = await E((a) => {
+const fr2 = await E((/** @type {{ slot: string | number; }} */ a) => {
   const s = window.__showroom
   return { pack: s.pack.map((p) => `${p.type}x${p.qty}`), slotEmpty: s.world.contents('fridge', 'fridge')[a.slot] === null, count: document.querySelector('#packCount').textContent }
 }, fr)
@@ -111,7 +128,7 @@ const gas = await E(() => {
   w.act('stove:use_burner_2')
   s.step(1.5)
   out.litWithValveClosed = w.isLit('stove', 'burner_2')
-  out.flameWithValveClosed = w.emitters().some((e) => e.kind === 'flame' && e.object === 'stove')
+  out.flameWithValveClosed = w.emitters().some((/** @type {{ kind: string; object: string; }} */ e) => e.kind === 'flame' && e.object === 'stove')
   w.act('gas_bottle:use_gas')
   s.step(1.5)
   out.relightsWhenValveOpens = w.isLit('stove', 'burner_2')
@@ -121,7 +138,7 @@ const gas = await E(() => {
     s.step(1.5)
   }
   out.lit = w.isLit('stove', 'burner_2')
-  out.flame = w.emitters().some((e) => e.kind === 'flame' && e.id === 'stove:burner_2_flame' && e.intensity > 0)
+  out.flame = w.emitters().some((/** @type {{ kind: string; id: string; intensity: number; }} */ e) => e.kind === 'flame' && e.id === 'stove:burner_2_flame' && e.intensity > 0)
   w.act('gas_bottle:use_gas') // close again
   s.step(1.5)
   out.litAfterClosing = w.isLit('stove', 'burner_2')
@@ -142,7 +159,7 @@ const bbq = await E(() => {
   const w = s.world
   w.act('bbq:ignite_coal')
   s.step(2)
-  const kinds = w.emitters().filter((e) => e.object === 'bbq').map((e) => e.kind)
+  const kinds = w.emitters().filter((/** @type {{ object: string; }} */ e) => e.object === 'bbq').map((e) => e.kind)
   return { kinds, lit: w.isLit('bbq', 'coal'), alive: s.effects.stats() }
 })
 check('barbecue: fire and smoke emitters while lit', bbq.lit && bbq.kinds.includes('fire') && bbq.kinds.includes('smoke'), bbq.kinds)
@@ -161,11 +178,11 @@ const rural = await E(() => {
   s.step(3)
   const em = w.emitters()
   for (const id of ['fireplace', 'wood_stove', 'campfire']) {
-    o[id] = { lit: w.isLit(id, 'fire'), kinds: em.filter((e) => e.object === id && e.intensity > 0).map((e) => e.kind) }
+    o[id] = { lit: w.isLit(id, 'fire'), kinds: em.filter((/** @type {{ object: string; intensity: number; }} */ e) => e.object === id && e.intensity > 0).map((e) => e.kind) }
   }
   w.act('well:use_water_bucket')
   s.step(1.5)
-  o.wellKinds = w.emitters().filter((e) => e.object === 'well' && e.intensity > 0).map((e) => e.kind)
+  o.wellKinds = w.emitters().filter((/** @type {{ object: string; intensity: number; }} */ e) => e.object === 'well' && e.intensity > 0).map((e) => e.kind)
   w.act('well:use_water_bucket')
   o.coolerClosed = w.accessible('cooler', 'cooler')
   w.act('cooler:toggle_lid')
@@ -181,7 +198,7 @@ const rural = await E(() => {
   w.act('camp_stove:use_burner')
   s.step(2)
   o.stoveLit = w.isLit('camp_stove', 'burner')
-  o.stoveFlame = w.emitters().some((e) => e.object === 'camp_stove' && e.kind === 'flame' && e.intensity > 0)
+  o.stoveFlame = w.emitters().some((/** @type {{ object: string; kind: string; intensity: number; }} */ e) => e.object === 'camp_stove' && e.kind === 'flame' && e.intensity > 0)
   return o
 })
 check('fireplace, wood stove and campfire light: fire and smoke emitters', ['fireplace', 'wood_stove', 'campfire'].every((id) => rural[id].lit && rural[id].kinds.includes('fire') && rural[id].kinds.includes('smoke')), { fireplace: rural.fireplace, wood_stove: rural.wood_stove, campfire: rural.campfire })
@@ -218,7 +235,7 @@ check('grid back: TV powered again', pw.backPowered)
 const lamp = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const L = s.lamps.find((l) => l.id === 'lamp_bath')
+  const L = s.lamps.find((/** @type {{ id: string; }} */ l) => l.id === 'lamp_bath')
   const o = { off: w.power.isOn('lamp_bath', 'lamp'), light0: L.light.intensity }
   w.act('switch_bath:use_switch')
   s.step(1)
@@ -255,10 +272,10 @@ const panel = await E(() => {
   o.lightsAct = w.act('electrical_panel:toggle_breaker_lights')
   s.step(1)
   o.lampCut = !w.power.isPowered('lamp_bath', 'lamp')
-  o.lampLight = s.lamps.find((l) => l.id === 'lamp_bath').light.intensity
+  o.lampLight = s.lamps.find((/** @type {{ id: string; }} */ l) => l.id === 'lamp_bath').light.intensity
   o.tvStill = w.power.isPowered('tv', 'tv')
   o.rocker = w.partT('electrical_panel', 'breaker_lights')
-  o.label = w.interactables().find((i) => i.id === 'electrical_panel:toggle_breaker_lights').label
+  o.label = w.interactables().find((/** @type {{ id: string; }} */ i) => i.id === 'electrical_panel:toggle_breaker_lights').label
   w.act('electrical_panel:toggle_breaker_lights')
   w.act('electrical_panel:toggle_breaker_sockets')
   s.step(1)
@@ -270,7 +287,7 @@ const panel = await E(() => {
   w.act('tv:use_tv')
   w.act('switch_bath:use_switch')
   w.setPart('electrical_panel', 'door', 0, true)
-  const meter = w.interactables().filter((i) => i.object === 'power_meter').map((i) => i.id)
+  const meter = w.interactables().filter((/** @type {{ object: string; }} */ i) => i.object === 'power_meter').map((i) => i.id)
   o.meter = meter
   return o
 })
@@ -289,13 +306,13 @@ const water = await E(() => {
   w.act('shower:use_shower')
   s.step(1)
   o.flowing = w.water.isFlowing('shower', 'shower')
-  o.emitter = w.emitters().some((e) => e.object === 'shower' && e.kind === 'water')
+  o.emitter = w.emitters().some((/** @type {{ object: string; kind: string; }} */ e) => e.object === 'shower' && e.kind === 'water')
   o.used = o.start - w.water.level(tank)
   s.drainTank()
   s.step(1)
   o.emptyLevel = w.water.level(tank)
   o.flowingWhenEmpty = w.water.isFlowing('shower', 'shower')
-  o.emitterWhenEmpty = w.emitters().some((e) => e.object === 'shower' && e.kind === 'water')
+  o.emitterWhenEmpty = w.emitters().some((/** @type {{ object: string; kind: string; }} */ e) => e.object === 'shower' && e.kind === 'water')
   s.setRain(true)
   s.step(10)
   o.afterRain = w.water.level(tank)
@@ -342,7 +359,7 @@ const cl = await E(() => {
   const softs = (w.get('clothesline').spec.soft || []).map((x) => x.id)
   s.setView({ x: 4.0, z: 12.7, eye: 1.6, yaw: 0, pitch: 0 })
   s.step(0.5)
-  const o = { clothes: softs.length, colliders: w.colliders().filter((c) => c.object === 'clothesline').map((c) => c.id), maxSway: 0, blocked: false }
+  const o = { clothes: softs.length, colliders: w.colliders().filter((/** @type {{ object: string; }} */ c) => c.object === 'clothesline').map((c) => c.id), maxSway: 0, blocked: false }
   for (let i = 0; i < 40; i++) {
     s.walk(0, -1, 0.1)
     for (const id of softs) {
@@ -354,7 +371,7 @@ const cl = await E(() => {
   o.x = s.player.x
   return o
 })
-check('clothes are never colliders (only the poles)', cl.colliders.every((id) => /pole/.test(id)) && cl.colliders.length >= 1, cl.colliders)
+check('clothes are never colliders (only the poles)', cl.colliders.every((/** @type {string} */ id) => /pole/.test(id)) && cl.colliders.length >= 1, cl.colliders)
 check('walking through the clothes: passed through, no collision', cl.z < 10.4, { z: +cl.z.toFixed(2) })
 check('clothes sway when pushed', cl.maxSway > 0.02, { maxSway: +cl.maxSway.toFixed(3) })
 
@@ -371,7 +388,7 @@ const mail = await E(() => {
   s.events.length = 0
   for (let k = 1; k <= 4 && !o.text; k++) {
     w.act(`mailbox:read_${k}`)
-    const m = s.events.find((e) => e.type === 'message')
+    const m = s.events.find((/** @type {{ type: string; }} */ e) => e.type === 'message')
     if (m) o.text = m.text
   }
   return o
@@ -443,6 +460,11 @@ await E(() => window.__showroom.setQuality('high'))
 // ------------------------------------------------------------------------------------------------------------------------------
 // Screenshots (high quality, desktop): the scene is set up through the same world calls a player would trigger
 // ------------------------------------------------------------------------------------------------------------------------------
+/**
+ * @param {string} name
+ * @param {string} setup
+ * @param {{ x: number; z: number; eye?: number; yaw?: number; pitch?: number; look?: number[]; fov?: number; }} p
+ */
 async function shot(name, setup, p, ctxPage = page) {
   await ctxPage.evaluate(
     ([code, view]) => {

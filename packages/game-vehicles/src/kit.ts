@@ -158,7 +158,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   kit.configure = function (o: any) {
     o = o || {}
     if (o.bands)
-      o.bands.forEach(function (b: any, i: number) {
+      o.bands.forEach(function (b: number, i: number) {
         if (kit.bands[i] && b) Object.assign(kit.bands[i], b)
       })
     if (o.zoneEffects)

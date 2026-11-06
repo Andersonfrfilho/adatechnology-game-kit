@@ -16,7 +16,14 @@ const INTERNAL_IMPORT = /['"](@adatechnology\/[a-z0-9-]+)(?:\/[^'"]*)?['"]/g
 const TESTING_ONLY_SOURCE = /^src\/(test-area|bench)\//
 const RUNTIME_FIELDS = ['dependencies', 'peerDependencies', 'optionalDependencies']
 
+/**
+ * A package.json as this check reads it.
+ * @typedef {{ name?: string, dependencies?: Record<string, string>, devDependencies?: Record<string, string>, peerDependencies?: Record<string, string>, optionalDependencies?: Record<string, string> } & Record<string, unknown>} Manifest
+ */
+/** @typedef {(message: string) => unknown} Report */
+
 // Declared on purpose without an import: package -> { dependency: reason }.
+/** @type {Record<string, Record<string, string>>} */
 const DECLARED_WITHOUT_IMPORT = {
   'game-floorplan-commercial': {
     '@adatechnology/game-floorplan-residential': 'registration order: the pack reuses residential libraries and palette, so residential must be registered first',
@@ -26,6 +33,7 @@ const DECLARED_WITHOUT_IMPORT = {
   },
 }
 
+/** @param {string} path @returns {unknown} */
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'))
 
 const packageDirectories = readdirSync(join(ROOT, 'packages'), { withFileTypes: true })
@@ -33,6 +41,7 @@ const packageDirectories = readdirSync(join(ROOT, 'packages'), { withFileTypes: 
   .map((entry) => entry.name)
   .sort()
 
+/** @param {string} directory @returns {string[]} */
 function listSourceFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory()) return IGNORED_DIRECTORIES.has(entry.name) ? [] : listSourceFiles(join(directory, entry.name))
@@ -41,7 +50,9 @@ function listSourceFiles(directory) {
 }
 
 // Internal packages imported by a package, split by where they are imported: production source, test-only source, tests and scripts.
+/** @param {string} packageDirectory */
 function collectInternalImports(packageDirectory) {
+  /** @type {Record<'production' | 'testingSource' | 'outsideSource', Set<string>>} */
   const imports = { production: new Set(), testingSource: new Set(), outsideSource: new Set() }
   for (const file of listSourceFiles(packageDirectory)) {
     const relativePath = relative(packageDirectory, file)
@@ -51,10 +62,12 @@ function collectInternalImports(packageDirectory) {
   return imports
 }
 
+/** @param {string} directory @param {Manifest} manifest @param {Report} report */
 function checkDeclaredEqualsImported(directory, manifest, report) {
   const imports = collectInternalImports(join(ROOT, 'packages', directory))
   const importedAnywhere = new Set([...imports.production, ...imports.testingSource, ...imports.outsideSource])
-  const declaredIn = (field) => Object.keys(manifest[field] ?? {}).filter((name) => name.startsWith(INTERNAL_SCOPE))
+  /** @param {string} field */
+  const declaredIn = (field) => Object.keys(/** @type {Record<string, string> | undefined} */ (manifest[field]) ?? {}).filter((name) => name.startsWith(INTERNAL_SCOPE))
   const runtimeDeclared = new Set(RUNTIME_FIELDS.flatMap(declaredIn))
   const allDeclared = new Set([...runtimeDeclared, ...declaredIn('devDependencies')])
   const allowed = DECLARED_WITHOUT_IMPORT[directory] ?? {}
@@ -78,13 +91,15 @@ function checkDeclaredEqualsImported(directory, manifest, report) {
 // "Everything is typed" (CLAUDE.md section 10): no package turns the strict checks off and no source file opts out with @ts-nocheck.
 // The ones below predate the rule; each is removed from its list when the package is fixed, and nothing new may be added.
 const STRICT_OFF_KNOWN = new Set(['game-floorplan-three'])
+/** @type {Set<string>} */
 const TS_NOCHECK_KNOWN = new Set([])
 const STRICT_FLAGS = ['strict', 'noImplicitAny', 'strictNullChecks', 'noImplicitThis', 'strictFunctionTypes']
 const TS_NOCHECK = /^\s*\/\/\s*@ts-nocheck\b/m
 
+/** @param {string} directory @param {Report} report */
 function checkTyping(directory, report) {
   const packageDirectory = join(ROOT, 'packages', directory)
-  const options = readJson(join(packageDirectory, 'tsconfig.json')).compilerOptions ?? {}
+  const options = /** @type {{ compilerOptions?: Record<string, unknown> }} */ (readJson(join(packageDirectory, 'tsconfig.json'))).compilerOptions ?? {}
   const relaxed = STRICT_FLAGS.filter((flag) => options[flag] === false)
   if (relaxed.length > 0 && !STRICT_OFF_KNOWN.has(directory)) report(`tsconfig.json turns off ${relaxed.join(', ')}: everything is typed (CLAUDE.md section 10)`)
   if (relaxed.length === 0 && STRICT_OFF_KNOWN.has(directory)) report('tsconfig.json is strict now: remove it from STRICT_OFF_KNOWN in tools/check-packages.mjs')
@@ -96,10 +111,12 @@ function checkTyping(directory, report) {
   }
 }
 
+/** @type {string[]} */
 const problems = []
 
 for (const directory of packageDirectories) {
-  const manifest = readJson(join(ROOT, 'packages', directory, 'package.json'))
+  const manifest = /** @type {Manifest} */ (readJson(join(ROOT, 'packages', directory, 'package.json')))
+  /** @type {Report} */
   const report = (message) => problems.push(`packages/${directory}: ${message}`)
 
   for (const field of DEPENDENCY_FIELDS) {
@@ -109,7 +126,7 @@ for (const directory of packageDirectories) {
   }
 
   for (const field of ['dependencies', 'optionalDependencies']) {
-    if (manifest[field]?.three) report(`three is in ${field}; it must be a peerDependency`)
+    if (/** @type {Record<string, string> | undefined} */ (manifest[field])?.three) report(`three is in ${field}; it must be a peerDependency`)
   }
   checkDeclaredEqualsImported(directory, manifest, report)
   checkTyping(directory, report)
@@ -119,7 +136,9 @@ for (const directory of packageDirectories) {
   if (threePeer !== undefined && !manifest.devDependencies?.three) report('peerDependencies.three needs a devDependency three for the tests')
 }
 
-const changesetConfig = readJson(join(ROOT, '.changeset', 'config.json'))
+const changesetConfig = /** @type {{ ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH?: { onlyUpdatePeerDependentsWhenOutOfRange?: boolean } }} */ (
+  readJson(join(ROOT, '.changeset', 'config.json'))
+)
 const unsafeOptions = changesetConfig.___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH ?? {}
 if (unsafeOptions.onlyUpdatePeerDependentsWhenOutOfRange !== true) {
   problems.push('.changeset/config.json: ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange must be true')

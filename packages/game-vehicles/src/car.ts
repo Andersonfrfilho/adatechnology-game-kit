@@ -354,7 +354,7 @@ export function installCar(kit: Kit) {
   }
   /* Fender flare: an arched strip over the wheel arch, on both sides.
      x, y: wheel centre; r: arch radius; z: half width where it attaches; o: { w (strip width), t (thickness), mat, a0 (start angle), sides } */
-  kit.archFlare = function (c: BuildContext, x: any, y: any, r: number, z: number, o: any) {
+  kit.archFlare = function (c: BuildContext, x: number, y: number, r: number, z: number, o: any) {
     o = o || {}
     const w = o.w || 0.07
     const t = o.t || 0.03

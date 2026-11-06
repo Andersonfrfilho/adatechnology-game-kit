@@ -51,6 +51,9 @@ const context = await browser.newContext({ viewport: { width: 1280, height: 720 
 await context.route('**/*', (route) => (/^(file|data|blob|about):/.test(route.request().url()) ? route.continue() : route.abort()))
 // the probe: every node start the engine makes, with how far ahead of the audio clock it is scheduled
 await context.addInitScript(() => {
+  /**
+     * @type {{ at: number; lead: number; }[]}
+     */
   const starts = []
   window.__soundStarts = starts
   for (const Node of [window.AudioBufferSourceNode, window.OscillatorNode]) {
@@ -110,27 +113,30 @@ await page.evaluate(() => {
 })
 await page.evaluate((floors) => {
   const room = window.__testRoom
-  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], i) => ({ rect: [-13 + i * 3.6, 3, -13 + i * 3.6 + 3, 13.6], surface: profile })) })
+  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], /** @type {number} */ i) => ({ rect: [-13 + i * 3.6, 3, -13 + i * 3.6 + 3, 13.6], surface: profile })) })
 }, FLOORS)
 }
 
 /** Holds the keys until `done()` (polled in the page) is true or `ms` pass, and answers the wall clock the keys went up. */
-const holdUntil = async (keys, done, ms) => {
+const holdUntil = async (/** @type {string[]} */ keys, /** @type {string} */ done, /** @type {number} */ ms) => {
   for (const k of keys) await page.keyboard.down(k)
   const until = Date.now() + ms
   while (Date.now() < until && !(await page.evaluate(done))) await page.waitForTimeout(150)
   for (const k of [...keys].reverse()) await page.keyboard.up(k)
   return now()
 }
-const count = (list, test = '') => page.evaluate(([l, s]) => window[l].filter((e) => !s || (e.id ?? e.type ?? '').startsWith(s)).length, [list, test])
-const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
-const tool = (id) => page.evaluate((i) => window.__testRoom.setTool(i), id)
+const count = (/** @type {string} */ list, test = '') => page.evaluate(([l, s]) => window[l].filter((e) => !s || (e.id ?? e.type ?? '').startsWith(s)).length, [list, test])
+const look = (/** @type {number[]} */ eye, /** @type {number[]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
+const tool = (/** @type {string} */ id) => page.evaluate((i) => window.__testRoom.setTool(i), id)
 const now = () => page.evaluate(() => performance.now())
 
 
 // 0.26 m from the side of the shelf's upright: inside the reach of every tool (the knife's is 0.4 m)
 const AT_SHELF = [-2.62, 1.5, 0]
 // the CI and this container have no GPU: the room runs at a few frames per second there, so each phase waits for the last blow to land before the next one starts
+    /**
+     * @type {null}
+     */
 let camera = null
 // each page load records its own clocks (performance.now starts again): a phase is scored against the load it ran in
 let load = -1
@@ -146,13 +152,13 @@ const fresh = async () => {
 }
 /** One blow: uses the tool (or kicks) and waits for the room to swing it (a `strike` or `melee` line); a tool still drawing or recovering ignores the
  * use, so it tries again, up to three times. Then waits for the blow to land. */
-const blow = async (kick) => {
+const blow = async (/** @type {boolean} */ kick) => {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const before = await page.evaluate(() => window.__lines.filter((l) => l.type === 'strike' || l.type === 'melee').length)
+    const before = await page.evaluate(() => window.__lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'strike' || l.type === 'melee').length)
     await page.evaluate((k) => (k ? window.__testRoom.kick() : window.__testRoom.use()), kick)
     const until = Date.now() + 4000
     while (Date.now() < until) {
-      if (await page.evaluate((n) => window.__lines.filter((l) => l.type === 'strike' || l.type === 'melee').length > n, before)) {
+      if (await page.evaluate((/** @type {number} */ n) => window.__lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'strike' || l.type === 'melee').length > n, before)) {
         await page.waitForTimeout(1500)
         return
       }
@@ -164,7 +170,7 @@ const phase = async (id, expect, run, settle = 2000) => {
   const from = await now()
   const keysUp = await run()
   await page.waitForTimeout(settle)
-  const at = await page.evaluate(() => ({ position: window.__testRoom.playerPosition.map((v) => Math.round(v * 100) / 100), camera: window.__testRoom.cameraMode }))
+  const at = await page.evaluate(() => ({ position: window.__testRoom.playerPosition.map((/** @type {number} */ v) => Math.round(v * 100) / 100), camera: window.__testRoom.cameraMode }))
   phases.push({ id, camera, load, expect, from, to: await now(), keysUp: typeof keysUp === 'number' ? keysUp : null, at })
 }
 
@@ -230,7 +236,7 @@ writeFileSync(join(shots, 'sound-sync-raw.json'), JSON.stringify({ phases, datas
 
 // ---- scoring --------------------------------------------------------------------------------------------------------------------------------------
 let data = null
-const within = (list, p) => list.filter((e) => e.at >= p.from && e.at <= p.to)
+const within = (list, p) => list.filter((/** @type {{ at: number; }} */ e) => e.at >= p.from && e.at <= p.to)
 /** ms from `at` to the moment the first node of the play after it sounds: the wait to the play call, the deferred start, and how far ahead it is scheduled. */
 // The play that answers an event is the one of that id nearest to it in the room's time (the same frame, most of the time: the room may log the
 // event before or after it plays the sound); the delay counts from the earlier of the two in wall time.
@@ -239,12 +245,15 @@ const soundDelay = (event, id) => {
   let play = null
   for (const x of data.plays) if (x.id === id && Math.abs(x.t - t) <= 0.25 && (!play || Math.abs(x.t - t) < Math.abs(play.t - t))) play = x
   if (!play) return null
-  const start = data.starts.find((s, i) => i >= play.startsBefore && s.at >= play.at - 1)
+  const start = data.starts.find((/** @type {{ at: number; }} */ s, /** @type {number} */ i) => i >= play.startsBefore && s.at >= play.at - 1)
   return start ? Math.round((start.at - Math.min(event.at, play.at) + start.lead) * 10) / 10 : null
 }
 const takesOf = (plays, id) => plays.filter((p) => p.id === id).map((p) => p.take)
 const repeats = (takes) => takes.filter((t, i) => i > 0 && t === takes[i - 1]).length
 const rows = []
+/**
+ * @type {string[]}
+ */
 const failures = []
 const check = (row, ok, label) => {
   row.checks.push({ ok, label })
@@ -255,12 +264,12 @@ for (const p of phases) {
   const plays = within(data.plays, p)
   const lines = within(data.lines, p)
   // a foot put down after the keys went up is the body settling: neither it nor its sound is the walk
-  const feet = within(data.feet, p).filter((f) => p.keysUp === null || f.at <= p.keysUp)
+  const feet = within(data.feet, p).filter((/** @type {{ at: number; }} */ f) => p.keysUp === null || f.at <= p.keysUp)
   const row = { phase: p.id, at: p.at, ids: [...new Set(plays.map((x) => x.id))], checks: [], numbers: {} }
   if (p.expect.footstep) {
     // a footstep after the keys went up is the body settling, whatever the gait was
-    const steps = plays.filter((x) => x.id.startsWith('footstep_') && (p.keysUp === null || x.at <= p.keysUp))
-    const delays = feet.map((f) => soundDelay(f, p.expect.footstep)).filter((d) => d !== null)
+    const steps = plays.filter((/** @type {{ id: string; at: number; }} */ x) => x.id.startsWith('footstep_') && (p.keysUp === null || x.at <= p.keysUp))
+    const delays = feet.map((f) => soundDelay(f, p.expect.footstep)).filter((/** @type {null} */ d) => d !== null)
     row.numbers = { footfalls: feet.length, footsteps: steps.length, delaysMs: delays, takes: takesOf(plays, p.expect.footstep) }
     check(row, feet.length >= 2, `footfalls from the body: ${feet.length}`)
     check(row, steps.length >= feet.length - 1 && steps.length > 0, `a footstep for each footfall: ${steps.length}/${feet.length}`)
@@ -270,36 +279,36 @@ for (const p of phases) {
   }
   if (p.expect.jump) {
     check(row, plays.some((x) => x.id === p.expect.jump), `C2 jump sound`)
-    const lands = lines.filter((l) => l.type === 'landing_player')
-    check(row, lands.length > 0 && plays.some((x) => x.id.startsWith('land_concrete_')), `C2 landing on concrete (${lands.length} landings)`)
-    row.numbers = { landings: lands.map((l) => l.data?.speedMs), landDelaysMs: lands.map((l) => soundDelay(l, plays.find((x) => x.id.startsWith('land_'))?.id ?? '')) }
-    check(row, row.numbers.landDelaysMs.every((d) => d !== null && d <= SYNC_MS), `C1 landing ≤ ${SYNC_MS} ms: ${JSON.stringify(row.numbers.landDelaysMs)}`)
+    const lands = lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'landing_player')
+    check(row, lands.length > 0 && plays.some((/** @type {{ id: string; }} */ x) => x.id.startsWith('land_concrete_')), `C2 landing on concrete (${lands.length} landings)`)
+    row.numbers = { landings: lands.map((l) => l.data?.speedMs), landDelaysMs: lands.map((l) => soundDelay(l, plays.find((/** @type {{ id: string; }} */ x) => x.id.startsWith('land_'))?.id ?? '')) }
+    check(row, row.numbers.landDelaysMs.every((/** @type {number | null} */ d) => d !== null && d <= SYNC_MS), `C1 landing ≤ ${SYNC_MS} ms: ${JSON.stringify(row.numbers.landDelaysMs)}`)
   }
   if ('hit' in p.expect) {
     // a contact is a `melee` line with the object it hit (a miss logs one too, without)
-    const melees = lines.filter((l) => l.type === 'melee' && l.data?.damage !== undefined && l.data?.distanceM !== undefined)
-    const strikes = lines.filter((l) => l.type === 'strike')
+    const melees = lines.filter((/** @type {{ type: string; data: { damage: undefined; distanceM: undefined; }; }} */ l) => l.type === 'melee' && l.data?.damage !== undefined && l.data?.distanceM !== undefined)
+    const strikes = lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'strike')
     const swings = plays.filter((x) => x.id === p.expect.swing)
     const hits = plays.filter((x) => p.expect.hit && x.id === p.expect.hit)
     const hitDelays = p.expect.hit ? melees.map((l) => soundDelay(l, p.expect.hit)) : []
     // the swing starts in the room's time a little before the contact (its loudest point is SWING_LEAD later): ms of room time from the swing to the contact
     // for each contact, the last swing that started before it
-    const peaks = melees.map((l) => {
-      const swing = swings.filter((s) => s.t <= l.t + 0.001).at(-1) ?? null
+    const peaks = melees.map((/** @type {{ t: number; }} */ l) => {
+      const swing = swings.filter((/** @type {{ t: number; }} */ s) => s.t <= l.t + 0.001).at(-1) ?? null
       return swing ? Math.round((l.t - swing.t) * 1000) : null
     })
     row.numbers = { strikes: strikes.length, contacts: melees.length, swings: swings.length, hits: hits.length, hitDelaysMs: hitDelays, swingStartBeforeContactMs: peaks, takes: takesOf(plays, p.expect.hit ?? p.expect.swing) }
     if (p.expect.swing) check(row, swings.length >= Math.max(1, strikes.length, p.expect.hit === null ? 1 : 0), `C2 a swing (${p.expect.swing}) per blow: ${swings.length}`)
     if (p.expect.hit) {
       check(row, hits.length === melees.length && hits.length > 0, `C2 the hit (${p.expect.hit}) on each contact: ${hits.length}/${melees.length}`)
-      check(row, hitDelays.every((d) => d !== null && d <= SYNC_MS), `C1 hit ≤ ${SYNC_MS} ms after the contact: ${JSON.stringify(hitDelays)}`)
-      if (p.expect.swing) check(row, peaks.length > 0 && peaks.every((d) => d !== null && d >= 0 && d <= 200), `C1 the swing starts 0-200 ms (room time) before the contact: ${JSON.stringify(peaks)}`)
-    } else check(row, !plays.some((x) => /^(punch|kick|knife|blunt|axe)_(hit|stab|slash|chop)|^shove_two/.test(x.id)), 'C2 no hit sound into the air')
+      check(row, hitDelays.every((/** @type {number | null} */ d) => d !== null && d <= SYNC_MS), `C1 hit ≤ ${SYNC_MS} ms after the contact: ${JSON.stringify(hitDelays)}`)
+      if (p.expect.swing) check(row, peaks.length > 0 && peaks.every((/** @type {number | null} */ d) => d !== null && d >= 0 && d <= 200), `C1 the swing starts 0-200 ms (room time) before the contact: ${JSON.stringify(peaks)}`)
+    } else check(row, !plays.some((/** @type {{ id: string; }} */ x) => /^(punch|kick|knife|blunt|axe)_(hit|stab|slash|chop)|^shove_two/.test(x.id)), 'C2 no hit sound into the air')
     if (p.expect.series) {
       const takes = takesOf(plays, p.expect.hit)
       check(row, new Set(takes).size >= 4, `C5 ≥ 4 takes in ${takes.length} punches: ${new Set(takes).size}`)
       check(row, repeats(takes) === 0, 'C5 never the same take twice in a row')
-      check(row, plays.filter((x) => x.take === null).length === 0, `C9 nothing dropped: ${plays.filter((x) => x.take === null).map((x) => x.id).join(',') || 'none'}`)
+      check(row, plays.filter((/** @type {{ take: null; }} */ x) => x.take === null).length === 0, `C9 nothing dropped: ${plays.filter((/** @type {{ take: null; }} */ x) => x.take === null).map((x) => x.id).join(',') || 'none'}`)
     }
   }
   rows.push(row)

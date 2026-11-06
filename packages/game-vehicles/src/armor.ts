@@ -187,7 +187,7 @@ export function installArmor(kit: Kit) {
           const px = (pc[0] + pc[1]) / 2
           const plH = yTop - pc[2]
           const py = pc[2] + plH / 2
-          function zAt(x: any) {
+          function zAt(x: number) {
             const h = I.probe(c, new V3(x, py, s2 * (m.width / 2 + 2)), new V3(0, 0, -s2), 2 + m.width * 0.4)
             return h && Math.abs(h.p.z) > m.width * 0.3 ? h.p.z : (s2 * m.width) / 2
           }

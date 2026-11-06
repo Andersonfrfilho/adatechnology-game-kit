@@ -8,7 +8,7 @@
   const GI = GameInteractables
   const GT = GameInteractablesThree
   const HHP = GameInteractablesHousehold
-  const $ = (s) => document.querySelector(s)
+  const $ = (/** @type {string} */ s) => document.querySelector(s)
 
   // ---------------------------------------------------------------------------------------------------------------------------
   // Constants and small helpers
@@ -36,12 +36,15 @@
     house: 'Casa',
   }
 
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
-  const hash = (s) => {
+  const clamp = (/** @type {number} */ v, /** @type {number} */ a, /** @type {number} */ b) => Math.max(a, Math.min(b, v))
+  const hash = (/** @type {string} */ s) => {
     let h = 2166136261
     for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619)
     return h >>> 0
   }
+  /**
+     * @param {number} seed
+     */
   function mulberry(seed) {
     let a = seed >>> 0
     return () => {
@@ -81,11 +84,11 @@
     t.anisotropy = anisotropy || 4
     return t
   }
-  const rgb = (r, g, b) => `rgb(${r | 0},${g | 0},${b | 0})`
+  const rgb = (/** @type {number} */ r, /** @type {number} */ g, /** @type {number} */ b) => `rgb(${r | 0},${g | 0},${b | 0})`
 
   function woodTexture() {
     const rnd = mulberry(7)
-    return canvasTexture(512, 512, (g, w, h) => {
+    return canvasTexture(512, 512, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; beginPath: () => void; moveTo: (arg0: number, arg1: number) => void; lineTo: (arg0: number, arg1: number) => void; stroke: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       const planks = 6
       const pw = w / planks
       for (let i = 0; i < planks; i++) {
@@ -113,6 +116,11 @@
       }
     })
   }
+  /**
+     * @param {string} a
+     * @param {string} b
+     * @param {string} grout
+     */
   function tileTexture(a, b, grout) {
     return canvasTexture(256, 256, (g, w, h) => {
       g.fillStyle = grout
@@ -134,7 +142,7 @@
   }
   function grassTexture() {
     const rnd = mulberry(3)
-    return canvasTexture(256, 256, (g, w, h) => {
+    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#5d8c3e'
       g.fillRect(0, 0, w, h)
       for (let i = 0; i < 3200; i++) {
@@ -146,7 +154,7 @@
   }
   function concreteTexture() {
     const rnd = mulberry(5)
-    return canvasTexture(256, 256, (g, w, h) => {
+    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; strokeRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#b9b6ae'
       g.fillRect(0, 0, w, h)
       for (let i = 0; i < 2500; i++) {
@@ -160,7 +168,7 @@
     })
   }
   function rugTexture() {
-    return canvasTexture(256, 256, (g, w, h) => {
+    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; strokeRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; save: () => void; translate: (arg0: number, arg1: number) => void; rotate: (arg0: number) => void; restore: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#8c4a3a'
       g.fillRect(0, 0, w, h)
       g.strokeStyle = '#e8d6a8'
@@ -194,6 +202,9 @@
     { n: [0, 0, -1], v: [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]] },
   ]
   class BoxBatch {
+    /**
+       * @param {number} seed
+       */
     constructor(seed) {
       this.pos = []
       this.nor = []
@@ -226,6 +237,10 @@
         this.idx.push(base, base + 1, base + 2, base, base + 2, base + 3)
       }
     }
+    /**
+       * @param {boolean} cast
+       * @param {boolean} receive
+       */
     mesh(material, cast, receive) {
       const g = new T.BufferGeometry()
       g.setAttribute('position', new T.Float32BufferAttribute(this.pos, 3))
@@ -264,6 +279,14 @@
     out.setAttribute('color', new T.Float32BufferAttribute(col, 3))
     return out
   }
+  /**
+     * @param {number} x0
+     * @param {number} z0
+     * @param {number} x1
+     * @param {number} z1
+     * @param {number} y
+     * @param {number} meters
+     */
   function texturedPlane(x0, z0, x1, z1, y, material, meters) {
     const g = new T.PlaneGeometry(x1 - x0, z1 - z0)
     g.rotateX(-Math.PI / 2)
@@ -383,10 +406,10 @@
 
     // walls running along x (thickness z0..z1) or along z (thickness x0..x1)
     function run(axis, c0, c1, a, b, o) {
-      const ops = (o.openings || []).slice().sort((p, r) => p.a - r.a)
+      const ops = (o.openings || []).slice().sort((/** @type {{ a: number; }} */ p, /** @type {{ a: number; }} */ r) => p.a - r.a)
       const H = CEIL
-      const at = (u0, v0, u1, v1) => (axis === 'x' ? [u0, v0, c0, u1, v1, c1] : [c0, v0, u0, c1, v1, u1])
-      const piece = (u0, u1, y0, y1) => {
+      const at = (/** @type {number} */ u0, /** @type {number} */ v0, /** @type {number} */ u1, /** @type {number} */ v1) => (axis === 'x' ? [u0, v0, c0, u1, v1, c1] : [c0, v0, u0, c1, v1, u1])
+      const piece = (/** @type {number} */ u0, /** @type {number} */ u1, /** @type {number} */ y0, /** @type {number} */ y1) => {
         if (u1 - u0 < 0.002 || y1 - y0 < 0.002) return
         const [x0, ya, z0, x1, yb, z1] = at(u0, y0, u1, y1)
         const colors = axis === 'x' ? [CAP, CAP, CAP, CAP, o.plus, o.minus] : [o.plus, o.minus, CAP, CAP, CAP, CAP]
@@ -410,7 +433,7 @@
         if (op.y1 < H) piece(op.a, op.b, op.y1, H)
         const t = 0.012
         const f = 0.07
-        const frame = (u0, u1, y0, y1) => {
+        const frame = (/** @type {number} */ u0, /** @type {number} */ u1, /** @type {number} */ y0, /** @type {number} */ y1) => {
           const [x0, ya, z0, x1, yb, z1] = at(u0, y0, u1, y1)
           if (axis === 'x') trim.box(x0, ya, z0 - t, x1, yb, z1 + t, TRIM, 0)
           else trim.box(x0 - t, ya, z0, x1 + t, yb, z1, TRIM, 0)
@@ -423,7 +446,7 @@
           // window: frame, mullion, sill, glass
           const mid = (c0 + c1) / 2
           const bar = 0.045
-          const fr = (u0, u1, y0, y1) => {
+          const fr = (/** @type {number} */ u0, /** @type {number} */ u1, /** @type {number} */ y0, /** @type {number} */ y1) => {
             const [x0, ya, z0, x1, yb, z1] = at(u0, y0, u1, y1)
             if (axis === 'x') trim.box(x0, ya, mid - 0.03, x1, yb, mid + 0.03, TRIM, 0)
             else trim.box(mid - 0.03, ya, z0, mid + 0.03, yb, z1, TRIM, 0)
@@ -433,7 +456,7 @@
           fr(op.a, op.b, op.y0, op.y0 + bar)
           fr(op.a, op.b, op.y1 - bar, op.y1)
           fr((op.a + op.b) / 2 - 0.02, (op.a + op.b) / 2 + 0.02, op.y0, op.y1)
-          const sill = (u0, u1, y0, y1) => {
+          const sill = (/** @type {number} */ u0, /** @type {number} */ u1, /** @type {number} */ y0, /** @type {number} */ y1) => {
             const [x0, ya, z0, x1, yb, z1] = at(u0, y0, u1, y1)
             if (axis === 'x') trim.box(x0, ya, z0 - 0.05, x1, yb, z1 + 0.05, TRIM, 0)
             else trim.box(x0 - 0.05, ya, z0, x1 + 0.05, yb, z1, TRIM, 0)
@@ -515,11 +538,21 @@
     // beyond the terrain's edge: the same grass, under it
     for (const r of ring) env.group.add(texturedPlane(r[0], r[1], r[2], r[3], -0.02, grass, 3))
     // fence (lot): pickets and rails, gate gap on the south side
+    /**
+       * @param {number} x0
+       * @param {number} x1
+       * @param {number} z
+       */
     function fenceX(x0, x1, z) {
       for (const [ya, yb] of [[0.25, 0.32], [0.75, 0.82]]) trim.box(x0, ya, z - 0.03, x1, yb, z + 0.03, 0xd7cfc1, 0.02)
       for (let x = x0; x < x1 - 0.05; x += 0.14) props.box(x, 0, z - 0.012, x + 0.09, 1.05, z + 0.012, 0xe4ddcf, 0.08)
       env.solidRects.push([x0, z - 0.05, x1, z + 0.05])
     }
+    /**
+       * @param {number} z0
+       * @param {number} z1
+       * @param {number} x
+       */
     function fenceZ(z0, z1, x) {
       for (const [ya, yb] of [[0.25, 0.32], [0.75, 0.82]]) trim.box(x - 0.03, ya, z0, x + 0.03, yb, z1, 0xd7cfc1, 0.02)
       for (let z = z0; z < z1 - 0.05; z += 0.14) props.box(x - 0.012, 0, z, x + 0.012, 1.05, z + 0.09, 0xe4ddcf, 0.08)
@@ -533,7 +566,7 @@
     for (const [fx, fz] of [[-1, 0], [-1, 14], [14, 0], [14, 14], [-1, 7], [14, 7]]) props.box(fx - 0.06, 0, fz - 0.06, fx + 0.06, 1.2, fz + 0.06, 0xb9ad98, 0.02)
 
     // dining table, coffee table, picture frames
-    const table = (cx, cz, w, d, h, top, leg) => {
+    const table = (/** @type {number} */ cx, /** @type {number} */ cz, /** @type {number} */ w, /** @type {number} */ d, /** @type {number} */ h, /** @type {number} */ top, /** @type {number} */ leg) => {
       props.box(cx - w / 2, h - 0.045, cz - d / 2, cx + w / 2, h, cz + d / 2, top, 0.03)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) props.box(cx + sx * (w / 2 - 0.08) - 0.03, 0, cz + sz * (d / 2 - 0.08) - 0.03, cx + sx * (w / 2 - 0.08) + 0.03, h - 0.045, cz + sz * (d / 2 - 0.08) + 0.03, leg, 0.03)
       env.solidRects.push([cx - w / 2, cz - d / 2, cx + w / 2, cz + d / 2])
@@ -605,6 +638,9 @@
 
   /** entries: id -> { id, type, x, z, ry, item, name, root, group, parts, extra } */
   const entries = new Map()
+  /**
+     * @type {string[]}
+     */
   const order = []
 
   function buildVisual(type, item) {
@@ -634,7 +670,7 @@
       if (mk === 'glass' || mk === 'water' || mk === 'emissive') o.castShadow = false
     })
     // TV: the only emissive mesh is the screen
-    if (spec.devices && spec.devices.some((d) => d.kind === 'screen')) {
+    if (spec.devices && spec.devices.some((/** @type {{ kind: string; }} */ d) => d.kind === 'screen')) {
       const mesh = e.group.children.find((c) => c.isMesh && c.userData.material === 'emissive')
       if (mesh) {
         let sc = screens.get(e.id)
@@ -718,6 +754,12 @@
 
   // --- lamps and the water tank: showroom-only objects, still driven by the engine --------------------------------------------
   const lamps = []
+  /**
+     * @param {string} id
+     * @param {number} x
+     * @param {number} z
+     * @param {string} name
+     */
   function placeLamp(id, x, z, name) {
     const spec = { type: 'ceiling_lamp', devices: [{ id: 'lamp', kind: 'lamp', watts: 40, circuit: 'lights' }], interactions: [] }
     world.add(id, spec, { x, y: 0, z, ry: 0 })
@@ -903,6 +945,10 @@
     fitAll()
   }
 
+  /**
+     * @param {number} x
+     * @param {number} z
+     */
   function wallBlocked(x, z) {
     for (const r of env.wallRects) if (x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3]) return true
     return false
@@ -932,7 +978,7 @@
       const spec = o.spec
       for (const d of spec.devices || []) {
         if (!d.plug) continue
-        const wire = (spec.wires || []).find((w) => w.id === `${d.id}_cord`)
+        const wire = (spec.wires || []).find((/** @type {{ id: string; }} */ w) => w.id === `${d.id}_cord`)
         const pts = (wire ? wire.points : [d.plug]).map((p) => toWorld(o.transform, p))
         const sid = world.power.pluggedInto(e.id, d.id)
         if (sid) {
@@ -1049,7 +1095,7 @@
   // Effects (smoke, fire, steam, water, flames), screens, lamps, rain
   // ---------------------------------------------------------------------------------------------------------------------------
   const effects = gfx.createEffects({ scene, camera, maxParticles: 2800, seed: 11, document })
-  const markerMat = new T.SpriteMaterial({ map: (() => canvasTexture(64, 64, (g, w, h) => {
+  const markerMat = new T.SpriteMaterial({ map: (() => canvasTexture(64, 64, (/** @type {{ beginPath: () => void; arc: (arg0: number, arg1: number, arg2: number, arg3: number, arg4: number) => void; lineWidth: number; strokeStyle: string; stroke: () => void; fillStyle: string; fill: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
     g.beginPath()
     g.arc(w / 2, h / 2, 22, 0, Math.PI * 2)
     g.lineWidth = 6
@@ -1083,6 +1129,9 @@
     scene.add(m)
     return { mesh: m, pos, base, N, t: 0 }
   })()
+  /**
+     * @param {number} dt
+     */
   function updateRain(dt) {
     if (!rain.mesh.visible) return
     rain.t += dt
@@ -1151,6 +1200,9 @@
       if (Math.abs(l.light.intensity - target) < 0.05) l.light.intensity = target
     }
   }
+  /**
+     * @param {number} dt
+     */
   function updateScreens(dt) {
     for (const [id, sc] of screens) {
       const on = world.power.isOn(id, 'tv') && world.power.isPowered(id, 'tv')
@@ -1173,11 +1225,23 @@
   const stick = { x: 0, y: 0 }
   let colliders = []
 
+  /**
+     * @param {number} x
+     * @param {number} z
+     * @param {number} r
+     * @param {number[]} rect
+     */
   function circleRect(x, z, r, rect) {
     const nx = clamp(x, rect[0], rect[2])
     const nz = clamp(z, rect[1], rect[3])
     return (x - nx) * (x - nx) + (z - nz) * (z - nz) < r * r
   }
+  /**
+     * @param {number} x
+     * @param {number} z
+     * @param {number} r
+     * @param {{ cx: number; cz: number; ry: number; hw: number; hd: number; }} c
+     */
   function circleObb(x, z, r, c) {
     const dx = x - c.cx
     const dz = z - c.cz
@@ -1189,6 +1253,10 @@
     const nz = clamp(lz, -c.hd, c.hd)
     return (lx - nx) * (lx - nx) + (lz - nz) * (lz - nz) < r * r
   }
+  /**
+     * @param {number} x
+     * @param {number} z
+     */
   function collides(x, z) {
     if (x < LOT.x0 || x > LOT.x1 || z < LOT.z0 || z > LOT.z1) return true
     for (const r of env.wallRects) if (circleRect(x, z, RADIUS, r)) return true
@@ -1199,6 +1267,10 @@
     }
     return false
   }
+  /**
+     * @param {number} dx
+     * @param {number} dz
+     */
   function tryMove(dx, dz) {
     const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / 0.08))
     const sx = dx / steps
@@ -1208,6 +1280,9 @@
       if (!collides(player.x, player.z + sz)) player.z += sz
     }
   }
+  /**
+     * @param {number} dt
+     */
   function movePlayer(dt) {
     let fwd = 0
     let side = 0
@@ -1246,6 +1321,11 @@
   function eyeState() {
     return { x: camera.position.x, y: camera.position.y, z: camera.position.z, yaw: player.yaw, pitch: player.pitch }
   }
+  /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
   function lookAt(x, y, z) {
     const dx = x - camera.position.x
     const dz = z - camera.position.z
@@ -1282,6 +1362,10 @@
       }
     }
   }
+  /**
+     * @param {number} x
+     * @param {number} z
+     */
   function freeSpotNear(x, z) {
     for (let r = 0.1; r < 2; r += 0.1) {
       for (let a = 0; a < 12; a++) {
@@ -1302,7 +1386,10 @@
   function currentTarget() {
     return world.target(eyeState(), { reach: 2.3, cone: 0.5 })
   }
-  /** Item slot looked at in an open container: { id, container, slot, stack, pos, angle, dist }. */
+  /**
+     * Item slot looked at in an open container: { id, container, slot, stack, pos, angle, dist }.
+     * @param {number} maxAngle
+     */
   function pickSlot(maxAngle) {
     const ex = camera.position.x
     const ey = camera.position.y
@@ -1410,6 +1497,9 @@
     }
     return true
   }
+  /**
+     * @param {{ x: number | undefined; z: number | undefined; eye: number | undefined; yaw: number | undefined; pitch: number | undefined; fov: number | undefined; }} v
+     */
   function setView(v) {
     if (v.x !== undefined) player.x = v.x
     if (v.z !== undefined) player.z = v.z
@@ -1442,7 +1532,10 @@
     return { id: `${TANK.id}:leak`, object: TANK.id, kind: 'water', pos: [TANK.x + 0.52, 0.55, TANK.z + 0.1], dir: [1, -0.25, 0.1], size: 0.09, intensity: 0.7 }
   }
 
-  /** One simulation step (no drawing). */
+  /**
+     * One simulation step (no drawing).
+     * @param {number} dt
+     */
   function sim(dt) {
     clock += dt
     colliders = world.colliders()
@@ -1489,6 +1582,9 @@
     lastCalls = renderer.info.render.calls
   }
 
+  /**
+     * @param {number} now
+     */
   function frame(now) {
     requestAnimationFrame(frame)
     if (paused) return
@@ -1522,6 +1618,11 @@
     panel: $('#panel'),
   }
   let toastTimer = 0
+  /**
+     * @param {string | null} text
+     * @param {string | undefined} [kind]
+     * @param {number | undefined} [ms]
+     */
   function showToast(text, kind, ms) {
     el.toast.textContent = text
     el.toast.className = kind || ''
@@ -1552,6 +1653,10 @@
     el.packEmpty.hidden = pack.length > 0
     el.packCount.textContent = String(total)
   }
+  /**
+     * @param {string | Node} main
+     * @param {string | null} sub
+     */
   function setPromptHtml(main, sub) {
     el.prompt.textContent = ''
     el.prompt.append(main)
@@ -1562,11 +1667,14 @@
       el.prompt.append(s)
     }
   }
-  const kbd = (k) => {
+  const kbd = (/** @type {string | null} */ k) => {
     const b = document.createElement('kbd')
     b.textContent = k
     return b
   }
+  /**
+     * @param {number} dt
+     */
   function updateHud(dt) {
     hudTimer -= dt
     if (hudTimer > 0) return
@@ -1671,6 +1779,9 @@
     renderPack()
     syncQuality()
   }
+  /**
+     * @param {boolean | undefined} open
+     */
   function setPanel(open) {
     el.panel.classList.toggle('open', open)
     $('#panelBtn').setAttribute('aria-expanded', String(open))
@@ -1727,6 +1838,9 @@
     }
     resize()
   }
+  /**
+     * @param {string | null} q
+     */
   function setQuality(q) {
     if (q !== 'high' && q !== 'game') return
     if (q === state.quality) return
@@ -1746,6 +1860,11 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   let locked = false
   let drag = null
+  /**
+     * @param {number} dx
+     * @param {number} dy
+     * @param {number} k
+     */
   function look(dx, dy, k) {
     player.yaw -= dx * k
     player.pitch = clamp(player.pitch - dy * k, -1.45, 1.45)
@@ -1804,8 +1923,11 @@
       $('#touch').hidden = false
       const st = $('#stick')
       const knob = $('#knob')
+      /**
+         * @type {null}
+         */
       let sid = null
-      const move = (ev) => {
+      const move = (/** @type {Event} */ ev) => {
         const r = st.getBoundingClientRect()
         const cx = r.left + r.width / 2
         const cy = r.top + r.height / 2
@@ -1828,7 +1950,7 @@
       st.addEventListener('pointermove', (ev) => {
         if (ev.pointerId === sid) move(ev)
       })
-      const stop = (ev) => {
+      const stop = (/** @type {{ pointerId: null; }} */ ev) => {
         if (ev.pointerId !== sid) return
         sid = null
         stick.x = stick.y = 0
@@ -1885,6 +2007,9 @@
       const dt = 1 / (hz || 30)
       for (let t = 0; t < seconds - 1e-9; t += dt) sim(dt)
     },
+    /**
+     * @param {boolean} on
+     */
     pause(on) {
       paused = on !== false
     },
@@ -1897,7 +2022,12 @@
     },
     drawCalls: () => lastCalls,
     itemCount: () => itemCount,
-    /** Walks by input for `seconds` with a world-space direction (dx, dz), through the same collision as the keyboard. */
+    /**
+     * Walks by input for `seconds` with a world-space direction (dx, dz), through the same collision as the keyboard.
+     * @param {number} dx
+     * @param {number} dz
+     * @param {number} seconds
+     */
     walk(dx, dz, seconds) {
       const yawSave = player.yaw
       player.yaw = Math.atan2(-dx, -dz)

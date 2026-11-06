@@ -98,7 +98,7 @@ export function installInterior(kit: Kit) {
     return g
   }
   /* Aircraft control yoke. */
-  kit.yoke = function (c: BuildContext, x: any, y: any, z: any, o: any) {
+  kit.yoke = function (c: BuildContext, x: number, y: number, z: number, o: any) {
     o = o || {}
     const mat = o.mat || MATERIALS.plastic
     c.rod(new V3(x + 0.25, y, z), new V3(x, y, z), 0.018, MATERIALS.chrome)

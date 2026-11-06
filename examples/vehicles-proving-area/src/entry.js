@@ -27,7 +27,7 @@ export function createModule(options = {}) {
     },
     ...options,
     locale,
-    onCertificate: (c) => {
+    onCertificate: (/** @type {{ vehicle: string | number; }} */ c) => {
       certificates[c.vehicle] = c
       options.onCertificate?.(c)
     },

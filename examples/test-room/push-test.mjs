@@ -16,25 +16,25 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?scene=push&table=0`, { timeout: 180000 })
-await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((s) => s.itemId === 'wardrobe'), null, { timeout: 180000 })
+await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((/** @type {{ itemId: string; }} */ s) => s.itemId === 'wardrobe'), null, { timeout: 180000 })
 await page.waitForTimeout(1500)
 
 const failures = []
-const check = (ok, label) => {
+const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
   if (!ok) failures.push(label)
 }
 const state = () =>
   page.evaluate(() => {
     const r = window.__testRoom
-    const at = (id) => r.spawned().find((s) => s.itemId === id)?.root.position
+    const at = (/** @type {string} */ id) => r.spawned().find((/** @type {{ itemId: string; }} */ s) => s.itemId === id)?.root.position
     return { push: r.push.state, player: [r.playerPosition[0], r.playerPosition[2]], nightstand: at('nightstand')?.z, bbq: at('bbq')?.z, wardrobe: at('wardrobe')?.z }
   })
-const shot = (name) => page.screenshot({ path: join(shots, `push-${name}.png`), timeout: 180000 })
+const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `push-${name}.png`), timeout: 180000 })
 const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
-const camera = (mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
+const camera = (/** @type {string} */ mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
 /** Holds E until the ring has gone `until` of the way (real seconds of a slow GL run). */
-const holdUntil = async (test) => {
+const holdUntil = async (/** @type {{ (): boolean; (): boolean; (): boolean; }} */ test) => {
   await page.keyboard.down('KeyE')
   await page.waitForFunction(test, null, { timeout: 60000, polling: 50 })
 }

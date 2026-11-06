@@ -26,7 +26,7 @@ export function installFluids(kit: Kit) {
      def: { fresh, dry (hex colours), dryTime (s until dry), roughFresh, roughDry, metalFresh, metalDry, wipeable (wiper/rain remove the fresh one) }
      Types without "fresh" (def.update(c, f, dt, i) returning true removes it) become fully custom fluids of the plugin. */
   kit.fluidTypes = {}
-  kit.defineFluid = function (key: any, def: any) {
+  kit.defineFluid = function (key: string, def: any) {
     const d = Object.assign({ dryTime: 600, roughFresh: 0.12, roughDry: 0.92, metalFresh: 0.15, metalDry: 0, wipeable: false }, def || {})
     d.key = key
     d.freshC = new THREE.Color(d.fresh || '#444444')
@@ -400,7 +400,7 @@ export function installFluids(kit: Kit) {
     }
     return evap
   }
-  function updateFluids(c: BuildContext, dt: any) {
+  function updateFluids(c: BuildContext, dt: number) {
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]
       f.t += dt

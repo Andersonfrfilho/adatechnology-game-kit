@@ -24,7 +24,7 @@ const check = (ok, label, data) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${data === undefined ? '' : ` ${JSON.stringify(data)}`}`)
   if (!ok) failures.push(label)
 }
-const shot = (name) => page.screenshot({ path: join(shots, `doors-house-${name}.png`), timeout: 180000 })
+const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `doors-house-${name}.png`), timeout: 180000 })
 const tapE = async () => {
   await page.keyboard.down('KeyE')
   await page.waitForTimeout(60)

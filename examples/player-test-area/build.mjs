@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
-const pkg = (name) => join(root, 'packages', name)
+const pkg = (/** @type {string} */ name) => join(root, 'packages', name)
 
 function findEsbuild() {
   const store = join(root, 'node_modules/.pnpm')
@@ -49,7 +49,7 @@ console.log(`dist/player-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
 const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
-  const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1')
+  const safe = (/** @type {string} */ s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')
   const at = page.lastIndexOf('</body>')
   if (at < 0) throw new Error('the room page has no </body>')

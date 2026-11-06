@@ -89,7 +89,7 @@ export function installParticles(kit: Kit) {
   }
   let SMOKE_TEXTURES: any = null
   let FIRE_TEXTURES: any = null
-  function puffMaterial(fire: boolean, col: any, op: any) {
+  function puffMaterial(fire: boolean, col: string, op: any) {
     if (!SMOKE_TEXTURES) {
       SMOKE_TEXTURES = [1, 2, 3, 4].map(function (k) {
         return puffTexture(k * 13, false)
@@ -304,7 +304,7 @@ export function installParticles(kit: Kit) {
       }
     }
   }
-  function burst(c: BuildContext, type: any, pFx: any, n: number, o: any) {
+  function burst(c: BuildContext, type: string, pFx: any, n: number, o: any) {
     o = o || {}
     const d = o.dir || new V3(0, 1, 0)
     const spd = o.speed || 2

@@ -1,15 +1,21 @@
 // The effects area: the bench module of @adatechnology/game-vfx-three with scenarios that play the catalogue the room lends it.
 import { buildScenarios } from './scenarios.js'
 
-const isEn = (locale) => locale === 'en'
+const isEn = (/** @type {string} */ locale) => locale === 'en'
 
 /** Wraps the module (`createVfxTestModule`) with the scenarios; they walk the catalogue the room's effects play. */
 export function createVfxArea({ createVfxTestModule, recipeIds, locale = 'pt-BR', ...options }) {
   const module = createVfxTestModule({ ...options, locale })
+  /**
+     * @type {undefined}
+     */
   let sink
   return {
     ...module,
-    scenarios: (loc) => buildScenarios(isEn(loc) ? 'en' : 'pt-BR', () => sink, () => splitCatalog(sink, recipeIds)),
+    scenarios: (/** @type {string} */ loc) => buildScenarios(isEn(loc) ? 'en' : 'pt-BR', () => sink, () => splitCatalog(sink, recipeIds)),
+    /**
+     * @param {{ effects: undefined; }} host
+     */
     attach(host) {
       sink = host.effects
       const detach = module.attach?.(host)

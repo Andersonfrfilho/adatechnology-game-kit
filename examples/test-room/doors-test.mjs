@@ -18,15 +18,15 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?scene=doors&table=0`, { timeout: 180000 })
-await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((s) => s.itemId === 'sedan'), null, { timeout: 240000 })
+await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((/** @type {{ itemId: string; }} */ s) => s.itemId === 'sedan'), null, { timeout: 240000 })
 await page.waitForTimeout(1500)
 
 const failures = []
-const check = (ok, label) => {
+const check = (/** @type {boolean} */ ok, /** @type {string} */ label) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}`)
   if (!ok) failures.push(label)
 }
-const shot = (name) => page.screenshot({ path: join(shots, `doors-${name}.png`), timeout: 180000 })
+const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `doors-${name}.png`), timeout: 180000 })
 const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
 /** Looks from where the player stands now (it walked to the handle) at a point. */
 const lookFromHere = (target) => page.evaluate((t) => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], t) }, target)
@@ -40,19 +40,19 @@ const overview = async (name, eye, target) => {
   await shot(name)
   await look([at[0], 1.7, at[2]], target)
 }
-const camera = (mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
+const camera = (/** @type {string} */ mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
 const ids = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z] })))
-const idOf = (item, n = 0) => ids.filter((s) => s.item === item)[n]
+const idOf = (/** @type {string} */ item, n = 0) => ids.filter((/** @type {{ item: string; }} */ s) => s.item === item)[n]
 const opening = (objectId, part) => page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [objectId, part])
 const door = () => page.evaluate(() => window.__testRoom.door)
-const lastAction = (type) => page.evaluate((t) => window.__testRoom.log.entries().filter((e) => e.type === t).length, type)
+const lastAction = (/** @type {string} */ type) => page.evaluate((t) => window.__testRoom.log.entries().filter((e) => e.type === t).length, type)
 /** A tap of E (shorter than the push hold), then waits for the hand to let go. */
 const tapE = async () => {
   await page.keyboard.down('KeyE')
   await page.waitForTimeout(60)
   await page.keyboard.up('KeyE')
 }
-const waitPhase = (phase) =>
+const waitPhase = (/** @type {string} */ phase) =>
   page.waitForFunction((p) => window.__testRoom.door?.phase === p || window.__testRoom.log.entries().slice(-1)[0]?.type === 'door_blocked', phase, { timeout: 90000, polling: 30 }).catch(async (e) => {
     console.log('waiting for', phase, JSON.stringify(await page.evaluate(() => ({ door: window.__testRoom.door, log: window.__testRoom.log.entries().slice(-5).map((x) => `${x.type} ${x.text} ${JSON.stringify(x.data ?? {})}`) }))))
     throw e
