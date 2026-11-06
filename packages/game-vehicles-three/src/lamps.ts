@@ -1,7 +1,8 @@
 /**
  * The lamps of a built vehicle switched on and off: position, low and high beam, fog lamps, the brake and reversing lamps and the cabin light. The glass of
  * each lamp the kit drew (`context.lights`) glows by the switch, its halo shows only when lit, and the beams that light the world are sources of the host's
- * light budget (`game-render-three`), never lights of their own. Everything it changes is put back by `dispose`.
+ * light budget (`game-render-three`), never lights of their own. The beacon lamps of an emergency vehicle (meshes the fleet tags `userData.lamp = 'beacon'`
+ * with their `beaconSide`, 0 or 1) flash one side and then the other. Everything it changes is put back by `dispose`.
  */
 import { isLightBudget, LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
@@ -19,11 +20,13 @@ export type LampSwitch = {
   /** Indicator lamps lit this instant (the controls blink them). */
   left: boolean
   right: boolean
+  /** The beacon: the side lit this instant (0 or 1), null with it off. Default off. */
+  beacon?: 0 | 1 | null
 }
 
 /** Glow of the lamp glass by switch, as a share of what the kit drew (the kit draws them lit), and the beams. */
 export const LAMP_RULES = {
-  glow: { head: { off: 0.04, position: 0.3, low: 1, high: 1.35 }, tail: { off: 0.15, on: 0.7, brake: 1.6 }, fog: { off: 0.04, on: 1.1 }, amber: { off: 0.1, on: 2.2 } },
+  glow: { head: { off: 0.04, position: 0.3, low: 1, high: 1.35 }, tail: { off: 0.15, on: 0.7, brake: 1.6 }, fog: { off: 0.04, on: 1.1 }, amber: { off: 0.1, on: 2.2 }, beacon: { off: 0.35, dark: 0.12, lit: 2.8 } },
   low: { color: 0xfff1d0, intensity: 2.4, distance: 32, angle: 0.42, penumbra: 0.55, decay: 1.6, drop: 0.09 },
   high: { color: 0xfff6e2, intensity: 3.6, distance: 70, angle: 0.3, penumbra: 0.45, decay: 1.4, drop: 0.015 },
   fog: { color: 0xfff0c8, intensity: 1.6, distance: 16, angle: 0.75, penumbra: 0.7, decay: 1.8, drop: 0.12 },
@@ -33,7 +36,7 @@ export const LAMP_RULES = {
 
 export interface VehicleLamps {
   /** What this vehicle has: fog lamps only when the kit drew them. */
-  readonly has: { head: boolean; tail: boolean; fog: boolean; indicators: boolean }
+  readonly has: { head: boolean; tail: boolean; fog: boolean; indicators: boolean; beacon: boolean }
   set(lamps: LampSwitch): void
   readonly state: LampSwitch
   dispose(): void
@@ -57,7 +60,11 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
     if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o as Glazed)) bulbs.push(o as Glazed)
   })
   if (bulbs.length) lamps.push({ kind: 'fog', inner: bulbs })
-  const has = { head: lamps.some((l) => l.kind === 'headlight'), tail: lamps.some((l) => l.kind === 'taillight'), fog: lamps.some((l) => l.kind === 'fog'), indicators: false }
+  const beacons: Array<{ mesh: Glazed; side: 0 | 1 }> = []
+  built.group.traverse((o: Object3D & Partial<Glazed>) => {
+    if (o.userData?.lamp === 'beacon' && o.material) beacons.push({ mesh: o as Glazed, side: o.userData.beaconSide === 1 ? 1 : 0 })
+  })
+  const has = { head: lamps.some((l) => l.kind === 'headlight'), tail: lamps.some((l) => l.kind === 'taillight'), fog: lamps.some((l) => l.kind === 'fog'), indicators: false, beacon: beacons.length > 0 }
   // the kit's lamp materials are shared by every vehicle: this one gets its own copies, given back on dispose
   const originals = new Map<Glazed, Glass>()
   const copies = new Map<Glass, Glass>()
@@ -73,6 +80,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
     mesh.material = copy
     return copy
   }
+  for (const b of beacons) own(b.mesh)
   const haloBase = new Map<object, number>()
   for (const l of lamps) {
     for (const m of l.inner) own(m)
@@ -154,6 +162,8 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
       else if (l.kind === 'fog') glow(l, state.fog ? g.fog.on : g.fog.off)
     }
     for (const m of amber) glowMesh(m, state[sideOf.get(m) ?? 'left'] ? g.amber.on : g.amber.off)
+    const lit = state.beacon ?? null
+    for (const b of beacons) glowMesh(b.mesh, lit === null ? g.beacon.off : lit === b.side ? g.beacon.lit : g.beacon.dark)
     // the low and the high beam are the same two spots, re-aimed: switching re-adds them with the other cone
     const beamId = state.mode === 'low' || state.mode === 'high' ? state.mode : null
     for (const id of ['low', 'high'] as const) beam(id, beamId === id, () => spots(front, LAMP_RULES[id]))
@@ -169,7 +179,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
       return { ...state }
     },
     set(next) {
-      if (next.mode === state.mode && next.fog === state.fog && next.interior === state.interior && next.brake === state.brake && next.reverse === state.reverse && next.left === state.left && next.right === state.right) return
+      if (next.mode === state.mode && next.fog === state.fog && next.interior === state.interior && next.brake === state.brake && next.reverse === state.reverse && next.left === state.left && next.right === state.right && (next.beacon ?? null) === (state.beacon ?? null)) return
       Object.assign(state, next)
       apply()
     },
@@ -178,15 +188,17 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
       sources.clear()
       for (const a of anchors) a.removeFromParent()
       anchors.length = 0
+      const giveBack = (m: Glazed): void => {
+        const copy = m.material
+        const original = originals.get(m)
+        if (!original) return
+        originals.delete(m)
+        m.material = original
+        if (copy && !Array.isArray(copy)) copy.dispose?.()
+      }
+      for (const b of beacons) giveBack(b.mesh)
       for (const l of lamps) {
-        for (const m of l.inner) {
-          const copy = m.material
-          const original = originals.get(m)
-          if (original) {
-            m.material = original
-            if (copy && !Array.isArray(copy)) copy.dispose?.()
-          }
-        }
+        for (const m of l.inner) giveBack(m)
         for (const h of l.halo ?? []) {
           h.visible = true
           const s = haloBase.get(h) ?? 1

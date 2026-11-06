@@ -2623,18 +2623,20 @@ export function installSuvPickupVan(fx: FleetContext): void {
           /* front beacon and rear lights */
           const beaconBar = [c.roundBox(0.3, 0.08, 1.5, 0.03, MT.trim, 0.6, m.top + 0.04, 0)]
           ;[-0.5, -0.17, 0.17, 0.5].forEach(function (z, i) {
-            beaconBar.push(
-              c.roundBox(
-                0.24,
-                0.1,
-                0.3,
-                0.04,
-                i % 2 ? MT.tail : CM('#f2f2f2', { emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0.6 }),
-                0.6,
-                m.top + 0.13,
-                z,
-              ),
+            const lamp = c.roundBox(
+              0.24,
+              0.1,
+              0.3,
+              0.04,
+              i % 2 ? MT.tail : CM('#f2f2f2', { emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0.6 }),
+              0.6,
+              m.top + 0.13,
+              z,
             )
+            // a beacon lamp: the lamps of the vehicle flash it with the others of its side (`game-vehicles-three` createVehicleLamps)
+            lamp.userData.lamp = 'beacon'
+            lamp.userData.beaconSide = z < 0 ? 0 : 1
+            beaconBar.push(lamp)
           })
           beaconBar.push(
             c.roundBox(

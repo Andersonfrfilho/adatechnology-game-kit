@@ -5,7 +5,7 @@ import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, M
 import { CABIN_BANK, LIBRARY_BANK, RADIO_BANK } from '@adatechnology/game-audio'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
 import { createSemiSimDriver } from '@adatechnology/game-vehicles-driving'
-import type { SemiDriver } from '@adatechnology/game-vehicles-driving'
+import type { SemiDriver, StorageStack } from '@adatechnology/game-vehicles-driving'
 import { certify, createProvingTests, startRun, statusOf, subjectSpec, withResult } from '@adatechnology/game-vehicles-proving'
 import type { ProvingCertificate, ProvingResult, ProvingRun, ProvingSubject, ProvingTestRegistry } from '@adatechnology/game-vehicles-proving'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
@@ -52,6 +52,10 @@ export interface ProvingModuleOptions {
   sounds?: Partial<VehicleSoundIds>
   /** Called whenever a certificate changes (a result in, a sign-off), so a page can keep or show them. */
   onCertificate?(certificate: ProvingCertificate): void
+  /** What the glovebox and the trunk of `vehicle` hold when someone gets in (items of the host's catalogue, as `game-items` finds them for a car). Default empty. */
+  stock?(compartment: string, vehicle: string): readonly StorageStack[]
+  /** The name of an item of the host's catalogue, for the log (default: its id). */
+  itemName?(id: string): string | undefined
 }
 
 /** Track: a straight strip along +x (the semi driver's forward at yaw 0), drawn as a 260 m tile the vehicle wraps on so a top-speed run of kilometres stays on the same tarmac. */
@@ -106,6 +110,10 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     return turn ? { ...pose, look: [pose.look[0] + turn, pose.look[1], pose.look[2]] } : pose
   }
   let gearbox: 'automatic' | 'manual' = 'automatic'
+  /** The key is in the ignition (the bench takes it out to hotwire the car), and the weather the glass mists by. */
+  let hasKey = true
+  let weather = { outsideC: 25, rain: 0 }
+  let misted = false
   let lastGear: number | null = null
   let driveClock = 0
   let queue: string[] = []
@@ -446,7 +454,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     run = null
     queue = []
     parking = null
-    setSurface('dry_asphalt')
+    setSurface(weather.rain > 0 ? 'wet_asphalt' : 'dry_asphalt')
+    misted = false
     driving = createCockpit({
       THREE: three,
       host,
@@ -459,8 +468,16 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       needle: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.amber,
       // the engine's own sound turns the key (starter, catch, idle by RPM)
       sounds: { starter: '' },
+      hasKey,
+      weather,
+      stock: (compartment) => options.stock?.(compartment, settings.vehicle) ?? [],
       onExit: () => stopDriving(),
       onEvent: (event) => {
+        if (event.type === 'hotwire') {
+          host?.log(sysText.events[event.stage === 'joined' ? 'hotwire_joined' : 'hotwire_started'], { vehicle: settings.vehicle, stage: event.stage }, 'proving_system')
+          if (event.stage === 'joined' && car && driving?.systems.canCrank() !== false) engine?.start([car.built.group.position.x, 0.5, car.built.group.position.z])
+          return
+        }
         if (event.type === 'refused') return host?.log(text.cabin.refused[event.reason] ?? sysText.refused[event.reason as keyof SystemsText['refused']] ?? event.reason)
         if (event.type === 'sound') return
         if (event.type !== 'command') {
@@ -524,11 +541,40 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       case 'climate': return `${sysText.climate}: ${onOff(st.climate.on)}`
       case 'demist': return `${sysText.demist}: ${onOff(st.climate.demist)}`
       case 'seatbelt': return `${c.seatbelt}: ${onOff(st.seatbelt)}`
+      case 'siren': return `${sysText.siren}: ${sysText.sirenModes[st.siren]}`
+      case 'beacon': return `${sysText.beacon}: ${onOff(st.beacon)}`
+      case 'glovebox': return `${sysText.glovebox}: ${sysText.lid[st.glovebox ? 'open' : 'shut']}`
       default: return null
     }
   }
+  const itemName = (id: string): string => options.itemName?.(id) ?? id
+  /** What a compartment holds, for the log: refused while shut, empty, or its stacks with the weight. */
+  const listCompartment = (cockpit: Cockpit, id: 'glovebox' | 'trunk'): void => {
+    const label = sysText.storage.names[id]
+    const data = { vehicle: settings.vehicle, compartment: id }
+    if (!cockpit.storage.compartments.some((c) => c.id === id)) return host?.log(fillText(sysText.storage.none, label.toLowerCase()), data, 'proving_storage')
+    if (!cockpit.storage.reachable(id, cockpit.access())) return host?.log(fillText(sysText.storage.shut, label), data, 'proving_storage')
+    const stacks = cockpit.storage.contents(id).filter((x): x is StorageStack => x !== null)
+    if (!stacks.length) return host?.log(fillText(sysText.storage.empty, label), data, 'proving_storage')
+    host?.log(fillText(sysText.storage.list, label, cockpit.storage.loadKg(id).toFixed(1), stacks.map((x) => (x.count > 1 ? `${x.count}× ${itemName(x.itemId)}` : itemName(x.itemId))).join(', ')), { ...data, stacks: stacks.map((x) => ({ item: x.itemId, count: x.count })) }, 'proving_storage')
+  }
   /** The bench's tests of the car's systems, on the car being driven (the driving seat opens if nobody is in it). */
   const systemsAction = (id: keyof SystemsText['actions']): void => {
+    if (id === 'take_key') {
+      // the key out (or back): the driver gets in again with or without it
+      hasKey = !hasKey
+      if (driving) stopDriving()
+      startDriving()
+      host?.log(hasKey ? sysText.keyBack : sysText.keyTaken, { vehicle: settings.vehicle, hasKey }, 'proving_system')
+      return
+    }
+    if (id === 'cold_rain') {
+      weather = weather.rain > 0 ? { outsideC: 25, rain: 0 } : { outsideC: 8, rain: 1 }
+      if (driving) driving.weather = { ...weather }
+      setSurface(weather.rain > 0 ? 'wet_asphalt' : 'dry_asphalt')
+      host?.log(weather.rain > 0 ? sysText.fog.weather : sysText.fog.fair, { vehicle: settings.vehicle, ...weather }, 'proving_system')
+      return
+    }
     if (!driving) startDriving()
     const cockpit = driving
     if (!cockpit) return
@@ -595,6 +641,24 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
         const placed = host.addObject?.(options.parkedCar ?? 'sedan', { position: at, rotationY: g.rotation.y })
         parked = placed ? { root: placed.root as { position: { x: number; z: number } }, remove: placed.remove } : null
         host.log(placed ? sysText.parking.placed : sysText.parking.none, { vehicle: settings.vehicle }, 'proving_system')
+        return
+      }
+      case 'glovebox_contents':
+        return listCompartment(cockpit, 'glovebox')
+      case 'trunk_contents':
+        return listCompartment(cockpit, 'trunk')
+      case 'take_from_trunk': {
+        const storage = cockpit.storage
+        if (!storage.compartments.some((c) => c.id === 'trunk')) return listCompartment(cockpit, 'trunk')
+        const slot = storage.contents('trunk').findIndex((x) => x !== null)
+        if (slot < 0 || !storage.reachable('trunk', cockpit.access())) return listCompartment(cockpit, 'trunk')
+        const stack = storage.take('trunk', slot, cockpit.access())
+        if (!stack) return
+        // it lands on the ground behind the car, an item of the host's like any other
+        const g = car?.built.group as { position: { x: number; z: number }; rotation: { y: number } } | undefined
+        const back = (car?.built.length ?? 4.5) / 2 + 0.8
+        const placed = g ? host?.addObject?.(stack.itemId, { position: [g.position.x - Math.sin(g.rotation.y) * back, 0, g.position.z - Math.cos(g.rotation.y) * back] }) : null
+        host?.log(fillText(placed ? sysText.storage.taken : sysText.storage.ground, itemName(stack.itemId)), { vehicle: settings.vehicle, item: stack.itemId, count: stack.count, placed: !!placed }, 'proving_storage')
         return
       }
       case 'force_door': {
@@ -706,6 +770,14 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       const d = driving
       d.step(dt)
       if (!driving) return
+      // the mist on the glass to the log as it comes and goes
+      if (!misted && d.fog.state.fog > 0.6) {
+        misted = true
+        host.log(sysText.fog.misted, { vehicle: settings.vehicle, fog: +d.fog.state.fog.toFixed(2), humidity: +d.fog.state.humidity.toFixed(2) }, 'proving_system')
+      } else if (misted && d.fog.state.fog < 0.1) {
+        misted = false
+        host.log(sysText.fog.clear, { vehicle: settings.vehicle }, 'proving_system')
+      }
       pose(d.driver.state, d.driver.state.steerAngle)
       speed = d.driver.state.u
       steer = d.driver.state.steerAngle
@@ -808,6 +880,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       { id: 'gear', name: text.metrics.gear, read: () => driving?.driver.state.gear ?? run?.driver.state.gear ?? 0 },
       { id: 'rpm', name: text.metrics.rpm, unit: 'rpm', digits: 0, read: () => driving?.driver.state.rpm ?? run?.driver.state.rpm ?? 0 },
       { id: 'time', name: text.metrics.time, unit: 's', digits: 1, read: () => run?.time ?? 0 },
+      { id: 'fog', name: sysText.fog.metric, unit: '%', digits: 0, read: () => (driving?.fog.state.fog ?? 0) * 100 },
       { id: 'value', name: text.metrics.value, digits: 1, read: () => (run ? (run.trace[run.trace.length - 1]?.[1] ?? 0) : 0) },
       { id: 'passed', name: text.metrics.passed, read: () => counts('pass') },
       { id: 'failed', name: text.metrics.failed, read: () => counts('fail') },

@@ -31,6 +31,12 @@ O teste da frota agora **reprova**, porta por porta, em toda a frota:
 - **friso de fechamento (a linha preta entre as portas) indo com a porta**: era a "haste vertical". Fica na carroceria e some enquanto uma das portas
   que ele marca está aberta.
 
+## Vidro embaçado por dentro
+
+Desde 2026-11-05: `createWindshieldMist` (`game-vehicles-three`) põe uma película clara em cada vidro do `context.glass`, **filha do próprio vidro** (desce com a
+janela, vai com a porta) e na geometria dele. A película não tem `raycast`: tiro, golpe e a mira passam para o vidro de baixo, e o vidro continua respondendo
+como vidro. Ela não escreve profundidade e sai no `dispose` com o material dela; a geometria é do vidro e fica. Vidro quebrado leva a película junto.
+
 ## Modelos que passam no teste automático (62)
 
 `adventure_bike`, `ambulance`, `amphibian_turboprop`, `apc_6x6`, `armored_car_6x6`, `attack_helicopter`, `beetle`, `bicycle`, `box_truck`, `boxy_hatch`, `cargo_van`, `city_bus`, `classic_six_sedan`, `commuter_motorcycle`, `compact_hatch`, `compact_pickup`, `compact_suv`, `crop_duster`, `crossover_pickup`, `cruiser`, `delivery_bike`, `electric_hatch`, `entry_hatch`, `family_hatch`, `highway_police_bike`, `highway_police_sedan`, `hybrid_suv`, `jet_ski`, `large_suv`, `light_4x4`, `light_attack_turboprop`, `light_jet`, `midsize_pickup`, `midsize_sedan`, `monster_truck`, `naked_bike`, `patrol_boat`, `piston_helicopter`, `police_helicopter`, `police_sedan`, `quad_bike`, `regional_turboprop`, `rescue_dinghy`, `rescue_helicopter`, `rideshare_hatch`, `river_skiff`, `sailboat`, `school_bus`, `scooter`, `speedboat`, `sport_bike`, `step_through_scooter`, `tandem_trainer`, `tanker_truck`, `taxi`, `trail_bike`, `trainer_helicopter`, `transport_helicopter`, `troop_truck`, `turbine_helicopter`, `turbo_hatch`, `v8_coupe`

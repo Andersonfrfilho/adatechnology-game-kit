@@ -150,4 +150,105 @@ describe('proving ground area', () => {
     window.removeEventListener('keydown', listen)
     room.dispose()
   })
+
+  it('hotwires the car without the key, misting the glass in the cold rain until the demister clears it, and keeps items in the glovebox and the trunk', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const module = createProvingModule({
+      locale: 'en',
+      createKit,
+      vehicles: ['compact_hatch', 'police_sedan'],
+      subject: (id, mass) => fleetProvingSubject(id, mass ? { mass } : {}),
+      stock: (compartment) => (compartment === 'glovebox' ? [{ itemId: 'car_key', count: 1, unitKg: 0.05 }] : [{ itemId: 'car_jack', count: 1, unitKg: 3.5 }]),
+    })
+    expect(room.loadModule(module as never).problems).toEqual([])
+    const bench = room.bench(PROVING_AREA_ID)!
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    const key = (code: string, down: boolean): void => void document.body.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, bubbles: true, cancelable: true }))
+    const press = (code: string): void => {
+      key(code, true)
+      key(code, false)
+    }
+    const logged = (type: string): Array<{ text: string; data: Record<string, unknown> }> => room.log.entries().filter((e) => e.type === type) as never
+    // no key: I refuses, held it strips and joins the wires and the engine turns over
+    bench.act('take_key')
+    room.update(1 / 30)
+    press('KeyI')
+    expect(room.log.entries().some((e) => String(e.text).includes('hold I to hotwire'))).toBe(true)
+    key('KeyI', true)
+    for (let i = 0; i < 9 * 30; i++) room.update(1 / 30)
+    key('KeyI', false)
+    expect(logged('proving_system').map((e) => e.data.stage).filter(Boolean)).toEqual(['started', 'joined'])
+    for (let i = 0; i < 30; i++) room.update(1 / 30)
+    expect(module.metrics!('en').find((m) => m.id === 'rpm')!.read()).toBeGreaterThan(500)
+
+    // cold rain: the glass mists up inside, the mist shows on the panes; the demister clears it
+    const film = (): number => {
+      let shown = 0
+      room.scene.traverse((o) => {
+        if (o.name === 'windshield_mist' && o.visible) shown++
+      })
+      return shown
+    }
+    expect(film()).toBe(0)
+    const fogNow = (): number => Number(module.metrics!('en').find((m) => m.id === 'fog')!.read())
+    bench.act('cold_rain')
+    for (let i = 0; i < 90 * 30 && fogNow() < 80; i++) room.update(1 / 30)
+    expect(fogNow()).toBeGreaterThan(80)
+    expect(film()).toBeGreaterThan(0)
+    expect(room.log.entries().some((e) => String(e.text).includes('misted up inside'))).toBe(true)
+    press('Equal')
+    for (let i = 0; i < 40 * 30 && fogNow() > 0; i++) room.update(1 / 30)
+    expect(fogNow()).toBe(0)
+    expect(film()).toBe(0)
+
+    // the glovebox is shut until its lid opens (/); the trunk until the lid goes up (6)
+    bench.act('glovebox_contents')
+    expect(logged('proving_storage').at(-1)!.text).toContain('Glovebox shut')
+    press('Slash')
+    bench.act('glovebox_contents')
+    expect(logged('proving_storage').at(-1)!.text).toContain('car_key')
+    bench.act('trunk_contents')
+    expect(logged('proving_storage').at(-1)!.text).toContain('Trunk shut')
+    press('Digit6')
+    for (let i = 0; i < 60; i++) room.update(1 / 30)
+    bench.act('trunk_contents')
+    expect(logged('proving_storage').at(-1)!.text).toContain('car_jack')
+    bench.act('take_from_trunk')
+    expect(logged('proving_storage').at(-1)!.data).toMatchObject({ item: 'car_jack' })
+    bench.act('trunk_contents')
+    expect(logged('proving_storage').at(-1)!.text).toContain('Trunk: empty')
+
+    // an ordinary hatch has no siren; the police sedan's light bar flashes its two halves in turn and the siren draws from the battery
+    press('Semicolon')
+    expect(room.log.entries().some((e) => String(e.text).includes('no siren'))).toBe(true)
+    press('KeyF')
+    room.update(1 / 30)
+    bench.set('vehicle', 'police_sedan')
+    room.update(1 / 30)
+    bench.act('drive')
+    room.update(1 / 30)
+    const glow = (side: number): number => {
+      let sum = 0
+      room.scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+        if (o.userData.lamp === 'beacon' && o.userData.beaconSide === side && m && !Array.isArray(m)) sum += m.emissiveIntensity
+      })
+      return sum
+    }
+    expect(glow(0) + glow(1)).toBeGreaterThan(0)
+    press('Semicolon')
+    expect(room.log.entries().some((e) => String(e.text).includes('Siren: wail'))).toBe(true)
+    const seen = new Set<string>()
+    for (let i = 0; i < 30; i++) {
+      room.update(1 / 30)
+      seen.add(glow(0) > glow(1) ? 'red' : 'blue')
+    }
+    expect([...seen].sort()).toEqual(['blue', 'red'])
+    press('KeyF')
+    room.update(1 / 30)
+    room.dispose()
+  })
 })
