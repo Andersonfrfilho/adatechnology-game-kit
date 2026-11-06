@@ -1,4 +1,4 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Heavy group: trucks, buses, armoured truck and tractor. Uses only the kit API.
@@ -30,8 +30,8 @@ export function installHeavy(fx: FleetContext): void {
   function lerp2(a: any, b: number[], t: number) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
   }
-  function armorPlus(fn: any) {
-    return function (c: VehicleContext, Z: any) {
+  function armorPlus(fn: (c: VehicleContext, Z: VehicleKit) => void) {
+    return function (c: VehicleContext, Z: VehicleKit) {
       Z.applyArmor(c)
       fn(c, Z)
     }
