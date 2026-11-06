@@ -30,13 +30,19 @@ const HIDE_PANELS = `(() => {
   return { x: box.x, y: box.y, width: box.width, height: box.height, scale: 1 }
 })()`
 
+/**
+ * @typedef {{ id?: number, result: { data: string, result: { value?: unknown }, exceptionDetails?: { text: string, exception?: { description?: string } } } }} CdpMessage
+ * @typedef {{ send: (method: string, params?: object) => Promise<CdpMessage>, evaluate: (expression: string) => Promise<unknown> }} CdpClient
+ */
+
+/** @param {number} ms */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function connect() {
   for (let attempt = 0; attempt < 60; attempt++) {
     try {
       const targets = await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()
-      const page = targets.find((target) => target.type === 'page')
+      const page = targets.find((/** @type {{ type: string, webSocketDebuggerUrl: string }} */ target) => target.type === 'page')
       const socket = new WebSocket(page.webSocketDebuggerUrl)
       await new Promise((resolve) => socket.addEventListener('open', resolve))
       return socket
@@ -47,19 +53,23 @@ async function connect() {
   throw new Error(`Chrome não respondeu na porta ${PORT}`)
 }
 
+/** @param {WebSocket} socket @returns {CdpClient} */
 function createClient(socket) {
   let nextId = 0
+  /** @type {Map<number, (message: CdpMessage) => void>} */
   const pending = new Map()
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data)
-    if (message.id && pending.has(message.id)) pending.get(message.id)(message)
+    if (message.id && pending.has(message.id)) /** @type {(message: CdpMessage) => void} */ (pending.get(message.id))(message)
   })
+  /** @type {CdpClient['send']} */
   const send = (method, params = {}) =>
     new Promise((resolve) => {
       const id = ++nextId
       pending.set(id, resolve)
       socket.send(JSON.stringify({ id, method, params }))
     })
+  /** @type {CdpClient['evaluate']} */
   const evaluate = async (expression) => {
     const { result } = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text)
@@ -68,6 +78,7 @@ function createClient(socket) {
   return { send, evaluate }
 }
 
+/** @param {CdpClient} client @param {string} expression */
 async function waitFor(client, expression) {
   const deadline = Date.now() + READY_TIMEOUT_MS
   while (Date.now() < deadline) {
@@ -77,6 +88,7 @@ async function waitFor(client, expression) {
   throw new Error(`a página não ficou pronta: ${expression}`)
 }
 
+/** @param {{ client: CdpClient, key: string, url: string, ready: string, setup?: string }} job */
 async function capture({ client, key, url, ready, setup }) {
   await client.send('Page.navigate', { url: `${baseUrl}/${url}` })
   await waitFor(client, ready)
