@@ -298,6 +298,73 @@ declare global {
   /** A room with its sound engine on, as the sound scripts open it (`room.audio`). */
   type AudioRoom = TestRoom & { readonly audio: NonNullable<TestRoom['audio']> }
 
+  // What the sound sync check (`examples/test-room/sound-sync.mjs`) records: each play with its take, each log line, each footfall, each node start
+  interface SoundSyncPlay { at: number; t: number; id: string; take: string | null; delay: number; volume: number; startsBefore: number }
+  interface SoundSyncLine { at: number; t: number; type: string; data: Record<string, unknown> | null }
+  interface SoundSyncFoot { at: number; foot: string | null; gait: string; time: number }
+  interface SoundSyncStart { at: number; lead: number }
+
+  /** The box of an object as the object audit (`examples/test-room/audit.mjs`) reads it: `Box3` corners as arrays. */
+  interface RoomAuditBox { min: number[]; max: number[] }
+  /** The helpers the object audit (`examples/test-room/audit.mjs`) puts on the page as `window.__audit`. */
+  interface RoomAudit {
+    spawnAt: Vec3
+    fresh(id: string, extra?: [string, Vec3][]): { objectId: string; movable: boolean }
+    so: SpawnedObject
+    box0: RoomAuditBox
+    others: SpawnedObject[]
+    start: number[] | null
+    box(): RoomAuditBox
+    state(): Record<string, unknown>
+    events(): Record<string, number>
+    metrics(): ReturnType<TestRoom['metrics']>['room']
+    look3q(dist?: number): void
+  }
+
+  // What the explosion frame budget (`examples/test-room/perf.mjs`) counts on the page: WebGL calls, frames, uploads and draws
+  interface PerfGlCounts { programs: number; buffers: number; draws: number; programNames: string[]; firstUses: number; firstUseNames: string[] }
+  type PerfMark = Omit<PerfGlCounts, 'programNames' | 'firstUseNames'> & { programNames: number; firstUseNames: number; frame: number; longTask: number; slowFrame: number }
+  interface PerfSlowFrame { at: number; ms: number; render: number; scripts: string[] }
+  interface PerfQueueStats { maxFramesWaiting: number; forced: number; ranUnits: number }
+  interface PerfPhaseResult {
+    name: string
+    frames: number
+    overTwiceMedian: number
+    p50: number
+    p95: number
+    p99: number
+    max: number
+    hitches: number
+    worstLongTask: number
+    programs: number
+    buffers: number
+    programNames: string[]
+    firstUses: number
+    firstUseNames: string[]
+    drawsPerFrame: number
+    slowFrames: PerfSlowFrame[]
+    maxFramesWaiting?: number
+    queues?: Record<string, PerfQueueStats>
+    drawList?: [string, number][]
+    bufferStacks?: [string, number][]
+  }
+  interface PerfRecorder { mark(): PerfMark; read(name: string, start: PerfMark): PerfPhaseResult }
+
+  // What the room's end-to-end test (`examples/test-room/test.mjs`) keeps on the page between its steps: the frame stepper, the close-up helpers and their runs
+  interface TestRoomStepper { r: TestRoom; run(n: number): void; look(): void }
+  interface TestRoomCloseUps {
+    r: TestRoom
+    key(code: string, extra?: KeyboardEventInit): void
+    at(name: string): Vec3 | null
+    view(position: Vec3, target: Vec3, fov?: number): void
+    armed(id: string): void
+    emptied(id: string): void
+  }
+  interface TestRoomPumpRun { frames: number; ammo: number[]; visits: number; away: boolean; capacity: number; before: number; rest: number[] }
+  interface TestRoomGlockRun { frames: number; track: { x: number; d: number }[]; before: number; slide: THREE.Object3D }
+  /** The end-to-end test's frame stepper (`window.S`), which its first-person steps call by its global name. */
+  var S: TestRoomStepper
+
   /** A bench of the room (`room.bench(id)`) the scripts know is there. */
   type RoomBench = NonNullable<ReturnType<TestRoom['bench']>>
 
@@ -350,6 +417,24 @@ declare global {
     __soundCalls: { readonly type: string; readonly id?: string; readonly wall: number; readonly [field: string]: unknown }[]
     __soundRecording?: { rec: MediaRecorder; chunks: Blob[]; ctx: BaseAudioContext; startedWall: number; startedCtx: number }
     __frames: number
+    // What the room's end-to-end test (`examples/test-room/test.mjs`) keeps on the page
+    C: TestRoomCloseUps
+    __pump: TestRoomPumpRun
+    __glock: TestRoomGlockRun
+    __heldIds: string[]
+    // What the explosion frame budget (`examples/test-room/perf.mjs`) installs on the page
+    __glCounts: PerfGlCounts
+    __perf: PerfRecorder
+    __detailSamples: { seconds: number; scale: number }[]
+    __bufferStacks: Record<string, number>
+    __drawing?: () => string
+    __drawTally: Record<string, number> | null
+    /** The object audit's helpers (`examples/test-room/audit.mjs`). */
+    __audit: RoomAudit
+    // What the sound sync check (`examples/test-room/sound-sync.mjs`) records on the page: the plays, the log lines and the footfalls
+    __plays: SoundSyncPlay[]
+    __lines: SoundSyncLine[]
+    __feet: SoundSyncFoot[]
     /** What the impact sound audit (`examples/test-room/sound-audit-impacts.mjs`) keeps on the page: the sounds and events of a hit, and its helpers. */
     __snd: {
       sounds: { id: string; t: number; volume: number; played: boolean; position: number[] | null }[]
