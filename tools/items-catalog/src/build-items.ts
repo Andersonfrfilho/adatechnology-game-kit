@@ -164,6 +164,8 @@ const buildExtraItem = (id: string, { value }: Decision<ExtraItem>, sources: Sou
     ...(value.portions === undefined ? {} : { portions: value.portions }),
     ...(value.nutrition ? { nutrition: { ...value.nutrition } } : {}),
     ...(value.places ? { finds: { places: [...value.places] } } : {}),
+    ...(value.hits === undefined ? {} : { durability: { kind: 'hits', amount: value.hits } as Durability }),
+    ...(value.melee ? { weapon: value.melee.weapon } : {}),
   }
   return { record, provenance: { created: true, idSource: 'decision', sizeSource } }
 }

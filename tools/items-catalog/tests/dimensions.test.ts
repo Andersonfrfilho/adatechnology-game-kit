@@ -27,7 +27,7 @@ describe('measures of the items', () => {
     const allowed = new Set([...items.keys(), ...gameModeled])
     for (const id of items.keys()) expect(sources.decisions.dimensions[id], id).toBeDefined()
     for (const id of Object.keys(sources.decisions.dimensions)) expect(allowed.has(id), id).toBe(true)
-    expect(items.size).toBe(327)
+    expect(items.size).toBe(330)
   })
 
   it('writes the measure of the decision, and says where it comes from', () => {

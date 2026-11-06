@@ -98,5 +98,20 @@
     "id": "arrows_and_bolts",
     "reach": 0,
     "noise": 0
+  },
+  {
+    "id": "kabar",
+    "reach": 0.55,
+    "noise": 1
+  },
+  {
+    "id": "katana",
+    "reach": 1.1,
+    "noise": 5
+  },
+  {
+    "id": "brass_knuckles",
+    "reach": 0.6,
+    "noise": 5
   }
 ]

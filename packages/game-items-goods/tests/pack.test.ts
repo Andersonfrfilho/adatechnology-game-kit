@@ -10,7 +10,7 @@ const ids = GOODS_ITEMS.map((item) => item.id)
 describe('the goods pack', () => {
   it('is a valid catalog for createItems, alone and through createGoodsItems', () => {
     expect(createItems({ packs: [goodsPack] }).items.size).toBe(GOODS_ITEMS.length)
-    expect(catalog.items.size).toBe(327)
+    expect(catalog.items.size).toBe(330)
     expect(catalog.categories.size).toBe(14 + 3)
     expect(catalog.places.size).toBe(24)
     expect(catalog.containers.size).toBe(17)
@@ -83,7 +83,7 @@ describe('melee items and the arsenal', () => {
 
   it('resolves every `weapon` in the arsenal, and only melee items and the shovel (a tool that digs in hand) carry one', () => {
     const withWeapon = GOODS_ITEMS.filter((item) => item.weapon !== undefined)
-    expect(withWeapon).toHaveLength(19)
+    expect(withWeapon).toHaveLength(22)
     for (const item of withWeapon) {
       expect(item.category === 'melee' || item.id === 'shovel', item.id).toBe(true)
       expect(arsenal.weapons.has(item.weapon ?? ''), `${item.id}: ${item.weapon}`).toBe(true)

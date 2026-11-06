@@ -2363,7 +2363,7 @@
       {
         "id": "body",
         "material": "plastic",
-        "thickness": 0.00002
+        "thickness": 2e-05
       }
     ],
     "weight": 0.01,
@@ -2763,5 +2763,14 @@
       "protection",
       "parts"
     ]
+  },
+  "kabar": {
+    "kind": "melee"
+  },
+  "katana": {
+    "kind": "melee"
+  },
+  "brass_knuckles": {
+    "kind": "melee"
   }
 }
