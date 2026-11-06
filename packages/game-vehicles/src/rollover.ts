@@ -1,5 +1,7 @@
 /** Rollover physics and the rolled-over state. */
-import type { Object3D, Vector3 } from 'three'
+import type { Mesh, Object3D, Vector3 } from 'three'
+
+import type { RollMesh, RollState } from './api'
 
 import type { BuildContext, Kit, SceneNode } from './types'
 import { hash } from './util'
@@ -16,8 +18,8 @@ export function installRollover(kit: Kit) {
      The support comes from the real shape: the convex hull (y, z) of all visible meshes (except decals, particles and thin rods),
      plus meta.rollRest [[y, z]...] and meta.rollTop if declared. The contact point stays still on the ground while the vehicle turns. */
   function rollMeshes(c: BuildContext) {
-    const list: any = []
-    const thin: any = []
+    const list: RollMesh[] = []
+    const thin: RollMesh[] = []
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
     c.vehicle.traverse(function (ob: SceneNode) {
@@ -32,22 +34,22 @@ export function installRollover(kit: Kit) {
       })
       /* `antena` is the original spelling of the flag */
       if (ob.userData.antenna || ob.userData.antena || (d[1] < 0.045 && d[2] > 0.2)) {
-        thin.push({ o: ob, M: M })
+        thin.push({ o: ob as Mesh, M: M })
         return
       }
-      list.push({ o: ob, M: M })
+      list.push({ o: ob as Mesh, M: M })
     })
     return { list: list, thin: thin }
   }
-  function convexHull(pts: any) {
+  function convexHull(pts: number[][]) {
     pts.sort(function (a: number[], b: number[]) {
       return a[1] - b[1] || a[0] - b[0]
     })
     function cr(o: number[], a: number[], b: number[]) {
       return (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1])
     }
-    const lo: any = []
-    const up = []
+    const lo: number[][] = []
+    const up: number[][] = []
     pts.forEach(function (p: number[]) {
       while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop()
       lo.push(p)
@@ -67,12 +69,12 @@ export function installRollover(kit: Kit) {
     const m = c.meta
     const bike = m.kind === 'bike'
     const R = rollMeshes(c)
-    let pts: any = []
+    let pts: number[][] = []
     const v = new V3()
     let yc = 0
     let zc = 0
     let n = 0
-    R.list.forEach(function (e: any) {
+    R.list.forEach(function (e) {
       const pos = e.o.geometry.attributes.position
       const st = Math.max(1, Math.floor(pos.count / 600))
       for (let i = 0; i < pos.count; i += st) {
@@ -83,7 +85,7 @@ export function installRollover(kit: Kit) {
         n++
       }
     })
-    ;(m.rollRest || []).forEach(function (q: any) {
+    ;(m.rollRest || []).forEach(function (q: readonly number[]) {
       pts.push([q[0], q[1]])
     })
     if (m.rollTop)
@@ -118,9 +120,9 @@ export function installRollover(kit: Kit) {
     if (c.hood) c.hood.target = 0
     return true
   }
-  function rollContact(c: BuildContext, A: any, q: any) {
+  function rollContact(c: BuildContext, A: RollState, q: readonly number[]) {
     const m = c.meta
-    const list: any = []
+    const list: Vector3[][] = []
     const dy = A.cen[0] - q[0]
     const dz = A.cen[1] - q[1]
     const dl = Math.hypot(dy, dz) || 1
@@ -152,13 +154,13 @@ export function installRollover(kit: Kit) {
     if (m.kind === 'boat') I.burst(c, 'water', c.toEffects(list[0][0]).setY(0.05), 30, { speed: 3 })
   }
   /* lowest y (in the c.root frame) of all supporting meshes, vertex by vertex */
-  function exactMinY(c: BuildContext, list: any) {
+  function exactMinY(c: BuildContext, list: readonly RollMesh[]) {
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.root.matrixWorld).invert()
     const M = new THREE.Matrix4()
     const v = new V3()
     let mn = 1e9
-    list.forEach(function (e: any) {
+    list.forEach(function (e) {
       const ob = e.o
       if (!ob.parent || !I.shown(c, ob)) return
       M.multiplyMatrices(inv, ob.matrixWorld)
@@ -171,7 +173,7 @@ export function installRollover(kit: Kit) {
     return mn
   }
   function finishRoll(c: BuildContext) {
-    const A = c.rollState
+    const A = c.rollState!
     const m = c.meta
     c.rollState = null
     c.flipped = true
@@ -197,7 +199,7 @@ export function installRollover(kit: Kit) {
     /* thin rods (antennas, sticks) that would go through the ground break and shed pieces */
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.root.matrixWorld).invert()
-    R.thin.forEach(function (e: any) {
+    R.thin.forEach(function (e) {
       const ob = e.o
       const bb = new THREE.Box3().setFromObject(ob).applyMatrix4(inv)
       if (bb.min.y < -0.01 && ob.parent) {
@@ -213,7 +215,8 @@ export function installRollover(kit: Kit) {
       c.parts.forEach(function (p) {
         if ((p.kind !== 'rotor' && p.kind !== 'tail_rotor') || !p.obj) return
         const main = p.kind === 'rotor'
-        p.obj.traverse(function (o: any) {
+        p.obj.traverse(function (node: Object3D) {
+          const o = node as Mesh & SceneNode
           if (!o.isMesh || !o.visible) return
           const bb = new THREE.Box3().setFromObject(o).applyMatrix4(inv)
           if (!main && bb.min.y >= -0.01) return
@@ -245,7 +248,7 @@ export function installRollover(kit: Kit) {
     if (mot && m.kind !== 'boat') kit.addEmitter(c, mot.pos.clone().add(new V3(0, -0.3, 0)), 'black', { rate: 4 })
   }
   function tickRoll(c: BuildContext, dt: number) {
-    const A = c.rollState
+    const A = c.rollState!
     A.t += dt
     const p = Math.min(1, A.t / A.dur)
     const e = p * p * (3 - 2 * p)

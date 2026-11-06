@@ -2,7 +2,7 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
-import type { Object3D, Vector3 } from 'three'
+import type { Matrix4, Mesh, Object3D, Vector3 } from 'three'
 
 import type { LodSettings } from './lod'
 import type { ZoneBox } from './zone-core'
@@ -120,6 +120,29 @@ export type PartLabel = string | { key: string; label?: string }
 
 /** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
 /** A part turning on its own every frame (a wheel, a rotor, a propeller): `v` radians per second about `axis`, slowing by `decay` per second. */
+/** A mesh the rollover rests on, with its matrix into the vehicle frame (`rollMeshes`). */
+export interface RollMesh {
+  o: Mesh
+  M: Matrix4
+}
+/** A rollover in progress (`kit.roll`): time and duration, side, the support hull S ([y, z]), the contact point and the fall target. */
+export interface RollState {
+  t: number
+  dur: number
+  s: number
+  S: number[][]
+  last: number
+  cz: number
+  target: number
+  x: number
+  L: number
+  bounce: number
+  cen: number[]
+  hitAt: readonly number[] | null
+  hits: number
+  thin: RollMesh[]
+  y0: number
+}
 export interface VehicleSpin {
   o: Object3D
   axis: 'x' | 'y' | 'z'
