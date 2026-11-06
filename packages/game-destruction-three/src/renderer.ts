@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -36,6 +36,13 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/**
+ * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
+ * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
+ */
+const STRUCTURAL_EVENTS: ReadonlySet<DestructionEventType> = new Set<DestructionEventType>([
+  'fracture', 'detach', 'collapse', 'settle', 'destroyed', 'expose', 'stage', 'hole', 'ignite', 'primed', 'extinguish', 'burnout', 'leak', 'explode',
+])
 /** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
 const MIN_FRAGMENTS_PER_SLICE = 8
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
@@ -199,6 +206,8 @@ class Renderer implements DestructionRenderer {
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   private staticAt = 0
   private readonly queue: DestructionEvent[] = []
+  /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
+  private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -295,7 +304,8 @@ class Renderer implements DestructionRenderer {
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
     })
     this.unsubscribe = this.world.on('*', (ev) => {
-      if (this.queue.length < QUEUE_CAP) this.queue.push(ev)
+      if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
+      if (this.queue.length < QUEUE_CAP || STRUCTURAL_EVENTS.has(ev.type)) this.queue.push(ev)
     })
   }
 
@@ -1454,9 +1464,14 @@ class Renderer implements DestructionRenderer {
     const confinement = report?.find((r) => r.blast !== undefined)?.blast?.confinement ?? 1
     const energy = ev.energy * confinement
     // the energy that got to an object after what stood in the way: the world's shelter of this blast when it carries one, else the cover between the centre and the
-    // object's centre (`blastReach`, always on: a wall, a car or a cupboard between them takes the push)
+    // object's centre (`blastReach`, always on: a wall, a car or a cupboard between them takes the push), as it stood when the part went off: the cupboard the wave
+    // tears apart still met it, and the stove it throws was not in the way yet
+    const wentOff = this.coverWhenWentOff.get(ev)
     const reachOf = (objectId: string, at: Vec3): number =>
-      report?.find((r) => r.object === objectId)?.blast?.shelter ?? this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ?? 1
+      report?.find((r) => r.object === objectId)?.blast?.shelter ??
+      wentOff?.get(objectId) ??
+      this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ??
+      1
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
       if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
@@ -1475,6 +1490,30 @@ class Renderer implements DestructionRenderer {
       ...(options.effect !== undefined ? { effect: options.effect } : {}),
       ...(report ? { confinement } : {}),
     })
+  }
+
+  /** The cover between a part of the world that goes off and the centre of each piece and each shoveable body within its radius, as the world stands at that moment. */
+  private coverAround(ev: Ev<'explode'>): Map<string, number> {
+    const cover = new Map<string, number>()
+    const reach = this.world.blastReach
+    if (!reach) return cover
+    const point = new this.THREE.Vector3(ev.point[0], ev.point[1], ev.point[2])
+    const centre = new this.THREE.Vector3()
+    const read = (objectId: string): void => {
+      if (centre.distanceTo(point) <= ev.radius) cover.set(objectId, reach.call(this.world, ev.point, [centre.x, centre.y, centre.z], { ignore: [ev.object, objectId] }))
+    }
+    for (const pc of this.pieceSys.list) {
+      this.pieceSys.centerOf(pc, centre)
+      read(pc.objectId)
+    }
+    const shoveable = this.o.shoveable
+    if (!shoveable) return cover
+    for (const b of this.bounds.values()) {
+      if (b.piece || cover.has(b.id) || !shoveable(b.id) || !this.world.has(b.id)) continue
+      centre.copy(this.measure(b.root, this.meshesOf(b)).center).applyQuaternion(b.root.quaternion).add(b.root.position)
+      read(b.id)
+    }
+    return cover
   }
 
   /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */

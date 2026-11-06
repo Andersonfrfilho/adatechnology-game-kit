@@ -1,3 +1,6 @@
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import { createDestruction } from '@adatechnology/game-destruction'
+import type { Hit } from '@adatechnology/game-destruction'
 import { buildStructure, masonryConstruction } from '@adatechnology/game-floorplan-structure'
 
 import { create } from './create.js'
@@ -32,7 +35,31 @@ export interface WallPiece {
    * per wall (call it every frame; without it the damage is painted 100 ms after the event).
    */
   follow(root: any, world: any, objectId: string): { restore(): void; dispose(): void; update(): void } | null
+  /**
+   * The wall drawn with one brick shot out of it, for a host to draw once at load (`WarmUpProbes`): the breach's materials (the shell around the hole and
+   * the bricks laid bare, instanced, lit and in the shadows) get their shader programs then, not at the first shot or blast of play. `dispose` frees its
+   * geometries and textures and leaves its materials to the host's warmup, which keeps them so the programs stay.
+   */
+  warmUpProbes(THREE: unknown): WarmUpProbes
 }
+
+/** A rifle round at the middle of the wall: it knocks a brick out, so the breach draws its shell and its bare bricks. */
+const WARM_UP_SHOT: Hit = { type: 'ballistic', point: [0, 1.2, 0.1], direction: [0, 0, -1], energy: 3500, caliber: 7.62 }
+const WARM_UP_FRAMES = 5
+
+/** What the probe reads of the drawing (structural: three.js objects fit). */
+type ProbeTexture = { readonly isTexture?: boolean; dispose(): void }
+type ProbeMaterial = { readonly uniforms?: Record<string, { readonly value?: unknown }>; readonly map?: ProbeTexture | null }
+type ProbeNode = { visible: boolean; frustumCulled: boolean; readonly geometry?: { dispose(): void }; readonly material?: ProbeMaterial | ProbeMaterial[] }
+type ProbeRoot = { traverse(visit: (node: ProbeNode) => void): void }
+type ProbeHouse = {
+  readonly destruction?: {
+    follow?(world: unknown, objectId: string, spec: unknown): { update?(): void } | null
+    readonly breach?: { flush?(budgetMs: number): number }
+  }
+}
+
+const isTexture = (value: unknown): value is ProbeTexture => typeof value === 'object' && value !== null && (value as ProbeTexture).isTexture === true
 
 const PLASTER = 0xe8e2d4
 const WALL_ID = 'wall_0_0'
@@ -91,5 +118,39 @@ export function wallPiece(THREE: any, options: WallPieceOptions): WallPiece {
     spec,
     build: (T: any) => label(draw(T, plan, houseOptions)),
     follow: (root: any, world: any, objectId: string) => (houses.get(root) as any)?.destruction?.follow?.(world, objectId, spec) ?? null,
+    warmUpProbes: (T: unknown): WarmUpProbes => {
+      const house = draw(T, plan, houseOptions)
+      const root = label(house) as ProbeRoot
+      const world = createDestruction({ seed: 1 })
+      const objectId = world.add(spec, { id: 'warm_up_wall' })
+      const destruction = (house as unknown as ProbeHouse).destruction
+      const follower = destruction?.follow?.(world, objectId, spec) ?? null
+      world.hitPart(objectId, WALL_ID, WARM_UP_SHOT)
+      for (let frame = 0; frame < WARM_UP_FRAMES; frame++) {
+        world.update(1 / 60)
+        follower?.update?.()
+      }
+      // paint all of it now: in a room the breach paints within the frame budget, and the probe is drawn before any frame runs
+      for (let guard = 0; guard < WARM_UP_FRAMES && (destruction?.breach?.flush?.(Infinity) ?? 0) > 0; guard++);
+      // drawn whatever the camera: the breach hides its bricks from afar (its level of detail), and an object that is not drawn builds no program
+      root.traverse((node) => {
+        node.visible = true
+        node.frustumCulled = false
+      })
+      return {
+        group: root,
+        // the materials stay: the warmup keeps them as anchors, and disposing the last material of a program frees the program it was drawn for (so the
+        // follower is not disposed either: it would put the wall back and dispose the breach's materials; its world goes with the probe)
+        dispose: () => {
+          root.traverse((node) => {
+            node.geometry?.dispose()
+            for (const material of Array.isArray(node.material) ? node.material : node.material ? [node.material] : []) {
+              for (const uniform of Object.values(material.uniforms ?? {})) if (isTexture(uniform.value)) uniform.value.dispose()
+              material.map?.dispose()
+            }
+          })
+        },
+      }
+    },
   }
 }

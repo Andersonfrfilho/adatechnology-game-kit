@@ -223,4 +223,15 @@ describe('wallPiece', () => {
     expect(box.max.x).toBeGreaterThan(4.9)
     expect(box.max.y).toBeCloseTo(3, 1)
   })
+
+  it('gives a host the wall with a brick shot out to draw at load: the breach shell and its bare bricks, instanced, so their programs are built before play', () => {
+    const probes = make().warmUpProbes(THREE)
+    const breach: Array<{ name: string; instanced: boolean }> = []
+    ;(probes.group as { traverse(fn: (object: { name?: string; isInstancedMesh?: boolean; isMesh?: boolean }) => void): void }).traverse((object) => {
+      if (object.isMesh && object.name?.startsWith('breach')) breach.push({ name: object.name, instanced: object.isInstancedMesh === true })
+    })
+    expect(breach.some((mesh) => mesh.instanced)).toBe(true)
+    expect(breach.some((mesh) => !mesh.instanced)).toBe(true)
+    probes.dispose()
+  })
 })

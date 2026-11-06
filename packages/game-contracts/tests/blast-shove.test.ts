@@ -35,6 +35,13 @@ describe('blastShove', () => {
     expect(blastShove({ ...BLAST, reach: 0.25 }, { position: [3, 0.2, 0], mass: 80 })?.speed).toBeLessThan(at(3, 80)?.speed ?? 0)
   })
 
+  it('a light thing behind cover is not thrown at the speed of one in the open, even when the open one is at the cap', () => {
+    const open = at(3, 0.5)
+    const covered = blastShove({ ...BLAST, reach: 0.19 }, { position: [3, 0.2, 0], mass: 0.5 })
+    expect(open?.speed).toBeCloseTo(DEFAULT_BLAST_SHOVE.maxSpeed * (1 - dist(3) / 14) ** 2, 6)
+    expect(covered?.speed).toBeCloseTo((open?.speed ?? 0) * Math.sqrt(0.19), 6)
+  })
+
   it('pushes up when the body is at the centre', () => {
     expect(blastShove(BLAST, { position: [0, 0, 0], mass: 5 })?.direction).toEqual([0, 1, 0])
   })

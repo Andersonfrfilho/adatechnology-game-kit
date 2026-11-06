@@ -3766,6 +3766,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   warmup.register(probeOf('vfx', vfx))
   warmup.register(probeOf('fluids', fluidView))
   warmup.register(spriteProbes(THREE))
+  for (const object of arena.objects) {
+    const probes = object.warmUpProbes
+    if (probes) warmup.register(probeOf(`scenery:${object.id}`, { warmUpProbes: () => probes(THREE) }))
+  }
   // a blast of every explosive and a flame, drawn a few frames at load: their programs link and their buffers reach the GPU before the first one goes off; nothing stays in the world, the log or the sound
   const warmedEffect = (id: string): EffectWarmup => {
     let handle: number | null = null
