@@ -287,7 +287,7 @@ export interface TestRoomOptions {
   toolMenu?: false | { keys?: string[] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
-  /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists']`); the shove and the kick are not. */
+  /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */
   punchTools?: readonly string[]
   /**
    * A strike combo the player has (an ability, such as `PUNCH_COMBO` of game-characters-people): while it is on (N, the combo button or `setStrikeCombo`), each blow of its

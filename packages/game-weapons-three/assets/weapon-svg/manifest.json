@@ -97,6 +97,10 @@
    "source": "generated",
    "file": "generated/bow_compound.svg"
   },
+  "brass_knuckles": {
+   "source": "generated",
+   "file": "generated/brass_knuckles.svg"
+  },
   "browning_m2": {
    "source": "generated",
    "file": "generated/browning_m2.svg"
@@ -405,6 +409,14 @@
    "source": "generated",
    "file": "generated/iwi_tavor.svg"
   },
+  "kabar": {
+   "source": "generated",
+   "file": "generated/kabar.svg"
+  },
+  "katana": {
+   "source": "generated",
+   "file": "generated/katana.svg"
+  },
   "kel_tec_ksg": {
    "source": "generated",
    "file": "generated/kel_tec_ksg.svg"
@@ -452,6 +464,10 @@
   "m2_flamethrower": {
    "source": "generated",
    "file": "generated/m2_flamethrower.svg"
+  },
+  "m32_mgl": {
+   "source": "generated",
+   "file": "generated/m32_mgl.svg"
   },
   "m60": {
    "source": "generated",
@@ -641,6 +657,10 @@
    "source": "generated",
    "file": "generated/screwdriver.svg"
   },
+  "semtex": {
+   "source": "generated",
+   "file": "generated/semtex.svg"
+  },
   "shotgun_double_12": {
    "source": "generated",
    "file": "generated/shotgun_double_12.svg"
@@ -680,6 +700,10 @@
   "smg_9mm": {
    "source": "generated",
    "file": "generated/smg_9mm.svg"
+  },
+  "smoke_grenade": {
+   "source": "generated",
+   "file": "generated/smoke_grenade.svg"
   },
   "sniper_338": {
    "source": "generated",

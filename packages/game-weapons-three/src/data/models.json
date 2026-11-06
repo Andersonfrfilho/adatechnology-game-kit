@@ -1844,5 +1844,12 @@
       "br": 0.022,
       "hR": 0.05
     }
+  },
+  "m32_mgl": {
+    "builder": "mgl",
+    "caliber": "40×46",
+    "length": 778,
+    "barrel": 300,
+    "options": {}
   }
 }

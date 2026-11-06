@@ -2321,6 +2321,119 @@
         "source": "reference",
         "reason": "TNT equivalente: Granada VOG-25 de 40 mm: 48 g de A-IX-2."
       }
+    },
+    "semtex": {
+      "sources": {
+        "value": {
+          "lab": "c4"
+        },
+        "source": "design",
+        "reason": "Blast radii of the Laboratory profile of the C4: the same family of plastic explosive, set the same way."
+      },
+      "name": {
+        "value": "Semtex charge",
+        "source": "design",
+        "reason": "Name in English; pt-BR lives in the locale."
+      },
+      "kind": {
+        "value": "blast",
+        "source": "derived",
+        "reason": "A blast charge, like the C4."
+      },
+      "triggers": {
+        "value": [
+          "remote",
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Set down and fired by a remote detonator, or by the safety fuse of its detonator (the C4 takes the remote only)."
+      },
+      "extras": {
+        "value": {
+          "mass": 0.5,
+          "fuseLength": 0.23,
+          "burnRate": 131,
+          "burnTolerance": 0.1
+        },
+        "source": "reference",
+        "reason": "A 500 g block (Semtex is sold in blocks of 0.5 kg, https://en.wikipedia.org/wiki/Semtex). The timed detonation is a safety fuse of 0.23 m burning 131 s/m (the rate of the dynamite entry), about 30 s, scattered by 10%."
+      },
+      "energy": {
+        "value": 377400,
+        "source": "derived",
+        "reason": "TNT equivalent times the energy per kilogram of TNT the C4 entry uses (345600 J for 0.76 kg): 0.83 x 454737 J."
+      },
+      "tnt": {
+        "value": 0.83,
+        "source": "reference",
+        "reason": "500 g of Semtex-H times its relative effectiveness factor of 1.66 (PETN and RDX, https://en.wikipedia.org/wiki/Semtex) = 0.83 kg of TNT."
+      },
+      "world": {
+        "value": {
+          "noise": 700,
+          "destructionLevel": 3
+        },
+        "source": "derived",
+        "reason": "The noise and the tearing-down level of the C4 entry (Arsenal §13): the same charge class."
+      }
+    },
+    "smoke_grenade": {
+      "sources": {
+        "value": {},
+        "source": "design",
+        "reason": "The Laboratory has no profile for a canister that does not blast."
+      },
+      "name": {
+        "value": "M18 colored smoke grenade",
+        "source": "design",
+        "reason": "Name in English; pt-BR lives in the locale."
+      },
+      "kind": {
+        "value": "smoke",
+        "source": "derived",
+        "reason": "It makes smoke and does not explode."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "The pull-ring M201A1 igniter lights the filling after its delay."
+      },
+      "radii": {
+        "value": {
+          "lethal": 0,
+          "injury": 0
+        },
+        "source": "derived",
+        "reason": "No blast: the filling burns."
+      },
+      "world": {
+        "value": {
+          "noise": 30,
+          "destructionLevel": 0
+        },
+        "source": "derived",
+        "reason": "The hiss of the burning filling is heard a few tens of metres away; it tears nothing down."
+      },
+      "extras": {
+        "value": {
+          "mass": 0.54,
+          "fuseRange": [
+            1.0,
+            2.3
+          ],
+          "smoke": {
+            "color": 4177738,
+            "seconds": [
+              50,
+              90
+            ]
+          }
+        },
+        "source": "reference",
+        "reason": "M18: 19 oz (0.54 kg), M201A1 igniter delay of 1.0 to 2.3 s, a cloud of coloured smoke for 50 to 90 s; the green variant (G940, 0x3FBF4A) is the default colour (https://en.wikipedia.org/wiki/M18_smoke_grenade)."
+      }
     }
   },
   "archetypes": {
@@ -4698,6 +4811,32 @@
       },
       "source": "reference",
       "reason": "AG36: cerca de 350 mm, cano de 280 mm e 1,5 kg (https://en.wikipedia.org/wiki/AG36); munição `m79_40mm` (decisão do dono). Velocidade de 76 m/s, massa carregada (+0,23 kg), recarga e coice do M79 (derivados)."
+    }
+  },
+  "multiLaunchers": {
+    "m32_mgl": {
+      "value": {
+        "id": "m32_mgl",
+        "name": "M32 multiple grenade launcher (Milkor MGL)",
+        "projectile": "m79_40mm",
+        "magazine": 6,
+        "length": 0.778,
+        "lengthCollapsed": 0.565,
+        "barrel": 0.3,
+        "emptyMass": 5.3,
+        "mass": 6.68,
+        "speed": 75,
+        "kick": 0.8,
+        "recoilBase": "shotgun_double_12",
+        "backblast": 0,
+        "reload": 9.2,
+        "stock": {
+          "kind": "fold",
+          "foldAxis": "over"
+        }
+      },
+      "source": "reference",
+      "reason": "Milkor MGL, the M32 of the US Marine Corps: 778 mm with the stock out and 565 mm folded, 300 mm barrel, 5.3 kg empty, 75 m/s, a six-round spring-driven revolving cylinder for 40×46 mm grenades (https://en.wikipedia.org/wiki/Milkor_MGL); ammunition `m79_40mm` (the same 40×46 grenade of the M79). Loaded mass = empty + 6 grenades of 0.23 kg. Recoil: the M79 kick (1.6, 2.7 kg) scaled by the mass ratio (2.7/5.3), derived. Reload of the whole cylinder derived, there is no maker figure: the frame opens and the cylinder is wound once (about 2 s, the M79 breech cycle), then six grenades are put in one by one at about 1.2 s each."
     }
   },
   "creations": {
@@ -7103,6 +7242,17 @@
       },
       "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
       "reason": "The VSS inherited the SVD. The SDK draws the real one: the thick integral suppressor covering the barrel, the AK-like receiver with its top cover, the skeletal wooden stock with its two cut-outs and the 10-round box magazine."
+    },
+    "m32_mgl": {
+      "value": {
+        "builder": "mgl",
+        "caliber": "40×46",
+        "length": 778,
+        "barrel": 300,
+        "options": {}
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (Milkor MGL, Armémuseum, CC BY 4.0), lote 1, part C",
+      "reason": "The MGL is a revolver-type launcher, not a break-action: the SDK draws the large six-chamber cylinder with its swing-out frame, the short barrel with its front grip, the collimator sight on top, the pistol grip and the folding stock."
     }
   },
   "weaponTags": {

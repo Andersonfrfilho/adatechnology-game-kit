@@ -253,7 +253,7 @@ export type WeaponAction =
       magazine: number
       reload: number
       timings?: WeaponTimings
-      family: 'rocket' | 'break' | 'underbarrel'
+      family: 'rocket' | 'break' | 'underbarrel' | 'revolver'
       disposable?: boolean
       speed: number
       /** Distance in metres below which the projectile hits without exploding. */

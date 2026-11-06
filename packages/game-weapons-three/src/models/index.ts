@@ -9,6 +9,7 @@ import { buildBullpup } from './bullpup'
 import { modelKit } from './kit'
 import type { ModelKit } from './kit'
 import { buildLauncher } from './launcher'
+import { buildMgl } from './launcher-mgl'
 import { buildM134 } from './m134'
 import { buildM2 } from './m2'
 import { buildMg42 } from './mg-mg42'
@@ -29,7 +30,7 @@ export type { ModelFamily, ModelOptions, ModelParts, WeaponModel } from './types
 
 /** One weapon of the gallery as `data/models.json` keeps it: the builder, the measures in mm and the builder's options. */
 export interface ModelEntry {
-  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'breakLauncher' | 'm2' | 'm134' | 'launcher' | 'mp40' | 'mp9' | 'ps90' | 'ppsh' | 'kar98' | 'mg42' | 'vss'
+  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'breakLauncher' | 'm2' | 'm134' | 'launcher' | 'mp40' | 'mp9' | 'ps90' | 'ppsh' | 'kar98' | 'mg42' | 'vss' | 'mgl'
   readonly caliber: string
   readonly length: number
   readonly barrel: number
@@ -74,6 +75,7 @@ const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOpti
   kar98: buildKar98,
   mg42: buildMg42,
   vss: buildVss,
+  mgl: buildMgl,
 }
 
 const nameParts = (parts: ModelParts): void => {

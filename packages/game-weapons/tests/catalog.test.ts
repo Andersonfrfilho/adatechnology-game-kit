@@ -14,7 +14,7 @@ describe('shipped catalog', () => {
 
   it('has the calibres, explosives and weapons of the team deliveries', () => {
     expect(CALIBERS).toHaveLength(34)
-    expect(EXPLOSIVES).toHaveLength(18)
+    expect(EXPLOSIVES).toHaveLength(20)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
     expect(ARCHETYPE_IDS).toHaveLength(42)
   })
@@ -85,7 +85,7 @@ describe('explosives', () => {
   it('scale the energy with the cube of the lethal radius from the M67 (Hopkinson)', () => {
     const m67 = arsenal.explosives.get('m67')
     for (const explosive of EXPLOSIVES) {
-      if (['molotov', 'claymore', 'flashbang'].includes(explosive.id)) continue
+      if (['molotov', 'claymore', 'flashbang', 'semtex'].includes(explosive.id)) continue
       const expected = (m67?.energy ?? 0) * Math.pow(explosive.lethalRadius / (m67?.lethalRadius ?? 1), 3)
       expect(explosive.energy, explosive.id).toBeCloseTo(expected, 1)
     }
@@ -119,10 +119,10 @@ describe('explosives', () => {
     expect(() => createArsenal({ patch: { explosives: { propane_p13: { leak: { fluid: 'gas', liters: 0, pressurized: true, igniteDelay: 0.8 } } } } })).toThrow(/leak of 0 l/)
   })
 
-  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79 and the ones under a barrel, and every explosive with a timer a fuse', () => {
+  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79, the M32 and the ones under a barrel, and every explosive with a timer a fuse', () => {
     for (const def of WEAPONS) {
       if (def.action.kind !== 'launcher') continue
-      expect(def.action.backblast, def.id).toBe(def.id === 'm79' || def.tags?.includes('underbarrel') ? 0 : 5)
+      expect(def.action.backblast, def.id).toBe(def.id === 'm79' || def.id === 'm32_mgl' || def.tags?.includes('underbarrel') ? 0 : 5)
       expect(def.action.minArmDistance, def.id).toBe(10)
     }
     for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(nominalFuse(explosive), explosive.id).toBeGreaterThan(0)

@@ -42,20 +42,21 @@ const fireOf = (decision: ExplosiveDecision, inputs: ExplosiveInputs): Record<st
 
 const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInputs): ExplosiveRecord => {
   const names = decision.sources.value
-  const lab = findLab(inputs, id, names.lab)
+  const lab = names.lab ? findLab(inputs, id, names.lab) : undefined
+  const radii = decision.radii?.value
   const arsenal = inputs.arsenal.find((row) => row.name === names.arsenal)
   if (names.arsenal && !arsenal) throw new Error(`weapons-catalog: Arsenal §13 has no row "${names.arsenal}"`)
   const world = decision.world?.value
   const extras = decision.extras?.value
-  const lethalRadius = lab.lethal
+  const lethalRadius = lab?.lethal ?? radii?.lethal ?? 0
   const record: Record<string, unknown> = {
     id,
     name: decision.name.value,
     kind: decision.kind.value,
     lethalRadius,
-    injuryRadius: lab.injury,
+    injuryRadius: lab?.injury ?? radii?.injury ?? 0,
   }
-  if (extras?.cone && lab.cone) record.cone = { halfAngleDeg: Math.round((lab.cone.half * 180) / Math.PI), length: lab.cone.len }
+  if (extras?.cone && lab?.cone) record.cone = { halfAngleDeg: Math.round((lab.cone.half * 180) / Math.PI), length: lab.cone.len }
   record.energy = decision.energy?.value ?? hopkinsonEnergy(lethalRadius, inputs.decisions.energyScale.value)
   if (decision.tnt) record.tnt = decision.tnt.value
   record.destructionLevel = arsenal?.destructionLevel ?? world?.destructionLevel
@@ -66,6 +67,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   if (extras?.burnRate !== undefined) record.burnRate = extras.burnRate
   if (extras?.burnTolerance !== undefined) record.burnTolerance = extras.burnTolerance
   if (extras?.stunSeconds !== undefined) record.stunSeconds = extras.stunSeconds
+  if (extras?.smoke) record.smoke = extras.smoke
   const fire = fireOf(decision, inputs)
   if (fire) record.fire = fire
   record.triggers = decision.triggers.value
@@ -75,7 +77,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   if (extras?.leak) record.leak = extras.leak
   if (extras?.shell) record.shell = extras.shell
   const isReferenced = extras?.fuseRange !== undefined || extras?.burnRate !== undefined
-  const origins = [arsenal ? 'arsenal' : undefined, 'lab', names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, isReferenced ? 'reference' : undefined, world || decision.copyOf ? 'derived' : undefined]
+  const origins = [arsenal ? 'arsenal' : undefined, lab ? 'lab' : undefined, names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, isReferenced ? 'reference' : undefined, world || decision.copyOf ? 'derived' : undefined]
   record.sources = origins.filter((origin) => origin !== undefined)
   return record as ExplosiveRecord
 }

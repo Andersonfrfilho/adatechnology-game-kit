@@ -391,7 +391,7 @@ describe('strikes wait for the impact of the clip', () => {
     wait(room, 0.5)
     room.use()
     expect(avatar.struck).toEqual(['jab'])
-    expect(DEFAULT_STRIKE_CLIPS).toEqual({ fists: 'punch_right', hand: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' })
+    expect(DEFAULT_STRIKE_CLIPS).toEqual({ brass_knuckles: 'punch_right', fists: 'punch_right', hand: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' })
   })
 
   it('a strike does not advance while the room is paused, and a reset forgets it', () => {

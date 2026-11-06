@@ -1,7 +1,7 @@
 import type { AnimationClipSpec } from '@adatechnology/game-contracts'
 import { ROOT, composeClip, cue, move, turn } from './clip-builder'
 import type { Tween } from './clip-builder'
-import { BLOWBACK, blowbackPart, kickOf, strokeOf } from './context'
+import { BLOWBACK, REVOLVING, blowbackPart, kickOf, strokeOf } from './context'
 import type { ClipContext } from './context'
 
 // how far the slide stays back for each fault, as a fraction of its travel: the page's `k` (stovepipe .35, double feed .6)
@@ -24,7 +24,7 @@ const recoil = (context: ClipContext): Tween[] => {
 /** A rotary gun turns its barrels a sixth of a turn with each shot; six barrels look the same every sixth, so the next shot starts over from rest. */
 const spinBarrels = (context: ClipContext): Tween[] => (context.parts.barrels && context.family === 'belt' ? [turn('barrels', 'x', 0, 0.03, 0, Math.PI / 3)] : [])
 
-const hammerFall = (context: ClipContext): Tween[] => (context.parts.hammer && context.family !== 'revolver' ? [turn('hammer', 'z', 0, 0.02, 0, -0.5), turn('hammer', 'z', 0.05, 0.06, -0.5, 0)] : [])
+const hammerFall = (context: ClipContext): Tween[] => (context.parts.hammer && !REVOLVING.has(context.family) ? [turn('hammer', 'z', 0, 0.02, 0, -0.5), turn('hammer', 'z', 0.05, 0.06, -0.5, 0)] : [])
 
 /** What every shot does, then what the mechanism does by family. `locked` leaves the pistol slide back, as after the last round. */
 function shotClip(id: string, context: ClipContext, locked: boolean): AnimationClipSpec {
@@ -39,7 +39,7 @@ function shotClip(id: string, context: ClipContext, locked: boolean): AnimationC
       if (!locked) tweens.push(move(part, 'x', 0.025, 0.045, travel, 0))
     }
     events.push(cue(0.012, 'eject_casing', { down: family === 'p90' || family === 'belt' }))
-  } else if (family === 'revolver' && parts.cylinder && parts.hammer) {
+  } else if (REVOLVING.has(family) && parts.cylinder && parts.hammer) {
     tweens.push(turn('cylinder', 'x', 0, 0.05, 0, Math.PI / 3), turn('hammer', 'z', 0, 0.05, 0, 0.5), turn('hammer', 'z', 0.05, 0.03, 0.5, -0.5), turn('hammer', 'z', 0.12, 0.08, -0.5, 0))
   }
   return composeClip(id, tweens, events)
@@ -58,7 +58,7 @@ const dudTweens = (context: ClipContext): Tween[] => [...pullTrigger(context), .
 /** A dud that does not stop the weapon (revolver, break action): the cylinder of a revolver still turns. */
 export function misfireClip(context: ClipContext): AnimationClipSpec {
   const tweens = dudTweens(context)
-  if (context.family === 'revolver' && context.parts.cylinder) tweens.push(turn('cylinder', 'x', 0, 0.07, 0, Math.PI / 3))
+  if (REVOLVING.has(context.family) && context.parts.cylinder) tweens.push(turn('cylinder', 'x', 0, 0.07, 0, Math.PI / 3))
   return composeClip('misfire', tweens)
 }
 

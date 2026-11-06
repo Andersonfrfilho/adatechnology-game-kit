@@ -23,16 +23,17 @@ const SHEET_NUMBERS: Readonly<Record<string, number>> = {
 }
 
 describe('the catalogue of the Lab', () => {
-  it('has the 16 profiles by explosive id, a generic one and the two aliases', () => {
+  it('has the 16 profiles by explosive id, a generic one and the three aliases', () => {
     expect(Object.keys(EXPLOSIONS).sort()).toEqual([...Object.keys(SHEET_NUMBERS), 'generic'].sort())
-    expect(EXPLOSION_ALIASES).toEqual({ carl_gustaf_84mm: 'at4_84mm', vog_25: 'm79_40mm' })
+    expect(EXPLOSION_ALIASES).toEqual({ carl_gustaf_84mm: 'at4_84mm', vog_25: 'm79_40mm', semtex: 'c4' })
   })
 
   it('answers for every explosive of game-weapons', () => {
-    const explosives = JSON.parse(readFileSync(new URL('../../game-weapons/src/data/explosives.json', import.meta.url), 'utf8')) as { id: string }[]
+    const explosives = JSON.parse(readFileSync(new URL('../../game-weapons/src/data/explosives.json', import.meta.url), 'utf8')) as { id: string; smoke?: unknown }[]
     const vfx = createVfx({ profile: 'low' })
-    expect(explosives).toHaveLength(18)
-    for (const { id } of explosives) expect(vfx.explosion(id, [0, 0, 0]), id).not.toBeNull()
+    expect(explosives).toHaveLength(20)
+    // a smoke canister has no blast: the host lets its smoke out puff by puff (`spawn`), so it has no profile
+    for (const { id, smoke } of explosives) if (!smoke) expect(vfx.explosion(id, [0, 0, 0]), id).not.toBeNull()
     expect(vfx.explosion('generic', [0, 0, 0])).not.toBeNull()
     expect(vfx.explosion('nothing', [0, 0, 0])).toBeNull()
   })

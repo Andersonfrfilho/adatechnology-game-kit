@@ -450,5 +450,58 @@
       "lab",
       "derived"
     ]
+  },
+  {
+    "id": "semtex",
+    "name": "Semtex charge",
+    "kind": "blast",
+    "lethalRadius": 6,
+    "injuryRadius": 18,
+    "energy": 377400,
+    "tnt": 0.83,
+    "destructionLevel": 3,
+    "noise": 700,
+    "fuseLength": 0.23,
+    "burnRate": 131,
+    "burnTolerance": 0.1,
+    "triggers": [
+      "remote",
+      "timer"
+    ],
+    "mass": 0.5,
+    "sources": [
+      "lab",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "smoke_grenade",
+    "name": "M18 colored smoke grenade",
+    "kind": "smoke",
+    "lethalRadius": 0,
+    "injuryRadius": 0,
+    "energy": 0,
+    "destructionLevel": 0,
+    "noise": 30,
+    "fuseRange": [
+      1,
+      2.3
+    ],
+    "smoke": {
+      "color": 4177738,
+      "seconds": [
+        50,
+        90
+      ]
+    },
+    "triggers": [
+      "timer"
+    ],
+    "mass": 0.54,
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]

@@ -142,6 +142,7 @@ A Galeria 3D do Arsenal (`/home/user/zombiada/site/pages/armas-itens/`) desenha 
 | M72 LAW (`m72_law`) | rocket | tática: larga o tubo vazio, encaixa o tubo novo | 1,15 s | — | regra: gallery, reference, derived; vazia: padrão da família (= tempo da tática) |
 | AT4 (`at4`) | rocket | tática: larga o tubo vazio, encaixa o tubo novo | 1,15 s | — | regra: gallery, reference, derived; vazia: padrão da família (= tempo da tática) |
 | Carl Gustaf M4 (`carl_gustaf_m4`) | rocket | tática: encaixa o foguete | 1,05 s | — | regra: gallery, reference, derived; vazia: padrão da família (= tempo da tática) |
+| M32 multiple grenade launcher (Milkor MGL) (`m32_mgl`) | revolver | tática: abre o tambor, ejeta as cápsulas, carrega com o speedloader, fecha o tambor | 9,20 s | — | regra: reference, derived; vazia: padrão da família (= tempo da tática) |
 
 ## Armas sem dado próprio
 

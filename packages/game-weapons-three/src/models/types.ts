@@ -100,7 +100,7 @@ export interface ModelFrames {
 }
 
 /** The moving mechanism of a model, which picks its fire, reload and clear motion. */
-export type ModelFamily = 'pistol' | 'revolver' | 'rifle' | 'semiint' | 'semi12' | 'p90' | 'belt' | 'pump' | 'lever' | 'bolt' | 'boltmag' | 'break' | 'rocket' | 'flame'
+export type ModelFamily = 'pistol' | 'revolver' | 'rifle' | 'semiint' | 'semi12' | 'p90' | 'belt' | 'pump' | 'lever' | 'bolt' | 'boltmag' | 'break' | 'rocket' | 'flame' | 'cylinder'
 
 /** The named parts a model exposes to the animation: pivots and marks inside the model, never copies. */
 export interface ModelParts {
@@ -131,6 +131,8 @@ export interface ModelParts {
   cover?: THREE_NS.Object3D
   crane?: THREE_NS.Object3D
   cylinder?: THREE_NS.Object3D
+  /** The vertical grip under the barrel where the support hand takes a long gun that has one (the MGL). */
+  foreGrip?: THREE_NS.Object3D
   chambers?: THREE_NS.Object3D[]
   barrels?: THREE_NS.Object3D
   breech?: THREE_NS.Object3D[]

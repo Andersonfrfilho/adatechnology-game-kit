@@ -13,6 +13,16 @@ import type { ProjectileModel, ProjectileQuery } from './types'
 type Vars = Record<string, string | number>
 type Fire = { temperature: number; radius: number; seconds: number }
 
+/** Puffs per second a burning smoke canister gives, how long each lives (a multiplier of the smoke kind's life), how fast they leave it and how big they start. */
+const SMOKE_PUFFS_PER_SECOND = 36
+const SMOKE_PUFF_LIFE = 3.2
+const SMOKE_PUFF_SPEED = 1.7
+const SMOKE_PUFF_SIZE = 5
+const SMOKE_PUFF_ALPHA = 1.5
+
+/** A canister that is burning: where it lies, the seconds left and the colour of its smoke. */
+type SmokeSource = { readonly point: Vec3; left: number; owed: number; readonly color: number }
+
 /** Radius of the blast a cone gives to each object inside it: the blast is the object's own, not the area around it. */
 const CONE_BLAST_RADIUS = 0.5
 
@@ -66,7 +76,7 @@ export type ExplosivesContext = {
   readonly world: Pick<DestructionWorld, 'raycast' | 'explode'>
   readonly renderer: Pick<DestructionRenderer, 'emit' | 'explode'>
   /** The effects world that draws the blast of an explosive by its id; the renderer keeps the shove on pieces and the sound. */
-  readonly effects: Pick<VfxWorld, 'explosion'>
+  readonly effects: Pick<VfxWorld, 'explosion' | 'spawn'>
   readonly arsenal: Pick<Arsenal, 'explosives' | 'rules'>
   /** The roots of the objects a blast can reach (the arena is not one). */
   readonly objects: () => readonly THREE_NS.Object3D[]
@@ -86,6 +96,8 @@ export type ExplosivesContext = {
   readonly emitHost: (event: HostEvent) => void
   readonly startFire: (weapon: string, at: Vec3, fire: Fire, isImpact: boolean) => void
   readonly say: (message: string) => void
+  /** A number in [0, 1) for the scatter of the smoke (default `Math.random`). */
+  readonly random?: () => number
   /** The host's model for a projectile or a charge; without it, or when it answers nothing, the room draws a primitive. */
   readonly projectileModel?: ((query: ProjectileQuery) => ProjectileModel | null | undefined) | undefined
 }
@@ -99,6 +111,8 @@ export type Explosives = {
   /** Sets the explosive `explosive` off at `point` at once, as if `weapon` had put it there (the test table's blast); false for an unknown explosive. */
   blastAt: (weapon: string, explosive: string, point: Vec3) => boolean
   update: (dt: number) => void
+  /** Seconds the canisters burning now still have, one per canister. */
+  smokeLeft: () => readonly number[]
   /** Removes every projectile and charge, and their meshes. */
   clear: () => void
 }
@@ -109,6 +123,8 @@ const toArray = (vector: THREE_NS.Vector3): Vec3 => [vector.x, vector.y, vector.
 export function createExplosives(context: ExplosivesContext): Explosives {
   const { THREE, scene, camera, world, renderer, arsenal, translate, format, action } = context
   const projectiles: Projectile[] = []
+  const smokeSources: SmokeSource[] = []
+  const random = context.random ?? Math.random
   const meshes: THREE_NS.Object3D[] = []
   const up = new THREE.Vector3(0, 1, 0)
 
@@ -119,6 +135,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   const clear = (): void => {
+    smokeSources.length = 0
     projectiles.length = 0
     drop(meshes)
     meshes.length = 0
@@ -313,6 +330,12 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   const detonate = (projectile: Projectile, detonation: Detonation): void => {
     const weaponName = context.toolName(projectile.weapon)
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
+    if (detonation.smoke) {
+      const [shortest, longest] = detonation.smoke.seconds
+      smokeSources.push({ point: detonation.point, left: shortest + (longest - shortest) * random(), owed: 0, color: detonation.smoke.color })
+      action('smoke', translate('act.smoke', { weapon: weaponName, seconds: format(smokeSources[smokeSources.length - 1]!.left, 0) }), { data: { weapon: projectile.weapon, explosive: detonation.explosive, point: detonation.point } })
+      return
+    }
     const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', context.blast())
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
     if (!detonation.cone) told(results)
@@ -444,7 +467,24 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     detonate(projectile, event.detonation)
   }
 
+  /** Each burning canister lets out puffs of its colour until its filling is spent. */
+  const burnSmoke = (dt: number): void => {
+    for (let index = smokeSources.length - 1; index >= 0; index--) {
+      const source = smokeSources[index]!
+      source.left -= dt
+      source.owed += SMOKE_PUFFS_PER_SECOND * dt
+      for (; source.owed >= 1; source.owed -= 1) {
+        const angle = random() * Math.PI * 2
+        const speed = SMOKE_PUFF_SPEED * (0.4 + random())
+        const velocity: Vec3 = [Math.cos(angle) * speed, 0.5 + random() * 0.8, Math.sin(angle) * speed]
+        context.effects.spawn('smoke', [source.point[0], source.point[1] + 0.08, source.point[2]], velocity, { color: source.color, size: SMOKE_PUFF_SIZE, life: SMOKE_PUFF_LIFE, alpha: SMOKE_PUFF_ALPHA })
+      }
+      if (source.left <= 0) smokeSources.splice(index, 1)
+    }
+  }
+
   const update = (dt: number): void => {
+    burnSmoke(dt)
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const projectile = projectiles[index]
       if (!projectile) continue
@@ -466,5 +506,5 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     }
   }
 
-  return { throwUse, placeUse, backblastUse, detonateCharges, blastAt, update, clear }
+  return { throwUse, placeUse, backblastUse, detonateCharges, blastAt, update, clear, smokeLeft: () => smokeSources.map((source) => source.left) }
 }

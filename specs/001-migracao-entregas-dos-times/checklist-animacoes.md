@@ -1,6 +1,6 @@
 # Checklist das animações por arma
 
-Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (136):
+Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (137):
 
 - **mão de apoio**: as duas mãos existem, ficam na frente do olho, dentro da vista e a até 12 cm do modelo na mão.
 - **dedo no gatilho**: com peça de gatilho no modelo, o indicador direito repousa estendido, vai ao gatilho e puxa a cada tiro (metralhadora e lança-chamas seguram o gatilho), e volta; sem peça de gatilho a empunhadura é a normal (—).
@@ -148,6 +148,7 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | Carl Gustaf M4 (`carl_gustaf_m4`) | ✓ | ✓ | ✓ | — | ✓ 1,05 s / — | ✓ | n/a | ✓ |
 | M2 flamethrower (`m2_flamethrower`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
 | Improvised flamethrower (`improvised_flamethrower`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
+| M32 multiple grenade launcher (Milkor MGL) (`m32_mgl`) | ✓ | ✓ | ✓ | — | ✓ 9,20 s / — | ✓ | n/a | ✓ |
 
 ## Sem gatilho no modelo
 
@@ -195,6 +196,8 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Dynamite (`dynamite`): throwable, throwable
 - C4 charge (`c4`): throwable, throwable
 - Claymore mine (`claymore`): throwable, throwable
+- Semtex charge (`semtex`): throwable, throwable
+- M18 colored smoke grenade (`smoke_grenade`): throwable, throwable
 - Tactical knife (`tactical_knife`): melee_blade, melee
 - Meat cleaver (`meat_cleaver`): melee_blade, melee
 - Hatchet (`hatchet`): melee_blade, melee
@@ -207,6 +210,9 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Improvised spear (`improvised_spear`): melee_blade, melee
 - Chainsaw (`chainsaw`): melee_blade, melee
 - Recurve bow (`recurve_bow`): bow, firearm
+- KA-BAR combat knife (`kabar`): melee_blade, melee
+- Katana (`katana`): melee_blade, melee
+- Brass knuckles (`brass_knuckles`): melee_blunt, melee
 
 ## Prévias
 

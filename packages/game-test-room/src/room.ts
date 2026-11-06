@@ -2197,7 +2197,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const kickLeg = options.kickLeg ?? 'alternate'
   let nextLeg: 'left' | 'right' = 'right'
   const punchHand = options.punchHand ?? 'alternate'
-  const punchTools = new Set(options.punchTools ?? ['hand', 'fists'])
+  const punchTools = new Set(options.punchTools ?? ['hand', 'fists', 'brass_knuckles'])
   let nextHand: 'left' | 'right' = 'right'
   // the combo (an ability the page gives, `strikeCombo`): while it is on, each blow of its tools is its next step, and a pause longer than `reset` starts it over
   const combo = options.strikeCombo

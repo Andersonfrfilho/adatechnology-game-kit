@@ -44,10 +44,18 @@ export interface ExplosiveShell {
   readonly trailSeconds: number
 }
 
+/** What a smoke canister gives off instead of a blast: the colour of the smoke and how long it burns (the real burn varies by lot, so it is a range). */
+export interface ExplosiveSmoke {
+  /** `0xRRGGBB` of the smoke. */
+  readonly color: number
+  /** Seconds the filling burns once the fuse has lit it, between the two ends. */
+  readonly seconds: readonly [number, number]
+}
+
 export interface ExplosiveDef {
   readonly id: ExplosiveId
   readonly name?: string
-  readonly kind: 'fragmentation' | 'blast' | 'incendiary' | 'directional' | 'flash' | 'shaped_charge' | 'fuel'
+  readonly kind: 'fragmentation' | 'blast' | 'incendiary' | 'directional' | 'flash' | 'shaped_charge' | 'fuel' | 'smoke'
   /** Radius in metres inside which everything dies. */
   readonly lethalRadius: number
   /** Radius in metres of the wounding area (damage falls with distance). */
@@ -75,6 +83,8 @@ export interface ExplosiveDef {
   /** Scatter of the burn rate as a fraction, sampled per throw (0.1 = ±10%). */
   readonly burnTolerance?: number
   readonly stunSeconds?: number
+  /** A smoke canister: it makes smoke for `seconds` and does not explode (energy and radii are 0). */
+  readonly smoke?: ExplosiveSmoke
   readonly fire?: { temperature: number; radius: number; seconds: number }
   readonly triggers?: readonly ExplosiveTrigger[]
   readonly chain?: ExplosiveChain
