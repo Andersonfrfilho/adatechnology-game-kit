@@ -54,11 +54,6 @@
       "count": 30
     }
   },
-  "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 22
-    }
-  },
   "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 15
