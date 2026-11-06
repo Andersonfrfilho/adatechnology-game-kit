@@ -1,10 +1,20 @@
-import type { ModuleScenario } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, DestructionEvent, ModuleScenario } from '@adatechnology/game-contracts'
+import type { DestructionWorld } from '@adatechnology/game-destruction'
 import { fill } from './text.js'
 import type { AreaText } from './text.js'
 
+/** A part of a specimen's spec. */
+type SpecPart = DestructibleSpec['parts'][number]
+
+/** The room as these scenarios use it: its destruction world, and `spawn` of an item at a point (its root carries the specimen's spec in `userData.floorplanSpec`). */
+export interface AreaRoom {
+  world: DestructionWorld
+  spawn(item: string, position: [number, number, number], rotationY: number): { objectId: string; root: { userData: Record<string, unknown> } }
+}
+
 /** What the room hands a scenario (`ScenarioContext` of game-test-room), narrowed to what these use. */
 export interface AreaContext {
-  room: any
+  room: AreaRoom
   step(seconds: number): void
   expect(condition: boolean, label: string, data?: Record<string, unknown>): void
 }
@@ -21,38 +31,38 @@ export const SPECIMEN_AT: Vec3 = [-5, 0, -11]
  */
 export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Array<ModuleScenario<AreaContext>> {
   const T = text.steps
-  const spawn = (room: any, item: string): { oid: string; parts: any[]; centre: (part: string) => [number, number, number] } => {
+  const spawn = (room: AreaRoom, item: string): { oid: string; parts: SpecPart[]; centre: (part: string) => [number, number, number] } => {
     const so = room.spawn(item, [at[0], at[1], at[2]], 0)
-    const parts: any[] = so.root.userData.floorplanSpec.parts
+    const parts: SpecPart[] = (so.root.userData.floorplanSpec as DestructibleSpec).parts
     const centre = (id: string): [number, number, number] => {
-      const p = parts.find((x) => x.id === id)
+      const p = parts.find((x) => x.id === id)!
       return [p.position[0] + at[0], p.position[1] + at[1], p.position[2] + at[2]]
     }
     return { oid: so.objectId, parts, centre }
   }
-  const role = (p: any): string | undefined => p.structure && p.structure.role
+  const role = (p: SpecPart): string | undefined => p.structure && p.structure.role
   // listeners opened by `events` during a run; each scenario stops them when it ends, or every later event of the room piles up in a list nobody reads
   const listening: Array<() => void> = []
-  const events = (room: any): any[] => {
-    const list: any[] = []
-    listening.push(room.world.on('*', (e: any) => list.push(e)))
+  const events = (room: AreaRoom): DestructionEvent[] => {
+    const list: DestructionEvent[] = []
+    listening.push(room.world.on('*', (e) => list.push(e)))
     return list
   }
   const stopListening = (): void => {
     for (const off of listening.splice(0)) off?.()
   }
-  const collapsed = (list: any[]): string[] => list.filter((e) => e.type === 'collapse').flatMap((e) => e.parts.map((p: any) => p.id || p))
+  const collapsed = (list: DestructionEvent[]): string[] => list.flatMap((e) => (e.type === 'collapse' ? e.parts.map((p) => (p as unknown as { id?: string }).id || p) : [])) /* parts are ids; an object with an id is read by it, as before */
   /** Standing: not broken, and not stripped to its rebar cage (reinforced concrete that fractured stays as a cage, stage 3). */
-  const whole = (room: any, oid: string, pid: string): boolean => {
+  const whole = (room: AreaRoom, oid: string, pid: string): boolean => {
     const p = room.world.part(oid, pid)
     return !!p && p.status !== 'broken' && !p.stripped
   }
-  const groundColumns = (parts: any[]): any[] => parts.filter((p) => role(p) === 'column' && p.position[1] < 2 && !/tank/.test(p.id))
-  const slabs = (parts: any[]): string[] => parts.filter((p) => role(p) === 'slab').map((p) => p.id)
-  const blunt = (room: any, oid: string, pid: string, point: [number, number, number], energy: number): void => {
+  const groundColumns = (parts: SpecPart[]): SpecPart[] => parts.filter((p) => role(p) === 'column' && p.position[1] < 2 && !/tank/.test(p.id))
+  const slabs = (parts: SpecPart[]): string[] => parts.filter((p) => role(p) === 'slab').map((p) => p.id)
+  const blunt = (room: AreaRoom, oid: string, pid: string, point: [number, number, number], energy: number): void => {
     room.world.hitPart(oid, pid, { type: 'blunt', point, energy, radius: 0.05, source: 'teste' })
   }
-  const bullet = (room: any, oid: string, pid: string, point: [number, number, number], energy: number): void => {
+  const bullet = (room: AreaRoom, oid: string, pid: string, point: [number, number, number], energy: number): void => {
     room.world.hitPart(oid, pid, { type: 'ballistic', point, direction: [0, 0, -1], energy, caliber: 9 })
   }
 
@@ -99,7 +109,7 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
       run({ room, step, expect }) {
         const { oid, parts, centre } = spawn(room, 'house_casa_inteira')
         const list = events(room)
-        const partition = parts.find((p) => role(p) === 'partition')
+        const partition = parts.find((p) => role(p) === 'partition')!
         const laj = slabs(parts)
         blunt(room, oid, partition.id, centre(partition.id), 3e6)
         step(20)
@@ -112,7 +122,7 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
       name: text.scenarios.house_window_glass as string,
       run({ room, step, expect }) {
         const { oid, parts, centre } = spawn(room, 'house_casa_inteira')
-        const window = parts.find((p) => /glass/.test(p.material) && /^window:/.test(p.id))
+        const window = parts.find((p) => /glass/.test(p.material) && /^window:/.test(p.id))!
         let shots = 0
         for (; shots < 12 && whole(room, oid, window.id); shots++) {
           bullet(room, oid, window.id, centre(window.id), 600)
@@ -129,13 +139,13 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
       name: text.scenarios.house_tank_leak as string,
       run({ room, step, expect }) {
         const { oid, parts, centre } = spawn(room, 'house_casa_inteira')
-        const tank = parts.find((p) => p.contains && p.contains.fluid === 'water')
+        const tank = parts.find((p) => p.contains && p.contains.fluid === 'water')!
         const before = (room.world.part(oid, tank.id) || {}).liters ?? 0
         bullet(room, oid, tank.id, centre(tank.id), 600)
         step(40)
         const state = room.world.part(oid, tank.id)
         expect((state ? state.holes.length : 0) > 0, T.tank_hole as string)
-        expect(before > 0 && (state.liters ?? 0) < before, fill(T.tank_leaked as string, { before: Math.round(before), after: Math.round(state.liters ?? 0) }))
+        expect(before > 0 && (state!.liters ?? 0) < before, fill(T.tank_leaked as string, { before: Math.round(before), after: Math.round(state!.liters ?? 0) }))
       },
     },
     {
@@ -144,11 +154,11 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
       run({ room, step, expect }) {
         const { oid, parts, centre } = spawn(room, 'house_casa_inteira')
         const list = events(room)
-        const bottle = parts.find((p) => p.explodes)
+        const bottle = parts.find((p) => p.explodes)!
         room.world.hitPart(oid, bottle.id, { type: 'fire', point: centre(bottle.id), temperature: 900, radius: 0.6, duration: 8 })
         step(12)
         expect(list.filter((e) => e.type === 'explode').length > 0, T.gas_exploded as string)
-        const damage = list.filter((e) => e.type === 'damage' && e.part !== bottle.id && e.damageType === 'explosive')
+        const damage = list.filter((e): e is Extract<DestructionEvent, { type: 'damage' }> => e.type === 'damage' && e.part !== bottle.id && e.damageType === 'explosive')
         expect(damage.length > 0, fill(T.gas_damaged as string, { n: new Set(damage.map((e) => e.part)).size }))
       },
     },

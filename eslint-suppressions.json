@@ -154,11 +154,6 @@
       "count": 2
     }
   },
-  "packages/game-floorplan-three/src/create.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/destruction/breach.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 42
@@ -174,34 +169,9 @@
       "count": 5
     }
   },
-  "packages/game-floorplan-three/src/furniture/spec.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 26
-    }
-  },
   "packages/game-floorplan-three/src/kernel-types.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/test-area/module.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 24
-    }
-  },
-  "packages/game-floorplan-three/src/test-area/scenarios.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 17
-    }
-  },
-  "packages/game-floorplan-three/src/test-area/specimens.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-floorplan-three/src/test-area/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
     }
   },
   "packages/game-floorplan-three/src/types.ts": {

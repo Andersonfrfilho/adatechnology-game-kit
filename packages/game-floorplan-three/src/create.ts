@@ -1,7 +1,7 @@
 import * as props3d from '@adatechnology/game-props3d'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
-import type { Kernel, Shared } from './kernel-types.js'
+import type { BoxCollider, Kernel, Shared, Three } from './kernel-types.js'
 import { createTranslator } from './locale.js'
 import * as statics from './statics.js'
 import { installKernelGeometry } from './kernel/geometry.js'
@@ -71,7 +71,7 @@ export { planLod, rectsOf, isOpenArea, OPEN_ROOM_TYPES } from './statics.js'
  * Creates a house renderer: `create(THREE, options).build(result, { quality, night })` turns the result of `@adatechnology/game-floorplan`
  * (plus the structure of `@adatechnology/game-floorplan-structure`) into a three.js group. Port of the team's Casa3DSDK.
  */
-export function create(THREE: any, options: HouseRendererOptions = {}): HouseRenderer {
+export function create(THREE: Three, options: HouseRendererOptions = {}): HouseRenderer {
   const cfg = Object.assign({}, options || {})
   const DOC = cfg.document || (typeof document !== 'undefined' ? document : null)
   const PROPS = cfg.props || props3d
@@ -80,8 +80,8 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   const HP = Object.assign({ glass: 20, wood: 60, water: 80, metal: 200, masonry: 500, rubber: 40, fuel: 60, gas: 40 }, cfg.hp)
   const invalidate = () => { if (cfg.onChange) cfg.onChange({ shadow: false }) }
   const invalidateShadow = () => { if (cfg.onChange) cfg.onChange({ shadow: true }) }
-  const colliderChanged = (c: any) => { if (c && cfg.onCollider) cfg.onCollider(c) }
-  const shared = { mats: null, quality: cfg.quality === 'game' ? 'game' : 'high' } as Partial<Shared> as Shared /* the installers fill the rest */
+  const colliderChanged = (c: BoxCollider | null | undefined): void => { if (c && cfg.onCollider) cfg.onCollider(c) }
+  const shared = { mats: null, quality: cfg.quality === 'game' ? 'game' : 'high' } as unknown as Shared /* the installers fill the rest */
   const seedKey = (id: unknown): unknown => { if (cfg.seedKey && id != null) { const k = cfg.seedKey(String(id)); return k == null ? id : k } return id }
   // the kernel's three: its primitive geometries (the GEO templates, breach units, fragments, mirrors) are made by game-shapes, bit-identical and cached by parameters
   // the installers below fill the rest of the kernel (Object.assign), so it starts with only what create() itself knows

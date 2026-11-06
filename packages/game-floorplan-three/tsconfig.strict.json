@@ -25,6 +25,7 @@
     "src/build/build.ts",
     "src/build/instance.ts",
     "src/build/api.ts",
+    "src/test-area/scenarios.ts",
     "src/navigation/bind.ts",
     "src/navigation/floor-navigator.ts",
     "src/navigation/from-house.ts",

@@ -4,6 +4,7 @@ import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
 import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { AdapterOptions, FloorplanAdapter, HouseholdKit } from '@adatechnology/game-floorplan-interactables'
 import type { BoxCollider, BuildContext, DoorLeaf, ElectricalInfo, Eye, GutterInfo, HouseInstance, HouseInteractives, HouseLabel, HouseRecord, HouseRoom, InteractionTarget, CarModel, InteractablesRefs, KitInteractionTarget, ReflectorClass, Three, VegetationLibs, EffectLighting, MaterialTable, RoomLighting, TypeTable, InteractiveState, KitTargetOptions, LightRequest, MirrorState, SavedHouseState, SolarInfo, StairRecord, VegetationInfo, WaterApi } from './kernel-types.js'
@@ -172,6 +173,9 @@ export interface HousePart {
   [extra: string]: unknown
 }
 
+/** What `HouseRenderer.build` takes: a plan of `game-floorplan` (`generate`), or a house record made from one. */
+export type HousePlan = FloorplanResult | HouseRecord
+
 /** A point in world coordinates. */
 export interface HousePoint { x: number; y: number; z: number }
 
@@ -287,8 +291,8 @@ export interface LightingOptions {
 /** The renderer `create(THREE, options)` returns. */
 export interface HouseRenderer {
   version: string
-  /** Builds the house of a plan (the result of `game-floorplan`). */
-  build(plan: HouseRecord, options?: BuildOptions): House
+  /** Builds the house of a plan (the result of `game-floorplan`, or a house record such as `wallPlan`'s). */
+  build(plan: HousePlan, options?: BuildOptions): House
   newState(): SavedHouseState
   /** Damage class and props kit type of each item type. */
   types: TypeTable

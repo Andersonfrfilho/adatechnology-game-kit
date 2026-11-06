@@ -5,7 +5,7 @@ import type { HouseRendererInternal, Kernel, Shared } from '../kernel-types.js';
 export function buildApi(K: Kernel, shared: Shared): HouseRendererInternal {
   const { cfg, VERSION, ATLAS, TEX, applyPart, carGroup, carModel, props, TYPES, roomLightMask, lighting, effectLights, newState, build } = K;
   return {
-        version: VERSION, build, newState, types: TYPES, mv: props, applyPart,
+        version: VERSION, build: build as HouseRendererInternal['build'] /* a floorplan result is read as the house record it becomes */, newState, types: TYPES, mv: props, applyPart,
         // the kernel and the shared state, for recorders that run the team's builders into something else than the house (`furnitureSpec`, `tapSpec`): not a stable api
         internals: { K, shared },
         get materials() { return shared.mats; }, roomLightMask, lighting, effectLights,

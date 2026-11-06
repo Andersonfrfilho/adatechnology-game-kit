@@ -345,7 +345,8 @@ export interface KernelBase {
   HP: Record<string, number>
   invalidate(): void
   invalidateShadow(): void
-  colliderChanged(c: unknown): void
+  /** Tells the game (`onCollider`) that a collider opened or closed. */
+  colliderChanged(c: BoxCollider | null | undefined): void
   VERSION: string
   isOpenArea(c: { type: string; outdoor?: boolean }): boolean
 }
