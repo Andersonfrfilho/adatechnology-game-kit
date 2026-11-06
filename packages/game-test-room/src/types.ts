@@ -28,7 +28,7 @@ import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
-import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -120,6 +120,11 @@ export interface SceneryObject {
    * object and `dispose` when it removes it. `update` (optional) is called every frame, after the renderer's: where the follower paints what it deferred.
    */
   follow?: (root: THREE_NS.Object3D, world: DestructionWorld, objectId: string) => { restore?(): void; dispose?(): void; update?(): void } | null | void
+  /**
+   * Throwaway meshes of what the object draws later on demand (the breach of a wall: its shell and its bare bricks), drawn once at load so their shader programs are
+   * built then and not at the first shot or blast of play (`WarmUpProbes` of game-contracts).
+   */
+  warmUpProbes?: (THREE: ThreeNamespace) => WarmUpProbes
   /** Name shown in the inspector and the log (default the translated name of a default id, else the id). */
   label?: string
   /**
