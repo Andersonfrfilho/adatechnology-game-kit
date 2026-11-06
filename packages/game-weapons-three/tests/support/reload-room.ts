@@ -13,10 +13,19 @@ export function stubRenderer(): THREE.WebGLRenderer {
 
 export const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
 
+// a room kept alive keeps its listeners: the next case's KeyR reloads every room still alive, and the heap grew past 3 GB over the reload tests
+const rooms: TestRoom[] = []
+/** Disposes the rooms of the cases that ran (the tests call it in afterEach). */
+export function disposeRooms(): void {
+  for (const room of rooms.splice(0)) room.dispose()
+  document.body.replaceChildren()
+}
+
 export function setup(): { room: TestRoom; last: () => HandState } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  rooms.push(room)
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
   const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }
   room.setAvatar(avatar)

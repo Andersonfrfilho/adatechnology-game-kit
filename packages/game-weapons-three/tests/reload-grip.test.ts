@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { hasWeaponModel, buildWeaponModelById } from '../src/models'
-import { arsenal, setup, step, keyR } from './support/reload-room'
+import { arsenal, disposeRooms, setup, step, keyR } from './support/reload-room'
+
+afterEach(disposeRooms)
 
 // When the support hand works a part (racks the slide, pulls the charging handle, pumps), the shooting hand keeps its hold: on the grip, closed, the finger off the trigger.
 describe('the shooting hand while the support hand works the action', () => {
