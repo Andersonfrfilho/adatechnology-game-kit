@@ -81,7 +81,7 @@
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-cars.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 101
+      "count": 57
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {

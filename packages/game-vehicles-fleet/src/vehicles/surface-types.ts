@@ -2,8 +2,8 @@
  * Types of the hull-surface toolkit the car files share (`mkSurf`, `sgrid`, `skin`, `mkKit`): a sampler of the body shell, the grids
  * laid on its ends, the skin layers drawn over them and the end-detail kit (headlights, taillights, bumpers, plates, grilles) bound to a car.
  */
-import type { Greenhouse, LabelArgument } from '@adatechnology/game-vehicles'
-import type { Box3, Material, Mesh, Vector3 } from 'three'
+import type { CarSpec, Greenhouse, LabelArgument, TumbleSpec, VehicleContext, WarpFn, WarpOptions } from '@adatechnology/game-vehicles'
+import type { Box3, ColorRepresentation, Material, Mesh, Vector3 } from 'three'
 
 /** A point on the bodywork and its outward normal. */
 export interface SurfHit {
@@ -140,17 +140,12 @@ export interface GrilleSpec {
 }
 
 /** A point of a trunk lid seam: on the rear face (y, z) or on the top (x, z, top). */
-export interface LidPoint {
-  x: number
-  y: number
-  z: number
-  top?: boolean
-}
+export type LidPoint = { y: number; z: number; top?: false } | { x: number; z: number; top: true }
 
 /** The end-detail kit bound to one car (`mkKit`). */
 export interface CarDetailKit {
   S: Surf
-  I: unknown
+  I: CarDetailCtx
   grid(E: number, sd: number, o: GridSpec): SurfGrid
   skin(Gd: SurfGrid, mat: Material, o: SkinSpec): Mesh
   head(sd: number, o: EndLampSpec): SurfGrid
@@ -172,3 +167,53 @@ export interface SkinVertex {
 
 /** The greenhouse of a fleet car: the kit's, plus a lower rear roof (`roofR`), a crown in the middle and a rising beltline. */
 export type CarGreenhouse = Greenhouse & { k: number; roofR?: number; crown?: number; rise?: number; r1?: number; r2?: number }
+
+/** What `details` hands the model's own front, rear and extra builders: the profile ends, widths, greenhouse, warp, sampler and kit. */
+export interface CarDetailCtx {
+  fx(y: number): number
+  rx(y: number): number
+  W: number
+  hw: number
+  by: number
+  gh: CarGreenhouse
+  T: TumbleSpec
+  Wf: CarWarp
+  S: Surf
+  fxB: number
+  rxB: number
+  K: CarDetailKit
+  wrapF: number
+  wrapR: number
+  bF: BumperSpec & { wrap?: number }
+  bR: BumperSpec & { wrap?: number }
+}
+
+/** The warp of a fleet car, with its side curve `sec(y)`. */
+export type CarWarp = WarpFn & { sec(y: number): number }
+
+/** The spec of the fleet's own car builder: the kit's car spec plus the model's end details and trim. */
+export type FleetCarSpec = Omit<CarSpec, 'gh' | 'warp' | 'arches'> & {
+  gh: CarGreenhouse
+  arches: number[][]
+  warp?: Partial<WarpOptions>
+  front?(c: VehicleContext, K: CarDetailKit, I: CarDetailCtx): void
+  rear?(c: VehicleContext, K: CarDetailKit, I: CarDetailCtx): void
+  extra?(c: VehicleContext, I: CarDetailCtx): void
+  bumperCol?: ColorRepresentation
+  handleCol?: ColorRepresentation
+  skirtH?: number
+  frontBumper?: Partial<BumperSpec> & { wrap?: number }
+  rearBumper?: Partial<BumperSpec> & { wrap?: number }
+  plateF?: number
+  plateR?: number
+  plateROnBumper?: boolean
+  blackPillars?: number[]
+  mirrorBlink?: boolean
+  clad?: boolean
+  chromeBelt?: boolean
+  fin?: boolean
+  spoiler?: boolean
+  rails?: boolean | number
+  dropRear?: boolean
+  exhaust?: boolean
+}

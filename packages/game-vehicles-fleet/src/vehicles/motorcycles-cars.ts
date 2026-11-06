@@ -1,6 +1,6 @@
 import type { LabelArgument, SceneNode, VehicleContext, WarpFn, WarpOptions } from '@adatechnology/game-vehicles'
 import type { Material, Mesh, MeshStandardMaterial, Object3D, Vector2, Vector3 } from 'three'
-import type { AlongU, CarDetailKit, LidPoint, CarGreenhouse, GridSpec, OutlineSpec, SkinSpec, SkinVertex, Surf, SurfGrid, SurfHit } from './surface-types'
+import type { AlongU, CarDetailCtx, CarDetailKit, CarWarp, FleetCarSpec, LidPoint, CarGreenhouse, GridSpec, OutlineSpec, SkinSpec, SkinVertex, Surf, SurfGrid, SurfHit } from './surface-types'
 import type { FleetContext } from '../context'
 import { tagWiper } from './moving-parts'
 
@@ -752,7 +752,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return [lo, hi]
   }
   /* end-detail kit, bound to a car */
-  function mkKit(c: VehicleContext, S: Surf, I: unknown) {
+  function mkKit(c: VehicleContext, S: Surf, I: CarDetailCtx) {
     const K = { S: S, I: I } as CarDetailKit
     K.grid = function (E: number, sd: number, o: GridSpec) {
       return sgrid(S, E, sd, o)
@@ -978,7 +978,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return K
   }
 
-  function car(c: VehicleContext, s: any) {
+  function car(c: VehicleContext, s: FleetCarSpec) {
     const W = s.W,
       gh = s.gh,
       bev = 0.05,
@@ -991,7 +991,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     const intr = s.interior === false ? null : Object.assign({ rows: 2 }, s.interior || {})
     const hoodO = s.hood ? Object.assign({ motor: 'gasoline' }, s.hood === true ? {} : s.hood) : null
     let tireW = 0.2
-    ;(s.wheels || []).forEach(function (w: number[]) {
+    ;(s.wheels || []).forEach(function (w) {
       tireW = Math.max(tireW, w[2])
     })
     const low = []
@@ -1029,7 +1029,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       gHoles.push(
         kit.holeQuad(qf),
         kit.holeQuad(qr),
-        kit.holeWhere(function (n: any, ce: any) {
+        kit.holeWhere(function (n: Vector3, ce: Vector3) {
           return n.y < -0.7 && ce.y < gh.belt + 0.02
         }),
       )
@@ -1137,7 +1137,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return m
   }
 
-  function details(c: VehicleContext, s: any, Wf: any, S: any) {
+  function details(c: VehicleContext, s: FleetCarSpec, Wf: CarWarp, S: Surf) {
     const m = c.meta,
       W = s.W,
       hw = W / 2,
@@ -1145,16 +1145,16 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       it = s.lower,
       gh = s.gh,
       T = m.tumble
-    const fx = function (y: any) {
+    const fx = function (y: number) {
         return profX(it, y, true)
       },
-      rx = function (y: any) {
+      rx = function (y: number) {
         return profX(it, y, false)
       }
-    const I: any = { fx: fx, rx: rx, W: W, hw: hw, by: by, gh: gh, T: T, Wf: Wf, S: S }
+    const I = { fx: fx, rx: rx, W: W, hw: hw, by: by, gh: gh, T: T, Wf: Wf, S: S } as CarDetailCtx
     I.fxB = S.endX(1, by + 0.2)
     I.rxB = S.endX(-1, by + 0.2)
-    const K: any = mkKit(c, S, I)
+    const K = mkKit(c, S, I)
     I.K = K
     const paint = c.paint(s.col),
       bcol = s.bumperCol ? c.paint(s.bumperCol) : paint
@@ -1188,7 +1188,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     /* pillars, mirrors, trim, handles, skirts */
     const tang = Math.atan(((gh.Wg / 2) * gh.k) / (T.top - T.belt))
     ;[1, -1].forEach(function (sd) {
-      ;(s.blackPillars || []).forEach(function (px: any) {
+      ;(s.blackPillars || []).forEach(function (px) {
         const ry = roofAt(gh, px),
           yc = (gh.belt + ry) / 2 + 0.005,
           hh = ry - gh.belt - 0.1
@@ -1203,10 +1203,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       c.roundBox(0.12, 0.12, 0.2, 0.05, mcol, mx, my + 0.02, sd * (mz0 + 0.14), { taper: { sx: 0.8, shift: -0.01 } })
       c.roundBox(0.02, 0.09, 0.16, 0.02, MT.chrome, mx - 0.065, my + 0.02, sd * (mz0 + 0.14))
       if (s.mirrorBlink !== false) c.roundBox(0.02, 0.012, 0.12, 0.005, MT.amber, mx + 0.03, my - 0.025, sd * (mz0 + 0.17))
-      ;(s.seams || []).forEach(function (x: any) {
+      ;(s.seams || []).forEach(function (x) {
         c.roundBox(0.008, gh.belt - by - 0.12, 0.006, 0.003, MT.dark, x, (gh.belt + by) / 2 + 0.03, sd * (hw + 0.001))
       })
-      ;(s.handles || []).forEach(function (x: any) {
+      ;(s.handles || []).forEach(function (x) {
         c.roundBox(
           0.15,
           0.03,
@@ -1223,7 +1223,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           x1 = s.arches[0][0] - s.arches[0][2] - 0.02
         c.roundBox(x1 - x0, 0.08, 0.035, 0.015, MT.trim, (x0 + x1) / 2, by + 0.05, sd * (hw - 0.008))
         if (s.clad)
-          s.arches.forEach(function (a: any) {
+          s.arches.forEach(function (a) {
             const a0 = Math.asin(clamp((by - a[1]) / a[2], -1, 1)),
               tor = c.add(new THREE.TorusGeometry(a[2] + 0.02, 0.035, 6, 26, PI - 2 * a0), MT.trim, a[0], a[1], sd * (hw - 0.01))
             tor.rotation.z = a0
@@ -1274,7 +1274,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         })
       })
     /* wheels (outside the warp; follow the curvature of the side) */
-    ;(s.wheels || []).forEach(function (w: any) {
+    ;(s.wheels || []).forEach(function (w) {
       const zw = hw * (1 - Wf.sec(w[1])) - w[2] / 2 + 0.02
       ;[1, -1].forEach(function (sd) {
         c.wheel(w[0], sd * zw, w[1], w[2], w[3] || {})
@@ -1299,7 +1299,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return I
   }
   /* underbody seen on rollover: matte black plate, exhaust, tank, axles and suspension arms */
-  function underbody(c: VehicleContext, s: any, I: any) {
+  function underbody(c: VehicleContext, s: FleetCarSpec, I: CarDetailCtx) {
     const by = I.by,
       fa = s.arches[0],
       ra = s.arches[1],
@@ -1313,7 +1313,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       c.roundBox(fa[0] - ra[0] - 0.8, 0.05, 0.06, 0.015, UNDER2, (fa[0] + ra[0]) / 2, y - 0.02, sd * (zi - 0.06))
     })
     c.roundBox(fa[0] - ra[0] - 0.9, 0.08, 0.2, 0.03, UNDER, (fa[0] + ra[0]) / 2, y - 0.025, 0)
-    if (s.hood && !(s.hood.motor === 'electric')) {
+    if (s.hood && !((s.hood as { motor?: string }).motor === 'electric')) {
       c.roundBox(0.42, 0.08, 0.36, 0.03, UNDER2, fa[0] + 0.12, y - 0.04, 0)
       const ex = s.exhaust !== false
       if (ex) {
@@ -1485,7 +1485,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
 
   /* ================= Hatch (Onix type) ================= */
   /* front of the hatch: thin headlight joined to the chrome bar, narrow upper grille, trapezoid lower grille and fog light */
-  function onyxFront(c: VehicleContext, K: any, _I: any) {
+  function onyxFront(c: VehicleContext, K: CarDetailKit, _I: CarDetailCtx) {
     ;[1, -1].forEach(function (sd) {
       const yb = function (u: number) {
           return 0.66 + 0.02 * u
@@ -1592,7 +1592,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
      rear: horizontal taillights that invade the lid; lid with a roof spoiler (hatch) or short lid with a chrome trim (sedan).
      top: roof dropping to the rear, "fin" antenna. */
   function onyxSides(sedan: any) {
-    return function (c: VehicleContext, I: any) {
+    return function (c: VehicleContext, I: CarDetailCtx) {
       const gh = I.gh,
         col = c.meta.color
       function yb(x: number) {
@@ -1631,7 +1631,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       })
     }
   }
-  function ONYX(col: string, sedan?: any) {
+  function ONYX(col: string, sedan?: boolean): FleetCarSpec {
     const lower = sedan
       ? [
           [-2.36, 0.27, 0.06],
@@ -1709,7 +1709,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       plateR: sedan ? 0.79 : 0.72,
       plateROnBumper: false,
       front: onyxFront,
-      rear: function (c: VehicleContext, K: any, I: any) {
+      rear: function (c: VehicleContext, K: CarDetailKit, I: CarDetailCtx) {
         const y0 = sedan ? 0.86 : 0.84,
           y1 = sedan ? 0.97 : 0.96
         ;[1, -1].forEach(function (sd) {
@@ -1857,7 +1857,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       hood: true,
     },
     function (c) {
-      const s: any = ONYX('#dedcd5', true)
+      const s = ONYX('#dedcd5', true)
       s.handleCol = '#d0cfc9'
       s.wheels = [
         [1.18, 0.31, 0.2, wheelOpts('hubcap')],
@@ -1981,7 +1981,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         plateF: 0.45,
         plateR: 0.74,
         plateROnBumper: false,
-        front: function (c: VehicleContext, K: any, _I: any) {
+        front: function (c: VehicleContext, K: CarDetailKit, _I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             /* main headlight below, in a black frame, and the thin daytime light above, next to the hood (the model signature) */
             K.head(sd, {
@@ -2040,7 +2040,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             c.roundBox(0.03, 0.04, 0.16, 0.015, MT.chrome, s1.p.x + 0.03, 0.45, sd * 0.56)
           })
         },
-        rear: function (c: VehicleContext, K: any, I: any) {
+        rear: function (c: VehicleContext, K: CarDetailKit, I: CarDetailCtx) {
           const z0 = I.hw - 0.07 - 0.11
           ;[1, -1].forEach(function (sd) {
             /* vertical "C" taillight, recessed in the corner */
@@ -2083,7 +2083,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           [-1.42, 0.293, 0.17, wheelOpts('hubcap')],
         ],
         warp: { bowF: 0.15, bowR: 0.16, Lf: 0.5, Lr: 0.45, pinR: 0.07 },
-        extra: function (c: VehicleContext, _I: any) {
+        extra: function (c: VehicleContext, _I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             c.roundBox(0.05, 0.16, 0.1, 0.03, MT.trim, -1.12, 1.17, sd * 0.69)
           })
@@ -2178,7 +2178,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         plateF: 0.45,
         plateR: 0.72,
         plateROnBumper: false,
-        front: function (c: VehicleContext, K: any, _I: any) {
+        front: function (c: VehicleContext, K: CarDetailKit, _I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             /* headlight with the inner tip rising towards the hood; continuous DRL along the top edge */
             const yb = function (u: number) {
@@ -2230,7 +2230,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             })
           })
         },
-        rear: function (c: VehicleContext, K: any, I: any) {
+        rear: function (c: VehicleContext, K: CarDetailKit, I: CarDetailCtx) {
           const z0 = 0.47
           ;[1, -1].forEach(function (sd) {
             K.tail(sd, {
@@ -2273,7 +2273,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         ],
         tankLabel: trl('labels.traction_battery'),
         warp: { bowF: 0.2, bowR: 0.12, Lf: 0.6 },
-        extra: function (c: VehicleContext, I: any) {
+        extra: function (c: VehicleContext, I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             /* the side "wave": embossed band that starts at the rear door and rises to the taillight */
             const Gw = sideGrid(I.S, sd, { x0: 0.2, x1: -1.98, y0: 0.5, y1: 0.98 })
@@ -2417,7 +2417,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         plateF: 0.42,
         plateR: 0.74,
         plateROnBumper: false,
-        front: function (c: VehicleContext, K: any, _I: any) {
+        front: function (c: VehicleContext, K: CarDetailKit, _I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             /* wedge headlight: thin inner tip, widening outward; L-shaped DRL */
             const yb = function (u: number) {
@@ -2502,7 +2502,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             K.skin(Gc, DRL, { u0: 0.15, u1: 0.25, yb: 0.36, yt: 0.47, off: 0.024, nv: 2 })
           })
         },
-        rear: function (c: VehicleContext, K: any, I: any) {
+        rear: function (c: VehicleContext, K: CarDetailKit, I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             const yb = function (u: number) {
                 return 0.82 + 0.02 * u
@@ -2591,7 +2591,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           [-1.4, 0.323, 0.21, wheelOpts('alloy2')],
         ],
         warp: { bowF: 0.2, bowR: 0.12, Lf: 0.6 },
-        extra: function (c: VehicleContext, I: any) {
+        extra: function (c: VehicleContext, I: CarDetailCtx) {
           ;[1, -1].forEach(function (sd) {
             crease(
               c,
@@ -2691,7 +2691,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       plateF: 0.42,
       plateR: 0.78,
       plateROnBumper: false,
-      front: function (c: VehicleContext, K: any, _I: any) {
+      front: function (c: VehicleContext, K: CarDetailKit, _I: CarDetailCtx) {
         ;[1, -1].forEach(function (sd) {
           const yb = function (u: number) {
               return 0.665 + 0.012 * u
@@ -2768,7 +2768,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         K.skin(lw, grilleMat('mesh'), { u0: lw.uz(-0.48), u1: lw.uz(0.48), yb: 0.34, yt: 0.46, off: 0.021, tile: 0.06, nv: 2 })
         outline(c, lw, { u0: lw.uz(-0.48), u1: lw.uz(0.48), yb: 0.34, yt: 0.46 }, 0.006, LH, 0.022)
       },
-      rear: function (c: VehicleContext, K: any, I: any) {
+      rear: function (c: VehicleContext, K: CarDetailKit, I: CarDetailCtx) {
         ;[1, -1].forEach(function (sd) {
           const yb = function (u: number) {
               return 0.835 + 0.02 * u
@@ -2845,7 +2845,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         [-1.4, 0.32, 0.21, wheelOpts('steelg')],
       ],
       warp: { bowF: 0.19, bowR: 0.12, Lf: 0.6 },
-      extra: function (c: VehicleContext, I: any) {
+      extra: function (c: VehicleContext, I: CarDetailCtx) {
         const S = I.S,
           K = I.K,
           dm = c.paint(door)
