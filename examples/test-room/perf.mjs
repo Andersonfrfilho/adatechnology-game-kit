@@ -22,11 +22,24 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
+/** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
+/** @typedef {NonNullable<TestRoom['webgl']>} WebGL */
+/** @typedef {NonNullable<TestRoom['lights']>} LightBudget */
+/** @typedef {TestRoom & { readonly webgl: WebGL; readonly lights: LightBudget }} LitRoom */
+/** @typedef {{ eye: number[]; target: number[] }} PerfAim */
+/** @typedef {{ finalDetailScale: number; settleSeconds: number; swing: number }} Adaptation */
+/** @typedef {{ [name: string]: unknown; name: string; adaptation: Adaptation }} HordeResult */
+/** @typedef {{ color: import('three').Color; position: import('three').Vector3 }} LightUniform */
+/** @typedef {{ pointLights: { value: LightUniform[] }; spotLights: { value: LightUniform[] } }} LightUniforms */
+/** @typedef {{ sourceFunctionName: string; invoker: string; sourceCharPosition: number; duration: number }} LoafScript */
+/** @typedef {PerformanceEntry & { scripts?: LoafScript[]; renderStart?: number }} LoafEntry */
+/** @typedef {(this: unknown, ...args: unknown[]) => unknown} GlMethod */
+
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
-const sliceOf = (list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT - 1)
+const sliceOf = (/** @type {string[]} */ list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT - 1)
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
 // PERF_SHARD=cold|warm|storm|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
 const [SHARD, SLICE] = (process.env.PERF_SHARD ?? 'all').split(':')
@@ -48,7 +61,7 @@ const BUDGET = {
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
 const HORDE_PHASES = (process.env.PERF_PHASES ?? 'dense_horde,chain_horde').split(',')
 const HORDE_SEED = 21
-const TIER = process.env.PERF_TIER ?? { intel: 'integrated', nvidia: 'discrete' }[process.env.PERF_GPU]
+const TIER = process.env.PERF_TIER ?? /** @type {Record<string, string>} */ ({ intel: 'integrated', nvidia: 'discrete' })[/** @type {string} */ (process.env.PERF_GPU)]
 if (process.env.PERF_GPU) console.log('PERF_GPU is deprecated: use PERF_TIER=integrated|discrete')
 const PIXEL_RATIO = Number(process.env.PERF_PIXEL_RATIO ?? 0)
 // a run without vsync draws far faster than the display, so "twice the median" only means something from a 60 Hz frame up
@@ -56,7 +69,7 @@ const SIXTY_HZ_MS = 16.7
 const CONVERGE_SECONDS = 2
 const SETTLED_SHARE = 0.05
 const MAX_SWING = 0.1
-const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((/** @type {number} */ ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
+const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((/** @type {number} */ ratio) => /** @type {WebGL} */ (window.__testRoom.webgl).setPixelRatio(ratio), PIXEL_RATIO) : undefined)
 let chainSetupBuffers = 0
 const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
 // the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
@@ -86,6 +99,7 @@ const SETTLE_TIMEOUT_MS = GPU_MODE ? 20000 : 360000
 // a first use is checked for the programs it links, which happens in its first frames: in counters mode the room does not wait for the smoke to clear
 const FIRST_USE_SETTLE_MS = GPU_MODE ? SETTLE_TIMEOUT_MS : 45000
 
+/** @returns {typeof import('playwright')} */
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -133,14 +147,16 @@ await pause(2000)
 const gpu = await page.evaluate(() => {
   const gl = document.querySelector('canvas')?.getContext('webgl2')
   const info = gl?.getExtension('WEBGL_debug_renderer_info')
-  return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : 'unknown'
+  return info ? /** @type {WebGL2RenderingContext} */ (gl).getParameter(info.UNMASKED_RENDERER_WEBGL) : 'unknown'
 })
 console.log(`PERF  mode=${GPU_MODE ? 'gpu' : 'counters'}  viewport=${VIEWPORT}  tier=${TIER ?? 'none'}  pixelRatio=${PIXEL_RATIO || 'default'}  gpu=${gpu}`)
 const calibration = process.env.PERF_CALIBRATE ? await page.evaluate(measureCalibration) : undefined
 const subsystems = calibration ? await page.evaluate(measureRoomCost) : undefined
-if (calibration) console.log(`CALIBRATION ${calibration.toFixed(2)} ms; room ${(subsystems.room / calibration).toFixed(2)}x, shadows ${(subsystems.shadows / calibration).toFixed(2)}x`)
+if (calibration) console.log(`CALIBRATION ${calibration.toFixed(2)} ms; room ${(/** @type {{ room: number; shadows: number }} */ (subsystems).room / calibration).toFixed(2)}x, shadows ${(/** @type {{ room: number; shadows: number }} */ (subsystems).shadows / calibration).toFixed(2)}x`)
 
+/** @type {PerfPhaseResult[]} */
 const phases = []
+/** @type {{ point: number[]; spot: number[]; problems: string[] }} */
 let lightSlotReport = { point: [], spot: [], problems: ['light_slots did not run'] }
 const idle = await phase('idle', () => pause(3000))
 // the light slots are a load-time property of the room: the cold shard (or the whole run) checks them, the warm shard skips them
@@ -160,6 +176,7 @@ const storm = runs('warm') && SHARD !== 'warm' ? await phase('storm', () => fire
 const after = runs('warm') && SHARD !== 'warm' ? await phase('after_storm', () => pause(3000)) : undefined
 
 // the horde phases reload the page on their own bench state (seed, scene, physics, count: applied in that order whatever the URL says)
+/** @type {Record<string, HordeResult>} */
 const hordeMetrics = {}
 if (runs('horde')) for (const id of HORDE_PHASES) hordeMetrics[id] = await hordePhase(id)
 
@@ -168,7 +185,7 @@ if (runs('horde')) for (const id of HORDE_PHASES) hordeMetrics[id] = await horde
 // out of the exit code: tools/gpu/perf-gate.mjs blocks those against main measured on the same machine instead.
 /** @type {{ text: string, kind: 'hard' | 'target' }[]} */
 const failures = []
-const fail = (/** @type {string} */ text, kind = 'target') => failures.push({ text, kind })
+const fail = (/** @type {string} */ text, /** @type {'hard' | 'target'} */ kind = 'target') => failures.push({ text, kind })
 const hard = (/** @type {string} */ text) => fail(text, 'hard')
 for (const p of phases) {
   const programBudget = p.name === 'chain_horde' ? HORDE_BUDGET.chainPrograms : BUDGET.programsAfterLoad
@@ -178,7 +195,7 @@ for (const p of phases) {
   if (p.hitches > 0) fail(`${p.name}: ${p.hitches} frames over ${BUDGET.hitchMs} ms (worst ${p.max} ms)`)
   if (p.p99 > BUDGET.p99Ms) fail(`${p.name}: p99 ${p.p99} ms (budget ${BUDGET.p99Ms} ms)`)
   if (p.worstLongTask > BUDGET.maxLongTaskMs) fail(`${p.name}: long task of ${p.worstLongTask} ms`)
-  if (p.maxFramesWaiting >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
+  if (/** @type {number} */ (p.maxFramesWaiting) >= BUDGET.maxFramesWaiting) fail(`${p.name}: a deferred queue waited ${p.maxFramesWaiting} frames (budget under ${BUDGET.maxFramesWaiting})`)
 }
 if (slots) for (const problem of lightSlotReport.problems) hard(`light_slots: ${problem}`)
 if (slots && slots.programs > 0) hard(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
@@ -203,6 +220,10 @@ function pause(ms) {
   return page.evaluate((/** @type {number | undefined} */ delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
 }
 
+/**
+ * @param {string[]} ids
+ * @param {{ gapMs?: number; aim?: PerfAim; settleMs?: number }} [options]
+ */
 async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE_TIMEOUT_MS } = {}) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
@@ -226,15 +247,16 @@ async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE
 // `tool.phase` turns null in the frame that ends the draw, and that frame is the trigger's too: a pull before the next frame still answers `drawing` and throws nothing.
 // Software GL draws a frame in 0.3–1.3 s, longer than DRAW_MS, so the pull waits for frames until the trigger takes it (as a player clicking again would).
 // Before UseStatus the second use of each launcher (warm_all, storm) answered `empty` and fired nothing, unnoticed: the other blasts hid it.
+/** @param {string} id @param {PerfAim} aim */
 async function pullUntilItGoes(id, aim) {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS
   for (;;) {
     const fired = await page.evaluate(([weapon, view]) => {
       const room = window.__testRoom
-      room.look(view.eye, view.target)
+      room.look(/** @type {Vec3} */ (view.eye), /** @type {Vec3} */ (view.target))
       const status = room.use()
-      return { id: room.tool?.id ?? weapon, status }
-    }, [id, aim])
+      return { id: /** @type {{ id?: string }} */ (/** @type {unknown} */ (room.tool))?.id ?? weapon, status }
+    }, /** @type {[string, PerfAim]} */ ([id, aim]))
     if (fired.id !== id || !NOT_YET.includes(fired.status) || Date.now() > deadline) return fired
     await nextFrames(2)
   }
@@ -245,20 +267,21 @@ async function pullUntilItGoes(id, aim) {
  * @param {number} count
  */
 function nextFrames(count) {
-  return page.evaluate((/** @type {number} */ frames) => new Promise((resolve) => {
+  return page.evaluate((/** @type {number} */ frames) => /** @type {Promise<void>} */ (new Promise((resolve) => {
     const step = (/** @type {number} */ left) => (left === 0 ? resolve() : requestAnimationFrame(() => step(left - 1)))
     step(frames)
-  }), count)
+  })), count)
 }
 
 /** The metrics of the module the room shows (the crowd area is the active bench), by id. */
 function readHorde() {
-  return page.evaluate(() => window.__testRoom.metrics().module)
+  return page.evaluate(() => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module))
 }
 
 // the horde phases: a page of their own, the bench state in the URL, the crowd baked at load (`eager`), the measurement from the first frame the room is ready
 /**
  * @param {string} id
+ * @returns {Promise<HordeResult>}
  */
 async function hordePhase(id) {
   const scene = id === 'dense_horde' ? 'dense_wall' : 'chain_line'
@@ -279,7 +302,7 @@ async function hordePhase(id) {
 }
 
 /**
- * @param {{ (): boolean; (): boolean; }} condition
+ * @param {() => boolean} condition
  * @param {number} seconds
  */
 async function waitForHorde(condition, seconds) {
@@ -288,23 +311,24 @@ async function waitForHorde(condition, seconds) {
 }
 
 async function playDenseHorde() {
-  await page.waitForFunction((/** @type {number} */ n) => window.__testRoom.metrics().module.agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
+  await page.waitForFunction((/** @type {number} */ n) => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module).agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
   // gpu mode plays the 30 s of the plan; software GL plays until the horde has done what the phase is for (falls by pressure, climbers) or the timeout
   if (GPU_MODE) await pause(HORDE_BUDGET.denseSeconds * 1000)
   else await waitForHorde(() => {
-    const m = window.__testRoom.metrics().module
+    const m = /** @type {NumericMetrics} */ (window.__testRoom.metrics().module)
     return (m.falls_pressure ?? 0) > 0 && (m.climbers ?? 0) > 0
   }, HORDE_BUDGET.denseSeconds)
 }
 
 // the horde comes down the street; grenades, a rocket, a molotov and rifle fire go into it from the end of the street
 async function playChainHorde() {
+  /** @type {PerfAim} */
   const aim = { eye: [0, 1.6, -31], target: [0, 0.5, -57] }
-  await waitForHorde(() => (window.__testRoom.metrics().module.agents ?? 0) > 0, 30)
+  await waitForHorde(() => (/** @type {NumericMetrics} */ (window.__testRoom.metrics().module).agents ?? 0) > 0, 30)
   await pause(GPU_MODE ? 6000 : 1000)
   chainSetupBuffers = await page.evaluate(() => window.__glCounts.buffers)
   await fireAndSettle(CHAIN_THROWN, { gapMs: 300, aim })
-  await page.evaluate(([view]) => window.__testRoom.equip('rifle_5_56') && window.__testRoom.look(view.eye, view.target), [aim])
+  await page.evaluate(([view]) => /** @type {unknown} */ (window.__testRoom.equip('rifle_5_56')) && window.__testRoom.look(/** @type {Vec3} */ (view.eye), /** @type {Vec3} */ (view.target)), [aim])
   await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push('the rifle never got ready'))
   for (let shot = 0; shot < 10; shot++) {
     await page.evaluate(() => window.__testRoom.use())
@@ -313,9 +337,10 @@ async function playChainHorde() {
   await pause(GPU_MODE ? 5000 : 1000)
 }
 
+/** @param {string} id @param {HordeResult} found */
 function checkHorde(id, found) {
   const own = phases.find((p) => p.name === id)
-  const crowd = found
+  const crowd = /** @type {Record<string, number> & { adaptation: Adaptation }} */ (/** @type {unknown} */ (found))
   if (crowd.agents === undefined) return hard(`${id}: the crowd area published no metrics (${Object.keys(crowd).join(', ')})`)
   if (crowd.draw_calls > HORDE_BUDGET.drawsPerFrame) fail(`${id}: the horde makes ${crowd.draw_calls} draw calls (budget ${HORDE_BUDGET.drawsPerFrame})`)
   const drawAllowance = id === 'chain_horde' ? HORDE_BUDGET.damagedVehicleDraws : 0
@@ -333,6 +358,7 @@ function checkHorde(id, found) {
   if (GPU_MODE && crowd.crowd_ms_p99 > HORDE_BUDGET.crowdMsP99) fail(`${id}: crowd step p99 ${crowd.crowd_ms_p99} ms (budget ${HORDE_BUDGET.crowdMsP99} ms)`)
 }
 
+/** @param {string} name @param {() => Promise<unknown>} run */
 async function phase(name, run) {
   const before = await page.evaluate(() => window.__perf.mark())
   if (process.env.PERF_STACKS) await page.evaluate(listUploads)
@@ -340,7 +366,7 @@ async function phase(name, run) {
   if (profiler) await profiler.send('Profiler.enable').then(() => profiler.send('Profiler.setSamplingInterval', { interval: 100 })).then(() => profiler.send('Profiler.start'))
   await run()
   if (profiler) writeFileSync(join(outDir, `perf-${name}.cpuprofile`), JSON.stringify((await profiler.send('Profiler.stop')).profile))
-  const result = await page.evaluate(([label, start]) => window.__perf.read(label, start), [name, before])
+  const result = await page.evaluate(([label, start]) => window.__perf.read(label, start), /** @type {[string, PerfMark]} */ ([name, before]))
   // the most frames any deferred queue had work waiting so far (the frame scheduler keeps it per queue), and each queue's forced runs
   const queues = await page.evaluate(() => window.__testRoom.frameStats?.().budget.queues ?? [])
   result.maxFramesWaiting = Math.max(0, ...queues.map((queue) => queue.maxFramesWaiting))
@@ -353,6 +379,7 @@ async function phase(name, run) {
 }
 
 /** When the detail settled (the last time it was off its final value by more than the share) and how much it still moves after that. */
+/** @param {Window['__detailSamples']} samples @returns {Adaptation} */
 function adaptationOf(samples) {
   const final = samples.at(-1)?.scale ?? 1
   const lastOff = samples.findLast((/** @type {{ scale: number; }} */ sample) => Math.abs(sample.scale - final) > final * SETTLED_SHARE)
@@ -368,11 +395,12 @@ function adaptationOf(samples) {
 // --- in the page ---
 
 function sampleDetailScale() {
-  const samples = (window.__detailSamples = [])
+  const samples = (window.__detailSamples = /** @type {Window['__detailSamples']} */ ([]))
+  /** @type {number | undefined} */
   let started
   let peak = 0
   setInterval(() => {
-    const { agents, detail_scale: scale } = window.__testRoom.metrics().module
+    const { agents, detail_scale: scale } = /** @type {NumericMetrics} */ (window.__testRoom.metrics().module)
     // the clock starts when the horde stopped growing: while it spawns the detail is following the load, not settling
     if (scale === undefined || !(agents > 0) || (agents > peak && (peak = agents))) return
     started ??= performance.now()
@@ -385,9 +413,9 @@ function measureCalibration() {
   const canvas = document.createElement('canvas')
   canvas.width = innerWidth
   canvas.height = innerHeight
-  const gl = canvas.getContext('webgl2')
+  const gl = /** @type {WebGL2RenderingContext} */ (canvas.getContext('webgl2'))
   const compile = (/** @type {number} */ type, /** @type {string} */ source) => {
-    const shader = gl.createShader(type)
+    const shader = /** @type {WebGLShader} */ (gl.createShader(type))
     gl.shaderSource(shader, source)
     gl.compileShader(shader)
     return shader
@@ -416,6 +444,7 @@ function measureCalibration() {
   gl.linkProgram(program)
   gl.useProgram(program)
   const pixel = new Uint8Array(4)
+  /** @type {number[]} */
   const times = []
   for (let frame = 0; frame < 40; frame++) {
     const started = performance.now()
@@ -429,10 +458,11 @@ function measureCalibration() {
 
 /** What the room costs in the machine's own frame, with and without the shadow pass, waited for with readPixels. */
 function measureRoomCost() {
-  const { webgl, scene, camera } = window.__testRoom
+  const { webgl, scene, camera } = /** @type {LitRoom} */ (window.__testRoom)
   const context = webgl.getContext()
   const pixel = new Uint8Array(4)
   const median = () => {
+    /** @type {number[]} */
     const times = []
     for (let frame = 0; frame < 20; frame++) {
       const started = performance.now()
@@ -455,8 +485,9 @@ function measureRoomCost() {
  */
 async function readLightSlots() {
   const THREE = window.__THREE
-  const room = window.__testRoom
+  const room = /** @type {LitRoom} */ (window.__testRoom)
   const { lights, webgl, scene, camera } = room
+  /** @type {string[]} */
   const problems = []
   const near = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ tolerance) => Math.abs(a - b) <= tolerance
   const lease = (() => {
@@ -466,28 +497,31 @@ async function readLightSlots() {
     }
     return null
   })()
+  /** @type {import('@adatechnology/game-render-three').LightHandle[]} */
   const spots = []
   for (let index = 0; index < lights.sizes.spot; index++) {
     const spot = lights.acquire({ owner: 'perf.light_slots', kind: 'spot', priority: 1e6, color: [1, 1, 1], intensity: 1, distance: 30, position: [0, 3, 0], angle: 0.5 })
     if (spot) spots.push(spot)
   }
-  const colourOf = (/** @type {number} */ k, /** @type {number} */ total) => [(k + 1) / (total + 1), 1 - (k + 1) / (total + 1), 0.25 + 0.5 * ((k * 7) % total) / total]
-  const worldOf = (/** @type {number} */ k) => [-6 + k * 0.8, 1.2 + (k % 3) * 0.7, -4 - (k % 5) * 0.9]
+  const colourOf = (/** @type {number} */ k, /** @type {number} */ total) => /** @type {Vec3} */ ([(k + 1) / (total + 1), 1 - (k + 1) / (total + 1), 0.25 + 0.5 * ((k * 7) % total) / total])
+  const worldOf = (/** @type {number} */ k) => /** @type {Vec3} */ ([-6 + k * 0.8, 1.2 + (k % 3) * 0.7, -4 - (k % 5) * 0.9])
   const handles = lease ? lease.handles : []
   handles.forEach((handle, k) => handle.update({ color: colourOf(k, handles.length), intensity: 1.5, distance: 20, position: worldOf(k) }))
   spots.forEach((handle, k) => handle.update({ color: colourOf(k + 3, spots.length + 3), intensity: 2, distance: 30, position: worldOf(k + 20), target: [worldOf(k + 20)[0], 0, worldOf(k + 20)[2]] }))
   camera.updateMatrixWorld(true)
   webgl.render(scene, camera)
   // a lit material the frame drew
+  /** @type {LightUniforms | null} */
   let uniforms = null
   scene.traverse((node) => {
-    const material = node.isMesh && node.visible ? node.material : null
-    const found = material && !Array.isArray(material) ? webgl.properties.get(material).uniforms : null
+    const material = /** @type {import('three').Mesh} */ (node).isMesh && node.visible ? /** @type {import('three').Mesh} */ (node).material : null
+    const found = /** @type {LightUniforms | null} */ (material && !Array.isArray(material) ? /** @type {{ uniforms: unknown }} */ (webgl.properties.get(material)).uniforms : null)
     if (!uniforms && found?.pointLights && found?.spotLights) uniforms = found
   })
   if (!uniforms) problems.push('no lit material drew in the frame')
   else {
-    const expectedView = (world) => new THREE.Vector3(...world).applyMatrix4(camera.matrixWorldInverse)
+    const expectedView = (/** @type {Vec3} */ world) => new THREE.Vector3(...world).applyMatrix4(camera.matrixWorldInverse)
+    /** @param {string} kind @param {readonly { slot: number }[]} list @param {{ value: LightUniform[] }} shaderLights @param {(k: number) => Vec3} colourFor @param {(k: number) => Vec3} worldFor @param {number} intensity */
     const check = (kind, list, shaderLights, colourFor, worldFor, intensity) => {
       list.forEach((handle, k) => {
         const entry = shaderLights.value[handle.slot]
@@ -499,8 +533,8 @@ async function readLightSlots() {
       })
     }
     // the colours are linear numbers the budget wrote as linear, so the uniform equals colour x intensity exactly
-    check('point', handles, uniforms.pointLights, (/** @type {number} */ k) => colourOf(k, handles.length), worldOf, 1.5)
-    check('spot', spots, uniforms.spotLights, (/** @type {number} */ k) => colourOf(k + 3, spots.length + 3), (/** @type {number} */ k) => worldOf(k + 20), 2)
+    check('point', handles, /** @type {LightUniforms} */ (uniforms).pointLights, (/** @type {number} */ k) => colourOf(k, handles.length), worldOf, 1.5)
+    check('spot', spots, /** @type {LightUniforms} */ (uniforms).spotLights, (/** @type {number} */ k) => colourOf(k + 3, spots.length + 3), (/** @type {number} */ k) => worldOf(k + 20), 2)
   }
   const report = { point: handles.map((handle) => handle.slot), spot: spots.map((handle) => handle.slot), problems }
   lease?.release()
@@ -510,16 +544,17 @@ async function readLightSlots() {
 
 function countWebGlCalls() {
   // firstUses: programs drawn with for the first time (linked earlier, at load, but never used: the driver finishes a program on its first draw, a stall in play)
+  /** @type {PerfGlCounts} */
   const counts = { programs: 0, buffers: 0, draws: 0, programNames: [], firstUses: 0, firstUseNames: [] }
   window.__glCounts = counts
   const nameOf = new WeakMap()
   const used = new WeakSet()
   for (const Context of [WebGL2RenderingContext, WebGLRenderingContext]) {
     const proto = Context.prototype
-    const wrap = (/** @type {string} */ name, /** @type {string} */ key) => {
-      const original = proto[name]
+    const wrap = (/** @type {string} */ name, /** @type {'programs' | 'buffers' | 'draws'} */ key) => {
+      const original = /** @type {Record<string, GlMethod>} */ (/** @type {unknown} */ (proto))[name]
       if (!original) return
-      proto[name] = function (...args) {
+      ;/** @type {Record<string, GlMethod>} */ (/** @type {unknown} */ (proto))[name] = function (...args) {
         counts[key]++
         return original.apply(this, args)
       }
@@ -550,18 +585,19 @@ function countWebGlCalls() {
 
 /** Tags every attribute with the code that made its geometry (the stack outside three.js), so an upload can be traced to the feature that asked for it. */
 function tagAttributeCreators() {
+  /** @type {typeof import('three') | undefined} */
   let namespace
   Object.defineProperty(window, '__THREE', {
     configurable: true,
     get: () => namespace,
-    set(value) {
+    set(/** @type {typeof import('three')} */ value) {
       namespace = value
       const proto = value.BufferGeometry.prototype
       const setAttribute = proto.setAttribute
       proto.setAttribute = function (name, attribute) {
-        if (attribute && !attribute.__by) {
+        if (attribute && !/** @type {{ __by?: string }} */ (attribute).__by) {
           const lines = (new Error().stack ?? '').split('\n').slice(2).map((line) => line.trim().replace(/^at /, ''))
-          attribute.__by = `${this.type} ` + lines.filter((line) => !/ (BufferGeometry|[A-Za-z]*Geometry|Object\.setAttribute)\b|new [A-Za-z]*Geometry/.test(line)).slice(0, 7).join(' < ')
+          ;/** @type {{ __by?: string }} */ (attribute).__by = `${this.type} ` + lines.filter((line) => !/ (BufferGeometry|[A-Za-z]*Geometry|Object\.setAttribute)\b|new [A-Za-z]*Geometry/.test(line)).slice(0, 7).join(' < ')
         }
         return setAttribute.call(this, name, attribute)
       }
@@ -572,7 +608,7 @@ function tagAttributeCreators() {
 /** Starts a fresh tally of the buffer attributes three.js uploads (its upload callback also runs on every refill, so an attribute counts once). */
 function listUploads() {
   window.__bufferStacks = {}
-  const proto = window.__THREE.BufferAttribute.prototype
+  const proto = /** @type {import('three').BufferAttribute & { __tallied?: boolean }} */ (window.__THREE.BufferAttribute.prototype)
   if (proto.__tallied) return
   proto.__tallied = true
   const original = proto.onUploadCallback
@@ -580,7 +616,7 @@ function listUploads() {
   proto.onUploadCallback = function () {
     if (seen.has(this)) return original.call(this)
     seen.add(this)
-    const key = `${this.constructor.name} count=${this.count} item=${this.itemSize} ${this.__by ?? ''}`
+    const key = `${this.constructor.name} count=${this.count} item=${this.itemSize} ${/** @type {{ __by?: string }} */ (/** @type {unknown} */ (this)).__by ?? ''}`
     window.__bufferStacks[key] = (window.__bufferStacks[key] ?? 0) + 1
     return original.call(this)
   }
@@ -588,13 +624,15 @@ function listUploads() {
 
 /** Names what three.js is drawing (renderBufferDirect runs before the program is chosen): a program used for the first time is reported with the object that asked for it. */
 function installDrawTap() {
-  const webgl = window.__testRoom.webgl
+  const webgl = /** @type {WebGL & { __tapped?: boolean }} */ (window.__testRoom.webgl)
   if (webgl.__tapped) return
   webgl.__tapped = true
+  /** @type {{ object: import('three').Object3D; material: import('three').Material } | null} */
   let current = null
+  /** @param {import('three').Object3D} object @param {import('three').Material & { isShaderMaterial?: boolean; uniforms?: object }} material */
   const describe = (object, material) => {
     const path = []
-    for (let node = object; node && path.length < 4; node = node.parent) if (node.name) path.push(node.name)
+    for (let node = /** @type {import('three').Object3D | null} */ (object); node && path.length < 4; node = node.parent) if (node.name) path.push(node.name)
     const uniforms = material.isShaderMaterial ? `{${Object.keys(material.uniforms ?? {}).slice(0, 4).join(',')}}` : ''
     const parents = path.length > 0 ? path.join('<') : `${object.parent?.type ?? '-'}<${object.parent?.parent?.type ?? '-'}`
     return `${object.type}:${parents} ${material.type}:${material.name || '-'}${uniforms}${object.receiveShadow ? ' receives-shadow' : ''}`
@@ -615,16 +653,16 @@ function installDrawTap() {
 
 /** One frame's draws by object and material, most first (PERF_DRAWLIST=1). */
 function listDraws() {
-  return new Promise((resolve) => {
+  return /** @type {Promise<[string, number][]>} */ (new Promise((resolve) => {
     requestAnimationFrame(() => {
       window.__drawTally = {}
       requestAnimationFrame(() => {
         const tally = window.__drawTally
         window.__drawTally = null
-        resolve(Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 60))
+        resolve(Object.entries(/** @type {Record<string, number>} */ (tally)).sort((a, b) => b[1] - a[1]).slice(0, 60))
       })
     })
-  })
+  }))
 }
 
 function installFrameRecorder() {
@@ -643,13 +681,14 @@ function installFrameRecorder() {
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
+  /** @type {PerfSlowFrame[]} */
   const slowFrames = []
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) longTasks.push(entry.duration)
   }).observe({ type: 'longtask' })
   // what ran in each frame over budget, so a failure names its culprit
   new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
+    for (const entry of /** @type {LoafEntry[]} */ (list.getEntries())) {
       if (entry.duration <= 33.4) continue
       const scripts = (entry.scripts ?? []).map((script) => `${script.sourceFunctionName || script.invoker}@${script.sourceCharPosition} ${Math.round(script.duration)}ms`)
       slowFrames.push({ at: frames.length, ms: Math.round(entry.duration), render: Math.round(entry.renderStart ? entry.startTime + entry.duration - entry.renderStart : 0), scripts })

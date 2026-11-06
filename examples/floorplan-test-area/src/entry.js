@@ -36,7 +36,10 @@ export const GROUPS = [
   { id: 'post_apocalyptic', name: { en: 'Post-apocalyptic', 'pt-BR': 'Pós-apocalíptico' }, templates: ['triage_tent'] },
 ]
 
-/** The module for the room's locale (`?lang=en` or pt-BR); options replace or extend anything. */
+/**
+ * The module for the room's locale (`?lang=en` or pt-BR); options replace or extend anything.
+ * @param {Partial<Parameters<typeof createFloorplanTestModule>[0]>} [options]
+ */
 export function createModule(options = {}) {
   registerPacks()
   // the houses are drawn with the interactables kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
@@ -46,6 +49,8 @@ export function createModule(options = {}) {
 /**
  * Creates the module for the room's locale, with the room's destruction world and renderer (the houses register in them), loads it, opens the houses area and builds the first house.
  * Returns the room's module report with the module itself under `area` (its `houses`, `build()` and `clear()`).
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createFloorplanTestModule>[0]>} [options]
  */
 export function loadInto(room, options = {}) {
   const params = new URLSearchParams(globalThis.location?.search ?? '')

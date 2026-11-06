@@ -5,8 +5,9 @@
   const { seed } = globalThis.__GOLDEN_PARAMS
   const { buildBody } = new Function('THREE', `${globalThis.__SLICES.instanced}\nreturn { buildBody }`)(THREE)
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {Record<string, GoldenScene>} */
   const scenes = {}
-  const fnv = (array) => {
+  const fnv = (/** @type {ArrayLike<number>} */ array) => {
     let hash = 0x811c9dc5
     for (let index = 0; index < array.length; index++) hash = Math.imul(hash ^ (Math.round(array[index] * 1e4) | 0), 0x01000193) >>> 0
     return hash.toString(16).padStart(8, '0')

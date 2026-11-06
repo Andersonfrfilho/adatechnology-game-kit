@@ -16,8 +16,24 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+/** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
+/** @typedef {Parameters<TestRoom['setCameraMode']>[0]} CameraMode */
+/** @typedef {Parameters<TestRoom['log']['add']>[0]} NewLogEntry */
+/** @typedef {SoundSyncPlay} SyncPlay */
+/** @typedef {SoundSyncLine} SyncLine */
+/** @typedef {SoundSyncFoot} SyncFoot */
+/** @typedef {SoundSyncStart} SyncStart */
+/** @typedef {{ plays: SyncPlay[]; lines: SyncLine[]; starts: SyncStart[]; feet: SyncFoot[] }} SyncData */
+/** @typedef {{ footstep?: string; jump?: string; land?: string; swing?: string | null; hit?: string | null; series?: number }} SyncExpect */
+/** @typedef {{ position: number[]; camera: string }} SyncAt */
+/** @typedef {{ id: string; camera: string | null; load: number; expect: SyncExpect; from: number; to: number; keysUp: number | null; at: SyncAt }} SyncPhase */
+/** @typedef {{ ok: boolean; label: string }} SyncCheck */
+/** @typedef {{ [key: string]: unknown; takes?: (string | null)[]; landDelaysMs?: (number | null)[] }} SyncNumbers */
+/** @typedef {{ phase: string; at: SyncAt; ids: string[]; checks: SyncCheck[]; numbers: SyncNumbers }} SyncRow */
+
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+/** @type {typeof import('playwright')} */
 const { chromium } = (() => {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -38,7 +54,7 @@ const SYNC_MS = 20
 
 // RESCORE=1 scores the last run again (shots/sound-sync-raw.json) without playing it
 const RESCORE = process.env.RESCORE === '1'
-const raw = RESCORE ? JSON.parse(readFileSync(join(shots, 'sound-sync-raw.json'), 'utf8')) : null
+const raw = /** @type {{ phases: SyncPhase[]; datasets: SyncData[]; cameras: string[]; errors: string[] } | null} */ (RESCORE ? JSON.parse(readFileSync(join(shots, 'sound-sync-raw.json'), 'utf8')) : null)
 const phases = raw?.phases ?? []
 const datasets = raw?.datasets ?? []
 const camerasTested = raw?.cameras ?? []
@@ -51,14 +67,12 @@ const context = await browser.newContext({ viewport: { width: 1280, height: 720 
 await context.route('**/*', (route) => (/^(file|data|blob|about):/.test(route.request().url()) ? route.continue() : route.abort()))
 // the probe: every node start the engine makes, with how far ahead of the audio clock it is scheduled
 await context.addInitScript(() => {
-  /**
-     * @type {{ at: number; lead: number; }[]}
-     */
+  /** @type {SyncStart[]} */
   const starts = []
-  window.__soundStarts = starts
+  window.__soundStarts = /** @type {Window['__soundStarts']} */ (/** @type {unknown} */ (starts))
   for (const Node of [window.AudioBufferSourceNode, window.OscillatorNode]) {
-    const start = Node.prototype.start
-    Node.prototype.start = function (when = 0, ...rest) {
+    const start = /** @type {(this: AudioScheduledSourceNode, ...args: number[]) => void} */ (Node.prototype.start)
+    Node.prototype.start = function (/** @type {number} */ when = 0, /** @type {number[]} */ ...rest) {
       const ctx = this.context
       starts.push({ at: performance.now(), lead: Math.max(0, when - ctx.currentTime) * 1000 })
       return start.call(this, when, ...rest)
@@ -87,15 +101,19 @@ await page.waitForFunction(() => window.__testRoom, null, { timeout: 300000 })
 
 await page.evaluate(() => {
   const room = window.__testRoom
+  /** @type {SyncPlay[]} */
   const plays = []
+  /** @type {SyncLine[]} */
   const lines = []
+  /** @type {SyncFoot[]} */
   const feet = []
   Object.assign(window, { __plays: plays, __lines: lines, __feet: feet })
-  const play = room.audio.play.bind(room.audio)
+  /** @typedef {NonNullable<TestRoom['audio']>} RoomAudio */
+  const play = /** @type {RoomAudio} */ (room.audio).play.bind(room.audio)
   const add = room.log.add.bind(room.log)
   // the room's clock (simulated seconds) of each play: what the blow's timing is measured in, whatever the frame rate
-  const simNow = () => room.log.add({ channel: 'probe', type: 'probe', text: '' }).t
-  room.audio.play = (id, options = {}) => {
+  const simNow = () => room.log.add(/** @type {NewLogEntry} */ (/** @type {unknown} */ ({ channel: 'probe', type: 'probe', text: '' }))).t
+  ;/** @type {RoomAudio} */ (room.audio).play = (id, options = {}) => {
     const at = performance.now()
     const startsBefore = window.__soundStarts.length
     const handle = play(id, options)
@@ -104,17 +122,17 @@ await page.evaluate(() => {
   }
   room.log.add = (e) => {
     const entry = add(e)
-    if (e.channel !== 'probe') lines.push({ at: performance.now(), t: entry.t, type: e.type, data: e.data ?? null })
+    if (/** @type {string} */ (e.channel) !== 'probe') lines.push({ at: performance.now(), t: entry.t, type: e.type, data: e.data ?? null })
     return entry
   }
-  room.on('footfall', (e) => feet.push({ at: performance.now(), ...e }))
-  room.audio.unlock()
-  room.audio.warmUp()
+  room.on('footfall', (e) => feet.push({ at: performance.now(), .../** @type {Omit<SyncFoot, 'at'>} */ (e) }))
+  ;/** @type {RoomAudio} */ (room.audio).unlock()
+  ;/** @type {RoomAudio} */ (room.audio).warmUp()
 })
 await page.evaluate((floors) => {
   const room = window.__testRoom
-  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], /** @type {number} */ i) => ({ rect: [-13 + i * 3.6, 3, -13 + i * 3.6 + 3, 13.6], surface: profile })) })
-}, FLOORS)
+  room.terrain.setLayout({ surface: 'concrete_slab', zones: floors.map(([, profile], i) => ({ rect: [-13 + i * 3.6, 3, -13 + i * 3.6 + 3, 13.6], surface: profile })) })
+}, /** @type {[string, string][]} */ (FLOORS))
 }
 
 /** Holds the keys until `done()` (polled in the page) is true or `ms` pass, and answers the wall clock the keys went up. */
@@ -125,8 +143,8 @@ const holdUntil = async (/** @type {string[]} */ keys, /** @type {string} */ don
   for (const k of [...keys].reverse()) await page.keyboard.up(k)
   return now()
 }
-const count = (/** @type {string} */ list, test = '') => page.evaluate(([l, s]) => window[l].filter((e) => !s || (e.id ?? e.type ?? '').startsWith(s)).length, [list, test])
-const look = (/** @type {number[]} */ eye, /** @type {number[]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
+const count = (/** @type {string} */ list, test = '') => page.evaluate(([l, s]) => /** @type {Record<string, { id?: string; type?: string }[]>} */ (/** @type {unknown} */ (window))[l].filter((e) => !s || (e.id ?? e.type ?? '').startsWith(s)).length, [list, test])
+const look = (/** @type {number[]} */ eye, /** @type {number[]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(/** @type {Vec3} */ (e), /** @type {Vec3} */ (t)), [eye, target])
 const tool = (/** @type {string} */ id) => page.evaluate((/** @type {string} */ i) => window.__testRoom.setTool(i), id)
 const now = () => page.evaluate(() => performance.now())
 
@@ -134,21 +152,19 @@ const now = () => page.evaluate(() => performance.now())
 // 0.26 m from the side of the shelf's upright: inside the reach of every tool (the knife's is 0.4 m)
 const AT_SHELF = [-2.62, 1.5, 0]
 // the CI and this container have no GPU: the room runs at a few frames per second there, so each phase waits for the last blow to land before the next one starts
-    /**
-     * @type {null}
-     */
+/** @type {string | null} */
 let camera = null
 // each page load records its own clocks (performance.now starts again): a phase is scored against the load it ran in
 let load = -1
 
 const collect = async () => {
-  datasets[load] = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: window.__soundStarts, feet: window.__feet }))
+  datasets[load] = await page.evaluate(() => ({ plays: window.__plays, lines: window.__lines, starts: /** @type {SyncStart[]} */ (/** @type {unknown} */ (window.__soundStarts)), feet: window.__feet }))
 }
 const fresh = async () => {
   if (load >= 0) await collect()
   load++
   await boot()
-  await page.evaluate((/** @type {string} */ c) => window.__testRoom.setCameraMode(c), camera)
+  await page.evaluate((/** @type {string | null} */ c) => window.__testRoom.setCameraMode(/** @type {CameraMode} */ (c)), camera)
 }
 /** One blow: uses the tool (or kicks) and waits for the room to swing it (a `strike` or `melee` line); a tool still drawing or recovering ignores the
  * use, so it tries again, up to three times. Then waits for the blow to land. */
@@ -166,7 +182,7 @@ const blow = async (/** @type {boolean} */ kick) => {
     }
   }
 }
-const phase = async (id, expect, run, settle = 2000) => {
+const phase = async (/** @type {string} */ id, /** @type {SyncExpect} */ expect, /** @type {() => Promise<unknown>} */ run, settle = 2000) => {
   const from = await now()
   const keysUp = await run()
   await page.waitForTimeout(settle)
@@ -235,27 +251,30 @@ writeFileSync(join(shots, 'sound-sync-raw.json'), JSON.stringify({ phases, datas
 }
 
 // ---- scoring --------------------------------------------------------------------------------------------------------------------------------------
-let data = null
-const within = (list, p) => list.filter((/** @type {{ at: number; }} */ e) => e.at >= p.from && e.at <= p.to)
+let data = /** @type {SyncData} */ (/** @type {unknown} */ (null))
+/** @template {{ at: number }} T */
+const within = (/** @type {T[]} */ list, /** @type {SyncPhase} */ p) => list.filter((/** @type {{ at: number; }} */ e) => e.at >= p.from && e.at <= p.to)
 /** ms from `at` to the moment the first node of the play after it sounds: the wait to the play call, the deferred start, and how far ahead it is scheduled. */
 // The play that answers an event is the one of that id nearest to it in the room's time (the same frame, most of the time: the room may log the
 // event before or after it plays the sound); the delay counts from the earlier of the two in wall time.
-const soundDelay = (event, id) => {
-  const t = event.t ?? event.time
+const soundDelay = (/** @type {{ at: number; t?: number; time?: number }} */ event, /** @type {string} */ id) => {
+  const t = /** @type {number} */ (event.t ?? event.time)
+  /** @type {SyncPlay | null} */
   let play = null
   for (const x of data.plays) if (x.id === id && Math.abs(x.t - t) <= 0.25 && (!play || Math.abs(x.t - t) < Math.abs(play.t - t))) play = x
   if (!play) return null
-  const start = data.starts.find((/** @type {{ at: number; }} */ s, /** @type {number} */ i) => i >= play.startsBefore && s.at >= play.at - 1)
+  const start = data.starts.find((/** @type {{ at: number; }} */ s, /** @type {number} */ i) => i >= /** @type {SyncPlay} */ (play).startsBefore && s.at >= /** @type {SyncPlay} */ (play).at - 1)
   return start ? Math.round((start.at - Math.min(event.at, play.at) + start.lead) * 10) / 10 : null
 }
-const takesOf = (plays, id) => plays.filter((p) => p.id === id).map((p) => p.take)
-const repeats = (takes) => takes.filter((t, i) => i > 0 && t === takes[i - 1]).length
+const takesOf = (/** @type {SyncPlay[]} */ plays, /** @type {string | null | undefined} */ id) => plays.filter((p) => p.id === id).map((p) => p.take)
+const repeats = (/** @type {(string | null)[]} */ takes) => takes.filter((t, i) => i > 0 && t === takes[i - 1]).length
+/** @type {SyncRow[]} */
 const rows = []
 /**
  * @type {string[]}
  */
 const failures = []
-const check = (row, ok, label) => {
+const check = (/** @type {SyncRow} */ row, /** @type {boolean} */ ok, /** @type {string} */ label) => {
   row.checks.push({ ok, label })
   if (!ok) failures.push(`${row.phase}: ${label}`)
 }
@@ -265,32 +284,33 @@ for (const p of phases) {
   const lines = within(data.lines, p)
   // a foot put down after the keys went up is the body settling: neither it nor its sound is the walk
   const feet = within(data.feet, p).filter((/** @type {{ at: number; }} */ f) => p.keysUp === null || f.at <= p.keysUp)
+  /** @type {SyncRow} */
   const row = { phase: p.id, at: p.at, ids: [...new Set(plays.map((x) => x.id))], checks: [], numbers: {} }
   if (p.expect.footstep) {
     // a footstep after the keys went up is the body settling, whatever the gait was
     const steps = plays.filter((/** @type {{ id: string; at: number; }} */ x) => x.id.startsWith('footstep_') && (p.keysUp === null || x.at <= p.keysUp))
-    const delays = feet.map((f) => soundDelay(f, p.expect.footstep)).filter((/** @type {null} */ d) => d !== null)
+    const delays = feet.map((f) => soundDelay(f, /** @type {string} */ (p.expect.footstep))).filter((d) => d !== null)
     row.numbers = { footfalls: feet.length, footsteps: steps.length, delaysMs: delays, takes: takesOf(plays, p.expect.footstep) }
     check(row, feet.length >= 2, `footfalls from the body: ${feet.length}`)
     check(row, steps.length >= feet.length - 1 && steps.length > 0, `a footstep for each footfall: ${steps.length}/${feet.length}`)
     check(row, steps.every((x) => x.id === p.expect.footstep), `C2 footstep ${p.expect.footstep}: ${[...new Set(steps.map((x) => x.id))].join(',')}`)
     check(row, delays.length > 0 && Math.max(...delays) <= SYNC_MS, `C1 footstep ≤ ${SYNC_MS} ms after the heel: ${JSON.stringify(delays)}`)
-    check(row, repeats(row.numbers.takes) === 0, `C5 no take twice in a row`)
+    check(row, repeats(/** @type {(string | null)[]} */ (row.numbers.takes)) === 0, `C5 no take twice in a row`)
   }
   if (p.expect.jump) {
     check(row, plays.some((x) => x.id === p.expect.jump), `C2 jump sound`)
     const lands = lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'landing_player')
     check(row, lands.length > 0 && plays.some((/** @type {{ id: string; }} */ x) => x.id.startsWith('land_concrete_')), `C2 landing on concrete (${lands.length} landings)`)
     row.numbers = { landings: lands.map((l) => l.data?.speedMs), landDelaysMs: lands.map((l) => soundDelay(l, plays.find((/** @type {{ id: string; }} */ x) => x.id.startsWith('land_'))?.id ?? '')) }
-    check(row, row.numbers.landDelaysMs.every((/** @type {number | null} */ d) => d !== null && d <= SYNC_MS), `C1 landing ≤ ${SYNC_MS} ms: ${JSON.stringify(row.numbers.landDelaysMs)}`)
+    check(row, /** @type {(number | null)[]} */ (row.numbers.landDelaysMs).every((/** @type {number | null} */ d) => d !== null && d <= SYNC_MS), `C1 landing ≤ ${SYNC_MS} ms: ${JSON.stringify(row.numbers.landDelaysMs)}`)
   }
   if ('hit' in p.expect) {
     // a contact is a `melee` line with the object it hit (a miss logs one too, without)
-    const melees = lines.filter((/** @type {{ type: string; data: { damage: undefined; distanceM: undefined; }; }} */ l) => l.type === 'melee' && l.data?.damage !== undefined && l.data?.distanceM !== undefined)
+    const melees = lines.filter((l) => l.type === 'melee' && l.data?.damage !== undefined && l.data?.distanceM !== undefined)
     const strikes = lines.filter((/** @type {{ type: string; }} */ l) => l.type === 'strike')
     const swings = plays.filter((x) => x.id === p.expect.swing)
     const hits = plays.filter((x) => p.expect.hit && x.id === p.expect.hit)
-    const hitDelays = p.expect.hit ? melees.map((l) => soundDelay(l, p.expect.hit)) : []
+    const hitDelays = p.expect.hit ? melees.map((l) => soundDelay(l, /** @type {string} */ (p.expect.hit))) : []
     // the swing starts in the room's time a little before the contact (its loudest point is SWING_LEAD later): ms of room time from the swing to the contact
     // for each contact, the last swing that started before it
     const peaks = melees.map((/** @type {{ t: number; }} */ l) => {
@@ -308,7 +328,7 @@ for (const p of phases) {
       const takes = takesOf(plays, p.expect.hit)
       check(row, new Set(takes).size >= 4, `C5 ≥ 4 takes in ${takes.length} punches: ${new Set(takes).size}`)
       check(row, repeats(takes) === 0, 'C5 never the same take twice in a row')
-      check(row, plays.filter((/** @type {{ take: null; }} */ x) => x.take === null).length === 0, `C9 nothing dropped: ${plays.filter((/** @type {{ take: null; }} */ x) => x.take === null).map((x) => x.id).join(',') || 'none'}`)
+      check(row, plays.filter((x) => x.take === null).length === 0, `C9 nothing dropped: ${plays.filter((x) => x.take === null).map((x) => x.id).join(',') || 'none'}`)
     }
   }
   rows.push(row)

@@ -4,19 +4,21 @@
 // Params: seed. Needs window.__testRoom and HouseArea (both globals of the page).
 (async () => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const room = globalThis.__testRoom
+  const room = window.__testRoom
   const recorder = GoldenTool.createEventRecorder()
   HouseArea.loadInto(room)
+  /** @type {(value: unknown) => import('../src/types').EventValue} */
   const plain = (value) => {
     if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean' || value === null) return value
     if (Array.isArray(value)) return value.map(plain)
     if (value && typeof value === 'object') {
-      return Object.fromEntries(Object.keys(value).filter((key) => typeof value[key] !== 'function' && value[key] !== undefined).map((key) => [key, plain(value[key])]))
+      return Object.fromEntries(Object.keys(value).filter((key) => typeof (/** @type {Record<string, unknown>} */ (value))[key] !== 'function' && (/** @type {Record<string, unknown>} */ (value))[key] !== undefined).map((key) => [key, plain(/** @type {Record<string, unknown>} */ (value)[key])]))
     }
     return null
   }
   const scenarios = room.scenarios.filter((scenario) => scenario.id.startsWith('house_'))
   for (const scenario of scenarios) {
+    /** @type {import('../src/types').EventValue[]} */
     const seen = []
     const stop = room.world.on('*', (event) => seen.push(plain(event)))
     const report = await room.runScenarios([scenario])

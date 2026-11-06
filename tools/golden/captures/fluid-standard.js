@@ -3,16 +3,16 @@
 // stepped with the page's own loop (renderer silenced). Records the thickness and dryness grids as hashes at 0.5, 1, 2, 5 and 10 s,
 // the wet-cell count and how many drops were launched.
 (() => {
-  const X = GoldenExposed
+  const X = /** @type {{ launch: (...args: unknown[]) => unknown; renderer: { render: () => void }; speed: number; h: ArrayLike<number>; dry: ArrayLike<number>; SKEYS: string[]; FKEYS: string[]; setFluid: (fluid: string) => void; sk: string; runN: number; runScene: (restart: boolean) => void }} */ (GoldenExposed)
   const FRAME_MS = 1000 / 60
   const INSTANT_FRAMES = [30, 60, 120, 300, 600]
   const SPEED = 20
-  const round4 = (value) => Math.round(value * 1e4) / 1e4 + 0
-  const hashArray = (array) => GoldenTool.hashText(Array.from(array, (value) => round4(value)).join(','))
+  const round4 = (/** @type {number} */ value) => Math.round(value * 1e4) / 1e4 + 0
+  const hashArray = (/** @type {ArrayLike<number>} */ array) => GoldenTool.hashText(Array.from(array, (value) => round4(value)).join(','))
   const recorder = GoldenTool.createEventRecorder()
   let launches = 0
   const launch = X.launch
-  X.launch = (...args) => {
+  X.launch = (/** @type {unknown[]} */ ...args) => {
     launches++
     return launch(...args)
   }

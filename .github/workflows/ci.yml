@@ -80,7 +80,7 @@ jobs:
           name: dist
 
       - run: pnpm typecheck
-      # the JS scripts already typed with JSDoc (examples, tools, site): docs/migracao-typescript.md
+      # every JS script (examples, tools, site), typed with JSDoc and checked strict: docs/migracao-typescript.md
       - run: pnpm typecheck:scripts
 
   # Builds the test matrix from packages/*/package.json (packages with a "test" script). Most packages test in a few seconds, so a job per package

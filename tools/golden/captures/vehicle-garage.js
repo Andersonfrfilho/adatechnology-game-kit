@@ -3,12 +3,15 @@
 // Params: key = the page's vehicle key (e.g. hatch), seed, gameOnlyFlags = comma list of crash flags that only the game adds (e.g. blood).
 (() => {
   const { key, seed, gameOnlyFlags = '' } = globalThis.__GOLDEN_PARAMS
-  const ZG = globalThis.VehicleSDK
+  /** @typedef {{ flags: Record<string, boolean>; h: number }} ZoneResult */
+  /** @typedef {{ root: import('three').Object3D }} BuiltVehicle */
+  const ZG = /** @type {{ zoneScenario: (vehicle: BuiltVehicle, pageId: string) => ZoneResult; build: (key: string | undefined, state: string, damage?: ZoneResult) => BuiltVehicle; config: { damagedScenario: string } }} */ (globalThis.VehicleSDK)
   const gameOnly = gameOnlyFlags.split(',').filter(Boolean)
   // the page's Portuguese scenario ids, recorded under the SDK's English ids
   const SCENARIOS = { front_crash: 'frontal', rollover: 'capotado' }
   const recorder = GoldenTool.createEventRecorder()
 
+  /** @param {BuiltVehicle} vehicle @param {string} pageId */
   function runScenario(vehicle, pageId) {
     const result = ZG.zoneScenario(vehicle, pageId)
     for (const flag of gameOnly) delete result.flags[flag]

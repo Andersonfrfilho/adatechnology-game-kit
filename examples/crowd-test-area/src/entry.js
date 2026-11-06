@@ -15,9 +15,12 @@ import { create } from '@adatechnology/game-infection'
 
 export { createCrowdTestModule }
 
+/** @typedef {Parameters<typeof createCrowdTestModule>[0]} CrowdOptions */
+
 const cardOf = (/** @type {string} */ id) => UNDEAD_TYPES.find((card) => card.id === id)
 
 /** The body builders of the kit: the Bestiário v17 builder with the undead types' names and eyes. */
+/** @type {NonNullable<CrowdOptions['builders']>} */
 const builders = (THREE) => {
   const best = createBestBuilder(THREE, { types: UNDEAD_TYPES.map((card) => ({ name: card.name['pt-BR'] ?? card.id, eye: Number.parseInt(card.eye.color, 16) })), random: createRng(11) })
   return {
@@ -52,6 +55,7 @@ const town = () => {
 }
 
 /** The scenes' wall is the houses' own wall piece (the kit's `wallPiece`); the cylinders, the car and its tank are items of the room's catalogue (the weapons' world explosives, the fleet's sedan). */
+/** @type {CrowdOptions['props']} */
 const SCENE_PROPS = {
   wall: (THREE, { length, height }) => wallPiece(THREE, { w: length, h: height }).build(THREE),
   items: { gasCylinder: 'world_propane_p13', car: 'sedan', carTank: 'world_car_fuel_tank' },
@@ -62,26 +66,30 @@ const SCENE_PROPS = {
  * The contact and the pressure go to a worker only in a page that is cross-origin isolated; a `file://` page is not, and the iife bundle has no worker file beside it,
  * so there the physics runs inline in the fixed step (the package falls back by itself).
  */
+/** @type {() => import('@adatechnology/game-crowd').CrowdPhysicsOptions} */
 const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, worker: globalThis.crossOriginIsolated ? 'auto' : 'off' })
 
-const sizeOf = (/** @type {{ body: { kind: string; }; }} */ species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
+const sizeOf = (/** @type {import('@adatechnology/game-animals').AnimalSpecies} */ species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
 
-/** The module with the kit's own content; options replace any of it (another pack, other bodies, no animals). */
+/**
+ * The module with the kit's own content; options replace any of it (another pack, other bodies, no animals).
+ * @param {Partial<CrowdOptions>} [options]
+ */
 export function createModule(options = {}) {
   const locale = options.locale ?? 'pt-BR'
   // ?budget=160,320,600 sets the bodies each mesh level may draw (off: the nominal levels), &adapt=0 keeps the budget fixed, &prepass=0 drops the near depth prepass, &clips=1 walks from the clip texture
   const query = new URLSearchParams(globalThis.location?.search ?? '')
   const raw = query.get('budget')
   const levels = raw && raw !== 'off' ? raw.split(',').map(Number) : null
-  const budget = levels ? { levels, ...(query.get('adapt') === '0' ? { adapt: false } : {}) } : raw === 'off' ? false : undefined
+  const budget = levels ? { levels, ...(query.get('adapt') === '0' ? { adapt: /** @type {const} */ (false) } : {}) } : raw === 'off' ? false : undefined
   return createCrowdTestModule({
     pack: undeadCrowdPack(),
     builders,
     typeName: (type) => cardOf(type.id)?.name['pt-BR'] ?? type.id,
-    typeLabel: (type) => cardOf(type.id)?.name[locale] ?? cardOf(type.id)?.name['pt-BR'] ?? type.id,
+    typeLabel: (type) => cardOf(type.id)?.name[/** @type {keyof (typeof UNDEAD_TYPES)[number]['name']} */ (locale)] ?? cardOf(type.id)?.name['pt-BR'] ?? type.id,
     civilianBodies: CIVILIAN_BODIES,
-    animals: { species: (id) => getSpecies(id), size: sizeOf, drawer: (THREE) => createAnimalsThree(THREE, { seed: 7 }) },
-    infection: { create: town, region: 'town', active: (model) => model.region('town').active },
+    animals: { species: (id) => getSpecies(id), size: /** @type {(species: import('@adatechnology/game-crowd-three/testing').CrowdBenchSpecies) => number} the species the bench passes are the ones `species` gave */ (sizeOf), drawer: (THREE) => createAnimalsThree(THREE, { seed: 7 }) },
+    infection: { create: town, region: 'town', active: (model) => /** @type {ReturnType<typeof town>} the model `create` made */ (model).region('town').active },
     props: SCENE_PROPS,
     crowdPhysics: roomPhysics(),
     // identity, accessories, near shadows, blobs and the impostor: the economy ladder of the horde
@@ -91,7 +99,11 @@ export function createModule(options = {}) {
   })
 }
 
-/** Creates the module for the room's locale (`?lang=en` or pt-BR) with a horde of 300, loads it and opens the crowd area. Returns the room's module report. */
+/**
+ * Creates the module for the room's locale (`?lang=en` or pt-BR) with a horde of 300, loads it and opens the crowd area. Returns the room's module report.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<CrowdOptions>} [options]
+ */
 export function loadInto(room, options = {}) {
   const query = new URLSearchParams(globalThis.location?.search ?? '')
   const lang = options.locale ?? (query.get('lang') === 'en' ? 'en' : 'pt-BR')

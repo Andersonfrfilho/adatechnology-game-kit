@@ -19,13 +19,13 @@ console.log(`ok: ${existsSync(page) ? 'bundle and room page' : 'bundle (no room 
 // With Playwright (Chromium, software GL) at hand: the room page loads, the contract report is clean, the six scenarios pass, the bench runs the days
 // and loads the zombiada slice as a game's content.
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
   const slice = join(here, '../../specs/001-migracao-entregas-dos-times/game-slice/stories')
   const read = (/** @type {string} */ file) => JSON.parse(readFileSync(join(slice, file), 'utf8'))
-  const content = existsSync(slice) ? { people: read('cast.json'), stories: [...read('stories.json'), read('roles.json')], life: read('life.json'), actions: read('actions.json').map((a) => ({ id: a.id, name: a.name })), playerBase: 'jogador', days: 90 } : null
+  const content = existsSync(slice) ? { people: read('cast.json'), stories: [...read('stories.json'), read('roles.json')], life: read('life.json'), actions: read('actions.json').map((/** @type {{ id: string; name: string }} */ a) => ({ id: a.id, name: a.name })), playerBase: 'jogador', days: 90 } : null
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
@@ -34,7 +34,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -51,16 +51,16 @@ if (!playwright || !existsSync(page)) {
       const report = window.__storiesReport
       const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('stories_'))
       const result = await room.runScenarios(scenarios)
-      const bench = room.bench('stories_area')
+      const bench = /** @type {RoomBench} */ (room.bench('stories_area'))
       bench.set('day', 25)
       for (let i = 0; i < 5; i++) room.update(1 / 30)
-      const day = room.metrics().module
+      const day = /** @type {NumericMetrics} */ (room.metrics().module)
       let slice = null
       if (content) {
         window.StoriesArea.loadContent(content)
         bench.set('day', 90)
         for (let i = 0; i < 5; i++) room.update(1 / 30)
-        slice = room.metrics().module
+        slice = /** @type {NumericMetrics} */ (room.metrics().module)
       }
       return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), day, slice }
     }, content)
@@ -68,7 +68,7 @@ if (!playwright || !existsSync(page)) {
     await tab.screenshot({ path: join(shots, `stories-${lang}.png`) })
     check(`[${lang}] contract report is clean, 6 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 6 && state.failed === 0, state)
     check(`[${lang}] the day slider runs the world to day 25`, state.day.current_day === 25 && state.day.lines > 0, state.day)
-    if (content) check(`[${lang}] the zombiada slice loads and runs its 90 days`, state.slice.current_day === 90 && state.slice.lines > 40, state.slice)
+    if (content) check(`[${lang}] the zombiada slice loads and runs its 90 days`, /** @type {NumericMetrics} */ (state.slice).current_day === 90 && /** @type {NumericMetrics} */ (state.slice).lines > 40, state.slice)
     await context.close()
   }
   check('no console errors', errors.length === 0, errors.slice(0, 3))

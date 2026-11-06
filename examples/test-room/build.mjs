@@ -141,8 +141,10 @@ const boot = `(function () {
 const sfxManifestDir = join(pkg('game-audio'), 'assets/sfx')
 const sfxDir = kitSfxDir(root)
 const sfxManifestFull = existsSync(join(sfxManifestDir, 'manifest.json')) ? JSON.parse(readFileSync(join(sfxManifestDir, 'manifest.json'), 'utf8')) : null
+/** @typedef {{ category: string; layers: Record<string, { file: string }[]> }} SfxSound a sound of the kit's sfx manifest: its takes by layer */
+/** @typedef {{ sounds: SfxSound[] }} SfxManifest */
 /** The manifest with only the takes whose file is on this machine (a sound left with no take is dropped). */
-const presentSfx = (manifest) => ({
+const presentSfx = (/** @type {SfxManifest} */ manifest) => ({
   ...manifest,
   sounds: manifest.sounds
     .map((sound) => ({ ...sound, layers: Object.fromEntries(Object.entries(sound.layers).map(([layer, takes]) => [layer, takes.filter((/** @type {{ file: string; }} */ entry) => existsSync(join(sfxDir, entry.file)))]).filter(([, takes]) => takes.length > 0)) }))

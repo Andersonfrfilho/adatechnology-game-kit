@@ -22,7 +22,7 @@ import { mkdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
@@ -33,9 +33,10 @@ if (!playwright || !existsSync(page)) {
      * @type {string[]}
      */
   const errors = []
+  /** @type {string[]} */
   const external = []
   let failed = 0
-  const check = (name, ok, detail) => {
+  const check = (/** @type {string} */ name, /** @type {unknown} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -61,24 +62,25 @@ if (!playwright || !existsSync(page)) {
       const report = window.__floorplanReport
       const room = window.__testRoom
       const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === report.module)
-      return { ok: report.ok, items: report.items, scenarios: report.scenarios, problems: report.problems, checks: checks.length, failedChecks: checks.filter((/** @type {{ type: string; }} */ e) => e.type !== 'pass').map((e) => e.text), houses: report.area.houses.length, parts: room.metrics().module.parts, bench: room.bench('floorplan_area').controls().map((c) => c.id) }
+      return { ok: report.ok, items: report.items, scenarios: report.scenarios, problems: report.problems, checks: checks.length, failedChecks: checks.filter((/** @type {{ type: string; }} */ e) => e.type !== 'pass').map((e) => e.text), houses: report.area.houses.length, parts: /** @type {NumericMetrics} */ (room.metrics().module).parts, bench: /** @type {RoomBench} */ (room.bench('floorplan_area')).controls().map((c) => c.id) }
     })
     check(`[${lang}] contract report is clean: 5 specimens, 7 scenarios, every check passed`, loaded.ok && loaded.problems.length === 0 && loaded.items.length === 5 && loaded.scenarios.length === 7 && loaded.failedChecks.length === 0 && loaded.checks > 0, loaded)
     check(`[${lang}] the first house stands in the room's world (one house, over 100 parts)`, loaded.houses === 1 && Number(loaded.parts) > 100, { houses: loaded.houses, parts: loaded.parts })
     // the houses are drawn with the interactables kit through the default adapter (game-floorplan-interactables), with no adapter injected by the page
     const kit = await tab.evaluate(() => {
       const iv = window.__floorplanReport.area.houses[0].house.interactives
-      if (!iv || !iv.active) return { active: false }
+      if (!iv || !iv.active) return { active: /** @type {const} */ (false) }
       const types = new Set([...iv.entries.values()].map((e) => e.type))
-      return { active: true, entries: iv.entries.size, interactables: iv.interactables().length, types: ['fridge', 'wall_socket', 'wall_switch'].filter((t) => types.has(t)), lamps: iv.plane.items.filter((/** @type {{ type: string; }} */ e) => e.type === 'lamp').length, warnings: iv.warnings, adapter: iv.kit.A.version }
+      return { active: /** @type {const} */ (true), entries: iv.entries.size, interactables: iv.interactables().length, types: ['fridge', 'wall_socket', 'wall_switch'].filter((t) => types.has(t)), lamps: iv.plane.items.filter((/** @type {{ type: string; }} */ e) => e.type === 'lamp').length, warnings: iv.warnings, adapter: iv.kit.A.version }
     })
     check(`[${lang}] the first house is made of kit objects: fridge, sockets, switches and the lamps of the rooms, built by the package's default adapter`, kit.active && kit.entries > 30 && kit.interactables > 10 && kit.types.length === 3 && kit.lamps > 0 && kit.warnings.length === 0 && kit.adapter === '0.3.0', kit)
     check(`[${lang}] the bench lists the package, the typology, the state, the seed and the actions`, ['package', 'template', 'state', 'seed', 'houses', 'budget', 'build', 'enter', 'up', 'down', 'door', 'strike'].every((id) => loaded.bench.includes(id)), loaded.bench)
 
     // the four packages: pick a typology of each and build it
     const packages = await tab.evaluate(() => {
-      const bench = window.__testRoom.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (window.__testRoom.bench('floorplan_area'))
       const area = window.__floorplanReport.area
+      /** @type {Record<string, { template: unknown; parts: number; floors: number; templates: number }>} */
       const out = {}
       for (const group of area.groups()) {
         bench.set('package', group.id)
@@ -95,7 +97,7 @@ if (!playwright || !existsSync(page)) {
     // walk in: the wall stops the player, the open space does not
     const walk = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const bench = room.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
       bench.set('package', 'residential')
       bench.set('template', 'single_storey_a')
       bench.set('seed', 1)
@@ -105,7 +107,7 @@ if (!playwright || !existsSync(page)) {
       const { house, plan } = area.houses[0]
       bench.act('enter')
       for (let i = 0; i < 5; i++) room.update(0.05)
-      const THREE_V = room.camera.position.constructor
+      const THREE_V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
       const local = () => { const v = new THREE_V(room.camera.position.x, 0.5, room.camera.position.z); house.group.worldToLocal(v); return v }
       const start = local()
       const inside = start.x > 0 && start.x < plan.w && start.z > 0 && start.z < plan.d
@@ -124,28 +126,28 @@ if (!playwright || !existsSync(page)) {
     // E opens the door in reach; the door in front of the player is found by the target
     const door = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const bench = room.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
       const { house, plan } = window.__floorplanReport.area.houses[0]
-      const THREE_V = room.camera.position.constructor
-      const d = plan.doors.find((x) => x.exterior && x.floor === 0)
-      const centre = plan.rooms.find((r) => r.id === d.opensTo)
+      const THREE_V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
+      const d = /** @type {(typeof plan.doors)[number]} the house has a front door */ (plan.doors.find((x) => x.exterior && x.floor === 0))
+      const centre = /** @type {(typeof plan.rooms)[number]} */ (plan.rooms.find((r) => r.id === d.opensTo))
       const dw = house.group.localToWorld(new THREE_V(d.u, 1.6, d.v))
       const cw = house.group.localToWorld(new THREE_V((centre.u0 + centre.u1) / 2, 1.6, (centre.v0 + centre.v1) / 2))
       const len = Math.hypot(cw.x - dw.x, cw.z - dw.z)
       room.look([dw.x + ((cw.x - dw.x) / len) * 0.9, 1.7, dw.z + ((cw.z - dw.z) / len) * 0.9], [dw.x, 1.5, dw.z])
       for (let i = 0; i < 12; i++) room.update(0.05)
-      const before = room.metrics().module.doors_open
-      const aim = room.metrics().module.target
+      const before = /** @type {NumericMetrics} */ (room.metrics().module).doors_open
+      const aim = /** @type {NumericMetrics} */ (room.metrics().module).target
       window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }))
       for (let i = 0; i < 20; i++) room.update(0.05)
-      return { before, aim, after: room.metrics().module.doors_open }
+      return { before, aim, after: /** @type {NumericMetrics} */ (room.metrics().module).doors_open }
     })
     check(`[${lang}] the door in reach is named by the target and E opens it`, door.before === 0 && door.after >= 1 && String(door.aim).length > 2, door)
 
     // floors
     const floors = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const bench = room.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
       bench.set('package', 'residential')
       bench.set('template', 'townhouse')
       bench.act('build')
@@ -156,7 +158,7 @@ if (!playwright || !existsSync(page)) {
       bench.act('up')
       room.update(0.05)
       const up = room.camera.position.y
-      const floorUp = room.metrics().module.floor
+      const floorUp = /** @type {NumericMetrics} */ (room.metrics().module).floor
       bench.act('down')
       room.update(0.05)
       return { y0, up, floorUp, down: room.camera.position.y }
@@ -166,7 +168,7 @@ if (!playwright || !existsSync(page)) {
     // the level of detail: by hand, then a row shared by the budget
     const lod = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const bench = room.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
       bench.set('houses', 4)
       for (let i = 0; i < 40; i++) room.update(0.05)
       // the rebuild runs behind the room's loading indicator, a frame later: wait for it to finish
@@ -178,7 +180,7 @@ if (!playwright || !existsSync(page)) {
       const sum = () => area.houses.reduce((n, h) => n + h.house.lod, 0)
       const levels = area.houses.map((h) => h.house.lod)
       const tight = sum()
-      const planned = room.metrics().module.planned
+      const planned = /** @type {NumericMetrics} */ (room.metrics().module).planned
       bench.set('budget', 100000)
       for (let i = 0; i < 20; i++) room.update(0.05)
       const roomy = sum()
@@ -197,23 +199,23 @@ if (!playwright || !existsSync(page)) {
     // hit the aimed wall: the burst marks it, the C4 brings it down; the reset puts it back
     const hit = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const bench = room.bench('floorplan_area')
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
       bench.set('template', 'single_storey_a')
       bench.act('build')
       for (let i = 0; i < 40; i++) room.update(0.05)
       const { house } = window.__floorplanReport.area.houses[0]
-      const THREE_V = room.camera.position.constructor
+      const THREE_V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
       const p = house.group.localToWorld(new THREE_V(4, 1.4, 0.05))
       room.look([p.x, 1.6, p.z + 6], [p.x, 1.4, p.z])
       room.update(0.05)
-      const before = room.metrics().module.broken
+      const before = /** @type {NumericMetrics} */ (room.metrics().module).broken
       bench.set('hit', 'c4')
       bench.act('strike')
       for (let i = 0; i < 160; i++) room.update(0.05)
-      const after = room.metrics().module.broken
+      const after = /** @type {NumericMetrics} */ (room.metrics().module).broken
       bench.act('reset')
       for (let i = 0; i < 4; i++) room.update(0.05)
-      return { before, after, reset: room.metrics().module.broken }
+      return { before, after, reset: /** @type {NumericMetrics} */ (room.metrics().module).broken }
     })
     await tab.screenshot({ path: join(shots, `floorplan-c4-${lang}.png`) })
     check(`[${lang}] the C4 on the aimed wall brings parts down and the reset puts them back`, hit.before === 0 && hit.after > 0 && hit.reset === 0, hit)

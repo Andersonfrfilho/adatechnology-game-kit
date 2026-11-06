@@ -6,16 +6,17 @@
 (() => {
   const { seed, seedFrom = '1', seedTo = '25', states = '', templates = '', rows: withRows = '0' } = globalThis.__GOLDEN_PARAMS
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {(value: unknown) => unknown} */
   const canonical = (value) => {
     if (typeof value === 'number') return Math.round(value * 1000) / 1000 + 0
     if (Array.isArray(value)) return value.map(canonical)
     if (value === undefined || typeof value === 'function') return null
-    if (value !== null && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]))
+    if (value !== null && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(/** @type {Record<string, unknown>} */ (value)[key])]))
     return value
   }
-  const text = (value) => JSON.stringify(canonical(value))
-  const hashOf = (value) => GoldenTool.hashText(text(value))
-  const hashRows = (list) => GoldenTool.hashText(list.map(text).join('\n'))
+  const text = (/** @type {unknown} */ value) => JSON.stringify(canonical(value))
+  const hashOf = (/** @type {unknown} */ value) => GoldenTool.hashText(text(value))
+  const hashRows = (/** @type {readonly unknown[]} */ list) => GoldenTool.hashText(list.map(text).join('\n'))
 
   const wantedStates = states ? states.split(',') : PlantasSDK.estados
   const wantedTemplates = templates ? templates.split(',') : PlantasSDK.listarTemplates().map((entry) => entry.id)

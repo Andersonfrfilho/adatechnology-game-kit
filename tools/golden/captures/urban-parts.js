@@ -1,4 +1,4 @@
-/* global GoldenTool */
+/* global GoldenTool, THREE */
 // Capture for the Galeria do Vale Cinzento: the pieces of the urban pattern (spec 001, T7.3a): the five poles with the light budget, roads, walks, the street grid, a filled block and the props.
 // Needs the recorder flag
 //   --expose rng,R,root,LB,IT,WL,WD,flush,poleLED,poleConcrete,poleIron,poleWood,floodTower,road,walk,ground,streetGrid,fillBlock,FAC,building,fence,tent,pine,tree,container,watchtower,sandbags,stripLabel,wires
@@ -6,9 +6,10 @@
 // (the instanced boxes and windows); the lists the page keeps before the flush (instanced boxes, lit and dark windows) are recorded as events, since the hash does not read instance matrices.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const page = globalThis.GoldenExposed
+  const page = /** @type {GalleryPage} */ (globalThis.GoldenExposed)
   const recorder = GoldenTool.createEventRecorder()
-  const round = (list) => list.map((entry) => entry.map((value) => (typeof value === 'number' ? Math.round(value * 1e4) / 1e4 : value)))
+  const round = (/** @type {readonly GalleryRow[]} */ list) => list.map((entry) => entry.map((value) => (typeof value === 'number' ? Math.round(value * 1e4) / 1e4 : value)))
+  /** @type {[string, () => void][]} */
   const CASES = [
     ['led_on', () => page.poleLED(0, 0, true)],
     ['led_off', () => page.poleLED(0, 0, false)],
@@ -47,9 +48,10 @@
     ['label', () => page.stripLabel(0, 20, 'CENTRO', 'avenida 2 × 7 m · LED branco a cada 25 m')],
     ['wires', () => page.wires([[0, 0], [10, 2], [28, -1]], 6.9)],
   ]
+  /** @type {Record<string, import('three').Group>} */
   const scenes = {}
   for (const [label, build] of CASES) {
-    page.root = new globalThis.THREE.Group()
+    page.root = new THREE.Group()
     page.R = page.rng(7)
     page.LB = 99
     page.IT.length = 0
@@ -68,8 +70,9 @@
     })
     page.flush()
     // what the scene hash does not read: shadows, the surface of each material and the settings of each light
-    const extra = []
-    page.root.traverse((node) => {
+    /** @type {(string | number)[][]} */
+  const extra = []
+    page.root.traverse(/** @type {(node: import('three').Object3D) => void} */ ((/** @type {GallerySurfaceNode} */ node) => {
       const material = node.material
       extra.push([
         node.type,
@@ -79,7 +82,7 @@
         node.isLight ? [node.color.getHex(), node.intensity, node.distance, node.decay, node.angle, node.penumbra].join(':') : '',
         node.count ?? '',
       ])
-    })
+    }))
     recorder.record('surface', { label, nodes: extra.length, hash: GoldenTool.hashText(JSON.stringify(extra)) })
     scenes[label] = page.root
   }

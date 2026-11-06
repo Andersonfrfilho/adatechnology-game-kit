@@ -18,9 +18,18 @@ import { defaultCharacterClips } from '@adatechnology/game-kit-defaults'
 
 export { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule, AVATAR_AREA_ID }
 
-const localeOf = (options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+/** @typedef {Partial<Parameters<typeof createPlayerTestModule>[0]>} PlayerOptions */
+/**
+ * What `loadInto` takes over the module's options: the page's three.js, the body's options, the first camera and the grab clip.
+ * @typedef {PlayerOptions & { THREE?: typeof import('three'); avatar?: Parameters<typeof createPlayerAvatar>[1]; cameraMode?: Parameters<import('@adatechnology/game-test-room').TestRoom['setCameraMode']>[0]; grabClip?: string }} PlayerAreaOptions
+ */
 
-/** The module for the room's locale (`?lang=en` or pt-BR); other pages (the furniture area) load it next to their own. */
+const localeOf = (/** @type {{ locale?: string }} */ options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+
+/**
+ * The module for the room's locale (`?lang=en` or pt-BR); other pages (the furniture area) load it next to their own.
+ * @param {PlayerOptions} [options]
+ */
 export function createModule(options = {}) {
   return createPlayerTestModule({ ...options, locale: localeOf(options) })
 }
@@ -28,6 +37,11 @@ export function createModule(options = {}) {
 /**
  * A module with no items and no bench that links the gameplay state to the body every frame: the player's crouch, knock-down and death to
  * `room.setAvatarState`, and a grab to the clip (`grab_clip`, default `grabbed_bitten_human`), which stops when the player is released.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {ReturnType<typeof createModule>} playerModule
+ * @param {ReturnType<typeof createPlayerAvatar>} avatar
+ * @param {{ grabClip?: string }} [options]
+ * @returns {import('@adatechnology/game-contracts').TestableModule}
  */
 export function createAvatarLink(room, playerModule, avatar, options = {}) {
   const clip = options.grabClip ?? 'grabbed_bitten_human'
@@ -59,12 +73,14 @@ export function createAvatarLink(room, playerModule, avatar, options = {}) {
 /**
  * Creates the player module and the body, loads both areas and the link, and opens the player area in third person. Returns the room's module report
  * (the player's, plus `avatar` with the avatar area's and `modules`).
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {PlayerAreaOptions} [options]
  */
 export function loadInto(room, options = {}) {
   const THREE = options.THREE ?? globalThis.__THREE
   if (!THREE) throw new Error('PlayerArea.loadInto needs three.js: pass { THREE } or expose it as window.__THREE')
   const locale = localeOf(options)
-  const previous = room.avatar
+  const previous = /** @type {(import('@adatechnology/game-test-room').RoomAvatar & { avatar?: { dispose?: () => void } }) | null} the body `toRoomAvatar` fitted keeps the player's avatar */ (room.avatar)
   const avatar = createPlayerAvatar(THREE, options.avatar)
   room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   previous?.avatar?.dispose?.()

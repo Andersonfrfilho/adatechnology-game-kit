@@ -4,21 +4,27 @@
 // exposed by the patch in `record-golden-chrome.ts`. Each scenario builds a fresh character and reseeds `Math.random` (one draw per hit).
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const team = globalThis.__team
+  /** @typedef {import('three').Object3D} Node */
+  /** @typedef {import('three').Mesh} SegmentMesh */
+  /** @typedef {{ state: string; hp: number; node?: Node }} Segment */
+  /** @typedef {{ kind: string; arm: number; a: number; v: number }} Pendulum */
+  /** @typedef {{ root: Node; segs: Record<string, Segment>; dmg: { dead: boolean; leg: number }; limp: number[]; pends: Pendulum[] }} Character */
+  const team = /** @type {{ THREE: typeof import('three'); build: (npc: unknown, index: number) => Character; hit: (character: Character, id: string, point: import('three').Vector3, direction: import('three').Vector3, mesh: SegmentMesh | null) => void; WEAPONS: { id: string }[]; NPCS: unknown[]; setWeapon: (id: string) => void; lastMessage: string }} */ (globalThis.__team)
   const { THREE, build, hit, WEAPONS, NPCS } = team
   const recorder = GoldenTool.createEventRecorder()
   const IDS = ['head', 'torso', 'pelvis', 'uArm0', 'uArm1', 'fArm0', 'fArm1', 'hand0', 'hand1', 'thigh0', 'thigh1', 'shin0', 'shin1']
   const MAX_HITS = 10
   let counter = 0
 
-  const meshOf = (character, id) => {
+  const meshOf = (/** @type {Character} */ character, /** @type {string} */ id) => {
+    /** @type {SegmentMesh | null} */
     let found = null
     character.root.traverse((object) => {
-      if (!found && object.isMesh && object.userData.seg === id && !object.userData.stump) found = object
+      if (!found && /** @type {Partial<SegmentMesh>} */ (object).isMesh && object.userData.seg === id && !object.userData.stump) found = /** @type {SegmentMesh} */ (object)
     })
     return found
   }
-  const state = (character) => ({
+  const state = (/** @type {Character} */ character) => ({
     states: Object.entries(character.segs).map(([key, segment]) => `${key}:${segment.state}`).join(' '),
     hp: Object.values(character.segs).map((segment) => segment.hp),
     dead: character.dmg.dead,
@@ -35,7 +41,7 @@
       character.root.updateMatrixWorld(true)
       const segment = character.segs[id]
       const mesh = meshOf(character, id)
-      const point = (segment.node ?? mesh).getWorldPosition(new THREE.Vector3())
+      const point = /** @type {Node} */ (segment.node ?? mesh).getWorldPosition(new THREE.Vector3())
       const scenario = `${weapon.id}_${id}`
       recorder.record('start', { scenario, ...state(character) })
       for (let step = 1; step <= MAX_HITS && segment.state !== 'cut' && segment.state !== 'quebrado' && !(character.dmg.dead && id !== 'head'); step++) {

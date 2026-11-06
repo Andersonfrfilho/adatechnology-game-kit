@@ -9,6 +9,7 @@
     ],
     "lib": [
       "ES2022",
+      "ES2023.Array",
       "DOM",
       "DOM.Iterable"
     ],
@@ -22,6 +23,9 @@
       ],
       "@adatechnology/*": [
         "packages/*/dist/index.d.ts"
+      ],
+      "three": [
+        "node_modules/@types/three/index.d.ts"
       ],
       "playwright": [
         "node_modules/playwright-core/index.d.ts"
