@@ -229,34 +229,9 @@
       "count": 1
     }
   },
-  "packages/game-vehicles/src/damageables.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-vehicles/src/destructible/item.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vehicles/src/tick.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-vehicles/src/trucks.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-vehicles/src/types.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
-    }
-  },
-  "packages/game-vehicles/src/util.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
     }
   },
   "packages/game-vehicles/tests/crease.test.ts": {

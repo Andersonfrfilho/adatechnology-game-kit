@@ -4,6 +4,7 @@
  */
 import type { Matrix4 } from 'three'
 
+import type { Damageable, DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 
 export type DamageableMaterial = 'metal' | 'glass' | 'rubber' | 'fuel'
@@ -33,7 +34,7 @@ export function installDamageables(kit: Kit): void {
   const THREE = kit.THREE
   kit.damageableKinds = { ...defaultDamageableKinds }
 
-  const kindOf = (zone: any): DamageableKind | null => {
+  const kindOf = (zone: DamageZone): DamageableKind | null => {
     const kinds = kit.damageableKinds
     if (zone.type === 'internal') return zone.sub ? kinds[`internal:${zone.sub}`] || null : null
     return kinds[`${zone.type}:${zone.fxKey}`] || kinds[zone.type] || null
@@ -44,7 +45,7 @@ export function installDamageables(kit: Kit): void {
    * `c.vehicle`, or in the frame of `matrix` when one is given (for example the output frame of `game-vehicles-three`).
    */
   kit.damageables = function (c: BuildContext, matrix?: Matrix4) {
-    const out: any[] = []
+    const out: Damageable[] = []
     for (const zone of c.zones || []) {
       const kind = kindOf(zone)
       if (!kind || !zone.box) continue

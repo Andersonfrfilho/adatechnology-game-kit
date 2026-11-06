@@ -32,7 +32,7 @@ export function installTick(kit: Kit) {
     const n = Math.round(sec * 30)
     for (let i = 0; i < n; i++) kit.tick(c, 1 / 30)
   }
-  kit.setHood = function (c: BuildContext, open: any) {
+  kit.setHood = function (c: BuildContext, open: unknown) {
     if (!c.hood) return false
     c.hood.target = open ? c.hood.open : 0
     return true

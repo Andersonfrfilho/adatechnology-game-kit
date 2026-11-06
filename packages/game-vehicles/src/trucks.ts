@@ -1,4 +1,7 @@
 /** Truck cab and chassis builders. */
+import type { ColorRepresentation } from 'three'
+
+import type { HeadlightOptions, GrilleOptions } from './lights'
 import type { BuildContext, Kit } from './types'
 
 export function installTrucks(kit: Kit) {
@@ -9,7 +12,10 @@ export function installTrucks(kit: Kit) {
 
   /* ================= trucks ================= */
   /* Forward cab. o: { f (front x), W, col, len (2.05), roofY (2.92), belt (1.75), floor (1.25), wheelR (0.52), wheelW (0.32), int:{col,trim}, hl, grille, sleeper } */
-  kit.truckCab = function (c: BuildContext, o: any) {
+  kit.truckCab = function (
+    c: BuildContext,
+    o: { f: number; W: number; col: ColorRepresentation; len?: number; roofY?: number; belt?: number; floor?: number; wheelR?: number; wheelW?: number; int?: { col?: ColorRepresentation; trim?: ColorRepresentation }; hl?: Partial<HeadlightOptions>; grille?: Partial<GrilleOptions>; visor?: boolean },
+  ) {
     const f = o.f
     const W = o.W
     const col = o.col
@@ -108,7 +114,7 @@ export function installTrucks(kit: Kit) {
     return m
   }
   /* Chassis, rear axles, tank and fenders. o: { f, L, W, axles:[x..], dual, tank ('left'|'right'|false), wheelR, wheelW } */
-  kit.truckChassis = function (c: BuildContext, o: any) {
+  kit.truckChassis = function (c: BuildContext, o: { f: number; L: number; W: number; axles?: number[]; dual?: boolean; tank?: 'left' | 'right' | false; wheelR?: number; wheelW?: number }) {
     const f = o.f
     const L = o.L
     const W = o.W
