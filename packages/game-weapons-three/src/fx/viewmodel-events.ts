@@ -127,11 +127,12 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     switch (event.type) {
       case 'muzzle_flash':
         if (data.at === 'ugl') {
-          if (parts.uglMuzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.uglMuzzle), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH)
+          if (parts.uglMuzzle && world.layers.muzzleFlash) world.afterPose(() => parts.uglMuzzle && effects.muzzleFlash(positionOf(parts.uglMuzzle), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH))
         } else if (parts.muzzle && world.layers.muzzleFlash && (session.def.action.kind === 'firearm' || session.def.action.kind === 'launcher')) {
           const profile = muzzleSmokeOf({ caliber: session.caliber, weapon: session.def, suppressed: session.suppressed })
           const size = session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType]
-          effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), size, profile)
+          const muzzle = parts.muzzle
+          world.afterPose(() => effects.muzzleFlash(positionOf(muzzle), root.getWorldQuaternion(new THREE.Quaternion()), size, profile))
         }
         break
       case 'eject_casing':
