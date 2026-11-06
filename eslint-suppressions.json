@@ -1,29 +1,4 @@
 {
-  "packages/game-floorplan-post-apocalyptic/src/state.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-post-apocalyptic/tests/floorplan.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 29
-    }
-  },
-  "packages/game-floorplan-post-apocalyptic/tests/support.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 86
-    }
-  },
-  "packages/game-floorplan-post-apocalyptic/tests/triage.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-floorplan-post-apocalyptic/tests/vc3-rows.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-floorplan-three/src/build/api.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
