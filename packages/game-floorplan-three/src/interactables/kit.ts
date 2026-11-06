@@ -1,4 +1,5 @@
 import { FloorplanInteractables } from '@adatechnology/game-floorplan-interactables';
+import type { AdapterOptions, FloorplanAdapter } from '@adatechnology/game-floorplan-interactables';
 import type { InteractablesRefs, Kernel, KernelInteractablesKit, Shared, VegetationLibs } from '../kernel-types.js';
 
 export function installInteractablesKit(K: Kernel, shared: Shared): void {
@@ -10,11 +11,11 @@ export function installInteractablesKit(K: Kernel, shared: Shared): void {
     const o = cfg.interactives; if (!o) return null;
     const GI = o.GameInteractables || null, HH = o.GameInteractablesHousehold || null, GT = o.GameInteractablesThree || null, AD = o.adapter || FloorplanInteractables;
     if (!GI || !HH || !GT) { console.warn(t('warn.interactablesIncomplete')); return null; }
-    const A = AD.plan ? AD : AD.create({ ...(o.adapterOptions || {}), GameInteractables: GI, GameInteractablesHousehold: HH, locale: o.locale || cfg.locale, region: o.region, ...(cfg.seedKey ? { seedKey: cfg.seedKey } : {}) });
+    const A = (AD as FloorplanAdapter).plan ? AD as FloorplanAdapter : (AD as { create(options: AdapterOptions): FloorplanAdapter }).create({ ...(o.adapterOptions || {}), GameInteractables: GI, GameInteractablesHousehold: HH, locale: (o.locale || cfg.locale) as string | undefined /* a table of messages passes through as before */, region: o.region, ...(cfg.seedKey ? { seedKey: cfg.seedKey } : {}) });
     return { GI, HH, GT, A, gfx: GT.createThreeAdapter(THREE, { document: DOC, Reflector }), items: o.items !== false, effects: o.effects !== false, effectSink: o.effectSink || null, camera: o.camera || null, onEvent: o.onEvent || null, onSeat: o.onSeat || null };
   })();
   // Vegetation package (cfg.vegetation = { GameVegetation, GameVegetationSpecies }); without it the props' plant builders stay in use.
-  const VEG = ((): VegetationLibs | null => { const l = cfg.vegetation || null, G = l && (l.GameVegetation || (l.buildLot ? l : null)), S = l && (l.GameVegetationSpecies || (l.toSpec ? l : null)); return G && S && G.buildLot && S.toSpec ? { G, S } : null; })();
+  const VEG = ((): VegetationLibs | null => { const l = cfg.vegetation || null, G = l && (l.GameVegetation || (l.buildLot ? l as VegetationLibs['G'] : null)), S = l && (l.GameVegetationSpecies || (l.toSpec ? l as VegetationLibs['S'] : null)); return G && S && (G.buildLot as unknown) && (S.toSpec as unknown) ? { G, S } : null; /* a module without them is not the vegetation package */ })();
   shared.vegMaterials = null;
   const vegMaterials: KernelInteractablesKit['vegMaterials'] = () => shared.vegMaterials || (shared.vegMaterials = (() => { const m = (VEG as VegetationLibs).G.createVegetationMaterials(THREE); for (const k of ['wood', 'foliage', 'flowers', 'fruit', 'spines'] as const) roomLightMask(m[k]); return m; })());
   const defined: KernelInteractablesKit = { IVK, VEG, vegMaterials };

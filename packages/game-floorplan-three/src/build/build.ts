@@ -7,20 +7,20 @@ import { panelViewOf } from '../destruction/panels.js';
 import type * as THREE_NS from 'three';
 import type { Structure } from '@adatechnology/game-floorplan-structure';
 import type { ApartmentBuilding, BoxCollider, DoorLeaf, Eye, HouseInstance, HouseRecord, InteractionTarget, InteractivePiece, Kernel, KernelBuildBuild, KitTargetOptions, LightRequest, Rect, Shared } from '../kernel-types.js';
-import type { BuildOptions, Damageable, HouseInteractable, HousePart } from '../types.js';
+import type { BuildOptions, Damageable, House, HouseFurnitureCollider, HouseInteractable, HousePart, HousePoint, HouseTargetOptions } from '../types.js';
 
 /** A point in world coordinates. */
-type Point = { x: number; y: number; z: number };
+type Point = HousePoint;
 /** A piece of furniture as a public collider (rotated box). */
-type FurnitureCollider = { type: 'furniture'; f: number; obb: { cx: number; cz: number; hw: number; hd: number; c: number; s: number }; item: string; off: boolean };
+type FurnitureCollider = HouseFurnitureCollider;
 /** Roof planes of the plan. */
 type BuildContextPanes = Shared['ctx']['panes'];
 /** Options of the house's target and interact. */
-type TargetOptions = { strike?: (meshes: THREE_NS.Mesh[]) => THREE_NS.Intersection | null | undefined; interactives?: KitTargetOptions };
+type TargetOptions = HouseTargetOptions;
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
   const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
-  function build(r0: HouseRecord, options?: BuildOptions): Record<string, unknown> {
+  function build(r0: HouseRecord, options?: BuildOptions): House {
         const opts: BuildOptions = options || {};
         const r = applyOutbuildings(r0); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
         const t0 = performance.now();
@@ -158,7 +158,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           return { hp: d.hp, destroyed: d.hp <= 0 && before > 0 };
         };
 
-        const res = {
+        const res: House = {
           version: VERSION, r: r0, name: r.name, quality: h.quality, group: root, house, groups: gs,
           floors: r.floors.map((a, i) => gs['f' + i] || new THREE.Group()), ceilings: r.floors.map((a, i) => gs['t' + i] || null), roof: gs.roof || null, lot: gs.lot || null, ground: gs.ground || null, building: gs.building || null,
           waterTank: r.waterTank ? (() => { const pt = Object.values(parts).find(p => p.type === 'water_tank') || null; return { part: pt, group: pt ? pt.group : null, pos: shared.ctx.waterTankPos || null, plant: r.waterTank }; })() : null,

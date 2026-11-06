@@ -4,6 +4,7 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { en, ptBR } from '../src'
+import type { HouseBoxCollider, HouseFurnitureCollider } from '../src'
 import { houseOf, planOf } from './helpers/houses'
 
 // The fourth slice: what the player does in the house (doors, lights, collision, prompts), the furniture map and the bridges that get their
@@ -95,9 +96,9 @@ describe('collision', () => {
   const { house } = houseOf(plan)
 
   it('stops at walls and furniture and lets the open air and an open door through', () => {
-    const wall = house.colliders.find((c: any) => c.type === 'wall')
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall')!
     expect(house.collide((wall.x0 + wall.x1) / 2, (wall.z0 + wall.z1) / 2, wall.f)).toBe(true)
-    const piece = house.colliders.find((c: any) => c.type === 'furniture')
+    const piece = house.colliders.find((c): c is HouseFurnitureCollider => c.type === 'furniture')!
     expect(house.collide(piece.obb.cx, piece.obb.cz, piece.f)).toBe(true)
     const free = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].flatMap((x) => [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map((z): [number, number] => [x, z])).find(([x, z]) => house.roomAt(0, x, z) && !house.collide(x, z, 0))
     expect(free).toBeTruthy()
@@ -110,7 +111,7 @@ describe('collision', () => {
   })
 
   it('takes the radius of the walker', () => {
-    const wall = house.colliders.find((c: any) => c.type === 'wall')
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall')!
     const x = (wall.x0 + wall.x1) / 2, z = wall.z1 + 0.3
     expect(house.collide(x, z, wall.f, { radius: 0.1 })).toBe(false)
     expect(house.collide(x, z, wall.f, { radius: 0.5 })).toBe(true)

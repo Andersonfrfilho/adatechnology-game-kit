@@ -37,8 +37,8 @@ describe('interactives with the default adapter (@adatechnology/game-floorplan-i
 
   it('still accepts the game\'s own adapter (an object, or a factory with create)', () => {
     const calls: string[] = []
-    const real = houseOf(plan, { interactives: kit }).house.interactives.kit.A
-    const spy = { ...real, plan: (...a: any[]) => { calls.push('plan'); return real.plan(...a) } }
+    const real = houseOf(plan, { interactives: kit }).house.interactives!.kit.A
+    const spy = { ...real, plan: (...a: Parameters<typeof real.plan>) => { calls.push('plan'); return real.plan(...a) } }
     houseOf(plan, { interactives: { ...kit, adapter: spy } })
     expect(calls).toContain('plan')
     const made: any[] = []

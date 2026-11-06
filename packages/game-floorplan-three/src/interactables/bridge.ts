@@ -4,7 +4,7 @@ import { isMesh } from '@adatechnology/game-shapes-three';
 import type * as THREE_NS from 'three';
 import type { ObjectSpec, Transform, Vec3, WorldEvent } from '@adatechnology/game-interactables';
 import type { PlanEntry, SourcePlan, WaterNetwork } from '@adatechnology/game-floorplan-interactables';
-import type { Eye, HouseInstance, Hex, InteractablesRefs, InteractablesState, InteractiveState, Accumulator, Kernel, KernelInteractablesBridge, KitEntry, KitInteractionTarget, KitRoomState, KitSeat, KitTarget, KitTargetOptions, MaterialTable, Shared } from '../kernel-types.js';
+import type { Eye, HouseInstance, HouseInteractives, Hex, InteractablesRefs, InteractablesState, InteractiveState, Accumulator, Kernel, KernelInteractablesBridge, KitEntry, KitInteractionTarget, KitRoomState, KitSeat, KitTarget, KitTargetOptions, MaterialTable, Shared } from '../kernel-types.js';
 
 /** What the lamp plan reads of a furniture item. */
 type HouseItemLike = { id: string; type: string; room?: string | null };
@@ -19,7 +19,7 @@ type ItemDef = { shape: string; size: Vec3; color?: Hex | null };
 
 export function installInteractablesBridge(K: Kernel, shared: Shared): void {
   const { t, THREE, invalidate, invalidateShadow, cfg, DOC, LIGHT_TYPES, _Y, _q, _v3, accFor, applyLight, cursor, hashString, hudMessage, lightBase, pieceRecord, put, rgbOf, sh, wallBlocks } = K;
-  const enter = (...a: any[]): any => K.enter(...a);
+  const enter = (...a: Parameters<Kernel['enter']>): ReturnType<Kernel['enter']> => K.enter(...a);
   const roomLightMask = (...a: Parameters<Kernel['roomLightMask']>): ReturnType<Kernel['roomLightMask']> => K.roomLightMask(...a);
   // ---------------- 75 interactables (cfg.interactives) ----------------
   // ===== interactive objects of the game-interactables kit (sdk/interactables) in place of the house's static or simple furniture =====
@@ -292,7 +292,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     if (IV.items) IV.items.geometry.dispose();
   }
   // what the house shows whoever uses it: house.interactives
-  function ivPublish(h: HouseInstance): Record<string, unknown> {
+  function ivPublish(h: HouseInstance): HouseInteractives {
     const IV = h.IV as InteractablesState, w = IV.world, ik = IV.k, com = <A extends unknown[], R>(fn: (...a: A) => R) => (...a: A): R => { enter(h); return fn(...a); };
     const rot = (k: { label: string }): string => 'E: ' + k.label.charAt(0).toLowerCase() + k.label.slice(1);
     IV.isBlocked = ik.A.blockedOf(h.ctx.r as unknown as SourcePlan); /* the house's record is the plan's result (plus the decor items it added) */

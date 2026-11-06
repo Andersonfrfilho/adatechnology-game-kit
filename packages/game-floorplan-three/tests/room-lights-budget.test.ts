@@ -1,4 +1,5 @@
 import { createLightBudget } from '@adatechnology/game-render-three'
+import type { LightHandle } from '@adatechnology/game-render-three'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
@@ -27,7 +28,7 @@ describe('room lights through a LightBudget', () => {
     expect(uniforms.uRB0.value.length).toBe(8 * 4)
     expect(Array.from(uniforms.uRB0.value.slice(blast.slot * 4, blast.slot * 4 + 4))).toEqual(EMPTY)
     for (let index = 0; index < rooms.n; index++) {
-      const slot = rooms.lights[index].slot
+      const slot = (rooms.lights[index] as LightHandle).slot /* with a budget the lights are its handles */
       const crate = rooms.crates[index]
       if (!crate) continue
       expect(Array.from(uniforms.uRB0.value.slice(slot * 4, slot * 4 + 4))).toEqual(crate.rects[0].map((value: number) => Math.fround(value)))

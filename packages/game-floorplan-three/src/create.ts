@@ -140,5 +140,5 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   installDestructionBreach(K, shared)
   installDestructionWorld(K, shared)
   installBuildBuild(K, shared)
-  return buildApi(K, shared) as HouseRenderer
+  return buildApi(K, shared)
 }

@@ -22,5 +22,11 @@
     "src/lights/room-light.ts",
     "src/interactables/kit.ts",
     "src/interactables/bridge.ts",
-    "src/build/build.ts"]
+    "src/build/build.ts",
+    "src/build/instance.ts",
+    "src/build/api.ts",
+    "src/navigation/bind.ts",
+    "src/navigation/floor-navigator.ts",
+    "src/navigation/from-house.ts",
+    "src/statics.ts"]
 }

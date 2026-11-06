@@ -3,6 +3,7 @@ import { createDestructionRenderer } from '@adatechnology/game-destruction-three
 import { describe, expect, it } from 'vitest'
 
 import { bindNavigator, createFloorNavigator, navigationDefOf } from '../src'
+import type { HouseBoxCollider } from '../src'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
 // The floor navigator (the team's AndaresSDK, a 10 cm grid per floor) and its binding to the house and to its destruction.
@@ -72,7 +73,7 @@ describe('run-time changes of the grid', () => {
 describe('a built house', () => {
   const plan = planOf('sobrado', 3)
   const { house } = houseOf(plan)
-  const def = navigationDefOf(house as any, { own: true })
+  const def = navigationDefOf(house, { own: true })
 
   it('takes the heights, the wall colliders and the flights from the house', () => {
     expect(def.floors.map((f) => f.y)).toEqual(house.r.floors.map((f: any) => f.y0))
@@ -88,7 +89,7 @@ describe('a built house', () => {
   it('leaves the gaps of the doors free and the wall cells solid', () => {
     const nav = createFloorNavigator()
     nav.register(def)
-    const wall = house.colliders.find((c: any) => c.type === 'wall' && c.f === 0)
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall' && c.f === 0)!
     expect(nav.blocked((wall.x0 + wall.x1) / 2, (wall.z0 + wall.z1) / 2, 0)).toBe(1)
     const door = house.doors.find((d: any) => d.floor === 0)
     expect(nav.blocked(door.cx, door.cz, 0)).toBe(0)
@@ -103,7 +104,7 @@ describe('a built house', () => {
 
   it('uses the name of the house as its id unless told otherwise', () => {
     expect(def.id).toBe(house.name)
-    expect(navigationDefOf(house as any, { id: 'mine' }).id).toBe('mine')
+    expect(navigationDefOf(house, { id: 'mine' }).id).toBe('mine')
   })
 })
 
@@ -112,7 +113,7 @@ describe('bound to the destruction', () => {
   function fixture() {
     const { house } = houseOf(planOf('sobrado', 3))
     const nav = createFloorNavigator()
-    nav.register(navigationDefOf(house as any, { id: 'h', own: true }))
+    nav.register(navigationDefOf(house, { id: 'h', own: true }))
     const listeners: ((e: any) => void)[] = []
     const fake = { r: house.r, structure: house.structure, destruction: { onEvent: (fn: (e: any) => void) => { listeners.push(fn); return () => { listeners.splice(listeners.indexOf(fn), 1) } } } }
     const binding = bindNavigator(nav, 'h', fake as any)
@@ -191,7 +192,7 @@ describe('bound to the destruction', () => {
     const { house } = houseOf(plan, { destruction: world, destructionRenderer: renderer })
     scene.add(house.group)
     const nav = createFloorNavigator()
-    nav.register(navigationDefOf(house as any, { id: 'real', own: true }))
+    nav.register(navigationDefOf(house, { id: 'real', own: true }))
     house.destruction.activate()
     bindNavigator(nav, 'real', house as any)
     const [x, z] = middle(house, 'wall_0_0')

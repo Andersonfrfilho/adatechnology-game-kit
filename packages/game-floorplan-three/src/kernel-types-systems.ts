@@ -4,14 +4,15 @@ import type * as THREE_NS from 'three'
 import type { ResultGate } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { PanelView } from './destruction/panels.js'
+import type { Kernel } from './kernel-types.js'
 import type { Props3d } from '@adatechnology/game-props3d'
 import type * as Vegetation from '@adatechnology/game-vegetation'
 import type * as VegetationThree from '@adatechnology/game-vegetation/three'
 import type * as Interactables from '@adatechnology/game-interactables'
 import type { Effects, Screen, ThreeAdapter } from '@adatechnology/game-interactables-three'
-import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
+import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, HouseholdKit, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
 import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
-import type { BuildOptions, Damageable, HouseFleetDamageable, HouseInteractable, LightingOptions } from './types.js'
+import type { BuildOptions, Damageable, House, HouseFleetDamageable, HouseRenderer, HouseInteractable, LightingOptions } from './types.js'
 import type { BoxCollider, DoorLeaf, ElectricalInfo, Flight, FurnitureApi, GutterConfig, Hex, HouseDoor, HouseItem, HouseRecord, HouseRoom, ItemRef, LightRequest, MirrorRecord, Mount, PieceRecord, RoofRect, SolarInfo, StairRecord, Three, TypeEntry, TypeTable, Vec3, WaterState } from './kernel-types.js'
 
 /** The procedural textures (`materials/textures`): what `cfg.textures` can replace. */
@@ -404,7 +405,7 @@ export interface KernelLightsRoomLight {
 /** The interactables kit the game injected (`cfg.interactives`), bound: the modules, the adapter of the plan and the three.js side. */
 export interface InteractablesRefs {
   GI: typeof Interactables
-  HH: unknown
+  HH: HouseholdKit
   GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): ThreeAdapter }
   A: FloorplanAdapter
   gfx: ThreeAdapter
@@ -483,7 +484,43 @@ export interface InteractablesState {
   added?: AddResult
   focus?: { x: number; y: number; z: number } | null
   isBlocked?: BlockedFn
-  pub?: Record<string, unknown>
+  pub?: HouseInteractives
+}
+
+/** What the house publishes of the interactables kit (`house.interactives`): the kit world and its tables, and the calls a game makes on it (in house coordinates). */
+export interface HouseInteractives {
+  active: boolean
+  world: Interactables.World
+  plane: AdapterPlan
+  kit: InteractablesRefs
+  entries: Map<string, KitEntry>
+  circuits: InteractablesState['circuits']
+  roomStates: Map<string, KitRoomState>
+  warnings: string[]
+  water: WaterNetwork
+  /** TV screens (id -> kit screen). */
+  screens: Map<string, Screen>
+  /** The particle system (smoke). */
+  effects(): Effects | null
+  /** (x, z, floor) -> inside a wall (the check of the furniture doors' sweep). */
+  isBlocked: BlockedFn
+  /** The kit objects one piece of furniture became (a sink: basin, cabinet, overhead). */
+  furnitureObjects(mid: string): KitEntry[]
+  target(eye: Eye, options?: KitTargetOptions): KitInteractionTarget | null
+  interact(eye: Eye, options?: KitTargetOptions): boolean
+  interactables(): { id: string; type: string; floor: number; pos: Vec3; radius: number; label: string; act: () => boolean }[]
+  /** Where the player sits or lies, if they do. */
+  seatInfo(): KitSeat | null
+  sit(object: string, seat: string): boolean
+  stand(): Vec3 | null
+  /** Opens (`target` truthy) or closes all the doors and drawers of a piece of furniture. */
+  opens(mid: string, target: unknown): void
+  /** Reads a breaker (no `on`) or sets it. */
+  breaker(circuit: string, on?: unknown): boolean
+  lightOn(roomId: string): boolean | null
+  light(roomId: string, on: unknown): void
+  /** Whether a kit animation is running. */
+  animate(): boolean
 }
 
 /** A house being built or played, as the kit side reads it (the per-house state `enter(h)` swaps in). */
@@ -533,7 +570,7 @@ export interface KernelInteractablesBridge {
   ivRoomLight(IV: InteractablesState, roomId: string, on: boolean): void
   ivParts(IV: InteractablesState, parts: Record<string, unknown>, tagDamage: (type: string) => unknown): void
   ivDispose(h: HouseInstance): void
-  ivPublish(h: HouseInstance): Record<string, unknown>
+  ivPublish(h: HouseInstance): HouseInteractives
 }
 
 /** A kit object as an interaction target. */
@@ -569,9 +606,11 @@ export interface HouseLabel {
 
 /** Gutters, downpipes and drains the roof drew (`house.gutters`). */
 export interface GutterInfo {
-  gutters: Record<string, unknown>[]
-  downpipes: Record<string, unknown>[]
-  drains: Record<string, unknown>[]
+  /** Each gutter: floor, side of the roof, axis it runs along, from `a` to `b` at `p` across, at height `y`. */
+  gutters: { f: number; side: string; axis: string; a: number; b: number; p: number; y: number }[]
+  /** Each downpipe: floor, place, bottom and top, and the drain it ends in (none when it floats over a lower roof). */
+  downpipes: { f: number; x: number; z: number; y0: number; y1: number; drain: [number, number] | null; hornBox?: boolean }[]
+  drains: { x: number; z: number }[]
 }
 
 /** The plants the vegetation drew (`house.vegetation`). */
@@ -671,5 +710,18 @@ export interface SharedState {
 
 /** What `build/build` puts on the kernel: `build(result, options)` draws a house and returns it (`House`). */
 export interface KernelBuildBuild {
-  build(r0: HouseRecord, options?: BuildOptions): Record<string, unknown>
+  build(r0: HouseRecord, options?: BuildOptions): House
 }
+
+/** What `build/instance` puts on the kernel: the props kit, the type table, the saved state, `enter(h)` and the damage of a class. */
+export interface KernelBuildInstance {
+  props: Props3d
+  TYPES: TypeTable
+  newState(): SavedHouseState
+  /** Makes `h` the house the kernel works on. */
+  enter(h: HouseInstance): void
+  tagDamage(type: string): Damageable
+}
+
+/** The renderer as `buildApi` makes it: the public `HouseRenderer` plus the kernel and the shared state for the recorders of `furniture/spec` (not a stable api). */
+export type HouseRendererInternal = HouseRenderer & { internals: { K: Kernel; shared: SharedState } }

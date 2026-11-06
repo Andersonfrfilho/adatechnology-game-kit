@@ -1,13 +1,17 @@
-import type { NavHouseDef, NavRect, NavStair } from './floor-navigator.js'
+import type { NavHouseDef, NavRect, NavShowable, NavStair } from './floor-navigator.js'
+
+/** A box collider of the house: type, floor and rectangle. */
+export interface NavBoxCollider { type: string; f: number; x0: number; z0: number; x1: number; z1: number }
 
 /** The parts of a built house (`create(THREE, options).build(...)`) the navigator reads. */
 export interface NavigableHouse {
   name?: string
   r: { floors: { index: number; y0: number; ceiling: number }[] }
-  colliders: { type: string; f: number; x0: number; z0: number; x1: number; z1: number }[]
+  /** Its colliders; the box ones (`x0`..`z1`) of the solid types make the cells solid. */
+  colliders: readonly (NavBoxCollider | { type: string; f: number })[]
   stairs: { m: { ry: number }; f: number; to: number; rect: NavRect }[]
-  floors: unknown[]
-  roof: unknown
+  floors: NavShowable[]
+  roof: NavShowable
 }
 
 export interface NavigationDefOptions {
@@ -29,7 +33,7 @@ export function navigationDefOf(house: NavigableHouse, options: NavigationDefOpt
   const floors = house.r.floors.map((floor) => ({
     y: floor.y0,
     h: floor.ceiling,
-    solids: house.colliders.filter((c) => c.f === floor.index && types.has(c.type)).map((c): NavRect => [c.x0, c.z0, c.x1, c.z1]),
+    solids: house.colliders.filter((c): c is NavBoxCollider => c.f === floor.index && types.has(c.type)).map((c): NavRect => [c.x0, c.z0, c.x1, c.z1]),
   }))
   // a flight climbs towards the local -z of its item (its bottom is at +z): in the world that is (-sin, -cos) of the rotation
   const stairs = house.stairs.map((stair): NavStair => {

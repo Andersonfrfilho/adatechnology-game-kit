@@ -62,7 +62,8 @@
     "@adatechnology/game-vegetation": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-interactables": "workspace:^",
-    "@adatechnology/game-interactables-three": "workspace:^"
+    "@adatechnology/game-interactables-three": "workspace:^",
+    "@adatechnology/game-destruction-three": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
@@ -98,6 +99,9 @@
       "optional": true
     },
     "@adatechnology/game-interactables-three": {
+      "optional": true
+    },
+    "@adatechnology/game-destruction-three": {
       "optional": true
     }
   }

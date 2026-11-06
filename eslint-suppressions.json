@@ -151,7 +151,7 @@
   },
   "packages/game-floorplan-three/src/build/api.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 4
+      "count": 2
     }
   },
   "packages/game-floorplan-three/src/create.ts": {
@@ -179,24 +179,9 @@
       "count": 26
     }
   },
-  "packages/game-floorplan-three/src/interactables/bridge.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/kernel-types.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/navigation/bind.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-floorplan-three/src/navigation/floor-navigator.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 9
     }
   },
   "packages/game-floorplan-three/src/test-area/module.ts": {
@@ -221,12 +206,7 @@
   },
   "packages/game-floorplan-three/src/types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 67
-    }
-  },
-  "packages/game-floorplan-three/src/wall.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 17
+      "count": 2
     }
   },
   "packages/game-floorplan-three/tests/blast-presentation.test.ts": {
@@ -271,12 +251,12 @@
   },
   "packages/game-floorplan-three/tests/interactables-default.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 6
+      "count": 5
     }
   },
   "packages/game-floorplan-three/tests/interaction.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 11
+      "count": 8
     }
   },
   "packages/game-floorplan-three/tests/lot-roof.test.ts": {
@@ -286,7 +266,7 @@
   },
   "packages/game-floorplan-three/tests/navigation.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 15
+      "count": 10
     }
   },
   "packages/game-floorplan-three/tests/room-lights-budget.test.ts": {

@@ -8,12 +8,12 @@
  */
 import type * as THREE_NS from 'three'
 import type { FloorplanResultFields, PlanDoor, PlanWall, PlanWindow, Rect, ResultGate, ResultLot, ResultRoom } from '@adatechnology/game-floorplan'
-import type { Outbuilding, PlumbingPoint, PlumbingRun, Utilities, WaterTank } from '@adatechnology/game-floorplan-structure'
+import type { Construction, Outbuilding, Structure, PlumbingPoint, PlumbingRun, Utilities, WaterTank } from '@adatechnology/game-floorplan-structure'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
 
 import type { Translate } from './locale.js'
 import type { HouseRendererOptions } from './types.js'
-import type { InteractivePiece, KernelAnimationClotheslines, KernelBuildBuild, KernelCars, KernelInteractablesBridge, KernelInteractablesKit, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionFittings, KernelInteractionItems, KernelInteractionState, KernelInteractionTarget, KernelLightsRoomLight, KernelMaterialsMaterials, KernelMaterialsTextures, KernelMirrors, KernelVegetationBridge, SharedState } from './kernel-types-systems.js'
+import type { InteractivePiece, KernelAnimationClotheslines, KernelBuildBuild, KernelCars, KernelInteractablesBridge, KernelInteractablesKit, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionFittings, KernelInteractionItems, KernelInteractionState, KernelInteractionTarget, KernelLightsRoomLight, KernelMaterialsMaterials, KernelMaterialsTextures, KernelMirrors, KernelVegetationBridge, SharedState, KernelBuildInstance } from './kernel-types-systems.js'
 
 export type * from './kernel-types-systems.js'
 
@@ -173,7 +173,8 @@ export interface Frame {
   base: number
   y?: number
   floor?: number
-  room?: unknown
+  /** Id of the room the item stands in. */
+  room?: string | null
   lampId?: string
   palette?: Record<string, Hex>
 }
@@ -210,9 +211,10 @@ export interface LightRequest {
   floor?: number
   group: string
   base: number
-  room?: unknown
+  /** The room id of the item that asked for it (a lamp of the lot has none). */
+  room?: string | null
   id?: string
-  roomId?: unknown
+  roomId?: string | null
   [extra: string]: unknown
 }
 
@@ -492,6 +494,9 @@ export interface HouseRecord extends Omit<FloorplanResultFields, 'rooms' | 'wall
   outbuildings?: Outbuilding[]
   /** The water tank of `game-floorplan-structure`. */
   waterTank?: WaterTank | null
+  /** The construction and the structure of `game-floorplan-structure` (its `extendWithStructure`). */
+  construction?: Construction
+  structure?: Structure
   [extension: string]: unknown
 }
 
@@ -887,7 +892,7 @@ export interface KernelCloseScene {
 }
 
 /** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild, KernelBuildInstance {
   [member: string]: any
 }
 

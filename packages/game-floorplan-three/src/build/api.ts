@@ -1,7 +1,8 @@
 import type * as THREE_NS from 'three';
-import type { Kernel, Shared } from '../kernel-types.js';
+import type { DeferredQueue } from '@adatechnology/game-contracts';
+import type { HouseRendererInternal, Kernel, Shared } from '../kernel-types.js';
 
-export function buildApi(K: Kernel, shared: Shared): any {
+export function buildApi(K: Kernel, shared: Shared): HouseRendererInternal {
   const { cfg, VERSION, ATLAS, TEX, applyPart, carGroup, carModel, props, TYPES, roomLightMask, lighting, effectLights, newState, build } = K;
   return {
         version: VERSION, build, newState, types: TYPES, mv: props, applyPart,
@@ -10,8 +11,8 @@ export function buildApi(K: Kernel, shared: Shared): any {
         get materials() { return shared.mats; }, roomLightMask, lighting, effectLights,
         setNight(n: boolean) { const glass = shared.mats.glass as THREE_NS.MeshPhongMaterial; glass.emissive.set(n ? 0x8a5a20 : 0x000000); glass.opacity = n ? 0.4 : 0.24; },
         /** The chipped-plaster painting of every house of this renderer as a `DeferredQueue` for a frame budget (id `floorplan.breach-paint`); asking for it changes nothing. */
-        deferredQueue: () => K.breachPaintQueue,
-        cars: { model: carModel, group: carGroup, info: (k, seed) => { const m = carModel(k, seed); return m && { parts: m.parts.length, tris: m.tris, L: m.L, W: m.W, H: m.H }; } },
-        dispose() { if (shared.vegMaterials) { shared.vegMaterials.dispose(); shared.vegMaterials = null; } for (const m of Object.values<any>(shared.mats)) { if (m && m.dispose) m.dispose(); } for (const [k, t] of Object.entries<any>(TEX)) if (t && t.dispose && !(cfg.textures && cfg.textures[k])) t.dispose(); for (const t of Object.values<any>(ATLAS)) if (t && t.dispose) t.dispose(); },
+        deferredQueue: () => K.breachPaintQueue as DeferredQueue, /* the destruction side is typed with the breach */
+        cars: { model: carModel, group: carGroup, info: (k: string, seed?: number) => { const m = carModel(k, seed); return m && { parts: m.parts.length, tris: m.tris, L: m.L, W: m.W, H: m.H }; } },
+        dispose() { if (shared.vegMaterials) { shared.vegMaterials.dispose(); shared.vegMaterials = null; } for (const m of Object.values(shared.mats)) { if (m && m.dispose) m.dispose(); } for (const [k, t] of Object.entries<any>(TEX)) if (t && t.dispose && !(cfg.textures && cfg.textures[k as keyof typeof cfg.textures])) t.dispose(); for (const t of Object.values<any>(ATLAS)) if (t && t.dispose) t.dispose(); },
       };
 }

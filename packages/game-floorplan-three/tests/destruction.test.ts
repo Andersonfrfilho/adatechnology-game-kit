@@ -213,7 +213,7 @@ describe('a wall cut where its units came out, at full detail', () => {
     const s = setup()
     const seen: { statistics: any; mesh: any; hidden: boolean; opening: any }[] = []
     s.world.on('stage', (e: any) => {
-      if (e.part === 'wall_0_0' && e.stage === 2) seen.push({ statistics: s.d.statistics().breached, mesh: s.house.group.getObjectByName('breach:wall_0_0') ?? s.house.getObjectByName?.('breach:wall_0_0'), hidden: hidden(s.house, 'wall_0_0'), opening: e.opening })
+      if (e.part === 'wall_0_0' && e.stage === 2) seen.push({ statistics: s.d.statistics().breached, mesh: s.house.group.getObjectByName('breach:wall_0_0'), hidden: hidden(s.house, 'wall_0_0'), opening: e.opening })
     })
     s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)

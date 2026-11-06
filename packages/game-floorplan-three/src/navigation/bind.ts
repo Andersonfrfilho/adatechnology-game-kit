@@ -1,10 +1,12 @@
+import type { DestructionEvent } from '@adatechnology/game-destruction'
+
 import type { FloorNavigator, NavRect } from './floor-navigator.js'
 
 /** The parts of a built house the binding reads: its structure (parts by id), its floors and its destruction adapter. */
 export interface DestructibleHouse {
   r: { floors: { index: number; y0: number }[] }
   structure: { byId: Map<string, { role: string; floor: number; aabb: NavRect; y1: number }> }
-  destruction: { onEvent(listener: (event: any) => void): () => void; restore?: () => void }
+  destruction: { onEvent(listener: (event: DestructionEvent) => void): () => void; restore?: () => void }
 }
 
 export interface NavigatorBinding {
