@@ -146,12 +146,11 @@ function fire(room: TestRoom, flashes: readonly THREE.Vector3[], lens: () => num
 const only = (process.env.MUZZLE_WEAPONS ?? '').split(',').filter(Boolean)
 const FIREARMS = WEAPONS.filter((def) => def.action.kind === 'firearm' && hasWeaponModel(def.id) && (only.length === 0 || only.includes(def.id))).map((def) => def.id)
 
-describe('the flash and the tracer leave the tip of the barrel as it is drawn', () => {
-  it('in every view and fire mode, within a few pixels', () => {
-    const samples: Sample[] = []
-    for (const weapon of FIREARMS) for (const view of ['first', 'third'] as const) samples.push(...measure(weapon, view))
+// one test per weapon: a single test over the whole arsenal ran for minutes without yielding, and vitest lost the worker (ERR_IPC_CHANNEL_CLOSED)
+describe('the flash and the tracer leave the tip of the barrel as it is drawn, in every view and fire mode, within a few pixels', () => {
+  it.each(FIREARMS)('%s', (weapon) => {
+    const samples = (['first', 'third'] as const).flatMap((view) => measure(weapon, view))
     const off = samples.filter((sample) => (sample.flash ?? 0) > MAX_PIXELS || (sample.tracer ?? 0) > MAX_PIXELS)
-    console.log(`muzzle-screen: ${samples.length} cases, ${off.length} off; worst ${JSON.stringify([...off].sort((a, b) => Math.max(b.flash ?? 0, b.tracer ?? 0) - Math.max(a.flash ?? 0, a.tracer ?? 0)).slice(0, 12))}`)
     expect(off).toEqual([])
-  }, 1_800_000)
+  }, 120_000)
 })
