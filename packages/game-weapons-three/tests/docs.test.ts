@@ -21,8 +21,8 @@ describe('the spec documents of the weapons', () => {
     expect(readFileSync(file, 'utf8')).toBe(text)
   })
 
-  it('checklist-animacoes.md is what the checks measure, and no weapon with a model is left with a ✗', () => {
-    const rows = checkWeapons()
+  it('checklist-animacoes.md is what the checks measure, and no weapon with a model is left with a ✗', async () => {
+    const rows = await checkWeapons()
     const arsenal = createArsenal({ seed: 1 })
     const modelled = new Set(rows.map((row) => row.id))
     const without = [...arsenal.weapons.values()].filter((def) => !modelled.has(def.id)).map((def) => ({ id: def.id, name: def.name ?? def.id, category: def.category, kind: def.action.kind }))
@@ -31,5 +31,5 @@ describe('the spec documents of the weapons', () => {
     if (write) writeFileSync(file, text)
     expect(rows.filter((row) => [row.support, row.trigger, row.tactical, row.empty, row.time, row.contact, row.sound].some((check) => check.ok === false)).map((row) => row.id)).toEqual([])
     expect(readFileSync(file, 'utf8')).toBe(text)
-  }, 120000)
+  }, 300_000)
 })

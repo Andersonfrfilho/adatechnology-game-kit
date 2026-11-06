@@ -1,5 +1,19 @@
 # @adatechnology/game-crowd-three
 
+## 0.5.8
+
+### Patch Changes
+
+- Updated dependencies [624ee79]
+- Updated dependencies [b6677b5]
+- Updated dependencies [d3f6983]
+  - @adatechnology/game-contracts@0.28.0
+  - @adatechnology/game-characters-three@0.11.0
+  - @adatechnology/game-characters@0.2.14
+  - @adatechnology/game-audio@0.9.2
+  - @adatechnology/game-crowd@0.4.5
+  - @adatechnology/game-player@0.5.6
+
 ## 0.5.7
 
 ### Patch Changes

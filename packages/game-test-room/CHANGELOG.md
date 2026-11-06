@@ -1,5 +1,50 @@
 # @adatechnology/game-test-room
 
+## 0.29.0
+
+### Minor Changes
+
+- 624ee79: A weapon in each hand, finished. The magazine change frees a hand as a person does: the other weapon is tucked in the belt (`rules.dualWield.stowSeconds`, 0.45 s), the free hand goes to the magazine well of the weapon being reloaded and back, the weapon is drawn again, then the same the other way round; neither weapon fires meanwhile. The contracts gain `HostTool.stowed`, the `stow` host event and `HandTargets.fingersL` (the left hand's index finger, as `fingers` is the right's); the first-person arms and the player's body curl each index finger by it (the body's right index now follows `fingers` too). Q (fire mode) and B (safety) act on the weapon of the hand that fired last, and X clears the stuck weapon (the last-fired one first).
+- b6677b5: A weapon in each hand. `rules.dualWield` of the arsenal says which weapons go one in each hand (the pistols and revolvers by category, the Mini Uzi, Uzi, MAC-10, vz. 61, MP7 and the knives, machete and hatchet by id; a game changes the lists) and how much worse each one shoots then (`spread` 1.8x, `recoil` 1.35x); `canDualWield(arsenal, id)` answers it, and `setStance({ dualWield: true })` applies it and keeps the weapon from aiming. The contracts gain `ToolHand`, `HostTool.offHand` (the left hand's tool, with its own rounds and reload), `hand` on the tool events, a `MuzzleSource` and a `holdFrame` asked by hand. The weapon module draws the left hand's weapon out to the left, the left hand on the mirror of its grip, in both views (`VIEW_HOLD.dual`, `BODY_HOLD.dualGrip`, `oneHandHold`; a stock is folded while held in one hand), and lends each hand's muzzle, so each shot's flash and tracer leave its own gun. The test room: Shift+click in the weapon picker puts two of an eligible weapon in the hands (a second Shift+click changes the left one, a plain click goes back to one); the left mouse button fires the right hand, the right button the left hand (no aiming with two); R reloads the right one, then the left one; `room.setOffTool`, `room.offTool`, `room.useOff` and `room.reload`.
+- d3f6983: `assets/weapon-references.json`: a photo of the real weapon for each weapon of the arsenal, to compare each model with (123 of 141). Each one is a free Wikimedia Commons file (the image stays on the Commons servers) with its author, licence and page. A file a person checked is pinned (`pinned`, the G36C is not the G36); a weapon with no free photo of its exact model is listed in `missing` instead of borrowing another's. The weapon-thumbnails tool writes it (`node dist/cli.js references`).
+
+  The weapons area gets a showcase: the `showcase_weapon` control puts any weapon with a model on a pedestal (the buffet of the furniture catalogue) behind the counters, turning slowly (`showcase_spin`), takes the camera close to it (`showcase_look`) and shows the photo of the real one with its author and licence, so the model can be compared with it.
+
+  `BenchSheet.image` (game-contracts): a picture of the real thing a sheet is about, with its credit and page; the test room shows it over the scene, top centre, linked to its page.
+
+- 5170e39: First lot, part C: the M32 multiple grenade launcher (Milkor MGL), the M18 smoke grenade, the Semtex charge, the KA-BAR, the katana and brass knuckles.
+
+  - game-weapons: the `m32_mgl` launcher (six 40x46 mm grenades, 778 mm with the stock out and 565 mm folded, 5.3 kg, 75 m/s; launcher family `revolver`); the `smoke_grenade` explosive (`kind: 'smoke'`, no blast, fuse 1.0 to 2.3 s, coloured smoke for 50 to 90 s, new `ExplosiveDef.smoke` carried by the `Detonation`); the `semtex` explosive (500 g, 0.83 kg TNT, remote or about 30 s fuse); the melee weapons `kabar`, `katana` (two-hand) and `brass_knuckles` (harder punch over a smaller contact area than `fists`). Generated data comes from `tools/weapons-catalog` (`multiLaunchers`, `radii`).
+  - game-weapons-three: a model of its own for each (`mgl` builder with the swing-out cylinder, front grip, collimator sight and folding stock; new `cylinder` model family that reloads and cycles like a revolver and is held as a long gun, with the support hand on `parts.foreGrip`; `buildHandheldModel` for the melee weapons, with a `support` mark for the second hand; the M18 and Semtex builders next to the other explosives).
+  - game-test-room: a burning smoke canister lets out puffs of its colour through the effects world until its filling is spent and tells the host of no explosion; brass knuckles punch with the fists clip and the one-hand punch rule.
+  - game-vfx: `semtex` blasts like the C4 (alias).
+
+### Patch Changes
+
+- Updated dependencies [20a6526]
+- Updated dependencies [624ee79]
+- Updated dependencies [b6677b5]
+- Updated dependencies [970f192]
+- Updated dependencies [d3f6983]
+- Updated dependencies [5e7d154]
+- Updated dependencies [0ce0b71]
+- Updated dependencies [0e47730]
+- Updated dependencies [5170e39]
+- Updated dependencies [2321c3f]
+  - @adatechnology/game-weapons@0.9.0
+  - @adatechnology/game-contracts@0.28.0
+  - @adatechnology/game-vfx@0.10.0
+  - @adatechnology/game-destruction@0.18.2
+  - @adatechnology/game-audio@0.9.2
+  - @adatechnology/game-destruction-three@0.17.3
+  - @adatechnology/game-fluids@0.5.3
+  - @adatechnology/game-fluids-three@0.4.16
+  - @adatechnology/game-player@0.5.6
+  - @adatechnology/game-runtime@0.2.6
+  - @adatechnology/game-terrain@0.5.1
+  - @adatechnology/game-terrain-three@0.5.2
+  - @adatechnology/game-vfx-three@0.7.4
+
 ## 0.28.2
 
 ### Patch Changes

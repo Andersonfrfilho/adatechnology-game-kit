@@ -41,6 +41,8 @@ export {
   GUNSHOT_PROFILES,
   GUNSHOT_SAMPLE,
   GUNSHOT_SAMPLE_IDS,
+  LAUNCH_SAMPLE,
+  LAUNCH_SOUND_IDS,
   RELOAD_SAMPLE,
   RELOAD_SAMPLE_HITS,
   CUES_IN_SAMPLE,
@@ -67,6 +69,7 @@ export type {
   CuePlayed,
   CasingSound,
   FlybySound,
+  LaunchKind,
   WeaponSampleOptions,
 } from './audio'
 export { buildProp, weaponProp, BODY_ACTIONS } from './props'

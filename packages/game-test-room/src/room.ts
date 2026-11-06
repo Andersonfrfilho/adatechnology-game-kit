@@ -2443,6 +2443,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     startFire,
     say,
     projectileModel: options.projectileModel,
+    audio,
   })
 
   // ----- the trigger

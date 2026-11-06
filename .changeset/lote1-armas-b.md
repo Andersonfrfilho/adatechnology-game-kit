@@ -1,6 +1,0 @@
----
-'@adatechnology/game-weapons': minor
-'@adatechnology/game-weapons-three': minor
----
-
-Four more real weapons in the arsenal, each with a model drawn after its photo and not borrowed from another weapon: PPSh-41 (one-piece wooden stock and body, perforated barrel jacket with the slanted muzzle brake, 71-round drum or curved box, tangent sight), Mauser Kar98k (long bolt action with the turned-down bolt handle, full wooden stock, one barrel band, nose cap with bayonet lug, internal five-round magazine), MG42 (perforated barrel shroud with the barrel-change opening, conical muzzle booster, front bipod, belt feed on the left, butt and pistol grip) and VSS Vintorez (integral suppressor over the whole barrel, AK-like receiver, skeletal wooden stock, 10-round box magazine). Three new calibres (7.62x25 Tokarev, 7.92x57 Mauser, 9x39) with their numbers, cartridge sizes and ammunition loads; the VSS carries the integral suppressor and its subsonic noise. Real numbers and sources in `tools/weapons-catalog/decisions.json` (`creations`, `calibers`, `archetypes`); the models are `weaponModels` decisions with the new `ppsh`, `kar98`, `mg42` and `vss` builders, and the new `beech` material. The three new calibres reuse existing gunshot profiles. No existing weapon changes.

@@ -95,7 +95,7 @@ describe('accessory bench: fit and remove per mount', () => {
 
   it('fits an M203, switches to it with U, fires a grenade and reloads it through the breech stages', () => {
     const { room, module } = areaRoom()
-    const play = vi.spyOn(module.audio!, 'play')
+    const launch = vi.spyOn(module.audio!, 'launch')
     equip(room, 'colt_m4a1')
     bench(room).set('fit_underbarrel', 'm203')
     run(room, 35)
@@ -107,7 +107,7 @@ describe('accessory bench: fit and remove per mount', () => {
     expect(room.tool.underbarrelActive).toBe(true)
     room.use()
     run(room, 0.3)
-    expect(play).toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number))
+    expect(launch).toHaveBeenCalledWith('grenade', expect.any(Number), expect.any(Number))
     const ammo = room.tool.underbarrel?.ammo ?? -1
     expect(ammo).toBe(0)
     key('KeyR')

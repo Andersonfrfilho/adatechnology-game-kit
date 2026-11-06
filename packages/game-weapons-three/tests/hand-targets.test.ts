@@ -91,6 +91,32 @@ describe('hand targets of the weapon in the hands', () => {
     expect(Math.hypot(back[0] - rest[0], back[1] - rest[1], back[2] - rest[2])).toBeLessThan(0.02)
   })
 
+  it('the hip-carried minigun gives the left hand the carry handle: the palm rests on the bar, over its near half, with the grip closed', () => {
+    const { room, last } = roomWithRecorder()
+    equip(room, 'm134')
+    const targets = last()!.targets!
+    // the carry handle is the thin bar on top of the housing: 0.2 m long (along the aim), 0.045 m wide, under 2 cm thick
+    let handle: THREE.Box3 | null = null
+    room.scene.traverse((node) => {
+      if (!(node as THREE.Mesh).isMesh) return
+      const box = new THREE.Box3().setFromObject(node)
+      const size = box.getSize(new THREE.Vector3())
+      if (size.y < 0.02 && Math.abs(size.z - 0.2) < 0.005 && Math.abs(size.x - 0.045) < 0.005) handle = box
+    })
+    expect(handle).not.toBeNull()
+    const bar = handle as unknown as THREE.Box3
+    const [x, y, z] = targets.L!.position
+    const centre = bar.getCenter(new THREE.Vector3())
+    // the palm lies on the bar (its middle a palm's thickness above), not sunk through it, and within 2 cm of it
+    expect(y - bar.max.y).toBeGreaterThan(0.025)
+    expect(y - bar.max.y).toBeLessThan(0.04)
+    expect(Math.abs(z - centre.z)).toBeLessThan(0.1)
+    // the knuckles (0.05 m ahead of the palm centre along the fingers, +x) reach the far edge of the bar, so the fingers close around it
+    expect(x + 0.05).toBeGreaterThan(bar.max.x - 0.015)
+    expect(x + 0.05).toBeLessThan(bar.max.x + 0.015)
+    expect(targets.gripL).toBeGreaterThanOrEqual(0.85)
+  })
+
   it('a tool that is not a weapon from the module gives no hand targets from the weapons module', () => {
     const { room, last } = roomWithRecorder()
     equip(room, 'hand')
