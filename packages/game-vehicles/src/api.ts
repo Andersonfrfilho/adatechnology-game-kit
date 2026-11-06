@@ -141,6 +141,8 @@ export interface RollState {
   hits: number
   thin: RollMesh[]
   y0: number
+  /** State a plugin keeps on the rollover (the fleet's military group marks its own handling). */
+  [extra: string]: unknown
 }
 
 /** A part thrown by an explosion (`fling`): its holder, linear and angular velocity, radius, whether it landed and how long it keeps burning. */
@@ -161,6 +163,8 @@ export interface VehicleSpin {
   decay?: number
   /** a road wheel, turned by the vehicle's speed */
   track?: boolean
+  /** a per-frame hook disguised as a spin (its `o.rotation` getter runs code), not a real part */
+  hook?: boolean
 }
 
 /** A continuous source of smoke or fire (`kit.addEmitter`): where (`c.vehicle`, or the vehicle world with `world`), how many puffs a second. */

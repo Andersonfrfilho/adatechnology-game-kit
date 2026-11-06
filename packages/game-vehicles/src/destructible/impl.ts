@@ -39,7 +39,7 @@ export interface VehicleDestructibleOptions {
   /** Display name. Default: the vehicle name. */
   name?: string
   /** Object whose space `describe()` answers in (the wrapper the host placed the vehicle in). Default: `c.root`. */
-  frame?: Object3D
+  frame?: unknown
   /** Tow hitch: the option wins over the spec flag, the spec flag over the seeded choice. */
   hitch?: boolean
   /** Do not create or move any mesh (logic only, for servers and tests that need no scene). */
@@ -278,7 +278,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   let steerSign = 1
   let specCache: DestructibleSpec | null = null
 
-  const frame = (): Object3D => options.frame ?? c.root
+  const frame = (): Object3D => (options.frame ?? c.root) as Object3D
   const sync = (): void => {
     c.root.updateWorldMatrix(true, true)
     frame().updateWorldMatrix(true, false)

@@ -27,7 +27,7 @@ export interface CabinSource {
 
 export interface CabinEnclosureOptions {
   /** The object the destructible answers in (its `frame` option, where the host placed the vehicle): the holes of `state()` are in its space. Default `vehicle.root`. */
-  readonly frame?: Object3D | null
+  readonly frame?: unknown
   /** Gaps of the shut doors and vents, share per second of the smoke pressing on the closed shell (default {@link CABIN_LEAK}). */
   readonly leak?: number
   /** How open a door or lid has to be (share of its full swing) to count as open (default 0.06: ajar). */
@@ -98,7 +98,7 @@ export function cabinEnclosure(source: CabinSource, options: CabinEnclosureOptio
   })
   // the holes of state() are in the frame's space: back to the vehicle's own
   node.updateWorldMatrix?.(true, false)
-  const frame = options.frame ?? c.root
+  const frame = (options.frame ?? c.root) as { localToWorld?: Object3D['localToWorld']; updateWorldMatrix?: Object3D['updateWorldMatrix'] } | null | undefined
   frame?.updateWorldMatrix?.(true, false)
   const inverse = node.matrixWorld.clone().invert()
   for (const def of source.model.parts) {

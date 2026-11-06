@@ -70,7 +70,7 @@ export function installMilitary(fx: FleetContext): void {
         fn(c)
       },
     })
-    c.spin.push({ o: o, axis: 'y', v: 0, hook: true })
+    c.spin.push({ o: o as unknown as Object3D, axis: 'y', v: 0, hook: true })
   }
   /* armoured steel: each new dent keeps only k of the depth, without rippling like putty.
      Applies to meshes in c.deform and to the rigid parts that follow the dent. */
