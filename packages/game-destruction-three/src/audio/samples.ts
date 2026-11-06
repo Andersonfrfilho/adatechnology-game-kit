@@ -34,6 +34,10 @@ export const BLAST_FIRE_SAMPLES: Readonly<Record<string, BlastFireSampleDefaults
   fire_loop_gas: { bus: 'world', gain: 6, loop: { crossfade: 1 } },
   fire_loop_liquid: { bus: 'world', gain: 3.5, loop: { crossfade: 1 } },
   fire_loop_plastic: { bus: 'world', gain: 1, loop: { crossfade: 0.6 } },
+  // a smoke canister venting: a gas hiss chained like the fire roar (the level comes from the room, by how near the burning canisters are)
+  smoke_grenade_hiss: { bus: 'world', gain: 1, loop: { crossfade: 0.8 } },
+  // the ring and the spoon of a hand grenade: a small metal latch
+  grenade_pin_pull: fire(0.5),
 }
 
 export type BlastFireSampleBankOptions = {
