@@ -26,6 +26,8 @@ declare global {
   var __provingCertificates: Record<string, import('@adatechnology/game-vehicles-proving').ProvingCertificate> | undefined
   /** The page's three.js, when the page exposes it (`window.__THREE`). */
   var __THREE: typeof THREE | undefined
+  /** The recorded sfx the test room page inlines (`examples/test-room/build.mjs`): the manifest and each file as a `data:` url. */
+  var __kitSfx: { readonly manifest: NonNullable<NonNullable<Parameters<typeof import('@adatechnology/game-weapons-three/testing').createWeaponsTestModule>[0]>['samples']>['manifest']; readonly files: Readonly<Record<string, string>> } | undefined
   /** The room page's build flag (`examples/test-room/build.mjs` defines it): true on the default page, false on the bare room the areas build over. */
   const __ROOM_FULL__: boolean
   /** The furniture builders the house renderer takes (`window.Moveis3DSDK`). */
@@ -220,6 +222,7 @@ declare global {
   type AreaEntryDir = keyof AreaEntries
   interface AreaEntries {
     'items-test-area': typeof import('../examples/items-test-area/src/entry.js')
+    'interactables-test-area': typeof import('../examples/interactables-test-area/src/entry.js')
     'floorplan-test-area': typeof import('../examples/floorplan-test-area/src/entry.js')
     'weather-test-area': typeof import('../examples/weather-test-area/src/entry.js')
     'vfx-test-area': typeof import('../examples/vfx-test-area/src/entry.js')
@@ -306,6 +309,7 @@ declare global {
     __provingReport: AreaReport<'vehicles-proving-area'>
     __playerReport: AreaReport<'player-test-area'>
     __crowdReport: AreaReport<'crowd-test-area'>
+    __furnitureReport: AreaReport<'interactables-test-area'>
   }
 }
 export {}

@@ -9,12 +9,41 @@
 //   - scenarios (pt-BR and en) written against the test room's `ScenarioContext`.
 import { buildScenarios } from './scenarios.js'
 
+/** @typedef {typeof import('@adatechnology/game-interactables-household')} HouseholdPack */
+/** @typedef {typeof import('@adatechnology/game-interactables-three')} InteractablesThree */
+/** @typedef {import('@adatechnology/game-interactables-three').ThreeLib} ThreeLib */
+/** @typedef {import('@adatechnology/game-interactables-household').Household} Household */
+/** @typedef {import('@adatechnology/game-interactables-household').HouseholdApi} HouseholdApi */
+/** @typedef {import('@adatechnology/game-props3d').PropsApi} PropsApi */
+/** @typedef {import('@adatechnology/game-interactables').ObjectSpec} ObjectSpec */
+/** @typedef {import('@adatechnology/game-interactables').PartSpec} PartSpec */
+/** @typedef {import('@adatechnology/game-interactables').PartDestruction} PartDestruction */
+/** @typedef {import('@adatechnology/game-interactables').Motion} Motion */
+/** @typedef {import('@adatechnology/game-contracts').TestableItem} TestableItem */
+/** @typedef {'box' | 'cylinder' | 'plane' | 'leaf'} PrimFn */
+/** @typedef {{ key: string; aabb: number[]; vol: number }} PrimShape */
+/** @typedef {PrimShape & { fn: PrimFn; args: unknown[] }} Prim */
+/** @typedef {{ id: string; pivot: number[]; ry: number; prims: Prim[] }} PartRecord */
+/** @typedef {{ indices: number[]; box: number[]; vol: number; keys: Set<string>; area: Record<string, number> }} Cluster */
+/** @typedef {{ id: string; indices: number[]; box: number[]; vol: number; material: string; key: string; mover: false; tag?: undefined; source?: undefined }} BodyPiece */
+/** @typedef {{ id: string; source: PartSpec; indices: number[]; box: number[]; vol: number; material: string; mover: true; tag: Partial<PartDestruction>; key?: undefined }} MoverPiece */
+/** @typedef {BodyPiece | MoverPiece} AnyPiece */
+/** @typedef {{ explodes?: PartDestruction['explodes']; contains?: PartDestruction['contains']; mass?: number; hp?: number; thickness?: number }} PartExtra */
+/** @typedef {[number, number, number]} Triple */
+/** @typedef {NonNullable<import('@adatechnology/game-contracts').DestructibleSpec['joints']>[number]['kind']} JointKind */
+/** @typedef {{ position: Triple; rotation: Triple }} PartPose */
+/** @typedef {{ source: string; id: string; on: boolean; pose: PartPose; seconds: number; sound: string; requires: string | undefined }} AnimPart */
+/** @typedef {{ capacity: number; liters: number; size: number[]; opening: number }} FluidFixture */
+/** @typedef {ReturnType<typeof analyse>} FurnitureAnalysis */
+
+/** @type {Readonly<Record<string, number>>} */
 const MAX_PIECES = { bbq: 30, clothesline: 24, dog_house: 24, gas_bottle: 6, microwave: 10, washing_machine: 12, tv: 8, fridge_compact: 12, utility_sink: 12, wall_socket: 3, wall_switch: 3 }
 const DEFAULT_MAX_PIECES = 18
 const WOOD_FAMILY = new Set(['wood_soft', 'wood_hard', 'mdf', 'plywood'])
 const METAL_FAMILY = new Set(['steel', 'aluminium', 'cast_iron', 'copper'])
 const UPHOLSTERED = new Set(['sofa', 'armchair', 'bed_double', 'bed_single'])
 // render material key -> destruction material, where the type's body material is not the right answer for that key
+/** @type {Readonly<Record<string, Readonly<Record<string, string>>>>} */
 const KEY_OVERRIDES = {
   shower: { plain: 'ceramic', metal: 'aluminium', glass: 'tempered_glass' },
   sink_kitchen: { wood: 'mdf' },
@@ -22,21 +51,25 @@ const KEY_OVERRIDES = {
   mailbox: { wood: 'steel' },
 }
 // fixtures that hold water: inner volume (m), litres at the start, where the opening is
+/** @type {Readonly<Record<string, FluidFixture>>} */
 const FLUIDS = {
   sink_kitchen: { liters: 4, capacity: 14, size: [0.5, 0.16, 0.36], opening: 0.2 },
   sink_bathroom: { liters: 2, capacity: 6, size: [0.34, 0.12, 0.28], opening: 0.15 },
   utility_sink: { liters: 8, capacity: 28, size: [0.5, 0.25, 0.4], opening: 0.22 },
   toilet: { liters: 3, capacity: 6, size: [0.3, 0.18, 0.3], opening: 0.14 },
 }
+/** @type {Readonly<Record<string, number>>} */
 const DENSITY = {
   steel: 7850, aluminium: 2700, cast_iron: 7200, copper: 8900, wood_soft: 550, wood_hard: 750, mdf: 700, plywood: 600, glass: 2500,
   tempered_glass: 2500, ceramic: 2300, plastic: 1000, rubber: 1100, fabric: 250, foam: 40, brick: 1800, concrete: 2400, foliage: 100,
 }
 // wall thickness of hollow things (appliance shells, sheet metal, ceramic bowls)
+/** @type {Readonly<Record<string, number>>} */
 const THICKNESS = { steel: 0.0012, aluminium: 0.001, copper: 0.002, plastic: 0.003, ceramic: 0.012, glass: 0.004, tempered_glass: 0.006 }
+/** @type {Readonly<Record<string, string>>} */
 const SOUND = { door: 'door', drawer: 'drawer', lid: 'lid', flap: 'flap', knob: 'knob', button: 'click', rocker: 'click', breaker: 'click' }
 
-const sanitize = (id) =>
+const sanitize = (/** @type {unknown} */ id) =>
   String(id)
     .trim()
     .toLowerCase()
@@ -48,9 +81,14 @@ const round = (/** @type {number} */ n, d = 4) => Math.round(n * 10 ** d) / 10 *
 // Geometry of the recorded primitives (axis-aligned boxes in the frame they were drawn in)
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const rotX = (/** @type {number[]} */ v, /** @type {number} */ a) => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)]
-const rotY = (v, a) => [v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], -v[0] * Math.sin(a) + v[2] * Math.cos(a)]
-const rotZ = (v, a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a), v[2]]
+const rotY = (/** @type {number[]} */ v, /** @type {number} */ a) => [v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], -v[0] * Math.sin(a) + v[2] * Math.cos(a)]
+const rotZ = (/** @type {number[]} */ v, /** @type {number} */ a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a), v[2]]
 
+/**
+ * @param {number[]} c
+ * @param {number[]} size
+ * @returns {number[]}
+ */
 function aabbOfBox(c, size, ry = 0, rx = 0, rz = 0) {
   const lo = [Infinity, Infinity, Infinity]
   const hi = [-Infinity, -Infinity, -Infinity]
@@ -69,29 +107,34 @@ function aabbOfBox(c, size, ry = 0, rx = 0, rz = 0) {
   return [...lo, ...hi]
 }
 
-/** Box, volume and render material key of one primitive call. */
+/**
+ * Box, volume and render material key of one primitive call.
+ * @param {PrimFn} fn
+ * @param {unknown[]} a
+ * @returns {PrimShape}
+ */
 function describePrimitive(fn, a) {
   // a = [M, material, ...] (box, cylinder, plane) or [M, x, ...] (leaf)
   if (fn === 'box') {
-    const [, material, x, y, z, w, h, d, , ry = 0, rx = 0, rz = 0] = a
+    const [, material, x, y, z, w, h, d, , ry = 0, rx = 0, rz = 0] = /** @type {Parameters<PropsApi['box']>} */ (a)
     return { key: material, aabb: aabbOfBox([x, y + h / 2, z], [w, h, d], ry, rx, rz), vol: w * h * d }
   }
   if (fn === 'cylinder') {
-    const [, material, x, y, z, r, h, , rx = 0, rz = 0, shape] = a
+    const [, material, x, y, z, r, h, , rx = 0, rz = 0, shape] = /** @type {Parameters<PropsApi['cylinder']>} */ (a)
     const tilted = rx || rz
     const k = shape === 'cone' ? 1 / 3 : shape === 'sphere' ? 2 / 3 : 1
     return { key: material, aabb: aabbOfBox([x, tilted ? y : y + h / 2, z], [2 * r, h, 2 * r], 0, rx, rz), vol: Math.PI * r * r * h * k }
   }
   if (fn === 'plane') {
-    const [, material, x, y, z, w, h, , ry = 0, rx = 0, rz = 0] = a
+    const [, material, x, y, z, w, h, , ry = 0, rx = 0, rz = 0] = /** @type {Parameters<PropsApi['plane']>} */ (a)
     return { key: material, aabb: aabbOfBox([x, y, z], [w, h, 0.012], ry, rx, rz), vol: w * h * 0.012 }
   }
   // leaf
-  const [, x, y, z, w, h, , ry = 0] = a
+  const [, x, y, z, w, h, , ry = 0] = /** @type {Parameters<PropsApi['leaf']>} */ (a)
   return { key: 'plant', aabb: aabbOfBox([x, y + h / 2, z], [w, h, w * 0.2], ry), vol: w * h * w * 0.1 }
 }
 
-const unionBox = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[3], b[3]), Math.max(a[4], b[4]), Math.max(a[5], b[5])]
+const unionBox = (/** @type {number[]} */ a, /** @type {number[]} */ b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[3], b[3]), Math.max(a[4], b[4]), Math.max(a[5], b[5])]
 const boxVolume = (/** @type {number[]} */ b) => Math.max(1e-9, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]))
 const boxGap = (/** @type {number[]} */ a, /** @type {number[]} */ b) => {
   const dx = Math.max(0, a[0] - b[3], b[0] - a[3])
@@ -99,10 +142,14 @@ const boxGap = (/** @type {number[]} */ a, /** @type {number[]} */ b) => {
   const dz = Math.max(0, a[2] - b[5], b[2] - a[5])
   return Math.hypot(dx, dy, dz)
 }
-const centre = (b) => [(b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2]
+const centre = (/** @type {number[]} */ b) => [(b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2]
 
-/** The part's closed-pose box in object space: the drawn boxes are relative to the pivot and turned by `ry`. */
+/**
+ * The part's closed-pose box in object space: the drawn boxes are relative to the pivot and turned by `ry`.
+ * @param {PartRecord} rec
+ */
 function partBox(rec) {
+  /** @type {number[] | null} */
   let box = null
   for (const p of rec.prims) {
     const lo = [p.aabb[0], p.aabb[1], p.aabb[2]]
@@ -121,45 +168,53 @@ function partBox(rec) {
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // Recording api: sits between the household pack and the mesh api (or nothing)
 // ---------------------------------------------------------------------------------------------------------------------------------------
+/** @type {readonly PrimFn[]} */
 const FNS = ['box', 'cylinder', 'plane', 'leaf']
 
 /**
  * Wraps the api a household pack draws through. Primitives drawn inside `part` go straight to `inner` (and are recorded per part);
  * static primitives are only recorded, and `flush` replays them into the destruction pieces of `plan` (one `part` group per piece), so the
  * drawing and the destruction share the same pieces.
+ * @param {HouseholdApi} inner
  */
 function createRecorder(inner) {
+  /** @type {Prim[]} */
   const statics = []
+  /** @type {Map<string, PartRecord>} */
   const parts = new Map()
+  /** @type {string[]} */
   const stack = []
-  const api = {
-    light: (...a) => inner.light?.(...a),
+  /** @type {HouseholdApi} */
+  const api = /** @type {HouseholdApi} */ ({
+    light: (/** @type {Parameters<NonNullable<HouseholdApi['light']>>} */ ...a) => inner.light?.(...a),
+    /** @type {HouseholdApi['part']} */
     part(id, pivot, ry, draw) {
       stack.push(id)
       parts.set(id, { id, pivot: [...pivot], ry: ry || 0, prims: [] })
       inner.part(id, pivot, ry, draw)
       stack.pop()
     },
-  }
+  })
   for (const fn of FNS) {
-    api[fn] = (...args) => {
+    api[fn] = (/** @type {unknown[]} */ ...args) => {
       const prim = { fn, args, ...describePrimitive(fn, args) }
       if (stack.length) {
-        parts.get(stack[stack.length - 1]).prims.push(prim)
-        inner[fn](...args)
+        /** @type {PartRecord} */ (parts.get(stack[stack.length - 1])).prims.push(prim)
+        ;/** @type {(...args: unknown[]) => void} */ (inner[fn])(...args)
       } else statics.push(prim)
     }
   }
-  const flush = (pieces) => {
+  const flush = (/** @type {ReadonlyArray<{ id: string; indices: number[] }>} */ pieces) => {
     for (const piece of pieces) {
       inner.part(piece.id, [0, 0, 0], 0, () => {
-        for (const i of piece.indices) inner[statics[i].fn](...statics[i].args)
+        for (const i of piece.indices) /** @type {(...args: unknown[]) => void} */ (inner[statics[i].fn])(...statics[i].args)
       })
     }
   }
   return { api, statics, parts, flush }
 }
 
+/** @type {HouseholdApi} */
 const NOOP = { part: (_id, _pivot, _ry, draw) => draw(), box() {}, cylinder() {}, plane() {}, leaf() {}, light() {} }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -167,7 +222,7 @@ const NOOP = { part: (_id, _pivot, _ry, draw) => draw(), box() {}, cylinder() {}
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /**
  * @param {string} type
- * @param {{ destruction: { material: string; }; }} spec
+ * @param {ObjectSpec} spec
  * @param {string} key
  * @param {number[]} box
  */
@@ -186,20 +241,28 @@ function materialFor(type, spec, key, box) {
   return body
 }
 
-/** Clusters the static primitives into at most `max` pieces: tiny ones join the nearest piece, then the smallest join their neighbours. */
+/**
+ * Clusters the static primitives into at most `max` pieces: tiny ones join the nearest piece, then the smallest join their neighbours.
+ * @param {string} type
+ * @param {ObjectSpec} spec
+ * @param {Prim[]} statics
+ * @returns {Cluster[]}
+ */
 function clusterStatics(type, spec, statics) {
   const max = MAX_PIECES[type] ?? DEFAULT_MAX_PIECES
+  /** @type {Cluster[]} */
   let pieces = statics.map((p, i) => ({ indices: [i], box: p.aabb.slice(), vol: p.vol, keys: new Set([p.key]), area: { [p.key]: p.vol } }))
-  const glassy = (p) => p.keys.has('glass') || p.keys.has('emissive')
-  const size = (/** @type {{ box: number[]; }} */ p) => Math.max(p.box[3] - p.box[0], p.box[4] - p.box[1], p.box[5] - p.box[2])
-  const merge = (a, b) => {
+  const glassy = (/** @type {Cluster} */ p) => p.keys.has('glass') || p.keys.has('emissive')
+  const size = (/** @type {Cluster} */ p) => Math.max(p.box[3] - p.box[0], p.box[4] - p.box[1], p.box[5] - p.box[2])
+  const merge = (/** @type {Cluster} */ a, /** @type {Cluster} */ b) => {
     a.indices.push(...b.indices)
     a.box = unionBox(a.box, b.box)
     a.vol += b.vol
     for (const k of b.keys) a.keys.add(k)
     for (const [k, v] of Object.entries(b.area)) a.area[k] = (a.area[k] ?? 0) + v
   }
-  const absorb = (/** @type {{ box: number[]; }} */ small) => {
+  const absorb = (/** @type {Cluster} */ small) => {
+    /** @type {Cluster | null} */
     let best = null
     let bestScore = Infinity
     for (const q of pieces) {
@@ -213,7 +276,7 @@ function clusterStatics(type, spec, statics) {
     }
     if (!best) return false
     merge(best, small)
-    pieces = pieces.filter((/** @type {{ box: number[]; }} */ p) => p !== small)
+    pieces = pieces.filter((/** @type {Cluster} */ p) => p !== small)
     return true
   }
   // 1. specks (screws, hinges, handles): smaller than 2 cm in every direction
@@ -221,12 +284,18 @@ function clusterStatics(type, spec, statics) {
   // 2. cap the count
   while (pieces.length > max) {
     const cand = pieces.filter((p) => !glassy(p) || pieces.filter(glassy).length > 3)
-    const small = (cand.length ? cand : pieces).reduce((/** @type {{ box: number[]; }} */ m, /** @type {{ box: number[]; }} */ p) => (boxVolume(p.box) < boxVolume(m.box) ? p : m))
+    const small = (cand.length ? cand : pieces).reduce((/** @type {Cluster} */ m, /** @type {Cluster} */ p) => (boxVolume(p.box) < boxVolume(m.box) ? p : m))
     if (!absorb(small)) break
   }
-  return pieces.sort((/** @type {{ box: number[]; }} */ a, /** @type {{ box: number[]; }} */ b) => boxVolume(b.box) - boxVolume(a.box))
+  return pieces.sort((/** @type {Cluster} */ a, /** @type {Cluster} */ b) => boxVolume(b.box) - boxVolume(a.box))
 }
 
+/**
+ * @param {Motion} motion
+ * @param {number} ry
+ * @param {InteractablesThree} GT
+ * @returns {PartPose}
+ */
 function partMotionPose(motion, ry, GT) {
   const pose = GT.poseOf(motion, 1)
   const [x, y, z, w] = pose.quaternion
@@ -241,6 +310,12 @@ function partMotionPose(motion, ry, GT) {
   return { position: [round(px), round(p[1]), round(pz)], rotation: [round(ex), round(ey), round(ez)] }
 }
 
+/**
+ * @param {ObjectSpec} spec
+ * @param {Map<string, string>} ids
+ * @param {InteractablesThree} GT
+ * @param {Set<string>} present
+ */
 function buildAnimations(spec, ids, GT, present) {
   const movers = (spec.parts ?? []).filter((p) => p.motion.kind !== 'scale' && present.has(p.id))
   if (movers.length === 0) return []
@@ -250,7 +325,7 @@ function buildAnimations(spec, ids, GT, present) {
     const piece = p.destruction?.piece ?? (kind === 'slide' ? 'drawer' : 'door')
     return {
       source: p.id,
-      id: ids.get(p.id),
+      id: /** @type {string} */ (ids.get(p.id)),
       on,
       pose: partMotionPose(p.motion, p.ry ?? 0, GT),
       seconds: on ? 0.4 : kind === 'slide' ? 0.8 : 1.1,
@@ -259,12 +334,13 @@ function buildAnimations(spec, ids, GT, present) {
     }
   })
   // a part behind another part (an inner drawer behind a door) starts when that one is half way
-  const staged = (list) => {
+  const staged = (/** @type {AnimPart[]} */ list) => {
     const bySource = new Map(list.map((p) => [p.source, p]))
-    const start = (p) => (p.requires && bySource.has(p.requires) ? start(bySource.get(p.requires)) + 0.5 : 0)
+    /** @type {(p: AnimPart) => number} */
+    const start = (p) => (p.requires && bySource.has(p.requires) ? start(/** @type {AnimPart} */ (bySource.get(p.requires))) + 0.5 : 0)
     return list.map((p) => ({ ...p, start: start(p), end: start(p) + p.seconds }))
   }
-  const clip = (id, list, closing, sound) => {
+  const clip = (/** @type {string} */ id, /** @type {AnimPart[]} */ list, /** @type {boolean} */ closing, /** @type {string} */ sound) => {
     const parts = staged(list)
     const duration = Math.max(...parts.map((p) => p.end))
     const times = [...new Set([0, duration, ...parts.flatMap((p) => [p.start, p.end])])].sort((a, b) => a - b)
@@ -274,7 +350,7 @@ function buildAnimations(spec, ids, GT, present) {
         parts.map((p) => {
           const f0 = Math.max(0, Math.min(1, (t - p.start) / (p.end - p.start)))
           const f = closing ? 1 - f0 : f0
-          return [p.id, { position: p.pose.position.map((/** @type {number} */ v) => round(v * f)), rotation: p.pose.rotation.map((/** @type {number} */ v) => round(v * f)) }]
+          return [p.id, { position: /** @type {Triple} */ (p.pose.position.map((/** @type {number} */ v) => round(v * f))), rotation: /** @type {Triple} */ (p.pose.rotation.map((/** @type {number} */ v) => round(v * f))) }]
         }),
       ),
     }))
@@ -293,6 +369,11 @@ function buildAnimations(spec, ids, GT, present) {
   return clips
 }
 
+/**
+ * @param {Household} hh
+ * @param {string} type
+ * @param {InteractablesThree} GT
+ */
 function analyse(hh, type, GT) {
   const rec = createRecorder(NOOP)
   const spec = hh.build(type, { seed: 1 }, rec.api)
@@ -309,6 +390,7 @@ function analyse(hh, type, GT) {
   const partIds = new Map()
   for (const p of spec.parts ?? []) partIds.set(p.id, unique(sanitize(p.id)))
 
+  /** @type {BodyPiece[]} */
   const pieces = []
   for (const c of clusters) {
     const dominant = Object.entries(c.area).sort((a, b) => b[1] - a[1])[0][0]
@@ -335,6 +417,7 @@ function analyse(hh, type, GT) {
       pieces.push({ id: unique(w.kind === 'conduit' ? 'conduit' : w.kind), indices: [], box: [...lo, ...hi], vol: Math.PI * r * r * len, material, key: 'plain', mover: false })
     }
   }
+  /** @type {MoverPiece[]} */
   const movers = []
   for (const p of spec.parts ?? []) {
     const r = rec.parts.get(p.id)
@@ -342,27 +425,27 @@ function analyse(hh, type, GT) {
     const box = p.bounds ?? partBox(r)
     if (!box) continue
     const vol = r.prims.reduce((s, q) => s + q.vol, 0)
-    const d = p.destruction ?? {}
-    movers.push({ id: partIds.get(p.id), source: p, indices: [], box, vol, material: d.material ?? spec.destruction?.material ?? 'plastic', mover: true, tag: d })
+    const d = /** @type {Partial<PartDestruction>} */ (p.destruction ?? {})
+    movers.push({ id: /** @type {string} */ (partIds.get(p.id)), source: p, indices: [], box, vol, material: d.material ?? spec.destruction?.material ?? 'plastic', mover: true, tag: d })
   }
 
-  const toPart = (pc, extra = {}) => {
+  const toPart = (/** @type {AnyPiece} */ pc, /** @type {PartExtra} */ extra = {}) => {
     const size = [Math.max(0.004, pc.box[3] - pc.box[0]), Math.max(0.004, pc.box[4] - pc.box[1]), Math.max(0.004, pc.box[5] - pc.box[2])]
     const c = centre(pc.box)
     const fill = Math.max(0.03, Math.min(1, pc.vol / (size[0] * size[1] * size[2])))
     const part = {
       id: pc.id,
       material: pc.material,
-      shape: { kind: 'box', size: size.map((v) => round(v)) },
-      position: c.map((v) => round(v)),
+      shape: { kind: /** @type {const} */ ('box'), size: /** @type {Triple} */ (size.map((v) => round(v))) },
+      position: /** @type {Triple} */ (c.map((v) => round(v))),
       fill: round(pc.material === 'foam' || pc.material === 'fabric' ? fill * 0.5 : fill, 3),
       tags: [type, ...(pc.tag?.piece ? [pc.tag.piece] : [])],
     }
     return Object.assign(part, extra)
   }
   const all = [...pieces, ...movers]
-  const body = spec.destruction ?? {}
-  const weight = (pc) => {
+  const body = /** @type {Partial<Omit<PartDestruction, 'piece'>>} */ (spec.destruction ?? {})
+  const weight = (/** @type {AnyPiece} */ pc) => {
     const [dx, dy, dz] = [pc.box[3] - pc.box[0], pc.box[4] - pc.box[1], pc.box[5] - pc.box[2]]
     const thin = THICKNESS[pc.material]
     return (thin ? Math.min(pc.vol, 2 * (dx * dy + dy * dz + dz * dx) * thin) : pc.vol) * (DENSITY[pc.material] ?? 800)
@@ -371,6 +454,7 @@ function analyse(hh, type, GT) {
   // the real mass of the object (the pack's `massKg`): the drawing is solid blocks, so the volume alone would give a fridge of two tonnes
   const targetMass = hh.types.find((t) => t.id === type)?.massKg
   const parts = all.map((pc) => {
+    /** @type {PartExtra} */
     const extra = {}
     const own = pc.mover ? pc.tag : null
     if (own?.explodes) extra.explodes = { ...own.explodes }
@@ -384,15 +468,17 @@ function analyse(hh, type, GT) {
   })
   // the body's `explodes` / `contains` belong to the biggest body piece (the shell of the bottle)
   if (pieces.length && (body.explodes || body.contains)) {
-    const shell = parts.find((p) => p.id === pieces[0].id)
+    const shell = /** @type {(typeof parts)[number]} */ (parts.find((p) => p.id === pieces[0].id))
     if (body.explodes) shell.explodes = { ...body.explodes }
     if (body.contains) shell.contains = { ...body.contains }
   }
 
   // joints: touching body pieces are fixed with the body's joint; each movable part hangs on the nearest body piece with its own joint
+  /** @type {{ a: string; b: string; kind: JointKind }[]} */
   const joints = []
   const degree = new Map()
-  const bodyKind = body.joint ?? 'screw'
+  const bodyKind = /** @type {JointKind} */ (body.joint ?? 'screw')
+  /** @type {{ a: BodyPiece; b: BodyPiece; gap: number }[]} */
   const edges = []
   for (let i = 0; i < pieces.length; i++)
     for (let j = i + 1; j < pieces.length; j++) {
@@ -401,8 +487,9 @@ function analyse(hh, type, GT) {
     }
   edges.sort((x, y) => x.gap - y.gap || Math.min(boxVolume(y.a.box), boxVolume(y.b.box)) - Math.min(boxVolume(x.a.box), boxVolume(x.b.box)))
   const uf = new Map(pieces.map((p) => [p.id, p.id]))
-  const find = (/** @type {string | undefined} */ x) => (uf.get(x) === x ? x : (uf.set(x, find(uf.get(x))), uf.get(x)))
-  const kindOf = (a, b) => (a.material.includes('glass') || b.material.includes('glass') ? 'clip' : bodyKind)
+  /** @type {(x: string) => string} */
+  const find = (x) => (uf.get(x) === x ? x : (uf.set(x, find(/** @type {string} */ (uf.get(x)))), /** @type {string} */ (uf.get(x))))
+  const kindOf = (/** @type {AnyPiece} */ a, /** @type {AnyPiece} */ b) => (a.material.includes('glass') || b.material.includes('glass') ? 'clip' : bodyKind)
   for (const e of edges) {
     if ((degree.get(e.a.id) ?? 0) >= 5 || (degree.get(e.b.id) ?? 0) >= 5) continue
     degree.set(e.a.id, (degree.get(e.a.id) ?? 0) + 1)
@@ -414,10 +501,12 @@ function analyse(hh, type, GT) {
   for (;;) {
     const roots = [...new Set(pieces.map((p) => find(p.id)))]
     if (roots.length <= 1) break
+    /** @type {{ a: BodyPiece; b: BodyPiece; g: number } | null} */
     let best = null
     for (const a of pieces) for (const b of pieces) if (find(a.id) !== find(b.id)) { const g = boxGap(a.box, b.box); if (!best || g < best.g) best = { a, b, g } }
-    uf.set(find(best.a.id), find(best.b.id))
-    joints.push({ a: best.a.id, b: best.b.id, kind: kindOf(best.a, best.b) })
+    const pair = /** @type {{ a: BodyPiece; b: BodyPiece; g: number }} */ (/** @type {unknown} */ (best))
+    uf.set(find(pair.a.id), find(pair.b.id))
+    joints.push({ a: pair.a.id, b: pair.b.id, kind: kindOf(pair.a, pair.b) })
   }
   const hangers = pieces.length ? pieces : []
   for (const m of movers) {
@@ -431,7 +520,7 @@ function analyse(hh, type, GT) {
         best = h
       }
     }
-    joints.push({ a: m.id, b: best.id, kind: m.tag.joint ?? 'hinge' })
+    joints.push({ a: m.id, b: best.id, kind: /** @type {JointKind} */ (m.tag.joint ?? 'hinge') })
   }
 
   const destructible = { name: type, parts, joints, tags: ['furniture', type] }
@@ -443,26 +532,28 @@ function analyse(hh, type, GT) {
 // The module
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /**
- * @param {{ GameInteractablesHousehold: any, GameInteractablesThree: any, fillContainers?: (THREE: any, group: any, spec: any, type: string) => void, locale?: string }} options
+ * @param {{ GameInteractablesHousehold: HouseholdPack, GameInteractablesThree: InteractablesThree, fillContainers?: (THREE: ThreeLib, group: import('three').Group, spec: ObjectSpec, type: string) => void, locale?: string }} options
  * `fillContainers` puts the contents of the containers of a piece of furniture in its group (the entry gives the one that draws them as real items).
- * @returns {import('@adatechnology/game-contracts').TestableModule<any>}
  */
 export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, locale: defaultLocale = 'en' }) {
   const isEn = (/** @type {string} */ l) => (l ?? defaultLocale) === 'en'
+  /** @type {Partial<Record<'en' | 'pt-BR', Household>>} */
   const households = {}
   const household = (/** @type {string} */ loc) => {
     const key = isEn(loc) ? 'en' : 'pt-BR'
     return (households[key] ??= HHP.createHousehold({ locale: key, region: key === 'en' ? 'us' : 'br' }))
   }
+  /** @type {Record<string, ReturnType<typeof analyse>>} */
   const analyses = {}
   const analysis = (/** @type {string} */ loc, /** @type {string} */ type) => {
     const key = `${isEn(loc) ? 'en' : 'pt-BR'}:${type}`
     return (analyses[key] ??= analyse(household(loc), type, GT))
   }
+  /** @type {WeakMap<ThreeLib, import('@adatechnology/game-interactables-three').ThreeAdapter>} */
   const adapters = new WeakMap()
 
   /**
-     * @param {object} THREE
+     * @param {ThreeLib} THREE
      * @param {string} loc
      * @param {string} type
      */
@@ -476,7 +567,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     rec.flush(a.pieces)
     const res = mesh.finish(spec)
     for (const l of res.lights) l.removeFromParent()
-    const tagGroup = (id, material, tag) => {
+    const tagGroup = (/** @type {string} */ id, /** @type {string} */ material, /** @type {{ id: string; piece?: string; joint?: string }} */ tag) => {
       const g = res.parts[id]
       if (!g) return
       g.name = id
@@ -484,7 +575,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
       g.userData.destructionPart = id
       g.userData.destructionPiece = tag.piece
       g.traverse((o) => {
-        if (!o.isMesh) return
+        if (!(/** @type {Partial<import('three').Mesh>} */ (o)).isMesh) return
         o.name = id
         o.userData.destructionMaterial = material
         o.userData.destructionPart = id
@@ -493,7 +584,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
       })
     }
     for (const p of a.pieces) tagGroup(p.id, p.material, { id: p.id, piece: p.key })
-    for (const m of a.movers) tagGroup(a.partIds.get(m.source.id), m.material, { id: m.id, piece: m.tag.piece, joint: m.tag.joint })
+    for (const m of a.movers) tagGroup(/** @type {string} */ (a.partIds.get(m.source.id)), m.material, { id: m.id, piece: m.tag.piece, joint: m.tag.joint })
     // household ids can be kebab-case; the groups were named by `finish` with the original id
     res.group.name = type
     res.group.userData.furnitureType = type
@@ -501,11 +592,16 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     return res.group
   }
 
+  /**
+   * @param {string} loc
+   * @param {string} type
+   * @param {ReturnType<typeof analyse>} a
+   */
   function fluidOf(loc, type, a) {
     const f = FLUIDS[type]
     if (!f) return undefined
     const basin = a.pieces.find((/** @type {{ material: string; }} */ p) => p.material === 'ceramic') ?? a.pieces[0]
-    const part = a.destructible.parts.find((p) => p.id === basin.id)
+    const part = /** @type {(typeof a.destructible.parts)[number]} */ (a.destructible.parts.find((p) => p.id === basin.id))
     const top = part.position[1] + part.shape.size[1] / 2
     return {
       container: {
@@ -513,12 +609,12 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         liquid: 'water',
         liters: f.liters,
         temperature: 18,
-        shape: { kind: 'box', size: [...f.size] },
+        shape: { kind: /** @type {const} */ ('box'), size: /** @type {Triple} */ ([...f.size]) },
         opening: f.opening,
       },
       part: part.id,
       uses: ['pour'],
-      offset: [part.position[0], round(top - f.size[1] - 0.01), part.position[2]],
+      offset: /** @type {Triple} */ ([part.position[0], round(top - f.size[1] - 0.01), part.position[2]]),
     }
   }
 
@@ -534,10 +630,11 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
       const hh = household(loc)
       return hh.types.map((t) => {
         const a = analysis(loc, t.id)
+        /** @type {TestableItem} */
         const item = {
           id: t.id,
           name: t.name,
-          build: (/** @type {object} */ THREE) => build(THREE, loc, t.id),
+          build: (/** @type {unknown} */ THREE) => build(/** @type {ThreeLib} */ (THREE), loc, t.id),
           spec: a.destructible,
         }
         if (a.animations.length) item.animations = a.animations
