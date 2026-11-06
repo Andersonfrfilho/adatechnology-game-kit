@@ -211,7 +211,18 @@ export const checkWeapons = (): WeaponChecks[] => {
     // the trigger finger
     const model = buildWeaponModelById(THREE, row.id)
     const finger = (): number | undefined => current()!.targets?.fingers?.index
-    if (model?.parts.trigger) {
+    if (row.carry === 'hip') {
+      // a gun carried at the hip fires by the thumb on its spade grip: the index stays closed on the handle, at rest and firing
+      const rest = finger()
+      room.use(1)
+      let lowest = 1
+      for (let i = 0; i < 40; i++) {
+        room.update(1 / 60)
+        lowest = Math.min(lowest, finger() ?? 0)
+      }
+      const ok = rest !== undefined && rest > TRIGGER_FINGER.ready && lowest > TRIGGER_FINGER.ready
+      checks.trigger = { ok, note: `mão fechada na empunhadura (gatilho de polegar): repouso ${rest?.toFixed(2)}, menor no tiro ${lowest.toFixed(2)}` }
+    } else if (model?.parts.trigger) {
       const rest = finger()
       // a minigun spins up and a flamethrower burns while the trigger is held
       room.use(row.def.action.kind === 'flame' || row.id === 'm134' ? 1 : undefined)
