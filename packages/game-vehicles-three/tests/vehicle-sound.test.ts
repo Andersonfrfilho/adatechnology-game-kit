@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
-import { CAR_ENGINE, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
+import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
+import type { SampleSound } from '@adatechnology/game-audio'
+import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -141,5 +143,42 @@ describe('createVehicleSound', () => {
     expect(car.crash(30, [0, 0, 0])).toBe('heavy')
     const ids = new Set([...(VEHICLE_SOUND_BANK.sounds ?? []).map((s) => s.id), ...(VEHICLE_SOUND_BANK.loops ?? []).map((l) => l.id)])
     for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+  })
+})
+
+describe('car recordings by reference', () => {
+  // the manifest's file ids as the kit registers them (the files themselves stay in the game)
+  const FILES = {
+    id: 'kit_samples',
+    samples: ['engine_loop_car_idle', 'engine_loop_car_high', 'engine_start_run_stop', 'car_door_shut', 'car_trunk_shut', 'car_door_open'].map((id) => ({
+      id,
+      bus: 'world' as const,
+      close: [{ url: `veiculos/${id}_01.ogg` }],
+      sources: ['test'],
+    })),
+  }
+
+  it('each car layer plays its file at rpm / recorded rpm, and the start and stop are cut out of one recording', () => {
+    const registry = createSoundRegistry([VEHICLE_SOUND_BANK, FILES])
+    const rpm = 2000
+    for (const layer of engineMix(CAR_ENGINE, { rpm, throttle: 0.5 }).filter((setting) => setting.frequency !== undefined)) {
+      const sample = registry.sample(layer.sound)
+      const recorded = layer.sound === 'engine_car_low' ? CAR_RECORDED_RPM.idle : CAR_RECORDED_RPM.high
+      expect(sample?.loop, layer.sound).toBe(true)
+      expect(loopRate(sample as SampleSound, layer.frequency as number), layer.sound).toBeCloseTo(rpm / recorded, 6)
+      // the recipe loop of the same id plays while the file loads or where the game has none
+      expect(sample?.fallback).toBe(layer.sound)
+      expect(registry.loop(layer.sound)).toBeDefined()
+    }
+    expect(registry.sample('engine_start')?.close[0]).toMatchObject({ url: 'veiculos/engine_start_run_stop_01.ogg', ...CAR_START_RUN_STOP.start })
+    expect(registry.sample('engine_stop')?.close[0]).toMatchObject(CAR_START_RUN_STOP.stop)
+    expect(registry.sample('car_door_close')?.close[0]?.url).toBe('veiculos/car_door_shut_01.ogg')
+    expect(registry.sample('car_trunk_close')?.close[0]?.url).toBe('veiculos/car_trunk_shut_01.ogg')
+    // without recordings (no game folder, CI) every vehicle id is still its recipe
+    const bare = createSoundRegistry([VEHICLE_SOUND_BANK])
+    for (const alias of VEHICLE_SAMPLE_ALIASES) {
+      expect(bare.sample(alias.id)).toBeUndefined()
+      expect(bare.sound(alias.id) ?? bare.loop(alias.id), alias.id).toBeDefined()
+    }
   })
 })

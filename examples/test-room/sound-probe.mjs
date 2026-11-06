@@ -71,7 +71,7 @@ await page.evaluate(() => {
   const play = engine.play.bind(engine)
   engine.play = (id, options = {}) => {
     const handle = play(id, options)
-    calls.push({ type: 'play', id, volume: options.volume ?? 1, position: options.position ?? null, wall: performance.now(), ctx: ctxTime(), played: Boolean(handle) })
+    calls.push({ type: 'play', id, volume: options.volume ?? 1, position: options.position ?? null, wall: performance.now(), ctx: ctxTime(), played: Boolean(handle), kind: handle?.kind ?? null })
     return handle
   }
   const loop = engine.loop.bind(engine)

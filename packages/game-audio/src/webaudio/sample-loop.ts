@@ -3,10 +3,16 @@
  * The takes are chained without a seam: each one starts `crossfade` seconds before the last one ends, the two crossed with equal-power ramps, and
  * the next take is drawn by the round-robin (never the same twice in a row while there are two or more). A take shorter than two crossfades
  * loops on itself (`AudioBufferSourceNode.loop`). While the files are not decoded the recipe loop of the fallback (or of the same id) plays, and
- * the files take over when they are ready, at the volume the loop has then.
+ * the files take over when they are ready, at the volume the loop has then. A `position` in `set` places the loop (the sound's falloff and pan from
+ * the listener), and with `baseFrequency` a `frequency` in `set` glides the rate of every take (an engine following its RPM).
  */
-import { pickTake } from '../sample'
-import type { BusId, SampleSound } from '../recipe'
+import type { Vec3 } from '@adatechnology/game-contracts'
+
+import { falloffGain } from '../falloff'
+import { listenerDistance, panFor } from '../listener'
+import type { DistanceMode, Listener } from '../listener'
+import { DEFAULT_SAMPLE_FALLOFF, pickTake } from '../sample'
+import type { BusId, SampleRef, SampleSound } from '../recipe'
 import type { AudioLoopHandle, LoopEntry } from './engine-loop'
 
 /** The crossfade between two takes of a loop, in seconds, when `loop: true` gives none. */
@@ -14,6 +20,10 @@ export const DEFAULT_LOOP_CROSSFADE = 0.25
 /** Takes are scheduled until this far (seconds) past the clock, so a busy main thread (a heavy frame, a late timer) never leaves a gap. */
 const LOOKAHEAD = 1.5
 const VOLUME_SMOOTHING = 0.05
+/** Time constant of the rate glide (as the recipe loops' frequency). */
+const RATE_SMOOTHING = 0.04
+/** The rate a loop may be pushed to by `frequency`, either way. */
+const RATE_RANGE = [0.25, 4] as const
 
 /** The crossfade of a looping sample sound, or `undefined` when it does not loop. */
 export function loopCrossfade(sound: SampleSound): number | undefined {
@@ -50,9 +60,16 @@ export type SampleLoopHost = {
   unregister(loop: LoopEntry): void
   /** Whether a bus is muted now. */
   muted(bus: BusId): boolean
+  /** Where the listener is, for a loop placed by `set({ position })`. */
+  listener?(): Listener
+  distance?: DistanceMode
 }
 
 type Segment = { readonly source: AudioBufferSourceNode; readonly gain: GainNode; readonly end: number }
+
+/** The rate a loop with `baseFrequency` plays at for a frequency. */
+export const loopRate = (sound: SampleSound, frequency: number): number =>
+  sound.baseFrequency && sound.baseFrequency > 0 && frequency > 0 ? Math.max(RATE_RANGE[0], Math.min(RATE_RANGE[1], frequency / sound.baseFrequency)) : 1
 
 /** Plays a looping sample sound; falls back to the recipe loop while its files load. `volume` is the opening level (default 0, opened by `set`). */
 export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost, volume = 0): AudioLoopHandle {
@@ -64,14 +81,18 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
   let segments: Segment[] = []
   let last: number | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
+  let panner: StereoPannerNode | undefined
+  let rate = 1
+  let position: Vec3 | undefined
 
   const entry: LoopEntry = {
     get created() {
       return master !== undefined
     },
     rewire() {
-      master?.disconnect()
-      master?.connect(host.output(sound.bus))
+      const out = panner ?? master
+      out?.disconnect()
+      out?.connect(host.output(sound.bus))
     },
     stop() {
       stopped = true
@@ -89,26 +110,32 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
       segments = []
       master?.disconnect()
       master = undefined
+      panner?.disconnect()
+      panner = undefined
       fallback?.stop()
       fallback = undefined
       host.unregister(entry)
     },
   }
 
-  const nextBuffer = (): AudioBuffer | undefined => {
+  const nextTake = (): { readonly buffer: AudioBuffer; readonly ref: SampleRef } | undefined => {
     const takes = sound.close
     const take = pickTake(takes.length, last, host.random)
     last = take
     const ref = takes[take]
-    return ref ? host.buffer(ref.url) : undefined
+    const buffer = ref ? host.buffer(ref.url) : undefined
+    return ref && buffer ? { buffer, ref } : undefined
   }
 
   // schedules one take from `at`; returns when the next one starts
   const schedule = (context: AudioContext, output: AudioNode, at: number, first: boolean): number | undefined => {
-    const buffer = nextBuffer()
-    if (!buffer) return undefined
+    const next = nextTake()
+    if (!next) return undefined
+    const { buffer, ref } = next
+    const offset = Math.max(0, Math.min(ref.offset ?? 0, buffer.duration))
     const source = context.createBufferSource()
     source.buffer = buffer
+    source.playbackRate.value = rate
     const gain = context.createGain()
     source.connect(gain)
     gain.connect(output)
@@ -117,15 +144,16 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
       // one take (or a take too short to cross): it loops on itself
       source.loop = true
       if (!first) ramp(gain.gain, 'in', at, Math.max(0.001, fade))
-      source.start(at)
+      source.start(at, offset)
       segments.push({ source, gain, end: Number.POSITIVE_INFINITY })
       return undefined
     }
     if (first) gain.gain.setValueAtTime(1, at)
     else ramp(gain.gain, 'in', at, fade)
-    const end = at + buffer.duration
+    // a take crossed into the next one is timed at the rate it starts with (a rate that moves later shifts the seam a little)
+    const end = at + (buffer.duration - offset) / rate
     ramp(gain.gain, 'out', end - fade, fade)
-    source.start(at)
+    source.start(at, offset)
     source.stop(end)
     segments.push({ source, gain, end })
     source.onended = () => {
@@ -150,7 +178,14 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
   }
 
   // the files play at the sound's own level (`SampleSound.gain`); the fallback recipe loop has its own
-  const fileLevel = (): number => level * (sound.gain ?? 1)
+  const spatial = (): number => {
+    if (!position || !host.listener) return 1
+    return falloffGain(sound.falloff ?? DEFAULT_SAMPLE_FALLOFF, 1, listenerDistance(host.listener(), position, host.distance))
+  }
+  const fileLevel = (): number => level * (sound.gain ?? 1) * spatial()
+  const place = (context: AudioContext): void => {
+    if (panner && position && host.listener) panner.pan.setTargetAtTime(panFor(host.listener(), position), context.currentTime, VOLUME_SMOOTHING)
+  }
 
   const startFiles = (): boolean => {
     if (stopped || master || !host.isReady(sound)) return master !== undefined
@@ -158,7 +193,12 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
     if (!context) return false
     master = context.createGain()
     master.gain.setValueAtTime(fileLevel(), context.currentTime)
-    master.connect(host.output(sound.bus))
+    if (sound.pan !== false && position && typeof context.createStereoPanner === 'function') {
+      panner = context.createStereoPanner()
+      if (host.listener) panner.pan.value = panFor(host.listener(), position)
+      master.connect(panner)
+      panner.connect(host.output(sound.bus))
+    } else master.connect(host.output(sound.bus))
     host.register(entry)
     pump(context, master, context.currentTime, true)
     if (fallback) {
@@ -190,9 +230,15 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
     set(next) {
       if (stopped) return
       if (next.volume !== undefined) level = host.muted(sound.bus) ? 0 : Math.max(0, next.volume)
+      if (next.position) position = next.position
+      if (next.frequency !== undefined && sound.baseFrequency) rate = loopRate(sound, next.frequency)
       if (level > 0) ensure()
       const context = host.ready()
-      if (master && context) master.gain.setTargetAtTime(fileLevel(), context.currentTime, VOLUME_SMOOTHING)
+      if (master && context) {
+        master.gain.setTargetAtTime(fileLevel(), context.currentTime, VOLUME_SMOOTHING)
+        place(context)
+        if (next.frequency !== undefined && sound.baseFrequency) for (const segment of segments) segment.source.playbackRate.setTargetAtTime(rate, context.currentTime, RATE_SMOOTHING)
+      }
       fallback?.set(next.volume === undefined ? next : { ...next, volume: level })
     },
     stop: entry.stop,

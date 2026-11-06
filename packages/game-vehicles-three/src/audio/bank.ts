@@ -2,7 +2,10 @@
 // engines as loops crossfaded by RPM, the starter, tyres, crashes by speed and the doors, hood and trunk of a car. The ids follow the sound list
 // (`sons/checklist-sons.md`, 5.6), so a recorded loop or one-shot replaces a recipe by registering the same id.
 import { sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
-import type { Falloff, Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
+import type { Falloff, Layer, LoopRecipe, SampleAlias, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
+
+import { firingHz } from './engine-mix'
+import { CAR_ENGINE } from './profiles'
 
 /** How a vehicle loop falls off: `1 / (1 + d² × 0.004)`, the game's one-shot curve, with the cutoff muffled by `1 + d × 0.01` (a car far away is dull). */
 export const VEHICLE_LOOP_FALLOFF: Falloff = { model: 'inverse_square', k: 0.004, cutoffK: 0.01 }
@@ -111,4 +114,45 @@ export const VEHICLE_SOUNDS: readonly SoundRecipe[] = [
   recipe('car_hood_close', [tone({ f: 70, f2: 40, d: 0.22, vol: 0.8 }), noise({ type: 'bandpass', f: 850, q: 1.4, d: 0.2, vol: 0.6, wet: 0.3 }), tone({ f: 900, f2: 860, d: 0.18, vol: 0.05 }), ...latch(0.015, 0.3)], 'hood slammed: a big sheet of metal ringing a little, the latch'),
 ]
 
-export const VEHICLE_SOUND_BANK: SoundBank = { id: 'vehicles_three', sounds: VEHICLE_SOUNDS, loops: VEHICLE_LOOPS }
+/**
+ * The RPM each car recording runs at, measured on the files (the crank turning at 16.7 and 42 Hz, the firing at four times that: a V8). A layer
+ * plays its file at `rpm / recorded rpm`.
+ */
+export const CAR_RECORDED_RPM = { idle: 1000, high: 2520 } as const
+
+/** Where the start and the stop sit in the recording of a car starting, running and stopping (`engine_start_run_stop`), in seconds. */
+export const CAR_START_RUN_STOP = {
+  /** The starter and the engine catching (at 0.58 s) and flaring; the loops take over at the crank time of the vehicle. */
+  start: { offset: 0, duration: 1.3 },
+  /** The ignition off: the engine running down to the end of the file. */
+  stop: { offset: 9.96, duration: 0.64 },
+} as const
+
+const carLayer = (id: string, file: string, rpm: number, harmonic: number, offset?: number): SampleAlias => ({
+  id,
+  file,
+  loop: true,
+  // the layer's oscillator plays the firing frequency times its harmonic: the file sounds at that frequency for the RPM it was recorded at
+  baseFrequency: firingHz(CAR_ENGINE, rpm) * harmonic,
+  falloff: VEHICLE_LOOP_FALLOFF,
+  ...(offset === undefined ? {} : { offset }),
+})
+
+/**
+ * The vehicle ids answered by the recordings of the kit's manifest (files kept by the game, never in the SDK): the car engine layers by RPM, the
+ * start and the stop cut out of one recording, the door and the trunk. Each recipe above stays as the fallback while the files load or where the
+ * game has none. `car_door_open` is a file id of its own and needs no alias; the hood, the truck, the bike, the tyres, crashes and horns have no
+ * recording yet.
+ */
+export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
+  carLayer('engine_car_low', 'engine_loop_car_idle', CAR_RECORDED_RPM.idle, 1),
+  carLayer('engine_car_mid', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 1),
+  // the same file as the mid layer, read from two seconds in, so the two do not sum in phase where they cross
+  carLayer('engine_car_high', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 2, 2),
+  { id: 'engine_start', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.start, falloff: VEHICLE_LOOP_FALLOFF },
+  { id: 'engine_stop', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
+  { id: 'car_door_close', file: 'car_door_shut' },
+  { id: 'car_trunk_close', file: 'car_trunk_shut' },
+]
+
+export const VEHICLE_SOUND_BANK: SoundBank = { id: 'vehicles_three', sounds: VEHICLE_SOUNDS, loops: VEHICLE_LOOPS, sampleAliases: VEHICLE_SAMPLE_ALIASES }
