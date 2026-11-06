@@ -81,11 +81,18 @@ vec3 terrainSurface(vec3 base, vec2 xz, float kind) {
     float seam = max(tsLine(xz.y, 0.2, 0.014), tsLine(along, 0.3, 0.014));
     return base * (0.72 + 0.6 * tsHash(cell)) * (0.82 + 0.36 * tsFbm(xz * 22.0)) * (1.0 - 0.8 * seam);
   }
-  float row = floor(xz.y / 0.2);
-  float along = xz.x - mod(abs(row), 2.0) * 0.1;
-  vec2 cell = vec2(floor(along / 0.2), row);
-  float seam = max(tsLine(xz.y, 0.2, 0.008), tsLine(along, 0.2, 0.008));
-  return base * (0.86 + 0.26 * tsHash(cell)) * (0.92 + 0.16 * tsNoise(xz * 70.0)) * (1.0 - 0.7 * seam);
+  if (k < 14.5) {
+    float row = floor(xz.y / 0.2);
+    float along = xz.x - mod(abs(row), 2.0) * 0.1;
+    vec2 cell = vec2(floor(along / 0.2), row);
+    float seam = max(tsLine(xz.y, 0.2, 0.008), tsLine(along, 0.2, 0.008));
+    return base * (0.86 + 0.26 * tsHash(cell)) * (0.92 + 0.16 * tsNoise(xz * 70.0)) * (1.0 - 0.7 * seam);
+  }
+  // bare rock: weathered blotches, lichen-dark patches and a few long joints, no grid
+  float blotch = tsFbm(xz * 0.9) * 0.6 + tsFbm(xz * 4.0 + 2.0) * 0.4;
+  float joint = 1.0 - smoothstep(0.0, 0.035, abs(tsNoise(xz * vec2(0.7, 1.9)) - 0.5));
+  float grain = tsNoise(xz * 95.0);
+  return base * (0.62 + 0.75 * blotch) * (0.88 + 0.24 * grain) * (1.0 - 0.6 * joint);
 }
 `
 

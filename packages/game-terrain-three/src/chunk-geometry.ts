@@ -31,7 +31,9 @@ function vertexLook(terrain: Terrain, column: number, row: number, base: [number
   base[2] = material.color[2] * tone
   shade[0] = Math.max(MIN_DEPTH_LIGHT, 1 - terrain.dug[index]! / DEPTH_SHADE)
   shade[1] = terrain.scorch[index]!
-  return patternIndex(broken ? 'soil' : material.pattern)
+  const profile = terrain.profileList[terrain.profileIndex[index]!]!
+  const untouched = profile.surfacePattern !== undefined && terrain.dug[index]! <= BROKEN_DEPTH && terrain.loose[index]! <= LOOSE_VISIBLE
+  return patternIndex(broken ? 'soil' : untouched ? profile.surfacePattern : material.pattern)
 }
 
 /** How many vertices `buildChunkGeometry` gives the chunk at this step: a geometry of that many can be refilled for it. */

@@ -105,6 +105,11 @@ describe('bare rock', () => {
     expect(blast.exposed).toBe('stone')
     expect(on('bedrock').strike('ballistic', { x: 0, z: 0, energy: PISTOL }).fine).toBe(true)
   })
+  it('is drawn as bare rock, not as the paving of the same stone', () => {
+    const rock = TERRAIN_PROFILES.find((profile) => profile.id === 'bedrock')!
+    expect(rock.surfacePattern).toBe('rock')
+    expect(TERRAIN_PROFILES.find((profile) => profile.id === 'stone_paving')!.surfacePattern).toBeUndefined()
+  })
   it('fire only blackens it a little', () => {
     const rock = on('bedrock')
     rock.burn({ x: 0, z: 0, radius: 0.5, temperature: 900, seconds: 30 })
