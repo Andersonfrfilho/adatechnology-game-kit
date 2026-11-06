@@ -101,6 +101,10 @@
    "source": "generated",
    "file": "generated/browning_m2.svg"
   },
+  "bt_mp9": {
+   "source": "generated",
+   "file": "generated/bt_mp9.svg"
+  },
   "c4": {
    "source": "generated",
    "file": "generated/c4.svg"
@@ -172,6 +176,10 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "page": "https://commons.wikimedia.org/wiki/File:Colt_M4A1_silhouette.svg"
+  },
+  "colt_python": {
+   "source": "generated",
+   "file": "generated/colt_python.svg"
   },
   "crossbow": {
    "source": "generated",
@@ -256,6 +264,10 @@
   "fn_parafal": {
    "source": "generated",
    "file": "generated/fn_parafal.svg"
+  },
+  "fn_ps90": {
+   "source": "generated",
+   "file": "generated/fn_ps90.svg"
   },
   "fn_scar_h": {
    "source": "generated",
@@ -364,6 +376,10 @@
   "hk_ump_45": {
    "source": "generated",
    "file": "generated/hk_ump_45.svg"
+  },
+  "hk_usp": {
+   "source": "generated",
+   "file": "generated/hk_usp.svg"
   },
   "hunting_rifle_30_06": {
    "source": "generated",
@@ -496,6 +512,10 @@
   "mossberg_590": {
    "source": "generated",
    "file": "generated/mossberg_590.svg"
+  },
+  "mp40": {
+   "source": "generated",
+   "file": "generated/mp40.svg"
   },
   "nail_bat": {
    "source": "generated",
@@ -633,6 +653,10 @@
    "source": "generated",
    "file": "generated/sig_sauer_p226.svg"
   },
+  "sig_sauer_p320": {
+   "source": "generated",
+   "file": "generated/sig_sauer_p320.svg"
+  },
   "sks": {
    "source": "generated",
    "file": "generated/sks.svg"
@@ -740,6 +764,10 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "page": "https://commons.wikimedia.org/wiki/File:Cz-skorpion_-_game-icons.svg"
+  },
+  "walther_p99": {
+   "source": "generated",
+   "file": "generated/walther_p99.svg"
   },
   "winchester_1887": {
    "source": "generated",
