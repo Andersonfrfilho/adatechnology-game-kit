@@ -172,7 +172,7 @@ if (sfxManifest) {
   console.log(`dist/sfx: manifest${categories.size > 0 ? ` and links to ${[...categories].join(', ')}` : ' only'}`)
 }
 // 4b. the owner's own sounds (.sfx-local/, written by `sfx:user` from packs the kit cannot redistribute) next to the page as sfx-local/, only on the
-//     machine that has them: the folder is ignored by git, so no CI build or package carries them
+//     machine that has them: the folder is ignored by git, so no CI build or package carries them; it is linked, not copied
 //     Or, by reference: `.sfx-local.json` (ignored by git) names a game's own sound folder and its manifest ({ "root": ".../zombiada/src",
 //     "manifest": ".../zombiada/src/jogo/sons-sdk.json" }, file paths relative to root). Nothing is copied: dist/sfx-local/ gets the manifest and a
 //     link to each folder of root, so the room plays the game's files where they are.
@@ -189,8 +189,12 @@ if (userRef && typeof userRef.root === 'string' && typeof userRef.manifest === '
   for (const name of readdirSync(resolve(root, ref.root))) symlinkSync(resolve(root, ref.root, name), join(dir, name))
   console.log(`dist/sfx-local linked to ${ref.root} (the game's own sounds, by reference)`)
 } else if (existsSync(join(userSfx, 'manifest.json'))) {
-  cpSync(userSfx, join(here, 'dist/sfx-local'), { recursive: true })
-  console.log('dist/sfx-local copied (your sounds, local only)')
+  // the manifest is copied and each folder linked, never the audio copied: the guard of step 6 refuses audio in dist that is not the SDK's own
+  const dir = join(here, 'dist/sfx-local')
+  mkdirSync(dir, { recursive: true })
+  cpSync(join(userSfx, 'manifest.json'), join(dir, 'manifest.json'))
+  for (const name of readdirSync(userSfx)) if (name !== 'manifest.json') symlinkSync(join(userSfx, name), join(dir, name))
+  console.log('dist/sfx-local linked to .sfx-local (your sounds, local only)')
 }
 
 // 5. the weapon thumbnails (game-weapons-three assets/weapon-svg) next to the page: the areas of the room ask for them at `../weapon-svg/` (the site's
