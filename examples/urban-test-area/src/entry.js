@@ -28,7 +28,7 @@ export function createModule(options = {}) {
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the urban area. Returns the room's module report. */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const report = room.loadModule(createModule({ ...options, locale: lang }))
+  const report = room.loadModule(createModule({ effects: room.effects, ...options, locale: lang }))
   room.openArea(URBAN_AREA_ID)
   addPlantasButton(lang)
   return report

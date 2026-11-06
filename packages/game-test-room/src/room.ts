@@ -4164,6 +4164,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluids,
     film: filmBridge,
     vfx: vfx.world,
+    effects: vfx,
     fluidRenderer: fluidView,
     audio,
     environment,
