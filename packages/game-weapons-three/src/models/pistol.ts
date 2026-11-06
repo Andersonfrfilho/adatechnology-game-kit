@@ -2,6 +2,7 @@ import type * as THREE from 'three'
 import type { ModelKit } from './kit'
 import { isDesignName } from './pistol-design-config'
 import { buildDesignedPistol } from './pistol-design'
+import { buildDeagle } from './pistol-deagle'
 import { buildSlide } from './pistol-slide'
 import type { Material, PistolSize, PistolStyle } from './pistol-style'
 import { STYLES } from './pistol-style'
@@ -81,6 +82,7 @@ function buildFrame(kit: ModelKit, group: THREE.Group, parts: ModelParts, option
 /** Port of the gallery's `pistol` (Galeria 3D do Arsenal): slide, frame, grip, magazine, trigger and hammer, in the order the page adds them. */
 export function buildPistol(kit: ModelKit, options: ModelOptions): BuiltModel {
   if (options.design && isDesignName(options.design)) return buildDesignedPistol(kit, options, options.design)
+  if (options.st === 'deagle') return buildDeagle(kit, options)
   const { M, box } = kit
   const style = { ...STYLES[options.st ?? 'glock'] } as PistolStyle
   const group = kit.group()

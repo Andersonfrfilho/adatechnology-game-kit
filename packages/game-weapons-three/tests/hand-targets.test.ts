@@ -224,3 +224,26 @@ describe('the hands and the weapon in first person are drawn at one scale', () =
     expect(weaponScale).toBeCloseTo(1, 3)
   })
 })
+
+describe('the weapons redrawn from the photo of the real one keep the hands on them', () => {
+  const pistols = ['desert_eagle_mark_xix']
+  it.each(pistols)('%s: the right hand on the grip, the left wrapped under it, and the reload takes the left to the magazine and back', (weapon) => {
+    const { room, last } = roomWithRecorder()
+    equip(room, weapon)
+    const targets = last()!.targets!
+    expect(targets.R).not.toBeNull()
+    expect(targets.L).not.toBeNull()
+    expect(distance(targets.R, targets.L)).toBeLessThan(0.1)
+    const rest = targets.L!.position.slice()
+    room.use()
+    run(room, 0.2)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+    let farthest = 0
+    for (let i = 0; i < 100; i++) {
+      room.update(0.02)
+      const p = last()!.targets!.L!.position
+      farthest = Math.max(farthest, Math.hypot(p[0] - rest[0], p[1] - rest[1], p[2] - rest[2]))
+    }
+    expect(farthest).toBeGreaterThan(0.03)
+  })
+})
