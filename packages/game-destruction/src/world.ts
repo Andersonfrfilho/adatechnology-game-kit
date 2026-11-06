@@ -308,6 +308,8 @@ const penetrationOf = (mat: MaterialDef, table: Readonly<Record<string, number>>
   return v === undefined ? undefined : v * (mat.penetrationScale ?? 1)
 }
 /** Share of its capacity a structural part still has: a bare rebar cage keeps the reinforcement's residual, a breached part loses what left it. */
+/** Metres from a buried part of the foundation (a footing, a ground beam) within which a blast still reaches it: a charge laid against it. */
+const BURIED_BLAST_REACH = 0.5
 /** Share of its hit points a part that gave at its cut keeps: it stands, as damaged as the shots left it. */
 const GIVE_AT_CUT_HP = 0.5
 const capacityScale = (p: PartRT, borne?: BorneAt, through?: ThroughAt): number => {
@@ -2652,7 +2654,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const dx = local[0] - p.pos[0]
       const dy = local[1] - p.pos[1]
       const dz = local[2] - p.pos[2]
-      if (dx * dx + dy * dy + dz * dz < reach * reach) near.push(p)
+      if (dx * dx + dy * dy + dz * dz >= reach * reach) continue
+      // a footing or a ground beam is in the soil: the air blast reaches it only from a charge against it
+      if (p.spec.anchored && p.spec.structure?.role === 'foundation' && distToPart(o, p, point) > BURIED_BLAST_REACH) continue
+      near.push(p)
     }
     blastProbe.partsTested += o.parts.length
     blastProbe.partsNear += near.length
