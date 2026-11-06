@@ -2918,7 +2918,7 @@ export function installMilitary(fx: FleetContext): void {
       function breakBlades(c2: VehicleContext) {
         if (mr.userData.broken) return
         mr.userData.broken = true
-        c2.spin = c2.spin.filter(function (sp: any) {
+        c2.spin = c2.spin.filter(function (sp) {
           return sp.o !== mr
         })
         const sphi = Math.sin(((c2.militaryRollSide || 1) * PI) / 2),

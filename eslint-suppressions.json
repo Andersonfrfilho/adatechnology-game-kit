@@ -76,7 +76,7 @@
   },
   "packages/game-vehicles-fleet/src/vehicles/military.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 69
+      "count": 68
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-cars.ts": {
@@ -111,7 +111,7 @@
   },
   "packages/game-vehicles-fleet/tests/crash.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 8
+      "count": 6
     }
   },
   "packages/game-vehicles-fleet/tests/crease-queue.test.ts": {
@@ -151,7 +151,7 @@
   },
   "packages/game-vehicles-fleet/tests/helpers/golden.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 8
+      "count": 1
     }
   },
   "packages/game-vehicles-fleet/tests/locale.test.ts": {
@@ -171,7 +171,7 @@
   },
   "packages/game-vehicles-fleet/tests/vehicle-acceptance.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 10
+      "count": 9
     }
   },
   "packages/game-vehicles-three/src/test-area/module.ts": {

@@ -59,9 +59,9 @@ describe('sheet metal in a crash', () => {
     const door = d.partWorldCenter('door_front_left')
     const hitDoor = () => crashVehicle(d, { point: [door[0], 0.6, door[2] - 0.9], direction: [0, 0, 1], speed: 50 / 3.6, massKg: SEDAN_KG, otherMassKg: SEDAN_KG, contactWidth: 0.4 }).events
     const first = hitDoor()
-    expect(first.some((e: any) => e.type === 'detach' && e.parts.includes('door_front_left'))).toBe(false)
+    expect(first.some((e) => e.type === 'detach' && e.parts.includes('door_front_left'))).toBe(false)
     let off = false
-    for (let i = 0; i < 12 && !off; i++) off = hitDoor().some((e: any) => e.type === 'detach' && e.parts.includes('door_front_left'))
+    for (let i = 0; i < 12 && !off; i++) off = hitDoor().some((e) => e.type === 'detach' && e.parts.includes('door_front_left'))
     expect(off).toBe(true)
   })
 })
