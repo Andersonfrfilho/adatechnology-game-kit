@@ -679,6 +679,14 @@ export interface DoorLeaf {
   col: BoxCollider | null
   minScale?: number
   rot?: number
+  /** The leaf's groups once the build placed them. */
+  gs: THREE_NS.Group[]
+  /** The handle pieces (`linkDoorLeaves`). */
+  handles?: InteractivePiece[]
+  /** Where the door's movement is: turning the handle, swinging, letting the handle rise, or rattling when locked. */
+  phase?: 'handle' | 'swing' | 'rise' | 'rattle' | null
+  anim?: boolean
+  jig?: number
   [extra: string]: unknown
 }
 
@@ -1006,6 +1014,182 @@ export interface KernelVegetationBridge {
   assembleVegetation(groups: Record<string, THREE_NS.Group>): void
 }
 
+/**
+ * A moving piece of the house (`definePiece`): a cabinet door, a drawer, a curtain, a gate, a light switch, a door handle, a lamp, or a part
+ * of the `part:` contract. `t` is where it is (0 closed, 1 open), `target` where it goes; `outer` stands at the hinge and `inner` moves.
+ */
+export interface InteractivePiece {
+  name: string
+  kind: string
+  pivot: number[]
+  ry: number
+  parent?: string
+  meshes: THREE_NS.Mesh[]
+  t: number
+  target: number
+  t0?: number
+  outer?: THREE_NS.Group
+  inner?: THREE_NS.Object3D
+  /** A handle: the door leaf and which of its groups holds it. */
+  leaf?: DoorLeaf
+  k?: number
+  /** A lamp: the room it lights. */
+  roomId?: string | null
+  col?: BoxCollider
+  gate?: ResultGate
+  sgn?: number
+  angle?: number
+  travel?: number
+  axis?: 'x' | 'y' | 'z'
+  /** The item that opens it. */
+  item?: InteractiveItem
+}
+
+/** What `definePiece` takes: the piece without its name, meshes and position, which it fills. */
+export type PieceDefinition = Omit<InteractivePiece, 'name' | 'meshes' | 't' | 'target'>
+
+/** Something the player can use (`E`): where they aim at, how far and at what angle it reaches, the pieces it moves, its prompt and action. */
+export interface InteractiveItem {
+  type: string
+  id: string
+  floor: number
+  anchor: number[]
+  range: number
+  angle: number
+  pieces: InteractivePiece[]
+  text(): string
+  action(): void
+  /** True: reached through walls (gates, mailbox). */
+  noWall?: boolean
+}
+
+/** A piece of furniture that blocks walking: rotated rectangle on a floor (`-1`: the lot). */
+export interface CollisionObject {
+  f: number
+  cx: number
+  cz: number
+  c: number
+  s: number
+  hw: number
+  hd: number
+  type: string
+}
+
+/** The interaction state of a house (`shared.inter`). */
+export interface InteractiveState {
+  defs: Map<string, InteractivePiece>
+  items: InteractiveItem[]
+  pieces: InteractivePiece[]
+  /** Lamp pieces per room. */
+  lights: Map<string, InteractivePiece[]>
+  litRooms: Set<string>
+  objs: CollisionObject[]
+  anim: Set<InteractivePiece>
+  msg: { text: string; until: number } | null
+  target: unknown
+}
+
+/** The eye of whoever interacts, in house coordinates. */
+export interface Eye {
+  x: number
+  y: number
+  z: number
+  yaw: number
+  pitch?: number
+  floor: number
+}
+
+/** The best target of an eye: its score (lower is better), prompt, action and what it is. */
+export interface InteractionTarget {
+  score: number
+  text: string
+  action: () => unknown
+  target: TargetRef
+}
+
+/** What a target is: a door leaf, an item of the house or an object of the interactables kit (`kit`, with its public view in `pub`). */
+export interface TargetRef {
+  id?: string
+  type?: string
+  kit?: unknown
+  pub?: unknown
+}
+
+/** What `interaction/state` puts on the kernel. */
+export interface KernelInteractionState {
+  newInteractiveState(): InteractiveState
+  MESSAGE_MS: number
+  createInteractiveMaterials(mats: MaterialTable): void
+  _EY: THREE_NS.Vector3
+  _UM3: THREE_NS.Vector3
+  hudMessage(text: string): void
+  definePiece(name: string, def: PieceDefinition): InteractivePiece
+  /** Item frame (`x`, `z`, `ry`) to plan coordinates. */
+  localOf(M: { x: number; z: number; ry: number }, lx: number, lz: number): [number, number]
+  visibleChain(o: THREE_NS.Object3D): boolean
+  assembleInteractive(gs: Record<string, THREE_NS.Group>): void
+  applyPiece(p: InteractivePiece): void
+  DURATION: Record<string, number>
+  animateInteractive(dt: number): void
+  togglePiece(p: InteractivePiece): void
+  lightBase(roomId: string | null | undefined): boolean
+  lightOn(roomId: string | null | undefined): boolean
+  applyLight(roomId: string): void
+  toggleLight(roomId: string): void
+}
+
+/** What `interaction/collision` puts on the kernel. */
+export interface KernelInteractionCollision {
+  NO_COLLIDE: RegExp
+  registerCollision(m: HouseItem, M: Mount): void
+  objectDistance(o: CollisionObject, x: number, z: number): number
+  collideObject(x: number, z: number, fx: number, fz: number, floor: number): boolean
+  collideAt(x: number, z: number, floor: number, opt?: { radius?: number; from?: readonly number[] }): boolean
+}
+
+/** What `interaction/doors` puts on the kernel. */
+export interface KernelInteractionDoors {
+  linkDoorLeaves(): void
+  handleApply(fo: DoorLeaf): void
+  toggleDoor(fo: DoorLeaf): void
+  animateDoors(dt: number): void
+  /** Does the segment from the eye to the target cut a wall? */
+  wallBlocks(ex: number, ez: number, ax: number, az: number, floor: number): boolean
+  doorText(fo: DoorLeaf): string
+  applyLeaf(fo: DoorLeaf): void
+}
+
+/** What `interaction/target` puts on the kernel. */
+export interface KernelInteractionTarget {
+  targetOf(o: Eye | null | undefined, opt?: { strike?: (meshes: THREE_NS.Mesh[]) => THREE_NS.Intersection | null | undefined; interactives?: unknown }): InteractionTarget | null
+}
+
+/** A drawing call of a builder, recorded to split an item into its moving pieces: the primitive and its arguments after the frame. */
+export type RecordedCall = [kind: 'box' | 'cylinder' | 'leaf' | 'plane', args: unknown[]]
+
+/** What `interaction/items` puts on the kernel. */
+export interface KernelInteractionItems {
+  DOOR_ITEM: RegExp
+  DRAWER_ITEM: RegExp
+  LIGHT_TYPES: Set<string>
+  objectName(type: string, drawer?: boolean): string
+  /** A kit that records the drawing calls instead of drawing them (lights still go through). */
+  recordApi(api: FurnitureApi): { pr: FurnitureApi; calls: RecordedCall[] }
+  buildItem(m: HouseItem, M: Mount, ent: TypeEntry, api: FurnitureApi, parent: string): void
+  lightItem(m: ItemRef, M: Mount, ent: TypeEntry, api: FurnitureApi, parent: string): void
+  curtainItem(m: HouseItem, M: Mount, ent: TypeEntry, api: FurnitureApi, parent: string): void
+  furnitureItem(m: HouseItem, M: Mount, ent: TypeEntry, api: FurnitureApi, parent: string, drawer: boolean): void
+}
+
+/** What `interaction/fittings` puts on the kernel. */
+export interface KernelInteractionFittings {
+  gatesInteractive(): void
+  mailboxInteractive(): void
+  placeSwitches(): void
+  /** Puts a room's light switch beside a door of it; false when no wall there takes one. */
+  putSwitch(c: HouseRoom, p: HouseDoor): boolean
+}
+
 /** What `kernel/noise` puts on the kernel. */
 export interface KernelNoise {
   _h2(x: number, z: number): number
@@ -1021,7 +1205,7 @@ export interface KernelCloseScene {
 }
 
 /** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings {
   [member: string]: any
 }
 

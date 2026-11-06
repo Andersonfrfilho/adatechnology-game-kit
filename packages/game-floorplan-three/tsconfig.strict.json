@@ -12,5 +12,11 @@
     "src/animation/clotheslines.ts",
     "src/mirrors.ts",
     "src/cars.ts",
-    "src/vegetation/bridge.ts"]
+    "src/vegetation/bridge.ts",
+    "src/interaction/collision.ts",
+    "src/interaction/doors.ts",
+    "src/interaction/target.ts",
+    "src/interaction/state.ts",
+    "src/interaction/items.ts",
+    "src/interaction/fittings.ts"]
 }

@@ -184,19 +184,9 @@
       "count": 5
     }
   },
-  "packages/game-floorplan-three/src/furniture/place-items.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
   "packages/game-floorplan-three/src/furniture/spec.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 26
-    }
-  },
-  "packages/game-floorplan-three/src/house/doors.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
     }
   },
   "packages/game-floorplan-three/src/interactables/bridge.ts": {
@@ -222,11 +212,6 @@
   "packages/game-floorplan-three/src/kernel-types.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/lights/decor.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
     }
   },
   "packages/game-floorplan-three/src/lights/room-light.ts": {

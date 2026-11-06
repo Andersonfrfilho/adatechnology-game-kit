@@ -3,8 +3,8 @@ import type { FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, M
 
 export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
   const { THREE, Y0, _col, boxC, colorOf, cursor, decorLights, makeApi, structurePiece } = K;
-  const buildItem = (...a: any[]): any => K.buildItem(...a);
-  const registerCollision = (...a: any[]): any => K.registerCollision(...a);
+  const buildItem = (...a: Parameters<Kernel['buildItem']>): ReturnType<Kernel['buildItem']> => K.buildItem(...a);
+  const registerCollision = (...a: Parameters<Kernel['registerCollision']>): ReturnType<Kernel['registerCollision']> => K.registerCollision(...a);
   const vegItem = (...a: Parameters<Kernel['vegItem']>): ReturnType<Kernel['vegItem']> => K.vegItem(...a);
   function houseItems(): Map<string, number> {
     const R = shared.ctx.r, T = shared.ctx.types, api = makeApi(), noModel = new Map<string, number>();

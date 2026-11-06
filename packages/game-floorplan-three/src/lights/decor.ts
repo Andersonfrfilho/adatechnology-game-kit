@@ -3,7 +3,7 @@ import type { BoxCollider, FurnitureApi, HouseRecord, Kernel, KernelLightsDecor,
 
 export function installLightsDecor(K: Kernel, shared: Shared): void {
   const { EPS, OPEN_AREA, SEED, Y0, cursor, rngString, roomAt, stairFootprint } = K;
-  const lightItem = (...a: any[]): any => K.lightItem(...a);
+  const lightItem = (...a: Parameters<Kernel['lightItem']>): ReturnType<Kernel['lightItem']> => K.lightItem(...a);
   // ===== extra lamps by class and seed: table lamp on a bedside table, floor lamp beside the sofa, sconces beside the mirror and an outdoor lamp at the entrance door =====
   function decorLights(api: FurnitureApi): void {
     interface Spot { id: string; room: string; x: number; z: number; ry: number; w?: number; d?: number; h?: number }

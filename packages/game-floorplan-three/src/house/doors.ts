@@ -6,7 +6,7 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
   const seedKey = (id: unknown): unknown => K.seedKey(id);
   const { EPS, Y0, boxC, bx, cursor, effectiveHeight, nearestWall, part, pieceOf, pieceRecord, roomAt, sideOf, wallBox } = K;
   const SEED = (...a: Parameters<Kernel['SEED']>): ReturnType<Kernel['SEED']> => K.SEED(...a);
-  const definePiece = (...a: any[]): any => K.definePiece(...a);
+  const definePiece = (...a: Parameters<Kernel['definePiece']>): ReturnType<Kernel['definePiece']> => K.definePiece(...a);
   const rngString = (...a: Parameters<Kernel['rngString']>): ReturnType<Kernel['rngString']> => K.rngString(...a);
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   function doorLineSides(p: HouseDoor): [WallSide, WallSide] { // colours of both sides in the door gap, from the neighbouring wall
@@ -36,7 +36,7 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       // moving leaves: each in its own group with the origin at the hinge (E opens and closes in first person)
       const open0 = p.blocked ? false : (doorState.has(p.id) ? doorState.get(p.id) === true : !!p.open); doorState.set(p.id, open0);
       const dc = alongU ? [p.at, L] : [L, p.at];
-      const fo: DoorLeaf = { id: p.id, floor: f, type: p.model === 'steel' ? 'steel' : 'swing', open: open0, t: open0 ? 1 : 0, blockedFlag: !!p.blocked, locked: R.state === 'fortified' && !!p.exterior, handleNames: [], hT: 0, cx: dc[0], cz: dc[1], visH, groups: [], col: null };
+      const fo: DoorLeaf = { id: p.id, floor: f, type: p.model === 'steel' ? 'steel' : 'swing', open: open0, t: open0 ? 1 : 0, blockedFlag: !!p.blocked, locked: R.state === 'fortified' && !!p.exterior, handleNames: [], hT: 0, cx: dc[0], cz: dc[1], visH, groups: [], gs: [], col: null };
       const colR: BoxCollider = { type: 'door', f, x0: alongU ? a : L - th / 2, z0: alongU ? L - th / 2 : a, x1: alongU ? b : L + th / 2, z1: alongU ? L + th / 2 : b, off: open0 };
       colliders.push(colR); fo.col = colR;
       const leafBox = (hu: number, d0: number, d1: number, y_0: number, y_1: number, tt: number, color: Hex, mat: string): void => alongU ? bx(mat, d0, y_0, -tt / 2, d1, y_1, tt / 2, color) : bx(mat, -tt / 2, y_0, d0, tt / 2, y_1, d1, color); // coordinates relative to the hinge
