@@ -1,9 +1,4 @@
 {
-  "packages/game-vehicles-three/src/test-area/module.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 19
-    }
-  },
   "packages/game-vehicles/src/api.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 26

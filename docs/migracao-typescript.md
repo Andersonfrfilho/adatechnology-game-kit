@@ -19,7 +19,7 @@ Levantamento na main em 2026-11-03, atualizado em 2026-11-06. Atualize ao termin
 - [x] `game-characters-three`: 8 arquivos com `// @ts-nocheck` (`rich/person-kit.ts`, `rich/person-builder.ts`, `rich/best-builder.ts` e 5 em `rich/accessories/`)
 - [x] `game-shapes`: `primitives/earcut.ts` tipado (a cópia do Earcut do three com tipos; a lógica igual, a triangulação continua batendo com a do three)
 
-### `any` explícito: de 4.979 em 240 arquivos para 47 em 4, contados em `eslint-suppressions.json`
+### `any` explícito: de 4.979 em 240 arquivos para 28 em 3 (só a API de extensão do `game-vehicles`), contados em `eslint-suppressions.json`
 Contratos primeiro, depois quem os outros importam, e os grandes por último, um PR por pacote:
 - [x] Contratos: `game-contracts` 3 (registros de tipos heterogêneos, como compositores, geradores e postes, usam a forma de método, sem `any`)
 - [x] Pequenos: `game-devtools` 5, `game-destruction` 2, `game-destruction-three` 4, `game-shapes` 2, `game-shapes-three` 7, `game-urban` 8, `game-vehicles-driving` 2, e 1 cada em `game-props3d`, `game-stories`, `game-vegetation`
@@ -30,7 +30,7 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - [x] `game-floorplan-three` 536 → 0, com o strict ligado: o kernel sem a assinatura `any` (o que nenhum módulo declara é `unknown`), a destruição da casa com tipos próprios (`HouseStructure`, `HouseDestruction`, `BreachView` em `src/destruction/types.ts`), a brecha com a vista de parede tipada, e os testes
 - [x] Adaptadores three: `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62 (o `type Three = any` virou `typeof THREE`)
 - [x] `game-characters-three` sem `any`
-- [ ] `game-vehicles-three` 19, todos no `src/test-area/module.ts`, que está no PR de som do carro (#196): sai depois que ele entrar
+- [x] `game-vehicles-three` sem `any`: o módulo da área usa `typeof THREE` e os tipos do three (o `MistThree` do para-brisa embaçado aceita o `Side` do three)
 - [x] `game-vehicles`: 1.584 → 29. `src` e testes sem `any`; as referências de vinco e corte dos testes perderam o `eslint-disable` e ganharam tipos. Sobram os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada), que só saem depois da frota tipada, porque a frota escreve campos livres neles
 - [x] `game-vehicles-fleet` 2.247 → 0: os kits compartilhados (`createWaterAirKit`, `createPlanesKit`) com tipo próprio, as opções de cada peça (casco, hélice, rotor, cabine, torre, guidão, chassi) como interfaces, e os testes
 - [ ] `game-vehicles` 28: os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada). Trocar por `unknown` dá uns 2.600 erros na frota, que lê esses campos livres: vira um PR próprio, que declara cada campo
