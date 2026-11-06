@@ -2,7 +2,8 @@ import { GL_NOISE } from './noise'
 
 /**
  * The puff shader of the Lab (L130-192), verbatim: a faceted icosahedron per puff, a five-band posterised heat ramp, a noise dissolve and banded light.
- * The only change is the r160 colour-space chunk: `encodings_fragment` (r128) is `colorspace_fragment` now.
+ * Two changes: the r160 colour-space chunk (`encodings_fragment` of r128 is `colorspace_fragment` now), and soot (a black smoke) keeps a floor of albedo and a rim
+ * lit by the sky, so it reads as a cloud and not as a flat black blob.
  */
 export const PUFF_VERTEX = `${GL_NOISE}
 attribute vec4 aP;attribute vec4 aD;attribute vec3 aC;
@@ -38,10 +39,15 @@ void main(){
   if(n<diss*1.08-.04)discard;
   float lam=max(dot(N,uLight),0.);
   float band=lam>.55?1.:lam>.15?.68:.42;
-  vec3 col=vC*(vec3(.5,.56,.7)*band*1.05+vec3(.2,.19,.18)+uGround*(.4-.4*N.y));
+  // soot: a dark smoke still scatters some light, so it never goes flat black, and its rim takes the sky so its volume reads (only the dark puffs; the rest as the Lab)
+  float dark=1.-smoothstep(.02,.12,dot(vC,vec3(.2126,.7152,.0722)));
+  vec3 alb=max(vC,vec3(.055)*dark);
+  vec3 col=alb*(vec3(.5,.56,.7)*band*1.05+vec3(.2,.19,.18)+uGround*(.4-.4*N.y));
+  float rim=pow(1.-clamp(abs(dot(N,normalize(cameraPosition-vWP))),0.,1.),2.);
+  col+=dark*rim*(uSky*.9+alb);
   vec3 tg=uGlowPos-vWP;float dg=length(tg)+.001;
   float gi=uGlowI/(1.+dg*dg*.05)*(.3+.7*max(dot(N,tg/dg),0.));
-  col+=uGlowCol*gi*vC*1.6;
+  col+=uGlowCol*gi*alb*1.6;
   float h=heat*(.72+.56*n)+heat*(-N.y)*.18;
   if(h>.05){
     float hq=floor(h*5.+.5)/5.;

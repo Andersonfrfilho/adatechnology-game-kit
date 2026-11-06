@@ -36,6 +36,10 @@ type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: 
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/** Seconds the grit of a broken hard face keeps falling (least, most), how often a pinch of it at first, and how many places at once. */
+const TRICKLE_SECONDS: readonly [number, number] = [2, 5]
+const TRICKLE_EVERY = 0.25
+const TRICKLE_MAX = 24
 /**
  * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
  * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
@@ -58,6 +62,13 @@ const STATIC_SPAN = 3
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
+const CONTACT_MESHES = 12
+/** How far (m) over its support what is left of a broken object may be and still stand; where under its lowest boxes the support is looked for (shares of the box). */
+const BROKEN_GAP = 0.03
+const BROKEN_SAMPLES: ReadonlyArray<readonly [number, number]> = [[0.5, 0.5], [0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9]]
+/** Kinds of object that answer to a load path of their own (a house, a wall, the ground), not to `checkBroken`. */
+const UNCHECKED_KINDS: ReadonlySet<string> = new Set(['structure', 'room', 'ground'])
 /** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
 const FIRE_CEILING_SECONDS = 3600
 /** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
@@ -204,10 +215,14 @@ class Renderer implements DestructionRenderer {
   private staticRound: string[] = []
   /** Boxes of the pieces' meshes (as `staticBoxes`), with the time they were measured. */
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
+  /** Objects broken since the last update: `checkBroken` looks at what is left of them. */
+  private readonly broken = new Set<string>()
   private staticAt = 0
   private readonly queue: DestructionEvent[] = []
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
+  /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
+  private readonly trickles: Array<{ point: Vec3; normal: Vec3; color: number | undefined; left: number; total: number; next: number }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -577,11 +592,13 @@ class Renderer implements DestructionRenderer {
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     if (!this.attached) this.drainQueue()
+    this.checkBroken()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.updateActive(dt)
     this.updateLeaks(dt)
+    this.updateTrickles(dt)
     this.pieceSys.update(dt)
     this.fragments.update(dt)
     this.ground.update(dt)
@@ -797,6 +814,7 @@ class Renderer implements DestructionRenderer {
 
   private apply(ev: DestructionEvent): void {
     this.staticDirty.add(ev.object)
+    if (ev.type === 'fracture' || ev.type === 'detach' || ev.type === 'collapse' || ev.type === 'burnout' || ev.type === 'destroyed') this.broken.add(ev.object)
     switch (ev.type) {
       case 'damage':
         if (ev.damageType === 'heat' || ev.damageType === 'fire' || ev.damageType === 'explosive') this.activate(ev.object, ev.part)
@@ -1149,9 +1167,37 @@ class Renderer implements DestructionRenderer {
     // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
     if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
     else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
+    if (core !== undefined) this.trickleFrom(ev.point, [normal.x, normal.y, normal.z], core)
     // a drawing that shows the coat coming off itself (the house renderer cuts its plaster and draws the bricks under it) takes no flat patch
     if ((mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
     this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
+  }
+
+  /** Grit and dust go on falling from where a blow broke a hard face (masonry, concrete) for `TRICKLE_SECONDS`, a pinch at a time and less and less. */
+  private trickleFrom(point: Vec3, normal: Vec3, color: number | undefined): void {
+    if (this.trickles.length >= TRICKLE_MAX) this.trickles.shift()
+    const total = TRICKLE_SECONDS[0] + (TRICKLE_SECONDS[1] - TRICKLE_SECONDS[0]) * this.rng()
+    this.trickles.push({ point: [point[0], point[1], point[2]], normal, color, left: total, total, next: TRICKLE_EVERY })
+  }
+
+  private updateTrickles(dt: number): void {
+    for (let i = this.trickles.length - 1; i >= 0; i--) {
+      const t = this.trickles[i]!
+      t.left -= dt
+      t.next -= dt
+      if (t.left <= 0) {
+        this.trickles.splice(i, 1)
+        continue
+      }
+      if (t.next > 0) continue
+      // falling off the face, slower as the loose grit runs out
+      const share = t.left / t.total
+      t.next = TRICKLE_EVERY / Math.max(share, 0.25)
+      const out: Vec3 = [t.normal[0] * 0.2, -1, t.normal[2] * 0.2]
+      const options = t.color !== undefined ? { color: t.color } : undefined
+      this.vfx.burst('chips', t.point, out, this.low ? 1 : 2, 0.3, options)
+      if (this.rng() < 0.5) this.vfx.burst('dust', t.point, out, 1, 0.2, options)
+    }
   }
 
   /**
@@ -1191,6 +1237,8 @@ class Renderer implements DestructionRenderer {
       const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
+    // a unit knocked out of masonry or concrete leaves a broken edge that goes on crumbling
+    if (def?.visual?.innerColor !== undefined || pv?.material === 'concrete' || pv?.material === 'brick') this.trickleFrom(ev.center, [0, 0, 0], color)
     // what a blow tore off a face leaves the hole it made where it is
     if (ev.torn) {
       this.impactSound(pv?.material ?? '', ev.center, 0.5, ev.blow)
@@ -1389,14 +1437,17 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
-   * Furniture that lost what it stood on falls: with every leg of a table broken the top is loose, and with the legs of one side gone what is left topples. Feet are the
-   * meshes at the bottom of the object as it was whole; while the ones left still span the same floor (a cupboard with a broken door, a table missing one leg) it stands.
+   * What lost what it stood on falls (furniture, a stand, a crate, a car; not a structure): with every leg of a table broken the top is loose, and with the legs of one side
+   * gone what is left topples. Feet are the meshes at the bottom of the object as it was whole; while the ones left still span the same floor (a cupboard with a broken door,
+   * a table missing one leg) it stands. A piece that lost a part is the box of what is left, touching the ground by the corners of each part (`setContacts`).
    */
   private loosenIfFootless(objectId: string): void {
     const b = this.bounds.get(objectId)
     if (!b || !this.autoSplit) return
     const left = this.meshesOf(b).filter((mv) => this.visuals.shown(mv))
     if (left.length === 0) return
+    // a house, a wall, the ground answer to their own load path: their pieces only take the box of what is left
+    const structural = UNCHECKED_KINDS.has(this.kindOf(b))
     const body = b.piece ?? this.pieceSys.get(objectId)
     if (body) {
       // a piece is the box of what is left of it: the legs that broke off no longer hold it up
@@ -1404,12 +1455,15 @@ class Renderer implements DestructionRenderer {
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
       body.mass = Math.max(0.05, this.massOf(objectId))
+      if (!structural) this.setContacts(b, body, left)
       body.sleeping = false
       return
     }
-    if (kitOriginOf(b.root)?.kind !== 'furniture') return
+    if (structural) return
     const boxOf = (mv: MeshVis): THREE_NS.Box3 => this.visuals.worldBox(mv, new this.THREE.Box3())
     const whole = [...b.parts.values()].flatMap((pv) => pv.meshes).map(boxOf).filter((one) => !one.isEmpty())
+    // what hangs (a wall cabinet, a lamp) is held by what it hangs on: only what stood on something can lose its footing
+    if (!this.standsOn(objectId, whole.map((one): [number, number, number, number, number, number] => [one.min.x, one.min.y, one.min.z, one.max.x, one.max.y, one.max.z]))) return
     const floor = Math.min(...whole.map((one) => one.min.y))
     const feetOf = (boxes: THREE_NS.Box3[]): THREE_NS.Box3 => boxes.filter((one) => one.min.y < floor + FEET_BAND).reduce((feet, one) => feet.union(one), new this.THREE.Box3())
     const was = feetOf(whole)
@@ -1425,9 +1479,124 @@ class Renderer implements DestructionRenderer {
       if (!narrow && centreX > now.min.x && centreX < now.max.x && centreZ > now.min.z && centreZ < now.max.z) return
     }
     const piece = this.makePiece(objectId)
+    this.setContacts(b, b.piece ?? (piece as PieceBody), left)
     this.tipIfTopHeavy(b)
     // the host stops keeping the footprint it had where it stood: it is a body that moves now
     this.o.onLoosened?.(objectId, piece, 'apart')
+  }
+
+  shownBoxes(objectId: string, partId?: string): Array<[number, number, number, number, number, number]> {
+    const b = this.bounds.get(objectId)
+    if (!b) return []
+    const box = new this.THREE.Box3()
+    const out: Array<[number, number, number, number, number, number]> = []
+    const pv = partId === undefined ? null : b.parts.get(partId)
+    if (partId !== undefined && (!pv || pv.gone !== 'none')) return out
+    for (const mv of pv ? pv.meshes : this.meshesOf(b)) {
+      if (!this.visuals.shown(mv)) continue
+      this.visuals.worldBox(mv, box)
+      if (!box.isEmpty()) out.push([box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z])
+    }
+    return out
+  }
+
+  /**
+   * What is left of each object broken since the last update stands on something, or falls: an object that is not a piece whose lowest drawn box has neither the ground, a
+   * fixed top nor a piece within `BROKEN_GAP` under it is made a piece on the spot (see `onBrokenChecked`).
+   */
+  private checkBroken(): void {
+    if (this.broken.size === 0) return
+    const ids = [...this.broken]
+    this.broken.clear()
+    for (const id of ids) {
+      const released = this.releaseIfFloating(id)
+      this.o.onBrokenChecked?.(id, released)
+    }
+  }
+
+  private releaseIfFloating(objectId: string): boolean {
+    const b = this.bounds.get(objectId)
+    if (!b || b.piece || this.pieceSys.get(objectId) || !this.autoSplit || UNCHECKED_KINDS.has(this.kindOf(b))) return false
+    const boxes = this.shownBoxes(objectId)
+    if (boxes.length === 0) return false
+    // the object as it was whole (it has not moved: it is no piece): one that hung (a wall cabinet, a lamp) is held by what it hangs on, not checked here
+    const whole = new this.THREE.Box3()
+    const wholeBoxes: Array<[number, number, number, number, number, number]> = []
+    for (const pv of b.parts.values()) {
+      for (const mv of pv.meshes) {
+        this.visuals.worldBox(mv, whole)
+        if (!whole.isEmpty()) wholeBoxes.push([whole.min.x, whole.min.y, whole.min.z, whole.max.x, whole.max.y, whole.max.z])
+      }
+    }
+    if (!this.standsOn(objectId, wholeBoxes) || this.standsOn(objectId, boxes)) return false
+    const piece = this.makePiece(objectId)
+    this.setContacts(b, b.piece ?? (piece as PieceBody), this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
+    this.tipIfTopHeavy(b)
+    this.o.onLoosened?.(objectId, piece, 'apart')
+    return true
+  }
+
+  /** Whether the lowest of `boxes` (world boxes of the object `objectId`) has the ground, a fixed top or a piece within `BROKEN_GAP` under it. */
+  private standsOn(objectId: string, boxes: ReadonlyArray<readonly [number, number, number, number, number, number]>): boolean {
+    if (boxes.length === 0) return false
+    const low = Math.min(...boxes.map((one) => one[1]))
+    for (const [x0, y0, z0, x1, , z1] of boxes) {
+      if (y0 > low + FEET_BAND) continue
+      for (const [fx, fz] of BROKEN_SAMPLES) {
+        const x = x0 + (x1 - x0) * fx
+        const z = z0 + (z1 - z0) * fz
+        const under = Math.max(this.groundAt(x, z), this.staticTopAtBut(objectId, x, z, y0, BROKEN_GAP), this.pieceSys.topAt(x, z, y0, BROKEN_GAP, objectId))
+        if (under >= y0 - BROKEN_GAP) return true
+      }
+    }
+    return false
+  }
+
+  /** The kind of kit piece a bound object is, by the mark on its root or the nearest one above it (a house binds a group inside its marked root); '' when unmarked. */
+  private kindOf(b: Bound): string {
+    for (let o: THREE_NS.Object3D | null = b.root; o; o = o.parent) {
+      const kind = kitOriginOf(o)?.kind
+      if (kind) return kind
+    }
+    return ''
+  }
+
+  /** `staticTopAt` without the boxes of `objectId` itself. */
+  private staticTopAtBut(objectId: string, x: number, z: number, y: number, step: number): number {
+    let top = -Infinity
+    for (const [id, a] of this.staticNow()) {
+      if (id === objectId || a.length === 0 || x < a[0] || x > a[3] || z < a[2] || z > a[5]) continue
+      for (let i = 6; i < a.length; i += 6) {
+        if (x < a[i] || x > a[i + 3] || z < a[i + 2] || z > a[i + 5]) continue
+        const t = a[i + 4]
+        if (t > top && t <= y + step) top = t
+      }
+    }
+    return top
+  }
+
+  /**
+   * The piece touches the ground by the corners of each part left of it, not by the box around them all: on one leg, or on the legs of one side, its centre of mass is off
+   * what holds it and it goes over until the top meets the floor. Past `CONTACT_MESHES` meshes it keeps the corners of its box.
+   */
+  private setContacts(b: Bound, body: PieceBody, meshes: MeshVis[]): void {
+    if (meshes.length > CONTACT_MESHES) {
+      body.contacts = undefined
+      return
+    }
+    const inv = specFrameInverse(this.THREE, b.root)
+    const m4 = new this.THREE.Matrix4()
+    const lb = new this.THREE.Box3()
+    const [cx, cy, cz] = body.localCenter
+    const points: Vec3[] = []
+    for (const mv of meshes) {
+      mv.mesh.updateWorldMatrix(true, false)
+      this.visuals.localBox(mv, lb)
+      if (lb.isEmpty()) continue
+      lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
+      for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
+    }
+    body.contacts = points.length > 0 ? points : undefined
   }
 
   /**
@@ -1760,6 +1929,7 @@ class Renderer implements DestructionRenderer {
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     this.leaks.length = 0
+    this.trickles.length = 0
     for (const id of [...this.bounds.keys()]) if (this.bounds.has(id)) this.restore(id)
     // anything left of a split object whose home is gone
     for (const b of [...this.bounds.values()]) {

@@ -81,6 +81,12 @@ export interface PartVis {
   gone: 'none' | 'broken' | 'melted' | 'ashes'
 }
 
+/** Coulomb friction coefficients of a piece's surface: what holds it still and what drags it while it slides. */
+export interface PieceFriction {
+  readonly static: number
+  readonly dynamic: number
+}
+
 export interface PieceBody extends Piece {
   /** `localCenter` as a vector (kept in sync with it). */
   centerV: THREE_NS.Vector3
@@ -98,6 +104,13 @@ export interface PieceBody extends Piece {
   warm?: Float64Array
   /** Height of the lowest support the piece last stood on: the floor under a top it was put beneath. */
   floor?: number
+  /**
+   * The points that touch the ground in place of the corners of its box (its frame, from the centre of mass): the corners of each part left of it. A top left on one leg
+   * stands on that leg's foot, so it goes over, and lands on the edge of the top.
+   */
+  contacts?: Vec3[]
+  /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
+  friction?: PieceFriction
 }
 
 export interface Bound {

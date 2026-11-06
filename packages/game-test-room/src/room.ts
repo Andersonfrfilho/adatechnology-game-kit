@@ -404,6 +404,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       rendererPieces.set(objectId, piece)
       action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
     },
+    // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
+    onBrokenChecked: (objectId, released) => {
+      bodyBoxes.delete(objectId)
+      if (standingIds.includes(objectId)) leaveFootprint(objectId)
+      if (!released) return
+      const e = entries.get(objectId)
+      log.add({ channel: 'check', type: 'fail', text: t('check.broken_floating', { name: e?.name ?? objectId }), objectId, ...(e ? { itemId: e.so.itemId } : {}), data: { invariant: 'broken_floating' } })
+    },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -1152,7 +1160,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const PUSH_WALK_N = 250
   const PUSH_RUN_N = 450
   const FLOOR_FRICTION = 0.5
-  interface BodyBox { minX: number; maxX: number; minZ: number; maxZ: number; base: number; top: number; stamp: number }
+  interface BodyBox { minX: number; maxX: number; minZ: number; maxZ: number; base: number; top: number; stamp: number; parts: ReadonlyArray<readonly [number, number, number, number, number, number]> }
   const bodyBoxes = new Map<string, BodyBox>()
   const bodyBounds = new THREE.Box3()
   let frameStamp = 0
@@ -1165,9 +1173,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       bodyBoxes.delete(id)
       return null
     }
-    bodyBounds.setFromObject(e.so.root)
-    if (bodyBounds.isEmpty()) return null
-    const box = { minX: bodyBounds.min.x, maxX: bodyBounds.max.x, minZ: bodyBounds.min.z, maxZ: bodyBounds.max.z, base: bodyBounds.min.y, top: bodyBounds.max.y, stamp: frameStamp }
+    // only what is still drawn collides: a broken leg leaves no box behind
+    const parts = renderer.shownBoxes(id)
+    if (parts.length === 0) {
+      bodyBoxes.delete(id)
+      return null
+    }
+    bodyBounds.makeEmpty()
+    for (const p of parts) bodyBounds.expandByPoint(tmpV.set(p[0], p[1], p[2])).expandByPoint(tmpV.set(p[3], p[4], p[5]))
+    const box = { minX: bodyBounds.min.x, maxX: bodyBounds.max.x, minZ: bodyBounds.min.z, maxZ: bodyBounds.max.z, base: bodyBounds.min.y, top: bodyBounds.max.y, stamp: frameStamp, parts }
     bodyBoxes.set(id, box)
     return box
   }
@@ -1188,7 +1202,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const reach = c.radius + r
       return (x - footPos.x) ** 2 + (z - footPos.z) ** 2 < reach * reach ? { ...b, top: Math.min(b.top, footPos.y + (c.height ?? b.top - footPos.y)) } : null
     }
-    return x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r ? b : null
+    if (!(x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r)) return null
+    // the boxes of what is drawn there: under a table top on legs the body passes between the legs only up to the top
+    let base = Infinity
+    let top = -Infinity
+    for (const p of b.parts) {
+      if (!(x > p[0] - r && x < p[3] + r && z > p[2] - r && z < p[5] + r)) continue
+      base = Math.min(base, p[1])
+      top = Math.max(top, p[4])
+    }
+    return top > base ? { ...b, base, top } : null
   }
   blockers.add((x, z, r) => {
     for (const e of entries.values()) {
@@ -1424,7 +1447,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * A blast shoves the player the way it shoves the people of the modules (`knockOf`, the host's `blastShove`), cut by the cover between the centre and the chest: strong
    * enough, it takes the player off its feet, and the body lies a while and gets up.
    */
-  /** How far ahead of the body (m, from its axis) a wall it slammed into is looked for, and the height of the shoulder that takes it. */
+  /** How far ahead of the body (m, from its axis) a wall it slammed into is looked for, and the heights over the feet it is looked for at (standing: shoulder first; lying: hip first). */
   const SLAM_REACH = PLAYER_RADIUS + 0.35
   const SLAM_SHOULDER = 1.3
   /** A blocked step stops the body up to one step (a third of its width) short of what stopped it: the probe looks that far ahead, and a hair more. */

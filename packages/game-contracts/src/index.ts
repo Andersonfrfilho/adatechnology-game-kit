@@ -57,7 +57,7 @@ export type {
 export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
 export { bodyMass, FRAGMENT_COVER, KNOCK_CHEST, KNOCK_DOWN_SPEED, KNOCKED_DOWN_ANGLE, knockOf, launchBody, stepKnock, takeLaunch } from './blast-knock'
-export { blastBodySpeed, bodyImpulse, DEFAULT_BLAST_IMPULSE, sideOnImpulse } from './blast-impulse'
+export { blastBodySpeed, bodyImpulse, DEFAULT_BLAST_IMPULSE, sideOnImpulse, sideOnOverpressure } from './blast-impulse'
 export type { BlastImpulseOptions } from './blast-impulse'
 export type { Knock } from './blast-knock'
 export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'

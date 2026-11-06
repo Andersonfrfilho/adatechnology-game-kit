@@ -36,6 +36,22 @@ export function sideOnImpulse(tnt: number, distance: number): number {
   return scaled * w3 * 100 // bar·ms to Pa·s
 }
 
+/** Sea-level atmospheric pressure, Pa. */
+const ATMOSPHERE = 101325
+
+/**
+ * Peak side-on (incident) overpressure of the wave, in Pa, at `distance` metres from `tnt` kg of TNT in free air: Kinney and Graham, "Explosive Shocks in Air" (1985),
+ * `Ps/Pa = 808 (1 + (Z/4.5)^2) / (sqrt(1 + (Z/0.048)^2) sqrt(1 + (Z/0.32)^2) sqrt(1 + (Z/1.35)^2))`, with the scaled distance `Z = R / W^(1/3)` (m/kg^(1/3)).
+ * What a wall takes from a blast is read against it: about 7 kPa cracks plaster and breaks windows, 14 to 20 kPa knocks parts of a brick wall out, 35 kPa and over brings an
+ * unreinforced brick wall down (Glasstone and Dolan, "The Effects of Nuclear Weapons", 1977, table 5.139; UFC 3-340-02).
+ */
+export function sideOnOverpressure(tnt: number, distance: number): number {
+  if (!(tnt > 0)) return 0
+  const z = Math.max(distance, NEAREST) / Math.cbrt(tnt)
+  const ratio = (808 * (1 + (z / 4.5) ** 2)) / (Math.sqrt(1 + (z / 0.048) ** 2) * Math.sqrt(1 + (z / 0.32) ** 2) * Math.sqrt(1 + (z / 1.35) ** 2))
+  return ratio * ATMOSPHERE
+}
+
 /**
  * The impulse per square metre a body facing the wave takes, Pa·s: the side-on impulse reflected. The reflection doubles a weak wave and grows up to about six times close to the charge,
  * where the wave is strong (the ratio of reflected to side-on impulse of the Kingery-Bulmash charts, fitted as `2 + 4 / (1 + Z^2)`).
