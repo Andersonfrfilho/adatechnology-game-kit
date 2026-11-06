@@ -1,6 +1,6 @@
 import { getAssembly } from '@adatechnology/game-destruction'
 
-import type { Construction, Rect, Structure, StructurePart, WallDetail } from '../types'
+import type { Construction, Rect, PlanStructure, StructurePart, WallDetail } from '../types'
 import { applySplits } from './apply'
 import type { PartsAndSupports } from './apply'
 import { splitIntoCourses } from './courses'
@@ -18,7 +18,7 @@ function logSpec(construction: Construction, part: StructurePart): CourseSpec {
 }
 
 /** Walls cut at their windows (piers, sills, lintels, spandrels); the walls of logs as courses of logs. */
-function panelSplits(input: PartsAndSupports, structure: Structure, lintelDepth?: (span: number) => number): Map<string, WallSplit> {
+function panelSplits(input: PartsAndSupports, structure: PlanStructure, lintelDepth?: (span: number) => number): Map<string, WallSplit> {
   const { construction } = structure
   const system = CONSTRUCTION_SYSTEMS.get(construction.system)!
   const splits = new Map<string, WallSplit>()
@@ -36,7 +36,7 @@ function panelSplits(input: PartsAndSupports, structure: Structure, lintelDepth?
 }
 
 /** Splits the walls the way `detail` says: `coarse` keeps one part per wall, `panels` cuts them at the windows, `units` goes on to bricks and blocks. */
-export function applyPanels(input: PartsAndSupports, structure: Structure, detail: WallDetail, lintelDepth?: (span: number) => number): PartsAndSupports {
+export function applyPanels(input: PartsAndSupports, structure: PlanStructure, detail: WallDetail, lintelDepth?: (span: number) => number): PartsAndSupports {
   if (detail === 'coarse') return input
   return onJambPillars(applySplits(input, panelSplits(input, structure, lintelDepth)))
 }
@@ -60,7 +60,7 @@ export interface Sized extends PartsAndSupports {
 }
 
 /** Cuts each wall piece that its assembly lays in units (bricks, blocks, concrete panels) into those units; a unit takes the share of the piece's capacity its width has (it carries its column of the wall). */
-export function applyUnits(input: Sized, structure: Structure): Sized {
+export function applyUnits(input: Sized, structure: PlanStructure): Sized {
   const splits = new Map<string, WallSplit>()
   for (const part of input.parts) {
     if (part.unit || !part.assembly || part.role === 'beam' || part.role === 'none') continue

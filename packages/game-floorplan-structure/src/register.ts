@@ -1,4 +1,4 @@
-import type { FloorplanEngine, ResultExtensionContext } from '@adatechnology/game-floorplan'
+import type { FloorplanEngine, FloorplanResult, ResultExtensionContext } from '@adatechnology/game-floorplan'
 
 import { constructionFor } from './construction'
 import enLocale from './locales/en.json'
@@ -13,7 +13,22 @@ import type { EnergyConfig } from './utilities/electrical'
 import type { TankPlanOptions } from './water-tank'
 import { VISOR_TANK_PILLAR_SIDE, planWaterTank } from './water-tank'
 import { structureLayer } from './viewer-layer'
-import type { Roof, StructureOptions, WallDetail } from './types'
+import type { PlanStructure, Roof, StructureOptions, WallDetail } from './types'
+
+/**
+ * A `generate` result once the structure pack is registered: the plan of `game-floorplan` with what the pack's extensions add (the construction and its extras,
+ * the water tank, the structure and its roof, the contents of the furniture, the outbuildings and the utilities).
+ */
+export type StructuredResult = FloorplanResult & {
+  construction: ConstructionBuild['construction']
+  structureExtras: NonNullable<ConstructionBuild['extras']>
+  waterTank: WaterTank | null
+  structure: PlanStructure
+  roof: Roof | null
+  contents: ReturnType<typeof planContents>
+  outbuildings: ReturnType<typeof planOutbuildings>
+  utilities: ReturnType<typeof planUtilities>
+}
 
 export interface StructurePackOptions {
   /** Litres of the tank by template id or style id. */

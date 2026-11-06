@@ -1,7 +1,7 @@
 export const version = '0.1.0'
 
 export { register } from './register'
-export type { StructurePackOptions } from './register'
+export type { StructuredResult, StructurePackOptions } from './register'
 export { buildStructure } from './structure'
 export { MEMBER_CAGE, PILE_AREA, cageResidualCapacity, RAFT_THICKNESS, REBAR_RATIOS, toDestructibleSpec } from './to-destructible-spec'
 export type { DestructibleSpecOptions } from './to-destructible-spec'

@@ -107,6 +107,9 @@ export interface Structure {
   framed: boolean
 }
 
+/** The structure as a `generate` result carries it: the roof goes out apart, in `result.roof`. */
+export type PlanStructure = Omit<Structure, 'roof'>
+
 export interface WallMaterials {
   material: MaterialId
   interior?: MaterialId

@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildStructure, campConstruction, logCabinConstruction, planWaterTank, registerConstruction, woodFrameConstruction, shackConstruction } from '../src'
-import type { Structure, WaterTank } from '../src'
+import type { PlanStructure, WaterTank } from '../src'
 import { TOWER_TEMPLATES, engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
+import type { StructuredResult } from '../src'
 
 const SEEDS = Number(process.env.SEEDS) || 8
 const STATES = ['normal', 'fortified', 'abandoned']
 const TEMPLATES = (engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]).filter((id) => !TOWER_TEMPLATES.includes(id))
 
 /** Follows what every part rests on until the ground; a part that never reaches it would fall on the first frame. */
-function ungrounded(structure: Structure): string[] {
+function ungrounded(structure: PlanStructure): string[] {
   const resting = new Map<string, string[]>()
   for (const support of structure.supports) resting.set(support.part, [...(resting.get(support.part) ?? []), support.on])
   const reaches = (id: string, seen: Set<string>): boolean => {
@@ -27,15 +28,15 @@ describe('every generated plan has a structure', () => {
     it(`${template}: ${SEEDS} seeds x 3 states have parts, roof, construction, levels and a path to the ground for every part`, () => {
       for (let seed = 1; seed <= SEEDS; seed++) {
         for (const state of STATES) {
-          const plan: any = engine.generate(template, { seed, state })
+          const plan = engine.generate(template, { seed, state }) as StructuredResult
           const where = `${template}#${seed}/${state}`
           expect(plan.structure.parts.length, where).toBeGreaterThan(5)
           expect(plan.construction?.system, where).toBeDefined()
           expect(plan.roof?.panes.length, where).toBeGreaterThan(0)
           expect(plan.structure.levels, where).toHaveLength(plan.floors.length)
           expect(ungrounded(plan.structure), where).toEqual([])
-          const roles = new Set(plan.structure.parts.map((p: any) => p.role))
-          expect(roles.has('roof') || plan.roof.shape === 'slab', where).toBe(true)
+          const roles = new Set(plan.structure.parts.map((p) => p.role))
+          expect(roles.has('roof') || plan.roof!.shape === 'slab', where).toBe(true)
           // canvas on poles has no walls (the camp of the VC3 and the triage tent of the gallery)
           expect(roles.has('wall') || roles.has('partition') || plan.construction.system === 'canvas', where).toBe(true)
         }
@@ -44,36 +45,36 @@ describe('every generated plan has a structure', () => {
   }
 
   it('the result carries construction, extras, tank, structure and roof; the roof is not repeated inside the structure', () => {
-    const plan: any = engine.generate('townhouse', { seed: 2, state: 'normal' })
+    const plan = engine.generate('townhouse', { seed: 2, state: 'normal' }) as StructuredResult
     expect(Object.keys(plan.structure).sort()).toEqual(['construction', 'elevation', 'framed', 'levels', 'openings', 'parts', 'supports'])
     expect(plan.structureExtras).toEqual({})
     expect(plan.waterTank === null || plan.waterTank.id === 'water_tank').toBe(true)
-    expect(plan.roof.shape).toBe('gable')
+    expect(plan.roof!.shape).toBe('gable')
   })
 
   it('a tank part exists exactly when the plan has a tank', () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
-      const plan: any = engine.generate('mid_modern_townhouse', { seed, state: 'normal' })
-      expect(plan.structure.parts.some((p: any) => p.id === 'water_tank')).toBe(plan.waterTank !== null)
+      const plan = engine.generate('mid_modern_townhouse', { seed, state: 'normal' }) as StructuredResult
+      expect(plan.structure.parts.some((p) => p.id === 'water_tank')).toBe(plan.waterTank !== null)
     }
   })
 })
 
 describe('construction systems', () => {
   it('options.construction puts a registered system on any plan, with timber floors and plates', () => {
-    const plan: any = engine.generate('townhouse', { seed: 4, state: 'normal', construction: 'wood_frame' })
+    const plan = engine.generate('townhouse', { seed: 4, state: 'normal', construction: 'wood_frame' }) as StructuredResult
     expect(plan.construction.system).toBe('wood_frame')
-    const ids: string[] = plan.structure.parts.map((p: any) => p.id)
+    const ids: string[] = plan.structure.parts.map((p) => p.id)
     expect(ids.some((id) => id.startsWith('joist_1'))).toBe(true)
-    expect(plan.structure.parts.filter((p: any) => p.beamKind).every((p: any) => p.beamKind === 'plate')).toBe(true)
+    expect(plan.structure.parts.filter((p) => p.beamKind).every((p) => p.beamKind === 'plate')).toBe(true)
     expect(ungrounded(plan.structure)).toEqual([])
   })
 
   it('a construction registered by name builds the plan', () => {
     registerConstruction('test_log_house', ({ result }) => ({ construction: { ...logCabinConstruction(), roof: { ...logCabinConstruction().roof, covering: result.facade.roof === 'slab' ? 'wood' : 'colonial' } } }))
-    const plan: any = engine.generate('single_storey_a', { seed: 1, state: 'normal', construction: 'test_log_house' })
+    const plan = engine.generate('single_storey_a', { seed: 1, state: 'normal', construction: 'test_log_house' }) as StructuredResult
     expect(plan.construction.system).toBe('log')
-    expect(plan.structure.parts.filter((p: any) => p.role === 'wall' && p.id.startsWith('wall_')).length).toBeGreaterThan(5)
+    expect(plan.structure.parts.filter((p) => p.role === 'wall' && p.id.startsWith('wall_')).length).toBeGreaterThan(5)
   })
 
   it('an unknown construction is an error that names it', () => {

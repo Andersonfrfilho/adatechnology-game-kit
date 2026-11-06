@@ -1,7 +1,7 @@
 import type { DestructibleSpec } from '@adatechnology/game-contracts'
 
 import { applyPanels } from '../wall-detail'
-import type { SourceDoor, Structure, WallDetail } from '../types'
+import type { SourceDoor, PlanStructure, WallDetail } from '../types'
 import { STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
 import { concreteViolations, loadPathViolations } from './load-path'
@@ -21,7 +21,7 @@ export interface ValidateStructureOptions {
  * 6118 sections, steel, beam depth) and, in masonry, confined masonry (ground beam, pillars at ends, corners, junctions and every 4 m up to the bond beam,
  * lintels and sill beams, bonded and plastered bricks). An empty list is a structure that a structural engineer would sign.
  */
-export function validateStructure(structure: Structure, options: ValidateStructureOptions = {}): StructuralViolation[] {
+export function validateStructure(structure: PlanStructure, options: ValidateStructureOptions = {}): StructuralViolation[] {
   const detail = options.wallDetail ?? 'panels'
   const built = applyPanels({ parts: structure.parts, supports: structure.supports }, structure, detail)
   const out = [...loadPathViolations(structure), ...concreteViolations({ ...built, construction: structure.construction }, isMasonryWall)]

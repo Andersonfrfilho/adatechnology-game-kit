@@ -5,11 +5,12 @@ import { buildStructure, buildWallSpecimen, logCabinConstruction, toDestructible
 import { engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
 import { breakParts, idsStarting } from './world-helpers'
+import type { StructuredResult } from '../src'
 
 const massOf = (spec: { parts: { mass?: number }[] }): number => spec.parts.reduce((sum, part) => sum + (part.mass ?? 0), 0)
 
 describe('wallDetail on a generated plan', () => {
-  const plan = (template: string, seed = 2): any => engine.generate(template, { seed, state: 'normal' })
+  const plan = (template: string, seed = 2): StructuredResult => engine.generate(template, { seed, state: 'normal' }) as StructuredResult
 
   for (const template of ['single_storey_a', 'townhouse', 'high_end_contemporary', 'market']) {
     it(`${template}: panels and units keep the mass of the walls (within 1%)`, () => {
@@ -29,7 +30,7 @@ describe('wallDetail on a generated plan', () => {
 
   it('cuts a wall at its windows: piers, sill, lintel bearing 0.2 m on the piers, wall above', () => {
     const generated = plan('single_storey_a', 1)
-    const window = generated.structure.openings.find((o: any) => o.kind === 'window')
+    const window = generated.structure.openings.find((o) => o.kind === 'window')!
     const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
     const pieces = spec.parts.filter((p) => p.id.startsWith(`${window.wall}_`))
     const kinds = pieces.map((p) => p.id.replace(`${window.wall}_`, '').replace(/_\d+$/, ''))
@@ -50,7 +51,7 @@ describe('wallDetail on a generated plan', () => {
     const generated = plan('townhouse', 3)
     const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
     const roleOf = (id: string) => spec.parts.find((p) => p.id === id)!.structure!.role
-    for (const part of generated.structure.parts.filter((p: any) => p.id.startsWith('wall_'))) {
+    for (const part of generated.structure.parts.filter((p) => p.id.startsWith('wall_'))) {
       const pier = spec.parts.find((p) => p.id === part.id || p.id.startsWith(`${part.id}_pier_`))
       if (pier) expect(roleOf(pier.id), part.id).toBe(part.role)
     }
@@ -75,15 +76,15 @@ describe('wallDetail on a generated plan', () => {
 
   it('door lintels bridge the gaps and carry the bond beam over the outside doors', () => {
     const generated = plan('single_storey_a', 1)
-    const lintels = generated.structure.parts.filter((p: any) => p.id.startsWith('lintel_'))
+    const lintels = generated.structure.parts.filter((p) => p.id.startsWith('lintel_'))
     expect(lintels.length).toBe(generated.doors.length)
     for (const lintel of lintels) {
       expect(lintel.role).toBe('beam')
-      expect(generated.structure.supports.filter((s: any) => s.part === lintel.id).length).toBeGreaterThanOrEqual(1)
+      expect(generated.structure.supports.filter((s) => s.part === lintel.id).length).toBeGreaterThanOrEqual(1)
     }
-    const outside = generated.doors.filter((door: any) => door.exterior).map((door: any) => `lintel_${door.id}`)
+    const outside = generated.doors.filter((door) => door.exterior).map((door) => `lintel_${door.id}`)
     expect(outside.length).toBeGreaterThan(0)
-    for (const id of outside) expect(generated.structure.supports.some((s: any) => s.on === id && s.part.startsWith('plate_')), id).toBe(true)
+    for (const id of outside) expect(generated.structure.supports.some((s) => s.on === id && s.part.startsWith('plate_')), id).toBe(true)
   })
 
   it('coarse keeps one box per wall and no assembly layers', () => {

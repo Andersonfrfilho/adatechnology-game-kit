@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { structureLayer } from '../src'
 import { engine } from './support'
+import type { StructuredResult } from '../src'
 
 type Call = [string, ...unknown[]]
 
@@ -26,7 +27,7 @@ describe('the structure layer of the 2D viewer', () => {
   })
 
   it('draws concrete pillars filled and wood posts hollow, beams dashed', () => {
-    const plan: any = engine.generate('single_storey_a', { seed: 1, state: 'normal' })
+    const plan = engine.generate('single_storey_a', { seed: 1, state: 'normal' }) as StructuredResult
     const { calls, hits, context } = fakeContext(plan)
     structureLayer.draw(context as never)
     const rects = calls.filter((call) => call[0] === 'rect')
@@ -36,14 +37,14 @@ describe('the structure layer of the 2D viewer', () => {
   })
 
   it('draws a timber plan with hollow posts', () => {
-    const plan: any = engine.generate('single_storey_a', { seed: 1, state: 'normal', construction: 'wood_frame' })
+    const plan = engine.generate('single_storey_a', { seed: 1, state: 'normal', construction: 'wood_frame' }) as StructuredResult
     const { calls, context } = fakeContext(plan)
     structureLayer.draw(context as never)
     expect(calls.filter((call) => call[0] === 'rect' && call[2] === null && call[3] !== null && call[4] === 2).length).toBeGreaterThan(0)
   })
 
   it('shows the trusses or rafters only on the top storey and the porch posts with their own footings', () => {
-    const plan: any = engine.generate('townhouse', { seed: 1, state: 'normal' })
+    const plan = engine.generate('townhouse', { seed: 1, state: 'normal' }) as StructuredResult
     const ground = fakeContext(plan, 0)
     const top = fakeContext(plan, 1)
     structureLayer.draw(ground.context as never)
@@ -53,7 +54,7 @@ describe('the structure layer of the 2D viewer', () => {
   })
 
   it('the legend lists what is drawn, by key of the ui locale', () => {
-    const plan: any = engine.generate('townhouse', { seed: 1, state: 'normal' })
+    const plan = engine.generate('townhouse', { seed: 1, state: 'normal' }) as StructuredResult
     const labels = structureLayer.legend!(plan).map((entry) => entry.label)
     expect(labels).toContain('structure_column_concrete')
     expect(labels).toContain('structure_beam_concrete')

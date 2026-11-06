@@ -4,7 +4,7 @@ import { densityOf } from '../density'
 import { round2, touches } from '../geometry'
 import { CONSTRUCTION_SYSTEMS } from '../registry'
 import { GROUND } from '../types'
-import type { Rect, Structure, StructurePart, Support } from '../types'
+import type { Rect, PlanStructure, StructurePart, Support } from '../types'
 import type { PartsAndSupports } from '../wall-detail/apply'
 import { layoutPanels, linesOf, runsOf, shareInside } from './layout'
 import type { Cut } from './layout'
@@ -105,7 +105,7 @@ interface Spot {
 }
 
 interface Context {
-  structure: Structure
+  structure: PlanStructure
   options: SlabPanelOptions
   beamMaterial: string
   pillarMaterial: string
@@ -373,7 +373,7 @@ export const beamDepthFor = (span: number, options: SlabPanelOptions, minimum = 
  * After the walls are cut at their windows: a bond beam over a wide opening spans it (the destruction world rests it on the piers, the nearest of its supports
  * to the ground), so it gets the depth and the width of a beam of that span. Returns copies of the parts it changes.
  */
-export function deepenBondBeams(input: PartsAndSupports, structure: Structure, options: SlabPanelOptions): PartsAndSupports {
+export function deepenBondBeams(input: PartsAndSupports, structure: PlanStructure, options: SlabPanelOptions): PartsAndSupports {
   const frame = structure.construction.frame
   if (!frame.rebar) return input
   const dist = distances(input.parts, input.supports)
@@ -425,7 +425,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
  * The slabs of concrete cut into panels with beams (`SlabPanelOptions`): see `T10-estrutura-real.md` §12. `input` is the structure as
  * `toDestructibleSpec` has it (walls with their roles), and the result has the panels, the beams, the pillars they need and the supports re-pointed.
  */
-export function applySlabPanels(input: PartsAndSupports, structure: Structure, options: SlabPanelOptions): PartsAndSupports {
+export function applySlabPanels(input: PartsAndSupports, structure: PlanStructure, options: SlabPanelOptions): PartsAndSupports {
   const frame = structure.construction.frame
   const system = CONSTRUCTION_SYSTEMS.get(structure.construction.system)
   if (!frame.rebar || !system || system.timber || structure.levels.length > options.maxStoreys) return input
@@ -473,7 +473,7 @@ function anchorBalconies(context: Context): void {
  * The panels `toDestructibleSpec` makes of the slabs of a structure (named as it names them), for a renderer that draws the floor of each room apart:
  * `panels` (each with `slab`, the id of the slab it was cut from), `replaced` (those slabs, which the spec no longer has) and the `supports` that touch the panels.
  */
-export function slabPanelView(structure: Structure, options: SlabPanelOptions): { panels: StructurePart[]; replaced: string[]; supports: Support[] } {
+export function slabPanelView(structure: PlanStructure, options: SlabPanelOptions): { panels: StructurePart[]; replaced: string[]; supports: Support[] } {
   const out = applySlabPanels({ parts: structure.parts, supports: structure.supports }, structure, options)
   const panels = out.parts.filter((p) => p.slab !== undefined && p.role === 'slab')
   const ids = new Set(panels.map((p) => p.id))
@@ -481,4 +481,4 @@ export function slabPanelView(structure: Structure, options: SlabPanelOptions): 
 }
 
 /** The panels of `slabPanelView`, alone. */
-export const slabPanelsOf = (structure: Structure, options: SlabPanelOptions): StructurePart[] => slabPanelView(structure, options).panels
+export const slabPanelsOf = (structure: PlanStructure, options: SlabPanelOptions): StructurePart[] => slabPanelView(structure, options).panels

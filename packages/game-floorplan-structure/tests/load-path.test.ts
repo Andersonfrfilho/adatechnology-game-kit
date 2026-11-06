@@ -5,6 +5,7 @@ import type { Construction } from '../src'
 import { engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
 import { breakParts, idsStarting, pillarsOfOneWall } from './world-helpers'
+import type { StructuredResult } from '../src'
 
 const specOf = (construction: Construction | undefined, porch = 0, wallDetail: 'coarse' | 'panels' = 'panels') =>
   toDestructibleSpec(buildStructure(rectangularHouse({ width: 8, depth: 6, porch, ...(construction ? { construction } : {}) }), { wallDetail }), { wallDetail })
@@ -53,7 +54,7 @@ describe('porch: its own posts carry its roof, and only its roof', () => {
 
 describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
   const frameOf = (template: string, seed = 3) => {
-    const result: any = engine.generate(template, { seed, state: 'normal' })
+    const result = engine.generate(template, { seed, state: 'normal' }) as StructuredResult
     return { result, spec: toDestructibleSpec(result.structure, { portico: true }) }
   }
 
@@ -85,7 +86,7 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
   })
 
   it('a commercial building is a frame by default: the pillars carry it', () => {
-    const result: any = engine.generate('market', { seed: 2, state: 'normal' })
+    const result = engine.generate('market', { seed: 2, state: 'normal' }) as StructuredResult
     expect(result.structure.framed).toBe(true)
     const spec = toDestructibleSpec(result.structure)
     const pillars = idsStarting(spec, 'column_0_')
@@ -95,9 +96,9 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
   })
 
   it('the rebar of the concrete parts is declared by the construction (steel)', () => {
-    const result: any = engine.generate('townhouse', { seed: 1, state: 'normal' })
+    const result = engine.generate('townhouse', { seed: 1, state: 'normal' }) as StructuredResult
     expect(result.construction.frame.rebar).toBe('steel')
-    expect(result.structure.parts.filter((p: any) => p.material === 'concrete').length).toBeGreaterThan(0)
+    expect(result.structure.parts.filter((p) => p.material === 'concrete').length).toBeGreaterThan(0)
   })
 })
 

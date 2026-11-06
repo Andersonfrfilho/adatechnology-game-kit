@@ -5,7 +5,7 @@
 import { hashText } from '@adatechnology/golden-tool'
 
 import idMap from '../../game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-id-map.json'
-import type { Structure, StructurePart } from '../src'
+import type { Construction, Roof, Structure, StructurePart, WaterTank } from '../src'
 import { toDestructibleSpec } from '../src'
 
 type Pairs = readonly (readonly [string, string])[]
@@ -135,21 +135,24 @@ const FOUNDATIONS: Record<string, string> = { strip_footing: 'sapata_corrida', b
 
 const covering = (value: string): string => COVERINGS[value] ?? value
 
-export function teamRoof(roof: Record<string, any>): unknown {
+export function teamRoof(roof: Roof): unknown {
   const panes = (roof.panes as (string | { id: string; aabb: number[]; y0: number; y1: number; flat?: boolean })[]).map((pane) =>
     typeof pane === 'string' ? teamId(pane) : { id: teamId(pane.id), aabb: pane.aabb, y0: pane.y0, y1: pane.y1, ...(pane.flat ? { plana: true } : {}) },
   )
   const out: Record<string, unknown> = { forma: SHAPES[roof.shape], cobertura: covering(roof.covering), material: roof.material, inclinacao: roof.pitch, apoiaEm: roof.bearingFloor, aguas: panes, tesouras: roof.trusses }
   const optional: [string, string][] = [['axis', 'eixo'], ['ridge', 'cumeeira'], ['eave', 'beiral'], ['y0', 'y0'], ['aabb', 'aabb']]
-  for (const [key, teamKey] of optional) if (roof[key] !== undefined) out[teamKey] = roof[key]
+  for (const [key, teamKey] of optional) {
+    const value = (roof as unknown as Record<string, unknown>)[key]
+    if (value !== undefined) out[teamKey] = value
+  }
   return out
 }
 
-export function teamConstruction(construction: Record<string, any>): unknown {
+export function teamConstruction(construction: Construction): unknown {
   const { walls, floor, roof, frame, foundation } = construction
   return {
     sistema: 'alvenaria',
-    parede: { material: walls.material, revestimento: walls.cladding, acabamento: FINISHES[walls.finish] ?? walls.finish, espessura: walls.thickness },
+    parede: { material: walls.material, revestimento: walls.cladding, acabamento: (walls.finish === undefined ? undefined : FINISHES[walls.finish]) ?? walls.finish, espessura: walls.thickness },
     piso: { material: floor.material, acabamento: FLOOR_FINISHES[floor.finish] ?? floor.finish },
     telhado: { material: roof.material, cobertura: covering(roof.covering), forma: SHAPES[roof.shape], inclinacao: roof.pitch, madeiramento: roof.timber },
     estrutura: { material: frame.material, pilares: frame.pillars, vigas: frame.beams, lajes: frame.slabs, madeiramento: frame.timber, armadura: frame.rebar },
@@ -159,12 +162,12 @@ export function teamConstruction(construction: Record<string, any>): unknown {
 
 const TANK_PLACES: Record<string, string> = { slab: 'laje', attic: 'sotao', raised_slab: 'laje_caixa', trestle: 'cavalete' }
 
-export function teamTank(tank: Record<string, any> | null): unknown {
+export function teamTank(tank: WaterTank | null): unknown {
   if (!tank) return null
   const out: Record<string, unknown> = { id: 'caixa_dagua', tipo: 'caixa_dagua', tipoItem: 'caixa_dagua', local: TANK_PLACES[tank.place], andar: tank.floor, comodo: teamRoom(tank.room), u: tank.u, v: tank.v, y: tank.y, w: tank.w, d: tank.d, h: tank.h, capacidade: tank.capacity, aabb: tank.aabb }
   if (tank.platform) {
     const p = tank.platform
-    out.plataforma = { aabb: p.aabb, yBase: p.baseY, altura: p.height, espessura: p.thickness, yTopo: p.topY, pilares: p.pillars.map((q: any) => ({ u: q.u, v: q.v, lado: q.side })), escada: p.ladder }
+    out.plataforma = { aabb: p.aabb, yBase: p.baseY, altura: p.height, espessura: p.thickness, yTopo: p.topY, pilares: p.pillars.map((q) => ({ u: q.u, v: q.v, lado: q.side })), escada: p.ladder }
   }
   return out
 }

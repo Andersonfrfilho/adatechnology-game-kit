@@ -5,6 +5,7 @@ import { REBAR_RATIOS, buildStructure, toDestructibleSpec } from '../src'
 import { WALL_THICKNESS } from '../src/geometry'
 import { engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
+import type { StructuredResult } from '../src'
 
 /** Real structure of the houses (game-destruction `structure.flexure` and `structure.masonry`, design T10-estrutura-real.md). */
 describe('real structure of the houses', () => {
@@ -16,7 +17,7 @@ describe('real structure of the houses', () => {
   })
 
   it('a house of concrete is reinforced by default, with the slab in panels', () => {
-    const result: any = engine.generate('budget_slab_house', { seed: 3, state: 'normal' })
+    const result = engine.generate('budget_slab_house', { seed: 3, state: 'normal' }) as StructuredResult
     const spec = toDestructibleSpec(result.structure, { portico: true })
     expect(spec.parts.some((p) => p.structure?.rebar)).toBe(true)
     expect(spec.parts.some((p) => /^slab_top_p\d+$/.test(p.id))).toBe(true)
