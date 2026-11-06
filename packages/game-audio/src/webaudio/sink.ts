@@ -52,5 +52,8 @@ export function createAudioSink(engine: AudioEngine): EngineSink {
     register(bank: unknown) {
       engine.register(bank as SoundBank)
     },
+    preload(sounds) {
+      void engine.loadSamples(sounds).catch(() => undefined)
+    },
   }
 }

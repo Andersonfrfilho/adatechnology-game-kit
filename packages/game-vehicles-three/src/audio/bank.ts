@@ -54,6 +54,15 @@ export const VEHICLE_LOOPS: readonly LoopRecipe[] = [
   noiseLoop('tire_skid_asphalt', 'bandpass', 1900, 5, 'rubber squealing on asphalt: a narrow band of noise near 2 kHz'),
   noiseLoop('tire_skid_dirt', 'lowpass', 700, 0.8, 'tyres sliding on dirt and gravel: a dull, wide hiss'),
   noiseLoop('tire_roll', 'lowpass', 400, 0.7, 'road noise of the tyres rolling, brighter with the speed'),
+  // a pad on a disc: a thin, nearly pure whistle near 3.4 kHz (a narrow band of noise, so it wavers as a real squeal does)
+  // a siren: a square through a low-pass, its pitch swept by the vehicle every frame (wail: a slow rise and fall; yelp: a fast one)
+  toneLoop('siren', 'square', 'lowpass', 2600, 0.8, 'emergency siren, the sweep driven by the vehicle'),
+  // the blades: a low rumble chopped at the blade-pass rate (≈ 18 Hz for a light helicopter's main rotor)
+  {
+    ...noiseLoop('helicopter_rotor_loop', 'lowpass', 320, 0.9, 'helicopter rotor: low rumble chopped by the blades'),
+    modulators: [{ target: 'gain', wave: 'sine', rate: 18, depth: 0.45, base: 0.55 }],
+  },
+  noiseLoop('brake_squeal', 'bandpass', 3400, 28, 'brake pads squealing on the discs as the car comes to a stop'),
 ]
 
 const recipe = (id: string, layers: readonly Layer[], line: string): SoundRecipe => ({ ...sceneRecipe(id, layers, line), sources: [SDK, line] })
@@ -104,6 +113,17 @@ export const VEHICLE_SOUNDS: readonly SoundRecipe[] = [
     ],
     'crash above 50 km/h: metal folding, the glass going, debris falling',
   ),
+  // a body hit by a car: the dull slap of the bumper on a person, the body folding over the bonnet, at speed a crack of the windscreen
+  recipe(
+    'vehicle_hit_pedestrian',
+    [
+      tone({ f: 95, f2: 50, d: 0.14, vol: 0.9 }),
+      noise({ type: 'lowpass', f: 600, d: 0.12, vol: 0.8 }),
+      noise({ type: 'bandpass', f: 280, q: 1.2, d: 0.18, vol: 0.55, delay: 0.09 }),
+      noise({ type: 'highpass', f: 2600, d: 0.05, vol: 0.18, delay: 0.1 }),
+    ],
+    'a person hit by a car: the bumper slap, the body on the bonnet',
+  ),
   // the game's horn (two squares at 415 and 523 Hz, jogo L70272) heard from where the car is; a truck's air horn lower and longer
   recipe('horn_car', [tone({ wave: 'square', f: 415, d: 0.6, vol: 0.09 }), tone({ wave: 'square', f: 523, d: 0.6, vol: 0.09 })], 'car horn: the game chord, placed and panned'),
   recipe('horn_truck', [tone({ wave: 'sawtooth', f: 220, d: 1.1, vol: 0.1 }), tone({ wave: 'sawtooth', f: 277, d: 1.1, vol: 0.08 }), noise({ type: 'bandpass', f: 900, q: 2, d: 1.1, vol: 0.05 })], 'truck air horn: low reedy chord'),
@@ -122,6 +142,8 @@ export const CAR_RECORDED_RPM = { idle: 1000, high: 2520 } as const
 
 /** Where the start and the stop sit in the recording of a car starting, running and stopping (`engine_start_run_stop`), in seconds. */
 export const CAR_START_RUN_STOP = {
+  /** The take the times below were measured on. */
+  take: '_01.',
   /** The starter and the engine catching (at 0.58 s) and flaring; the loops take over at the crank time of the vehicle. */
   start: { offset: 0, duration: 1.3 },
   /** The ignition off: the engine running down to the end of the file. */
@@ -149,10 +171,14 @@ export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
   carLayer('engine_car_mid', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 1),
   // the same file as the mid layer, read from two seconds in, so the two do not sum in phase where they cross
   carLayer('engine_car_high', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 2, 2),
-  { id: 'engine_start', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.start, falloff: VEHICLE_LOOP_FALLOFF },
-  { id: 'engine_stop', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
+  // the cut points are of take _01 (10.6 s); _02 (21.9 s) starts already running and idles at 9.96 s, so it is left out of both
+  { id: 'engine_start', file: 'engine_start_run_stop', only: CAR_START_RUN_STOP.take, ...CAR_START_RUN_STOP.start, falloff: VEHICLE_LOOP_FALLOFF },
+  { id: 'engine_stop', file: 'engine_start_run_stop', only: CAR_START_RUN_STOP.take, ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
   { id: 'car_door_close', file: 'car_door_shut' },
   { id: 'car_trunk_close', file: 'car_trunk_shut' },
 ]
+
+/** The ids a host should decode as the vehicles load (`AudioSink.preload`): every aliased recording and the door's own file id. */
+export const VEHICLE_PRELOAD_SOUNDS: readonly string[] = [...VEHICLE_SAMPLE_ALIASES.map((alias) => alias.id), 'car_door_open']
 
 export const VEHICLE_SOUND_BANK: SoundBank = { id: 'vehicles_three', sounds: VEHICLE_SOUNDS, loops: VEHICLE_LOOPS, sampleAliases: VEHICLE_SAMPLE_ALIASES }
