@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Boats group of the fleet ("water" group). Uses only the kit API.
@@ -21,7 +22,7 @@ export function installBoatsExtra(fx: FleetContext): void {
     tb = EA.tab
 
   /* triangular sail: tack T, head (top) Hd, sheet clew C, belly cam (fraction of the chord) towards +z */
-  function sailGeo(T: any, Hd: any, C: any, cam: any, o?: any) {
+  function sailGeo(T: number[], Hd: number[], C: number[], cam: number, o?: any) {
     o = o || {}
     const nu = o.nu || 10,
       nv = o.nv || 16,
@@ -57,7 +58,7 @@ export function installBoatsExtra(fx: FleetContext): void {
     return g
   }
   /* lifeline: runs through the stanchion rings pts and sags a little between them */
-  function ropeAlong(c: any, pts: any, sag: any, r: any, mat: any) {
+  function ropeAlong(c: VehicleContext, pts: any, sag: number, r: number, mat: any) {
     const out = []
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i],
@@ -163,7 +164,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return -0.05 - y
         }),
         c.paint('#c9ccce', { roughness: 0.45 }),
@@ -233,7 +234,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         hdST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.26 - y, x - 0.35)
         }),
         white,
@@ -252,7 +253,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         stST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           const yc = 0.45 + (x + 1.0) * 0.05
           return 0.018 - Math.abs(y - yc)
         }),
@@ -331,7 +332,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       c.zone('taillight_left', trl('labels.overtaking_light'))
       c.zone('engine', trl('labels.rotax_engine_under_the_seat'))
       c.zone('stern', trl('labels.stern_and_turbine'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: rescue sled behind, steel plate on the nose, handlebar spotlight and a jerry can on the platform */
         const stl = kit.steelMaterial,
           sled = CM('#e8b51c', { roughness: 0.5 })
@@ -445,7 +446,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return 0.0 - y
         }),
         c.paint('#7b2220', { roughness: 0.6 }),
@@ -454,7 +455,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return 0.035 - Math.abs(y - 0.07)
         }),
         navy,
@@ -463,7 +464,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           const sy = H.sheerAt(x).y
           return Math.min(0.04 - Math.abs(y - (sy - 0.13)), x + 3.9, 3.7 - x)
         }),
@@ -518,7 +519,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         trST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return y - 1.53
         }),
         nonskid,
@@ -535,7 +536,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         const gw = EA.skinOf(
           c,
           trunk,
-          EA.bandT(function (x: any, y: any, z: any) {
+          EA.bandT(function (x: any, y: any, z: number) {
             return -Math.max(winP(x, y), 0.5 - s * z)
           }),
           MT.glassDark,
@@ -726,7 +727,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           trl('effects.broken_mast_engine_only'),
         ],
       })
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: sails furled under a storm sail, steel plates on the cabin windows, jerry cans lashed on deck and a spotlight on the pulpit */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -850,7 +851,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             return [p[0], p[1], -p[2]]
           }),
       )
-      function rf(u: any) {
+      function rf(u: number) {
         const e = Math.min(u, 1 - u)
         return 0.245 * (e < 0.035 ? 0.62 + 0.38 * EA.sstep(0, 0.035, e) : 1)
       }
@@ -874,11 +875,11 @@ export function installBoatsExtra(fx: FleetContext): void {
       ;[1, -1].forEach(function (s) {
         for (let x = -1.9; x <= 1.31; x += 0.64) rings.push([x, yc + 0.17, s * (zc + 0.17)])
       })
-      const rs = rings.filter(function (p: any) {
+      const rs = rings.filter(function (p: number[]) {
           return p[2] > 0
         }),
         rp = rings
-          .filter(function (p: any) {
+          .filter(function (p: number[]) {
             return p[2] < 0
           })
           .reverse()
@@ -976,7 +977,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       c.zone('deck', trl('labels.floor_seat_and_rescue_equipment'))
       c.zone('taillight_center', trl('labels.bow_lights'))
       c.zone('taillight_left', trl('labels.stern_light_and_beacon'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: thick aluminium plates protecting the bow tubes, spotlight on a pole, jerry cans and a grille on the engine */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -1095,7 +1096,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.06 - y, x - x0 - 0.04)
         }),
         CM('#1d2023', { roughness: 0.6 }),
@@ -1104,7 +1105,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.sheerTube(c, H, x0 + 0.02, 6.2, 0.07, blk, { dy: -0.1, dz: 0.02 })
       const deck = c.add(EA.deckGeo(H, x0 + 0.02, 6.32, { n: 40, m: 10, crown: 0.05 }), deckC)
       c.deform.push(deck)
-      const dk = function (x: any) {
+      const dk = function (x: number) {
         return H.sheerAt(x).y + 0.04
       }
       /* house with a sloped windshield, cut-out windows, aft door, roof with an overhang */
@@ -1116,7 +1117,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return n.x > 0.5
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: number, z: number) {
           return Math.max(0.2 - y, y - 0.75, Math.abs(z) - 0.98, 0.04 - Math.abs(z - 0.33), 0.04 - Math.abs(z + 0.33))
         },
       }
@@ -1124,7 +1125,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         sel: function (n: any, ce: any) {
           return n.x < -0.5 && ce.x < 0
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: number, z: number) {
           return Math.max(-0.88 - y, y - 0.6, Math.abs(z + 0.35) - 0.33)
         },
       }
@@ -1356,7 +1357,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           trl('effects.mast_torn_off_no_radar_or_radio'),
         ],
       })
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: extra ballistic plates with a vision slit on the windshield, anti-RPG grille on the house, sandbags on the bow and a shield on the 7.62s */
         const stl = kit.steelMaterial
         c2.roundBox(0.05, 0.42, 2.0, 0.02, stl, fx + 0.03, hy0 + hh / 2 + 0.38, 0, { rot: [0, 0, 0.214] })

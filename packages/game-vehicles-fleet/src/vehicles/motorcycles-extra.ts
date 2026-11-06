@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Motorcycles added after the first batch (group F). Uses only the kit API.
@@ -91,14 +92,14 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), o.crease || 60)
   }
-  function body(c: any, st: any, mat: any, o?: any) {
+  function body(c: VehicleContext, st: number[][], mat: any, o?: any) {
     o = o || {}
     const m = c.add(sloft(st, o), mat, 0, 0, 0, o.parent)
     if (o.def !== false) c.deform.push(m)
     return m
   }
   /* half width of the loft (x axis) at position x and height y: to glue texts and trim to the side */
-  function loftHalf(st: any, x: any, y: any) {
+  function loftHalf(st: any, x: number, y: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -115,7 +116,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return 0
   }
   /* half width of a loft on the y axis at height y and position x (stations [y, xFront, xRear, width, p]) */
-  function yHalf(st: any, y: any, x: any) {
+  function yHalf(st: any, y: number, x: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -132,7 +133,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return 0
   }
   /* fender arch over the wheel. cx, cy centre; r inner radius; a0..a1 angles (0 = front); w width; t bulge */
-  function fenderGeo(cx: any, cy: any, r: any, a0: any, a1: any, w: any, t: any, zc: any, o?: any) {
+  function fenderGeo(cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, zc: number, o?: any) {
     o = o || {}
     const na = kit.lod.on ? 10 : o.na || 22,
       nu = kit.lod.on ? 5 : 10,
@@ -160,18 +161,18 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), 70)
   }
-  function fender(c: any, cx: any, cy: any, r: any, a0: any, a1: any, w: any, t: any, mat: any, o?: any) {
+  function fender(c: VehicleContext, cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, mat: any, o?: any) {
     const f = c.add(fenderGeo(cx, cy, r, a0, a1, w, t, 0, o), mat, 0, 0, 0)
     c.deform.push(f)
     return f
   }
-  function lamp(c: any, o: any) {
+  function lamp(c: VehicleContext, o: any) {
     const L = kit.headlight(c, o)
     if (o.roll) L.group.rotation.x = o.roll
     if (o.pitch) L.group.rotation.z = o.pitch
     return L
   }
-  function drlOn(L: any, w: any, h: any, y: any, d: any, z?: any) {
+  function drlOn(L: any, w: number, h: number, y: number, d: number, z?: any) {
     const m = new THREE.Mesh(G.roundedBox(0.01, h, w, Math.min(0.005, h * 0.4)), DRL)
     m.position.set((d || 0.06) / 2 + 0.004, y || 0, z || 0)
     m.castShadow = false
@@ -179,7 +180,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     L.inner.push(m)
     return m
   }
-  function fork(c: any, top: any, axle: any, zg: any, r: any, up: any, low: any, o?: any) {
+  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: any, low: any, o?: any) {
     o = o || {}
     ;[1, -1].forEach(function (s) {
       const a = new V3(top[0], top[1], s * zg),
@@ -193,7 +194,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       rot: [0, 0, Math.atan2(axle[0] - top[0], top[1] - axle[1])],
     })
   }
-  function handlebar(c: any, x: any, y: any, half: any, o: any) {
+  function handlebar(c: VehicleContext, x: number, y: number, half: number, o: any) {
     o = o || {}
     const mat = o.mat || MT.trim,
       rise = o.rise || 0.03,
@@ -249,7 +250,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
     return c.vehicle.children.slice(n0)
   }
-  function blinker(c: any, x: any, y: any, z: any, front: any, o?: any) {
+  function blinker(c: VehicleContext, x: any, y: any, z: any, front: boolean, o?: any) {
     o = o || {}
     if (o.flush) {
       const f = c.roundBox(0.03, 0.025, 0.05, 0.01, MT.amber, x, y, z, { rot: [0, 0, 0] })
@@ -261,7 +262,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     b.castShadow = false
     return b
   }
-  function plateMoto(c: any, x: any, y: any, txt?: any) {
+  function plateMoto(c: VehicleContext, x: any, y: any, txt?: any) {
     c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.012, y, 0)
     c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x, y, 0, '-x', {
       w: 300,
@@ -274,7 +275,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
   }
   /* air-cooled single-cylinder engine (crankcase, side covers, inclined finned cylinder, head) */
-  function singleEngine(c: any, o: any) {
+  function singleEngine(c: VehicleContext, o: any) {
     const x = o.x,
       y = o.y,
       tilt = o.tilt || 0.3,
@@ -302,24 +303,24 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
     return { exh: new V3(cx + Math.sin(tilt) * len * 0.9 + 0.06, cy + Math.cos(tilt) * len * 0.45, 0.06) }
   }
-  function jerryFlat(c: any, x: any, y: any, z: any, col: any) {
+  function jerryFlat(c: VehicleContext, x: any, y: any, z: any, col: string) {
     c.roundBox(0.4, 0.15, 0.28, 0.04, CM(col, { roughness: 0.5 }), x, y, z, { def: true })
     c.cylinder(0.022, 0.022, 0.05, MT.trim, x + 0.18, y + 0.06, z + 0.1)
     ;[-0.1, 0.1].forEach(function (dx) {
       c.roundBox(0.03, 0.155, 0.29, 0.005, CM('#1b1c1e'), x + dx, y + 0.002, z)
     })
   }
-  function roofLamp(c: any, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }
-  function bikeMeta(c: any, o: any) {
+  function bikeMeta(c: VehicleContext, o: any) {
     Object.assign(c.meta, { kind: 'bike', clearance: 0.25, bodyHeight: 0.6, belt: 0.88 }, o)
   }
   /* meshes created since mark n0 (without wheels, headlights, taillights or glass, which already have their own zone) */
-  function grab(c: any, n0: any) {
+  function grab(c: VehicleContext, n0: any) {
     const Ls = new Set()
-    ;(c.lights || []).forEach(function (L: any) {
+    ;(c.lights || []).forEach(function (L) {
       if (L.group) Ls.add(L.group)
     })
     return c.vehicle.children.slice(n0).filter(function (o: any) {
@@ -327,7 +328,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
   }
   /* extra spokes on a core alloy wheel (spokedWheel cast has 5): n spokes from angle a0 */
-  function moreSpokes(g: any, n: any, a0: any, mat?: any, thick?: any) {
+  function moreSpokes(g: any, n: number, a0: number, mat?: any, thick?: any) {
     const r = g.userData.r,
       tire = g.children[0].geometry.parameters.tube,
       sl = r - tire * 2
@@ -340,7 +341,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     }
   }
   /* drum brake hub (work motorcycle) */
-  function drumHub(g: any, r: any, side: any) {
+  function drumHub(g: any, r: number, side: number) {
     const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.07, 20), ENG)
     d.rotation.x = PI / 2
     d.position.z = (side || 1) * 0.02
@@ -352,7 +353,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   }
 
   /* closed-disc wheel (Lakester) with a wide low-profile tyre, made by lathe. Registers as a core wheel. */
-  function fatWheel(c: any, x: any, r: any, w: any, rimR: any, o: any) {
+  function fatWheel(c: VehicleContext, x: number, r: number, w: number, rimR: number, o: any) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, 0)
@@ -425,7 +426,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   }
 
   /* zones: the automatic motorcycle ones already exist; here we only hand the right parts to each */
-  function zoneParts(c: any, map: any) {
+  function zoneParts(c: VehicleContext, map: any) {
     Object.keys(map).forEach(function (id) {
       if (map[id] && map[id].length) c.zone(id, null, null, map[id])
     })
@@ -711,7 +712,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         exhaust: new V3(-0.76, 0.32, 0.15),
       })
       /* modified: tubular crash bar, wire basket at the front, crate with a can on the grab handle */
-      c.meta.armor = function (c: any, Zg: any) {
+      c.meta.armor = function (c: VehicleContext, Zg) {
         ;[1, -1].forEach(function (s) {
           c.tube(
             [
@@ -1028,7 +1029,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         exhaust: new V3(-0.66, 0.5, 0.18),
       })
       /* modified: engine and tank guard, side cases, can on the pillion, auxiliary light */
-      c.meta.armor = function (c: any, Zg: any) {
+      c.meta.armor = function (c: VehicleContext, Zg) {
         ;[1, -1].forEach(function (s) {
           c.tube(
             [
@@ -1346,7 +1347,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         exhaust: new V3(-0.6, 0.5, 0.18),
       })
       /* modified: sheet grille over the headlights, side sliders and a screen over the windshield, tank bag and can on the pillion */
-      c.meta.armor = function (c: any, Zg: any) {
+      c.meta.armor = function (c: VehicleContext, Zg) {
         c.roundBox(0.04, 0.12, 0.3, 0.01, Zg.steelMaterial, 0.97, 0.8, 0, { rot: [0, 0, -0.5] })
         for (let i = -3; i <= 3; i++) c.rod(new V3(0.66, 0.92, i * 0.035), new V3(0.58, 1.08, i * 0.035), 0.004, MT.steel)
         ;[1, -1].forEach(function (s) {
@@ -1616,7 +1617,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       })
       /* own zone: the rear fender and taillight belong to the seat and tail (the automatic one already takes them); nothing to remove */
       /* modified: leather saddlebags, backrest (sissy bar) with a can, bumper plate on the fork, cans on the floorboards */
-      c.meta.armor = function (c: any, Zg: any) {
+      c.meta.armor = function (c: VehicleContext, Zg) {
         const lea = CM('#3a2618', { roughness: 0.85 })
         ;[1, -1].forEach(function (s) {
           c.roundBox(0.42, 0.3, 0.16, 0.06, lea, -0.85, 0.58, s * 0.27, { def: true })
@@ -1925,7 +1926,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         exhaust: new V3(-0.87, 0.5, 0.18),
       })
       /* modified: armoured box with plate and grille, side cans, engine guard */
-      c.meta.armor = function (c: any, Zg: any) {
+      c.meta.armor = function (c: VehicleContext, Zg) {
         c.roundBox(0.48, 0.44, 0.012, 0.004, Zg.steelMaterial, -0.74, RY + 0.22, 0.228)
         c.roundBox(0.48, 0.44, 0.012, 0.004, Zg.steelMaterial, -0.74, RY + 0.22, -0.228)
         for (let i = 0; i < 4; i++)

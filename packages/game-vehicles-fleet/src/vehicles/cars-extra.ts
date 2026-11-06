@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 import { markSunroof, tagWiper } from './moving-parts'
 
@@ -32,7 +33,7 @@ export function installCarsExtra(fx: FleetContext): void {
 
   /* soft deformation applied after assembly: rounds the front and rear in plan and curves the side */
   function mkWarp(o: any) {
-    function sec(y: any) {
+    function sec(y: number) {
       if (y >= o.belt) return o.kt
       if (y >= o.ys) {
         const a = (y - o.ys) / (o.belt - o.ys)
@@ -41,7 +42,7 @@ export function installCarsExtra(fx: FleetContext): void {
       const b = clamp((o.ys - y) / (o.ys - o.yb), 0, 1.25)
       return o.kb * b * b
     }
-    const f: any = function (x: any, y: any, z: any) {
+    const f: any = function (x: number, y: number, z: number) {
       const tF = smooth((x - (o.xF - o.Lf)) / o.Lf),
         tR = smooth((o.xR + o.Lr - x) / o.Lr),
         u = Math.min(1.15, Math.abs(z) / o.hw),
@@ -57,7 +58,7 @@ export function installCarsExtra(fx: FleetContext): void {
     f.sec = sec
     return f
   }
-  function applyWarp(c: any, Wf: any) {
+  function applyWarp(c: VehicleContext, Wf: any) {
     c.root.updateMatrixWorld(true)
     const gInv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert(),
       rel = new THREE.Matrix4(),
@@ -98,7 +99,7 @@ export function installCarsExtra(fx: FleetContext): void {
       p.set(r[0], r[1], r[2])
       if (Math.abs(yaw) > 1e-4) o.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(yAx, yaw))
     }
-    c.glass.forEach(function (gm: any) {
+    c.glass.forEach(function (gm) {
       const GD = gm.userData.glass
       if (!GD || !GD.outline || GD.zpos == null) return
       let cx = 0,
@@ -133,7 +134,7 @@ export function installCarsExtra(fx: FleetContext): void {
   }
 
   /* side windows with the sloped roof (roofR at the rear, crown in the middle) */
-  function roofAt(gh: any, x: any) {
+  function roofAt(gh: any, x: number) {
     const rR = gh.roofR || gh.roof,
       t = clamp((x - gh.rt) / (gh.ft - gh.rt), 0, 1)
     return rR + (gh.roof - rR) * t + (gh.crown || 0) * 4 * t * (1 - t)
@@ -141,10 +142,10 @@ export function installCarsExtra(fx: FleetContext): void {
   function windows(gh: any) {
     const inn = 0.07,
       rise = gh.rise || 0
-    function ybAt(x: any) {
+    function ybAt(x: number) {
       return gh.belt + 0.035 + rise * clamp((gh.fb - x) / (gh.fb - gh.rb), 0, 1)
     }
-    function lx(x0: any, x1: any, y: any, top: any) {
+    function lx(x0: number, x1: number, y: number, top: number) {
       return x0 + ((x1 - x0) * (y - gh.belt)) / (top - gh.belt)
     }
     function rearX(y: any) {
@@ -153,14 +154,14 @@ export function installCarsExtra(fx: FleetContext): void {
     function frontX(y: any) {
       return lx(gh.fb, gh.ft, y, gh.roof) - inn * 1.3
     }
-    function topY(x: any) {
+    function topY(x: number) {
       return roofAt(gh, x) - 0.068
     }
-    const ps = gh.pillars.slice().sort(function (a: any, b: any) {
+    const ps = gh.pillars.slice().sort(function (a: number, b: number) {
         return a - b
       }),
       bounds = [-1e9]
-    ps.forEach(function (p: any) {
+    ps.forEach(function (p: number) {
       bounds.push(p - 0.06, p + 0.06)
     })
     bounds.push(1e9)
@@ -168,10 +169,10 @@ export function installCarsExtra(fx: FleetContext): void {
     for (let i = 0; i < bounds.length; i += 2) {
       const xa = bounds[i],
         xb = bounds[i + 1]
-      const L = function (y: any) {
+      const L = function (y: number) {
           return Math.max(xa, rearX(y))
         },
-        R = function (y: any) {
+        R = function (y: number) {
           return Math.min(xb, frontX(y))
         }
       let ybl = ybAt(xa > -1e8 ? xa : gh.rb),
@@ -213,7 +214,7 @@ export function installCarsExtra(fx: FleetContext): void {
   const RECESS = CM('#0b0c0d', { roughness: 0.9 })
   const PLATEL = CM('#f4f1e4', { emissive: '#f0ead0', emissiveIntensity: 1.0, roughness: 0.3 })
   /* grille textures (repeated pattern) */
-  function patTex(kind: any) {
+  function patTex(kind: string) {
     const cv = kit.document.createElement('canvas')
     cv.width = cv.height = 64
     const x = cv.getContext('2d')
@@ -272,7 +273,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return t
   }
   const GRM: any = {}
-  function grilleMat(kind: any) {
+  function grilleMat(kind: string) {
     if (!GRM[kind])
       GRM[kind] = new THREE.MeshStandardMaterial({
         map: patTex(kind),
@@ -283,7 +284,7 @@ export function installCarsExtra(fx: FleetContext): void {
   }
 
   /* hull surface sampler (c.g coordinates, before the warp) */
-  function mkSurf(mesh: any, W: any) {
+  function mkSurf(mesh: any, W: number) {
     const geo = mesh.geometry,
       pos = geo.attributes.position,
       ix = geo.index,
@@ -336,7 +337,7 @@ export function installCarsExtra(fx: FleetContext): void {
       if (nn.dot(d) > 0) nn.negate()
       return { p: o.clone().addScaledVector(d, best), n: nn }
     }
-    S.endX = function (E: any, y: any) {
+    S.endX = function (E: any, y: number) {
       const k = E + ':' + y.toFixed(3)
       if (cache[k] != null) return cache[k]
       const h = S.hit(new V3(E * 10, y, 0), new V3(-E, 0, 0), E > 0 ? 'F' : 'R')
@@ -346,7 +347,7 @@ export function installCarsExtra(fx: FleetContext): void {
   }
   /* sample grid at one end (E = +1 front, -1 rear). sd = +1/-1 side; sd = 0 full width (side to side).
      Path: along the face (z0..z1), turns the corner (radius R) and runs "wrap" metres along the side. */
-  function sgrid(S: any, E: any, sd: any, o: any) {
+  function sgrid(S: any, E: number, sd: number, o: any) {
     const R = 0.07,
       hw = S.hw,
       full = !sd,
@@ -391,7 +392,7 @@ export function installCarsExtra(fx: FleetContext): void {
       }
     }
     const G: any = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: tot * (full ? 2 : 1), E: E, sd: sd }
-    G.at = function (u: any, y: any) {
+    G.at = function (u: any, y: number) {
       const fi = clamp(u, 0, 1) * nu,
         fj = clamp((y - o.y0) / (o.y1 - o.y0), 0, 1) * nv,
         i0 = Math.min(nu - 1, Math.floor(fi)),
@@ -409,11 +410,11 @@ export function installCarsExtra(fx: FleetContext): void {
       return { p: L(P), n: L(N).normalize() }
     }
     /* u of the point with a given z (face only) */
-    G.uz = function (z: any) {
+    G.uz = function (z: number) {
       const s = Math.abs(z) - z0
       return full ? ((Math.sign(z || 1) * s) / tot + 1) / 2 : s / tot
     }
-    G.zu = function (u: any) {
+    G.zu = function (u: number) {
       return full ? (2 * u - 1) * tot : z0 + u * tot
     }
     return G
@@ -426,7 +427,7 @@ export function installCarsExtra(fx: FleetContext): void {
         }
   }
   /* skin layer over the grid: region u0..u1, yb(u)..yt(u), offset "off" from the bodywork; "thick" gives thickness (visible edge) */
-  function skin(c: any, G: any, mat: any, o: any) {
+  function skin(c: VehicleContext, G: any, mat: any, o: any) {
     const u0 = o.u0 || 0,
       u1 = o.u1 == null ? 1 : o.u1,
       yb = fnv(o.yb),
@@ -461,7 +462,7 @@ export function installCarsExtra(fx: FleetContext): void {
       t0 = new V3().subVectors(A[mi + 1][mj].p, A[mi][mj].p),
       t1 = new V3().subVectors(A[mi][mj + 1].p, A[mi][mj].p),
       flip = t0.cross(t1).dot(A[mi][mj].n) < 0
-    function tri(a: any, b: any, d: any, rev: any) {
+    function tri(a: any, b: any, d: any, rev: boolean) {
       const l = flip !== !!rev ? [a, d, b] : [a, b, d]
       l.forEach(function (q) {
         pos.push(q.p.x, q.p.y, q.p.z)
@@ -524,7 +525,7 @@ export function installCarsExtra(fx: FleetContext): void {
   }
   const G0 = G
   /* outline (tube) of a grid region */
-  function outline(c: any, Gd: any, o: any, r: any, mat: any, off: any) {
+  function outline(c: VehicleContext, Gd: any, o: any, r: number, mat: any, off: number) {
     const u0 = o.u0 || 0,
       u1 = o.u1 == null ? 1 : o.u1,
       yb = fnv(o.yb),
@@ -554,7 +555,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return t
   }
   /* line (tube) along sampled points: list of {u, y} on a grid */
-  function lineOn(c: any, Gd: any, list: any, r: any, mat: any, off: any) {
+  function lineOn(c: VehicleContext, Gd: any, list: any, r: number, mat: any, off: number) {
     const pts = list.map(function (q: any) {
       const s = Gd.at(q[0], q[1])
       return s.p.addScaledVector(s.n, off || 0.003)
@@ -565,13 +566,13 @@ export function installCarsExtra(fx: FleetContext): void {
     return t
   }
   /* small mesh leaning on the surface, with its axis (y for cylinders) along the normal */
-  function onSurf(m: any, s: any, off: any, axis?: any) {
+  function onSurf(m: any, s: any, off: number, axis?: any) {
     m.position.copy(s.p).addScaledVector(s.n, off || 0)
     m.quaternion.setFromUnitVectors(axis || new V3(0, 1, 0), s.n)
     m.rotation.order = 'XYZ'
     return m
   }
-  function regLight(c: any, kind: any, label: any, inner: any, lens: any, pos: any) {
+  function regLight(c: VehicleContext, kind: string, label: any, inner: any, lens: any, pos: any) {
     const L = { group: null, inner: inner, lens: lens, kind: kind, tint: kind === 'headlight' ? 'clear' : 'red', broken: false }
     c.lights.push(L)
     const pt = c.part(kind, label, inner[0], pos, 0.8)
@@ -589,7 +590,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return [lo, hi]
   }
   /* end-detail kit, bound to a car */
-  function mkKit(c: any, S: any, I: any) {
+  function mkKit(c: VehicleContext, S: any, I: any) {
     const K: any = { S: S, I: I }
     K.grid = function (E: any, sd: any, o: any) {
       return sgrid(S, E, sd, o)
@@ -598,7 +599,7 @@ export function installCarsExtra(fx: FleetContext): void {
       return skin(c, Gd, mat, o)
     }
     /* headlight: o = { z0, wrap, shape(u) -> [yb, yt], proj: [[u, dy, r]], drl: [{u0,u1,yb,yt}], amber: [...], refl, pad } */
-    K.head = function (sd: any, o: any) {
+    K.head = function (sd: number, o: any) {
       const sh = o.shape,
         rg = shapeRange(sh),
         pad = o.pad == null ? 0.012 : o.pad
@@ -631,7 +632,7 @@ export function installCarsExtra(fx: FleetContext): void {
         nv: 4,
       })
       const reflector = skin(c, Gd, o.refl || REFL, { u0: pu, u1: 1 - pu, yb: yb, yt: yt, off: 0.006, nv: 4 })
-      ;(o.proj || []).forEach(function (q: any) {
+      ;(o.proj || []).forEach(function (q: number[]) {
         const r = sh(q[0]),
           y = (r[0] + r[1]) / 2 + (q[1] || 0),
           s = Gd.at(q[0], y),
@@ -669,7 +670,7 @@ export function installCarsExtra(fx: FleetContext): void {
       return Gd
     }
     /* taillight: o = { z0, wrap, shape(u), main (area material), hi: [...], rev: [...], amber: [...] } */
-    K.tail = function (sd: any, o: any) {
+    K.tail = function (sd: number, o: any) {
       const sh = o.shape,
         rg = shapeRange(sh),
         pad = o.pad == null ? 0.01 : o.pad
@@ -735,7 +736,7 @@ export function installCarsExtra(fx: FleetContext): void {
       return Gd
     }
     /* bumper: thick shell in the body colour (or black) that covers the end and bends round the corners up to near the wheel arch */
-    K.bumper = function (E: any, o: any) {
+    K.bumper = function (E: number, o: any) {
       const Gd = sgrid(S, E, 0, { wrap: o.wrap, y0: o.y0, y1: o.y1, du: 0.03, dv: 0.03 })
       const m = skin(c, Gd, o.mat, {
         yb: o.yb || o.y0,
@@ -759,14 +760,14 @@ export function installCarsExtra(fx: FleetContext): void {
       return m
     }
     /* Mercosur plate in a recess (with a plate light behind) */
-    K.plate = function (E: any, y: any, o: any) {
+    K.plate = function (E: number, y: number, o: any) {
       o = o || {}
       const Gd: any = sgrid(S, E, 0, { z1: 0.32, y0: y - 0.12, y1: y + 0.12, du: 0.03, dv: 0.03 }),
         off = o.off || 0.004,
         s = Gd.at(0.5, y)
       const rc = skin(c, Gd, RECESS, { u0: Gd.uz(-0.235), u1: Gd.uz(0.235), yb: y - 0.083, yt: y + 0.083, off: off, nv: 2 })
       rc.geometry.computeBoundingBox()
-      const ext = E > 0 ? rc.position.x + rc.geometry.boundingBox.max.x : rc.position.x + rc.geometry.boundingBox.min.x
+      const ext = E > 0 ? rc.position.x + rc.geometry.boundingBox!.max.x : rc.position.x + rc.geometry.boundingBox!.min.x
       /* the plate (4-vertex plane) stays outside the warp: warped, it receded entirely into the recess and the recess pierced the plate */
       const pl = c.plate(ext + E * 0.004, s.p.y, 0, E > 0 ? '+x' : '-x')
       pl.userData.noWarp = true
@@ -780,7 +781,7 @@ export function installCarsExtra(fx: FleetContext): void {
     K.lid = function (pts0: any) {
       /* intermediate points every 4 cm: the line follows the bodywork in straight runs (no spline belly crossing the plate or lid) */
       const pts: any = []
-      pts0.forEach(function (q: any, i: any) {
+      pts0.forEach(function (q: any, i: number) {
         const n = pts0[i + 1]
         pts.push(q)
         if (!n || !!n.top !== !!q.top) return
@@ -809,7 +810,7 @@ export function installCarsExtra(fx: FleetContext): void {
       return t
     }
     /* red reflector on the rear bumper */
-    K.reflector = function (sd: any, z0: any, y: any, w: any) {
+    K.reflector = function (sd: any, z0: any, y: number, w: any) {
       const Gd = sgrid(S, -1, sd, { z0: z0, z1: z0 + (w || 0.12), y0: y - 0.03, y1: y + 0.03, du: 0.03, dv: 0.03 })
       return skin(c, Gd, REFLR, { yb: y - 0.016, yt: y + 0.016, off: 0.03, nv: 1 })
     }
@@ -833,7 +834,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return K
   }
 
-  function car(c: any, s: any) {
+  function car(c: VehicleContext, s: any) {
     const W = s.W,
       gh = s.gh,
       bev = 0.05,
@@ -846,7 +847,7 @@ export function installCarsExtra(fx: FleetContext): void {
     const intr = s.interior === false ? null : Object.assign({ rows: 2 }, s.interior || {})
     const hoodO = s.hood ? Object.assign({ motor: 'gasoline' }, s.hood === true ? {} : s.hood) : null
     let tireW = 0.2
-    ;(s.wheels || []).forEach(function (w: any) {
+    ;(s.wheels || []).forEach(function (w: number[]) {
       tireW = Math.max(tireW, w[2])
     })
     const low = []
@@ -906,7 +907,7 @@ export function installCarsExtra(fx: FleetContext): void {
       polys,
       gh.Wg,
       T,
-      function (i: any, n: any) {
+      function (i: number, n: number) {
         return i === 0 && n > 2 ? lbl('quarter_glass') : i === n - 1 ? lbl('window_front') : lbl('window_rear')
       },
       { see: !!intr },
@@ -959,7 +960,7 @@ export function installCarsExtra(fx: FleetContext): void {
       )
     if (hoodO) {
       let fa = -1e9
-      ;(s.arches || []).forEach(function (a: any) {
+      ;(s.arches || []).forEach(function (a: number[]) {
         fa = Math.max(fa, a[0])
       })
       const hood = kit.makeHood(c, lowMesh.userData.cut.hood, { x0: hx0, col: s.col })
@@ -1001,7 +1002,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return m
   }
 
-  function details(c: any, s: any, Wf: any, S: any) {
+  function details(c: VehicleContext, s: any, Wf: any, S: any) {
     const m = c.meta,
       W = s.W,
       hw = W / 2,
@@ -1134,7 +1135,7 @@ export function installCarsExtra(fx: FleetContext): void {
       p1.z += q[2]
       const blade = c.rod(p0, p1, 0.009, MT.trim)
       const cap = c.cylinder(0.018, 0.018, 0.03, MT.trim, p0.x, p0.y, p0.z)
-      tagWiper({ context: c, parts: [blade, cap], spindle: p0, normal: wn, index })
+      tagWiper({ context: c as Parameters<typeof tagWiper>[0]['context'], parts: [blade, cap], spindle: p0, normal: wn, index })
     })
     /* sliding sunroof: a tinted pane over the dark opening, in the front half of the roof */
     if (s.sunroof) {
@@ -1178,23 +1179,23 @@ export function installCarsExtra(fx: FleetContext): void {
     underbody(c, s, I)
     if (s.extra) s.extra(c, I)
     if (
-      !c.parts.some(function (p: any) {
+      !c.parts.some(function (p) {
         return p.kind === 'engine'
       })
     )
-      c.part('engine', trl('labels.engine'), null, new V3(m.front - 0.6, by + 0.45, 0), 1.0)
+      c.part('engine', trl('labels.engine'), null, new V3(m.front! - 0.6, by + 0.45, 0), 1.0)
     if (
-      !c.parts.some(function (p: any) {
+      !c.parts.some(function (p) {
         return p.kind === 'radiator'
       }) &&
       !s.noRadiator
     )
-      c.part('radiator', trl('labels.radiator'), null, new V3(m.front - 0.15, by + 0.35, 0), 0.9)
-    c.part('fuel_tank', s.tankLabel || trl('labels.fuel_tank'), null, new V3(m.rear + 0.8, by + 0.15, -W * 0.22), 1.0)
+      c.part('radiator', trl('labels.radiator'), null, new V3(m.front! - 0.15, by + 0.35, 0), 0.9)
+    c.part('fuel_tank', s.tankLabel || trl('labels.fuel_tank'), null, new V3(m.rear! + 0.8, by + 0.15, -W * 0.22), 1.0)
     return I
   }
   /* underbody seen on rollover: matte black plate, exhaust, tank, axles and suspension arms */
-  function underbody(c: any, s: any, I: any) {
+  function underbody(c: VehicleContext, s: any, I: any) {
     const by = I.by,
       fa = s.arches[0],
       ra = s.arches[1],
@@ -1238,7 +1239,7 @@ export function installCarsExtra(fx: FleetContext): void {
       c.rod(new V3(fa[0] - 0.04, fa[1] - 0.06, sd * (I.hw - 0.3)), new V3(fa[0] - 0.3, by - 0.02, sd * 0.3), 0.022, UNDER2)
     })
   }
-  function wheelOpts(kind: any) {
+  function wheelOpts(kind: string) {
     if (kind === 'alloy') return { rim: ALLOY, spokes: 5, rimR: 0.62 }
     if (kind === 'alloy2') return { rim: ALLOYD, spokeMat: ALLOY, spokes: 10, rimR: 0.64 }
     if (kind === 'hubcap') return { rim: HUBCAP, spokes: 0, rimR: 0.6 }
@@ -1255,21 +1256,21 @@ export function installCarsExtra(fx: FleetContext): void {
   }
   /* modified armour: the core default and one extra per model */
   function armorPlus(fn: any) {
-    return function (c: any, Z: any) {
+    return function (c: VehicleContext, Z: any) {
       Z.applyArmor(c)
       fn(c, Z)
     }
   }
-  function roofLamp(c: any, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }
-  function sm(t: any) {
+  function sm(t: number) {
     t = clamp(t, 0, 1)
     return t * t * (3 - 2 * t)
   }
   /* side grille (u along x, from x0 to x1) */
-  function sideGrid(S: any, sd: any, o: any) {
+  function sideGrid(S: any, sd: number, o: any) {
     const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / (0.04 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
       nv = Math.max(2, Math.ceil((o.y1 - o.y0) / (0.03 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
       P: any = [],
@@ -1288,7 +1289,7 @@ export function installCarsExtra(fx: FleetContext): void {
       }
     }
     const G: any = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: Math.abs(o.x1 - o.x0) }
-    G.at = function (u: any, y: any) {
+    G.at = function (u: any, y: number) {
       const fi = clamp(u, 0, 1) * nu,
         fj = clamp((y - o.y0) / (o.y1 - o.y0), 0, 1) * nv,
         i0 = Math.min(nu - 1, Math.floor(fi)),
@@ -1305,13 +1306,13 @@ export function installCarsExtra(fx: FleetContext): void {
       }
       return { p: L(P), n: L(N).normalize() }
     }
-    G.ux = function (x: any) {
+    G.ux = function (x: number) {
       return (x - o.x0) / (o.x1 - o.x0)
     }
     return G
   }
   /* round (decorative) fog light on the surface */
-  function fogLamp(c: any, s: any, r: any) {
+  function fogLamp(c: VehicleContext, s: any, r: number) {
     onSurf(c.cylinder(r * 1.4, r * 1.4, 0.014, LH, 0, 0, 0), s, 0.006).castShadow = false
     onSurf(c.cylinder(r, r, 0.012, REFL, 0, 0, 0), s, 0.012).castShadow = false
     const bulb = onSurf(c.sphere(r * 0.45, MT.head, 0, 0, 0, 1, 0.5, 1), s, 0.016)
@@ -1321,19 +1322,19 @@ export function installCarsExtra(fx: FleetContext): void {
   }
 
   /* body crease (character line): thin step in the car colour that follows the side through points [x, y], with a thin shadow fillet below */
-  function crease(c: any, I: any, sd: any, pts: any, o: any) {
+  function crease(c: VehicleContext, I: any, sd: number, pts: any, o: any) {
     o = o || {}
     const x0 = pts[0][0],
       x1 = pts[pts.length - 1][0]
     let lo = 9,
       hi = -9
-    pts.forEach(function (q: any) {
+    pts.forEach(function (q: number[]) {
       lo = Math.min(lo, q[1])
       hi = Math.max(hi, q[1])
     })
     const h = o.h || 0.03,
       Gd = sideGrid(I.S, sd, { x0: x0, x1: x1, y0: lo - h - 0.03, y1: hi + 0.03 })
-    function yAt(u: any) {
+    function yAt(u: number) {
       const x = x0 + (x1 - x0) * u
       for (let i = 0; i < pts.length - 1; i++) {
         const a = pts[i],
@@ -1404,8 +1405,8 @@ export function installCarsExtra(fx: FleetContext): void {
     }
   }
   /* glasshouse that narrows in plan towards the rear (C pillars converging): width factor above the waist */
-  function cabTaper(belt: any, top: any, x0: any, L: any, a: any) {
-    return function (x: any, y: any) {
+  function cabTaper(belt: number, top: number, x0: number, L: number, a: number) {
+    return function (x: number, y: number) {
       return 1 - a * sm((y - belt) / (top - belt)) * sm((x0 - x) / L)
     }
   }
@@ -1413,7 +1414,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return { rim: CHROMEB, spokes: 0, rimR: 0.62 }
   }
   /* hood surface (point and normal) by vertical ray, for parts glued to it (vents) */
-  function hoodHit(c: any, x: any, z: any) {
+  function hoodHit(c: VehicleContext, x: number, z: number) {
     if (!c.hood) return null
     c.root.updateMatrixWorld(true)
     const top = c.hood.piv.children[0],
@@ -1428,7 +1429,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return { p: p, n: n }
   }
   /* part attached to the hood (opens with it): converts from c.g to the pivot */
-  function onHood(c: any, m: any) {
+  function onHood(c: VehicleContext, m: any) {
     const piv = c.hood.piv
     c.vehicle.remove(m)
     m.position.sub(piv.position)
@@ -1437,7 +1438,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return m
   }
   /* roof rail (black rubber) of the old cars */
-  function gutter(c: any, gh: any, T: any, mat?: any) {
+  function gutter(c: VehicleContext, gh: any, T: any, mat?: any) {
     ;[1, -1].forEach(function (sd) {
       const pts = [],
         z = function (y: any) {
@@ -1540,7 +1541,7 @@ export function installCarsExtra(fx: FleetContext): void {
         plateR: 0.72,
         plateROnBumper: false,
         mirrorCol: '#1b1c1e',
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
             K.head(sd, {
               z0: 0.3,
@@ -1586,7 +1587,7 @@ export function installCarsExtra(fx: FleetContext): void {
             0.018,
           )
         },
-        rear: function (c: any, K: any, I: any) {
+        rear: function (c: VehicleContext, K: any, I: any) {
           ;[1, -1].forEach(function (sd) {
             K.tail(sd, {
               z0: I.hw - 0.22,
@@ -1617,7 +1618,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.191, 0.2875, 0.175, wheelOpts('hubcap')],
         ],
         warp: { bowF: 0.07, bowR: 0.04, Lf: 0.4, Lr: 0.3, pinF: 0.02, pinR: 0.01, kt: 0.02, kb: 0.04 },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           const gh = I.gh
           gutter(c, gh, I.T)
           ;[1, -1].forEach(function (sd) {
@@ -1650,7 +1651,7 @@ export function installCarsExtra(fx: FleetContext): void {
       c.zone('roof', null, null, esc.concat(m.rails || []))
       m.top = ry + 0.04
       m.roof.y = ry + 0.04
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         kit.jerryCan(c, -0.9, m.roof.y + 0.2, 0.35, '#8e2a20')
         kit.jerryCan(c, -0.9, m.roof.y + 0.2, -0.35, '#2f5b2a')
       })
@@ -1747,12 +1748,12 @@ export function installCarsExtra(fx: FleetContext): void {
         plateR: 0.74,
         plateROnBumper: false,
         spoiler: true,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
             const yb = function (u: any) {
                 return 0.635 + 0.065 * sm(u)
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.785 - 0.012 * u
               }
             K.head(sd, {
@@ -1827,12 +1828,12 @@ export function installCarsExtra(fx: FleetContext): void {
             fogLamp(c, s2, 0.036)
           })
         },
-        rear: function (c: any, K: any, I: any) {
+        rear: function (c: VehicleContext, K: any, I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.78 + 0.05 * u
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.97 - 0.035 * u
               }
             K.tail(sd, {
@@ -1910,7 +1911,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.265, 0.3, 0.175, wheelOpts('alloy')],
         ],
         warp: { bowF: 0.15, bowR: 0.14, Lf: 0.5, Lr: 0.48, kt: 0.05, zx: cabTaper(0.96, 1.36, -0.3, 1.4, 0.07) },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           const gh = I.gh
           ;[1, -1].forEach(function (sd) {
             crease(
@@ -1945,9 +1946,9 @@ export function installCarsExtra(fx: FleetContext): void {
           c.deform.push(an)
         },
       })
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const m = c.meta,
-          fx = m.front + 0.05
+          fx = m.front! + 0.05
         ;[0.45, -0.45].forEach(function (z) {
           c.tube(
             [
@@ -2058,12 +2059,12 @@ export function installCarsExtra(fx: FleetContext): void {
         plateF: 0.33,
         plateR: 0.48,
         spoiler: true,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.735 + 0.01 * u
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.785 + 0.004 * u
               }
             K.head(sd, {
@@ -2106,12 +2107,12 @@ export function installCarsExtra(fx: FleetContext): void {
           const e = g.at(0.5, 0.66)
           kit.emblem(c, e.p.x + 0.03, 0.66, 0, 0.04)
         },
-        rear: function (c: any, K: any, I: any) {
+        rear: function (c: VehicleContext, K: any, I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.85 + 0.01 * u
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.925 - 0.008 * u
               }
             K.tail(sd, {
@@ -2170,7 +2171,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.32, 0.302, 0.185, wheelOpts('alloy2')],
         ],
         warp: { bowF: 0.19, bowR: 0.15, Lf: 0.6, Lr: 0.5, kt: 0.05, zx: cabTaper(0.98, 1.38, -0.3, 1.4, 0.07) },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           ;[1, -1].forEach(function (sd) {
             crease(
               c,
@@ -2198,7 +2199,7 @@ export function installCarsExtra(fx: FleetContext): void {
           })
         },
       })
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const r = c.meta.roof
         roofLamp(c, r.x1, r.y + 0.2, 0.32)
         roofLamp(c, r.x1, r.y + 0.2, -0.32)
@@ -2297,12 +2298,12 @@ export function installCarsExtra(fx: FleetContext): void {
         plateR: 0.73,
         plateROnBumper: false,
         spoiler: true,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.665 + 0.012 * u
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.745 + 0.018 * u
               }
             K.head(sd, {
@@ -2364,7 +2365,7 @@ export function installCarsExtra(fx: FleetContext): void {
               u0: 0.08,
               u1: 0.8,
               yb: 0.34,
-              yt: function (u: any) {
+              yt: function (u: number) {
                 return 0.49 - 0.06 * u
               },
               off: 0.021,
@@ -2378,7 +2379,7 @@ export function installCarsExtra(fx: FleetContext): void {
                 u0: 0.08,
                 u1: 0.8,
                 yb: 0.34,
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return 0.49 - 0.06 * u
                 },
               },
@@ -2388,12 +2389,12 @@ export function installCarsExtra(fx: FleetContext): void {
             )
           })
         },
-        rear: function (c: any, K: any, I: any) {
+        rear: function (c: VehicleContext, K: any, I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.84 + 0.015 * u
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.955 - 0.012 * u
               }
             K.tail(sd, {
@@ -2460,7 +2461,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.316, 0.31, 0.185, wheelOpts('alloy')],
         ],
         warp: { bowF: 0.18, bowR: 0.15, Lf: 0.6, Lr: 0.5, kt: 0.05, zx: cabTaper(0.99, 1.4, -0.3, 1.45, 0.07) },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           ;[1, -1].forEach(function (sd) {
             /* "tornado" crease: straight, sharp, high */
             crease(
@@ -2488,7 +2489,7 @@ export function installCarsExtra(fx: FleetContext): void {
           })
         },
       })
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const r = c.meta.roof,
           y = r.y + 0.1
         ;[r.x0 + 0.1, r.x1 - 0.1].forEach(function (x) {
@@ -2597,9 +2598,9 @@ export function installCarsExtra(fx: FleetContext): void {
         plateF: 0.4,
         plateR: 0.79,
         plateROnBumper: false,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.6 + 0.07 * sm(u * 1.2)
               },
               yt = function (u: any) {
@@ -2692,7 +2693,7 @@ export function installCarsExtra(fx: FleetContext): void {
               u0: 0.05,
               u1: 0.95,
               yb: 0.29,
-              yt: function (u: any) {
+              yt: function (u: number) {
                 return 0.5 - 0.05 * u
               },
               off: 0.021,
@@ -2703,13 +2704,13 @@ export function installCarsExtra(fx: FleetContext): void {
             fogLamp(c, s2, 0.03)
           })
         },
-        rear: function (c: any, K: any, I: any) {
+        rear: function (c: VehicleContext, K: any, I: any) {
           ;[1, -1].forEach(function (sd) {
             /* boomerang: thin on the lid, tall at the corner, running down the side */
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.885 - 0.13 * sm((u - 0.35) / 0.55)
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.925 - 0.01 * u
               }
             K.tail(sd, {
@@ -2794,7 +2795,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.35, 0.3235, 0.215, wheelOpts('alloy2')],
         ],
         warp: { bowF: 0.21, bowR: 0.13, Lf: 0.65, zx: cabTaper(0.97, 1.36, -0.5, 1.3, 0.06) },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           ;[1, -1].forEach(function (sd) {
             crease(
               c,
@@ -2828,7 +2829,7 @@ export function installCarsExtra(fx: FleetContext): void {
       })
       /* the spoiler lip belongs to the trunk lid (it dents, hangs and goes away with it) */
       c.zone('lid', trl('labels.trunk_lid'), null, [c.meta.lip])
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const g = c.meta.glasshouse
         for (let z = -0.6; z <= 0.61; z += 0.15)
           c.rod(new V3(g.fb + 0.02, g.belt + 0.04, z), new V3(g.ft + 0.05, g.roof - 0.04, z * 0.92), 0.012, kit.steelMaterial)
@@ -2926,7 +2927,7 @@ export function installCarsExtra(fx: FleetContext): void {
         plateF: 0.38,
         plateR: 0.66,
         plateROnBumper: false,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
             /* large rectangular headlight and the amber indicator that wraps the corner */
             K.head(sd, {
@@ -2972,7 +2973,7 @@ export function installCarsExtra(fx: FleetContext): void {
           const bg = c.meta.frontBumper.userData.grid
           c.deform.push(K.skin(bg, MT.rubber, { u0: 0.02, u1: 0.98, yb: 0.37, yt: 0.405, off: 0.02, nv: 1 }))
         },
-        rear: function (c: any, K: any, _I: any) {
+        rear: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
             K.tail(sd, {
               z0: 0.27,
@@ -3006,7 +3007,7 @@ export function installCarsExtra(fx: FleetContext): void {
           [-1.367, 0.3145, 0.195, hubChrome()],
         ],
         warp: { bowF: 0.05, bowR: 0.04, Lf: 0.35, Lr: 0.3, pinF: 0.02, pinR: 0.02, kt: 0.02, kb: 0.04 },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           gutter(c, I.gh, I.T, CHROMEH)
           ;[1, -1].forEach(function (sd) {
             /* rubber trim with a chrome thread on the side */
@@ -3024,9 +3025,9 @@ export function installCarsExtra(fx: FleetContext): void {
           I.hoodOrn = true
         },
       })
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const m = c.meta,
-          fx = m.front + 0.06
+          fx = m.front! + 0.06
         c.roundBox(0.06, 0.38, 1.7, 0.02, kit.steelMaterial, fx, 0.42, 0, { rot: [0, 0, -0.25] })
         ;[0.6, 0, -0.6].forEach(function (z) {
           c.rod(new V3(fx - 0.25, 0.4, z), new V3(fx, 0.45, z), 0.03, kit.steelMaterial)
@@ -3119,13 +3120,13 @@ export function installCarsExtra(fx: FleetContext): void {
         plateF: 0.3,
         plateR: 0.46,
         exhaust: true,
-        front: function (c: any, K: any, _I: any) {
+        front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
             /* angular headlight: base rising outward, three vertical LED bars on the inner side (tri-bar) */
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.605 + 0.06 * sm(u * 1.1)
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.762 - 0.004 * u
               }
             K.head(sd, {
@@ -3166,7 +3167,7 @@ export function installCarsExtra(fx: FleetContext): void {
             })
             /* "fangs": vertical black intakes on the bumper corners */
             const Gc = K.grid(1, sd, { z0: 0.64, wrap: 0.08, y0: 0.26, y1: 0.54, du: 0.02, dv: 0.02 })
-            const fy = function (u: any) {
+            const fy = function (u: number) {
               return 0.5 - 0.1 * u
             }
             K.skin(Gc, grilleMat('mesh'), { u0: 0.06, u1: 0.9, yb: 0.29, yt: fy, off: 0.021, tile: 0.045, nv: 3 })
@@ -3190,7 +3191,7 @@ export function installCarsExtra(fx: FleetContext): void {
           const lp = K.grid(1, 0, { wrap: 0.25, y0: 0.19, y1: 0.27, du: 0.03, dv: 0.02 })
           K.skin(lp, PLASTIC, { yb: 0.2, yt: 0.24, off: 0.04, thick: 0.03, nv: 2 })
         },
-        rear: function (c: any, K: any, _I: any) {
+        rear: function (c: VehicleContext, K: any, _I: any) {
           /* black panel between the taillights and the three vertical bars on each side */
           const pn = K.grid(-1, 0, { z1: 0.86, y0: 0.74, y1: 0.92, du: 0.02, dv: 0.02 })
           K.skin(pn, GLOSS, { yb: 0.765, yt: 0.9, off: 0.004, nv: 2 })
@@ -3243,12 +3244,12 @@ export function installCarsExtra(fx: FleetContext): void {
           kt: 0.06,
           zx: (function () {
             const ct = cabTaper(0.93, 1.32, -0.5, 1.3, 0.06)
-            return function (x: any, y: any) {
+            return function (x: number, y: any) {
               return (1 - 0.035 * sm((x + 1.0) / 0.45) * sm((0.95 - x) / 0.4)) * ct(x, y)
             }
           })(),
         },
-        extra: function (c: any, I: any) {
+        extra: function (c: VehicleContext, I: any) {
           ;[1, -1].forEach(function (sd) {
             /* hip over the rear wheel and door crease */
             crease(
@@ -3298,7 +3299,7 @@ export function installCarsExtra(fx: FleetContext): void {
       /* on the coupe, the rear window is the fixed side glass of the pillar */
       c.zone('window_rear_left', trl('labels.left_rear_quarter_glass'), null, null, {})
       c.zone('window_rear_right', trl('labels.right_rear_quarter_glass'), null, null, {})
-      c.meta.armor = armorPlus(function (c: any) {
+      c.meta.armor = armorPlus(function (c: VehicleContext) {
         const r = c.meta.roof
         roofLamp(c, r.x1, r.y + 0.18, 0.35)
         roofLamp(c, r.x1, r.y + 0.18, -0.35)

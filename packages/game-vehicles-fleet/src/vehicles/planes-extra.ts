@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Planes added after the first batch (group H). Uses only the kit API and the water/air helpers exposed as the shared EA
@@ -21,11 +22,11 @@ export function installPlanesExtra(fx: FleetContext): void {
   /* ================= local utilities (group H) ================= */
   /* conventional-gear aircraft attitude: finds the inclination TH at which the main wheel (Af, radius ra) and the tail wheel
      (Tf, radius rt), given in the flight frame, touch the ground together; returns P(x,y,z) that takes flight to ground */
-  function pose3(Af: any, ra: any, Tf: any, rt: any) {
+  function pose3(Af: number[], ra: number, Tf: number[], rt: number) {
     let lo = 0,
       hi = 0.5,
       TH = 0
-    function f(t: any) {
+    function f(t: number) {
       const s = Math.sin(t),
         c = Math.cos(t)
       return Af[0] * s + Af[1] * c - ra - (Tf[0] * s + Tf[1] * c - rt)
@@ -38,14 +39,14 @@ export function installPlanesExtra(fx: FleetContext): void {
     const s = Math.sin(TH),
       c = Math.cos(TH),
       Y0 = ra - (Af[0] * s + Af[1] * c)
-    const P = function (x: any, y: any, z?: any) {
+    const P = function (x: number, y: number, z?: any) {
       return new V3(x * c - y * s, x * s + y * c + Y0, z || 0)
     }
     const M = new THREE.Matrix4().compose(new V3(0, Y0, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, TH)), new V3(1, 1, 1))
     return { TH: TH, Y0: Y0, P: P, M: M }
   }
   /* generic five-point star (fictional insignia) on a disc, facing a face */
-  function starDecal(c: any, x: any, y: any, z: any, r: any, face: any, o: any) {
+  function starDecal(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o: any) {
     o = o || {}
     const sh = new THREE.Shape()
     for (let i = 0; i < 10; i++) {
@@ -77,7 +78,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return g
   }
   /* rounded polygon (window) in the x-y plane: rectangle [x0, x1, y0, y1] with corners of radius r */
-  function rrect(x0: any, x1: any, y0: any, y1: any, r: any, n?: any) {
+  function rrect(x0: number, x1: number, y0: number, y1: number, r: number, n?: any) {
     n = n || 4
     const pts: any = [],
       cs = [
@@ -113,14 +114,14 @@ export function installPlanesExtra(fx: FleetContext): void {
     if (pre) kit.cutMesh(m, [pre], 40)
     kit.cutMesh(m, tests, 40, { sub: sub || 0.08 })
   }
-  function scaleSt(st: any, k: any) {
+  function scaleSt(st: any, k: number) {
     return st.map(function (s: any) {
       const cy = (s[1] + s[2]) / 2,
         hh = ((s[2] - s[1]) / 2) * k
       return [s[0], cy - hh, cy + hh, s[3] * k, s[4], s[5]]
     })
   }
-  function fSkin(c: any, EA: any, st: any, keep: any, mat: any, o: any) {
+  function fSkin(c: VehicleContext, EA: any, st: number[][], keep: any, mat: any, o: any) {
     o = o || {}
     const m = c.add(EA.fuseGeo(scaleSt(st, o.k || 1.004), { smooth: o.smooth || 48, seg: o.seg || 30 }), mat, 0, 0, 0, o.parent)
     m.castShadow = false
@@ -128,7 +129,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     c.deform.push(m)
     return m
   }
-  function fGlass(c: any, EA: any, st: any, keep: any, label: any, type: any, o: any) {
+  function fGlass(c: VehicleContext, EA: any, st: number[][], keep: any, label: any, type: string, o: any) {
     o = o || {}
     const m = new THREE.Mesh(EA.fuseGeo(scaleSt(st, o.k || 0.988), { smooth: o.smooth || 48, seg: o.seg || 30 }), o.mat || MT.glass)
     ;(o.parent || c.vehicle).add(m)
@@ -136,7 +137,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return kit.asGlass(c, m, label, type || 'tempered', o.pos ? { pos: o.pos } : {})
   }
   /* pod/tank elongated along x (rocket, wing tank, simple float) */
-  function pod(c: any, EA: any, x0: any, x1: any, y: any, z: any, r: any, mat: any, o?: any) {
+  function pod(c: VehicleContext, EA: any, x0: number, x1: number, y: number, z: number, r: number, mat: any, o?: any) {
     o = o || {}
     const L = x0 - x1,
       st = [
@@ -155,13 +156,13 @@ export function installPlanesExtra(fx: FleetContext): void {
   }
 
   /* fuselage half width (stations [x, low y, high y, width, exponent]) at height y, interpolating the stations in x */
-  function halfW(ST: any, x: any, y: any) {
+  function halfW(ST: any, x: number, y: number) {
     for (let i = 0; i < ST.length - 1; i++) {
       const a = ST[i],
         b = ST[i + 1]
       if (x > a[0] || x < b[0]) continue
       const t = (a[0] - x) / (a[0] - b[0] || 1),
-        L = function (k: any, d?: any) {
+        L = function (k: number, d?: any) {
           return (a[k] == null ? d : a[k]) * (1 - t) + (b[k] == null ? d : b[k]) * t
         }
       const yb = L(1),
@@ -176,7 +177,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return 0
   }
   /* floor or lining that fits inside the fuselage: runs of up to 1 m, each with the minimum width of the run minus the clearance */
-  function liner(c: any, ST: any, x0: any, x1: any, y: any, mat: any, o?: any) {
+  function liner(c: VehicleContext, ST: number[][], x0: number, x1: number, y: any, mat: any, o?: any) {
     o = o || {}
     const n = Math.max(1, Math.ceil((x1 - x0) / 1.0)),
       dx = (x1 - x0) / n,
@@ -194,7 +195,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return out
   }
   /* registration glued on the tapering flank: centre on the outside and a yaw that follows the taper */
-  function sideText(c: any, ST: any, txt: any, w: any, h: any, x: any, y: any, s: any, o: any) {
+  function sideText(c: VehicleContext, ST: number[][], txt: string, w: number, h: number, x: any, y: any, s: number, o: any) {
     const a = halfW(ST, x + w / 2, y),
       b = halfW(ST, x - w / 2, y),
       m = c.text(txt, w, h, x, y, s * ((a + b) / 2 + 0.014), s > 0 ? '+z' : '-z', o)
@@ -310,7 +311,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       )
       c.deform.push(fus)
       /* black bolt: stripe that starts at the nose and breaks in a zigzag at windshield height */
-      const bolt = function (x: any) {
+      const bolt = function (x: number) {
         return x > 2.0
           ? 0.02
           : x > 1.72
@@ -319,14 +320,14 @@ export function installPlanesExtra(fx: FleetContext): void {
               ? -0.2 + ((1.72 - x) / 0.22) * 0.14
               : -0.06 - (1.5 - x) * 0.012
       }
-      const boltW = function (x: any) {
+      const boltW = function (x: number) {
         return x > 1.5 ? 0.065 : Math.max(0.035, 0.065 - (1.5 - x) * 0.007)
       }
       fSkin(
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(boltW(x) - Math.abs(y - bolt(x)), x + 3.2, 2.93 - x, Math.abs(z) - 0.12)
         }),
         black,
@@ -342,7 +343,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.006 - Math.min(Math.abs(doorR(x, y)), x > 0.14 && x < 1.38 ? Math.abs(y - 0.06) : 9), z - 0.25)
         }),
         MT.dark,
@@ -351,7 +352,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.006 - Math.abs(x - 2.28), y + 0.38)
         }),
         MT.dark,
@@ -395,8 +396,8 @@ export function installPlanesExtra(fx: FleetContext): void {
       /* straight high wing with round tips (chord 1.60 m), dihedral 1 degree, skylight in the middle */
       const wingMat = c.paint(yel),
         wings = []
-      function halfWing(s: any) {
-        const dh = function (z: any) {
+      function halfWing(s: number) {
+        const dh = function (z: number) {
           return 0.8 + z * 0.017
         }
         const g = EA.foilGeo(
@@ -573,7 +574,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         top: 2.05,
         roof: null,
       })
-      const bx = function (x0: any, x1: any) {
+      const bx = function (x0: number, x1: number) {
         return [P(x0, 0).x, P(x1, 0).x]
       }
       c.zone('cab', trl('labels.cabin_split_door_and_windows'), bx(-0.65, 1.38).concat([0.55, 2.0, -0.5, 0.5]), null, {
@@ -595,7 +596,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_light'))
       c.zone('headlight_left', trl('labels.landing_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified bush plane: 0.8 m balloon tyres (tundra), cargo pod on the belly, cans on the back seat, wire cutter and spotlight */
         const tun = CM('#1b1b1a', { roughness: 0.95 })
         ;[1, -1].forEach(function (s) {
@@ -693,7 +694,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: any, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -710,14 +711,14 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(fus, [winCut], 40, { sub: 0.15 })
       c.deform.push(fus)
       /* stripes: wide blue on the window line with a thread, grey belly */
-      const yc = function (x: any) {
+      const yc = function (x: number) {
         return x > -3.6 ? 1.68 : 1.68 + (-3.6 - x) * 0.13
       }
       fSkin(
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.07 - Math.abs(y - yc(x)), x + 7.2, 7.1 - x, Math.abs(z) - 0.2)
         }),
         blue,
@@ -727,7 +728,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.024 - Math.abs(y - yc(x) - 0.64), x + 6.0, 6.0 - x, Math.abs(z) - 0.3)
         }),
         blue,
@@ -736,7 +737,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(1.08 - y, x + 7.3)
         }),
         grey,
@@ -756,7 +757,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: any) {
+            sdf: function (x: any, y: any, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -771,7 +772,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: any, y: any, z: number) {
           return Math.min(0.008 - Math.abs(doorF(x, y)), -z - 0.5)
         }),
         MT.dark,
@@ -801,7 +802,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       liner(c, ST, -4.3, 4.5, 2.48, MT.headliner)
       /* low trapezoid wing with 7 degree dihedral, straight trailing edge */
       const wingMat = c.paint(wcol),
-        dh = function (z: any) {
+        dh = function (z: number) {
           return 0.98 + Math.max(0, Math.abs(z) - 0.8) * 0.122
         },
         nacs: any = { 1: [], '-1': [] },
@@ -852,7 +853,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const nb = EA.fuseSkin(
           c,
           NS,
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: number, y: number) {
             return Math.min(0.05 - Math.abs(y - 1.58 + (x < 0 ? x * 0.03 : 0)), x + 0.9, 3.75 - x)
           }),
           blue,
@@ -938,7 +939,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         finB,
         [
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: number, y: number) {
             const yy = 3.3 + (x + 6.0) * 0.4
             return Math.min(0.16 - Math.abs(y - yy), 4.7 - y)
           }),
@@ -1028,7 +1029,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified for rescue: wing-tip tanks, steel plates under the cockpit,
          grille on the windshield, search spotlight under the left wing and supply boxes tied in the aisle */
         const stl = kit.steelMaterial,
@@ -1117,7 +1118,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: any, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -1134,14 +1135,14 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(fus, [winCut], 40, { sub: 0.1 })
       c.deform.push(fus)
       /* stripes: navy blue with a gold thread rising to the tail */
-      const yc = function (x: any) {
+      const yc = function (x: number) {
         return x > -2.5 ? 2.42 : 2.42 + (-2.5 - x) * 0.3
       }
       fSkin(
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.1 - Math.abs(y - yc(x)), x + 5.9, 4.95 - x, Math.abs(z) - 0.2)
         }),
         navy,
@@ -1151,7 +1152,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.02 - Math.abs(y - yc(x) - 0.15), x + 5.9, 4.6 - x, Math.abs(z) - 0.2)
         }),
         gold,
@@ -1167,7 +1168,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: any) {
+            sdf: function (x: any, y: any, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -1183,7 +1184,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         EA.fuseSkin(
           c,
           ST,
-          EA.bandT(function (x: any, y: any, z: any) {
+          EA.bandT(function (x: any, y: any, z: number) {
             return Math.min(0.007 - Math.abs(df(x, y)), s * z - 0.5)
           }),
           MT.dark,
@@ -1195,7 +1196,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(
             0.008 - Math.min(Math.abs(cgo(x, y)), x > -3.3 && x < -2.05 && y > 2.05 && y < 3.42 ? Math.abs(x + 2.7) : 9),
             -z - 0.5,
@@ -1239,7 +1240,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       liner(c, ST, -2.9, 1.9, 3.5, MT.headliner)
       /* high wing: straight in the centre, tapered at the tips, 3 degree dihedral, single strut each side */
       const wingMat = c.paint(wcol),
-        dh = function (z: any) {
+        dh = function (z: number) {
           return 3.72 + Math.abs(z) * 0.05
         },
         wingsM = []
@@ -1304,7 +1305,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA.fuseSkin(
             c,
             FS,
-            EA.bandT(function (x: any, y: any) {
+            EA.bandT(function (x: number, y: number) {
               return Math.min(0.03 - Math.abs(y - 1.05), x + 4.1, 4.7 - x)
             }),
             navy,
@@ -1375,7 +1376,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         finB,
         [
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: number, y: number) {
             return Math.min(0.18 - Math.abs(y - 4.3 - (x + 5.0) * 0.2), 5.0 - y)
           }),
         ],
@@ -1470,7 +1471,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified riverine: jet-fuel drums on the float deck, mesh guardrail on the rear windows,
          spotlight on the strut, aluminium canoe tied on the left float and wire cutter on the windshield */
         const stl = kit.steelMaterial
@@ -1567,7 +1568,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: any, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -1584,21 +1585,21 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(fus, [winCut], 40, { sub: 0.1 })
       c.deform.push(fus)
       /* curved grey-silver stripe (from the belly to the top of the tail) with a blue thread */
-      const sw = function (x: any) {
+      const sw = function (x: number) {
         return x > 3.0 ? 1.0 : 1.0 + Math.pow((3.0 - x) / 9.0, 1.6) * 1.35
       }
       fSkin(
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any, _z: any) {
+        EA.bandT(function (x: number, y: number, _z: any) {
           return Math.min(sw(x) - y, x + 6.0, 5.6 - x)
         }),
         silver,
         {
           sub: 0.09,
           pre: {
-            sdf: function (x: any, y: any) {
+            sdf: function (x: any, y: number) {
               return sw(x) + 0.2 - y
             },
           },
@@ -1608,7 +1609,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.03 - Math.abs(y - sw(x) - 0.09), x + 5.9, 5.3 - x)
         }),
         navy,
@@ -1629,7 +1630,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: any) {
+            sdf: function (x: any, y: any, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -1647,7 +1648,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: any, y: any, z: number) {
           return Math.min(0.008 - Math.abs(EA.polySdf(rrect(2.62, 3.25, 0.72, 2.22, 0.12))(x, y)), -z - 0.5)
         }),
         MT.dark,
@@ -1657,7 +1658,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.035 - Math.abs(x - 3.88 - (y - 1.75) * 0.5), y - 1.7, 2.42 - y)
         }),
         blk,
@@ -1696,7 +1697,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       liner(c, ST, -1.75, 3.75, 2.25, MT.headliner)
       /* low wing with slight sweep, dihedral and raised tips */
       const wingMat = c.paint(wcol),
-        dh = function (z: any) {
+        dh = function (z: number) {
           return 0.82 + Math.max(0, Math.abs(z) - 0.8) * 0.085
         },
         legs = []
@@ -1804,7 +1805,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         finB,
         [
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: number, y: number) {
             return Math.min(y - 2.4 - (x + 6.0) * -0.9, 4.0 - y)
           }),
         ],
@@ -1896,7 +1897,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified for evacuation: steel plates inside the cockpit, thin grille on the windshield, debris deflectors on the
          nose wheel (dirt strip), ferry tank in the aisle and medicine boxes on the seats */
         const stl = kit.steelMaterial
@@ -1956,7 +1957,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         cB = new THREE.Color('#5f6d45'),
         cC = new THREE.Color('#7f8466'),
         cL = new THREE.Color('#a3abad')
-      function camo(x: any, z: any, y: any, under: any) {
+      function camo(x: number, z: number, y: number, under: boolean) {
         if (under) return cL
         const n = Math.sin(x * 1.35 + z * 0.9) + Math.sin(x * 0.55 - z * 1.7 + 1.3) + 0.6 * Math.sin(y * 2.2 + x * 0.3)
         return n > 0.9 ? cC : n > -0.1 ? cB : cA
@@ -1979,7 +1980,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       const fus = c.add(
         EA.fuseGeo(ST, {
           seg: 36,
-          col: function (x: any, y: any, z: any) {
+          col: function (x: number, y: number, z: any) {
             return camo(x, z, y, y < 1.32 + (x < -1.5 ? (-1.5 - x) * 0.12 : 0))
           },
         }),
@@ -2025,7 +2026,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         can,
         [
           {
-            sdf: function (x: any, y: any) {
+            sdf: function (x: any, y: number) {
               return y - 1.99
             },
           },
@@ -2094,7 +2095,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         }
       })
       /* low trapezoid wing with 5.5 degree dihedral, camouflaged on top */
-      const dh = function (z: any) {
+      const dh = function (z: number) {
           return 1.02 + Math.max(0, Math.abs(z) - 0.48) * 0.096
         },
         legs = [],
@@ -2111,7 +2112,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           ],
           { up: 'y', n: 14 },
         )
-        EA.colorize(g, function (x: any, y: any, z: any) {
+        EA.colorize(g, function (x: any, y: number, z: any) {
           return camo(x, z, y, y < dh(z) - 0.005)
         })
         const w = c.add(g, wingM)
@@ -2169,8 +2170,8 @@ export function installPlanesExtra(fx: FleetContext): void {
       /* empennage: tall fin with dorsal and ventral fins, low elevator */
       const tailM = c.paint('#ffffff')
       tailM.vertexColors = true
-      function ctail(geo: any, top: any) {
-        EA.colorize(geo, function (x: any, y: any, z: any) {
+      function ctail(geo: any, top: boolean) {
+        EA.colorize(geo, function (x: any, y: number, z: any) {
           return camo(x, z, y, top ? false : y < 1.7)
         })
         return geo
@@ -2222,7 +2223,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           ],
           { up: 'y', n: 10 },
         )
-        EA.colorize(g, function (x: any, y: any, z: any) {
+        EA.colorize(g, function (x: any, y: number, z: number) {
           return camo(x, z, y, y < 1.72 + Math.abs(z) * 0.018)
         })
         const hs = c.add(g, tailM)
@@ -2293,7 +2294,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: machine-gun pod on the belly, fragmentation bombs on the inner pylons in place of the tanks,
          steel plates on the cabin sides and a spotlight on the outer left pylon */
         const stl = kit.steelMaterial,

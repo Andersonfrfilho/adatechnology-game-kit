@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Water and air, boats, planes and helicopters (rebuilt with real measurements).
@@ -33,16 +34,16 @@ export function installWaterAir(fx: FleetContext): void {
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3))
     return geo
   }
-  function mix(a: any, b: any, t: any) {
+  function mix(a: number, b: number, t: number) {
     return a + (b - a) * t
   }
-  function sstep(a: any, b: any, x: any) {
+  function sstep(a: number, b: number, x: number) {
     const t = clamp((x - a) / (b - a), 0, 1)
     return t * t * (3 - 2 * t)
   }
   /* interpolates a table [[t, v], ...] (t increasing) with smoothing */
   function tab(T: any) {
-    return function (t: any) {
+    return function (t: number) {
       if (t <= T[0][0]) return T[0][1]
       for (let i = 1; i < T.length; i++)
         if (t <= T[i][0]) {
@@ -54,7 +55,7 @@ export function installWaterAir(fx: FleetContext): void {
     }
   }
   function tabL(T: any) {
-    return function (t: any) {
+    return function (t: number) {
       if (t <= T[0][0]) return T[0][1]
       for (let i = 1; i < T.length; i++)
         if (t <= T[i][0]) {
@@ -77,7 +78,7 @@ export function installWaterAir(fx: FleetContext): void {
       pos = [],
       col = [],
       idx = []
-    function sec(t: any) {
+    function sec(t: number) {
       const ky = o.keel(t),
         ch = o.chine(t),
         sh = o.sheer(t),
@@ -135,11 +136,11 @@ export function installWaterAir(fx: FleetContext): void {
       geo: g,
       o: o,
       sec: sec,
-      t: function (x: any) {
+      t: function (x: number) {
         return clamp((x - o.x0) / o.L, 0, 1)
       },
       /* half beam of the hull at height y (inside, so floors and decks do not leak) */
-      half: function (x: any, y: any) {
+      half: function (x: any, y: number) {
         const t = H.t(x),
           P = sec(t)
         if (y <= P[0][1]) return 0
@@ -158,7 +159,7 @@ export function installWaterAir(fx: FleetContext): void {
     return H
   }
   /* deck (or floor) that follows the hull: from x0 to x1, height y(x) (default: the sheer), crown in the middle, rim inset */
-  function deckGeo(H: any, x0: any, x1: any, o: any) {
+  function deckGeo(H: any, x0: number, x1: number, o: any) {
     o = o || {}
     const n = o.n || 24,
       m = o.m || 10,
@@ -193,7 +194,7 @@ export function installWaterAir(fx: FleetContext): void {
     return G.crease(g, 40)
   }
   /* trim along the rim (or at another relative height) */
-  function sheerTube(c: any, H: any, x0: any, x1: any, r: any, mat: any, o: any) {
+  function sheerTube(c: VehicleContext, H: any, x0: number, x1: number, r: number, mat: any, o: any) {
     o = o || {}
     let pts = []
     const n = o.n || 30
@@ -284,7 +285,7 @@ export function installWaterAir(fx: FleetContext): void {
     return g
   }
   /* inner glass shell: the same fuselage slightly smaller, cut out to leave only the window */
-  function fuseGlass(c: any, st: any, keep: any, label: any, type: any, o: any) {
+  function fuseGlass(c: VehicleContext, st: any, keep: any, label: any, type: any, o: any) {
     o = o || {}
     const k = o.k || 0.988
     const st2 = st.map(function (s: any) {
@@ -299,7 +300,7 @@ export function installWaterAir(fx: FleetContext): void {
     return kit.asGlass(c, m, label, type || 'laminated', o.pos ? { pos: o.pos } : {})
   }
   /* paint stripe: shell 0.4% bigger, cut out (sharp edge) */
-  function fuseSkin(c: any, st: any, keep: any, mat: any, o: any) {
+  function fuseSkin(c: VehicleContext, st: any, keep: any, mat: any, o: any) {
     o = o || {}
     const k = o.k || 1.004
     const st2 = st.map(function (s: any) {
@@ -318,7 +319,7 @@ export function installWaterAir(fx: FleetContext): void {
   }
   /* cut tests: inside the box (cut) / outside the box (keep); zMin limits to one side only */
   function inBox(b: any) {
-    return function (x: any, y: any, z: any) {
+    return function (x: number, y: number, z: number) {
       return Math.max(
         b[0] - x,
         x - b[1],
@@ -343,7 +344,7 @@ export function installWaterAir(fx: FleetContext): void {
   }
   /* window by polygon in the x-y plane (side), cut only on side faces */
   function polySdf(poly: any) {
-    return function (x: any, y: any) {
+    return function (x: number, y: number) {
       let inside = false,
         d = 1e9
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -366,22 +367,22 @@ export function installWaterAir(fx: FleetContext): void {
       sel: function (n: any) {
         return Math.abs(n.z) > 0.3
       },
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: any, y: any, z: number) {
         return Math.max(f(x, y), (zMin || 0) - Math.abs(z))
       },
     }
   }
-  function sideKeepP(poly: any, zMin: any, side: any) {
+  function sideKeepP(poly: any, zMin: any, side: number) {
     const f = polySdf(poly)
     return {
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: any, y: any, z: number) {
         return -Math.max(f(x, y), (zMin || 0) - (side ? side * z : Math.abs(z)))
       },
     }
   }
 
   /* ---- propeller: twisted and tapered blades, hub and spinner. Outer group rigid (inclination), inner turns in x ---- */
-  function propeller(c: any, x: any, y: any, z: any, o: any) {
+  function propeller(c: VehicleContext, x: number, y: number, z: number, o: any) {
     o = o || {}
     const R = o.R || 0.95,
       nb = o.blades || 2,
@@ -443,7 +444,7 @@ export function installWaterAir(fx: FleetContext): void {
     return g
   }
   /* main rotor: thin-profile blades with a tip, hub, plates and rods; o.axis "y" (default) */
-  function mainRotor(c: any, x: any, y: any, z: any, o: any) {
+  function mainRotor(c: VehicleContext, x: any, y: any, z: any, o: any) {
     o = o || {}
     const nb = o.blades || 2,
       R = o.R || 5,
@@ -490,7 +491,7 @@ export function installWaterAir(fx: FleetContext): void {
     return g
   }
   /* tail rotor: group at the point, turns in z (blades in the x-y plane), side +1/-1 only for the hub position */
-  function tailRotorE(c: any, x: any, y: any, z: any, o: any) {
+  function tailRotorE(c: VehicleContext, x: any, y: any, z: any, o: any) {
     o = o || {}
     const nb = o.blades || 2,
       R = o.R || 0.73,
@@ -529,7 +530,7 @@ export function installWaterAir(fx: FleetContext): void {
     blue: CM('#1d4f9a', { emissive: new THREE.Color('#3a7cff'), emissiveIntensity: 1.4, roughness: 0.3 }),
   }
   const HALO: any = { red: '#ff3a2a', green: '#3aff7a', white: '#fff1d0', amber: '#ffb040', blue: '#4a8cff' }
-  function navLight(c: any, x: any, y: any, z: any, color: any, label: any, o: any) {
+  function navLight(c: VehicleContext, x: any, y: any, z: any, color: string, label: any, o: any) {
     o = o || {}
     const r = o.r || 0.045,
       g = new THREE.Group()
@@ -563,7 +564,7 @@ export function installWaterAir(fx: FleetContext): void {
     return L
   }
   /* round landing light/spotlight, pointing to +x (or rotY) */
-  function lamp(c: any, x: any, y: any, z: any, r: any, label: any, o: any) {
+  function lamp(c: VehicleContext, x: any, y: any, z: number, r: number, label: any, o: any) {
     o = o || {}
     return kit.headlight(c, {
       style: 'round',
@@ -581,7 +582,7 @@ export function installWaterAir(fx: FleetContext): void {
   }
   /* Flattens a group assembled separately (e.g. a tail-down tilted plane) into direct children of c.g,
      preserving the pose (the core dents, folds and finds parts only on direct children of c.g). */
-  function bake(c: any, grp: any) {
+  function bake(c: VehicleContext, grp: any) {
     grp.updateMatrix()
     const M = grp.matrix
     grp.children.slice().forEach(function (o: any) {
@@ -601,7 +602,7 @@ export function installWaterAir(fx: FleetContext): void {
     if (grp.parent) grp.parent.remove(grp)
   }
   /* plane/helicopter panel: dark top, round gauges and screens */
-  function instPanel(c: any, x: any, y: any, w: any, o: any) {
+  function instPanel(c: VehicleContext, x: any, y: any, w: number, o: any) {
     o = o || {}
     const h = o.h || 0.26,
       tilt = o.tilt || 0.15
@@ -623,22 +624,22 @@ export function installWaterAir(fx: FleetContext): void {
     })
   }
   /* helicopter stick (cyclic) and collective */
-  function cyclic(c: any, x: any, fl: any, z: any) {
+  function cyclic(c: VehicleContext, x: number, fl: number, z: any) {
     c.rod(new V3(x, fl, z), new V3(x - 0.04, fl + 0.55, z), 0.014, MT.plastic)
     c.roundBox(0.04, 0.12, 0.04, 0.015, MT.plastic, x - 0.05, fl + 0.6, z)
   }
-  function collective(c: any, x: any, fl: any, z: any) {
+  function collective(c: VehicleContext, x: number, fl: number, z: any) {
     c.rod(new V3(x - 0.35, fl + 0.18, z), new V3(x + 0.05, fl + 0.32, z), 0.016, MT.plastic)
     c.cylinder(0.022, 0.022, 0.1, MT.plastic, x + 0.07, fl + 0.33, z, 'x')
   }
-  function pedals(c: any, x: any, fl: any, z: any) {
+  function pedals(c: VehicleContext, x: any, fl: number, z: number) {
     ;[-0.09, 0.09].forEach(function (d) {
       c.roundBox(0.05, 0.14, 0.08, 0.015, MT.steel, x, fl + 0.1, z + d, { rot: [0, 0, 0.5] })
     })
   }
 
   /* outboard motor: rigid group fixed to the transom (x = transom, y = top of the transom). k = scale (1 about 40 hp, 1.7 about 250 hp) */
-  function outboard(c: any, x: any, y: any, z: any, o: any) {
+  function outboard(c: VehicleContext, x: any, y: any, z: any, o: any) {
     o = o || {}
     const k = o.k || 1,
       col = CM(o.col || '#16181b', { roughness: 0.35, metalness: 0.25 }),
@@ -688,13 +689,13 @@ export function installWaterAir(fx: FleetContext): void {
     return g
   }
   /* mooring cleat and bow navigation light (two-colour) */
-  function cleat(c: any, x: any, y: any, z: any, r: any) {
+  function cleat(c: VehicleContext, x: any, y: number, z: any, r: number) {
     r = r || 1
     c.roundBox(0.16 * r, 0.03, 0.04, 0.012, MT.chrome, x, y + 0.04, z)
     c.roundBox(0.04, 0.04, 0.03, 0.01, MT.chrome, x, y + 0.02, z)
   }
   /* paint skin over a finished mesh (hull stripe): a slightly inflated copy in z, cut out by the keep test */
-  function skinOf(c: any, mesh: any, keep: any, mat: any, o: any) {
+  function skinOf(c: VehicleContext, mesh: any, keep: any, mat: any, o: any) {
     o = o || {}
     const g = mesh.geometry.clone(),
       p = g.attributes.position,
@@ -712,12 +713,12 @@ export function installWaterAir(fx: FleetContext): void {
     return m
   }
   /* wraparound windshield: points in plan [x, z] (base), height h, top setback, at y0; tempered glass with a frame */
-  function wrapShield(c: any, pts: any, y0: any, h: any, rake: any, label: any, o: any) {
+  function wrapShield(c: VehicleContext, pts: any, y0: any, h: any, rake: number, label: any, o: any) {
     o = o || {}
     const pos: any = [],
       idx = [],
       n = pts.length
-    pts.forEach(function (q: any) {
+    pts.forEach(function (q: number[]) {
       pos.push(q[0], y0, q[1], q[0] - rake, y0 + h, q[1] * (o.pinch || 0.97))
     })
     for (let i = 0; i < n - 1; i++) {
@@ -729,19 +730,19 @@ export function installWaterAir(fx: FleetContext): void {
     g.setIndex(idx)
     g.computeVertexNormals()
     const m = c.add(g, o.mat || MT.glass)
-    const top = pts.map(function (q: any) {
+    const top = pts.map(function (q: number[]) {
       return [q[0] - rake, y0 + h, q[1] * (o.pinch || 0.97)]
     })
     if (o.frame !== false) c.tube(top, 0.014, o.frameMat || MT.chrome, { seg: 40, rs: 6 })
     return kit.asGlass(c, m, label, o.type || 'tempered', o.pos ? { pos: o.pos } : {})
   }
   /* stainless lifeline / stanchion rail: tube through points with feet at every step */
-  function rail(c: any, pts: any, h: any, r: any, every: any) {
+  function rail(c: VehicleContext, pts: any, h: any, r: any, every: any) {
     const top = pts.map(function (p: any) {
       return [p[0], p[1] + h, p[2]]
     })
     c.tube(top, r || 0.016, MT.chrome, { seg: 60, rs: 6 })
-    pts.forEach(function (p: any, i: any) {
+    pts.forEach(function (p: any, i: number) {
       if (i % (every || 2) === 0) c.rod(new V3(p[0], p[1], p[2]), new V3(p[0], p[1] + h, p[2]), (r || 0.016) * 0.75, MT.chrome, { seg: 6 })
     })
   }
@@ -803,7 +804,7 @@ export function installWaterAir(fx: FleetContext): void {
     return g
   }
   /* name painted on the flank: plane rotated to the hull tangent and offset enough so the ends do not enter the curve of the bow (reviewer) */
-  function hullText(c: any, H: any, txt: any, w: any, h: any, x: any, y: any, s: any, o: any) {
+  function hullText(c: VehicleContext, H: any, txt: string, w: number, h: number, x: any, y: any, s: number, o: any) {
     o = o || {}
     const d = 0.05,
       m = (H.half(x + d, y) - H.half(x - d, y)) / (2 * d),
@@ -1013,7 +1014,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('deck', trl('labels.seats_floor_and_bow_deck'))
       c.zone('taillight_center', trl('labels.bow_navigation_lights'))
       c.zone('taillight_right', trl('labels.stern_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: riveted steel plates on the flank, wire cage in front of the helmsman, cans and spotlight on the bow bench */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -1123,7 +1124,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return 0.02 - y
         }),
         c.paint('#2a3340', { roughness: 0.5 }),
@@ -1133,7 +1134,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           const yc = 0.34 + (x + 3.6) * 0.055 - EA.sstep(0.6, 2.3, x) * 0.05,
             hw = 0.018 + 0.11 * EA.sstep(-1.6, 1.3, x),
             tip = (2.3 - x) * 0.35
@@ -1275,7 +1276,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('deck', trl('labels.cockpit_consoles_and_upholstery'), null, null, { alsoGlass: true })
       c.zone('taillight_center', trl('labels.bow_navigation_lights'))
       c.zone('taillight_right', trl('labels.overtaking_light'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: steel plates on the rim, grille over the windshield, cans on the sofa, spotlight on the console and a protective arch */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -1405,7 +1406,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return 0.05 - y
         }),
         redP,
@@ -1414,7 +1415,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           const sy = H.sheerAt(x).y
           return 0.07 - Math.abs(y - (sy - 0.18))
         }),
@@ -1443,7 +1444,7 @@ export function installWaterAir(fx: FleetContext): void {
       })
       /* bulwark: wooden cap, plank deck, hold hatch, winch, net, boxes */
       EA.sheerTube(c, H, x0 + 0.02, 5.45, 0.07, wood, { closeBow: true })
-      const dk = function (x: any) {
+      const dk = function (x: number) {
         return H.sheerAt(x).y - 0.55
       }
       const deck = c.add(EA.deckGeo(H, x0 + 0.1, 5.1, { y: dk, inset: 0.05, n: 40, m: 10 }), deckW)
@@ -1475,7 +1476,7 @@ export function installWaterAir(fx: FleetContext): void {
         sel: function (n: any) {
           return n.x > 0.5
         },
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: any, y: number, z: number) {
           return Math.max(0.15 - y, y - 0.62, Math.abs(z) - 0.85, Math.max(0.05 - Math.abs(z - 0.3), 0.05 - Math.abs(z + 0.3)))
         },
       }
@@ -1503,7 +1504,7 @@ export function installWaterAir(fx: FleetContext): void {
           sel: function (n: any, ce: any) {
             return Math.abs(n.x) > 0.5 && ce.x < 0
           },
-          sdf: function (x: any, y: any, z: any) {
+          sdf: function (x: any, y: number, z: number) {
             return Math.max(-0.88 - y, y - 0.68, Math.abs(z - 0.3) - 0.35)
           },
         },
@@ -1623,7 +1624,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.starboard_side_light'))
       c.zone('taillight_left', trl('labels.port_side_light'))
       c.zone('taillight_center', trl('labels.masthead_and_stern_lights'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: steel plates welded on the house, grille on the windows, barbed wire on the rim and extra diesel drums */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -1713,7 +1714,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.055 - Math.abs(y - yc(x)), x - -5.3, 2.2 - x, Math.abs(z) - 0.03)
         }),
         c.paint('#1f3d6e'),
@@ -1721,7 +1722,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.01 - Math.abs(y - yc(x) - 0.085), x - -5.3, 2.2 - x, Math.abs(z) - 0.03)
         }),
         c.paint('#b8862e'),
@@ -1780,7 +1781,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: any, y: any, z: number) {
           return Math.min(0.007 - Math.abs(doorF(x, y)), Math.abs(z) - 0.3)
         }),
         MT.dark,
@@ -1789,7 +1790,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, _z: any) {
+        EA.bandT(function (x: number, y: number, _z: any) {
           return Math.min(0.006 - Math.abs(x - 1.47), y - 0.75)
         }),
         MT.dark,
@@ -1822,8 +1823,8 @@ export function installWaterAir(fx: FleetContext): void {
       c.roundBox(0.04, 0.14, 0.04, 0.01, MT.plastic, 0.9, 1.93, 0)
       /* high wing: two half wings (zone per side), rectangular inboard and tapered outboard, dihedral 1.7 degrees */
       const wingMat = c.paint(white)
-      function halfWing(s: any) {
-        const dh = function (z: any) {
+      function halfWing(s: number) {
+        const dh = function (z: number) {
           return 2.135 + Math.max(0, z - 0.56) * 0.03
         }
         const g = EA.foilGeo(
@@ -1916,7 +1917,7 @@ export function installWaterAir(fx: FleetContext): void {
       kit.cutMesh(
         finB,
         [
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: number, y: number) {
             const yy = 2.0 + (x + 5.0) * 0.55
             return Math.min(0.13 - Math.abs(y - yy), 2.6 - y)
           }),
@@ -1978,7 +1979,7 @@ export function installWaterAir(fx: FleetContext): void {
         anyMesh: true,
       })
       c.zone('nose', trl('labels.engine_hood_and_propeller'), [1.3, 2.75, 0.7, 1.75, -0.7, 0.7], null, {
-        onBand: function (c2: any, b: any) {
+        onBand: function (c2: VehicleContext, b: number) {
           if (b >= 4) pr.visible = false
         },
       }) /* reviewer: when torn off the propeller comes off whole (the core cut-out left blade tips loose in the air) */
@@ -1988,7 +1989,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_light'))
       c.zone('headlight_left', trl('labels.landing_and_taxi_lights'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified for survival: ventral cargo pod, wing spotlight, cans tied on the back seat and a grille on the windshield */
         const pod = CM('#7d8278', { roughness: 0.6, metalness: 0.2 })
         const cp = c2.add(
@@ -2051,7 +2052,7 @@ export function installWaterAir(fx: FleetContext): void {
         Y0 = 1.0,
         cs = Math.cos(TH),
         sn = Math.sin(TH)
-      function P(x: any, y: any, z?: any) {
+      function P(x: number, y: number, z?: any) {
         return new V3(x * cs - y * sn + X0, x * sn + y * cs + Y0, z || 0)
       }
       const grp = new THREE.Group()
@@ -2102,7 +2103,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(-0.12 - y, x + 3.7)
         }),
         grn,
@@ -2111,7 +2112,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.03 - Math.abs(y - 0.12 - (x < -1.5 ? (x + 1.5) * -0.08 : 0)), x + 3.6, 3.05 - x, Math.abs(z) - 0.05)
         }),
         grn,
@@ -2147,7 +2148,7 @@ export function installWaterAir(fx: FleetContext): void {
       /* straight low wing of constant chord with dihedral, tips with navigation lights */
       const wingM = c.paint('#d9aa22')
       ;[1, -1].forEach(function (s) {
-        const dh = function (z: any) {
+        const dh = function (z: number) {
           return -0.4 + Math.max(0, z - 0.5) * 0.1
         }
         const w = c.add(
@@ -2236,7 +2237,7 @@ export function installWaterAir(fx: FleetContext): void {
       kit.cutMesh(
         finB,
         [
-          EA.bandT(function (x: any, y: any) {
+          EA.bandT(function (x: any, y: number) {
             return y - 1.45
           }),
         ],
@@ -2327,7 +2328,7 @@ export function installWaterAir(fx: FleetContext): void {
         anyMesh: true,
       })
       c.zone('nose', trl('labels.hood_hopper_and_propeller'), [P(0.5, 0).x, F + 0.2, 0.9, 2.5, -0.62, 0.62], null, {
-        onBand: function (c2: any, b: any) {
+        onBand: function (c2: VehicleContext, b: number) {
           if (b >= 4) pr.visible = false
         },
       }) /* reviewer: when torn off the propeller comes off whole (the core cut-out left blade tips loose in the air) */
@@ -2349,7 +2350,7 @@ export function installWaterAir(fx: FleetContext): void {
           trl('effects.boom_torn_off_no_spraying'),
         ],
       })
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: hopper becomes an incendiary slurry tank, larger nozzles, steel plate under the cabin and cans tied at the side */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
@@ -2373,7 +2374,7 @@ export function installWaterAir(fx: FleetContext): void {
 
   /* ================= helicopters ================= */
   /* skids: two tubes with an upturned tip and two cross tubes arching up to the belly */
-  function skidGear(c: any, o: any) {
+  function skidGear(c: VehicleContext, o: any) {
     const mat = o.mat || MT.steel,
       z = o.z,
       y = o.y || 0.045
@@ -2461,7 +2462,7 @@ export function installWaterAir(fx: FleetContext): void {
       ]
       const wsT = {
         sel: null,
-        sdf: function (x: any, y: any) {
+        sdf: function (x: number, y: number) {
           return Math.min(x - 0.8 - 0.2 * (y - 0.9), y - 0.86)
         },
       }
@@ -2494,13 +2495,13 @@ export function installWaterAir(fx: FleetContext): void {
       c.deform.push(fus)
       /* white belly with a black thread (outside the bubble) */
       const wsS = wsT.sdf,
-        bl: any = function (x: any) {
+        bl: any = function (x: number) {
           return 1.0 + (x < -1.0 ? (-1.0 - x) * 0.4 : 0)
         }
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return Math.min(bl(x) - y, -wsS(x, y))
         }),
         white,
@@ -2508,7 +2509,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return Math.min(0.018 - Math.abs(y - bl(x) - 0.05), -wsS(x, y) - 0.02)
         }),
         blk,
@@ -2543,7 +2544,7 @@ export function installWaterAir(fx: FleetContext): void {
         EA.fuseSkin(
           c,
           ST,
-          EA.bandT(function (x: any, y: any, z: any) {
+          EA.bandT(function (x: any, y: any, z: number) {
             return Math.min(0.006 - Math.min(Math.abs(df(x, y)), Math.abs(dr(x, y))), s * z - 0.35)
           }),
           MT.dark,
@@ -2754,7 +2755,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_lights'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: emergency floats on the skids, spotlight under the nose, side cargo basket and a grille on the bubble */
         const fl2 = CM('#d8d4c8', { roughness: 0.7 })
         ;[1, -1].forEach(function (s) {
@@ -2818,7 +2819,7 @@ export function installWaterAir(fx: FleetContext): void {
         [-2.0, 1.18, 2.22, 1.0, 2.4],
         [-2.55, 1.5, 2.18, 0.58, 2.2],
       ]
-      const wsF = function (x: any, y: any) {
+      const wsF = function (x: number, y: number) {
         return Math.min(x - 1.7 - 0.28 * (y - 0.9), y - 0.86)
       }
       const fdP = [
@@ -2852,7 +2853,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return Math.min(1.14 - y, -wsF(x, y))
         }),
         org,
@@ -2860,7 +2861,7 @@ export function installWaterAir(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any) {
+        EA.bandT(function (x: any, y: number) {
           return Math.min(0.022 - Math.abs(y - 1.1), -wsF(x, y) - 0.02)
         }),
         CM('#1c3b6b'),
@@ -2890,7 +2891,7 @@ export function installWaterAir(fx: FleetContext): void {
         EA.fuseSkin(
           c,
           ST,
-          EA.bandT(function (x: any, y: any, z: any) {
+          EA.bandT(function (x: any, y: any, z: number) {
             return Math.min(0.007 - Math.min(Math.abs(df(x, y)), Math.abs(dr(x, y))), s * z - 0.5)
           }),
           MT.dark,
@@ -3140,7 +3141,7 @@ export function installWaterAir(fx: FleetContext): void {
       c.zone('taillight_right', trl('labels.right_navigation_light_green'))
       c.zone('taillight_left', trl('labels.left_navigation_light_red'))
       c.zone('taillight_center', trl('labels.tail_and_anti_collision_lights'))
-      c.meta.armor = function (c2: any) {
+      c.meta.armor = function (c2: VehicleContext) {
         /* modified: steel plates on the floor and the pilot doors, left door machine gun, supply basket on the skid */
         const stl = kit.steelMaterial
         ;[1, -1].forEach(function (s) {
