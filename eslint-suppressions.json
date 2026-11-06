@@ -294,11 +294,6 @@
       "count": 9
     }
   },
-  "packages/game-vehicles/src/scenarios.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 12
-    }
-  },
   "packages/game-vehicles/src/tick.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1

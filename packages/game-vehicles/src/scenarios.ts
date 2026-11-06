@@ -1,5 +1,7 @@
 /** Damage scenarios and the scenario registry. */
-import type { DamageZone } from './api'
+import type { Object3D, Vector3 } from 'three'
+
+import type { DamageZone, ScenarioContext, ScenarioDefinition, VehicleContext, ZoneDamageEntry } from './api'
 import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 
@@ -13,9 +15,9 @@ export function installScenarios(kit: Kit) {
      flags (flipped, burnt, abandoned or those of kit.flagEffects). X carries: c, meta, front, rear, length, width, clearance, top, rand (deterministic random),
      center (centre of the current zone), isWindshield (windshield zone), bodyTypes (bodywork types), clamp. Returns { health, flags, scenario }. */
   kit.scenarios = []
-  kit.scenario = function (def: any) {
+  kit.scenario = function (def: ScenarioDefinition) {
     if (!def || !def.id || typeof def.zone !== 'function') throw new Error('kit.scenario: id and zone(z, X) are required')
-    const i = kit.scenarios.findIndex(function (s: any) {
+    const i = kit.scenarios.findIndex(function (s: ScenarioDefinition) {
       return s.id === def.id
     })
     if (i >= 0) kit.scenarios[i] = def
@@ -38,18 +40,18 @@ export function installScenarios(kit: Kit) {
     const W = m.width || 1.7
     const cl = m.clearance || 0.3
     const top = m.top || 1.5
-    const S = kit.scenarios.find(function (s: any) {
+    const S: ScenarioDefinition | undefined = kit.scenarios.find(function (s: ScenarioDefinition) {
       return s.id === name || s.name === name
     })
     const sc = S ? S.id : name
     const health: Record<string, number> = {}
-    const flags: any = {}
+    const flags: Record<string, boolean> = {}
     const rand = rng(strHash((c.seedKey || c.key || '') + '|' + ((S && S.seedId) || sc)))
     function set(z: DamageZone, v: number) {
       health[z.id] = clamp(Math.round(v), 0, 100)
     }
-    const X: any = {
-      c: c,
+    const X: ScenarioContext = {
+      c: c as VehicleContext,
       meta: m,
       front: F,
       rear: R,
@@ -71,7 +73,7 @@ export function installScenarios(kit: Kit) {
       Zs.forEach(function (z: DamageZone) {
         X.center = I.boxCenter(z.box)
         X.isWindshield = z.tags.indexOf('windshield') >= 0
-        S.zone(z, X)
+        S!.zone(z, X)
       })
     }
     return { health: health, flags: flags, scenario: sc }
@@ -113,14 +115,14 @@ export function installScenarios(kit: Kit) {
     return { health: h, band: I.bandOf(h), name: kit.bands[I.bandOf(h)].name }
   }
   /* zone of point p (c.vehicle coordinates), with the optional mesh that was hit */
-  kit.zoneAt = function (c: BuildContext, p: any, obj: any) {
+  kit.zoneAt = function (c: BuildContext, p: Vector3, obj?: Object3D | null): DamageZone | null {
     const Zs = I.zonesOf(c)
     const own = obj ? I.ownerOf(c, obj) : null
     if (own) return own
-    let best: any = null
+    let best = null as DamageZone | null
     Zs.forEach(function (z: DamageZone) {
       if (z.internal) return
-      if (I.boxContains(z.box, p.x, p.y, p.z, 0.03) && (!best || I.boxVolume(z.box) < I.boxVolume(best.box))) best = z
+      if (I.boxContains(z.box, p.x, p.y, p.z, 0.03) && (!best || I.boxVolume(z.box) < I.boxVolume(best!.box))) best = z
     })
     if (best) return best
     let bd = 1e9
@@ -135,11 +137,11 @@ export function installScenarios(kit: Kit) {
     return best
   }
   /* impact at a point: takes health from the zones near the point, according to the force (0.3..1.4) */
-  kit.zoneDamageAt = function (c: BuildContext, p: any, dir: any, force: number, obj: any) {
+  kit.zoneDamageAt = function (c: BuildContext, p: Vector3, dir: Vector3 | null | undefined, force: number, obj?: Object3D | null) {
     const Zs = I.zonesOf(c)
-    const main = kit.zoneAt(c, p, obj)
+    const main: DamageZone | null = kit.zoneAt(c, p, obj)
     const Rr = 0.35 + 0.35 * force
-    const out: any = []
+    const out: ZoneDamageEntry[] = []
     Zs.forEach(function (z: DamageZone) {
       const d = z === main ? 0 : I.boxDistance(z.box, p)
       let dmg = 0

@@ -433,6 +433,12 @@ export interface ZoneDamageEntry {
   damage: number
 }
 
+/** What `zoneDamageAt` returns: the id of the zone hit and the damage it spread to every zone near the point. */
+export interface ZoneDamageResult {
+  main: string | null
+  list: ZoneDamageEntry[]
+}
+
 export interface DamageMapOptions {
   /** Id of the selected zone. */
   selected?: string
@@ -522,8 +528,9 @@ export interface VehicleKit {
   zoneScenario(c: VehicleContext, idOrName: string): ScenarioResult
   zoneOverall(c: VehicleContext): OverallHealth
   zoneAt(c: VehicleContext, point: ThreeVector, object?: ThreeObject): DamageZone | null
-  zoneDamageAt(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, object?: ThreeObject): ZoneDamageEntry[]
-  zonePoint(c: VehicleContext, zone: DamageZone): ThreeVector
+  zoneDamageAt(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, object?: ThreeObject): ZoneDamageResult
+  /** Point and direction of an impact on one side (`front`, `rear`, `left` or `right`), in vehicle coordinates. */
+  zonePoint(c: VehicleContext, side: 'front' | 'rear' | 'left' | 'right' | string): { p: Vector3; dir: Vector3 }
   zoneImpact(c: VehicleContext, side: 'front' | 'rear' | 'left' | 'right' | string, force: number): unknown
   impact(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, options?: ImpactOptions): unknown[]
   splat(
