@@ -4,7 +4,7 @@ import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
+import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -25,6 +25,19 @@ const FINE_CELLS = 1.5
 /** A hole deeper than this many cells is no longer a mark on the surface. */
 const FINE_DEPTH_CELLS = 0.4
 const RIGID_WIDENING = 2.5
+/** Calibre (mm) a round's crater has the material's own shape at: a thinner round goes deeper and opens less for the same energy, a thicker one opens more. */
+const REFERENCE_CALIBER = 7.62
+/** How far a calibre bends the crater's depth over its radius: (reference / calibre) to this power, kept within `CALIBER_ASPECT_RANGE`. */
+const CALIBER_ASPECT_POWER = 0.5
+const CALIBER_ASPECT_RANGE = [0.6, 1.6] as const
+/** A round's crater is at least this many calibres across. */
+const CALIBERS_ACROSS = 2.5
+
+/** Depth-over-radius factor of a round's crater: 1 without a calibre or at the reference one. */
+const caliberAspect = (caliber: number | undefined): number =>
+  caliber && caliber > 0 ? Math.min(CALIBER_ASPECT_RANGE[1], Math.max(CALIBER_ASPECT_RANGE[0], (REFERENCE_CALIBER / caliber) ** CALIBER_ASPECT_POWER)) : 1
+/** The smallest crater radius (m) a round of `caliber` mm leaves. */
+const caliberRadius = (caliber: number | undefined): number => (caliber && caliber > 0 ? (caliber / 1000) * CALIBERS_ACROSS / 2 : 0)
 /** Bars alone do not drop a slab that still has this share of its concrete to lose. */
 const COLLAPSE_DEPTH_SHARE = 0.75
 const COLLAPSE_SPREAD_BEND = 0.5
@@ -399,7 +412,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     }
   }
 
-  function strike(blow: TerrainBlow, spec: { x: number; z: number; energy: number; direction?: readonly number[]; contactRadius?: number }): TerrainBlowResult {
+  function strike(blow: TerrainBlow, spec: TerrainStrike): TerrainBlowResult {
     const { x, z } = spec
     const start = columnAt(x, z)
     const profile = profileMap.get(start.profile)!
@@ -444,16 +457,17 @@ export function createTerrain(options: TerrainOptions): Terrain {
         const pastCover = bars !== undefined && depth - layer.top >= bars.cover - 1e-6
         const specificEnergy = response.specificEnergy * (pastCover ? bars.resistance : 1)
         const limit = bars && !pastCover ? Math.min(room, layer.top + bars.cover - depth) : room
+        const aspect = response.aspect * caliberAspect(spec.caliber)
         const volume = energy / specificEnergy
-        const wanted = Math.cbrt((2 * volume) / (Math.PI * response.aspect))
-        const wantedDepth = wanted * response.aspect
+        const wanted = Math.cbrt((2 * volume) / (Math.PI * aspect))
+        const wantedDepth = wanted * aspect
         const takenDepth = Math.min(wantedDepth, limit)
-        const takenRadius = takenDepth < wantedDepth ? takenDepth / response.aspect : wanted
+        const takenRadius = takenDepth < wantedDepth ? takenDepth / aspect : wanted
         const takenVolume = (Math.PI * takenRadius * takenRadius * takenDepth) / 2
         energy -= takenVolume * specificEnergy
         depth += takenDepth
         carved += takenDepth
-        radius = Math.max(radius, takenRadius, response.minRadius ?? 0, spec.contactRadius ?? 0)
+        radius = Math.max(radius, takenRadius, response.minRadius ?? 0, spec.contactRadius ?? 0, caliberRadius(spec.caliber))
         const last = removed[removed.length - 1]
         if (last?.material === material.id) (last as { volume: number }).volume += takenVolume
         else removed.push({ material: material.id, volume: takenVolume })
@@ -515,7 +529,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
    * A floor of separate pieces: a blow does not dig them, it shakes them. Each takes the energy that reaches it, added blow by blow, and past its limit it comes off the bed whole and is thrown.
    * Under the limit the blow only chips it.
    */
-  function strikeUnits(blow: TerrainBlow, spec: { x: number; z: number; energy: number; direction?: readonly number[]; contactRadius?: number }, layer: { stratum: TerrainStratum; top: number }, profile: TerrainProfile, point: [number, number, number]): TerrainBlowResult {
+  function strikeUnits(blow: TerrainBlow, spec: TerrainStrike, layer: { stratum: TerrainStratum; top: number }, profile: TerrainProfile, point: [number, number, number]): TerrainBlowResult {
     const { x, z, energy } = spec
     const material = materials.get(layer.stratum.material)!
     const units = material.units!
@@ -523,7 +537,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     const bottom = layer.top + layer.stratum.thickness
     const miss: TerrainBlowResult = { point, radius: 0, depth: 0, totalDepth: layer.top, removed: [], exposed: material.id, atLimit: false, rebarExposed: false, collapsed: false, fine: true }
     if (!response || energy < (response.thresholdJoules ?? 0)) return miss
-    const reach = Math.max(spec.contactRadius ?? 0, response.minRadius ?? 0, Math.cbrt((2 * energy) / response.specificEnergy / (Math.PI * response.aspect)))
+    const reach = Math.max(spec.contactRadius ?? 0, response.minRadius ?? 0, caliberRadius(spec.caliber), Math.cbrt((2 * energy) / response.specificEnergy / (Math.PI * response.aspect * caliberAspect(spec.caliber))))
     const rowFirst = Math.floor((z - reach) / units.width)
     const rowLast = Math.floor((z + reach) / units.width)
     let loosened = 0
@@ -892,7 +906,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
       case 'slash': {
         if (!hit.energy) return null
         const contactRadius = hit.type === 'blunt' ? hit.radius : undefined
-        return strike(hit.type, { x, z, energy: hit.energy, ...(hit.direction ? { direction: hit.direction } : {}), ...(contactRadius !== undefined ? { contactRadius } : {}) })
+        const caliber = hit.type === 'ballistic' ? hit.caliber : undefined
+        return strike(hit.type, { x, z, energy: hit.energy, ...(hit.direction ? { direction: hit.direction } : {}), ...(contactRadius !== undefined ? { contactRadius } : {}), ...(caliber !== undefined ? { caliber } : {}) })
       }
       case 'explosive': {
         if (!hit.energy) return null

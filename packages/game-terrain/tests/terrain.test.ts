@@ -445,3 +445,41 @@ describe('the soot of a blast', () => {
     expect(high.columnAt(0, 0).scorch).toBe(0)
   })
 })
+
+describe('a round leaves the crater of its calibre', () => {
+  // the same 1800 J from a 5.56 mm rifle round and a 12.7 mm round: the energy is the volume of the crater, the calibre its shape
+  const ENERGY = 1800
+
+  it('a thin round goes deeper and opens less than a thick one with the same energy', () => {
+    const thin = make('concrete_slab').strike('ballistic', { x: 0, z: 0, energy: ENERGY, caliber: 5.56 })
+    const thick = make('concrete_slab').strike('ballistic', { x: 0, z: 0, energy: ENERGY, caliber: 12.7 })
+    expect(thin.depth).toBeGreaterThan(thick.depth * 1.3)
+    expect(thick.radius).toBeGreaterThan(thin.radius)
+  })
+
+  it('without a calibre the crater keeps the shape of the material', () => {
+    const plain = make('concrete_slab').strike('ballistic', { x: 0, z: 0, energy: ENERGY })
+    const reference = make('concrete_slab').strike('ballistic', { x: 0, z: 0, energy: ENERGY, caliber: 7.62 })
+    expect(reference.depth).toBeCloseTo(plain.depth, 6)
+    expect(reference.radius).toBeCloseTo(plain.radius, 6)
+  })
+
+  it('the crater is at least two and a half calibres across', () => {
+    const graze = make('concrete_slab').strike('ballistic', { x: 0, z: 0, energy: 900, caliber: 20 })
+    expect(graze.radius).toBeGreaterThanOrEqual(0.025 - 1e-9)
+  })
+
+  it('a hit from the world carries its calibre to the crater', () => {
+    const hitWith = (caliber: number) => make('concrete_slab').applyHit({ type: 'ballistic', point: [0, 0, 0], direction: [0, -1, 0], energy: ENERGY, caliber })
+    const thin = hitWith(5.56)!
+    const thick = hitWith(12.7)!
+    expect(thin.depth).toBeGreaterThan(thick.depth * 1.3)
+  })
+
+  it('on a tiled floor a pistol round cracks the tile and a rifle round goes on into the subfloor', () => {
+    const pistol = make('tile_floor').applyHit({ type: 'ballistic', point: [1, 0, 1], direction: [0, -1, 0], energy: PISTOL, caliber: 9 })!
+    const rifle = make('tile_floor').applyHit({ type: 'ballistic', point: [1, 0, 1], direction: [0, -1, 0], energy: 3400, caliber: 7.62 })!
+    expect(pistol.depth).toBeLessThan(rifle.depth)
+    expect(rifle.removed.map((entry) => entry.material)).toContain('mortar')
+  })
+})
