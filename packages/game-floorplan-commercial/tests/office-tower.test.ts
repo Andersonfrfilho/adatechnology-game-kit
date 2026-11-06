@@ -4,13 +4,20 @@ import { register as registerResidential } from '@adatechnology/game-floorplan-r
 import { register, OFFICE_TOWER_DEFAULTS, buildOfficeTower, officeTowerLayout, officeTowerTemplate } from '../src'
 import en from '../src/locales/en.json'
 import ptBR from '../src/locales/pt-BR.json'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
+
+/** The plan of a tower as these tests read it: the tower's numbers in `config.tower`, and each room's label and the storeys a stair links. */
+interface TowerPlan extends FloorplanResult {
+  config: { tower: { storeys: number } & Record<string, unknown> }
+  rooms: (FloorplanResult['rooms'][number] & { label: string; link?: number[] })[]
+}
 
 registerResidential(engine, { region: 'br' })
 register(engine, { region: 'br' })
 
 /** The office tower (design T10-estrutura-real.md §11): the plan of a skyscraper, from the same layout as its structure. */
 describe('office tower', () => {
-  const plan = engine.generate('office_tower', { seed: 7, floors: 20, locale: 'en' }) as any
+  const plan = engine.generate('office_tower', { seed: 7, floors: 20, locale: 'en' }) as TowerPlan
   const layout = officeTowerLayout({ storeys: 20 })
 
   it('is registered as a commercial template whose storeys are an option, clamped by the zone', () => {
@@ -20,7 +27,7 @@ describe('office tower', () => {
     const zt = engine.listZones().find((z) => z.id === 'zt')!
     expect(zt.maxFloors).toBe(60)
     expect(zt.maxHeight).toBe(240)
-    const zc = engine.generate('office_tower', { seed: 7, floors: 60, zone: 'zc', locale: 'en' }) as any
+    const zc = engine.generate('office_tower', { seed: 7, floors: 60, zone: 'zc', locale: 'en' }) as TowerPlan
     expect(zc.floors.length).toBeLessThanOrEqual(24)
   })
 
@@ -31,7 +38,7 @@ describe('office tower', () => {
   })
 
   it('the game configures the tower at generation: floors wins over tower.storeys, every field of tower is reachable, the max is raised by tower.range', () => {
-    const gen = (o: object) => (engine.generate('office_tower', { seed: 7, locale: 'en', ...o }) as any).config.tower
+    const gen = (o: object) => (engine.generate('office_tower', { seed: 7, locale: 'en', ...o }) as TowerPlan).config.tower
     expect(gen({ floors: 24, tower: { storeys: 30 } }).storeys).toBe(24)
     expect(gen({ tower: { storeys: 30 } }).storeys).toBe(30)
     expect(officeTowerLayout({ storeys: 90 }).storeys).toBe(60)
@@ -57,7 +64,7 @@ describe('office tower', () => {
       expect(rooms.filter((r: { type: string }) => r.type === 'elevator')).toHaveLength(layout.core!.elevators)
       expect(rooms.some((r: { id: string }) => r.id === `lobby_${f}`)).toBe(true)
       const stairs = rooms.find((r: { type: string }) => r.type === 'stairs')
-      expect(stairs.link).toEqual(f < 19 ? [f, f + 1] : [f - 1, f])
+      expect(stairs!.link).toEqual(f < 19 ? [f, f + 1] : [f - 1, f])
     }
   })
 
@@ -75,7 +82,7 @@ describe('office tower', () => {
   })
 
   it('the suites are furnished as open-plan offices', () => {
-    const desks = plan.items.filter((i: { room: string; type: string }) => i.room.startsWith('suite_5_') && /desk/.test(i.type))
+    const desks = plan.items.filter((i) => i.room!.startsWith('suite_5_') && /desk/.test(i.type))
     expect(desks.length).toBeGreaterThan(12)
   })
 
@@ -121,9 +128,9 @@ describe('office tower', () => {
       expect(locale.templates.office_tower).toBeTruthy()
       for (const key of ['office_suite', 'washrooms', 'reception', 'security_desk', 'lobby_entrance']) expect((locale.labels as Record<string, string>)[key]).toBeTruthy()
     }
-    const pt = engine.generate('office_tower', { seed: 7, floors: 20, locale: 'pt-BR' }) as any
+    const pt = engine.generate('office_tower', { seed: 7, floors: 20, locale: 'pt-BR' }) as TowerPlan
     expect(pt.name).toBe('Torre de escritórios')
     expect(pt.floors[1].name).toBe('Andar tipo')
-    expect(pt.rooms.find((r: { id: string }) => r.id === 'restroom_3').name).toBe('Sanitários')
+    expect(pt.rooms.find((r: { id: string }) => r.id === 'restroom_3')!.name).toBe('Sanitários')
   })
 })

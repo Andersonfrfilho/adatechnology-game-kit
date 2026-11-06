@@ -26,8 +26,8 @@ const planned = (template: string, seed: number, state: string, popts: Record<st
 describe('the tables are the team\'s', () => {
   it('has the same number of furniture types, content ids by legacy and group fallbacks as the IIFE', () => {
     expect(Object.keys(Team.MAPA_TIPOS).length).toBe(Object.keys(adapter.registries.typeMap).length)
-    expect(Object.values(Team.MAPA_TIPOS).map((m: any) => JSON.stringify({ t: m.t ?? null, c: m.composto ?? null, v: m.variant ?? null, w: m.watts ?? null })).sort()).toEqual(
-      Object.values<any>(adapter.registries.typeMap).map((m) => JSON.stringify({ t: m.type ?? null, c: ({ sink: 'pia', basin: 'pia_b', rustic_sink: 'pia_rustica' } as any)[m.compound] ?? null, v: m.variant ?? null, w: m.watts ?? null })).sort(),
+    expect(Object.values(Team.MAPA_TIPOS).map((m) => JSON.stringify({ t: m.t ?? null, c: m.composto ?? null, v: m.variant ?? null, w: m.watts ?? null })).sort()).toEqual(
+      Object.values(adapter.registries.typeMap).map((m) => JSON.stringify({ t: m.type ?? null, c: ({ sink: 'pia', basin: 'pia_b', rustic_sink: 'pia_rustica' } as Record<string, string>)[m.compound as string] ?? null, v: m.variant ?? null, w: m.watts ?? null })).sort(),
     )
     expect(Object.keys(Team.CONTEUDO_POR_CATEGORIA).length).toBe(Object.keys(adapter.registries.contentByGroup).length)
     // every household item the team's table points to is reached by the kit's table, or is a household item itself (the id stays)
@@ -58,10 +58,10 @@ describe('plan: the same objects as the team\'s adapter, house by house', () => 
     const r = planOf('single_storey_a', 3)
     const mine = adapter.plan(r, { seed: r.seed })
     const fridge = mine.items.find((e) => e.type === 'fridge')!
-    const ids = new Set(r.contents['kitchen.fridge'].map((s: any) => s.itemId))
+    const ids = new Set(r.contents['kitchen.fridge'].map((s) => s.itemId))
     const placed = Object.values(fridge.item.contents ?? {}).flat().filter((s) => s != null)
     expect(placed.length).toBeGreaterThan(0)
-    for (const stack of placed) expect(ids.has(stack.data?.source)).toBe(true)
+    for (const stack of placed) expect(ids.has(stack.data?.source as string)).toBe(true)
   })
 })
 
@@ -75,10 +75,10 @@ describe('world and add: the same world, door by door', () => {
       const teamPlan = teamAdapter.planejar(res, { semente: res.semente, noite: true })
       const outTeam = toKit(teamAdapter.adicionar(worldTeam, teamPlan, { bloqueado: teamAdapter.bloqueadoDe(res) }))
       expect(JSON.parse(JSON.stringify(outMine))).toEqual(JSON.parse(JSON.stringify(outTeam)))
-      expect(mine.items.length).toBe(team.items.length)
+      expect(mine.items.length).toBe((team.items as unknown[]).length)
       const mineWorld = normalizeWorld(JSON.parse(JSON.stringify(worldMine.serialize())))
       const teamWorld = normalizeWorld(JSON.parse(JSON.stringify(worldTeam.serialize())))
-      expect(Object.keys(mineWorld.objects).length).toBe(mine.items.length)
+      expect(Object.keys((mineWorld as { objects: object }).objects).length).toBe(mine.items.length)
       expect(mineWorld).toEqual(teamWorld)
     })
   }

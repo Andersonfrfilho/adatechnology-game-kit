@@ -1,54 +1,4 @@
 {
-  "packages/game-characters-three/tests/exact-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-characters-three/tests/people.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-floorplan-commercial/tests/commercial.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-floorplan-commercial/tests/interiors.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-commercial/tests/office-tower.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "packages/game-floorplan-interactables/tests/adapter.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 17
-    }
-  },
-  "packages/game-floorplan-interactables/tests/support/plans.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-floorplan-interactables/tests/support/team-shape.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "packages/game-floorplan-interactables/tests/team-golden-extras.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-floorplan-interactables/tests/team-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
   "packages/game-floorplan-post-apocalyptic/src/state.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
@@ -72,16 +22,6 @@
   "packages/game-floorplan-post-apocalyptic/tests/vc3-rows.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
-    }
-  },
-  "packages/game-floorplan-residential/tests/residential-tower.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-floorplan-residential/tests/residential.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 7
     }
   },
   "packages/game-floorplan-structure/tests/extension.test.ts": {

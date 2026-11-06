@@ -24,7 +24,7 @@ const base = { skin: 0xc49070, hair: { s: 'short', c: 0x222222 }, top: { c: 0x44
 const person = (spec: PersonSpec, detail = 0): THREE.Object3D => createPersonBuilder(THREE, { random: createRng(5), detail, createCanvas: canvas }).build(spec).root
 
 const cards = undeadTypes.map((type) => ({ name: type.name['pt-BR'], eye: Number.parseInt(type.eye.color, 16) }))
-const best = (spec: Record<string, any>, lod: number): THREE.Object3D => {
+const best = (spec: Parameters<ReturnType<typeof createBestBuilder>['build']>[0], lod: number): THREE.Object3D => {
   const builder = createBestBuilder(THREE, { types: cards, random: () => 0.5 })
   builder.setLOD(lod)
   return builder.build(spec)
