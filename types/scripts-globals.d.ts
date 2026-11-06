@@ -26,6 +26,90 @@ declare global {
   var __provingCertificates: Record<string, import('@adatechnology/game-vehicles-proving').ProvingCertificate> | undefined
   /** The page's three.js, when the page exposes it (`window.__THREE`). */
   var __THREE: typeof THREE | undefined
+  // The interactables showroom page (examples/interactables-showroom/src/showroom.js): its objects and the API it puts on `window.__showroom`.
+  // The page assigns `window.__showroom` against this type, so a change on either side fails the check.
+  type ShowroomVec3 = [number, number, number]
+  interface ShowroomView { readonly x?: number; readonly z?: number; readonly eye?: number; readonly yaw?: number; readonly pitch?: number; readonly fov?: number }
+  interface ShowroomEntryView { dist?: number; look?: number[]; at?: number[] }
+  interface ShowroomEntryBase { id: string; type: string; x: number; z: number; ry: number; name?: string; root: THREE.Group; view?: ShowroomEntryView }
+  /** A household object of the pack, drawn by the three adapter. */
+  type ShowroomHouseholdEntry = ShowroomEntryBase & { hh: true; custom?: undefined; item: import('@adatechnology/game-interactables-household').HouseholdItem; group: THREE.Group; parts: Record<string, THREE.Group>; nth?: number }
+  /** A showroom-only object (the lamps, the water tank), still driven by the engine. */
+  type ShowroomCustomEntry = ShowroomEntryBase & { hh?: undefined; custom: true }
+  type ShowroomEntry = ShowroomHouseholdEntry | ShowroomCustomEntry
+  type ShowroomEnvMaterial = THREE.MeshLambertMaterial | THREE.MeshStandardMaterial
+  type ShowroomEnvMaterials = Record<'vc' | 'glassMat' | 'woodFloor' | 'tileKitchen' | 'tileBath' | 'grass' | 'concrete' | 'rug' | 'ceilingMat', ShowroomEnvMaterial>
+  interface ShowroomPlayer {
+    x: number
+    z: number
+    yaw: number
+    pitch: number
+    vx: number
+    vz: number
+    seat: { object: string; seat: string; eye: ShowroomVec3; pose: string } | null
+    eye: number
+  }
+  interface ShowroomSlot { id: string; container: string; slot: number; stack: import('@adatechnology/game-interactables').ItemStack; pos: ShowroomVec3; angle: number; dist: number }
+  type ShowroomLayoutRow = [string, string, number, number, number, import('@adatechnology/game-interactables-household').HouseholdItem?]
+  interface ShowroomApi {
+    readonly THREE: typeof THREE
+    readonly world: import('@adatechnology/game-interactables').World
+    readonly hh: import('@adatechnology/game-interactables-household').Household
+    readonly scene: THREE.Scene
+    readonly camera: THREE.PerspectiveCamera
+    readonly renderer: THREE.WebGLRenderer
+    readonly player: ShowroomPlayer
+    readonly entries: Map<string, ShowroomEntry>
+    readonly state: { quality: 'high' | 'game'; night: boolean; rain: boolean; wind: boolean }
+    readonly env: { wallRects: number[][]; solidRects: number[][]; group: THREE.Group; materials: ShowroomEnvMaterials | null }
+    readonly gfx: import('@adatechnology/game-interactables-three').ThreeAdapter
+    readonly effects: import('@adatechnology/game-interactables-three').Effects
+    readonly mirrors: import('@adatechnology/game-interactables-three').Mirrors
+    readonly screens: Map<string, import('@adatechnology/game-interactables-three').Screen>
+    readonly lamps: { id: string; light: THREE.PointLight; bulbMat: THREE.MeshBasicMaterial; on: boolean }[]
+    readonly pack: import('@adatechnology/game-interactables').ItemStack[]
+    readonly events: import('@adatechnology/game-interactables').WorldEvent[]
+    readonly sweeps: Record<string, ReturnType<import('@adatechnology/game-interactables').World['fitSweep']>>
+    readonly items: Record<'cyl' | 'box' | 'sph', THREE.InstancedMesh>
+    readonly TANK: { id: string; x: number; z: number; gauge: null; fill: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial> | null }
+    readonly LAYOUT: ShowroomLayoutRow[]
+    sim(dt: number): void
+    render(): void
+    step(seconds: number, hz?: number): void
+    pause(on?: boolean): void
+    teleport(id: string): boolean
+    setView(v: ShowroomView): void
+    lookAt(x: number, y: number, z: number): void
+    pickSlot(maxAngle: number): ShowroomSlot | null
+    currentTarget(): ReturnType<import('@adatechnology/game-interactables').World['target']>
+    pressUse(): boolean
+    pressTake(): boolean
+    standUp(): boolean
+    drainTank(): void
+    fitAll(): void
+    buildCords(): void
+    wallBlocked(x: number, z: number): boolean
+    collides(x: number, z: number): boolean
+    setQuality(q: string | null | undefined): void
+    setNight(on: boolean): void
+    setRain(on: boolean): void
+    setWind(on: boolean): void
+    setPanel(open?: boolean): void
+    seatEye(objectId: string, seatId: string): { eye: ShowroomVec3; yaw: number; pose: import('@adatechnology/game-interactables').SeatPose; exit: ShowroomVec3 }
+    hud(): void
+    drawCalls(): number
+    itemCount(): number
+    walk(dx: number, dz: number, seconds: number): void
+    showToast(text: string | null, kind?: string, ms?: number): void
+  }
+  // The interactables showroom page's bundle globals (examples/interactables-showroom/src/entry.js puts them on window for src/showroom.js).
+  const GameInteractables: typeof import('@adatechnology/game-interactables')
+  const GameInteractablesHousehold: typeof import('@adatechnology/game-interactables-household')
+  const GameInteractablesThree: typeof import('@adatechnology/game-interactables-three')
+  const GameTerrain: typeof import('@adatechnology/game-terrain')
+  const GameTerrainThree: typeof import('@adatechnology/game-terrain-three')
+  const Reflector: typeof import('three/examples/jsm/objects/Reflector.js').Reflector
+  const RoomEnvironment: typeof import('three/examples/jsm/environments/RoomEnvironment.js').RoomEnvironment
   /** The recorded sfx the test room page inlines (`examples/test-room/build.mjs`): the manifest and each file as a `data:` url. */
   var __kitSfx: { readonly manifest: NonNullable<NonNullable<Parameters<typeof import('@adatechnology/game-weapons-three/testing').createWeaponsTestModule>[0]>['samples']>['manifest']; readonly files: Readonly<Record<string, string>> } | undefined
   /** The room page's build flag (`examples/test-room/build.mjs` defines it): true on the default page, false on the bare room the areas build over. */
@@ -310,6 +394,7 @@ declare global {
     __playerReport: AreaReport<'player-test-area'>
     __crowdReport: AreaReport<'crowd-test-area'>
     __furnitureReport: AreaReport<'interactables-test-area'>
+    __showroom: ShowroomApi
   }
 }
 export {}

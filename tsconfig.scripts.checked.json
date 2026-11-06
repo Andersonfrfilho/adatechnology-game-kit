@@ -24,6 +24,8 @@
     "examples/floorplan-test-area/test.mjs",
     "examples/interactables-showroom/build.mjs",
     "examples/interactables-showroom/src/entry.js",
+    "examples/interactables-showroom/src/showroom.js",
+    "examples/interactables-showroom/test.mjs",
     "examples/interactables-test-area/build.mjs",
     "examples/interactables-test-area/src/area.js",
     "examples/interactables-test-area/src/entry.js",

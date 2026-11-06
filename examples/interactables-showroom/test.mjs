@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+/** @returns {typeof import('playwright')} */
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -30,13 +31,13 @@ const shotsDir = join(here, 'shots')
 mkdirSync(shotsDir, { recursive: true })
 
 /**
- * @type {{ name: string; ok: boolean; detail: string[] | undefined; }[]}
+ * @type {{ name: string; ok: boolean; detail: unknown }[]}
  */
 const results = []
 /**
  * @param {string} name
- * @param {boolean} ok
- * @param {string[] | undefined} [detail]
+ * @param {unknown} ok
+ * @param {unknown} [detail]
  */
 function check(name, ok, detail) {
   results.push({ name, ok: !!ok, detail })
@@ -54,11 +55,12 @@ const external = []
 const consoleErrors = []
 /**
  * @param {{ width: number; height: number; }} viewport
+ * @param {import('playwright').BrowserContextOptions} [extra]
  */
 async function openPage(viewport, extra = {}) {
   const context = await browser.newContext({ viewport, ...extra })
   // block (and record) everything that is not the file itself
-  await context.route('**/*', (route) => {
+  await context.route('**/*', (/** @type {import('playwright').Route} */ route) => {
     const url = route.request().url()
     if (/^(file|data|blob|about):/.test(url)) return route.continue()
     external.push(url)
@@ -71,7 +73,7 @@ async function openPage(viewport, extra = {}) {
   page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => {
     if (m.type() === 'error') consoleErrors.push(m.text())
   })
-  page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
+  page.on('pageerror', (/** @type {Error} */ e) => consoleErrors.push(`pageerror: ${e.message}`))
   await page.goto(pathToFileURL(dist).href, { timeout: 180000 })
   await page.waitForFunction(() => window.__showroom && window.__showroom.world, null, { timeout: 90000 })
   await page.evaluate(() => window.__showroom.pause(true))
@@ -79,7 +81,15 @@ async function openPage(viewport, extra = {}) {
 }
 
 const { page } = await openPage({ width: 1100, height: 620 })
-const E = (fn, arg) => page.evaluate(fn, arg)
+/**
+ * Runs `fn` in the page with `arg` (a structured-clone copy) and answers what it returned.
+ * @template R
+ * @template A
+ * @param {(arg: A) => R | Promise<R>} fn
+ * @param {A} [arg]
+ * @returns {Promise<R>}
+ */
+const E = (fn, arg) => page.evaluate(/** @type {(arg: unknown) => R | Promise<R>} */ (fn), arg)
 
 // ------------------------------------------------------------------------------------------------------------------------------
 // Boot
@@ -106,15 +116,15 @@ const fr = await E(() => {
   const p = w.slotPosition('fridge', 'fridge', slot)
   s.lookAt(p[0], p[1] + 0.05, p[2])
   s.hud()
-  return { closed, open: w.accessible('fridge', 'fridge'), slot, type: stacks[slot] && stacks[slot].type, packBefore: s.pack.length, prompt: document.querySelector('#prompt').textContent, sweep: s.sweeps['fridge:door_fridge'] }
+  return { closed, open: w.accessible('fridge', 'fridge'), slot, type: stacks[slot] && stacks[slot].type, packBefore: s.pack.length, prompt: /** @type {HTMLElement} */ (document.querySelector('#prompt')).textContent, sweep: s.sweeps['fridge:door_fridge'] }
 })
 check('fridge closed: container not accessible', fr.closed === false)
 check('fridge door opens: container accessible', fr.open === true, { sweepLimit: fr.sweep })
-check('HUD prompt is localized while aiming at an item', /Pegar/.test(fr.prompt) && !/prompt\./.test(fr.prompt), fr.prompt)
+check('HUD prompt is localized while aiming at an item', /Pegar/.test(/** @type {string} */ (fr.prompt)) && !/prompt\./.test(/** @type {string} */ (fr.prompt)), fr.prompt)
 await page.keyboard.press('KeyF')
-const fr2 = await E((/** @type {{ slot: string | number; }} */ a) => {
+const fr2 = await E((a) => {
   const s = window.__showroom
-  return { pack: s.pack.map((p) => `${p.type}x${p.qty}`), slotEmpty: s.world.contents('fridge', 'fridge')[a.slot] === null, count: document.querySelector('#packCount').textContent }
+  return { pack: s.pack.map((p) => `${p.type}x${p.qty}`), slotEmpty: s.world.contents('fridge', 'fridge')[a.slot] === null, count: /** @type {HTMLElement} */ (document.querySelector('#packCount')).textContent }
 }, fr)
 check('F takes the item: backpack grows, slot emptied', fr2.pack.length === fr.packBefore + 1 && fr2.slotEmpty && fr2.count !== '0', fr2)
 
@@ -124,6 +134,7 @@ check('F takes the item: backpack grows, slot emptied', fr2.pack.length === fr.p
 const gas = await E(() => {
   const s = window.__showroom
   const w = s.world
+  /** @type {Record<string, boolean>} */
   const out = { valveClosedAtStart: w.partT('gas_bottle', 'valve') < 0.5 }
   w.act('stove:use_burner_2')
   s.step(1.5)
@@ -168,16 +179,17 @@ check('particles are alive for the effects', bbq.alive.alive > 0, bbq.alive.byKi
 // ------------------------------------------------------------------------------------------------------------------------------
 // Rural and camping corner: fireplace, wood stove and campfire burn; the well gives water; the cooler opens; the camp stove lights
 // ------------------------------------------------------------------------------------------------------------------------------
+/** @typedef {'fireplace' | 'wood_stove' | 'campfire'} Hearth */
 const rural = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const o = {}
+  const o = /** @type {Record<Hearth, { lit: boolean; kinds: string[] }> & { wellKinds: string[]; coolerClosed: boolean; coolerOpen: boolean; coolerSlot: number; coolerGot: string | null; stoveLit: boolean; stoveFlame: boolean }} */ ({})
   for (const id of ['fireplace', 'wood_stove', 'campfire']) {
     w.act(`${id}:ignite_fire`)
   }
   s.step(3)
   const em = w.emitters()
-  for (const id of ['fireplace', 'wood_stove', 'campfire']) {
+  for (const id of /** @type {Hearth[]} */ (['fireplace', 'wood_stove', 'campfire'])) {
     o[id] = { lit: w.isLit(id, 'fire'), kinds: em.filter((/** @type {{ object: string; intensity: number; }} */ e) => e.object === id && e.intensity > 0).map((e) => e.kind) }
   }
   w.act('well:use_water_bucket')
@@ -201,7 +213,7 @@ const rural = await E(() => {
   o.stoveFlame = w.emitters().some((/** @type {{ object: string; kind: string; intensity: number; }} */ e) => e.object === 'camp_stove' && e.kind === 'flame' && e.intensity > 0)
   return o
 })
-check('fireplace, wood stove and campfire light: fire and smoke emitters', ['fireplace', 'wood_stove', 'campfire'].every((id) => rural[id].lit && rural[id].kinds.includes('fire') && rural[id].kinds.includes('smoke')), { fireplace: rural.fireplace, wood_stove: rural.wood_stove, campfire: rural.campfire })
+check('fireplace, wood stove and campfire light: fire and smoke emitters', /** @type {Hearth[]} */ (['fireplace', 'wood_stove', 'campfire']).every((id) => rural[id].lit && rural[id].kinds.includes('fire') && rural[id].kinds.includes('smoke')), { fireplace: rural.fireplace, wood_stove: rural.wood_stove, campfire: rural.campfire })
 check('well: pulling the bucket gives water', rural.wellKinds.includes('water'), rural.wellKinds)
 check('cooler: lid opens and an item can be taken', !rural.coolerClosed && rural.coolerOpen && rural.coolerSlot >= 0 && !!rural.coolerGot, { got: rural.coolerGot })
 check('camp stove lights from its canister', rural.stoveLit && rural.stoveFlame, { lit: rural.stoveLit, flame: rural.stoveFlame })
@@ -212,16 +224,16 @@ check('camp stove lights from its canister', rural.stoveLit && rural.stoveFlame,
 const pw = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const o = { plugged: w.power.pluggedInto('tv', 'tv') }
+  const o = /** @type {{ plugged: string | null; on: boolean; powered: boolean; screenOn: boolean; gridOffPowered: boolean; gridOffScreen: boolean; backPowered: boolean }} */ ({ plugged: w.power.pluggedInto('tv', 'tv') })
   w.act('tv:use_tv')
   s.step(0.5)
   o.on = w.power.isOn('tv', 'tv')
   o.powered = w.power.isPowered('tv', 'tv')
-  o.screenOn = s.screens.get('tv').on
+  o.screenOn = /** @type {import('@adatechnology/game-interactables-three').Screen} */ (s.screens.get('tv')).on
   w.power.setGrid(false)
   s.step(0.5)
   o.gridOffPowered = w.power.isPowered('tv', 'tv')
-  o.gridOffScreen = s.screens.get('tv').on
+  o.gridOffScreen = /** @type {import('@adatechnology/game-interactables-three').Screen} */ (s.screens.get('tv')).on
   w.power.setGrid(true)
   s.step(0.5)
   o.backPowered = w.power.isPowered('tv', 'tv')
@@ -235,8 +247,8 @@ check('grid back: TV powered again', pw.backPowered)
 const lamp = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const L = s.lamps.find((/** @type {{ id: string; }} */ l) => l.id === 'lamp_bath')
-  const o = { off: w.power.isOn('lamp_bath', 'lamp'), light0: L.light.intensity }
+  const L = /** @type {ShowroomApi['lamps'][number]} */ (s.lamps.find((l) => l.id === 'lamp_bath'))
+  const o = /** @type {{ off: boolean; light0: number; on: boolean; light1: number; breakerOff: boolean; light2: number; offAgain: boolean }} */ ({ off: w.power.isOn('lamp_bath', 'lamp'), light0: L.light.intensity })
   w.act('switch_bath:use_switch')
   s.step(1)
   o.on = w.power.isOn('lamp_bath', 'lamp') && w.power.isPowered('lamp_bath', 'lamp')
@@ -272,10 +284,10 @@ const panel = await E(() => {
   o.lightsAct = w.act('electrical_panel:toggle_breaker_lights')
   s.step(1)
   o.lampCut = !w.power.isPowered('lamp_bath', 'lamp')
-  o.lampLight = s.lamps.find((/** @type {{ id: string; }} */ l) => l.id === 'lamp_bath').light.intensity
+  o.lampLight = /** @type {ShowroomApi['lamps'][number]} */ (s.lamps.find((l) => l.id === 'lamp_bath')).light.intensity
   o.tvStill = w.power.isPowered('tv', 'tv')
   o.rocker = w.partT('electrical_panel', 'breaker_lights')
-  o.label = w.interactables().find((/** @type {{ id: string; }} */ i) => i.id === 'electrical_panel:toggle_breaker_lights').label
+  o.label = /** @type {ReturnType<typeof w.interactables>[number]} */ (w.interactables().find((i) => i.id === 'electrical_panel:toggle_breaker_lights')).label
   w.act('electrical_panel:toggle_breaker_lights')
   w.act('electrical_panel:toggle_breaker_sockets')
   s.step(1)
@@ -302,7 +314,7 @@ const water = await E(() => {
   const s = window.__showroom
   const w = s.world
   const tank = 'water_tank:main'
-  const o = { start: w.water.level(tank) }
+  const o = /** @type {{ start: number; flowing: boolean; emitter: boolean; used: number; emptyLevel: number; flowingWhenEmpty: boolean; emitterWhenEmpty: boolean; afterRain: number; flowingAfterRefill: boolean }} */ ({ start: w.water.level(tank) })
   w.act('shower:use_shower')
   s.step(1)
   o.flowing = w.water.isFlowing('shower', 'shower')
@@ -356,10 +368,10 @@ check('Space stands up: free, standing eye height', !stand.seat && !stand.seated
 const cl = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const softs = (w.get('clothesline').spec.soft || []).map((x) => x.id)
+  const softs = (/** @type {import('@adatechnology/game-interactables').WorldObject} */ (w.get('clothesline')).spec.soft || []).map((x) => x.id)
   s.setView({ x: 4.0, z: 12.7, eye: 1.6, yaw: 0, pitch: 0 })
   s.step(0.5)
-  const o = { clothes: softs.length, colliders: w.colliders().filter((/** @type {{ object: string; }} */ c) => c.object === 'clothesline').map((c) => c.id), maxSway: 0, blocked: false }
+  const o = /** @type {{ clothes: number; colliders: string[]; maxSway: number; blocked: boolean; z: number; x: number }} */ ({ clothes: softs.length, colliders: w.colliders().filter((/** @type {{ object: string; }} */ c) => c.object === 'clothesline').map((c) => c.id), maxSway: 0, blocked: false })
   for (let i = 0; i < 40; i++) {
     s.walk(0, -1, 0.1)
     for (const id of softs) {
@@ -381,15 +393,15 @@ check('clothes sway when pushed', cl.maxSway > 0.02, { maxSway: +cl.maxSway.toFi
 const mail = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const o = { closed: w.accessible('mailbox', 'letters') }
+  const o = /** @type {{ closed: boolean; open: boolean; text?: string }} */ ({ closed: w.accessible('mailbox', 'letters') })
   w.act('mailbox:toggle_flap')
   s.step(1.5)
   o.open = w.accessible('mailbox', 'letters')
   s.events.length = 0
   for (let k = 1; k <= 4 && !o.text; k++) {
     w.act(`mailbox:read_${k}`)
-    const m = s.events.find((/** @type {{ type: string; }} */ e) => e.type === 'message')
-    if (m) o.text = m.text
+    const m = s.events.find((e) => e.type === 'message')
+    if (m) o.text = /** @type {Extract<import('@adatechnology/game-interactables').WorldEvent, { type: 'message' }>} */ (m).text
   }
   return o
 })
@@ -398,7 +410,7 @@ check('letters are readable (localized text)', mail.text && mail.text.length > 1
 const bin = await E(() => {
   const s = window.__showroom
   const w = s.world
-  const o = { closed: w.accessible('trash_bin', 'bin') }
+  const o = /** @type {{ closed: boolean; open: boolean }} */ ({ closed: w.accessible('trash_bin', 'bin') })
   w.act('trash_bin:toggle_lid')
   s.step(1.5)
   o.open = w.accessible('trash_bin', 'bin')
@@ -430,6 +442,7 @@ check('nearest mirror gets a real reflector', mir.active.length === 1 && /mirror
 // Draw calls in game quality (renderer.info.render.calls, both passes of the mirror and the shadow pass included)
 // ------------------------------------------------------------------------------------------------------------------------------
 await E(() => window.__showroom.setQuality('game'))
+/** @type {Record<string, { x: number; z: number; eye?: number; yaw?: number; pitch?: number; look?: number[] }>} */
 const views = {
   overview: { x: 6, z: 21, eye: 15, yaw: 0, pitch: -0.78 },
   kitchen: { x: 3.2, z: 2.9, look: [1.6, 0.9, 0.3] },
@@ -440,6 +453,7 @@ const views = {
 }
 const calls = await E((v) => {
   const s = window.__showroom
+  /** @type {Record<string, { withShadowPass: number; steady: number }>} */
   const out = {}
   for (const [name, p] of Object.entries(v)) {
     s.setView({ x: p.x, z: p.z, eye: p.eye || 1.6, yaw: p.yaw, pitch: p.pitch })
@@ -467,7 +481,7 @@ await E(() => window.__showroom.setQuality('high'))
  */
 async function shot(name, setup, p, ctxPage = page) {
   await ctxPage.evaluate(
-    ([code, view]) => {
+    (/** @type {[string, typeof p]} */ [code, view]) => {
       const s = window.__showroom
       // eslint-disable-next-line no-new-func
       if (code) new Function('s', code)(s)
@@ -480,7 +494,7 @@ async function shot(name, setup, p, ctxPage = page) {
       s.render()
       s.render()
     },
-    [setup, p],
+    /** @type {[string, typeof p]} */ ([setup, p]),
   )
   const png = join(shotsDir, `${name}.png`)
   await ctxPage.screenshot({ path: png })
@@ -563,8 +577,8 @@ await page.locator('#objList button[data-id="stove"]').click()
 const tp = await E(() => {
   const s = window.__showroom
   s.hud()
-  const st = s.entries.get('stove')
-  return { dist: Math.hypot(s.player.x - st.x, s.player.z - st.z), prompt: document.querySelector('#prompt').textContent, hidden: document.querySelector('#prompt').hidden }
+  const st = /** @type {ShowroomEntry} */ (s.entries.get('stove'))
+  return { dist: Math.hypot(s.player.x - st.x, s.player.z - st.z), prompt: /** @type {HTMLElement} */ (document.querySelector('#prompt')).textContent, hidden: /** @type {HTMLElement} */ (document.querySelector('#prompt')).hidden }
 })
 check('object list click teleports in front of the object', tp.dist > 0.8 && tp.dist < 2.5, { dist: +tp.dist.toFixed(2), prompt: tp.prompt })
 
@@ -573,14 +587,14 @@ const mobile = await openPage({ width: 390, height: 844 }, { hasTouch: true, isM
 const mp = mobile.page
 const mob = await mp.evaluate(() => {
   const s = window.__showroom
-  return { w: innerWidth, scrollW: document.documentElement.scrollWidth, quality: s.state.quality, touch: !document.querySelector('#touch').hidden }
+  return { w: innerWidth, scrollW: document.documentElement.scrollWidth, quality: s.state.quality, touch: !/** @type {HTMLElement} */ (document.querySelector('#touch')).hidden }
 })
 check('mobile 390 px: no horizontal scroll, game quality by default, touch controls shown', mob.scrollW <= mob.w && mob.quality === 'game' && mob.touch, mob)
 saved.push(await shot('07-mobile-390', 's.world.act("gas_bottle:use_gas"); s.world.act("stove:use_burner_1"); s.world.act("stove:use_burner_4"); s.world.act("stove:use_burner_2")', { x: 3.1, z: 1.55, look: [3.08, 0.9, 0.2] }, mp))
 await mp.evaluate(() => window.__showroom.setPanel(true))
 await mp.waitForTimeout(400)
 const panelBox = await mp.evaluate(() => {
-  const r = document.querySelector('#panel').getBoundingClientRect()
+  const r = /** @type {HTMLElement} */ (document.querySelector('#panel')).getBoundingClientRect()
   return { left: r.left, right: r.right, width: r.width, vw: innerWidth }
 })
 check('mobile panel fits the 390 px viewport', panelBox.left >= 0 && panelBox.right <= panelBox.vw + 1, panelBox)
