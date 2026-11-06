@@ -13,8 +13,18 @@ float tsNoise(vec2 p) {
   return mix(mix(tsHash(i), tsHash(i + vec2(1.0, 0.0)), f.x), mix(tsHash(i + vec2(0.0, 1.0)), tsHash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 float tsFbm(vec2 p) { return tsNoise(p) * 0.55 + tsNoise(p * 2.3 + 7.1) * 0.3 + tsNoise(p * 5.1 + 3.3) * 0.15; }
-float tsLine(float value, float period, float width) { float d = abs(fract(value / period + 0.5) - 0.5) * period; return 1.0 - smoothstep(width * 0.6, width, d); }
-vec3 terrainSurface(vec3 base, vec2 xz, float kind) {
+// a pixel wider than FAR_PIXEL_TO metres shows only the average of the pattern, PATTERN_MEAN of the base colour
+const float FAR_PIXEL_FROM = 0.03;
+const float FAR_PIXEL_TO = 0.12;
+const float PATTERN_MEAN = 0.92;
+// metres one pixel covers on the ground here: a line or a grain finer than that cannot be drawn, only its average can
+float tsPixel = 0.0;
+float tsLine(float value, float period, float width) {
+  float drawn = max(width, tsPixel);
+  float d = abs(fract(value / period + 0.5) - 0.5) * period;
+  return (1.0 - smoothstep(drawn * 0.6, drawn, d)) * (width / drawn);
+}
+vec3 terrainPattern(vec3 base, vec2 xz, float kind) {
   float k = floor(kind + 0.5);
   if (k < 0.5) return base * (0.86 + 0.28 * tsFbm(xz * 9.0));
   if (k < 1.5) {
@@ -93,6 +103,12 @@ vec3 terrainSurface(vec3 base, vec2 xz, float kind) {
   float joint = 1.0 - smoothstep(0.0, 0.035, abs(tsNoise(xz * vec2(0.7, 1.9)) - 0.5));
   float grain = tsNoise(xz * 95.0);
   return base * (0.62 + 0.75 * blotch) * (0.88 + 0.24 * grain) * (1.0 - 0.6 * joint);
+}
+/** The pattern where a pixel can hold it; far off, where a pixel covers more ground than the finest grain, its average, so that the grain does not sparkle as dots. */
+vec3 terrainSurface(vec3 base, vec2 xz, float kind) {
+  tsPixel = max(length(dFdx(xz)), length(dFdy(xz)));
+  vec3 near = terrainPattern(base, xz, kind);
+  return mix(near, base * PATTERN_MEAN, smoothstep(FAR_PIXEL_FROM, FAR_PIXEL_TO, tsPixel));
 }
 `
 
