@@ -244,6 +244,8 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'dry_clay', strata: [{ material: 'clay', thickness: 0.35 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
   { id: 'snow', strata: [{ material: 'snow', thickness: 0.3 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
   { id: 'cobblestone', strata: [{ material: 'cobble', thickness: 0.12 }, { material: 'sand', thickness: 0.06 }, { material: 'gravel', thickness: 0.2 }, { material: 'soil', thickness: 1.2 }] },
+  // rock at the surface (an outcrop, a quarry floor): a blast only spalls it and a shot chips it
+  { id: 'bedrock', surfacePattern: 'rock', strata: [{ material: 'stone', thickness: 3 }] },
   { id: 'paver_floor', strata: [{ material: 'paver', thickness: 0.08 }, { material: 'sand', thickness: 0.05 }, { material: 'gravel', thickness: 0.15 }, { material: 'soil', thickness: 1.2 }] },
   { id: 'shallow_water', water: { liquid: 'water', depth: 0.3, drag: 0.65, blowShare: WATER_BLOW_SHARE }, strata: [{ material: 'mud', thickness: 0.15 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
 ]

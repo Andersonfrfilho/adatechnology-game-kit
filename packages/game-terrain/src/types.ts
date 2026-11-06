@@ -96,7 +96,7 @@ export interface TerrainFireResponse {
   readonly flammable?: boolean
 }
 
-export const TERRAIN_PATTERNS = ['plain', 'grass', 'soil', 'sand', 'asphalt', 'concrete', 'tile', 'planks', 'stone', 'mud', 'gravel', 'clay', 'snow', 'cobble', 'paver'] as const
+export const TERRAIN_PATTERNS = ['plain', 'grass', 'soil', 'sand', 'asphalt', 'concrete', 'tile', 'planks', 'stone', 'mud', 'gravel', 'clay', 'snow', 'cobble', 'paver', 'rock'] as const
 export type TerrainPattern = (typeof TERRAIN_PATTERNS)[number]
 
 /** One layer of a column, from the top down. */
@@ -122,6 +122,8 @@ export interface TerrainProfile {
   readonly strata: readonly TerrainStratum[]
   /** A slab with nothing under it: where its bars give way the floor opens, and the ground is this many metres further down (the floor below). Without it the ground under the slab holds it up. */
   readonly drop?: number
+  /** How the untouched top layer is drawn when it is not its material's way: bare rock is stone, but not laid as paving. Dug, the material's own shows. */
+  readonly surfacePattern?: TerrainPattern
   /** Water standing over the column: the strata are its bed. */
   readonly water?: TerrainWater
 }

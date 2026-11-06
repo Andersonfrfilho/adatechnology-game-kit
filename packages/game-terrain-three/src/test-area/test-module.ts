@@ -5,11 +5,11 @@ import { locale as localeTable } from './locale'
 
 type ThreeLib = typeof THREE_NS
 
-/** The lots of the area, side by side in two rows, one of each ground: soft ones in the back row, built ones in front. */
-export const TERRAIN_STRIPS = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay', 'gravel_bed', 'snow', 'shallow_water', 'road', 'cobblestone', 'paver_floor', 'stone_paving', 'concrete_slab', 'suspended_slab', 'tile_floor', 'wood_floor'] as const
-const LOT_WIDTH = 3.4
+/** The lots of the area, side by side in two rows, one of each ground: natural ones in the back row, built ones in front. */
+export const TERRAIN_STRIPS = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay', 'gravel_bed', 'snow', 'shallow_water', 'bedrock', 'road', 'cobblestone', 'paver_floor', 'stone_paving', 'concrete_slab', 'suspended_slab', 'tile_floor', 'wood_floor'] as const
+const LOT_WIDTH = 3
 const LOT_DEPTH = 3.8
-const LOTS_PER_ROW = 8
+const LOTS_PER_ROW = 9
 /** Between the target wall and the table of the room: what the player sees on arriving, and clear of the furniture. */
 const LOTS_Z1 = -1.4
 const lotRect = (index: number): readonly [number, number, number, number] => {

@@ -58,6 +58,8 @@ export interface VfxOptions {
   readonly groundAt?: (x: number, z: number) => number
   /** A surface that keeps no mark here (water): a blast over it leaves no crater, scorch or rim of rock. */
   readonly marklessAt?: (x: number, z: number) => boolean
+  /** Ground a blast opens a dirt crater in (soil, sand, snow). Where it answers false (rock, asphalt, a slab) a blast leaves only soot. Default everywhere. */
+  readonly cratersAt?: (x: number, z: number) => boolean
   /** A deformable ground the craters dig into (see `createGroundField`). */
   readonly ground?: GroundField
   readonly wind?: Vec3Like
@@ -255,6 +257,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     clock: { time: 0, lastBlast: -1, lod: 1, forcedLod: null },
     groundAt,
     ...(options.marklessAt ? { marklessAt: options.marklessAt } : {}),
+    ...(options.cratersAt ? { cratersAt: options.cratersAt } : {}),
     emit: (request) => options.onRequest?.(request),
   }
 
