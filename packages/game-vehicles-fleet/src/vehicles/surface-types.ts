@@ -3,7 +3,7 @@
  * laid on its ends, the skin layers drawn over them and the end-detail kit (headlights, taillights, bumpers, plates, grilles) bound to a car.
  */
 import type { CarSpec, Greenhouse, LabelArgument, TumbleSpec, VehicleContext, WarpFn, WarpOptions } from '@adatechnology/game-vehicles'
-import type { Box3, ColorRepresentation, Material, Mesh, Vector3 } from 'three'
+import type { Box3, ColorRepresentation, Material, Mesh, Object3D, Vector3 } from 'three'
 
 /** A point on the bodywork and its outward normal. */
 export interface SurfHit {
@@ -35,8 +35,8 @@ export interface GridSpec {
   y1: number
 }
 
-/** A grid of points and normals sampled on an end of the body. */
-export interface SurfGrid {
+/** A grid of points and normals sampled on the bodywork, what a skin layer or a line is laid on. */
+export interface SampledGrid {
   P: Vector3[][]
   N: Vector3[][]
   nu: number
@@ -44,10 +44,28 @@ export interface SurfGrid {
   y0: number
   y1: number
   len: number
-  E: number
-  sd: number
   /** Point and normal at u (0..1 along the grid) and height y. */
   at(u: number, y: number): SurfHit
+}
+
+/** A grid sampled along a side of the body, from x0 (u = 0) to x1 (u = 1). */
+export interface SideGrid extends SampledGrid {
+  /** u of the point at x. */
+  ux(x: number): number
+}
+
+/** The x range and height of a side grid. */
+export interface SideGridSpec {
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+}
+
+/** A grid of points and normals sampled on an end of the body. */
+export interface SurfGrid extends SampledGrid {
+  E: number
+  sd: number
   /** u of the point at z (face only). */
   uz(z: number): number
   zu(u: number): number
@@ -147,7 +165,7 @@ export interface CarDetailKit {
   S: Surf
   I: CarDetailCtx
   grid(E: number, sd: number, o: GridSpec): SurfGrid
-  skin(Gd: SurfGrid, mat: Material, o: SkinSpec): Mesh
+  skin(Gd: SampledGrid, mat: Material, o: SkinSpec): Mesh
   head(sd: number, o: EndLampSpec): SurfGrid
   tail(sd: number, o: EndLampSpec): SurfGrid
   bumper(E: number, o: BumperSpec): Mesh
@@ -186,6 +204,9 @@ export interface CarDetailCtx {
   wrapR: number
   bF: BumperSpec & { wrap?: number }
   bR: BumperSpec & { wrap?: number }
+  /** Left here by a model's own `extra`: its mast antenna and whether it has a hood ornament. */
+  antenna?: Object3D
+  hoodOrn?: boolean
 }
 
 /** The warp of a fleet car, with its side curve `sec(y)`. */
@@ -216,4 +237,27 @@ export type FleetCarSpec = Omit<CarSpec, 'gh' | 'warp' | 'arches'> & {
   rails?: boolean | number
   dropRear?: boolean
   exhaust?: boolean
+}
+
+/** A superellipse loft (`sloft`): segments round each section, Catmull-Rom resampling to `smooth` stations, sections along y, exponent and crease angle. */
+export interface SloftOptions {
+  seg?: number
+  smooth?: number
+  axis?: string
+  p?: number
+  crease?: number
+}
+
+/** A loft added to the car (`body`): the loft, the parent it hangs from, and `def: false` to keep it out of the deforming shell. */
+export type BodyOptions = SloftOptions & { parent?: Object3D | null; def?: boolean }
+
+/** A body crease (`crease`): its height, the paint or colour, the offset from the bodywork, the u range and the shadow fillet's material. */
+export interface CreaseOptions {
+  h?: number
+  mat?: Material
+  col?: ColorRepresentation
+  off?: number
+  u0?: number
+  u1?: number
+  shade?: Material
 }

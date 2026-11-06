@@ -8,7 +8,17 @@
   const GI = GameInteractables
   const GT = GameInteractablesThree
   const HHP = GameInteractablesHousehold
-  const $ = (/** @type {string} */ s) => document.querySelector(s)
+  /** @typedef {import('@adatechnology/game-interactables-household').HouseholdItem} HouseholdItem */
+  /** @typedef {import('@adatechnology/game-interactables').ObjectSpec} ObjectSpec */
+  /** @typedef {import('@adatechnology/game-interactables').WorldEvent} WorldEvent */
+  /** @typedef {import('@adatechnology/game-interactables').ItemStack} ItemStack */
+  // the entries, the player and the API on `window.__showroom` are typed in types/scripts-globals.d.ts (`ShowroomApi`), which the test uses too
+  /** @typedef {ShowroomEnvMaterials} EnvMaterials */
+  /** @typedef {ShowroomHouseholdEntry} HouseholdEntry */
+  /** @typedef {ShowroomCustomEntry} CustomEntry */
+  /** @typedef {ShowroomEntry} ShowEntry */
+  /** @typedef {{ id: string; type: string; x: number; z: number; ry: number; item?: HouseholdItem; view?: ShowroomEntryView }} Placement */
+  const $ = (/** @type {string} */ s) => /** @type {HTMLElement} */ (document.querySelector(s))
 
   // ---------------------------------------------------------------------------------------------------------------------------
   // Constants and small helpers
@@ -23,6 +33,7 @@
     ['sockets', 'Tomadas'],
     ['shower', 'Chuveiro'],
   ]
+  /** @type {Readonly<Record<string, string>>} */
   const GROUP_NAMES = {
     storage: 'Armazenamento',
     kitchen: 'Cozinha e banheiro',
@@ -55,7 +66,12 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296
     }
   }
-  /** Object-local point to world, with the engine's convention (ry turns +z toward +x). */
+  /**
+   * Object-local point to world, with the engine's convention (ry turns +z toward +x).
+   * @param {{ x: number; y?: number; z: number; ry: number }} tr
+   * @param {ArrayLike<number>} p
+   * @returns {[number, number, number]}
+   */
   function toWorld(tr, p) {
     const c = Math.cos(tr.ry)
     const s = Math.sin(tr.ry)
@@ -64,7 +80,7 @@
 
   const params = new URLSearchParams(location.search)
   const state = {
-    quality: params.get('q') === 'high' || params.get('q') === 'game' ? params.get('q') : innerWidth < 800 ? 'game' : 'high',
+    quality: /** @type {'high' | 'game'} */ (params.get('q') === 'high' || params.get('q') === 'game' ? params.get('q') : innerWidth < 800 ? 'game' : 'high'),
     night: false,
     rain: false,
     wind: false,
@@ -73,11 +89,17 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Procedural textures (canvas, no assets)
   // ---------------------------------------------------------------------------------------------------------------------------
+  /**
+   * @param {number} w
+   * @param {number} h
+   * @param {(g: CanvasRenderingContext2D, w: number, h: number) => void} draw
+   * @param {number} [anisotropy]
+   */
   function canvasTexture(w, h, draw, anisotropy) {
     const c = document.createElement('canvas')
     c.width = w
     c.height = h
-    draw(c.getContext('2d'), w, h)
+    draw(/** @type {CanvasRenderingContext2D} */ (c.getContext('2d')), w, h)
     const t = new T.CanvasTexture(c)
     t.wrapS = t.wrapT = T.RepeatWrapping
     t.colorSpace = T.SRGBColorSpace
@@ -88,7 +110,7 @@
 
   function woodTexture() {
     const rnd = mulberry(7)
-    return canvasTexture(512, 512, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; beginPath: () => void; moveTo: (arg0: number, arg1: number) => void; lineTo: (arg0: number, arg1: number) => void; stroke: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
+    return canvasTexture(512, 512, (/** @type {CanvasRenderingContext2D} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       const planks = 6
       const pw = w / planks
       for (let i = 0; i < planks; i++) {
@@ -142,7 +164,7 @@
   }
   function grassTexture() {
     const rnd = mulberry(3)
-    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
+    return canvasTexture(256, 256, (/** @type {CanvasRenderingContext2D} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#5d8c3e'
       g.fillRect(0, 0, w, h)
       for (let i = 0; i < 3200; i++) {
@@ -154,7 +176,7 @@
   }
   function concreteTexture() {
     const rnd = mulberry(5)
-    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; strokeRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
+    return canvasTexture(256, 256, (/** @type {CanvasRenderingContext2D} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#b9b6ae'
       g.fillRect(0, 0, w, h)
       for (let i = 0; i < 2500; i++) {
@@ -168,7 +190,7 @@
     })
   }
   function rugTexture() {
-    return canvasTexture(256, 256, (/** @type {{ fillStyle: string; fillRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; strokeStyle: string; lineWidth: number; strokeRect: (arg0: number, arg1: number, arg2: number, arg3: number) => void; save: () => void; translate: (arg0: number, arg1: number) => void; rotate: (arg0: number) => void; restore: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
+    return canvasTexture(256, 256, (/** @type {CanvasRenderingContext2D} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
       g.fillStyle = '#8c4a3a'
       g.fillRect(0, 0, w, h)
       g.strokeStyle = '#e8d6a8'
@@ -206,15 +228,30 @@
        * @param {number} seed
        */
     constructor(seed) {
+      /** @type {number[]} */
       this.pos = []
+      /** @type {number[]} */
       this.nor = []
+      /** @type {number[]} */
       this.col = []
+      /** @type {number[]} */
       this.uv = []
+      /** @type {number[]} */
       this.idx = []
       this.rnd = mulberry(seed || 1)
       this.c = new T.Color()
     }
-    /** Box from two corners. `color` is a hex number, or [px, nx, py, ny, pz, nz]. */
+    /**
+     * Box from two corners. `color` is a hex number, or [px, nx, py, ny, pz, nz].
+     * @param {number} x0
+     * @param {number} y0
+     * @param {number} z0
+     * @param {number} x1
+     * @param {number} y1
+     * @param {number} z1
+     * @param {number | readonly number[]} color
+     * @param {number} [jitter]
+     */
     box(x0, y0, z0, x1, y1, z1, color, jitter) {
       const xs = [Math.min(x0, x1), Math.max(x0, x1)]
       const ys = [Math.min(y0, y1), Math.max(y0, y1)]
@@ -307,7 +344,7 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Renderer, scene, lights, sky
   // ---------------------------------------------------------------------------------------------------------------------------
-  const canvas = $('#c')
+  const canvas = /** @type {HTMLCanvasElement} */ ($('#c'))
   /**
      * @type {THREE.WebGLRenderer}
      */
@@ -329,10 +366,9 @@
   const scene = new T.Scene()
   scene.fog = new T.Fog(0xcfe0ec, 45, 150)
   const camera = new T.PerspectiveCamera(72, 1, 0.06, 400)
+  /** @type {ReturnType<typeof GameTerrain.createTerrain> | null} */
   let terrain = null
-  /**
-     * @type {{ group: THREE.Object3D<THREE.Object3DEventMap>; sync: (arg0: THREE.Vector3) => void; } | null}
-     */
+  /** @type {ReturnType<typeof GameTerrainThree.createTerrainRenderer> | null} */
   let terrainView = null
   camera.rotation.order = 'YXZ'
   scene.add(camera)
@@ -384,6 +420,7 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Environment: walls, floors, ground, fence, trees. Everything static is merged (a handful of draw calls).
   // ---------------------------------------------------------------------------------------------------------------------------
+  /** @type {{ wallRects: number[][]; solidRects: number[][]; group: THREE.Group; materials: EnvMaterials | null }} */
   const env = { wallRects: [], solidRects: [], group: new T.Group(), materials: null }
   scene.add(env.group)
 
@@ -403,8 +440,8 @@
     env.wallRects.length = 0
     env.solidRects.length = 0
     while (env.group.children.length) {
-      const o = env.group.children.pop()
-      o.traverse((n) => n.geometry && n.geometry.dispose())
+      const o = /** @type {THREE.Object3D} */ (env.group.children.pop())
+      o.traverse((n) => /** @type {THREE.Mesh} */ (n).geometry && /** @type {THREE.Mesh} */ (n).geometry.dispose())
     }
 
     const walls = new BoxBatch(11)
@@ -415,7 +452,15 @@
     const CAP = 0xe6e1d8
     const TRIM = 0xf4f1ea
 
-    // walls running along x (thickness z0..z1) or along z (thickness x0..x1)
+    /**
+     * Walls running along x (thickness z0..z1) or along z (thickness x0..x1).
+     * @param {'x' | 'z'} axis
+     * @param {number} c0
+     * @param {number} c1
+     * @param {number} a
+     * @param {number} b
+     * @param {{ plus: number; minus: number; skirtPlus?: boolean; skirtMinus?: boolean; openings?: { a: number; b: number; y0: number; y1: number }[] }} o
+     */
     function run(axis, c0, c1, a, b, o) {
       const ops = (o.openings || []).slice().sort((/** @type {{ a: number; }} */ p, /** @type {{ a: number; }} */ r) => p.a - r.a)
       const H = CEIL
@@ -624,7 +669,9 @@
     'pt-BR': { 'type.ceiling_lamp': 'luminária de teto', 'type.water_tank': "caixa d'água" },
     en: { 'type.ceiling_lamp': 'ceiling lamp', 'type.water_tank': 'water tank' },
   }
+  /** @type {WorldEvent[]} */
   const events = [] // last events, for tests
+  /** @type {ItemStack[]} */
   const pack = [] // backpack: [{ type, qty }]
   const world = GI.createWorld({
     locale: 'pt-BR',
@@ -640,22 +687,28 @@
   })
   const gfx = GT.createThreeAdapter(T, { document, Reflector, envMap: envTexture })
 
+  /** @type {ReturnType<typeof makeMaterials> | null} */
   let mats = null
   function makeMaterials() {
     const m = GT.createDefaultMaterials(T, state.quality)
-    for (const k of Object.keys(m)) if ('envMapIntensity' in m[k]) m[k].envMapIntensity = k === 'metal' ? 0.9 : 0.5
+    for (const k of /** @type {(keyof typeof m)[]} */ (Object.keys(m))) if ('envMapIntensity' in m[k]) /** @type {THREE.MeshStandardMaterial} */ (m[k]).envMapIntensity = k === 'metal' ? 0.9 : 0.5
     return m
   }
 
   /** entries: id -> { id, type, x, z, ry, item, name, root, group, parts, extra } */
+  /** @type {Map<string, ShowEntry>} */
   const entries = new Map()
   /**
      * @type {string[]}
      */
   const order = []
 
+  /**
+   * @param {string} type
+   * @param {HouseholdItem} item
+   */
   function buildVisual(type, item) {
-    const mesh = gfx.createMeshApi({ quality: state.quality, materials: mats, shadows: true, swayAmplitude: 0.035 })
+    const mesh = gfx.createMeshApi({ quality: state.quality, materials: /** @type {NonNullable<typeof mats>} */ (mats), shadows: true, swayAmplitude: 0.035 })
     const spec = hh.build(type, item, mesh.api)
     const res = mesh.finish(spec) // game quality merges blind slats and clothes into a few meshes
     for (const l of res.lights) l.removeFromParent() // the showroom owns the lights (a handful of PointLights, constant count)
@@ -673,16 +726,17 @@
   }
   const mirrorMeshes = new Map()
 
+  /** @param {HouseholdEntry} e */
   function finishVisual(e) {
-    const spec = world.get(e.id).spec
+    const spec = /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(e.id)).spec
     e.group.traverse((o) => {
-      if (!o.isMesh) return
+      if (!(/** @type {THREE.Mesh} */ (o)).isMesh) return
       const mk = o.userData.material
       if (mk === 'glass' || mk === 'water' || mk === 'emissive') o.castShadow = false
     })
     // TV: the only emissive mesh is the screen
     if (spec.devices && spec.devices.some((/** @type {{ kind: string; }} */ d) => d.kind === 'screen')) {
-      const mesh = e.group.children.find((c) => c.isMesh && c.userData.material === 'emissive')
+      const mesh = /** @type {THREE.Mesh | undefined} */ (e.group.children.find((c) => /** @type {THREE.Mesh} */ (c).isMesh && c.userData.material === 'emissive'))
       if (mesh) {
         let sc = screens.get(e.id)
         if (!sc) {
@@ -699,7 +753,7 @@
       const g = e.parts[s.part || s.id]
       if (!g || g.userData.merged) continue // merged cloth already carries its own sway shader
       g.traverse((o) => {
-        if (o.isMesh && !o.userData.sway) gfx.attachSway(o, { amplitude: s.kind === 'cloth' ? 0.035 : 0.02 })
+        if (/** @type {THREE.Mesh} */ (o).isMesh && !o.userData.sway) gfx.attachSway(/** @type {THREE.Mesh} */ (o), { amplitude: s.kind === 'cloth' ? 0.035 : 0.02 })
       })
     }
     // mirrors: a plane of our own on the part (or the object), registered for the Reflector
@@ -713,7 +767,7 @@
       const n = new T.Vector3(m.normal[0], m.normal[1], m.normal[2]).normalize()
       mesh.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), n)
       const host = m.part ? e.parts[m.part] : e.group
-      const pv = m.part ? spec.parts.find((p) => p.id === m.part).pivot : [0, 0, 0]
+      const pv = m.part ? /** @type {import('@adatechnology/game-interactables').PartSpec} */ (/** @type {NonNullable<ObjectSpec['parts']>} */ (spec.parts).find((p) => p.id === m.part)).pivot : [0, 0, 0]
       mesh.position.set(m.center[0] - pv[0] + n.x * 0.003, m.center[1] - pv[1] + n.y * 0.003, m.center[2] - pv[2] + n.z * 0.003)
       host.add(mesh)
       mirrorMeshes.set(id, mesh)
@@ -728,6 +782,10 @@
   }
   const UNIT_PLANE = new T.PlaneGeometry(1, 1)
 
+  /**
+   * @param {Placement} p
+   * @returns {HouseholdEntry}
+   */
   function placeHousehold(p) {
     const item = Object.assign({ seed: hash(p.id) % 100000 }, p.item || {})
     const v = buildVisual(p.type, item)
@@ -738,6 +796,7 @@
     root.add(v.group)
     scene.add(root)
     world.add(p.id, v.spec, { x: p.x, y: 0, z: p.z, ry: p.ry })
+    /** @type {HouseholdEntry} */
     const e = { id: p.id, type: p.type, x: p.x, z: p.z, ry: p.ry, item, root, group: v.group, parts: v.parts, hh: true, view: p.view }
     entries.set(p.id, e)
     order.push(p.id)
@@ -750,8 +809,8 @@
       if (!e.hh) continue
       const old = e.group
       e.root.remove(old)
-      old.traverse((/** @type {{ geometry: THREE.PlaneGeometry; }} */ o) => {
-        if (o.geometry && o.geometry !== UNIT_PLANE) o.geometry.dispose()
+      old.traverse((o) => {
+        if (/** @type {THREE.Mesh} */ (o).geometry && /** @type {THREE.Mesh} */ (o).geometry !== UNIT_PLANE) /** @type {THREE.Mesh} */ (o).geometry.dispose()
       })
       // wires were children of root: drop everything but the new group
       for (const c of e.root.children.slice()) c.removeFromParent()
@@ -775,7 +834,7 @@
      * @param {string} name
      */
   function placeLamp(id, x, z, name) {
-    const spec = { type: 'ceiling_lamp', devices: [{ id: 'lamp', kind: 'lamp', watts: 40, circuit: 'lights' }], interactions: [] }
+    const spec = /** @type {ObjectSpec} */ ({ type: 'ceiling_lamp', devices: [{ id: 'lamp', kind: 'lamp', watts: 40, circuit: 'lights' }], interactions: [] })
     world.add(id, spec, { x, y: 0, z, ry: 0 })
     const g = new T.Group()
     g.position.set(x, CEIL, z)
@@ -794,21 +853,23 @@
     light.position.set(0, -0.5, 0)
     g.add(light)
     scene.add(g)
+    /** @type {CustomEntry} */
     const e = { id, type: 'ceiling_lamp', x, z, ry: 0, name, root: g, custom: true, view: { dist: 0.1, look: [x, 2.3, z], at: [x, z + 1.2] } }
     entries.set(id, e)
     order.push(id)
     lamps.push({ id, light, bulbMat, on: false })
   }
 
+  /** @type {{ id: string; x: number; z: number; gauge: null; fill: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial> | null }} */
   const TANK = { id: 'water_tank', x: 11.8, z: 9.5, gauge: null, fill: null }
   function placeTank() {
-    const spec = {
+    const spec = /** @type {ObjectSpec} */ ({
       type: 'water_tank',
       tanks: [{ id: 'main', capacity: 500, level: 500, rainArea: 40 }],
       damage: [{ target: 'main', kind: 'water', hp: 100 }],
       colliders: [{ id: 'body', center: [0, 0.8, 0], half: [0.58, 0.8, 0.58] }],
       interactions: [],
-    }
+    })
     world.add(TANK.id, spec, { x: TANK.x, y: 0, z: TANK.z, ry: 0 })
     const g = new T.Group()
     g.position.set(TANK.x, 0, TANK.z)
@@ -836,13 +897,14 @@
     pipe.position.set(0.2, 0.75, -0.7)
     g.add(stand, body, lid, ring1, ring2, gaugeBack, fill, pipe)
     g.traverse((o) => {
-      if (o.isMesh) {
+      if (/** @type {THREE.Mesh} */ (o).isMesh) {
         o.castShadow = o !== fill
         o.receiveShadow = true
       }
     })
     scene.add(g)
     TANK.fill = fill
+    /** @type {CustomEntry} */
     const e = { id: TANK.id, type: 'water_tank', x: TANK.x, z: TANK.z, ry: 0, root: g, custom: true, view: { dist: 1.9, look: [TANK.x, 1.1, TANK.z], at: [TANK.x, TANK.z + 1.9] } }
     entries.set(TANK.id, e)
     order.push(TANK.id)
@@ -854,6 +916,7 @@
   const PI = Math.PI
   const H = PI / 2
   const SOCK = { circuit: 'sockets' }
+  /** @type {Array<[string, string, number, number, number, HouseholdItem?]>} */
   const LAYOUT = [
     // kitchen: counter run along the north wall (fridge right next to the west wall)
     ['fridge', 'fridge', 0.37, 0.36, 0, { hinge: 'right' }],
@@ -938,6 +1001,7 @@
 
   function buildWorld() {
     mats = makeMaterials()
+    /** @type {Map<string, number>} */
     const names = new Map()
     for (const row of LAYOUT) {
       const [id, type, x, z, ry, item] = row
@@ -947,8 +1011,8 @@
       e.nth = n
     }
     for (const e of entries.values()) {
-      if (e.hh && names.get(e.type) > 1) e.name = `${typeInfo.get(e.type).name} ${e.nth}`
-      else if (e.hh) e.name = typeInfo.get(e.type).name
+      if (e.hh && /** @type {number} */ (names.get(e.type)) > 1) e.name = `${/** @type {import('@adatechnology/game-interactables-household').HouseholdType} */ (typeInfo.get(e.type)).name} ${e.nth}`
+      else if (e.hh) e.name = /** @type {import('@adatechnology/game-interactables-household').HouseholdType} */ (typeInfo.get(e.type)).name
     }
     placeLamp('lamp_kitchen', 3.0, 1.8, 'Luminária da cozinha')
     placeLamp('lamp_living', 3.0, 5.4, 'Luminária da sala')
@@ -967,6 +1031,7 @@
     for (const r of env.wallRects) if (x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3]) return true
     return false
   }
+  /** @type {Record<string, ReturnType<typeof world.fitSweep>>} */
   const sweeps = {}
   function fitAll() {
     for (const o of world.objects()) {
@@ -980,6 +1045,7 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Plugged cords: from the device plug (hh draws the first bit) to the socket it found, with the adapter's createCord
   // ---------------------------------------------------------------------------------------------------------------------------
+  /** @type {THREE.Mesh[]} */
   const cordMeshes = []
   function buildCords() {
     for (const m of cordMeshes.splice(0)) {
@@ -988,7 +1054,7 @@
     }
     for (const e of entries.values()) {
       if (!e.hh) continue
-      const o = world.get(e.id)
+      const o = /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(e.id))
       const spec = o.spec
       for (const d of spec.devices || []) {
         if (!d.plug) continue
@@ -998,14 +1064,17 @@
         if (sid) {
           const cut = sid.indexOf(':')
           const so = world.get(sid.slice(0, cut))
-          const sk = so && so.spec.sockets.find((s) => s.id === sid.slice(cut + 1))
+          const sk = so && /** @type {NonNullable<ObjectSpec['sockets']>} */ (so.spec.sockets).find((s) => s.id === sid.slice(cut + 1))
           if (so && sk) {
             const sp = toWorld(so.transform, sk.pos)
             const dir = [Math.sin(so.transform.ry), Math.cos(so.transform.ry)]
             const last = pts[pts.length - 1]
             if (last[1] < 0.3) {
+              /** @type {[number, number, number]} */
               const foot = [sp[0] + dir[0] * 0.035, 0.012, sp[2] + dir[1] * 0.035]
+              /** @type {[number, number, number]} */
               const mid1 = [last[0] + (foot[0] - last[0]) * 0.4, 0.012, last[2] + (foot[2] - last[2]) * 0.4]
+              /** @type {[number, number, number]} */
               const mid2 = [last[0] + (foot[0] - last[0]) * 0.75, 0.012, last[2] + (foot[2] - last[2]) * 0.75]
               pts.push(mid1, mid2, foot, [foot[0], Math.max(0.1, sp[1] - 0.04), foot[2]], [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012])
             } else {
@@ -1025,6 +1094,7 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Items in containers: small simple meshes at world.slotPosition (instanced: a few draw calls for hundreds of items)
   // ---------------------------------------------------------------------------------------------------------------------------
+  /** @type {Record<string, Array<['cyl' | 'box' | 'sph', number, number, number, number, number]>>} */
   const SHAPES = {
     can: [['cyl', 1, 1, 1, 0, 1]],
     bottle: [['cyl', 0.9, 0.72, 0.9, 0, 1], ['cyl', 0.36, 0.3, 0.36, 0.7, 0.55]],
@@ -1066,7 +1136,7 @@
     for (const e of entries.values()) {
       if (!e.hh) continue
       if (Math.abs(e.x - cx) > 14 || Math.abs(e.z - cz) > 14) continue
-      const spec = world.get(e.id).spec
+      const spec = /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(e.id)).spec
       for (const c of spec.containers || []) {
         if (c.access && world.partT(e.id, c.access) < 0.02) continue
         const stacks = world.contents(e.id, c.id)
@@ -1076,7 +1146,7 @@
           const def = hh.items[st.type]
           if (!def) continue
           const p = world.slotPosition(e.id, c.id, i)
-          const shape = SHAPES[def.shape] || SHAPES.box
+          const shape = SHAPES[/** @type {string} */ (def.shape)] || SHAPES.box
           for (const part of shape) {
             const kind = part[0]
             const mesh = items[kind]
@@ -1097,7 +1167,7 @@
       }
     }
     itemCount = n.cyl + n.box + n.sph
-    for (const k of Object.keys(items)) {
+    for (const k of /** @type {(keyof typeof items)[]} */ (Object.keys(items))) {
       const m = items[k]
       m.count = n[k]
       m.instanceMatrix.needsUpdate = true
@@ -1109,7 +1179,7 @@
   // Effects (smoke, fire, steam, water, flames), screens, lamps, rain
   // ---------------------------------------------------------------------------------------------------------------------------
   const effects = gfx.createEffects({ scene, camera, maxParticles: 2800, seed: 11, document })
-  const markerMat = new T.SpriteMaterial({ map: (() => canvasTexture(64, 64, (/** @type {{ beginPath: () => void; arc: (arg0: number, arg1: number, arg2: number, arg3: number, arg4: number) => void; lineWidth: number; strokeStyle: string; stroke: () => void; fillStyle: string; fill: () => void; }} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
+  const markerMat = new T.SpriteMaterial({ map: (() => canvasTexture(64, 64, (/** @type {CanvasRenderingContext2D} */ g, /** @type {number} */ w, /** @type {number} */ h) => {
     g.beginPath()
     g.arc(w / 2, h / 2, 22, 0, Math.PI * 2)
     g.lineWidth = 6
@@ -1177,14 +1247,17 @@
     rain.mesh.geometry.attributes.position.needsUpdate = true
   }
 
+  /** @type {{ m: THREE.MeshStandardMaterial; base: number }[]} */
   const envScale = [] // { m, base } materials whose environment reflection fades at night
   function registerEnv() {
     envScale.length = 0
-    const add = (m) => {
-      if (m && 'envMapIntensity' in m) envScale.push({ m, base: m.envMapIntensity })
+    const add = (/** @type {THREE.Material | undefined} */ m) => {
+      if (m && 'envMapIntensity' in m) envScale.push({ m: /** @type {THREE.MeshStandardMaterial} */ (m), base: /** @type {THREE.MeshStandardMaterial} */ (m).envMapIntensity })
     }
-    for (const k of Object.keys(mats)) add(mats[k])
-    for (const k of Object.keys(env.materials)) add(env.materials[k])
+    const ms = /** @type {Record<string, THREE.Material>} */ (mats)
+    for (const k of Object.keys(ms)) add(ms[k])
+    const em = /** @type {Record<string, THREE.Material>} */ (/** @type {unknown} */ (env.materials))
+    for (const k of Object.keys(em)) add(em[k])
   }
   function applyTime() {
     const night = state.night
@@ -1197,8 +1270,8 @@
     hemi.groundColor.setHex(night ? 0x151a26 : 0xb8ab97)
     renderer.toneMappingExposure = night ? 1.15 : 1
     sky.material.color.setHex(night ? 0x0a1126 : state.rain ? 0x9aa4ad : 0xffffff)
-    scene.fog.color.setHex(night ? 0x0a1020 : state.rain ? 0x9aa7b0 : 0xcfe0ec)
-    env.materials.ceilingMat.emissive.setHex(night ? 0x0c0c10 : 0x9c9890)
+    ;/** @type {THREE.Fog} */ (scene.fog).color.setHex(night ? 0x0a1020 : state.rain ? 0x9aa7b0 : 0xcfe0ec)
+    ;/** @type {EnvMaterials} */ (env.materials).ceilingMat.emissive.setHex(night ? 0x0c0c10 : 0x9c9890)
     for (const r of envScale) r.m.envMapIntensity = r.base * (night ? 0.05 : state.rain ? 0.45 : 0.7)
   }
 
@@ -1228,15 +1301,17 @@
   }
   function updateTank() {
     const lvl = world.water.level(`${TANK.id}:main`)
-    TANK.fill.scale.y = Math.max(0.001, lvl / 500)
+    ;/** @type {NonNullable<typeof TANK.fill>} */ (TANK.fill).scale.y = Math.max(0.001, lvl / 500)
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------
   // Player: first person, collision against walls and world.colliders() (soft volumes are never colliders)
   // ---------------------------------------------------------------------------------------------------------------------------
+  /** @type {{ x: number; z: number; yaw: number; pitch: number; vx: number; vz: number; seat: { object: string; seat: string; eye: [number, number, number]; pose: string } | null; eye: number }} */
   const player = { x: 6.1, z: 5.3, yaw: 0.35, pitch: -0.12, vx: 0, vz: 0, seat: null, eye: EYE }
   const keys = new Set()
   const stick = { x: 0, y: 0 }
+  /** @type {ReturnType<typeof world.colliders>} */
   let colliders = []
 
   /**
@@ -1350,12 +1425,17 @@
   }
 
   // --- seats ------------------------------------------------------------------------------------------------------------------
+  /**
+   * @param {string} objectId
+   * @param {string} seatId
+   */
   function seatEye(objectId, seatId) {
-    const o = world.get(objectId)
-    const seat = o.spec.seats.find((s) => s.id === seatId)
+    const o = /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(objectId))
+    const seat = /** @type {import('@adatechnology/game-interactables').SeatSpec} */ (/** @type {NonNullable<ObjectSpec['seats']>} */ (o.spec.seats).find((s) => s.id === seatId))
     const eye = toWorld(o.transform, [seat.pos[0], seat.pos[1] + (seat.eye === undefined ? (seat.pose === 'lie' ? 0.18 : 0.62) : seat.eye), seat.pos[2]])
     return { eye, yaw: o.transform.ry + seat.ry + PI, pose: seat.pose, exit: toWorld(o.transform, seat.exit) }
   }
+  /** @param {Extract<WorldEvent, { type: 'seat' }>} e */
   function onSeat(e) {
     if (e.actor !== 'player') return
     if (e.seated) {
@@ -1403,22 +1483,25 @@
   /**
      * Item slot looked at in an open container: { id, container, slot, stack, pos, angle, dist }.
      * @param {number} maxAngle
+     * @returns {{ id: string; container: string; slot: number; stack: ItemStack; pos: [number, number, number]; angle: number; dist: number } | null}
      */
   function pickSlot(maxAngle) {
     const ex = camera.position.x
     const ey = camera.position.y
     const ez = camera.position.z
     const dir = [-Math.sin(player.yaw) * Math.cos(player.pitch), Math.sin(player.pitch), -Math.cos(player.yaw) * Math.cos(player.pitch)]
+    /** @type {ReturnType<typeof pickSlot>} */
     let best = null
     for (const e of entries.values()) {
       if (!e.hh || Math.abs(e.x - ex) > 4 || Math.abs(e.z - ez) > 4) continue
-      const spec = world.get(e.id).spec
+      const spec = /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(e.id)).spec
       for (const c of spec.containers || []) {
         if (!world.accessible(e.id, c.id)) continue
         const stacks = world.contents(e.id, c.id)
         for (let i = 0; i < stacks.length; i++) {
-          if (!stacks[i]) continue
-          const def = hh.items[stacks[i].type]
+          const sti = stacks[i]
+          if (!sti) continue
+          const def = hh.items[sti.type]
           if (def && def.pickable === false) continue
           const p = world.slotPosition(e.id, c.id, i)
           const hgt = def ? def.size[1] / 2 : 0.05
@@ -1428,20 +1511,20 @@
           const cos = clamp((v[0] * dir[0] + v[1] * dir[1] + v[2] * dir[2]) / dist, -1, 1)
           const angle = Math.acos(cos)
           if (angle > (maxAngle || 0.3)) continue
-          if (!best || angle < best.angle) best = { id: e.id, container: c.id, slot: i, stack: stacks[i], pos: p, angle, dist }
+          if (!best || angle < best.angle) best = { id: e.id, container: c.id, slot: i, stack: sti, pos: p, angle, dist }
         }
       }
     }
     return best
   }
-  function itemName(type) {
+  function itemName(/** @type {string} */ type) {
     return world.t(`item.${type}`)
   }
-  function takeSlot(s) {
+  function takeSlot(/** @type {ReturnType<typeof pickSlot>} */ s) {
     if (!s) return null
     return world.take(s.id, s.container, s.slot, 'player')
   }
-  function interactTarget(t) {
+  function interactTarget(/** @type {ReturnType<typeof currentTarget>} */ t) {
     if (!t) return false
     const ok = t.act('player')
     return ok
@@ -1454,7 +1537,7 @@
   function pressTake() {
     return !!takeSlot(pickSlot(0.3))
   }
-  function addToPack(st) {
+  function addToPack(/** @type {ItemStack} */ st) {
     const found = pack.find((p) => p.type === st.type)
     if (found) found.qty += st.qty
     else pack.push({ type: st.type, qty: st.qty })
@@ -1463,7 +1546,7 @@
 
   // --- world events -------------------------------------------------------------------------------------------------------------
   let shadowHold = 0
-  function onWorldEvent(e) {
+  function onWorldEvent(/** @type {WorldEvent} */ e) {
     if (e.type === 'part') shadowHold = 0.8
     else if (e.type === 'pickup') {
       if (e.actor === 'player') {
@@ -1479,7 +1562,7 @@
   }
 
   // --- teleport to an object ------------------------------------------------------------------------------------------------------
-  function standSpot(e) {
+  function standSpot(/** @type {ShowEntry} */ e) {
     if (e.view && e.view.at) return { x: e.view.at[0], z: e.view.at[1] }
     const def = typeInfo.get(e.type)
     const d = def ? def.d : 0.5
@@ -1493,7 +1576,7 @@
     const f = freeSpotNear(e.x + Math.sin(e.ry) * 1.2, e.z + Math.cos(e.ry) * 1.2)
     return { x: f[0], z: f[1] }
   }
-  function teleport(id) {
+  function teleport(/** @type {string} */ id) {
     const e = entries.get(id)
     if (!e) return false
     if (player.seat) standUp()
@@ -1512,7 +1595,7 @@
     return true
   }
   /**
-     * @param {{ x: number | undefined; z: number | undefined; eye: number | undefined; yaw: number | undefined; pitch: number | undefined; fov: number | undefined; }} v
+     * @param {ShowroomView} v
      */
   function setView(v) {
     if (v.x !== undefined) player.x = v.x
@@ -1538,12 +1621,13 @@
   let fpsAcc = 0
   let fpsN = 0
   let fps = 0
+  /** @type {[string, string][]} */
   const softIds = []
 
   function leakEmitter() {
     const hp = world.hp(TANK.id, 'main')
     if (hp === null || hp >= 100 || world.water.level(`${TANK.id}:main`) <= 0) return null
-    return { id: `${TANK.id}:leak`, object: TANK.id, kind: 'water', pos: [TANK.x + 0.52, 0.55, TANK.z + 0.1], dir: [1, -0.25, 0.1], size: 0.09, intensity: 0.7 }
+    return /** @type {import('@adatechnology/game-interactables').ActiveEmitter} */ ({ id: `${TANK.id}:leak`, object: TANK.id, kind: 'water', pos: [TANK.x + 0.52, 0.55, TANK.z + 0.1], dir: [1, -0.25, 0.1], size: 0.09, intensity: 0.7 })
   }
 
   /**
@@ -1558,7 +1642,7 @@
     world.update(dt)
     updateCamera()
     for (const id of order) {
-      const e = entries.get(id)
+      const e = /** @type {ShowEntry} */ (entries.get(id))
       if (e.hh) gfx.syncObject(world, id, e.parts, { time: clock })
     }
     const em = world.emitters()
@@ -1602,8 +1686,9 @@
   function frame(now) {
     requestAnimationFrame(frame)
     if (paused) return
-    const dt = clamp((now - (frame.last || now)) / 1000, 0, 0.05)
-    frame.last = now
+    const self = /** @type {typeof frame & { last?: number }} */ (frame)
+    const dt = clamp((now - (self.last || now)) / 1000, 0, 0.05)
+    self.last = now
     sim(dt)
     updateHud(dt)
     render()
@@ -1631,6 +1716,7 @@
     packCount: $('#packCount'),
     panel: $('#panel'),
   }
+  /** @type {ReturnType<typeof setTimeout> | number} */
   let toastTimer = 0
   /**
      * @param {string | null} text
@@ -1722,7 +1808,8 @@
     syncPanel()
   }
 
-  const ui = {}
+  /** @type {{ grid: HTMLInputElement; gas: HTMLInputElement }} */
+  const ui = /** @type {{ grid: HTMLInputElement; gas: HTMLInputElement }} */ ({})
   function buildPanel() {
     // breakers
     const br = $('#breakers')
@@ -1737,28 +1824,29 @@
       l.append(i, ` Disjuntor: ${label}`)
       br.append(l)
     }
-    ui.grid = $('#tGrid')
+    ui.grid = /** @type {HTMLInputElement} */ ($('#tGrid'))
     ui.grid.addEventListener('change', () => world.power.setGrid(ui.grid.checked))
-    ui.gas = $('#tGas')
+    ui.gas = /** @type {HTMLInputElement} */ ($('#tGas'))
     ui.gas.addEventListener('change', () => {
       if (gasOpen() !== ui.gas.checked) world.act('gas_bottle:use_gas')
     })
-    $('#tNight').addEventListener('change', (ev) => setNight(ev.target.checked))
-    $('#tRain').addEventListener('change', (ev) => setRain(ev.target.checked))
-    $('#tWind').addEventListener('change', (ev) => setWind(ev.target.checked))
+    $('#tNight').addEventListener('change', (ev) => setNight(/** @type {HTMLInputElement} */ (ev.target).checked))
+    $('#tRain').addEventListener('change', (ev) => setRain(/** @type {HTMLInputElement} */ (ev.target).checked))
+    $('#tWind').addEventListener('change', (ev) => setWind(/** @type {HTMLInputElement} */ (ev.target).checked))
     $('#bFill').addEventListener('click', () => world.water.refill(`${TANK.id}:main`, 500))
     $('#bDrain').addEventListener('click', drainTank)
     $('#bLeak').addEventListener('click', () => world.damage(TANK.id, 'main', 60, 'water'))
-    for (const b of document.querySelectorAll('#qualitySeg button')) b.addEventListener('click', () => setQuality(b.dataset.q))
+    for (const b of document.querySelectorAll('#qualitySeg button')) b.addEventListener('click', () => setQuality(/** @type {HTMLElement} */ (b).dataset.q))
     // object list, grouped
     const list = $('#objList')
+    /** @type {Map<string, ShowEntry[]>} */
     const groups = new Map()
     for (const id of order) {
-      const e = entries.get(id)
+      const e = /** @type {ShowEntry} */ (entries.get(id))
       const def = typeInfo.get(e.type)
-      const g = e.hh ? (def.group === 'bathroom' ? 'kitchen' : def.group) : 'house'
+      const g = e.hh ? (/** @type {NonNullable<typeof def>} */ (def).group === 'bathroom' ? 'kitchen' : /** @type {NonNullable<typeof def>} */ (def).group) : 'house'
       if (!groups.has(g)) groups.set(g, [])
-      groups.get(g).push(e)
+      ;/** @type {ShowEntry[]} */ (groups.get(g)).push(e)
     }
     const names = ['house', 'storage', 'kitchen', 'electrical', 'seating', 'window', 'yard']
     for (const g of names) {
@@ -1804,11 +1892,11 @@
     return world.partT('gas_bottle', 'valve') > 0.5
   }
   function syncQuality() {
-    for (const b of document.querySelectorAll('#qualitySeg button')) b.classList.toggle('on', b.dataset.q === state.quality)
+    for (const b of document.querySelectorAll('#qualitySeg button')) b.classList.toggle('on', /** @type {HTMLElement} */ (b).dataset.q === state.quality)
   }
   function syncPanel() {
     ui.grid.checked = world.power.grid
-    for (const i of document.querySelectorAll('#breakers input')) i.checked = world.power.breaker(i.dataset.circuit)
+    for (const i of document.querySelectorAll('#breakers input')) /** @type {HTMLInputElement} */ (i).checked = world.power.breaker(/** @type {string} */ (/** @type {HTMLInputElement} */ (i).dataset.circuit))
     ui.gas.checked = gasOpen()
     const gas = world.fuelLevel('gas_bottle', 'gas')
     $('#gasBar').style.width = `${clamp((gas / 13) * 100, 0, 100)}%`
@@ -1824,21 +1912,21 @@
     world.load(st)
     fitAll()
   }
-  function setNight(on) {
+  function setNight(/** @type {boolean} */ on) {
     state.night = !!on
-    $('#tNight').checked = state.night
+    ;/** @type {HTMLInputElement} */ ($('#tNight')).checked = state.night
     applyTime()
   }
-  function setRain(on) {
+  function setRain(/** @type {boolean} */ on) {
     state.rain = !!on
-    $('#tRain').checked = state.rain
+    ;/** @type {HTMLInputElement} */ ($('#tRain')).checked = state.rain
     world.water.setRain(on ? 60 : 0)
     rain.mesh.visible = state.rain
     applyTime()
   }
-  function setWind(on) {
+  function setWind(/** @type {boolean} */ on) {
     state.wind = !!on
-    $('#tWind').checked = state.wind
+    ;/** @type {HTMLInputElement} */ ($('#tWind')).checked = state.wind
     world.setWind(on ? 3.5 : 0, on ? 1.5 : 0)
     effects.setWind(on ? 3.5 : 0, on ? 1.5 : 0)
   }
@@ -1853,7 +1941,7 @@
     resize()
   }
   /**
-     * @param {string | null} q
+     * @param {string | null | undefined} q
      */
   function setQuality(q) {
     if (q !== 'high' && q !== 'game') return
@@ -1873,6 +1961,7 @@
   // Input
   // ---------------------------------------------------------------------------------------------------------------------------
   let locked = false
+  /** @type {{ id: number; x: number; y: number } | null} */
   let drag = null
   /**
      * @param {number} dx
@@ -1913,13 +2002,13 @@
         drag.y = ev.clientY
       }
     })
-    const end = (ev) => {
+    const end = (/** @type {PointerEvent} */ ev) => {
       if (drag && drag.id === ev.pointerId) drag = null
     }
     canvas.addEventListener('pointerup', end)
     canvas.addEventListener('pointercancel', end)
     window.addEventListener('keydown', (ev) => {
-      if (ev.target && ev.target.tagName === 'INPUT' && ev.target.type === 'text') return
+      if (ev.target && /** @type {HTMLInputElement} */ (ev.target).tagName === 'INPUT' && /** @type {HTMLInputElement} */ (ev.target).type === 'text') return
       if (ev.code === 'Space' || ev.code.startsWith('Arrow')) ev.preventDefault()
       if (ev.repeat) return
       keys.add(ev.code)
@@ -1937,11 +2026,9 @@
       $('#touch').hidden = false
       const st = $('#stick')
       const knob = $('#knob')
-      /**
-         * @type {null}
-         */
+      /** @type {number | null} */
       let sid = null
-      const move = (/** @type {Event} */ ev) => {
+      const move = (/** @type {PointerEvent} */ ev) => {
         const r = st.getBoundingClientRect()
         const cx = r.left + r.width / 2
         const cy = r.top + r.height / 2
@@ -1964,7 +2051,7 @@
       st.addEventListener('pointermove', (ev) => {
         if (ev.pointerId === sid) move(ev)
       })
-      const stop = (/** @type {{ pointerId: null; }} */ ev) => {
+      const stop = (/** @type {PointerEvent} */ ev) => {
         if (ev.pointerId !== sid) return
         sid = null
         stick.x = stick.y = 0
@@ -1998,9 +2085,9 @@
     registerEnv()
     buildCords()
     for (const id of order) {
-      const e = entries.get(id)
+      const e = /** @type {ShowEntry} */ (entries.get(id))
       if (!e.hh) continue
-      for (const s of world.get(id).spec.soft || []) softIds.push([id, s.id])
+      for (const s of /** @type {import('@adatechnology/game-interactables').WorldObject} */ (world.get(id)).spec.soft || []) softIds.push([id, s.id])
     }
     buildPanel()
     applyQuality()
@@ -2017,7 +2104,7 @@
   window.__showroom = {
     THREE: T, world, hh, scene, camera, renderer, player, entries, state, env, gfx, effects, mirrors: mirrorsApi, screens, lamps, pack, events, sweeps, items,
     TANK, LAYOUT,
-    sim, render, step(seconds, hz) {
+    sim, render, step(/** @type {number} */ seconds, /** @type {number | undefined} */ hz) {
       const dt = 1 / (hz || 30)
       for (let t = 0; t < seconds - 1e-9; t += dt) sim(dt)
     },
@@ -2055,6 +2142,7 @@
     showToast,
   }
   // ?area=kitchen opens the house in that room, the way the demo site links each area of the index
+  /** @type {Readonly<Record<string, string>>} */
   const AREA_SPOTS = { kitchen: 'stove', living: 'sofa', bedroom: 'bed_double', bathroom: 'shower', laundry: 'washing_machine', yard: 'bbq', cabin: 'wood_stove', camp: 'campfire' }
   const area = params.get('area')
   if (area && AREA_SPOTS[area]) teleport(AREA_SPOTS[area])

@@ -15,31 +15,38 @@ Levantamento na main em 2026-11-03, atualizado em 2026-11-06. Atualize ao termin
 ## Falta tipar de verdade
 
 ### Pacotes com o strict desligado ou contornado
-- [ ] `game-floorplan-three`: `strict: false` e `noImplicitAny: false` no tsconfig (536 `any`)
+- [x] `game-floorplan-three`: strict ligado (o tsconfig só herda o `tsconfig.base.json`), `STRICT_OFF_KNOWN` vazio
 - [x] `game-characters-three`: 8 arquivos com `// @ts-nocheck` (`rich/person-kit.ts`, `rich/person-builder.ts`, `rich/best-builder.ts` e 5 em `rich/accessories/`)
 - [x] `game-shapes`: `primitives/earcut.ts` tipado (a cópia do Earcut do three com tipos; a lógica igual, a triangulação continua batendo com a do three)
 
-### `any` explícito: 4.979 em 240 arquivos (src, testes e tools), contados em `eslint-suppressions.json`
+### `any` explícito: de 4.979 em 240 arquivos para 28 em 3 (só a API de extensão do `game-vehicles`), contados em `eslint-suppressions.json`
 Contratos primeiro, depois quem os outros importam, e os grandes por último, um PR por pacote:
 - [x] Contratos: `game-contracts` 3 (registros de tipos heterogêneos, como compositores, geradores e postes, usam a forma de método, sem `any`)
 - [x] Pequenos: `game-devtools` 5, `game-destruction` 2, `game-destruction-three` 4, `game-shapes` 2, `game-shapes-three` 7, `game-urban` 8, `game-vehicles-driving` 2, e 1 cada em `game-props3d`, `game-stories`, `game-vegetation`
 - [x] `game-floorplan`: `Json` virou `unknown`; a planta (portas, paredes, janelas, portões, caminhos, lote, fachada), os slots, a grade de circulação e o resultado do `generate` (`FloorplanResult`) têm tipo próprio. Residential, rural, commercial, post-apocalyptic e structure ajustados ao resultado tipado
 - [x] `game-floorplan-structure`: `Json = unknown`; instalações (luz, gás, água, solar, edícula) com tipos próprios exportados; `src` sem `any` (os que sobram estão nos testes)
 - [x] `game-floorplan-interactables`: `Json = unknown`; o adaptador usa os tipos reais do kit (`World`, `ObjectSpec`, `HouseholdItem`) e exporta o plano tipado (`AdapterPlan`, `PlanEntry`); `src` sem `any`
-- [ ] Casas, `any` que sobram (só nos testes, menos o post-apocalyptic): `game-floorplan-residential` 12, `game-floorplan-commercial` 13, `game-floorplan-interactables` 29, `game-floorplan-structure` 85, `game-floorplan-post-apocalyptic` 125
-- [ ] `game-floorplan-three` 536 (junto com ligar o strict)
+- [x] Casas: `game-floorplan-residential`, `-commercial`, `-interactables`, `-structure` e `-post-apocalyptic` sem `any` (src e testes)
+- [x] `game-floorplan-three` 536 → 0, com o strict ligado: o kernel sem a assinatura `any` (o que nenhum módulo declara é `unknown`), a destruição da casa com tipos próprios (`HouseStructure`, `HouseDestruction`, `BreachView` em `src/destruction/types.ts`), a brecha com a vista de parede tipada, e os testes
 - [x] Adaptadores three: `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62 (o `type Three = any` virou `typeof THREE`)
-- [ ] Adaptadores three que faltam: `game-characters-three` (resto, fora do construtor de sobreviventes), `game-vehicles-three` 49 (o que sobra está nos arquivos do PR de som do carro)
+- [x] `game-characters-three` sem `any`
+- [x] `game-vehicles-three` sem `any`: o módulo da área usa `typeof THREE` e os tipos do three (o `MistThree` do para-brisa embaçado aceita o `Side` do three)
 - [x] `game-vehicles`: 1.584 → 29. `src` e testes sem `any`; as referências de vinco e corte dos testes perderam o `eslint-disable` e ganharam tipos. Sobram os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada), que só saem depois da frota tipada, porque a frota escreve campos livres neles
-- [ ] `game-vehicles-fleet` 2.247 → 898 (checada contra o fonte novo do `game-vehicles`, sem build, por `paths`)
+- [x] `game-vehicles-fleet` 2.247 → 0: os kits compartilhados (`createWaterAirKit`, `createPlanesKit`) com tipo próprio, as opções de cada peça (casco, hélice, rotor, cabine, torre, guidão, chassi) como interfaces, e os testes
+- [ ] `game-vehicles` 28: os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada). Trocar por `unknown` dá uns 2.600 erros na frota, que lê esses campos livres: vira um PR próprio, que declara cada campo
 - Achados tipando o `game-vehicles` (corrigidos): `zoneDamageAt` devolve `{ main, list }` e `zonePoint` recebe o lado e devolve `{ p, dir }`, mas a API pública dizia outra coisa; `locate` e `partOfSurface` recebiam o ponto como número; o giro do `fling` era tipado como número; `broken` das lanternas também vale `'gone'`
+- Achados tipando a frota (o comportamento ficou igual, para decidir à parte): o `fogLamp` dos carros extras recebe um número onde vai o ponto da superfície; `LampSpec.wrap` era tipado como booleano mas é um comprimento; `Gd.ux ? 0.5 : 0.5` dá sempre 0,5
 - [x] `tools/`: `vehicles-catalog`, `characters-catalog`, `compat-check` e `golden` sem `any` (os documentos falsos, o digest da frota, a frota leve e o snapshot exato com tipos estruturais)
 
-### Fora dos pacotes, ainda em JavaScript
-Checados com JSDoc pelo `tsconfig.scripts.checked.json` (CI: `pnpm typecheck:scripts`): 63 de 131. Faltam 68:
-- [ ] `examples/*`: 39 (`test-room` 13; as outras áreas de 1 a 4)
-- [ ] `tools/`: 24 (`golden` 16, `characters-catalog` 8)
-- [x] `site/`: os 4 (`build-site`, `capture-thumbs`, `catalog`, `landing`)
+### Fora dos pacotes, em JavaScript com JSDoc
+- [x] Os 135 scripts de `examples/`, `tools/` e `site/` checados strict pelo `tsconfig.scripts.json` (CI: `pnpm typecheck:scripts`). A lista
+  `tsconfig.scripts.checked.json` saiu: o check pega o `include` inteiro, então um script novo já entra checado.
+- [x] O que cada página de teste põe no `window` para os scripts (sala, relatórios das áreas, showroom, sondas de som, perf, auditoria) tem tipo em
+  `types/scripts-globals.d.ts`; a página que atribui e o script que lê quebram juntos
+- Achados tipando os scripts (corrigidos no #213): os kits de veículo das áreas urbana e de clima recebiam `room.vfx` (o mundo de efeitos,
+  `play(id, ponto)`) onde esperam um `EffectSink` (`play(pedido)`), e a fumaça, a poeira e o fogo desses carros sumiam (agora recebem `room.effects`);
+  o `perf.mjs` lia `room.tool.id`, que não existe (é `def.id`), e o aviso de arma errada nunca disparava; o teste da área de móveis contava peças
+  `'detached'`, que não é um status de peça
 
 ### Regras
 - [x] Regra "tudo tipado" no `CLAUDE.md` (seção 8)

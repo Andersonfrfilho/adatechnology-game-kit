@@ -8,9 +8,15 @@ import original from './fixtures/original-pt.json'
 import { fakeDocument } from './helpers/fake-dom'
 import { makeFleetKit, strings } from './helpers/kit'
 
-const en = enLocale.fleet as Record<string, any>
-const pt = ptBrLocale.fleet as Record<string, any>
-const ORIGINAL = original as unknown as Record<string, any>
+/** The fleet table of a locale: the vehicle texts by key and the other sections. */
+interface FleetTable {
+  vehicles: Record<string, { name?: string; inspired?: string; category?: string; description?: string; [field: string]: unknown }>
+  stripped: string[]
+  [section: string]: unknown
+}
+const en = enLocale.fleet as unknown as FleetTable
+const pt = ptBrLocale.fleet as unknown as FleetTable
+const ORIGINAL = original as unknown as FleetTable
 
 function paths(value: unknown): string[] {
   return [...strings(value)].map(([path]) => path)

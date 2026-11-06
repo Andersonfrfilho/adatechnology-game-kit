@@ -7,8 +7,15 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
+/** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
+/** @typedef {import('@adatechnology/game-contracts').HandTargets} HandTargets */
+/** @typedef {{ R: NonNullable<HandTargets['R']>; L: NonNullable<HandTargets['L']>; grip?: number }} Hands */
+/** @typedef {import('@adatechnology/game-characters-three').RoomAvatarLike} PlayerBody */
+/** @typedef {{ stance: string; playing: string | null; visible: boolean; strikes: number }} SeenBody */
+
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
+/** @returns {typeof import('playwright')} */
 function loadPlaywright() {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -27,6 +34,7 @@ const shotsDir = join(here, 'shots')
 mkdirSync(shotsDir, { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+/** @type {string[]} */
 const external = []
 /**
  * @type {string[]}
@@ -44,7 +52,7 @@ const SHOT = { timeout: 180000 }
 const started = Date.now()
 const lap = (/** @type {string} */ label) => console.log(`TIME  ${((Date.now() - started) / 1000).toFixed(0)} s  ${label}`)
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 } })
-await context.route('**/*', (route) => {
+await context.route('**/*', (/** @type {import('playwright').Route} */ route) => {
   const url = route.request().url()
   if (/^(file|data|blob|about):/.test(url)) return route.continue()
   external.push(url)
@@ -57,7 +65,7 @@ page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m
   if (m.type() === 'error' && !isThumbnailError(m.text())) consoleErrors.push(m.text())
   if (m.type() === 'warning' && m.text().startsWith('[game-kit]')) fallbackWarnings.push(m.text())
 })
-page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
+page.on('pageerror', (/** @type {Error} */ e) => consoleErrors.push(`pageerror: ${e.message}`))
 
 const url = pathToFileURL(dist).href
 
@@ -66,6 +74,7 @@ const url = pathToFileURL(dist).href
 // page load takes minutes on software GL, so the halves run in parallel jobs), `hands` (first person, close-ups, contact sheets); unset runs all
 const [PART, SHARD] = (process.env.EXAMPLE_PART || 'all').split(':')
 const runs = (/** @type {string} */ part) => PART === 'all' || PART === part
+/** @type {Pick<NonNullable<Window['__testRoomReport']>, 'passed' | 'failed' | 'results'>} */
 const report = { passed: 0, failed: 0, results: [] }
 let bodyOk = true
 
@@ -96,6 +105,7 @@ if (runs('views')) {
       const lists = { household: r.items, weapons: r.weapons?.items ?? [], goods: r.itemsArea?.items ?? [], vehicles: r.vehicles?.items ?? [], vegetation: r.vegetation?.items ?? [], characters: r.characters?.items ?? [], animals: r.animals?.items ?? [] }
       const all = Object.values(lists).flat()
       const room = window.__testRoom
+      /** @type {Record<string, boolean>} */
       const spawnable = {}
       for (const id of ['weapon_beretta_92fs', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
         try {
@@ -179,12 +189,13 @@ if (runs('views')) {
       const r = window.__testRoom
       const groups = r.testTable.groups()
       const sizes = Object.fromEntries(groups.map((g) => [g, r.testTable.items().filter((i) => i.group === g).length]))
+      /** @type {Record<string, boolean>} */
       const reached = {}
       for (const kind of ['shot', 'punch', 'stab', 'fire', 'blast']) {
-        const page = r.testTable.find('item_canned_beans') ?? r.testTable.find(r.testTable.items()[0].id)
+        const page = /** @type {NonNullable<ReturnType<TestRoom['testTable']['find']>>} */ (r.testTable.find('item_canned_beans') ?? r.testTable.find(r.testTable.items()[0].id))
         const target = page.selected
         const before = r.log.entries().length
-        r.testTable.trial(kind)
+        r.testTable.trial(/** @type {Parameters<TestRoom['testTable']['trial']>[0]} */ (kind))
         for (let i = 0; i < 60; i++) r.update(1 / 60)
         reached[kind] = r.log.entries().slice(before).some((e) => e.objectId === target && e.type !== 'spawn')
       }
@@ -207,6 +218,7 @@ if (runs('views')) {
 if (runs('hands')) {
   lap('before the first-person steps')
   // the first-person arms and the strikes, in both languages: bare hands, fists, a pistol and a rifle held, the rifle mid-reload, the punch, the shove and the kick at their impact, and the punch seen from behind
+  /** @type {[string, () => void][]} */
   const fpSteps = [
     ['bare-hands', () => { S.r.setTool('hand'); S.run(60) }],
     ['fists', () => { S.r.setTool('fists'); S.run(60) }],
@@ -227,7 +239,9 @@ if (runs('hands')) {
     ['shove-wall', () => { S.r.resume(); S.run(70); S.r.spawn('wardrobe', [-9, 0, 8.3], 0); S.run(30); S.r.setTool('shove'); S.run(40); S.r.use(); S.run(16); S.r.pause() }],
     ['punch-third', () => { S.r.resume(); S.run(60); S.r.setCameraMode('third'); S.r.setTool('fists'); S.run(60); S.r.use(); S.run(10); S.r.pause() }],
   ]
+  /** @type {Record<string, string>} */
   const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', m4: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', 'pistol-reload-empty': 'hold', 'm4-reload-empty': 'hold', 'ak-reload-empty': 'hold', 'shotgun-pump': 'hold', punch: 'fists', shove: 'relaxed', 'shove-wall': 'relaxed', kick: 'relaxed', 'kick-left': 'relaxed', 'kick-right': 'relaxed' }
+  /** @type {Record<string, string>} */
   const fpPlaying = { punch: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', 'kick-left': 'front_kick', 'kick-right': 'front_kick', 'shove-wall': 'shove_two_hands', 'punch-third': 'punch_right' }
   let fpOk = true
   for (const lang of ['pt-BR', 'en']) {
@@ -243,7 +257,7 @@ if (runs('hands')) {
     })
     lap(`first-person steps, ${lang}`)
     for (const [name, act] of fpSteps) {
-      const seen = await page.evaluate(`(() => { (${act.toString()})(); const r = window.__testRoom; const a = r.avatar; return { stance: r.handState().stance, playing: a.avatar?.playing ?? null, visible: a.root.visible, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`)
+      const seen = /** @type {SeenBody} */ (await page.evaluate(`(() => { (${act.toString()})(); const r = window.__testRoom; const a = r.avatar; return { stance: r.handState().stance, playing: a.avatar?.playing ?? null, visible: a.root.visible, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`))
       if (!CI) {
         await page.waitForTimeout(150)
         await page.screenshot({ path: join(shotsDir, `fp-${name}-${lang}.png`), ...SHOT })
@@ -264,13 +278,20 @@ if (runs('hands')) {
   // were not readable at the normal view: the tube loaded shell by shell, the slide racked by the support hand, the cup of the support hand under a handguard and the trigger finger.
   {
     let closeOk = true
-    const verdict = (name, ok, info) => {
+    const verdict = (/** @type {string} */ name, /** @type {unknown} */ ok, /** @type {unknown} */ info) => {
       if (!ok) closeOk = false
       console.log(`${ok ? 'PASS' : 'FAIL'}  close-up: ${name}`, JSON.stringify(info))
     }
     // (CI renders in software and every picture costs seconds there: the assertions run, the pictures are the ones committed)
+    /**
+     * @template A, R
+     * @param {string} name
+     * @param {(arg: A) => R} fn
+     * @param {A} [arg]
+     * @returns {Promise<R>}
+     */
     const closeShot = async (name, fn, arg) => {
-      const info = await page.evaluate(fn, arg)
+      const info = /** @type {R} */ (await page.evaluate(/** @type {(arg: unknown) => R} */ (fn), arg))
       if (CI) return info
       await page.waitForTimeout(250)
       await page.screenshot({ path: join(shotsDir, `closeup-${name}.png`), ...SHOT })
@@ -315,12 +336,12 @@ if (runs('hands')) {
     })
 
     // the tube shotgun, empty: the shells go in one by one at the rule's seconds, a hand visit and a sound each, then the pump. One reload, looked at four times: the room stays paused between the shots
-    const pumpTo = (arg) => {
+    const pumpTo = (/** @type {{ start?: boolean; to: number; view?: boolean }} */ arg) => {
       const r = window.C.r
       const S = window.S
       if (arg.start) {
         window.C.emptied('remington_870')
-        const run = { frames: 0, ammo: [], visits: 0, away: false, capacity: r.tool.capacity, before: r.log.entries().length, rest: r.handState().targets.R.position.slice() }
+        const run = { frames: 0, ammo: [], visits: 0, away: false, capacity: r.tool.capacity, before: r.log.entries().length, rest: /** @type {Hands} */ (r.handState().targets).R.position.slice() }
         window.__pump = run
         window.C.key('KeyR')
       }
@@ -340,34 +361,34 @@ if (runs('hands')) {
         }
       }
       r.pause()
-      const sounds = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && e.data?.cue === 'shell_insert').map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
+      const sounds = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'shell_insert').map((e) => +e.t.toFixed(2))
       const port = window.C.at('loadPort')
       if (arg.view && port) window.C.view([port[0] + 0.32, port[1] + 0.1, port[2] + 0.08], port, 38)
       const steps = run.ammo.flatMap((a, i) => (i > 0 && a !== run.ammo[i - 1] ? [{ at: +(i / 60).toFixed(2), ammo: a }] : []))
-      const actions = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && ['pump_back', 'pump_forward'].includes(e.data?.cue)).map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
-      const hand = r.handState().targets.R.position
+      const actions = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && ['pump_back', 'pump_forward'].includes(/** @type {string} */ (e.data?.cue))).map((e) => +e.t.toFixed(2))
+      const hand = /** @type {Hands} */ (r.handState().targets).R.position
       const awayFromGrip = +Math.hypot(hand[0] - run.rest[0], hand[1] - run.rest[1], hand[2] - run.rest[2]).toFixed(3)
-      return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, actions, awayFromGrip, grip: r.handState().targets.grip, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
+      return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, actions, awayFromGrip, grip: /** @type {Hands} */ (r.handState().targets).grip, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
     }
     let full = await page.evaluate(pumpTo, { start: true, to: 0 })
-    for (const [name, to] of [['shell-1', 40], ['shell-3', 110], ['shell-6', 215], ['pump', 245]]) {
+    for (const [name, to] of /** @type {[string, number][]} */ ([['shell-1', 40], ['shell-3', 110], ['shell-6', 215], ['pump', 245]])) {
       const info = await closeShot(`870-${name}`, pumpTo, { to, view: true })
       console.log(`      870 ${name}: ${info.ammo}/${info.capacity} shells at ${info.at} s, ${info.sounds.length} sounds, ${info.visits} visits, shooting hand ${info.awayFromGrip} m from the grip`)
       // the pump moves the support hand only: the shooting hand is on the grip, closed, from the first sound of the pump
-      if (name === 'pump') verdict('remington 870 at the pump: the shooting hand holds the grip (closed, not at the port)', info.awayFromGrip < 0.012 && info.grip >= 0.85 && info.actions.length > 0, { awayFromGrip: info.awayFromGrip, grip: info.grip, actions: info.actions })
+      if (name === 'pump') verdict('remington 870 at the pump: the shooting hand holds the grip (closed, not at the port)', info.awayFromGrip < 0.012 && /** @type {number} */ (info.grip) >= 0.85 && info.actions.length > 0, { awayFromGrip: info.awayFromGrip, grip: info.grip, actions: info.actions })
     }
     full = await page.evaluate(pumpTo, { to: 60 * 8 })
     const secs = full.steps.map((entry) => entry.at)
-    const gaps = secs.slice(1).map((/** @type {number} */ t, /** @type {string | number} */ i) => +(t - secs[i]).toFixed(2))
-    verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each, every shell in before the pump', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((/** @type {number} */ g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading && full.actions.length === 2 && full.sounds.at(-1) < full.actions[0], { ...full, gaps })
+    const gaps = secs.slice(1).map((/** @type {number} */ t, i) => +(t - secs[i]).toFixed(2))
+    verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each, every shell in before the pump', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((/** @type {number} */ g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading && full.actions.length === 2 && /** @type {number} */ (full.sounds.at(-1)) < full.actions[0], { ...full, gaps })
 
     // the pistol, empty: the slide is racked by the support hand (it goes back and forward) and the snap is heard as it closes
-    const glockTo = (arg) => {
+    const glockTo = (/** @type {{ start?: boolean; to?: number; rear?: boolean; view?: boolean }} */ arg) => {
       const r = window.C.r
       const S = window.S
       if (arg.start) {
         window.C.emptied('glock_17')
-        window.__glock = { frames: 0, track: [], before: r.log.entries().length, slide: r.scene.getObjectByName('weapon-viewmodel').getObjectByName('slide') }
+        window.__glock = { frames: 0, track: [], before: r.log.entries().length, slide: /** @type {import('three').Object3D} */ (/** @type {import('three').Object3D} */ (r.scene.getObjectByName('weapon-viewmodel')).getObjectByName('slide')) }
         window.C.key('KeyR')
       }
       const run = window.__glock
@@ -375,15 +396,15 @@ if (runs('hands')) {
       const step = () => {
         S.run(1)
         run.frames++
-        const hand = r.handState().targets.L.position
+        const hand = /** @type {Hands} */ (r.handState().targets).L.position
         const at = window.C.at('slide')
         run.track.push({ x: run.slide.position.x, d: at ? Math.hypot(hand[0] - at[0], hand[1] - at[1], hand[2] - at[2]) : 9 })
       }
       // `to`: a frame; `rear`: until the slide is at the rear, the moment it is pulled back (the slide back and no longer going further)
-      if (arg.rear) while (run.frames < 400 && !(run.track.length > 1 && run.track.at(-1).x < -0.02 && run.track.at(-1).x >= run.track.at(-2).x)) step()
-      else while (run.frames < arg.to) step()
+      if (arg.rear) while (run.frames < 400 && !(run.track.length > 1 && /** @type {{ x: number }} */ (run.track.at(-1)).x < -0.02 && /** @type {{ x: number }} */ (run.track.at(-1)).x >= /** @type {{ x: number }} */ (run.track.at(-2)).x)) step()
+      else while (run.frames < /** @type {number} */ (arg.to)) step()
       r.pause()
-      const snap = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && e.data?.cue === 'slide_release').map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
+      const snap = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'slide_release').map((e) => +e.t.toFixed(2))
       const at = window.C.at('slide')
       // from the left and above, where the support hand reaches over the slide
       if (arg.view && at) window.C.view([at[0] - 0.28, at[1] + 0.16, at[2] + 0.12], [at[0], at[1] - 0.02, at[2]], 38)
@@ -397,21 +418,21 @@ if (runs('hands')) {
     const xs = run.track.map((entry) => entry.x)
     const back = Math.min(...xs)
     const reached = Math.min(...run.track.map((entry) => entry.d))
-    verdict('glock empty: the slide goes back and forward, the support hand reaches it and the snap sounds', back < -0.02 && Math.abs(xs.at(-1)) < 1e-3 && xs[0] === 0 && reached < 0.09 && run.snap.length === 1, { back: +back.toFixed(3), pulledAtFrame: rack.frames, handToSlide: +reached.toFixed(3), snapAt: run.snap })
+    verdict('glock empty: the slide goes back and forward, the support hand reaches it and the snap sounds', back < -0.02 && Math.abs(/** @type {number} */ (xs.at(-1))) < 1e-3 && xs[0] === 0 && reached < 0.09 && run.snap.length === 1, { back: +back.toFixed(3), pulledAtFrame: rack.frames, handToSlide: +reached.toFixed(3), snapAt: run.snap })
 
     // the support hand at rest under a handguard: a palm-up cup, the forearm from below
-    const cup = (id) => {
+    const cup = (/** @type {string} */ id) => {
       const r = window.C.r
       // the gun rides the body in both views (spec 004 T3.1): the support hand is checked from the player's own first person
       window.C.armed(id)
       r.pause()
       // the body's support arm (arms[0], at +x): elbow and hand in the world
       const T = window.__THREE
-      const elbow = r.avatar.avatar.rig.arms[0].el.getWorldPosition(new T.Vector3())
-      const wrist = r.avatar.avatar.hand('L').getWorldPosition(new T.Vector3())
+      const elbow = /** @type {import('three').Object3D} */ (/** @type {unknown} */ (/** @type {PlayerBody} */ (/** @type {unknown} */ (r.avatar)).avatar.rig.arms[0].el)).getWorldPosition(new T.Vector3())
+      const wrist = /** @type {PlayerBody} */ (/** @type {unknown} */ (r.avatar)).avatar.hand('L').getWorldPosition(new T.Vector3())
       const j = { elbow, wrist }
       const fore = j.wrist.clone().sub(j.elbow)
-      const left = r.handState().targets.L
+      const left = /** @type {Hands} */ (r.handState().targets).L
       window.C.view([left.position[0] + 0.55, left.position[1], left.position[2] + 0.1], left.position, 40)
       return { underWrist: +(j.wrist.y - j.elbow.y).toFixed(3), offForward: +((Math.atan2(Math.abs(fore.x), -fore.z) * 180) / Math.PI).toFixed(0), rising: +((Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * 180) / Math.PI).toFixed(0) }
     }
@@ -428,7 +449,7 @@ if (runs('hands')) {
       }
       await closeShot(`${name}-rest-below`, () => {
         const r = window.__testRoom
-        const l = r.handState().targets.L.position
+        const l = /** @type {Hands} */ (r.handState().targets).L.position
         window.C.view([l[0] + 0.1, l[1] - 0.5, l[2] + 0.35], l, 40)
       })
     }
@@ -451,11 +472,12 @@ if (runs('hands')) {
         S.run(260)
         r.pause()
       }
-      const grip = r.handState().targets.R.position
+      const grip = /** @type {Hands} */ (r.handState().targets).R.position
       // 25 cm away, in front of the hand and to its right, where the finger is seen from the side it curls to
       window.C.view([grip[0] + 0.17, grip[1] + 0.04, grip[2] - 0.18], [grip[0], grip[1] + 0.02, grip[2] - 0.03], 32)
-      return +r.handState().triggerFinger.toFixed(2)
+      return +/** @type {number} */ (r.handState().triggerFinger).toFixed(2)
     }
+    /** @type {Record<string, number>} */
     const fingerAt = {}
     for (const phase of ['rest', 'pull', 'released']) fingerAt[phase] = await closeShot(`trigger-finger-${phase}`, finger, phase)
     verdict('trigger finger: 0 at rest, curled on the trigger mid-pull (at least 0.75: more than 60 degrees at the first joint), 0 again once released', fingerAt.rest === 0 && fingerAt.pull >= 0.75 && fingerAt.released === 0, fingerAt)
@@ -505,11 +527,11 @@ if (runs('hands')) {
     const compose = CI ? null : await page.context().newPage()
     for (let sheet = 0; sheet < (CI ? 0 : sheets); sheet++) {
       const from = sheet * COLS * ROWS
-      const data = await compose.evaluate(async ({ part, pictures, COLS, ROWS, CELL }) => {
+      const data = await /** @type {import('playwright').Page} */ (compose).evaluate(async ({ part, pictures, COLS, ROWS, CELL }) => {
         const canvas = document.createElement('canvas')
         canvas.width = COLS * CELL.w
         canvas.height = ROWS * CELL.h
-        const c = canvas.getContext('2d')
+        const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'))
         c.fillStyle = '#000'
         c.fillRect(0, 0, canvas.width, canvas.height)
         for (let i = 0; i < part.length; i++) {

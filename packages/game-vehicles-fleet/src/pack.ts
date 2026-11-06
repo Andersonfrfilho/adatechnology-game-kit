@@ -1,4 +1,4 @@
-import type { KitConfiguration, Plugin, VehicleKit, VehicleSpec } from '@adatechnology/game-vehicles'
+import type { KitConfiguration, Plugin, VehicleKit, VehicleSpec, ZoneEffect } from '@adatechnology/game-vehicles'
 import type { FleetContext, FleetLabel, FleetShared } from './context'
 import { fleetGroupIds } from './groups'
 import type { FleetGroupId, FleetVehicleId } from './groups'
@@ -66,8 +66,8 @@ const FUEL_FIELDS: Record<string, keyof FleetFuel> = {
 }
 
 /** Reads a table of the pack from the strings in use by the kit (`fleet.<section>`). */
-function section(kit: VehicleKit, name: string): Record<string, any> {
-  return ((kit.strings as unknown as Record<string, any>).fleet || {})[name] || {}
+function section<T>(kit: VehicleKit, name: string): Record<string, T> {
+  return ((kit.strings as unknown as { fleet?: Record<string, Record<string, T> | undefined> }).fleet || {})[name] || {}
 }
 
 function createContext(kit: VehicleKit, options: FleetOptions): FleetContext {
@@ -103,7 +103,7 @@ export function createFleetPack(options: FleetOptions = {}): Plugin {
       kit.registerLegacySeeds({ zones: legacyZoneIds, glassLabels: legacyGlassLabels })
       const groups = fleetGroupIds.filter((g) => !options.groups || options.groups.includes(g))
       const fuels: Record<string, FleetFuel> = {}
-      const fuelTable = section(kit, 'fuels')
+      const fuelTable = section<Record<string, string>>(kit, 'fuels')
       for (const id of Object.keys(fuelTable)) {
         const fuel: Record<string, string> = { id }
         for (const [field, prop] of Object.entries(FUEL_FIELDS)) fuel[prop] = fuelTable[id][field]
@@ -114,8 +114,8 @@ export function createFleetPack(options: FleetOptions = {}): Plugin {
         groups: [...groups],
         waterGroups: { water: true },
         defaultGroup: 'cars',
-        partEffects: section(kit, 'part_effects'),
-        zoneEffects: section(kit, 'zone_effects'),
+        partEffects: section<string>(kit, 'part_effects'),
+        zoneEffects: section<ZoneEffect>(kit, 'zone_effects'),
       }
       if (options.scenarios !== false) {
         config.scenarios = createScenarios((id: FleetScenarioId) => kit.t('fleet.scenarios.' + id))

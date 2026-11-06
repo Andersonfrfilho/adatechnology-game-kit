@@ -6,15 +6,16 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const { chromium } = createRequire(import.meta.url)('playwright') // NODE_PATH points at it, as in test.mjs
+const { chromium } = /** @type {typeof import('playwright')} */ (createRequire(import.meta.url)('playwright')) // NODE_PATH points at it, as in test.mjs
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
 const base = process.argv[2] ?? pathToFileURL(join(here, 'dist/test-room.html')).href
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
-page.on('pageerror', (e) => errors.push(e.message))
+page.on('pageerror', (/** @type {Error} */ e) => errors.push(e.message))
 await page.goto(`${base}?table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.testTable.items().some((/** @type {{ id: string; }} */ item) => item.id === 'item_soda_can'), null, { timeout: 180000 })
 await page.waitForTimeout(1500)

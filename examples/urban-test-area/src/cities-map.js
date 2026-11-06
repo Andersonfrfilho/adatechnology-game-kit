@@ -2,14 +2,27 @@
 // plans, and a button that fills the blocks of the downtown / commercial districts with buildings through `urban.cities.fillBlock`.
 import { createUrban } from '@adatechnology/game-urban'
 
+/** @typedef {ReturnType<typeof createUrban>} Urban */
+/** @typedef {ReturnType<Urban['cities']['layout']>} Layout */
+/** @typedef {NonNullable<NonNullable<Parameters<Urban['cities']['layout']>[1]>['locale']>} PlanLocale */
+/** @typedef {{ placed: ReturnType<Urban['cities']['fillBlock']>; blocks: number }} Filled */
+
+/** @type {Record<string, string>} */
 const LINE_COLORS = { avenue: '#f2f2f2', street: '#cfcfcf', highway: '#ffd27a', rail: '#444444', river: '#4aa3ff' }
 const FILL_KINDS = ['downtown', 'commercial_center']
+/** @type {Record<string, Record<'title' | 'fill' | 'clear' | 'close' | 'blocks' | 'buildings' | 'max', string>>} */
 const T = {
   'pt-BR': { title: 'Plantas', fill: 'Preencher quadras do centro', clear: 'Limpar', close: 'Fechar', blocks: 'quadras', buildings: 'prédios', max: 'andares (máx.)' },
   en: { title: 'City plans', fill: 'Fill downtown blocks', clear: 'Clear', close: 'Close', blocks: 'blocks', buildings: 'buildings', max: 'floors (max)' },
 }
 
-/** Draws a layout on a 2D canvas context. Returns the transform ({ scale, x, z }) so the caller can add to the drawing. */
+/**
+ * Draws a layout on a 2D canvas context. Returns the transform ({ scale, x, z }) so the caller can add to the drawing.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Layout} layout
+ * @param {number} width
+ * @param {number} height
+ */
 export function drawLayout(ctx, layout, width, height) {
   const [w, d] = layout.size
   const scale = Math.min(width / w, height / d)
@@ -41,9 +54,15 @@ export function drawLayout(ctx, layout, width, height) {
   return { scale, px, pz }
 }
 
-/** Fills the blocks of the downtown and commercial districts of a layout. Returns the buildings placed and the number of blocks. */
+/**
+ * Fills the blocks of the downtown and commercial districts of a layout. Returns the buildings placed and the number of blocks.
+ * @param {Urban} urban
+ * @param {Layout} layout
+ * @returns {Filled}
+ */
 export function fillDowntown(urban, layout, seed = 7) {
   const b = urban.builder({ seed })
+  /** @type {Filled['placed']} */
   const placed = []
   let blocks = 0
   for (const d of layout.districts.filter((/** @type {{ kind: string; }} */ x) => FILL_KINDS.includes(x.kind))) {
@@ -55,10 +74,15 @@ export function fillDowntown(urban, layout, seed = 7) {
   return { placed, blocks }
 }
 
-/** Opens the overlay in `parent` (default document.body). Returns { element, select(id), fill(), close() }. */
+/**
+ * Opens the overlay in `parent` (default document.body). Returns { element, select(id), fill(), close() }.
+ * @param {{ parent?: HTMLElement; locale?: string; urban?: Urban; maxFloors?: number; size?: number }} [options]
+ */
 export function openCityPlans({ parent = globalThis.document?.body, locale = 'pt-BR', urban = createUrban(), maxFloors, size = 640 } = {}) {
   const doc = parent.ownerDocument
-  const t = T[locale] ?? T.en
+  // the plans know their own locales; one they do not know falls back to theirs
+  const planLocale = /** @type {PlanLocale} */ (locale)
+  const t = T[locale] ?? /** @type {(typeof T)[string]} */ (T.en)
   const box = doc.createElement('div')
   box.style.cssText = 'position:fixed;right:12px;top:12px;z-index:50;background:#161b22;color:#e6edf3;font:13px sans-serif;padding:10px;border-radius:8px;box-shadow:0 4px 24px #0008'
   const bar = doc.createElement('div')
@@ -69,10 +93,10 @@ export function openCityPlans({ parent = globalThis.document?.body, locale = 'pt
   for (const id of urban.cities.plans.ids()) {
     const o = doc.createElement('option')
     o.value = id
-    o.textContent = urban.cities.layout(id, { locale }).name
+    o.textContent = urban.cities.layout(id, { locale: planLocale }).name
     select.appendChild(o)
   }
-  const mkButton = (label, on) => {
+  const mkButton = (/** @type {string} */ label, /** @type {() => unknown} */ on) => {
     const btn = doc.createElement('button')
     btn.textContent = label
     btn.onclick = on
@@ -83,11 +107,13 @@ export function openCityPlans({ parent = globalThis.document?.body, locale = 'pt
   const canvas = doc.createElement('canvas')
   canvas.width = size
   canvas.height = size
+  /** @type {Layout | null} */
   let layout = null
+  /** @type {Filled | null} */
   let buildings = null
   const redraw = () => {
-    layout = urban.cities.layout(select.value, { locale, maxFloors })
-    const ctx = canvas.getContext('2d')
+    layout = urban.cities.layout(select.value, { locale: planLocale, maxFloors })
+    const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'))
     const view = drawLayout(ctx, layout, size, size)
     if (buildings) {
       ctx.fillStyle = '#ffffffcc'
@@ -102,7 +128,7 @@ export function openCityPlans({ parent = globalThis.document?.body, locale = 'pt
     redraw()
   }
   const fill = () => {
-    buildings = fillDowntown(urban, layout)
+    buildings = fillDowntown(urban, /** @type {Layout} */ (layout))
     redraw()
     return buildings
   }

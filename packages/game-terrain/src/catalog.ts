@@ -253,5 +253,9 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
 /** About twelve grenades (200 kJ) on the same spot of bare bars. */
 export const DEFAULT_BAR_YIELD_JOULES = 2_400_000
 
+/** A 10 mm bar of CA-50 steel: bare, a mesh of them at 15 cm holds about 450 kg on a spot. */
+export const DEFAULT_BAR_DIAMETER = 0.01
+export const DEFAULT_BAR_YIELD_PA = 500e6
+
 /** The profile of a floor with nothing else said: a plain slab. */
 export const DEFAULT_PROFILE = 'concrete_slab'

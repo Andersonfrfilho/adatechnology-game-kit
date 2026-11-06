@@ -40,7 +40,7 @@ document.documentElement.lang = locale
 document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
 const arena = Number(params.get('arena'))
-const quality = ['low', 'medium', 'high'].includes(params.get('quality')) ? params.get('quality') : 'medium'
+const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
 // The room's scenery is the kit's own pieces: the target wall is a wall of the houses (`wallPiece` of game-floorplan-three: the structure the houses have, the wall on
@@ -54,18 +54,19 @@ const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCata
 // over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
 const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
+/** @type {Record<string, import('@adatechnology/game-test-room').SceneryObject>} */
 const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
   target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes },
-  table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
+  table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top ?? undefined },
   shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true, pushable: true },
-  test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
+  test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top ?? undefined, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
   sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
 }
 
 const room = createTestRoom({
   THREE,
-  container: document.getElementById('app'),
+  container: /** @type {HTMLElement} */ (document.getElementById('app')),
   locale,
   catalog: [],
   scenery,
@@ -77,7 +78,7 @@ const room = createTestRoom({
   // ?pushForce=2000: the legs that move the loaded bookcase (242 kg), which the default force of the kit does not
   ...(params.get('pushForce') ? { push: { forceN: Number(params.get('pushForce')) } } : {}),
   // ?lights=8,2: point and spot slots of the room's light budget
-  ...(params.get('lights') ? { lightSizes: { point: Number(params.get('lights').split(',')[0]), spot: Number(params.get('lights').split(',')[1]) } } : {}),
+  ...(params.get('lights') ? { lightSizes: { point: Number(/** @type {string} */ (params.get('lights')).split(',')[0]), spot: Number(/** @type {string} */ (params.get('lights')).split(',')[1]) } } : {}),
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
@@ -110,8 +111,8 @@ if (room.audio && params.get('sfx') !== '0' && location.protocol.startsWith('htt
     .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`sfx/manifest.json ${response.status}`))))
     .then((manifest) => {
       const bank = blastFireSampleBank(manifest, { baseUrl: 'sfx/' })
-      room.audio.register(bank)
-      return room.audio.loadSamples(bank.samples.map((sample) => sample.id))
+      ;/** @type {NonNullable<typeof room.audio>} the block runs only with the engine */ (room.audio).register(bank)
+      return /** @type {NonNullable<typeof room.audio>} */ (room.audio).loadSamples(/** @type {NonNullable<typeof bank.samples>} */ (bank.samples).map((sample) => sample.id))
     })
     .then((report) => {
       window.__sfxReport = report
@@ -159,7 +160,7 @@ async function start() {
   if (deferred) {
     if (items) for (const [i, id] of items.split(',').filter(Boolean).entries()) room.spawn(id, [(i - (items.split(',').filter(Boolean).length - 1) / 2) * 1.3, 0, 0.5])
     // an area with hundreds of items takes a second: the room's loading indicator says which one is opening
-    if (params.get('area')) await room.openAreaAsync(params.get('area'))
+    if (params.get('area')) await room.openAreaAsync(/** @type {string} */ (params.get('area')))
   }
   // the test table starts with the goods catalogue on it (the first page; the panel pages through the rest), unless the page asked for an area, items or another group (?table=0: empty)
   const table = params.get('table') ?? (params.get('area') || items || params.get('scenario') ? '0' : '')

@@ -10,7 +10,7 @@ const outDir = process.argv[2] ?? join(here, 'shots')
 const count = Number(process.argv[3] ?? 2000)
 mkdirSync(outDir, { recursive: true })
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright-core')
+const { chromium } = /** @type {typeof import('playwright')} */ (require('playwright-core'))
 const browser = await chromium.launch({
   args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--no-sandbox'],
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
@@ -27,19 +27,20 @@ const open = async () => {
   await page.waitForFunction(() => window.__crowdReport, null, { timeout: 120000 })
   // the room's panels float over the canvas: leave only the canvas on the picture
   await page.evaluate(() => {
-    const canvas = document.querySelector('canvas')
-    for (const element of document.querySelectorAll('body *')) {
+    const canvas = /** @type {HTMLCanvasElement} */ (document.querySelector('canvas'))
+    for (const element of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('body *'))) {
       if (element === canvas || element.contains(canvas) || canvas.contains(element) || element.tagName === 'SCRIPT' || element.tagName === 'STYLE') continue
       if (getComputedStyle(element).position === 'fixed' || getComputedStyle(element).position === 'absolute') element.style.display = 'none'
     }
   })
   return page
 }
-const view = (page, camera) =>
+/** @typedef {{ x: number; y: number; z: number; lookAt: { x: number; y: number; z: number }; steps: number; zoom?: number }} ShotCamera where the picture is taken from */
+const view = (/** @type {import('playwright').Page} */ page, /** @type {ShotCamera} */ camera) =>
   page.evaluate(
     ({ camera, count }) => {
-      const room = window.__testRoom
-      const bench = room.bench('crowd_area')
+      const room = /** @type {GlRoom} */ (window.__testRoom)
+      const bench = /** @type {RoomBench} */ (room.bench('crowd_area'))
       bench.set('count', count)
       for (const child of room.camera.children) child.visible = false // the room's hand and viewmodel
       room.look([camera.x, camera.y, camera.z], [camera.lookAt.x, camera.lookAt.y, camera.lookAt.z])
@@ -53,7 +54,7 @@ const view = (page, camera) =>
       room.camera.updateProjectionMatrix()
       room.camera.updateMatrixWorld(true)
       room.webgl.info.autoReset = false
-      const crowd = room.scene.getObjectByName('crowd')
+      const crowd = /** @type {import('three').Object3D} the area's horde */ (room.scene.getObjectByName('crowd'))
       const callsOf = () => {
         room.webgl.info.reset()
         room.webgl.render(room.scene, room.camera)
@@ -66,7 +67,7 @@ const view = (page, camera) =>
       room.webgl.info.autoReset = true
       const crowdCalls = calls - without
       // read the canvas in the same task as the render: the room's own loop would draw its camera over it before a screenshot
-      return { metrics: room.metrics().module, calls, crowdCalls, triangles: room.webgl.info.render.triangles, picture: room.webgl.domElement.toDataURL('image/png') }
+      return { metrics: /** @type {NumericMetrics} */ (room.metrics().module), calls, crowdCalls, triangles: room.webgl.info.render.triangles, picture: room.webgl.domElement.toDataURL('image/png') }
     },
     { camera, count },
   )

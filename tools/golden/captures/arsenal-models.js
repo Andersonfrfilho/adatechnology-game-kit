@@ -5,16 +5,19 @@
 // the text of each node, so that a mismatch shows which node changed; `0` keeps only the hash).
 (() => {
   const { seed, indexes = 'all', lines = '1' } = globalThis.__GOLDEN_PARAMS
-  const source = [...document.scripts].map((script) => script.textContent).find((text) => text.includes('function buildWeapon'))
+  const source = /** @type {string} */ ([...document.scripts].map((script) => script.textContent).find((text) => /** @type {string} */ (text).includes('function buildWeapon')))
   const from = source.indexOf('const T = THREE')
   const to = source.indexOf('/* ---------- explosivos')
   const casingFrom = source.indexOf('function casingMesh')
   const casingTo = source.indexOf('function restFlat')
   const body = `${source.slice(from, to)}\n${source.slice(casingFrom, casingTo)}\nreturn { buildWeapon, WEAP, AMMO, cartridge }`
-  const { buildWeapon, WEAP, AMMO, cartridge } = new Function('THREE', body)(THREE)
+  /** @typedef {readonly [string, unknown, string, unknown, number, number, ...unknown[]]} WeaponRow the page's WEAP row: name, ..., caliber, ..., length, barrel */
+  /** @typedef {readonly [string, ...unknown[]]} AmmoRow */
+  const { buildWeapon, WEAP, AMMO, cartridge } = /** @type {{ buildWeapon: (weapon: WeaponRow) => import('three').Object3D; WEAP: WeaponRow[]; AMMO: AmmoRow[]; cartridge: (ammo: AmmoRow) => import('three').Object3D }} */ (new Function('THREE', body)(THREE))
 
   const wanted = indexes === 'all' ? WEAP.map((_, index) => index) : indexes.split(',').map(Number)
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {Record<string, import('three').Object3D>} */
   const scenes = {}
   for (const index of wanted) {
     const [name, , caliber, , length, barrel] = WEAP[index]

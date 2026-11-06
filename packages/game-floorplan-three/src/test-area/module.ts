@@ -432,7 +432,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     let holes = 0
     if (world) {
       for (const p of placed) {
-        const state = p.house.destruction.active ? world.state(p.house.destruction.id) : null
+        const state = p.house.destruction.active ? world.state(p.house.destruction.id!) : null
         for (const part of state?.parts ?? []) {
           parts++
           if (part.status === 'broken' || part.stripped) broken++

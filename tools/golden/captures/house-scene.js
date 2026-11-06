@@ -14,7 +14,9 @@
   const { seed, pairs = 'casaA:3,sobrado:3,apartamento:1,media_terrea_moderna:3,mercado:3,farmacia:2', state = 'normal' } = globalThis.__GOLDEN_PARAMS
   const recorder = GoldenTool.createEventRecorder()
   const sdk = Casa3DSDK.criar(THREE, { Moveis3DSDK, document })
+  /** @type {Record<string, import('three').Object3D>} */
   const scenes = {}
+  /** @type {{ key: string; house: TeamHouse }[]} */
   const built = []
   for (const pair of pairs.split(',')) {
     const [template, n] = pair.split(':')
@@ -38,7 +40,7 @@
     recorder.record('stats', { key, drawCalls: house.stats.drawCalls, drawCallsLOD1: house.stats.drawCallsLOD1, triangles: house.stats.triangulos })
   })
   const houses = built.map((b) => b.house)
-  const foci = [[0, 0, 0], [150, 0, 0], [300, 0, 0], [-500, 0, 0], [120, 0, 40]]
+  const foci = /** @type {[number, number, number][]} */ ([[0, 0, 0], [150, 0, 0], [300, 0, 0], [-500, 0, 0], [120, 0, 40]])
   const budgets = [1e9, 1200, 800, 400, 200]
   for (const [fx, fy, fz] of foci) {
     for (const budget of budgets) {

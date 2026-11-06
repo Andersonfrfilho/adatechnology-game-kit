@@ -7,15 +7,15 @@ import { fakeDocument } from './fake-dom'
 
 /** The damage of a car reaches its driving: what the destruction model reports becomes the driver's condition. */
 function sedan() {
-  const kit: any = createVehicleKit({ THREE, document: fakeDocument })
+  const kit = createVehicleKit({ THREE, document: fakeDocument })
   installFleet(kit)
-  const item: any = buildVehicleItem(kit, 'midsize_sedan')
-  return createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root }) as any
+  const item = buildVehicleItem(kit, 'midsize_sedan')
+  return createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
 }
 
 /** From 100 km/h on dry asphalt to a stop: metres travelled and how far it drifted to the side. */
-function stop(condition: any) {
-  const driver: any = createSemiSimDriver({}, { surfaces: createSurfaces() })
+function stop(condition: Parameters<typeof conditionFromDamage>[1]) {
+  const driver = createSemiSimDriver({}, { surfaces: createSurfaces() })
   driver.place(0, 0, 0)
   const world = { ground: () => ({ surface: 'dry_asphalt' }) }
   for (let t = 0; t < 40 && Math.abs(driver.state.u) * 3.6 < 100; t += 1 / 60) driver.step({ throttle: 1, brake: 0, steer: 0, handbrake: false }, 1 / 60, world)
@@ -34,7 +34,7 @@ describe('damage that changes the driving', () => {
   })
   it('broken brakes take much longer to stop', () => {
     const car = sedan()
-    const brakes = car.describe().parts.find((p: any) => p.id === 'brakes')
+    const brakes = car.describe().parts.find((p) => p.id === 'brakes')
     car.hit({ type: 'blunt', point: car.partWorldCenter('brakes'), energy: brakes ? 1e6 : 0, radius: 0.3 })
     const report = car.driveReport()
     expect(report.brakes).toBeLessThan(0.6)
@@ -45,7 +45,7 @@ describe('damage that changes the driving', () => {
     const t = car.partWorldCenter('tyre_front_left')
     car.hit({ type: 'ballistic', point: t, part: 'tyre_front_left', direction: [0, 0, 1], energy: 3500, caliber: 7.8 })
     const report = car.driveReport()
-    const driver: any = createSemiSimDriver({}, { surfaces: createSurfaces() })
+    const driver = createSemiSimDriver({}, { surfaces: createSurfaces() })
     const condition = conditionFromDamage(driver.spec, report)
     expect(condition.tyres!.filter((h) => h < 0.2)).toHaveLength(1)
     expect(condition.rims!.filter(Boolean)).toHaveLength(0)

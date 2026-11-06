@@ -10,7 +10,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 const here = dirname(fileURLToPath(import.meta.url))
 const page = join(here, '../test-room/dist/test-room.html')
 const require = createRequire(import.meta.url)
-const playwright = [process.env.PLAYWRIGHT_PATH, 'playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].filter(Boolean).map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ ([process.env.PLAYWRIGHT_PATH, 'playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].filter(Boolean).map((id) => { try { return require(/** @type {string} */ (id)) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped (no playwright or no room page)')
   process.exit(0)
@@ -34,15 +34,18 @@ await tab.evaluate(() => window.__testRoom.waitUntilReady())
 await tab.evaluate(() => {
   const T = window.__THREE
   const room = window.__testRoom
-  const avatar = room.avatar.avatar
-  const rig = avatar.rig
+  const avatar = /** @type {PlayerRoomAvatar} */ (room.avatar).avatar
+  /** @typedef {import('three').Object3D} Node */
+  const rig = /** @type {{ headG: Node; upper: Node; arms: { el: Node }[]; legs: { g: Node }[] }} the rig's nodes are three.js objects */ (/** @type {unknown} */ (avatar.rig))
   const Hd = rig.headG.children[0]
   // the eyes of the builder, in the head's own frame (best-builder: eyes at y 1.815, z about 0.16)
   const EYES = new T.Vector3(0, 1.815, 0.16)
+  /** @type {ScriptSceneNode[]} */
   const neck = []
-  rig.upper.traverse((o) => { if (o.isMesh && o.geometry?.type === 'CylinderGeometry' && o.parent !== null && !rig.headG.getObjectById(o.id) && Math.abs(o.position.y - 1.7) < 0.08 && Math.abs(o.position.x) < 0.01) neck.push(o) })
+  rig.upper.traverse((/** @type {ScriptSceneNode} */ o) => { if (o.isMesh && o.geometry?.type === 'CylinderGeometry' && o.parent !== null && !rig.headG.getObjectById(o.id) && Math.abs(o.position.y - 1.7) < 0.08 && Math.abs(o.position.x) < 0.01) neck.push(o) })
+  /** @type {ScriptSceneNode[]} */
   const headMeshes = []
-  rig.headG.traverse((o) => { if (o.isMesh) headMeshes.push(o) })
+  rig.headG.traverse((/** @type {ScriptSceneNode} */ o) => { if (o.isMesh) headMeshes.push(o) })
   const hidden = [...headMeshes, ...neck]
   const original = new Map(hidden.map((m) => [m, m.material]))
   window.__proto = {
@@ -61,12 +64,13 @@ await tab.evaluate(() => {
         m.material = original.get(m)
         if (way === 'layer') m.layers.set(5)
         if (way === 'material') {
-          const list = Array.isArray(m.material) ? m.material : [m.material]
+          const list = /** @type {import('three').Material[]} */ (Array.isArray(m.material) ? m.material : [m.material])
           const clones = list.map((mat) => Object.assign(mat.clone(), { colorWrite: false, depthWrite: false }))
           m.material = Array.isArray(m.material) ? clones : clones[0]
         }
       }
     },
+    /** @param {import('three').Camera} camera */
     nearest(camera) {
       /**
          * @type {{ d: number; at: string; }[]}
@@ -74,11 +78,11 @@ await tab.evaluate(() => {
       const out = []
       const box = new T.Box3()
       avatar.root.updateMatrixWorld(true)
-      avatar.root.traverse((o) => {
+      avatar.root.traverse((/** @type {ScriptSceneNode} */ o) => {
         if (!o.isMesh || hidden.includes(o)) return
         box.setFromObject(o)
         const d = box.distanceToPoint(camera.position)
-        out.push({ d, at: o.parent === rig.arms[0].el || o.parent === rig.arms[1].el ? 'forearm' : rig.upper.getObjectById(o.id) ? 'upper' : rig.legs.some((l) => l.g.getObjectById(o.id)) ? 'leg' : 'other' })
+        out.push({ d, at: o.parent === rig.arms[0].el || o.parent === rig.arms[1].el ? 'forearm' : rig.upper.getObjectById(o.id) ? 'upper' : rig.legs.some((/** @type {{ g: Node }} */ l) => l.g.getObjectById(o.id)) ? 'leg' : 'other' })
       })
       return out.sort((a, b) => a.d - b.d).slice(0, 3).map((x) => ({ at: x.at, d: Math.round(x.d * 1000) / 1000 }))
     },
@@ -100,9 +104,10 @@ const measure = (/** @type {string} */ label, /** @type {string} */ setup) =>
       const feet = room.playerPosition
       return { label, roomEye: +(camera.position.y - feet[1]).toFixed(3), bodyEye: +(eye.y - feet[1]).toFixed(3), bodyEyeAhead: +Math.hypot(eye.x - camera.position.x, eye.z - camera.position.z).toFixed(3) }
     },
-    [label, setup],
+    /** @type {[string, string]} */ ([label, setup]),
   )
 
+/** @type {unknown[]} */
 const poses = []
 poses.push(await measure('standing', ''))
 poses.push(await measure('crouched', "room.setAvatarState({ crouch: true })"))
@@ -116,6 +121,7 @@ const lens = await tab.evaluate(() => {
   if (room.seat) room.stand()
   room.setAvatarState({ crouch: false, down: false })
   for (let i = 0; i < 30; i++) room.update(1 / 60)
+  /** @type {unknown[]} */
   const out = []
   for (const pitch of [-1.4, -0.9, -0.4, 0, 0.6, 1.2]) {
     for (const turn of [0, 0.8]) {
@@ -137,11 +143,11 @@ const result = { neckFound: await tab.evaluate(() => window.__proto.neckFound), 
 
 if (shots) {
   for (const way of ['none', 'layer', 'material']) {
-    await tab.evaluate((way) => {
+    await tab.evaluate((/** @type {string} */ way) => {
       const room = window.__testRoom
       window.__proto.hide(way)
       room.setCameraMode('first')
-      room.avatar.root.visible = true
+      ;/** @type {PlayerRoomAvatar} */ (room.avatar).root.visible = true
       const p = room.playerPosition
       room.look([p[0], 1.7, p[2]], [p[0], 0.2, p[2] - 1.2])
       for (let i = 0; i < 10; i++) room.update(1 / 60)

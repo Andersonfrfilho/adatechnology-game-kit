@@ -1,4 +1,6 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { LabelArgument, VehicleContext } from '@adatechnology/game-vehicles'
+import type { Material, Mesh, Object3D, Vector3 } from 'three'
+import type { SkidGearOptions, WaterAirKit } from './water-air'
 import type { FleetContext } from '../context'
 
 /* Helicopters added after the first batch (group H). Uses only the kit API, the helpers of the water/air file exposed as the shared EA, and those of group H
@@ -17,15 +19,15 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     MT = kit.materials,
     CM = kit.makeMaterial,
     G = kit.geo
-  const GH = shared.GH
+  const GH = shared.GH!
 
   /* ================= local utilities ================= */
   /* skids: two tubes with an upturned tip and cross tubes arching up to the belly; returns the meshes */
-  function skids(c: VehicleContext, o: any) {
+  function skids(c: VehicleContext, o: SkidGearOptions & { step?: readonly [number, number] }) {
     const mat = o.mat || MT.steel,
       z = o.z,
       y = o.y || 0.07,
-      out: any = []
+      out: Mesh[] = []
     ;[1, -1].forEach(function (s) {
       out.push(
         c.tube(
@@ -50,7 +52,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           c.rod(new V3(o.step[0], y, s * z), new V3(o.step[0], y + 0.28, s * (z - 0.12)), 0.018, MT.steel),
         )
     })
-    o.cross.forEach(function (q: any) {
+    o.cross.forEach(function (q) {
       const x = q[0],
         top = q[1],
         zi = q[2]
@@ -74,7 +76,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return out
   }
   /* tail cone by stations along x: [x, centre y, vertical radius, lateral radius] */
-  function boom(c: VehicleContext, EA: any, pts: any, mat: any) {
+  function boom(c: VehicleContext, EA: WaterAirKit, pts: number[][], mat: Material) {
     const st = pts.map(function (q: number[]) {
       return [q[0], q[1] - q[2], q[1] + q[2], q[3] * 2, 2]
     })
@@ -83,7 +85,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return m
   }
   /* fenestron: annular fairing in the fin with an n-blade fan turning in z and a stator */
-  function fenestron(c: VehicleContext, x: number, y: number, R: number, w: number, n: number, mat: any, bladeMat: any) {
+  function fenestron(c: VehicleContext, x: number, y: number, R: number, w: number, n: number, mat: Material, bladeMat: Material) {
     const ring = c.add(new THREE.TorusGeometry(R + 0.06, 0.07, 10, 36), mat, x, y, 0)
     ring.scale.z = w / 0.14
     c.deform.push(ring)
@@ -117,7 +119,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return { ring: ring, fan: g, duct: duct }
   }
   /* X tail rotor (two two-blade rotors offset by about 38 degrees), turning in z */
-  function xRotor(c: VehicleContext, x: number, y: number, z: number, R: number, ch: number, mat: any, tip: any) {
+  function xRotor(c: VehicleContext, x: number, y: number, z: number, R: number, ch: number, mat: Material, tip?: Material | null) {
     const g = new THREE.Group()
     g.position.set(x, y, z)
     c.vehicle.add(g)
@@ -145,7 +147,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return g
   }
   /* 20-rocket pod (generic B-8 type): body with a nose and a dark mouth of tubes */
-  function rocketPod(c: VehicleContext, EA: any, x: number, y: number, z: number, L: number, r: number, mat: any) {
+  function rocketPod(c: VehicleContext, EA: WaterAirKit, x: number, y: number, z: number, L: number, r: number, mat: Material) {
     const m = GH.pod(c, EA, x + L / 2, x - L / 2, y, z, r, mat)
     const face = c.cylinder(r * 0.95, r * 0.95, 0.02, MT.dark, x + L / 2 - L * 0.02, y, z, 'x', { seg: 20 })
     for (let i = 0; i < 6; i++) {
@@ -189,7 +191,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         col = '#1f4f8a',
         blue = c.paint(col),
         white = c.paint('#e9e7e0'),
@@ -231,7 +233,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       )
       c.deform.push(fus)
       /* white belly with a black thread, outside the bubble */
-      const bl = function (..._rest: any[]) {
+      const bl = function (..._rest: unknown[]) {
         return 0.86
       }
       GH.fSkin(
@@ -549,7 +551,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         wcol = '#eeece6',
         white = c.paint(wcol),
         mar = c.paint('#7a1e22'),
@@ -596,7 +598,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
             },
           },
           {
-            sel: function (n: any) {
+            sel: function (n: Vector3) {
               return n.x > 0.2
             },
             sdf: function (x: number, y: number, z: number) {
@@ -964,7 +966,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         navyC = '#1b2c52',
         navy = c.paint(navyC),
         white = c.paint('#ecebe6'),
@@ -1011,7 +1013,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
             },
           },
           {
-            sel: function (n: any) {
+            sel: function (n: Vector3) {
               return n.x > 0.2
             },
             sdf: function (x: number, y: number, z: number) {
@@ -1262,7 +1264,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fin,
         [
           {
-            sdf: function (x: number, y: number, _z: any) {
+            sdf: function (x: number, y: number, _z: number) {
               return Math.hypot(x + 7.3, y - 2.12) - 0.56
             },
           },
@@ -1439,7 +1441,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         blk = CM('#1a1b1d', { roughness: 0.6 })
       c.meta.matte = true
       const cA = new THREE.Color('#3a4430'),
@@ -1483,10 +1485,10 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(gunK, function (n: any) {
+          EA.cutT(gunK, function (n: Vector3) {
             return n.y > 0.2
           }),
-          EA.cutT(pilK, function (n: any) {
+          EA.cutT(pilK, function (n: Vector3) {
             return n.y > 0.3
           }),
         ],
@@ -1494,7 +1496,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       )
       c.deform.push(fus)
       /* tandem cockpit bubbles (moulded glass) with a frame */
-      function bubble(st: number[][], label: any, pos: any) {
+      function bubble(st: number[][], label: LabelArgument, pos: Vector3) {
         const m = new THREE.Mesh(EA.fuseGeo(st, { smooth: 26, seg: 28 }), MT.armorGlass)
         c.vehicle.add(m)
         kit.cutMesh(
@@ -1607,7 +1609,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       GH.liner(c, ST, -0.4, 2.0, 2.75, MT.headliner, { maxW: 1.4 })
       /* side-by-side engines with round filters at the front and IR suppressors turned outward */
       const engM = c.paint('#ffffff'),
-        engs: any = []
+        engs: Object3D[] = []
       engM.vertexColors = true
       ;[1, -1].forEach(function (s) {
         const z0 = s * 0.55,
@@ -1691,7 +1693,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       c.roundBox(0.3, 0.05, 0.08, 0.02, MT.steel, -9.95, 1.57, 0)
       /* short wings with anhedral, pylons with rocket pods and missile launchers at the tips */
       const wingM = c.paint('#ffffff'),
-        wps: any = { 1: [], '-1': [] }
+        wps: Record<number, Object3D[]> = { 1: [], '-1': [] }
       wingM.vertexColors = true
       ;[1, -1].forEach(function (s) {
         const dh = function (z: number) {

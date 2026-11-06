@@ -7,19 +7,22 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const { chromium } = createRequire(import.meta.url)('playwright') // NODE_PATH points at it, as in test.mjs
+const { chromium } = /** @type {typeof import('playwright')} */ (createRequire(import.meta.url)('playwright')) // NODE_PATH points at it, as in test.mjs
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
-const modes = process.argv[2] ? [process.argv[2]] : ['first', 'third']
+const modes = /** @type {import('@adatechnology/game-test-room').CameraMode[]} the camera given on the command line, or both */ (process.argv[2] ? [process.argv[2]] : ['first', 'third'])
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${pathToFileURL(join(here, 'dist/sala-casas.html')).href}?arena=40&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__floorplanReport, null, { timeout: 240000 })
 
+/** @type {string[]} */
 const failures = []
+/** @param {unknown} ok @param {string} label @param {unknown} [data] */
 const check = (ok, label, data) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${data === undefined ? '' : ` ${JSON.stringify(data)}`}`)
   if (!ok) failures.push(label)
@@ -35,21 +38,21 @@ const standAtDoor = () =>
   page.evaluate(() => {
     const room = window.__testRoom
     const { house, plan } = window.__floorplanReport.area.houses[0]
-    const V = room.camera.position.constructor
-    const d = plan.doors.find((x) => x.exterior && x.floor === 0)
-    const centre = plan.rooms.find((r) => r.id === d.opensTo)
+    const V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
+    const d = /** @type {(typeof plan.doors)[number]} the house has a front door */ (plan.doors.find((x) => x.exterior && x.floor === 0))
+    const centre = /** @type {(typeof plan.rooms)[number]} */ (plan.rooms.find((r) => r.id === d.opensTo))
     const dw = house.group.localToWorld(new V(d.u, 1.0, d.v))
     const cw = house.group.localToWorld(new V((centre.u0 + centre.u1) / 2, 1.0, (centre.v0 + centre.v1) / 2))
     const len = Math.hypot(cw.x - dw.x, cw.z - dw.z)
     room.look([dw.x + ((cw.x - dw.x) / len) * 1.2, 1.7, dw.z + ((cw.z - dw.z) / len) * 1.2], [dw.x, 1.1, dw.z])
     return d.id
   })
-const doorsOpen = () => page.evaluate(() => window.__testRoom.metrics().module.doors_open)
+const doorsOpen = () => page.evaluate(() => /** @type {NumericMetrics} */ (window.__testRoom.metrics().module).doors_open)
 const hand = () => page.evaluate(() => ({ door: window.__testRoom.avatarState().door, hand: window.__testRoom.handState().targets?.R?.position }))
 
 for (const mode of modes) {
   console.log(`--- ${mode} person`)
-  await page.evaluate((/** @type {string} */ m) => window.__testRoom.setCameraMode(m), mode)
+  await page.evaluate((/** @type {import('@adatechnology/game-test-room').CameraMode} */ m) => window.__testRoom.setCameraMode(m), mode)
   const id = await standAtDoor()
   await page.waitForTimeout(500)
   const before = await doorsOpen()
@@ -66,8 +69,8 @@ for (const mode of modes) {
   await page.evaluate(() => {
     const room = window.__testRoom
     const { house, plan } = window.__floorplanReport.area.houses[0]
-    const d = plan.doors.find((x) => x.exterior && x.floor === 0)
-    const dw = house.group.localToWorld(new (room.camera.position.constructor)(d.u, 1.1, d.v))
+    const d = /** @type {(typeof plan.doors)[number]} */ (plan.doors.find((x) => x.exterior && x.floor === 0))
+    const dw = house.group.localToWorld(new (/** @type {typeof import('three').Vector3} */ (room.camera.position.constructor))(d.u, 1.1, d.v))
     const [x, , z] = room.playerPosition
     room.look([x, 1.7, z], [dw.x, 1.1, dw.z])
   })

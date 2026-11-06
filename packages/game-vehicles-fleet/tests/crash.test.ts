@@ -5,9 +5,9 @@ import { makeFleetKit } from './helpers/kit'
 const SEDAN_KG = 1380
 
 function crash(otherMassKg: number, contactWidth: number, kmh: number) {
-  const kit: any = makeFleetKit('en')
-  const item: any = buildVehicleItem(kit, 'midsize_sedan')
-  const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+  const kit = makeFleetKit('en')
+  const item = buildVehicleItem(kit, 'midsize_sedan')
+  const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
   item.root.updateMatrixWorld(true)
   const front = d.partWorldCenter('bumper_front')
   crashVehicle(d, { point: [front[0] + 0.15, 0.55, front[2]], direction: [1, 0, 0], speed: kmh / 3.6, massKg: SEDAN_KG, otherMassKg, contactWidth })
@@ -52,9 +52,9 @@ describe('sheet metal in a crash', () => {
     expect(hard.broken.filter((id) => id.startsWith('fender'))).toEqual([])
   })
   it('a door comes off only when blow after blow wears its hinges through', () => {
-    const kit: any = makeFleetKit('en')
-    const item: any = buildVehicleItem(kit, 'midsize_sedan')
-    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    const kit = makeFleetKit('en')
+    const item = buildVehicleItem(kit, 'midsize_sedan')
+    const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
     item.root.updateMatrixWorld(true)
     const door = d.partWorldCenter('door_front_left')
     const hitDoor = () => crashVehicle(d, { point: [door[0], 0.6, door[2] - 0.9], direction: [0, 0, 1], speed: 50 / 3.6, massKg: SEDAN_KG, otherMassKg: SEDAN_KG, contactWidth: 0.4 }).events

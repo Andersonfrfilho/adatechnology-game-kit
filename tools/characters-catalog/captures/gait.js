@@ -3,10 +3,12 @@
 // as the joint rotations it leaves on the rig. `__SLICES.types` has the 13 types as `{ id, name }`. The page's animation path draws no random numbers.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const { build, animate0 } = globalThis.__team
+  /** @typedef {import('three').Object3D} Node */
+  /** @typedef {{ fig: Node; upper: Node; headG: Node; arms: { g: Node; el: Node }[]; legs: { g: Node; kn: Node; lost?: boolean }[] }} Rig */
+  const { build, animate0 } = /** @type {{ build: (spec: { type: string; decay: number; seed: number; phase: number }) => Node & { userData: { rig: Rig } }; animate0: (object: Node, time: number) => void }} */ (globalThis.__team)
   const recorder = GoldenTool.createEventRecorder()
   const TIMES = Array.from({ length: 9 }, (_, step) => step * 0.25)
-  const rotation = (object) => [object.rotation.x, object.rotation.y, object.rotation.z]
+  const rotation = (/** @type {Node} */ object) => [object.rotation.x, object.rotation.y, object.rotation.z]
   for (const type of globalThis.__SLICES.types) {
     const object = build({ type: type.name, decay: 0, seed: 5, phase: 0.7 })
     const rig = object.userData.rig

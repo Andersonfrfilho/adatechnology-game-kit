@@ -5,7 +5,10 @@
 // Params: seed. Events carry the damage text, the state of the zombie and its bleeders; the gore geometry (splats, particles) is not recorded.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const team = globalThis.__team
+  /** @typedef {{ type: string; side: number; attached: boolean; hp: number; g: import('three').Object3D }} Segment */
+  /** @typedef {{ rate: number; dur: number; spurt?: boolean }} Bleeder */
+  /** @typedef {{ life: number; alive: boolean; state: string; limp?: number; why?: string; segs: Segment[]; bleeders: Bleeder[]; pools: unknown[]; root: import('three').Object3D }} Zombie */
+  const team = /** @type {{ T: typeof import('three'); ZW: Record<string, { pel: number; dmg: number }>; damage: (segment: Segment, amount: number, direction: import('three').Vector3, point: import('three').Vector3 | null, normal: import('three').Vector3 | null, heavy: boolean) => string | undefined; grenadeAt: (point: import('three').Vector3) => void; show: (zombie: unknown, offset: import('three').Vector3) => void; buildZombie: () => unknown; Z: Zombie }} */ (globalThis.__team)
   const { T, ZW, damage, grenadeAt, show, buildZombie } = team
   const recorder = GoldenTool.createEventRecorder()
   const TYPES = ['head', 'jaw', 'neck', 'torso', 'pelvis', 'upperArm', 'forearm', 'hand', 'thigh', 'shin', 'foot']
@@ -21,8 +24,8 @@
     team.Z.root.updateMatrixWorld(true)
     return team.Z
   }
-  const bleeders = (Z) => Z.bleeders.map((bleeder) => [bleeder.rate, bleeder.dur, bleeder.spurt ? 1 : 0])
-  const state = (Z) => ({
+  const bleeders = (/** @type {Zombie} */ Z) => Z.bleeders.map((bleeder) => [bleeder.rate, bleeder.dur, bleeder.spurt ? 1 : 0])
+  const state = (/** @type {Zombie} */ Z) => ({
     life: Z.life,
     alive: Z.alive,
     state: Z.state,
@@ -41,7 +44,7 @@
       for (const side of type === 'head' || type === 'jaw' || type === 'neck' || type === 'torso' || type === 'pelvis' ? [0] : [1, -1]) {
         for (const withPoint of weapon === 'fuzil' ? [false, true] : [false]) {
           const Z = fresh()
-          const segment = Z.segs.find((candidate) => candidate.type === type && candidate.side === side)
+          const segment = /** @type {Segment} */ (Z.segs.find((candidate) => candidate.type === type && candidate.side === side))
           const id = `${weapon}_${type}${side === 0 ? '' : side > 0 ? '_L' : '_R'}${withPoint ? '_point' : ''}`
           recorder.record('start', { scenario: id, ...state(Z) })
           for (let hit = 1; hit <= MAX_HITS && segment.attached && Z.alive; hit++) {
@@ -60,7 +63,7 @@
   for (const distance of DISTANCES) {
     for (const aim of ['pelvis', 'head', 'foot']) {
       const Z = fresh()
-      const target = Z.segs.find((candidate) => candidate.type === aim && candidate.side <= 0)
+      const target = /** @type {Segment} */ (Z.segs.find((candidate) => candidate.type === aim && candidate.side <= 0))
       const point = target.g.getWorldPosition(new T.Vector3()).add(new T.Vector3(distance, 0, 0))
       grenadeAt(point)
       recorder.record('grenade', { scenario: `grenade_${aim}_${distance}`, distance, ...state(Z) })

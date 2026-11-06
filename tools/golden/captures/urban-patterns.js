@@ -1,4 +1,4 @@
-/* global GoldenTool */
+/* global GoldenTool, THREE */
 // Capture for the Galeria do Vale Cinzento: the sample sheet of the nine neighbourhood patterns and the military cell (`buildPadraoRuas`, spec 001, T7.3b).
 // Needs the recorder flag
 //   --expose rng,R,root,LB,IT,WL,WD,flush,buildPadraoRuas,car,env,pin
@@ -7,9 +7,9 @@
 // dark windows) before it empties them, since the scene hash does not read instance matrices. The scene is the root after the page's own `flush()`.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const page = globalThis.GoldenExposed
+  const page = /** @type {GalleryPage} */ (globalThis.GoldenExposed)
   const recorder = GoldenTool.createEventRecorder()
-  const round = (list) => list.map((entry) => entry.map((value) => (typeof value === 'number' ? Math.round(value * 1e4) / 1e4 : value)))
+  const round = (/** @type {readonly GalleryRow[]} */ list) => list.map((entry) => entry.map((value) => (typeof value === 'number' ? Math.round(value * 1e4) / 1e4 : value)))
   const realFlush = page.flush
   page.env = () => {}
   page.car = () => {}
@@ -26,7 +26,7 @@
     })
     realFlush()
   }
-  page.root = new globalThis.THREE.Group()
+  page.root = new THREE.Group()
   page.R = page.rng(7)
   page.LB = 0
   page.IT.length = 0
@@ -34,8 +34,9 @@
   page.WD.length = 0
   page.buildPadraoRuas()
   recorder.record('after', { next: page.R(), lightBudgetLeft: page.LB })
+  /** @type {(string | number)[][]} */
   const extra = []
-  page.root.traverse((node) => {
+  page.root.traverse(/** @type {(node: import('three').Object3D) => void} */ ((/** @type {GallerySurfaceNode} */ node) => {
     const material = node.material
     extra.push([
       node.type,
@@ -45,7 +46,7 @@
       node.isLight ? [node.color.getHex(), node.intensity, node.distance, node.decay, node.angle, node.penumbra].join(':') : '',
       node.count ?? '',
     ])
-  })
+  }))
   recorder.record('surface', { nodes: extra.length, hash: GoldenTool.hashText(JSON.stringify(extra)) })
   return GoldenTool.createGoldenRecord({ name: 'urban-patterns', seed, events: recorder.events(), scenes: { sample_sheet: page.root } })
 })()

@@ -18,7 +18,7 @@ console.log(`ok: ${existsSync(page) ? 'bundle and room page' : 'bundle (no room 
 
 // With Playwright (Chromium, software GL) at hand: the room page loads, the contract report is clean, the nine scenarios pass and the bench drives the crowd.
 const require = createRequire(import.meta.url)
-const playwright = ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean)
+const playwright = /** @type {typeof import('playwright') | undefined} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
@@ -30,7 +30,7 @@ if (!playwright || !existsSync(page)) {
      */
   const errors = []
   let failed = 0
-  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {unknown} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -44,9 +44,9 @@ if (!playwright || !existsSync(page)) {
     await tab.waitForFunction(() => window.__crowdReport, null, { timeout: 90000 })
     const drawn = await tab.evaluate(() => {
       const room = window.__testRoom
-      room.bench('crowd_area').act('herd')
+      ;/** @type {RoomBench} */ (room.bench('crowd_area')).act('herd')
       for (let i = 0; i < 90; i++) room.update(1 / 30)
-      return room.metrics().module
+      return /** @type {NumericMetrics} */ (room.metrics().module)
     })
     await tab.waitForTimeout(300)
     await tab.screenshot({ path: join(shots, `crowd-${lang}.png`), timeout: 120000 }) // software GL with 300 agents is slow to settle a frame
@@ -55,13 +55,13 @@ if (!playwright || !existsSync(page)) {
       const report = window.__crowdReport
       const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('crowd_'))
       const result = await room.runScenarios(scenarios)
-      const bench = room.bench('crowd_area')
+      const bench = /** @type {RoomBench} */ (room.bench('crowd_area'))
       bench.act('hit')
       for (let i = 0; i < 5; i++) room.update(1 / 30)
-      const hit = room.metrics().module
+      const hit = /** @type {NumericMetrics} */ (room.metrics().module)
       bench.set('count', 1000)
       for (let i = 0; i < 10; i++) room.update(1 / 30)
-      const big = room.metrics().module
+      const big = /** @type {NumericMetrics} */ (room.metrics().module)
       return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), hit, big }
     })
     check(`[${lang}] contract report is clean, 9 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 9 && state.failed === 0, state)

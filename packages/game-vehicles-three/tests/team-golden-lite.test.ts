@@ -34,7 +34,19 @@ const kit = createVehicleKit({ THREE, document: fakeDocument, locale: 'pt-BR' })
 installFleet(kit)
 const vehicles = createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
 const idOf = (pageKey: string): string => Object.keys(legacyVehicleSeeds).find((id) => legacyVehicleSeeds[id] === pageKey) as string
-const entries = Object.entries(golden.vehicles as Record<string, any>)
+/** One vehicle of the team's page as it was recorded: colour, triangles, draw calls, size, pruned pieces, the fused classes and the damageable boxes. */
+interface GoldenVehicle {
+  color: unknown
+  tris: number
+  drawCalls: number
+  L: number
+  W: number
+  H: number
+  pruned: number
+  classes: Record<string, unknown>
+  damageables: { material: string; zone: string; part: string; side: string; min: number[]; max: number[] }[]
+}
+const entries = Object.entries(golden.vehicles as unknown as Record<string, GoldenVehicle>)
 
 describe('team golden: Frota Leve, light and high quality', () => {
   it.each(entries)('%s has the same triangles, draw calls, size and colour as the page', (name, want) => {
@@ -51,10 +63,11 @@ describe('team golden: Frota Leve, light and high quality', () => {
   it.each(entries.filter(([name]) => name.endsWith(':lite')))('%s fuses into the same six classes with the same vertices', (name, want) => {
     const built = vehicles.build(idOf(name.split(':')[0] as string), { quality: 'lite', seed: golden.seed })
     const got: Record<string, unknown> = {}
-    built.group.traverse((m: any) => {
-      if (m.isMesh) got[m.name] = { vertices: m.geometry.attributes.position.count, indices: m.geometry.index.count, hash: fnv(m.geometry.attributes.position.array) }
+    built.group.traverse((obj) => {
+      const m = obj as THREE.Mesh
+      if (m.isMesh) got[m.name] = { vertices: m.geometry.attributes.position.count, indices: m.geometry.index!.count, hash: fnv(m.geometry.attributes.position.array) }
     })
-    const expected = Object.fromEntries(Object.entries(want.classes as Record<string, unknown>).map(([cls, value]) => [CLASS_NAMES[cls], value]))
+    const expected = Object.fromEntries(Object.entries(want.classes).map(([cls, value]) => [CLASS_NAMES[cls], value]))
     expect(got).toEqual(expected)
     built.dispose()
   })
@@ -62,8 +75,8 @@ describe('team golden: Frota Leve, light and high quality', () => {
   it.each(entries)('%s lists the same damageable boxes as the page', (name, want) => {
     const [pageKey, quality] = name.split(':') as [string, 'lite' | 'high']
     const built = vehicles.build(idOf(pageKey), { quality, seed: golden.seed })
-    const vehicle = built.context ?? (kit.build(idOf(pageKey), 'intact') as any)
-    const zones = new Map<string, string>((vehicle.zones as any[]).map((z) => [z.id, legacyZoneId(z)]))
+    const vehicle = built.context ?? kit.build(idOf(pageKey), 'intact')
+    const zones = new Map<string, string>(vehicle.zones.map((z) => [z.id, legacyZoneId(z)]))
     const got = built.damageables.map((d) => ({
       material: d.material,
       zone: zones.get(d.zone),
@@ -72,7 +85,7 @@ describe('team golden: Frota Leve, light and high quality', () => {
       min: [d.box.min.x, d.box.min.y, d.box.min.z].map(round),
       max: [d.box.max.x, d.box.max.y, d.box.max.z].map(round),
     }))
-    const expected = (want.damageables as any[]).map((d) => ({ material: MATERIALS[d.material], zone: d.zone, part: PARTS[d.part], side: SIDES[d.side], min: d.min, max: d.max }))
+    const expected = want.damageables.map((d) => ({ material: MATERIALS[d.material], zone: d.zone, part: PARTS[d.part], side: SIDES[d.side], min: d.min, max: d.max }))
     expect(got).toEqual(expected)
     built.dispose()
   })

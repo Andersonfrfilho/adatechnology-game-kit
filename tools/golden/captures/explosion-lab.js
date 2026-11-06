@@ -3,12 +3,34 @@
 // zombies are skipped) from the scene's own camera, then stepped at 1/60 s for 8 s with the page's update functions in the page's order.
 // Needs --expose with the names listed in tools/golden/README.md. Params: seed (unused: each scene uses the page's own seed 1000 + index * 97).
 (() => {
-  const X = GoldenExposed
+  /** @typedef {import('three').Color} Color */
+  /** @typedef {{ x: number; y: number; z: number; vx: number; vy: number; vz: number; s0: number; s1: number; sg: number; gk: number; life: number; h0: number; hl: number; drag: number; buoy: number; grav: number; kind: number | string; seed: number; wind: number; c: Color; t: number; ph?: number; th?: number; ring?: { t: number; x: number; z: number; y0: number; rise: number; R0: number; R1: number; r: number } }} Puff */
+  /** @typedef {{ x: number; y: number; z: number; vx: number; vy: number; vz: number; life: number; w: number; st: number; kind: number | string; drag: number; g: number; bounce: number; t: number }} Spark */
+  /** @typedef {{ x: number; y: number; z: number; s: number; s1: number; i: number; life: number; c: number[]; curve: number; fx: number; fy: number; fz: number; follow?: boolean; flick?: boolean; t: number }} Glow */
+  /** @typedef {{ x: number; y: number; z: number; vx: number; vy: number; vz: number; rx: number; ry: number; rz: number; ax: number; ay: number; az: number; sx: number; sy: number; sz: number; col: Color; plate?: boolean; hot?: boolean; rest?: boolean; t: number; trail: number }} Chunk */
+  /** @typedef {{ x: number; y: number; z: number; r: number; r0: number; grow: number; life: number; rate: number; smoke: number; col: Color; t: number; acc: number; smokeAcc: number; fade: number }} Fire */
+  /** @typedef {{ t: number; x: number; z: number; y0: number; rise: number; rk: number; R0: number; R1: number; r: number; roll: number; life: number }} Ring */
+  /** @typedef {import('three').Mesh<import('three').BufferGeometry, import('three').ShaderMaterial>} ShockMesh */
+  /** @typedef {{ Rs: number; Rg: number; t: number; dur: number; x: number; z: number; sm: ShockMesh; rm: ShockMesh }} Shock */
+  /** @typedef {'puff' | 'spark' | 'glow' | 'chunk' | 'fire' | 'shock' | 'boomLight' | 'scorch' | 'crater' | 'mushroom'} SpawnerName */
+  /** @typedef {(...args: unknown[]) => unknown} Spawner */
+  /** @typedef {'updateRings' | 'updatePuffs' | 'updateSparks' | 'updateGlows' | 'updateShocks' | 'updateChunks' | 'updateBodies' | 'updateFires' | 'updateBlood' | 'updateZombies' | 'updateLights'} UpdateName */
+  /**
+   * What `--expose` opens of the page's closure.
+   * @typedef {{ P: Puff[]; S: Spark[]; GL: Glow[]; CH: Chunk[]; FIRES: Fire[]; SHOCKS: Shock[]; RINGS: Ring[]; XL: { l: import('three').Light }[]; FL: import('three').Light[];
+   *   U: { uGlowI: { value: number }; uGlowPos: { value: import('three').Vector3 } }; stage: import('three').Object3D; puffGeo: { instanceCount: number }; pA: Float32Array; pD: Float32Array; pC: Float32Array;
+   *   ORDER: string[]; seed: number; clearAll: () => void; clock: number; simT: number; xlIdx: number; decalY: number; flashDecay: number; lodNow: number; WINDOWS: unknown[];
+   *   applyCam: (camera: unknown) => void; SC: Record<string, unknown>; renderFicha: (key: string) => void; profOf: (key: string) => object; camera: import('three').PerspectiveCamera;
+   *   blast: (x: number, y: number, z: number, definition: object) => void; shakeAmp: number; flashV: number; evCount: { p: number; s: number; c: number; l: number } }
+   *   & { [name in SpawnerName]: Spawner } & { [name in UpdateName]: (seconds: number) => void }} ExplosionLab
+   */
+  const X = /** @type {ExplosionLab} */ (GoldenExposed)
   const FRAME_SECONDS = 1 / 60
   const TOTAL_FRAMES = 480
   const INSTANTS = [0.08, 0.25, 0.5, 1, 2, 4]
   const MAX_SPAWNS = 400
   // where each scene detonates, copied from the `run` of the page (y and direction included)
+  /** @type {Record<string, { at: [number, number, number]; direction?: [number, number, number] }>} */
   const BLASTS = {
     granada: { at: [-4.2, 0.1, 3.4] },
     molotov: { at: [-3.7, 0.05, 2.6] },
@@ -27,51 +49,56 @@
     posto: { at: [-7, 0.4, -1] },
     horda: { at: [0, 0.1, 0] },
   }
-  const round4 = (value) => Math.round(value * 1e4) / 1e4 + 0
-  const num = (value) => (value === null || value === undefined ? -1 : round4(Number(value)))
-  const line = (values) => values.map(num).join(' ')
-  const colorOf = (color) => [color.r, color.g, color.b]
+  const round4 = (/** @type {number} */ value) => Math.round(value * 1e4) / 1e4 + 0
+  const num = (/** @type {unknown} */ value) => (value === null || value === undefined ? -1 : round4(Number(value)))
+  const line = (/** @type {readonly unknown[]} */ values) => values.map(num).join(' ')
+  const colorOf = (/** @type {Color} */ color) => [color.r, color.g, color.b]
   const tracedFields = {
-    puff: (p) => [p.x, p.y, p.z, p.vx, p.vy, p.vz, p.s0, p.s1, p.sg, p.gk, p.life, p.h0, p.hl, p.drag, p.buoy, p.grav, p.kind, p.seed, p.wind, ...colorOf(p.c)],
-    spark: (s) => [s.x, s.y, s.z, s.vx, s.vy, s.vz, s.life, s.w, s.st, s.kind, s.drag, s.g, s.bounce],
-    glow: (g) => [g.x, g.y, g.z, g.s, g.s1, g.i, g.life, ...g.c, g.curve, g.fx, g.fy, g.fz, g.follow ? 1 : 0, g.flick ? 1 : 0],
-    chunk: (c) => [c.x, c.y, c.z, c.vx, c.vy, c.vz, c.rx, c.ry, c.rz, c.ax, c.ay, c.az, c.sx, c.sy, c.sz, ...colorOf(c.col), c.plate ? 1 : 0, c.hot ? 1 : 0],
-    fire: (f) => [f.x, f.y, f.z, f.r, f.r0, f.grow, f.life, f.rate, f.smoke, ...colorOf(f.col)],
+    puff: (/** @type {Puff} */ p) => [p.x, p.y, p.z, p.vx, p.vy, p.vz, p.s0, p.s1, p.sg, p.gk, p.life, p.h0, p.hl, p.drag, p.buoy, p.grav, p.kind, p.seed, p.wind, ...colorOf(p.c)],
+    spark: (/** @type {Spark} */ s) => [s.x, s.y, s.z, s.vx, s.vy, s.vz, s.life, s.w, s.st, s.kind, s.drag, s.g, s.bounce],
+    glow: (/** @type {Glow} */ g) => [g.x, g.y, g.z, g.s, g.s1, g.i, g.life, ...g.c, g.curve, g.fx, g.fy, g.fz, g.follow ? 1 : 0, g.flick ? 1 : 0],
+    chunk: (/** @type {Chunk} */ c) => [c.x, c.y, c.z, c.vx, c.vy, c.vz, c.rx, c.ry, c.rz, c.ax, c.ay, c.az, c.sx, c.sy, c.sz, ...colorOf(c.col), c.plate ? 1 : 0, c.hot ? 1 : 0],
+    fire: (/** @type {Fire} */ f) => [f.x, f.y, f.z, f.r, f.r0, f.grow, f.life, f.rate, f.smoke, ...colorOf(f.col)],
   }
   const stateFields = {
-    puff: (p) => [...tracedFields.puff(p), p.t, p.ph ?? -1, p.th ?? -1, ...(p.ring ? [p.ring.t, p.ring.x, p.ring.z, p.ring.y0, p.ring.rise, p.ring.R0, p.ring.R1, p.ring.r] : [-1])],
-    spark: (s) => [...tracedFields.spark(s), s.t],
-    glow: (g) => [...tracedFields.glow(g), g.t],
-    chunk: (c) => [...tracedFields.chunk(c), c.rest ? 1 : 0, c.t, c.trail],
-    fire: (f) => [...tracedFields.fire(f), f.t, f.acc, f.smokeAcc, f.fade],
+    puff: (/** @type {Puff} */ p) => [...tracedFields.puff(p), p.t, p.ph ?? -1, p.th ?? -1, ...(p.ring ? [p.ring.t, p.ring.x, p.ring.z, p.ring.y0, p.ring.rise, p.ring.R0, p.ring.R1, p.ring.r] : [-1])],
+    spark: (/** @type {Spark} */ s) => [...tracedFields.spark(s), s.t],
+    glow: (/** @type {Glow} */ g) => [...tracedFields.glow(g), g.t],
+    chunk: (/** @type {Chunk} */ c) => [...tracedFields.chunk(c), c.rest ? 1 : 0, c.t, c.trail],
+    fire: (/** @type {Fire} */ f) => [...tracedFields.fire(f), f.t, f.acc, f.smokeAcc, f.fade],
   }
+  /** @template T @param {readonly T[]} items @param {(item: T) => unknown[]} toFields */
   const hashPool = (items, toFields) => GoldenTool.hashText(items.map((item) => line(toFields(item))).join('\n'))
 
   const recorder = GoldenTool.createEventRecorder()
   let frame = 0
+  /** @type {string[]} */
   let spawns = []
-  const trace = (kind, values) => {
+  const trace = (/** @type {string} */ kind, /** @type {readonly unknown[]} */ values) => {
     if (spawns.length < MAX_SPAWNS) spawns.push(`${frame} ${kind} ${line(values)}`)
   }
   // wraps the page's spawners through the exposed accessors (the page calls them by name, so the wrapper sees every call, nested ones included)
+  /** @type {Record<string, Spawner>} */
   const original = {}
+  /** @typedef {(...values: unknown[]) => void} Call */
+  /** @param {SpawnerName} name @param {(...args: never) => void} onCall what the spawner was called with, or what it made @param {boolean} [afterReturn] */
   const wrap = (name, onCall, afterReturn) => {
     original[name] = X[name]
     X[name] = (...args) => {
-      if (!afterReturn) onCall(...args)
+      if (!afterReturn) /** @type {Call} */ (onCall)(...args)
       const result = original[name](...args)
-      if (afterReturn) onCall(result)
+      if (afterReturn) /** @type {Call} */ (onCall)(result)
       return result
     }
   }
-  for (const kind of ['puff', 'spark', 'glow', 'chunk', 'fire']) wrap(kind, (made) => trace(kind, tracedFields[kind](made)), true)
-  wrap('shock', (x, y, z, rs, rg, dur) => trace('shock', [x, y, z, rs, rg, dur ?? -1]))
-  wrap('boomLight', (x, y, z, peak, dist, life, hex) => trace('light', [x, y, z, peak, dist, life, hex ?? -1]))
-  wrap('scorch', (x, z, r) => trace('scorch', [x, z, r]))
-  wrap('crater', (x, z, r, depth) => trace('crater', [x, z, r, depth]))
-  wrap('mushroom', (x, y, z, m) => trace('mushroom', [x, y, z, m.h, m.r, m.n ?? -1, m.stem ?? -1, m.life ?? -1, m.rk ?? -1, m.roll ?? -1]))
+  for (const kind of /** @type {const} */ (['puff', 'spark', 'glow', 'chunk', 'fire'])) wrap(kind, (/** @type {never} what the spawner of `kind` made */ made) => trace(kind, tracedFields[kind](made)), true)
+  wrap('shock', (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {number} */ rs, /** @type {number} */ rg, /** @type {number | undefined} */ dur) => trace('shock', [x, y, z, rs, rg, dur ?? -1]))
+  wrap('boomLight', (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {number} */ peak, /** @type {number} */ dist, /** @type {number} */ life, /** @type {number | undefined} */ hex) => trace('light', [x, y, z, peak, dist, life, hex ?? -1]))
+  wrap('scorch', (/** @type {number} */ x, /** @type {number} */ z, /** @type {number} */ r) => trace('scorch', [x, z, r]))
+  wrap('crater', (/** @type {number} */ x, /** @type {number} */ z, /** @type {number} */ r, /** @type {number} */ depth) => trace('crater', [x, z, r, depth]))
+  wrap('mushroom', (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {{ h: number; r: number; n?: number; stem?: number; life?: number; rk?: number; roll?: number }} */ m) => trace('mushroom', [x, y, z, m.h, m.r, m.n ?? -1, m.stem ?? -1, m.life ?? -1, m.rk ?? -1, m.roll ?? -1]))
 
-  const updates = ['updateRings', 'updatePuffs', 'updateSparks', 'updateGlows', 'updateShocks', 'updateChunks', 'updateBodies', 'updateFires', 'updateBlood', 'updateZombies', 'updateLights']
+  const updates = /** @type {const} */ (['updateRings', 'updatePuffs', 'updateSparks', 'updateGlows', 'updateShocks', 'updateChunks', 'updateBodies', 'updateFires', 'updateBlood', 'updateZombies', 'updateLights'])
   const aliveLight = () => X.XL.some((entry) => entry.l.intensity > 0.05)
   const layerAlive = {
     flash: () => aliveLight() || X.GL.some((g) => !g.follow),
@@ -84,6 +111,7 @@
   const counts = () => [X.P.length, X.S.length, X.GL.length, X.CH.length, X.FIRES.length, X.SHOCKS.length, X.RINGS.length, X.XL.filter((entry) => entry.l.intensity > 0.05).length]
   const stageRoot = () => X.stage
 
+  /** @param {string} key @param {number} seconds */
   function describeInstant(key, seconds) {
     const lights = [...X.XL.map((entry) => entry.l.intensity), ...X.FL.map((l) => l.intensity), X.U.uGlowI.value, X.U.uGlowPos.value.x, X.U.uGlowPos.value.y, X.U.uGlowPos.value.z]
     recorder.record('instant', {
@@ -103,9 +131,10 @@
       puffBuffer: X.puffGeo.instanceCount > 0 ? bufferSample(X.pA, X.pD, X.pC, X.puffGeo.instanceCount) : '',
     })
   }
+  /** @param {Float32Array} positions @param {Float32Array} state @param {Float32Array} colors @param {number} count */
   function bufferSample(positions, state, colors, count) {
     // `count` is what the page wrote this frame (puffs spawned later in the frame are not in the buffer yet); the rows are the first and the sixth (or the last)
-    const pick = (index) => [index, ...positions.subarray(index * 4, index * 4 + 4), ...state.subarray(index * 4, index * 4 + 4), ...colors.subarray(index * 3, index * 3 + 3)]
+    const pick = (/** @type {number} */ index) => [index, ...positions.subarray(index * 4, index * 4 + 4), ...state.subarray(index * 4, index * 4 + 4), ...colors.subarray(index * 3, index * 3 + 3)]
     return `${line(pick(0))} | ${line(pick(Math.min(5, count - 1)))}`
   }
 
@@ -125,16 +154,19 @@
     X.renderFicha(key)
     const profile = X.profOf(key)
     const spec = BLASTS[key]
-    const extra = spec.direction ? { dir: new X.camera.position.constructor(...spec.direction) } : {}
+    const extra = spec.direction ? { dir: new (/** @type {typeof import('three').Vector3} */ (X.camera.position.constructor))(...spec.direction) } : {}
     const definition = Object.assign({}, profile, extra)
     frame = 0
     spawns = []
     const camera = X.camera.position
-    recorder.record('scene', { key, seed: 1000 + index * 97, camera: [camera.x, camera.y, camera.z], estimate: document.getElementById('mPv').textContent })
+    recorder.record('scene', { key, seed: 1000 + index * 97, camera: [camera.x, camera.y, camera.z], estimate: /** @type {HTMLElement} */ (document.getElementById('mPv')).textContent })
     X.blast(spec.at[0], spec.at[1], spec.at[2], definition)
     recorder.record('after_blast', { key, lod: X.lodNow, counts: counts().join('/'), shake: X.shakeAmp, flash: X.flashV, flashDecay: X.flashDecay, events: [X.evCount.p, X.evCount.s, X.evCount.c, X.evCount.l], seed: X.seed })
+    /** @type {string[]} */
     const timeline = []
+    /** @type {Record<string, number>} */
     const first = {}
+    /** @type {Record<string, number>} */
     const last = {}
     const instantFrames = new Map(INSTANTS.map((seconds) => [Math.round(seconds * 60), seconds]))
     for (frame = 1; frame <= TOTAL_FRAMES; frame++) {
@@ -147,13 +179,13 @@
         if (first[layer] === undefined) first[layer] = frame
         last[layer] = frame
       }
-      if (instantFrames.has(frame)) describeInstant(key, instantFrames.get(frame))
+      if (instantFrames.has(frame)) describeInstant(key, /** @type {number} */ (instantFrames.get(frame)))
     }
     recorder.record('spawns', { key, count: spawns.length, list: spawns })
     recorder.record('frames', { key, counts: timeline.join(' ') })
     recorder.record('layers', { key, first, last })
     recorder.record('end', { key, seed: X.seed, stage: GoldenTool.snapshotScene(stageRoot()).hash })
   }
-  for (const [name, fn] of Object.entries(original)) X[name] = fn
+  for (const [name, fn] of Object.entries(original)) X[/** @type {SpawnerName} */ (name)] = fn
   return GoldenTool.createGoldenRecord({ name: 'explosion-lab', seed: 0, events: recorder.events(), scenes: {} })
 })()

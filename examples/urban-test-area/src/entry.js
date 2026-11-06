@@ -13,19 +13,32 @@ import { drawLayout, fillDowntown, openCityPlans } from './cities-map.js'
 
 export { createUrbanTestModule, loadUrbanTestModule, drawLayout, fillDowntown, openCityPlans }
 
-/** The vehicles of the fleet for the bench: one kit for the room's three.js, the fleet installed, the lite build. */
+/**
+ * The vehicles of the fleet for the bench: one kit for the room's three.js, the fleet installed, the lite build.
+ * @param {unknown} THREE the room's three.js (the module hands it on untyped)
+ * @param {string} [locale]
+ * @param {Parameters<typeof createVehicleKit>[0]['effects'] extends (() => infer E) | undefined ? E : never} [effects]
+ */
 export function createVehicleBuilder(THREE, locale = 'pt-BR', effects = undefined) {
-  const kit = createVehicleKit({ THREE, locale, ...(effects ? { effects: () => effects } : {}) })
+  const three = /** @type {typeof import('three')} */ (THREE)
+  const kit = createVehicleKit({ THREE: three, locale, ...(effects ? { effects: () => effects } : {}) })
   installFleet(kit)
-  return createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
+  return createVehiclesThree(three, { kit, fleet: defaultVehicleFleet() })
 }
 
-/** The module with the kit's own catalogues; options replace or extend any of it. */
+/**
+ * The module with the kit's own catalogues; options replace or extend any of it.
+ * @param {Partial<Parameters<typeof createUrbanTestModule>[0]> & { locale?: string; effects?: Parameters<typeof createVehicleBuilder>[2] }} [options]
+ */
 export function createModule(options = {}) {
   return createUrbanTestModule({ providers: defaultUrbanProviders(), plantSpec: defaultPlantSpec, vehicles: (THREE) => createVehicleBuilder(THREE, options.locale, options.effects), ...options })
 }
 
-/** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the urban area. Returns the room's module report. */
+/**
+ * Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the urban area. Returns the room's module report.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Parameters<typeof createModule>[0]} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createModule({ effects: room.effects, ...options, locale: lang }))
