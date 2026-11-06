@@ -21,5 +21,19 @@
     "sources": [
       "sdk: the crackles of every fire share four voices"
     ]
+  },
+  "debris_knock": {
+    "maxConcurrent": 3,
+    "cooldown": 0.04,
+    "sources": [
+      "sdk: forty parts coming loose in one blast are a few knocks, not forty (room log: thunk x34 in under a second when a molotov broke)"
+    ]
+  },
+  "sizzle": {
+    "maxConcurrent": 1,
+    "cooldown": 0.5,
+    "sources": [
+      "sdk: every melting part of a burning bin is one sizzle at a time (room log: hiss x34 in 1.6 s on a plastic bin)"
+    ]
   }
 }

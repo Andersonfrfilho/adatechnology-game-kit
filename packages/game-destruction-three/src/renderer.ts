@@ -909,8 +909,9 @@ class Renderer implements DestructionRenderer {
       }
       case 'melt':
         this.activate(ev.object, ev.part)
-        if (this.time - (this.throttles.get(`melt:${ev.object}|${ev.part}`) ?? -9) > 1.5) {
-          this.throttles.set(`melt:${ev.object}|${ev.part}`, this.time)
+        // one sizzle per melting object every 1.5 s, not one per part (a plastic bin has dozens)
+        if (this.time - (this.throttles.get(`melt:${ev.object}`) ?? -9) > 1.5) {
+          this.throttles.set(`melt:${ev.object}`, this.time)
           this.sound('melt_sizzle', this.rootPoint(ev.object), 0.4)
         }
         break

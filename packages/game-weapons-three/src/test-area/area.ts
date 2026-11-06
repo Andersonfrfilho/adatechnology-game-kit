@@ -479,6 +479,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       const offEvents = lent.on((event) => {
         worldEffects.handle(event, lent.effects)
         if (event.type === 'explosion') {
+          // a host that lends its engine (the test room) plays the blast itself, recorded, from the destruction sound: no second synthesized burst on top
+          if (lentEngine) return
           const away = Math.hypot(event.point[0] - camera.position.x, event.point[1] - camera.position.y, event.point[2] - camera.position.z)
           ownAudio()?.play('explosion', Math.min(1, EXPLOSION_VOLUME_BASE + event.radius * EXPLOSION_VOLUME_PER_METRE), away)
           return
