@@ -92,6 +92,9 @@ const pageSources = (dir) => {
   return found
 }
 
+/** The source without its block and line comments (a `//` after a colon, as in a URL, is kept). @param {string} text @returns {string} */
+const withoutComments = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
+
 /** Reads the workspace: each package's folder and runtime dependencies, and the packages each example page declares or imports. @param {string} root @returns {Workspace} */
 export const readWorkspace = (root) => {
   /** @type {Map<string, string>} */
@@ -111,7 +114,8 @@ export const readWorkspace = (root) => {
   for (const page of AREAS) {
     const dir = join(root, 'examples', page)
     const pkg = readJson(join(dir, 'package.json'))
-    const imported = pageSources(dir).flatMap((file) => readFileSync(file, 'utf8').match(/@adatechnology\/[a-z0-9-]+/g) ?? [])
+    // comments are left out: a JSDoc type (`import('@adatechnology/...')`) loads nothing in the page
+    const imported = pageSources(dir).flatMap((file) => withoutComments(readFileSync(file, 'utf8')).match(/@adatechnology\/[a-z0-9-]+/g) ?? [])
     pageLoads.set(page, [...new Set([...workspaceNames(pkg.dependencies), ...workspaceNames(pkg.devDependencies), ...imported])].filter((name) => dependencies.has(name)))
   }
   return { packageOfFolder, dependencies, pageLoads }

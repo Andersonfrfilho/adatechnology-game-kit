@@ -81,6 +81,22 @@
     }
   },
   {
+    "type": "dependency",
+    "from": "packages/game-vehicles/src/three-types.ts",
+    "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
+    "unresolvedTo": "three",
+    "dependencyTypes": [
+      "npm-peer",
+      "npm-dev",
+      "type-only",
+      "export"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "core-no-three"
+    }
+  },
+  {
     "type": "cycle",
     "from": "packages/game-characters/src/damage/damage-character.ts",
     "to": "packages/game-characters/src/damage/pipeline.ts",
@@ -10096,59 +10112,6 @@
       },
       {
         "name": "packages/game-weapons-three/src/fx/hand-work.ts",
-        "dependencyTypes": [
-          "local",
-          "type-only",
-          "import"
-        ]
-      }
-    ]
-  },
-  {
-    "type": "cycle",
-    "from": "packages/game-weapons-three/src/models/index.ts",
-    "to": "packages/game-weapons-three/src/models/rifle.ts",
-    "unresolvedTo": "./rifle",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "packages/game-weapons-three/src/models/rifle.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-weapons-three/src/models/rifle-fittings.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-weapons-three/src/models/attachments/bipod.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-weapons-three/src/models/attachments/types.ts",
-        "dependencyTypes": [
-          "local",
-          "type-only",
-          "import"
-        ]
-      },
-      {
-        "name": "packages/game-weapons-three/src/models/index.ts",
         "dependencyTypes": [
           "local",
           "type-only",

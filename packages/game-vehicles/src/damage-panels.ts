@@ -1,5 +1,5 @@
 /** Per-zone damage for body panels: doors, lids, hoods, roofs, hulls and wings. */
-import type { Intersection, Matrix4, Mesh, Object3D, Vector3 } from 'three'
+import type { Intersection, Matrix4, Mesh, Object3D, Vector3 } from './three-types'
 
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

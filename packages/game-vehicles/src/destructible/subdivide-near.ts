@@ -1,4 +1,4 @@
-import type { Mesh, Vector3 } from 'three'
+import type { Mesh, Vector3 } from '../three-types'
 
 import type { Three } from '../types'
 

@@ -4,7 +4,7 @@
  * away; a bullet hole lets a little in at a rate that grows with its size, and the gaps of a shut door let a trace in.
  */
 import type { Enclosure, EnclosureBox, ObjectState, Vec3 } from '@adatechnology/game-contracts'
-import type { Object3D, Quaternion, Vector3 } from 'three'
+import type { Object3D, Quaternion, Vector3 } from '../three-types'
 
 import type { VehicleContext } from '../api'
 import type { LocalBox, PartRole, VehicleModel } from './model'

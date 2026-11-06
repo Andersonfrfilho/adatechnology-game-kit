@@ -1,5 +1,5 @@
 /** Per-zone damage for separate parts: lights, wheels, glass, internals, rotors and landing gear. */
-import type { CanvasTexture, Material, Mesh, MeshStandardMaterial, Object3D, Sprite, Vector3 } from 'three'
+import type { CanvasTexture, Material, Mesh, MeshStandardMaterial, Object3D, Sprite, Vector3 } from './three-types'
 
 import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

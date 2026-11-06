@@ -1,5 +1,5 @@
 /** Soft body warp (sculpting) used for panel deformation. */
-import type { Mesh, Object3D, Vector2 } from 'three'
+import type { Mesh, Object3D, Vector2 } from './three-types'
 
 import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, smooth } from './util'

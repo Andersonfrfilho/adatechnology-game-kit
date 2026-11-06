@@ -1,4 +1,4 @@
-import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import { markKitOrigin } from '@adatechnology/game-contracts'
 

@@ -1,5 +1,5 @@
 /** The generic car builder: shell, glasshouse, lights, wheels, interior and engine bay in one call. */
-import type { ColorRepresentation, Material, Mesh, MeshStandardMaterial, Vector3 } from 'three'
+import type { ColorRepresentation, Material, Mesh, MeshStandardMaterial, Vector3 } from './three-types'
 
 import type { Greenhouse } from './body'
 import type { LabelArgument } from './context'

@@ -1,5 +1,5 @@
 /** Damage scenarios and the scenario registry. */
-import type { Object3D, Vector3 } from 'three'
+import type { Object3D, Vector3 } from './three-types'
 
 import type { DamageZone, ScenarioContext, ScenarioDefinition, VehicleContext, ZoneDamageEntry } from './api'
 import type { BuildContext, Kit } from './types'

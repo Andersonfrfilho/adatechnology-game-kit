@@ -1,5 +1,5 @@
 /** Headlights and taillights in several styles, with beams and glow. */
-import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, MeshStandardMaterial, Object3D, Sprite, SpriteMaterial } from 'three'
+import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, MeshStandardMaterial, Object3D, Sprite, SpriteMaterial } from './three-types'
 
 import type { VehicleLamp } from './api'
 import type { BuildContext, Kit } from './types'

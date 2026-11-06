@@ -5,7 +5,7 @@
  *
  * It depends on the contracts only (types) and on the kit it is given: not on the default destruction world.
  */
-import type { Matrix4, Object3D, Vector3 } from 'three'
+import type { Matrix4, Object3D, Vector3 } from '../three-types'
 
 import type {
   AnimationClipSpec,

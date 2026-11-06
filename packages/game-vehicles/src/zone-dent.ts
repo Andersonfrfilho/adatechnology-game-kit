@@ -1,5 +1,5 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
-import type { BufferGeometry, Material, Matrix4, Mesh, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, Material, Matrix4, Mesh, Object3D, Vector3 } from './three-types'
 
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

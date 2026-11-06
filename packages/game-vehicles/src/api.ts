@@ -2,7 +2,7 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
-import type { Group, Matrix4, Mesh, Object3D, Vector3 } from 'three'
+import type { Group, Matrix4, Mesh, Object3D, Vector3 } from './three-types'
 
 import type { LodSettings } from './lod'
 import type { ZoneBox } from './zone-core'
