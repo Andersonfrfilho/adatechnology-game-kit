@@ -269,11 +269,6 @@
       "count": 3
     }
   },
-  "packages/game-vehicles/src/destructible/impl.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 50
-    }
-  },
   "packages/game-vehicles/src/destructible/item.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1

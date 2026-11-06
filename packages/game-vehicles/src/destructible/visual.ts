@@ -1175,11 +1175,11 @@ export class VehicleVisuals implements CreaseWork {
   }
   /** The door or lid a hinge group stands for. */
   /** The part a separately drawn piece stands for (a mirror on the door, a battery under the hood), so a shot at it lands on that part. */
-  extraIdOf(o: Obj): string | undefined {
+  extraIdOf(o: Object3D): string | undefined {
     for (const [id, objs] of this.extra) if (objs.includes(o)) return id
     return undefined
   }
-  plateIdOf(o: Obj): string | undefined {
+  plateIdOf(o: Object3D): string | undefined {
     return o.userData.plateOf
   }
   spark(point: [number, number, number], dir: [number, number, number], count = 8): void {
