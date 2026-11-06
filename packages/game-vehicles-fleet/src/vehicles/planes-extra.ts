@@ -253,7 +253,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         yel = '#f0bd22'
       const Q = pose3([1.62, -0.78], 0.25, [-3.24, -0.27], 0.075),
         P = Q.P,
@@ -605,7 +605,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         })
         const pd = pod(
           c2,
-          shared.EA,
+          shared.EA!,
           P(1.4, -0.6).x,
           P(-1.2, -0.45).x,
           P(0.1, -0.66).y,
@@ -655,7 +655,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         wcol = '#ecebe6',
         white = c.paint(wcol),
         blue = c.paint('#1d4f8c'),
@@ -1082,7 +1082,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         wcol = '#eceae3',
         white = c.paint(wcol),
         navy = c.paint('#1e2f55'),
@@ -1533,7 +1533,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         wcol = '#efeeea',
         white = c.paint(wcol),
         silver = c.paint('#7d868e', { metalness: 0.45, roughness: 0.35 }),
@@ -1949,7 +1949,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         blk = CM('#1a1b1d', { roughness: 0.6 })
       c.meta.matte = true
       /* per-vertex camouflage: two shades of green in patches on top, light grey below (real colours in the white material) */

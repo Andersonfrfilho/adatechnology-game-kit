@@ -189,7 +189,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         col = '#1f4f8a',
         blue = c.paint(col),
         white = c.paint('#e9e7e0'),
@@ -549,7 +549,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         wcol = '#eeece6',
         white = c.paint(wcol),
         mar = c.paint('#7a1e22'),
@@ -964,7 +964,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         navyC = '#1b2c52',
         navy = c.paint(navyC),
         white = c.paint('#ecebe6'),
@@ -1439,7 +1439,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       hood: false,
     },
     function (c) {
-      const EA = shared.EA,
+      const EA = shared.EA!,
         blk = CM('#1a1b1d', { roughness: 0.6 })
       c.meta.matte = true
       const cA = new THREE.Color('#3a4430'),

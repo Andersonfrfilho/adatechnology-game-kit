@@ -46,7 +46,7 @@
   },
   "packages/game-vehicles-fleet/src/context.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 1
     }
   },
   "packages/game-vehicles-fleet/src/pack.ts": {
@@ -82,11 +82,6 @@
   "packages/game-vehicles-fleet/src/vehicles/planes-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 50
-    }
-  },
-  "packages/game-vehicles-fleet/src/vehicles/water-air.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 94
     }
   },
   "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {

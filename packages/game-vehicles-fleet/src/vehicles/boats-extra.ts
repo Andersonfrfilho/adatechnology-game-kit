@@ -18,7 +18,7 @@ export function installBoatsExtra(fx: FleetContext): void {
     CM = kit.makeMaterial,
     _G = kit.geo,
     DS = THREE.DoubleSide,
-    EA = shared.EA,
+    EA = shared.EA!,
     tb = EA.tab
 
   /* triangular sail: tack T, head (top) Hd, sheet clew C, belly cam (fraction of the chord) towards +z */

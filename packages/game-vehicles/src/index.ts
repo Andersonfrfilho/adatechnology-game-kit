@@ -44,6 +44,7 @@ export type {
   VehicleMeta,
   VehiclePart,
   VehicleSpec,
+  VehicleLamp,
   HeadlightLens,
   ZoneDamageEntry,
   ZoneEffect,
