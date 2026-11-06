@@ -2498,7 +2498,7 @@
         }
       },
       "source": "reference",
-      "reason": "Melee item of the arsenal weapon `katana` (lote 1, part C (owner decision 2026-11-06)). Rare: a decorative or collector sword that hangs on a living-room or bedroom wall. The floorplan has pictures and mirrors on walls but no pickable wall item, so it lies in a display cabinet (living room) and in the wardrobe (bedroom). Durability by hits is derived from the knife and machete entries (200 and the like), longer for solid brass."
+      "reason": "Melee item of the arsenal weapon `katana` (lote 1, part C (owner decision 2026-11-06)). Rare: a decorative or collector sword that hangs on a living-room or bedroom wall. The floorplan has pictures and mirrors on walls but no pickable wall item, so it lies in the bedroom wardrobe (the display cabinet and the TV unit have pools too small to give a rare item a rare chance). Durability by hits is derived from the knife and machete entries (200 and the like), longer for solid brass."
     },
     "brass_knuckles": {
       "value": {
@@ -11296,11 +11296,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.93,
+          "weight": 0.06,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "uncommon entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 28/60 = 0.93. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       },
       "soco_ingles": {
         "value": {
@@ -11312,11 +11312,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.3,
+          "weight": 0.03,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "rare entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 9/60 = 0.3. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       }
     },
     "criado": {
@@ -11330,11 +11330,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.93,
+          "weight": 0.06,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "uncommon entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 28/60 = 0.93. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       },
       "soco_ingles": {
         "value": {
@@ -11346,29 +11346,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.3,
+          "weight": 0.03,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "rare entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 9/60 = 0.3. (lote 1, part C (owner decision 2026-11-06))"
-      }
-    },
-    "gaveteiro": {
-      "faca_kabar": {
-        "value": {
-          "item": "kabar",
-          "name": "Faca KA-BAR",
-          "qty": [
-            1,
-            1
-          ],
-          "viewerCategory": "arma_improvisada",
-          "isTakeable": true,
-          "weight": 0.93,
-          "isSupply": false
-        },
-        "source": "derived",
-        "reason": "uncommon entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 28/60 = 0.93. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       }
     },
     "bancada": {
@@ -11382,11 +11364,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.93,
+          "weight": 0.06,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "uncommon entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 28/60 = 0.93. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       }
     },
     "estante_ferr": {
@@ -11400,29 +11382,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.93,
+          "weight": 0.06,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "uncommon entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 28/60 = 0.93. (lote 1, part C (owner decision 2026-11-06))"
-      }
-    },
-    "cristaleira": {
-      "katana": {
-        "value": {
-          "item": "katana",
-          "name": "Katana",
-          "qty": [
-            1,
-            1
-          ],
-          "viewerCategory": "arma_improvisada",
-          "isTakeable": true,
-          "weight": 0.3,
-          "isSupply": false
-        },
-        "source": "derived",
-        "reason": "rare entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 9/60 = 0.3. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       }
     },
     "guarda": {
@@ -11436,11 +11400,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.3,
+          "weight": 0.03,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "rare entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 9/60 = 0.3. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       },
       "soco_ingles": {
         "value": {
@@ -11452,11 +11416,11 @@
           ],
           "viewerCategory": "arma_improvisada",
           "isTakeable": true,
-          "weight": 0.3,
+          "weight": 0.03,
           "isSupply": false
         },
         "source": "derived",
-        "reason": "rare entry: a common entry of the pool weighs 2, and the rarity weights are 60 common, 28 uncommon, 9 rare (spawn.json), so the share is 2 x 9/60 = 0.3. (lote 1, part C (owner decision 2026-11-06))"
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
       }
     }
   }

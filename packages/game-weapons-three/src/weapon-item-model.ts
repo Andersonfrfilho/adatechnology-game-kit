@@ -14,6 +14,8 @@ export interface WeaponItemModel {
   readonly item?: string
   /** Quarter turns about y after the long axis is laid along x (a crossbow's stock is shorter than its limbs). */
   readonly turn?: number
+  /** Quarter turns about z after `turn`, standing the item on its edge (the brass knuckles are worn with the rings facing forward). */
+  readonly roll?: number
   /** Turn it end for end after the head is found (the head is the narrow end: a knife's blade, a screwdriver's tip, an extinguisher's nozzle). */
   readonly flip?: boolean
   /** Where the hands close on a long tool (both hands on a shovel's shaft); one hand on its handle when absent. */
@@ -36,7 +38,7 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle (the left 11 cm behind the right); the brass knuckles lie with the ring row across the strike
   ['kabar', { flip: true }],
   ['katana', { flip: true, grips: { handle: -0.35, support: -0.46 } }],
-  ['brass_knuckles', { turn: 1 }],
+  ['brass_knuckles', { turn: 1, roll: 1 }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -72,7 +74,7 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
     const itemId = itemModelOf(def.id, items)
     if (!itemId) return undefined
     const model = models.get(def.id)
-    return drawItemWeapon({ THREE, def, items, itemId, turn: model?.turn ?? 0, flip: model?.flip === true, grips: model?.grips })
+    return drawItemWeapon({ THREE, def, items, itemId, turn: model?.turn ?? 0, roll: model?.roll ?? 0, flip: model?.flip === true, grips: model?.grips })
   }
   return {
     register: (weaponId, model) => void models.set(weaponId, model ?? { item: '' }),
