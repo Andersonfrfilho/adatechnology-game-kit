@@ -23,20 +23,20 @@ function buildPythonBarrel(kit: ModelKit, parts: ModelParts, group: Group, barre
 /** The grip of walnut with its checkering, the brass medallion and the flared butt. */
 function buildPythonGrip(kit: ModelKit, parts: ModelParts, group: Group): void {
   const { M, box, cylinderZ } = kit
-  const grip = kit.pivot(group, 0.0, -0.05, 0)
-  grip.rotation.z = -0.4
+  const grip = kit.pivot(group, 0.014, -0.05, 0)
+  grip.rotation.z = -0.3
   parts.grip = grip
   kit.roundness = 0.3
-  box(grip, 0.052, 0.08, 0.033, M.wood, 0.0, 0.014, 0)
-  box(grip, 0.05, 0.07, 0.034, M.wood, -0.006, -0.036, 0)
+  box(grip, 0.046, 0.11, 0.034, M.wood, 0, -0.004, 0)
+  kit.roundness = 0.5
+  box(grip, 0.056, 0.032, 0.036, M.wood, -0.007, -0.05, 0)
   kit.roundness = null
   for (const side of [-1, 1]) {
-    for (let i = 0; i < 9; i++) for (let j = 0; j < 6; j++) box(grip, 0.0045, 0.0045, 0.0012, M.woodL, -0.022 + j * 0.0075, -0.068 + i * 0.0105, side * 0.0172, 0, 0, 0.785)
-    cylinderZ(grip, 0.0048, 0.0014, M.brass, 0.006, 0.026, side * 0.0172, 14)
-    cylinderZ(grip, 0.0014, 0.0012, M.steel, -0.01, -0.004, side * 0.0172, 8)
+    for (let i = 0; i < 9; i++) for (let j = 0; j < 5; j++) box(grip, 0.0045, 0.0045, 0.0012, M.woodL, -0.014 + j * 0.0075 - i * 0.0004, -0.056 + i * 0.0105, side * 0.0176, 0, 0, 0.785)
+    cylinderZ(grip, 0.0055, 0.0014, M.brass, 0.008, 0.034, side * 0.0176, 14)
+    cylinderZ(grip, 0.0014, 0.0012, M.steel, -0.012, -0.004, side * 0.0182, 8)
   }
-  box(grip, 0.05, 0.004, 0.036, M.metal, -0.006, -0.073, 0)
-  box(grip, 0.006, 0.07, 0.025, M.metal, 0.0265, 0.0, 0)
+  box(grip, 0.006, 0.1, 0.025, M.metal, 0.0245, -0.004, 0)
 }
 
 /** Colt Python: blued frame with the adjustable rear sight, the long hammer spur, round trigger guard, the swing-out cylinder and the pieces of `buildPythonBarrel` and `buildPythonGrip`. */
