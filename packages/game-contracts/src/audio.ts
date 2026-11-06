@@ -48,4 +48,9 @@ export interface AudioSink {
   setListener?(listener: AudioListener): void
   /** Adds a sound bank to the host's engine. `bank` is the engine's own type, `unknown` here because the contracts do not know it. */
   register?(bank: unknown): void
+  /**
+   * Fetches and decodes the recorded files of these sounds now, so their first play is the recording and not the synthesized fallback (a door
+   * opened the moment the area loads). A host without recordings leaves it out; ids without files are ignored.
+   */
+  preload?(sounds: readonly string[]): void
 }

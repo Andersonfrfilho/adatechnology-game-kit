@@ -155,4 +155,7 @@ export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
   { id: 'car_trunk_close', file: 'car_trunk_shut' },
 ]
 
+/** The ids a host should decode as the vehicles load (`AudioSink.preload`): every aliased recording and the door's own file id. */
+export const VEHICLE_PRELOAD_SOUNDS: readonly string[] = [...VEHICLE_SAMPLE_ALIASES.map((alias) => alias.id), 'car_door_open']
+
 export const VEHICLE_SOUND_BANK: SoundBank = { id: 'vehicles_three', sounds: VEHICLE_SOUNDS, loops: VEHICLE_LOOPS, sampleAliases: VEHICLE_SAMPLE_ALIASES }

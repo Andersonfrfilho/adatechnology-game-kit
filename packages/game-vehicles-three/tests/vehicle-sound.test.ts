@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
 import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
 import type { SampleSound } from '@adatechnology/game-audio'
-import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
+import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -174,6 +174,8 @@ describe('car recordings by reference', () => {
     expect(registry.sample('engine_stop')?.close[0]).toMatchObject(CAR_START_RUN_STOP.stop)
     expect(registry.sample('car_door_close')?.close[0]?.url).toBe('veiculos/car_door_shut_01.ogg')
     expect(registry.sample('car_trunk_close')?.close[0]?.url).toBe('veiculos/car_trunk_shut_01.ogg')
+    // every recording the vehicles area decodes up front is a sample once the files are there
+    for (const id of VEHICLE_PRELOAD_SOUNDS) expect(registry.sample(id), id).toBeDefined()
     // without recordings (no game folder, CI) every vehicle id is still its recipe
     const bare = createSoundRegistry([VEHICLE_SOUND_BANK])
     for (const alias of VEHICLE_SAMPLE_ALIASES) {
