@@ -20,7 +20,7 @@ case "${1:-on}" in
   on)
     mkdir -p "$units" "$HOME/.cache/adatechnology-game-kit"
     node_dir=$(dirname "$(command -v node)")
-    sed -e "s|@REPO@|$repo|g" -e "s|@NODE_PATH@|$node_dir:$(dirname "$(command -v pnpm)")|g" "$here/game-kit-nightly-gpu.service" > "$units/game-kit-nightly-gpu.service"
+    sed -e "s|@REPO@|$repo|g" -e "s|@NODE@|$(command -v node)|g" -e "s|@NODE_PATH@|$node_dir:$(dirname "$(command -v pnpm)")|g" "$here/game-kit-nightly-gpu.service" > "$units/game-kit-nightly-gpu.service"
     cp "$here/game-kit-nightly-gpu.timer" "$units/"
     systemctl --user daemon-reload
     systemctl --user enable --now game-kit-nightly-gpu.timer
