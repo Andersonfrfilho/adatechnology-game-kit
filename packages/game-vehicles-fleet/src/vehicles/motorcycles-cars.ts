@@ -1,6 +1,6 @@
-import type { LabelArgument, SceneNode, VehicleContext, WarpFn, WarpOptions } from '@adatechnology/game-vehicles'
-import type { Material, Mesh, MeshStandardMaterial, Object3D, Vector2, Vector3 } from 'three'
-import type { AlongU, CarDetailCtx, CarDetailKit, CarWarp, FleetCarSpec, LidPoint, CarGreenhouse, GridSpec, OutlineSpec, SkinSpec, SkinVertex, Surf, SurfGrid, SurfHit } from './surface-types'
+import type { CutTest, HeadlightOptions, LabelArgument, VehicleKit, SceneNode, VehicleContext, WarpFn, WarpOptions } from '@adatechnology/game-vehicles'
+import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Vector2, Vector3 } from 'three'
+import type { AlongU, BodyOptions, CreaseOptions, SampledGrid, SideGrid, SideGridSpec, SloftOptions, CarDetailCtx, CarDetailKit, CarWarp, FleetCarSpec, LidPoint, CarGreenhouse, GridSpec, OutlineSpec, SkinSpec, SkinVertex, Surf, SurfGrid, SurfHit } from './surface-types'
 import type { FleetContext } from '../context'
 import { tagWiper } from './moving-parts'
 
@@ -137,9 +137,9 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   /* superellipse loft in x (sections in the y-z plane) or in y (sections in the x-z plane).
      x axis: stations [x, top, base, width, p, zc]; y axis: stations [y, xFront, xRear, width, p, zc] */
   /* resamples stations with Catmull-Rom (each parameter), for large smooth shells */
-  function resample(st: any, n: number) {
+  function resample(st: readonly (readonly (number | null | undefined)[])[], n: number): number[][] {
     if (kit.lod.on) n = Math.max(kit.lod.minStations, Math.round(n * kit.lod.stationFraction))
-    const out = [],
+    const out: number[][] = [],
       L = st.length
     function P(i: number) {
       return st[Math.max(0, Math.min(L - 1, i))]
@@ -152,7 +152,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         b = P(i),
         c2 = P(i + 1),
         d = P(i + 2),
-        row = []
+        row: number[] = []
       for (let j = 0; j < b.length; j++) {
         let p0 = a[j] == null ? b[j] : a[j],
           p1 = b[j],
@@ -169,7 +169,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return out
   }
   /* half width of the loft shell at height y, at position x (for trim and parts glued to the side) */
-  function loftHalf(st: any, x: number, y: number) {
+  function loftHalf(st: readonly (readonly number[])[], x: number, y: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -185,16 +185,16 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     }
     return 0
   }
-  function sloft(st: any, o: any) {
+  function sloft(st: number[][], o?: SloftOptions | null) {
     o = o || {}
     if (kit.lod.on) o = Object.assign({}, o, { seg: Math.max(kit.lod.minLoftSegments, Math.round((o.seg || 24) * kit.lod.loftSegmentFraction)) })
     if (o.smooth) st = resample(st, o.smooth)
     const seg = o.seg || 24,
-      pos: any = [],
-      idx = [],
+      pos: number[] = [],
+      idx: number[] = [],
       ring = seg + 1,
       axisY = o.axis === 'y'
-    st.forEach(function (s: any) {
+    st.forEach(function (s) {
       const a0 = s[1],
         b0 = s[2],
         cc = (a0 + b0) / 2,
@@ -239,19 +239,19 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     g = G.crease(g.toNonIndexed(), o.crease || 60)
     return g
   }
-  function body(c: VehicleContext, st: number[][], mat: any, o?: any) {
+  function body(c: VehicleContext, st: number[][], mat: Material, o?: BodyOptions | null) {
     o = o || {}
     const m = c.add(sloft(st, o), mat, 0, 0, 0, o.parent)
     if (o.def !== false) c.deform.push(m)
     return m
   }
   /* wheel arch: curved shell over the wheel. cx, cy wheel centre; r inner radius; a0..a1 angles (0 = front); w width; t bulge height */
-  function fenderGeo(cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, zc: number, o?: any) {
+  function fenderGeo(cx: number, cy: number, r: number, a0: number, a1: number, w: number, t: number, zc: number, o?: { na?: number; rf?: (a: number) => number; p?: number } | null) {
     o = o || {}
     const na = kit.lod.on ? 10 : o.na || 22,
       nu = kit.lod.on ? 5 : 10,
-      pos = [],
-      idx = [],
+      pos: number[] = [],
+      idx: number[] = [],
       rf =
         o.rf ||
         function () {
@@ -280,7 +280,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), 70)
   }
-  function lamp(c: VehicleContext, o: any) {
+  function lamp(c: VehicleContext, o: HeadlightOptions & { roll?: number; pitch?: number }) {
     const L = kit.headlight(c, o)
     if (o.roll) L.group.rotation.x = o.roll
     if (o.pitch) L.group.rotation.z = o.pitch
@@ -589,7 +589,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         }
   }
   /* skin layer over the grid: region u0..u1, yb(u)..yt(u), offset "off" from the bodywork; "thick" gives thickness (visible edge) */
-  function skin(c: VehicleContext, G: SurfGrid, mat: Material, o: SkinSpec): Mesh {
+  function skin(c: VehicleContext, G: SampledGrid, mat: Material, o: SkinSpec): Mesh {
     const u0 = o.u0 || 0,
       u1 = o.u1 == null ? 1 : o.u1,
       yb = fnv(o.yb),
@@ -687,7 +687,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   }
   const G0 = G
   /* outline (tube) of a grid region */
-  function outline(c: VehicleContext, Gd: SurfGrid, o: OutlineSpec, r: number, mat: Material, off: number) {
+  function outline(c: VehicleContext, Gd: SampledGrid, o: OutlineSpec, r: number, mat: Material, off: number) {
     const u0 = o.u0 || 0,
       u1 = o.u1 == null ? 1 : o.u1,
       yb = fnv(o.yb),
@@ -717,7 +717,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return t
   }
   /* line (tube) along sampled points: list of {u, y} on a grid */
-  function lineOn(c: VehicleContext, Gd: SurfGrid, list: number[][], r: number, mat: Material, off: number) {
+  function lineOn(c: VehicleContext, Gd: SampledGrid, list: number[][], r: number, mat: Material, off: number) {
     const pts = list.map(function (q) {
       const s = Gd.at(q[0], q[1])
       return s.p.addScaledVector(s.n, off || 0.003)
@@ -757,7 +757,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     K.grid = function (E: number, sd: number, o: GridSpec) {
       return sgrid(S, E, sd, o)
     }
-    K.skin = function (Gd: SurfGrid, mat: Material, o: SkinSpec) {
+    K.skin = function (Gd: SampledGrid, mat: Material, o: SkinSpec) {
       return skin(c, Gd, mat, o)
     }
     /* headlight: o = { z0, wrap, shape(u) -> [yb, yt], proj: [[u, dy, r]], drl: [{u0,u1,yb,yt}], amber: [...], refl, pad } */
@@ -1359,13 +1359,13 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return {}
   }
   /* modified armour: the core default and one extra per model */
-  function armorPlus(fn: any) {
-    return function (c: VehicleContext, Z: any) {
+  function armorPlus(fn: (c: VehicleContext, Z: VehicleKit) => void) {
+    return function (c: VehicleContext, Z: VehicleKit) {
       Z.applyArmor(c)
       fn(c, Z)
     }
   }
-  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: number, y: number, z: number) {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }
@@ -1374,11 +1374,11 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return t * t * (3 - 2 * t)
   }
   /* side grille (u along x, from x0 to x1) */
-  function sideGrid(S: any, sd: number, o: any) {
+  function sideGrid(S: Surf, sd: number, o: SideGridSpec): SideGrid {
     const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / (0.04 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
       nv = Math.max(2, Math.ceil((o.y1 - o.y0) / (0.03 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
-      P: any = [],
-      N: any = []
+      P: Vector3[][] = [],
+      N: Vector3[][] = []
     for (let i = 0; i <= nu; i++) {
       P.push([])
       N.push([])
@@ -1387,12 +1387,12 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           y = o.y0 + ((o.y1 - o.y0) * j) / nv,
           O = new V3(x, y, sd * (S.hw + 1)),
           D = new V3(0, 0, -sd)
-        const h: any = S.hit(O, D, 'M') || { p: new V3(x, y, sd * S.hw), n: new V3(0, 0, sd) }
+        const h = S.hit(O, D, 'M') || { p: new V3(x, y, sd * S.hw), n: new V3(0, 0, sd) }
         P[i].push(h.p)
         N[i].push(h.n)
       }
     }
-    const G: any = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: Math.abs(o.x1 - o.x0) }
+    const G = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: Math.abs(o.x1 - o.x0) } as SideGrid
     G.at = function (u: number, y: number) {
       const fi = clamp(u, 0, 1) * nu,
         fj = clamp((y - o.y0) / (o.y1 - o.y0), 0, 1) * nv,
@@ -1400,7 +1400,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         j0 = Math.min(nv - 1, Math.floor(fj)),
         a = fi - i0,
         b = fj - j0
-      function L(M: any) {
+      function L(M: Vector3[][]) {
         return M[i0][j0]
           .clone()
           .multiplyScalar((1 - a) * (1 - b))
@@ -1426,7 +1426,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   }
 
   /* body crease (character line): thin step in the car colour that follows the side through points [x, y], with a thin shadow fillet below */
-  function crease(c: VehicleContext, I: any, sd: number, pts: any, o: any) {
+  function crease(c: VehicleContext, I: CarDetailCtx, sd: number, pts: number[][], o?: CreaseOptions | null) {
     o = o || {}
     const x0 = pts[0][0],
       x1 = pts[pts.length - 1][0]
@@ -1450,7 +1450,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       }
       return pts[pts.length - 1][1]
     }
-    I.K.skin(Gd, o.mat || c.paint(o.col), {
+    I.K.skin(Gd, o.mat || c.paint(o.col!), {
       yb: function (u: number) {
         return yAt(u) - h
       },
@@ -1471,10 +1471,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   }
   const SHADE = CM('#000000', { roughness: 1, transparent: true, opacity: 0.45, depthWrite: false })
   /* chrome trim of the window line (DLO): follows the base of the glass and can climb the C pillar (pts [x, y] on the side of the glass) */
-  function dloChrome(c: VehicleContext, I: any, sd: number, pts: any, r: number) {
+  function dloChrome(c: VehicleContext, I: CarDetailCtx, sd: number, pts: number[][], r: number) {
     const gh = I.gh,
       T = I.T,
-      P = pts.map(function (q: any) {
+      P = pts.map(function (q) {
         return [q[0], q[1], sd * (halfAt(gh.Wg, T, q[1]) + 0.012)]
       })
     const t = c.tube(P, r || 0.007, MT.chrome, { seg: P.length * 10, rs: 5 })
@@ -1591,7 +1591,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
      window line rising to the rear with a chrome trim that "breaks" upward at the C pillar (teardrop); black B pillar.
      rear: horizontal taillights that invade the lid; lid with a roof spoiler (hatch) or short lid with a chrome trim (sedan).
      top: roof dropping to the rear, "fin" antenna. */
-  function onyxSides(sedan: any) {
+  function onyxSides(sedan?: boolean) {
     return function (c: VehicleContext, I: CarDetailCtx) {
       const gh = I.gh,
         col = c.meta.color
@@ -2044,10 +2044,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           const z0 = I.hw - 0.07 - 0.11
           ;[1, -1].forEach(function (sd) {
             /* vertical "C" taillight, recessed in the corner */
-            const yb = function (..._rest: any[]) {
+            const yb = function (..._rest: unknown[]) {
                 return 0.66
               },
-              yt = function (..._rest: any[]) {
+              yt = function (..._rest: unknown[]) {
                 return 0.98
               }
             K.tail(sd, {
@@ -2335,7 +2335,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       })
     },
   )
-  function K0(I: any) {
+  function K0(I: CarDetailCtx) {
     return I.K
   }
 
@@ -2865,7 +2865,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         })
         ;[1, -1].forEach(function (sd) {
           /* dark grey doors with "MILITARY POLICE", red stripe at the waist and "190" on the rear fender */
-          const Gd: any = sideGrid(S, sd, { x0: 0.715, x1: -1.355, y0: I.by + 0.1, y1: I.gh.belt - 0.01 })
+          const Gd = sideGrid(S, sd, { x0: 0.715, x1: -1.355, y0: I.by + 0.1, y1: I.gh.belt - 0.01 })
           if (!highwayPolice) K.skin(Gd, dm, { yb: I.by + 0.14, yt: I.gh.belt - 0.035, off: 0.004, nv: 6, u0: 0.003, u1: 0.997 })
           const Gs = sideGrid(S, sd, { x0: 2.0, x1: -2.25, y0: 0.82, y1: 0.9 })
           K.skin(Gs, CM(highwayPolice ? blueP : '#b3201a', { roughness: 0.45, metalness: 0.2 }), {
@@ -2883,7 +2883,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             K.skin(Gs2, CM(yellowP, { roughness: 0.45, metalness: 0.2 }), { yb: 0.746, yt: 0.77, off: 0.007, nv: 1, u0: 0.01, u1: 0.99 })
           }
           const f = sd > 0 ? '+z' : '-z',
-            pt = Gd.at(Gd.ux ? 0.5 : 0.5, 0.62).p
+            pt = Gd.at(0.5, 0.62).p
           if (highwayPolice)
             c.text(trl('texts.federal_highway_police'), 1.9, 0.13, -0.32, 0.6, sd * (Math.abs(pt.z) + 0.012), f, {
               fg: blueP,
@@ -3007,7 +3007,17 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   )
 
   /* ================= motorcycles: common parts ================= */
-  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: any, low: any, o?: any) {
+  /** A motorcycle handlebar: material, rise and sweep back, tube radius, mirrors (on unless false) and their stalk height, and the hand guards' material. */
+  interface HandlebarOptions {
+    mat?: Material
+    rise?: number
+    back?: number
+    r?: number
+    mirrors?: boolean
+    stalk?: number
+    guards?: Material | false | null
+  }
+  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: Material, low: Material, o?: { split?: number; lowK?: number; gaiter?: boolean; clamp?: Material } | null) {
     o = o || {}
     ;[1, -1].forEach(function (s) {
       const a = new V3(top[0], top[1], s * zg),
@@ -3021,7 +3031,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       rot: [0, 0, Math.atan2(axle[0] - top[0], top[1] - axle[1])],
     })
   }
-  function handlebar(c: VehicleContext, x: number, y: number, half: number, o: any) {
+  function handlebar(c: VehicleContext, x: number, y: number, half: number, o?: HandlebarOptions | null) {
     o = o || {}
     const mat = o.mat || MT.trim,
       rise = o.rise || 0.03,
@@ -3073,7 +3083,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     const b = c.sphere(0.026, MT.amber, x + (front ? 0.012 : -0.012), y, z, 1.5, 0.9, 0.9)
     b.castShadow = false
   }
-  function plateMoto(c: VehicleContext, x: any, y: any) {
+  function plateMoto(c: VehicleContext, x: number, y: number) {
     c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.012, y, 0)
     c.text(kit.config.plate.slice(0, 5), 0.2, 0.135, x, y, 0, '-x', {
       w: 300,
@@ -3085,7 +3095,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       font: "'IBM Plex Mono', monospace",
     })
   }
-  function singleEngine(c: VehicleContext, o: any) {
+  function singleEngine(c: VehicleContext, o: { x: number; y: number; tilt?: number; fin?: Material }) {
     const x = o.x,
       y = o.y,
       tilt = o.tilt || 0.3,
@@ -3106,7 +3116,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return { exh: new V3(cx + Math.sin(tilt) * 0.2 + 0.06, cy + Math.cos(tilt) * 0.1, 0.06) }
   }
   /* lit LED thread over the lens of a core headlight (an internal part: it goes off if the headlight breaks) */
-  function drlOn(L: any, w: number, h: number, y: number, d: number) {
+  function drlOn(L: { group: Object3D; inner: Object3D[] }, w: number, h: number, y: number, d: number) {
     const m = new THREE.Mesh(G.roundedBox(0.01, h, w, Math.min(0.005, h * 0.4)), DRL)
     m.position.set((d || 0.06) / 2 + 0.004, y || 0, 0)
     m.castShadow = false
@@ -3115,9 +3125,9 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return m
   }
   /* rotates a set of child meshes of c.g around a point (bent handlebar, loose fender) */
-  function bendSet(list: any, piv: any, axis: any, ang: number) {
+  function bendSet(list: Object3D[], piv: Vector3, axis: Vector3, ang: number) {
     const q = new THREE.Quaternion().setFromAxisAngle(axis.clone().normalize(), ang)
-    list.forEach(function (m: any) {
+    list.forEach(function (m) {
       if (!m.parent) return
       m.position.sub(piv).applyQuaternion(q).add(piv)
       m.quaternion.premultiply(q)
@@ -3131,7 +3141,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       c.roundBox(0.03, 0.155, 0.29, 0.005, CM('#1b1c1e'), x + dx, y + 0.002, z)
     })
   }
-  function bikeMeta(c: VehicleContext, o: any) {
+  function bikeMeta(c: VehicleContext, o: Record<string, unknown>) {
     Object.assign(c.meta, { kind: 'bike', clearance: 0.25, bodyHeight: 0.6, belt: 0.88 }, o)
   }
 
@@ -4046,7 +4056,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         rack: 0.87,
       })
       /* wrecked: besides the default dent, the handlebar bends and the front fender comes loose on one side and falls */
-      c.meta.damage = function (c: VehicleContext, Z: any) {
+      c.meta.damage = function (c: VehicleContext, Z: VehicleKit) {
         Z.defaultDamage(c)
         bendSet(bars, new V3(0.4, 1.05, 0), new V3(-0.35, 1, 0), 0.32)
         bendSet(bars, new V3(0.4, 1.05, 0), new V3(1, 0, 0), -0.12)
@@ -4091,7 +4101,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     const fw = kit.spokedWheel(c, 0.78, 0.325, 0.06, { spokes: 40, knobby: true, disc: true, label: trl('labels.front_tire') })
     const rw = kit.spokedWheel(c, -0.72, 0.318, 0.08, { spokes: 40, knobby: true, label: trl('labels.rear_tire') })
     ;[fw, rw].forEach(function (g) {
-      g.children.forEach(function (ch: any) {
+      g.children.forEach(function (o: Object3D) {
+        const ch = o as Mesh
         if (ch.geometry && ch.geometry.type === 'TorusGeometry' && ch.material === MT.chrome) ch.material = rimGold
       })
     })
@@ -4704,13 +4715,13 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           [-0.72, 1.3],
           [-0.92, 1.18],
         ]
-      const holes = []
+      const holes: CutTest[] = []
       ;[1, -1].forEach(function (sd) {
         holes.push(kit.holeSide(winD, { side: sd, tag: 'front_window' + sd }), kit.holeSide(winT, { side: sd, tag: 'quarter_window' + sd }))
       })
       holes.push({
         tag: 'windshield',
-        sel: function (n: any, ce: any) {
+        sel: function (n, ce) {
           return n.x > 0.3 && ce.y > 0.98
         },
         sdf: function (x: number, y: number, z: number) {
@@ -4719,7 +4730,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       })
       holes.push({
         tag: 'rear_window',
-        sel: function (n: any, ce: any) {
+        sel: function (n, ce) {
           return n.x < -0.3 && ce.y > 1.0
         },
         sdf: function (x: number, y: number, z: number) {
@@ -4728,7 +4739,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       })
       holes.push({
         tag: 'hood',
-        sel: function (n: any, ce: any) {
+        sel: function (n, ce) {
           return n.y > 0.3 && ce.x > 0.9 && ce.y > 0.6
         },
         sdf: function (x: number, y: number, z: number) {
@@ -4738,7 +4749,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       })
       const cut = kit.cutMesh(shellM, holes, 50)
       c.deform.push(shellM)
-      function glassFrom(geo: any, label: any, type: string) {
+      function glassFrom(geo: BufferGeometry | undefined, label: LabelArgument, type: string) {
         if (!geo || !geo.attributes.position.count) return null
         return kit.addGlass(c, geo, label, type, { mat: MT.glass })
       }
@@ -4825,7 +4836,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         })
       })
       /* chrome blade bumpers with guards */
-      function blade(x0: number, x1: number, y: number, lab: any, fwd: number) {
+      function blade(x0: number, x1: number, y: number, lab: LabelArgument, fwd: number) {
         const pts = [
           [x0, y, -0.74],
           [x1 - fwd * 0.02, y, -0.58],
