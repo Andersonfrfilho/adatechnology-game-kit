@@ -229,6 +229,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const muzzleAt = new THREE.Vector3()
   const muzzleAlong = new THREE.Vector3()
 
+  // what leaves the muzzle this frame, emitted once the clips have posed the gun (the kick of the shot moves it after the event)
+  const posed: Array<() => void> = []
   const world: FxWorld = {
     kit,
     scene,
@@ -242,6 +244,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       const played = audio?.cue(cue, profile, lead)
       options.onSound?.({ weapon, cue, profile, ...(played ? { played } : {}) })
     },
+    afterPose: (emit) => void posed.push(emit),
     schedule: (delay, seconds, step, done) => void tasks.push({ delay, seconds, elapsed: 0, step: (progress) => step(ease(progress)), done }),
   }
 
@@ -533,6 +536,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (session) {
         place(dt)
         player?.update(dt)
+        if (posed.length) {
+          hand.updateMatrixWorld(true)
+          for (const emit of posed.splice(0)) emit()
+        }
         const wantsMagazine = reloading || options.tool?.().reloading === true
         magazineHand += ((wantsMagazine ? 1 : 0) - magazineHand) * Math.min(1, dt * HAND_HOLD.magRate)
         const tool = options.tool?.()

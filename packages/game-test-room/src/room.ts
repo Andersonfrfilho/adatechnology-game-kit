@@ -1822,7 +1822,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // tracers
-  const tracers: Array<{ line: THREE_NS.Line; life: number }> = []
+  // a tracer from a muzzle a module draws keeps its start on that muzzle while it lives: the kick of the shot moves the gun after the round left
+  const tracers: Array<{ line: THREE_NS.Line; life: number; follows: boolean }> = []
   const tracerMat = new THREE.LineBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.9 })
   const tracer = (a: Vec3, b: Vec3): void => {
     let tr = tracers.find((x) => x.life <= 0)
@@ -1833,7 +1834,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const line = new THREE.Line(g, tracerMat)
       line.frustumCulled = false
       scene.add(line)
-      tr = { line, life: 0 }
+      tr = { line, life: 0, follows: false }
       tracers.push(tr)
     }
     const attr = tr.line.geometry.getAttribute('position') as THREE_NS.BufferAttribute
@@ -1842,6 +1843,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     attr.needsUpdate = true
     tr.line.visible = true
     tr.life = 0.07
+    tr.follows = muzzleSource !== null
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -3327,10 +3329,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // lateSimulate, after the modules' frame callbacks
   const simulateAfterModules = (dt: number): void => {
+    const drawn = tracers.some((tr) => tr.life > 0 && tr.follows) ? (muzzleSource?.() ?? null) : null
     for (const tr of tracers) {
       if (tr.life > 0) {
         tr.life -= dt
         if (tr.life <= 0) tr.line.visible = false
+        else if (tr.follows && drawn) {
+          const attr = tr.line.geometry.getAttribute('position') as THREE_NS.BufferAttribute
+          attr.setXYZ(0, drawn.position[0], drawn.position[1], drawn.position[2])
+          attr.needsUpdate = true
+        }
       }
     }
     flush()
