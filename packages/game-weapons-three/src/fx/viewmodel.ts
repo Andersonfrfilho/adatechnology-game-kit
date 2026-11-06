@@ -597,7 +597,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       hand.updateMatrixWorld(true)
       const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
       const trigger = session.model.parts.trigger
-      if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      // a gun carried at the hip fires by the thumb on its spade grip: the whole hand, the index too, closes on the handle
+      if (session.model.parts.carry === 'hip') targets.fingers = { index: 1 }
+      else if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
       return limitSupportSpan(targets)
     },
     get inHand() {
