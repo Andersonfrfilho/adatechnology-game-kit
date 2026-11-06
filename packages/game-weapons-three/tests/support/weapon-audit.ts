@@ -36,6 +36,8 @@ export interface WeaponAudit {
   family: string | undefined
   /** The builder family of the model (`pistol`, `rifle`, `boltmag`...). */
   modelFamily: string
+  /** How the body carries it (`ModelParts.carry`): `hip` for a gun too heavy for the shoulder. */
+  carry?: 'hip'
   caliberCase: string
   /** What the hands do to the parts during the reload clips (`data/hand-work.json`): the hand, the anchor kind and the clips it works in. */
   works: Array<{ hand: 'R' | 'L'; anchor: string; part: string | null; clips: readonly string[] }>
@@ -113,7 +115,7 @@ export const auditWeapons = (arsenal: Arsenal = createArsenal({ seed: 1, rules: 
       }
     }
     const works = handWorkOf(THREE, model, def.id, holdOfModel(THREE, model, 1).right).map((work) => ({ hand: work.hand, anchor: work.id, part: work.part, clips: work.clips }))
-    rows.push({ id: def.id, name: def.name ?? def.id, def, works, family: 'family' in action ? action.family : undefined, modelFamily: model.parts.family, caliberCase: action.kind === 'firearm' ? (arsenal.calibers.get(action.caliber)?.caseType ?? '') : '', runs })
+    rows.push({ id: def.id, name: def.name ?? def.id, def, works, family: 'family' in action ? action.family : undefined, modelFamily: model.parts.family, ...(model.parts.carry ? { carry: model.parts.carry } : {}), caliberCase: action.kind === 'firearm' ? (arsenal.calibers.get(action.caliber)?.caseType ?? '') : '', runs })
   }
   return rows
 }

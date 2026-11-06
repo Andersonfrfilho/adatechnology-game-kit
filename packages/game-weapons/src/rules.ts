@@ -1,22 +1,46 @@
 import { DEFAULT_IGNITION_RULES } from '@adatechnology/game-contracts'
 import type { FaultContext, WeaponRules } from './types'
 
+// Physical model (2026-11-05): temperature above ambient in °C. Steel is 490 J/(kg·K); the shares, kg per metre and cooling constants are the kit's
+// calibration against real references (an M4 reaches the warning in about 130 rounds of rapid fire, a pistol never does, a minigun shares six barrels).
 const DEFAULT_HEAT: WeaponRules['heat'] = {
-  cap: 140,
-  displayMax: 120,
-  decayBase: 1.6,
-  decayPerPoint: 0.03,
-  faultFrom: 60,
-  faultSpan: 40,
-  perShot: { shell: 3, big: 6, tiny: 0.5, pistol: 1.2, rifle: 2 },
+  cap: 900,
+  displayMax: 750,
+  faultFrom: 350,
+  faultSpan: 200,
+  specificHeat: 490,
+  barrelShare: { shell: 0.48, big: 0.48, tiny: 0.3, pistol: 0.3, rifle: 0.48 },
+  barrelKilogramsPerMetre: {
+    pistol: 1.0,
+    revolver: 1.4,
+    smg: 1.2,
+    carbine: 1.6,
+    rifle: 1.6,
+    dmr: 2.4,
+    sniper: 2.4,
+    hunting: 2.4,
+    machine_gun: 3.0,
+    shotgun: 1.1,
+  },
+  barrelFallback: { metres: 0.4, kilogramsPerMetre: 1.6 },
+  cooling: { baseSeconds: 30, secondsPerKilogram: 250 },
   perRocket: 35,
-  visual: { smokeFrom: 70, smokeSeconds: 2.5, glowFrom: 80, glowSpan: 40 },
+  visual: { smokeFrom: 250, smokeSpan: 300, smokeSeconds: 2.5, glowFrom: 450, glowSpan: 300 },
 }
 
-/** The heat the Galeria 3D do Arsenal recorded (hotter per round: a magazine was enough to glow); kept so the recorded runs stay reproducible. */
+/** The heat the Galeria 3D do Arsenal recorded (abstract units, hotter per round: a magazine was enough to glow); kept so the recorded runs stay reproducible. */
 export const GALLERY_HEAT: WeaponRules['heat'] = {
   ...DEFAULT_HEAT,
-  perShot: { shell: 6, big: 9, tiny: 1.2, pistol: 3, rifle: 4.5 },
+  cap: 140,
+  displayMax: 120,
+  faultFrom: 60,
+  faultSpan: 40,
+  visual: { smokeFrom: 70, smokeSpan: 100, smokeSeconds: 2.5, glowFrom: 80, glowSpan: 40 },
+  gallery: {
+    perShot: { shell: 6, big: 9, tiny: 1.2, pistol: 3, rifle: 4.5 },
+    decayBase: 1.6,
+    decayPerPoint: 0.03,
+  },
 }
 
 /** Chance of a fault for one round: the wear of the weapon, scaled by its reliability and by how hot it is. */

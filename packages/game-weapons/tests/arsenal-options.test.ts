@@ -41,7 +41,7 @@ describe('arsenal options', () => {
 
   it('merges rules and strings over the defaults', () => {
     const arsenal = createArsenal({ locale: 'pt-BR', rules: { heat: { cap: 200 }, faults: false }, strings: { weapons: { glock_17: 'Minha pistola' } } })
-    expect(arsenal.rules.heat).toMatchObject({ cap: 200, displayMax: 120, faultFrom: 60 })
+    expect(arsenal.rules.heat).toMatchObject({ cap: 200, displayMax: 750, faultFrom: 350 })
     expect(arsenal.rules.faults).toBe(false)
     expect(arsenal.rules.conditions).toHaveLength(4)
     expect(arsenal.name('glock_17')).toBe('Minha pistola')

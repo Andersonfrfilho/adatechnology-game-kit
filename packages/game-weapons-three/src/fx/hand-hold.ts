@@ -123,6 +123,7 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
   root.updateWorldMatrix(true, true)
 
   // the right hand: on the pivot of the drawn pistol grip, else under the receiver at the grip's x
+  if (parts.holdRight || parts.holdLeft) return namedHold(THREE, model, holderScale)
   let gripAt: THREE_NS.Vector3
   let up: THREE_NS.Vector3
   if (parts.grip) {
@@ -171,6 +172,20 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
     scale: holderScale,
     grip: HAND_HOLD.closed,
     gripLeft: HAND_HOLD.forend,
+  }
+}
+
+/** The hold a model names (`holdRight`, `holdLeft`): each palm on top of its handle, the back of the hand up; the right hand's fingers forward over a handle across the gun, the left's across the carry handle. */
+function namedHold(THREE: Three, model: WeaponModel, holderScale: number): Hold {
+  const { parts } = model
+  const on = (mark: THREE_NS.Object3D | undefined, fingers: THREE_NS.Vector3): HandAnchor | null => (mark ? { part: mark, offset: V(THREE, 0, HAND_HOLD.palm, 0), quaternion: handFrame(THREE, fingers, V(THREE, 0, 1, 0)) } : null)
+  return {
+    right: on(parts.holdRight, V(THREE, 1, 0, 0)),
+    left: on(parts.holdLeft, V(THREE, 0, 0, 1)),
+    leftMagazine: null,
+    scale: holderScale,
+    grip: HAND_HOLD.closed,
+    gripLeft: HAND_HOLD.closed,
   }
 }
 

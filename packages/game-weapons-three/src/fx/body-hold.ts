@@ -26,6 +26,8 @@ export const BODY_HOLD = {
   shoulderGripTo: 0.34,
   /** The farthest apart two hands hold a long gun (a support hand past it slides back along the gun, toward the grip). */
   supportSpan: 0.5,
+  /** A gun carried at the hip (`carry: 'hip'`): its rear grip low at the right hip, a little ahead of it. */
+  hipGrip: [0.25, -0.5, -0.24],
   /** How much of the aim's pitch a tool held low in one hand follows. */
   toolPitch: 0.5,
 } as const
@@ -42,6 +44,8 @@ export type BodyHoldPlacement = {
   readonly handgun: boolean
   readonly right: HandAnchor | null
   readonly left: HandAnchor | null
+  /** Carried at the hip (`ModelParts.carry`): the rear grip at `BODY_HOLD.hipGrip`, following the aim's pitch partly. */
+  readonly hip?: boolean
 }
 
 const scratch = { a: null as THREE_NS.Vector3 | null, b: null as THREE_NS.Vector3 | null, euler: null as THREE_NS.Euler | null }
@@ -54,6 +58,7 @@ export const placeOnBody = (placement: BodyHoldPlacement): void => {
   holder.scale.setScalar(1)
   hand.position.set(...frame.position)
   hand.quaternion.set(...frame.quaternion)
+  if (placement.hip) return placeAtHip(placement)
   const shouldered = !placement.handgun && placement.left !== null && placement.lengthMetres >= BODY_HOLD.shoulderedFrom
   if (shouldered) {
     // the model's barrel (x) runs down the aim (-z) by the holder's quarter turn: the rear end at the pocket
@@ -76,6 +81,23 @@ export const placeOnBody = (placement: BodyHoldPlacement): void => {
   // a short gun with a support hand is held like a handgun, in the middle of the chest, not low like a one-hand tool
   const grip = placement.handgun || placement.left ? BODY_HOLD.handgunGrip : BODY_HOLD.toolGrip
   const want = scratch.a.set(grip[0], grip[1], grip[2]).applyQuaternion(hand.quaternion).add(hand.position)
+  const now = placement.right.part.localToWorld(scratch.b.copy(placement.right.offset))
+  hand.position.add(want.sub(now))
+  hand.updateMatrixWorld(true)
+}
+
+/** A gun carried at the hip: level-ish ahead (the aim's pitch partly), its rear grip at `BODY_HOLD.hipGrip`. */
+const placeAtHip = (placement: BodyHoldPlacement): void => {
+  const { THREE, hand, holder } = placement
+  scratch.a ??= new THREE.Vector3()
+  scratch.b ??= new THREE.Vector3()
+  scratch.euler ??= new THREE.Euler()
+  const turn = scratch.euler.setFromQuaternion(hand.quaternion, 'YXZ')
+  hand.quaternion.setFromEuler(turn.set(turn.x * BODY_HOLD.toolPitch, turn.y, 0, 'YXZ'))
+  holder.position.set(0, 0, 0)
+  hand.updateMatrixWorld(true)
+  if (!placement.right) return
+  const want = scratch.a.set(...BODY_HOLD.hipGrip).applyQuaternion(hand.quaternion).add(hand.position)
   const now = placement.right.part.localToWorld(scratch.b.copy(placement.right.offset))
   hand.position.add(want.sub(now))
   hand.updateMatrixWorld(true)

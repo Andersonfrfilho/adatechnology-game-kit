@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import type { EngineSink } from '@adatechnology/game-audio'
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { createArsenal, genericWeapons } from '@adatechnology/game-weapons'
+import { createArsenal, genericWeapons, roundsToWarningOf } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
@@ -129,7 +129,7 @@ interface Text {
   fuseLength: string
   fuseLengthHint: string
   layers: Record<'muzzle_flash' | 'casings' | 'magazines', string>
-  metrics: Record<'casings_live' | 'magazines_live' | 'heat', string>
+  metrics: Record<'casings_live' | 'magazines_live' | 'heat' | 'rounds_to_warning', string>
 }
 
 const TEXT: Record<string, Text> = {
@@ -167,7 +167,7 @@ const TEXT: Record<string, Text> = {
     fuseLength: 'Dynamite fuse length',
     fuseLengthHint: 'Metres of safety fuse (131 s per metre): a long one is set down lit, for a delayed trap',
     layers: { muzzle_flash: 'Muzzle flash', casings: 'Ejected casings', magazines: 'Dropped magazines' },
-    metrics: { casings_live: 'Casings in the scene', magazines_live: 'Magazines in the scene', heat: 'Barrel heat' },
+    metrics: { casings_live: 'Casings in the scene', magazines_live: 'Magazines in the scene', heat: 'Barrel temperature above ambient', rounds_to_warning: 'Rounds to the heat warning (cyclic rate, from cold)' },
   },
   'pt-BR': {
     group: 'Armas',
@@ -203,7 +203,7 @@ const TEXT: Record<string, Text> = {
     fuseLength: 'Pavio da dinamite',
     fuseLengthHint: 'Metros de pavio de segurança (131 s por metro): um longo é posto no chão aceso, para armadilha com atraso',
     layers: { muzzle_flash: 'Clarão do cano', casings: 'Cápsulas ejetadas', magazines: 'Pentes que caem' },
-    metrics: { casings_live: 'Cápsulas na cena', magazines_live: 'Pentes na cena', heat: 'Calor do cano' },
+    metrics: { casings_live: 'Cápsulas na cena', magazines_live: 'Pentes na cena', heat: 'Temperatura do cano acima do ambiente', rounds_to_warning: 'Tiros até o aviso de calor (cadência, a frio)' },
   },
 }
 const textOf = (locale: string): Text => TEXT[locale] ?? (TEXT.en as Text)
@@ -350,7 +350,12 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   let host: ModuleHost | null = null
   let soundDistance = 0
   let soundIndoors = false
-  const heatPercent = (): number => Math.min(100, (host?.tool().heat ?? 0) * 100)
+  const barrelCelsius = (): number => (host?.tool().heat ?? 0) * arsenal.rules.heat.displayMax
+  const roundsToWarning = (): number | string => {
+    const weaponId = host?.tool().weapon
+    const rounds = weaponId ? roundsToWarningOf(arsenal, weaponId) : Infinity
+    return Number.isFinite(rounds) ? rounds : '-'
+  }
   return {
     id: 'weapons_area',
     name: text.name,
@@ -403,7 +408,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     metrics: (): ModuleMetric[] => [
       { id: 'casings_live', name: text.metrics.casings_live, read: () => fx?.casings ?? 0 },
       { id: 'magazines_live', name: text.metrics.magazines_live, read: () => fx?.magazines ?? 0 },
-      { id: 'heat', name: text.metrics.heat, unit: '%', max: 100, digits: 0, read: heatPercent },
+      { id: 'heat', name: text.metrics.heat, unit: '°C', max: arsenal.rules.heat.displayMax, digits: 0, read: barrelCelsius },
+      { id: 'rounds_to_warning', name: text.metrics.rounds_to_warning, read: roundsToWarning },
       ...accessoryMetrics(accessoryText, () => host?.tool() ?? EMPTY_TOOL),
     ],
     attach(lent) {
@@ -446,6 +452,10 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
         ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
         firstPerson: () => lent.player().cameraMode === 'first',
+        // the lens of the gun in first person, how far it is brought to the eye (the right button) and how the body moves (the bob and the sway follow it)
+        ...(lent.setViewmodelFov ? { viewmodelFov: (degrees: number | null) => lent.setViewmodelFov?.(degrees) } : {}),
+        aim: () => accessories.aimProgress,
+        motion: () => ({ speed: lent.player().speed, running: lent.player().running }),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(lent.particleLimit ? { particleLimit: lent.particleLimit } : {}),
         ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),

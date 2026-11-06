@@ -6,7 +6,7 @@ import type { AudioEngine } from '@adatechnology/game-audio'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
-import { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
+import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -227,6 +227,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const scene = options.scene ?? new THREE.Scene()
   const camera = options.camera ?? new THREE.PerspectiveCamera(72, width() / height(), 0.05, 140)
   if (!options.camera) scene.add(camera)
+  // the first-person layer (the tool in the hands and its arms) is drawn by a pass of its own over the world (`drawFirstPersonLayer`)
+  camera.layers.disable(FIRST_PERSON_LAYER)
   const resize = (): void => {
     const w = width()
     const h = height()
@@ -1495,11 +1497,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const thirdActive = (): boolean => cameraMode === 'third' && avatar !== null
+  const firstPersonArms = options.firstPersonArms ?? null
+  if (firstPersonArms) {
+    firstPersonArms.root.visible = cameraMode === 'first'
+    scene.add(firstPersonArms.root)
+  }
   const syncAvatarVisible = (): void => {
+    if (firstPersonArms) firstPersonArms.root.visible = cameraMode === 'first'
     if (!avatar) return
-    // one body for both views: in first person the camera sits at its eyes and only the head is kept out of that camera
+    // one body for both views: in first person the camera sits at its eyes and only the head (and the arms, when the view draws arms of its own) is kept out of that camera
     avatar.root.visible = cameraMode === 'third' || !!avatar.eye
-    avatar.setView?.(cameraMode, camera)
+    avatar.setView?.(cameraMode, camera, { arms: firstPersonArms !== null })
+  }
+  /** The first-person arms take the hands of the tool, on the first-person layer, every frame the eye is the view. */
+  const updateFirstPersonArms = (dt: number): void => {
+    if (!firstPersonArms || cameraMode !== 'first') return
+    firstPersonArms.update(dt, { camera, targets: lastHand.targets, stance: lastHand.stance, speed: player.speed, running: avatarState.running, crouch: avatarState.crouch })
+    firstPersonArms.root.traverse((node) => node.layers.set(FIRST_PERSON_LAYER))
   }
   const setCameraMode = (mode: CameraMode): void => {
     if (mode !== 'first' && mode !== 'third') return
@@ -1602,6 +1616,44 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let handSource: HandTargetSource | null = null
   // the muzzle of the weapon a module draws in the hands (`setMuzzleSource`): the shots' tracers and flash leave from there
   let muzzleSource: MuzzleSource | null = null
+  // the lens of the tool in the hands (`ModuleHost.setViewmodelFov`): null is the view's own
+  let viewmodelFov: number | null = null
+  const firstPersonCamera = new THREE.PerspectiveCamera(72, 1, 0.01, 30)
+  firstPersonCamera.layers.set(FIRST_PERSON_LAYER)
+  let firstPersonPasses = 0
+  /**
+   * The first-person layer over the world: the depth cleared and the lens of the tool, so the gun and its arms never go into a wall and are framed for the eye. Drawn only while
+   * something is on it (first-person arms, or a module that set its lens). The lights are put on the layer now and then, so one added later lights it too.
+   */
+  const drawFirstPersonLayer = (): void => {
+    if (!firstPersonArms && viewmodelFov === null) return
+    const renderer = gl as Partial<THREE_NS.WebGLRenderer>
+    if (typeof renderer.clearDepth !== 'function' || typeof renderer.render !== 'function') return
+    if (firstPersonPasses++ % 60 === 0) {
+      scene.traverse((node) => {
+        if ((node as THREE_NS.Light).isLight) node.layers.enable(FIRST_PERSON_LAYER)
+      })
+    }
+    firstPersonCamera.position.copy(camera.position)
+    firstPersonCamera.quaternion.copy(camera.quaternion)
+    const fov = viewmodelFov ?? camera.fov
+    if (firstPersonCamera.fov !== fov || firstPersonCamera.aspect !== camera.aspect) {
+      firstPersonCamera.fov = fov
+      firstPersonCamera.aspect = camera.aspect
+      firstPersonCamera.updateProjectionMatrix()
+    }
+    firstPersonCamera.updateMatrixWorld()
+    const { autoClear } = renderer
+    const { background, fog } = scene
+    renderer.autoClear = false
+    scene.background = null
+    scene.fog = null
+    renderer.clearDepth()
+    renderer.render(scene, firstPersonCamera)
+    scene.background = background
+    scene.fog = fog
+    renderer.autoClear = autoClear ?? true
+  }
   // a second camera the room can be drawn from without moving the player's: the arms stay where the player's eye puts them
   let debugView: THREE_NS.PerspectiveCamera | null = null
   let lastHand: { stance: string; triggerFinger: number | null; targets: HandTargets | null } = { stance: 'relaxed', triggerFinger: null, targets: null }
@@ -1770,7 +1822,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // tracers
-  const tracers: Array<{ line: THREE_NS.Line; life: number }> = []
+  // a tracer from a muzzle a module draws keeps its start on that muzzle while it lives: the kick of the shot moves the gun after the round left
+  const tracers: Array<{ line: THREE_NS.Line; life: number; follows: boolean }> = []
   const tracerMat = new THREE.LineBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.9 })
   const tracer = (a: Vec3, b: Vec3): void => {
     let tr = tracers.find((x) => x.life <= 0)
@@ -1781,7 +1834,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const line = new THREE.Line(g, tracerMat)
       line.frustumCulled = false
       scene.add(line)
-      tr = { line, life: 0 }
+      tr = { line, life: 0, follows: false }
       tracers.push(tr)
     }
     const attr = tr.line.geometry.getAttribute('position') as THREE_NS.BufferAttribute
@@ -1790,6 +1843,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     attr.needsUpdate = true
     tr.line.visible = true
     tr.life = 0.07
+    tr.follows = muzzleSource !== null
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -3275,10 +3329,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // lateSimulate, after the modules' frame callbacks
   const simulateAfterModules = (dt: number): void => {
+    const drawn = tracers.some((tr) => tr.life > 0 && tr.follows) ? (muzzleSource?.() ?? null) : null
     for (const tr of tracers) {
       if (tr.life > 0) {
         tr.life -= dt
         if (tr.life <= 0) tr.line.visible = false
+        else if (tr.follows && drawn) {
+          const attr = tr.line.geometry.getAttribute('position') as THREE_NS.BufferAttribute
+          attr.setXYZ(0, drawn.position[0], drawn.position[1], drawn.position[2])
+          attr.needsUpdate = true
+        }
       }
     }
     flush()
@@ -3318,6 +3378,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // present: what the player reads (HUD, progress, log, bench metrics), by real time
   const updatePresent = (dt: number): void => {
     reachAvatar()
+    updateFirstPersonArms(dt)
     if (progress && simTime - progress.at > 0.25) progress = null
     // the log first: it scrolls before anything of this frame touches the DOM, so reading its height lays nothing out
     ui?.flushLog()
@@ -3697,6 +3758,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return () => {
         if (handSource === source) handSource = null
       }
+    },
+    setViewmodelFov(degrees) {
+      viewmodelFov = degrees
     },
     setMuzzleSource(source) {
       muzzleSource = source
@@ -4480,7 +4544,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
         graphics?.beforeRender(camera)
-        gl.render(scene, debugView ?? moduleViews.main(camera))
+        const view = debugView ?? moduleViews.main(camera)
+        gl.render(scene, view)
+        if (view === camera && cameraMode === 'first') drawFirstPersonLayer()
         moduleViews.render(scene)
         graphics?.afterRender()
         restoreCamera()

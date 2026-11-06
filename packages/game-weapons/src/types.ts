@@ -190,6 +190,10 @@ export interface WeaponDimensions {
   readonly barrel: number
   readonly emptyMass: number
   readonly lengthCollapsed?: number
+  /** Barrels that share the heat (a rotary gun: 6). Default 1. */
+  readonly barrels?: number
+  /** Mass in kg of one barrel; replaces barrel length times the kg per metre of the category (a heavy or quick-change barrel). */
+  readonly barrelMass?: number
 }
 
 /** What using the item does. Firearms produce ballistic shots; the rest produce one `Use` of their kind. */
@@ -360,9 +364,9 @@ export interface WeaponState {
   readonly clearing: boolean
   /** With the safety on the trigger does nothing. */
   readonly safety: boolean
-  /** Heat of the barrel, 0 to `rules.heat.cap`. */
+  /** Barrel temperature above ambient in °C, 0 to `rules.heat.cap`. */
   readonly heat: number
-  /** 0 to 1: the heat against what the display shows as full. */
+  /** 0 to 1: the temperature against `rules.heat.displayMax`. */
   readonly heatLevel: number
   readonly condition: string
   readonly ammoQuality: string

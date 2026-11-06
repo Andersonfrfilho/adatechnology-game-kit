@@ -1,4 +1,4 @@
-import { decayHeat } from './heat'
+import { barrelMassOf, decayHeat } from './heat'
 import { isReloadable } from './reload'
 import { createRng } from './rng'
 import type { AmmoDef, AmmoKind, AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, Vec3, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
@@ -130,6 +130,10 @@ export abstract class WeaponCore {
   get safety(): boolean {
     return this._safety
   }
+  /** Kg of steel that heat up with the shots. */
+  protected get barrelMass(): number {
+    return barrelMassOf(this.def, this.rules.heat)
+  }
   get heat(): number {
     return this._heat
   }
@@ -189,7 +193,7 @@ export abstract class WeaponCore {
 
   protected advance(seconds: number): void {
     if (seconds <= 0) return
-    this._heat = decayHeat(this._heat, seconds, this.rules.heat)
+    this._heat = decayHeat(this._heat, seconds, this.barrelMass, this.rules.heat)
     this.clock += seconds
   }
 

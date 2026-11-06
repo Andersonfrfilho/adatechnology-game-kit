@@ -147,7 +147,7 @@ describe('the effects of the weapon in the hands go through the host sink', () =
     })
 
     it('a magazine of a rifle does not smoke the barrel', () => {
-      expect(wispsFor(0.45, 1.5)).toHaveLength(0)
+      expect(wispsFor(0.12, 1.5)).toHaveLength(0)
     })
   })
 

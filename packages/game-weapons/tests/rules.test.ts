@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createArsenal } from '../src'
+import { barrelMassOf, createArsenal, decayHeat } from '../src'
 import type { FaultId, Vec3, WeaponEvent, WeaponState } from '../src'
 
 const ORIGIN: Vec3 = [0, 1.5, 0]
@@ -219,40 +219,42 @@ describe('rounds of one pull', () => {
 
 describe('heat', () => {
   const FRAME = 1 / 60
-  const decayed = (heat: number): number => Math.max(0, heat - FRAME * (1.6 + heat * 0.03))
 
-  it('adds the case heat per round and cools by the gallery step at 1/60 s', () => {
-    const weapon = createArsenal({ rules: NO_FAULTS }).create('glock_17')
+  it('adds the energy-based heat per round and cools exponentially, whatever the step', () => {
+    const arsenal = createArsenal({ rules: NO_FAULTS })
+    const weapon = arsenal.create('glock_17')
+    const mass = barrelMassOf(weapon.def, arsenal.rules.heat)
     let expected = 0
     for (let frame = 1; frame <= 150; frame++) {
       weapon.update(FRAME)
-      expected = decayed(expected)
+      expected = decayHeat(expected, FRAME, mass, arsenal.rules.heat)
       if (frame % 15 === 0) {
-        weapon.trigger(ORIGIN, AIM, 0, false)
-        expected += createArsenal().rules.heat.perShot.pistol
+        const shot = weapon.trigger(ORIGIN, AIM, 0, false).shots[0]
+        expected += (arsenal.rules.heat.barrelShare.pistol * (shot?.energy ?? 0)) / (mass * arsenal.rules.heat.specificHeat)
       }
       expect(weapon.heat).toBeCloseTo(expected, 9)
     }
-    expect(weapon.heatLevel).toBeCloseTo(Math.min(1, expected / 120), 9)
+    expect(weapon.heatLevel).toBeCloseTo(Math.min(1, expected / arsenal.rules.heat.displayMax), 9)
   })
 
-  it('caps at 140 and the level at 1', () => {
+  it('caps at 900 °C and the level at 1', () => {
     const weapon = createArsenal({ rules: NO_FAULTS }).create('browning_m2', { reserve: 1000 })
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 400; i++) {
       weapon.refill()
       weapon.trigger(ORIGIN, AIM, 1, true)
     }
-    expect(weapon.heat).toBeLessThanOrEqual(140)
+    expect(weapon.heat).toBeLessThanOrEqual(900)
     expect(weapon.heatLevel).toBe(1)
   })
 
-  it('a hot barrel jams more: the chance grows past 60', () => {
+  it('a hot barrel jams more: the chance grows past the warning, doubling at the end of the fault span', () => {
     const arsenal = createArsenal()
     const def = arsenal.weapons.get('sw_686')
     const condition = arsenal.rules.conditions[1]
     if (!def || !condition) throw new Error('missing data')
     const cold = arsenal.rules.faultChance({ def, condition, heat: 0 })
-    expect(arsenal.rules.faultChance({ def, condition, heat: 100 })).toBeCloseTo(cold * 2, 9)
+    expect(arsenal.rules.faultChance({ def, condition, heat: 350 })).toBeCloseTo(cold, 9)
+    expect(arsenal.rules.faultChance({ def, condition, heat: 550 })).toBeCloseTo(cold * 2, 9)
   })
 })
 

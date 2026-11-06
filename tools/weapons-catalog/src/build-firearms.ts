@@ -24,6 +24,8 @@ export type FirearmSpec = {
   readonly noise?: number
   readonly modes?: { readonly modes: readonly string[]; readonly burst?: number }
   readonly extras?: Readonly<Record<string, unknown>>
+  /** Barrel heat inputs over the category default (game-weapons heat.ts): rotary barrels sharing the heat, kg of each barrel. */
+  readonly barrelHeat?: { readonly barrels?: number; readonly barrelMass?: number }
   readonly sources?: readonly string[]
 }
 
@@ -95,7 +97,7 @@ export const buildFirearm = (spec: FirearmSpec, context: WeaponContext): WeaponR
     ...(accepts === undefined ? {} : { acceptsCalibers: accepts }),
   }
   const maker = makerOf(row[0], decisions)
-  const dimensions = { length: row[4] / MM_PER_METRE, barrel: row[5] / MM_PER_METRE, emptyMass, ...(sheet?.lengthCollapsed === undefined ? {} : { lengthCollapsed: sheet.lengthCollapsed }) }
+  const dimensions = { length: row[4] / MM_PER_METRE, barrel: row[5] / MM_PER_METRE, emptyMass, ...(sheet?.lengthCollapsed === undefined ? {} : { lengthCollapsed: sheet.lengthCollapsed }), ...spec.barrelHeat }
   return {
     id: spec.id,
     name: spec.name,

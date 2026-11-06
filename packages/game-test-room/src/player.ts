@@ -41,7 +41,12 @@ export interface PlayerOptions {
    */
   onSlam?(event: PlayerSlam): void
   onFeet?: (event: PlayerFeetEvent) => void
+  /** How the view comes back after a shot's kick (`kick`): the share of each kick that returns and the seconds it takes to return most of it. Default `RECOIL_RETURN`. */
+  recoilReturn?: { readonly share: number; readonly seconds: number }
 }
+
+/** The view comes back down after each kick, as the shooter brings the gun back on target: 70 % of the kick within about a quarter of a second; the rest stays, so a long burst still climbs. */
+export const RECOIL_RETURN = { share: 0.7, seconds: 0.25 } as const
 
 /** What the feet did this frame: a jump, or a landing with the speed of the fall (a jump on the spot comes down at about 4.6 m/s). */
 export type PlayerFeetEvent = { readonly type: 'jump' } | { readonly type: 'land'; readonly speed: number }
@@ -156,6 +161,19 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const cam = o.camera
   let yaw = 0
   let pitch = 0
+  const recoilReturn = o.recoilReturn ?? RECOIL_RETURN
+  // what is still to come back of the kicks, radians
+  const recoilDebt = { pitch: 0, yaw: 0 }
+  const returnRecoil = (dt: number): void => {
+    if (Math.abs(recoilDebt.pitch) + Math.abs(recoilDebt.yaw) < 1e-6) return
+    const k = 1 - Math.exp((-3 * dt) / Math.max(1e-3, recoilReturn.seconds))
+    const back = { pitch: recoilDebt.pitch * k, yaw: recoilDebt.yaw * k }
+    recoilDebt.pitch -= back.pitch
+    recoilDebt.yaw -= back.yaw
+    pitch = Math.max(-1.5, Math.min(1.5, pitch - back.pitch))
+    yaw -= back.yaw
+    apply()
+  }
   let y = 0
   let eye = EYE
   let crouch = 0
@@ -522,6 +540,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return stunLeft
     },
     update(dt) {
+      returnRecoil(dt)
       if (stunLeft > 0) {
         stunLeft = Math.max(0, stunLeft - dt)
         stunPhase += dt * 2.4
@@ -571,6 +590,9 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     },
     setPose(position, yw, pt) {
       knocked = null
+      // a view set on purpose is where the kicks come back to
+      recoilDebt.pitch = 0
+      recoilDebt.yaw = 0
       px.x = position[0]
       px.z = position[2]
       floorLevel = floorHere()
@@ -583,6 +605,9 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     },
     look(position, target) {
       knocked = null
+      // a view set on purpose is where the kicks come back to
+      recoilDebt.pitch = 0
+      recoilDebt.yaw = 0
       px.x = position[0]
       px.z = position[2]
       floorLevel = floorHere()
@@ -597,8 +622,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       apply()
     },
     kick(pitchDeg, yawDeg) {
+      const before = pitch
       pitch = Math.max(-1.5, Math.min(1.5, pitch + (pitchDeg * Math.PI) / 180))
       yaw += (yawDeg * Math.PI) / 180
+      recoilDebt.pitch += (pitch - before) * recoilReturn.share
+      recoilDebt.yaw += ((yawDeg * Math.PI) / 180) * recoilReturn.share
       apply()
     },
     moveBy(dx, dz) {

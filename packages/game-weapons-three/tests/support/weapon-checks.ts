@@ -1,10 +1,11 @@
+import { FIRST_PERSON_LAYER } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
 
 type HandState = ReturnType<TestRoom['handState']>
 import { createArsenal } from '@adatechnology/game-weapons'
-import { createWeaponsTestModule } from '../../src'
+import { createWeaponsTestModule, VIEW_HOLD } from '../../src'
 import { TRIGGER_FINGER } from '../../src/fx/viewmodel'
 import { buildWeaponModelById } from '../../src/models'
 import { auditWeapons } from './weapon-audit'
@@ -162,8 +163,13 @@ export const checkWeapons = (): WeaponChecks[] => {
       continue
     }
 
-    // the hands: both there, in front of the eye, in view, and on or near the weapon
-    const camera = room.camera as THREE.PerspectiveCamera
+    // the hands: both there, in front of the eye, in view, and on or near the weapon; in first person the gun and the arms are drawn through the lens of the gun's kind
+    const onLens = held.layers.mask === 1 << FIRST_PERSON_LAYER
+    const camera = (room.camera as THREE.PerspectiveCamera).clone()
+    if (onLens) {
+      camera.fov = VIEW_HOLD[row.carry === 'hip' ? 'hip' : row.modelFamily === 'pistol' || row.modelFamily === 'revolver' ? 'handgun' : row.modelFamily === 'rocket' ? 'launcher' : 'long'].fov
+      camera.updateProjectionMatrix()
+    }
     camera.updateMatrixWorld(true)
     const box = new THREE.Box3().setFromObject(held)
     const problems: string[] = []
@@ -196,15 +202,27 @@ export const checkWeapons = (): WeaponChecks[] => {
     const stuck = new THREE.Box3().setFromObject(held)
     let farthest = 0
     for (const x of [stuck.min.x, stuck.max.x]) for (const y of [stuck.min.y, stuck.max.y]) for (const z of [stuck.min.z, stuck.max.z]) farthest = Math.max(farthest, new THREE.Vector3(x, y, z).sub(from).dot(ahead))
-    const inFront = farthest <= WALL_DISTANCE + 0.005
-    checks.contact = { ok: inFront, note: inFront ? `alcance ${farthest.toFixed(2)} m com a parede a ${WALL_DISTANCE} m` : `atravessa: alcance ${farthest.toFixed(2)} m com a parede a ${WALL_DISTANCE} m` }
+    // in first person the gun is drawn over the world (the first-person layer, depth cleared): it never shows through a wall, whatever it reaches
+    const inFront = onLens || farthest <= WALL_DISTANCE + 0.005
+    checks.contact = { ok: inFront, note: onLens ? 'desenhada por cima do mundo (camada de 1ª pessoa)' : inFront ? `alcance ${farthest.toFixed(2)} m com a parede a ${WALL_DISTANCE} m` : `atravessa: alcance ${farthest.toFixed(2)} m com a parede a ${WALL_DISTANCE} m` }
     room.scene.remove(wall)
     sleep(room, 90)
 
     // the trigger finger
     const model = buildWeaponModelById(THREE, row.id)
     const finger = (): number | undefined => current()!.targets?.fingers?.index
-    if (model?.parts.trigger) {
+    if (row.carry === 'hip') {
+      // a gun carried at the hip fires by the thumb on its spade grip: the index stays closed on the handle, at rest and firing
+      const rest = finger()
+      room.use(1)
+      let lowest = 1
+      for (let i = 0; i < 40; i++) {
+        room.update(1 / 60)
+        lowest = Math.min(lowest, finger() ?? 0)
+      }
+      const ok = rest !== undefined && rest > TRIGGER_FINGER.ready && lowest > TRIGGER_FINGER.ready
+      checks.trigger = { ok, note: `mão fechada na empunhadura (gatilho de polegar): repouso ${rest?.toFixed(2)}, menor no tiro ${lowest.toFixed(2)}` }
+    } else if (model?.parts.trigger) {
       const rest = finger()
       // a minigun spins up and a flamethrower burns while the trigger is held
       room.use(row.def.action.kind === 'flame' || row.id === 'm134' ? 1 : undefined)

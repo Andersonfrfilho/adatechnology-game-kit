@@ -92,7 +92,7 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     }
     const t = Math.max(start, this.readyAt)
     this._ammo -= 1
-    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, null, this.rules.heat))
+    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound({ action: a, caliber: null, energy: 0, barrelMass: this.barrelMass, rules: this.rules.heat }))
     this.emit({ type: 'shot', shots: 0, rounds: 1, mode: this.mode, at: t })
     return result('ok', { uses: launcherUses(a, this.explosive, origin, dir), recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
   }

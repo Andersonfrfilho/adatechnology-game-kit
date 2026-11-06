@@ -23,6 +23,8 @@ export interface FxWorld {
   /** A sound cue of a clip: the audio plays it (when there is one) and the host is told. */
   /** A reload cue; `lead`: how early the clip fired it (seconds before the part reaches its stop). */
   sound(weapon: string, cue: string, profile: SoundProfile, lead?: number): void
+  /** Runs `emit` once the gun is drawn where this frame puts it (its kick included): what has to leave the muzzle as the eye sees it, a flash. */
+  afterPose(emit: () => void): void
   /** Runs `step(e)` for `seconds` from `delay` seconds on, with `e` the eased progress, then `done`. */
   schedule(delay: number, seconds: number, step: (eased: number) => void, done?: () => void): void
 }
