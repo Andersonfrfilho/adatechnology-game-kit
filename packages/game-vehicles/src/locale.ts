@@ -9,9 +9,12 @@ export type PartialLocaleStrings = { [K in keyof LocaleStrings]?: Partial<Locale
 
 const registry: Record<string, PartialLocaleStrings> = { en, 'pt-BR': ptBR }
 
+/** A string table, or a branch of one: strings, lists and nested tables. */
+type Table = Record<string, unknown>
+
 /** Registers (or extends) a locale under a code such as `es` or `pt-BR`. Missing keys fall back to English. */
-export function registerLocale(code: string, strings: PartialLocaleStrings | Record<string, any>): void {
-  registry[code] = merge(registry[code] || {}, strings)
+export function registerLocale(code: string, strings: PartialLocaleStrings | Record<string, unknown>): void {
+  registry[code] = merge(registry[code] || {}, strings) as PartialLocaleStrings
 }
 
 /** Codes of the registered locales. */
@@ -19,22 +22,23 @@ export function listLocales(): string[] {
   return Object.keys(registry)
 }
 
-function merge(base: any, extra: any): any {
-  const out: any = Array.isArray(base) ? base.slice() : Object.assign({}, base)
+function merge(base: object, extra: object | null | undefined): Table {
+  const out = (Array.isArray(base) ? base.slice() : Object.assign({}, base)) as Table
   Object.keys(extra || {}).forEach(function (k) {
-    const v = extra[k]
-    if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = merge(out[k] && typeof out[k] === 'object' ? out[k] : {}, v)
+    const v = (extra as Table)[k]
+    if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = merge(out[k] && typeof out[k] === 'object' ? (out[k] as object) : {}, v)
     else if (v !== undefined) out[k] = v
   })
   return out
 }
 
 /** Copies `source` into `target` in place, level by level (the string table of a live kit has to stay the same object). */
-export function assignDeep(target: any, source: any): any {
+export function assignDeep<T extends object>(target: T, source: object | null | undefined): T {
+  const t = target as Table
   Object.keys(source || {}).forEach(function (k) {
-    const v = source[k]
-    if (v && typeof v === 'object' && !Array.isArray(v)) target[k] = assignDeep(target[k] && typeof target[k] === 'object' ? target[k] : {}, v)
-    else if (v !== undefined) target[k] = v
+    const v = (source as Table)[k]
+    if (v && typeof v === 'object' && !Array.isArray(v)) t[k] = assignDeep(t[k] && typeof t[k] === 'object' ? (t[k] as object) : {}, v)
+    else if (v !== undefined) t[k] = v
   })
   return target
 }
@@ -46,10 +50,10 @@ export function assignDeep(target: any, source: any): any {
 export function resolveStrings(locale?: string | PartialLocaleStrings): LocaleStrings {
   /* English is the base of every locale, including the keys content packs add to it with registerLocale */
   const base = registry.en || en
-  if (locale && typeof locale === 'object') return merge(base, locale)
+  if (locale && typeof locale === 'object') return merge(base, locale) as LocaleStrings
   const code = locale || 'en'
   const hit = findLocale(code)
-  return hit ? merge(base, hit) : (merge(base, {}) as LocaleStrings)
+  return (hit ? merge(base, hit) : merge(base, {})) as LocaleStrings
 }
 
 function findLocale(code: string): PartialLocaleStrings | null {
@@ -85,9 +89,9 @@ export type Translate = (key: string, vars?: Record<string, unknown>) => string
  */
 export function createTranslate(strings: LocaleStrings): Translate {
   return function t(key, vars) {
-    let cur: any = strings
+    let cur: unknown = strings
     for (const part of key.split('.')) {
-      cur = cur == null ? undefined : cur[part]
+      cur = cur == null ? undefined : (cur as Table)[part]
       if (cur === undefined) break
     }
     if (typeof cur !== 'string') return key
