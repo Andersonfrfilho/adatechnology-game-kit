@@ -1,5 +1,5 @@
 /** Headlights and taillights in several styles, with beams and glow. */
-import type { MeshStandardMaterial } from 'three'
+import type { BufferGeometry, MeshStandardMaterial } from 'three'
 
 import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
@@ -21,14 +21,14 @@ export function installLights(kit: Kit) {
     c.vehicle.add(g)
     return g
   }
-  function gm(g: any, geo: any, mat: MeshStandardMaterial, x?: any, y?: any, z?: any) {
+  function gm(g: any, geo: BufferGeometry, mat: MeshStandardMaterial, x?: any, y?: any, z?: any) {
     const m = new THREE.Mesh(geo, mat)
     m.position.set(x || 0, y || 0, z || 0)
     m.castShadow = false
     g.add(m)
     return m
   }
-  function wedgeY(geo: any, w: number, s: number, k: number) {
+  function wedgeY(geo: BufferGeometry, w: number, s: number, k: number) {
     const p = geo.attributes.position
     for (let i = 0; i < p.count; i++) {
       const t = clamp((p.getZ(i) * s) / w + 0.5, 0, 1)
@@ -94,7 +94,7 @@ export function installLights(kit: Kit) {
         lens.push(L)
         return L
       },
-      glow: function (geo: any, mat: MeshStandardMaterial, x: any, y: any, z: any) {
+      glow: function (geo: BufferGeometry, mat: MeshStandardMaterial, x: any, y: any, z: any) {
         const m = gm(g, geo, mat, x, y, z)
         inner.push(m)
         return m
@@ -167,7 +167,7 @@ export function installLights(kit: Kit) {
       K.proj(-h / 2 + hl / 2, s * w * 0.05, hl * 0.3, B)
       K.lens(w * 0.8, hl, -h / 2 + hl / 2, -s * w * 0.08)
     } else if (st === 'wedge') {
-      const wf = function (geo: any) {
+      const wf = function (geo: BufferGeometry) {
         wedgeY(geo, w, s, 0.45)
       }
       K.housing(w, h, 0, 0, wf)

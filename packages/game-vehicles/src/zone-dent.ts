@@ -1,6 +1,7 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
-import type { Matrix4, Vector3 } from 'three'
+import type { BufferGeometry, Matrix4, Vector3 } from 'three'
 
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { smooth } from './util'
 import { liveTriIndex, touchTriIndex } from './tri-index'
@@ -15,7 +16,7 @@ export function installZoneDent(kit: Kit) {
   function sm(t: number) {
     return smooth(t)
   }
-  function subdivIn(geo: any, rel: Matrix4, B: any, maxLen: number) {
+  function subdivIn(geo: BufferGeometry, rel: Matrix4, B: any, maxLen: number) {
     const a = geo.attributes.position.array
     /* the result grows from the size of the mesh (a typed array: a plain array of this many numbers is the slowest part of the call) */
     let out = new Float32Array(a.length + 4096)
@@ -44,7 +45,7 @@ export function installZoneDent(kit: Kit) {
     function mid(p: any, q: any) {
       return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2]
     }
-    function tri(A: any, Bv: any, C: any, depth: number) {
+    function tri(A: number[], Bv: number[], C: number[], depth: number) {
       const ab = d(A, Bv)
       const bc = d(Bv, C)
       const ca = d(C, A)
@@ -93,7 +94,7 @@ export function installZoneDent(kit: Kit) {
     return g
   }
   /* meshes this zone may dent: shell (c.deform), paint, its own parts and, with anyMesh, any mesh */
-  function dentTargets(c: BuildContext, z: any, inv: Matrix4) {
+  function dentTargets(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const dset = new Set(c.deform)
     const out: any = []
     c.vehicle.traverse(function (o: any) {
@@ -124,7 +125,7 @@ export function installZoneDent(kit: Kit) {
     return r
   }
   /* dents: [{ u, v (centre, absolute tangent coordinates), ru, rv (radii in m), depth }], crease: { v, w, depth } */
-  function zoneDent(c: BuildContext, z: any, dents: any, dirty: any, opt: any) {
+  function zoneDent(c: BuildContext, z: DamageZone, dents: any, dirty: any, opt: any) {
     opt = opt || {}
     const B = z.box
     const d = z.dir
@@ -280,7 +281,7 @@ export function installZoneDent(kit: Kit) {
     return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
   }
   /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
-  function cutPanel(c: BuildContext, z: any, rect: number[], keep: any, dirty: any, o?: any) {
+  function cutPanel(c: BuildContext, z: DamageZone, rect: number[], keep: any, dirty: any, o?: any) {
     o = o || {}
     const B = z.box
     const d = z.dir

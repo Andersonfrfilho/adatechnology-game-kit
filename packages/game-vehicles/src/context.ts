@@ -90,7 +90,7 @@ export function installContext(kit: Kit) {
     }
     roundBox(w: number, h: number, d: number, r: number, mat: Material | Material[], x?: number, y?: number, z?: number, o?: ParentOption & { taper?: Parameters<typeof taper>[1]; sub?: number; def?: boolean; rot?: readonly number[] }): Mesh {
       o = o || {}
-      let geo = roundedBoxGeometry(w, h, d, r)
+      let geo: BufferGeometry = roundedBoxGeometry(w, h, d, r)
       if (o.taper) taper(geo, o.taper)
       if (o.sub) geo = crease(subdivide(geo, o.sub), 40)
       else if (o.def) geo = crease(geo.toNonIndexed(), 50)

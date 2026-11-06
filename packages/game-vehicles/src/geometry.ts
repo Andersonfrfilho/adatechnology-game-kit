@@ -1,4 +1,6 @@
 /** Geometry helpers: rounded boxes, lofts, creasing, subdivision, merging and convex hulls. */
+import type { BufferGeometry } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 import { TRI_BLOCK, boundsFromIndex, storeTriIndex, triIndexOf } from './tri-index'
@@ -43,9 +45,9 @@ export function installGeometry(kit: Kit) {
     }
     return g
   }
-  function taper(geo: any, t: any) {
+  function taper(geo: BufferGeometry, t: any) {
     geo.computeBoundingBox()
-    const bb = geo.boundingBox
+    const bb = geo.boundingBox!
     const h = bb.max.y - bb.min.y
     const p = geo.attributes.position
     const sx = t.sx == null ? 1 : t.sx
@@ -59,7 +61,7 @@ export function installGeometry(kit: Kit) {
     p.needsUpdate = true
     geo.computeVertexNormals()
   }
-  function subdivide(geo: any, maxLen: number) {
+  function subdivide(geo: BufferGeometry, maxLen: number) {
     if (lod.on) maxLen = maxLen * lod.subdivisionFactor
     const src = geo.index ? geo.toNonIndexed() : geo
     const a = src.attributes.position.array
@@ -102,7 +104,7 @@ export function installGeometry(kit: Kit) {
   const latestCrease = new WeakMap<object, object>()
   /* The smoothing of `crease` as slices: `step(deadline)` works until the clock passes it and returns whether it finished.
      The normals start as flat face normals, so the mesh draws right between the slices; the end result is the same as one call. */
-  function creaseTask(geo: any, deg: number) {
+  function creaseTask(geo: BufferGeometry, deg: number) {
     if (geo.index) {
       const ni = geo.toNonIndexed()
       Object.keys(ni.attributes).forEach(function (k) {
@@ -252,7 +254,7 @@ export function installGeometry(kit: Kit) {
     }
     return { geo: geo, step: step }
   }
-  function crease(geo: any, deg: number) {
+  function crease(geo: BufferGeometry, deg: number) {
     creaseTask(geo, deg).step(Infinity)
     return geo
   }
@@ -294,7 +296,7 @@ export function installGeometry(kit: Kit) {
     }
     return s
   }
-  function tumble(geo: any, T: any) {
+  function tumble(geo: BufferGeometry, T: any) {
     if (!T) return
     const p = geo.attributes.position
     for (let i = 0; i < p.count; i++) {
@@ -402,7 +404,7 @@ export function installGeometry(kit: Kit) {
      Triangles crossing the edge are cut along the line sdf = 0. Removed pieces with a tag come back in .cut[tag].
      A lone test may carry `bounds` { lo, hi } (a box in the frame of the geometry that holds every point with sdf < 0): triangles outside it are
      copied as they are, with no per-triangle work, and the result is the same as testing them. */
-  function cutGeometry(geo: any, tests: any) {
+  function cutGeometry(geo: BufferGeometry, tests: any) {
     const idx = geo.index ? geo.index.array : null
     const names = ['position'].concat(
       ['color', 'uv'].filter(function (n) {
@@ -598,7 +600,7 @@ export function installGeometry(kit: Kit) {
   }
   /* The bounding box and sphere of a geometry, the same numbers as computeBoundingBox and computeBoundingSphere; for a non-indexed geometry with a
      complete triangle index the box comes from the blocks and the vertices are read once, and nothing is redone while the positions stand. */
-  function refreshBounds(geo: any) {
+  function refreshBounds(geo: BufferGeometry) {
     const found = boundsFromIndex(geo)
     if (!found) {
       geo.computeBoundingSphere()
@@ -644,9 +646,9 @@ export function installGeometry(kit: Kit) {
     return g
   }
   /* Normalised 0..1 UV projecting onto the two axes of greatest extent (or onto the given axes, e.g. "xy"). */
-  function uvProject(geo: any, axes: string) {
+  function uvProject(geo: BufferGeometry, axes: string) {
     geo.computeBoundingBox()
-    const bb = geo.boundingBox
+    const bb = geo.boundingBox!
     const sz = new V3().subVectors(bb.max, bb.min)
     const ax = axes
       ? [axes.charCodeAt(0) - 120, axes.charCodeAt(1) - 120]

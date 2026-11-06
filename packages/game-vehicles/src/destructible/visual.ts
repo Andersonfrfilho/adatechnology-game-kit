@@ -5,10 +5,10 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
-import type { Vector3 } from 'three'
+import type { BufferGeometry, Vector3 } from 'three'
 
 import type { BuildContext } from '../types'
-import type { VehicleContext, VehicleKit } from '../api'
+import type { DamageZone, VehicleContext, VehicleKit } from '../api'
 import type { PartDef, VehicleModel } from './model'
 import { raycastIndexed, warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
@@ -194,7 +194,7 @@ export class VehicleVisuals implements CreaseWork {
   private holdArmed = false
   private holdFrame = -1
   /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
-  private readonly smoothing = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
+  private readonly smoothing = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
@@ -475,7 +475,7 @@ export class VehicleVisuals implements CreaseWork {
     return true
   }
   /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, in the same paint as on a real car, lines the opening. */
-  private doorEdges(piv: Obj, z: any, y1: number): void {
+  private doorEdges(piv: Obj, z: DamageZone, y1: number): void {
     const THREE = this.THREE
     const B = z.box
     const side = z.side < 0 ? -1 : 1
@@ -558,7 +558,7 @@ export class VehicleVisuals implements CreaseWork {
     })
   }
   /** A front door carries the mirror drawn at its corner. */
-  private mirrorsOn(z: any): Obj[] {
+  private mirrorsOn(z: DamageZone): Obj[] {
     if (!z.mirror) return []
     const own = ((z.mirrors ?? []) as Obj[]).filter((o) => o.parent)
     if (own.length) return own
@@ -566,7 +566,7 @@ export class VehicleVisuals implements CreaseWork {
     return part ? (this.extra.get(part.id) ?? []).filter((o) => o.parent) : []
   }
   /** The panel drawn inside the door is lit like the rest of a cabin, not a black slab from end to end. */
-  private liftDoorTrim(objs: Obj[], z: any): void {
+  private liftDoorTrim(objs: Obj[], z: DamageZone): void {
     const card = this.I.makeMaterial(DOOR_LINER_COLOR, { roughness: 0.85 })
     const inv = this.I.worldInverseOf(this.c)
     for (const o of objs) {
@@ -577,7 +577,7 @@ export class VehicleVisuals implements CreaseWork {
     }
   }
   /** A long strip drawn along the side of the car (the chrome of the belt): the part over the door goes with the door, and nothing stays across the opening. */
-  private cutStripsAcross(piv: Obj, z: any, inv: any): void {
+  private cutStripsAcross(piv: Obj, z: DamageZone, inv: any): void {
     const THREE = this.THREE
     const B = z.box
     const x0 = B.x0 + 0.03
@@ -1495,7 +1495,7 @@ export class VehicleVisuals implements CreaseWork {
     this.gone.add(p.id)
     return r
   }
-  private cutZone(z: any): Obj[] {
+  private cutZone(z: DamageZone): Obj[] {
     const I = this.I
     const B = z.box
     const a = I.axisOf(z.dir)
@@ -1507,7 +1507,7 @@ export class VehicleVisuals implements CreaseWork {
     const mg = Math.min(0.05, (u1 - u0) * 0.08, (v1 - v0) * 0.08)
     const dirty = new Set<Obj>()
     let pcs: Array<{ mesh?: Obj }> = []
-    const pieceTasks = new Map<Obj, { geo: any; step: (deadline: number) => boolean }>()
+    const pieceTasks = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
     try {
       pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks })
     } catch {

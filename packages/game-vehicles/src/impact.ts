@@ -26,7 +26,7 @@ export function installImpact(kit: Kit) {
   }
   /* The bumper comes loose on the side of the hit and hangs from the other side (does not fly): the real part rotates around the attached end,
      without swapping the geometry, and the angle is limited so the loose end touches the ground without going through it (and does not become a pole on a tall vehicle). */
-  function hangBumper(c: BuildContext, o: any, p: any) {
+  function hangBumper(c: BuildContext, o: any, p: Vector3) {
     if (!o || o.userData.hung || !o.parent || c.meta.noBumper) return
     o.userData.hung = true
     const di = c.deform.indexOf(o)

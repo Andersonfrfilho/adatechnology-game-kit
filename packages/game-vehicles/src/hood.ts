@@ -1,5 +1,5 @@
 /** Hoods, engine bays and hinge helpers. */
-import type { MeshStandardMaterial, Vector3 } from 'three'
+import type { BufferGeometry, MeshStandardMaterial, Vector3 } from 'three'
 
 import type { BuildContext, Kit } from './types'
 
@@ -15,12 +15,12 @@ export function installHood(kit: Kit) {
 
   /* ================= hood and engine bay ================= */
   /* Hood made from the skin cut out of the hull (shell holes with a tag). o: { x0 (hinge), col, open (rad), hole (extra hole, e.g. blower) } */
-  kit.makeHood = function (c: BuildContext, geo: any, o: any) {
+  kit.makeHood = function (c: BuildContext, geo: BufferGeometry, o: any) {
     o = o || {}
     if (!geo || !geo.attributes.position.count) return null
     if (o.hole) geo = cutGeometry(geo, [o.hole]).geo
     geo.computeBoundingBox()
-    const bb = geo.boundingBox.clone()
+    const bb = geo.boundingBox!.clone()
     const p = geo.attributes.position
     const hx = o.x0 != null ? o.x0 : bb.min.x
     let hy = -1e9

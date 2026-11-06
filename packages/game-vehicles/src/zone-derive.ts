@@ -1,4 +1,5 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 
 export function installZoneDerive(kit: Kit) {
@@ -22,7 +23,7 @@ export function installZoneDerive(kit: Kit) {
       } as Record<string, any>)[d] || null
     )
   }
-  function resolveObjs(c: BuildContext, list: any, z: any) {
+  function resolveObjs(c: BuildContext, list: any, z: Pick<DamageZone, 'lights' | 'glass' | 'wheels'>) {
     const out: any = []
     ;(list || []).forEach(function (o: any) {
       if (!o) return
@@ -54,7 +55,7 @@ export function installZoneDerive(kit: Kit) {
     const m = c.meta
     let list: any = []
     const byId: any = {}
-    ;(m.zones === false ? [] : I.autoZones(c)).forEach(function (z: any) {
+    ;(m.zones === false ? [] : I.autoZones(c)).forEach(function (z: DamageZone) {
       byId[z.id] = z
       list.push(z)
     })
@@ -115,10 +116,10 @@ export function installZoneDerive(kit: Kit) {
       }
       z.box = I.normalizeBox(bb)
     })
-    list = list.filter(function (z: any) {
+    list = list.filter(function (z: DamageZone) {
       return z.box && z.name
     })
-    list.forEach(function (z: any) {
+    list.forEach(function (z: DamageZone) {
       z.glass = (z.glass || []).slice()
       z.lights = (z.lights || []).slice()
       z.wheels = (z.wheels || []).slice()
@@ -143,16 +144,16 @@ export function installZoneDerive(kit: Kit) {
       z.health = 100
       if (z.side < 0 && z.tags.indexOf('left') < 0) z.tags.push('left')
       if (z.side > 0 && z.tags.indexOf('right') < 0) z.tags.push('right')
-      z.owned.forEach(function (o: any) {
+      z.owned.forEach(function (o) {
         owner.set(o, z)
       })
-      z.glass.forEach(function (o: any) {
+      z.glass.forEach(function (o) {
         if (!owner.has(o)) owner.set(o, z)
       })
-      z.wheels.forEach(function (o: any) {
+      z.wheels.forEach(function (o) {
         owner.set(o, z)
       })
-      z.lights.forEach(function (Lt: any) {
+      z.lights.forEach(function (Lt) {
         if (Lt.group) owner.set(Lt.group, z)
         Lt.lens.concat(Lt.inner).forEach(function (o: any) {
           owner.set(o, z)
@@ -164,7 +165,7 @@ export function installZoneDerive(kit: Kit) {
       if (owner.has(g) || !g.parent || !g.userData.glass || g.userData.ghost) return
       const cg = I.localBox(c, g, inv).getCenter(new V3())
       let best: any = null
-      list.forEach(function (z: any) {
+      list.forEach(function (z: DamageZone) {
         if (z.internal || z.type === 'wheel' || z.type === 'light') return
         if (I.boxContains(z.box, cg.x, cg.y, cg.z, 0.05) && (!best || I.boxVolume(z.box) < I.boxVolume(best.box))) best = z
       })
@@ -174,7 +175,7 @@ export function installZoneDerive(kit: Kit) {
       }
     })
     /* loose parts (children of c.vehicle) join the smallest "part" zone that contains them */
-    const looseParts = list.filter(function (z: any) {
+    const looseParts = list.filter(function (z: DamageZone) {
       return z.type === 'part'
     })
     if (looseParts.length)
@@ -185,7 +186,7 @@ export function installZoneDerive(kit: Kit) {
         const cen = bb.getCenter(new V3())
         const sz = bb.getSize(new V3())
         let best: any = null
-        looseParts.forEach(function (z: any) {
+        looseParts.forEach(function (z: DamageZone) {
           const B = z.box
           if (!I.boxContains(B, cen.x, cen.y, cen.z, 0.02)) return
           if (sz.x > (B.x1 - B.x0) * 1.6 + 0.1 || sz.y > (B.y1 - B.y0) * 1.6 + 0.1 || sz.z > (B.z1 - B.z0) * 1.6 + 0.1) return
@@ -200,7 +201,7 @@ export function installZoneDerive(kit: Kit) {
         }
       })
     /* mirrors: small parts outside the body width, at belt height, next to the front door */
-    list.forEach(function (z: any) {
+    list.forEach(function (z: DamageZone) {
       if (!z.mirror) return
       z.mirrors = []
       const B = z.box
@@ -240,7 +241,7 @@ export function installZoneDerive(kit: Kit) {
         })
       }
     })
-    list.forEach(function (z: any) {
+    list.forEach(function (z: DamageZone) {
       const B = z.box
       z.map = z.map || [Math.max(B.x0, R - 0.3), Math.min(B.x1, F + 0.3), Math.max(B.z0, -W / 2 - 0.35), Math.min(B.z1, W / 2 + 0.35)]
     })
@@ -255,7 +256,7 @@ export function installZoneDerive(kit: Kit) {
     const hw = W / 2
     const gh = m.glasshouse
     if ((m.kind || 'car') !== 'car' || !gh || gh.fb == null) return
-    list.forEach(function (z: any) {
+    list.forEach(function (z: DamageZone) {
       if (z.mapSet) return
       const B = z.box
       const s = z.side

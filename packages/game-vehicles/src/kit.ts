@@ -4,7 +4,7 @@ import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStr
 import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
 import type { BuildContext, Kit } from './types'
-import type { VehicleKit, VehicleKitOptions } from './api'
+import type { DamageZone, VehicleKit, VehicleKitOptions } from './api'
 import { installMaterials } from './materials'
 import { installGeometry } from './geometry'
 import { installContext } from './context'
@@ -312,7 +312,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     if (zoneState) kit.applyZones(c, zoneState)
     else {
       c.zoneState = { health: {}, flags: {} }
-      c.zones.forEach(function (z: any) {
+      c.zones.forEach(function (z: DamageZone) {
         c.zoneState.health[z.id] = 100
       })
     }

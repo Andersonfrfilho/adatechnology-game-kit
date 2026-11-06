@@ -1,7 +1,8 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
-import type { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
+import type { BufferGeometry, Matrix4, MeshStandardMaterial, Vector3 } from 'three'
 
 import type { MaterialOptions } from './materials'
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { TRI_BLOCK, triIndexOf } from './tri-index'
 
@@ -57,7 +58,7 @@ export function installZoneDecals(kit: Kit) {
     m.quaternion.copy(_zq2.multiply(_zq))
     m.position.copy(p).addScaledVector(n, 0.004)
   }
-  function decalMesh(c: BuildContext, geo: any, mat: MeshStandardMaterial, p: any, n: Vector3, ang: number, obj?: any) {
+  function decalMesh(c: BuildContext, geo: BufferGeometry, mat: MeshStandardMaterial, p: any, n: Vector3, ang: number, obj?: any) {
     const m = c.add(geo, mat, 0, 0, 0)
     m.castShadow = false
     m.receiveShadow = false
@@ -83,7 +84,7 @@ export function installZoneDecals(kit: Kit) {
     return new THREE.ShapeGeometry(s)
   }
   /* torn metal: a dark hole with a sharp edge of metal teeth that bend outward */
-  function tearDecal(c: BuildContext, p: any, n: any, r: number, rnd: any, obj: any) {
+  function tearDecal(c: BuildContext, p: any, n: Vector3, r: number, rnd: any, obj: any) {
     const N = 13
     const pts: any = []
     for (let k = 0; k < N; k++) {
@@ -132,7 +133,7 @@ export function installZoneDecals(kit: Kit) {
   const STROKE_REACH = 0.6 /* scratchPath: 0.08 above the surface + 0.2 of ray + up to 0.25 along the stroke + the 0.02 of the box test */
   const _pv = new V3()
   const _pm = new THREE.Matrix4()
-  function decalRegion(c: BuildContext, z: any) {
+  function decalRegion(c: BuildContext, z: DamageZone) {
     const B = z.box
     const lo = [0, 1, 2].map(function (k) {
       return I.boxLo(B, k) - STROKE_REACH
@@ -166,7 +167,7 @@ export function installZoneDecals(kit: Kit) {
     return { lo, hi }
   }
   /* the candidates of a decal call with the heavy meshes cut down to the region of the zone (the others stay as they are) */
-  function regionCands(c: BuildContext, z: any, cands: any) {
+  function regionCands(c: BuildContext, z: DamageZone, cands: any) {
     if (!cands.some(heavy)) return cands
     const R = decalRegion(c, z)
     const Mw = c.vehicle.matrixWorld
@@ -316,7 +317,7 @@ export function installZoneDecals(kit: Kit) {
     for (let i = 0; i < hits.length; i++) if (hits[i].object.proxyOf) hits[i].object = hits[i].object.proxyOf
     return hits
   }
-  function zoneCands(c: BuildContext, z: any, inv: Matrix4, glassToo?: any) {
+  function zoneCands(c: BuildContext, z: DamageZone, inv: Matrix4, glassToo?: any) {
     const out: any = []
     c.vehicle.traverse(function (o: any) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || o.isSprite) return
@@ -332,7 +333,7 @@ export function installZoneDecals(kit: Kit) {
   }
   /* decals only on bodywork: shell, paint, parts of the zone itself (or any mesh with anyMesh/part) */
   const _dsetC = new WeakMap()
-  function skinOK(c: BuildContext, z: any, o: any, ow: any) {
+  function skinOK(c: BuildContext, z: DamageZone, o: any, ow: any) {
     if (ow === z || z.anyMesh || z.type === 'part' || z.type === 'wheel') return true
     if (c.paints && c.paints.has(o.material)) return true
     let ds = _dsetC.get(c.deform)
@@ -346,7 +347,7 @@ export function installZoneDecals(kit: Kit) {
     const a = Math.abs(d.x) >= Math.abs(d.y) && Math.abs(d.x) >= Math.abs(d.z) ? 0 : Math.abs(d.y) >= Math.abs(d.z) ? 1 : 2
     return a
   }
-  function zoneSurf(c: BuildContext, z: any, n: number, rnd: any, cands: any, o?: any) {
+  function zoneSurf(c: BuildContext, z: DamageZone, n: number, rnd: any, cands: any, o?: any) {
     o = o || {}
     const out = []
     const B = z.box
@@ -468,7 +469,7 @@ export function installZoneDecals(kit: Kit) {
     return m
   }
   /* scratches, chipped paint (grey primer and metal), rust and torn metal */
-  function zoneDecals(c: BuildContext, z: any, spec: any, cands: any) {
+  function zoneDecals(c: BuildContext, z: DamageZone, spec: any, cands: any) {
     const R = c.rand
     const need =
       (spec.fine || 0) +

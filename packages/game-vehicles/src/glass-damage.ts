@@ -1,5 +1,5 @@
 /** Glass cracks, shattering and tempered or laminated breakage textures. */
-import type { Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector3 } from 'three'
+import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector3 } from 'three'
 
 import type { BuildContext, Kit, Three } from './types'
 import { clamp } from './util'
@@ -133,7 +133,7 @@ export function installGlassDamage(kit: Kit) {
   }
   // a 2D context that draws nothing: every call and gradient is a no-op
   const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
-  function crackGlass(c: BuildContext, msh: any, p: any, force: number, sc?: any) {
+  function crackGlass(c: BuildContext, msh: any, p: Vector3, force: number, sc?: any) {
     const G = msh.userData.glass
     // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
     // seeded result after it) stays the same as when the hidden canvas was still drawn on
@@ -158,7 +158,7 @@ export function installGlassDamage(kit: Kit) {
     G.hits++
   }
   /* irregular edge attached to the frame for glass without an outline (cut from the shell): only the strip near the open edges remains */
-  function glassRim(geo: any, rnd: any) {
+  function glassRim(geo: BufferGeometry, rnd: any) {
     const src = geo.index ? geo.toNonIndexed() : geo
     const p = src.attributes.position
     const cnt: any = {}

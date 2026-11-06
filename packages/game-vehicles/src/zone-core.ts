@@ -1,6 +1,7 @@
 /** Zone core: bands, effects text, box helpers and part lookups. */
 import type { Box3, Matrix4 } from 'three'
 
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { clamp } from './util'
 
@@ -50,11 +51,11 @@ export function installZoneCore(kit: Kit) {
   const ZONE_EFFECTS: any = {}
   /* key -> 5 texts (one per band); filled by configure({ zoneEffects }) */
   kit.zoneEffects = ZONE_EFFECTS
-  function zoneFx(z: any, b: number) {
+  function zoneFx(z: DamageZone, b: number) {
     const t = (z.fx || ZONE_EFFECTS[z.fxKey] || ZONE_EFFECTS[z.type] || ZONE_EFFECTS.panel || [])[b] || kit.config.texts.noEffect || ''
     return t.replace(/\{who\}/g, z.who || kit.config.texts.who)
   }
-  kit.zoneEffect = function (z: any, h: any) {
+  kit.zoneEffect = function (z: DamageZone, h: any) {
     return zoneFx(z, bandOf(h == null ? z.health : h))
   }
   /* box: [x0, x1, y0, y1, z0, z1], { x0, x1, y0, y1, z0, z1 } or THREE.Box3 (c.vehicle coordinates) */

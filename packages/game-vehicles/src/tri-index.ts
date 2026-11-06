@@ -1,5 +1,5 @@
 /** Boxes of the triangles of a geometry, grouped in blocks, so a region query visits the few triangles near it instead of every one. */
-import type { Vector3 } from 'three'
+import type { BufferAttribute, BufferGeometry, Vector3 } from 'three'
 
 import type { Three } from './types'
 
@@ -21,18 +21,18 @@ export type TriIndex = {
 
 const cache = new WeakMap<object, TriIndex>()
 
-function trianglesOf(geo: any): number {
+function trianglesOf(geo: BufferGeometry): number {
   return Math.floor((geo.index ? geo.index.count : geo.attributes.position.count) / 3)
 }
-function supports(geo: any): boolean {
+function supports(geo: BufferGeometry): boolean {
   const pos = geo.attributes && geo.attributes.position
-  return !!pos && !pos.isInterleavedBufferAttribute && pos.itemSize === 3
+  return !!pos && !(pos as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && pos.itemSize === 3
 }
-function isCurrent(geo: any, ti: TriIndex): boolean {
+function isCurrent(geo: BufferGeometry, ti: TriIndex): boolean {
   const pos = geo.attributes.position
   return (
     ti.position === pos &&
-    ti.positionVersion === pos.version &&
+    ti.positionVersion === (pos as BufferAttribute).version &&
     ti.index === (geo.index || null) &&
     ti.indexVersion === (geo.index ? geo.index.version : 0) &&
     ti.triangles === trianglesOf(geo)
@@ -58,7 +58,7 @@ function boxBlock(ti: TriIndex, block: number): void {
     }
   }
 }
-function boxTriangle(geo: any, ti: TriIndex, t: number): void {
+function boxTriangle(geo: BufferGeometry, ti: TriIndex, t: number): void {
   const P = geo.attributes.position.array
   const ix = geo.index ? geo.index.array : null
   const a = (ix ? ix[t * 3] : t * 3) * 3
@@ -70,7 +70,7 @@ function boxTriangle(geo: any, ti: TriIndex, t: number): void {
     ti.boxes[j + 3 + k] = Math.max(P[a + k], P[b + k], P[c + k])
   }
 }
-function advance(geo: any, ti: TriIndex, deadline: number): boolean {
+function advance(geo: BufferGeometry, ti: TriIndex, deadline: number): boolean {
   const total = blockCount(ti.triangles)
   while (ti.builtBlocks < total) {
     const block = ti.builtBlocks
@@ -82,12 +82,12 @@ function advance(geo: any, ti: TriIndex, deadline: number): boolean {
   }
   return ti.builtBlocks === total
 }
-function start(geo: any, store: WeakMap<object, TriIndex> = cache): TriIndex {
+function start(geo: BufferGeometry, store: WeakMap<object, TriIndex> = cache): TriIndex {
   const pos = geo.attributes.position
   const triangles = trianglesOf(geo)
   const ti: TriIndex = {
     position: pos,
-    positionVersion: pos.version,
+    positionVersion: (pos as BufferAttribute).version,
     index: geo.index || null,
     indexVersion: geo.index ? geo.index.version : 0,
     triangles,
@@ -100,7 +100,7 @@ function start(geo: any, store: WeakMap<object, TriIndex> = cache): TriIndex {
 }
 
 /** The index of a geometry (built now if it is not there or the positions changed), or undefined for a layout it does not cover. */
-export function triIndexOf(geo: any): TriIndex | undefined {
+export function triIndexOf(geo: BufferGeometry): TriIndex | undefined {
   if (!supports(geo)) return undefined
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
@@ -109,7 +109,7 @@ export function triIndexOf(geo: any): TriIndex | undefined {
 }
 
 /** Builds the index of a geometry a slice at a time; true once it is complete and current. */
-export function warmTriIndex(geo: any, deadline: number): boolean {
+export function warmTriIndex(geo: BufferGeometry, deadline: number): boolean {
   if (!supports(geo)) return true
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
@@ -117,7 +117,7 @@ export function warmTriIndex(geo: any, deadline: number): boolean {
 }
 
 /** Keeps the index of the result of a cut: `boxes` are the boxes of its triangles in order. */
-export function storeTriIndex(geo: any, boxes: Float64Array): void {
+export function storeTriIndex(geo: BufferGeometry, boxes: Float64Array): void {
   const ti = start(geo)
   ti.boxes = boxes
   const total = blockCount(ti.triangles)
@@ -126,15 +126,15 @@ export function storeTriIndex(geo: any, boxes: Float64Array): void {
 }
 
 /** Before moving vertices of a non-indexed geometry: its index when it is complete and current (pass it to `touchTriIndex` after). */
-export function liveTriIndex(geo: any): TriIndex | undefined {
+export function liveTriIndex(geo: BufferGeometry): TriIndex | undefined {
   if (geo.index || !supports(geo)) return undefined
   const ti = cache.get(geo)
   return ti && isCurrent(geo, ti) && ti.builtBlocks === blockCount(ti.triangles) ? ti : undefined
 }
 
 /** After moving `vertices` of a non-indexed geometry and flagging its positions: only their triangles are measured again. */
-export function touchTriIndex(geo: any, ti: TriIndex, vertices: number[]): void {
-  if (ti.positionVersion + 1 !== geo.attributes.position.version) return
+export function touchTriIndex(geo: BufferGeometry, ti: TriIndex, vertices: number[]): void {
+  if (ti.positionVersion + 1 !== (geo.attributes.position as BufferAttribute).version) return
   const blocks = new Set<number>()
   for (const v of vertices) {
     const t = Math.floor(v / 3)
@@ -143,11 +143,11 @@ export function touchTriIndex(geo: any, ti: TriIndex, vertices: number[]): void 
     blocks.add(Math.floor(t / TRI_BLOCK))
   }
   blocks.forEach((b) => boxBlock(ti, b))
-  ti.positionVersion = geo.attributes.position.version
+  ti.positionVersion = (geo.attributes.position as BufferAttribute).version
 }
 
 /** The box of every vertex of a non-indexed geometry from its complete, current index (one pass over the blocks); undefined when it cannot be taken from there. */
-export function boundsFromIndex(geo: any): { box: Float64Array; version: number } | undefined {
+export function boundsFromIndex(geo: BufferGeometry): { box: Float64Array; version: number } | undefined {
   if (geo.index || !supports(geo)) return undefined
   const ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti) || ti.builtBlocks !== blockCount(ti.triangles) || !ti.triangles || geo.attributes.position.count !== ti.triangles * 3) return undefined
@@ -165,7 +165,7 @@ export function boundsFromIndex(geo: any): { box: Float64Array; version: number 
  * `boundsFromIndex`), and a ray must not change what the vehicle looks like.
  */
 const rayCache = new WeakMap<object, TriIndex>()
-function rayIndexOf(geo: any): TriIndex | undefined {
+function rayIndexOf(geo: BufferGeometry): TriIndex | undefined {
   const shared = cache.get(geo)
   if (shared && isCurrent(geo, shared) && shared.builtBlocks === blockCount(shared.triangles)) return shared
   let ti = rayCache.get(geo)

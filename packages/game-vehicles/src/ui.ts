@@ -1,4 +1,5 @@
 /** Damage-map widgets (SVG top-down map, band buttons, legend, health bar, scenario buttons). Optional: nothing else depends on it. */
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 
 const SVGNS = 'http://www.w3.org/2000/svg'
@@ -29,7 +30,7 @@ export function installUi(kit: Kit): void {
     return e
   }
   /** "Front door · Dented 38%" */
-  function zoneLabel(z: any): string {
+  function zoneLabel(z: DamageZone): string {
     const B = kit.bands[kit.bandOf(z.health)]
     return z.name + ' · ' + B.name + ' ' + z.health + '%'
   }
@@ -49,10 +50,10 @@ export function installUi(kit: Kit): void {
     const sel = o.selected
     host.innerHTML = ''
     const Z = c.zones
-    const ext = Z.filter(function (z: any) {
+    const ext = Z.filter(function (z: DamageZone) {
       return !z.internal
     })
-    const inn = Z.filter(function (z: any) {
+    const inn = Z.filter(function (z: DamageZone) {
       return z.internal
     })
     if (!ext.length) {
@@ -63,7 +64,7 @@ export function installUi(kit: Kit): void {
     let x1 = -1e9
     let z0 = 1e9
     let z1 = -1e9
-    ext.forEach(function (z: any) {
+    ext.forEach(function (z: DamageZone) {
       x0 = Math.min(x0, z.map[0])
       x1 = Math.max(x1, z.map[1])
       z0 = Math.min(z0, z.map[2])
@@ -140,13 +141,13 @@ export function installUi(kit: Kit): void {
       .sort(function (a: any, b: any) {
         return (b.map[1] - b.map[0]) * (b.map[3] - b.map[2]) - (a.map[1] - a.map[0]) * (a.map[3] - a.map[2])
       })
-      .forEach(function (z: any) {
+      .forEach(function (z: DamageZone) {
         node(z, X(z.map[2]), Y(z.map[1]), X(z.map[3]) - X(z.map[2]), Y(z.map[0]) - Y(z.map[1]), svg)
       })
     if (inn.length) {
       const tl = sv('text', { x: pad, y: stripY, class: 'dm-sub' }, svg)
       tl.textContent = T('inside')
-      inn.forEach(function (z: any, i: number) {
+      inn.forEach(function (z: DamageZone, i: number) {
         const col = i % cols
         const row = Math.floor(i / cols)
         const x = pad + col * (tw + 6)

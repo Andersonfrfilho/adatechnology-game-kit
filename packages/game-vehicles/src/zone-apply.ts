@@ -1,6 +1,7 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
 import type { Mesh } from 'three'
 
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
@@ -34,7 +35,7 @@ export function installZoneApply(kit: Kit) {
     fadePaint(c)
     I.hurtEngine(c, 0.45)
     const inv = I.worldInverseOf(c)
-    ;(c.zones || []).forEach(function (z: any) {
+    ;(c.zones || []).forEach(function (z: DamageZone) {
       if (z.internal || ['panel', 'door', 'roof', 'lid', 'hood', 'bumper'].indexOf(z.type) < 0) return
       c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.rust + legacyZoneId(z)))
       I.zoneDecals(c, z, { rust: 3 }, I.zoneCands(c, z, inv))
@@ -124,7 +125,7 @@ export function installZoneApply(kit: Kit) {
     const H = zs.health || {}
     const FL = zs.flags || {}
     c.zoneState = { health: {}, flags: Object.assign({}, FL) }
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       z.health = H[z.id] == null ? 100 : clamp(Math.round(H[z.id]), 0, 100)
       z.band = I.bandOf(z.health)
       c.zoneState.health[z.id] = z.health
@@ -134,7 +135,7 @@ export function installZoneApply(kit: Kit) {
     let any = false
     c.zoneDrops = []
     c.zoneErrors = c.zoneErrors || []
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       if (z.health >= 100) return
       any = true
       c.rand = rng(strHash((c.seedKey || c.key) + '|' + legacyZoneId(z) + '|' + z.band))
@@ -142,15 +143,15 @@ export function installZoneApply(kit: Kit) {
         const b = z.band
         if (z.type === 'wheel' && z.fxKey === 'landing_gear' && c.meta.kind === 'plane') I.gearBand(c, z, b)
         else if (z.type === 'wheel')
-          z.wheels.forEach(function (w: any) {
+          z.wheels.forEach(function (w) {
             I.wheelBand(c, z, w, b)
           })
         else if (z.type === 'glass')
-          z.glass.forEach(function (g: any) {
+          z.glass.forEach(function (g) {
             I.glassBand(c, z, g, b)
           })
         else if (z.type === 'light')
-          z.lights.forEach(function (Lt: any) {
+          z.lights.forEach(function (Lt) {
             I.lightBand(c, z, Lt, b)
           })
         else if (z.type === 'internal') I.internalBand(c, z, b)
@@ -159,16 +160,16 @@ export function installZoneApply(kit: Kit) {
         else if (z.type === 'part') I.partBand(c, z, b, dirty)
         else I.panelBand(c, z, b, dirty)
         if (z.type !== 'glass')
-          z.glass.forEach(function (g: any) {
+          z.glass.forEach(function (g) {
             if (b === 1 && g !== z.glass[0]) return
             I.glassBand(c, z, g, b === 4 ? 4 : b)
           })
         if (z.type !== 'light')
-          z.lights.forEach(function (Lt: any) {
+          z.lights.forEach(function (Lt) {
             I.lightBand(c, z, Lt, b)
           })
         if (z.type !== 'wheel' && !z.track)
-          z.wheels.forEach(function (w: any) {
+          z.wheels.forEach(function (w) {
             I.wheelBand(c, z, w, b)
           })
         if (z.sub && z.type !== 'internal' && b >= 2)

@@ -1,4 +1,5 @@
 /** Automatic zone derivation for each vehicle family. */
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { legacyGlassId, legacyLightId } from './legacy-seeds'
 
@@ -778,7 +779,7 @@ export function installZoneAuto(kit: Kit) {
       glassDone = true
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: any) {
+      Z = Z.filter(function (z: DamageZone) {
         return z.type !== 'glass'
       }) /* the aircraft glass stays in the cabin */
     } else if (fam === 'heli') {
@@ -837,7 +838,7 @@ export function installZoneAuto(kit: Kit) {
       glassZones(true)
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: any) {
+      Z = Z.filter(function (z: DamageZone) {
         return z.type !== 'glass'
       }) /* glass goes to the nose and the cabin */
     } else {

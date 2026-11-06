@@ -112,6 +112,19 @@ export interface VehiclePart {
 /** A part label: a plain string, or a locale key (`parts.<key>`) with an optional text override. */
 export type PartLabel = string | { key: string; label?: string }
 
+/** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
+export interface VehicleLamp {
+  group: ThreeObject | null
+  lens: ThreeObject[]
+  inner: ThreeObject[]
+  kind: string
+  tint: string
+  broken: boolean
+  cracked?: boolean
+  dark?: boolean
+  [extra: string]: unknown
+}
+
 /** A damage zone of a built vehicle. */
 export interface DamageZone {
   id: string
@@ -123,7 +136,12 @@ export interface DamageZone {
   health: number
   band: number
   internal?: boolean
-  owned?: boolean
+  /** The objects of the vehicle the zone holds (resolved when the zones are derived). */
+  owned: ThreeObject[]
+  /** The lamps, panes and wheels the zone holds. */
+  lights: VehicleLamp[]
+  glass: ThreeObject[]
+  wheels: ThreeObject[]
   tags: string[]
   /** `[xMin, xMax, zMin, zMax]` rectangle on the top-down damage map. */
   map: [number, number, number, number]

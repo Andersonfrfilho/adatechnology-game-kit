@@ -1,4 +1,5 @@
 /** Damage scenarios and the scenario registry. */
+import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 
@@ -44,7 +45,7 @@ export function installScenarios(kit: Kit) {
     const health: Record<string, number> = {}
     const flags: any = {}
     const rand = rng(strHash((c.seedKey || c.key || '') + '|' + ((S && S.seedId) || sc)))
-    function set(z: any, v: number) {
+    function set(z: DamageZone, v: number) {
       health[z.id] = clamp(Math.round(v), 0, 100)
     }
     const X: any = {
@@ -67,7 +68,7 @@ export function installScenarios(kit: Kit) {
     }
     if (S) {
       if (S.init) S.init(X)
-      Zs.forEach(function (z: any) {
+      Zs.forEach(function (z: DamageZone) {
         X.center = I.boxCenter(z.box)
         X.isWindshield = z.tags.indexOf('windshield') >= 0
         S.zone(z, X)
@@ -80,16 +81,16 @@ export function installScenarios(kit: Kit) {
     const Zs = I.zonesOf(c)
     let s = 0
     let w = 0
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       s += z.health * z.weight
       w += z.weight
     })
     let h = w ? Math.round(s / w) : 100
     /* floor by the worst structural zone: a destroyed or torn-off zone does not leave the vehicle "Intact" on average */
-    const st = Zs.filter(function (z: any) {
+    const st = Zs.filter(function (z: DamageZone) {
       return !z.internal && z.type !== 'glass' && z.type !== 'light'
     })
-      .map(function (z: any) {
+      .map(function (z: DamageZone) {
         return z.health
       })
       .sort(function (a: number, b: number) {
@@ -103,9 +104,9 @@ export function installScenarios(kit: Kit) {
         }, 0) / w3.length
       h = Math.min(h, Math.round(st[0] + 30), Math.round(m3 + 22))
     }
-    const gl = Zs.filter(function (z: any) {
+    const gl = Zs.filter(function (z: DamageZone) {
       return z.type === 'glass' || z.type === 'light'
-    }).map(function (z: any) {
+    }).map(function (z: DamageZone) {
       return z.health
     })
     if (gl.length) h = Math.min(h, Math.round(Math.min.apply(null, gl) + 55))
@@ -117,13 +118,13 @@ export function installScenarios(kit: Kit) {
     const own = obj ? I.ownerOf(c, obj) : null
     if (own) return own
     let best: any = null
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       if (z.internal) return
       if (I.boxContains(z.box, p.x, p.y, p.z, 0.03) && (!best || I.boxVolume(z.box) < I.boxVolume(best.box))) best = z
     })
     if (best) return best
     let bd = 1e9
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       if (z.internal) return
       const d = I.boxDistance(z.box, p)
       if (d < bd) {
@@ -139,7 +140,7 @@ export function installScenarios(kit: Kit) {
     const main = kit.zoneAt(c, p, obj)
     const Rr = 0.35 + 0.35 * force
     const out: any = []
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       const d = z === main ? 0 : I.boxDistance(z.box, p)
       let dmg = 0
       if (z === main) dmg = force * 36

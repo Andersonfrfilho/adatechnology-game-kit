@@ -1,5 +1,5 @@
 /** Glass panes: windshield quads, side windows and ghost glass. */
-import type { Mesh, Object3D } from 'three'
+import type { BufferGeometry, Mesh, Object3D } from 'three'
 
 import type { BuildContext, Kit } from './types'
 
@@ -14,7 +14,7 @@ export function installGlass(kit: Kit) {
   I.paneSeals = paneSeals
 
   /* ================= glass ================= */
-  kit.addGlass = function (c: BuildContext, geo: any, label: any, type?: any, o?: any) {
+  kit.addGlass = function (c: BuildContext, geo: BufferGeometry, label: any, type?: any, o?: any) {
     o = o || {}
     if (!geo.attributes.uv || o.reuv) o.aspect = uvProject(geo, o.uvAxes)
     const m = c.add(geo, o.mat || MATERIALS.glass)
@@ -40,7 +40,7 @@ export function installGlass(kit: Kit) {
     let pos = o.pos
     if (!pos) {
       geo.computeBoundingBox()
-      pos = geo.boundingBox.getCenter(new V3()).add(m.position)
+      pos = geo.boundingBox!.getCenter(new V3()).add(m.position)
     }
     c.part('glass', L, m, pos, o.reach || 0.9)
     return m
