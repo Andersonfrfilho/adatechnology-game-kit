@@ -56,7 +56,7 @@ const SIXTY_HZ_MS = 16.7
 const CONVERGE_SECONDS = 2
 const SETTLED_SHARE = 0.05
 const MAX_SWING = 0.1
-const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
+const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((/** @type {number} */ ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
 let chainSetupBuffers = 0
 const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
 // the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
@@ -206,7 +206,7 @@ function pause(ms) {
 async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE_TIMEOUT_MS } = {}) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
-    await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
+    await page.evaluate((/** @type {string} */ weapon) => window.__testRoom.equip(weapon), id)
     await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push(`${id} never got ready`))
     await pause(DRAW_MS)
     const fired = await pullUntilItGoes(id, aim)

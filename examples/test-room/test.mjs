@@ -287,7 +287,7 @@ if (runs('hands')) {
       window.C = {
         r,
         key: (code, extra = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { code, ...extra })),
-        at: (name) => {
+        at: (/** @type {string} */ name) => {
           const part = r.scene.getObjectByName('weapon-viewmodel')?.getObjectByName(name)
           if (!part) return null
           part.updateWorldMatrix(true, false)
@@ -295,7 +295,7 @@ if (runs('hands')) {
           return [e[12], e[13], e[14]]
         },
         view: (position, target, fov = 40) => r.setDebugCamera({ position, target, fov }),
-        armed: (id) => {
+        armed: (/** @type {string} */ id) => {
           r.setDebugCamera(null)
           r.resume()
           window.S.look()
@@ -493,7 +493,7 @@ if (runs('hands')) {
     const CELL = { w: 384, h: 216 }
     const images = []
     for (const id of CI ? [] : ids) {
-      await page.evaluate((tool) => {
+      await page.evaluate((/** @type {string} */ tool) => {
         const r = window.__testRoom
         r.setTool(tool)
         for (let i = 0; i < 45; i++) r.update(1 / 60)

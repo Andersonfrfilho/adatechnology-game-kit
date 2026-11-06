@@ -13,7 +13,12 @@ export function createModule(options = {}) {
   return createVegetationTestModule({ GameVegetationSpecies: defaultVegetationSpecies(), ...options })
 }
 
-/** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the vegetation area. Returns the room's module report. */
+/**
+ * Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the vegetation area. Returns the room's module report.
+ * @param {{ openArea: (arg0: string) => void; }} room
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createVegetationTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = loadVegetationTestModule(room, { GameVegetationSpecies: defaultVegetationSpecies(), ...options, locale: lang })

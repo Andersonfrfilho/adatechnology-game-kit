@@ -47,7 +47,7 @@ await page.evaluate(() => {
   const room = window.__testRoom
   const A = (window.__audit = {})
   A.spawnAt = [-7, 0, -6]
-  A.fresh = (id, extra = []) => {
+  A.fresh = (/** @type {string} */ id, extra = []) => {
     room.clear()
     room.setDebugCamera(null)
     const so = room.spawn(id, A.spawnAt, 0)
@@ -105,7 +105,11 @@ await page.evaluate(() => {
 })
 
 const sleep = (/** @type {number} */ ms) => page.waitForTimeout(ms)
-/** Run `act` in the page, then sample the metrics every 100 ms for `seconds` (frame time at the peak, the most fragments and particles). */
+/**
+ * Run `act` in the page, then sample the metrics every 100 ms for `seconds` (frame time at the peak, the most fragments and particles).
+ * @param {{ (k: string): number; (): number; (): number; (): number; (): number; (): number; }} act
+ * @param {string | undefined} [arg]
+ */
 async function measure(act, seconds = 2.5, arg) {
   const before = await page.evaluate(() => window.__audit.metrics())
   const cost = await page.evaluate(act, arg)
@@ -155,7 +159,7 @@ await snap('00-inteiro')
 
 const trial = (/** @type {string} */ kind) => async () => {
   await fresh()
-  const m = await measure((k) => {
+  const m = await measure((/** @type {string} */ k) => {
     const t = performance.now()
     window.__testRoom.testTable.trial(k, window.__audit.so.objectId)
     return Math.round((performance.now() - t) * 10) / 10

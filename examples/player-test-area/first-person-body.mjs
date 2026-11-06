@@ -68,6 +68,9 @@ await tab.evaluate(() => {
       }
     },
     nearest(camera) {
+      /**
+         * @type {{ d: number; at: string; }[]}
+         */
       const out = []
       const box = new T.Box3()
       avatar.root.updateMatrixWorld(true)

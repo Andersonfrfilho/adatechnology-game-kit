@@ -49,7 +49,7 @@ const hand = () => page.evaluate(() => ({ door: window.__testRoom.avatarState().
 
 for (const mode of modes) {
   console.log(`--- ${mode} person`)
-  await page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
+  await page.evaluate((/** @type {string} */ m) => window.__testRoom.setCameraMode(m), mode)
   const id = await standAtDoor()
   await page.waitForTimeout(500)
   const before = await doorsOpen()

@@ -114,7 +114,7 @@ function loadSteps(room, options, lang) {
   const on = (/** @type {string | number} */ key) => options[key] !== false
   const label = (/** @type {string | number} */ key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
   const steps = []
-  const mod = (key, create, before) => {
+  const mod = (/** @type {string} */ key, create, /** @type {{ (): void; (): void; } | undefined} */ before) => {
     if (!on(key)) return
     steps.push({
       key,

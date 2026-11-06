@@ -127,7 +127,7 @@ const holdUntil = async (/** @type {string[]} */ keys, /** @type {string} */ don
 }
 const count = (/** @type {string} */ list, test = '') => page.evaluate(([l, s]) => window[l].filter((e) => !s || (e.id ?? e.type ?? '').startsWith(s)).length, [list, test])
 const look = (/** @type {number[]} */ eye, /** @type {number[]} */ target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
-const tool = (/** @type {string} */ id) => page.evaluate((i) => window.__testRoom.setTool(i), id)
+const tool = (/** @type {string} */ id) => page.evaluate((/** @type {string} */ i) => window.__testRoom.setTool(i), id)
 const now = () => page.evaluate(() => performance.now())
 
 
@@ -148,7 +148,7 @@ const fresh = async () => {
   if (load >= 0) await collect()
   load++
   await boot()
-  await page.evaluate((c) => window.__testRoom.setCameraMode(c), camera)
+  await page.evaluate((/** @type {string} */ c) => window.__testRoom.setCameraMode(c), camera)
 }
 /** One blow: uses the tool (or kicks) and waits for the room to swing it (a `strike` or `melee` line); a tool still drawing or recovering ignores the
  * use, so it tries again, up to three times. Then waits for the blow to land. */

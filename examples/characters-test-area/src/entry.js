@@ -11,6 +11,7 @@ import { UNDEAD_TYPES, createUndead, createUndeadPack, getUndeadAge } from '@ada
 export { BODY_MATERIAL_DEF, createCharactersTestModule, registerBodyMaterial }
 
 /** The module with the kit's own packs; options replace or extend any of them (the game's numbers, its own professions). */
+/** @param {Partial<Parameters<typeof createCharactersTestModule>[0]>} [options] */
 export function createModule(options = {}) {
   return createCharactersTestModule({
     packs: [createPeoplePack(), createUndeadPack()],
@@ -28,6 +29,10 @@ export function createModule(options = {}) {
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), puts the body material in the room's world, loads it and opens the characters area. Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createCharactersTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   registerBodyMaterial(room.world)

@@ -32,7 +32,7 @@ const state = () =>
   })
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `push-${name}.png`), timeout: 180000 })
 const look = (eye, target) => page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, target])
-const camera = (/** @type {string} */ mode) => page.evaluate((m) => window.__testRoom.setCameraMode(m), mode)
+const camera = (/** @type {string} */ mode) => page.evaluate((/** @type {string} */ m) => window.__testRoom.setCameraMode(m), mode)
 /** Holds E until the ring has gone `until` of the way (real seconds of a slow GL run). */
 const holdUntil = async (/** @type {{ (): boolean; (): boolean; (): boolean; }} */ test) => {
   await page.keyboard.down('KeyE')

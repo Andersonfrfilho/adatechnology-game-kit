@@ -39,7 +39,10 @@ export function loadModule(room, options = {}) {
   return room.loadModule(createModule(options))
 }
 
-/** Loads it and opens its area. Returns the room's module report. */
+/**
+ * Loads it and opens its area. Returns the room's module report.
+ * @param {{ openArea: (arg0: string) => void; }} room
+ */
 export function loadInto(room, options = {}) {
   const report = loadModule(room, options)
   room.openArea(PROVING_AREA_ID)

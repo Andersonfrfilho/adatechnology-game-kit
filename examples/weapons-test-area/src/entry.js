@@ -13,6 +13,10 @@ export { createWeaponsTestModule }
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weapons area (behind the room's loading indicator). Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createWeaponsTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createWeaponsTestModule({ thumbnailBase: SITE_THUMBNAIL_BASE, items: itemModels, ...options, locale: lang }))

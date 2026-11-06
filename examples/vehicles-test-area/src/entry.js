@@ -9,11 +9,16 @@ import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule } fr
 export { createVehiclesTestModule, loadVehiclesTestModule }
 
 /** The module with the kit's own fleet; options replace or extend any of it. */
+/** @param {Partial<Parameters<typeof createVehiclesTestModule>[0]>} [options] */
 export function createModule(options = {}) {
   return createVehiclesTestModule({ fleet: defaultVehicleFleet(), ...options })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it (the room's three.js is learned from the room) and opens the vehicles area. Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createVehiclesTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = loadVehiclesTestModule(room, { fleet: defaultVehicleFleet(), ...options, locale: lang })

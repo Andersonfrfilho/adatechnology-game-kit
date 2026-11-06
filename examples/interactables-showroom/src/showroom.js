@@ -240,6 +240,7 @@
     /**
        * @param {boolean} cast
        * @param {boolean} receive
+       * @param {THREE.MeshLambertMaterial | THREE.MeshStandardMaterial} material
        */
     mesh(material, cast, receive) {
       const g = new T.BufferGeometry()
@@ -255,7 +256,10 @@
       return m
     }
   }
-  /** Merges non-indexed copies of geometries (with per-geometry vertex color) into one. */
+  /**
+     * Merges non-indexed copies of geometries (with per-geometry vertex color) into one.
+     * @param {({ geo: THREE.CylinderGeometry; matrix: THREE.Matrix4; color: number; } | { geo: THREE.IcosahedronGeometry; matrix: THREE.Matrix4; color: number; })[]} list
+     */
   function mergeColored(list) {
     const pos = []
     const nor = []
@@ -286,6 +290,7 @@
      * @param {number} z1
      * @param {number} y
      * @param {number} meters
+     * @param {THREE.MeshLambertMaterial | THREE.MeshStandardMaterial} material
      */
   function texturedPlane(x0, z0, x1, z1, y, material, meters) {
     const g = new T.PlaneGeometry(x1 - x0, z1 - z0)
@@ -303,6 +308,9 @@
   // Renderer, scene, lights, sky
   // ---------------------------------------------------------------------------------------------------------------------------
   const canvas = $('#c')
+  /**
+     * @type {THREE.WebGLRenderer}
+     */
   let renderer
   try {
     renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true })
@@ -322,6 +330,9 @@
   scene.fog = new T.Fog(0xcfe0ec, 45, 150)
   const camera = new T.PerspectiveCamera(72, 1, 0.06, 400)
   let terrain = null
+  /**
+     * @type {{ group: THREE.Object3D<THREE.Object3DEventMap>; sync: (arg0: THREE.Vector3) => void; } | null}
+     */
   let terrainView = null
   camera.rotation.order = 'YXZ'
   scene.add(camera)
@@ -378,7 +389,7 @@
 
   function buildEnvironment() {
     const q = state.quality
-    const std = (p) => (q === 'game' ? new T.MeshLambertMaterial(p) : new T.MeshStandardMaterial(Object.assign({ roughness: 0.9, metalness: 0 }, p)))
+    const std = (/** @type {THREE.MeshLambertMaterialParameters | undefined} */ p) => (q === 'game' ? new T.MeshLambertMaterial(p) : new T.MeshStandardMaterial(Object.assign({ roughness: 0.9, metalness: 0 }, p)))
     const vc = std({ vertexColors: true })
     const glassMat = std({ vertexColors: true, transparent: true, opacity: 0.22, depthWrite: false })
     const woodFloor = std({ map: woodTexture() })
@@ -739,7 +750,7 @@
       if (!e.hh) continue
       const old = e.group
       e.root.remove(old)
-      old.traverse((o) => {
+      old.traverse((/** @type {{ geometry: THREE.PlaneGeometry; }} */ o) => {
         if (o.geometry && o.geometry !== UNIT_PLANE) o.geometry.dispose()
       })
       // wires were children of root: drop everything but the new group
@@ -753,6 +764,9 @@
   }
 
   // --- lamps and the water tank: showroom-only objects, still driven by the engine --------------------------------------------
+  /**
+     * @type {{ id: string; light: THREE.PointLight; bulbMat: THREE.MeshBasicMaterial; on: boolean; }[]}
+     */
   const lamps = []
   /**
      * @param {string} id
@@ -1028,7 +1042,7 @@
     shoe: [['box', 1, 0.7, 1, 0, 1]],
   }
   const items = (() => {
-    const mk = (geo) => {
+    const mk = (/** @type {THREE.CylinderGeometry | THREE.SphereGeometry | THREE.BoxGeometry} */ geo) => {
       const mat = state.quality === 'game' ? new T.MeshLambertMaterial() : new T.MeshStandardMaterial({ roughness: 0.65, metalness: 0.05 })
       const mesh = new T.InstancedMesh(geo, mat, 900)
       mesh.frustumCulled = false

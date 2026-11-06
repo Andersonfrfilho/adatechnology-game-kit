@@ -15,7 +15,7 @@ import { create } from '@adatechnology/game-infection'
 
 export { createCrowdTestModule }
 
-const cardOf = (id) => UNDEAD_TYPES.find((card) => card.id === id)
+const cardOf = (/** @type {string} */ id) => UNDEAD_TYPES.find((card) => card.id === id)
 
 /** The body builders of the kit: the Bestiário v17 builder with the undead types' names and eyes. */
 const builders = (THREE) => {

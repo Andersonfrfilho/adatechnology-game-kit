@@ -85,7 +85,7 @@ await page.evaluate((mats) => {
     A.events.length = 0
     return A.so.objectId
   }
-  A.aim = (tool, dist = 2.5, y = 0.6) => {
+  A.aim = (/** @type {string} */ tool, dist = 2.5, y = 0.6) => {
     room.setTool(tool)
     room.look([A.at[0], 1.6, A.at[2] + dist], [A.at[0], y, A.at[2]])
   }
@@ -120,7 +120,7 @@ async function act(m, kind) {
       return window.__testRoom.use(0)
     })
   } else {
-    await page.evaluate((k) => window.__testRoom.testTable.trial(k, window.__snd.so.objectId), kind)
+    await page.evaluate((/** @type {string} */ k) => window.__testRoom.testTable.trial(k, window.__snd.so.objectId), kind)
   }
   await sleep(kind === 'blast' ? 2500 : 1200)
   return collect()
