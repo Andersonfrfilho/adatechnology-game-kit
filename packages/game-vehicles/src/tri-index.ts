@@ -1,8 +1,7 @@
 /** Boxes of the triangles of a geometry, grouped in blocks, so a region query visits the few triangles near it instead of every one. */
-import type { Box3, BufferAttribute, BufferGeometry, Intersection, InterleavedBufferAttribute, Material, Matrix4, Mesh, Object3D, Ray, Raycaster, Sphere, Vector3 } from 'three'
+import type { Box3, BufferAttribute, BufferGeometry, Intersection, InterleavedBufferAttribute, Material, Matrix4, Mesh, Object3D, Ray, Raycaster, Sphere, THREE_NS, Vector3 } from './three-types'
 
-import type { Three } from './types'
-
+type Three = typeof THREE_NS
 
 export const TRI_BLOCK = 32
 

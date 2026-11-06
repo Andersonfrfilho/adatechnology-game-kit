@@ -1,5 +1,4 @@
 /** The kernel's types of the house's systems and state: materials, mirrors, cars, vegetation, interaction, room lights, the interactables kit and the build. */
-import type * as VegetationSpecies from '@adatechnology/game-vegetation-species'
 import type * as THREE_NS from 'three'
 import type { ResultGate } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
@@ -9,7 +8,7 @@ import type { Props3d } from '@adatechnology/game-props3d'
 import type * as Vegetation from '@adatechnology/game-vegetation'
 import type * as VegetationThree from '@adatechnology/game-vegetation/three'
 import type * as Interactables from '@adatechnology/game-interactables'
-import type { Effects, Screen, ThreeAdapter } from '@adatechnology/game-interactables-three'
+import type { InteractablesEffects, InteractablesGfx, InteractablesScreen, SpeciesLibrary } from './adapter-shapes.js'
 import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, HouseholdKit, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
 import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
 import type { BuildOptions, Damageable, House, HouseFleetDamageable, HouseRenderer, HouseInteractable, LightingOptions } from './types.js'
@@ -127,7 +126,7 @@ export interface KernelCars {
 /** The vegetation packages the game injected (`cfg.vegetation`): what the house uses of them. */
 export interface VegetationLibs {
   G: Pick<typeof Vegetation, 'scatter' | 'buildLot'> & Pick<typeof VegetationThree, 'createLotObject' | 'createVegetationMaterials'>
-  S: Pick<typeof VegetationSpecies, 'toSpec'>
+  S: SpeciesLibrary
 }
 
 /** The plants of one group and height, collected by `vegItem` and merged by `assembleVegetation`. */
@@ -406,9 +405,9 @@ export interface KernelLightsRoomLight {
 export interface InteractablesRefs {
   GI: typeof Interactables
   HH: HouseholdKit
-  GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): ThreeAdapter }
+  GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): InteractablesGfx }
   A: FloorplanAdapter
-  gfx: ThreeAdapter
+  gfx: InteractablesGfx
   items: boolean
   effects: boolean
   effectSink: unknown
@@ -467,8 +466,8 @@ export interface InteractablesState {
   roomStates: Map<string, KitRoomState>
   lampRoom: Map<string, string>
   anim: Map<string, { object: string; part: string; target: number; t0: number }>
-  screens: Map<string, Screen>
-  efx: Effects | null
+  screens: Map<string, InteractablesScreen>
+  efx: InteractablesEffects | null
   items: THREE_NS.Mesh | null
   itemsDirty: boolean
   itemsT: number
@@ -499,9 +498,9 @@ export interface HouseInteractives {
   warnings: string[]
   water: WaterNetwork
   /** TV screens (id -> kit screen). */
-  screens: Map<string, Screen>
+  screens: Map<string, InteractablesScreen>
   /** The particle system (smoke). */
-  effects(): Effects | null
+  effects(): InteractablesEffects | null
   /** (x, z, floor) -> inside a wall (the check of the furniture doors' sweep). */
   isBlocked: BlockedFn
   /** The kit objects one piece of furniture became (a sink: basin, cabinet, overhead). */

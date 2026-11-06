@@ -1,5 +1,5 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
-import type { Object3D, Vector3 } from 'three'
+import type { Object3D, Vector3 } from './three-types'
 
 import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

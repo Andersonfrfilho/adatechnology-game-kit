@@ -5,7 +5,7 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
-import type { BufferGeometry, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from 'three'
+import type { BufferGeometry, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
 
 import type { BuildContext, KitShared, SceneNode, Three } from '../types'
 import type { DamageZone, VehicleContext, VehicleKit } from '../api'

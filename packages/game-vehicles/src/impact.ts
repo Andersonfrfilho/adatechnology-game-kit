@@ -1,5 +1,5 @@
 /** Impact resolution: direction, surface lookup, deformation, shards and sparks. */
-import type { Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { Mesh, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import type { ImpactOptions, VehiclePart } from './api'
 import type { Puddle } from './fluids'

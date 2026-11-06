@@ -1,5 +1,5 @@
 /** Rollover physics and the rolled-over state. */
-import type { Mesh, Object3D, Vector3 } from 'three'
+import type { Mesh, Object3D, Vector3 } from './three-types'
 
 import type { RollMesh, RollState } from './api'
 

@@ -1,5 +1,5 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
-import type { BufferGeometry, Intersection, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from 'three'
+import type { BufferGeometry, Intersection, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from './three-types'
 
 import type { MaterialOptions } from './materials'
 import type { DamageZone } from './api'

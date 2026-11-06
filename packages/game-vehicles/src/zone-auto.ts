@@ -1,5 +1,5 @@
 /** Automatic zone derivation for each vehicle family. */
-import type { Box3, Object3D } from 'three'
+import type { Box3, Object3D } from './three-types'
 
 import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'

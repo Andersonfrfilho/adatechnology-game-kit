@@ -2,7 +2,7 @@
  * Damageable parts: what a bullet, a bat or a crash can hurt on a built vehicle, as boxes. Port of `coletarDanificaveis` and `tipoDaZona`
  * (frota-leve.js 14391-14405), driven by the zones the kit already derives, so it works for any vehicle of any pack.
  */
-import type { Matrix4 } from 'three'
+import type { Matrix4 } from './three-types'
 
 import type { Damageable, DamageZone } from './api'
 import type { BuildContext, Kit } from './types'

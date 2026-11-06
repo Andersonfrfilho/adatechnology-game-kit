@@ -1,5 +1,5 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
-import type { BufferGeometry, ColorRepresentation, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import type { FlyingPiece } from './api'
 

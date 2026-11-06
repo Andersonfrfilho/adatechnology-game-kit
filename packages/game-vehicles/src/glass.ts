@@ -1,5 +1,5 @@
 /** Glass panes: windshield quads, side windows and ghost glass. */
-import type { BufferGeometry, Material, Mesh, Object3D, Vector2, Vector3 } from 'three'
+import type { BufferGeometry, Material, Mesh, Object3D, Vector2, Vector3 } from './three-types'
 
 import type { LabelArgument } from './context'
 import type { CutTest, TumbleSpec } from './geometry'

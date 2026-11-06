@@ -1,5 +1,5 @@
 /** Spoked wheels and track assemblies. */
-import type { Group, Material } from 'three'
+import type { Group, Material } from './three-types'
 
 import type { LabelArgument } from './context'
 import type { BuildContext, Kit } from './types'

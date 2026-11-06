@@ -1,5 +1,5 @@
 /** Armoured vehicle details (plating, hatches, add-on armour) and the applyArmor helper. */
-import type { MeshStandardMaterial } from 'three'
+import type { MeshStandardMaterial } from './three-types'
 
 import type { BuildContext, Kit } from './types'
 import { clamp, hash } from './util'

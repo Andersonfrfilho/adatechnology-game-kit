@@ -1,5 +1,5 @@
 /** Car body shell, panels and body helpers. */
-import type { BufferGeometry, ColorRepresentation, Material, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, Material, Object3D, Vector3 } from './three-types'
 
 import type { CutTest, PathItem, TumbleSpec } from './geometry'
 import type { BuildContext, Kit, SceneNode } from './types'

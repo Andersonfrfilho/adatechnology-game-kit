@@ -1,5 +1,5 @@
 /** Fluid types (oil, stains, rain...) and the splat/puddle system. */
-import type { BufferGeometry, Color, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three'
+import type { BufferGeometry, Color, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from './three-types'
 
 import type { FluidDefinition } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
