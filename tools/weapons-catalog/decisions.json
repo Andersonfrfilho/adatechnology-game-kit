@@ -5575,6 +5575,10 @@
         "length": 801,
         "barrel": 559,
         "emptyMass": 39,
+        "barrelHeat": {
+          "barrels": 6,
+          "barrelMass": 2
+        },
         "options": {
           "rpm": 3000
         },

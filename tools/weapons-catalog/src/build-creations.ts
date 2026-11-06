@@ -45,6 +45,7 @@ const spec = (name: string, decision: NewWeaponDecision, row: GalleryWeaponRow, 
     ...(decision.muzzleSpeed === undefined && inherited === undefined ? {} : { muzzleSpeed: decision.muzzleSpeed ?? inherited }),
     ...(decision.noise === undefined ? {} : { noise: decision.noise }),
     ...(decision.modes === undefined ? {} : { modes: decision.modes }),
+    ...(decision.barrelHeat === undefined ? {} : { barrelHeat: decision.barrelHeat }),
     ...(Object.keys(extrasOf(decision)).length === 0 ? {} : { extras: extrasOf(decision) }),
   }
 }

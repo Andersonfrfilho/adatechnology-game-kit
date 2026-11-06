@@ -169,6 +169,8 @@ export type NewWeaponDecision = {
   readonly modes?: ModeChoice
   readonly spin?: { readonly upSeconds: number; readonly holdSeconds: number }
   readonly rpmRange?: readonly [number, number]
+  /** Rotary barrels sharing the heat and kg of each barrel, when the category default does not fit (the M134's six 2 kg barrels). */
+  readonly barrelHeat?: { readonly barrels?: number; readonly barrelMass?: number }
   /** Where each number of the row comes from (`length`, `barrel`, `emptyMass`, `rpm`, `capacity`, `reload`, and `muzzleSpeed`/`noise`/`spin` when set). */
   readonly numbers: Readonly<Record<string, NumberNote>>
 }
