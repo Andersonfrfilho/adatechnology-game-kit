@@ -12,6 +12,7 @@
 //   PERF_GATE_BASE=<ref>        compare against another commit (default origin/main)
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
+//   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -21,6 +22,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
+import { batterySkipReason } from './power.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
@@ -37,6 +39,9 @@ const skip = (reason) => {
 }
 
 if (process.env.PRE_PUSH_PERF === '0') skip('PRE_PUSH_PERF=0')
+// on battery the GPU throttles and main's cached run is not comparable: frame budgets run on the charger only, the push is not blocked (tools/gpu/power.mjs)
+const onBattery = batterySkipReason()
+if (onBattery) skip(onBattery)
 
 // playwright-core comes with the workspace (a dependency of the test tools) inside pnpm's store, not at the top of node_modules
 const storeModules = (() => {
