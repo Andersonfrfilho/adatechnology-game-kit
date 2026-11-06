@@ -4654,6 +4654,62 @@
       }
     },
     {
+      "id": "smoke_grenade_hiss",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "explosoes-fogo/gas_leak_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.03,
+            "seconds": 6,
+            "source": "https://freesound.org/people/henrikcederblad/sounds/615668/",
+            "author": "henrikcederblad",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/fire_extinguish_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -2.19,
+            "seconds": 2.59,
+            "source": "https://freesound.org/people/tranzfusion/sounds/642961/",
+            "author": "tranzfusion",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grenade_pin_pull",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "itens-portas/metal_latch_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 0.261,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/metal_latch_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 0.446,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "glass_blunt_heavy",
       "category": "impactos",
       "layers": {
