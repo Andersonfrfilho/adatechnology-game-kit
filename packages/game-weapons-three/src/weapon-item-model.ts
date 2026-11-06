@@ -6,7 +6,6 @@ import type { WeaponGrips } from './item-weapon-draw'
 import { DEFAULT_ITEM_MODELS } from './item-models'
 import type { ItemModels } from './item-models'
 import { buildExplosiveModel, hasExplosiveModel } from './models/explosives'
-import { buildMeleeModel, hasMeleeModel } from './models/melee'
 import { buildProp, weaponProp } from './props'
 
 /** How a weapon is drawn from an item model of game-items-three: the item (default the weapon id), and the turns the laying-down rule gets wrong. */
@@ -34,6 +33,10 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['claw_hammer', { item: 'hammer' }],
   // a shovel is held in both hands: the right on the grip at the end of the shaft, the left 30 cm down the shaft (within the arm's reach from the hold)
   ['shovel', { grips: { handle: -0.46, support: -0.19 } }],
+  // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle (the left 11 cm behind the right); the brass knuckles lie with the ring row across the strike
+  ['kabar', { flip: true }],
+  ['katana', { flip: true, grips: { handle: -0.35, support: -0.46 } }],
+  ['brass_knuckles', { turn: 1 }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -57,12 +60,6 @@ export type WeaponModelDef = Pick<WeaponDef, 'id' | 'category' | 'mass'> & Parti
 /** Whether the gallery drew the explosive a throwable carries. */
 export const hasThrowableModel = (def: Partial<Pick<WeaponDef, 'action'>>): boolean => def.action?.kind === 'throwable' && def.action.explosive !== undefined && hasExplosiveModel(def.action.explosive)
 
-/** Whether the kit drew the melee weapon itself (the KA-BAR, the katana, the brass knuckles). */
-export const hasHandheldModel = (def: Pick<WeaponDef, 'id'>): boolean => hasMeleeModel(def.id)
-
-/** The model of a melee weapon the kit drew, lying as the item models do (see `buildMeleeModel`), or undefined for any other weapon. */
-export const buildHandheldModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>): THREE_NS.Group | undefined => buildMeleeModel(THREE, def.id)
-
 export const buildThrowableModel = (THREE: typeof THREE_NS, def: Partial<Pick<WeaponDef, 'action'>>): THREE_NS.Group | undefined =>
   def.action?.kind === 'throwable' && def.action.explosive !== undefined ? buildExplosiveModel(THREE, def.action.explosive) : undefined
 
@@ -82,7 +79,7 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
     get: (weaponId) => models.get(weaponId),
     itemModelOf,
     buildItemModel,
-    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildHandheldModel(THREE, def) ?? buildThrowableModel(THREE, def) ?? buildProp(THREE, weaponProp(def)),
+    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildThrowableModel(THREE, def) ?? buildProp(THREE, weaponProp(def)),
   }
 }
 

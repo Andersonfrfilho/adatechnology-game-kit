@@ -75,7 +75,7 @@ export type {
 } from './audio'
 export { buildProp, weaponProp, BODY_ACTIONS } from './props'
 export type { WeaponProp } from './props'
-export { buildHandheldModel, buildItemWeaponModel, buildThrowableModel, hasHandheldModel, buildWeaponModel, defaultWeaponProps, hasThrowableModel, itemModelOfWeapon, registerWeaponItemModel } from './weapon-item-model'
+export { buildItemWeaponModel, buildThrowableModel, buildWeaponModel, defaultWeaponProps, hasThrowableModel, itemModelOfWeapon, registerWeaponItemModel } from './weapon-item-model'
 export type { WeaponItemModel, WeaponModelDef, WeaponProps } from './weapon-item-model'
 export { buildExplosiveModel, EXPLOSIVE_MODEL_IDS, hasExplosiveModel } from './models/explosives'
 export { buildModeledProp, buildTripodMountedProp, modeledPropSpec } from './modeled-prop'
