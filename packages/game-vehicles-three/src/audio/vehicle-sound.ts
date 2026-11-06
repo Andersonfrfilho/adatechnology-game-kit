@@ -20,6 +20,10 @@ export type VehicleSoundFrame = {
   readonly surface?: 'asphalt' | 'dirt'
   /** 0..1, how hard the brakes are pressed: the pads squeal as the car comes to a stop without skidding. */
   readonly brake?: number
+  /** An emergency vehicle's siren: `wail` sweeps 650–1500 Hz in ~4 s, `yelp` in a quarter second; absent or `off`, silent. */
+  readonly siren?: 'off' | 'wail' | 'yelp'
+  /** 0..1, how fast a helicopter's rotor turns (the blades spool up and down with it). */
+  readonly rotor?: number
 }
 
 export type VehicleSoundOptions = {
@@ -70,7 +74,7 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
   const self = {}
   const levels: Record<string, number> = {}
   // running: the engine turns; cranking counts down the starter; flare is the RPM the engine overshoots to as it catches
-  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0 }
+  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0, sirenPhase: 0 }
 
   const loopOf = (sound: string): LoopHandle | undefined => {
     let handle = loops.get(sound)
@@ -142,6 +146,16 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
       // the pads squeal in the last metres of a stop on the brakes, while the tyres still grip (a skid is the tyres' sound, not the pads')
       const squeal = clamp01(((frame.brake ?? 0) - 0.3) / 0.4) * clamp01(speed / 0.8) * clamp01((5 - speed) / 2) * (slide > 0 ? 0 : 1)
       setLoop(keys.brakeSqueal, heard * 0.05 * squeal, frame.position, { cutoff: 3200 + 400 * squeal })
+      // the siren's sweep is a triangle in time: up and down between 650 and 1500 Hz
+      const siren = frame.siren ?? 'off'
+      if (siren !== 'off' || loops.has(keys.siren)) {
+        const period = siren === 'yelp' ? 0.25 : 4
+        state.sirenPhase = (state.sirenPhase + frame.dt / period) % 1
+        const tri = state.sirenPhase < 0.5 ? state.sirenPhase * 2 : 2 - state.sirenPhase * 2
+        setLoop(keys.siren, heard * (siren === 'off' ? 0 : 0.07), frame.position, { frequency: 650 + 850 * tri, cutoff: 2600 })
+      }
+      const rotor = clamp01(frame.rotor ?? 0)
+      setLoop(keys.rotor, heard * 0.12 * rotor, frame.position, { cutoff: 180 + 220 * rotor })
     },
     get reading() {
       return { running: state.running, rpm: state.rpm, levels: { ...levels } }

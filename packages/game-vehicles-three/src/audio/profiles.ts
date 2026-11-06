@@ -50,6 +50,10 @@ export type VehicleSoundKeys = {
   readonly brakeSqueal: string
   /** A body hit by the vehicle; a game points it at its own (a zombie, an animal) through `sounds` or the `hit` call. */
   readonly hitBody: string
+  /** An emergency siren, its pitch swept by the vehicle (`frame.siren`). */
+  readonly siren: string
+  /** A helicopter's blades (`frame.rotor`). */
+  readonly rotor: string
 }
 
 export const DEFAULT_VEHICLE_SOUND_KEYS: VehicleSoundKeys = {
@@ -64,6 +68,8 @@ export const DEFAULT_VEHICLE_SOUND_KEYS: VehicleSoundKeys = {
   roll: 'tire_roll',
   brakeSqueal: 'brake_squeal',
   hitBody: 'vehicle_hit_pedestrian',
+  siren: 'siren',
+  rotor: 'helicopter_rotor_loop',
 }
 
 /** The speed of the hit, m/s, where a crash stops being light (≈ 22 km/h: dents and plastic) and where it turns heavy (≈ 50 km/h: metal folds, glass goes). */

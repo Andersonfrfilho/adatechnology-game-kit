@@ -55,6 +55,13 @@ export const VEHICLE_LOOPS: readonly LoopRecipe[] = [
   noiseLoop('tire_skid_dirt', 'lowpass', 700, 0.8, 'tyres sliding on dirt and gravel: a dull, wide hiss'),
   noiseLoop('tire_roll', 'lowpass', 400, 0.7, 'road noise of the tyres rolling, brighter with the speed'),
   // a pad on a disc: a thin, nearly pure whistle near 3.4 kHz (a narrow band of noise, so it wavers as a real squeal does)
+  // a siren: a square through a low-pass, its pitch swept by the vehicle every frame (wail: a slow rise and fall; yelp: a fast one)
+  toneLoop('siren', 'square', 'lowpass', 2600, 0.8, 'emergency siren, the sweep driven by the vehicle'),
+  // the blades: a low rumble chopped at the blade-pass rate (≈ 18 Hz for a light helicopter's main rotor)
+  {
+    ...noiseLoop('helicopter_rotor_loop', 'lowpass', 320, 0.9, 'helicopter rotor: low rumble chopped by the blades'),
+    modulators: [{ target: 'gain', wave: 'sine', rate: 18, depth: 0.45, base: 0.55 }],
+  },
   noiseLoop('brake_squeal', 'bandpass', 3400, 28, 'brake pads squealing on the discs as the car comes to a stop'),
 ]
 

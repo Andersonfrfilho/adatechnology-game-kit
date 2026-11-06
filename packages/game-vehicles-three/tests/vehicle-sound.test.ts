@@ -142,7 +142,7 @@ describe('createVehicleSound', () => {
     car.update({ dt: 1, position: [0, 0, 0], speed: 3, throttle: 1 })
     expect(car.crash(30, [0, 0, 0])).toBe('heavy')
     const ids = new Set([...(VEHICLE_SOUND_BANK.sounds ?? []).map((s) => s.id), ...(VEHICLE_SOUND_BANK.loops ?? []).map((l) => l.id)])
-    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', 'brake_squeal', 'vehicle_hit_pedestrian', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', 'brake_squeal', 'vehicle_hit_pedestrian', 'siren', 'helicopter_rotor_loop', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
   })
 })
 
@@ -177,6 +177,27 @@ describe('brakes, hits and many vehicles', () => {
     car.hit(0.2, [1, 0, 0])
     expect(played.map((p) => p.sound)).toEqual(['vehicle_hit_pedestrian', 'vehicle_hit_pedestrian', 'game_hit_zombie'])
     expect(played[1]?.volume).toBeGreaterThan(played[0]?.volume as number)
+  })
+
+  it('the siren sweeps 650–1500 Hz (wail in ~4 s, yelp in a quarter second) and goes quiet when off; the rotor follows its speed', () => {
+    const { sink, sets } = fakeSink()
+    const car = createVehicleSound(sink)
+    const sweep = (mode: 'wail' | 'yelp', seconds: number): number[] => {
+      const out: number[] = []
+      for (let t = 0; t < seconds; t += 0.01) {
+        car.update({ dt: 0.01, position: [0, 0, 0], speed: 10, throttle: 0, siren: mode })
+        out.push(lastOf(sets, 'siren')?.frequency as number)
+      }
+      return out
+    }
+    const wail = sweep('wail', 4)
+    expect(Math.min(...wail)).toBeLessThan(700)
+    expect(Math.max(...wail)).toBeGreaterThan(1450)
+    const yelp = sweep('yelp', 0.25)
+    expect(Math.max(...yelp) - Math.min(...yelp)).toBeGreaterThan(700)
+    car.update({ dt: 0.01, position: [0, 0, 0], speed: 10, throttle: 0, siren: 'off', rotor: 0.5 })
+    expect(lastOf(sets, 'siren')?.volume).toBe(0)
+    expect(lastOf(sets, 'helicopter_rotor_loop')?.volume).toBeCloseTo(0.06, 6)
   })
 
   it('with a budget only the nearest vehicles keep their loops; one that comes closer takes the place of the farthest', () => {
