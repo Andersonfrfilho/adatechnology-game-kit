@@ -239,24 +239,9 @@
       "count": 2
     }
   },
-  "packages/game-vehicles/src/destructible/clips.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-vehicles/src/destructible/enclosure.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
   "packages/game-vehicles/src/destructible/item.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
-    }
-  },
-  "packages/game-vehicles/src/destructible/subdivide-near.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
     }
   },
   "packages/game-vehicles/src/hood.ts": {
