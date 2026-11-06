@@ -404,11 +404,6 @@
       "count": 21
     }
   },
-  "packages/game-vehicles/src/zone-decals.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 45
-    }
-  },
   "packages/game-vehicles/src/zone-dent.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 22

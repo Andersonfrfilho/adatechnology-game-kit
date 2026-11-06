@@ -1,10 +1,20 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
-import type { BufferGeometry, Matrix4, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, Intersection, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from 'three'
 
 import type { MaterialOptions } from './materials'
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
 import { TRI_BLOCK, triIndexOf } from './tri-index'
+import type { ZoneBox } from './zone-core'
+
+/** A mesh a decal ray can hit: the mesh itself, or a proxy of a heavy one that holds only the triangles of the zone's region. */
+type DecalCandidate = Mesh & { proxyOf?: Mesh; kept?: Uint32Array; keptBox?: Float32Array; keptBlocks?: Float32Array }
+type DecalProxy = DecalCandidate & { proxyOf: Mesh; kept: Uint32Array; keptBox: Float32Array; keptBlocks: Float32Array }
+/** A point of the bodywork found by the rays (`c.vehicle` coordinates) and the mesh under it. */
+export type SurfacePoint = { p: Vector3; n: Vector3; obj?: Object3D }
+/** How many marks of each kind `zoneDecals` puts on a zone. */
+export type DecalCounts = { fine?: number; deep?: number; chip?: number; rust?: number; tear?: number; ding?: number; soot?: number; crater?: number }
+type Region = { lo: number[]; hi: number[] }
 
 export function installZoneDecals(kit: Kit) {
   const THREE = kit.THREE
@@ -52,13 +62,13 @@ export function installZoneDecals(kit: Kit) {
   const _zq = new THREE.Quaternion()
   const _zq2 = new THREE.Quaternion()
   const _zz = new V3(0, 0, 1)
-  function orientDecal(m: any, p: any, n: Vector3, ang: number) {
+  function orientDecal(m: Object3D, p: Vector3, n: Vector3, ang: number) {
     _zq.setFromUnitVectors(_zz, n)
     _zq2.setFromAxisAngle(n, ang || 0)
     m.quaternion.copy(_zq2.multiply(_zq))
     m.position.copy(p).addScaledVector(n, 0.004)
   }
-  function decalMesh(c: BuildContext, geo: BufferGeometry, mat: MeshStandardMaterial, p: any, n: Vector3, ang: number, obj?: any) {
+  function decalMesh(c: BuildContext, geo: BufferGeometry, mat: MeshStandardMaterial, p: Vector3, n: Vector3, ang: number, obj?: Object3D | null) {
     const m = c.add(geo, mat, 0, 0, 0)
     m.castShadow = false
     m.receiveShadow = false
@@ -71,7 +81,7 @@ export function installZoneDecals(kit: Kit) {
     }
     return m
   }
-  function blobGeometry(r: number, rnd: any, jag?: any, ell?: any) {
+  function blobGeometry(r: number, rnd: () => number, jag?: boolean, ell?: number) {
     const s = new THREE.Shape()
     const nz = I.valueNoise(Math.floor(rnd() * 997))
     const N = 18
@@ -84,21 +94,21 @@ export function installZoneDecals(kit: Kit) {
     return new THREE.ShapeGeometry(s)
   }
   /* torn metal: a dark hole with a sharp edge of metal teeth that bend outward */
-  function tearDecal(c: BuildContext, p: any, n: Vector3, r: number, rnd: any, obj: any) {
+  function tearDecal(c: BuildContext, p: Vector3, n: Vector3, r: number, rnd: () => number, obj: Object3D | null | undefined) {
     const N = 13
-    const pts: any = []
+    const pts: number[][] = []
     for (let k = 0; k < N; k++) {
       const a = (k / N) * PI * 2 + (rnd() - 0.5) * 0.3
       const rr = r * (k % 2 ? 0.42 + rnd() * 0.25 : 0.8 + rnd() * 0.35)
       pts.push([Math.cos(a) * rr * 1.25, Math.sin(a) * rr])
     }
     const s = new THREE.Shape()
-    pts.forEach(function (q: number[], i: any) {
+    pts.forEach(function (q: number[], i: number) {
       s[i ? 'lineTo' : 'moveTo'](q[0] * 0.86, q[1] * 0.86)
     })
     const hole = decalMesh(c, new THREE.ShapeGeometry(s), DAMAGE_MATERIALS.hole, p, n, rnd() * 6)
     const hp = hole.parent
-    const pos: any = []
+    const pos: number[] = []
     pts.forEach(function (q: number[], i: number) {
       const q2 = pts[(i + 1) % N]
       const ox = q[0] * 1.12
@@ -167,11 +177,11 @@ export function installZoneDecals(kit: Kit) {
     return { lo, hi }
   }
   /* the candidates of a decal call with the heavy meshes cut down to the region of the zone (the others stay as they are) */
-  function regionCands(c: BuildContext, z: DamageZone, cands: any) {
+  function regionCands(c: BuildContext, z: DamageZone, cands: DecalCandidate[]): (DecalCandidate | null)[] {
     if (!cands.some(heavy)) return cands
     const R = decalRegion(c, z)
     const Mw = c.vehicle.matrixWorld
-    return cands.map(function (o: any) {
+    return cands.map(function (o) {
       if (!heavy(o)) return o
       /* the ray test would have left the bounds of the mesh computed; the mesh keeps that */
       if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere()
@@ -179,15 +189,15 @@ export function installZoneDecals(kit: Kit) {
       return proxyIn(o, Mw, R)
     })
   }
-  function heavy(o: any) {
+  function heavy(o: DecalCandidate) {
     const g = o.geometry
     const pos = g && g.attributes && g.attributes.position
     return (
       o.raycast === THREE.Mesh.prototype.raycast /* a mesh with a raycast of its own (the no-op of marks and puddles) keeps it */ &&
-      !o.isSkinnedMesh &&
+      !(o as SceneNode).isSkinnedMesh &&
       !Array.isArray(o.material) &&
       pos &&
-      !pos.isInterleavedBufferAttribute &&
+      !(pos as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute &&
       pos.itemSize === 3 &&
       !g.groups.length &&
       !(g.morphAttributes && g.morphAttributes.position) &&
@@ -197,7 +207,7 @@ export function installZoneDecals(kit: Kit) {
   /* scratch of `proxyIn`, grown to the biggest mesh seen */
   let _keep = new Uint32Array(0)
   let _box = new Float32Array(0)
-  function proxyIn(o: any, Mw: Matrix4, R: any) {
+  function proxyIn(o: DecalCandidate, Mw: Matrix4, R: Region): DecalProxy | null {
     /* the region (vehicle frame) as a box in the frame of the mesh */
     _pm.copy(o.matrixWorld).invert().multiply(Mw)
     const lo = [Infinity, Infinity, Infinity]
@@ -261,7 +271,7 @@ export function installZoneDecals(kit: Kit) {
     /* the bounds of the whole mesh hold for the proxy too (the ray test only skips with them), and the proxy shares its positions: no pass over all vertices */
     pg.boundingSphere = g.boundingSphere
     pg.boundingBox = g.boundingBox
-    const proxy: any = new THREE.Mesh(pg, o.material)
+    const proxy = new THREE.Mesh(pg, o.material) as DecalProxy
     proxy.layers.mask = o.layers.mask
     proxy.proxyOf = o
     proxy.kept = kept
@@ -270,7 +280,7 @@ export function installZoneDecals(kit: Kit) {
     return proxy
   }
   /* the triangles of a proxy whose box meets the box of the ray (in the frame of the mesh): the rest cannot be hit by it */
-  function narrowTo(rc: any, proxy: any) {
+  function narrowTo(rc: Raycaster, proxy: DecalProxy) {
     const o = proxy.proxyOf
     const ray = rc.ray
     _pm.copy(o.matrixWorld).invert()
@@ -289,7 +299,7 @@ export function installZoneDecals(kit: Kit) {
     const X = proxy.keptBox
     const KB = proxy.keptBlocks
     const nt = K.length / 3
-    const dst = proxy.geometry.index.array
+    const dst = proxy.geometry.index!.array
     let m = 0
     for (let blk = 0, t0 = 0; t0 < nt; blk++, t0 += TRI_BLOCK) {
       const b = blk * 6
@@ -306,19 +316,22 @@ export function installZoneDecals(kit: Kit) {
     proxy.geometry.setDrawRange(0, m)
   }
   /* raycast against decal candidates; a hit on a proxy is reported on the mesh it stands for */
-  function castAt(rc: any, cands: any) {
+  function castAt(rc: Raycaster, cands: DecalCandidate[]): Intersection[] {
     for (let i = 0; i < cands.length; i++) {
       const q = cands[i]
       if (!q.proxyOf) continue
       q.matrixWorld.copy(q.proxyOf.matrixWorld)
-      narrowTo(rc, q)
+      narrowTo(rc, q as DecalProxy)
     }
     const hits = rc.intersectObjects(cands, false)
-    for (let i = 0; i < hits.length; i++) if (hits[i].object.proxyOf) hits[i].object = hits[i].object.proxyOf
+    for (let i = 0; i < hits.length; i++) {
+      const proxyOf = (hits[i].object as DecalCandidate).proxyOf
+      if (proxyOf) hits[i].object = proxyOf
+    }
     return hits
   }
-  function zoneCands(c: BuildContext, z: DamageZone, inv: Matrix4, glassToo?: any) {
-    const out: any = []
+  function zoneCands(c: BuildContext, z: DamageZone, inv: Matrix4, glassToo?: boolean) {
+    const out: DecalCandidate[] = []
     c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || o.isSprite) return
       for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
@@ -327,29 +340,29 @@ export function installZoneDecals(kit: Kit) {
       if (ow && ow !== z) return
       if (!skinOK(c, z, o, ow)) return
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
-      if (I.boxIntersects(z.box, I.localBox(c, o, inv))) out.push(o)
+      if (I.boxIntersects(z.box, I.localBox(c, o, inv))) out.push(o as DecalCandidate)
     })
     return out
   }
   /* decals only on bodywork: shell, paint, parts of the zone itself (or any mesh with anyMesh/part) */
-  const _dsetC = new WeakMap()
-  function skinOK(c: BuildContext, z: DamageZone, o: any, ow: any) {
+  const _dsetC = new WeakMap<Mesh[], Set<Object3D>>()
+  function skinOK(c: BuildContext, z: DamageZone, o: SceneNode, ow: DamageZone | null | undefined) {
     if (ow === z || z.anyMesh || z.type === 'part' || z.type === 'wheel') return true
-    if (c.paints && c.paints.has(o.material)) return true
+    if (c.paints && c.paints.has(o.material as MeshStandardMaterial)) return true
     let ds = _dsetC.get(c.deform)
     if (!ds) {
-      ds = new Set(c.deform)
+      ds = new Set<Object3D>(c.deform)
       _dsetC.set(c.deform, ds)
     }
-    return ds.has(o) || c.deform.indexOf(o) >= 0
+    return ds.has(o) || c.deform.indexOf(o as Mesh) >= 0
   }
-  function axisOf(d: any) {
+  function axisOf(d: Vector3) {
     const a = Math.abs(d.x) >= Math.abs(d.y) && Math.abs(d.x) >= Math.abs(d.z) ? 0 : Math.abs(d.y) >= Math.abs(d.z) ? 1 : 2
     return a
   }
-  function zoneSurf(c: BuildContext, z: DamageZone, n: number, rnd: any, cands: any, o?: any) {
+  function zoneSurf(c: BuildContext, z: DamageZone, n: number, rnd: () => number, cands: DecalCandidate[], o?: { u0?: number; u1?: number } | null) {
     o = o || {}
-    const out = []
+    const out: SurfacePoint[] = []
     const B = z.box
     const d = z.dir
     const a = axisOf(d)
@@ -389,7 +402,7 @@ export function installZoneDecals(kit: Kit) {
   const _rt = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _rt.layers.enableAll()
-  function scratchPath(c: BuildContext, s: any, len: number, ang: number, cands: any, B: any) {
+  function scratchPath(c: BuildContext, s: SurfacePoint, len: number, ang: number, cands: DecalCandidate[], B: ZoneBox | null | undefined): SurfacePoint[] | null {
     const n = s.n.clone().normalize()
     const t = Math.abs(n.y) < 0.9 ? new V3().crossVectors(new V3(0, 1, 0), n) : new V3().crossVectors(new V3(1, 0, 0), n)
     t.normalize().applyAxisAngle(n, ang || 0)
@@ -397,18 +410,18 @@ export function installZoneDecals(kit: Kit) {
     const Mw = c.vehicle.matrixWorld
     const inv = I.worldInverseOf(c)
     const M = Math.max(3, Math.round(len / 0.04))
-    const pts = []
-    function at(k: number) {
+    const pts: SurfacePoint[] = []
+    function at(k: number): SurfacePoint | null {
       const q = s.p.clone().addScaledVector(t, (len * 0.5 * k) / M)
       _rt.set(q.clone().addScaledVector(n, 0.08).applyMatrix4(Mw), n.clone().negate().transformDirection(Mw))
       _rt.far = 0.2
-      const h = castAt(_rt, cands).find(function (x: any) {
+      const h = castAt(_rt, cands).find(function (x) {
         return x.face
       })
       if (!h) return null
       const lp = h.point.clone().applyMatrix4(inv)
       if (B && !I.boxContains(B, lp.x, lp.y, lp.z, 0.02)) return null
-      const nn = h.face.normal.clone().transformDirection(h.object.matrixWorld).transformDirection(inv)
+      const nn = h.face!.normal.clone().transformDirection(h.object.matrixWorld).transformDirection(inv)
       if (nn.dot(n) < 0) nn.negate()
       if (nn.dot(n) < 0.55) return null
       return { p: lp, n: nn }
@@ -428,13 +441,13 @@ export function installZoneDecals(kit: Kit) {
     }
     return pts.length >= 3 ? pts : null
   }
-  function ribbonGeo(pts: any, wd: number, lift: number) {
-    const pos: any = []
-    const idx: any = []
+  function ribbonGeo(pts: SurfacePoint[], wd: number, lift: number) {
+    const pos: number[] = []
+    const idx: number[] = []
     const N = pts.length
     const tg = new V3()
     const sd = new V3()
-    pts.forEach(function (q: any, i: number) {
+    pts.forEach(function (q, i) {
       const a = pts[Math.max(0, i - 1)].p
       const b = pts[Math.min(N - 1, i + 1)].p
       tg.subVectors(b, a).normalize()
@@ -454,7 +467,7 @@ export function installZoneDecals(kit: Kit) {
     g.computeVertexNormals()
     return g
   }
-  function scratchDecal(c: BuildContext, s: any, len: number, wd: number, mat: MeshStandardMaterial, ang: number, cands: any, B: any, pts?: any) {
+  function scratchDecal(c: BuildContext, s: SurfacePoint, len: number, wd: number, mat: MeshStandardMaterial, ang: number, cands: DecalCandidate[], B: ZoneBox | null | undefined, pts?: SurfacePoint[] | null) {
     pts = pts || scratchPath(c, s, len, ang, cands, B)
     if (!pts) return null
     const m = c.add(ribbonGeo(pts, wd, mat === DAMAGE_MATERIALS.deep ? 0.0038 : 0.003), mat, 0, 0, 0)
@@ -469,7 +482,7 @@ export function installZoneDecals(kit: Kit) {
     return m
   }
   /* scratches, chipped paint (grey primer and metal), rust and torn metal */
-  function zoneDecals(c: BuildContext, z: DamageZone, spec: any, cands: any) {
+  function zoneDecals(c: BuildContext, z: DamageZone, spec: DecalCounts, cands: DecalCandidate[]) {
     const R = c.rand
     const need =
       (spec.fine || 0) +
@@ -481,7 +494,7 @@ export function installZoneDecals(kit: Kit) {
       (spec.soot || 0) +
       (spec.crater || 0)
     if (!need) return []
-    cands = regionCands(c, z, cands).filter(Boolean)
+    cands = regionCands(c, z, cands).filter(Boolean) as DecalCandidate[]
     const S = zoneSurf(c, z, need + 2, R, cands)
     let k = 0
     const ang0 = R() * PI
@@ -524,7 +537,7 @@ export function installZoneDecals(kit: Kit) {
         decalMesh(c, blobGeometry(rc * 1.5, R, true), DAMAGE_MATERIALS.metal, s.p, s.n, R() * 6, s.obj)
         decalMesh(c, blobGeometry(rc * 0.8, R), DAMAGE_MATERIALS.hole, s.p.clone().addScaledVector(s.n, 0.0008), s.n, R() * 6, s.obj)
       }
-    const tears = []
+    const tears: Mesh[] = []
     for (i = 0; i < (spec.tear || 0); i++) if ((s = nx())) tears.push(tearDecal(c, s.p, s.n, 0.07 + R() * 0.06, R, s.obj))
     return S
   }
