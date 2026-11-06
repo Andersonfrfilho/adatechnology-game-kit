@@ -48,7 +48,8 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
   // 1st phase (before the SDK furniture): plans, creates the kit world, draws each object (static into the accumulators, moving pieces into groups) and wires water, light and the electrical grid
   function ivBuild(h: HouseInstance, water: WaterNetwork): InteractablesState {
     const ik = K.IVK as InteractablesRefs, r = shared.ctx.r, A = ik.A, world0 = null; void world0;
-    const plane = A.plan(r, { seed: r.seed });
+    const source = r as unknown as SourcePlan; /* the house's record is the plan's result (plus the decor items it added) */
+    const plane = A.plan(source, { seed: r.seed });
     const IV = { k: ik, plane, world: null as unknown as InteractablesState['world'], water, entries: new Map(), roots: [], replace: new Set(), roomStates: new Map(), lampRoom: new Map(), anim: new Map(), screens: new Map(), efx: null, items: null, itemsDirty: true, itemsT: 0, dirty: true, list: null, listT: 0, t: 0, circuits: [], switchRooms: new Set(), warnings: [], tBuild: 0 } as unknown as InteractablesState; /* the world and the materials come next */
     h.IV = IV; const t0 = performance.now();
     const lamps = new Set(plane.items.filter(e => e.type === 'lamp').map(e => e.id));
@@ -65,7 +66,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const mats: MaterialTable = shared.mats;
     IV.mats = { plain: mats.plain, metal: shared.mats.metal, wood: shared.mats.wood, glass: shared.mats.glass, fabric: shared.mats.fabric, plant: shared.mats.plant, water: shared.mats.water, emissive: shared.mats.emissive, atlas_picture: shared.mats.picture, atlas_floor: shared.mats.floor };
     const ev = (e: WorldEvent): void => ivEvent(h, e);
-    const world = IV.world = A.createWorld(r, { water, seed: r.seed, onEvent: ev });
+    const world = IV.world = A.createWorld(source, { water, seed: r.seed, onEvent: ev });
     const add0 = world.add;
     world.add = (id: string, spec: ObjectSpec, tr) => { // initial state: lamp on if the room is lit (night or stored); switch key in the same position
       const e = entById.get(id);
@@ -78,7 +79,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
       else if (e && e.type === 'wall_switch') { const l = (e.connections.controls || [])[0], roomId = l && IV.lampRoom.get(l); if (roomId) for (const p of spec.parts || []) if (p.id === 'rocker') p.t0 = wants(roomId) ? 1 : 0; }
       return add0(id, spec, tr);
     };
-    const added = A.add(world, plane, { isBlocked: A.blockedOf(r), build: (type, item) => ivDraw(IV, entByItem.get(item) as PlanEntry, type, item) });
+    const added = A.add(world, plane, { isBlocked: A.blockedOf(source), build: (type, item) => ivDraw(IV, entByItem.get(item) as PlanEntry, type, item) });
     world.add = add0;
     IV.warnings = added.warnings; IV.added = added;
     if (h.state.iv) { // rebuild (night/cut): doors, drawers, breakers, appliances come back; the lamps follow the per-room intent
@@ -90,7 +91,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     }
     // kit switches per room; circuits
     for (const e of plane.items) if (e.type === 'wall_switch') for (const l of e.connections.controls || []) { const roomId = IV.lampRoom.get(l); if (roomId) { IV.switchRooms.add(roomId); (IV.roomStates.get(roomId) as KitRoomState).switches.push(e.id); } }
-    const E = r.utilities.electrical;
+    const E = (r.utilities as NonNullable<typeof r.utilities>).electrical; /* the structure always runs before the kit */
     if (E) for (const c of E.circuits || []) IV.circuits.push({ id: c.id, room: c.room, outlets: (c.outlets || []).slice(), switches: (c.switches || []).slice(), lamps: (c.lamps || []).slice() });
     ivCords(IV);
     for (const S of IV.roomStates.values()) S.ef = ivRoomEffective(IV, S);

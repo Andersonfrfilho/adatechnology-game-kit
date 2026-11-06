@@ -6,7 +6,7 @@ import type { Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesWater, Shared,
 export function installUtilitiesWater(K: Kernel, shared: Shared): void {
   const { THREE, _Y, _q, cursor, cylBase, part, pieceRecord, put } = K;
   // ===== R69: water network: tank level at run time (house.water) and the visible pipes (tank outlet, under the sink; the ones in the wall stay hidden) =====
-  function createWater(r: HouseRecord, state: { water?: WaterState }): WaterApi {
+  function createWater(r: HouseRecord, state: { water?: WaterState | null }): WaterApi {
     type Listener = (api: WaterApi) => void;
     const H = r.utilities?.plumbing, cap = H ? +H.capacityL || 0 : 0, ls: Record<string, Listener[]> = { dry: [], full: [] }, points: Record<string, PlumbingPoint> = {}, itemPoint: Record<string, string> = {};
     if (H) for (const p of H.points) { points[p.id] = p; itemPoint[p.item] = p.id; }

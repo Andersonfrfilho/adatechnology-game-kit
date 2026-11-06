@@ -42,7 +42,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     }
     const Q = E.panel;
     if (Q) { // breaker panel flush/surface-mounted on the wall, light door with a row of breakers (with the kit: electrical_panel)
-      const g0 = cursor.group, noDrawing = !!(KV && KV.picture);
+      const g0 = cursor.group, noDrawing = !!(KV && (KV as { picture?: unknown }).picture); /* the plan has no `picture`: kept as delivered */
       cursor.group = 'f' + Math.max(0, Math.min(nA - 1, Q.floor || 0)); const frontU = Q.frontU || 0, frontV = Q.frontV || 0, w = Q.w || 0.3, h = Q.h || 0.4, hw = w / 2, d = 0.05;
       const bq = (a0: number, y0_: number, a1: number, y1_: number, o0: number, o1: number, mat: string, color: Hex): void => { // a = along the wall (u if the wall is on the u axis), o = out of the wall (into the room)
         if (frontV) bx(mat, Q.u + a0, Q.y + y0_, Q.v + (frontV > 0 ? o0 : -o1), Q.u + a1, Q.y + y1_, Q.v + (frontV > 0 ? o1 : -o0), color); else bx(mat, Q.u + (frontU > 0 ? o0 : -o1), Q.y + y0_, Q.v + a0, Q.u + (frontU > 0 ? o1 : -o0), Q.y + y1_, Q.v + a1, color);

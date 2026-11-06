@@ -36,7 +36,7 @@ export function installMirrors(K: Kernel, shared: Shared): void {
       }
       for (const [parent, B] of by) {
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(B.P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(B.N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(B.U, 2)); g.setIndex(B.I); g.computeBoundingSphere();
-        const m = new THREE.Mesh(g, shared.mirrorMat); m.name = 'mirror/environment'; m.userData.part = 'mirror'; (groups[parent] || (groups[parent] = new THREE.Group())).add(m);
+        const m = new THREE.Mesh(g, shared.mirrorMat as THREE_NS.Material); m.name = 'mirror/environment'; m.userData.part = 'mirror'; (groups[parent] || (groups[parent] = new THREE.Group())).add(m);
       }
       return;
     }
@@ -44,7 +44,7 @@ export function installMirrors(K: Kernel, shared: Shared): void {
       const g = new THREE.Group(); g.position.set(E.x, E.y, E.z); g.rotation.y = E.ry; g.name = 'mirror';
       g.userData.part = 'mirror'; g.userData.room = E.room;
       const geo = new THREE.PlaneGeometry(E.w, E.h);
-      const fake = new THREE.Mesh(geo, shared.mirrorMat); fake.userData.part = 'mirror'; fake.name = 'mirror/environment'; g.add(fake);
+      const fake = new THREE.Mesh(geo, shared.mirrorMat as THREE_NS.Material); fake.userData.part = 'mirror'; fake.name = 'mirror/environment'; g.add(fake);
       let real: THREE_NS.Mesh | null = null;
       try {
         real = new Reflector(geo, { textureWidth: 512, textureHeight: Math.round(512 * Math.max(0.5, Math.min(2, E.h / E.w))), color: 0xdfe6ea, clipBias: 0.002, multisample: 0 });

@@ -69,7 +69,7 @@ export interface HouseRendererOptions {
   drawCallBudget?: number
   onChange?: (change: { shadow: boolean }) => void
   onCollider?: (collider: any) => void
-  onDamage?: (part: any, point: { x: number; y: number; z: number } | null, type: string) => void
+  onDamage?: (part: any, point: { x: number; y: number; z: number } | null | undefined, type: string) => void
   onWreck?: (event: any, house: any) => void
   onInteract?: (target: any, action: any) => boolean | void
   /** A room's light turned on or off (`on` is what it shows now). */
@@ -101,6 +101,35 @@ export interface BuildOptions {
   pillars?: 'shown' | 'hidden'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
+}
+
+/** Something the player can use, as the house publishes it: where it is, how far it reaches, its prompt and how to use it. */
+export interface HouseInteractable {
+  id: string
+  type: string
+  floor: number
+  pos: number[]
+  radius: number
+  angle?: number
+  readonly label: string
+  ref: unknown
+  _action: () => unknown
+  act?: () => boolean
+}
+
+/** A part of the house that moves or takes damage (`house.parts[id]`): its group, its damage and how to open it. */
+export interface HousePart {
+  id: string
+  type: string
+  group: THREE.Object3D | null
+  damageable: Damageable | null
+  opens(t: number): void
+  readonly t: number
+  floor?: number
+  /** Box of a virtual part (window, mirror, car zone): `[x0, y0, z0, x1, y1, z1]`. */
+  aabb?: number[]
+  virtual?: boolean
+  [extra: string]: unknown
 }
 
 /** The house the renderer built. The three.js groups are ready to add to a scene. */

@@ -154,11 +154,6 @@
       "count": 4
     }
   },
-  "packages/game-floorplan-three/src/build/build.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
   "packages/game-floorplan-three/src/create.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -167,11 +162,6 @@
   "packages/game-floorplan-three/src/destruction/breach.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 42
-    }
-  },
-  "packages/game-floorplan-three/src/destruction/panels.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
     }
   },
   "packages/game-floorplan-three/src/destruction/pieces.ts": {
@@ -196,7 +186,7 @@
   },
   "packages/game-floorplan-three/src/kernel-types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     }
   },
   "packages/game-floorplan-three/src/navigation/bind.ts": {
