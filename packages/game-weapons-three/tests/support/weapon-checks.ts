@@ -121,7 +121,10 @@ const reloadChecks = (row: WeaponAudit): Pick<WeaponChecks, 'tactical' | 'empty'
 }
 
 /** Runs every check on every weapon with a model: the hands and the trigger finger and the wall in the room with the weapon in the hands, the reload and the sound from the clips the audit plays. */
-export const checkWeapons = (): WeaponChecks[] => {
+// a pause between weapons: the whole arsenal takes over a minute on CI, and a worker that never yields misses vitest's calls (Timeout calling "onTaskUpdate")
+const yieldToVitest = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
+
+export const checkWeapons = async (): Promise<WeaponChecks[]> => {
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
   const audit = auditWeapons(arsenal)
   const container = document.createElement('div')
@@ -139,6 +142,7 @@ export const checkWeapons = (): WeaponChecks[] => {
 
   const results: WeaponChecks[] = []
   for (const row of audit) {
+    await yieldToVitest()
     const reload = reloadChecks(row)
     const checks: WeaponChecks = {
       id: row.id,
@@ -241,5 +245,6 @@ export const checkWeapons = (): WeaponChecks[] => {
     }
     results.push(checks)
   }
+  room.dispose()
   return results
 }

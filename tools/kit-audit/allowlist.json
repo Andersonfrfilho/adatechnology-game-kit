@@ -70,6 +70,11 @@
       "file": "packages/game-weapons-three/src/models/explosives.ts",
       "domain": "items",
       "reason": "the explosives of the weapons gallery (the molotov's bottle, the grenade, the charges): game-weapons owns the explosives, not the goods catalogue"
+    },
+    {
+      "file": "packages/game-weapons-three/src/models/revolver-python.ts",
+      "domain": "items",
+      "reason": "the revolver's barrel and its trigger guard: a gun barrel drawn by the weapon model, not a barrel (drum) of the goods catalogue"
     }
   ],
   "pending": [
