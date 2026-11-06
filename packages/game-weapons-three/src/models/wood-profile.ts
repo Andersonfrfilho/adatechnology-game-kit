@@ -31,3 +31,37 @@ export function profileBlock(kit: ModelKit, parent: Parent, points: readonly Pro
     kit.box(parent, Math.hypot(step, rise) * 1.12, height, width, material, first[0] + step * (index + 0.5), centre, 0, Math.atan2(rise, step))
   }
 }
+
+const BEVEL = 0.0025
+
+/**
+ * A stock cut from its side profile as one smooth solid: the top and the bottom edges are splines through the points, the outline is extruded across the weapon with a
+ * rounded edge, and `hole` (a closed loop of (x, y) points, also a spline) cuts a thumbhole through it. Centred on z, `width` wide in all.
+ */
+export function profileSolid(kit: ModelKit, parent: Parent, points: readonly ProfilePoint[], width: number, material: THREE_NS.Material, hole?: readonly (readonly [number, number])[]): THREE_NS.Mesh {
+  const { THREE } = kit
+  const top = points.map(([x, y]) => new THREE.Vector2(x, y))
+  const bottom = [...points].reverse().map(([x, , y]) => new THREE.Vector2(x, y))
+  const first = top[0] as THREE_NS.Vector2
+  const shape = new THREE.Shape()
+  shape.moveTo(first.x, first.y)
+  shape.splineThru(top.slice(1))
+  shape.lineTo((bottom[0] as THREE_NS.Vector2).x, (bottom[0] as THREE_NS.Vector2).y)
+  shape.splineThru(bottom.slice(1))
+  shape.closePath()
+  if (hole) {
+    const loop = hole.map(([x, y]) => new THREE.Vector2(x, y))
+    const path = new THREE.Path()
+    path.moveTo((loop[0] as THREE_NS.Vector2).x, (loop[0] as THREE_NS.Vector2).y)
+    path.splineThru([...loop.slice(1), loop[0] as THREE_NS.Vector2])
+    shape.holes.push(path)
+  }
+  const depth = Math.max(0.002, width - BEVEL * 2)
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth, curveSegments: 16, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 2 })
+  geometry.translate(0, 0, -depth / 2)
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+  parent.add(mesh)
+  return mesh
+}

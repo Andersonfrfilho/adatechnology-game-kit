@@ -1,6 +1,7 @@
 import { rail, vents } from './details'
 import type { RifleContext } from './rifle-context'
 import { buildG36Handguard } from './rifle-g36'
+import { buildSvdHandguard } from './rifle-svd'
 
 const PI = Math.PI
 
@@ -10,6 +11,10 @@ export function buildForend(context: RifleContext): void {
   const { M, box } = kit
   if (o.g36) {
     buildG36Handguard(context)
+    return
+  }
+  if (o.svd) {
+    buildSvdHandguard(context)
     return
   }
   const hasLongScope = (o.scope ?? 0) >= 3

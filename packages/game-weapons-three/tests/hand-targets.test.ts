@@ -246,4 +246,15 @@ describe('the weapons redrawn from the photo of the real one keep the hands on t
     }
     expect(farthest).toBeGreaterThan(0.03)
   })
+
+  const longGuns = ['svd_dragunov']
+  it.each(longGuns)('%s: the right hand at the grip and the left forward of it, under the barrel', (weapon) => {
+    const { room, last } = roomWithRecorder()
+    equip(room, weapon)
+    const targets = last()!.targets!
+    expect(targets.R).not.toBeNull()
+    expect(targets.L).not.toBeNull()
+    expect(distance(targets.R, targets.L)).toBeGreaterThan(0.1)
+    expect(distance(targets.R, targets.L)).toBeLessThan(0.7)
+  })
 })

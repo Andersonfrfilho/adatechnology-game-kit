@@ -714,7 +714,7 @@
     "barrel": 620,
     "options": {
       "wood": 1,
-      "stock": "skeleton",
+      "stock": "svd",
       "stockLen": 0.32,
       "mag": "box",
       "curve": 0.09,
@@ -724,7 +724,8 @@
       "scope": 4,
       "brake": 1,
       "ak": 1,
-      "charge": 1
+      "charge": 1,
+      "svd": 1
     }
   },
   "fn_scar_h": {

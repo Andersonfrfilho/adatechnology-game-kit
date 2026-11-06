@@ -23,3 +23,19 @@ describe('the Desert Eagle Mark XIX drawn from its photo', () => {
     expect(muzzle.x).toBeGreaterThan(whole.max.x - 0.01)
   })
 })
+
+describe('the SVD Dragunov drawn from its photo', () => {
+  const model = buildWeaponModelById(THREE, 'svd_dragunov')!
+
+  it('is 1225 mm long and its stock has the thumbhole: a ray across the stock behind the grip passes through nothing', () => {
+    expect(sizeOf(model.root).x).toBeCloseTo(1.225, 2)
+    const stock = model.parts.stockMeshes ?? []
+    expect(stock.length).toBeGreaterThan(0)
+    model.root.updateMatrixWorld(true)
+    const scale = model.inner.scale.x
+    const across = (x: number, y: number): number => new THREE.Raycaster(new THREE.Vector3(model.inner.position.x + x * scale, y, 1), new THREE.Vector3(0, 0, -1)).intersectObjects(stock, false).length
+    expect(across(0.22, -0.055)).toBe(0)
+    expect(across(0.22, 0.005)).toBeGreaterThan(0)
+    expect(across(0.22, -0.11)).toBeGreaterThan(0)
+  })
+})

@@ -50,6 +50,8 @@ export interface ModelOptions {
   g3?: number
   /** The Heckler & Koch G36 family: its polymer receiver, skeletal stock (`stock: 'g36'`), handguard, and on top the carry handle with optics (`carry`) or the long rail. */
   g36?: number
+  /** The SVD Dragunov's chunky slotted wooden handguard (with `stock: 'svd'`, its thumbhole stock). */
+  svd?: number
   charge?: number
   rail?: number
   jacket?: number

@@ -7253,6 +7253,31 @@
       },
       "source": "reference: free Wikimedia Commons photo of the real weapon (Milkor MGL, Armémuseum, CC BY 4.0), lote 1, part C",
       "reason": "The MGL is a revolver-type launcher, not a break-action: the SDK draws the large six-chamber cylinder with its swing-out frame, the short barrel with its front grip, the collimator sight on top, the pistol grip and the folding stock."
+    },
+    "svd_dragunov": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×54R",
+        "length": 1225,
+        "barrel": 620,
+        "options": {
+          "wood": 1,
+          "stock": "svd",
+          "stockLen": 0.32,
+          "mag": "box",
+          "curve": 0.09,
+          "magLen": 0.9,
+          "hg": "wood",
+          "hgFrac": 0.4,
+          "scope": 4,
+          "brake": 1,
+          "ak": 1,
+          "charge": 1,
+          "svd": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the SVD with the generic skeleton stock (two thin bars and a plate) and a thin handguard, so it read like any other rifle. The SDK draws the thumbhole stock of the photo (the comb with its cheek rest, the butt behind the hole and the bottom bar closing it at the foot of the pistol grip) and the chunky slotted wooden handguard with the gas block ahead of it."
     }
   },
   "weaponTags": {
