@@ -85,7 +85,7 @@ export function installWheels(kit: Kit): void {
     const sp = ((x1 - x0 - 2 * rs) / Math.max(1, n - 1)) * 0.92
     const firstX = x0 + rs + 0.1
     const gs: any = []
-    function road(x: any, y: any, rr: any) {
+    function road(x: number, y: number, rr: any) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)
@@ -108,7 +108,7 @@ export function installWheels(kit: Kit): void {
     for (let k = 0; k < 3; k++) road(x0 + (x1 - x0) * (0.25 + k * 0.25), top - th - 0.07, 0.07)
     const path = []
     const segs = 40
-    function arc(cx: any, cy: any, rr: any, a0: any, a1: any) {
+    function arc(cx: number, cy: number, rr: number, a0: number, a1: number) {
       for (let s = 0; s <= segs / 4; s++) {
         const a = a0 + ((a1 - a0) * s) / (segs / 4)
         path.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr])

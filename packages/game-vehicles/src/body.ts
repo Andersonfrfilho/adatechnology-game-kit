@@ -11,7 +11,7 @@ export function installBody(kit: Kit): void {
   const { MATERIALS, crease, cutGeometry, pathShape, subdivide, tumble } = I
 
   /* ================= bodies ================= */
-  function halfAt(Wg: any, T: any, y: any) {
+  function halfAt(Wg: number, T: any, y: number) {
     return (Wg / 2) * (T ? 1 - T.k * clamp((y - T.belt) / (T.top - T.belt), 0, 1) : 1)
   }
   kit.halfAt = halfAt
@@ -20,7 +20,7 @@ export function installBody(kit: Kit): void {
     if (o.arches)
       o.arches
         .slice()
-        .sort(function (a: any, b: any) {
+        .sort(function (a: number[], b: number[]) {
           return b[0] - a[0]
         })
         .forEach(function (a: any) {
@@ -43,7 +43,7 @@ export function installBody(kit: Kit): void {
     const tests = (o.holes || []).slice()
     let cut: any = {}
     if (o.arches && o.archInner != null)
-      o.arches.forEach(function (a: any) {
+      o.arches.forEach(function (a: number[]) {
         const zk = o.archInner
         tests.push({
           sel: function (n: any, ce: any) {
@@ -52,7 +52,7 @@ export function installBody(kit: Kit): void {
             const d = Math.hypot(dx, dy) || 1
             return d < a[2] + 0.08 && (n.x * dx + n.y * dy) / d > 0.4
           },
-          sdf: function (x: any, y: any, z: any) {
+          sdf: function (x: any, y: any, z: number) {
             return Math.abs(z) - zk
           },
         })
@@ -97,7 +97,7 @@ export function installBody(kit: Kit): void {
     const inn = 0.075
     const yb = gh.belt + 0.06
     const yt = gh.roof - 0.075
-    function lx(x0: any, x1: any, y: any) {
+    function lx(x0: number, x1: number, y: number) {
       return x0 + ((x1 - x0) * (y - gh.belt)) / (gh.roof - gh.belt)
     }
     function rearX(y: any) {
@@ -106,21 +106,21 @@ export function installBody(kit: Kit): void {
     function frontX(y: any) {
       return lx(gh.fb, gh.ft, y) - inn * 1.3
     }
-    const ps = gh.pillars.slice().sort(function (a: any, b: any) {
+    const ps = gh.pillars.slice().sort(function (a: number, b: number) {
       return a - b
     })
     const bounds = [-1e9]
-    ps.forEach(function (p: any) {
+    ps.forEach(function (p: number) {
       bounds.push(p - 0.06, p + 0.06)
     })
     bounds.push(1e9)
     const polys = []
     for (let i = 0; i < bounds.length; i += 2) {
       ;(function (xa, xb) {
-        const L = function (y: any) {
+        const L = function (y: number) {
           return Math.max(xa, rearX(y))
         }
-        const R = function (y: any) {
+        const R = function (y: number) {
           return Math.min(xb, frontX(y))
         }
         if (R(yb) - L(yb) > 0.15 && R(yt) - L(yt) > 0.05)
@@ -135,7 +135,7 @@ export function installBody(kit: Kit): void {
     return polys
   }
   kit.autoWindows = autoWindows
-  function profX(items: any, y: any, front: any) {
+  function profX(items: any, y: number, front: boolean) {
     let best = front ? -1e9 : 1e9
     for (let i = 0; i < items.length; i++) {
       const a = items[i]
@@ -179,7 +179,7 @@ export function installBody(kit: Kit): void {
     return { p: h.point.clone().applyMatrix4(inv), n: n, obj: h.object }
   }
   /* x of the skin at the front (front = true) or at the rear, at height y and side z; falls back to profX(items) if the ray finds nothing */
-  kit.surfaceX = function (c: any, y: any, z: any, front: any, items: any) {
+  kit.surfaceX = function (c: any, y: any, z: any, front: boolean, items: any) {
     const m = c.meta
     const sg = front === false ? -1 : 1
     const x0 = sg > 0 ? (m.front || 3) + 2 : (m.rear || -3) - 2

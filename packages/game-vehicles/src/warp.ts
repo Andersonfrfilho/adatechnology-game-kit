@@ -14,7 +14,7 @@ export function installWarp(kit: Kit): void {
   /* makeWarp(o) creates f(x, y, z) -> [x, y, z] that rounds the front/rear in plan view and curves the side.
      o: { xF, xR, Lf, Lr, hw, bowF, bowR, pinF, pinR, belt, ys, yb, kt, kb, dropF, dropY }. applyWarp(c, f) deforms everything already assembled. */
   function makeWarp(o: any) {
-    function sec(y: any) {
+    function sec(y: number) {
       if (y >= o.belt) return o.kt
       if (y >= o.ys) {
         const a = (y - o.ys) / (o.belt - o.ys)
@@ -23,7 +23,7 @@ export function installWarp(kit: Kit): void {
       const b = clamp((o.ys - y) / (o.ys - o.yb), 0, 1.25)
       return o.kb * b * b
     }
-    const f = function (x: any, y: any, z: any) {
+    const f = function (x: number, y: number, z: number) {
       const tF = smooth((x - (o.xF - o.Lf)) / o.Lf)
       const tR = smooth((o.xR + o.Lr - x) / o.Lr)
       const u = Math.min(1.15, Math.abs(z) / o.hw)
@@ -108,11 +108,11 @@ export function installWarp(kit: Kit): void {
       else rigid(o)
     })
   }
-  function resample(st: any, n: any) {
+  function resample(st: any, n: number) {
     if (lod.on) n = Math.max(lod.minStations, Math.round(n * lod.stationFraction))
     const out = []
     const L = st.length
-    function P(i: any) {
+    function P(i: number) {
       return st[Math.max(0, Math.min(L - 1, i))]
     }
     for (let k = 0; k <= n; k++) {

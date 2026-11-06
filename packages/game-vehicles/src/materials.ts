@@ -1,5 +1,23 @@
 /** Shared materials, studio environment map, paint colours and text textures. */
+import type * as THREE_NS from 'three'
+
 import type { Kit } from './types'
+
+/** Options of `kit.makeMaterial`: the parameters of a `MeshStandardMaterial`, and `noEnv` to keep the studio environment map off a metallic one. */
+export type MaterialOptions = THREE_NS.MeshStandardMaterialParameters & { noEnv?: boolean }
+
+/** Options of `kit.textTexture` (and of `c.text`): canvas size, background, the blue band of a plate, text colour, size share, weight and font. */
+export interface TextTextureOptions {
+  w?: number
+  h?: number
+  bg?: string
+  band?: string
+  fg?: string
+  size?: number
+  weight?: string
+  font?: string
+  [option: string]: unknown
+}
 
 export function installMaterials(kit: Kit): void {
   const THREE = kit.THREE
@@ -9,18 +27,18 @@ export function installMaterials(kit: Kit): void {
   /* ================= materiais ================= */
   const RUST = new THREE.Color('#5e3220')
   /* kit.configure({ palette: { rust } }) changes the rust tone of aged paint */
-  const cache: any = {}
+  const cache: Record<string, THREE_NS.MeshStandardMaterial> = {}
   /* studio environment map (canvas cube): without it every very metallic material (chrome, reflector, aluminium) renders almost black.
        Grey-blue sky, a light band on the horizon and a dark floor. It is added automatically to every material with metalness >= 0.6. */
-  let envTex: any = null
-  function studioEnvironment() {
+  let envTex: THREE_NS.CubeTexture | null = null
+  function studioEnvironment(): THREE_NS.CubeTexture {
     if (envTex) return envTex
-    const faces = []
+    const faces: HTMLCanvasElement[] = []
     const S = 64
     for (let f = 0; f < 6; f++) {
       const cv = document.createElement('canvas')
       cv.width = cv.height = S
-      const x: any = cv.getContext('2d')
+      const x = cv.getContext('2d') as CanvasRenderingContext2D
       if (f === 2) {
         x.fillStyle = '#7d8a99'
         x.fillRect(0, 0, S, S)
@@ -50,7 +68,7 @@ export function installMaterials(kit: Kit): void {
     return envTex
   }
   kit.studioEnvironment = studioEnvironment
-  function makeMaterial(color: any, o: any) {
+  function makeMaterial(color: THREE_NS.ColorRepresentation, o?: MaterialOptions): THREE_NS.MeshStandardMaterial {
     o = o || {}
     const c = color instanceof THREE.Color ? color : new THREE.Color(color)
     const key =
@@ -60,7 +78,7 @@ export function installMaterials(kit: Kit): void {
         return v && v.isColor ? '#' + v.getHexString() : v && v.isTexture ? v.uuid : v
       })
     if (!cache[key]) {
-      const o2 = Object.assign({}, o)
+      const o2: MaterialOptions = Object.assign({}, o)
       delete o2.noEnv
       const mt = new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.8, metalness: 0, flatShading: false }, o2))
       if (!o.envMap && o.noEnv !== true && mt.metalness >= 0.6) {
@@ -69,13 +87,13 @@ export function installMaterials(kit: Kit): void {
       }
       cache[key] = mt
     }
-    return cache[key]
+    return cache[key]!
   }
-  function makeFlatMaterial(color: any, o: any) {
+  function makeFlatMaterial(color: THREE_NS.ColorRepresentation, o?: MaterialOptions): THREE_NS.MeshStandardMaterial {
     return makeMaterial(color, Object.assign({ flatShading: true, roughness: 0.92 }, o || {}))
   }
   const DOUBLE_SIDE = THREE.DoubleSide
-  function toColor(hex: any) {
+  function toColor(hex: THREE_NS.ColorRepresentation): THREE_NS.Color {
     return new THREE.Color(hex)
   }
   const MATERIALS = {
@@ -134,7 +152,7 @@ export function installMaterials(kit: Kit): void {
   kit.makeMaterial = makeMaterial
   kit.makeFlatMaterial = makeFlatMaterial
   kit.materials = MATERIALS
-  function paintColor(hex: any, st: any) {
+  function paintColor(hex: THREE_NS.ColorRepresentation, st: string): THREE_NS.Color {
     const c = new THREE.Color(hex)
     if (st === 'damaged') {
       c.lerp(RUST, 0.22)
@@ -143,17 +161,17 @@ export function installMaterials(kit: Kit): void {
     return c
   }
   kit.paintColor = paintColor
-  const texCache: any = {}
-  function textTexture(text: any, o: any) {
+  const texCache: Record<string, THREE_NS.CanvasTexture> = {}
+  function textTexture(text: string, o?: TextTextureOptions): THREE_NS.CanvasTexture {
     o = o || {}
     const key = text + JSON.stringify(o)
-    if (texCache[key]) return texCache[key]
+    if (texCache[key]) return texCache[key]!
     const w = o.w || 512
     const h = o.h || 128
     const cv = document.createElement('canvas')
     cv.width = w
     cv.height = h
-    const x: any = cv.getContext('2d')
+    const x = cv.getContext('2d') as CanvasRenderingContext2D
     if (o.bg) {
       x.fillStyle = o.bg
       x.fillRect(0, 0, w, h)

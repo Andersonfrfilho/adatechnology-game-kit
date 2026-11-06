@@ -551,7 +551,7 @@ export class VehicleVisuals implements CreaseWork {
       if (!o.isMesh || !o.visible || o.userData.glass || o.userData.decal || (this.c as any).deform?.includes(o)) return false
       const box = this.I.localBox(this.c, o, inv)
       if (box.isEmpty()) return false
-      return boxes.some((b: any) => b.containsBox(box) && box.getSize(new THREE.Vector3()).x > b.getSize(new THREE.Vector3()).x * WINDOW_FRAME_SPAN)
+      return boxes.some((b) => b.containsBox(box) && box.getSize(new THREE.Vector3()).x > b.getSize(new THREE.Vector3()).x * WINDOW_FRAME_SPAN)
     })
   }
   /** A front door carries the mirror drawn at its corner. */
@@ -811,17 +811,17 @@ export class VehicleVisuals implements CreaseWork {
     if (u.lengthSq() < 1e-4) u.set(1, 0, 0)
     u.normalize()
     const w = normal.clone().cross(u)
-    const cx = outline.reduce((sum: number, p: any) => sum + p.dot(u), 0) / outline.length
-    const cy = outline.reduce((sum: number, p: any) => sum + p.dot(w), 0) / outline.length
+    const cx = outline.reduce((sum: number, p) => sum + p.dot(u), 0) / outline.length
+    const cy = outline.reduce((sum: number, p) => sum + p.dot(w), 0) / outline.length
     // the strip under the edge of the glass stays: the pillars and the sill it rests on
-    const poly = outline.map((p: any) => {
+    const poly = outline.map((p) => {
       const x = p.dot(u)
       const y = p.dot(w)
       const d = Math.hypot(x - cx, y - cy) || 1
       const k = Math.max(0, d - inset) / d
       return [cx + (x - cx) * k, cy + (y - cy) * k] as [number, number]
     })
-    const plane = outline.reduce((sum: number, p: any) => sum + p.dot(normal), 0) / outline.length
+    const plane = outline.reduce((sum: number, p) => sum + p.dot(normal), 0) / outline.length
     const inside = (x: number, y: number): boolean => {
       let hit = false
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {

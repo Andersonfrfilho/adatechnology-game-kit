@@ -11,7 +11,7 @@ export function installInterior(kit: Kit): void {
 
   /* ================= interior ================= */
   /* Seat. x = seat centre, fl = floor height, z = lateral centre. o: { w, h (seat height), len, back, lean, n (places on a bench seat), dir (+1 faces forward), mat, headrest } */
-  kit.seat = function (c: any, x: any, fl: any, z: any, o: any) {
+  kit.seat = function (c: any, x: number, fl: number, z: number, o: any) {
     o = o || {}
     if (o.face === '+z' || o.face === '-z') {
       /* seat facing sideways (troop, ambulance): built facing +x in a group and rotated */
@@ -72,7 +72,7 @@ export function installInterior(kit: Kit): void {
     c.seatTops.push({ x: x, y: fl + h + 0.01, z: z, w: w, l: cl })
   }
   /* 3-spoke steering wheel with column. o: { r, tilt (rad), col (column length), mat } */
-  kit.steeringWheel = function (c: any, x: any, y: any, z: any, o: any) {
+  kit.steeringWheel = function (c: any, x: number, y: number, z: number, o: any) {
     o = o || {}
     const r = o.r || 0.18
     const mat = o.mat || MATERIALS.plastic
@@ -136,7 +136,7 @@ export function installInterior(kit: Kit): void {
     })
     if (o.drv != null) c.roundBox(0.006, 0.12, w * 0.3, 0.004, MATERIALS.dark, xb - 0.003, y - 0.2, -Math.sign(o.drv || -1) * w * 0.25)
   }
-  function consoleBox(c: any, x: any, fl: any, h: any, mat: any) {
+  function consoleBox(c: any, x: number, fl: number, h: number, mat: any) {
     c.roundBox(0.62, h, 0.2, 0.04, mat, x, fl + h / 2, 0)
     c.rod(new V3(x + 0.18, fl + h, 0), new V3(x + 0.13, fl + h + 0.13, 0), 0.011, MATERIALS.chrome, { seg: 6 })
     c.sphere(0.03, MATERIALS.plastic, x + 0.13, fl + h + 0.14, 0)
@@ -173,7 +173,7 @@ export function installInterior(kit: Kit): void {
     })
     kit.steeringWheel(c, x0 - 0.68, belt - 0.02, drv * zs, { mat: trim })
     const roof = o.roof != null ? o.roof : belt + 0.5
-    function lim(y: any) {
+    function lim(y: number) {
       if (o.rb == null) return -1e9
       const t = clamp((y - belt) / (roof - belt), 0, 1)
       return o.rb + t * ((o.rt != null ? o.rt : o.rb) - o.rb) + 0.1

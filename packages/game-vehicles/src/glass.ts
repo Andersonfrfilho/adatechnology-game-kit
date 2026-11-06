@@ -53,9 +53,9 @@ export function installGlass(kit: Kit): void {
     if (o.reuv !== false) o.reuv = true
     return kit.addGlass(c, geo, label, type, Object.assign({ mat: mesh.material }, o))
   }
-  kit.sideWindows = function (c: any, polys: any, Wg: any, T: any, label: any, o: any) {
+  kit.sideWindows = function (c: any, polys: any, Wg: number, T: any, label: any, o: any) {
     o = o || {}
-    ;(o.sides || [1, -1]).forEach(function (s: any) {
+    ;(o.sides || [1, -1]).forEach(function (s: number) {
       polys.forEach(function (poly: any, i: any) {
         const shp = pathShape(
           poly.map(function (p: any) {
@@ -70,7 +70,7 @@ export function installGlass(kit: Kit): void {
         const asp = uvProject(geo, 'xy')
         let cx = 0
         let cy = 0
-        poly.forEach(function (p: any) {
+        poly.forEach(function (p: number[]) {
           cx += p[0]
           cy += p[1]
         })
@@ -99,7 +99,7 @@ export function installGlass(kit: Kit): void {
     })
   }
   /* Cuts a ready mesh (mesh local coordinates) and recomputes the normals. */
-  kit.cutMesh = function (mesh: any, tests: any, deg: any, o: any) {
+  kit.cutMesh = function (mesh: any, tests: any, deg: any, o: string) {
     /* o.sub: subdivide first (edges longer than o.sub, in m) for windows inside large faces; drops colour/uv */
     const src = o && o.sub ? subdivide(mesh.geometry, o.sub) : mesh.geometry
     const r = cutGeometry(src, tests)
@@ -108,7 +108,7 @@ export function installGlass(kit: Kit): void {
     mesh.geometry = r.geo
     return r.cut
   }
-  kit.quadDef = function (pb: any, pt: any, Wg: any, T: any, which: any, bev: any, o: any) {
+  kit.quadDef = function (pb: number[], pt: number[], Wg: any, T: any, which: string, bev: any, o: any) {
     o = o || {}
     bev = bev == null ? 0.05 : bev
     const dx = pt[0] - pb[0]

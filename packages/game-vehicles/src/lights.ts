@@ -11,7 +11,7 @@ export function installLights(kit: Kit): void {
   const { MATERIALS, mergeGeometries, roundedBoxGeometry, taper } = I
 
   /* ================= headlights, taillights, grilles ================= */
-  function lampGroup(c: any, x: any, y: any, z: any, rotY: any) {
+  function lampGroup(c: any, x: number, y: number, z: number, rotY: number) {
     const g = new THREE.Group()
     g.position.set(x, y, z)
     g.rotation.y = rotY || 0
@@ -26,7 +26,7 @@ export function installLights(kit: Kit): void {
     g.add(m)
     return m
   }
-  function wedgeY(geo: any, w: any, s: any, k: any) {
+  function wedgeY(geo: any, w: number, s: number, k: number) {
     const p = geo.attributes.position
     for (let i = 0; i < p.count; i++) {
       const t = clamp((p.getZ(i) * s) / w + 0.5, 0, 1)
@@ -54,7 +54,7 @@ export function installLights(kit: Kit): void {
     return haloTex
   }
   const haloMats: any = {}
-  function halo(parent: any, x: any, y: any, z: any, size: any, hex: any, op: any) {
+  function halo(parent: any, x: number, y: number, z: number, size: number, hex: any, op: number) {
     const key = hex + op
     if (!haloMats[key])
       haloMats[key] = new THREE.SpriteMaterial({
@@ -76,15 +76,15 @@ export function installLights(kit: Kit): void {
     return sp
   }
   kit.halo = halo
-  function lampKit(g: any, d: any, inner: any, lens: any, lensMat: any, refl?: any) {
+  function lampKit(g: any, d: number, inner: any, lens: any, lensMat: any, refl?: any) {
     refl = refl || MATERIALS.reflector
     return {
-      housing: function (w: any, h: any, y?: any, z?: any, geoFn?: any) {
+      housing: function (w: any, h: number, y?: any, z?: any, geoFn?: any) {
         const geo = roundedBoxGeometry(d, h, w, Math.min(0.03, h * 0.4))
         if (geoFn) geoFn(geo)
         return gm(g, geo, MATERIALS.housing, 0, y || 0, z || 0)
       },
-      lens: function (w: any, h: any, y?: any, z?: any, geoFn?: any) {
+      lens: function (w: number, h: number, y?: any, z?: any, geoFn?: any) {
         const geo = roundedBoxGeometry(0.03, h + 0.006, w + 0.006, Math.min(0.025, h * 0.4))
         if (geoFn) geoFn(geo)
         const L = gm(g, geo, lensMat, d / 2 - 0.004, y || 0, z || 0)
@@ -255,7 +255,7 @@ export function installLights(kit: Kit): void {
     return L
   }
   /* light bar from end to end (ledbar at the front, bar at the rear). face: +1 front, -1 rear */
-  kit.lightBar = function (c: any, x: any, y: any, z0: any, z1: any, h: any, face: any, mat: any) {
+  kit.lightBar = function (c: any, x: any, y: any, z0: number, z1: number, h: number, face: number, mat: any) {
     const len = Math.abs(z1 - z0)
     const zc = (z0 + z1) / 2
     const f = face || 1
@@ -273,7 +273,7 @@ export function installLights(kit: Kit): void {
     return L
   }
   /* Generic emblem (chrome circle with a bar), never a real logo */
-  kit.emblem = function (c: any, x: any, y: any, z: any, r: any, parent: any) {
+  kit.emblem = function (c: any, x: number, y: number, z: number, r: any, parent: any) {
     r = r || 0.045
     const g = new THREE.Group()
     g.position.set(x, y, z)
@@ -335,7 +335,7 @@ export function installLights(kit: Kit): void {
       const nb3 = Math.max(4, Math.round(h / 0.1))
       for (i = 0; i < nb3; i++) gm(g, roundedBoxGeometry(0.024, 0.03, w * 0.94, 0.008), MATERIALS.chrome, 0.04, -h / 2 + ((i + 0.5) * h) / nb3, 0)
     }
-    g.children.forEach(function (m: any) {
+    g.children.forEach(function (m) {
       m.castShadow = true
     })
     if (o.emblem !== false) kit.emblem(c, 0.05, st === 'closed' ? h * 0.12 : 0, 0, Math.min(0.05, h * 0.3), g)

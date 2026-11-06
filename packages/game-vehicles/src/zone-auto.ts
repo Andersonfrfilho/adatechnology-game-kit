@@ -26,7 +26,7 @@ export function installZoneAuto(kit: Kit): void {
     const top = m.top || belt + 0.5
     const hw = W / 2
     const WH = I.wheelInfo(c)
-    function add(id: any, name: any, type: any, box: any, o?: any) {
+    function add(id: string, name: string, type: string, box: any, o?: any) {
       const z = Object.assign({ id: id, name: name, type: type, box: I.normalizeBox(box) }, o || {})
       Z.push(z)
       return z
@@ -40,7 +40,7 @@ export function installZoneAuto(kit: Kit): void {
     let wheelsDone = false
 
     /* glass, lights and wheels in common */
-    function glassZones(grouped: any) {
+    function glassZones(grouped: boolean) {
       glassDone = true
       const gl = c.glass.filter(function (g: any) {
         return g.parent && g.userData.glass && !g.userData.ghost
@@ -184,7 +184,7 @@ export function installZoneAuto(kit: Kit): void {
         cl2.sort(function (a2: any, b2: any) {
           return (p[0] === 'headlight' ? -1 : 1) * (a2.bb.max.x - b2.bb.max.x) || a2.bb.min.y - b2.bb.min.y
         })
-        cl2.forEach(function (q: any, i: any) {
+        cl2.forEach(function (q: any, i: number) {
           add(i ? key + '_' + (i + 1) : key, i ? n + ' (' + (i + 1) + ')' : n, 'light', q.bb.expandByScalar(0.03), {
             lights: q.L,
             fxKey: p[0],
@@ -193,7 +193,7 @@ export function installZoneAuto(kit: Kit): void {
         })
       })
     }
-    function wheelZones(byAxle: any) {
+    function wheelZones(byAxle: boolean) {
       wheelsDone = true
       if (!WH) return
       const ws = WH.list
@@ -210,7 +210,7 @@ export function installZoneAuto(kit: Kit): void {
             if (a) a.w.push(w)
             else ax.push({ x: w.position.x, w: [w] })
           })
-        ax.forEach(function (a: any, i: any) {
+        ax.forEach(function (a: any, i: number) {
           const bb = new THREE.Box3()
           a.w.forEach(function (w: any) {
             bb.union(I.localBox(c, w, inv))
@@ -242,7 +242,7 @@ export function installZoneAuto(kit: Kit): void {
         add(id, n, 'wheel', I.localBox(c, w, inv).expandByScalar(0.04), { wheels: [w], who: '', seedId: seed })
       })
     }
-    function internal(kind2: any, n: any, fxKey: any, sz?: any) {
+    function internal(kind2: string, n: string, fxKey: string, sz?: any) {
       const ps = I.partsOf(c, kind2)
       if (!ps.length) return null
       const p = ps[0].pos
@@ -265,7 +265,7 @@ export function installZoneAuto(kit: Kit): void {
       const doorF = fb - 0.03
       const pil =
         gh && gh.pillars
-          ? gh.pillars.slice().sort(function (a: any, b: any) {
+          ? gh.pillars.slice().sort(function (a: number, b: number) {
               return b - a
             })
           : []
@@ -274,7 +274,7 @@ export function installZoneAuto(kit: Kit): void {
       const C = rearDoor ? Math.max(pil[1] != null && pil[1] < B - 0.4 ? pil[1] : rb, xr + rr * 0.2) : B
       const y0s = Math.max(0.03, cl - 0.12)
       const y1s = belt + 0.03
-      const sideB = function (x0: any, x1: any, s: any, y0?: any, y1?: any) {
+      const sideB = function (x0: number, x1: number, s: number, y0?: any, y1?: any) {
         return s < 0
           ? [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, -hw - out, -hw + sb]
           : [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, hw - sb, hw + out]

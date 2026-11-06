@@ -11,7 +11,7 @@ export function installGeometry(kit: Kit): void {
   const lod = kit.lod
 
   /* ================= geometry ================= */
-  function roundedBoxGeometry(w: any, h: any, d: any, r: any) {
+  function roundedBoxGeometry(w: any, h: any, d: any, r: number) {
     r = Math.max(0.002, Math.min(r, w * 0.45, h * 0.45, d * 0.45))
     /* light mode: a small or hard-edged box is a plain box (12 triangles), the rest gets fewer rounding rings */
     if (lod.on && (r < 0.012 || Math.max(w, h, d) < lod.flatBoxEdge || Math.min(w, h, d) < 0.08)) return new THREE.BoxGeometry(w, h, d)
@@ -23,7 +23,7 @@ export function installGeometry(kit: Kit): void {
     const hx = w / 2 - r
     const hy = h / 2 - r
     const hz = d / 2 - r
-    function map(v: any, hi: any) {
+    function map(v: number, hi: number) {
       const i = Math.round((v + 0.5) * n)
       return i <= nb ? -hi - (r * (nb - i)) / nb : hi + (r * (i - nb - 1)) / nb
     }
@@ -59,18 +59,18 @@ export function installGeometry(kit: Kit): void {
     p.needsUpdate = true
     geo.computeVertexNormals()
   }
-  function subdivide(geo: any, maxLen: any) {
+  function subdivide(geo: any, maxLen: number) {
     if (lod.on) maxLen = maxLen * lod.subdivisionFactor
     const src = geo.index ? geo.toNonIndexed() : geo
     const a = src.attributes.position.array
     const out: any = []
-    function d(p: any, q: any) {
+    function d(p: number[], q: number[]) {
       return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
     }
     function m(p: any, q: any) {
       return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2]
     }
-    function tri(A: any, B: any, C: any, depth: any) {
+    function tri(A: any, B: any, C: any, depth: number) {
       const ab = d(A, B)
       const bc = d(B, C)
       const ca = d(C, A)
@@ -102,7 +102,7 @@ export function installGeometry(kit: Kit): void {
   const latestCrease = new WeakMap<object, object>()
   /* The smoothing of `crease` as slices: `step(deadline)` works until the clock passes it and returns whether it finished.
      The normals start as flat face normals, so the mesh draws right between the slices; the end result is the same as one call. */
-  function creaseTask(geo: any, deg: any) {
+  function creaseTask(geo: any, deg: number) {
     if (geo.index) {
       const ni = geo.toNonIndexed()
       Object.keys(ni.attributes).forEach(function (k) {
@@ -252,7 +252,7 @@ export function installGeometry(kit: Kit): void {
     }
     return { geo: geo, step: step }
   }
-  function crease(geo: any, deg: any) {
+  function crease(geo: any, deg: number) {
     creaseTask(geo, deg).step(Infinity)
     return geo
   }
@@ -303,7 +303,7 @@ export function installGeometry(kit: Kit): void {
     }
     p.needsUpdate = true
   }
-  function loftGeometry(st: any, seg: any, pw: any, colorFn: any) {
+  function loftGeometry(st: any, seg: number, pw: number, colorFn: any) {
     seg = seg || 22
     pw = pw || 2
     const pos: any = []
@@ -431,12 +431,12 @@ export function installGeometry(kit: Kit): void {
     const e1 = new V3()
     const e2 = new V3()
     const ce = new V3()
-    function lerp(P: any, Q: any, k: any) {
+    function lerp(P: any, Q: number[], k: number) {
       const o = new Array(P.length)
       for (let i = 0; i < P.length; i++) o[i] = P[i] + (Q[i] - P[i]) * k
       return o
     }
-    function clip(t: any, d: any, s: any) {
+    function clip(t: any, d: any, s: number) {
       const out = []
       for (let i = 0; i < 3; i++) {
         const j = (i + 1) % 3
@@ -559,7 +559,7 @@ export function installGeometry(kit: Kit): void {
           }
           return
         }
-        seg.forEach(function (t: any) {
+        seg.forEach(function (t: number[][]) {
           if (boxesOut) {
             for (let k = 0; k < 3; k++) {
               boxesOut[wb + k] = Math.fround(Math.min(t[0][k], t[1][k], t[2][k]))
@@ -644,7 +644,7 @@ export function installGeometry(kit: Kit): void {
     return g
   }
   /* Normalised 0..1 UV projecting onto the two axes of greatest extent (or onto the given axes, e.g. "xy"). */
-  function uvProject(geo: any, axes: any) {
+  function uvProject(geo: any, axes: string) {
     geo.computeBoundingBox()
     const bb = geo.boundingBox
     const sz = new V3().subVectors(bb.max, bb.min)
@@ -681,13 +681,13 @@ export function installGeometry(kit: Kit): void {
     uvProject: uvProject,
   }
   /* Ready-made holes for shell({ holes }) and geo.cut */
-  kit.holeTop = function (x0: any, x1: any, z: any, yMin: any, tag: any) {
+  kit.holeTop = function (x0: number, x1: number, z: number, yMin: number, tag: any) {
     return {
       tag: tag,
       sel: function (n: any, ce: any) {
         return n.y > 0.3 && ce.y > yMin
       },
-      sdf: function (x: any, y: any, zz: any) {
+      sdf: function (x: number, y: any, zz: number) {
         return Math.max(x0 - x, x - x1, Math.abs(zz) - z)
       },
     }
@@ -701,7 +701,7 @@ export function installGeometry(kit: Kit): void {
       area += a[0] * b[1] - b[0] * a[1]
     }
     const sg = area > 0 ? 1 : -1
-    const E2 = poly.map(function (a: any, i: any) {
+    const E2 = poly.map(function (a: any, i: number) {
       const b = poly[(i + 1) % poly.length]
       const dx = b[0] - a[0]
       const dy = b[1] - a[1]
@@ -715,7 +715,7 @@ export function installGeometry(kit: Kit): void {
       sel: function (n: any, ce: any) {
         return Math.abs(n.z) > 0.5 && Math.abs(ce.z) >= zMin && (o.side == null || Math.sign(ce.z) === o.side)
       },
-      sdf: function (x: any, y: any) {
+      sdf: function (x: number, y: number) {
         let d = -1e9
         for (let i = 0; i < E2.length; i++) {
           const e = E2[i]
@@ -725,13 +725,13 @@ export function installGeometry(kit: Kit): void {
       },
     }
   }
-  kit.holeQuad = function (q: any, margin: any) {
+  kit.holeQuad = function (q: any, margin: number) {
     margin = margin || 0
     return {
       sel: function (n: any) {
         return n.x * q.n[0] + n.y * q.n[1] > 0.55
       },
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: number, y: number, z: number) {
         const rx = x - q.pb[0]
         const ry = y - q.pb[1]
         const s = rx * q.u[0] + ry * q.u[1]
@@ -744,11 +744,11 @@ export function installGeometry(kit: Kit): void {
       },
     }
   }
-  kit.holeBox = function (min: any, max: any, sel: any, tag: any) {
+  kit.holeBox = function (min: number[], max: number[], sel: any, tag: any) {
     return {
       tag: tag,
       sel: sel || null,
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: number, y: number, z: number) {
         return Math.max(min[0] - x, x - max[0], min[1] - y, y - max[1], min[2] - z, z - max[2])
       },
     }

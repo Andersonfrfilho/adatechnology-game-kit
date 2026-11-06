@@ -35,18 +35,18 @@ export function installParticles(kit: Kit): void {
     droplet: makeMaterial('#0b0908', { roughness: 0.05, metalness: 0.7 }),
   }
   /* ---- smoke, fire and dust: sprite puffs with a noise texture; they grow, drift with the wind and dissolve by noise ---- */
-  function valueNoise(seed: any) {
+  function valueNoise(seed: number) {
     const N = 16
     const g: any = []
     for (let i = 0; i < N * N; i++) g.push(hash(i % N, (i / N) | 0, seed))
-    return function (x: any, y: any) {
+    return function (x: number, y: number) {
       const xi = Math.floor(x)
       const yi = Math.floor(y)
       const fx = x - xi
       const fy = y - yi
       const sx = fx * fx * (3 - 2 * fx)
       const sy = fy * fy * (3 - 2 * fy)
-      function G(a: any, b: any) {
+      function G(a: number, b: number) {
         return g[(((a % N) + N) % N) + (((b % N) + N) % N) * N]
       }
       const a = G(xi, yi) + (G(xi + 1, yi) - G(xi, yi)) * sx
@@ -54,7 +54,7 @@ export function installParticles(kit: Kit): void {
       return a + (b - a) * sy
     }
   }
-  function puffTexture(seed: any, fire: any) {
+  function puffTexture(seed: number, fire: boolean) {
     const S = 96
     const cv = document.createElement('canvas')
     cv.width = cv.height = S
@@ -87,7 +87,7 @@ export function installParticles(kit: Kit): void {
   }
   let SMOKE_TEXTURES: any = null
   let FIRE_TEXTURES: any = null
-  function puffMaterial(fire: any, col: any, op: any) {
+  function puffMaterial(fire: boolean, col: any, op: any) {
     if (!SMOKE_TEXTURES) {
       SMOKE_TEXTURES = [1, 2, 3, 4].map(function (k) {
         return puffTexture(k * 13, false)
@@ -134,7 +134,7 @@ export function installParticles(kit: Kit): void {
   const WIND = new V3(-0.45, 0, 0.16)
   const PARTICLE_LIFE: any = { spark: 0.6, dust: 1.6, smoke: 2.8, fire: 0.7, water: 1.2, droplet: 1.0 }
   const TRANSIENT_TYPES: any = { spark: 1, dust: 1, smoke: 1, fire: 1, water: 1, droplet: 1 }
-  function killParticle(c: any, i: any) {
+  function killParticle(c: any, i: number) {
     const P = c.particles[i]
     c.effects.remove(P.m)
     if (P.own) {
@@ -165,7 +165,7 @@ export function installParticles(kit: Kit): void {
     )
     return null
   }
-  kit.spawn = function (c: any, type: any, pos: any, vel: any, o: any) {
+  kit.spawn = function (c: any, type: string, pos: any, vel: any, o: any) {
     o = o || {}
     const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
     if (effects) return routeParticle(c, effects, type, pos, vel, o)
@@ -222,7 +222,7 @@ export function installParticles(kit: Kit): void {
   const _q = new THREE.Quaternion()
   const _z = new V3(0, 0, 1)
   const _t = new V3()
-  function tickParticles(c: any, dt: any) {
+  function tickParticles(c: any, dt: number) {
     for (let i = c.particles.length - 1; i >= 0; i--) {
       const P = c.particles[i]
       if (P.rest) continue
@@ -302,7 +302,7 @@ export function installParticles(kit: Kit): void {
       }
     }
   }
-  function burst(c: any, type: any, pFx: any, n: any, o: any) {
+  function burst(c: any, type: any, pFx: any, n: number, o: any) {
     o = o || {}
     const d = o.dir || new V3(0, 1, 0)
     const spd = o.speed || 2
@@ -322,7 +322,7 @@ export function installParticles(kit: Kit): void {
   }
   kit.burst = burst
   /* Continuous emitter. p in c.vehicle (or in the vehicle world with o.world). kind: white|black|fire|exhaust (exhaust follows c.engineHealth) */
-  kit.addEmitter = function (c: any, p: any, kind: any, o: any) {
+  kit.addEmitter = function (c: any, p: any, kind: string, o: any) {
     o = o || {}
     if (
       c.emitters.some(function (e: any) {
@@ -344,14 +344,14 @@ export function installParticles(kit: Kit): void {
     return e
   }
   /* colour and opacity of the exhaust smoke by engine condition: 100% almost invisible, 60% grey, 30% dark grey, 10% black with misfires */
-  function exhaustLook(h: any) {
+  function exhaustLook(h: number) {
     if (h >= 0.85) return ['#a7adb2', 0.05]
     if (h >= 0.45) return ['#7b8084', 0.2 + (0.85 - h) * 0.3]
     if (h >= 0.2) return ['#3f4245', 0.42]
     return ['#141414', 0.66]
   }
   kit.exhaustLook = exhaustLook
-  function tickEmit(c: any, dt: any) {
+  function tickEmit(c: any, dt: number) {
     c.emitters.forEach(function (e: any) {
       if (e.kind === 'exhaust') {
         const h = c.engineHealth == null ? 1 : c.engineHealth

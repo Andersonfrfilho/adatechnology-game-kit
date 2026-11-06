@@ -87,7 +87,7 @@ export function wrapThreeForLod(TH: any, lod: LodSettings): any {
     }
   }
   T.TubeGeometry = class extends TH.TubeGeometry {
-    constructor(path: any, ts: any, r: any, rs: any, closed: any) {
+    constructor(path: any, ts: any, r: number, rs: any, closed: any) {
       if (lod.on) {
         let len = 1
         try {

@@ -24,7 +24,7 @@ export function installDamageParts(kit: Kit): void {
     const m = c.meta
     return new V3((m.front + m.rear) / 2 - p.x, 0, -p.z).normalize()
   }
-  function glassBand(c: any, z: any, g: any, b: any) {
+  function glassBand(c: any, z: any, g: any, b: number) {
     const G = g.userData.glass
     if (!G || !g.parent) return
     const R = c.rand
@@ -85,7 +85,7 @@ export function installDamageParts(kit: Kit): void {
     crackLensCache.set(mat, m2)
     return m2
   }
-  function lightBand(c: any, z: any, Lt: any, b: any) {
+  function lightBand(c: any, z: any, Lt: any, b: number) {
     if (!Lt || Lt.broken === 'gone') return
     const dir = new V3(Lt.kind === 'taillight' ? 1 : -1, 0, 0)
     if (b === 1) {
@@ -123,7 +123,7 @@ export function installDamageParts(kit: Kit): void {
     })
     return out
   }
-  function flattenTire(w: any, k: any) {
+  function flattenTire(w: any, k: number) {
     const r = w.userData.r || 0.3
     const yb = -r * (1 - k)
     const v = new V3()
@@ -153,7 +153,7 @@ export function installDamageParts(kit: Kit): void {
       t.geometry.computeBoundingSphere()
     })
   }
-  function wheelBand(c: any, z: any, w: any, b: any) {
+  function wheelBand(c: any, z: any, w: any, b: number) {
     if (!w || !w.parent) return
     const r = w.userData.r || 0.3
     const s = w.position.z >= 0 ? 1 : -1
@@ -199,7 +199,7 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- aircraft landing gear: dented sags, destroyed breaks the front leg (nose on the ground), torn off = belly landing ---- */
-  function gearBand(c: any, z: any, b: any) {
+  function gearBand(c: any, z: any, b: number) {
     const R = c.rand
     const ws = z.wheels.filter(function (w: any) {
       return w.parent
@@ -301,7 +301,7 @@ export function installDamageParts(kit: Kit): void {
     c.effects.add(mk)
   }
   /* ---- internal zones: engine, radiator, tank, battery, underbody ---- */
-  function internalBand(c: any, z: any, b: any) {
+  function internalBand(c: any, z: any, b: number) {
     const m = c.meta
     const p = z.pos ? z.pos.clone() : I.boxCenter(z.box)
     const sub = z.sub || z.id
@@ -350,7 +350,7 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- hood ---- */
-  function hoodBand(c: any, z: any, b: any, dirty: any) {
+  function hoodBand(c: any, z: any, b: number, dirty: any) {
     const H = c.hood && z.owned.indexOf(c.hood.piv) >= 0 ? c.hood : null
     if (!H) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -414,7 +414,7 @@ export function installDamageParts(kit: Kit): void {
     } else I.zoneDecals(c, z, { deep: 3, chip: 3 }, I.zoneCands(c, z, I.worldInverseOf(c)))
   }
   /* ---- bumper ---- */
-  function bumperBand(c: any, z: any, b: any, dirty: any) {
+  function bumperBand(c: any, z: any, b: number, dirty: any) {
     const o = z.owned[0]
     if (!o || !o.parent) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -460,7 +460,7 @@ export function installDamageParts(kit: Kit): void {
     })
   }
   /* ---- loose parts (bike, rotor, weapon, skid) ---- */
-  function partBand(c: any, z: any, b: any, dirty: any) {
+  function partBand(c: any, z: any, b: number, dirty: any) {
     const objs = z.owned.filter(function (o: any) {
       return o.parent
     })
@@ -485,7 +485,7 @@ export function installDamageParts(kit: Kit): void {
     }
     if (z.kindPart && b >= 2 && b <= 3) {
       objs.forEach(function (o: any) {
-        o.children.forEach(function (ch: any, i: any) {
+        o.children.forEach(function (ch: any, i: number) {
           if (ch.type === 'Group' || ch.isMesh) {
             ch.rotation.z += (-0.12 - hash(i, 1, 1) * 0.2) * (b - 1)
             ch.rotation.x += (i % 2 ? 0.15 : -0.15) * (b - 1)
@@ -528,7 +528,7 @@ export function installDamageParts(kit: Kit): void {
   }
   /* bent tail cone: everything behind the crease (cone, fin, tail rotor) rotates downward around it.
      Meshes that cross the crease bend per vertex; whole parts behind it rotate as a rigid body. */
-  function bendAft(c: any, z: any, kx: any, ky: any, ang: any, dirty: any) {
+  function bendAft(c: any, z: any, kx: any, ky: any, ang: number, dirty: any) {
     const inv = I.worldInverseOf(c)
     const q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 0, 1), ang)
     const K = new V3(kx, ky, 0)
@@ -536,7 +536,7 @@ export function installDamageParts(kit: Kit): void {
     const rel = new THREE.Matrix4()
     const irel = new THREE.Matrix4()
     const blend = 0.25
-    function rot(p: any, k: any) {
+    function rot(p: any, k: number) {
       const a2 = ang * k
       const cs = Math.cos(a2)
       const sn = Math.sin(a2)

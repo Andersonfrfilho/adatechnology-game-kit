@@ -44,7 +44,7 @@ export function installScenarios(kit: Kit): void {
     const health: Record<string, number> = {}
     const flags: any = {}
     const rand = rng(strHash((c.seedKey || c.key || '') + '|' + ((S && S.seedId) || sc)))
-    function set(z: any, v: any) {
+    function set(z: any, v: number) {
       health[z.id] = clamp(Math.round(v), 0, 100)
     }
     const X: any = {
@@ -92,7 +92,7 @@ export function installScenarios(kit: Kit): void {
       .map(function (z: any) {
         return z.health
       })
-      .sort(function (a: any, b: any) {
+      .sort(function (a: number, b: number) {
         return a - b
       })
     if (st.length) {
@@ -134,7 +134,7 @@ export function installScenarios(kit: Kit): void {
     return best
   }
   /* impact at a point: takes health from the zones near the point, according to the force (0.3..1.4) */
-  kit.zoneDamageAt = function (c: any, p: any, dir: any, force: any, obj: any) {
+  kit.zoneDamageAt = function (c: any, p: any, dir: any, force: number, obj: any) {
     const Zs = I.zonesOf(c)
     const main = kit.zoneAt(c, p, obj)
     const Rr = 0.35 + 0.35 * force
@@ -151,7 +151,7 @@ export function installScenarios(kit: Kit): void {
     return { main: main ? main.id : null, list: out }
   }
   /* point and direction of the impacts by side (Front, Rear, Left side and Right side buttons) */
-  kit.zonePoint = function (c: any, zone: any) {
+  kit.zonePoint = function (c: any, zone: string) {
     const m = c.meta
     const mid = m.clearance + (m.bodyHeight || 0.6) * 0.5
     let p

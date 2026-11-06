@@ -621,7 +621,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       if (door) {
         // the objects of the vehicle: use the box that wraps them
         const bb = (door.mirrors as any[]).reduce(
-          (acc: [number, number, number, number, number, number] | null, o: any) => {
+          (acc: [number, number, number, number, number, number] | null, o) => {
             const w = new (kit.THREE.Box3 as any)().setFromObject(o)
             const inv = new (kit.THREE.Matrix4 as any)().copy(c.vehicle.matrixWorld).invert()
             w.applyMatrix4(inv)

@@ -15,7 +15,7 @@ export function installArmor(kit: Kit): void {
     return makeMaterial(h, { metalness: 0.5, roughness: 0.55 })
   })
   kit.steelMaterial = STEEL_MATERIAL
-  function jerryCan(c: any, x: any, y: any, z: any, col: any) {
+  function jerryCan(c: any, x: number, y: number, z: number, col: string) {
     c.roundBox(0.34, 0.44, 0.16, 0.04, makeMaterial(col, { roughness: 0.5 }), x, y, z)
     c.tube(
       [
@@ -172,7 +172,7 @@ export function installArmor(kit: Kit): void {
         const a1 = brk[b + 1]
         const mid = (a0 + a1) / 2
         let bot = m.clearance + 0.1
-        wl.forEach(function (w: any) {
+        wl.forEach(function (w: number[]) {
           if (mid > w[0] && mid < w[1]) bot = Math.max(bot, w[2])
         })
         if (yTop - bot < 0.14 || a1 - a0 < 0.12) continue
@@ -180,7 +180,7 @@ export function installArmor(kit: Kit): void {
         for (let q = 0; q < np; q++) pieces.push([a0 + ((a1 - a0) * q) / np, a0 + ((a1 - a0) * (q + 1)) / np, bot])
       }
       ;[1, -1].forEach(function (s2) {
-        pieces.forEach(function (pc: any, j: any) {
+        pieces.forEach(function (pc: number[], j: number) {
           const pl = pc[1] - pc[0] - 0.03
           const px = (pc[0] + pc[1]) / 2
           const plH = yTop - pc[2]

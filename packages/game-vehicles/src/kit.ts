@@ -286,9 +286,9 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     }
     try {
       kit.zonesOf(c)
-    } catch (e: any) {
+    } catch (e) {
       c.zones = []
-      ;(c.zoneErrors = c.zoneErrors || []).push('zones: ' + (e && e.message))
+      ;(c.zoneErrors = c.zoneErrors || []).push('zones: ' + (e && (e as Error).message))
     }
     if (st === 'modified') {
       if (m.armor) m.armor(c, kit)
@@ -300,8 +300,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       let fromScenario: any = { health: {}, flags: {} }
       try {
         fromScenario = kit.zoneScenario(c, zoneState.scenario)
-      } catch (e: any) {
-        ;(c.zoneErrors = c.zoneErrors || []).push('scenario: ' + (e && e.message))
+      } catch (e) {
+        ;(c.zoneErrors = c.zoneErrors || []).push('scenario: ' + (e && (e as Error).message))
       }
       zoneState = {
         health: Object.assign({}, fromScenario.health, zoneState.health),

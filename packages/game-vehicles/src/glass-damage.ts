@@ -72,7 +72,7 @@ export function installGlassDamage(kit: Kit): void {
     return out
   }
   /* Crack web: thick opaque lines at the centre, thinning outward, with a dark outline so it reads from afar. */
-  function drawWeb(x: any, cx: any, cy: any, s: any, ax: any, rnd: any) {
+  function drawWeb(x: any, cx: number, cy: number, s: number, ax: number, rnd: any) {
     const n = 16 + Math.floor(rnd() * 8)
     const spokes: any = []
     for (let i = 0; i < n; i++) {
@@ -96,10 +96,10 @@ export function installGlassDamage(kit: Kit): void {
       x.lineTo(q[0], q[1])
       x.stroke()
     }
-    ;[
+    ;([
       ['rgba(8,12,14,0.55)', 2.2],
       ['rgba(244,248,250,0.97)', 0],
-    ].forEach(function (pass: any) {
+    ] as [string, number][]).forEach(function (pass) {
       spokes.forEach(function (pts: any) {
         for (let k = 1; k < pts.length; k++) {
           const t = k / pts.length
@@ -110,7 +110,7 @@ export function installGlassDamage(kit: Kit): void {
         x.lineWidth = Math.max(0.8, 2.6 - r * 0.45) + pass[1] * 0.6
         x.strokeStyle = pass[0]
         x.beginPath()
-        spokes.forEach(function (sp: any, j: any) {
+        spokes.forEach(function (sp: any, j: number) {
           const p = sp[Math.min(r, sp.length - 1)]
           const q = spokes[(j + 1) % spokes.length][Math.min(r, sp.length - 1)]
           if (rnd() < 0.8) {
@@ -132,7 +132,7 @@ export function installGlassDamage(kit: Kit): void {
   }
   // a 2D context that draws nothing: every call and gradient is a no-op
   const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
-  function crackGlass(c: any, msh: any, p: any, force: any, sc?: any) {
+  function crackGlass(c: any, msh: any, p: any, force: number, sc?: any) {
     const G = msh.userData.glass
     // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
     // seeded result after it) stays the same as when the hidden canvas was still drawn on
@@ -162,7 +162,7 @@ export function installGlassDamage(kit: Kit): void {
     const p = src.attributes.position
     const cnt: any = {}
     const toColor: any = []
-    function key(i: any) {
+    function key(i: number) {
       return Math.round(p.getX(i) * 1000) + ',' + Math.round(p.getY(i) * 1000) + ',' + Math.round(p.getZ(i) * 1000)
     }
     for (let f = 0; f < p.count; f += 3)
@@ -184,7 +184,7 @@ export function installGlassDamage(kit: Kit): void {
     const ab = new V3()
     const ap = new V3()
     const q2 = new V3()
-    function dist(x: any, y: any, z: any) {
+    function dist(x: number, y: number, z: number) {
       let best = 1e9
       q2.set(x, y, z)
       for (let i = 0; i < toColor.length; i++) {
@@ -202,7 +202,7 @@ export function installGlassDamage(kit: Kit): void {
     const sub = subdivide(src, 0.03)
     const r = cutGeometry(sub, [
       {
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: number, y: number, z: number) {
           return 0.02 + 0.07 * nz(x * 9 + z * 5, y * 9 + z * 3) * nz(x * 23, y * 23 + z * 17) - dist(x, y, z)
         },
       },
@@ -210,7 +210,7 @@ export function installGlassDamage(kit: Kit): void {
     if (!r.geo.attributes.position.count) return null
     return crease(r.geo, 60)
   }
-  function shatterGlass(c: any, msh: any, force: any, dir: any) {
+  function shatterGlass(c: any, msh: any, force: number, dir: any) {
     const G = msh.userData.glass
     if (G.broken) return
     G.broken = true
@@ -240,7 +240,7 @@ export function installGlassDamage(kit: Kit): void {
         }),
       )
       const hole = new THREE.Path()
-      out.forEach(function (p: any, i: any) {
+      out.forEach(function (p: any, i: number) {
         const dx = cx - p.x
         const dy = cy - p.y
         const d = Math.hypot(dx, dy) || 1
@@ -336,7 +336,7 @@ export function installGlassDamage(kit: Kit): void {
       c.vehicle.add(sm)
     }
   }
-  function hitGlass(c: any, msh: any, p: any, dir: any, force: any) {
+  function hitGlass(c: any, msh: any, p: any, dir: any, force: number) {
     const G = msh && msh.userData.glass
     if (!G || G.broken) return
     if (G.type === 'laminated') {

@@ -10,7 +10,7 @@ export function installZoneDecals(kit: Kit): void {
   const { makeMaterial, DOUBLE_SIDE } = I
 
   /* ---- damage materials ---- */
-  function dmat(hex: any, o: any) {
+  function dmat(hex: string, o: any) {
     return makeMaterial(hex, Object.assign({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -3, side: DOUBLE_SIDE }, o || {}))
   }
   const DAMAGE_MATERIALS = {
@@ -54,7 +54,7 @@ export function installZoneDecals(kit: Kit): void {
     m.quaternion.copy(_zq2.multiply(_zq))
     m.position.copy(p).addScaledVector(n, 0.004)
   }
-  function decalMesh(c: any, geo: any, mat: any, p: any, n: any, ang: any, obj?: any) {
+  function decalMesh(c: any, geo: any, mat: any, p: any, n: any, ang: number, obj?: any) {
     const m = c.add(geo, mat, 0, 0, 0)
     m.castShadow = false
     m.receiveShadow = false
@@ -67,7 +67,7 @@ export function installZoneDecals(kit: Kit): void {
     }
     return m
   }
-  function blobGeometry(r: any, rnd: any, jag?: any, ell?: any) {
+  function blobGeometry(r: number, rnd: any, jag?: any, ell?: any) {
     const s = new THREE.Shape()
     const nz = I.valueNoise(Math.floor(rnd() * 997))
     const N = 18
@@ -80,7 +80,7 @@ export function installZoneDecals(kit: Kit): void {
     return new THREE.ShapeGeometry(s)
   }
   /* torn metal: a dark hole with a sharp edge of metal teeth that bend outward */
-  function tearDecal(c: any, p: any, n: any, r: any, rnd: any, obj: any) {
+  function tearDecal(c: any, p: any, n: any, r: number, rnd: any, obj: any) {
     const N = 13
     const pts: any = []
     for (let k = 0; k < N; k++) {
@@ -89,13 +89,13 @@ export function installZoneDecals(kit: Kit): void {
       pts.push([Math.cos(a) * rr * 1.25, Math.sin(a) * rr])
     }
     const s = new THREE.Shape()
-    pts.forEach(function (q: any, i: any) {
+    pts.forEach(function (q: number[], i: any) {
       s[i ? 'lineTo' : 'moveTo'](q[0] * 0.86, q[1] * 0.86)
     })
     const hole = decalMesh(c, new THREE.ShapeGeometry(s), DAMAGE_MATERIALS.hole, p, n, rnd() * 6)
     const hp = hole.parent
     const pos: any = []
-    pts.forEach(function (q: any, i: any) {
+    pts.forEach(function (q: number[], i: number) {
       const q2 = pts[(i + 1) % N]
       const ox = q[0] * 1.12
       const oy = q[1] * 1.12
@@ -343,7 +343,7 @@ export function installZoneDecals(kit: Kit): void {
     const a = Math.abs(d.x) >= Math.abs(d.y) && Math.abs(d.x) >= Math.abs(d.z) ? 0 : Math.abs(d.y) >= Math.abs(d.z) ? 1 : 2
     return a
   }
-  function zoneSurf(c: any, z: any, n: any, rnd: any, cands: any, o?: any) {
+  function zoneSurf(c: any, z: any, n: number, rnd: any, cands: any, o?: any) {
     o = o || {}
     const out = []
     const B = z.box
@@ -385,7 +385,7 @@ export function installZoneDecals(kit: Kit): void {
   const _rt = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _rt.layers.enableAll()
-  function scratchPath(c: any, s: any, len: any, ang: any, cands: any, B: any) {
+  function scratchPath(c: any, s: any, len: number, ang: number, cands: any, B: any) {
     const n = s.n.clone().normalize()
     const t = Math.abs(n.y) < 0.9 ? new V3().crossVectors(new V3(0, 1, 0), n) : new V3().crossVectors(new V3(1, 0, 0), n)
     t.normalize().applyAxisAngle(n, ang || 0)
@@ -394,7 +394,7 @@ export function installZoneDecals(kit: Kit): void {
     const inv = I.worldInverseOf(c)
     const M = Math.max(3, Math.round(len / 0.04))
     const pts = []
-    function at(k: any) {
+    function at(k: number) {
       const q = s.p.clone().addScaledVector(t, (len * 0.5 * k) / M)
       _rt.set(q.clone().addScaledVector(n, 0.08).applyMatrix4(Mw), n.clone().negate().transformDirection(Mw))
       _rt.far = 0.2
@@ -424,13 +424,13 @@ export function installZoneDecals(kit: Kit): void {
     }
     return pts.length >= 3 ? pts : null
   }
-  function ribbonGeo(pts: any, wd: any, lift: any) {
+  function ribbonGeo(pts: any, wd: number, lift: number) {
     const pos: any = []
     const idx: any = []
     const N = pts.length
     const tg = new V3()
     const sd = new V3()
-    pts.forEach(function (q: any, i: any) {
+    pts.forEach(function (q: any, i: number) {
       const a = pts[Math.max(0, i - 1)].p
       const b = pts[Math.min(N - 1, i + 1)].p
       tg.subVectors(b, a).normalize()
@@ -450,7 +450,7 @@ export function installZoneDecals(kit: Kit): void {
     g.computeVertexNormals()
     return g
   }
-  function scratchDecal(c: any, s: any, len: any, wd: any, mat: any, ang: any, cands: any, B: any, pts?: any) {
+  function scratchDecal(c: any, s: any, len: number, wd: number, mat: any, ang: number, cands: any, B: any, pts?: any) {
     pts = pts || scratchPath(c, s, len, ang, cands, B)
     if (!pts) return null
     const m = c.add(ribbonGeo(pts, wd, mat === DAMAGE_MATERIALS.deep ? 0.0038 : 0.003), mat, 0, 0, 0)

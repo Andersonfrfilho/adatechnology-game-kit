@@ -9,7 +9,7 @@ export function installDamagePanels(kit: Kit): void {
   const { MATERIALS } = I
 
   /* ---- body panel (door, fender, side panel, roof, lid, armour, hull, wing) ---- */
-  function panelBand(c: any, z: any, b: any, dirty: any) {
+  function panelBand(c: any, z: any, b: number, dirty: any) {
     const R = c.rand
     const inv = I.worldInverseOf(c)
     const B = z.box
@@ -96,7 +96,7 @@ export function installDamagePanels(kit: Kit): void {
     opt.crease = longU ? null : null
     if (longU) opt.crease = { v: vc + (R() - 0.5) * lv * 0.15, w: Math.min(0.09, lv * 0.2), depth: maxD * 0.55 }
     if (b === 3)
-      opt.extra = function (p: any, f: any) {
+      opt.extra = function (p: any, f: number) {
         p.addScaledVector(d, 0.012 * Math.sin(p.getComponent(ax[0]) * 17) * Math.min(1, f / 0.05))
       }
     /* dented door: the rear edge of the door sticks out (misaligned gap) */
@@ -224,7 +224,7 @@ export function installDamagePanels(kit: Kit): void {
       )
     })
   }
-  function doorGap(c: any, z: any, b: any, cands: any) {
+  function doorGap(c: any, z: any, b: number, cands: any) {
     const B = z.box
     const xe = z.hinge === 'rear' ? B.x1 : B.x0
     const inv = I.worldInverseOf(c)
@@ -244,7 +244,7 @@ export function installDamagePanels(kit: Kit): void {
     seam.castShadow = false
     seam.userData.decal = true
   }
-  function mirrorHang(c: any, z: any, ang: any) {
+  function mirrorHang(c: any, z: any, ang: number) {
     const objs = z.mirrors.filter(function (o: any) {
       return o.parent
     })

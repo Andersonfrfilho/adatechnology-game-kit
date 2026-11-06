@@ -16,7 +16,7 @@ export function installExplosion(kit: Kit): void {
     return makeMaterial(h, { roughness: 1, metalness: i === 3 ? 0.35 : 0.15 })
   })
   const BURNT_RUB = makeMaterial('#0b0b0b', { roughness: 1 })
-  function boomMat(hex: any, op: any, add?: any) {
+  function boomMat(hex: any, op: number, add?: any) {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color(hex),
       transparent: true,
@@ -125,10 +125,10 @@ export function installExplosion(kit: Kit): void {
     const g = new THREE.Group()
     c.effects.add(g)
     c.bigFx = { g: g, t: 0, rings: [], col: [] }
-    ;[
+    ;([
       [12, '#d8322a', kit.t('blast.lethal', { m: 12 })],
       [30, '#e0a548', kit.t('blast.injury', { m: 30 })],
-    ].forEach(function (r: any) {
+    ] as [number, string, string][]).forEach(function (r) {
       const ring = new THREE.Mesh(new THREE.RingGeometry(r[0] - 0.25, r[0], 96), boomMat(r[1], 0.85))
       ring.rotation.x = -PI / 2
       ring.position.y = 0.06
@@ -226,7 +226,7 @@ export function installExplosion(kit: Kit): void {
       I.shatterGlass(c, gm2, 1.4, new V3(0, 1, 0))
     })
     /* parts that fly off with a fire trail */
-    function rv(a: any, b: any) {
+    function rv(a: number, b: number) {
       return a + c.rand() * (b - a)
     }
     if (c.hood) {
@@ -259,7 +259,7 @@ export function installExplosion(kit: Kit): void {
     c.log.push({ kind: 'explosion', label: kit.t(big ? 'blast.tank_explosion' : 'blast.explosion') })
     if (big) bigBoomFx(c)
   }
-  function tickBoom(c: any, dt: any) {
+  function tickBoom(c: any, dt: number) {
     const B = c.blast
     B.t += dt
     if (B.phase === 'fire') {
@@ -308,7 +308,7 @@ export function installExplosion(kit: Kit): void {
       }
     }
   }
-  function tickFlying(c: any, dt: any) {
+  function tickFlying(c: any, dt: number) {
     ;(c.flying || []).forEach(function (P: any) {
       if (P.landed) {
         if (P.trail > 0) {
@@ -385,7 +385,7 @@ export function installExplosion(kit: Kit): void {
         }
       }
       const fade = F.t < 6 ? 1 : Math.max(0, 1 - (F.t - 6) / 2)
-      F.rings.forEach(function (r: any, i: any) {
+      F.rings.forEach(function (r: any, i: number) {
         r.material.opacity = (i % 3 === 1 ? 0.07 : 0.85) * fade * Math.min(1, F.t * 3)
       })
       if (fade <= 0) {

@@ -1068,7 +1068,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     meshParts = new Map()
     for (const d of model.parts) {
       if (d.role !== 'glass') continue
-      const z = (kit.zonesOf(c) as any[]).find((q: any) => q.id === d.zoneId)
+      const z = (kit.zonesOf(c) as any[]).find((q) => q.id === d.zoneId)
       for (const g of z?.glass ?? d.panes ?? []) meshParts.set(g, d.id)
     }
     return meshParts

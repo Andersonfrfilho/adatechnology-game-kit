@@ -38,10 +38,10 @@ export function installRollover(kit: Kit): void {
     return { list: list, thin: thin }
   }
   function convexHull(pts: any) {
-    pts.sort(function (a: any, b: any) {
+    pts.sort(function (a: number[], b: number[]) {
       return a[1] - b[1] || a[0] - b[0]
     })
-    function cr(o: any, a: any, b: any) {
+    function cr(o: number[], a: number[], b: number[]) {
       return (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1])
     }
     const lo: any = []
@@ -59,7 +59,7 @@ export function installRollover(kit: Kit): void {
     lo.pop()
     return lo.concat(up)
   }
-  kit.roll = function (c: any, s: any) {
+  kit.roll = function (c: any, s: number) {
     if (c.rollState || c.flipped) return false
     s = s || 1
     const m = c.meta
@@ -179,7 +179,7 @@ export function installRollover(kit: Kit): void {
       const sn = Math.sin(c.vehicle.rotation.x)
       let best = null
       let by = 1e9
-      A.S.forEach(function (q: any) {
+      A.S.forEach(function (q: number[]) {
         const y = q[0] * cs - q[1] * sn
         if (y < by) {
           by = y
@@ -234,7 +234,7 @@ export function installRollover(kit: Kit): void {
       c.vehicle.position.y -= 0.45
       c.sunk = c.vehicle.position.y
     }
-    c.wheels.forEach(function (w: any, i: any) {
+    c.wheels.forEach(function (w: any, i: number) {
       c.spin.push({ o: w, axis: 'z', v: 2.2 + hash(i, 2, 3) * 2, decay: 0.12 })
     })
     const mot = c.parts.find(function (p: any) {
@@ -242,7 +242,7 @@ export function installRollover(kit: Kit): void {
     })
     if (mot && m.kind !== 'boat') kit.addEmitter(c, mot.pos.clone().add(new V3(0, -0.3, 0)), 'black', { rate: 4 })
   }
-  function tickRoll(c: any, dt: any) {
+  function tickRoll(c: any, dt: number) {
     const A = c.rollState
     A.t += dt
     const p = Math.min(1, A.t / A.dur)
@@ -252,7 +252,7 @@ export function installRollover(kit: Kit): void {
     const sn = Math.sin(phi)
     let minY = 1e9
     let idx = 0
-    A.S.forEach(function (q: any, i: any) {
+    A.S.forEach(function (q: number[], i: number) {
       const y = q[0] * cs - q[1] * sn
       if (y < minY - 1e-6) {
         minY = y

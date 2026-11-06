@@ -10,10 +10,10 @@ export function installZoneDent(kit: Kit): void {
   const { cutGeometry } = I
 
   /* ---- dent masked by the box (follows the panel) ---- */
-  function sm(t: any) {
+  function sm(t: number) {
     return smooth(t)
   }
-  function subdivIn(geo: any, rel: any, B: any, maxLen: any) {
+  function subdivIn(geo: any, rel: any, B: any, maxLen: number) {
     const a = geo.attributes.position.array
     /* the result grows from the size of the mesh (a typed array: a plain array of this many numbers is the slowest part of the call) */
     let out = new Float32Array(a.length + 4096)
@@ -36,13 +36,13 @@ export function installZoneDent(kit: Kit): void {
       used += 9
     }
     const e = 0.15
-    function d(p: any, q: any) {
+    function d(p: number[], q: number[]) {
       return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
     }
     function mid(p: any, q: any) {
       return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2]
     }
-    function tri(A: any, Bv: any, C: any, depth: any) {
+    function tri(A: any, Bv: any, C: any, depth: number) {
       const ab = d(A, Bv)
       const bc = d(Bv, C)
       const ca = d(C, A)
@@ -257,7 +257,7 @@ export function installZoneDent(kit: Kit): void {
   }
   /* the box, in the frame of a mesh (rel maps it to the vehicle frame), that holds the panel cut: every point with sdf < 0 of the cut test lies in it;
      undefined when rel cannot be inverted. The pad swallows the rounding of the inverse. */
-  function panelBoundsIn(rel: any, rect: any, B: any, a: any, ax: any) {
+  function panelBoundsIn(rel: any, rect: number[], B: any, a: number, ax: number[]) {
     const det = rel.determinant()
     if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return undefined
     const back = rel.clone().invert()
@@ -278,7 +278,7 @@ export function installZoneDent(kit: Kit): void {
     return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
   }
   /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
-  function cutPanel(c: any, z: any, rect: any, keep: any, dirty: any, o: any) {
+  function cutPanel(c: any, z: any, rect: number[], keep: any, dirty: any, o: any) {
     o = o || {}
     const B = z.box
     const d = z.dir
@@ -324,7 +324,7 @@ export function installZoneDent(kit: Kit): void {
                 nv.copy(n).applyMatrix3(nm).normalize()
                 return nv.dot(outN) > 0.3
               },
-        sdf: function (x: any, y: any, zz: any) {
+        sdf: function (x: number, y: number, zz: number) {
           v.set(x, y, zz).applyMatrix4(rel)
           let q = -1e9
           q = Math.max(

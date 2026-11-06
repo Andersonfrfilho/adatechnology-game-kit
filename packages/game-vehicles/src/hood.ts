@@ -146,12 +146,12 @@ export function installHood(kit: Kit): void {
           c.cylinder(0.012, 0.012, 0.02, MATERIALS.steel, o.axle + Math.cos(a) * 0.055, fl + H * 0.7 + 0.01, s * (zw - 0.12) + Math.sin(a) * 0.055)
         }
       })
-    function reservoir(x: any, y: any, z: any, w: any, h: any, d: any, shell: any, liq: any, cap: any) {
+    function reservoir(x: number, y: number, z: number, w: number, h: number, d: number, shell: any, liq: any, cap: any) {
       c.roundBox(w, h, d, 0.02, shell, x, y, z).castShadow = false
       if (liq) c.roundBox(w * 0.85, h * 0.55, d * 0.85, 0.015, liq, x, y - h * 0.18, z)
       c.cylinder(0.026, 0.026, 0.025, cap, x, y + h / 2 + 0.012, z)
     }
-    function battery(x: any, y: any, z: any, sc?: any) {
+    function battery(x: number, y: number, z: number, sc?: number | undefined) {
       sc = sc || 1
       c.roundBox(0.2 * sc, 0.15 * sc, 0.15 * sc, 0.015, makeMaterial('#1a1b1c', { roughness: 0.5 }), x, y, z)
       c.roundBox(0.2 * sc, 0.012, 0.15 * sc, 0.005, makeMaterial('#2e3a6a', { roughness: 0.5 }), x, y + 0.04 * sc, z)

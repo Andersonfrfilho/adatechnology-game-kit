@@ -55,7 +55,7 @@ export function installContext(kit: Kit): void {
       this.time = 0
       this.rand = rng(seed || 7)
     }
-    add(geo: any, mat: any, x: any, y: any, z: any, parent: any) {
+    add(geo: any, mat: any, x: number, y: number, z: number, parent: any) {
       const m = new THREE.Mesh(geo, mat)
       m.position.set(x || 0, y || 0, z || 0)
       m.castShadow = true
@@ -86,7 +86,7 @@ export function installContext(kit: Kit): void {
       if (o.def) this.deform.push(m)
       return m
     }
-    cylinder(r1: any, r2: any, h: any, mat: any, x: any, y: any, z: any, axis: any, o: any) {
+    cylinder(r1: any, r2: any, h: any, mat: any, x: any, y: any, z: any, axis: string, o: any) {
       o = o || {}
       const m = this.add(new THREE.CylinderGeometry(r1, r2, h, o.seg || 20, 1, !!o.open), mat, x, y, z, o.parent)
       if (axis === 'x') m.rotation.z = -PI / 2
@@ -123,7 +123,7 @@ export function installContext(kit: Kit): void {
       )
       return this.add(new THREE.TubeGeometry(curve, o.seg || 40, r, o.rs || 8, !!o.closed), mat, 0, 0, 0, o.parent)
     }
-    text(txt: any, w: any, h: any, x: any, y: any, z: any, face: any, o: any) {
+    text(txt: any, w: any, h: any, x: any, y: any, z: any, face: string, o: any) {
       o = o || {}
       const mat = new THREE.MeshStandardMaterial({ map: textTexture(txt, o), transparent: !o.bg, roughness: 0.6, alphaTest: o.bg ? 0 : 0.3 })
       if (o.glow) {
@@ -153,7 +153,7 @@ export function installContext(kit: Kit): void {
       pl.userData.plate = true
       return pl
     }
-    part(kind: any, label: any, obj: any, pos: any, reach?: any, o?: any) {
+    part(kind: string, label: any, obj: any, pos: any, reach?: number, o?: any) {
       const L = I.resolveLabel(label)
       const pt = Object.assign(
         { kind: kind, label: L.label, key: L.key, obj: obj, pos: pos.clone ? pos.clone() : new V3(pos[0], pos[1], pos[2]), reach: reach || 1 },
@@ -162,7 +162,7 @@ export function installContext(kit: Kit): void {
       this.parts.push(pt)
       return pt
     }
-    wheel(x: any, z: any, r: any, w: any, o: any) {
+    wheel(x: any, z: number, r: any, w: number, o: any) {
       o = o || {}
       const s = z >= 0 ? 1 : -1
       const g = new THREE.Group()
@@ -256,7 +256,7 @@ export function installContext(kit: Kit): void {
 
 
     /** Declares or refines a damage zone: `c.zone(id, label, box, parts, options)`. Pass `label === false` to remove an auto-derived zone. */
-    zone(id: string, label: any, box?: any, parts?: any, o?: any) {
+    zone(id: string, label: boolean, box?: any, parts?: any, o?: any) {
       const d: any = Object.assign({ id: id }, o || {})
       if (label === false) d.remove = true
       else if (label) d.name = label

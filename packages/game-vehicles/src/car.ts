@@ -37,7 +37,7 @@ export function installCar(kit: Kit): void {
     const intr = s.interior === false ? null : Object.assign({ rows: 2 }, s.interior || {})
     const hoodO = s.hood ? Object.assign({ motor: 'gasoline' }, s.hood === true ? {} : s.hood) : null
     let tireW = 0.2
-    ;(s.wheels || []).forEach(function (w: any) {
+    ;(s.wheels || []).forEach(function (w: number[]) {
       tireW = Math.max(tireW, w[2])
     })
     const low = []
@@ -86,7 +86,7 @@ export function installCar(kit: Kit): void {
       polys,
       gh.Wg,
       T,
-      function (i: any, n: any) {
+      function (i: number, n: number) {
         return { key: i === 0 && n > 2 ? 'quarter_glass' : i === n - 1 ? 'window_front' : 'window_rear' }
       },
       { see: !!intr },
@@ -126,7 +126,7 @@ export function installCar(kit: Kit): void {
       )
     if (hoodO) {
       let fa = -1e9
-      ;(s.arches || []).forEach(function (a: any) {
+      ;(s.arches || []).forEach(function (a: number[]) {
         fa = Math.max(fa, a[0])
       })
       const bxv8 = hx0 + (hx1 - hx0) * 0.45
@@ -170,7 +170,7 @@ export function installCar(kit: Kit): void {
       .map(function (w: any) {
         return w
       })
-      .sort(function (a: any, b: any) {
+      .sort(function (a: number[], b: number[]) {
         return b[0] - a[0]
       })
     if (ws.length < 2) return
@@ -186,10 +186,10 @@ export function installCar(kit: Kit): void {
     m.underbodyGroup = ug
     const DK = makeMaterial('#1a1b1c', { roughness: 0.75, metalness: 0.3 })
     const ST = MATERIALS.steel
-    function box(w: any, h: any, d: any, mat: any, x: any, y: any, z: any) {
+    function box(w: number, h: number, d: number, mat: any, x: number, y: number, z: number) {
       return c.roundBox(w, h, d, Math.min(0.02, h * 0.4), mat, x, y, z, { parent: ug })
     }
-    function rod(a: any, b: any, r: any, mat: any) {
+    function rod(a: any, b: any, r: number, mat: any) {
       return c.rod(a, b, r, mat, { parent: ug, seg: 8 })
     }
     const diesel = o.motor === 'diesel' || o.motor === 'v8' || o.motor === 'v8_na'
@@ -241,7 +241,7 @@ export function installCar(kit: Kit): void {
       c.cylinder(0.32, 0.32, 0.2, MATERIALS.rubber, rx - 0.55, Math.max(0.2, by - 0.05), 0, null, { parent: ug })
       c.cylinder(0.2, 0.2, 0.21, ST, rx - 0.55, Math.max(0.2, by - 0.05), 0, null, { parent: ug })
     }
-    ug.traverse(function (x: any) {
+    ug.traverse(function (x) {
       x.castShadow = false
     })
     return ug
@@ -352,14 +352,14 @@ export function installCar(kit: Kit): void {
   }
   /* Fender flare: an arched strip over the wheel arch, on both sides.
      x, y: wheel centre; r: arch radius; z: half width where it attaches; o: { w (strip width), t (thickness), mat, a0 (start angle), sides } */
-  kit.archFlare = function (c: any, x: any, y: any, r: any, z: any, o: any) {
+  kit.archFlare = function (c: any, x: any, y: any, r: number, z: number, o: any) {
     o = o || {}
     const w = o.w || 0.07
     const t = o.t || 0.03
     const mat = o.mat || MATERIALS.trim
     const a0 = o.a0 == null ? 0.12 : o.a0
     const out: any = []
-    ;(o.sides || [1, -1]).forEach(function (sd: any) {
+    ;(o.sides || [1, -1]).forEach(function (sd: number) {
       const shp = new THREE.Shape()
       const N = 24
       for (let i = 0; i <= N; i++) {

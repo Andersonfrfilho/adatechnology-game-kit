@@ -1,4 +1,6 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
+import type { Mesh } from 'three'
+
 import type { Kit } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
@@ -128,7 +130,7 @@ export function installZoneApply(kit: Kit): void {
       c.zoneState.health[z.id] = z.health
     })
     const R0 = c.rand
-    const dirty = new Set()
+    const dirty = new Set<Mesh>()
     let any = false
     c.zoneDrops = []
     c.zoneErrors = c.zoneErrors || []
@@ -172,11 +174,11 @@ export function installZoneApply(kit: Kit): void {
         if (z.sub && z.type !== 'internal' && b >= 2)
           I.internalBand(c, Object.assign({}, z, { pos: z.pos || I.boxCenter(z.box) }), Math.min(b, 3))
         if (typeof z.onBand === 'function') z.onBand(c, b, z, kit)
-      } catch (e: any) {
-        c.zoneErrors.push(z.id + ': ' + (e && e.message))
+      } catch (e) {
+        c.zoneErrors.push(z.id + ': ' + (e && (e as Error).message))
       }
     })
-    dirty.forEach(function (msh: any) {
+    dirty.forEach(function (msh) {
       const g = msh.geometry
       if (g.userData.crease || !g.index) crease(g, 42)
       else g.computeVertexNormals()
@@ -185,8 +187,8 @@ export function installZoneApply(kit: Kit): void {
     })
     try {
       settleDrops(c)
-    } catch (e: any) {
-      c.zoneErrors.push('settling: ' + e.message)
+    } catch (e) {
+      c.zoneErrors.push('settling: ' + (e as Error).message)
     }
     c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.scenario))
     const flagList = Object.keys(FL)

@@ -39,7 +39,7 @@ export function installFluids(kit: Kit): void {
   /* Liquid splat: a flat stain glued to the surface, irregular outline, satellite drops and a trickle that runs down,
      thins and ends in a bulb. The trickle stops when the volume runs out. Glossy when fresh, dries matte in the fluid type's time.
      o: { fluid (key of kit.fluidTypes; default config.defaultSplat), glass, obj (mesh to attach to; the trickle follows its curve) } */
-  kit.splat = function (c: any, p: any, n: any, r: any, o: any) {
+  kit.splat = function (c: any, p: any, n: any, r: number, o: any) {
     o = o || {}
     n = n.clone().normalize()
     const fdef = kit.fluidTypes[o.fluid || kit.config.defaultSplat] || kit.fluidTypes.stain
@@ -63,7 +63,7 @@ export function installFluids(kit: Kit): void {
     grp.quaternion.setFromRotationMatrix(M)
     const rnd = c.rand
     const nz = I.valueNoise(Math.floor(rnd() * 1000))
-    function blobShape(cx: any, cz: any, rr: any, k: any, ph: any) {
+    function blobShape(cx: number, cz: number, rr: number, k: number, ph: number) {
       const sh = new THREE.Shape()
       const N = 28
       for (let i = 0; i <= N; i++) {
@@ -134,12 +134,12 @@ export function installFluids(kit: Kit): void {
     c.fluids.push(f)
     return f
   }
-  function buildDrip(f: any, L: any) {
+  function buildDrip(f: any, L: number) {
     const pos = []
     const NS = 12
     const r = f.r
     const x0 = r * 0.55
-    function hAt(x: any) {
+    function hAt(x: number) {
       const u = clamp((x - x0) / f.Lmax, 0, 1) * (f.off.length - 1)
       const i = Math.min(f.off.length - 2, Math.floor(u))
       const t = u - i
@@ -227,7 +227,7 @@ export function installFluids(kit: Kit): void {
     g.setIndex(idx)
     return g
   }
-  function puddle(c: any, kind: any, pLocal: any, maxR: any) {
+  function puddle(c: any, kind: string, pLocal: any, maxR: any) {
     const q = c.toEffects(pLocal)
     const oily = kind === 'oil' || kind === 'diesel'
     const mat =
@@ -480,7 +480,7 @@ export function installFluids(kit: Kit): void {
   }
   kit.updateFluids = updateFluids
   /* The wiper (glass only) and rain clean only fresh stains (less than half dry) of the types with wipeable. */
-  kit.wipe = function (c: any, mode: any) {
+  kit.wipe = function (c: any, mode: string) {
     let n = 0
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]
