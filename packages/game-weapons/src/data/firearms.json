@@ -8030,5 +8030,210 @@
         "mount": "rail_bottom"
       }
     ]
+  },
+  {
+    "id": "fn_ps90",
+    "name": "FN PS90",
+    "maker": "FN",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_7x28",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 50,
+      "reload": 3,
+      "muzzleSpeed": 715,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.69,
+        0.38
+      ],
+      "range": 80,
+      "family": "top_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3,
+        "clear": 1.2
+      }
+    },
+    "mass": 2.86,
+    "dimensions": {
+      "length": 0.668,
+      "barrel": 0.407,
+      "emptyMass": 2.86
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "fn_p90",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "bt_mp9",
+    "name": "B&T MP9",
+    "maker": "B&T",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 1100,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        1.66,
+        0.92
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 1.4,
+    "dimensions": {
+      "length": 0.523,
+      "barrel": 0.13,
+      "emptyMass": 1.4,
+      "lengthCollapsed": 0.303
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "uzi",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
+  },
+  {
+    "id": "mp40",
+    "name": "MP40",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 550,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 32,
+      "reload": 2.9,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.48,
+        0.27
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.9,
+        "clear": 1.2
+      }
+    },
+    "mass": 4,
+    "dimensions": {
+      "length": 0.833,
+      "barrel": 0.251,
+      "emptyMass": 4,
+      "lengthCollapsed": 0.63
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "thompson_m1a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "under"
+    }
   }
 ]

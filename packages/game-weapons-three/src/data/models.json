@@ -1665,6 +1665,40 @@
       "rpm": 750
     }
   },
+  "fn_ps90": {
+    "builder": "ps90",
+    "caliber": "5,7×28",
+    "length": 668,
+    "barrel": 407,
+    "options": {
+      "rpm": 120
+    }
+  },
+  "bt_mp9": {
+    "builder": "mp9",
+    "caliber": "9×19",
+    "length": 523,
+    "barrel": 130,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.2,
+      "rail": 1,
+      "rpm": 1100
+    }
+  },
+  "mp40": {
+    "builder": "mp40",
+    "caliber": "9×19",
+    "length": 833,
+    "barrel": 251,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.24,
+      "rpm": 550
+    }
+  },
   "m79": {
     "builder": "breakLauncher",
     "caliber": "40×46",

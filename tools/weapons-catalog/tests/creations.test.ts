@@ -23,9 +23,9 @@ beforeAll(() => {
 })
 
 describe('creations (weapons the team pages do not have)', () => {
-  it('has 27 of them (the 21 of T1.7 and the 6 of the first lot, part A1), every one with a reason and a source', () => {
+  it('has 30 of them (the 21 of T1.7 and the 6 of the first lot, part A1, and the 3 submachine guns of part A2), every one with a reason and a source', () => {
     const entries = Object.entries(decisions.creations)
-    expect(entries).toHaveLength(27)
+    expect(entries).toHaveLength(30)
     for (const [name, decision] of entries) {
       expect(decision.reason.length, name).toBeGreaterThan(20)
       expect(['reference', 'arsenal', 'derived'], name).toContain(decision.source)
