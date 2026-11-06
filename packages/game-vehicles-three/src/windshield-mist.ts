@@ -4,14 +4,14 @@
  * the whole share and the other panes a little less, since the demister blows on the windshield first. The film is never hit by a shot (it has no
  * raycast) and never writes depth. `dispose` takes the films away and frees their materials; the geometry is the pane's and stays.
  */
-import type { BufferGeometry, Material, Mesh, Object3D } from 'three'
+import type { BufferGeometry, Material, Mesh, Object3D, Side } from 'three'
 
 import type { BuiltVehicle } from './build'
 
 /** What the mist needs of three.js. */
 export type MistThree = {
   Mesh: new (geometry: BufferGeometry, material: Material) => Mesh
-  MeshBasicMaterial: new (parameters: { color: number; transparent: boolean; opacity: number; depthWrite: boolean; side: number; polygonOffset: boolean; polygonOffsetFactor: number; polygonOffsetUnits: number }) => Material & { opacity: number }
+  MeshBasicMaterial: new (parameters: { color: number; transparent: boolean; opacity: number; depthWrite: boolean; side: Side; polygonOffset: boolean; polygonOffsetFactor: number; polygonOffsetUnits: number }) => Material & { opacity: number }
 }
 
 /** How the mist looks: its colour, how opaque full fog is, and the share of it on the side and rear panes. */
@@ -28,13 +28,13 @@ export interface WindshieldMist {
 
 type Pane = Object3D & { geometry?: BufferGeometry; material?: { side?: number } | unknown[]; userData: { glass?: { key?: string } } }
 /** three.js `DoubleSide`: the kit draws its glass from both faces, and the film is seen from inside and out the same way. */
-const DOUBLE_SIDE = 2
+const DOUBLE_SIDE: Side = 2
 
 export function createWindshieldMist(THREE: MistThree, built: BuiltVehicle): WindshieldMist {
   const glass = ((built.context as { glass?: Pane[] } | null)?.glass ?? []).filter((p) => p?.geometry)
   const films: Array<{ mesh: Mesh; material: Material & { opacity: number }; share: number }> = []
   for (const pane of glass) {
-    const side = (!Array.isArray(pane.material) && (pane.material as { side?: number } | undefined)?.side) || DOUBLE_SIDE
+    const side = (!Array.isArray(pane.material) && (pane.material as { side?: Side } | undefined)?.side) || DOUBLE_SIDE
     const material = new THREE.MeshBasicMaterial({ color: MIST_RULES.color, transparent: true, opacity: 0, depthWrite: false, side, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
     const mesh = new THREE.Mesh(pane.geometry as BufferGeometry, material)
     mesh.name = 'windshield_mist'
