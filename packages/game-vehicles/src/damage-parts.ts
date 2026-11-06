@@ -262,7 +262,7 @@ export function installDamageParts(kit: Kit) {
     I.partsOf(c, 'propeller').forEach(function (hp) {
       const o = hp.obj
       if (!o || !o.parent) return
-      c.spin = c.spin.filter(function (q: any) {
+      c.spin = c.spin.filter(function (q) {
         return q.o !== o
       })
       let best = 0
@@ -495,7 +495,7 @@ export function installDamageParts(kit: Kit) {
           }
         })
       })
-      c.spin = c.spin.filter(function (s: any) {
+      c.spin = c.spin.filter(function (s) {
         return objs.indexOf(s.o) < 0
       })
       return
@@ -504,7 +504,7 @@ export function installDamageParts(kit: Kit) {
       objs.forEach(function (o) {
         I.hideObj(c, o)
       })
-      c.spin = c.spin.filter(function (s: any) {
+      c.spin = c.spin.filter(function (s) {
         return objs.indexOf(s.o) < 0
       })
       return
@@ -525,7 +525,7 @@ export function installDamageParts(kit: Kit) {
     const piv = I.pivotOf(c, objs, at)
     piv.quaternion.setFromAxisAngle(axis, th)
     piv.position.y -= b === 3 ? 0.03 : 0.01
-    c.spin = c.spin.filter(function (s: any) {
+    c.spin = c.spin.filter(function (s) {
       return objs.indexOf(s.o) < 0
     })
   }

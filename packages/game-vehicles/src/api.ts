@@ -2,7 +2,10 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
+import type { Object3D } from 'three'
+
 import type { LodSettings } from './lod'
+import type { ZoneBox } from './zone-core'
 import type { BuildContext } from './types'
 import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
@@ -116,13 +119,24 @@ export interface VehiclePart {
 export type PartLabel = string | { key: string; label?: string }
 
 /** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
+/** A part turning on its own every frame (a wheel, a rotor, a propeller): `v` radians per second about `axis`, slowing by `decay` per second. */
+export interface VehicleSpin {
+  o: Object3D
+  axis: 'x' | 'y' | 'z'
+  v: number
+  decay?: number
+  /** a road wheel, turned by the vehicle's speed */
+  track?: boolean
+}
+
 export interface VehicleLamp {
   group: ThreeObject | null
   lens: ThreeObject[]
   inner: ThreeObject[]
   kind: string
   tint: string
-  broken: boolean
+  /** broken; `'gone'` once the whole unit came off */
+  broken: boolean | 'gone'
   cracked?: boolean
   dark?: boolean
   /** The additive halo sprites of the lamp, hidden when it breaks. */
@@ -150,7 +164,8 @@ export interface DamageZone {
   tags: string[]
   /** `[xMin, xMax, zMin, zMax]` rectangle on the top-down damage map. */
   map: [number, number, number, number]
-  box: ThreeObject
+  /** The zone's box in `c.vehicle` coordinates. */
+  box: ZoneBox
   /** Overrides the id used to seed the random damage (keeps the output of an earlier pack identical). */
   seedId?: string
   [key: string]: any

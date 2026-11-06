@@ -609,7 +609,7 @@ export function installZoneAuto(kit: Kit) {
             return Math.sign(w.position.z) === s
           })
           const objs = [p.obj]
-          c.spin.forEach(function (sp: any) {
+          c.spin.forEach(function (sp) {
             if (sp.track && Math.sign(sp.o.position.z) === s) objs.push(sp.o)
           })
           add('track_' + (s < 0 ? 'left' : 'right'), t('zones.track', { s }), 'part', bb.expandByScalar(0.05), {

@@ -49,7 +49,7 @@ export function installDamagePanels(kit: Kit) {
       z.owned.forEach(function (o) {
         if (o.parent && c.wheels.indexOf(o) < 0 && !o.userData.glass) I.hideObj(c, o)
       })
-      c.spin = c.spin.filter(function (sp: any) {
+      c.spin = c.spin.filter(function (sp) {
         return I.shown(c, sp.o)
       })
       if (z.type === 'roof') roofOff(c, z, inv)
@@ -191,7 +191,7 @@ export function installDamagePanels(kit: Kit) {
       if (bb.isEmpty()) return
       if (bb.max.x < kx + 0.05) I.hideObj(c, o)
     })
-    c.spin = c.spin.filter(function (sp: any) {
+    c.spin = c.spin.filter(function (sp) {
       return I.shown(c, sp.o)
     })
   }

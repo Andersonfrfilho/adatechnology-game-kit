@@ -224,7 +224,7 @@ export function installRollover(kit: Kit) {
           I.burst(c, 'spark', pf, 6, { speed: 2.2 })
           I.burst(c, 'dust', pf.clone().setY(0.1), 2, { speed: 0.8, s: 1.1 })
         })
-        c.spin = c.spin.filter(function (sp: any) {
+        c.spin = c.spin.filter(function (sp) {
           return sp.o !== p.obj
         })
       })

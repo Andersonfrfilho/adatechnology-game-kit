@@ -16,7 +16,7 @@ export function installTick(kit: Kit) {
       h.ang += (tg - h.ang) * Math.min(1, dt * 4.5)
       h.piv.rotation.z = h.ang * (h.sign || 1)
     }
-    c.spin.forEach(function (s: any) {
+    c.spin.forEach(function (s) {
       s.o.rotation[s.axis] += dt * s.v
       if (s.decay) s.v *= Math.max(0, 1 - s.decay * dt)
     })

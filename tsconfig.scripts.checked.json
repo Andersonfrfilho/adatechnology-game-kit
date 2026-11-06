@@ -58,6 +58,7 @@
     "tools/kit-audit/mcp.mjs",
     "tools/kit-audit/scene.mjs",
     "tools/local-audio/local-audio.mjs",
+    "tools/locale-audit/audit.mjs",
     "tools/sfx-sources/cut.mjs",
     "tools/sfx-sources/hits.mjs",
     "tools/weapon-thumbnails/scripts/commons-import.mjs",

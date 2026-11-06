@@ -1,5 +1,5 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
-import type { MeshStandardMaterial, Vector3 } from 'three'
+import type { Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
 import type { BuildContext, Kit, SceneNode } from './types'
 
@@ -70,7 +70,7 @@ export function installExplosion(kit: Kit) {
     }
     return null
   }
-  function fling(c: BuildContext, obj: any, v: Vector3, w: Vector3) {
+  function fling(c: BuildContext, obj: Object3D, v: Vector3, w: Vector3) {
     if (!obj || !obj.parent) return null
     c.root.updateMatrixWorld(true)
     const bb = new THREE.Box3().setFromObject(obj)
@@ -89,7 +89,7 @@ export function installExplosion(kit: Kit) {
     obj.traverse(function (x: any) {
       x.userData.noFollow = true
     })
-    const di = c.deform.indexOf(obj)
+    const di = c.deform.indexOf(obj as Mesh)
     if (di >= 0) c.deform.splice(di, 1)
     return piece
   }
