@@ -3,7 +3,7 @@ import type { ReloadFamily } from '@adatechnology/game-weapons'
 import type { ReloadRun, WeaponAudit } from './weapon-audit'
 
 /** The reload family a model stands for when the catalog gives none (the generic archetypes). */
-const FAMILY_OF_MODEL: Record<string, ReloadFamily> = { pistol: 'pistol', revolver: 'revolver', rifle: 'magazine', semiint: 'tube_semi', semi12: 'tube_semi', p90: 'top_magazine', belt: 'belt', pump: 'pump', lever: 'lever', bolt: 'bolt', boltmag: 'bolt_magazine', break: 'break', rocket: 'rocket', flame: 'flame' }
+const FAMILY_OF_MODEL: Record<string, ReloadFamily> = { pistol: 'pistol', revolver: 'revolver', cylinder: 'revolver', rifle: 'magazine', semiint: 'tube_semi', semi12: 'tube_semi', p90: 'top_magazine', belt: 'belt', pump: 'pump', lever: 'lever', bolt: 'bolt', boltmag: 'bolt_magazine', break: 'break', rocket: 'rocket', flame: 'flame' }
 
 /** The steps of the rule's reload (`RELOAD_STAGES`) in words. */
 const STAGE_TEXT: Record<string, string> = {

@@ -1333,19 +1333,20 @@
     "length": 999,
     "barrel": 480,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
+      "hgFrac": 0.7,
       "carry": 1,
-      "scope": 2
+      "gripAt": 0.05
     }
   },
   "hk_g36k": {
@@ -1354,19 +1355,20 @@
     "length": 860,
     "barrel": 318,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
+      "hgFrac": 0.78,
       "carry": 1,
-      "scope": 2
+      "gripAt": 0.05
     }
   },
   "hk_g36c": {
@@ -1375,18 +1377,20 @@
     "length": 720,
     "barrel": 228,
     "options": {
-      "stock": "fold",
-      "stockLen": 0.24,
+      "g36": 1,
+      "stock": "g36",
+      "stockLen": 0.25,
       "mag": "box",
-      "curve": 0.05,
-      "magLen": 1,
-      "hg": "poly",
-      "hgFrac": 0.5,
-      "hR": 0.065,
-      "charge": 1,
+      "curve": 0.04,
+      "magLen": 1.1,
+      "magMat": "smoke",
+      "hR": 0.085,
+      "wR": 0.042,
       "sel": 1,
       "rpm": 750,
-      "rail": 1
+      "hgFrac": 0.8,
+      "rail": 1,
+      "gripAt": 0.05
     }
   },
   "fn_m249": {
@@ -1548,6 +1552,284 @@
       "rpm": 3000
     }
   },
+  "aks_74u": {
+    "builder": "rifle",
+    "caliber": "5,45×39",
+    "length": 730,
+    "barrel": 206,
+    "options": {
+      "stock": "fold",
+      "mag": "curved",
+      "hg": "poly",
+      "hgFrac": 0.42,
+      "gas": 1,
+      "charge": 1,
+      "brake": 1,
+      "ak": 1,
+      "rod": 1,
+      "rpm": 700,
+      "magMat": "bakelite",
+      "stockLen": 0.22
+    },
+    "variantOf": "ak_74"
+  },
+  "fn_scar_l": {
+    "builder": "rifle",
+    "caliber": "5,56×45",
+    "length": 889,
+    "barrel": 351,
+    "options": {
+      "tan": 1,
+      "stock": "fold",
+      "mag": "box",
+      "magLen": 1.05,
+      "hg": "rail",
+      "hgFrac": 0.7,
+      "hR": 0.07,
+      "rail": 1,
+      "scope": 2,
+      "charge": 1,
+      "rpm": 625
+    },
+    "variantOf": "fn_scar_h"
+  },
+  "m1_garand": {
+    "builder": "rifle",
+    "caliber": ".30-06",
+    "length": 1100,
+    "barrel": 610,
+    "options": {
+      "wood": 1,
+      "stock": "trad",
+      "mag": "internal",
+      "fore": 0.55,
+      "gas": 1,
+      "charge": 1,
+      "bayo": 1
+    },
+    "variantOf": "sks"
+  },
+  "accuracy_l96a1": {
+    "builder": "rifle",
+    "caliber": "7,62×51",
+    "length": 1180,
+    "barrel": 660,
+    "options": {
+      "olive": 1,
+      "stock": "skeleton",
+      "stockLen": 0.34,
+      "mag": "box",
+      "magLen": 0.6,
+      "hg": "poly",
+      "hgFrac": 0.3,
+      "scope": 3,
+      "bolt": 1,
+      "bipod": 1,
+      "brake": 1,
+      "round": 1
+    },
+    "variantOf": "accuracy_awm"
+  },
+  "mossberg_590": {
+    "builder": "rifle",
+    "caliber": "12 ga",
+    "length": 1003,
+    "barrel": 508,
+    "options": {
+      "stock": "fixed",
+      "mag": "none",
+      "tube": 1,
+      "pump": 1,
+      "hg": "none",
+      "br": 0.0105,
+      "hR": 0.055,
+      "noFH": 1,
+      "heat": 1,
+      "bayo": 1
+    },
+    "variantOf": "mossberg_500"
+  },
+  "fn_m240b": {
+    "builder": "rifle",
+    "caliber": "7,62×51",
+    "length": 1245,
+    "barrel": 630,
+    "options": {
+      "stock": "fixed",
+      "mag": "belt",
+      "hg": "poly",
+      "hgFrac": 0.35,
+      "bipod": 1,
+      "carry": 1,
+      "hR": 0.085,
+      "br": 0.011,
+      "charge": 1,
+      "rail": 1,
+      "heat": 1,
+      "rpm": 750
+    }
+  },
+  "sig_sauer_p320": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 203,
+    "barrel": 120,
+    "options": {
+      "design": "p320",
+      "rel": 0.8
+    }
+  },
+  "hk_usp": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 194,
+    "barrel": 108,
+    "options": {
+      "design": "usp",
+      "rel": 0.8
+    }
+  },
+  "walther_p99": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 180,
+    "barrel": 102,
+    "options": {
+      "design": "p99",
+      "rel": 0.7
+    }
+  },
+  "colt_python": {
+    "builder": "revolver",
+    "caliber": ".357 Magnum",
+    "length": 292,
+    "barrel": 152,
+    "options": {
+      "python": 1,
+      "chambers": 6
+    }
+  },
+  "fn_ps90": {
+    "builder": "ps90",
+    "caliber": "5,7×28",
+    "length": 668,
+    "barrel": 407,
+    "options": {
+      "rpm": 120
+    }
+  },
+  "bt_mp9": {
+    "builder": "mp9",
+    "caliber": "9×19",
+    "length": 523,
+    "barrel": 130,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.2,
+      "rail": 1,
+      "rpm": 1100
+    }
+  },
+  "mp40": {
+    "builder": "mp40",
+    "caliber": "9×19",
+    "length": 833,
+    "barrel": 251,
+    "options": {
+      "mag": "box",
+      "stock": "fold",
+      "stockLen": 0.24,
+      "rpm": 550
+    }
+  },
+  "famas": {
+    "builder": "bullpup",
+    "caliber": "5,56×45",
+    "length": 757,
+    "barrel": 488,
+    "options": {
+      "rpm": 1000,
+      "look": "famas"
+    },
+    "variantOf": "steyr_aug_a1"
+  },
+  "iwi_tavor": {
+    "builder": "bullpup",
+    "caliber": "5,56×45",
+    "length": 720,
+    "barrel": 460,
+    "options": {
+      "rpm": 850,
+      "look": "tavor",
+      "rail": 1
+    },
+    "variantOf": "steyr_aug_a1"
+  },
+  "l85a2": {
+    "builder": "bullpup",
+    "caliber": "5,56×45",
+    "length": 785,
+    "barrel": 518,
+    "options": {
+      "rpm": 700,
+      "look": "sa80",
+      "rail": 1
+    },
+    "variantOf": "steyr_aug_a1"
+  },
+  "winchester_1887": {
+    "builder": "rifle",
+    "caliber": "12 ga",
+    "length": 1016,
+    "barrel": 508,
+    "options": {
+      "wood": 1,
+      "stock": "straight",
+      "mag": "none",
+      "tube": 1,
+      "lever": 1,
+      "hR": 0.05,
+      "fore": 0,
+      "bands": 1,
+      "br": 0.012,
+      "m1887": 1
+    },
+    "variantOf": "winchester_1894"
+  },
+  "ppsh_41": {
+    "builder": "ppsh",
+    "caliber": "7,62×25",
+    "length": 843,
+    "barrel": 269,
+    "options": {
+      "mag": "drum",
+      "rpm": 1250
+    }
+  },
+  "mauser_kar98k": {
+    "builder": "kar98",
+    "caliber": "7,92×57",
+    "length": 1110,
+    "barrel": 600,
+    "options": {}
+  },
+  "mg42": {
+    "builder": "mg42",
+    "caliber": "7,92×57",
+    "length": 1220,
+    "barrel": 530,
+    "options": {
+      "rpm": 1200
+    }
+  },
+  "vss_vintorez": {
+    "builder": "vss",
+    "caliber": "9×39",
+    "length": 894,
+    "barrel": 200,
+    "options": {}
+  },
   "m79": {
     "builder": "breakLauncher",
     "caliber": "40×46",
@@ -1562,5 +1844,12 @@
       "br": 0.022,
       "hR": 0.05
     }
+  },
+  "m32_mgl": {
+    "builder": "mgl",
+    "caliber": "40×46",
+    "length": 778,
+    "barrel": 300,
+    "options": {}
   }
 }

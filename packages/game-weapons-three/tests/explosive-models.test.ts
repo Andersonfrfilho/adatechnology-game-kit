@@ -39,8 +39,8 @@ describe('the explosives of the gallery', () => {
     }
   })
 
-  it('has no model for what the gallery did not draw', () => {
-    expect(EXPLOSIVE_MODEL_IDS).toEqual(['m67', 'molotov', 'pipe_bomb', 'dynamite', 'c4', 'claymore', 'flashbang'])
+  it('has no model for what the gallery did not draw (the kit adds the smoke canister and the Semtex block)', () => {
+    expect(EXPLOSIVE_MODEL_IDS).toEqual(['m67', 'molotov', 'pipe_bomb', 'dynamite', 'c4', 'claymore', 'flashbang', 'smoke_grenade', 'semtex'])
     expect(buildExplosiveModel(THREE, 'm79_40mm')).toBeUndefined()
   })
 })

@@ -9,6 +9,10 @@
    "source": "generated",
    "file": "generated/accuracy_awm.svg"
   },
+  "accuracy_l96a1": {
+   "source": "generated",
+   "file": "generated/accuracy_l96a1.svg"
+  },
   "ag36": {
    "source": "generated",
    "file": "generated/ag36.svg"
@@ -32,6 +36,10 @@
   "akm": {
    "source": "generated",
    "file": "generated/akm.svg"
+  },
+  "aks_74u": {
+   "source": "generated",
+   "file": "generated/aks_74u.svg"
   },
   "anti_materiel_50": {
    "source": "generated",
@@ -89,9 +97,17 @@
    "source": "generated",
    "file": "generated/bow_compound.svg"
   },
+  "brass_knuckles": {
+   "source": "generated",
+   "file": "generated/brass_knuckles.svg"
+  },
   "browning_m2": {
    "source": "generated",
    "file": "generated/browning_m2.svg"
+  },
+  "bt_mp9": {
+   "source": "generated",
+   "file": "generated/bt_mp9.svg"
   },
   "c4": {
    "source": "generated",
@@ -165,6 +181,10 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "page": "https://commons.wikimedia.org/wiki/File:Colt_M4A1_silhouette.svg"
   },
+  "colt_python": {
+   "source": "generated",
+   "file": "generated/colt_python.svg"
+  },
   "crossbow": {
    "source": "generated",
    "file": "generated/crossbow.svg"
@@ -201,6 +221,10 @@
    "source": "generated",
    "file": "generated/extinguisher.svg"
   },
+  "famas": {
+   "source": "generated",
+   "file": "generated/famas.svg"
+  },
   "flamethrower": {
    "source": "generated",
    "file": "generated/flamethrower.svg"
@@ -216,6 +240,10 @@
   "fn_five_seven": {
    "source": "generated",
    "file": "generated/fn_five_seven.svg"
+  },
+  "fn_m240b": {
+   "source": "generated",
+   "file": "generated/fn_m240b.svg"
   },
   "fn_m249": {
    "source": "generated",
@@ -241,9 +269,17 @@
    "source": "generated",
    "file": "generated/fn_parafal.svg"
   },
+  "fn_ps90": {
+   "source": "generated",
+   "file": "generated/fn_ps90.svg"
+  },
   "fn_scar_h": {
    "source": "generated",
    "file": "generated/fn_scar_h.svg"
+  },
+  "fn_scar_l": {
+   "source": "generated",
+   "file": "generated/fn_scar_l.svg"
   },
   "frag_grenade": {
    "source": "generated",
@@ -345,6 +381,10 @@
    "source": "generated",
    "file": "generated/hk_ump_45.svg"
   },
+  "hk_usp": {
+   "source": "generated",
+   "file": "generated/hk_usp.svg"
+  },
   "hunting_rifle_30_06": {
    "source": "generated",
    "file": "generated/hunting_rifle_30_06.svg"
@@ -365,6 +405,18 @@
    "source": "generated",
    "file": "generated/iron_pipe.svg"
   },
+  "iwi_tavor": {
+   "source": "generated",
+   "file": "generated/iwi_tavor.svg"
+  },
+  "kabar": {
+   "source": "generated",
+   "file": "generated/kabar.svg"
+  },
+  "katana": {
+   "source": "generated",
+   "file": "generated/katana.svg"
+  },
   "kel_tec_ksg": {
    "source": "generated",
    "file": "generated/kel_tec_ksg.svg"
@@ -381,6 +433,10 @@
    "source": "generated",
    "file": "generated/kriss_vector.svg"
   },
+  "l85a2": {
+   "source": "generated",
+   "file": "generated/l85a2.svg"
+  },
   "lighter": {
    "source": "generated",
    "file": "generated/lighter.svg"
@@ -393,6 +449,10 @@
    "source": "generated",
    "file": "generated/m14_ebr.svg"
   },
+  "m1_garand": {
+   "source": "generated",
+   "file": "generated/m1_garand.svg"
+  },
   "m203": {
    "source": "generated",
    "file": "generated/m203.svg"
@@ -404,6 +464,10 @@
   "m2_flamethrower": {
    "source": "generated",
    "file": "generated/m2_flamethrower.svg"
+  },
+  "m32_mgl": {
+   "source": "generated",
+   "file": "generated/m32_mgl.svg"
   },
   "m60": {
    "source": "generated",
@@ -433,6 +497,10 @@
    "source": "generated",
    "file": "generated/makarov_pm.svg"
   },
+  "mauser_kar98k": {
+   "source": "generated",
+   "file": "generated/mauser_kar98k.svg"
+  },
   "meat_cleaver": {
    "source": "generated",
    "file": "generated/meat_cleaver.svg"
@@ -440,6 +508,10 @@
   "mg3": {
    "source": "generated",
    "file": "generated/mg3.svg"
+  },
+  "mg42": {
+   "source": "generated",
+   "file": "generated/mg42.svg"
   },
   "mini_uzi": {
    "source": "generated",
@@ -460,6 +532,14 @@
   "mossberg_500_cruiser": {
    "source": "generated",
    "file": "generated/mossberg_500_cruiser.svg"
+  },
+  "mossberg_590": {
+   "source": "generated",
+   "file": "generated/mossberg_590.svg"
+  },
+  "mp40": {
+   "source": "generated",
+   "file": "generated/mp40.svg"
   },
   "nail_bat": {
    "source": "generated",
@@ -496,6 +576,10 @@
   "pp19_bizon": {
    "source": "generated",
    "file": "generated/pp19_bizon.svg"
+  },
+  "ppsh_41": {
+   "source": "generated",
+   "file": "generated/ppsh_41.svg"
   },
   "propane_p13": {
    "source": "generated",
@@ -573,6 +657,10 @@
    "source": "generated",
    "file": "generated/screwdriver.svg"
   },
+  "semtex": {
+   "source": "generated",
+   "file": "generated/semtex.svg"
+  },
   "shotgun_double_12": {
    "source": "generated",
    "file": "generated/shotgun_double_12.svg"
@@ -597,6 +685,10 @@
    "source": "generated",
    "file": "generated/sig_sauer_p226.svg"
   },
+  "sig_sauer_p320": {
+   "source": "generated",
+   "file": "generated/sig_sauer_p320.svg"
+  },
   "sks": {
    "source": "generated",
    "file": "generated/sks.svg"
@@ -608,6 +700,10 @@
   "smg_9mm": {
    "source": "generated",
    "file": "generated/smg_9mm.svg"
+  },
+  "smoke_grenade": {
+   "source": "generated",
+   "file": "generated/smoke_grenade.svg"
   },
   "sniper_338": {
    "source": "generated",
@@ -697,6 +793,10 @@
    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
    "page": "https://commons.wikimedia.org/wiki/File:Uzi_silhouette.svg"
   },
+  "vss_vintorez": {
+   "source": "generated",
+   "file": "generated/vss_vintorez.svg"
+  },
   "vz61": {
    "source": "commons",
    "file": "commons/vz61.svg",
@@ -704,6 +804,14 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "page": "https://commons.wikimedia.org/wiki/File:Cz-skorpion_-_game-icons.svg"
+  },
+  "walther_p99": {
+   "source": "generated",
+   "file": "generated/walther_p99.svg"
+  },
+  "winchester_1887": {
+   "source": "generated",
+   "file": "generated/winchester_1887.svg"
   },
   "winchester_1894": {
    "source": "generated",

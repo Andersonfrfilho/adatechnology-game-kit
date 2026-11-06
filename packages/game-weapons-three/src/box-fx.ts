@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { GunshotSpace } from './audio/gunshot'
 import { FIRST_PERSON_LAYER } from '@adatechnology/game-contracts'
-import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool, MuzzlePose } from '@adatechnology/game-contracts'
+import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool, MuzzlePose, ToolHand } from '@adatechnology/game-contracts'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
@@ -11,9 +11,9 @@ import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { IN_HAND_NODE_NAME } from './laser-raycast'
-import { createEyeFrame, placeOnBody } from './fx/body-hold'
+import { BODY_HOLD, createEyeFrame, placeOnBody, placeStowed } from './fx/body-hold'
 import { placeInView, toWorldLens, VIEW_HOLD } from './fx/view-hold'
-import { holdOfProp, targetsOf } from './fx/hand-hold'
+import { holdOfProp, oneHandHold, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
 import type { ItemModels } from './item-models'
 import { BODY_ACTIONS } from './props'
@@ -56,6 +56,8 @@ export interface WeaponFxOptions {
   contact?: LaserRaycast
   /** Where the body holds the tool (`ModuleHost.holdFrame`): third person draws it there at its real size. */
   bodyHold?: () => HandPose | null
+  /** Where the body holds a tool in the left hand (`ModuleHost.holdFrame('L')`), for the left hand's weapon with a weapon in each hand; without it, a body's left shoulder under the eye. */
+  leftBodyHold?: () => HandPose | null
   /** Whether the view is the player's own eye: the gallery's guns are then framed in the view (`VIEW_HOLD`) instead of held on the body. */
   firstPerson?: () => boolean
   /** The lens the host draws the first-person layer with (`ModuleHost.setViewmodelFov`): the gun in the hands sets the one of its family, and null when it leaves the view. */
@@ -72,6 +74,10 @@ export interface WeaponFxOptions {
   lights?: LightBudget
   /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them; without them each makes its own (deprecated, removed in the next major). */
   pools?: RenderPools
+  /** The hand this presentation draws the tool in (default `R`); `L` is the left hand's tool with a tool in each hand (`HostTool.offHand`): held out to the left, the hand on the mirror of the grip. */
+  hand?: ToolHand
+  /** True while the other hand holds a tool of its own: the tool is held in this hand alone, out to its side, and never brought to the eye. */
+  oneHand?: () => boolean
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */
@@ -85,6 +91,8 @@ export interface BoxFx {
   readonly inHand: string | null
   /** Where the hands take the prop now (world space): the right around its handle, the left under the barrel of a long gun; null with nothing in the hands. */
   handTargets(): HandTargets | null
+  /** Where the other hand goes to change this tool's magazine with a tool in each hand; the props have no magazine well drawn: null. */
+  supportTarget(): HandPose | null
   /** The front end of the tool in the hands (world space) where its shot, flame or foam leaves, and the way it points; null for a tool with none (a blade, a bare hand). This presentation draws no muzzle flash. */
   muzzle(): MuzzlePose | null
   /** Casings and magazines currently on the floor or in the air. */
@@ -141,7 +149,11 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   let reloading = false
   const v = new THREE.Vector3()
   const v2 = new THREE.Vector3()
-  const eyeFrame = createEyeFrame(THREE, camera)
+  const side: ToolHand = options.hand ?? 'R'
+  const eyeFrame = createEyeFrame(THREE, camera, side)
+  const isOneHand = (): boolean => side === 'L' || options.oneHand?.() === true
+  const heldHold = (): Hold | null => (hold && isOneHand() ? oneHandHold(hold, side) : hold)
+  const heldAnchor = (current: Hold | null): Hold['right'] => (side === 'L' ? (current?.left ?? null) : (current?.right ?? null))
   let rear = 0
   let lengthMetres = 0
   const q = new THREE.Quaternion()
@@ -183,6 +195,25 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const handPoint = (x: number, y: number, z: number, out: THREE_NS.Vector3): THREE_NS.Vector3 => {
     if (!model) return out.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     return out.set(x, y, z).applyQuaternion(camera.quaternion).add(model.getWorldPosition(v2))
+  }
+
+  // put away against the body (`HostTool.stowed`) to free the hand for the other tool's magazine: 0 in the hand to 1 tucked in the belt
+  let stowK = 0
+  const stowFrom = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() }
+  const stow = (dt: number): void => {
+    const want = options.tool?.().stowed === true ? 1 : 0
+    const seconds = Math.max(0.05, arsenal.rules.dualWield.stowSeconds)
+    stowK = want > stowK ? Math.min(want, stowK + dt / seconds) : Math.max(want, stowK - dt / seconds)
+    if (stowK <= 0 || !model) return
+    stowFrom.position.copy(hand.position)
+    stowFrom.quaternion.copy(hand.quaternion)
+    const holderAt = model.position.clone()
+    placeStowed({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), anchor: heldAnchor(heldHold()), ...(side === 'L' ? { mirror: true } : {}) })
+    const k = stowK * stowK * (3 - 2 * stowK)
+    hand.position.lerpVectors(stowFrom.position, hand.position, k)
+    hand.quaternion.slerpQuaternions(stowFrom.quaternion, hand.quaternion.clone(), k)
+    model.position.lerpVectors(holderAt, model.position, k)
+    hand.updateMatrixWorld(true)
   }
 
   const throwBody = (kind: Body['kind'], mesh: THREE_NS.Mesh, from: THREE_NS.Vector3, velocity: THREE_NS.Vector3, radius: number): void => {
@@ -288,6 +319,9 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       inHand = null
       hold = null
     },
+    supportTarget() {
+      return null
+    },
     muzzle() {
       if (!model || !def || !SPOUTS.has(def.action.kind)) return null
       hand.updateMatrixWorld(true)
@@ -297,9 +331,10 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: false }
     },
     handTargets() {
-      if (!model || !hold) return null
+      const held = heldHold()
+      if (!model || !held) return null
       hand.updateMatrixWorld(true)
-      return targetsOf(THREE, hold, model.getWorldQuaternion(q2), 0)
+      return targetsOf(THREE, held, model.getWorldQuaternion(q2), 0)
     },
     handle(event, tool) {
       if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
@@ -317,17 +352,25 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       dip += ((reloading ? 1 : 0) - dip) * Math.min(1, dt * 8)
       if (inHand && model && options.firstPerson?.()) {
         setLens(true)
-        placeInView({ THREE, hand, holder: model, camera, right: hold?.right ?? null, box: restBox, kind: 'tool', aim: 0, offset: noMotion })
+        const held = heldHold()
+        // a gun held in one hand beside another is held out like one; a blade stays carried point up
+        const kind = isOneHand() && def?.action.kind === 'firearm' ? 'dual' : 'tool'
+        placeInView({ THREE, hand, holder: model, camera, right: heldAnchor(held), box: restBox, kind, aim: 0, offset: noMotion, ...(side === 'L' ? { mirror: true } : {}) })
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
         hand.updateMatrixWorld(true)
       } else if (inHand && model) {
         if (inLens) setLens(false)
         const handgun = def?.category === 'pistol' || def?.category === 'revolver'
-        placeOnBody({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), rear, lengthMetres, handgun, right: hold?.right ?? null, left: hold?.left ?? null })
+        if (isOneHand()) {
+          const held = heldHold()
+          const grip = def?.action.kind === 'firearm' ? BODY_HOLD.dualGrip : BODY_HOLD.toolGrip
+          placeOnBody({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), rear, lengthMetres, handgun: true, right: heldAnchor(held), left: null, grip, ...(side === 'L' ? { mirror: true } : {}) })
+        } else placeOnBody({ THREE, hand, holder: model, frame: options.bodyHold?.() ?? eyeFrame(), rear, lengthMetres, handgun, right: hold?.right ?? null, left: hold?.left ?? null })
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
         q.setFromEuler(new THREE.Euler(0.14 * kick - 0.25 * dip, 0, 0.6 * dip))
         hand.quaternion.multiply(q)
       }
+      stow(dt)
       for (const body of [...bodies]) {
         stepBody(body, dt)
         if (body.age > LIFETIME_S) removeBody(body)

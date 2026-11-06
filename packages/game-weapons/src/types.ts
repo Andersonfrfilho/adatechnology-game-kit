@@ -253,7 +253,7 @@ export type WeaponAction =
       magazine: number
       reload: number
       timings?: WeaponTimings
-      family: 'rocket' | 'break' | 'underbarrel'
+      family: 'rocket' | 'break' | 'underbarrel' | 'revolver'
       disposable?: boolean
       speed: number
       /** Distance in metres below which the projectile hits without exploding. */
@@ -344,6 +344,8 @@ export interface WeaponStance {
   readonly aiming?: boolean
   /** Lying down, or on a bipod or tripod. */
   readonly supported?: boolean
+  /** Held in one hand with another weapon in the other (`rules.dualWield`): the spread and the recoil are worse, and it does not aim. */
+  readonly dualWield?: boolean
 }
 
 export interface WeaponState {

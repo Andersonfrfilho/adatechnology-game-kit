@@ -9,20 +9,28 @@ import { buildBullpup } from './bullpup'
 import { modelKit } from './kit'
 import type { ModelKit } from './kit'
 import { buildLauncher } from './launcher'
+import { buildMgl } from './launcher-mgl'
 import { buildM134 } from './m134'
 import { buildM2 } from './m2'
+import { buildMg42 } from './mg-mg42'
 import { buildP90 } from './p90'
+import { buildPs90 } from './ps90'
 import { partRegistry } from './part-registry'
 import { buildPistol } from './pistol'
 import { buildRevolver } from './revolver'
 import { buildRifle } from './rifle'
+import { buildKar98 } from './rifle-kar98'
+import { buildVss } from './rifle-vss'
+import { buildMp40 } from './smg-mp40'
+import { buildMp9 } from './smg-mp9'
+import { buildPpsh } from './smg-ppsh'
 import type { BuiltModel, ModelOptions, ModelParts, WeaponModel } from './types'
 
 export type { ModelFamily, ModelOptions, ModelParts, WeaponModel } from './types'
 
 /** One weapon of the gallery as `data/models.json` keeps it: the builder, the measures in mm and the builder's options. */
 export interface ModelEntry {
-  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'breakLauncher' | 'm2' | 'm134' | 'launcher'
+  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'breakLauncher' | 'm2' | 'm134' | 'launcher' | 'mp40' | 'mp9' | 'ps90' | 'ppsh' | 'kar98' | 'mg42' | 'vss' | 'mgl'
   readonly caliber: string
   readonly length: number
   readonly barrel: number
@@ -34,12 +42,14 @@ export const MODEL_ENTRIES: Readonly<Record<string, ModelEntry>> = data as Recor
 
 /**
  * The model each generic archetype wears: the one of the first brand weapon (lowest id) that points to it with `archetype` and fires the same way (a rocket launcher that points to
- * `shotgun_pump_12` does not lend its tube to the shotgun). An archetype nothing points to, the melee weapons and the bow keep their simple prop.
+ * `shotgun_pump_12` does not lend its tube to the shotgun), a weapon of its own before a variant of another (`variantOf`): a variant added later never changes what the generic looks like.
+ * An archetype nothing points to, the melee weapons and the bow keep their simple prop.
  */
 export const ARCHETYPE_MODELS: Readonly<Record<string, string>> = (() => {
   const actionOf = new Map(WEAPONS.map((def) => [def.id, def.action.kind]))
   const chosen: Record<string, string> = {}
-  for (const def of [...WEAPONS].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+  const order = (def: (typeof WEAPONS)[number]): string => `${def.variantOf ? 1 : 0}${def.id}`
+  for (const def of [...WEAPONS].sort((a, b) => (order(a) < order(b) ? -1 : 1))) {
     const { archetype } = def
     if (!archetype || !(def.id in MODEL_ENTRIES) || archetype in MODEL_ENTRIES || archetype in chosen) continue
     if (actionOf.get(archetype) === def.action.kind) chosen[archetype] = def.id
@@ -58,6 +68,14 @@ const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOpti
   m2: (kit) => buildM2(kit),
   m134: (kit) => buildM134(kit),
   launcher: buildLauncher,
+  mp40: buildMp40,
+  mp9: buildMp9,
+  ps90: buildPs90,
+  ppsh: buildPpsh,
+  kar98: buildKar98,
+  mg42: buildMg42,
+  vss: buildVss,
+  mgl: buildMgl,
 }
 
 const nameParts = (parts: ModelParts): void => {

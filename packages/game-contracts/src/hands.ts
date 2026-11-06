@@ -26,6 +26,8 @@ export interface HandTargets {
   scale?: number
   /** Fingers of the right hand that curl by themselves, 0 extended to 1 fully curled (the index finger of a trigger hand); the others follow `grip`. */
   fingers?: { index?: number }
+  /** The same for the left hand (its index on the trigger of a tool of its own, with a tool in each hand); absent, the left hand's fingers all follow `gripL`. */
+  fingersL?: { index?: number }
   /**
    * Where the elbows go: `view` puts them on screen beside the hand, out to the side, as a tool held out in front (default); `body` lets them hang down and back by the body, as an item
    * carried close (a can, a bottle), where an elbow out to the side would lift it above the shoulder.
@@ -45,8 +47,14 @@ export interface MuzzlePose {
   readonly drawsFlash: boolean
 }
 
-/** Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). */
-export type MuzzleSource = () => MuzzlePose | null
+/** A hand of the body: `R` the right, `L` the left. A tool in one hand alone is in the right; the left holds one of its own only with a tool in each hand (`HostTool.offHand`). */
+export type ToolHand = 'R' | 'L'
+
+/**
+ * Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). `hand` is the hand that fired (absent: the right one); a source that draws
+ * one tool only answers the same for both.
+ */
+export type MuzzleSource = (hand?: ToolHand) => MuzzlePose | null
 
 /**
  * The layer of what the first-person view draws over the world (three.js `Object3D.layers`): the tool in the hands and the arms that hold it. A host with a first-person view draws

@@ -23,6 +23,7 @@ export interface Detonation {
   readonly cone?: ExplosiveDef['cone']
   readonly stunSeconds?: number
   readonly fire?: ExplosiveDef['fire']
+  readonly smoke?: ExplosiveDef['smoke']
 }
 
 export type ExplosiveEvent =
@@ -199,6 +200,7 @@ export class ExplosiveBody {
       ...(def.cone ? { cone: def.cone } : {}),
       ...(def.stunSeconds !== undefined ? { stunSeconds: def.stunSeconds } : {}),
       ...(def.fire ? { fire: def.fire } : {}),
+      ...(def.smoke ? { smoke: def.smoke } : {}),
     }
     return { type: 'detonate', at, detonation }
   }

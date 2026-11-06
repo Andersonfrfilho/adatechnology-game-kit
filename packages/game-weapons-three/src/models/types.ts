@@ -11,6 +11,8 @@ export interface ModelOptions {
   h?: number
   gl?: number
   deagle?: number
+  /** A pistol drawn from its photo instead of by style: `p320`, `usp` or `p99` (see `pistol-design.ts`). */
+  design?: string
   /** Metal and furniture finish. */
   steel?: number
   stain?: number
@@ -46,6 +48,8 @@ export interface ModelOptions {
   ar?: number
   ak?: number
   g3?: number
+  /** The Heckler & Koch G36 family: its polymer receiver, skeletal stock (`stock: 'g36'`), handguard, and on top the carry handle with optics (`carry`) or the long rail. */
+  g36?: number
   charge?: number
   rail?: number
   jacket?: number
@@ -60,10 +64,16 @@ export interface ModelOptions {
   heat?: number
   /** Chambers of the revolver cylinder (default 6): the capacity of the weapon. */
   chambers?: number
+  /** The Colt Python: ventilated rib, full underlug, walnut grip (see `revolver-python.ts`). */
+  python?: number
   bayo?: number
   rod?: number
   bands?: number
   shot?: number
+  /** The body a bullpup is drawn with when it is not the Steyr AUG (`famas`, `tavor`, `sa80`). */
+  look?: string
+  /** The Winchester 1887 lever-action shotgun (its own receiver, lever loop and stock). */
+  m1887?: number
   /** Launcher type: `rpg`, `m72`, `at4`, `carl`, `flame`, `flameDIY`. */
   lt?: string
 }
@@ -90,7 +100,7 @@ export interface ModelFrames {
 }
 
 /** The moving mechanism of a model, which picks its fire, reload and clear motion. */
-export type ModelFamily = 'pistol' | 'revolver' | 'rifle' | 'semiint' | 'semi12' | 'p90' | 'belt' | 'pump' | 'lever' | 'bolt' | 'boltmag' | 'break' | 'rocket' | 'flame'
+export type ModelFamily = 'pistol' | 'revolver' | 'rifle' | 'semiint' | 'semi12' | 'p90' | 'belt' | 'pump' | 'lever' | 'bolt' | 'boltmag' | 'break' | 'rocket' | 'flame' | 'cylinder'
 
 /** The named parts a model exposes to the animation: pivots and marks inside the model, never copies. */
 export interface ModelParts {
@@ -121,6 +131,8 @@ export interface ModelParts {
   cover?: THREE_NS.Object3D
   crane?: THREE_NS.Object3D
   cylinder?: THREE_NS.Object3D
+  /** The vertical grip under the barrel where the support hand takes a long gun that has one (the MGL). */
+  foreGrip?: THREE_NS.Object3D
   chambers?: THREE_NS.Object3D[]
   barrels?: THREE_NS.Object3D
   breech?: THREE_NS.Object3D[]

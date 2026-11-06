@@ -33,7 +33,7 @@ export function buildMagazine(context: RifleContext, gx: number): number {
   const scale = o.magLen || 1
   const magazine = kit.pivot(group, mx, -hR / 2, 0)
   parts.mag = magazine
-  const finish: THREE.Material | undefined = o.magMat === 'bakelite' ? M.bakelite : o.magMat === 'poly' ? M.polyMag : undefined
+  const finish: THREE.Material | undefined = o.magMat === 'bakelite' ? M.bakelite : o.magMat === 'poly' ? M.polyMag : o.magMat === 'smoke' ? M.smoke : undefined
   if (o.mag === 'curved') {
     let px = 0
     let py = 0

@@ -240,6 +240,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     parent.add(mesh)
     return mesh
   }
+  // the closure of an index finger fully pulled on a trigger, as the grip of a held tool closes the others
+  const TRIGGER_CURL = 1.22
   type ThirdPersonHand = { side: 1 | -1; hg: THREE_NS.Group; fingers: THREE_NS.Object3D[]; th: THREE_NS.Object3D | null }
   const hands: ThirdPersonHand[] = []
   rig.arms.forEach((arm, index) => {
@@ -690,6 +692,14 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run || fall > 0) return
       root.updateMatrixWorld(true)
       armReach.apply(targets, view)
+      // the index finger of a hand on a trigger curls by itself (`HandTargets.fingers` for the right hand, `fingersL` for the left), the other fingers keep the grip
+      for (const hand of hands) {
+        const curl = hand.side < 0 ? targets?.fingers?.index : targets?.fingersL?.index
+        if (curl === undefined || !hand.fingers[1]) continue
+        const k = TRIGGER_CURL * Math.min(1, Math.max(0, curl))
+        hand.fingers[0]!.rotation.z = -hand.side * k * 0.9
+        hand.fingers[1]!.rotation.z = -hand.side * k * 1.1
+      }
     },
     on(_type, listener) {
       listeners.add(listener)

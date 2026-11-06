@@ -7517,5 +7517,1476 @@
       }
     ],
     "fitted": []
+  },
+  {
+    "id": "aks_74u",
+    "name": "AKS-74U",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_45x39",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 735,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.66,
+        0.4
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 2.7,
+    "dimensions": {
+      "length": 0.73,
+      "barrel": 0.206,
+      "emptyMass": 2.7,
+      "lengthCollapsed": 0.49
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "ak_74",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "left"
+    }
+  },
+  {
+    "id": "fn_scar_l",
+    "name": "FN SCAR-L",
+    "maker": "FN",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 625,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 870,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.43,
+        0.24
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.29,
+    "dimensions": {
+      "length": 0.889,
+      "barrel": 0.351,
+      "emptyMass": 3.29,
+      "lengthCollapsed": 0.635
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "fn_scar_h",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "acog_4x",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
+  },
+  {
+    "id": "m1_garand",
+    "name": "M1 Garand",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "30_06",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 8,
+      "reload": 2.2,
+      "muzzleSpeed": 865,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        2.28,
+        1.22
+      ],
+      "range": 350,
+      "family": "top_load_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.2,
+        "clear": 1.2
+      }
+    },
+    "mass": 4.31,
+    "dimensions": {
+      "length": 1.1,
+      "barrel": 0.61,
+      "emptyMass": 4.31
+    },
+    "archetype": "rifle_7_62x39",
+    "variantOf": "sks",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "accuracy_l96a1",
+    "name": "Accuracy L96A1",
+    "maker": "Accuracy",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 10,
+      "reload": 3.2,
+      "muzzleSpeed": 840,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.64,
+        0.27
+      ],
+      "range": 800,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3.2,
+        "cycle": 0.82,
+        "clear": 1.2
+      }
+    },
+    "mass": 6.5,
+    "dimensions": {
+      "length": 1.18,
+      "barrel": 0.66,
+      "emptyMass": 6.5
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "accuracy_awm",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ]
+  },
+  {
+    "id": "mossberg_590",
+    "name": "Mossberg 590",
+    "maker": "Mossberg",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 8,
+      "chamber": 1,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.62,
+        0.91
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.3,
+    "dimensions": {
+      "length": 1.003,
+      "barrel": 0.508,
+      "emptyMass": 3.3
+    },
+    "archetype": "shotgun_pump_12",
+    "variantOf": "mossberg_500",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "fn_m240b",
+    "name": "FN M240B",
+    "maker": "FN",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 750,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 100,
+      "reload": 8.5,
+      "muzzleSpeed": 853,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        0.77,
+        0.41
+      ],
+      "range": 350,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 8.5,
+        "clear": 1.2
+      }
+    },
+    "mass": 12.5,
+    "dimensions": {
+      "length": 1.245,
+      "barrel": 0.63,
+      "emptyMass": 12.5
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ]
+  },
+  {
+    "id": "sig_sauer_p320",
+    "name": "SIG Sauer P320",
+    "maker": "SIG Sauer",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 17,
+      "reload": 1.9,
+      "muzzleSpeed": 350,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.2,
+        0.4
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8
+    },
+    "mass": 0.83,
+    "dimensions": {
+      "length": 0.203,
+      "barrel": 0.12,
+      "emptyMass": 0.83
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "sig_sauer_p226",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "hk_usp",
+    "name": "HK USP",
+    "maker": "HK",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.9,
+      "muzzleSpeed": 350,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.29,
+        0.43
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8
+    },
+    "mass": 0.77,
+    "dimensions": {
+      "length": 0.194,
+      "barrel": 0.108,
+      "emptyMass": 0.77
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "sig_sauer_p226",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "walther_p99",
+    "name": "Walther P99",
+    "maker": "Walther",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.8,
+      "muzzleSpeed": 375,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.81,
+        0.6
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 0.7
+    },
+    "mass": 0.63,
+    "dimensions": {
+      "length": 0.18,
+      "barrel": 0.102,
+      "emptyMass": 0.63
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "glock_17",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "colt_python",
+    "name": "Colt Python",
+    "maker": "Colt",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "357mag",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 2.4,
+      "muzzleSpeed": 430,
+      "spreadDeg": 0.8,
+      "bloomDeg": 1,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3.13,
+        0.94
+      ],
+      "range": 60,
+      "family": "revolver",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "perRound": 1,
+        "clear": 1.2
+      }
+    },
+    "mass": 1.23,
+    "dimensions": {
+      "length": 0.292,
+      "barrel": 0.152,
+      "emptyMass": 1.23
+    },
+    "archetype": "revolver_357",
+    "variantOf": "sw_686",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [],
+    "fitted": []
+  },
+  {
+    "id": "fn_ps90",
+    "name": "FN PS90",
+    "maker": "FN",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_7x28",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 50,
+      "reload": 3,
+      "muzzleSpeed": 715,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.69,
+        0.38
+      ],
+      "range": 80,
+      "family": "top_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3,
+        "clear": 1.2
+      }
+    },
+    "mass": 2.86,
+    "dimensions": {
+      "length": 0.668,
+      "barrel": 0.407,
+      "emptyMass": 2.86
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "fn_p90",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "bt_mp9",
+    "name": "B&T MP9",
+    "maker": "B&T",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 1100,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        1.66,
+        0.92
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 1.4,
+    "dimensions": {
+      "length": 0.523,
+      "barrel": 0.13,
+      "emptyMass": 1.4,
+      "lengthCollapsed": 0.303
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "uzi",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
+  },
+  {
+    "id": "mp40",
+    "name": "MP40",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 550,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 32,
+      "reload": 2.9,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.48,
+        0.27
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.9,
+        "clear": 1.2
+      }
+    },
+    "mass": 4,
+    "dimensions": {
+      "length": 0.833,
+      "barrel": 0.251,
+      "emptyMass": 4,
+      "lengthCollapsed": 0.63
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "thompson_m1a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "under"
+    }
+  },
+  {
+    "id": "famas",
+    "name": "FAMAS",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 1000,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 25,
+      "reload": 2.8,
+      "muzzleSpeed": 960,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.99,
+        0.6
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.61,
+    "dimensions": {
+      "length": 0.757,
+      "barrel": 0.488,
+      "emptyMass": 3.61
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "iwi_tavor",
+    "name": "IWI Tavor",
+    "maker": "IWI",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 850,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 910,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.98,
+        0.59
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.27,
+    "dimensions": {
+      "length": 0.72,
+      "barrel": 0.46,
+      "emptyMass": 3.27
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "l85a2",
+    "name": "L85A2",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 940,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.9,
+        0.54
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.82,
+    "dimensions": {
+      "length": 0.785,
+      "barrel": 0.518,
+      "emptyMass": 3.82
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "winchester_1887",
+    "name": "Winchester 1887",
+    "maker": "Winchester",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 109.09,
+      "modes": [
+        "lever"
+      ],
+      "magazine": 5,
+      "reload": 0.6,
+      "perRound": true,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.33,
+        0.39
+      ],
+      "range": 800,
+      "family": "lever",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.6,
+        "perRound": 0.6,
+        "cycle": 0.55,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 1.016,
+      "barrel": 0.508,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "winchester_1894",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "ppsh_41",
+    "name": "PPSh-41",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x25",
+      "rpm": 1250,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 71,
+      "magazineOptions": [
+        35
+      ],
+      "reload": 2.9,
+      "muzzleSpeed": 488,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.7,
+        0.39
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.9,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.63,
+    "dimensions": {
+      "length": 0.843,
+      "barrel": 0.269,
+      "emptyMass": 3.63
+    },
+    "archetype": "smg_9mm",
+    "variantOf": "thompson_m1a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_drum"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "mauser_kar98k",
+    "name": "Mauser Kar98k",
+    "maker": "Mauser",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_92x57",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 2.4,
+      "muzzleSpeed": 760,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.84,
+        0.47
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "cycle": 0.82,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.7,
+    "dimensions": {
+      "length": 1.11,
+      "barrel": 0.6,
+      "emptyMass": 3.7
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "mosin_nagant_91_30",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "mg42",
+    "name": "MG42",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_92x57",
+      "rpm": 1200,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 50,
+      "reload": 8.5,
+      "muzzleSpeed": 740,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        0.75,
+        0.4
+      ],
+      "range": 350,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 8.5,
+        "clear": 1.2
+      },
+      "faultFactor": 1.3
+    },
+    "mass": 11.6,
+    "dimensions": {
+      "length": 1.22,
+      "barrel": 0.53,
+      "emptyMass": 11.6
+    },
+    "archetype": "rifle_7_62x39",
+    "variantOf": "m60",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "vss_vintorez",
+    "name": "VSS Vintorez",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x39",
+      "rpm": 850,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 10,
+      "magazineOptions": [
+        20,
+        30
+      ],
+      "reload": 2.6,
+      "muzzleSpeed": 295,
+      "noise": 75,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        0.73,
+        0.39
+      ],
+      "range": 350,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 2.6,
+    "dimensions": {
+      "length": 0.894,
+      "barrel": 0.2,
+      "emptyMass": 2.6
+    },
+    "archetype": "rifle_7_62x39",
+    "variantOf": "svd_dragunov",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "integral"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "integral_suppressor",
+        "mount": "muzzle",
+        "integral": true
+      }
+    ]
   }
 ]

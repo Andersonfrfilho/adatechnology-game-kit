@@ -106,7 +106,7 @@ describe('mounts and fitted accessories of the firearms', () => {
       }
     }
     const integralIds = firearms.flatMap((firearm) => (firearm.fitted ?? []).filter((part) => part.integral).map((part) => `${firearm.id}:${part.id}`))
-    expect(integralIds.sort()).toEqual(['browning_m2:tripod', 'hk_g36:integral_optic_3x', 'hk_g36k:integral_optic_3x', 'hk_mp5sd3:integral_suppressor', 'm24_sws:fixed_scope_10x', 'steyr_aug_a1:integral_optic_1_5x', 'svd_dragunov:pso_1'])
+    expect(integralIds.sort()).toEqual(['browning_m2:tripod', 'hk_g36:integral_optic_3x', 'hk_g36k:integral_optic_3x', 'hk_mp5sd3:integral_suppressor', 'm24_sws:fixed_scope_10x', 'steyr_aug_a1:integral_optic_1_5x', 'svd_dragunov:pso_1', 'vss_vintorez:integral_suppressor'])
   })
 
   it('maps the Gallery options: rails, scopes, bipods, brakes and the AK slots of §17', () => {

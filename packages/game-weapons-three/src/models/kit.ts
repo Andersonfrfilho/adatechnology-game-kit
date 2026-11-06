@@ -22,6 +22,7 @@ const createMaterials = (THREE: Three) => {
     olive: standard(0x4b5231, 0.8, 0.05),
     tan: standard(0x9c8a63, 0.8, 0.05),
     wood: standard(0x4a2c17, 0.55, 0),
+    beech: standard(0xb98650, 0.6, 0),
     woodL: standard(0x5e3a1f, 0.55, 0),
     brass: standard(0xc39a45, 0.28, 0.9),
     copper: standard(0xb06a3b, 0.3, 0.85),
@@ -53,9 +54,14 @@ const createMaterials = (THREE: Three) => {
     dynamite: standard(0x9e2a1f, 0.7, 0),
     c4: standard(0x6d6a4c, 0.95, 0),
     wire: standard(0xb02020, 0.5, 0),
+    /** The Semtex putty and the green band of an M18 smoke canister. */
+    semtex: standard(0xd98a2b, 0.75, 0),
+    smokeBand: standard(0x3fbf4a, 0.6, 0),
+    cellophane: standard(0xe8e2cf, 0.2, 0, { transparent: true, opacity: 0.35, depthWrite: false }),
     /** Magazine finishes named by the options. */
     bakelite: standard(0x6a2e1c, 0.6, 0),
     polyMag: standard(0x2a2a26, 0.85, 0),
+    smoke: standard(0x3a3b36, 0.35, 0, { transparent: true, opacity: 0.72 }),
   }
   // shared by every model of this kit: a model put away (discardObject3D of game-shapes-three) must not free them, or the next one uploads them again
   markShared(...Object.values(materials))

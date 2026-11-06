@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "generate": "node dist/cli.js generate",
-    "manifest": "node dist/cli.js manifest"
+    "manifest": "node dist/cli.js manifest",
+    "references": "node dist/cli.js references"
   },
   "dependencies": {
     "@adatechnology/game-items-three": "workspace:*",

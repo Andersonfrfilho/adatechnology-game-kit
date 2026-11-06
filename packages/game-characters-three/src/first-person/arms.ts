@@ -328,7 +328,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const channelPose = newPose(THREE)
   const mixed = newPose(THREE)
   const dropped = newPose(THREE)
-  let indexCurl: number | undefined
+  // the index finger of each hand that holds a trigger (`HandTargets.fingers` for the right, `fingersL` for the left)
+  const indexCurl: { R: number | undefined; L: number | undefined } = { R: undefined, L: undefined }
   const bone = createTwoBone(THREE)
   const shoulder = new THREE.Vector3()
   const wristAt = new THREE.Vector3()
@@ -403,7 +404,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     arm.anchor.quaternion.copy(pose.q)
     arm.anchor.scale.setScalar(scale)
     arm.hand.setGrip(pose.grip)
-    arm.hand.setIndex(arm.side === 'R' ? indexCurl : undefined)
+    arm.hand.setIndex(indexCurl[arm.side])
     arm.joints.shoulder.copy(shoulder)
     arm.joints.elbow.copy(bone.joint)
     arm.joints.wrist.copy(bone.end)
@@ -499,7 +500,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           desired.p.add(bobOffset)
         }
         modeOf(mode, arm)
-        if (side === 'R') indexCurl = mode === 'target' ? targets?.fingers?.index : undefined
+        indexCurl[side] = mode === 'target' ? (side === 'R' ? targets?.fingers?.index : targets?.fingersL?.index) : undefined
         arm.blend = blendSeconds <= 0 ? 1 : Math.min(1, arm.blend + dt / blendSeconds)
         if (arm.blend >= 1) copyPose(arm.shown, desired)
         else mixPose(THREE, arm.shown, arm.from, desired, ease(arm.blend))

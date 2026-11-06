@@ -332,5 +332,45 @@
       "reference",
       "derived"
     ]
+  },
+  {
+    "id": "m32_mgl",
+    "name": "M32 multiple grenade launcher (Milkor MGL)",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 6,
+      "reload": 9.2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 9.2,
+        "clear": 1.2
+      },
+      "family": "revolver",
+      "speed": 75,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        2.25,
+        0.6
+      ]
+    },
+    "mass": 6.68,
+    "dimensions": {
+      "length": 0.778,
+      "lengthCollapsed": 0.565,
+      "barrel": 0.3,
+      "emptyMass": 5.3
+    },
+    "archetype": "shotgun_double_12",
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "over"
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]
