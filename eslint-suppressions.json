@@ -314,11 +314,6 @@
       "count": 9
     }
   },
-  "packages/game-vehicles/src/particles.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 24
-    }
-  },
   "packages/game-vehicles/src/rollover.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 14

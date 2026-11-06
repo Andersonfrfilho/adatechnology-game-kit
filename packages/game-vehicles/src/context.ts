@@ -3,7 +3,7 @@ import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshSt
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
 import type { MaterialOptions, TextTextureOptions } from './materials'
-import type { VehicleLamp, VehiclePart, VehicleSpin } from './api'
+import type { VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
 import type { Kit } from './types'
 import type { ZoneBoxInput } from './zone-core'
 import { clamp, rng } from './util'
@@ -48,6 +48,7 @@ export function installContext(kit: Kit) {
     declare parts: VehiclePart[]
     declare lights: VehicleLamp[]
     declare spin: VehicleSpin[]
+    declare emitters: VehicleEmitter[]
     declare log: unknown[]
     declare paints: Set<Material>
     declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]

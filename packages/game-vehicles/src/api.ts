@@ -2,7 +2,7 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
-import type { Object3D } from 'three'
+import type { Object3D, Vector3 } from 'three'
 
 import type { LodSettings } from './lod'
 import type { ZoneBox } from './zone-core'
@@ -127,6 +127,18 @@ export interface VehicleSpin {
   decay?: number
   /** a road wheel, turned by the vehicle's speed */
   track?: boolean
+}
+
+/** A continuous source of smoke or fire (`kit.addEmitter`): where (`c.vehicle`, or the vehicle world with `world`), how many puffs a second. */
+export interface VehicleEmitter {
+  p: Vector3
+  kind: string
+  world: boolean
+  rate: number
+  acc: number
+  s: number
+  dir: Vector3 | null
+  gap: number
 }
 
 export interface VehicleLamp {

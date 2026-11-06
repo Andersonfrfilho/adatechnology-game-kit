@@ -1,7 +1,26 @@
 /** Particle system: smoke, fire, sparks, shards, dust and water. */
-import type { Vector3 } from 'three'
+import type { BufferGeometry, CanvasTexture, ColorRepresentation, Material, Vector3 } from 'three'
 
+import type { VehicleEmitter } from './api'
+import type { ParticleEffects } from './routed-particles'
 import type { BuildContext, Kit } from './types'
+
+/** What a particle may override: colour, variant (`red`, `white`...), opacity, size, life, growth, material, rest height. */
+export type SpawnOptions = {
+  col?: ColorRepresentation
+  variant?: string
+  op?: number
+  s?: number
+  life?: number
+  grow?: number
+  nofog?: boolean
+  mat?: Material
+  r?: number
+  floor?: number
+}
+/** A burst of particles: the spawn options plus a main direction, speed, spread and how far from the point they start. */
+export type BurstOptions = SpawnOptions & { dir?: Vector3; speed?: number; spread?: number; jitter?: number }
+export type EmitterOptions = { world?: boolean; rate?: number; s?: number; dir?: Vector3 | null }
 import { warnOnce } from '@adatechnology/game-contracts'
 import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
@@ -16,7 +35,7 @@ export function installParticles(kit: Kit) {
 
   /* ================= particles ================= */
   const PARTICLE_LIMIT = 400
-  const PARTICLE_GEOMETRIES: any = {
+  const PARTICLE_GEOMETRIES: Record<string, BufferGeometry> = {
     spark: new THREE.BoxGeometry(0.012, 0.012, 0.1),
     shard: new THREE.TetrahedronGeometry(0.028, 0),
     cube: new THREE.BoxGeometry(0.014, 0.014, 0.014),
@@ -26,7 +45,7 @@ export function installParticles(kit: Kit) {
     water: new THREE.SphereGeometry(0.03, 6, 4),
     droplet: new THREE.SphereGeometry(0.012, 6, 4),
   }
-  const PARTICLE_MATERIALS: any = {
+  const PARTICLE_MATERIALS: Record<string, Material> = {
     spark: new THREE.MeshBasicMaterial({ color: 0xffc46a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }),
     shard: makeMaterial('#cfe3e8', { roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.8 }),
     cube: makeMaterial('#d6e8ec', { roughness: 0.08, metalness: 0.4, transparent: true, opacity: 0.85 }),
@@ -39,7 +58,7 @@ export function installParticles(kit: Kit) {
   /* ---- smoke, fire and dust: sprite puffs with a noise texture; they grow, drift with the wind and dissolve by noise ---- */
   function valueNoise(seed: number) {
     const N = 16
-    const g: any = []
+    const g: number[] = []
     for (let i = 0; i < N * N; i++) g.push(hash(i % N, (i / N) | 0, seed))
     return function (x: number, y: number) {
       const xi = Math.floor(x)
@@ -60,7 +79,7 @@ export function installParticles(kit: Kit) {
     const S = 96
     const cv = document.createElement('canvas')
     cv.width = cv.height = S
-    const x: any = cv.getContext('2d')
+    const x = cv.getContext('2d') as CanvasRenderingContext2D
     const img = x.createImageData(S, S)
     const nz = valueNoise(seed)
     for (let j = 0; j < S; j++)
@@ -87,9 +106,9 @@ export function installParticles(kit: Kit) {
     const t = new THREE.CanvasTexture(cv)
     return t
   }
-  let SMOKE_TEXTURES: any = null
-  let FIRE_TEXTURES: any = null
-  function puffMaterial(fire: boolean, col: string, op: any) {
+  let SMOKE_TEXTURES: CanvasTexture[] | null = null
+  let FIRE_TEXTURES: CanvasTexture[] | null = null
+  function puffMaterial(fire: boolean, col: ColorRepresentation, op: number) {
     if (!SMOKE_TEXTURES) {
       SMOKE_TEXTURES = [1, 2, 3, 4].map(function (k) {
         return puffTexture(k * 13, false)
@@ -98,7 +117,7 @@ export function installParticles(kit: Kit) {
         return puffTexture(k * 17, true)
       })
     }
-    const list = fire ? FIRE_TEXTURES : SMOKE_TEXTURES
+    const list = (fire ? FIRE_TEXTURES : SMOKE_TEXTURES)!
     const build = () =>
       new THREE.SpriteMaterial({
         map: list[Math.floor(Math.random() * list.length)],
@@ -111,7 +130,7 @@ export function installParticles(kit: Kit) {
     const mat = kit.particleMaterials ? kit.particleMaterials.own(build) : build()
     const dis = { value: 0 }
     mat.userData.dis = dis
-    mat.onBeforeCompile = function (sh: any) {
+    mat.onBeforeCompile = function (sh: { uniforms: Record<string, unknown>; fragmentShader: string }) {
       sh.uniforms.uDis = dis
       /* the sampled texel is called texelColor up to r152 and sampledDiffuseColor from r153 */
       const texel = parseInt(THREE.REVISION, 10) >= 153 ? 'sampledDiffuseColor' : 'texelColor'
@@ -124,8 +143,8 @@ export function installParticles(kit: Kit) {
     }
     return mat
   }
-  const SPRITE_TYPES: any = { smoke: 1, fire: 1, dust: 1 }
-  const PUFF_COLORS: any = {
+  const SPRITE_TYPES: Record<string, number> = { smoke: 1, fire: 1, dust: 1 }
+  const PUFF_COLORS: Record<string, [string, number]> = {
     smokewhite: ['#9aa1a7', 0.42],
     smokeblack: ['#1b1b1c', 0.62],
     smokegray: ['#55595c', 0.5],
@@ -134,8 +153,8 @@ export function installParticles(kit: Kit) {
     fire: ['#ffffff', 0.9],
   }
   const WIND = new V3(-0.45, 0, 0.16)
-  const PARTICLE_LIFE: any = { spark: 0.6, dust: 1.6, smoke: 2.8, fire: 0.7, water: 1.2, droplet: 1.0 }
-  const TRANSIENT_TYPES: any = { spark: 1, dust: 1, smoke: 1, fire: 1, water: 1, droplet: 1 }
+  const PARTICLE_LIFE: Record<string, number> = { spark: 0.6, dust: 1.6, smoke: 2.8, fire: 0.7, water: 1.2, droplet: 1.0 }
+  const TRANSIENT_TYPES: Record<string, number> = { spark: 1, dust: 1, smoke: 1, fire: 1, water: 1, droplet: 1 }
   function killParticle(c: BuildContext, i: number) {
     const P = c.particles[i]
     c.effects.remove(P.m)
@@ -147,7 +166,7 @@ export function installParticles(kit: Kit) {
   }
   /* Particle in the sibling group c.effects (vehicle world coordinates). type: spark|shard|cube|lens|scrap|plastic|dust|smoke|fire|water|droplet */
   /* The effects world draws the puff and its budget caps it: positions and velocities go from the vehicle's effects group to the world. */
-  function routeParticle(c: BuildContext, effects: any, type: string, pos: Vector3, vel: any, o: any) {
+  function routeParticle(c: BuildContext, effects: ParticleEffects, type: string, pos: Vector3, vel: Vector3, o: SpawnOptions) {
     c.effects.updateWorldMatrix(true, false)
     const at = pos.clone().applyMatrix4(c.effects.matrixWorld)
     const to = vel.clone().transformDirection(c.effects.matrixWorld).multiplyScalar(vel.length())
@@ -167,13 +186,13 @@ export function installParticles(kit: Kit) {
     )
     return null
   }
-  kit.spawn = function (c: BuildContext, type: string, pos: Vector3, vel: any, o: any) {
+  kit.spawn = function (c: BuildContext, type: string, pos: Vector3, vel: Vector3, o?: SpawnOptions | null) {
     o = o || {}
     const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
     if (effects) return routeParticle(c, effects, type, pos, vel, o)
     if (ROUTED_PARTICLE_TYPES[type] && !kit.effects) warnOnce('game-vehicles.own-particles', 'game-vehicles drew its smoke, fire and dust with sprites of its own because the host lent no effects world (options.effects); pass the host effects so the puffs share one budget')
     if (c.particles.length >= PARTICLE_LIMIT) {
-      const idx = c.particles.findIndex(function (q: any) {
+      const idx = c.particles.findIndex(function (q: { type: string }) {
         return TRANSIENT_TYPES[q.type]
       })
       killParticle(c, idx >= 0 ? idx : 0)
@@ -304,7 +323,7 @@ export function installParticles(kit: Kit) {
       }
     }
   }
-  function burst(c: BuildContext, type: string, pFx: any, n: number, o: any) {
+  function burst(c: BuildContext, type: string, pFx: Vector3, n: number, o?: BurstOptions | null) {
     o = o || {}
     const d = o.dir || new V3(0, 1, 0)
     const spd = o.speed || 2
@@ -324,15 +343,15 @@ export function installParticles(kit: Kit) {
   }
   kit.burst = burst
   /* Continuous emitter. p in c.vehicle (or in the vehicle world with o.world). kind: white|black|fire|exhaust (exhaust follows c.engineHealth) */
-  kit.addEmitter = function (c: BuildContext, p: any, kind: string, o: any) {
+  kit.addEmitter = function (c: BuildContext, p: Vector3, kind: string, o?: EmitterOptions | null) {
     o = o || {}
     if (
-      c.emitters.some(function (e: any) {
+      c.emitters.some(function (e) {
         return e.kind === kind && e.p.distanceTo(p) < 0.3
       })
     )
       return null
-    const e = {
+    const e: VehicleEmitter = {
       p: p.clone(),
       kind: kind,
       world: !!o.world,
@@ -354,7 +373,7 @@ export function installParticles(kit: Kit) {
   }
   kit.exhaustLook = exhaustLook
   function tickEmit(c: BuildContext, dt: number) {
-    c.emitters.forEach(function (e: any) {
+    c.emitters.forEach(function (e) {
       if (e.kind === 'exhaust') {
         const h = c.engineHealth == null ? 1 : c.engineHealth
         if (h <= 0 || c.flipped || c.rollState) return

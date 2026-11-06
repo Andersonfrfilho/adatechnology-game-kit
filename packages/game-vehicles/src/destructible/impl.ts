@@ -1234,7 +1234,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       p.temp = Math.min(p.temp, 120)
     }
     if (!partId) {
-      c.emitters = (c.emitters as { kind: string }[]).filter((e) => e.kind !== 'fire' && e.kind !== 'black')
+      c.emitters = c.emitters.filter((e) => e.kind !== 'fire' && e.kind !== 'black')
     }
   }
 
