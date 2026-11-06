@@ -13,6 +13,8 @@ export type DrawItemWeaponParams = {
   readonly itemId: string
   readonly turn: number
   readonly flip: boolean
+  /** Where a second hand closes, metres from the `handle` along the weapon. */
+  readonly support?: number
 }
 
 type Context = { readonly THREE: typeof THREE_NS; readonly group: THREE_NS.Group; readonly root: THREE_NS.Object3D }
@@ -63,7 +65,7 @@ function headToPositiveX(context: Context, flip: boolean): void {
 }
 
 // origin at the bottom centre, an empty `handle` at the narrow end where the hand closes
-function restOnFloor({ THREE, group, root }: Context): void {
+function restOnFloor({ THREE, group, root }: Context, support: number | undefined): void {
   group.updateMatrixWorld(true)
   const laid = new THREE.Box3().setFromObject(root)
   const centre = laid.getCenter(new THREE.Vector3())
@@ -73,6 +75,12 @@ function restOnFloor({ THREE, group, root }: Context): void {
   handle.name = 'handle'
   handle.position.set(-length * 0.35, 0, 0)
   group.add(handle)
+  if (support !== undefined) {
+    const second = new THREE.Object3D()
+    second.name = 'support'
+    second.position.set(handle.position.x + support, 0, 0)
+    group.add(second)
+  }
   root.traverse((node) => {
     const mesh = node as THREE_NS.Mesh
     if (!mesh.isMesh) return
@@ -81,7 +89,7 @@ function restOnFloor({ THREE, group, root }: Context): void {
   })
 }
 
-export function drawItemWeapon({ THREE, def, items, itemId, turn, flip }: DrawItemWeaponParams): THREE_NS.Group {
+export function drawItemWeapon({ THREE, def, items, itemId, turn, flip, support }: DrawItemWeaponParams): THREE_NS.Group {
   const { root } = (items ?? DEFAULT_ITEM_MODELS).build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = def.id
@@ -89,6 +97,6 @@ export function drawItemWeapon({ THREE, def, items, itemId, turn, flip }: DrawIt
   const context: Context = { THREE, group, root }
   layFlat(context, turn)
   headToPositiveX(context, flip)
-  restOnFloor(context)
+  restOnFloor(context, support)
   return group
 }

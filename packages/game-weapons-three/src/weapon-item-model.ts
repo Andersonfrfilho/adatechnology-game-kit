@@ -5,7 +5,6 @@ import { drawItemWeapon } from './item-weapon-draw'
 import { DEFAULT_ITEM_MODELS } from './item-models'
 import type { ItemModels } from './item-models'
 import { buildExplosiveModel, hasExplosiveModel } from './models/explosives'
-import { buildMeleeModel, hasMeleeModel } from './models/melee'
 import { buildProp, weaponProp } from './props'
 
 /** How a weapon is drawn from an item model of game-items-three: the item (default the weapon id), and the turns the laying-down rule gets wrong. */
@@ -16,6 +15,8 @@ export interface WeaponItemModel {
   readonly turn?: number
   /** Turn it end for end after the head is found (the head is the narrow end: a knife's blade, a screwdriver's tip, an extinguisher's nozzle). */
   readonly flip?: boolean
+  /** A weapon held with two hands: metres from the handle mark, along the weapon (negative toward the butt), where the second hand closes (the `support` mark). */
+  readonly support?: number
 }
 
 // the weapons whose item has another id, or that the laying-down rule turns the wrong way
@@ -29,6 +30,10 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['screwdriver', { flip: true }],
   // the Itens do Vale Cinzento hammer is a claw hammer: the head and the two-pronged claw
   ['claw_hammer', { item: 'hammer' }],
+  // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle; the brass knuckles lie with the ring row across the strike
+  ['kabar', { flip: true }],
+  ['katana', { flip: true, support: -0.11 }],
+  ['brass_knuckles', { turn: 1 }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -52,12 +57,6 @@ export type WeaponModelDef = Pick<WeaponDef, 'id' | 'category' | 'mass'> & Parti
 /** Whether the gallery drew the explosive a throwable carries. */
 export const hasThrowableModel = (def: Partial<Pick<WeaponDef, 'action'>>): boolean => def.action?.kind === 'throwable' && def.action.explosive !== undefined && hasExplosiveModel(def.action.explosive)
 
-/** Whether the kit drew the melee weapon itself (the KA-BAR, the katana, the brass knuckles). */
-export const hasHandheldModel = (def: Pick<WeaponDef, 'id'>): boolean => hasMeleeModel(def.id)
-
-/** The model of a melee weapon the kit drew, lying as the item models do (see `buildMeleeModel`), or undefined for any other weapon. */
-export const buildHandheldModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>): THREE_NS.Group | undefined => buildMeleeModel(THREE, def.id)
-
 export const buildThrowableModel = (THREE: typeof THREE_NS, def: Partial<Pick<WeaponDef, 'action'>>): THREE_NS.Group | undefined =>
   def.action?.kind === 'throwable' && def.action.explosive !== undefined ? buildExplosiveModel(THREE, def.action.explosive) : undefined
 
@@ -69,14 +68,14 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
   const buildItemModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => {
     const itemId = itemModelOf(def.id, items)
     if (!itemId) return undefined
-    return drawItemWeapon({ THREE, def, items, itemId, turn: models.get(def.id)?.turn ?? 0, flip: models.get(def.id)?.flip === true })
+    return drawItemWeapon({ THREE, def, items, itemId, turn: models.get(def.id)?.turn ?? 0, flip: models.get(def.id)?.flip === true, ...(models.get(def.id)?.support === undefined ? {} : { support: models.get(def.id)?.support as number }) })
   }
   return {
     register: (weaponId, model) => void models.set(weaponId, model ?? { item: '' }),
     get: (weaponId) => models.get(weaponId),
     itemModelOf,
     buildItemModel,
-    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildHandheldModel(THREE, def) ?? buildThrowableModel(THREE, def) ?? buildProp(THREE, weaponProp(def)),
+    buildModel: (THREE, def, items) => buildItemModel(THREE, def, items) ?? buildThrowableModel(THREE, def) ?? buildProp(THREE, weaponProp(def)),
   }
 }
 
