@@ -173,6 +173,10 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "page": "https://commons.wikimedia.org/wiki/File:Colt_M4A1_silhouette.svg"
   },
+  "colt_python": {
+   "source": "generated",
+   "file": "generated/colt_python.svg"
+  },
   "crossbow": {
    "source": "generated",
    "file": "generated/crossbow.svg"
@@ -360,6 +364,10 @@
   "hk_ump_45": {
    "source": "generated",
    "file": "generated/hk_ump_45.svg"
+  },
+  "hk_usp": {
+   "source": "generated",
+   "file": "generated/hk_usp.svg"
   },
   "hunting_rifle_30_06": {
    "source": "generated",
@@ -621,6 +629,10 @@
    "source": "generated",
    "file": "generated/sig_sauer_p226.svg"
   },
+  "sig_sauer_p320": {
+   "source": "generated",
+   "file": "generated/sig_sauer_p320.svg"
+  },
   "sks": {
    "source": "generated",
    "file": "generated/sks.svg"
@@ -728,6 +740,10 @@
    "license": "CC BY 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
    "page": "https://commons.wikimedia.org/wiki/File:Cz-skorpion_-_game-icons.svg"
+  },
+  "walther_p99": {
+   "source": "generated",
+   "file": "generated/walther_p99.svg"
   },
   "winchester_1894": {
    "source": "generated",

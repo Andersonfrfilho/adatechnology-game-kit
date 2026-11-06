@@ -1,6 +1,6 @@
 # Checklist das animações por arma
 
-Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (121):
+Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (125):
 
 - **mão de apoio**: as duas mãos existem, ficam na frente do olho, dentro da vista e a até 12 cm do modelo na mão.
 - **dedo no gatilho**: com peça de gatilho no modelo, o indicador direito repousa estendido, vai ao gatilho e puxa a cada tiro (metralhadora e lança-chamas seguram o gatilho), e volta; sem peça de gatilho a empunhadura é a normal (—).
@@ -127,6 +127,10 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | Accuracy L96A1 (`accuracy_l96a1`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,20 s / 3,20 s | ✓ | n/a | ✓ |
 | Mossberg 590 (`mossberg_590`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 5,68 s | ✓ | n/a | ✓ |
 | FN M240B (`fn_m240b`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
+| SIG Sauer P320 (`sig_sauer_p320`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
+| HK USP (`hk_usp`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
+| Walther P99 (`walther_p99`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,80 s / 1,80 s | ✓ | n/a | ✓ |
+| Colt Python (`colt_python`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,00 s / 6,00 s | ✓ | n/a | ✓ |
 | RPG-7 (`rpg_7`) | ✓ | ✓ | ✓ | — | ✓ 4,50 s / — | ✓ | n/a | ✓ |
 | M72 LAW (`m72_law`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |
 | AT4 (`at4`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |

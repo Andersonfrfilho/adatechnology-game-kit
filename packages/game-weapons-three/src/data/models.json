@@ -1669,6 +1669,46 @@
       "rpm": 750
     }
   },
+  "sig_sauer_p320": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 203,
+    "barrel": 120,
+    "options": {
+      "design": "p320",
+      "rel": 0.8
+    }
+  },
+  "hk_usp": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 194,
+    "barrel": 108,
+    "options": {
+      "design": "usp",
+      "rel": 0.8
+    }
+  },
+  "walther_p99": {
+    "builder": "pistol",
+    "caliber": "9×19",
+    "length": 180,
+    "barrel": 102,
+    "options": {
+      "design": "p99",
+      "rel": 0.7
+    }
+  },
+  "colt_python": {
+    "builder": "revolver",
+    "caliber": ".357 Magnum",
+    "length": 292,
+    "barrel": 152,
+    "options": {
+      "python": 1,
+      "chambers": 6
+    }
+  },
   "m79": {
     "builder": "breakLauncher",
     "caliber": "40×46",

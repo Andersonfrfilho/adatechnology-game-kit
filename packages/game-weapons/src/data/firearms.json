@@ -8032,5 +8032,223 @@
         "mount": "rail_bottom"
       }
     ]
+  },
+  {
+    "id": "sig_sauer_p320",
+    "name": "SIG Sauer P320",
+    "maker": "SIG Sauer",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 17,
+      "reload": 1.9,
+      "muzzleSpeed": 350,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.2,
+        0.4
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8
+    },
+    "mass": 0.83,
+    "dimensions": {
+      "length": 0.203,
+      "barrel": 0.12,
+      "emptyMass": 0.83
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "sig_sauer_p226",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "hk_usp",
+    "name": "HK USP",
+    "maker": "HK",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.9,
+      "muzzleSpeed": 350,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.29,
+        0.43
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8
+    },
+    "mass": 0.77,
+    "dimensions": {
+      "length": 0.194,
+      "barrel": 0.108,
+      "emptyMass": 0.77
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "sig_sauer_p226",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "walther_p99",
+    "name": "Walther P99",
+    "maker": "Walther",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.8,
+      "muzzleSpeed": 375,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.81,
+        0.6
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 0.7
+    },
+    "mass": 0.63,
+    "dimensions": {
+      "length": 0.18,
+      "barrel": 0.102,
+      "emptyMass": 0.63
+    },
+    "archetype": "pistol_9mm",
+    "variantOf": "glock_17",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "colt_python",
+    "name": "Colt Python",
+    "maker": "Colt",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "357mag",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 2.4,
+      "muzzleSpeed": 430,
+      "spreadDeg": 0.8,
+      "bloomDeg": 1,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3.13,
+        0.94
+      ],
+      "range": 60,
+      "family": "revolver",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "perRound": 1,
+        "clear": 1.2
+      }
+    },
+    "mass": 1.23,
+    "dimensions": {
+      "length": 0.292,
+      "barrel": 0.152,
+      "emptyMass": 1.23
+    },
+    "archetype": "revolver_357",
+    "variantOf": "sw_686",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [],
+    "fitted": []
   }
 ]

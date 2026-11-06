@@ -82,7 +82,8 @@
       "Rossi",
       "Browning",
       "Knight's",
-      "Thompson"
+      "Thompson",
+      "Walther"
     ],
     "source": "gallery",
     "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
@@ -5946,6 +5947,164 @@
       },
       "source": "reference",
       "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/M240_machine_gun"
+    },
+    "SIG Sauer P320": {
+      "value": {
+        "id": "sig_sauer_p320",
+        "name": "SIG Sauer P320",
+        "of": "SIG Sauer P226",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "17",
+        "length": 203,
+        "barrel": 120,
+        "emptyMass": 0.83,
+        "options": {
+          "rail": 1
+        },
+        "reloadFrom": "SIG Sauer P226",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "P320 Full Size: 203 mm. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 4,7 pol. (120 mm). https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "833 g sem carregador. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 17 no 9×19. https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SIG Sauer P226: a mesma pistola de carregador do mesmo fabricante."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/SIG_Sauer_P320"
+    },
+    "HK USP": {
+      "value": {
+        "id": "hk_usp",
+        "name": "HK USP",
+        "of": "SIG Sauer P226",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "15",
+        "length": 194,
+        "barrel": 108,
+        "emptyMass": 0.77,
+        "options": {
+          "rail": 1
+        },
+        "reloadFrom": "SIG Sauer P226",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "USP 9 mm: 194 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 108 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "770 g sem carregador (9 mm). https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 15 no 9×19. https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da SIG Sauer P226 (pistola de carregador de 9 mm, a mesma sequência)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Heckler_%26_Koch_USP"
+    },
+    "Walther P99": {
+      "value": {
+        "id": "walther_p99",
+        "name": "Walther P99",
+        "of": "Glock 17",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "15",
+        "length": 180,
+        "barrel": 102,
+        "emptyMass": 0.63,
+        "reloadFrom": "Glock 17",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "180 mm. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 102 mm. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "630 g sem carregador. https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 15 no 9×19 (a primeira geração). https://en.wikipedia.org/wiki/Walther_P99"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Glock 17: pistola de polímero e percussor lançado, a mesma sequência."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Walther_P99"
+    },
+    "Colt Python": {
+      "value": {
+        "id": "colt_python",
+        "name": "Colt Python",
+        "of": "S&W 686",
+        "caliber": "357mag",
+        "caliberText": ".357 Magnum",
+        "capacity": "6",
+        "length": 292,
+        "barrel": 152,
+        "emptyMass": 1.23,
+        "reloadFrom": "S&W 686",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "292 mm com o cano de 6 pol. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 6 pol. (152 mm), o mais comum. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "1,23 kg (43,5 oz) com o cano de 6 pol. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tambor de 6. https://en.wikipedia.org/wiki/Colt_Python"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do S&W 686: revólver .357 de tambor que abre para o lado."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Colt_Python"
     }
   },
   "gp25Mount": {
@@ -6052,6 +6211,62 @@
       },
       "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
       "reason": "The gallery drew every G36 as a generic rifle (thin receiver, wire stock, an ACOG on a flat handle). The SDK draws the compact: no carry handle but a long top rail on two risers ending in the front sight, a short handguard with a rail underneath for the vertical grip; all three share the tall polymer receiver, the skeletal side-folding stock, the angled grip and the translucent magazine with the rounds seen through it."
+    },
+    "sig_sauer_p320": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 203,
+        "barrel": 120,
+        "options": {
+          "design": "p320",
+          "rel": 0.8
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The P320 inherited the P226 model and came out the same as the other pistols. The SDK draws the pistol: modular polymer frame with a straight grip, slide with forward and rear serrations, squared guard and accessory rail."
+    },
+    "hk_usp": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 194,
+        "barrel": 108,
+        "options": {
+          "design": "usp",
+          "rel": 0.8
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The USP inherited the P226 model. The SDK draws the pistol: squared slide front, polymer frame with the hooked trigger guard and the long rail, thick grip with strap ridges and the external hammer."
+    },
+    "walther_p99": {
+      "value": {
+        "builder": "pistol",
+        "caliber": "9×19",
+        "length": 180,
+        "barrel": 102,
+        "options": {
+          "design": "p99",
+          "rel": 0.7
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The P99 inherited the Glock 17 model. The SDK draws the pistol: slide with the cocking cut-outs, sculpted grip with backstrap, dimples and front strap ridges, rail."
+    },
+    "colt_python": {
+      "value": {
+        "builder": "revolver",
+        "caliber": ".357 Magnum",
+        "length": 292,
+        "barrel": 152,
+        "options": {
+          "python": 1,
+          "chambers": 6
+        }
+      },
+      "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
+      "reason": "The Python inherited the S&W 686 model. The SDK draws the revolver: ventilated rib along the barrel, full-length underlug, wood grip with its medallion, swing-out cylinder."
     }
   },
   "weaponTags": {

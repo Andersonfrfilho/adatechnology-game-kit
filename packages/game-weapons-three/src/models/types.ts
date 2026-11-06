@@ -11,6 +11,8 @@ export interface ModelOptions {
   h?: number
   gl?: number
   deagle?: number
+  /** A pistol drawn from its photo instead of by style: `p320`, `usp` or `p99` (see `pistol-design.ts`). */
+  design?: string
   /** Metal and furniture finish. */
   steel?: number
   stain?: number
@@ -62,6 +64,8 @@ export interface ModelOptions {
   heat?: number
   /** Chambers of the revolver cylinder (default 6): the capacity of the weapon. */
   chambers?: number
+  /** The Colt Python: ventilated rib, full underlug, walnut grip (see `revolver-python.ts`). */
+  python?: number
   bayo?: number
   rod?: number
   bands?: number
