@@ -1249,7 +1249,7 @@ export class VehicleVisuals implements CreaseWork {
     return !!best.userData.glass?.broken
   }
   private panesOf(p: PartDef): Obj[] {
-    return p.panes ?? (this.zone(p)?.glass as Obj[] | undefined) ?? []
+    return (p.panes as Obj[] | undefined) ?? (this.zone(p)?.glass as Obj[] | undefined) ?? []
   }
   glassBreak(p: PartDef): void {
     const z = this.zone(p)

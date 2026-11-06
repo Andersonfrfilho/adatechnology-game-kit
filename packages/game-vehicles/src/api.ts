@@ -212,6 +212,12 @@ export interface DamageZone {
   box: ZoneBox
   /** Overrides the id used to seed the random damage (keeps the output of an earlier pack identical). */
   seedId?: string
+  /** What the zone is (`panel`, `door`, `glass`, `light`, `wheel`, `internal`...). */
+  type: string
+  /** The internal system an internal zone stands for (`engine`, `fuel_tank`, `underbody`...). */
+  sub?: string
+  /** The effects key (sounds, labels) when it differs from the id. */
+  fxKey?: string
   [key: string]: any
 }
 

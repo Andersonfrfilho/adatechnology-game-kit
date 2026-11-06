@@ -5,9 +5,11 @@
  *
  * Everything here is pure data derived from the built vehicle: no meshes are created or touched.
  */
+import type { Matrix4, Mesh, Object3D } from 'three'
+
 import type { BuildContext } from '../types'
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'
-import type { HeadlightLens, VehicleContext, VehicleKit } from '../api'
+import type { DamageZone, HeadlightLens, VehicleContext, VehicleKit } from '../api'
 import { clamp, strHash } from '../util'
 import type { ArmourLevel } from './armour'
 
@@ -59,7 +61,7 @@ export interface PartDef {
   /** The damage zone this part is, when it is one. */
   zoneId?: string
   /** The panes of a glass part no damage zone claims. */
-  panes?: any[]
+  panes?: Mesh[]
   /** Fluid held, in litres. */
   contains?: { fluid: string; liters: number; pressurized?: boolean }
   explodes?: { energy: number; radius: number; atC: number; /** The named explosion of game-vfx it plays (its fireball and its sound). */ effect?: string }
@@ -220,9 +222,9 @@ const floorPan = (b: LocalBox): LocalBox => ({
 
 /** Builds the part and joint model of a built vehicle. */
 /** A pane's box in the vehicle's space. */
-function paneBox(c: BuildContext, pane: any, inverse: any): LocalBox {
+function paneBox(c: BuildContext, pane: Mesh, inverse: Matrix4): LocalBox {
   pane.geometry.computeBoundingBox()
-  const box = pane.geometry.boundingBox.clone().applyMatrix4(pane.matrixWorld)
+  const box = pane.geometry.boundingBox!.clone().applyMatrix4(pane.matrixWorld)
   box.applyMatrix4(inverse)
   const center: [number, number, number] = [(box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2]
   const size: [number, number, number] = [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z]
@@ -264,8 +266,8 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
   }
 
   // ---- zones ------------------------------------------------------------------------------------------------------------------------------
-  const zones = kit.zonesOf(c) as Array<any>
-  const zoneOf = new Map<string, any>()
+  const zones: DamageZone[] = kit.zonesOf(c)
+  const zoneOf = new Map<string, DamageZone>()
   for (const z of zones) zoneOf.set(z.id, z)
 
   const hasTankZone = zones.some((z) => roleOfZone(z) === 'fuel_tank')
@@ -284,7 +286,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     const label = String(z.name ?? id)
     const tags: string[] = [...(z.tags ?? [])]
     if (role === 'rim') {
-      const wheels = (z.wheels ?? []) as any[]
+      const wheels: Object3D[] = z.wheels ?? []
       const r = Math.max(0.2, ...wheels.map((w) => w.userData?.r ?? 0.3))
       // the rim is the inner, smaller part of the wheel box: the tyre wraps it and the bolts are on the body side
       const sz = Math.sign(box.center[2]) || 1
@@ -385,9 +387,9 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
 
   // a pane the zones do not claim is still glass: it takes the round as a pane of its own
   const claimed = new Set<unknown>(zones.filter((z) => roleOfZone(z) === 'glass').flatMap((z) => z.glass ?? []))
-  ;(c as any).root.updateMatrixWorld(true)
-  const inverse = (c as any).vehicle.matrixWorld.clone().invert()
-  for (const pane of ((c as any).glass ?? []) as any[]) {
+  ;(c.root as Object3D).updateMatrixWorld(true)
+  const inverse: Matrix4 = (c.vehicle as Object3D).matrixWorld.clone().invert()
+  for (const pane of (c.glass ?? []) as Mesh[]) {
     if (claimed.has(pane)) continue
     const G = pane.userData.glass
     const bb = paneBox(c, pane, inverse)
@@ -621,10 +623,10 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       let box: LocalBox = { center: [mx, my, s * half], size: [0.14, 0.12, 0.2] }
       if (door) {
         // the objects of the vehicle: use the box that wraps them
-        const bb = (door.mirrors as any[]).reduce(
-          (acc: [number, number, number, number, number, number] | null, o) => {
-            const w = new (kit.THREE.Box3 as any)().setFromObject(o)
-            const inv = new (kit.THREE.Matrix4 as any)().copy(c.vehicle.matrixWorld).invert()
+        const bb = (door.mirrors as Object3D[]).reduce<[number, number, number, number, number, number] | null>(
+          (acc, o) => {
+            const w = new kit.THREE.Box3().setFromObject(o)
+            const inv = new kit.THREE.Matrix4().copy((c.vehicle as Object3D).matrixWorld).invert()
             w.applyMatrix4(inv)
             const cur: [number, number, number, number, number, number] = [w.min.x, w.max.x, w.min.y, w.max.y, w.min.z, w.max.z]
             if (!acc) return cur

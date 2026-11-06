@@ -52,7 +52,7 @@ export function installZoneCore(kit: Kit) {
   /* key -> 5 texts (one per band); filled by configure({ zoneEffects }) */
   kit.zoneEffects = ZONE_EFFECTS
   function zoneFx(z: DamageZone, b: number) {
-    const t = (z.fx || ZONE_EFFECTS[z.fxKey] || ZONE_EFFECTS[z.type] || ZONE_EFFECTS.panel || [])[b] || kit.config.texts.noEffect || ''
+    const t = (z.fx || ZONE_EFFECTS[z.fxKey!] || ZONE_EFFECTS[z.type] || ZONE_EFFECTS.panel || [])[b] || kit.config.texts.noEffect || ''
     return t.replace(/\{who\}/g, z.who || kit.config.texts.who)
   }
   kit.zoneEffect = function (z: DamageZone, h?: number | null) {
