@@ -44,11 +44,6 @@
       "count": 3
     }
   },
-  "packages/game-vehicles-fleet/src/context.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-vehicles-fleet/src/pack.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -72,11 +67,6 @@
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 22
-    }
-  },
-  "packages/game-vehicles-fleet/src/vehicles/planes-extra.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 50
     }
   },
   "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {

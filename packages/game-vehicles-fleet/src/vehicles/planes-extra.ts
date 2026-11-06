@@ -1,23 +1,40 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { CutTest, LabelArgument, VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
+import type { BufferGeometry, Material, Mesh, Object3D, Vector3 } from 'three'
+import type { WaterAirKit } from './water-air'
 import type { FleetContext } from '../context'
 
 /* Planes added after the first batch (group H). Uses only the kit API and the water/air helpers exposed as the shared EA
    (fuselage, airfoil, propeller, navigation lights, moulded glass, bake).
    Local helpers of this file (not in the core): pose3 (tail-down attitude), starDecal (generic star),
    pod (pod/rocket), hpoly (rounded window polygon), twinProp and frame3 (see comments). */
-export function installPlanesExtra(fx: FleetContext): void {
-  const kit = fx.kit
-  const THREE = kit.THREE
-  const shared = fx.shared
-  const trl = fx.t
-  const lbl = fx.label
+/** A star decal (`starDecal`): parent, disc (on unless false) and star colours, and a turn about its face. */
+export interface StarDecalOptions {
+  parent?: Object3D
+  ring?: boolean
+  bg?: string
+  fg?: string
+  rot?: number
+}
+/** A skin or glass loft cut to a keep test (`fSkin`, `fGlass`): scale, loft detail, cut subdivision, a coarse cut first, and the parent. */
+export interface SkinOptions {
+  k?: number
+  smooth?: number
+  seg?: number
+  sub?: number
+  pre?: CutTest | null
+  parent?: Object3D
+}
 
+/** What `createPlanesKit` gives: the plane helpers the helicopters file uses too (shared as GH). */
+export type PlanesKit = ReturnType<typeof createPlanesKit>
+
+/** The plane helpers of group H, built once for the kit. */
+export function createPlanesKit(kit: VehicleKit) {
+  const THREE = kit.THREE
   const V3 = kit.V3,
     PI = Math.PI,
     MT = kit.materials,
-    CM = kit.makeMaterial,
-    _G = kit.geo,
-    _DS = THREE.DoubleSide
+    CM = kit.makeMaterial
 
   /* ================= local utilities (group H) ================= */
   /* conventional-gear aircraft attitude: finds the inclination TH at which the main wheel (Af, radius ra) and the tail wheel
@@ -46,7 +63,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return { TH: TH, Y0: Y0, P: P, M: M }
   }
   /* generic five-point star (fictional insignia) on a disc, facing a face */
-  function starDecal(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o: any) {
+  function starDecal(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o?: StarDecalOptions) {
     o = o || {}
     const sh = new THREE.Shape()
     for (let i = 0; i < 10; i++) {
@@ -72,15 +89,15 @@ export function installPlanesExtra(fx: FleetContext): void {
     else if (face === '-y') g.rotation.x = PI / 2
     else g.rotation.y = ({ '+z': 0, '-z': PI, '+x': PI / 2, '-x': -PI / 2 } as Record<string, number>)[face] || 0
     if (o.rot) g.rotation.z += o.rot
-    g.children.forEach(function (m: any) {
+    g.children.forEach(function (m: Object3D) {
       m.castShadow = false
     })
     return g
   }
   /* rounded polygon (window) in the x-y plane: rectangle [x0, x1, y0, y1] with corners of radius r */
-  function rrect(x0: number, x1: number, y0: number, y1: number, r: number, n?: any) {
+  function rrect(x0: number, x1: number, y0: number, y1: number, r: number, n?: number) {
     n = n || 4
-    const pts: any = [],
+    const pts: number[][] = [],
       cs = [
         [x1 - r, y1 - r, 0],
         [x0 + r, y1 - r, PI / 2],
@@ -96,13 +113,13 @@ export function installPlanesExtra(fx: FleetContext): void {
     return pts
   }
   /* sdf of several windows (union) to cut the skin at once */
-  function polysSdf(EA: any, polys: any) {
-    const fs = polys.map(function (p: any) {
+  function polysSdf(EA: WaterAirKit, polys: readonly (readonly (readonly number[])[])[]) {
+    const fs = polys.map(function (p) {
       return EA.polySdf(p)
     })
-    return function (x: any, y: any) {
+    return function (x: number, y: number) {
       let d = 1e9
-      fs.forEach(function (f: any) {
+      fs.forEach(function (f) {
         d = Math.min(d, f(x, y))
       })
       return d
@@ -110,18 +127,18 @@ export function installPlanesExtra(fx: FleetContext): void {
   }
   /* skin, glass and cut-out with local subdivision (windows and strips smaller than the fuselage triangles):
      pre = coarse cut-out test done before, without subdividing, to limit the subdivided area */
-  function cutSub(m: any, tests: any, sub: any, pre: any) {
+  function cutSub(m: Mesh, tests: readonly CutTest[], sub?: number, pre?: CutTest | null) {
     if (pre) kit.cutMesh(m, [pre], 40)
     kit.cutMesh(m, tests, 40, { sub: sub || 0.08 })
   }
-  function scaleSt(st: any, k: number) {
-    return st.map(function (s: any) {
+  function scaleSt(st: readonly (readonly number[])[], k: number) {
+    return st.map(function (s) {
       const cy = (s[1] + s[2]) / 2,
         hh = ((s[2] - s[1]) / 2) * k
       return [s[0], cy - hh, cy + hh, s[3] * k, s[4], s[5]]
     })
   }
-  function fSkin(c: VehicleContext, EA: any, st: number[][], keep: any, mat: any, o: any) {
+  function fSkin(c: VehicleContext, EA: WaterAirKit, st: number[][], keep: CutTest, mat: Material, o?: SkinOptions) {
     o = o || {}
     const m = c.add(EA.fuseGeo(scaleSt(st, o.k || 1.004), { smooth: o.smooth || 48, seg: o.seg || 30 }), mat, 0, 0, 0, o.parent)
     m.castShadow = false
@@ -129,7 +146,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     c.deform.push(m)
     return m
   }
-  function fGlass(c: VehicleContext, EA: any, st: number[][], keep: any, label: any, type: string, o: any) {
+  function fGlass(c: VehicleContext, EA: WaterAirKit, st: number[][], keep: CutTest, label: LabelArgument, type: string, o?: SkinOptions & { mat?: Material; pos?: Vector3 }) {
     o = o || {}
     const m = new THREE.Mesh(EA.fuseGeo(scaleSt(st, o.k || 0.988), { smooth: o.smooth || 48, seg: o.seg || 30 }), o.mat || MT.glass)
     ;(o.parent || c.vehicle).add(m)
@@ -137,7 +154,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return kit.asGlass(c, m, label, type || 'tempered', o.pos ? { pos: o.pos } : {})
   }
   /* pod/tank elongated along x (rocket, wing tank, simple float) */
-  function pod(c: VehicleContext, EA: any, x0: number, x1: number, y: number, z: number, r: number, mat: any, o?: any) {
+  function pod(c: VehicleContext, EA: WaterAirKit, x0: number, x1: number, y: number, z: number, r: number, mat: Material, o?: { parent?: Object3D }) {
     o = o || {}
     const L = x0 - x1,
       st = [
@@ -156,14 +173,14 @@ export function installPlanesExtra(fx: FleetContext): void {
   }
 
   /* fuselage half width (stations [x, low y, high y, width, exponent]) at height y, interpolating the stations in x */
-  function halfW(ST: any, x: number, y: number) {
+  function halfW(ST: readonly (readonly number[])[], x: number, y: number) {
     for (let i = 0; i < ST.length - 1; i++) {
       const a = ST[i],
         b = ST[i + 1]
       if (x > a[0] || x < b[0]) continue
       const t = (a[0] - x) / (a[0] - b[0] || 1),
-        L = function (k: number, d?: any) {
-          return (a[k] == null ? d : a[k]) * (1 - t) + (b[k] == null ? d : b[k]) * t
+        L = function (k: number, d?: number) {
+          return (a[k] == null ? d! : a[k]) * (1 - t) + (b[k] == null ? d! : b[k]) * t
         }
       const yb = L(1),
         yt = L(2),
@@ -177,7 +194,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return 0
   }
   /* floor or lining that fits inside the fuselage: runs of up to 1 m, each with the minimum width of the run minus the clearance */
-  function liner(c: VehicleContext, ST: number[][], x0: number, x1: number, y: number, mat: any, o?: any) {
+  function liner(c: VehicleContext, ST: number[][], x0: number, x1: number, y: number, mat: Material, o?: { maxW?: number; gap?: number; h?: number; parent?: Object3D }) {
     o = o || {}
     const n = Math.max(1, Math.ceil((x1 - x0) / 1.0)),
       dx = (x1 - x0) / n,
@@ -195,7 +212,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return out
   }
   /* registration glued on the tapering flank: centre on the outside and a yaw that follows the taper */
-  function sideText(c: VehicleContext, ST: number[][], txt: string, w: number, h: number, x: number, y: number, s: number, o: any) {
+  function sideText(c: VehicleContext, ST: number[][], txt: string, w: number, h: number, x: number, y: number, s: number, o?: Parameters<VehicleContext['text']>[7]) {
     const a = halfW(ST, x + w / 2, y),
       b = halfW(ST, x - w / 2, y),
       m = c.text(txt, w, h, x, y, s * ((a + b) / 2 + 0.014), s > 0 ? '+z' : '-z', o)
@@ -203,8 +220,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return m
   }
 
-  /* helpers also used by the helicopters file (same group H) */
-  shared.GH = {
+  return {
     pose3: pose3,
     starDecal: starDecal,
     rrect: rrect,
@@ -218,6 +234,27 @@ export function installPlanesExtra(fx: FleetContext): void {
     liner: liner,
     sideText: sideText,
   }
+}
+
+export function installPlanesExtra(fx: FleetContext): void {
+  const kit = fx.kit
+  const THREE = kit.THREE
+  const shared = fx.shared
+  const trl = fx.t
+  const lbl = fx.label
+
+  const V3 = kit.V3,
+    PI = Math.PI,
+    MT = kit.materials,
+    CM = kit.makeMaterial,
+    _G = kit.geo,
+    _DS = THREE.DoubleSide
+
+  /* helpers also used by the helicopters file (same group H) */
+  const GH = createPlanesKit(kit)
+  shared.GH = GH
+  const { pose3, starDecal, rrect, polysSdf, pod, fSkin, fGlass, liner, sideText } = GH
+
 
   /* ================= Light tail-dragger (J-3 Cub type) ================= */
   /* Reference · Piper J-3 Cub (J3C-65) - WebSearch (aerocorner, AOPA, Smithsonian NASM, museumofflight) and partly from memory
@@ -301,7 +338,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(wsK, function (n: any) {
+          EA.cutT(wsK, function (n: Vector3) {
             return n.y > 0.12
           }),
           EA.sideCutP(sideW, 0.25),
@@ -418,7 +455,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           kit.cutMesh(
             w,
             [
-              EA.cutT([0.55, 1.3, 0.85, 1.1, null, 0.32], function (n: any) {
+              EA.cutT([0.55, 1.3, 0.85, 1.1, null, 0.32], function (n: Vector3) {
                 return n.y > 0.5
               }),
             ],
@@ -691,7 +728,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       }
       const winF = polysSdf(EA, wins)
       const winCut = {
-        sel: function (n: any) {
+        sel: function (n: Vector3) {
           return Math.abs(n.z) > 0.3
         },
         sdf: function (x: number, y: number, z: number) {
@@ -701,7 +738,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(wsK, function (n: any) {
+          EA.cutT(wsK, function (n: Vector3) {
             return n.x > 0.2 && n.y > 0.05
           }),
           EA.sideCutP(ckP, 0.5),
@@ -805,8 +842,8 @@ export function installPlanesExtra(fx: FleetContext): void {
         dh = function (z: number) {
           return 0.98 + Math.max(0, Math.abs(z) - 0.8) * 0.122
         },
-        nacs: any = { 1: [], '-1': [] },
-        props: any = {},
+        nacs: Record<number, Object3D[]> = { 1: [], '-1': [] },
+        props: Record<number, Object3D> = {},
         legs = []
       ;[1, -1].forEach(function (s) {
         const w = c.add(
@@ -1115,7 +1152,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         }),
         winF = polysSdf(EA, wins)
       const winCut = {
-        sel: function (n: any) {
+        sel: function (n: Vector3) {
           return Math.abs(n.z) > 0.3
         },
         sdf: function (x: number, y: number, z: number) {
@@ -1125,7 +1162,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(wsK, function (n: any) {
+          EA.cutT(wsK, function (n: Vector3) {
             return n.x > 0.15 && n.y > 0.1
           }),
           EA.sideCutP(ckP, 0.5),
@@ -1278,9 +1315,9 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.lamp(c, 1.56, dh(2.6) - 0.02, 2.6, 0.06, trl('labels.taxi_light_right_wing'))
       /* amphibian floats: V hull with a step, flat deck, hatches, cleats and water rudders */
       const flMat = c.paint('#d9dbd8', { metalness: 0.4, roughness: 0.4 }),
-        floats: any = [],
-        fstr: any = [],
-        legs2: any = []
+        floats: Object3D[] = [],
+        fstr: Object3D[] = [],
+        legs2: Object3D[] = []
       ;[1, -1].forEach(function (s) {
         const z0 = s * 1.45,
           FS = [
@@ -1565,7 +1602,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         }),
         winF = polysSdf(EA, wins)
       const winCut = {
-        sel: function (n: any) {
+        sel: function (n: Vector3) {
           return Math.abs(n.z) > 0.3
         },
         sdf: function (x: number, y: number, z: number) {
@@ -1575,7 +1612,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(wsK, function (n: any) {
+          EA.cutT(wsK, function (n: Vector3) {
             return n.x > 0.12 && n.y > 0.05
           }),
           EA.sideCutP(ckP, 0.5),
@@ -1592,7 +1629,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: number, y: number, _z: any) {
+        EA.bandT(function (x: number, y: number, _z: number) {
           return Math.min(sw(x) - y, x + 6.0, 5.6 - x)
         }),
         silver,
@@ -1641,7 +1678,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       })
       /* airstair door (front, left) and black windshield frame */
       const dF = EA.polySdf(
-        rrect(3.25, 2.6, 0.72, 2.2, 0.1).map(function (q: any) {
+        rrect(3.25, 2.6, 0.72, 2.2, 0.1).map(function (q) {
           return [Math.min(q[0], 3.25), q[1]]
         }),
       )
@@ -1747,7 +1784,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       c.wheel(4.9, 0.0001, 0.21, 0.13, { spokes: 0, rimR: 0.5, noPart: true, rim: CM('#c9ccce', { metalness: 0.5 }) })
       EA.lamp(c, 5.02, 0.62, 0.0001, 0.04, trl('labels.taxi_light'))
       /* engines on the tail: pylon, nacelle, intake with a dark fan, exhaust cone */
-      const engs: any = { 1: [], '-1': [] }
+      const engs: Record<number, Object3D[]> = { 1: [], '-1': [] }
       ;[1, -1].forEach(function (s) {
         const z0 = s * 1.32,
           y0 = 2.0,
@@ -1990,7 +2027,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       kit.cutMesh(
         fus,
         [
-          EA.cutT(ckCut, function (n: any) {
+          EA.cutT(ckCut, function (n: Vector3) {
             return n.y > 0.35
           }),
         ],
@@ -2170,7 +2207,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       /* empennage: tall fin with dorsal and ventral fins, low elevator */
       const tailM = c.paint('#ffffff')
       tailM.vertexColors = true
-      function ctail(geo: any, top: boolean) {
+      function ctail(geo: BufferGeometry, top: boolean) {
         EA.colorize(geo, function (x: number, y: number, z: number) {
           return camo(x, z, y, top ? false : y < 1.7)
         })

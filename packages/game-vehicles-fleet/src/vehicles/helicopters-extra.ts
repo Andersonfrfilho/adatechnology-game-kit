@@ -17,7 +17,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     MT = kit.materials,
     CM = kit.makeMaterial,
     G = kit.geo
-  const GH = shared.GH
+  const GH = shared.GH!
 
   /* ================= local utilities ================= */
   /* skids: two tubes with an upturned tip and cross tubes arching up to the belly; returns the meshes */
