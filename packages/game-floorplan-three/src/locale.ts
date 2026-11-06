@@ -62,7 +62,7 @@ export type Translate = (key: string, params?: Record<string, string | number>) 
  * A missing key falls back to English and then to the key itself.
  */
 export function createTranslator(locale?: string | Partial<Messages>): Translate {
-  const table: Messages = typeof locale === 'string' ? (locales[locale] ?? en) : { ...en, ...(locale ?? {}) }
+  const table: Partial<Messages> = typeof locale === 'string' ? (locales[locale] ?? en) : { ...en, ...(locale ?? {}) }
   return (key, params) => {
     const text = table[key] ?? en[key] ?? key
     return params ? text.replace(/\{(\w+)\}/g, (_, name: string) => (params[name] != null ? String(params[name]) : '')) : text

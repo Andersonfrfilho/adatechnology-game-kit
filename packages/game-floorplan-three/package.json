@@ -58,7 +58,9 @@
   },
   "peerDependencies": {
     "three": "^0.160.0",
-    "@adatechnology/game-floorplan": "workspace:^"
+    "@adatechnology/game-floorplan": "workspace:^",
+    "@adatechnology/game-vegetation": "workspace:^",
+    "@adatechnology/game-vegetation-species": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
@@ -82,6 +84,12 @@
   },
   "peerDependenciesMeta": {
     "@adatechnology/game-floorplan": {
+      "optional": true
+    },
+    "@adatechnology/game-vegetation": {
+      "optional": true
+    },
+    "@adatechnology/game-vegetation-species": {
       "optional": true
     }
   }

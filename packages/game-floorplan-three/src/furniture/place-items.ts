@@ -5,7 +5,7 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
   const { THREE, Y0, _col, boxC, colorOf, cursor, decorLights, makeApi, structurePiece } = K;
   const buildItem = (...a: any[]): any => K.buildItem(...a);
   const registerCollision = (...a: any[]): any => K.registerCollision(...a);
-  const vegItem = (...a: any[]): any => K.vegItem(...a);
+  const vegItem = (...a: Parameters<Kernel['vegItem']>): ReturnType<Kernel['vegItem']> => K.vegItem(...a);
   function houseItems(): Map<string, number> {
     const R = shared.ctx.r, T = shared.ctx.types, api = makeApi(), noModel = new Map<string, number>();
     const list: HouseItem[] = R.items.concat(R.stateItems.filter((e: HouseItem) => e.w != null && e.d != null && e.type !== 'razor_wire' && e.type !== 'barbed_wire'));

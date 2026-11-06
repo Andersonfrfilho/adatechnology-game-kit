@@ -43,7 +43,7 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
   function assembleInteractive(gs) {
     for (const [name, def] of shared.inter.defs) {
       const g = gs[name]; if (!g) continue; delete gs[name];
-      const outer = new THREE.Group(); outer.position.set(...def.pivot); outer.rotation.y = def.ry || 0; outer.updateMatrix();
+      const outer = new THREE.Group(); outer.position.fromArray(def.pivot); outer.rotation.y = def.ry || 0; outer.updateMatrix();
       const inv = new THREE.Matrix4().compose(new THREE.Vector3(...def.pivot), new THREE.Quaternion().setFromAxisAngle(_EY, def.ry || 0), _UM3).invert();
       g.traverse(o => { if (o.isMesh) { o.geometry.applyMatrix4(inv); o.userData.piece = def; def.meshes.push(o); } });
       outer.add(g); def.outer = outer; def.inner = g;

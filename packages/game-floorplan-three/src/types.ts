@@ -1,3 +1,4 @@
+import type * as THREE from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
@@ -7,6 +8,22 @@ export interface Damageable {
   type: string
   hp: number
   hpMax: number
+}
+
+/** A damageable box of a fleet car, in the car's frame (`game-vehicles` gives them). */
+export interface HouseFleetDamageable {
+  box: THREE.Box3
+  zone: string
+  part?: string
+  side?: string
+  type?: string
+}
+
+/** A car the fleet built: its group (+z in front), its damageable boxes, and how to give its resources back. */
+export interface HouseFleetCar {
+  group: THREE.Object3D
+  damageables?: HouseFleetDamageable[]
+  release?(): void
 }
 
 /** What `create(THREE, options)` reads. Everything is optional; the three.js namespace is the first argument. */
@@ -22,14 +39,15 @@ export interface HouseRendererOptions {
   /** `THREE.Reflector` (three/examples/jsm/objects/Reflector.js); without it the mirrors use only the environment map. */
   reflector?: any
   /** Cars of the lot and garage: `build(kind, { quality, seed })` -> `{ group, damageable, release() }`. Without it there are no cars. */
-  fleet?: { build(kind: string, options: { quality: string; seed: number }): any } | null
+  fleet?: { build(kind: string, options: { quality: string; seed: number }): HouseFleetCar } | null
   /** Car kinds (fleet ids) per lot style (`budget`, `mid`, `high`); replaces the list of a style. */
   carKinds?: Record<string, string[]>
   /** Hit points per damage class (glass, wood, water, metal, masonry, rubber, fuel, gas). */
   hp?: Record<string, number>
   /** Textures from the app that replace the procedural ones. */
-  textures?: Record<string, any>
-  atlas?: Record<string, any>
+  textures?: Partial<Record<'roughcast' | 'block' | 'tile' | 'dirt' | 'grass' | 'asphalt' | 'sidewalk' | 'fiber_cement', THREE.Texture>>
+  /** Atlas textures from the app: framed pictures, floor kinds, water. */
+  atlas?: { picture?: THREE.Texture; floorKind?: THREE.Texture; water?: THREE.Texture }
   /** Materials the game swaps (a material or a function of the default one). */
   materials?: Record<string, any>
   /** The world of `@adatechnology/game-destruction`; the house registers itself in it on first need. */
@@ -54,7 +72,8 @@ export interface HouseRendererOptions {
   onDamage?: (part: any, point: { x: number; y: number; z: number } | null, type: string) => void
   onWreck?: (event: any, house: any) => void
   onInteract?: (target: any, action: any) => boolean | void
-  onLight?: (light: any) => void
+  /** A room's light turned on or off (`on` is what it shows now). */
+  onLight?: (roomId: string, on: boolean) => void
   onMessage?: (text: string) => void
 }
 

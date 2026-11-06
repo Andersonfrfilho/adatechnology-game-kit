@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- port of the team's closure: dead locals and shapes stay as delivered */
 import { markKitOrigin } from '@adatechnology/game-contracts';
+import { isMesh } from '@adatechnology/game-shapes-three';
+
 import { panelViewOf } from '../destruction/panels.js';
+
 import type { ApartmentBuilding, Kernel, Shared } from '../kernel-types.js';
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
@@ -20,7 +23,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
-        shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
+        shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { quality: 'high', lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
         terrain();
         if (r.lot) { if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
         walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
@@ -104,7 +107,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         for (const def of shared.inter.defs.values()) if (def.outer && /^(light|drawer|swing|curtain|light_switch|handle)$/.test(def.kind)) lodObjects.push(def.outer);
         for (const [id, g] of Object.entries<any>(shared.ctx.parts || {})) if (/^(handle|shower_door)$/.test(g.userData.part) && g.visible !== false) lodObjects.push(g);
         if (shared.ctx.iv) { for (const E of shared.ctx.iv.roots) lodObjects.push(E.root); }
-        const countDraw = () => { let n = 0, t = 0; root.traverseVisible(o => { if (o.isMesh) { n++; t += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } }); return { n, t: Math.round(t) }; };
+        const countDraw = () => { let n = 0, t = 0; root.traverseVisible(o => { if (isMesh(o)) { n++; t += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } }); return { n, t: Math.round(t) }; };
         const s0 = countDraw(); for (const o of lodObjects) o.visible = false; const s1 = countDraw(); for (const o of lodObjects) o.visible = true;
         const budget = opts.drawCallBudget != null ? opts.drawCallBudget : cfg.drawCallBudget;
         const stats = { quality: h.quality, drawCalls: s0.n, drawCallsLOD1: s1.n, triangles: s0.t, trianglesLod1: s1.t, budget: budget || null, overBudget: !!budget && s0.n > budget, tBuild: performance.now() - t0 };
@@ -186,7 +189,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           structure, destruction,
           partOf(obj) { for (let n = obj; n; n = n.parent) { const id = n.userData && n.userData.partId; if (id && parts[id]) return parts[id]; const pc = n.userData && n.userData.piece; if (pc && parts[pc.name]) return parts[pc.name]; } return null; },
           partAt(p, tol) { tol = tol || 0.05; let m = null; for (const k in parts) { const a = parts[k].aabb; if (a && p.x >= a[0] - tol && p.x <= a[3] + tol && p.y >= a[1] - tol && p.y <= a[4] + tol && p.z >= a[2] - tol && p.z <= a[5] + tol) { m = parts[k]; break; } } return m; },
-          dispose() { enter(h); destruction.deactivate(); if (h.IV) ivDispose(h);  root.traverse(o => { if (o.isMesh && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && o.dispose) o.dispose(); }); root.removeFromParent(); },
+          dispose() { enter(h); destruction.deactivate(); if (h.IV) ivDispose(h);  root.traverse(o => { if (isMesh(o) && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && 'dispose' in o && typeof o.dispose === 'function') o.dispose(); }); root.removeFromParent(); },
           internal: { h, ctx: shared.ctx, inter: shared.inter, partState: shared.partState, doorState: shared.doorState, mirrors: shared.mirrors },
         };
         return res;

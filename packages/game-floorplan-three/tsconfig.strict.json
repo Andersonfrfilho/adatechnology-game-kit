@@ -5,5 +5,12 @@
     "noImplicitAny": true
   },
   "include": [],
-  "files": ["src/kernel-types.ts", "src/kernel/geometry.ts", "src/kernel/noise.ts", "src/kernel/close-scene.ts", "src/furniture/api.ts", "src/furniture/builders.ts", "src/furniture/place-items.ts", "src/furniture/extra-types.ts", "src/furniture/fixtures.ts", "src/furniture/yard.ts", "src/furniture/taps.ts", "src/furniture/type-table.ts", "src/furniture/plants.ts", "src/lights/fixtures.ts", "src/house/helpers.ts", "src/house/floors.ts", "src/house/stairs.ts", "src/house/baseboard.ts", "src/house/building.ts", "src/house/outbuildings.ts", "src/house/windows.ts", "src/house/walls.ts", "src/house/doors.ts", "src/roof/tiles.ts", "src/roof/rect.ts", "src/roof/gutters.ts", "src/roof/slabs.ts", "src/roof/roofs.ts", "src/lot/terrain.ts", "src/lot/perimeter.ts", "src/lot/gates.ts", "src/lights/decor.ts"]
+  "files": ["src/kernel-types.ts", "src/kernel/geometry.ts", "src/kernel/noise.ts", "src/kernel/close-scene.ts", "src/furniture/api.ts", "src/furniture/builders.ts", "src/furniture/place-items.ts", "src/furniture/extra-types.ts", "src/furniture/fixtures.ts", "src/furniture/yard.ts", "src/furniture/taps.ts", "src/furniture/type-table.ts", "src/furniture/plants.ts", "src/lights/fixtures.ts", "src/house/helpers.ts", "src/house/floors.ts", "src/house/stairs.ts", "src/house/baseboard.ts", "src/house/building.ts", "src/house/outbuildings.ts", "src/house/windows.ts", "src/house/walls.ts", "src/house/doors.ts", "src/roof/tiles.ts", "src/roof/rect.ts", "src/roof/gutters.ts", "src/roof/slabs.ts", "src/roof/roofs.ts", "src/lot/terrain.ts", "src/lot/perimeter.ts", "src/lot/gates.ts", "src/lights/decor.ts", "src/utilities/water.ts", "src/utilities/solar.ts", "src/utilities/electrical.ts",
+    "src/locale.ts",
+    "src/materials/textures.ts",
+    "src/materials/materials.ts",
+    "src/animation/clotheslines.ts",
+    "src/mirrors.ts",
+    "src/cars.ts",
+    "src/vegetation/bridge.ts"]
 }

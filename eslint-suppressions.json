@@ -159,11 +159,6 @@
       "count": 8
     }
   },
-  "packages/game-floorplan-three/src/cars.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "packages/game-floorplan-three/src/create.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -191,7 +186,7 @@
   },
   "packages/game-floorplan-three/src/furniture/place-items.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 6
+      "count": 4
     }
   },
   "packages/game-floorplan-three/src/furniture/spec.ts": {
@@ -229,11 +224,6 @@
       "count": 3
     }
   },
-  "packages/game-floorplan-three/src/kernel/close-scene.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
   "packages/game-floorplan-three/src/lights/decor.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -242,11 +232,6 @@
   "packages/game-floorplan-three/src/lights/room-light.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/materials/materials.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
     }
   },
   "packages/game-floorplan-three/src/navigation/bind.ts": {
@@ -281,12 +266,7 @@
   },
   "packages/game-floorplan-three/src/types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 71
-    }
-  },
-  "packages/game-floorplan-three/src/utilities/water.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
+      "count": 67
     }
   },
   "packages/game-floorplan-three/src/wall.ts": {

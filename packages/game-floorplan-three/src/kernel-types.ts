@@ -8,8 +8,14 @@
  */
 import type * as THREE_NS from 'three'
 import type { FloorplanResultFields, PlanDoor, PlanWall, PlanWindow, Rect, ResultGate, ResultLot, ResultRoom } from '@adatechnology/game-floorplan'
-import type { Outbuilding, Utilities } from '@adatechnology/game-floorplan-structure'
-import type { Props3d } from '@adatechnology/game-props3d'
+import type { Outbuilding, PlumbingPoint, PlumbingRun, Utilities } from '@adatechnology/game-floorplan-structure'
+import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
+import type * as Vegetation from '@adatechnology/game-vegetation'
+import type * as VegetationThree from '@adatechnology/game-vegetation/three'
+import type * as VegetationSpecies from '@adatechnology/game-vegetation-species'
+
+import type { Translate } from './locale.js'
+import type { HouseFleetDamageable, HouseRendererOptions } from './types.js'
 
 export type { Rect }
 
@@ -320,9 +326,30 @@ export interface KernelLightsFixtures {
 
 /** What `create()` itself puts on the kernel before the installers run. */
 export interface KernelBase {
+  t: Translate
   /** The game's key for a seed (`cfg.seedKey`), or the seed itself. */
   seedKey(id: unknown): unknown
+  /** The three.js namespace, with the primitive geometries of `game-shapes-three`. */
+  THREE: Three
+  cfg: HouseRendererOptions
+  /** Where the procedural canvases are drawn; null outside a page with no `options.document`. */
+  DOC: DocumentLike | null
+  /** `@adatechnology/game-props3d` or the game's replacement. */
+  PROPS: { create(THREE: Three, options?: Props3dOptions): Props3d }
+  /** `THREE.Reflector`; null: the mirrors use only the environment map. */
+  Reflector: ReflectorClass | null
+  FLEET: HouseRendererOptions['fleet']
+  /** Hit points per damage class. */
+  HP: Record<string, number>
+  invalidate(): void
+  invalidateShadow(): void
+  colliderChanged(c: unknown): void
+  VERSION: string
+  isOpenArea(c: { type: string; outdoor?: boolean }): boolean
 }
+
+/** The `Reflector` of three's examples: a plane that mirrors the scene. */
+export type ReflectorClass = new (geometry: THREE_NS.BufferGeometry, options: Record<string, unknown>) => THREE_NS.Mesh
 
 /** Variations of a plant builder: flattened blobs, a share of flowers and their colours, coconuts, fruit colours, a low crown, a type. */
 export interface PlantOptions {
@@ -766,6 +793,219 @@ export interface ItemRef {
   [extra: string]: unknown
 }
 
+/** Water in a house's tank: kept in the house's state so it survives a rebuild (night, cut). */
+export interface WaterState {
+  cap: number
+  level: number
+  rate: number
+}
+
+/** The water network of a house (`house.water`): the tank level and the points that draw from it. */
+export interface WaterApi {
+  capacity: number
+  points: Record<string, PlumbingPoint>
+  itemPoint: Record<string, string>
+  runs: PlumbingRun[]
+  level(): number
+  fraction(): number
+  /** Draws litres from a point; returns the litres delivered. */
+  consume(pointId: string, liters: number): number
+  fill(liters: number): number
+  /** Litres per second; 0 stops it. */
+  leak(rate: number): number
+  readonly leakage: number
+  readonly dry: boolean
+  on(ev: 'dry' | 'full', fn: (api: WaterApi) => void): () => void
+  off(ev: 'dry' | 'full', fn: (api: WaterApi) => void): void
+  step(dt: number): void
+}
+
+/** What `utilities/water` puts on the kernel. */
+export interface KernelUtilitiesWater {
+  createWater(r: HouseRecord, state: { water?: WaterState }): WaterApi
+  PIPE_COLOR: Hex
+  /** Cylinder between two points. */
+  pipe(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void
+  _v3: THREE_NS.Vector3
+  waterPipes(): void
+}
+
+/** The solar panels and inverter as the game sees them (`house.solar`). */
+export interface SolarInfo {
+  type: string
+  panels: { id: string; pos: Vec3; tilt: number; w: number; length: number }[]
+  inverter: { id: string; pos: Vec3; side: string; link: string } | null
+}
+
+/** What `utilities/solar` puts on the kernel. */
+export interface KernelUtilitiesSolar {
+  /** Height of the roof surface at (u, v), on storey `f` or any; null where no roof covers. */
+  roofHeightAt(u: number, v: number, f?: number): number | null
+  solar(): void
+}
+
+/** The electrical structure as the game sees it (`house.electrical`). */
+export interface ElectricalInfo {
+  pole: { pos: Vec3; h: number } | null
+  meter: { id: string; pos: Vec3; place: string } | null
+  panel: { id: string; pos: Vec3; normal: Vec3; room: string; breakers: number } | null
+  conduits: string[]
+  outlets: { id: string; pos: Vec3; normal: Vec3; room: string; floor: number; type: string; voltage: number }[]
+  switches: { id: string; pos: Vec3; normal: Vec3; room: string; floor: number; controls: string[] }[]
+  circuits: unknown[]
+  exposed: boolean
+}
+
+/** What `utilities/electrical` puts on the kernel. */
+export interface KernelUtilitiesElectrical {
+  electricalStructure(): void
+  pipe2(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void
+}
+
+/** The procedural textures (`materials/textures`): what `cfg.textures` can replace. */
+export type TextureName = 'roughcast' | 'block' | 'tile' | 'dirt' | 'grass' | 'asphalt' | 'sidewalk' | 'fiber_cement'
+/** The atlas textures (`cfg.atlas` can give them ready). */
+export type AtlasTextureName = 'picture' | 'floorKind' | 'water'
+
+/** What `materials/textures` puts on the kernel. */
+export interface KernelMaterialsTextures {
+  texture(n: number, f: (g: CanvasRenderingContext2D, n: number) => void, rep?: boolean, rx?: number, ry?: number): THREE_NS.CanvasTexture
+  /** Seeded random of the procedural textures (one sequence for all of them, in their order). */
+  rngTexture(): number
+  TEXGEN: Record<TextureName, () => THREE_NS.CanvasTexture>
+  TEX: Record<TextureName, THREE_NS.Texture>
+  ATLAS: Partial<Record<AtlasTextureName, THREE_NS.Texture>>
+}
+
+/** The house's materials by name (`plain`, `glass`, `dirt`...). */
+export type MaterialTable = Record<string, THREE_NS.Material>
+
+/** What `materials/materials` puts on the kernel. */
+export interface KernelMaterialsMaterials {
+  createMaterials(props: Props3d): MaterialTable
+  antiTile(mat: THREE_NS.Material, scale2: number, fn: number): void
+  dirtMaterial(mat: THREE_NS.Material): void
+  /** Time and wind of the clothes on the line (`animation/clotheslines` updates them). */
+  CLOTHES_UNIFORMS: { uTime: { value: number }; uVento: { value: number } }
+  clothesMaterial(): THREE_NS.MeshLambertMaterial
+  /** Render order per material (transparent ones last). */
+  ORDER: Record<string, number>
+  /** Materials whose meshes cast no shadow. */
+  NO_SHADOW: Set<string>
+}
+
+/** What `animation/clotheslines` puts on the kernel. */
+export interface KernelAnimationClotheslines {
+  WIND: { t0: number; last: number; base: number }
+  animateClotheslines(now: number): void
+}
+
+/** A mirror assembled with a real reflection: the group, its environment-map plane and the reflector (null when it failed). */
+export interface MirrorEntry {
+  E: MirrorRecord
+  g: THREE_NS.Group
+  fake: THREE_NS.Mesh
+  real: THREE_NS.Mesh | null
+}
+
+/** Mirrors of a house: the assembled ones, the one reflecting now, a scratch vector and the house group. */
+export interface MirrorState {
+  list: MirrorEntry[]
+  active: MirrorEntry | null
+  tmp: THREE_NS.Vector3
+  house: THREE_NS.Object3D | null
+}
+
+/** What `mirrors` puts on the kernel. */
+export interface KernelMirrors {
+  mirrorEnv(): THREE_NS.CubeTexture
+  newMirrorState(): MirrorState
+  assembleMirrors(groups: Record<string, THREE_NS.Group>): void
+  /** Floor index of a height in the house. */
+  floorAtY(y: number): number
+  chooseMirror(camera: THREE_NS.Camera): void
+}
+
+/** A car to place at the end of the build (`furniture/extra-types` writes it): where, its slot, the fleet kind, the paint seed and the group. */
+export interface CarSlot {
+  x: number
+  y: number
+  z: number
+  ry: number
+  w: number
+  d: number
+  k: string
+  seed: number
+  parent: string
+}
+
+/** A car model merged by material, built once per kind, quality and seed. */
+export interface CarModel {
+  damageables: HouseFleetDamageable[]
+  /** Where the fleet group's centre (x, z) and floor (y) were. */
+  off: Vec3
+  parts: { geo: THREE_NS.BufferGeometry; mat: THREE_NS.Material }[]
+  W: number
+  L: number
+  H: number
+  tris: number
+}
+
+/** A shine class of the plain opaque car materials: one vertex-coloured material per class. */
+export interface CarBucket {
+  sig: string
+  mat: THREE_NS.MeshStandardMaterial
+}
+
+/** What `cars` puts on the kernel. */
+export interface KernelCars {
+  CARS: CarSlot[]
+  CAR_BY_STYLE: Record<string, string[]>
+  CAR_CACHE: Map<string, CarModel | null>
+  materialSignature(m: THREE_NS.Material): string
+  BUCKETS: Map<string, CarBucket>
+  bucketMaterial(m: THREE_NS.Material): CarBucket | null
+  carModel(k: string, seed?: number): CarModel | null
+  carGroup(k: string, w: number, d: number, seed?: number): THREE_NS.Group | null
+  assembleCars(groups: Record<string, THREE_NS.Group>): void
+  assembleMergedCars(groups: Record<string, THREE_NS.Group>): void
+}
+
+/** The vegetation packages the game injected (`cfg.vegetation`): what the house uses of them. */
+export interface VegetationLibs {
+  G: Pick<typeof Vegetation, 'scatter' | 'buildLot'> & Pick<typeof VegetationThree, 'createLotObject' | 'createVegetationMaterials'>
+  S: Pick<typeof VegetationSpecies, 'toSpec'>
+}
+
+/** The plants of one group and height, collected by `vegItem` and merged by `assembleVegetation`. */
+export interface VegetationGroup {
+  group: string
+  y: number
+  pl: Vegetation.Placement[]
+}
+
+/** The vegetation of the house being built (`shared.ctx.veg`). */
+export interface VegetationContext extends VegetationLibs {
+  mats(): VegetationThree.VegetationMaterials
+  groups: Map<string, VegetationGroup>
+  /** Species the package knows (cached `toSpec` checks). */
+  ok: Map<string, boolean>
+  opts: Omit<Vegetation.BuildLotOptions, 'seed'>
+}
+
+/** What `vegetation/bridge` puts on the kernel. */
+export interface KernelVegetationBridge {
+  VEG_POT: string[]
+  VEG_CACTUS: Record<string, string>
+  /** Plan item type -> species ids. */
+  VEG_MAP: Record<string, string[]>
+  /** Planter type -> species scattered in it. */
+  VEG_PLANTER: Record<string, string[]>
+  /** True when the vegetation took the item; false lets the house's own builder draw it. */
+  vegItem(m: HouseItem, M: Mount, group: string): boolean
+  assembleVegetation(groups: Record<string, THREE_NS.Group>): void
+}
+
 /** What `kernel/noise` puts on the kernel. */
 export interface KernelNoise {
   _h2(x: number, z: number): number
@@ -781,7 +1021,7 @@ export interface KernelCloseScene {
 }
 
 /** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge {
   [member: string]: any
 }
 
