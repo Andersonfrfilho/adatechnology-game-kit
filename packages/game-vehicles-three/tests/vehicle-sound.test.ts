@@ -153,7 +153,8 @@ describe('car recordings by reference', () => {
     samples: ['engine_loop_car_idle', 'engine_loop_car_high', 'engine_start_run_stop', 'car_door_shut', 'car_trunk_shut', 'car_door_open'].map((id) => ({
       id,
       bus: 'world' as const,
-      close: [{ url: `veiculos/${id}_01.ogg` }],
+      // the start/run/stop file has two takes, as in the manifest: _02 is longer and starts already running
+      close: id === 'engine_start_run_stop' ? [{ url: `veiculos/${id}_01.ogg` }, { url: `veiculos/${id}_02.ogg` }] : [{ url: `veiculos/${id}_01.ogg` }],
       sources: ['test'],
     })),
   }
@@ -172,6 +173,8 @@ describe('car recordings by reference', () => {
     }
     expect(registry.sample('engine_start')?.close[0]).toMatchObject({ url: 'veiculos/engine_start_run_stop_01.ogg', ...CAR_START_RUN_STOP.start })
     expect(registry.sample('engine_stop')?.close[0]).toMatchObject(CAR_START_RUN_STOP.stop)
+    // the cut points are of take _01: the longer _02 never plays as the start or the stop
+    for (const id of ['engine_start', 'engine_stop']) expect(registry.sample(id)?.close.map((ref) => ref.url), id).toEqual(['veiculos/engine_start_run_stop_01.ogg'])
     expect(registry.sample('car_door_close')?.close[0]?.url).toBe('veiculos/car_door_shut_01.ogg')
     expect(registry.sample('car_trunk_close')?.close[0]?.url).toBe('veiculos/car_trunk_shut_01.ogg')
     // every recording the vehicles area decodes up front is a sample once the files are there

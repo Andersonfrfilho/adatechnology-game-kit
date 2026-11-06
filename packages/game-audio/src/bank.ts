@@ -42,19 +42,24 @@ function mergeRecords(base: Record<string, unknown>, patch: Record<string, unkno
 }
 
 const trimmed = (refs: readonly SampleRef[], alias: SampleAlias): SampleRef[] =>
-  refs.map((ref) => ({
+  refs.filter((ref) => alias.only === undefined || ref.url.includes(alias.only)).map((ref) => ({
     ...ref,
     ...(alias.offset === undefined ? {} : { offset: alias.offset }),
     ...(alias.duration === undefined ? {} : { duration: alias.duration }),
   }))
 
-/** The sample an alias names: the file's takes and numbers, with the alias's id and its own numbers; the recipe of the alias id is the fallback. */
-export function aliasSample(alias: SampleAlias, file: SampleSound): SampleSound {
+/**
+ * The sample an alias names: the file's takes (those `only` keeps) and numbers, with the alias's id and its own numbers; the recipe of the alias id is
+ * the fallback. `undefined` when `only` keeps no take.
+ */
+export function aliasSample(alias: SampleAlias, file: SampleSound): SampleSound | undefined {
+  const close = trimmed(file.close, alias)
+  if (close.length === 0) return undefined
   const { tiers: _tiers, fallback: _fallback, choke: _choke, ...rest } = file
   return {
     ...rest,
     id: alias.id,
-    close: trimmed(file.close, alias),
+    close,
     ...(file.far ? { far: trimmed(file.far, alias) } : {}),
     ...(alias.loop === undefined ? {} : { loop: alias.loop }),
     ...(alias.baseFrequency === undefined ? {} : { baseFrequency: alias.baseFrequency }),
@@ -83,7 +88,7 @@ export function createSoundRegistry(banks: readonly SoundBank[] = []): SoundRegi
     const file = samples.get(alias.file)
     if (!file) return undefined
     const sample = aliasSample(alias, file)
-    derived.set(id, sample)
+    if (sample) derived.set(id, sample)
     return sample
   }
   const registry: SoundRegistry = {

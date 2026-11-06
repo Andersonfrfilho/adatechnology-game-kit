@@ -122,6 +122,8 @@ export const CAR_RECORDED_RPM = { idle: 1000, high: 2520 } as const
 
 /** Where the start and the stop sit in the recording of a car starting, running and stopping (`engine_start_run_stop`), in seconds. */
 export const CAR_START_RUN_STOP = {
+  /** The take the times below were measured on. */
+  take: '_01.',
   /** The starter and the engine catching (at 0.58 s) and flaring; the loops take over at the crank time of the vehicle. */
   start: { offset: 0, duration: 1.3 },
   /** The ignition off: the engine running down to the end of the file. */
@@ -149,8 +151,9 @@ export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
   carLayer('engine_car_mid', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 1),
   // the same file as the mid layer, read from two seconds in, so the two do not sum in phase where they cross
   carLayer('engine_car_high', 'engine_loop_car_high', CAR_RECORDED_RPM.high, 2, 2),
-  { id: 'engine_start', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.start, falloff: VEHICLE_LOOP_FALLOFF },
-  { id: 'engine_stop', file: 'engine_start_run_stop', ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
+  // the cut points are of take _01 (10.6 s); _02 (21.9 s) starts already running and idles at 9.96 s, so it is left out of both
+  { id: 'engine_start', file: 'engine_start_run_stop', only: CAR_START_RUN_STOP.take, ...CAR_START_RUN_STOP.start, falloff: VEHICLE_LOOP_FALLOFF },
+  { id: 'engine_stop', file: 'engine_start_run_stop', only: CAR_START_RUN_STOP.take, ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
   { id: 'car_door_close', file: 'car_door_shut' },
   { id: 'car_trunk_close', file: 'car_trunk_shut' },
 ]

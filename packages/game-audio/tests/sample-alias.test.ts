@@ -56,6 +56,13 @@ describe('sample aliases', () => {
     }
   })
 
+  it('only keeps the takes a trim was measured on, and an alias that keeps none is nothing', () => {
+    const two: SampleSound = { ...START, close: [{ url: 'run_01.ogg' }, { url: 'run_02.ogg' }] }
+    const cut = (only: string) => createSoundRegistry([{ id: 'files', samples: [two] }, { id: 'p', sampleAliases: [{ id: 'cut', file: START.id, only, offset: 9.96 }] }]).sample('cut')
+    expect(cut('_01.')?.close).toEqual([{ url: 'run_01.ogg', offset: 9.96 }])
+    expect(cut('_09.')).toBeUndefined()
+  })
+
   it('without the file the alias is nothing, and a sample of its own id wins', () => {
     const registry = createSoundRegistry([PACKAGE])
     expect(registry.sample('engine_test_low')).toBeUndefined()
