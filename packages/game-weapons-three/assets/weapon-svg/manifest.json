@@ -101,6 +101,10 @@
    "source": "generated",
    "file": "generated/browning_m2.svg"
   },
+  "bt_mp9": {
+   "source": "generated",
+   "file": "generated/bt_mp9.svg"
+  },
   "c4": {
    "source": "generated",
    "file": "generated/c4.svg"
@@ -256,6 +260,10 @@
   "fn_parafal": {
    "source": "generated",
    "file": "generated/fn_parafal.svg"
+  },
+  "fn_ps90": {
+   "source": "generated",
+   "file": "generated/fn_ps90.svg"
   },
   "fn_scar_h": {
    "source": "generated",
@@ -492,6 +500,10 @@
   "mossberg_590": {
    "source": "generated",
    "file": "generated/mossberg_590.svg"
+  },
+  "mp40": {
+   "source": "generated",
+   "file": "generated/mp40.svg"
   },
   "nail_bat": {
    "source": "generated",

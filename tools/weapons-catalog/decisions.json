@@ -83,7 +83,8 @@
       "Browning",
       "Knight's",
       "Thompson",
-      "Walther"
+      "Walther",
+      "B&T"
     ],
     "source": "gallery",
     "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
@@ -3115,6 +3116,24 @@
       },
       "source": "reference",
       "reason": "SCAR-L: a coronha recolhe e dobra para a direita; 635 mm dobrada. https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "bt_mp9": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right",
+        "lengthCollapsed": 0.303
+      },
+      "source": "reference",
+      "reason": "MP9: 303 mm com a coronha dobrada para a direita. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+    },
+    "mp40": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "under",
+        "lengthCollapsed": 0.63
+      },
+      "source": "reference",
+      "reason": "MP40: 630 mm com a coronha de metal dobrada por baixo. https://en.wikipedia.org/wiki/MP_40"
     }
   },
   "integral": {
@@ -6105,6 +6124,153 @@
       },
       "source": "reference",
       "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Colt_Python"
+    },
+    "FN PS90": {
+      "value": {
+        "id": "fn_ps90",
+        "name": "FN PS90",
+        "of": "FN P90",
+        "caliber": "5_7x28",
+        "caliberText": "5,7×28",
+        "capacity": "50",
+        "length": 668,
+        "barrel": 407,
+        "emptyMass": 2.86,
+        "options": {
+          "rpm": 120
+        },
+        "modes": {
+          "modes": [
+            "semi"
+          ]
+        },
+        "reloadFrom": "FN P90",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "668 mm. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 407 mm (16 pol., exigido para a versão civil). https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,86 kg sem carregador. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "o carregador de 50 do P90. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "semiautomática apenas (a versão civil do P90): o ritmo é o do dedo. https://en.wikipedia.org/wiki/FN_PS90"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do FN P90: o mesmo carregador horizontal por cima."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FN_PS90"
+    },
+    "B&T MP9": {
+      "value": {
+        "id": "bt_mp9",
+        "name": "B&T MP9",
+        "of": "Uzi",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30",
+        "length": 523,
+        "barrel": 130,
+        "emptyMass": 1.4,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.2,
+          "rail": 1,
+          "rpm": 1100
+        },
+        "reloadFrom": "Uzi",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "523 mm com a coronha aberta, 303 mm dobrada. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 130 mm. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "1,4 kg sem carregador. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 na empunhadura. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "900 a 1100 tiros/min. https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Uzi: o carregador entra pela empunhadura, como na Uzi."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Brügger_%26_Thomet_MP9"
+    },
+    "MP40": {
+      "value": {
+        "id": "mp40",
+        "name": "MP40",
+        "of": "Thompson M1A1",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "32",
+        "length": 833,
+        "barrel": 251,
+        "emptyMass": 4.0,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.24,
+          "wood": 0,
+          "round": 1,
+          "rpm": 550
+        },
+        "reloadFrom": "Thompson M1A1",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "833 mm com a coronha aberta, 630 mm dobrada. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 251 mm. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "4,0 kg. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador reto de 32. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "500 a 550 tiros/min. https://en.wikipedia.org/wiki/MP_40"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Thompson M1A1: submetralhadora de carregador reto por baixo, ferrolho aberto."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/MP_40"
     }
   },
   "gp25Mount": {
@@ -6267,6 +6433,52 @@
       },
       "source": "reference: free Wikimedia Commons photo of the real weapon (lote 1, part A2)",
       "reason": "The Python inherited the S&W 686 model. The SDK draws the revolver: ventilated rib along the barrel, full-length underlug, wood grip with its medallion, swing-out cylinder."
+    },
+    "mp40": {
+      "value": {
+        "builder": "mp40",
+        "caliber": "9×19",
+        "length": 833,
+        "barrel": 251,
+        "options": {
+          "mag": "box",
+          "stock": "fold",
+          "stockLen": 0.24,
+          "rpm": 550
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The MP40 inherited the Thompson (a thin rod with the magazine floating apart and no pistol grip). The SDK draws the real one: tubular receiver about 40 mm thick, the straight magazine in a well under the front of the receiver (the support hand holds it), the Bakelite housing and the black grip, the ribbed barrel with the rest bar under the muzzle and the metal stock that folds under."
+    },
+    "bt_mp9": {
+      "value": {
+        "builder": "mp9",
+        "caliber": "9×19",
+        "length": 523,
+        "barrel": 130,
+        "options": {
+          "mag": "box",
+          "stock": "fold",
+          "stockLen": 0.2,
+          "rail": 1,
+          "rpm": 1100
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The MP9 inherited the Uzi (it looked like a MAC-10 with a wire stock). The SDK draws the real one: compact polymer block, the magazine in the pistol grip, the vertical foregrip in front of the trigger guard, the top rail and the skeletal stock that folds to the right."
+    },
+    "fn_ps90": {
+      "value": {
+        "builder": "ps90",
+        "caliber": "5,7×28",
+        "length": 668,
+        "barrel": 407,
+        "options": {
+          "rpm": 120
+        }
+      },
+      "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The PS90 inherited the FN P90 model (a block of boxes). The SDK draws the civilian rifle: thumbhole stock with the rounded olive body, the translucent magazine on top under the integrated optic housing, and the 407 mm barrel with its flash hider sticking out of the front."
     }
   },
   "weaponTags": {
