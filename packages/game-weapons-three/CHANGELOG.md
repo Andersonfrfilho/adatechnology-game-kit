@@ -1,5 +1,43 @@
 # @adatechnology/game-weapons-three
 
+## 0.15.0
+
+### Minor Changes
+
+- d9f3302: The shot leaves the muzzle of the weapon drawn in the hands. `ModuleHost.setMuzzleSource` (with `MuzzlePose` and `MuzzleSource`) lends the host the muzzle of the tool the module draws: the weapons module gives the `muzzle` mark of the gallery model (or the front end of the generic prop, where a flame or an extinguisher's foam also leaves), and the test room starts the tracers there and, when the module draws its own muzzle flash, draws none of its own. Before, the room flashed and drew its tracers from a fixed point ahead of the eye, away from the weapon, while the module flashed at the real muzzle.
+- 0e1bb14: Every gun closes the view in when it aims, not only one with a scope. `rules.aim.ironSightZoom` gives the iron-sight zoom of each weapon category (1.1x for a handgun up to 1.4x for a marksman or sniper rifle with no optic) and `aimZoomOf(arsenal, weapon, attachments)` answers the zoom of a weapon: the optic fitted (the AUG's integral 1.5x, an ACOG 4x), else the iron sights of its category. The right mouse button of the weapons area aims every firearm and launcher by it.
+- 9e84e19: The gun in the first-person view is held at the hip instead of shouldered beside the eye. The view's own pose (`VIEW_HOLD`, used when the host says the view is the player's eye: `firstPerson`, which the weapons area reads from `ModuleHost.player().cameraMode`) puts the grip low and right where the right hand reaches, a handgun's higher and nearer the middle and a rocket launcher's on the shoulder, with the barrel parallel to the aim, so the sights stay below the crosshair and the muzzle points at it. The body still shoulders the gun in third person. The test room reports its real camera mode to the modules (it always said `first`).
+- e507329: The weapon picker. `weaponMenu(arsenal)` lists the whole arsenal by group (firearms, melee weapons, explosives, tools) and category, sorted by name and with each brand weapon's maker; `genericWeapons` and `realLoadout` name the generic guns (the `9 mm service pistol`) and the real weapon that stands for each. The test room opens the picker with the key left of 1 (or its Armas button): a click equips the weapon and adds it to the hotbar, a search finds a weapon by name or maker in every group, and the default hotbar holds the real weapons instead of the generic guns.
+
+  The explosives of the weapons gallery are ported (`buildExplosiveModel`: the M67, the molotov, the pipe bomb, the dynamite, the C4, the Claymore and the flashbang), so the throwables are drawn with their own model in the hands, on the counters and in flight (`projectileModel`) instead of the box of the generic prop. The M79 gets the gallery's model with a break action that folds down to load one grenade, a grenade launcher no longer fires a rocket's backblast, the claw hammer takes the item model of the hammer, and the pt-BR names of the weapons that showed in English are translated.
+
+### Patch Changes
+
+- 61a4a79: Cover counts in a blast's push as it stood when the blast went off, and for light things too. `blastShove` takes the cover's share off the speed after the cap (`sqrt(reach) * min(maxSpeed, ...)`): a bottle behind a kitchen cupboard was thrown at the cap like one in the open, since a P13 gives a 0.5 kg body far more than the cap; in the open nothing changes. The destruction renderer reads the cover of each piece and shoveable body when a part of the world goes off, before the blast tears the cupboard apart or throws the stove into the line. The P13 push scenario reads the cover at the same moment and at the middle of what is drawn of each body, and bounds what a sheltered body may move by its share of what one of its kind went in the open nearer the blast.
+- be1b538: The recorded shots and reload steps load as a weapon comes to the hands, so the first shot after the page opens already plays its recording instead of the synthesized sound.
+- Updated dependencies [8c11843]
+- Updated dependencies [fb985db]
+- Updated dependencies [6c3877d]
+- Updated dependencies [d9f3302]
+- Updated dependencies [e0aaf22]
+- Updated dependencies [61a4a79]
+- Updated dependencies [f362db3]
+- Updated dependencies [54a1bcb]
+- Updated dependencies [63adb4c]
+- Updated dependencies [0e1bb14]
+- Updated dependencies [bf407ec]
+- Updated dependencies [1a5d6fc]
+- Updated dependencies [e507329]
+- Updated dependencies [78e76b0]
+- Updated dependencies [33c09f1]
+  - @adatechnology/game-floorplan-three@0.10.0
+  - @adatechnology/game-contracts@0.25.0
+  - @adatechnology/game-vfx@0.8.0
+  - @adatechnology/game-vfx-three@0.7.0
+  - @adatechnology/game-weapons@0.7.0
+  - @adatechnology/game-audio@0.8.0
+  - @adatechnology/game-items-three@0.7.3
+
 ## 0.14.2
 
 ### Patch Changes

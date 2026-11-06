@@ -1,5 +1,21 @@
 # @adatechnology/game-vfx-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 6c3877d: The scorch and dirt marks of a blast follow the crater the host's terrain dug instead of lying flat over it and hiding it: `VfxWorld.hostGroundAt` hands over the host height (`VfxOptions.groundAt`), the renderer passes it to the mark layer (`MarkLayerOptions.heightAt`), and where the ground dips under the mark its grid is finer (20 steps per metre, up to 64) so it reaches the bottom of the bowl; flat ground keeps the Explosion Lab grid.
+
+### Patch Changes
+
+- Updated dependencies [fb985db]
+- Updated dependencies [6c3877d]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [78e76b0]
+  - @adatechnology/game-contracts@0.25.0
+  - @adatechnology/game-vfx@0.8.0
+
 ## 0.6.0
 
 ### Minor Changes

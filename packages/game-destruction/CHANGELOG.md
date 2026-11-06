@@ -1,5 +1,24 @@
 # @adatechnology/game-destruction
 
+## 0.17.0
+
+### Minor Changes
+
+- fb985db: A blast breaks a masonry wall only where it reaches: the units within the circle its reach cuts on the wall (by the cube root of the energy and of how much the wall resists) come out with a ragged edge, the units past it are loosened for the next blow, and what the hole leaves with nothing under it comes down (`unsupportedCells`: the triangle over the hole, all that hangs at a free end). The rest of the wall stands, and later shots and blasts keep cutting it. A blast loosens a long joint only over the stretch it breaks, so a grenade no longer opens the bed of a ten-metre wall and drops it whole. Everything a blast knocks out comes in one `chip` with `units` (new optional field), painted once by the house renderer. The ground takes the soot of a blast's fireball by its material (`fire.maxScorch`: concrete soots, turf chars).
+- 5a66d40: Bricks left in the air come down: after every unit a shot, a blow, a breach or a blast takes out of a wall of laid units, the units with no bearing down to the bottom of the wall (`unsupportedCells`: an island over the edge of a hole, a strip between two slots, a unit held by less than a quarter of its bed) fall as debris in one `chip` with `units`, leave the part (rays and shots pass where they were) and take their marks with them. A unit between two standing units of its course is wedged by its head joints, so a gap of one or two bricks holds.
+- 02b8ea2: Madeira se despedaça pelo jeito que é feita (`MaterialDef.splitForm`): madeira maciça em lascas pontiagudas de vários tamanhos ao longo da fibra, e o toco de tábua quebrada com a ponta rasgada; compensado em farpas finas e lâminas que se separam em camadas; MDF em torrões granulados, sem fibra. O renderizador desenha lasca, toco rasgado, torrão e lâmina com poucas geometrias compartilhadas por forma; o resto continua caixa.
+- 78e76b0: More grounds to stand on, each with its own answer to a blow: mud, gravel, dry clay, snow, cobblestones, concrete pavers and shallow water. The room's default page lays a lot of every ground with its sign. Fixes the player standing twice as deep in a hole and twice as high on a heap.
+
+### Patch Changes
+
+- 1495684: Wood (any material with `splitForm`) plans how it comes apart on a stream of its own, read off the world's stream without drawing from it and mixed with the object, the part and where it was hit. How a board splits no longer moves the cracks and spalls the world draws after it, and a save still replays it exactly.
+- bf407ec: A reinforced member cast round its cage (a pillar or beam in concrete blocks) is cut through by a blast only at or near contact (`MEMBER_CUT_REACH`, half the breach reach); further off the blast takes the concrete it reaches out of it block by block and the cage holds it to what it rests on. The bare cage of a pillar keeps what its bars carry (`cageResidualCapacity`: perimeter bars by the steel's crushing strength, halved for buckling) instead of a flat 15%, so the end pillar of a wall stands on its cage under a light bond beam.
+- Updated dependencies [fb985db]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [78e76b0]
+  - @adatechnology/game-contracts@0.25.0
+
 ## 0.16.0
 
 ### Minor Changes

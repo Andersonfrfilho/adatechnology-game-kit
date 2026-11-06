@@ -1,5 +1,24 @@
 # @adatechnology/game-audio
 
+## 0.8.0
+
+### Minor Changes
+
+- 33c09f1: Sons de carro gravados por referência. `game-audio`: `SampleRef.offset`/`duration` (um trecho do arquivo, com fade no corte), `SampleSound.baseFrequency`
+  (o laço gravado segue `set({ frequency })` pela taxa de reprodução), laço gravado com posição (queda e lado pelo ouvinte) e `SoundBank.sampleAliases`
+  (um id do pacote toca as tomadas de um id do manifest, resolvido na consulta). `game-vehicles-three`: `VEHICLE_SAMPLE_ALIASES` liga o motor do carro
+  (marcha lenta a 1 000 rpm, alta a 2 520 rpm) a `rpm / rpm gravado`, a partida e o desligar recortados de `engine_start_run_stop`, a porta e o
+  porta-malas aos arquivos do jogo; sem os arquivos, tudo continua sintetizado.
+
+### Patch Changes
+
+- 63adb4c: The hand foley of the test room plays the recorded takes: `KIT_SAMPLE_ALIASES` points `door_wood_close` and `door_wood_slam` at the wooden door shut and slam files and the item pickups (metal, plastic, glass, wood, fabric) at the pickup files, and the room preloads those ids (`HAND_RECORDED_IDS`) on the first key or click. Taking an item now plays one sound, the item's class: the second `grab_*` sound that played with it at the same moment is gone.
+- Updated dependencies [fb985db]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [78e76b0]
+  - @adatechnology/game-contracts@0.25.0
+
 ## 0.7.0
 
 ### Minor Changes

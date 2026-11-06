@@ -1,5 +1,12 @@
 # @adatechnology/game-vfx
 
+## 0.8.0
+
+### Minor Changes
+
+- 6c3877d: The scorch and dirt marks of a blast follow the crater the host's terrain dug instead of lying flat over it and hiding it: `VfxWorld.hostGroundAt` hands over the host height (`VfxOptions.groundAt`), the renderer passes it to the mark layer (`MarkLayerOptions.heightAt`), and where the ground dips under the mark its grid is finer (20 steps per metre, up to 64) so it reaches the bottom of the bowl; flat ground keeps the Explosion Lab grid.
+- 78e76b0: More grounds to stand on, each with its own answer to a blow: mud, gravel, dry clay, snow, cobblestones, concrete pavers and shallow water. The room's default page lays a lot of every ground with its sign. Fixes the player standing twice as deep in a hole and twice as high on a heap.
+
 ## 0.7.0
 
 ### Minor Changes

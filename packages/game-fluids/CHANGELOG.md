@@ -1,5 +1,19 @@
 # @adatechnology/game-fluids
 
+## 0.5.0
+
+### Minor Changes
+
+- 78e76b0: More grounds to stand on, each with its own answer to a blow: mud, gravel, dry clay, snow, cobblestones, concrete pavers and shallow water. The room's default page lays a lot of every ground with its sign. Fixes the player standing twice as deep in a hole and twice as high on a heap.
+
+### Patch Changes
+
+- Updated dependencies [fb985db]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [78e76b0]
+  - @adatechnology/game-contracts@0.25.0
+
 ## 0.4.4
 
 ### Patch Changes

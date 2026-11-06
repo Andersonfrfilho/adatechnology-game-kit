@@ -1,5 +1,29 @@
 # @adatechnology/game-vehicles-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 33c09f1: Sons de carro gravados por referência. `game-audio`: `SampleRef.offset`/`duration` (um trecho do arquivo, com fade no corte), `SampleSound.baseFrequency`
+  (o laço gravado segue `set({ frequency })` pela taxa de reprodução), laço gravado com posição (queda e lado pelo ouvinte) e `SoundBank.sampleAliases`
+  (um id do pacote toca as tomadas de um id do manifest, resolvido na consulta). `game-vehicles-three`: `VEHICLE_SAMPLE_ALIASES` liga o motor do carro
+  (marcha lenta a 1 000 rpm, alta a 2 520 rpm) a `rpm / rpm gravado`, a partida e o desligar recortados de `engine_start_run_stop`, a porta e o
+  porta-malas aos arquivos do jogo; sem os arquivos, tudo continua sintetizado.
+
+### Patch Changes
+
+- Updated dependencies [fb985db]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [63adb4c]
+- Updated dependencies [78e76b0]
+- Updated dependencies [33c09f1]
+  - @adatechnology/game-contracts@0.25.0
+  - @adatechnology/game-audio@0.8.0
+  - @adatechnology/game-vehicles@0.6.3
+  - @adatechnology/game-vehicles-driving@0.2.12
+  - @adatechnology/game-vehicles-proving@0.1.3
+
 ## 0.6.4
 
 ### Patch Changes

@@ -1,6 +1,0 @@
----
-'@adatechnology/game-floorplan-structure': minor
-'@adatechnology/game-floorplan-three': minor
----
-
-Structural validation and confined masonry. `validateStructure(structure, { doors, wallDetail })` and `validateSpec(spec)` return what a structure gets wrong as a real building, as typed violations with stable codes (`STRUCTURAL_VIOLATION`: load paths, NBR 6118 sections and steel, beam depth L/10, long beams on masonry, ground beam, pillars at ends, corners, junctions and every 4 m up to the bond beam, bond beam, lintel and sill beam, bonded bricks, plaster on both faces). Masonry houses on strip footings stand on reinforced concrete ground beams (`ground_beam_*`, `GROUND_BEAM_DEPTH`, anchored foundation in the spec; `groundBeams: false` leaves them out), every window gets a sill beam (`_sillbeam_`, `SILL_BEAM_DEPTH`) and lintels and sill beams bear on the jamb pillars, lintels are at least L/10 deep, wide doors get jamb pillars (`jamb_column_*`), short piers keep their jamb pillar, raised tank and balcony pillars are 0.2 m (`TANK_PILLAR_SIDE`; `visorSections: true` keeps the Visor's sections for the team's golden). The house renderer draws the pillars in the walls as structure, plastered a shade off the facade and 2.5 cm out of each face (`BuildOptions.pillars`, `'hidden'` as the Visor drew them).
