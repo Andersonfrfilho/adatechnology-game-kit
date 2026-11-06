@@ -15,6 +15,8 @@ export interface ModelOptions {
   design?: string
   /** Metal and furniture finish. */
   steel?: number
+  /** Polished steel, as a chrome-finished pistol. */
+  chrome?: number
   stain?: number
   wood?: number
   olive?: number

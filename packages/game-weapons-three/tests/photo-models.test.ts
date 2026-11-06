@@ -15,6 +15,16 @@ describe('the Desert Eagle Mark XIX drawn from its photo', () => {
     expect(model.parts.slide && model.parts.grip && model.parts.mag && model.parts.trigger && model.parts.hammer && model.parts.muzzle && model.parts.eject).toBeTruthy()
   })
 
+  it('is finished in polished steel like the photo: the slide is bright and glossy', () => {
+    let slide: THREE.MeshStandardMaterial | undefined
+    model.parts.slide!.traverse((object) => {
+      const mesh = object as THREE.Mesh
+      if (!slide && mesh.isMesh) slide = mesh.material as THREE.MeshStandardMaterial
+    })
+    expect(slide!.color.getHSL({ h: 0, s: 0, l: 0 }).l).toBeGreaterThan(0.55)
+    expect(slide!.roughness).toBeLessThan(0.25)
+  })
+
   it('keeps the barrel block fixed ahead of a slide that only covers the rear half, the muzzle at the front', () => {
     const slide = new THREE.Box3().setFromObject(model.parts.slide!)
     const whole = new THREE.Box3().setFromObject(model.root)
