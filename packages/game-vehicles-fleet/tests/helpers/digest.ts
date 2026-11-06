@@ -1,4 +1,6 @@
 /** Order-sensitive digest of a built vehicle: the same function produced the golden fixtures from the original SDK. */
+import type * as THREE from 'three'
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 function round(x: number): number {
   return Math.round(x * 1e4) / 1e4
 }
@@ -15,10 +17,11 @@ function fnv(values: ArrayLike<number>): string {
   return (h >>> 0).toString(16)
 }
 
-function describe(root: any): string[] {
+function describe(root: THREE.Object3D): string[] {
   const out: string[] = []
   root.updateMatrixWorld(true)
-  root.traverse((o: any) => {
+  root.traverse((obj) => {
+    const o = obj as THREE.Mesh
     let s =
       o.type +
       (o.visible ? '' : '!') +
@@ -33,7 +36,7 @@ function describe(root: any): string[] {
       s += ' v' + p.count + ':' + fnv(p.array)
       if (o.geometry.index) s += ' i' + o.geometry.index.count
     }
-    const m = o.material
+    const m = o.material as THREE.Material & { color?: THREE.Color; roughness?: number }
     if (m && !Array.isArray(m)) {
       s +=
         ' m' +
@@ -57,7 +60,7 @@ export interface Digest {
   counts: string
 }
 
-export function digest(c: any): Digest {
+export function digest(c: VehicleContext): Digest {
   const lines = describe(c.root)
   let h = 2166136261
   const text = lines.join('\n')

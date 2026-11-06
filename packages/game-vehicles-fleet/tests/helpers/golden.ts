@@ -77,7 +77,7 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
             const c = kit.build(key, 'intact')
             const res = kit.zoneScenario(c, id)
             const health: Record<string, number> = {}
-            for (const z of c.zones as any[]) if (res.health[z.id] != null) health[legacyZoneId(z)] = res.health[z.id]
+            for (const z of c.zones) if (res.health[z.id] != null) health[legacyZoneId(z)] = res.health[z.id]
             expect(health, `${id} health`).toEqual(want.health)
             expect(
               Object.keys(res.flags)
