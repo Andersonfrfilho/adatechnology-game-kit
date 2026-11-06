@@ -1,6 +1,11 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
-import type { DamageZone } from './api'
+import type { Object3D, Vector3 } from 'three'
+
+import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
+
+/** What a builder declares about a zone (`c.zone(...)`): new fields, or `remove`; `objs` are parts by label or kind, lamps or objects. */
+type ZoneDef = Partial<DamageZone> & { id: string; remove?: boolean; replace?: boolean; fit?: boolean; objs?: unknown[] }
 
 export function installZoneDerive(kit: Kit) {
   const THREE = kit.THREE
@@ -8,9 +13,9 @@ export function installZoneDerive(kit: Kit) {
   const I = kit._
 
   /* ---- finalisation: direction, side, owned parts, map ---- */
-  function parseDir(d: any) {
+  function parseDir(d: unknown): Vector3 | null {
     if (!d) return null
-    if (d.isVector3) return d.clone().normalize()
+    if ((d as Vector3).isVector3) return (d as Vector3).clone().normalize()
     if (Array.isArray(d)) return new V3(d[0], d[1], d[2]).normalize()
     return (
       ({
@@ -20,12 +25,13 @@ export function installZoneDerive(kit: Kit) {
         rear: new V3(1, 0, 0),
         up: new V3(0, -1, 0),
         down: new V3(0, 1, 0),
-      } as Record<string, any>)[d] || null
+      } as Record<string, Vector3>)[d as string] || null
     )
   }
-  function resolveObjs(c: BuildContext, list: any, z: Pick<DamageZone, 'lights' | 'glass' | 'wheels'>) {
-    const out: any = []
-    ;(list || []).forEach(function (o: any) {
+  function resolveObjs(c: BuildContext, list: readonly unknown[] | null | undefined, z: Pick<DamageZone, 'lights' | 'glass' | 'wheels'>) {
+    const out: Object3D[] = []
+    ;(list || []).forEach(function (item) {
+      const o = item as (VehicleLamp & Object3D) | string | null
       if (!o) return
       if (typeof o === 'string') {
         c.parts.forEach(function (p) {
@@ -39,7 +45,7 @@ export function installZoneDerive(kit: Kit) {
         })
         return
       }
-      if (o.lens && o.inner) {
+      if ((o as VehicleLamp).lens && (o as VehicleLamp).inner) {
         z.lights.push(o)
         return
       }
@@ -53,13 +59,13 @@ export function installZoneDerive(kit: Kit) {
   }
   function deriveZones(c: BuildContext) {
     const m = c.meta
-    let list: any = []
-    const byId: any = {}
+    let list: DamageZone[] = []
+    const byId: Record<string, DamageZone> = {}
     ;(m.zones === false ? [] : I.autoZones(c)).forEach(function (z: DamageZone) {
       byId[z.id] = z
       list.push(z)
     })
-    ;(c.zoneDefs || []).forEach(function (d: any) {
+    ;((c.zoneDefs || []) as ZoneDef[]).forEach(function (d) {
       let z = byId[d.id]
       if (d.remove) {
         if (z) {
@@ -67,7 +73,7 @@ export function installZoneDerive(kit: Kit) {
           delete byId[d.id]
         }
         /* removing the left headlight also removes the extra groups on the same side (headlight_left_2...) */
-        list.slice().forEach(function (q: any) {
+        list.slice().forEach(function (q) {
           if (q.id.indexOf(d.id + '_') === 0 && /^\d+$/.test(q.id.slice(d.id.length + 1))) {
             list.splice(list.indexOf(q), 1)
             delete byId[q.id]
@@ -80,7 +86,7 @@ export function installZoneDerive(kit: Kit) {
         Object.assign(z, d)
         z.objs = d.objs ? (d.replace ? d.objs : o0.concat(d.objs)) : o0
       } else {
-        z = Object.assign({ type: 'panel' }, d)
+        z = Object.assign({ type: 'panel' }, d) as DamageZone
         byId[d.id] = z
         list.push(z)
       }
@@ -89,23 +95,23 @@ export function installZoneDerive(kit: Kit) {
     const F = m.front
     const R = m.rear
     const W = m.width || 1.7
-    const owner = new Map()
+    const owner = new Map<Object3D, DamageZone>()
     /* zone created (or refined as part/wheel) with parts only, no box: the box comes from the parts themselves */
-    ;(c.zoneDefs || []).forEach(function (d: any) {
+    ;((c.zoneDefs || []) as ZoneDef[]).forEach(function (d) {
       const z = byId[d.id]
       if (!z || d.remove || d.box || !d.objs || !d.objs.length) return
       if (z.box && !d.fit && !(z.type === 'part' || z.type === 'wheel')) return
-      const tmp = { lights: [], glass: [], wheels: [] }
+      const tmp: { lights: VehicleLamp[]; glass: Object3D[]; wheels: Object3D[] } = { lights: [], glass: [], wheels: [] }
       const os = resolveObjs(c, d.objs, tmp)
       const bb = new THREE.Box3()
-      os.concat(tmp.glass, tmp.wheels).forEach(function (o: any) {
+      os.concat(tmp.glass, tmp.wheels).forEach(function (o) {
         bb.union(I.localBox(c, o, inv))
       })
       tmp.lights.forEach(function (Lt) {
         bb.union(I.lightBoxOf(c, Lt, inv))
       })
       if (z.box && z.type === 'wheel')
-        (z.wheels || []).forEach(function (w: any) {
+        (z.wheels || []).forEach(function (w: Object3D) {
           bb.union(I.localBox(c, w, inv))
         })
       if (bb.isEmpty()) return
@@ -114,9 +120,9 @@ export function installZoneDerive(kit: Kit) {
         const B0 = z.box
         bb.union(new THREE.Box3(new V3(B0.x0, B0.y0, B0.z0), new V3(B0.x1, B0.y1, B0.z1)))
       }
-      z.box = I.normalizeBox(bb)
+      z.box = I.normalizeBox(bb)!
     })
-    list = list.filter(function (z: DamageZone) {
+    list = list.filter(function (z) {
       return z.box && z.name
     })
     list.forEach(function (z: DamageZone) {
@@ -155,7 +161,7 @@ export function installZoneDerive(kit: Kit) {
       })
       z.lights.forEach(function (Lt) {
         if (Lt.group) owner.set(Lt.group, z)
-        Lt.lens.concat(Lt.inner).forEach(function (o: any) {
+        Lt.lens.concat(Lt.inner).forEach(function (o: Object3D) {
           owner.set(o, z)
         })
       })
@@ -164,7 +170,7 @@ export function installZoneDerive(kit: Kit) {
     c.glass.forEach(function (g) {
       if (owner.has(g) || !g.parent || !g.userData.glass || g.userData.ghost) return
       const cg = I.localBox(c, g, inv).getCenter(new V3())
-      let best: any = null
+      let best = null as DamageZone | null
       list.forEach(function (z: DamageZone) {
         if (z.internal || z.type === 'wheel' || z.type === 'light') return
         if (I.boxContains(z.box, cg.x, cg.y, cg.z, 0.05) && (!best || I.boxVolume(z.box) < I.boxVolume(best.box))) best = z
@@ -185,7 +191,7 @@ export function installZoneDerive(kit: Kit) {
         if (bb.isEmpty()) return
         const cen = bb.getCenter(new V3())
         const sz = bb.getSize(new V3())
-        let best: any = null
+        let best = null as DamageZone | null
         looseParts.forEach(function (z: DamageZone) {
           const B = z.box
           if (!I.boxContains(B, cen.x, cen.y, cen.z, 0.02)) return
@@ -196,7 +202,7 @@ export function installZoneDerive(kit: Kit) {
           best.owned.push(o)
           owner.set(o, best)
           c.lights.forEach(function (Lt) {
-            if (Lt.group === o && best.lights.indexOf(Lt) < 0) best.lights.push(Lt)
+            if (Lt.group === o && best!.lights.indexOf(Lt) < 0) best!.lights.push(Lt)
           })
         }
       })
@@ -227,7 +233,7 @@ export function installZoneDerive(kit: Kit) {
       /* the housing and the mirror glass stay next to the arm already found (the core may sit inside the body width) */
       if (z.mirrors.length) {
         const mb = new THREE.Box3()
-        z.mirrors.forEach(function (o: any) {
+        z.mirrors.forEach(function (o: Object3D) {
           mb.union(I.localBox(c, o, inv))
         })
         mb.expandByScalar(0.05)
@@ -250,7 +256,7 @@ export function installZoneDerive(kit: Kit) {
     return list
   }
   /* more readable top-down map for cars: door on the edge, side glass inward, roof in the middle */
-  function carMap(c: BuildContext, list: any) {
+  function carMap(c: BuildContext, list: DamageZone[]) {
     const m = c.meta
     const W = m.width || 1.7
     const hw = W / 2
@@ -289,10 +295,10 @@ export function installZoneDerive(kit: Kit) {
     return c.zones
   }
   kit.zonesOf = zonesOf
-  function ownerOf(c: BuildContext, o: any) {
-    const own = c.zoneOwners
+  function ownerOf(c: BuildContext, o: Object3D | null | undefined): DamageZone | null {
+    const own = c.zoneOwners as Map<Object3D, DamageZone> | undefined
     if (!own) return null
-    for (let q = o; q && q !== c.vehicle; q = q.parent) if (own.has(q)) return own.get(q)
+    for (let q: Object3D | null | undefined = o; q && q !== c.vehicle; q = q.parent) if (own.has(q)) return own.get(q)!
     return null
   }
   kit.zoneOwner = ownerOf

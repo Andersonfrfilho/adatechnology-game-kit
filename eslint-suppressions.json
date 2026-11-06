@@ -284,11 +284,6 @@
       "count": 7
     }
   },
-  "packages/game-vehicles/src/glass.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 16
-    }
-  },
   "packages/game-vehicles/src/hood.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 6
@@ -357,11 +352,6 @@
   "packages/game-vehicles/src/zone-apply.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 11
-    }
-  },
-  "packages/game-vehicles/src/zone-derive.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 18
     }
   },
   "packages/game-vehicles/tests/crease.test.ts": {

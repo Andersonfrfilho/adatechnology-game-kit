@@ -1,7 +1,42 @@
 /** Glass panes: windshield quads, side windows and ghost glass. */
-import type { BufferGeometry, Mesh, Object3D } from 'three'
+import type { BufferGeometry, Material, Mesh, Object3D, Vector2, Vector3 } from 'three'
 
+import type { LabelArgument } from './context'
+import type { CutTest, TumbleSpec } from './geometry'
 import type { BuildContext, Kit } from './types'
+
+/** How a pane is made: its material, outline and seat on the body (side windows), the uv aspect, where its part sits and how far it reaches. */
+export type GlassOptions = {
+  reuv?: boolean
+  uvAxes?: string
+  mat?: Material
+  outline?: Vector2[] | null
+  side?: number
+  Wg?: number
+  T?: TumbleSpec | null
+  zpos?: number
+  aspect?: number
+  pos?: Vector3
+  reach?: number
+}
+export type PaneLook = { type?: string; mat?: Material; see?: boolean }
+/** A windshield or rear window between the base point `pb` and the top `pt` of its pillar line (`kit.quadDef`). */
+export type GlassQuad = {
+  pb: number[]
+  pt: number[]
+  L: number
+  u: number[]
+  n: number[]
+  ins: number
+  b: number[]
+  t: number[]
+  hb: number
+  ht: number
+  which: string
+  bev: number
+  Wg: number
+  T: TumbleSpec | null | undefined
+}
 
 export function installGlass(kit: Kit) {
   const THREE = kit.THREE
@@ -14,7 +49,7 @@ export function installGlass(kit: Kit) {
   I.paneSeals = paneSeals
 
   /* ================= glass ================= */
-  kit.addGlass = function (c: BuildContext, geo: BufferGeometry, label: string, type?: string, o?: any) {
+  kit.addGlass = function (c: BuildContext, geo: BufferGeometry, label: LabelArgument, type?: string, o?: GlassOptions | null) {
     o = o || {}
     if (!geo.attributes.uv || o.reuv) o.aspect = uvProject(geo, o.uvAxes)
     const m = c.add(geo, o.mat || MATERIALS.glass)
@@ -46,7 +81,7 @@ export function installGlass(kit: Kit) {
     return m
   }
   /* registers a ready mesh (roundBox, sphere...) as glass; type "laminated" cracks, "tempered" shatters */
-  kit.asGlass = function (c: BuildContext, mesh: any, label: string, type: string, o: any) {
+  kit.asGlass = function (c: BuildContext, mesh: Mesh, label: LabelArgument, type: string, o?: GlassOptions | null) {
     o = o || {}
     const i = c.deform.indexOf(mesh)
     if (i >= 0) c.deform.splice(i, 1)
@@ -56,10 +91,10 @@ export function installGlass(kit: Kit) {
     if (o.reuv !== false) o.reuv = true
     return kit.addGlass(c, geo, label, type, Object.assign({ mat: mesh.material }, o))
   }
-  kit.sideWindows = function (c: BuildContext, polys: any, Wg: number, T: any, label: any, o: any) {
+  kit.sideWindows = function (c: BuildContext, polys: number[][][], Wg: number, T: TumbleSpec | null | undefined, label: ((i: number, n: number) => LabelArgument) | null | undefined, o?: (PaneLook & { sides?: number[] }) | null) {
     o = o || {}
     ;(o.sides || [1, -1]).forEach(function (s: number) {
-      polys.forEach(function (poly: number[][], i: any) {
+      polys.forEach(function (poly: number[][], i: number) {
         const shp = pathShape(
           poly.map(function (p) {
             return [p[0], p[1], 0.035]
@@ -102,7 +137,7 @@ export function installGlass(kit: Kit) {
     })
   }
   /* Cuts a ready mesh (mesh local coordinates) and recomputes the normals. */
-  kit.cutMesh = function (mesh: any, tests: any, deg: any, o?: { sub?: number }) {
+  kit.cutMesh = function (mesh: Mesh, tests: CutTest[], deg?: number | null, o?: { sub?: number }) {
     /* o.sub: subdivide first (edges longer than o.sub, in m) for windows inside large faces; drops colour/uv */
     const src = o && o.sub ? subdivide(mesh.geometry, o.sub) : mesh.geometry
     const r = cutGeometry(src, tests)
@@ -111,9 +146,9 @@ export function installGlass(kit: Kit) {
     mesh.geometry = r.geo
     return r.cut
   }
-  kit.quadDef = function (pb: number[], pt: number[], Wg: number, T: any, which: string, bev: any, o: any) {
+  kit.quadDef = function (pb: number[], pt: number[], Wg: number, T: TumbleSpec | null | undefined, which: string, bev?: number | null, o?: { inset?: number; side?: number } | null): GlassQuad {
     o = o || {}
-    bev = bev == null ? 0.05 : bev
+    const bv = bev == null ? 0.05 : bev
     const dx = pt[0] - pb[0]
     const dy = pt[1] - pb[1]
     const L = Math.hypot(dx, dy)
@@ -122,21 +157,21 @@ export function installGlass(kit: Kit) {
     const nx = which === 'front' ? uy : -uy
     const ny = which === 'front' ? -ux : ux
     const ins = o.inset || 0.09
-    const off = bev + 0.006
+    const off = bv + 0.006
     const sd = o.side || 0.1
     const b = [pb[0] + ux * ins + nx * off, pb[1] + uy * ins + ny * off]
     const t = [pt[0] - ux * ins * 1.3 + nx * off, pt[1] - uy * ins * 1.3 + ny * off]
     const hb = I.halfAt(Wg, T, b[1]) - sd
     const ht = I.halfAt(Wg, T, t[1]) - sd
-    return { pb: pb, pt: pt, L: L, u: [ux, uy], n: [nx, ny], ins: ins, b: b, t: t, hb: hb, ht: ht, which: which, bev: bev, Wg: Wg, T: T }
+    return { pb: pb, pt: pt, L: L, u: [ux, uy], n: [nx, ny], ins: ins, b: b, t: t, hb: hb, ht: ht, which: which, bev: bv, Wg: Wg, T: T }
   }
-  kit.glassQuad = function (c: BuildContext, q: any, label: string, o: any) {
+  kit.glassQuad = function (c: BuildContext, q: GlassQuad, label: LabelArgument, o?: PaneLook | null) {
     o = o || {}
     const NX = 10
     const NY = 8
-    const pos = []
-    const uv = []
-    const idx = []
+    const pos: number[] = []
+    const uv: number[] = []
+    const idx: number[] = []
     for (let j = 0; j <= NY; j++)
       for (let i = 0; i <= NX; i++) {
         const u = i / NX

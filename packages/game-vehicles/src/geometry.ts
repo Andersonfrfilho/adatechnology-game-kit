@@ -674,7 +674,7 @@ export function installGeometry(kit: Kit) {
     return g
   }
   /* Normalised 0..1 UV projecting onto the two axes of greatest extent (or onto the given axes, e.g. "xy"). */
-  function uvProject(geo: BufferGeometry, axes: string) {
+  function uvProject(geo: BufferGeometry, axes?: string) {
     geo.computeBoundingBox()
     const bb = geo.boundingBox!
     const sz = new V3().subVectors(bb.max, bb.min)
