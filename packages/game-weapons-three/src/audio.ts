@@ -10,10 +10,10 @@ import type { WeaponEvent } from '@adatechnology/game-weapons'
 import { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 import { BURST_IDS, GUNSHOT_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
 import { computeGunshot, pickTake } from './audio/gunshot'
-import { computeCasingSound } from './audio/casing-sound'
+import { computeCasingSound, magazineDropId } from './audio/casing-sound'
 import { computeFlyby } from './audio/flyby'
 import type { FlybyInput, FlybyVoice } from './audio/flyby'
-import type { CasingInput, CasingSound, CasingVoice } from './audio/casing-sound'
+import type { CasingInput, CasingSound, CasingVoice, MagazineDropInput } from './audio/casing-sound'
 import type { Gunshot, GunshotInput, GunshotOptions, GunshotSpace, GunshotVoice } from './audio/gunshot'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 import { DEFAULT_SOUND_PROFILE, RELOAD_CUES, reloadCueSteps } from './audio/reload-sounds'
@@ -29,8 +29,8 @@ export { computeGunshot, gunshotProfileOf, pickTake, energyOfGunshot, GUNSHOT_PR
 export type { Gunshot, GunshotInput, GunshotOptions, GunshotProfile, GunshotProfileId, GunshotFarClass, GunshotSpace, GunshotGroup, GunshotVoice } from './audio/gunshot'
 export { computeFlyby } from './audio/flyby'
 export type { FlybyInput, FlybySound, FlybyVoice } from './audio/flyby'
-export { computeCasingSound, casingSurfaceOf, casingKindOf } from './audio/casing-sound'
-export type { CasingInput, CasingSound, CasingVoice, CasingSurface, CasingKind } from './audio/casing-sound'
+export { computeCasingSound, casingSurfaceOf, casingKindOf, magazineDropId } from './audio/casing-sound'
+export type { CasingInput, CasingSound, CasingVoice, CasingSurface, CasingKind, MagazineDropInput } from './audio/casing-sound'
 export { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 export type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 export { RELOAD_CUES, RELOAD_CUE_IDS, DEFAULT_SOUND_PROFILE, reloadCueSteps, soundProfileOf } from './audio/reload-sounds'
@@ -125,8 +125,8 @@ export interface WeaponAudio {
   casing(input: CasingInput): void
   /** A bullet passing the listener (shot by someone else): crack when supersonic, whiz when not; `position` is where it passes, for the side. */
   flyby(input: FlybyInput & { readonly position?: readonly [number, number, number] }): void
-  /** A magazine landing on the floor. */
-  thud(): void
+  /** A magazine landing on the floor: the floor material, the speed and which bounce (all optional). */
+  thud(input?: MagazineDropInput): void
   /** Master volume, 0 to 1. */
   setVolume(volume: number): void
   dispose(): void
@@ -175,6 +175,8 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   // the fitted copy of a recording (`registerFittedSounds` of game-audio/fitted on the host engine): a set under the sample's id, played while the
   // files load or where they are not on the machine, closer to the recording than the synthesized layers
   const fittedReady = (id: string): boolean => sampleIds.has(id) && engine.registry.sound(id) === undefined && engine.registry.set(id) !== undefined
+  // a sound the weapon files do not carry (the bullet passing, the magazine landing): the host's recording, or its set (a fitted copy) with no recipe
+  const hostReady = (id: string): boolean => sampleReady(id) || (engine.registry.sound(id) === undefined && engine.registry.set(id) !== undefined)
 
   // a filtered noise burst with a fast attack and an exponential tail
   const burst = (config: Burst): void => {
@@ -341,7 +343,12 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     casing,
     flyby(input) {
       const sound = computeFlyby({ ...input, pitch: input.pitch ?? 1 + (channel.random() * 2 - 1) * 0.05 })
-      for (const voice of sound?.voices ?? []) playCasingVoice(voice, input.position)
+      if (!sound) return
+      if (hostReady(sound.sample)) {
+        channel.play(sound.sample, { volume: Math.min(1, 1 / (1 + input.miss / 1.5)), ...(input.position ? { position: [input.position[0], input.position[1], input.position[2]] as [number, number, number] } : {}) })
+        return
+      }
+      for (const voice of sound.voices) playCasingVoice(voice, input.position)
     },
     clink() {
       if (options.shotModel !== 'game') {
@@ -353,8 +360,14 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       const at = 0.25 + channel.random() * 0.2
       sceneTone({ layer: 'scene_tone', at, wave: 'sine', f, f2: 3800, d: 0.06, vol: 0.06 })
     },
-    thud() {
-      burst({ seconds: 0.09, gain: 0.35, filter: 'lowpass', frequency: 380 })
+    thud(input = {}) {
+      // the recording of a magazine on that floor (`mag_drop_<concreto|madeira|terra|metal>`) holds its bounces: it plays on the first hit
+      const id = magazineDropId(input.surface)
+      if (hostReady(id)) {
+        if ((input.bounce ?? 0) === 0) channel.play(id, { volume: Math.min(1, Math.max(0.2, (input.speed ?? 1.5) / 2.5)) })
+        return
+      }
+      burst({ seconds: 0.09, gain: 0.35 * (input.speed === undefined ? 1 : Math.min(1, Math.max(0.3, input.speed / 2.5))) * ((input.bounce ?? 0) === 0 ? 1 : 0.5), filter: 'lowpass', frequency: 380 })
     },
     setVolume(next) {
       const level = Math.max(0, Math.min(1, next))

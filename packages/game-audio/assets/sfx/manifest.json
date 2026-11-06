@@ -12088,6 +12088,54 @@
           }
         ]
       }
+    },
+    {
+      "id": "mag_drop_concreto",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/metal_fall_close_08.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.418,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_fall_close_09.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.18,
+            "seconds": 0.427,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_fall_close_10.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.1,
+            "seconds": 0.403,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/item_drop_metal_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.669,
+            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
+            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
+            "license": "CC-BY"
+          }
+        ]
+      }
     }
   ]
 }

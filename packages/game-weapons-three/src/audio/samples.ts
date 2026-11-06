@@ -65,7 +65,7 @@ const isGunshot = (id: string): boolean => GUNSHOT_SAMPLE_IDS.includes(id)
 /** The numbers of a sound of the manifest: a gunshot, a case landing or a reload step (`armas` only). */
 export function weaponSampleDefaults(sound: { readonly id: string; readonly category: string }, overrides: WeaponSampleOptions['sounds'] = {}): SampleDefaults | undefined {
   if (sound.category !== 'armas') return undefined
-  const base = sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
+  const base = sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') || sound.id.startsWith('mag_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
   return { ...base, ...overrides[sound.id] }
 }
 

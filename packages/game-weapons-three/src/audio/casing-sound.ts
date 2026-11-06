@@ -113,3 +113,19 @@ export function computeCasingSound(input: CasingInput): CasingSound {
   const surfaceName = surface === 'hard' ? 'concreto' : surface === 'soft' ? 'terra' : surface === 'wood' ? 'madeira' : 'metal'
   return { surface, kind, sample: `casing_drop_${surfaceName}_${kind}`, voices }
 }
+
+/** A dropped magazine hitting the floor. */
+export interface MagazineDropInput {
+  /** Floor material id (`concrete`, `wood_hard`, `soil`...). */
+  readonly surface?: string
+  /** Vertical speed at the hit, m/s. Default 1.5. */
+  readonly speed?: number
+  /** 0 for the first hit, then 1, 2... */
+  readonly bounce?: number
+}
+
+/** The sample of a magazine landing on a floor, named like the cases': `mag_drop_<concreto|madeira|terra|metal>`. */
+export function magazineDropId(material: string | undefined): string {
+  const surface = casingSurfaceOf(material)
+  return `mag_drop_${surface === 'hard' ? 'concreto' : surface === 'soft' ? 'terra' : surface === 'wood' ? 'madeira' : 'metal'}`
+}
