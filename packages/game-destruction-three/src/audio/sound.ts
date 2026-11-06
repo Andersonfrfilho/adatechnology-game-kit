@@ -77,6 +77,20 @@ export const IMPACT_SOUND_KEYS: Readonly<Record<string, SoundKeyRule>> = {
 }
 
 /**
+ * Every sound a blow, ricochet or break on a material can play (`sound`, `above.sound` and `fallback` of each rule of `rules`): a game preloads them on
+ * the first input, so even the first ricochet or impact plays the recording instead of the synthesized recipe while the file is still loading.
+ */
+export const impactSoundIds = (rules: Readonly<Record<string, SoundKeyRule>> = IMPACT_SOUND_KEYS): string[] => {
+  const ids = new Set<string>()
+  for (const rule of Object.values(rules)) {
+    ids.add(rule.sound)
+    if (rule.above) ids.add(rule.above.sound)
+    if (rule.fallback) ids.add(rule.fallback)
+  }
+  return [...ids]
+}
+
+/**
  * The keys `createDestructionRenderer` sends to `onSound`, mapped to the sounds the teams delivered. The Cena de Arte has a sound for every material
  * (clang, wood, glass, crumble, thud...); the game has four classes (impact, glass, wood, explosion) and its own explosion thump. Which team sound answers
  * which key is the kit's choice (the teams call the sounds, not the renderer's keys), so it is data: `keys` replaces any entry.
