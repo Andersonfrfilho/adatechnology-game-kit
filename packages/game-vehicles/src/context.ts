@@ -284,7 +284,7 @@ export function installContext(kit: Kit) {
 
 
     /** Declares or refines a damage zone: `c.zone(id, label, box, parts, options)`. Pass `label === false` to remove an auto-derived zone. */
-    zone(id: string, label: string | false | null | undefined, box?: ZoneBoxInput | null, parts?: Object3D | readonly Object3D[] | null, o?: Record<string, unknown>) {
+    zone(id: string, label: string | false | null | undefined, box?: ZoneBoxInput | null, parts?: Object3D | VehicleLamp | readonly (Object3D | VehicleLamp)[] | null, o?: Record<string, unknown>) {
       const d: any = Object.assign({ id: id }, o || {})
       if (label === false) d.remove = true
       else if (label) d.name = label

@@ -1814,8 +1814,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
       kit.car(c, s)
       const low = c.deform[n0],
         m = c.meta
-      cargoBed(c, { low: low, x0: m.rear + 0.06, x1: -0.42, floor: 1.78, top: 2.25, W: W, arches: [] })
-      c.roundBox(0.08, 0.08, W + 0.1, 0.03, MT.chrome, m.front + 0.06, 1.72, 0)
+      cargoBed(c, { low: low, x0: m.rear! + 0.06, x1: -0.42, floor: 1.78, top: 2.25, W: W, arches: [] })
+      c.roundBox(0.08, 0.08, W + 0.1, 0.03, MT.chrome, m.front! + 0.06, 1.72, 0)
       const stripe = c.paint('#e9e7e1')
       const ex: any = []
       ;[1, -1].forEach(function (sd) {
@@ -1942,13 +1942,13 @@ export function installSuvPickupVan(fx: FleetContext): void {
       c.rod(new V3(0.6, 2.8, -0.78), new V3(0.6, 2.8, 0.78), 0.035, red)
       c.rod(new V3(-0.25, 2.8, -0.78), new V3(-0.25, 2.8, 0.78), 0.035, red)
       c.rod(new V3(-0.25, 2.3, -0.8), new V3(-0.25, 2.8, 0.78), 0.03, red)
-      const roofItems = [c.roundBox(0.16, 0.05, 1.3, 0.02, MT.trim, 0.42, m.top + 0.08, 0)]
+      const roofItems = [c.roundBox(0.16, 0.05, 1.3, 0.02, MT.trim, 0.42, m.top! + 0.08, 0)]
       ;[-0.48, -0.16, 0.16, 0.48].forEach(function (z) {
         roofItems.push(
           kit.headlight(c, {
             style: 'round',
             x: 0.5,
-            y: m.top + 0.2,
+            y: m.top! + 0.2,
             z: z,
             w: 0.17,
             h: 0.17,
@@ -1962,10 +1962,10 @@ export function installSuvPickupVan(fx: FleetContext): void {
       /* roof light bracket: it is the highest point, enters the rollover box (the cab does not sink into the ground) */
       const hoop = c.tube(
         [
-          [0.62, m.top - 0.02, -0.66],
-          [0.62, m.top + 0.33, -0.62],
-          [0.62, m.top + 0.33, 0.62],
-          [0.62, m.top - 0.02, 0.66],
+          [0.62, m.top! - 0.02, -0.66],
+          [0.62, m.top! + 0.33, -0.62],
+          [0.62, m.top! + 0.33, 0.62],
+          [0.62, m.top! - 0.02, 0.66],
         ],
         0.028,
         MT.steel,
@@ -1978,21 +1978,21 @@ export function installSuvPickupVan(fx: FleetContext): void {
       m.width = W
       m.bodyHeight = 0.95
       m.roof.w = 1.5
-      m.top = top0 + 0.33
+      m.top = top0! + 0.33
       finishing(c, roofItems)
       pickupZones(c)
       /* headlights: the two in the grille in one zone per side and the four on the roof in their own zone */
-      const fGrade = c.lights.filter(function (L: any) {
+      const fGrade = c.lights.filter(function (L) {
           return L.kind === 'headlight' && L.group && L.group.position.x > 2
         }),
-        fTeto = c.lights.filter(function (L: any) {
-          return L.kind === 'headlight' && L.group && L.group.position.y > top0
+        fTeto = c.lights.filter(function (L) {
+          return L.kind === 'headlight' && L.group && L.group.position.y > top0!
         })
       c.zone('headlight_right', false)
       c.zone('headlight_left', false)
       c.zone('headlight_center', false)
       ;[1, -1].forEach(function (sd) {
-        const L = fGrade.filter(function (q: any) {
+        const L = fGrade.filter(function (q) {
           return Math.sign(q.group.position.z) === sd
         })
         c.zone(
@@ -2003,15 +2003,15 @@ export function installSuvPickupVan(fx: FleetContext): void {
           { type: 'light', fxKey: 'headlight', side: sd },
         )
       })
-      c.zone('roof_lights', trl('labels.roof_lights'), [0.32, 0.68, top0 + 0.05, top0 + 0.45, -0.7, 0.7], fTeto, {
+      c.zone('roof_lights', trl('labels.roof_lights'), [0.32, 0.68, top0! + 0.05, top0! + 0.45, -0.7, 0.7], fTeto, {
         type: 'light',
         fxKey: 'headlight',
         dir: 'up',
       })
-      const bpt = c.parts.find(function (p: any) {
+      const bpt = c.parts.find(function (p) {
           return p.obj === m.frontBumper
         }),
-        bptR = c.parts.find(function (p: any) {
+        bptR = c.parts.find(function (p) {
           return p.obj === m.rearBumper
         })
       ;[bpt, bptR].forEach(function (pt) {
@@ -2024,10 +2024,10 @@ export function installSuvPickupVan(fx: FleetContext): void {
         })
       })
       c.parts
-        .filter(function (p: any) {
+        .filter(function (p) {
           return p.kind === 'engine' || p.kind === 'hood'
         })
-        .forEach(function (pt: any) {
+        .forEach(function (pt) {
           setOnHit(pt, function (c: any) {
             if (c.hood) c.hood.latch = Math.min(c.hood.latch, 0.05)
           })

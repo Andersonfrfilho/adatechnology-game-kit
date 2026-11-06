@@ -1,3 +1,4 @@
+import type { Object3D } from 'three'
 import type { FleetContext } from '../context'
 
 /* Military group (military file). Uses only the kit API.
@@ -1224,7 +1225,7 @@ export function installMilitary(fx: FleetContext): void {
         bc = new V3(f - len / 2 + 0.25, 1.0, 0)
       kit.engineBay(c, { x0: f - len + 0.12, x1: f - 0.45, zw: 0.42, floor: 0.8, top: 1.5, motor: 'diesel', col: '#3a3c32' })
       scale(c, nB, bc, 1.35)
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.kind === 'engine' || p.kind === 'radiator') p.pos.sub(bc).multiplyScalar(1.35).add(bc)
       })
       /* the cab tilts past vertical: the engine is clear for whoever looks from the front and from above */
@@ -2768,7 +2769,7 @@ export function installMilitary(fx: FleetContext): void {
         kit.seat(c, r[0], fl, 0, { w: wB, n: r[1], h: 0.4, back: 0.55, lean: 0.08, dir: 1, mat: CANVAS_TOP, headrest: false })
         const st = c.seatTops.pop()
         for (let q = 0; q < r[1]; q++)
-          c.seatTops.push({ x: st.x, y: st.y, z: ((q - (r[1] - 1) / 2) * wB) / r[1], w: wB / r[1] - 0.02, l: st.l })
+          c.seatTops.push({ x: st!.x, y: st!.y, z: ((q - (r[1] - 1) / 2) * wB) / r[1], w: wB / r[1] - 0.02, l: st!.l })
       })
       ;[1, -1].forEach(function (sd) {
         kit.seat(c, 0.6, fl, sd * 0.75, { w: 0.5, h: 0.4, back: 0.55, lean: 0.08, mat: fab, headrest: false })
@@ -2890,7 +2891,7 @@ export function installMilitary(fx: FleetContext): void {
       c.part('avionics', trl('labels.nose_avionics'), null, new V3(3.45, 1.35, 0), 1.0)
       c.part('fuselage', trl('labels.rear_fuselage'), null, new V3(-3.3, 1.5, 0), 1.2)
       c.part('fuselage', trl('labels.low_tail_and_tail_wheel'), null, new V3(-7.6, 1.5, 0), 1.2)
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.label === trl('labels.windshield')) {
           p.pos.set(3.0, 2.1, 0)
           p.reach = 1.0
@@ -2987,7 +2988,7 @@ export function installMilitary(fx: FleetContext): void {
         cutAll: true,
         anyMesh: true,
         onBand: function (c2: any, b: any) {
-          const tail = [py].concat(stab)
+          const tail: Object3D[] = [py].concat(stab)
           if (b === 4) {
             /* the whole tail goes away: pylon, stabilizer, rotor, tail wheel and the cone tip that is outside the box */
             tail.concat(stripes, tailwheel, [trg]).forEach(function (o) {

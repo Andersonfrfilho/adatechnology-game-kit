@@ -1863,25 +1863,25 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       car(c, s)
       const m = c.meta,
         lit = c.state === 'damaged' ? 0.05 : 0.75,
-        ly = m.top + 0.1
+        ly = m.top! + 0.1
       /* the light bar counts toward the rest height on rollover (it dents with the roof) */
       const lamps = [
         c.roundBox(0.52, 0.17, 0.26, 0.06, CM('#e8d36a', { emissive: new THREE.Color('#7a6410'), emissiveIntensity: lit }), -0.55, ly, 0, {
           def: true,
         }),
-        c.roundBox(0.56, 0.03, 0.3, 0.012, MT.trim, -0.55, m.top + 0.01, 0, { def: true }),
+        c.roundBox(0.56, 0.03, 0.3, 0.012, MT.trim, -0.55, m.top! + 0.01, 0, { def: true }),
         c.text(trl('texts.taxi'), 0.24, 0.1, -0.55 + 0.262, ly, 0, '+x', { fg: '#1a1a1a' }),
         c.text(trl('texts.taxi'), 0.24, 0.1, -0.55 - 0.262, ly, 0, '-x', { fg: '#1a1a1a' }),
       ]
       ;[1, -1].forEach(function (s2) {
-        const z = s2 * (m.width / 2 + 0.008),
+        const z = s2 * (m.width! / 2 + 0.008),
           f = s2 > 0 ? '+z' : '-z'
         c.text(trl('texts.taxi'), 0.46, 0.14, 0.15, 0.72, z, f, { fg: '#2c5f8a' })
         c.text(trl('texts.n_24h_cooperative_3333_1000'), 1.5, 0.075, -0.9, 0.72, z, f, { fg: '#2c5f8a', size: 0.78, w: 1280, h: 64 })
-        c.roundBox(3.4, 0.05, 0.01, 0.005, CM('#2c5f8a'), -0.25, 0.58, s2 * (m.width / 2 + 0.003))
+        c.roundBox(3.4, 0.05, 0.01, 0.005, CM('#2c5f8a'), -0.25, 0.58, s2 * (m.width! / 2 + 0.003))
       })
       /* short radio antenna, leaning back */
-      const prev = c.rod(new V3(-1.45, m.top - 0.03, 0.3), new V3(-1.62, m.top + 0.2, 0.3), 0.005, MT.trim, { r2: 0.003 })
+      const prev = c.rod(new V3(-1.45, m.top! - 0.03, 0.3), new V3(-1.62, m.top! + 0.2, 0.3), 0.005, MT.trim, { r2: 0.003 })
       c.deform.push(prev)
       /* the light bar and the antenna belong to the roof: they go off from a dent and go away when the roof is torn off */
       c.zone('roof', null, null, lamps.concat([prev]), {
@@ -2311,7 +2311,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           c.cylinder(0.03, 0.03, 0.01, MT.blue, -1.85, 0.72, -(I.hw + 0.012), 'z')
         },
       })
-      c.parts = c.parts.filter(function (p: any) {
+      c.parts = c.parts.filter(function (p) {
         return p.kind !== 'radiator' && p.kind !== 'fuel_tank'
       })
       c.part('battery', trl('labels.traction_battery'), null, new V3(-0.3, 0.3, 0), 1.2)

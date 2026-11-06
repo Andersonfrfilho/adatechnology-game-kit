@@ -731,7 +731,7 @@ export function installHeavy(fx: FleetContext): void {
       })
       const m = c.meta
       m.front = f + 0.24
-      m.length = m.front - m.rear
+      m.length = m.front - m.rear!
       m.top = 3.38
       m.belt = 1.56
       m.bodyHeight = 1.6
@@ -1612,10 +1612,12 @@ export function installHeavy(fx: FleetContext): void {
         weight: 0.5,
         anchor: [3.3, 3.12, 0],
       })
-      ;[
-        [dF, 'front_door', trl('labels.front_door'), 'porta_dianteira'],
-        [dM, 'middle_door', trl('labels.middle_door'), 'porta_central'],
-      ].forEach(function (P) {
+      ;(
+        [
+          [dF, 'front_door', trl('labels.front_door'), 'porta_dianteira'],
+          [dM, 'middle_door', trl('labels.middle_door'), 'porta_central'],
+        ] as [unknown, string, string, string][]
+      ).forEach(function (P) {
         const d: any = P[0]
         c.zone(P[1], P[2], [d[0][0] - 0.05, d[1][0] + 0.05, 0.3, 2.78, W / 2 - 0.3, W / 2 + 0.25], null, {
           type: 'panel',
@@ -1650,7 +1652,7 @@ export function installHeavy(fx: FleetContext): void {
       lidObjs.push(c.text('207', 0.5, 0.2, rr - 0.09, 1.28, 0, '-x', { fg: '#ffb02e', bg: '#060606', glow: '#e09020' }))
       kit.hinge(c, lidObjs, new V3(rr - 0.03, 1.42, 0), { len: -0.4, open: 1.2, sign: -1, zw: 0.8, label: trl('labels.engine_cover') })
       m.glasshouse = { fb: f, belt: 1.3, Wg: W }
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.kind === 'radiator') p.pos.set(rr + 0.3, 0.7, 0)
       })
       m.armor = armorPlus(function (c: any) {

@@ -74,8 +74,11 @@ export interface VehicleMeta {
   bodyKind?: 'box' | 'body'
   exhaust?: ThreeVector | false
   exhaustDir?: ThreeVector
-  /** Replaces the default armour (state `modified`). */
-  armor?: (c: VehicleContext, kit: VehicleKit) => void
+  /**
+   * Replaces the default armour (state `modified`). A few fleet vehicles write their protection level here as text (`'III'`) while they
+   * build and set the builder afterwards.
+   */
+  armor?: ((c: VehicleContext, kit: VehicleKit) => void) | string
   [key: string]: any
 }
 

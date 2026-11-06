@@ -292,7 +292,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       ;(c.zoneErrors = c.zoneErrors || []).push('zones: ' + (e && (e as Error).message))
     }
     if (st === 'modified') {
-      if (m.armor) m.armor(c, kit)
+      if (m.armor) (m.armor as unknown as (ctx: typeof c, k: Kit) => void)(c, kit)
       else kit.applyArmor(c)
     }
     if (zoneState == null && st === 'damaged' && kit.config.damagedScenario) zoneState = kit.zoneScenario(c, kit.config.damagedScenario)

@@ -2132,10 +2132,12 @@ export function installPlanesExtra(fx: FleetContext): void {
         c.cylinder(0.022, 0.022, 0.5, MT.steel, 1.55, dh(1.5) - 0.06, s * 1.5, 'x', { seg: 10 })
         c.cylinder(0.03, 0.03, 0.06, MT.dark, 1.8, dh(1.5) - 0.06, s * 1.5, 'x', { seg: 10 })
         /* pylons: inner with a tank/rocket, outer with a rocket pod */
-        ;[
-          [2.45, 'tanque'],
-          [3.6, 'foguete'],
-        ].forEach(function (q: any) {
+        ;(
+          [
+            [2.45, 'tanque'],
+            [3.6, 'foguete'],
+          ] as [number, string][]
+        ).forEach(function (q) {
           const z = s * q[0],
             y = dh(q[0]) - 0.14
           pyl.push(c.roundBox(0.8, 0.14, 0.06, 0.03, CM('#5d6555', { roughness: 0.7 }), 0.55, y, z))
