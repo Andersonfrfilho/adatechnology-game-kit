@@ -1,5 +1,5 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
-import type { BufferAttribute, Mesh, Object3D } from 'three'
+import type { CutTest, Greenhouse, LabelArgument, ShellSpec, VehicleContext, VehicleKit, VehiclePart, RollState } from '@adatechnology/game-vehicles'
+import type { BufferAttribute, Group, Material, Mesh, Object3D, ShapeGeometry, Vector3 } from 'three'
 import type { FleetContext } from '../context'
 
 /* Military group (military file). Uses only the kit API.
@@ -18,6 +18,59 @@ import type { FleetContext } from '../context'
    - tiltCab() and engineNoLatch(): tilting cab (copied from the heavy group)
    - mirroredBay(): mirrored engine bay for a rear engine (copied from the heavy group)
    - camoNet(), sandbags(), slat(): items of the "modified" state */
+/** What `rollover` does on the way down: the final tilt, and hooks at the start, on each frame of the roll and once it lies flipped. */
+interface RolloverOptions {
+  tilt?: number
+  onStart?(c: VehicleContext, A: RollState): void
+  onRoll?(c: VehicleContext, A: RollState): void
+  onFlip?(c: VehicleContext): void
+}
+/** `matteOlive`: the roof paint to swap too and its matte material, and whether chrome turns to matte steel (on unless false). */
+interface MatteOptions {
+  roof?: string
+  roofMat?: Material
+  dechrome?: boolean
+}
+/** A painted star (`star`): material, parent, a turn about its face and a ring around it. */
+interface StarOptions {
+  mat?: Material
+  parent?: Object3D
+  rotZ?: number
+  ring?: boolean
+}
+/** An armoured hull (`hull`): the shell and the belt, top and taper (k) of the sides above the belt. */
+type HullSpec = Omit<ShellSpec, 'T'> & { belt: number; top: number; k?: number }
+type EngineBayOptions = Parameters<VehicleKit['engineBay']>[1]
+/** A truck cab (`militaryCab`): front x, width, length, roof, belt and bottom heights, floor, paint, and the front axle and wheel. */
+interface MilitaryCabOptions {
+  f: number
+  W: number
+  len: number
+  roof: number
+  belt: number
+  bot: number
+  floor: number
+  col: string
+  ax: number
+  wr: number
+  ww: number
+}
+/** A turret extruded from its plan (`buildTurret`): the plan points [x, z], height, bevel, smoothing, crease, taper and where it sits. */
+interface TurretOptions {
+  plan: readonly number[][]
+  h: number
+  bev?: number
+  sub?: number
+  crease?: number
+  k?: number
+  kx?: number
+  cx?: number
+  mat: Material
+  x?: number
+  y: number
+  z?: number
+}
+
 export function installMilitary(fx: FleetContext): void {
   const kit = fx.kit
   const THREE = kit.THREE
@@ -60,7 +113,7 @@ export function installMilitary(fx: FleetContext): void {
 
   /* ================= rollover, stiffness and antennas (local to the military group) ================= */
   /* runs fn(c) every frame of the tick (neutral input in c.spin: the core only adds rotation 0) */
-  function perFrame(c: VehicleContext, fn: any) {
+  function perFrame(c: VehicleContext, fn: (c: VehicleContext) => void) {
     const o = { rotation: {} }
     Object.defineProperty(o.rotation, 'y', {
       get: function () {
@@ -95,7 +148,7 @@ export function installMilitary(fx: FleetContext): void {
         g.computeBoundingBox()
         ud.militaryVersion = (pos as BufferAttribute).version
       })
-      c.vehicle.children.forEach(function (o: any) {
+      c.vehicle.children.forEach(function (o: Object3D) {
         const u = o.userData
         if (!u.pos0) return
         if (!u.militaryPrev) u.militaryPrev = u.pos0.clone()
@@ -106,16 +159,16 @@ export function installMilitary(fx: FleetContext): void {
     })
   }
   /* parts that neither dent nor sink with the dent (turret, cannon, mast) */
-  function rigid(c: VehicleContext, objs: any) {
-    objs.forEach(function (o: any) {
-      const i = c.deform.indexOf(o)
+  function rigid(c: VehicleContext, objs: readonly Object3D[]) {
+    objs.forEach(function (o) {
+      const i = c.deform.indexOf(o as Mesh)
       if (i >= 0) c.deform.splice(i, 1)
       o.userData.noFollow = true
     })
   }
   /* antennas break at the first contact of the rollover (the rod goes away and pieces fly off) */
   function breakAntennas(c: VehicleContext) {
-    ;(c.militaryAntennas || []).forEach(function (w: any) {
+    ;(c.militaryAntennas || []).forEach(function (w: Object3D) {
       if (!w.parent) return
       const p = c.toEffects(w.position.clone())
       w.parent.remove(w)
@@ -124,24 +177,24 @@ export function installMilitary(fx: FleetContext): void {
     })
   }
   /* settles the vehicle on the ground by the lowest point of EVERYTHING visible (turret, mast, gear), not only the hull */
-  function settle(c: VehicleContext, tilt: number, riseOnly?: any) {
+  function settle(c: VehicleContext, tilt: number, riseOnly?: boolean) {
     if (tilt) c.vehicle.rotation.z += tilt
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.root.matrixWorld).invert(),
       box = new THREE.Box3(),
       tmp = new THREE.Box3()
-    c.vehicle.traverse(function (ob: any) {
+    c.vehicle.traverse(function (ob: Mesh) {
       if (!ob.isMesh) return
-      for (let q = ob; q && q !== c.vehicle; q = q.parent)
+      for (let q: Object3D | null = ob; q && q !== c.vehicle; q = q.parent)
         if (!q.visible || q.userData.decal || q.userData.ghost || q.userData.antena) return
       if (!ob.geometry.boundingBox) ob.geometry.computeBoundingBox()
-      tmp.copy(ob.geometry.boundingBox).applyMatrix4(ob.matrixWorld).applyMatrix4(inv)
+      tmp.copy(ob.geometry.boundingBox!).applyMatrix4(ob.matrixWorld).applyMatrix4(inv)
       box.union(tmp)
     })
     if (!box.isEmpty() && (!riseOnly || box.min.y < -0.005)) c.vehicle.position.y -= box.min.y
   }
   /* o: { tilt (rad, final inclination), onStart(c, A), onRoll(c, A), onFlip(c) } */
-  function rollover(c: VehicleContext, o?: any) {
+  function rollover(c: VehicleContext, o?: RolloverOptions) {
     o = o || {}
     let done = false,
       prev = false,
@@ -185,8 +238,8 @@ export function installMilitary(fx: FleetContext): void {
     kit.impact(c, new V3((m.front! + m.rear!) * 0.5 + m.length! * 0.12, mid + 0.1, -m.width! / 2), new V3(0, 0, 1), 0.7, { noStain: true })
   }
   /* scales everything assembled since n0 around cen (bigger engine without rewriting the core engine bay) */
-  function scale(c: VehicleContext, n0: any, cen: any, s: number) {
-    c.vehicle.children.slice(n0).forEach(function (ob: any) {
+  function scale(c: VehicleContext, n0: number, cen: Vector3, s: number) {
+    c.vehicle.children.slice(n0).forEach(function (ob: Object3D) {
       ob.position.sub(cen).multiplyScalar(s).add(cen)
       ob.scale.multiplyScalar(s)
     })
@@ -203,13 +256,13 @@ export function installMilitary(fx: FleetContext): void {
   }
   /* swaps the glossy material of c.paint(hex) for the matte one on everything already assembled */
   const MATTE_STEEL = CM('#2e3128', { metalness: 0.45, roughness: 0.6 })
-  function matteOlive(c: VehicleContext, hex: any, o?: any) {
+  function matteOlive(c: VehicleContext, hex: string, o?: MatteOptions) {
     o = o || {}
     const bright = c.paint(hex),
       mate = paintMat(c, hex),
       roofB = o.roof ? c.paint(o.roof) : null,
       roofM = o.roofMat || CANVAS
-    c.root.traverse(function (ob: any) {
+    c.root.traverse(function (ob: Mesh) {
       if (!ob.isMesh) return
       if (ob.material === bright) ob.material = mate
       else if (roofB && ob.material === roofB) ob.material = roofM
@@ -218,8 +271,8 @@ export function installMilitary(fx: FleetContext): void {
     return mate
   }
   /* five-point star. face: "+z" | "-z" | "+y" | "+x" | "-x" */
-  const starGeoCache: any = {}
-  function star(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o: any) {
+  const starGeoCache: Record<string, ShapeGeometry> = {}
+  function star(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o?: StarOptions) {
     o = o || {}
     const key = r.toFixed(3)
     if (!starGeoCache[key]) {
@@ -247,7 +300,7 @@ export function installMilitary(fx: FleetContext): void {
     return m
   }
   /* military wheel: stud tyre with a V pattern and an olive-green rim */
-  function militaryWheel(c: VehicleContext, x: number, z: number, r: number, w: number, o: any) {
+  function militaryWheel(c: VehicleContext, x: number, z: number, r: number, w: number, o?: Parameters<VehicleContext['wheel']>[4]) {
     o = o || {}
     return c.wheel(x, z, r, w, Object.assign({ lugs: true, chevron: true, rim: RIMO, spokes: 0, rimR: 0.55 }, o))
   }
@@ -343,7 +396,7 @@ export function installMilitary(fx: FleetContext): void {
      sits 5 cm above the top and drops OUTSIDE the width; fine mesh with smooth normals; irregular tufts */
   const NET_MAT = CM('#ffffff', { vertexColors: true, roughness: 1, side: DS })
   NET_MAT.shadowSide = THREE.BackSide
-  function camoNet(c: VehicleContext, x0: number, x1: number, y: number, w: number, drop: number, prof?: any) {
+  function camoNet(c: VehicleContext, x0: number, x1: number, y: number, w: number, drop: number, prof?: (z: number) => number) {
     prof =
       prof ||
       function () {
@@ -421,8 +474,8 @@ export function installMilitary(fx: FleetContext): void {
     return m
   }
   /* anti-rocket grille (slat): horizontal bars set off from the side */
-  function slat(c: VehicleContext, x0: number, x1: number, y0: number, y1: number, z: number, mat?: any) {
-    mat = mat || OLIVE_STEEL
+  function slat(c: VehicleContext, x0: number, x1: number, y0: number, y1: number, z: number, mat?: Material) {
+    mat = mat || (OLIVE_STEEL as Material)
     const s = Math.sign(z)
     for (let y = y0; y <= y1 + 1e-6; y += 0.11) c.rod(new V3(x0, y, z), new V3(x1, y, z), 0.012, mat, { seg: 5 })
     for (let x = x0; x <= x1 + 1e-6; x += 0.7) {
@@ -432,7 +485,7 @@ export function installMilitary(fx: FleetContext): void {
     }
   }
   /* generic heavy machine gun (.50) pointing to +x from (x, y, z) */
-  function machineGun(c: VehicleContext, x: number, y: number, z: number, o: any) {
+  function machineGun(c: VehicleContext, x: number, y: number, z: number, o?: { len?: number; yaw?: number; pitch?: number }) {
     o = o || {}
     const len = o.len || 1.6,
       g = new THREE.Group()
@@ -452,7 +505,7 @@ export function installMilitary(fx: FleetContext): void {
     return g
   }
   /* round hatch: ring and a lid hinged backwards (open in rad) */
-  function hatch(c: VehicleContext, x: number, y: number, z: number, r: number, open: number, mat: any, o?: any) {
+  function hatch(c: VehicleContext, x: number, y: number, z: number, r: number, open: number, mat: Material, o?: { hingeX?: number; yaw?: number }) {
     o = o || {}
     c.cylinder(r + 0.05, r + 0.07, 0.07, mat, x, y + 0.02, z, null, { seg: 24 })
     c.cylinder(r - 0.01, r - 0.01, 0.075, MT.dark, x, y + 0.025, z, null, { seg: 24 })
@@ -470,7 +523,7 @@ export function installMilitary(fx: FleetContext): void {
     return piv
   }
   /* vision block (periscope) with armoured glass. Face +x by default */
-  function periscope(c: VehicleContext, x: number, y: number, z: number, w: number, label: any, o?: any) {
+  function periscope(c: VehicleContext, x: number, y: number, z: number, w: number, label: LabelArgument | null | undefined, o?: { rot?: number; mat?: Material }) {
     o = o || {}
     const rot = o.rot || 0
     const box = c.roundBox(0.14, 0.12, w + 0.06, 0.02, o.mat || OLIVE_STEEL, x, y, z, { rot: [0, rot, 0] })
@@ -479,7 +532,7 @@ export function installMilitary(fx: FleetContext): void {
     return box
   }
   /* troop seat against the wall, facing the centre (dir = +1 faces +z) */
-  function sideSeat(c: VehicleContext, x0: number, x1: number, fl: number, z: number, dir: number, o: any) {
+  function sideSeat(c: VehicleContext, x0: number, x1: number, fl: number, z: number, dir: number, o?: { mat?: Material; h?: number }) {
     o = o || {}
     const fab = o.mat || CM('#2f3226', { roughness: 0.9 }),
       h = o.h || 0.42,
@@ -495,7 +548,7 @@ export function installMilitary(fx: FleetContext): void {
     }
   }
   /* armoured hull: side profile [x, y, radius] extruded to width W and tapered above belt (k) */
-  function hull(c: VehicleContext, o: any) {
+  function hull(c: VehicleContext, o: HullSpec) {
     const T = { belt: o.belt, top: o.top, k: o.k || 0 }
     const m = kit.shell(c, {
       items: o.items,
@@ -513,7 +566,7 @@ export function installMilitary(fx: FleetContext): void {
     return {
       mesh: m,
       T: T,
-      half: function (y: any) {
+      half: function (y: number) {
         return kit.halfAt(o.W, T, y)
       },
     }
@@ -523,13 +576,13 @@ export function installMilitary(fx: FleetContext): void {
   function engineNoLatch(c: VehicleContext) {
     c.parts.forEach(function (p) {
       if (p.kind !== 'engine') return
-      p.onHit = function (c2: VehicleContext, pt: any, force: number) {
+      p.onHit = function (c2: VehicleContext, pt: VehiclePart, force: number) {
         kit.addEmitter(c2, pt.pos.clone().add(new V3(0, 0.35, 0)), 'black')
         kit.puddle(c2, 'oil', pt.pos.clone().setY(Math.max(0.2, c2.meta.clearance || 0.3)), 0.6 + force * 0.3)
       }
     })
   }
-  function tiltCab(c: VehicleContext, objs: any, pivot: any, o: any) {
+  function tiltCab(c: VehicleContext, objs: readonly Object3D[], pivot: Vector3, o?: { len?: number; open?: number; label?: string }) {
     o = o || {}
     const h = kit.hinge(c, [], pivot, {
       len: -(o.len || 1.8),
@@ -554,9 +607,9 @@ export function installMilitary(fx: FleetContext): void {
       }
       return M
     }
-    objs.forEach(function (ob: any) {
+    objs.forEach(function (ob) {
       if (ob === piv) return
-      ob.updateMatrix = function () {
+      ob.updateMatrix = function (this: Object3D) {
         this.matrix.compose(this.position, this.quaternion, this.scale)
         const t = tm()
         if (t) this.matrix.premultiply(t)
@@ -573,12 +626,12 @@ export function installMilitary(fx: FleetContext): void {
     return h
   }
   /* mirrored engine bay (rear engine): engineBay turned 180 degrees around the vertical axis at xm */
-  function mirroredBay(c: VehicleContext, o: any, xm: number) {
+  function mirroredBay(c: VehicleContext, o: EngineBayOptions, xm: number) {
     const n0 = c.vehicle.children.length,
       np = c.parts.length
     kit.engineBay(c, o)
     const q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), PI)
-    c.vehicle.children.slice(n0).forEach(function (ob: any) {
+    c.vehicle.children.slice(n0).forEach(function (ob: Object3D) {
       ob.position.x = 2 * xm - ob.position.x
       ob.position.z = -ob.position.z
       ob.quaternion.premultiply(q)
@@ -596,7 +649,7 @@ export function installMilitary(fx: FleetContext): void {
       b.center.x = 2 * xm - b.center.x
     }
   }
-  function antenna(c: VehicleContext, x: any, y: number, z: any, h: number) {
+  function antenna(c: VehicleContext, x: number, y: number, z: number, h: number) {
     c.cylinder(0.03, 0.035, 0.08, BLACK, x, y + 0.04, z)
     const w = c.rod(new V3(x, y + 0.08, z), new V3(x - 0.15, y + h, z), 0.006, BLACK, { r2: 0.003, seg: 5 })
     w.userData.antena = true
@@ -716,7 +769,7 @@ export function installMilitary(fx: FleetContext): void {
       sideSeat(c, -0.7, -1.52, s.bottomY + 0.1, 0.8, -1, { h: 0.42 })
       sideSeat(c, -0.7, -1.52, s.bottomY + 0.1, -0.8, 1, { h: 0.42 })
       /* flat fenders over the wheels and running board */
-      const flares: any = []
+      const flares: Mesh[] = []
       ;[1, -1].forEach(function (sd) {
         ;[xf, xr].forEach(function (x) {
           flares.push(c.roundBox(1.0, 0.05, 0.14, 0.02, paint, x, 0.9, sd * (W / 2 + 0.04), { def: true }))
@@ -815,18 +868,18 @@ export function installMilitary(fx: FleetContext): void {
       }
     },
   )
-  function marruaArmor(c: VehicleContext, s: any, F: number, R: number, W: number) {
+  function marruaArmor(c: VehicleContext, s: { gh: Greenhouse }, F: number, R: number, W: number) {
     const gh = s.gh,
       m = c.meta,
       q = m.frontQuad,
       paint = paintMat(c, OLIVE)
     /* folded top: the canvas goes away (roof, sides and plastic windows) and only the framed windshield remains */
     const hide = new Set<Mesh>((c.militaryCanvasTop as Mesh[] | undefined) || [])
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: Mesh) {
       if (!o.isMesh) return
       const g = o.geometry
       if (!g.boundingSphere) g.computeBoundingSphere()
-      const ce = g.boundingSphere.center.clone().applyMatrix4(o.matrix)
+      const ce = g.boundingSphere!.center.clone().applyMatrix4(o.matrix)
       if (o.material === CANVAS_TOP || o.material === MT.headliner) hide.add(o)
       else if (g.type === 'TubeGeometry' && o.material === MT.trim && ce.y > gh.belt && ce.x < gh.fb - 0.02) hide.add(o)
       else if (
@@ -938,7 +991,7 @@ export function installMilitary(fx: FleetContext): void {
      diesel tank and battery box between the axles, single wheels with V studs at the back
      rear: low-sided cargo body with the tailgate down, double round taillights, hitch on the bumper
      top: rounded canvas over five arches, white star on the canvas, radio antenna behind the cab */
-  function militaryCab(c: VehicleContext, o: any) {
+  function militaryCab(c: VehicleContext, o: MilitaryCabOptions) {
     const f = o.f,
       W = o.W,
       len = o.len,
@@ -965,7 +1018,7 @@ export function installMilitary(fx: FleetContext): void {
     function wsx(y: number) {
       return ws0[0] + ((ws1[0] - ws0[0]) * (y - ws0[1])) / (ws1[1] - ws0[1])
     }
-    function l2(a: any, b: number[], t: number) {
+    function l2(a: number[], b: number[], t: number) {
       return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
     }
     const q = kit.quadDef(l2(ws0, ws1, 0.05), l2(ws0, ws1, 0.93), W, T, 'front', 0.05, { inset: 0.04, side: 0.11 })
@@ -1088,7 +1141,7 @@ export function installMilitary(fx: FleetContext): void {
     return { items: items, q: q, wsx: wsx, xr: xr, T: T, fx: fx }
   }
   /* cargo body with sides, arches and canvas; the rear stays open and shows the seats */
-  function canvasBody(c: VehicleContext, o: any) {
+  function canvasBody(c: VehicleContext, o: { x0: number; x1: number; y0: number; W: number; sideH: number; bowH: number }) {
     const x0 = o.x0,
       x1 = o.x1,
       y0 = o.y0,
@@ -1401,7 +1454,7 @@ export function installMilitary(fx: FleetContext): void {
       return t >= 1 ? yb - 0.05 : yb + (top - yb - 0.25) * Math.min(1, sn * 3) + 0.25 * Math.pow(sn, 3)
     }
     camoNet(c, rear + 0.15, f - len - 0.2, top, 2.5, 0.75, prof)
-    ;(c.militaryCanvasStars || []).forEach(function (st: any) {
+    ;(c.militaryCanvasStars || []).forEach(function (st: Object3D) {
       st.visible = false
       if (st.userData.ring) st.userData.ring.visible = false
     })
@@ -1427,11 +1480,11 @@ export function installMilitary(fx: FleetContext): void {
   }
 
   /* engine bay shifted to one side (front right engine of the armoured vehicles) */
-  function offsetBay(c: VehicleContext, o: any, dz: number) {
+  function offsetBay(c: VehicleContext, o: EngineBayOptions, dz: number) {
     const n0 = c.vehicle.children.length,
       np = c.parts.length
     kit.engineBay(c, o)
-    c.vehicle.children.slice(n0).forEach(function (ob: any) {
+    c.vehicle.children.slice(n0).forEach(function (ob: Object3D) {
       ob.position.z += dz
     })
     c.parts.slice(np).forEach(function (p) {
@@ -1440,7 +1493,7 @@ export function installMilitary(fx: FleetContext): void {
     if (c.meta.bay) c.meta.bay.center.z += dz
   }
   /* protected military headlight: box, headlight and bar grille */
-  function guardedHeadlight(c: VehicleContext, x: number, y: number, z: number, s: number, o?: any) {
+  function guardedHeadlight(c: VehicleContext, x: number, y: number, z: number, s: number, o?: { style?: string; w?: number; h?: number; noPart?: boolean }) {
     o = o || {}
     c.roundBox(0.16, 0.24, 0.32, 0.03, OLIVE_STEEL, x - 0.05, y, z)
     const L = kit.headlight(c, {
@@ -1460,7 +1513,7 @@ export function installMilitary(fx: FleetContext): void {
     return L
   }
   /* generic remote weapon station */
-  function weaponStation(c: VehicleContext, x: number, y: number, z: number, o?: any) {
+  function weaponStation(c: VehicleContext, x: number, y: number, z: number, o?: { mat?: Material }) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, y, z)
@@ -1552,12 +1605,12 @@ export function installMilitary(fx: FleetContext): void {
         kit.holeBox(
           [hood0, 0.9, 0.08],
           [hood1, 2.5, 1.05],
-          function (n: any) {
+          function (n: Vector3) {
             return n.y > 0.3
           },
           'hood',
         ),
-        kit.holeBox([R - 0.3, 0.68, -0.8], [R + 0.3, 1.98, 0.8], function (n: any) {
+        kit.holeBox([R - 0.3, 0.68, -0.8], [R + 0.3, 1.98, 0.8], function (n: Vector3) {
           return n.x < -0.5
         }),
       ]
@@ -1766,7 +1819,7 @@ export function installMilitary(fx: FleetContext): void {
       c.part('station', trl('labels.weapon_station'), null, new V3(0.15, roofY + 0.35, 0.1), 0.6)
       c.part('battery', trl('labels.batteries'), null, new V3(2.5, 1.0, -0.6), 0.6)
       c.part('hull', trl('labels.side_armor'), null, new V3(-1.0, 1.3, W / 2), 1.0, {
-        onHit: function (c2: VehicleContext, pt: any, f: any, dir: any, p: any) {
+        onHit: function (c2: VehicleContext, pt: VehiclePart, f: number, dir: Vector3, p: Vector3) {
           kit.burst(c2, 'spark', c2.toEffects(p || pt.pos), 20, { speed: 3 })
         },
       })
@@ -1817,7 +1870,7 @@ export function installMilitary(fx: FleetContext): void {
       }
     },
   )
-  function guaraniMod(c: VehicleContext, F: number, R: number, W: number, roofY: number, H: any) {
+  function guaraniMod(c: VehicleContext, F: number, R: number, W: number, roofY: number, H: { half(y: number): number }) {
     ;[1, -1].forEach(function (s) {
       slat(c, R + 0.1, F - 1.1, 0.95, 1.8, s * (W / 2 + 0.3))
     })
@@ -1834,7 +1887,7 @@ export function installMilitary(fx: FleetContext): void {
   }
 
   /* turret: plan [x, z] extruded upward (h), with sloped sides (k = how much the top shrinks) */
-  function buildTurret(c: VehicleContext, o: any) {
+  function buildTurret(c: VehicleContext, o: TurretOptions) {
     const sh = new THREE.Shape(),
       pl = o.plan
     pl.forEach(function (p: number[], i: number) {
@@ -1867,7 +1920,7 @@ export function installMilitary(fx: FleetContext): void {
     return m
   }
   /* cannon: tube along +x from x0, with a thermal sleeve (rings), optional fume extractor and muzzle brake */
-  function cannon(c: VehicleContext, x0: number, y: number, z: number, len: number, r: number, o: any) {
+  function cannon(c: VehicleContext, x0: number, y: number, z: number, len: number, r: number, o?: { mat?: Material; sleeve?: boolean; fume?: number; brake?: boolean }) {
     o = o || {}
     const mat = o.mat || paintMat(c, OLIVE)
     const g = new THREE.Group()
@@ -1881,7 +1934,7 @@ export function installMilitary(fx: FleetContext): void {
     if (o.fume) c.cylinder(r * 1.6, r * 1.6, 0.6, mat, len * o.fume, 0, 0, 'x', { parent: g, seg: 18 })
     if (o.fume)
       [0.3, -0.3].forEach(function (d) {
-        c.cylinder(r * 1.15, r * 1.6, 0.12, mat, len * o.fume + d, 0, 0, 'x', { parent: g, seg: 18 }).rotation.z = d > 0 ? -PI / 2 : PI / 2
+        c.cylinder(r * 1.15, r * 1.6, 0.12, mat, len * o.fume! + d, 0, 0, 'x', { parent: g, seg: 18 }).rotation.z = d > 0 ? -PI / 2 : PI / 2
       })
     if (o.brake) {
       c.cylinder(r * 1.6, r * 1.6, 0.32, mat, len + 0.12, 0, 0, 'x', { parent: g, seg: 16 })
@@ -2498,7 +2551,7 @@ export function installMilitary(fx: FleetContext): void {
     },
   )
   /* tank track: double road wheels, toothed sprocket at the back, idler at the front, return rollers */
-  function leopardTrack(c: VehicleContext, o: any) {
+  function leopardTrack(c: VehicleContext, o: { x0: number; x1: number; z: number; w?: number; wheelMat: Material }) {
     const x0 = o.x0,
       x1 = o.x1,
       z = o.z,
@@ -2516,7 +2569,7 @@ export function installMilitary(fx: FleetContext): void {
       rI = 0.27,
       yI = 0.66,
       rr = 0.075
-    function wheel(x: number, y: number, rad: number, opt: any) {
+    function wheel(x: number, y: number, rad: number, opt: { tires?: boolean; teeth?: boolean; spokes?: boolean }) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)
@@ -2633,7 +2686,7 @@ export function installMilitary(fx: FleetContext): void {
      with large wheels under the cockpit, long low tail cone with a tail wheel
      rear: inclined pylon with the tail rotor on the right and a large stabilizer below
      top: two turboshafts side by side in nacelles with the air intake at the front and infrared suppressors turned outward, 4-blade rotor */
-  function boxKeep(x0: number, x1: number, y0: number, y1: number, zw: number, zMin?: any) {
+  function boxKeep(x0: number, x1: number, y0: number, y1: number, zw: number, zMin?: number): CutTest {
     return {
       sdf: function (x: number, y: number, z: number) {
         const d = Math.max(x0 - x, x - x1, y0 - y, y - y1, Math.abs(z) - zw, (zMin || -1) - Math.abs(z))
@@ -2641,14 +2694,14 @@ export function installMilitary(fx: FleetContext): void {
       },
     }
   }
-  function boxCut(x0: number, x1: number, y0: number, y1: number, zw: number, zMin?: any) {
+  function boxCut(x0: number, x1: number, y0: number, y1: number, zw: number, zMin?: number): CutTest {
     return {
       sdf: function (x: number, y: number, z: number) {
         return Math.max(x0 - x, x - x1, y0 - y, y - y1, Math.abs(z) - zw, (zMin || -1) - Math.abs(z))
       },
     }
   }
-  function militaryRotor(c: VehicleContext, x: number, y: number, z: number, n: number, len: number, chord: number, mat: any, o: any) {
+  function militaryRotor(c: VehicleContext, x: number, y: number, z: number, n: number, len: number, chord: number, mat: Material, o?: { axis?: string; phase?: number; th?: number; hub?: number; droop?: number; tip?: Material; hubR?: number; v?: number }) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, y, z)
@@ -2728,7 +2781,7 @@ export function installMilitary(fx: FleetContext): void {
       kit.cutMesh(fus, [wsCut, cockSide, gun, door], 30)
       c.deform.push(fus)
       /* glass moulded into the fuselage itself (cut-out inner loft) */
-      function glass(test: any, label: any, type: string) {
+      function glass(test: CutTest, label: LabelArgument, type: string) {
         const st2 = st.map(function (q) {
           return Object.assign({}, q, { w: q.w * 0.985, h: q.h * 0.985 })
         })
@@ -2923,8 +2976,8 @@ export function installMilitary(fx: FleetContext): void {
         })
         const sphi = Math.sin(((c2.militaryRollSide || 1) * PI) / 2),
           hubH = 1.35
-        mr.children.forEach(function (piv: any, i: number) {
-          if (!piv.isGroup) return
+        mr.children.forEach(function (piv: Object3D, i: number) {
+          if (!(piv as Group).isGroup) return
           const a = mr.rotation.y + piv.rotation.y,
             dz = -Math.sin(a),
             d = dz * sphi
@@ -2949,10 +3002,10 @@ export function installMilitary(fx: FleetContext): void {
         }
       }
       rollover(c, {
-        onStart: function (c2: VehicleContext, A: any) {
+        onStart: function (c2: VehicleContext, A: RollState) {
           A.target = PI / 2
         },
-        onRoll: function (c2: VehicleContext, A: any) {
+        onRoll: function (c2: VehicleContext, A: RollState) {
           if (A.last >= 1 && A.last < 3) A.last = 3
           if (A.t / A.dur > 0.33) breakBlades(c2)
         },
@@ -3031,7 +3084,7 @@ export function installMilitary(fx: FleetContext): void {
       }
     },
   )
-  function blackhawkMod(c: VehicleContext, paint: any) {
+  function blackhawkMod(c: VehicleContext, paint: Material) {
     /* external armament wings with auxiliary tanks, machine guns in the gunner windows, flare launchers */
     const tankM = paintMat(c, '#3a4030')
     ;[1, -1].forEach(function (sd) {

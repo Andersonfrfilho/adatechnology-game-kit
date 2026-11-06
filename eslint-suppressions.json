@@ -69,11 +69,6 @@
       "count": 22
     }
   },
-  "packages/game-vehicles-fleet/src/vehicles/military.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 68
-    }
-  },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 22
