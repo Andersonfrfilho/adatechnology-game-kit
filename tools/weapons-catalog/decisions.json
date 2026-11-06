@@ -7370,6 +7370,80 @@
       },
       "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
       "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "ak_47": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 880,
+        "barrel": 415,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "bayo": 1,
+          "rpm": 600,
+          "rel": 0.4
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+    },
+    "akm": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 880,
+        "barrel": 415,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "rpm": 600,
+          "magMat": "bakelite",
+          "rel": 0.45
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+    },
+    "rpk": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 1040,
+        "barrel": 590,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "bayo": 0,
+          "rpm": 600,
+          "rel": 0.4,
+          "bipod": 1,
+          "magLen": 1.4
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
     }
   },
   "weaponTags": {

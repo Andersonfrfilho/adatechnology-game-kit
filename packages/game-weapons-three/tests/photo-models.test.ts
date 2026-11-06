@@ -57,3 +57,14 @@ describe('the bolt-action rifles with the sporter stock of their photos', () => 
     expect(heightAt(0.17, 0.21)).toBeLessThan(0.1)
   })
 })
+
+describe('the Kalashnikovs with the wedge stock of their photos', () => {
+  it.each(['ak_47', 'akm', 'rpk'])('%s: the stock drops from the receiver to a butt about 12 cm tall', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    const stock = new THREE.Box3()
+    for (const mesh of model.parts.stockMeshes ?? []) stock.union(new THREE.Box3().setFromObject(mesh))
+    const receiver = new THREE.Box3().setFromObject(model.parts.bolt!)
+    expect(stock.max.y - stock.min.y).toBeGreaterThan(0.11)
+    expect(stock.min.y).toBeLessThan(receiver.min.y - 0.08)
+  })
+})

@@ -39,8 +39,8 @@ const sceneOf = (id: string): SceneNodeLike => {
 }
 
 // Owner decision (2026-10-24): the data wins over the page. The S&W 686 holds 7 rounds, so its cylinder draws 7 chambers where the page draws 6 for every revolver.
-// Owner decision (2026-11-06): the models that diverged from the photo of the real weapon are redrawn from it (the Desert Eagle's barrel block, guard and grip; the SVD's thumbhole stock and wooden handguard; the sporter stock of the bolt-action rifles).
-const OWNER_DEVIATIONS: ReadonlySet<string> = new Set(['sw_686', 'desert_eagle_mark_xix', 'svd_dragunov', 'remington_700', 'hunting_rifle_30_06', 'm24_sws', 'steyr_ssg_69'])
+// Owner decision (2026-11-06): the models that diverged from the photo of the real weapon are redrawn from it (the Desert Eagle's barrel block, guard and grip; the SVD's thumbhole stock and wooden handguard; the sporter stock of the bolt-action rifles; the Kalashnikov's wedge stock).
+const OWNER_DEVIATIONS: ReadonlySet<string> = new Set(['sw_686', 'desert_eagle_mark_xix', 'svd_dragunov', 'remington_700', 'hunting_rifle_30_06', 'm24_sws', 'steyr_ssg_69', 'ak_47', 'akm'])
 
 type Recorded = { type: string; data: { index: number; name: string; caliber?: string; length?: number; barrel?: number } }
 

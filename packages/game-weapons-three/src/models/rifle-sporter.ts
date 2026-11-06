@@ -40,3 +40,13 @@ export function buildSporterStock(context: RifleContext, magazineX: number): voi
   swivel(kit, group, forendTip - 0.05, bottom - 0.02)
 }
 
+// The Kalashnikov's wooden stock as the AK-47, AKM and RPK photos show it (Wikimedia Commons): a wedge from the rear of the receiver to the steel buttplate.
+
+/** The wedge: the comb falling a little and the belly falling a lot from the receiver to the butt, the steel buttplate and the sling loop. */
+export function buildKalashnikovStock(context: RifleContext): void {
+  const { kit, group, furniture: furn, stockLength: S, receiverHeight: hR } = context
+  const { M, box } = kit
+  profileSolid(kit, group, [[0.008, -0.034, -0.15], [S * 0.5, -0.014, -0.1], [S + 0.004, hR * 0.2, -hR / 2 - 0.002]], 0.036, furn)
+  box(group, 0.008, 0.118, 0.038, M.metal, 0.004, -0.092, 0, -0.06)
+  box(group, 0.03, 0.006, 0.006, M.metal, 0.11, -0.13, 0.02, 0.3)
+}

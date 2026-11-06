@@ -470,7 +470,7 @@
     "barrel": 415,
     "options": {
       "wood": 1,
-      "stock": "wood",
+      "stock": "ak",
       "mag": "curved",
       "hg": "wood",
       "hgFrac": 0.42,
@@ -490,7 +490,7 @@
     "barrel": 415,
     "options": {
       "wood": 1,
-      "stock": "wood",
+      "stock": "ak",
       "mag": "curved",
       "hg": "wood",
       "hgFrac": 0.42,
@@ -1455,7 +1455,7 @@
     "barrel": 590,
     "options": {
       "wood": 1,
-      "stock": "wood",
+      "stock": "ak",
       "mag": "curved",
       "hg": "wood",
       "hgFrac": 0.42,
@@ -1468,8 +1468,7 @@
       "rel": 0.4,
       "bipod": 1,
       "magLen": 1.4
-    },
-    "variantOf": "ak_47"
+    }
   },
   "sig_mpx": {
     "builder": "rifle",
