@@ -8030,5 +8030,280 @@
         "mount": "rail_bottom"
       }
     ]
+  },
+  {
+    "id": "famas",
+    "name": "FAMAS",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 1000,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 25,
+      "reload": 2.8,
+      "muzzleSpeed": 960,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.99,
+        0.6
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.61,
+    "dimensions": {
+      "length": 0.757,
+      "barrel": 0.488,
+      "emptyMass": 3.61
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "iwi_tavor",
+    "name": "IWI Tavor",
+    "maker": "IWI",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 850,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 910,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.98,
+        0.59
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.27,
+    "dimensions": {
+      "length": 0.72,
+      "barrel": 0.46,
+      "emptyMass": 3.27
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "l85a2",
+    "name": "L85A2",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 940,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.9,
+        0.54
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.82,
+    "dimensions": {
+      "length": 0.785,
+      "barrel": 0.518,
+      "emptyMass": 3.82
+    },
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
+  },
+  {
+    "id": "winchester_1887",
+    "name": "Winchester 1887",
+    "maker": "Winchester",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 109.09,
+      "modes": [
+        "lever"
+      ],
+      "magazine": 5,
+      "reload": 0.6,
+      "perRound": true,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.33,
+        0.39
+      ],
+      "range": 800,
+      "family": "lever",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.6,
+        "perRound": 0.6,
+        "cycle": 0.55,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 1.016,
+      "barrel": 0.508,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "winchester_1894",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   }
 ]
