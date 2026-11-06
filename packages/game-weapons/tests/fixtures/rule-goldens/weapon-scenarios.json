@@ -1466,6 +1466,50 @@
 {"step":"fault","status":"fault","shots":0,"rounds":0,"uses":"","ammo":100,"reserve":300,"heat":0,"events":"fault:misfire@0.98"},
 {"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":99,"reserve":300,"heat":0,"events":"clear:misfire:start@4.6 clear:misfire:end@5.8","status":"none"}
 ]},
+{"id":"sig_sauer_p320","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":17,"reserve":51,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":17,"reserve":51,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":16,"reserve":51,"heat":0,"events":"shot:semi:1/1@1"},
+{"step":"empty","status":"empty","shots":16,"rounds":16,"uses":"","ammo":0,"reserve":51,"heat":0,"events":"shot:semi:1/1×16@4-14.5 empty@15.2"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":17,"reserve":34,"heat":0,"events":"reload:start:empty@18.2 stage:magazine_out@18.2 stage:magazine_in@19.24 stage:charge@19.86 reload:end:empty@20.1"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":17,"reserve":32,"heat":0,"events":"reload:start:tactical@79.6 stage:magazine_out@79.6 stage:magazine_in@80.64 reload:end:tactical@81.5"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":17,"reserve":30,"heat":0,"events":"reload:start:tactical@141 stage:magazine_out@141 stage:magazine_in@142.04 reload:end:tactical@142.9"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":16,"reserve":51,"heat":0,"events":"fault:stovepipe@1 shot:semi:1/1@1"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":16,"reserve":51,"heat":0,"events":"clear:stovepipe:start@4 clear:stovepipe:end@5.2","status":"none"}
+]},
+{"id":"hk_usp","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":45,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":45,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"shot:semi:1/1@1"},
+{"step":"empty","status":"empty","shots":14,"rounds":14,"uses":"","ammo":0,"reserve":45,"heat":0,"events":"shot:semi:1/1×14@4-13.1 empty@13.8"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":30,"heat":0,"events":"reload:start:empty@16.8 stage:magazine_out@16.8 stage:magazine_in@17.84 stage:charge@18.46 reload:end:empty@18.7"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":28,"heat":0,"events":"reload:start:tactical@78.2 stage:magazine_out@78.2 stage:magazine_in@79.24 reload:end:tactical@80.1"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":26,"heat":0,"events":"reload:start:tactical@139.6 stage:magazine_out@139.6 stage:magazine_in@140.64 reload:end:tactical@141.5"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"fault:stovepipe@1 shot:semi:1/1@1"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"clear:stovepipe:start@4 clear:stovepipe:end@5.2","status":"none"}
+]},
+{"id":"walther_p99","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":45,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":45,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:semi","status":"ok","shots":1,"rounds":1,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"shot:semi:1/1@1"},
+{"step":"empty","status":"empty","shots":14,"rounds":14,"uses":"","ammo":0,"reserve":45,"heat":0,"events":"shot:semi:1/1×14@4-13.1 empty@13.8"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":30,"heat":0,"events":"reload:start:empty@16.8 stage:magazine_out@16.8 stage:magazine_in@17.79 stage:charge@18.37 reload:end:empty@18.6"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":28,"heat":0,"events":"reload:start:tactical@78.2 stage:magazine_out@78.2 stage:magazine_in@79.19 reload:end:tactical@80"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":15,"reserve":26,"heat":0,"events":"reload:start:tactical@139.6 stage:magazine_out@139.6 stage:magazine_in@140.59 reload:end:tactical@141.4"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"fault:stovepipe@1 shot:semi:1/1@1"},
+{"step":"clear:started","shots":0,"rounds":0,"uses":"","ammo":14,"reserve":45,"heat":0,"events":"clear:stovepipe:start@4 clear:stovepipe:end@5.2","status":"none"}
+]},
+{"id":"colt_python","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":6,"reserve":18,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":6,"reserve":18,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:single","status":"ok","shots":1,"rounds":1,"uses":"","ammo":5,"reserve":18,"heat":0,"events":"shot:single:1/1@1"},
+{"step":"empty","status":"empty","shots":5,"rounds":5,"uses":"","ammo":0,"reserve":18,"heat":0,"events":"shot:single:1/1×5@4-6.8 empty@7.5"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":6,"reserve":12,"heat":0,"events":"reload:start:one_by_one@10.5 stage:cylinder_open@10.5 feed@11.5 stage:cylinder_eject@11.98 feed×3@12.5-14.5 stage:cylinder_close@15.35 feed×2@15.5-16.5 reload:end:one_by_one@16.5"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":6,"reserve":10,"heat":0,"events":"reload:start:tactical@71.9 stage:cylinder_open@71.9 stage:cylinder_eject@72.49 stage:cylinder_load@73.19 stage:cylinder_close@73.84 reload:end:tactical@74.3"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":6,"reserve":8,"heat":0,"events":"reload:start:one_by_one@133.3 stage:cylinder_open@133.3 stage:cylinder_eject@133.79 feed@134.3 stage:cylinder_close@134.92 feed@135.3 reload:end:one_by_one@135.3"},
+{"step":"fault","status":"misfire","shots":0,"rounds":1,"uses":"","ammo":5,"reserve":18,"heat":0,"events":"misfire@1"},
+{"step":"clear:refused","shots":0,"rounds":0,"uses":"","ammo":5,"reserve":18,"heat":0,"events":"","status":"none"}
+]},
 {"id":"rpg_7","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
 {"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},
