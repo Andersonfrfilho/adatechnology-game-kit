@@ -264,11 +264,6 @@
       "count": 3
     }
   },
-  "packages/game-vehicles/src/explosion.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
   "packages/game-vehicles/src/fluids.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 7

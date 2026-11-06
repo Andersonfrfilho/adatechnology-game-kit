@@ -3,7 +3,7 @@ import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshSt
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
 import type { MaterialOptions, TextTextureOptions } from './materials'
-import type { RollState, VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
+import type { FlyingPiece, RollState, VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
 import type { Kit } from './types'
 import type { ZoneBoxInput } from './zone-core'
 import { clamp, rng } from './util'
@@ -54,6 +54,7 @@ export function installContext(kit: Kit) {
     declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
     declare flipped: boolean
     declare rollState: RollState | null
+    declare flying?: FlyingPiece[]
     /** How far each wheel drops when the zones are applied (flat tyre, broken rim), to settle the body on them. */
     declare zoneDrops: { x: number; z: number; d: number }[]
     declare time: number

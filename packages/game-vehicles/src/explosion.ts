@@ -1,5 +1,7 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
-import type { Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+
+import type { FlyingPiece } from './api'
 
 import type { BuildContext, Kit, SceneNode } from './types'
 
@@ -18,7 +20,7 @@ export function installExplosion(kit: Kit) {
     return makeMaterial(h, { roughness: 1, metalness: i === 3 ? 0.35 : 0.15 })
   })
   const BURNT_RUB: MeshStandardMaterial = makeMaterial('#0b0b0b', { roughness: 1 })
-  function boomMat(hex: any, op: number, add?: any) {
+  function boomMat(hex: ColorRepresentation, op: number, add?: boolean) {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color(hex),
       transparent: true,
@@ -37,7 +39,7 @@ export function installExplosion(kit: Kit) {
     const m = c.meta
     return new V3(m.front - 0.6, (m.clearance || 0.3) + 0.3, 0)
   }
-  kit.explode = function (c: BuildContext, o: any) {
+  kit.explode = function (c: BuildContext, o?: { now?: boolean; delay?: number | null } | null) {
     o = o || {}
     if (c.blast || c.exploded) return false
     const fuse = o.now ? 0 : o.delay != null ? o.delay : 3 + c.rand() * 5
@@ -83,10 +85,10 @@ export function installExplosion(kit: Kit) {
     c.effects.updateMatrixWorld(true)
     holder.attach(obj)
     const sz = bb.getSize(new V3())
-    const piece = { o: holder, v: v, w: w, r: Math.max(0.08, Math.min(sz.x, sz.y, sz.z) * 0.5 + 0.02), landed: false, trail: 2.2 }
+    const piece: FlyingPiece = { o: holder, v: v, w: w, r: Math.max(0.08, Math.min(sz.x, sz.y, sz.z) * 0.5 + 0.02), landed: false, trail: 2.2 }
     c.flying = c.flying || []
     c.flying.push(piece)
-    obj.traverse(function (x: any) {
+    obj.traverse(function (x: Object3D) {
       x.userData.noFollow = true
     })
     const di = c.deform.indexOf(obj as Mesh)
@@ -115,10 +117,10 @@ export function installExplosion(kit: Kit) {
     })
     c.lights.forEach(function (L) {
       L.broken = true
-      L.lens.forEach(function (m: any) {
+      L.lens.forEach(function (m: Object3D) {
         m.visible = false
       })
-      ;(L.halo || []).forEach(function (h: any) {
+      ;(L.halo || []).forEach(function (h: Object3D) {
         h.visible = false
       })
     })
@@ -311,7 +313,7 @@ export function installExplosion(kit: Kit) {
     }
   }
   function tickFlying(c: BuildContext, dt: number) {
-    ;(c.flying || []).forEach(function (P: any) {
+    ;(c.flying || []).forEach(function (P) {
       if (P.landed) {
         if (P.trail > 0) {
           P.trail -= dt
@@ -387,7 +389,7 @@ export function installExplosion(kit: Kit) {
         }
       }
       const fade = F.t < 6 ? 1 : Math.max(0, 1 - (F.t - 6) / 2)
-      F.rings.forEach(function (r: any, i: number) {
+      F.rings.forEach(function (r: Mesh<BufferGeometry, MeshBasicMaterial>, i: number) {
         r.material.opacity = (i % 3 === 1 ? 0.07 : 0.85) * fade * Math.min(1, F.t * 3)
       })
       if (fade <= 0) {

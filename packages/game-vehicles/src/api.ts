@@ -2,7 +2,7 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
-import type { Matrix4, Mesh, Object3D, Vector3 } from 'three'
+import type { Group, Matrix4, Mesh, Object3D, Vector3 } from 'three'
 
 import type { LodSettings } from './lod'
 import type { ZoneBox } from './zone-core'
@@ -142,6 +142,15 @@ export interface RollState {
   hits: number
   thin: RollMesh[]
   y0: number
+}
+/** A part thrown by an explosion (`fling`): its holder, linear and angular velocity, radius, whether it landed and how long it keeps burning. */
+export interface FlyingPiece {
+  o: Group
+  v: Vector3
+  w: Vector3
+  r: number
+  landed: boolean
+  trail: number
 }
 export interface VehicleSpin {
   o: Object3D
