@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 
 import type { HandAnchor } from './hand-hold'
 
-/** How a tool is held in the first-person view: a pistol or a revolver, a rocket launcher, a long gun, or a tool in one hand (a blade, a bat, a grenade, a lighter). */
-export type ViewHoldKind = 'handgun' | 'launcher' | 'long' | 'tool'
+/** How a tool is held in the first-person view: a pistol or a revolver, a rocket launcher, a long gun, a tool in one hand (a blade, a bat, a grenade, a lighter), or a gun carried at the hip (a hand-held rotary gun). */
+export type ViewHoldKind = 'handgun' | 'launcher' | 'long' | 'tool' | 'hip'
 
 type Hold = {
   /** The right hand's grip at the hip, from the eye (x right, y up, -z ahead, metres). */
@@ -26,6 +26,8 @@ export const VIEW_HOLD: Readonly<Record<ViewHoldKind, Hold>> = {
   handgun: { grip: [0.13, -0.15, -0.33], fov: 76, sights: { distance: 0.42, fromRear: 0.02 } },
   launcher: { grip: [0.2, -0.14, -0.3], fov: 84, sights: { distance: 0.18, fromRear: 0.25 } },
   tool: { grip: [0.21, -0.31, -0.36], fov: 84, sights: { distance: 0.3, fromRear: 0.1 }, tilt: 0.3 },
+  // the gun at the hip, its rear grip low and to the right, the barrels ahead of the body; it has no sights to bring to the eye
+  hip: { grip: [0.44, -0.32, -0.42], fov: 84, sights: { distance: 0.6, fromRear: 0.1 } },
 }
 
 /** A gun with no grip anchor: the rear of its bore, from the eye. */

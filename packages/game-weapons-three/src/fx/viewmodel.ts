@@ -444,8 +444,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const family = session.model.parts.family
     session.holderScale = 1
     if (options.firstPerson?.()) {
-      const kind: ViewHoldKind = family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long'
-      const aim = options.aim?.() ?? 0
+      const kind: ViewHoldKind = session.model.parts.carry === 'hip' ? 'hip' : family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long'
+      // a gun carried at the hip has no sights to bring to the eye
+      const aim = kind === 'hip' ? 0 : (options.aim?.() ?? 0)
       placeInView({ THREE, hand, holder, camera, right: hold?.right ?? null, box: restBox, kind, aim, offset: viewMotion(dt, aim) })
       setLens(kind)
       lift = 0
@@ -454,7 +455,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
     setLens(null)
     hand.scale.set(1, 1, 1)
-    placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', right: hold?.right ?? null, left: hold?.left ?? null })
+    placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', hip: session.model.parts.carry === 'hip', right: hold?.right ?? null, left: hold?.left ?? null })
     hand.updateMatrixWorld(true)
     lift += (liftToKeepInView() - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
     if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)

@@ -167,7 +167,7 @@ export const checkWeapons = (): WeaponChecks[] => {
     const onLens = held.layers.mask === 1 << FIRST_PERSON_LAYER
     const camera = (room.camera as THREE.PerspectiveCamera).clone()
     if (onLens) {
-      camera.fov = VIEW_HOLD[row.modelFamily === 'pistol' || row.modelFamily === 'revolver' ? 'handgun' : row.modelFamily === 'rocket' ? 'launcher' : 'long'].fov
+      camera.fov = VIEW_HOLD[row.carry === 'hip' ? 'hip' : row.modelFamily === 'pistol' || row.modelFamily === 'revolver' ? 'handgun' : row.modelFamily === 'rocket' ? 'launcher' : 'long'].fov
       camera.updateProjectionMatrix()
     }
     camera.updateMatrixWorld(true)
