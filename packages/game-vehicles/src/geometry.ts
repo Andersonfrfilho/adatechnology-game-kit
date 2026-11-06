@@ -25,7 +25,7 @@ type Rgb = { r: number; g: number; b: number }
 export type LoftStation = { x: number; y: number; w: number; h: number; p?: number }
 export type HullSpec = { n?: number; L: number; p?: number; beam(t: number): number; keel(t: number): number; sheer(t: number): number }
 /** A corner of a path ([x, y, radius]) or an arc ({ arc: [cx, cy, r, from, to, clockwise] }). */
-export type PathItem = { readonly arc?: readonly number[]; readonly [i: number]: number }
+export type PathItem = { readonly arc?: readonly [number, number, number, number, number, boolean?]; readonly [i: number]: number }
 export type TaperSpec = { sx?: number | null; sz?: number | null; shift?: number }
 export type TumbleSpec = { belt: number; top: number; k: number }
 /** A side window of a truck cab (`holeQuad`): base point, the axes along and across it, the inset, length and the heights at both ends. */
