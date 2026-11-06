@@ -50,7 +50,7 @@ import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
-import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult } from '@adatechnology/game-terrain'
+import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
@@ -148,6 +148,14 @@ const TERRAIN_CELL = 0.1
 const GROUND_SPLASH_MAX_LITRES = 3
 /** Metres per second a body has to hit the water at for a splash. */
 const WATER_ENTRY_SPEED = 1.5
+/** Seconds between two looks at what stands still on the ground. */
+const LOAD_EVERY = 0.2
+/** Metres over the ground a body can be and still stand on it. */
+const RESTING_GAP = 0.06
+const PLAYER_FOOTPRINT = 0.25
+/** Metres per second under which a body counts as standing still. */
+const RESTING_SPEED = 0.3
+const GRAVITY_EARTH = 9.81
 /** A huge arena gets coarser cells, not more memory. */
 const TERRAIN_MAX_CELLS = 1000
 const GROUND_BURST_MAX = 28
@@ -2979,6 +2987,33 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const p of loose) floatPiece(p, dt)
   }
   const footprints = createFootprints(terrain)
+
+  // weight standing still: what rests on bare bars bends them, and a slab over a void gives way under what its bars cannot hold
+  let loadClock = 0
+  const restingLoad = (piece: Piece): TerrainLoad | null => {
+    // what is still weighs on the ground under it, through whatever it rests on (a stack, a shelf); what is falling does not yet
+    if (piece.held || Math.hypot(piece.velocity[0], piece.velocity[1], piece.velocity[2]) > RESTING_SPEED) return null
+    const box = tmpBox.setFromObject(piece.root)
+    const centre = box.getCenter(tmpV)
+    return { x: centre.x, z: centre.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
+  }
+  const updateLoads = (dt: number): void => {
+    loadClock += dt
+    if (loadClock < LOAD_EVERY) return
+    loadClock = 0
+    const loads: TerrainLoad[] = []
+    const [px, py, pz] = player.position
+    if (py - terrain.heightAt(px, pz) <= RESTING_GAP) loads.push({ x: px, z: pz, radius: PLAYER_FOOTPRINT, newtons: playerMass * GRAVITY_EARTH })
+    for (const e of entries.values()) {
+      const load = e.piece ? restingLoad(e.piece) : null
+      if (load) loads.push(load)
+    }
+    for (const p of loose) {
+      const load = restingLoad(p)
+      if (load) loads.push(load)
+    }
+    if (loads.length > 0 && terrain.bear(loads)) action('ground_gave_way', t('act.ground_gave_way'))
+  }
   const prevVy = new Map<string, number>()
   const tmpBox = new THREE.Box3()
 
@@ -3314,6 +3349,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     vfx.update(dt)
     updateImpacts()
     updateWater(dt)
+    updateLoads(dt)
     if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
     filmBridge.update(dt)

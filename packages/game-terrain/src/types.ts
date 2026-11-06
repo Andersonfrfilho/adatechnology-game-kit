@@ -113,7 +113,20 @@ export interface TerrainStratum {
     readonly resistance: number
     /** Joules on one spot of bare bars before they give way (default `DEFAULT_BAR_YIELD_JOULES`). */
     readonly yieldJoules?: number
+    /** Metres across one bar (default `DEFAULT_BAR_DIAMETER`): with `yieldPa` it says what weight bare bars hold. */
+    readonly diameter?: number
+    /** Pascals at which the steel yields (default `DEFAULT_BAR_YIELD_PA`). */
+    readonly yieldPa?: number
   }
+}
+
+/** Weight standing still on the ground: a body, a fridge, a car. */
+export interface TerrainLoad {
+  readonly x: number
+  readonly z: number
+  /** Metres: half the side of the footprint it stands on. */
+  readonly radius: number
+  readonly newtons: number
 }
 
 /** What a column of ground is made of. The strata end at the digging limit: under them nothing is removed. */
@@ -356,6 +369,8 @@ export interface Terrain {
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */
   applyHit(hit: Hit): TerrainBlowResult | null
+  /** What stands still on the ground now. Where it stands over bare bars they sag under it, and past what they hold they give way; a slab over a void then opens. True when it opened. */
+  bear(loads: readonly TerrainLoad[]): boolean
   /** Height a foot stands at: the ground less what it sinks in. */
   footAt(x: number, z: number): number
   /** What is left of the walking speed here, 0..1. */

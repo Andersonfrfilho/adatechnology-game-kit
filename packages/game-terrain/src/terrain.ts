@@ -1,10 +1,10 @@
 import type { Hit } from '@adatechnology/game-contracts'
-import { DEFAULT_BAR_YIELD_JOULES, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
+import { DEFAULT_BAR_DIAMETER, DEFAULT_BAR_YIELD_JOULES, DEFAULT_BAR_YIELD_PA, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
 import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
+import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -28,6 +28,8 @@ const RIGID_WIDENING = 2.5
 /** Bars alone do not drop a slab that still has this share of its concrete to lose. */
 const COLLAPSE_DEPTH_SHARE = 0.75
 const COLLAPSE_SPREAD_BEND = 0.5
+/** Metres around a weight over which bare bars share it with the weights beside it. */
+const BARS_SHARE_REACH = 0.6
 const RIM_REACH = 1.45
 /** Under this temperature (°C) a flame does nothing to the ground. */
 const FLAME_MINIMUM = 200
@@ -613,20 +615,109 @@ export function createTerrain(options: TerrainOptions): Terrain {
         }
       }
     }
-    if (collapsed) emitDeform(x, z, reach)
-    // what gave way takes down what was already bending around it
-    if (collapsed && profile.drop !== undefined) {
-      for (let row = row0; row <= row1; row++) {
-        for (let column = column0; column <= column1; column++) {
-          const index = row * stride + column
-          if (barBend[index]! >= COLLAPSE_SPREAD_BEND && dug[index]! < limit + profile.drop) {
-            dug[index] = limit + profile.drop
-            touchVertex(column, row)
-          }
+    if (collapsed) giveWay({ x, z, reach, profile })
+    return collapsed
+  }
+
+  /** What gave way takes down what was already bending around it, and what stood there must look again. */
+  function giveWay(spec: { x: number; z: number; reach: number; profile: TerrainProfile }): void {
+    const { x, z, reach, profile } = spec
+    emitDeform(x, z, reach)
+    if (profile.drop === undefined) return
+    const limit = maxDepthOfProfile(profile)
+    const column0 = clampIndex(Math.floor((x - reach - x0) / cellSize), columns)
+    const column1 = clampIndex(Math.ceil((x + reach - x0) / cellSize), columns)
+    const row0 = clampIndex(Math.floor((z - reach - z0) / cellSize), rows)
+    const row1 = clampIndex(Math.ceil((z + reach - z0) / cellSize), rows)
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const index = row * stride + column
+        if (barBend[index]! >= COLLAPSE_SPREAD_BEND && dug[index]! < limit + profile.drop) {
+          dug[index] = limit + profile.drop
+          touchVertex(column, row)
         }
       }
     }
-    return collapsed
+  }
+
+  /** Depth under the surface of the bars of a profile, and the stratum that holds them. */
+  function barsOf(profile: TerrainProfile): { stratum: TerrainStratum; cover: number } | null {
+    const bars = profile.strata.find((stratum) => stratum.reinforcement)
+    if (!bars?.reinforcement) return null
+    let cover = bars.reinforcement.cover
+    for (const stratum of profile.strata) {
+      if (stratum === bars) break
+      cover += stratum.thickness
+    }
+    return { stratum: bars, cover }
+  }
+
+  /**
+   * Weights on bare bars. Each bar over the hole works as a beam that yields at its plastic moment fy·d³/6; the bars of a mesh crossing a hole of any size hold 8·Mp/spacing
+   * on a spot, so the bend is the weight over that. Weights over the same bars add up (a stack, things side by side). The share of a footprint on intact concrete is carried
+   * by the concrete. Bars do not spring back: the bend only grows.
+   */
+  function bearAll(loads: readonly TerrainLoad[]): boolean {
+    const bends = new Map<number, number>()
+    const touched: { load: TerrainLoad; reach: number; profile: TerrainProfile }[] = []
+    for (const load of loads) {
+      const spread = spreadLoad(load, bends)
+      if (spread) touched.push({ load, ...spread })
+    }
+    let opened = false
+    for (const [index, bend] of bends) {
+      if (barBend[index]! >= bend) continue
+      barBend[index] = bend
+      const column = index % stride
+      const row = (index - column) / stride
+      touchVertex(column, row)
+      const profile = profileList[profileIndex[index]!]!
+      const limit = maxDepthOfProfile(profile)
+      if (bend >= 1 && profile.drop !== undefined && dug[index]! >= limit * COLLAPSE_DEPTH_SHARE && dug[index]! < limit + profile.drop) {
+        dug[index] = limit + profile.drop
+        opened = true
+      }
+    }
+    if (opened) for (const { load, reach, profile } of touched) giveWay({ x: load.x, z: load.z, reach, profile })
+    return opened
+  }
+
+  /** Adds the bend one weight gives the bare bars under it to `bends`; null where it stands on no bare bars. */
+  function spreadLoad(load: TerrainLoad, bends: Map<number, number>): { reach: number; profile: TerrainProfile } | null {
+    if (!contains(load.x, load.z) || load.newtons <= 0) return null
+    const profile = profileList[profileIndex[vertexOf(load.x, load.z).index]!]!
+    const bars = barsOf(profile)
+    if (!bars) return null
+    const reinforcement = bars.stratum.reinforcement!
+    const moment = ((reinforcement.yieldPa ?? DEFAULT_BAR_YIELD_PA) * (reinforcement.diameter ?? DEFAULT_BAR_DIAMETER) ** 3) / 6
+    const holds = (8 * moment) / reinforcement.spacing
+    // the footprint of a box reaches its corners: a disc of its half side would leave them standing on the slab
+    const footprint = load.radius * Math.SQRT2 + cellSize
+    // and the bars of a hole carry together what stands on it: weights side by side add up as a stack does
+    const reach = Math.max(footprint, BARS_SHARE_REACH)
+    const column0 = clampIndex(Math.floor((load.x - reach - x0) / cellSize), columns)
+    const column1 = clampIndex(Math.ceil((load.x + reach - x0) / cellSize), columns)
+    const row0 = clampIndex(Math.floor((load.z - reach - z0) / cellSize), rows)
+    const row1 = clampIndex(Math.ceil((load.z + reach - z0) / cellSize), rows)
+    const bare: number[] = []
+    let under = 0
+    let onBars = 0
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const distance = Math.hypot(x0 + column * cellSize - load.x, z0 + row * cellSize - load.z)
+        if (distance >= reach) continue
+        const index = row * stride + column
+        const isBare = dug[index]! >= bars.cover
+        if (isBare) bare.push(index)
+        if (distance >= footprint) continue
+        under++
+        if (isBare) onBars++
+      }
+    }
+    if (onBars === 0) return null
+    const bend = (load.newtons * (onBars / under)) / holds
+    for (const index of bare) bends.set(index, (bends.get(index) ?? 0) + bend)
+    return { reach, profile }
   }
 
   const maxDepthOfProfile = (profile: TerrainProfile): number => maxDepthOf[indexOfProfile.get(profile.id)!]!
@@ -921,6 +1012,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     strike,
     burn,
     applyHit,
+    bear: bearAll,
     onDeform(listener) {
       deformListeners.add(listener)
       return () => deformListeners.delete(listener)
