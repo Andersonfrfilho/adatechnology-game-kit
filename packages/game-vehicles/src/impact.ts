@@ -135,7 +135,7 @@ export function installImpact(kit: Kit) {
             ch.rotation.x += i % 2 ? 0.2 : -0.2
           }
         })
-        c.spin = c.spin.filter(function (s: any) {
+        c.spin = c.spin.filter(function (s) {
           return s.o !== o
         })
       }

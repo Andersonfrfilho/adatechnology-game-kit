@@ -169,7 +169,7 @@ export function installExplosion(kit: Kit) {
     B.rz = (c.rand() - 0.5) * 0.35
     c.exploded = true
     c.engineHealth = 0
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind !== 'exhaust'
     })
     /* flash, fireball, smoke, shock wave on the ground */
@@ -246,10 +246,10 @@ export function installExplosion(kit: Kit) {
     /* a wheel is bolted to its hub: the tyres burn, no wheel flies off */
     burnAll(c)
     /* low fire that stays on the shell */
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind === 'exhaust' ? false : true
     })
-    c.emitters.forEach(function (e: any) {
+    c.emitters.forEach(function (e) {
       if (e.kind === 'fire') e.rate = Math.min(e.rate, 7)
     })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 8, s: 0.8 })

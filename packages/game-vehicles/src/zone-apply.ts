@@ -1,5 +1,5 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
-import type { Material, Mesh } from 'three'
+import type { HSL, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
@@ -14,19 +14,19 @@ export function installZoneApply(kit: Kit) {
 
   /* ---- applying all zones ---- */
   function fadePaint(c: BuildContext) {
-    const cache2 = new Map()
+    const cache2 = new Map<Material, MeshStandardMaterial>()
     c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || !c.paints || !c.paints.has(o.material as Material)) return
-      let nm2 = cache2.get(o.material)
+      let nm2 = cache2.get(o.material as Material)
       if (!nm2) {
-        nm2 = (o.material as Material).clone()
-        const hsl: any = {}
+        nm2 = (o.material as MeshStandardMaterial).clone()
+        const hsl = {} as HSL
         nm2.color.getHSL(hsl)
         nm2.color.setHSL(hsl.h, hsl.s * 0.45, Math.min(0.75, hsl.l * 0.9 + 0.08))
         nm2.color.lerp(RUST, 0.12)
         nm2.roughness = 0.96
         nm2.metalness = 0.05
-        cache2.set(o.material, nm2)
+        cache2.set(o.material as Material, nm2)
       }
       o.material = nm2
     })
@@ -49,7 +49,7 @@ export function installZoneApply(kit: Kit) {
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 5, s: 0.6 })
     kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 4, s: 0.55 })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 3, s: 1.3 })
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind !== 'exhaust'
     })
     c.burnt = true
@@ -59,7 +59,7 @@ export function installZoneApply(kit: Kit) {
     if (!D || !D.length || (['boat', 'plane', 'heli'].indexOf(c.meta.kind) >= 0 && c.meta.kind !== 'plane')) return
     const WH = I.wheelInfo(c)
     if (!WH) return
-    const P = function (w: any) {
+    const P = function (w: Object3D): Vector3 {
       return w.userData.gpos || w.position
     } /* a wheel that went inside a pivot (broken gear) keeps its original position */
     const xs = WH.list.map(function (w) {
@@ -68,25 +68,25 @@ export function installZoneApply(kit: Kit) {
     const zs2 = WH.list.map(function (w) {
       return P(w).z
     })
-    const dAt = function (w: any) {
-      const q = D.filter(function (e: any) {
+    const dAt = function (w: Object3D) {
+      const q = D.filter(function (e) {
         return Math.abs(e.x - P(w).x) < 0.01 && Math.abs(e.z - P(w).z) < 0.01
       })
       return q.length
         ? Math.max.apply(
             null,
-            q.map(function (e: any) {
+            q.map(function (e) {
               return e.d
             }),
           )
         : 0
     }
     const xc =
-      xs.reduce(function (s: any, v: any) {
+      xs.reduce(function (s: number, v: number) {
         return s + v
       }, 0) / xs.length
     const zc =
-      zs2.reduce(function (s: any, v: any) {
+      zs2.reduce(function (s: number, v: number) {
         return s + v
       }, 0) / zs2.length
     let sxx = 0
@@ -119,7 +119,7 @@ export function installZoneApply(kit: Kit) {
     c.vehicle.rotation.x += -Math.asin(clamp(Bz, -0.5, 0.5))
     c.vehicle.position.y += t - A * xc - Bz * zc
   }
-  kit.applyZones = function (c: BuildContext, zs: any) {
+  kit.applyZones = function (c: BuildContext, zs?: { health?: Record<string, number>; flags?: Record<string, unknown> } | null) {
     const Zs = I.zonesOf(c)
     zs = zs || {}
     const H = zs.health || {}

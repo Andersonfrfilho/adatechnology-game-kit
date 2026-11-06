@@ -54,6 +54,8 @@ export function installContext(kit: Kit) {
     declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
     declare flipped: boolean
     declare rollState: RollState | null
+    /** How far each wheel drops when the zones are applied (flat tyre, broken rim), to settle the body on them. */
+    declare zoneDrops: { x: number; z: number; d: number }[]
     declare time: number
     declare rand: () => number
     constructor(state: string, seed?: number) {

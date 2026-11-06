@@ -266,7 +266,7 @@
   },
   "packages/game-vehicles/src/explosion.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 11
+      "count": 8
     }
   },
   "packages/game-vehicles/src/fluids.ts": {
@@ -281,7 +281,7 @@
   },
   "packages/game-vehicles/src/impact.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 9
+      "count": 8
     }
   },
   "packages/game-vehicles/src/interior.ts": {
@@ -327,11 +327,6 @@
   "packages/game-vehicles/src/wheels.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 5
-    }
-  },
-  "packages/game-vehicles/src/zone-apply.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 11
     }
   },
   "packages/game-vehicles/tests/crease.test.ts": {
