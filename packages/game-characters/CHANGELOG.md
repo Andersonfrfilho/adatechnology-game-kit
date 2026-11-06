@@ -1,5 +1,12 @@
 # @adatechnology/game-characters
 
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies [c8b0e40]
+  - @adatechnology/game-contracts@0.26.0
+
 ## 0.2.11
 
 ### Patch Changes

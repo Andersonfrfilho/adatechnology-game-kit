@@ -1,5 +1,33 @@
 # @adatechnology/game-test-room
 
+## 0.27.0
+
+### Minor Changes
+
+- 9a44330: Synthesized sounds measured from the recordings. `@adatechnology/game-audio/fitted` holds the fitted copy of every recorded sound but the vehicles (band gain curves and ringing partials per take, measured by `tools/sfx-sources/fit.mjs`), and `registerFittedSounds(engine)` puts them in place of the older hand-made recipes of the same ids, so a door, a shot or a footstep stays close to its recording where the files are missing or still loading. The test room registers them; the weapons play the fitted shot, reload step and case under the recorded id (`played.kind === 'fitted'`) instead of the synthesized layers until the files load.
+
+  The kit ships its default recorded sounds again: the 1050 CC0 and CC-BY takes in `@adatechnology/game-audio/assets/sfx/<categoria>/` (credits in `CREDITOS.md`), and `pointSamples(engine, files, { baseUrl })` lets a game play its own files for any id (the id keeps the kit's numbers) without touching the kit. Git takes only the manifest's CC0 and CC-BY files there.
+
+### Patch Changes
+
+- 2933abd: `impactSoundIds()` lists every sound a blow, ricochet or break on a material plays; the test room preloads them on the first key or click, so the first ricochet off a wall plays the recording instead of the synthesized recipe.
+- Updated dependencies [dbc0ef3]
+- Updated dependencies [2933abd]
+- Updated dependencies [9a44330]
+- Updated dependencies [c8b0e40]
+  - @adatechnology/game-destruction@0.18.0
+  - @adatechnology/game-destruction-three@0.17.0
+  - @adatechnology/game-audio@0.9.0
+  - @adatechnology/game-contracts@0.26.0
+  - @adatechnology/game-terrain@0.3.1
+  - @adatechnology/game-fluids@0.5.1
+  - @adatechnology/game-fluids-three@0.4.13
+  - @adatechnology/game-player@0.5.4
+  - @adatechnology/game-runtime@0.2.4
+  - @adatechnology/game-terrain-three@0.4.1
+  - @adatechnology/game-vfx-three@0.7.1
+  - @adatechnology/game-weapons@0.7.1
+
 ## 0.26.0
 
 ### Minor Changes

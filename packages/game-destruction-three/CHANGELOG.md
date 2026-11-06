@@ -1,5 +1,21 @@
 # @adatechnology/game-destruction-three
 
+## 0.17.0
+
+### Minor Changes
+
+- 2933abd: `impactSoundIds()` lists every sound a blow, ricochet or break on a material plays; the test room preloads them on the first key or click, so the first ricochet off a wall plays the recording instead of the synthesized recipe.
+
+### Patch Changes
+
+- Updated dependencies [dbc0ef3]
+- Updated dependencies [9a44330]
+- Updated dependencies [c8b0e40]
+  - @adatechnology/game-destruction@0.18.0
+  - @adatechnology/game-audio@0.9.0
+  - @adatechnology/game-contracts@0.26.0
+  - @adatechnology/game-vfx-three@0.7.1
+
 ## 0.16.0
 
 ### Minor Changes

@@ -1,5 +1,16 @@
 # @adatechnology/game-destruction
 
+## 0.18.0
+
+### Minor Changes
+
+- dbc0ef3: A bullet that skims masonry now skips off it like on steel: concrete (12°), brick (10°), stone and cobble (15°), paver (12°), mortar and asphalt (8°) get a ricochet angle. Plaster, soil and sand still take the round.
+
+### Patch Changes
+
+- Updated dependencies [c8b0e40]
+  - @adatechnology/game-contracts@0.26.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @adatechnology/game-fluids
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [c8b0e40]
+  - @adatechnology/game-contracts@0.26.0
+
 ## 0.5.0
 
 ### Minor Changes
