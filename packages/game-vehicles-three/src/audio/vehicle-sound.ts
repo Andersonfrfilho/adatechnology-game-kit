@@ -1,5 +1,6 @@
 import type { AudioSink, LoopHandle, Vec3 } from '@adatechnology/game-contracts'
 
+import type { EngineBudget } from './engine-budget'
 import { createGearGuess, engineMix } from './engine-mix'
 import { CAR_ENGINE, CRASH_SPEEDS, DEFAULT_VEHICLE_SOUND_KEYS } from './profiles'
 import type { EngineProfile, VehicleSoundKeys } from './profiles'
@@ -17,6 +18,12 @@ export type VehicleSoundFrame = {
   readonly slip?: number
   /** What the tyres are on: `dirt` for earth, gravel, sand or grass; anything else squeals as asphalt. */
   readonly surface?: 'asphalt' | 'dirt'
+  /** 0..1, how hard the brakes are pressed: the pads squeal as the car comes to a stop without skidding. */
+  readonly brake?: number
+  /** An emergency vehicle's siren: `wail` sweeps 650–1500 Hz in ~4 s, `yelp` in a quarter second; absent or `off`, silent. */
+  readonly siren?: 'off' | 'wail' | 'yelp'
+  /** 0..1, how fast a helicopter's rotor turns (the blades spool up and down with it). */
+  readonly rotor?: number
 }
 
 export type VehicleSoundOptions = {
@@ -25,6 +32,8 @@ export type VehicleSoundOptions = {
   readonly sounds?: Partial<VehicleSoundKeys>
   /** Seconds the starter turns before the engine catches (the `engine_start` recipe catches at 0.75 s). */
   readonly crankSeconds?: number
+  /** Shared by the vehicles of a scene: only the nearest few keep their loops (`createEngineBudget`). */
+  readonly budget?: EngineBudget
 }
 
 /** What was asked of the sink, for the checks and the bench: the RPM in use and the level of each loop. */
@@ -41,6 +50,8 @@ export type VehicleSound = {
   stop(position: Vec3): void
   /** A hit at `speed` m/s: light, medium or heavy by speed, louder with it. */
   crash(speed: number, position: Vec3): 'light' | 'medium' | 'heavy'
+  /** A body hit at `speed` m/s (a person, an animal; `sound` names another id, a zombie in a game), louder with the speed. */
+  hit(speed: number, position: Vec3, sound?: string): void
   update(frame: VehicleSoundFrame): void
   readonly reading: VehicleSoundReading
   dispose(): void
@@ -58,9 +69,12 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
   const crankSeconds = options.crankSeconds ?? 0.75
   const gears = createGearGuess(profile)
   const loops = new Map<string, LoopHandle>()
+  const budget = options.budget
+  // the key the budget knows this vehicle by
+  const self = {}
   const levels: Record<string, number> = {}
   // running: the engine turns; cranking counts down the starter; flare is the RPM the engine overshoots to as it catches
-  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0 }
+  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0, sirenPhase: 0 }
 
   const loopOf = (sound: string): LoopHandle | undefined => {
     let handle = loops.get(sound)
@@ -97,6 +111,11 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
       play(kind === 'heavy' ? keys.crashHeavy : kind === 'medium' ? keys.crashMedium : keys.crashLight, position, Math.min(1, 0.35 + v / 20))
       return kind
     },
+    hit(speed, position, sound) {
+      const v = Math.abs(speed)
+      if (v < 0.5) return
+      play(sound ?? keys.hitBody, position, Math.min(1, 0.3 + v / 15))
+    },
     update(frame) {
       if (state.cranking > 0) {
         state.cranking -= frame.dt
@@ -111,22 +130,38 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
       // as it catches the engine overshoots to ~2.2× idle and settles back
       const rpm = state.running ? Math.max(driven, profile.idleRpm * (1 + 1.2 * state.flare * state.flare)) : 0
       state.rpm = rpm
+      // out of the budget (too many vehicles nearer the listener) every loop goes quiet; the state above keeps running so it comes back in step
+      const heard = budget ? (budget.admit(self, frame.position) ? 1 : 0) : 1
       for (const layer of engineMix(profile, { rpm, throttle: Math.max(throttle, state.flare * 0.6) })) {
-        setLoop(layer.sound, layer.volume, frame.position, { ...(layer.frequency === undefined ? {} : { frequency: layer.frequency }), cutoff: layer.cutoff })
+        setLoop(layer.sound, heard * layer.volume, frame.position, { ...(layer.frequency === undefined ? {} : { frequency: layer.frequency }), cutoff: layer.cutoff })
       }
       const speed = Math.abs(frame.speed)
       // a slide squeals once the slip passes ~15% and the car moves; on dirt it is a hiss, not a squeal
       const slide = clamp01(((frame.slip ?? 0) - 0.15) / 0.5) * clamp01(speed / 4)
       const dirt = frame.surface === 'dirt'
-      setLoop(keys.skidAsphalt, dirt ? 0 : 0.16 * slide, frame.position, { cutoff: 1700 + 600 * slide })
-      setLoop(keys.skidDirt, dirt ? 0.2 * slide : 0, frame.position, { cutoff: 500 + 500 * slide })
+      setLoop(keys.skidAsphalt, heard * (dirt ? 0 : 0.16 * slide), frame.position, { cutoff: 1700 + 600 * slide })
+      setLoop(keys.skidDirt, heard * (dirt ? 0.2 * slide : 0), frame.position, { cutoff: 500 + 500 * slide })
       // road noise grows with the speed and gets brighter
-      setLoop(keys.roll, 0.06 * clamp01(speed / 25), frame.position, { cutoff: 250 + 45 * Math.min(speed, 40) })
+      setLoop(keys.roll, heard * 0.06 * clamp01(speed / 25), frame.position, { cutoff: 250 + 45 * Math.min(speed, 40) })
+      // the pads squeal in the last metres of a stop on the brakes, while the tyres still grip (a skid is the tyres' sound, not the pads')
+      const squeal = clamp01(((frame.brake ?? 0) - 0.3) / 0.4) * clamp01(speed / 0.8) * clamp01((5 - speed) / 2) * (slide > 0 ? 0 : 1)
+      setLoop(keys.brakeSqueal, heard * 0.05 * squeal, frame.position, { cutoff: 3200 + 400 * squeal })
+      // the siren's sweep is a triangle in time: up and down between 650 and 1500 Hz
+      const siren = frame.siren ?? 'off'
+      if (siren !== 'off' || loops.has(keys.siren)) {
+        const period = siren === 'yelp' ? 0.25 : 4
+        state.sirenPhase = (state.sirenPhase + frame.dt / period) % 1
+        const tri = state.sirenPhase < 0.5 ? state.sirenPhase * 2 : 2 - state.sirenPhase * 2
+        setLoop(keys.siren, heard * (siren === 'off' ? 0 : 0.07), frame.position, { frequency: 650 + 850 * tri, cutoff: 2600 })
+      }
+      const rotor = clamp01(frame.rotor ?? 0)
+      setLoop(keys.rotor, heard * 0.12 * rotor, frame.position, { cutoff: 180 + 220 * rotor })
     },
     get reading() {
       return { running: state.running, rpm: state.rpm, levels: { ...levels } }
     },
     dispose() {
+      budget?.release(self)
       for (const handle of loops.values()) handle.stop()
       loops.clear()
     },

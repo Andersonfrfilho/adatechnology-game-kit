@@ -1,5 +1,58 @@
 # @adatechnology/game-test-room
 
+## 0.26.0
+
+### Minor Changes
+
+- 8c11843: The first shot or blast on a wall no longer builds shader programs in play. `wallPiece` gives `warmUpProbes(THREE)`: the wall drawn with one brick shot out of it (the breach's shell and its bare bricks, instanced, lit and in the shadows), for a host to draw once at load; its `dispose` frees geometries and textures and leaves the materials to the host's warmup, which keeps the programs alive. A room's `SceneryObject` takes `warmUpProbes`, and the room draws them with its other probes; the test room passes the target wall's.
+- d9f3302: The shot leaves the muzzle of the weapon drawn in the hands. `ModuleHost.setMuzzleSource` (with `MuzzlePose` and `MuzzleSource`) lends the host the muzzle of the tool the module draws: the weapons module gives the `muzzle` mark of the gallery model (or the front end of the generic prop, where a flame or an extinguisher's foam also leaves), and the test room starts the tracers there and, when the module draws its own muzzle flash, draws none of its own. Before, the room flashed and drew its tracers from a fixed point ahead of the eye, away from the weapon, while the module flashed at the real muzzle.
+- e507329: The weapon picker. `weaponMenu(arsenal)` lists the whole arsenal by group (firearms, melee weapons, explosives, tools) and category, sorted by name and with each brand weapon's maker; `genericWeapons` and `realLoadout` name the generic guns (the `9 mm service pistol`) and the real weapon that stands for each. The test room opens the picker with the key left of 1 (or its Armas button): a click equips the weapon and adds it to the hotbar, a search finds a weapon by name or maker in every group, and the default hotbar holds the real weapons instead of the generic guns.
+
+  The explosives of the weapons gallery are ported (`buildExplosiveModel`: the M67, the molotov, the pipe bomb, the dynamite, the C4, the Claymore and the flashbang), so the throwables are drawn with their own model in the hands, on the counters and in flight (`projectileModel`) instead of the box of the generic prop. The M79 gets the gallery's model with a break action that folds down to load one grenade, a grenade launcher no longer fires a rocket's backblast, the claw hammer takes the item model of the hammer, and the pt-BR names of the weapons that showed in English are translated.
+
+- 78e76b0: More grounds to stand on, each with its own answer to a blow: mud, gravel, dry clay, snow, cobblestones, concrete pavers and shallow water. The room's default page lays a lot of every ground with its sign. Fixes the player standing twice as deep in a hole and twice as high on a heap.
+
+### Patch Changes
+
+- 63adb4c: The hand foley of the test room plays the recorded takes: `KIT_SAMPLE_ALIASES` points `door_wood_close` and `door_wood_slam` at the wooden door shut and slam files and the item pickups (metal, plastic, glass, wood, fabric) at the pickup files, and the room preloads those ids (`HAND_RECORDED_IDS`) on the first key or click. Taking an item now plays one sound, the item's class: the second `grab_*` sound that played with it at the same moment is gone.
+- 9e84e19: The gun in the first-person view is held at the hip instead of shouldered beside the eye. The view's own pose (`VIEW_HOLD`, used when the host says the view is the player's eye: `firstPerson`, which the weapons area reads from `ModuleHost.player().cameraMode`) puts the grip low and right where the right hand reaches, a handgun's higher and nearer the middle and a rocket launcher's on the shoulder, with the barrel parallel to the aim, so the sights stay below the crosshair and the muzzle points at it. The body still shoulders the gun in third person. The test room reports its real camera mode to the modules (it always said `first`).
+- 78f764d: A body thrown into something finds what stopped it: the slam's ray reaches the far side of the footprint just ahead (a steel sheet on its stand stopped the body 0.6 m from the panel, past the fixed 0.65 m reach by one walk step) and, when it misses at the shoulder or the hip, sweeps the footprint's height (the panel floats above the hip once the blast has taken its posts). Before, whether the slam named the wall depended on how much of the blast's destruction the frame budget had applied when the body arrived, so it changed with the machine and the Node version.
+- 296efd7: What lay on a support that is gone falls. A sleeping piece looks under it again, a few each update in turn, and wakes when none of its lowest points has the ground,
+  a piece or a fixed top under it (the cans on a table whose legs broke, a book on a shelf that fell over); a fragment asleep over a ground that dropped does the same.
+  Furniture that lost the parts it stood on is loose: with every leg broken the top comes down, with the legs of one end gone it goes over, and a piece that lost a part
+  is the box of what is left of it. In the test room, a module's counter that became a piece no longer holds things up where it stood.
+- Updated dependencies [fb985db]
+- Updated dependencies [6c3877d]
+- Updated dependencies [d9f3302]
+- Updated dependencies [5a66d40]
+- Updated dependencies [e0aaf22]
+- Updated dependencies [61a4a79]
+- Updated dependencies [54a1bcb]
+- Updated dependencies [e587c5d]
+- Updated dependencies [63adb4c]
+- Updated dependencies [1495684]
+- Updated dependencies [02b8ea2]
+- Updated dependencies [0e1bb14]
+- Updated dependencies [bf407ec]
+- Updated dependencies [e59b4d4]
+- Updated dependencies [e507329]
+- Updated dependencies [296efd7]
+- Updated dependencies [78e76b0]
+- Updated dependencies [33c09f1]
+  - @adatechnology/game-contracts@0.25.0
+  - @adatechnology/game-destruction@0.17.0
+  - @adatechnology/game-destruction-three@0.16.0
+  - @adatechnology/game-terrain@0.3.0
+  - @adatechnology/game-vfx@0.8.0
+  - @adatechnology/game-vfx-three@0.7.0
+  - @adatechnology/game-weapons@0.7.0
+  - @adatechnology/game-audio@0.8.0
+  - @adatechnology/game-terrain-three@0.4.0
+  - @adatechnology/game-fluids@0.5.0
+  - @adatechnology/game-fluids-three@0.4.12
+  - @adatechnology/game-player@0.5.3
+  - @adatechnology/game-runtime@0.2.3
+
 ## 0.25.2
 
 ### Patch Changes

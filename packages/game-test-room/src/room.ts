@@ -4,7 +4,7 @@ import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
@@ -326,7 +326,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const preload = (): void => {
         window.removeEventListener('keydown', preload, true)
         window.removeEventListener('pointerdown', preload, true)
-        void audio.loadSamples([...HAND_RECORDED_IDS]).catch(() => undefined)
+        // the hand's sounds and every impact, ricochet and break: the first ricochet off a wall plays the recording, not the recipe
+        void audio.loadSamples([...HAND_RECORDED_IDS, ...impactSoundIds()]).catch(() => undefined)
       }
       window.addEventListener('keydown', preload, true)
       window.addEventListener('pointerdown', preload, true)

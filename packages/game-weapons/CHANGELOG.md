@@ -1,5 +1,23 @@
 # @adatechnology/game-weapons
 
+## 0.7.0
+
+### Minor Changes
+
+- 0e1bb14: Every gun closes the view in when it aims, not only one with a scope. `rules.aim.ironSightZoom` gives the iron-sight zoom of each weapon category (1.1x for a handgun up to 1.4x for a marksman or sniper rifle with no optic) and `aimZoomOf(arsenal, weapon, attachments)` answers the zoom of a weapon: the optic fitted (the AUG's integral 1.5x, an ACOG 4x), else the iron sights of its category. The right mouse button of the weapons area aims every firearm and launcher by it.
+- e507329: The weapon picker. `weaponMenu(arsenal)` lists the whole arsenal by group (firearms, melee weapons, explosives, tools) and category, sorted by name and with each brand weapon's maker; `genericWeapons` and `realLoadout` name the generic guns (the `9 mm service pistol`) and the real weapon that stands for each. The test room opens the picker with the key left of 1 (or its Armas button): a click equips the weapon and adds it to the hotbar, a search finds a weapon by name or maker in every group, and the default hotbar holds the real weapons instead of the generic guns.
+
+  The explosives of the weapons gallery are ported (`buildExplosiveModel`: the M67, the molotov, the pipe bomb, the dynamite, the C4, the Claymore and the flashbang), so the throwables are drawn with their own model in the hands, on the counters and in flight (`projectileModel`) instead of the box of the generic prop. The M79 gets the gallery's model with a break action that folds down to load one grenade, a grenade launcher no longer fires a rocket's backblast, the claw hammer takes the item model of the hammer, and the pt-BR names of the weapons that showed in English are translated.
+
+### Patch Changes
+
+- e0aaf22: The `pdw` tags of the FN P90 and the HK MP7A1 and the break-action model of the M79 are decisions of the catalogue (`weaponTags` and `weaponModels` in `tools/weapons-catalog/decisions.json`), so the generated `firearms.json` and `models.json` keep them: they had been written into the generated files by hand, and the catalogue check failed.
+- Updated dependencies [fb985db]
+- Updated dependencies [d9f3302]
+- Updated dependencies [61a4a79]
+- Updated dependencies [78e76b0]
+  - @adatechnology/game-contracts@0.25.0
+
 ## 0.6.0
 
 ### Minor Changes

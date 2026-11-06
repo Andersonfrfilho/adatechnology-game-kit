@@ -433,6 +433,7 @@
     "floor": 60
    }
   },
+  "ricochetDeg": 12,
   "hitDebris": "chips",
   "breakDebris": "dust",
   "visual": { "innerColor": 10197652 },
@@ -464,6 +465,7 @@
    0.04,
    0.12
   ],
+  "ricochetDeg": 10,
   "hitDebris": "chips",
   "breakDebris": "dust",
   "visual": { "innerColor": 12085567 },
@@ -521,6 +523,7 @@
    0.06,
    0.3
   ],
+  "ricochetDeg": 15,
   "hitDebris": "chips",
   "breakDebris": "dust",
   "visual": { "innerColor": 9407364 },
@@ -949,6 +952,7 @@
    0.03,
    0.15
   ],
+  "ricochetDeg": 8,
   "hitDebris": "chips",
   "breakDebris": "dust",
   "thermal": {
@@ -1048,6 +1052,7 @@
    0.02,
    0.08
   ],
+  "ricochetDeg": 8,
   "hitDebris": "chips",
   "breakDebris": "dust",
   "thermal": {
@@ -1142,6 +1147,7 @@
       0.05,
       0.15
     ],
+    "ricochetDeg": 15,
     "hitDebris": "chips",
     "breakDebris": "chips",
     "thermal": {
@@ -1167,6 +1173,7 @@
       0.04,
       0.12
     ],
+    "ricochetDeg": 12,
     "hitDebris": "chips",
     "breakDebris": "chips",
     "thermal": {

@@ -21,7 +21,7 @@ import { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
 import type { EffectsLike, VehiclesContext, VehiclesTestFleet, VehiclesTestOptions } from './types'
 import { createVehicleSound } from '../audio/vehicle-sound'
 import type { VehicleSound } from '../audio/vehicle-sound'
-import { VEHICLE_SOUND_BANK } from '../audio/bank'
+import { VEHICLE_PRELOAD_SOUNDS, VEHICLE_SOUND_BANK } from '../audio/bank'
 
 export const VEHICLES_AREA_ID = 'vehicles_area'
 
@@ -437,6 +437,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
             throttle: input.throttle,
             ...(semiState ? { rpm: semiState.rpm, slip: Math.max(0, ...semiState.slip.map(Math.abs)) } : { slip: braking && speed > 3 ? 0.6 : 0 }),
             surface: /dirt|gravel|sand|grass|mud/.test(settings.surface) ? 'dirt' : 'asphalt',
+            brake: input.brake,
           })
         }
         state.exhaust -= dt
@@ -606,6 +607,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
       lent.audio?.register?.(VEHICLE_SOUND_BANK)
+      // the recordings of the car (when the game has them) decode now, so the first door opened or engine started is already the file
+      lent.audio?.preload?.(VEHICLE_PRELOAD_SOUNDS)
       return () => {
         stopChange?.()
         stopFrame()

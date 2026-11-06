@@ -223,6 +223,24 @@ describe('ballistic', () => {
     expect(types(g.events)).toContain('ricochet')
   })
 
+  it('ricochets off grazing masonry, not off plaster or soil', () => {
+    // a 9 mm round that skims a wall at ~6° skips off concrete, brick and stone (real ones do below ~10-15°); square on it chips it
+    for (const material of ['concrete', 'brick', 'stone', 'cobble', 'paver']) {
+      const w = createDestruction()
+      const id = w.add(plate(material, 1, 1, 0.1))
+      const g = w.hit(id, { type: 'ballistic', point: [0, 0.2, 0.05], direction: [0, -1, -0.1], energy: 500, caliber: 9 })
+      expect(types(g.events), material).toContain('ricochet')
+      const s = w.hit(id, { type: 'ballistic', point: [0, -0.2, 0.05], direction: [0, -0.2, -1], energy: 500, caliber: 9 })
+      expect(types(s.events), material).not.toContain('ricochet')
+    }
+    for (const material of ['plaster', 'soil', 'sand']) {
+      const w = createDestruction()
+      const id = w.add(plate(material, 1, 1, 0.1))
+      const g = w.hit(id, { type: 'ballistic', point: [0, 0.2, 0.05], direction: [0, -1, -0.1], energy: 500, caliber: 9 })
+      expect(types(g.events), material).not.toContain('ricochet')
+    }
+  })
+
   it('shoot goes through several parts and keeps the exit energy', () => {
     const w = createDestruction()
     w.add(plate('wood_soft', 1, 1, 0.01), { id: 'a' })

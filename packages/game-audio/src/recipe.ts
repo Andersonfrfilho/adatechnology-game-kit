@@ -226,6 +226,11 @@ export type SoundBank = {
 export type SampleAlias = {
   readonly id: string
   readonly file: string
+  /**
+   * Keep only the takes whose url contains this (`_01.`): a trim measured on one recording must not land on another take of the same file id,
+   * which may be longer and hold something else at that time.
+   */
+  readonly only?: string
   readonly offset?: number
   readonly duration?: number
   readonly loop?: SampleSound['loop']

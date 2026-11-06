@@ -145,7 +145,10 @@ export type AudioEngine = {
   plan(id: string, options?: PlayOptions): SoundPlan | null
   /** Pure: the plan a sample sound would play with (no round-robin memory), from `options.seed` or the engine seed. */
   planSample(id: string, options?: PlayOptions): SamplePlan | null
-  /** Loads the files of these sample sounds (default all registered). Creates the context; resolves when every file is decoded or failed. */
+  /**
+   * Loads the files of these sample sounds (default all registered). Creates the context; resolves when every file is decoded or failed. An id named
+   * here that has no files yet (its manifest not registered) loads as soon as a bank that resolves it registers.
+   */
   loadSamples(ids?: readonly string[]): Promise<SampleLoadReport>
   /** `ready` when every file of the sound is decoded. */
   sampleStatus(id: string): SampleStatus
@@ -413,6 +416,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return set ? chooser.pick(set, random) : { id, rate: 1 }
   }
 
+  // ids `loadSamples` was asked for that had no files yet: they load when a bank that resolves them registers
+  const wanted = new Set<string>()
   const loadSounds = (sounds: readonly SampleSound[]): Promise<SampleLoadReport> => {
     const audio = ready()
     if (!audio) return Promise.resolve({ loaded: [], failed: sounds.flatMap(sampleUrls).map((url) => ({ url, error: 'no audio context' })) })
@@ -551,13 +556,21 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
 
   return {
     registry,
-    register: (bank) => registry.register(bank),
+    register: (bank) => {
+      registry.register(bank)
+      // ids asked for before their files were known (a module preloading as it loads, the manifest still on its way) load as soon as they resolve
+      if (wanted.size === 0) return
+      const now = [...wanted].map((id) => registry.sample(id)).filter((sample): sample is SampleSound => sample !== undefined)
+      for (const sample of now) wanted.delete(sample.id)
+      if (now.length > 0) void loadSounds(now).catch(() => undefined)
+    },
     plan: (id, playOptions = {}) => planWith(id, playOptions, createRng(playOptions.seed ?? seed)),
     planSample(id, playOptions = {}) {
       const sample = registry.sample(id)
       return sample ? planSample(sample, sampleInput(playOptions, createRng(playOptions.seed ?? seed), false)) : null
     },
     loadSamples(ids) {
+      for (const id of ids ?? []) if (!registry.sample(id)) wanted.add(id)
       const chosen = (ids ?? registry.sampleIds()).map((id) => registry.sample(id)).filter((sample): sample is SampleSound => sample !== undefined)
       return loadSounds(chosen)
     },

@@ -1,5 +1,39 @@
 # @adatechnology/game-destruction-three
 
+## 0.16.0
+
+### Minor Changes
+
+- 02b8ea2: Madeira se despedaça pelo jeito que é feita (`MaterialDef.splitForm`): madeira maciça em lascas pontiagudas de vários tamanhos ao longo da fibra, e o toco de tábua quebrada com a ponta rasgada; compensado em farpas finas e lâminas que se separam em camadas; MDF em torrões granulados, sem fibra. O renderizador desenha lasca, toco rasgado, torrão e lâmina com poucas geometrias compartilhadas por forma; o resto continua caixa.
+
+### Patch Changes
+
+- fb985db: A blast breaks a masonry wall only where it reaches: the units within the circle its reach cuts on the wall (by the cube root of the energy and of how much the wall resists) come out with a ragged edge, the units past it are loosened for the next blow, and what the hole leaves with nothing under it comes down (`unsupportedCells`: the triangle over the hole, all that hangs at a free end). The rest of the wall stands, and later shots and blasts keep cutting it. A blast loosens a long joint only over the stretch it breaks, so a grenade no longer opens the bed of a ten-metre wall and drops it whole. Everything a blast knocks out comes in one `chip` with `units` (new optional field), painted once by the house renderer. The ground takes the soot of a blast's fireball by its material (`fire.maxScorch`: concrete soots, turf chars).
+- 61a4a79: Cover counts in a blast's push as it stood when the blast went off, and for light things too. `blastShove` takes the cover's share off the speed after the cap (`sqrt(reach) * min(maxSpeed, ...)`): a bottle behind a kitchen cupboard was thrown at the cap like one in the open, since a P13 gives a 0.5 kg body far more than the cap; in the open nothing changes. The destruction renderer reads the cover of each piece and shoveable body when a part of the world goes off, before the blast tears the cupboard apart or throws the stove into the line. The P13 push scenario reads the cover at the same moment and at the middle of what is drawn of each body, and bounds what a sheltered body may move by its share of what one of its kind went in the open nearer the blast.
+- 54a1bcb: A wall that comes down after the house drew its holes no longer leaves as an invisible piece: the house renderer keeps the plain positions of the ranges it collapses (`userData.plainPositions`), and the destruction renderer draws them again when the part leaves the mesh (`showCollapsedRanges`, and `extract` for ranges of a merged mesh). The fallen wall is drawn where the world has it, so shots hit only what is drawn and its bullet marks stay on it instead of floating in the air.
+- e587c5d: The renderer never drops an event that changes what is drawn. A blast floods the event queue with damage, melt and drip events; past its cap the queue now keeps taking breaks, collapses, detaches, fires and leaks, and drops only the cosmetic ones, so a wall the solver brought down is never left drawn standing.
+- e59b4d4: Bare rebar no longer hangs in the air: a part's cage is drawn as a child of the drawing of its object, so a beam or a wall that comes down (a split piece) takes its bars with it, and a cage that gives way (`expose` with no bars) drops its bars as steel debris that falls, lies on the ground and stays there with a body (`FragmentSystem.spawn` with `lasting`). Bars still held by concrete stay where they are and keep bending under load.
+- 296efd7: What lay on a support that is gone falls. A sleeping piece looks under it again, a few each update in turn, and wakes when none of its lowest points has the ground,
+  a piece or a fixed top under it (the cans on a table whose legs broke, a book on a shelf that fell over); a fragment asleep over a ground that dropped does the same.
+  Furniture that lost the parts it stood on is loose: with every leg broken the top comes down, with the legs of one end gone it goes over, and a piece that lost a part
+  is the box of what is left of it. In the test room, a module's counter that became a piece no longer holds things up where it stood.
+- Updated dependencies [fb985db]
+- Updated dependencies [6c3877d]
+- Updated dependencies [d9f3302]
+- Updated dependencies [5a66d40]
+- Updated dependencies [61a4a79]
+- Updated dependencies [63adb4c]
+- Updated dependencies [1495684]
+- Updated dependencies [02b8ea2]
+- Updated dependencies [bf407ec]
+- Updated dependencies [78e76b0]
+- Updated dependencies [33c09f1]
+  - @adatechnology/game-contracts@0.25.0
+  - @adatechnology/game-destruction@0.17.0
+  - @adatechnology/game-vfx@0.8.0
+  - @adatechnology/game-vfx-three@0.7.0
+  - @adatechnology/game-audio@0.8.0
+
 ## 0.15.4
 
 ### Patch Changes

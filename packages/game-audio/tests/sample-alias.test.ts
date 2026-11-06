@@ -1,7 +1,7 @@
 import { createAudioRecorder } from '@adatechnology/golden-tool'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { TRIM_FADE, createAudioEngine, createSoundRegistry, loopRate } from '../src'
+import { TRIM_FADE, createAudioEngine, createAudioSink, createSoundRegistry, loopRate } from '../src'
 import type { LoopRecipe, SampleSound, SoundBank, SoundRecipe } from '../src'
 
 // a manifest file id, and a package that plays it under its own ids: a loop that follows a frequency, and a one-shot cut out of the file
@@ -56,6 +56,13 @@ describe('sample aliases', () => {
     }
   })
 
+  it('only keeps the takes a trim was measured on, and an alias that keeps none is nothing', () => {
+    const two: SampleSound = { ...START, close: [{ url: 'run_01.ogg' }, { url: 'run_02.ogg' }] }
+    const cut = (only: string) => createSoundRegistry([{ id: 'files', samples: [two] }, { id: 'p', sampleAliases: [{ id: 'cut', file: START.id, only, offset: 9.96 }] }]).sample('cut')
+    expect(cut('_01.')?.close).toEqual([{ url: 'run_01.ogg', offset: 9.96 }])
+    expect(cut('_09.')).toBeUndefined()
+  })
+
   it('without the file the alias is nothing, and a sample of its own id wins', () => {
     const registry = createSoundRegistry([PACKAGE])
     expect(registry.sample('engine_test_low')).toBeUndefined()
@@ -103,5 +110,25 @@ describe('sample aliases', () => {
     const levels = entries.filter((entry) => entry.op === 'param' && entry.param === 'gain' && entry.method === 'setTargetAtTime').map((entry) => entry.args?.[0] as number)
     expect(levels.at(-1)).toBeCloseTo(0.5 / (1 + 1600 * 0.002), 6)
     loop.stop()
+  })
+})
+
+describe('the sink preloads', () => {
+  it('an id preloaded before its files are known loads as soon as the manifest registers', async () => {
+    const { engine } = engineWith([PACKAGE])
+    const sink = createAudioSink(engine)
+    sink.preload?.(['engine_test_start'])
+    expect(engine.sampleStatus('engine_test_start')).toBe('none')
+    engine.register(FILES)
+    await vi.waitFor(() => expect(engine.sampleStatus('engine_test_start')).toBe('ready'))
+  })
+
+  it('preload decodes the files of the ids a module names, so their first play is the recording', async () => {
+    const { engine } = engineWith([FILES, PACKAGE])
+    const sink = createAudioSink(engine)
+    expect(engine.sampleStatus('engine_test_start')).toBe('none')
+    sink.preload?.(['engine_test_start', 'no_such_sound'])
+    await vi.waitFor(() => expect(engine.sampleStatus('engine_test_start')).toBe('ready'))
+    expect(engine.play('engine_test_start')?.kind).toBe('sample')
   })
 })

@@ -3,7 +3,7 @@ import { MATERIALS } from '@adatechnology/game-destruction'
 import type { MaterialDef } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
-import { DESTRUCTION_SOUND_BANK, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundKeys, ricochetSoundKeys } from '../src'
+import { DESTRUCTION_SOUND_BANK, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundIds, impactSoundKeys, ricochetSoundKeys } from '../src'
 
 // Checklist 5.3: the sound of a blow on a material follows the material and the kind of blow, not only one of five families.
 const def = (id: string): MaterialDef => {
@@ -67,5 +67,14 @@ describe('ricochet by material', () => {
     expect(rico('steel')).toBe('ricochet_metal')
     expect(rico('concrete')).toBe('ricochet_stone')
     expect(rico('glass')).toBe('ping')
+  })
+
+  it('the preload list has every sound a blow, ricochet or break plays, each once', () => {
+    const ids = impactSoundIds()
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const rule of Object.values(IMPACT_SOUND_KEYS)) expect(ids, rule.sound).toContain(rule.sound)
+    expect(ids).toContain('ricochet_stone')
+    expect(ids).toContain('ricochet_metal')
+    expect(impactSoundIds({ a: { sound: 'x', above: { volume: 0.5, sound: 'y' }, fallback: 'z' } })).toEqual(['x', 'y', 'z'])
   })
 })

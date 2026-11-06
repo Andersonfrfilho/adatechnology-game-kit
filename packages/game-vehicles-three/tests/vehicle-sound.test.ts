@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
 import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
 import type { SampleSound } from '@adatechnology/game-audio'
-import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
+import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -142,7 +142,81 @@ describe('createVehicleSound', () => {
     car.update({ dt: 1, position: [0, 0, 0], speed: 3, throttle: 1 })
     expect(car.crash(30, [0, 0, 0])).toBe('heavy')
     const ids = new Set([...(VEHICLE_SOUND_BANK.sounds ?? []).map((s) => s.id), ...(VEHICLE_SOUND_BANK.loops ?? []).map((l) => l.id)])
-    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', 'brake_squeal', 'vehicle_hit_pedestrian', 'siren', 'helicopter_rotor_loop', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+  })
+})
+
+describe('brakes, hits and many vehicles', () => {
+  const running = (sink: AudioSink, options = {}) => {
+    const car = createVehicleSound(sink, options)
+    car.start([0, 0, 0])
+    car.update({ dt: 1, position: [0, 0, 0], speed: 0, throttle: 0 })
+    return car
+  }
+
+  it('the pads squeal in the last metres of a stop on the brakes, never while the tyres skid, at full speed or standing still', () => {
+    const { sink, sets } = fakeSink()
+    const car = running(sink)
+    const squeal = (speed: number, brake: number, slip = 0): number => {
+      car.update({ dt: 0.016, position: [0, 0, 0], speed, throttle: 0, brake, slip })
+      return lastOf(sets, 'brake_squeal')?.volume ?? 0
+    }
+    expect(squeal(2, 1)).toBeGreaterThan(0.03)
+    expect(squeal(2, 0)).toBe(0)
+    expect(squeal(12, 1)).toBe(0)
+    expect(squeal(2, 1, 0.9)).toBe(0)
+    expect(squeal(0, 1)).toBe(0)
+  })
+
+  it('a body hit plays louder with the speed, a game may name its own sound, and a touch at walking pace is silent', () => {
+    const { sink, played } = fakeSink()
+    const car = createVehicleSound(sink)
+    car.hit(4, [1, 0, 0])
+    car.hit(14, [1, 0, 0])
+    car.hit(10, [1, 0, 0], 'game_hit_zombie')
+    car.hit(0.2, [1, 0, 0])
+    expect(played.map((p) => p.sound)).toEqual(['vehicle_hit_pedestrian', 'vehicle_hit_pedestrian', 'game_hit_zombie'])
+    expect(played[1]?.volume).toBeGreaterThan(played[0]?.volume as number)
+  })
+
+  it('the siren sweeps 650–1500 Hz (wail in ~4 s, yelp in a quarter second) and goes quiet when off; the rotor follows its speed', () => {
+    const { sink, sets } = fakeSink()
+    const car = createVehicleSound(sink)
+    const sweep = (mode: 'wail' | 'yelp', seconds: number): number[] => {
+      const out: number[] = []
+      for (let t = 0; t < seconds; t += 0.01) {
+        car.update({ dt: 0.01, position: [0, 0, 0], speed: 10, throttle: 0, siren: mode })
+        out.push(lastOf(sets, 'siren')?.frequency as number)
+      }
+      return out
+    }
+    const wail = sweep('wail', 4)
+    expect(Math.min(...wail)).toBeLessThan(700)
+    expect(Math.max(...wail)).toBeGreaterThan(1450)
+    const yelp = sweep('yelp', 0.25)
+    expect(Math.max(...yelp) - Math.min(...yelp)).toBeGreaterThan(700)
+    car.update({ dt: 0.01, position: [0, 0, 0], speed: 10, throttle: 0, siren: 'off', rotor: 0.5 })
+    expect(lastOf(sets, 'siren')?.volume).toBe(0)
+    expect(lastOf(sets, 'helicopter_rotor_loop')?.volume).toBeCloseTo(0.06, 6)
+  })
+
+  it('with a budget only the nearest vehicles keep their loops; one that comes closer takes the place of the farthest', () => {
+    const budget = createEngineBudget({ max: 2, listener: () => [0, 0, 0] })
+    const cars = [10, 20, 30].map((x) => {
+      const { sink, sets } = fakeSink()
+      return { car: running(sink, { budget }), sets, x }
+    })
+    const frame = (): void => cars.forEach(({ car, x }) => car.update({ dt: 0.016, position: [x, 0, 0], speed: 0, throttle: 0 }))
+    const heard = (): boolean[] => cars.map(({ sets }) => (lastOf(sets, 'engine_car_low')?.volume ?? 0) > 0)
+    frame()
+    frame()
+    expect(heard()).toEqual([true, true, false])
+    cars[2]!.x = 5
+    frame()
+    frame()
+    expect(heard()).toEqual([true, false, true])
+    cars[0]!.car.dispose()
+    expect(budget.size).toBe(2)
   })
 })
 
@@ -153,7 +227,8 @@ describe('car recordings by reference', () => {
     samples: ['engine_loop_car_idle', 'engine_loop_car_high', 'engine_start_run_stop', 'car_door_shut', 'car_trunk_shut', 'car_door_open'].map((id) => ({
       id,
       bus: 'world' as const,
-      close: [{ url: `veiculos/${id}_01.ogg` }],
+      // the start/run/stop file has two takes, as in the manifest: _02 is longer and starts already running
+      close: id === 'engine_start_run_stop' ? [{ url: `veiculos/${id}_01.ogg` }, { url: `veiculos/${id}_02.ogg` }] : [{ url: `veiculos/${id}_01.ogg` }],
       sources: ['test'],
     })),
   }
@@ -172,8 +247,12 @@ describe('car recordings by reference', () => {
     }
     expect(registry.sample('engine_start')?.close[0]).toMatchObject({ url: 'veiculos/engine_start_run_stop_01.ogg', ...CAR_START_RUN_STOP.start })
     expect(registry.sample('engine_stop')?.close[0]).toMatchObject(CAR_START_RUN_STOP.stop)
+    // the cut points are of take _01: the longer _02 never plays as the start or the stop
+    for (const id of ['engine_start', 'engine_stop']) expect(registry.sample(id)?.close.map((ref) => ref.url), id).toEqual(['veiculos/engine_start_run_stop_01.ogg'])
     expect(registry.sample('car_door_close')?.close[0]?.url).toBe('veiculos/car_door_shut_01.ogg')
     expect(registry.sample('car_trunk_close')?.close[0]?.url).toBe('veiculos/car_trunk_shut_01.ogg')
+    // every recording the vehicles area decodes up front is a sample once the files are there
+    for (const id of VEHICLE_PRELOAD_SOUNDS) expect(registry.sample(id), id).toBeDefined()
     // without recordings (no game folder, CI) every vehicle id is still its recipe
     const bare = createSoundRegistry([VEHICLE_SOUND_BANK])
     for (const alias of VEHICLE_SAMPLE_ALIASES) {
