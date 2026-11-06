@@ -25,7 +25,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
-import { BODY_HOLD, createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
+import { BODY_HOLD, createEyeFrame, limitSupportSpan, placeOnBody, placeStowed } from './body-hold'
 import { placeInView, toWorldLens, VIEW_HOLD } from './view-hold'
 import type { ViewHoldKind } from './view-hold'
 import type { FxLayers } from './layers'
@@ -37,7 +37,7 @@ import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
 import { createClipEventHandler } from './viewmodel-events'
 import { handWorkOf, workWeights } from './hand-work'
-import { HAND_HOLD, holdOfModel, oneHandHold, targetsOf } from './hand-hold'
+import { HAND_HOLD, holdOfModel, mirrorAnchor, oneHandHold, poseOf, targetsOf } from './hand-hold'
 import type { HandAnchor, Hold } from './hand-hold'
 
 const PI = Math.PI
@@ -118,6 +118,8 @@ export interface Viewmodel {
   setCondition(condition: string): void
   /** Where the hands take the weapon now (world space), or null with nothing in the hands. The right hand sits on the grip, the left on the forend, and goes to the magazine while it is changed. */
   handTargets(): HandTargets | null
+  /** Where the other hand goes to change this gun's magazine with a tool in each hand (the magazine well, world space), or null. */
+  supportTarget(): HandPose | null
   /** The muzzle of the model in the hands now (the gallery's `muzzle` mark, world space) and the way the barrel points; null with nothing in the hands or a model with no muzzle. */
   muzzle(): MuzzlePose | null
   readonly inHand: string | null
@@ -462,7 +464,29 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
     return Math.max(0, Math.min(HAND_IN_VIEW.max, needed))
   }
+  // how far the tool is put away against the body (`HostTool.stowed`), 0 in the hand to 1 tucked in the belt, eased over the rule's `stowSeconds`
+  let stowK = 0
+  const stowFrom = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion(), holder: new THREE.Vector3() }
   const place = (dt = 0): void => {
+    placeHeld(dt)
+    stow(dt)
+  }
+  const stow = (dt: number): void => {
+    const want = options.tool?.().stowed === true ? 1 : 0
+    const seconds = Math.max(0.05, arsenal.rules.dualWield.stowSeconds)
+    stowK = want > stowK ? Math.min(want, stowK + dt / seconds) : Math.max(want, stowK - dt / seconds)
+    if (stowK <= 0 || !session) return
+    stowFrom.position.copy(hand.position)
+    stowFrom.quaternion.copy(hand.quaternion)
+    stowFrom.holder.copy(holder.position)
+    placeStowed({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), anchor: heldAnchor(heldHold()), ...(side === 'L' ? { mirror: true } : {}) })
+    const k = ease(stowK)
+    hand.position.lerpVectors(stowFrom.position, hand.position, k)
+    hand.quaternion.slerpQuaternions(stowFrom.quaternion, hand.quaternion.clone(), k)
+    holder.position.lerpVectors(stowFrom.holder, holder.position, k)
+    hand.updateMatrixWorld(true)
+  }
+  const placeHeld = (dt = 0): void => {
     if (!session) return
     const family = session.model.parts.family
     session.holderScale = 1
@@ -636,10 +660,21 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       hand.updateMatrixWorld(true)
       const targets = targetsOf(THREE, held, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, held.works ? workWeights(held.works, player?.running ?? []) : undefined)
       const trigger = session.model.parts.trigger
-      // a gun carried at the hip fires by the thumb on its spade grip: the whole hand, the index too, closes on the handle; the contract curls the right hand's index finger, the left one closes with its grip
+      // a gun carried at the hip fires by the thumb on its spade grip: the whole hand, the index too, closes on the handle; any other gun: the index finger of the hand that holds it, on its trigger
       if (session.model.parts.carry === 'hip') targets.fingers = { index: 1 }
-      else if (trigger && side === 'R') targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      else if (trigger) {
+        const index = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+        if (side === 'R') targets.fingers = index
+        else targets.fingersL = index
+      }
       return limitSupportSpan(targets)
+    },
+    supportTarget() {
+      // the other hand on the magazine well: the place the supporting hand of a two-hand hold takes for a new magazine (mirrored for the left hand's gun)
+      const anchor = hold?.leftMagazine ?? hold?.left ?? null
+      if (!session || !anchor) return null
+      hand.updateMatrixWorld(true)
+      return poseOf(side === 'L' ? mirrorAnchor(anchor) : anchor, session.model.root.getWorldQuaternion(rootQuaternion))
     },
     get inHand() {
       return session?.id ?? null

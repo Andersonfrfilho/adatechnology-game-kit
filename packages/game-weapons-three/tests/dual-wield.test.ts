@@ -150,7 +150,8 @@ describe('a weapon in each hand', () => {
     run(room, 0.3)
     expect(fireWhenReady(() => room.useOff(), room)).toBe('ok')
     room.reload()
-    room.update(1 / 60)
+    // the left gun is tucked away first, to free the hand that changes the right one's magazine
+    run(room, 0.5)
     expect(room.tool.reloading).toBe(true)
     expect(room.offTool!.reloading).toBe(false)
     let seconds = 0
@@ -158,7 +159,7 @@ describe('a weapon in each hand', () => {
       room.update(0.05)
       seconds += 0.05
     }
-    room.update(0.05)
+    run(room, 1.2)
     expect(room.offTool!.reloading).toBe(true)
     run(room, 6)
     expect(room.tool.ammo).toBe(room.tool.capacity)
@@ -179,6 +180,60 @@ describe('a weapon in each hand', () => {
     const targets = room.handState().targets
     // one pistol again: both hands on its grip
     expect(at(targets?.R).distanceTo(at(targets?.L))).toBeLessThan(0.1)
+    room.dispose()
+  })
+
+  it.each(VIEWS)('%s: a magazine change frees a hand: the other weapon is tucked low against the body, the free hand goes to the magazine well and back', (view) => {
+    const room = makeRoom()
+    room.setCameraMode(view)
+    twoOf(room, 'glock_17')
+    room.look([0, 1.6, 2], [0, 1.2, -11])
+    expect(fireWhenReady(() => room.use(), room)).toBe('ok')
+    run(room, 0.3)
+    expect(fireWhenReady(() => room.useOff(), room)).toBe('ok')
+    run(room, 0.3)
+    const held = heldModels(room)
+    const sideX = (node: THREE.Object3D): number => sideOf(room, boxOf(node).getCenter(new THREE.Vector3()))
+    const [rightGun, leftGun] = [...held].sort((a, b) => sideX(b) - sideX(a))
+    const leftRestY = boxOf(leftGun!).getCenter(new THREE.Vector3()).y
+    room.reload()
+    // the left gun tucked (0.45 s) and the right one reloading: the left hand on the right gun's magazine well
+    run(room, 0.8)
+    expect(room.tool.reloading).toBe(true)
+    expect(boxOf(leftGun!).getCenter(new THREE.Vector3()).y).toBeLessThan(leftRestY - 0.15)
+    const leftPalm = at(room.handState().targets?.L)
+    expect(boxOf(rightGun!).distanceToPoint(leftPalm)).toBeLessThan(0.05)
+    expect(boxOf(leftGun!).distanceToPoint(leftPalm)).toBeGreaterThan(0.1)
+    expect(room.useOff()).toBe('reloading')
+    // then the right gun is tucked and the right hand changes the left one's magazine
+    let seconds = 0
+    while (!(room.offTool!.reloading) && seconds < 6) {
+      run(room, 0.1)
+      seconds += 0.1
+    }
+    run(room, 0.3)
+    const rightPalm = at(room.handState().targets?.R)
+    expect(boxOf(leftGun!).distanceToPoint(rightPalm)).toBeLessThan(0.05)
+    run(room, 6)
+    const targets = room.handState().targets
+    expect(boxOf(rightGun!).distanceToPoint(at(targets?.R))).toBeLessThan(PALM_ON_GRIP)
+    expect(boxOf(leftGun!).distanceToPoint(at(targets?.L))).toBeLessThan(PALM_ON_GRIP)
+    expect(Math.abs(boxOf(leftGun!).getCenter(new THREE.Vector3()).y - leftRestY)).toBeLessThan(0.02)
+    expect(room.tool.ammo).toBe(room.tool.capacity)
+    expect(room.offTool!.ammo).toBe(room.offTool!.capacity)
+    room.dispose()
+  })
+
+  it('the index finger of the left hand is on its trigger and curls when that hand fires', () => {
+    const room = makeRoom()
+    twoOf(room, 'glock_17')
+    room.look([0, 1.6, 2], [0, 1.2, -11])
+    run(room, 2)
+    expect(room.handState().targets?.fingersL?.index ?? 1).toBeLessThan(0.1)
+    expect(fireWhenReady(() => room.useOff(), room)).toBe('ok')
+    room.update(1 / 60)
+    expect(room.handState().targets?.fingersL?.index ?? 0).toBeGreaterThan(0.45)
+    expect(room.handState().targets?.fingers?.index ?? 1).toBeLessThan(0.1)
     room.dispose()
   })
 })

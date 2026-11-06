@@ -87,6 +87,8 @@ export const DEFAULT_RULES: WeaponRules = {
     exclude: [],
     spread: 1.8,
     recoil: 1.35,
+    // tucking a pistol in the belt and drawing it back is a short motion of one hand
+    stowSeconds: 0.45,
   },
   // Arsenal §08/§11: coronha retrátil saca mais rápido, mais recuo; os números são padrões aprovados pelo dono (2026-10-24)
   stock: {

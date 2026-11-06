@@ -34,6 +34,7 @@ import { createExplosives } from './explosives'
 import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
+import { createDualReload } from './dual-reload'
 import { createLoading } from './loading'
 import { createRoomGraphics } from './graphics'
 import type { RoomGraphics } from './graphics'
@@ -488,8 +489,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let offTool: WeaponState | null = null
   let offHeld = false
   let offFirst = false
-  // R with a tool in each hand: the left one reloads once the right one is done (one hand holds the other weapon)
-  let offReloadQueued = false
+  // the hand that fired last: Q (fire mode) and B (safety) act on its weapon with a tool in each hand
+  let firedHand: ToolHand = 'R'
 
   const catalogMap = new Map<string, TestRoomItem>()
   for (const i of options.catalog) catalogMap.set(i.id, i)
@@ -1364,9 +1365,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     tools.clear()
     tool = toolState(toolId)
     // a scenario starts from one tool in the right hand
+    dualReload.cancel()
     offTool = null
     offToolId = null
-    offReloadQueued = false
+    firedHand = 'R'
     if (pristineWorld) {
       for (const id of world.ids()) world.remove(id)
       world.load(pristineWorld)
@@ -2417,6 +2419,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** The tool of a hand: the right one is the tool in hand, the left one is there only with a tool in each hand. */
   const toolOf = (hand: ToolHand): { readonly id: string; readonly state: WeaponState } | null =>
     hand === 'L' ? (offTool && offToolId ? { id: offToolId, state: offTool } : null) : { id: toolId, state: tool }
+  const dualReload = createDualReload(
+    {
+      needs: (hand) => {
+        const state = toolOf(hand)?.state
+        return state !== undefined && (state.def.action.kind === 'firearm' || state.def.action.kind === 'launcher') && state.ammo < state.capacity && state.reserve > 0
+      },
+      startReload: (hand) => startReload(hand),
+      reloading: (hand) => toolOf(hand)?.state.reloading ?? false,
+      stow: (hand, on, seconds) => {
+        const slot = toolOf(hand)
+        if (!slot) return
+        if (on) slot.state.release()
+        emitHost({ type: 'stow', weapon: slot.id, on, duration: seconds, ...(hand === 'L' ? { hand } : {}) })
+        action('stow', t(on ? 'act.stow' : 'act.unstow', { weapon: toolName(slot.id), hand: t(hand === 'L' ? 'hand.left' : 'hand.right') }), { data: { weapon: slot.id, hand, on, seconds } })
+      },
+    },
+    () => arsenal.rules.dualWield.stowSeconds,
+  )
   /** The key a blow of the hand's tool waits on: the left hand's own, so two machetes swing apart. */
   const strikeKeyOf = (id: string, hand: ToolHand): string => (hand === 'L' ? `${id}${LEFT_HAND_KEY}` : id)
   const useTool = (dt: number, held: boolean, hand: ToolHand = 'R'): UseStatus => {
@@ -2424,6 +2444,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const slot = toolOf(hand)
     if (!slot) return 'cooldown'
     const { id, state } = slot
+    // with a tool in each hand a magazine change takes both hands: one works the magazine, the other weapon is tucked away
+    if (offTool && dualReload.busy) {
+      if (!held) say(t('hud.reloading'))
+      return 'reloading'
+    }
     const cat = state.def.category
     if (cat === 'hand') {
       if (strikes.some((strike) => strike.key === 'hand' || strike.key === 'fists')) return 'cooldown'
@@ -2434,7 +2459,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const res = state.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
     flushEvents(id, state, res.recoil, hand)
     if (res.status === 'empty') {
-      if (!state.reloading && state.reserve > 0) startReload(hand)
+      if (!state.reloading && state.reserve > 0) {
+        if (offTool) dualReload.start([hand, hand === 'R' ? 'L' : 'R'])
+        else startReload(hand)
+      }
       say(t(state.reloading ? 'hud.reloading' : 'hud.empty'))
       return res.status
     }
@@ -2445,6 +2473,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       else if (res.status === 'safe') say(t('hud.safe'))
       return res.status
     }
+    firedHand = hand
     applyUses(res, dt, hand)
     return res.status
   }
@@ -2536,7 +2565,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     offToolId = null
     offHeld = false
     offFirst = false
-    offReloadQueued = false
+    dualReload.cancel()
+    firedHand = 'R'
     tool.setStance({ dualWield: false })
     action('tool_left', t('act.tool_left_off'), { data: { hand: 'L' } })
     emitHost({ type: 'tool', weapon: '', hand: 'L' })
@@ -2560,7 +2590,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     tool.setStance({ dualWield: true })
     offTool = state
     offToolId = id
-    offReloadQueued = false
+    dualReload.cancel()
     action('tool_left', t('act.tool_left', { weapon: toolName(id) }), { data: { weapon: id, hand: 'L' } })
     state.draw()
     flushEvents(id, state, undefined, 'L')
@@ -3108,11 +3138,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           say(t('hud.reloading'))
         }
         break
-      case 'KeyQ': {
-        tool.cycleMode()
-        flushEvents(toolId, tool)
+      case 'KeyQ':
+        cycleToolMode()
         break
-      }
       case 'KeyX':
         clearToolFault()
         break
@@ -3422,10 +3450,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (offTool && offToolId) {
       offTool.update(dt)
       flushEvents(offToolId, offTool, undefined, 'L')
-      if (offReloadQueued && !tool.reloading) {
-        offReloadQueued = false
-        startReload('L')
-      }
+      dualReload.step(dt)
     }
     if (audio) {
       // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
@@ -3751,38 +3776,53 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
   /** Reloads the tool of a hand. With a tool in each hand one hand holds the other weapon: a reload waits while the other one runs, and R reloads the right, then the left. */
-  function startReload(hand: ToolHand = 'R'): void {
+  /** Reloads the tool of a hand; answers whether the reload started. */
+  function startReload(hand: ToolHand = 'R'): boolean {
     const slot = toolOf(hand)
-    if (!slot) return
-    const other = toolOf(hand === 'L' ? 'R' : 'L')
-    if (other?.state.reloading) {
-      if (hand === 'L') offReloadQueued = true
-      return
-    }
-    slot.state.reload()
+    if (!slot) return false
+    const started = slot.state.reload()
     flushEvents(slot.id, slot.state, undefined, hand)
+    return started
   }
-  /** R: the tool in hand reloads; with one in each hand the left follows once the right is done (now, when the right has nothing to reload). */
+  /**
+   * R: the tool in hand reloads. With one in each hand a hand is needed for the magazine: the left weapon is tucked against the body, the left hand changes the right one's magazine,
+   * the left weapon comes back; then the right one is tucked and the right hand changes the left one's (`dualReload`). Neither fires meanwhile.
+   */
   function reloadHands(): void {
     if (!offTool) {
       startReload()
       return
     }
-    const rightNeeds = tool.ammo < tool.capacity && tool.reserve > 0
-    if (rightNeeds) {
-      startReload('R')
-      offReloadQueued = offTool.ammo < offTool.capacity
-    } else startReload('L')
+    dualReload.start(['R', 'L'])
   }
+  /** The hand whose weapon Q and B act on: the one that fired last (the right one with a single tool). */
+  const commandHand = (): ToolHand => (offTool ? firedHand : 'R')
+  /** X clears a stuck weapon: the one of the hand that fired last when it is stuck, else the other one. */
   function clearToolFault(): void {
-    if (!tool.clearFault()) return
-    flushEvents(toolId, tool)
-    say(t('hud.clearing'))
+    const order: ToolHand[] = offTool ? [firedHand, firedHand === 'R' ? 'L' : 'R'] : ['R']
+    for (const hand of order) {
+      const slot = toolOf(hand)
+      if (!slot?.state.fault || !slot.state.clearFault()) continue
+      flushEvents(slot.id, slot.state, undefined, hand)
+      say(t('hud.clearing'))
+      return
+    }
   }
   function toggleSafety(): void {
-    tool.setSafety(!tool.safety)
-    flushEvents(toolId, tool)
-    say(t(tool.safety ? 'hud.safety_on' : 'hud.safety_off'))
+    const hand = commandHand()
+    const slot = toolOf(hand)
+    if (!slot) return
+    slot.state.setSafety(!slot.state.safety)
+    flushEvents(slot.id, slot.state, undefined, hand)
+    say(`${t(slot.state.safety ? 'hud.safety_on' : 'hud.safety_off')}${offTool ? ` (${toolName(slot.id)}, ${t(hand === 'L' ? 'hand.left' : 'hand.right')})` : ''}`)
+  }
+  function cycleToolMode(): void {
+    const hand = commandHand()
+    const slot = toolOf(hand)
+    if (!slot) return
+    slot.state.cycleMode()
+    flushEvents(slot.id, slot.state, undefined, hand)
+    if (offTool) say(`${toolName(slot.id)} (${t(hand === 'L' ? 'hand.left' : 'hand.right')}): ${slot.state.mode}`)
   }
   function runToolCommand(request: ToolCommand): ToolCommandResult {
     // the room is the bench: every accessory can be fitted here, whatever it needs (a tool, a workbench)
@@ -3848,7 +3888,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     playerHeld: () => moduleHeld,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     blastReach: (point, target, ignore) => world.blastReach(point, target, ignore ? { ignore } : {}),
-    tool: () => ({ ...hostToolOf(toolId, tool), ...(offTool && offToolId ? { offHand: hostToolOf(offToolId, offTool) } : {}) }),
+    tool: () => ({
+      ...hostToolOf(toolId, tool),
+      ...(dualReload.stowed('R') ? { stowed: true } : {}),
+      ...(offTool && offToolId ? { offHand: { ...hostToolOf(offToolId, offTool), ...(dualReload.stowed('L') ? { stowed: true } : {}) } } : {}),
+    }),
     command(request) {
       const result = runToolCommand(request)
       flushEvents(toolId, tool)

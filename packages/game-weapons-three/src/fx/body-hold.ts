@@ -30,6 +30,11 @@ export const BODY_HOLD = {
   supportSpan: 0.5,
   /** A gun carried at the hip (`carry: 'hip'`): its rear grip low at the right hip, a little ahead of it. */
   hipGrip: [0.25, -0.5, -0.24],
+  /**
+   * A tool put away against the body to free its hand (a magazine changed with a tool in each hand): tucked in the front of the belt on its own side, muzzle down and grip forward, its
+   * grip here in the frame of the shoulder pocket (the left one mirrored).
+   */
+  stowGrip: [-0.07, -0.5, -0.17],
   /** How much of the aim's pitch a tool held low in one hand follows. */
   toolPitch: 0.5,
 } as const
@@ -133,4 +138,30 @@ export const createEyeFrame = (THREE: typeof THREE_NS, camera: THREE_NS.Camera, 
     frame.quaternion = [camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w]
     return frame
   }
+}
+
+const stowScratch = { euler: null as THREE_NS.Euler | null, yaw: null as THREE_NS.Quaternion | null, turn: null as THREE_NS.Quaternion | null, a: null as THREE_NS.Vector3 | null, b: null as THREE_NS.Vector3 | null }
+
+/** Puts a tool away against the body (`BODY_HOLD.stowGrip`): turned with the body (its yaw only), muzzle down, the grip where the hand left it. `mirror` for the left side. */
+export const placeStowed = (placement: { readonly THREE: typeof THREE_NS; readonly hand: THREE_NS.Object3D; readonly holder: THREE_NS.Object3D; readonly frame: HandPose; readonly anchor: HandAnchor | null; readonly mirror?: boolean }): void => {
+  const { THREE, hand, holder, frame, anchor } = placement
+  stowScratch.euler ??= new THREE.Euler()
+  stowScratch.yaw ??= new THREE.Quaternion()
+  stowScratch.turn ??= new THREE.Quaternion()
+  stowScratch.a ??= new THREE.Vector3()
+  stowScratch.b ??= new THREE.Vector3()
+  const yaw = stowScratch.euler.setFromQuaternion(stowScratch.yaw.set(...frame.quaternion), 'YXZ').y
+  hand.position.set(...frame.position)
+  // the holder turns the barrel down the aim (-z); a quarter turn about x points it down, a half turn about the vertical puts the grip forward
+  hand.quaternion.setFromEuler(stowScratch.euler.set(0, yaw, 0, 'YXZ'))
+  hand.quaternion.multiply(stowScratch.turn.setFromAxisAngle(stowScratch.a.set(0, 1, 0), Math.PI))
+  hand.quaternion.multiply(stowScratch.turn.setFromAxisAngle(stowScratch.a.set(1, 0, 0), -Math.PI / 2))
+  holder.position.set(0, 0, 0)
+  hand.updateMatrixWorld(true)
+  if (!anchor) return
+  const grip = BODY_HOLD.stowGrip
+  const want = stowScratch.a.set(placement.mirror ? -grip[0] : grip[0], grip[1], grip[2]).applyEuler(stowScratch.euler.set(0, yaw, 0, 'YXZ')).add(hand.position)
+  const now = anchor.part.localToWorld(stowScratch.b.copy(anchor.offset))
+  hand.position.add(want.sub(now))
+  hand.updateMatrixWorld(true)
 }

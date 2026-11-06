@@ -115,6 +115,11 @@ export interface WeaponRules {
     readonly exclude: readonly WeaponId[]
     readonly spread: number
     readonly recoil: number
+    /**
+     * Seconds to put one weapon away against the body (tucked in the belt) to free its hand, and as long to take it back: a magazine is changed with the free hand, one weapon after
+     * the other, and neither fires meanwhile.
+     */
+    readonly stowSeconds: number
   }
   /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
   readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }

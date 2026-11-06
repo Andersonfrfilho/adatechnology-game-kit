@@ -279,8 +279,9 @@ machete and the hatchet) less `exclude`, and the multipliers of a weapon held so
 the lists with `createArsenal({ rules: { dualWield: { weapons: [...] } } })` (an array replaces the shipped one).
 
 **In the test room**: Shift+click in the weapon picker puts two of an eligible weapon in the hands (a second Shift+click changes the left one; a plain click goes back to one). The left
-mouse button fires the right hand, the right button the left hand (no aiming with two); R reloads the right one, then the left one: one hand holds the other weapon meanwhile, so the
-two never reload at once and neither hand leaves its grip for the magazine.
+mouse button fires the right hand, the right button the left hand (no aiming with two); R changes the magazines as a person does: the left weapon is tucked in the belt (`rules.dualWield.stowSeconds`), the free left hand changes the
+right one's magazine and draws its weapon back, then the right weapon is tucked and the right hand changes the left one's; neither fires meanwhile. Q (fire mode) and B (safety)
+act on the weapon of the hand that fired last; X clears the stuck one. Each index finger curls on its own trigger (`HandTargets.fingers` / `fingersL`).
 
 ## API
 
