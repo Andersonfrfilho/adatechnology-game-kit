@@ -23,7 +23,7 @@ import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, check
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
-import { leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
+import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
@@ -325,7 +325,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const preload = (): void => {
         window.removeEventListener('keydown', preload, true)
         window.removeEventListener('pointerdown', preload, true)
-        void audio.loadSamples(['latch', 'creak_wood', 'shut_wood', 'rattle', 'grab_hard', 'grab_soft']).catch(() => undefined)
+        void audio.loadSamples([...HAND_RECORDED_IDS]).catch(() => undefined)
       }
       window.addEventListener('keydown', preload, true)
       window.addEventListener('pointerdown', preload, true)
@@ -2537,8 +2537,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldVel[0] = heldVel[1] = heldVel[2] = 0
     playSound(pickupSoundOf(heldEntry?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
-    // the hand closing on it: the sound starts as the hold does (criterion C1)
-    playSound(impactKey(world.materials.get(heaviestMaterial(r.object) ?? '')).replace('impact_', 'grab_'), v3(piece.root.getWorldPosition(tmpV)), 0.8)
     fire('grab', { held: true, objectId: r.object })
     return true
   }
