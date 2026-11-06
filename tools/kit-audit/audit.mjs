@@ -38,6 +38,14 @@ const ownerOf = (/** @type {string} */ file) => {
   return parts[0] === 'packages' ? parts[1] : `${parts[0]}/${parts[1]}`
 }
 
+/**
+ * @typedef {{ owners: string[], words: string[], use: string }} DomainRule
+ * @typedef {{ scan: string[], skip: string[], window: number, domains: Record<string, DomainRule> }} Rules
+ * @typedef {{ file: string, domain: string, reason?: string, fix?: string }} ListEntry
+ * @typedef {{ file: string, line: number, owner: string, domain: string, words: string[], code: string, use: string, owners: string[], allowed?: string, pending?: string }} Finding
+ */
+
+/** @param {string} dir @param {string[]} skip @param {string[]} [out] @returns {string[]} */
 const walk = (dir, skip, out = []) => {
   if (!existsSync(dir)) return out
   for (const name of readdirSync(dir)) {
@@ -49,7 +57,9 @@ const walk = (dir, skip, out = []) => {
   return out
 }
 
+/** @param {Rules} rules */
 const filesOf = (rules) => {
+  /** @type {string[]} */
   const files = []
   for (const pattern of rules.scan) {
     const [group, , ...rest] = pattern.split('/')
@@ -58,12 +68,19 @@ const filesOf = (rules) => {
   return files.sort()
 }
 
-/** Every finding of the repository (or of `options.packages` / `options.domains`), with `allowed` set from the allowlist. */
+/**
+ * Every finding of the repository (or of `options.packages` / `options.domains`), with `allowed` set from the allowlist.
+ * @param {{ packages?: string[], domains?: string[] }} [options]
+ * @returns {Finding[]}
+ */
 export function audit(options = {}) {
+  /** @type {Rules} */
   const rules = JSON.parse(readFileSync(join(here, 'rules.json'), 'utf8'))
+  /** @type {{ allowed?: ListEntry[], pending?: ListEntry[] }} */
   const lists = JSON.parse(readFileSync(join(here, 'allowlist.json'), 'utf8'))
   const allowlist = lists.allowed ?? []
   const pending = lists.pending ?? []
+  /** @type {Finding[]} */
   const findings = []
   for (const file of filesOf(rules)) {
     const owner = ownerOf(file)
@@ -76,11 +93,11 @@ export function audit(options = {}) {
       for (const [domain, rule] of Object.entries(rules.domains)) {
         if (options.domains?.length && !options.domains.includes(domain)) continue
         if (rule.owners.includes(owner)) continue
-        const hits = rule.words.filter((/** @type {string} */ word) => words.has(word))
+        const hits = rule.words.filter((word) => words.has(word))
         if (hits.length === 0) continue
         const path = relative(root, file)
-        const allowed = allowlist.find((/** @type {{ file: string; domain: string; }} */ entry) => entry.file === path && entry.domain === domain)
-        const known = pending.find((/** @type {{ file: string; domain: string; }} */ entry) => entry.file === path && entry.domain === domain)
+        const allowed = allowlist.find((entry) => entry.file === path && entry.domain === domain)
+        const known = pending.find((entry) => entry.file === path && entry.domain === domain)
         findings.push({ file: path, line: index + 1, owner, domain, words: hits, code: line.trim().slice(0, 160), use: rule.use, owners: rule.owners, ...(allowed ? { allowed: allowed.reason } : {}), ...(known ? { pending: known.fix } : {}) })
       }
     })
@@ -88,8 +105,12 @@ export function audit(options = {}) {
   return findings
 }
 
-/** One entry per file and domain (the lines together): what a person reads. */
+/**
+ * One entry per file and domain (the lines together): what a person reads.
+ * @param {Finding[]} findings
+ */
 export function group(findings) {
+  /** @type {Map<string, { file: string, owner: string, domain: string, lines: number[], words: Set<string>, use: string, allowed?: string, pending?: string }>} */
   const byKey = new Map()
   for (const f of findings) {
     const key = `${f.file}::${f.domain}`

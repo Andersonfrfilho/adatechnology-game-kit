@@ -19,6 +19,9 @@ export function loadConfig() {
  * Limpa todos os chunks anteriores (LIST, bext, cue, smpl, junk, PAD)
  * e reconstrói o arquivo mantendo estritamente o áudio puro (fmt, data)
  * com metadados exclusivos da organização ada-technology.
+ * @param {string} filepath
+ * @param {string} title
+ * @param {{ artist?: string, comment?: string, encoder?: string }} [meta]
  */
 export function tagWavFile(filepath, title, meta = {}) {
   const artist = meta.artist || 'ada-technology';
@@ -45,6 +48,7 @@ export function tagWavFile(filepath, title, meta = {}) {
     pos += total;
   }
 
+  /** @param {string} fourcc @param {string} text */
   function makeSubchunk(fourcc, text) {
     const raw = Buffer.from(text + '\0', 'utf8');
     const padded = raw.length % 2 === 1 ? Buffer.concat([raw, Buffer.from([0])]) : raw;
@@ -83,6 +87,7 @@ export function tagWavFile(filepath, title, meta = {}) {
 /**
  * Remove 100% dos chunks de metadados (LIST, bext, cue, smpl, junk, PAD),
  * deixando o arquivo WAV com áudio puro (apenas fmt e data).
+ * @param {string} filepath
  */
 export function stripAllMetadata(filepath) {
   const buffer = readFileSync(filepath);
@@ -114,8 +119,10 @@ export function stripAllMetadata(filepath) {
   return true;
 }
 
+/** @param {string} directory */
 export function stripAllWavsInDirectory(directory) {
   let count = 0;
+  /** @param {string} dir */
   function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);

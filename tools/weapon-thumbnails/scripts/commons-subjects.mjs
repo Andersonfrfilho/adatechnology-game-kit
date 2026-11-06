@@ -1,4 +1,5 @@
 // Weapon id -> [Commons search query, ...keys the file title must contain (letters and digits only, lower case)]. A generic weapon is searched by the real object it is.
+/** @type {Record<string, string[]>} */
 export const SUBJECTS = {
   glock_17: ['Glock 17', 'glock17', 'glock'], glock_18: ['Glock 18', 'glock18'], glock_19: ['Glock 19', 'glock19'],
   beretta_92fs: ['Beretta 92', 'beretta92', 'm9'], sig_sauer_p226: ['SIG Sauer P226', 'p226'], cz_75: ['CZ 75', 'cz75'],

@@ -30,6 +30,7 @@ const ESSENTIAL_FOURCC = new Set(['fmt ', 'data', 'fact']);
 /**
  * Limpa um arquivo WAV individual.
  * Devolve { success, originalSize, newSize, strippedChunks } ou { error }.
+ * @param {string} filepath
  */
 export function stripWavMetadata(filepath) {
   try {
@@ -81,12 +82,13 @@ export function stripWavMetadata(filepath) {
       strippedChunks,
     };
   } catch (err) {
-    return { error: err.message };
+    return { error: /** @type {Error} */ (err).message };
   }
 }
 
 /**
  * Varre recursivamente um diretório limpando todos os arquivos .wav.
+ * @param {string} directory
  */
 export function cleanDirectory(directory) {
   const results = {
@@ -96,6 +98,7 @@ export function cleanDirectory(directory) {
     bytesSaved: 0,
   };
 
+  /** @param {string} dir */
   function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const fullPath = join(dir, entry.name);

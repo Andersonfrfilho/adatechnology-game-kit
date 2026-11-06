@@ -16,7 +16,7 @@ export default {
   create(context) {
     const source = context.sourceCode ?? context.getSourceCode()
     return {
-      "CallExpression[callee.type='MemberExpression'][callee.property.name='removeFromParent'][arguments.length=0]"(node) {
+      "CallExpression[callee.type='MemberExpression'][callee.property.name='removeFromParent'][arguments.length=0]"(/** @type {import('eslint').Rule.Node} */ node) {
         let scope = node.parent
         while (scope && !/Function/.test(scope.type) && scope.type !== 'Program') scope = scope.parent
         if (scope && FREES.test(source.getText(scope))) return

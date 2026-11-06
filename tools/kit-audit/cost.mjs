@@ -16,7 +16,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
 const require = createRequire(import.meta.url)
 const args = process.argv.slice(2)
-const optionOf = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null)
+const optionOf = (/** @type {string} */ name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null)
 const only = optionOf('--area')
 const jsonPath = optionOf('--json')
 const { chromium } = require('playwright')
@@ -26,10 +26,14 @@ const tab = await browser.newPage({ viewport: { width: 640, height: 400 } })
 await tab.goto(`${pathToFileURL(join(root, 'examples/test-room/dist/test-room.html')).href}?ui=0`, { timeout: 180000 })
 await tab.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
 
+/**
+ * @typedef {{ id: string, owner: string, draws: number, triangles: number, materials: number }} Piece
+ * @param {string | null} area
+ */
 const census = (area) =>
   tab.evaluate(async (area) => {
     const room = window.__testRoom
-    const frames = (n) => new Promise((done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
+    const frames = (/** @type {number} */ n) => new Promise((/** @type {(value?: unknown) => void} */ done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
     const count = () => { let n = 0; room.scene.traverse(() => n++); return n }
     if (area) await room.openAreaAsync(area)
     // settled: the same count three checks in a row (a CI runner takes over a minute to tear an area down and batch the next one)
@@ -40,12 +44,14 @@ const census = (area) =>
       same = now === last ? same + 1 : 0
       last = now
     }
+    /** @type {Map<ScriptSceneNode, { id: string, owner: string, draws: number, triangles: number, materials: Set<unknown> }>} */
     const pieces = new Map()
-    room.scene.traverse((object) => {
+    room.scene.traverse((/** @type {ScriptSceneNode} */ object) => {
       if (!(object.isMesh || object.isLine || object.isPoints || object.isSprite)) return
-      for (let q = object; q; q = q.parent) if (q.visible === false) return
+      for (let /** @type {THREE.Object3D | null} */ q = object; q; q = q.parent) if (q.visible === false) return
       // a mesh drawn inside a batch (createStaticBatcher) is off the camera layer: the batch is what costs
       if ((object.layers.mask & 1) === 0) return
+      /** @type {THREE.Object3D | null} */
       let holder = object
       while (holder && !holder.userData?.kitOrigin) holder = holder.parent
       if (!holder) return
@@ -67,7 +73,9 @@ const census = (area) =>
 
 const started = Date.now()
 const bare = await census(null)
+/** @type {Map<string, Piece & { area: string }>} */
 const worst = new Map()
+/** @param {string} area @param {Piece[]} pieces */
 const take = (area, pieces) => {
   for (const piece of pieces) {
     const key = `${piece.owner}|${piece.id}`
@@ -87,8 +95,9 @@ console.log('draws  triangles  materials  owner / piece (area)')
 for (const row of rows) console.log(`${String(row.draws).padStart(5)}  ${String(row.triangles).padStart(9)}  ${String(row.materials).padStart(9)}  ${row.owner} / ${row.id} (${row.area})`)
 console.log(`\n${rows.length} pieces`)
 
+/** @type {{ limits: Record<string, number>, pending: Record<string, number> }} */
 const { limits, pending } = JSON.parse(readFileSync(join(here, 'budgets.json'), 'utf8'))
-const keyOf = (row) => `${row.owner}|${row.id}`
+const keyOf = (/** @type {Piece} */ row) => `${row.owner}|${row.id}`
 const over = rows.filter((row) => limits[row.owner] !== undefined && row.draws > limits[row.owner])
 const broken = over.filter((row) => row.draws > (pending[keyOf(row)] ?? limits[row.owner]))
 const fixed = Object.keys(pending).filter((key) => !over.some((row) => keyOf(row) === key))

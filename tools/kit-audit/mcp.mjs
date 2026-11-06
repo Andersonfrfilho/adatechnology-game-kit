@@ -14,8 +14,10 @@ import { audit, group, wordsOf } from './audit.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
+/** @type {import('./audit.mjs').Rules} */
 const rules = JSON.parse(readFileSync(join(here, 'rules.json'), 'utf8'))
 
+/** @param {string[]} args */
 const git = (...args) => {
   try {
     return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim()
@@ -24,6 +26,7 @@ const git = (...args) => {
   }
 }
 
+/** @param {{ piece?: unknown }} input */
 function owner({ piece }) {
   const words = wordsOf(String(piece ?? ''))
   const matches = Object.entries(rules.domains)
@@ -32,6 +35,7 @@ function owner({ piece }) {
   return matches.length > 0 ? { piece, matches } : { piece, matches: [], note: 'No domain of tools/kit-audit/rules.json names this piece: look it up in .claude/skills/game-kit/SKILL.md, then ask before drawing it.' }
 }
 
+/** @param {{ text?: unknown, path?: unknown }} input */
 function origin({ text, path }) {
   const needle = String(text ?? '')
   if (!needle) throw new Error('text is required')
@@ -49,12 +53,14 @@ function origin({ text, path }) {
   return { text: needle, found: true, shallow, commit: sha.slice(0, 10), date, author, subject, ...(pr ? { pullRequest: Number(pr), mergedBy: merge } : {}), files }
 }
 
+/** @param {{ package?: string, domain?: string, all?: boolean }} input */
 function auditTool({ package: pkg, domain, all }) {
   const grouped = group(audit({ packages: pkg ? [pkg] : [], domains: domain ? [domain] : [] }))
   const shown = all ? grouped : grouped.filter((entry) => !entry.allowed)
   return { findings: shown, counts: { new: grouped.filter((e) => !e.allowed && !e.pending).length, pending: grouped.filter((e) => !e.allowed && e.pending).length, allowed: grouped.filter((e) => e.allowed).length } }
 }
 
+/** @type {Array<{ name: string, description: string, inputSchema: object, run: (input: Record<string, unknown>) => unknown }>} */
 const TOOLS = [
   {
     name: 'kit_owner',
@@ -76,8 +82,10 @@ const TOOLS = [
   },
 ]
 
+/** @param {Record<string, unknown>} message */
 const send = (message) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', ...message })}\n`)
 
+/** @param {{ id?: number | string, method?: string, params?: { protocolVersion?: string, name?: string, arguments?: Record<string, unknown> } }} request */
 function handle(request) {
   const { id, method, params } = request
   if (id === undefined) return // a notification (initialized, cancelled): nothing to answer
@@ -90,10 +98,10 @@ function handle(request) {
     const tool = TOOLS.find((t) => t.name === params?.name)
     if (!tool) return send({ id, error: { code: -32602, message: `unknown tool ${params?.name}` } })
     try {
-      const result = tool.run(params.arguments ?? {})
+      const result = tool.run(params?.arguments ?? {})
       return send({ id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } })
     } catch (error) {
-      return send({ id, result: { content: [{ type: 'text', text: String(error?.message ?? error) }], isError: true } })
+      return send({ id, result: { content: [{ type: 'text', text: String(/** @type {Error | undefined} */ (error)?.message ?? error) }], isError: true } })
     }
   }
   return send({ id, error: { code: -32601, message: `method not found: ${method}` } })
