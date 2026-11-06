@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
 import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
 import type { SampleSound } from '@adatechnology/game-audio'
-import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
+import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -142,7 +142,60 @@ describe('createVehicleSound', () => {
     car.update({ dt: 1, position: [0, 0, 0], speed: 3, throttle: 1 })
     expect(car.crash(30, [0, 0, 0])).toBe('heavy')
     const ids = new Set([...(VEHICLE_SOUND_BANK.sounds ?? []).map((s) => s.id), ...(VEHICLE_SOUND_BANK.loops ?? []).map((l) => l.id)])
-    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+    for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', 'brake_squeal', 'vehicle_hit_pedestrian', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+  })
+})
+
+describe('brakes, hits and many vehicles', () => {
+  const running = (sink: AudioSink, options = {}) => {
+    const car = createVehicleSound(sink, options)
+    car.start([0, 0, 0])
+    car.update({ dt: 1, position: [0, 0, 0], speed: 0, throttle: 0 })
+    return car
+  }
+
+  it('the pads squeal in the last metres of a stop on the brakes, never while the tyres skid, at full speed or standing still', () => {
+    const { sink, sets } = fakeSink()
+    const car = running(sink)
+    const squeal = (speed: number, brake: number, slip = 0): number => {
+      car.update({ dt: 0.016, position: [0, 0, 0], speed, throttle: 0, brake, slip })
+      return lastOf(sets, 'brake_squeal')?.volume ?? 0
+    }
+    expect(squeal(2, 1)).toBeGreaterThan(0.03)
+    expect(squeal(2, 0)).toBe(0)
+    expect(squeal(12, 1)).toBe(0)
+    expect(squeal(2, 1, 0.9)).toBe(0)
+    expect(squeal(0, 1)).toBe(0)
+  })
+
+  it('a body hit plays louder with the speed, a game may name its own sound, and a touch at walking pace is silent', () => {
+    const { sink, played } = fakeSink()
+    const car = createVehicleSound(sink)
+    car.hit(4, [1, 0, 0])
+    car.hit(14, [1, 0, 0])
+    car.hit(10, [1, 0, 0], 'game_hit_zombie')
+    car.hit(0.2, [1, 0, 0])
+    expect(played.map((p) => p.sound)).toEqual(['vehicle_hit_pedestrian', 'vehicle_hit_pedestrian', 'game_hit_zombie'])
+    expect(played[1]?.volume).toBeGreaterThan(played[0]?.volume as number)
+  })
+
+  it('with a budget only the nearest vehicles keep their loops; one that comes closer takes the place of the farthest', () => {
+    const budget = createEngineBudget({ max: 2, listener: () => [0, 0, 0] })
+    const cars = [10, 20, 30].map((x) => {
+      const { sink, sets } = fakeSink()
+      return { car: running(sink, { budget }), sets, x }
+    })
+    const frame = (): void => cars.forEach(({ car, x }) => car.update({ dt: 0.016, position: [x, 0, 0], speed: 0, throttle: 0 }))
+    const heard = (): boolean[] => cars.map(({ sets }) => (lastOf(sets, 'engine_car_low')?.volume ?? 0) > 0)
+    frame()
+    frame()
+    expect(heard()).toEqual([true, true, false])
+    cars[2]!.x = 5
+    frame()
+    frame()
+    expect(heard()).toEqual([true, false, true])
+    cars[0]!.car.dispose()
+    expect(budget.size).toBe(2)
   })
 })
 

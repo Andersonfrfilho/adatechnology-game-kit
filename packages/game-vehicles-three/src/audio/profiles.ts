@@ -46,6 +46,10 @@ export type VehicleSoundKeys = {
   readonly skidAsphalt: string
   readonly skidDirt: string
   readonly roll: string
+  /** Pads squealing on the discs as a car brakes to a stop (not a skid: the tyres still grip). */
+  readonly brakeSqueal: string
+  /** A body hit by the vehicle; a game points it at its own (a zombie, an animal) through `sounds` or the `hit` call. */
+  readonly hitBody: string
 }
 
 export const DEFAULT_VEHICLE_SOUND_KEYS: VehicleSoundKeys = {
@@ -58,6 +62,8 @@ export const DEFAULT_VEHICLE_SOUND_KEYS: VehicleSoundKeys = {
   skidAsphalt: 'tire_skid_asphalt',
   skidDirt: 'tire_skid_dirt',
   roll: 'tire_roll',
+  brakeSqueal: 'brake_squeal',
+  hitBody: 'vehicle_hit_pedestrian',
 }
 
 /** The speed of the hit, m/s, where a crash stops being light (≈ 22 km/h: dents and plastic) and where it turns heavy (≈ 50 km/h: metal folds, glass goes). */

@@ -437,6 +437,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
             throttle: input.throttle,
             ...(semiState ? { rpm: semiState.rpm, slip: Math.max(0, ...semiState.slip.map(Math.abs)) } : { slip: braking && speed > 3 ? 0.6 : 0 }),
             surface: /dirt|gravel|sand|grass|mud/.test(settings.surface) ? 'dirt' : 'asphalt',
+            brake: input.brake,
           })
         }
         state.exhaust -= dt

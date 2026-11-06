@@ -54,6 +54,8 @@ export const VEHICLE_LOOPS: readonly LoopRecipe[] = [
   noiseLoop('tire_skid_asphalt', 'bandpass', 1900, 5, 'rubber squealing on asphalt: a narrow band of noise near 2 kHz'),
   noiseLoop('tire_skid_dirt', 'lowpass', 700, 0.8, 'tyres sliding on dirt and gravel: a dull, wide hiss'),
   noiseLoop('tire_roll', 'lowpass', 400, 0.7, 'road noise of the tyres rolling, brighter with the speed'),
+  // a pad on a disc: a thin, nearly pure whistle near 3.4 kHz (a narrow band of noise, so it wavers as a real squeal does)
+  noiseLoop('brake_squeal', 'bandpass', 3400, 28, 'brake pads squealing on the discs as the car comes to a stop'),
 ]
 
 const recipe = (id: string, layers: readonly Layer[], line: string): SoundRecipe => ({ ...sceneRecipe(id, layers, line), sources: [SDK, line] })
@@ -103,6 +105,17 @@ export const VEHICLE_SOUNDS: readonly SoundRecipe[] = [
       ...many(6, () => noise({ type: 'bandpass', f: [1500, 3000], q: 2, d: 0.04, vol: 0.25, delay: [0.5, 1.5] })),
     ],
     'crash above 50 km/h: metal folding, the glass going, debris falling',
+  ),
+  // a body hit by a car: the dull slap of the bumper on a person, the body folding over the bonnet, at speed a crack of the windscreen
+  recipe(
+    'vehicle_hit_pedestrian',
+    [
+      tone({ f: 95, f2: 50, d: 0.14, vol: 0.9 }),
+      noise({ type: 'lowpass', f: 600, d: 0.12, vol: 0.8 }),
+      noise({ type: 'bandpass', f: 280, q: 1.2, d: 0.18, vol: 0.55, delay: 0.09 }),
+      noise({ type: 'highpass', f: 2600, d: 0.05, vol: 0.18, delay: 0.1 }),
+    ],
+    'a person hit by a car: the bumper slap, the body on the bonnet',
   ),
   // the game's horn (two squares at 415 and 523 Hz, jogo L70272) heard from where the car is; a truck's air horn lower and longer
   recipe('horn_car', [tone({ wave: 'square', f: 415, d: 0.6, vol: 0.09 }), tone({ wave: 'square', f: 523, d: 0.6, vol: 0.09 })], 'car horn: the game chord, placed and panned'),

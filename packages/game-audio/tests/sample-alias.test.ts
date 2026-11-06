@@ -114,6 +114,15 @@ describe('sample aliases', () => {
 })
 
 describe('the sink preloads', () => {
+  it('an id preloaded before its files are known loads as soon as the manifest registers', async () => {
+    const { engine } = engineWith([PACKAGE])
+    const sink = createAudioSink(engine)
+    sink.preload?.(['engine_test_start'])
+    expect(engine.sampleStatus('engine_test_start')).toBe('none')
+    engine.register(FILES)
+    await vi.waitFor(() => expect(engine.sampleStatus('engine_test_start')).toBe('ready'))
+  })
+
   it('preload decodes the files of the ids a module names, so their first play is the recording', async () => {
     const { engine } = engineWith([FILES, PACKAGE])
     const sink = createAudioSink(engine)
