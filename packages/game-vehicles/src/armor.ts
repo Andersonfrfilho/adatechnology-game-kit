@@ -88,7 +88,7 @@ export function installArmor(kit: Kit) {
       return
     }
     if (!m.bullet) {
-      c.glass.slice().forEach(function (gm2: any) {
+      c.glass.slice().forEach(function (gm2) {
         if (!gm2.parent) return
         const b = new THREE.Box3().setFromObject(gm2)
         const dx = b.max.x - b.min.x
@@ -155,7 +155,7 @@ export function installArmor(kit: Kit) {
       const x1 = m.front - 0.15
       const brk = [x0, x1]
       const wl: any = []
-      c.wheels.forEach(function (w: any) {
+      c.wheels.forEach(function (w) {
         if (!w.parent) return
         const r = w.userData.r || 0.33
         wl.push([w.position.x - r - 0.07, w.position.x + r + 0.07, w.position.y + r + 0.05])

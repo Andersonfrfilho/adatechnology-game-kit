@@ -310,7 +310,7 @@ export function installGlassDamage(kit: Kit) {
       if (i % 3 === 0 && c.seatTops.length && !c.rollState && !c.flipped) {
         let best: any = null
         let bd = 1e9
-        c.seatTops.forEach(function (s: any) {
+        c.seatTops.forEach(function (s) {
           const dd = Math.hypot(s.x - p.x, s.z - p.z)
           if (dd < bd) {
             bd = dd

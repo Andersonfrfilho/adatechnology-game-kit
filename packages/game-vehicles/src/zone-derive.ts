@@ -28,13 +28,13 @@ export function installZoneDerive(kit: Kit) {
     ;(list || []).forEach(function (o: any) {
       if (!o) return
       if (typeof o === 'string') {
-        c.parts.forEach(function (p: any) {
+        c.parts.forEach(function (p) {
           if ((p.label === o || p.kind === o) && p.obj) {
             if (p.light) z.lights.push(p.light)
             else out.push(p.obj)
           }
         })
-        c.glass.forEach(function (g: any) {
+        c.glass.forEach(function (g) {
           if (g.userData.glass && g.userData.glass.label === o) z.glass.push(g)
         })
         return
@@ -161,7 +161,7 @@ export function installZoneDerive(kit: Kit) {
       })
     })
     /* glass without a zone of its own goes to the panel zone that contains it (aircraft cabin, helicopter nose) */
-    c.glass.forEach(function (g: any) {
+    c.glass.forEach(function (g) {
       if (owner.has(g) || !g.parent || !g.userData.glass || g.userData.ghost) return
       const cg = I.localBox(c, g, inv).getCenter(new V3())
       let best: any = null
@@ -195,7 +195,7 @@ export function installZoneDerive(kit: Kit) {
         if (best) {
           best.owned.push(o)
           owner.set(o, best)
-          c.lights.forEach(function (Lt: any) {
+          c.lights.forEach(function (Lt) {
             if (Lt.group === o && best.lights.indexOf(Lt) < 0) best.lights.push(Lt)
           })
         }

@@ -1423,7 +1423,7 @@ export class VehicleVisuals implements CreaseWork {
         if (c.hood && this.hood?.id === p.id) {
           this.fling(c.hood.piv, c.dirToEffects(new V3(1.2, 6.5, 0)), new V3(0, 0.5, 3), trail)
           c.hood = null
-          c.parts.forEach((q: any) => {
+          c.parts.forEach((q) => {
             if (q.kind === 'hood') q.done = true
           })
           moved = true
@@ -1456,7 +1456,7 @@ export class VehicleVisuals implements CreaseWork {
         for (const w of this.objectsOfGone(p)) {
           const i = c.wheels.indexOf(w)
           if (i >= 0) c.wheels.splice(i, 1)
-          c.parts.forEach((q: any) => {
+          c.parts.forEach((q) => {
             if (q.obj === w) q.done = true
           })
           c.spin = c.spin.filter((s: any) => s.o !== w)

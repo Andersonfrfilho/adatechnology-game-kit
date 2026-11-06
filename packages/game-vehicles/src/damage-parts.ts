@@ -259,7 +259,7 @@ export function installDamageParts(kit: Kit) {
       I.hideObj(c, o)
     })
     /* propeller stopped horizontally (hit the ground and the engine died) */
-    I.partsOf(c, 'propeller').forEach(function (hp: any) {
+    I.partsOf(c, 'propeller').forEach(function (hp) {
       const o = hp.obj
       if (!o || !o.parent) return
       c.spin = c.spin.filter(function (q: any) {
@@ -369,7 +369,7 @@ export function installDamageParts(kit: Kit) {
     }
     if (b === 4) {
       H.piv.visible = false
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.kind === 'hood') p.done = true
       })
       c.hood = null
@@ -458,7 +458,7 @@ export function installDamageParts(kit: Kit) {
     o.rotation.y += (R() - 0.5) * 0.5
     o.rotation.x += (R() - 0.5) * 0.12
     o.userData.noFollow = true
-    c.parts.forEach(function (q: any) {
+    c.parts.forEach(function (q) {
       if (q.obj === o) q.done = true
     })
   }

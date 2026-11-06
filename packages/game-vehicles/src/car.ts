@@ -338,13 +338,13 @@ export function installCar(kit: Kit) {
       })
     })
     if (
-      !c.parts.some(function (p: any) {
+      !c.parts.some(function (p) {
         return p.kind === 'engine'
       })
     )
       c.part('engine', { key: 'engine' }, null, new V3(m.front - 0.6, by + 0.45, 0), 1.0)
     if (
-      !c.parts.some(function (p: any) {
+      !c.parts.some(function (p) {
         return p.kind === 'radiator'
       }) &&
       !s.noRadiator

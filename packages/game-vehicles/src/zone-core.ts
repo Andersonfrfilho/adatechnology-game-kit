@@ -131,7 +131,7 @@ export function installZoneCore(kit: Kit) {
       .replace(/^_|_$/g, '')
   }
   function wheelInfo(c: BuildContext) {
-    const ws = c.wheels.filter(function (w: any) {
+    const ws = c.wheels.filter(function (w) {
       return w.parent
     })
     if (!ws.length) return null
@@ -139,7 +139,7 @@ export function installZoneCore(kit: Kit) {
     let xr = 1e9
     let rf = 0.3
     let rr = 0.3
-    ws.forEach(function (w: any) {
+    ws.forEach(function (w) {
       const r = w.userData.r || 0.3
       if (w.position.x > xf) {
         xf = w.position.x
@@ -153,7 +153,7 @@ export function installZoneCore(kit: Kit) {
     return { list: ws, xf: xf, xr: xr, rf: rf, rr: rr }
   }
   function partsOf(c: BuildContext, kind: any) {
-    return c.parts.filter(function (p: any) {
+    return c.parts.filter(function (p) {
       return p.kind === kind
     })
   }
@@ -176,7 +176,7 @@ export function installZoneCore(kit: Kit) {
   function hideObj(c: BuildContext, o: any) {
     if (!o) return
     o.visible = false
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.obj === o) p.done = true
     })
   }

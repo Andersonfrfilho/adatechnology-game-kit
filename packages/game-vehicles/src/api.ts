@@ -122,6 +122,8 @@ export interface VehicleLamp {
   broken: boolean
   cracked?: boolean
   dark?: boolean
+  /** The additive halo sprites of the lamp, hidden when it breaks. */
+  halo?: ThreeObject[]
   [extra: string]: unknown
 }
 

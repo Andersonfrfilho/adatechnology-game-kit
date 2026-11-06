@@ -210,7 +210,7 @@ export function installRollover(kit: Kit) {
     })
     /* upside-down helicopter: the blades that would go through the ground break into pieces */
     if (m.kind === 'heli')
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if ((p.kind !== 'rotor' && p.kind !== 'tail_rotor') || !p.obj) return
         const main = p.kind === 'rotor'
         p.obj.traverse(function (o: any) {
@@ -236,10 +236,10 @@ export function installRollover(kit: Kit) {
       c.vehicle.position.y -= 0.45
       c.sunk = c.vehicle.position.y
     }
-    c.wheels.forEach(function (w: any, i: number) {
+    c.wheels.forEach(function (w, i: number) {
       c.spin.push({ o: w, axis: 'z', v: 2.2 + hash(i, 2, 3) * 2, decay: 0.12 })
     })
-    const mot = c.parts.find(function (p: any) {
+    const mot = c.parts.find(function (p) {
       return p.kind === 'engine'
     })
     if (mot && m.kind !== 'boat') kit.addEmitter(c, mot.pos.clone().add(new V3(0, -0.3, 0)), 'black', { rate: 4 })

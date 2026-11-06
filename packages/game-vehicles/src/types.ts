@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { BufferGeometry, Material, Object3D } from 'three'
 
 import type { installArmor } from './armor'
 import type { installContext } from './context'
@@ -86,3 +87,21 @@ export interface Kit {
 
 /** The object a vehicle is built in (`kit.build` returns it): the groups, the parts, the zones and the builders `add`, `roundBox`, `part`, ... */
 export type BuildContext = InstanceType<KitShared['BuildContext']>
+
+/**
+ * A node of a vehicle's scene graph as the modules read it while they walk it (`traverse`): any `Object3D`, with what a mesh, a sprite or
+ * a group adds there when it is one. The modules check the flags (`isMesh`, `isSprite`) before they touch the mesh fields.
+ */
+export type SceneNode = Object3D & {
+  geometry?: BufferGeometry
+  material?: Material
+  morphTargetInfluences?: number[]
+  isMesh?: boolean
+  isSprite?: boolean
+  isGroup?: boolean
+  isInstancedMesh?: boolean
+  isSkinnedMesh?: boolean
+  isLight?: boolean
+  isPoints?: boolean
+  isLine?: boolean
+}

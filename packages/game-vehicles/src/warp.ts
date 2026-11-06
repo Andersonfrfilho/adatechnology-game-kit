@@ -75,7 +75,7 @@ export function installWarp(kit: Kit) {
       p.set(r[0], r[1], r[2])
       if (Math.abs(yaw) > 1e-4) o.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(yAx, yaw))
     }
-    c.glass.forEach(function (gm: any) {
+    c.glass.forEach(function (gm) {
       const GD = gm.userData.glass
       if (!GD || !GD.outline || GD.zpos == null) return
       let cx = 0

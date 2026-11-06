@@ -247,7 +247,7 @@ export function installImpact(kit: Kit) {
     const sc = new V3()
     const local = new V3()
     const cab = m.cabin && !c.flipped && !c.rollState ? m.cabin : null
-    c.deform.forEach(function (msh: any) {
+    c.deform.forEach(function (msh) {
       if (!msh.parent || !msh.visible) return
       rel.multiplyMatrices(gInv, msh.matrixWorld)
       const g = msh.geometry
@@ -255,8 +255,8 @@ export function installImpact(kit: Kit) {
       let changed = false
       if (!g.boundingSphere) g.computeBoundingSphere()
       sc.setFromMatrixScale(rel)
-      v.copy(g.boundingSphere.center).applyMatrix4(rel)
-      if (v.distanceTo(p) > H.R + g.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z)) return
+      v.copy(g.boundingSphere!.center).applyMatrix4(rel)
+      if (v.distanceTo(p) > H.R + g.boundingSphere!.radius * Math.max(sc.x, sc.y, sc.z)) return
       irel.copy(rel).invert()
       if (!g.userData.p0) g.userData.p0 = new Float32Array(pos.array)
       const p0 = g.userData.p0
@@ -293,9 +293,9 @@ export function installImpact(kit: Kit) {
         // the same bounds three.js computes, in two passes instead of three (computeBoundingSphere measures its own box again), read
         // straight from the array: getX/getY/getZ per vertex were most of the ~56 ms of the first blast on the sedan (perf.mjs, 2026-11-03)
         const sphere = g.boundingSphere ?? (g.boundingSphere = new THREE.Sphere())
-        if (pos.isInterleavedBufferAttribute || pos.normalized || Object.keys(g.morphAttributes).length > 0) {
+        if ((pos as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute || pos.normalized || Object.keys(g.morphAttributes).length > 0) {
           g.computeBoundingBox()
-          g.boundingBox.getCenter(sphere.center)
+          g.boundingBox!.getCenter(sphere.center)
           let far2 = 0
           for (let i = 0; i < pos.count; i++) far2 = Math.max(far2, sphere.center.distanceToSquared(v.fromBufferAttribute(pos, i)))
           sphere.radius = Math.sqrt(far2)
@@ -361,7 +361,7 @@ export function installImpact(kit: Kit) {
       if (w.length() > maxD) o.position.copy(o.userData.pos0).add(w.setLength(maxD))
     })
     const hit: any = []
-    c.parts.forEach(function (pt: any) {
+    c.parts.forEach(function (pt) {
       if (pt.done) return
       if (pt.pos.distanceTo(p) < H.R * pt.reach + 0.1) {
         pt.done = true
@@ -481,7 +481,7 @@ export function installImpact(kit: Kit) {
     const hit = impact(c, p, dir, force)
     if (zone === 'front' && force > 0.7 && land) {
       /* a hard frontal impact cracks the windshield from its base (the body hits the glass) */
-      const ws = c.parts.find(function (pt: any) {
+      const ws = c.parts.find(function (pt) {
         return (
           pt.kind === 'glass' &&
           !pt.done &&

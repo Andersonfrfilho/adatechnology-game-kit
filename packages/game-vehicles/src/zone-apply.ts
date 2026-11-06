@@ -62,10 +62,10 @@ export function installZoneApply(kit: Kit) {
     const P = function (w: any) {
       return w.userData.gpos || w.position
     } /* a wheel that went inside a pivot (broken gear) keeps its original position */
-    const xs = WH.list.map(function (w: any) {
+    const xs = WH.list.map(function (w) {
       return P(w).x
     })
-    const zs2 = WH.list.map(function (w: any) {
+    const zs2 = WH.list.map(function (w) {
       return P(w).z
     })
     const dAt = function (w: any) {
@@ -95,7 +95,7 @@ export function installZoneApply(kit: Kit) {
     let sxd = 0
     let szd = 0
     let sd = 0
-    WH.list.forEach(function (w: any) {
+    WH.list.forEach(function (w) {
       const x = P(w).x - xc
       const z2 = P(w).z - zc
       const d = -dAt(w)

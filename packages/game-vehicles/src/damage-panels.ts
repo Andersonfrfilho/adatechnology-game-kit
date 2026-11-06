@@ -58,7 +58,7 @@ export function installDamagePanels(kit: Kit) {
         I.hideObj(c, o)
       })
       if (z.type === 'door')
-        windowsOver(c, z, inv).forEach(function (g: any) {
+        windowsOver(c, z, inv).forEach(function (g) {
           I.glassBand(c, z, g, 4)
         })
       I.zoneDecals(c, z, { rust: 3, deep: 2 }, I.zoneCands(c, z, I.worldInverseOf(c)))
@@ -129,7 +129,7 @@ export function installDamagePanels(kit: Kit) {
       else if (z.type === 'lid') lidHang(c, z, dirty)
       else if (z.type !== 'roof' && !z.noFlap) flapHang(c, z, dirty)
       if (z.type === 'door')
-        windowsOver(c, z, I.worldInverseOf(c)).forEach(function (g: any) {
+        windowsOver(c, z, I.worldInverseOf(c)).forEach(function (g) {
           I.glassBand(c, z, g, 3)
         })
     }
@@ -215,7 +215,7 @@ export function installDamagePanels(kit: Kit) {
     return out
   }
   function windowsOver(c: BuildContext, z: DamageZone, inv: Matrix4) {
-    return c.glass.filter(function (g: any) {
+    return c.glass.filter(function (g) {
       if (!g.parent || !g.visible) return false
       const cen = I.localBox(c, g, inv).getCenter(new V3())
       return (
@@ -295,7 +295,7 @@ export function installDamagePanels(kit: Kit) {
     const sgn = z.hinge === 'rear' ? -1 : 1
     yaw.rotation.y = z.side * sgn * (0.42 + c.rand() * 0.15)
     tilt.rotation.z = sgn * Math.min(0.22, Math.asin(clamp((bb.min.y - 0.03) / Math.max(0.3, dx), 0, 0.9)))
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.kind === 'door') p.done = true
     })
   }

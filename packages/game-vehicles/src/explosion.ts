@@ -30,7 +30,7 @@ export function installExplosion(kit: Kit) {
     })
   }
   function enginePos(c: BuildContext) {
-    const mot = c.parts.find(function (p: any) {
+    const mot = c.parts.find(function (p) {
       return p.kind === 'engine'
     })
     if (mot) return mot.pos.clone()
@@ -60,7 +60,7 @@ export function installExplosion(kit: Kit) {
     }
     if (c.tankDamage > 200 && !c.tankFire) {
       c.tankFire = true
-      const tk = c.parts.find(function (p: any) {
+      const tk = c.parts.find(function (p) {
         return p.kind === 'fuel_tank'
       })
       const tp = tk ? tk.pos.clone() : enginePos(c)
@@ -113,7 +113,7 @@ export function installExplosion(kit: Kit) {
       }
       o.material = BURNT[i++ % BURNT.length]
     })
-    c.lights.forEach(function (L: any) {
+    c.lights.forEach(function (L) {
       L.broken = true
       L.lens.forEach(function (m: any) {
         m.visible = false
@@ -217,7 +217,7 @@ export function installExplosion(kit: Kit) {
     })
     I.burst(c, 'plastic', cen, 8, { speed: 4 })
     /* the glass bursts into shards */
-    c.glass.slice().forEach(function (gm2: any) {
+    c.glass.slice().forEach(function (gm2) {
       const G = gm2.userData.glass
       if (!G || G.broken || !gm2.visible || !gm2.parent) return
       // a laminated windshield holds together by its film: it crazes all over and stays; a tempered pane bursts into cubes
@@ -255,7 +255,7 @@ export function installExplosion(kit: Kit) {
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 8, s: 0.8 })
     kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 6, s: 0.7 })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 4, s: 1.4 })
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.kind === 'glass' || p.kind === 'headlight' || p.kind === 'taillight' || p.kind === 'hood') p.done = true
     })
     c.log.push({ kind: 'explosion', label: kit.t(big ? 'blast.tank_explosion' : 'blast.explosion') })

@@ -3,7 +3,7 @@ import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshSt
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
 import type { MaterialOptions, TextTextureOptions } from './materials'
-import type { VehiclePart } from './api'
+import type { VehicleLamp, VehiclePart } from './api'
 import type { Kit } from './types'
 import type { ZoneBoxInput } from './zone-core'
 import { clamp, rng } from './util'
@@ -38,6 +38,21 @@ export function installContext(kit: Kit) {
   /** The object every vehicle builder receives. Axes: +x front, +y up, +z right (driver at negative z), ground at y = 0, metres. */
   class BuildContext {
     [key: string]: any
+    declare root: Group
+    declare vehicle: Group
+    declare effects: Group
+    declare state: string
+    declare glass: Mesh[]
+    declare deform: Mesh[]
+    declare wheels: Group[]
+    declare parts: VehiclePart[]
+    declare lights: VehicleLamp[]
+    declare log: unknown[]
+    declare paints: Set<Material>
+    declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
+    declare flipped: boolean
+    declare time: number
+    declare rand: () => number
     constructor(state: string, seed?: number) {
       this.root = new THREE.Group()
       this.vehicle = new THREE.Group()
