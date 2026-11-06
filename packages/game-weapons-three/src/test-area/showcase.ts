@@ -34,11 +34,12 @@ export function showcaseControls(arsenal: Arsenal, text: ShowcaseText, locale: s
 
 /** The pedestal as an item of the area. */
 export function showcasePedestalItem(name: string): TestableItem {
-  const piece = (THREE: unknown) => furnitureSpec(THREE, PEDESTAL_FURNITURE, { w: SHOWCASE.size, d: SHOWCASE.size, h: SHOWCASE.height })
+  const piece = (THREE: typeof THREE_NS) => furnitureSpec(THREE, PEDESTAL_FURNITURE, { w: SHOWCASE.size, d: SHOWCASE.size, h: SHOWCASE.height })
   return {
     id: SHOWCASE_PEDESTAL_ID,
     name,
-    build: (THREE: unknown) => {
+    build: (lent: unknown) => {
+      const THREE = lent as typeof THREE_NS
       const built = piece(THREE)
       const root = built.build(THREE) as THREE_NS.Object3D
       root.userData.pedestalSpec = { ...built.spec, name, tags: [...(built.spec.tags ?? []), 'furniture'] }
