@@ -41,7 +41,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           { seg: 40 },
         ),
       )
-      ;(o.shoes || []).forEach(function (x: any) {
+      ;(o.shoes || []).forEach(function (x: number) {
         out.push(c.roundBox(0.16, 0.03, 0.06, 0.01, MT.trim, x, y - 0.03, s * z))
       })
       if (o.step)
@@ -83,7 +83,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return m
   }
   /* fenestron: annular fairing in the fin with an n-blade fan turning in z and a stator */
-  function fenestron(c: VehicleContext, x: any, y: any, R: number, w: number, n: number, mat: any, bladeMat: any) {
+  function fenestron(c: VehicleContext, x: number, y: number, R: number, w: number, n: number, mat: any, bladeMat: any) {
     const ring = c.add(new THREE.TorusGeometry(R + 0.06, 0.07, 10, 36), mat, x, y, 0)
     ring.scale.z = w / 0.14
     c.deform.push(ring)
@@ -145,7 +145,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
     return g
   }
   /* 20-rocket pod (generic B-8 type): body with a nose and a dark mouth of tubes */
-  function rocketPod(c: VehicleContext, EA: any, x: number, y: any, z: any, L: number, r: number, mat: any) {
+  function rocketPod(c: VehicleContext, EA: any, x: number, y: number, z: number, L: number, r: number, mat: any) {
     const m = GH.pod(c, EA, x + L / 2, x - L / 2, y, z, r, mat)
     const face = c.cylinder(r * 0.95, r * 0.95, 0.02, MT.dark, x + L / 2 - L * 0.02, y, z, 'x', { seg: 20 })
     for (let i = 0; i < 6; i++) {
@@ -221,7 +221,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fus,
         [
           {
-            sdf: function (x: any, y: any) {
+            sdf: function (x: number, y: number) {
               return -wsT.sdf(x, y)
             },
           },
@@ -238,7 +238,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(bl(x) - y, -wsT.sdf(x, y))
         }),
         white,
@@ -248,7 +248,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return Math.min(0.016 - Math.abs(y - bl(x) - 0.04), -wsT.sdf(x, y) - 0.02)
         }),
         blk,
@@ -269,7 +269,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           c,
           EA,
           ST,
-          EA.bandT(function (x: any, y: any, z: number) {
+          EA.bandT(function (x: number, y: number, z: number) {
             return Math.min(0.006 - Math.abs(df(x, y)), s * z - 0.32)
           }),
           MT.dark,
@@ -566,7 +566,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         [-1.65, 1.02, 1.96, 0.64, 2.3],
         [-1.85, 1.3, 1.9, 0.3, 2],
       ]
-      const wsF = function (x: number, y: number, z: any) {
+      const wsF = function (x: number, y: number, z: number) {
         return Math.min(x - 1.3 - 0.4 * (y - 1.2), y - 1.12, 0.46 - Math.abs(z || 0) + (x - 1.62) * 1.6)
       }
       const chin = function (x: number, y: number) {
@@ -591,7 +591,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fus,
         [
           {
-            sdf: function (x: any, y: any, z: any) {
+            sdf: function (x: number, y: number, z: number) {
               return -wsF(x, y, z)
             },
           },
@@ -599,7 +599,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
             sel: function (n: any) {
               return n.x > 0.2
             },
-            sdf: function (x: any, y: any, z: number) {
+            sdf: function (x: number, y: number, z: number) {
               return -Math.min(chin(x, y), Math.abs(z) - 0.05)
             },
           },
@@ -617,7 +617,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: number, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.08 - Math.abs(y - yc(x)), -wsF(x, y, z) - 0.02, -chin(x, y) - 0.02)
         }),
         mar,
@@ -627,7 +627,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: number, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.016 - Math.abs(y - yc(x) - 0.12), -wsF(x, y, z) - 0.02)
         }),
         gold,
@@ -638,7 +638,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         ST,
         {
-          sdf: function (x: any, y: any, z: number) {
+          sdf: function (x: number, y: number, z: number) {
             return Math.min(chin(x, y), Math.abs(z) - 0.05)
           },
         },
@@ -675,7 +675,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           c,
           EA,
           ST,
-          EA.bandT(function (x: any, y: any, z: number) {
+          EA.bandT(function (x: number, y: number, z: number) {
             return Math.min(0.006 - Math.min(Math.abs(df(x, y)), Math.abs(dr(x, y))), s * z - 0.45)
           }),
           MT.dark,
@@ -982,7 +982,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         [-3.12, 0.95, 2.3, 1.1, 2.6],
         [-3.2, 1.3, 2.28, 0.4, 2],
       ]
-      const wsF = function (x: number, y: number, z: any) {
+      const wsF = function (x: number, y: number, z: number) {
         return Math.min(x - 1.85 - 0.42 * (y - 1.2), y - 1.22, 0.62 - Math.abs(z || 0) + (x - 2.2) * 1.4)
       }
       const chin = function (x: number, y: number) {
@@ -1006,7 +1006,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fus,
         [
           {
-            sdf: function (x: any, y: any, z: any) {
+            sdf: function (x: number, y: number, z: number) {
               return -wsF(x, y, z)
             },
           },
@@ -1014,7 +1014,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
             sel: function (n: any) {
               return n.x > 0.2
             },
-            sdf: function (x: any, y: any, z: number) {
+            sdf: function (x: number, y: number, z: number) {
               return -Math.min(chin(x, y), Math.abs(z) - 0.06)
             },
           },
@@ -1029,7 +1029,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: any, y: number, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(1.22 - y, -wsF(x, y, z) - 0.02, -chin(x, y) - 0.02)
         }),
         navy,
@@ -1039,7 +1039,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         EA,
         ST,
-        EA.bandT(function (x: number, y: number, z: any) {
+        EA.bandT(function (x: number, y: number, z: number) {
           const ch = (Math.floor((x + 9) / 0.14) + Math.floor((y + 9) / 0.07)) % 2
           return Math.min(0.07 - Math.abs(y - 1.3), ch ? 1 : -1, -wsF(x, y, z) - 0.02, x + 3.0, 2.1 - x)
         }),
@@ -1051,7 +1051,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         c,
         ST,
         {
-          sdf: function (x: any, y: any, z: number) {
+          sdf: function (x: number, y: number, z: number) {
             return Math.min(chin(x, y), Math.abs(z) - 0.06)
           },
         },
@@ -1089,7 +1089,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           c,
           EA,
           ST,
-          EA.bandT(function (x: any, y: any, z: number) {
+          EA.bandT(function (x: number, y: number, z: number) {
             return Math.min(0.007 - Math.min(Math.abs(df(x, y)), Math.abs(dr(x, y))), s * z - 0.6)
           }),
           MT.dark,
@@ -1453,7 +1453,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       }
       const paintV = c.paint('#ffffff')
       paintV.vertexColors = true
-      const col = function (x: any, y: number, z: any) {
+      const col = function (x: number, y: number, z: number) {
         return camo(x, y, z, y < 1.05)
       }
       /* fuselage: nose with two stepped cockpits, troop cabin, tapering to the cone */
@@ -1501,7 +1501,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           m,
           [
             {
-              sdf: function (x: any, y: number) {
+              sdf: function (x: number, y: number) {
                 return y - st[0][1] - 0.04
               },
             },
@@ -1660,7 +1660,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
             ],
             { up: 'z', n: 10 },
           ),
-          function (x: any, y: any, z: any) {
+          function (x: number, y: number, z: number) {
             return camo(x, y, z, false)
           },
         ),
@@ -1677,7 +1677,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
               ],
               { up: 'y', n: 8 },
             ),
-            function (x: any, y: number, z: any) {
+            function (x: number, y: number, z: number) {
               return camo(x, y, z, y < 2.75)
             },
           ),
@@ -1707,7 +1707,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
               ],
               { up: 'y', n: 12 },
             ),
-            function (x: any, y: number, z: any) {
+            function (x: number, y: number, z: number) {
               return camo(x, y, z, y < dh(z))
             },
           ),

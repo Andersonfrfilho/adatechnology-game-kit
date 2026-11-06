@@ -219,7 +219,7 @@ export function installMilitary(fx: FleetContext): void {
   }
   /* five-point star. face: "+z" | "-z" | "+y" | "+x" | "-x" */
   const starGeoCache: any = {}
-  function star(c: VehicleContext, x: any, y: any, z: any, r: number, face: string, o: any) {
+  function star(c: VehicleContext, x: number, y: number, z: number, r: number, face: string, o: any) {
     o = o || {}
     const key = r.toFixed(3)
     if (!starGeoCache[key]) {
@@ -327,7 +327,7 @@ export function installMilitary(fx: FleetContext): void {
     })
     return out
   }
-  function sandbags(c: VehicleContext, x0: number, x1: number, y: number, z: any, along: string, rows: number) {
+  function sandbags(c: VehicleContext, x0: number, x1: number, y: number, z: number, along: string, rows: number) {
     rows = rows || 2
     for (let r = 0; r < rows; r++) {
       const off = r % 2 ? 0.2 : 0
@@ -421,7 +421,7 @@ export function installMilitary(fx: FleetContext): void {
     return m
   }
   /* anti-rocket grille (slat): horizontal bars set off from the side */
-  function slat(c: VehicleContext, x0: any, x1: number, y0: number, y1: number, z: number, mat?: any) {
+  function slat(c: VehicleContext, x0: number, x1: number, y0: number, y1: number, z: number, mat?: any) {
     mat = mat || OLIVE_STEEL
     const s = Math.sign(z)
     for (let y = y0; y <= y1 + 1e-6; y += 0.11) c.rod(new V3(x0, y, z), new V3(x1, y, z), 0.012, mat, { seg: 5 })
@@ -452,7 +452,7 @@ export function installMilitary(fx: FleetContext): void {
     return g
   }
   /* round hatch: ring and a lid hinged backwards (open in rad) */
-  function hatch(c: VehicleContext, x: any, y: number, z: any, r: any, open: number, mat: any, o?: any) {
+  function hatch(c: VehicleContext, x: number, y: number, z: number, r: number, open: number, mat: any, o?: any) {
     o = o || {}
     c.cylinder(r + 0.05, r + 0.07, 0.07, mat, x, y + 0.02, z, null, { seg: 24 })
     c.cylinder(r - 0.01, r - 0.01, 0.075, MT.dark, x, y + 0.025, z, null, { seg: 24 })
@@ -470,7 +470,7 @@ export function installMilitary(fx: FleetContext): void {
     return piv
   }
   /* vision block (periscope) with armoured glass. Face +x by default */
-  function periscope(c: VehicleContext, x: any, y: any, z: any, w: number, label: any, o?: any) {
+  function periscope(c: VehicleContext, x: number, y: number, z: number, w: number, label: any, o?: any) {
     o = o || {}
     const rot = o.rot || 0
     const box = c.roundBox(0.14, 0.12, w + 0.06, 0.02, o.mat || OLIVE_STEEL, x, y, z, { rot: [0, rot, 0] })
@@ -1440,7 +1440,7 @@ export function installMilitary(fx: FleetContext): void {
     if (c.meta.bay) c.meta.bay.center.z += dz
   }
   /* protected military headlight: box, headlight and bar grille */
-  function guardedHeadlight(c: VehicleContext, x: number, y: any, z: any, s: number, o?: any) {
+  function guardedHeadlight(c: VehicleContext, x: number, y: number, z: number, s: number, o?: any) {
     o = o || {}
     c.roundBox(0.16, 0.24, 0.32, 0.03, OLIVE_STEEL, x - 0.05, y, z)
     const L = kit.headlight(c, {
@@ -1893,7 +1893,7 @@ export function installMilitary(fx: FleetContext): void {
     c.part('cannon', trl('labels.cannon'), g, new V3(x0 + len * 0.6, y, z), 0.8)
     return g
   }
-  function smokeLauncher(c: VehicleContext, x: number, y: number, z: any, s: number, n: number) {
+  function smokeLauncher(c: VehicleContext, x: number, y: number, z: number, s: number, n: number) {
     for (let i = 0; i < n; i++) {
       const t = c.cylinder(0.045, 0.045, 0.22, BARREL, x + (i % 2) * 0.1, y + Math.floor(i / 2) * 0.1, z, 'x')
       t.rotation.y = -s * 0.5
@@ -2516,7 +2516,7 @@ export function installMilitary(fx: FleetContext): void {
       rI = 0.27,
       yI = 0.66,
       rr = 0.075
-    function wheel(x: any, y: number, rad: number, opt: any) {
+    function wheel(x: number, y: number, rad: number, opt: any) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)
@@ -2923,7 +2923,7 @@ export function installMilitary(fx: FleetContext): void {
         })
         const sphi = Math.sin(((c2.militaryRollSide || 1) * PI) / 2),
           hubH = 1.35
-        mr.children.forEach(function (piv: any, i: any) {
+        mr.children.forEach(function (piv: any, i: number) {
           if (!piv.isGroup) return
           const a = mr.rotation.y + piv.rotation.y,
             dz = -Math.sin(a),

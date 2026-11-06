@@ -39,7 +39,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     const s = Math.sin(TH),
       c = Math.cos(TH),
       Y0 = ra - (Af[0] * s + Af[1] * c)
-    const P = function (x: number, y: number, z?: any) {
+    const P = function (x: number, y: number, z?: number) {
       return new V3(x * c - y * s, x * s + y * c + Y0, z || 0)
     }
     const M = new THREE.Matrix4().compose(new V3(0, Y0, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, TH)), new V3(1, 1, 1))
@@ -177,7 +177,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return 0
   }
   /* floor or lining that fits inside the fuselage: runs of up to 1 m, each with the minimum width of the run minus the clearance */
-  function liner(c: VehicleContext, ST: number[][], x0: number, x1: number, y: any, mat: any, o?: any) {
+  function liner(c: VehicleContext, ST: number[][], x0: number, x1: number, y: number, mat: any, o?: any) {
     o = o || {}
     const n = Math.max(1, Math.ceil((x1 - x0) / 1.0)),
       dx = (x1 - x0) / n,
@@ -195,7 +195,7 @@ export function installPlanesExtra(fx: FleetContext): void {
     return out
   }
   /* registration glued on the tapering flank: centre on the outside and a yaw that follows the taper */
-  function sideText(c: VehicleContext, ST: number[][], txt: string, w: number, h: number, x: any, y: any, s: number, o: any) {
+  function sideText(c: VehicleContext, ST: number[][], txt: string, w: number, h: number, x: number, y: number, s: number, o: any) {
     const a = halfW(ST, x + w / 2, y),
       b = halfW(ST, x - w / 2, y),
       m = c.text(txt, w, h, x, y, s * ((a + b) / 2 + 0.014), s > 0 ? '+z' : '-z', o)
@@ -694,7 +694,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -757,7 +757,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: number) {
+            sdf: function (x: number, y: number, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -772,7 +772,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: number) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.008 - Math.abs(doorF(x, y)), -z - 0.5)
         }),
         MT.dark,
@@ -1118,7 +1118,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -1168,7 +1168,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: number) {
+            sdf: function (x: number, y: number, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -1184,7 +1184,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         EA.fuseSkin(
           c,
           ST,
-          EA.bandT(function (x: any, y: any, z: number) {
+          EA.bandT(function (x: number, y: number, z: number) {
             return Math.min(0.007 - Math.abs(df(x, y)), s * z - 0.5)
           }),
           MT.dark,
@@ -1568,7 +1568,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return Math.abs(n.z) > 0.3
         },
-        sdf: function (x: any, y: any, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(winF(x, y), 0.5 - Math.abs(z))
         },
       }
@@ -1599,7 +1599,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         {
           sub: 0.09,
           pre: {
-            sdf: function (x: any, y: number) {
+            sdf: function (x: number, y: number) {
               return sw(x) + 0.2 - y
             },
           },
@@ -1630,7 +1630,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA,
           ST,
           {
-            sdf: function (x: any, y: any, z: number) {
+            sdf: function (x: number, y: number, z: number) {
               return -Math.max(winF(x, y), 0.5 - s * z)
             },
           },
@@ -1648,7 +1648,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         ST,
-        EA.bandT(function (x: any, y: any, z: number) {
+        EA.bandT(function (x: number, y: number, z: number) {
           return Math.min(0.008 - Math.abs(EA.polySdf(rrect(2.62, 3.25, 0.72, 2.22, 0.12))(x, y)), -z - 0.5)
         }),
         MT.dark,
@@ -1980,7 +1980,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       const fus = c.add(
         EA.fuseGeo(ST, {
           seg: 36,
-          col: function (x: number, y: number, z: any) {
+          col: function (x: number, y: number, z: number) {
             return camo(x, z, y, y < 1.32 + (x < -1.5 ? (-1.5 - x) * 0.12 : 0))
           },
         }),
@@ -2026,7 +2026,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         can,
         [
           {
-            sdf: function (x: any, y: number) {
+            sdf: function (x: number, y: number) {
               return y - 1.99
             },
           },
@@ -2112,7 +2112,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           ],
           { up: 'y', n: 14 },
         )
-        EA.colorize(g, function (x: any, y: number, z: any) {
+        EA.colorize(g, function (x: number, y: number, z: number) {
           return camo(x, z, y, y < dh(z) - 0.005)
         })
         const w = c.add(g, wingM)
@@ -2171,7 +2171,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       const tailM = c.paint('#ffffff')
       tailM.vertexColors = true
       function ctail(geo: any, top: boolean) {
-        EA.colorize(geo, function (x: any, y: number, z: any) {
+        EA.colorize(geo, function (x: number, y: number, z: number) {
           return camo(x, z, y, top ? false : y < 1.7)
         })
         return geo
@@ -2223,7 +2223,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           ],
           { up: 'y', n: 10 },
         )
-        EA.colorize(g, function (x: any, y: number, z: number) {
+        EA.colorize(g, function (x: number, y: number, z: number) {
           return camo(x, z, y, y < 1.72 + Math.abs(z) * 0.018)
         })
         const hs = c.add(g, tailM)

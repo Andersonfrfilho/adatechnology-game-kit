@@ -124,7 +124,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           [0.95, 0.08],
           [1, 0.32],
         ]),
-        chine: function (t: any) {
+        chine: function (t: number) {
           return [
             tb([
               [0, 0.43],
@@ -140,7 +140,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             ])(t),
           ]
         },
-        sheer: function (t: any) {
+        sheer: function (t: number) {
           return [
             tb([
               [0, 0.53],
@@ -164,7 +164,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return -0.05 - y
         }),
         c.paint('#c9ccce', { roughness: 0.45 }),
@@ -174,7 +174,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       /* rim (gunwale) around the footwells, boarding platform and footwell floors */
       const gun = c.add(
         EA.deckGeo(H, x0 + 0.02, 0.4, {
-          inner: function (x: any) {
+          inner: function (x: number) {
             return H.sheerAt(x).z - 0.14
           },
           n: 20,
@@ -407,7 +407,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           [0.9, -0.08],
           [1, 1.05],
         ]),
-        chine: function (t: any) {
+        chine: function (t: number) {
           return [
             tb([
               [0, 1.0],
@@ -796,7 +796,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           [0.85, -0.1],
           [1, 0.25],
         ]),
-        chine: function (t: any) {
+        chine: function (t: number) {
           return [
             tb([
               [0, 0.5],
@@ -812,7 +812,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             ])(t),
           ]
         },
-        sheer: function (t: any) {
+        sheer: function (t: number) {
           return [
             tb([
               [0, 0.6],
@@ -863,7 +863,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             const s = Math.sign(p[2]) || 0
             return [p[0], p[1] - 0.17, p[2] + s * 0.08 * (Math.abs(p[2]) / zc)]
           }),
-          function (u: any) {
+          function (u: number) {
             return rf(u) * 0.36
           },
           { n: 140, rs: 10 },
@@ -1057,7 +1057,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           [0.95, 0.4],
           [1, 1.5],
         ]),
-        chine: function (t: any) {
+        chine: function (t: number) {
           return [
             tb([
               [0, 1.25],
@@ -1074,7 +1074,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             ])(t),
           ]
         },
-        sheer: function (t: any) {
+        sheer: function (t: number) {
           return [
             tb([
               [0, 1.31],
@@ -1117,7 +1117,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         sel: function (n: any) {
           return n.x > 0.5
         },
-        sdf: function (x: any, y: number, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(0.2 - y, y - 0.75, Math.abs(z) - 0.98, 0.04 - Math.abs(z - 0.33), 0.04 - Math.abs(z + 0.33))
         },
       }
@@ -1125,7 +1125,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         sel: function (n: any, ce: any) {
           return n.x < -0.5 && ce.x < 0
         },
-        sdf: function (x: any, y: number, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(-0.88 - y, y - 0.6, Math.abs(z + 0.35) - 0.33)
         },
       }

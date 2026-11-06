@@ -56,12 +56,12 @@
   },
   "packages/game-vehicles-fleet/src/vehicles/boats-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 29
+      "count": 17
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/cars-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 234
+      "count": 183
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/heavy.ts": {
@@ -71,37 +71,37 @@
   },
   "packages/game-vehicles-fleet/src/vehicles/helicopters-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 70
+      "count": 22
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/military.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 85
+      "count": 69
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-cars.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 252
+      "count": 207
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 42
+      "count": 30
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/planes-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 80
+      "count": 50
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/suv-pickup-van.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 104
+      "count": 98
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/water-air.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 152
+      "count": 94
     }
   },
   "packages/game-vehicles-fleet/tests/ammo-types.test.ts": {

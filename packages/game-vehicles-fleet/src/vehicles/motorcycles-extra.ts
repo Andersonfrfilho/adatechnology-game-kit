@@ -250,7 +250,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
     return c.vehicle.children.slice(n0)
   }
-  function blinker(c: VehicleContext, x: any, y: any, z: any, front: boolean, o?: any) {
+  function blinker(c: VehicleContext, x: number, y: number, z: number, front: boolean, o?: any) {
     o = o || {}
     if (o.flush) {
       const f = c.roundBox(0.03, 0.025, 0.05, 0.01, MT.amber, x, y, z, { rot: [0, 0, 0] })
@@ -262,7 +262,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     b.castShadow = false
     return b
   }
-  function plateMoto(c: VehicleContext, x: any, y: any, txt?: any) {
+  function plateMoto(c: VehicleContext, x: number, y: number, txt?: string) {
     c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.012, y, 0)
     c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x, y, 0, '-x', {
       w: 300,
@@ -303,14 +303,14 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     })
     return { exh: new V3(cx + Math.sin(tilt) * len * 0.9 + 0.06, cy + Math.cos(tilt) * len * 0.45, 0.06) }
   }
-  function jerryFlat(c: VehicleContext, x: any, y: any, z: any, col: string) {
+  function jerryFlat(c: VehicleContext, x: number, y: number, z: number, col: string) {
     c.roundBox(0.4, 0.15, 0.28, 0.04, CM(col, { roughness: 0.5 }), x, y, z, { def: true })
     c.cylinder(0.022, 0.022, 0.05, MT.trim, x + 0.18, y + 0.06, z + 0.1)
     ;[-0.1, 0.1].forEach(function (dx) {
       c.roundBox(0.03, 0.155, 0.29, 0.005, CM('#1b1c1e'), x + dx, y + 0.002, z)
     })
   }
-  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: number, y: number, z: number) {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }

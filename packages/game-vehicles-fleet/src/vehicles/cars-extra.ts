@@ -572,7 +572,7 @@ export function installCarsExtra(fx: FleetContext): void {
     m.rotation.order = 'XYZ'
     return m
   }
-  function regLight(c: VehicleContext, kind: string, label: any, inner: any, lens: any, pos: any) {
+  function regLight(c: VehicleContext, kind: string, label: string, inner: any, lens: any, pos: any) {
     const L = { group: null, inner: inner, lens: lens, kind: kind, tint: kind === 'headlight' ? 'clear' : 'red', broken: false }
     c.lights.push(L)
     const pt = c.part(kind, label, inner[0], pos, 0.8)
@@ -1289,7 +1289,7 @@ export function installCarsExtra(fx: FleetContext): void {
       }
     }
     const G: any = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: Math.abs(o.x1 - o.x0) }
-    G.at = function (u: any, y: number) {
+    G.at = function (u: number, y: number) {
       const fi = clamp(u, 0, 1) * nu,
         fj = clamp((y - o.y0) / (o.y1 - o.y0), 0, 1) * nv,
         i0 = Math.min(nu - 1, Math.floor(fi)),
@@ -1312,7 +1312,7 @@ export function installCarsExtra(fx: FleetContext): void {
     return G
   }
   /* round (decorative) fog light on the surface */
-  function fogLamp(c: VehicleContext, s: any, r: number) {
+  function fogLamp(c: VehicleContext, s: number, r: number) {
     onSurf(c.cylinder(r * 1.4, r * 1.4, 0.014, LH, 0, 0, 0), s, 0.006).castShadow = false
     onSurf(c.cylinder(r, r, 0.012, REFL, 0, 0, 0), s, 0.012).castShadow = false
     const bulb = onSurf(c.sphere(r * 0.45, MT.head, 0, 0, 0, 1, 0.5, 1), s, 0.016)
@@ -1750,7 +1750,7 @@ export function installCarsExtra(fx: FleetContext): void {
         spoiler: true,
         front: function (c: VehicleContext, K: any, _I: any) {
           ;[1, -1].forEach(function (sd) {
-            const yb = function (u: any) {
+            const yb = function (u: number) {
                 return 0.635 + 0.065 * sm(u)
               },
               yt = function (u: number) {
@@ -1759,7 +1759,7 @@ export function installCarsExtra(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.34,
               wrap: 0.13,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               refl: REFLB,
@@ -1771,10 +1771,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.78,
                   u1: 0.98,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.006
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.03
                   },
                 },
@@ -1814,7 +1814,7 @@ export function installCarsExtra(fx: FleetContext): void {
             zb = 0.4,
             y0 = 0.3,
             y1 = 0.47
-          function yB(u: any) {
+          function yB(u: number) {
             const z = Math.abs(lw.zu(u))
             return z <= zb ? y0 : y0 + (((y1 - y0) * (z - zb)) / (zt - zb)) * 0.6
           }
@@ -1839,17 +1839,17 @@ export function installCarsExtra(fx: FleetContext): void {
             K.tail(sd, {
               z0: 0.45,
               wrap: 0.19,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               hi: [
                 {
                   u0: 0.06,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.035
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.012
                   },
                 },
@@ -1858,10 +1858,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.06,
                   u1: 0.3,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.045
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.075
                   },
                 },
@@ -1870,7 +1870,7 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.06,
                   u1: 0.3,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.01
                   },
                   yt: function (u: any) {
@@ -2070,7 +2070,7 @@ export function installCarsExtra(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.36,
               wrap: 0.16,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -2082,10 +2082,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.04,
                   u1: 0.97,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.012
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.004
                   },
                 },
@@ -2098,7 +2098,7 @@ export function installCarsExtra(fx: FleetContext): void {
           })
           /* huge edge-to-edge grille (geometric pattern) */
           const g = K.grid(1, 0, { z1: 0.62, y0: 0.4, y1: 0.73, du: 0.03, dv: 0.03 })
-          function yT(u: any) {
+          function yT(u: number) {
             const z = Math.abs(g.zu(u))
             return 0.715 - 0.03 * sm((z - 0.3) / 0.3)
           }
@@ -2118,17 +2118,17 @@ export function installCarsExtra(fx: FleetContext): void {
             K.tail(sd, {
               z0: 0.48,
               wrap: 0.17,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               hi: [
                 {
                   u0: 0.04,
                   u1: 0.97,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.022
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.01
                   },
                 },
@@ -2137,7 +2137,7 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.08,
                   u1: 0.3,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.008
                   },
                   yt: function (u: any) {
@@ -2309,7 +2309,7 @@ export function installCarsExtra(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.34,
               wrap: 0.18,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -2320,10 +2320,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.03,
                   u1: 0.97,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.016
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.006
                   },
                 },
@@ -2353,7 +2353,7 @@ export function installCarsExtra(fx: FleetContext): void {
             zb = 0.38,
             y0 = 0.31,
             y1 = 0.49
-          function yB(u: any) {
+          function yB(u: number) {
             const z = Math.abs(lw.zu(u))
             return z <= zb ? y0 : y0 + (((y1 - y0) * (z - zb)) / (zt - zb)) * 0.5
           }
@@ -2400,27 +2400,27 @@ export function installCarsExtra(fx: FleetContext): void {
             K.tail(sd, {
               z0: 0.36,
               wrap: 0.2,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               hi: [
                 {
                   u0: 0.05,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.03
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.016
                   },
                 },
                 {
                   u0: 0.05,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.014
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.026
                   },
                 },
@@ -2429,7 +2429,7 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.08,
                   u1: 0.28,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.03
                   },
                   yt: function (u: any) {
@@ -2603,13 +2603,13 @@ export function installCarsExtra(fx: FleetContext): void {
             const yb = function (u: number) {
                 return 0.6 + 0.07 * sm(u * 1.2)
               },
-              yt = function (u: any) {
+              yt = function (u: number) {
                 return 0.69 + 0.045 * sm(u)
               }
             K.head(sd, {
               z0: 0.38,
               wrap: 0.26,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -2621,10 +2621,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.05,
                   u1: 0.95,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.014
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.004
                   },
                 },
@@ -2633,10 +2633,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.66,
                   u1: 0.95,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.004
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.016
                   },
                 },
@@ -2661,11 +2661,11 @@ export function installCarsExtra(fx: FleetContext): void {
           K.skin(wg, CHROMEB, {
             u0: 0.01,
             u1: 0.99,
-            yb: function (u: any) {
+            yb: function (u: number) {
               const z = Math.abs(wg.zu(u))
               return 0.66 + 0.014 * sm((z - 0.3) / 0.12)
             },
-            yt: function (u: any) {
+            yt: function (u: number) {
               const z = Math.abs(wg.zu(u))
               return 0.705 + 0.008 * sm((z - 0.3) / 0.12)
             },
@@ -2680,7 +2680,7 @@ export function installCarsExtra(fx: FleetContext): void {
             zb = 0.42,
             y0 = 0.27,
             y1 = 0.47
-          function yB(u: any) {
+          function yB(u: number) {
             const z = Math.abs(lw.zu(u))
             return z <= zb ? y0 : y0 + (((y1 - y0) * (z - zb)) / (zt - zb)) * 0.7
           }
@@ -2716,27 +2716,27 @@ export function installCarsExtra(fx: FleetContext): void {
             K.tail(sd, {
               z0: 0.24,
               wrap: 0.24,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               hi: [
                 {
                   u0: 0.02,
                   u1: 0.97,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.016
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.006
                   },
                 },
                 {
                   u0: 0.86,
                   u1: 0.95,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.006
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.006
                   },
                 },
@@ -3132,7 +3132,7 @@ export function installCarsExtra(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.4,
               wrap: 0.2,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -3144,10 +3144,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 return {
                   u0: u,
                   u1: u + 0.028,
-                  yb: function (v: any) {
+                  yb: function (v: number) {
                     return yb(v) + 0.008
                   },
-                  yt: function (v: any) {
+                  yt: function (v: number) {
                     return yt(v) - 0.008
                   },
                 }
@@ -3156,10 +3156,10 @@ export function installCarsExtra(fx: FleetContext): void {
                 {
                   u0: 0.8,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.004
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.018
                   },
                 },

@@ -1391,7 +1391,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       }
     }
     const G: any = { P: P, N: N, nu: nu, nv: nv, y0: o.y0, y1: o.y1, len: Math.abs(o.x1 - o.x0) }
-    G.at = function (u: any, y: number) {
+    G.at = function (u: number, y: number) {
       const fi = clamp(u, 0, 1) * nu,
         fj = clamp((y - o.y0) / (o.y1 - o.y0), 0, 1) * nv,
         i0 = Math.min(nu - 1, Math.floor(fi)),
@@ -1414,7 +1414,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     return G
   }
   /* round (decorative) fog light on the surface */
-  function fogLamp(c: VehicleContext, s: any, r: number) {
+  function fogLamp(c: VehicleContext, s: number, r: number) {
     onSurf(c.cylinder(r * 1.4, r * 1.4, 0.014, LH, 0, 0, 0), s, 0.006).castShadow = false
     onSurf(c.cylinder(r, r, 0.012, REFL, 0, 0, 0), s, 0.012).castShadow = false
     const bulb = onSurf(c.sphere(r * 0.45, MT.head, 0, 0, 0, 1, 0.5, 1), s, 0.016)
@@ -1449,7 +1449,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       return pts[pts.length - 1][1]
     }
     I.K.skin(Gd, o.mat || c.paint(o.col), {
-      yb: function (u: any) {
+      yb: function (u: number) {
         return yAt(u) - h
       },
       yt: yAt,
@@ -1494,7 +1494,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       K.head(sd, {
         z0: 0.37,
         wrap: 0.14,
-        shape: function (u: any) {
+        shape: function (u: number) {
           return [yb(u), yt(u)]
         },
         proj: [
@@ -1505,10 +1505,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           {
             u0: 0.04,
             u1: 0.97,
-            yb: function (u: any) {
+            yb: function (u: number) {
               return yt(u) - 0.015
             },
-            yt: function (u: any) {
+            yt: function (u: number) {
               return yt(u) - 0.005
             },
           },
@@ -1517,10 +1517,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           {
             u0: 0.82,
             u1: 0.98,
-            yb: function (u: any) {
+            yb: function (u: number) {
               return yb(u) + 0.005
             },
-            yt: function (u: any) {
+            yt: function (u: number) {
               return yb(u) + 0.02
             },
           },
@@ -1563,7 +1563,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       zb = 0.42,
       y0 = 0.33,
       y1 = 0.51
-    function yB(u: any) {
+    function yB(u: number) {
       const z = Math.abs(lw.zu(u))
       return z <= zb ? y0 : y0 + ((y1 - y0) * (z - zb)) / (zt - zb)
     }
@@ -1720,7 +1720,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           K.tail(sd, {
             z0: sedan ? 0.41 : 0.37,
             wrap: 0.17,
-            shape: function (u: any) {
+            shape: function (u: number) {
               return [yb(u), yt(u)]
             },
             hi: [
@@ -2188,7 +2188,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.26,
               wrap: 0.2,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -2199,10 +2199,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
                 {
                   u0: 0.015,
                   u1: 0.98,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.016
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.005
                   },
                 },
@@ -2427,7 +2427,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             K.head(sd, {
               z0: 0.3,
               wrap: 0.22,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               proj: [
@@ -2438,20 +2438,20 @@ export function installMotorcyclesCars(fx: FleetContext): void {
                 {
                   u0: 0.22,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.004
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yb(u) + 0.015
                   },
                 },
                 {
                   u0: 0.86,
                   u1: 0.9,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.004
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.008
                   },
                 },
@@ -2479,7 +2479,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             zb = 0.5,
             y0 = 0.31,
             y1 = 0.52
-          function yB(u: any) {
+          function yB(u: number) {
             const z = Math.abs(lw.zu(u))
             return z <= zb ? y0 : y0 + ((y1 - y0) * (z - zb)) / (zt - zb)
           }
@@ -2511,27 +2511,27 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             K.tail(sd, {
               z0: 0.43,
               wrap: 0.22,
-              shape: function (u: any) {
+              shape: function (u: number) {
                 return [yb(u), yt(u)]
               },
               hi: [
                 {
                   u0: 0.12,
                   u1: 0.96,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yt(u) - 0.022
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.01
                   },
                 },
                 {
                   u0: 0.12,
                   u1: 0.17,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.01
                   },
-                  yt: function (u: any) {
+                  yt: function (u: number) {
                     return yt(u) - 0.01
                   },
                 },
@@ -2540,7 +2540,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
                 {
                   u0: 0.22,
                   u1: 0.45,
-                  yb: function (u: any) {
+                  yb: function (u: number) {
                     return yb(u) + 0.01
                   },
                   yt: function (u: any) {
@@ -2700,7 +2700,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           K.head(sd, {
             z0: 0.38,
             wrap: 0.18,
-            shape: function (u: any) {
+            shape: function (u: number) {
               return [yb(u), yt(u)]
             },
             proj: [
@@ -2711,10 +2711,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
               {
                 u0: 0.08,
                 u1: 0.96,
-                yb: function (u: any) {
+                yb: function (u: number) {
                   return yb(u) + 0.005
                 },
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return yb(u) + 0.016
                 },
               },
@@ -2723,10 +2723,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
               {
                 u0: 0.82,
                 u1: 0.98,
-                yb: function (u: any) {
+                yb: function (u: number) {
                   return yt(u) - 0.03
                 },
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return yt(u) - 0.008
                 },
               },
@@ -2777,27 +2777,27 @@ export function installMotorcyclesCars(fx: FleetContext): void {
           K.tail(sd, {
             z0: 0.43,
             wrap: 0.2,
-            shape: function (u: any) {
+            shape: function (u: number) {
               return [yb(u), yt(u)]
             },
             hi: [
               {
                 u0: 0.1,
                 u1: 0.96,
-                yb: function (u: any) {
+                yb: function (u: number) {
                   return yt(u) - 0.024
                 },
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return yt(u) - 0.011
                 },
               },
               {
                 u0: 0.86,
                 u1: 0.92,
-                yb: function (u: any) {
+                yb: function (u: number) {
                   return yb(u) + 0.01
                 },
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return yt(u) - 0.011
                 },
               },
@@ -2806,10 +2806,10 @@ export function installMotorcyclesCars(fx: FleetContext): void {
               {
                 u0: 0.08,
                 u1: 0.3,
-                yb: function (u: any) {
+                yb: function (u: number) {
                   return yb(u) + 0.01
                 },
-                yt: function (u: any) {
+                yt: function (u: number) {
                   return yb(u) + 0.045
                 },
               },
@@ -3066,7 +3066,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     })
     return c.vehicle.children.slice(n0)
   }
-  function blinker(c: VehicleContext, x: number, y: any, z: any, front: boolean) {
+  function blinker(c: VehicleContext, x: number, y: number, z: number, front: boolean) {
     c.rod(new V3(x, y, z * 0.55), new V3(x, y, z), 0.008, MT.trim, { seg: 6 })
     const b = c.sphere(0.026, MT.amber, x + (front ? 0.012 : -0.012), y, z, 1.5, 0.9, 0.9)
     b.castShadow = false
@@ -3122,7 +3122,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     })
   }
   /* jerry can lying down (fixed with straps) */
-  function jerryFlat(c: VehicleContext, x: any, y: any, z: any, col: string) {
+  function jerryFlat(c: VehicleContext, x: number, y: number, z: number, col: string) {
     c.roundBox(0.4, 0.15, 0.28, 0.04, CM(col, { roughness: 0.5 }), x, y, z, { def: true })
     c.cylinder(0.022, 0.022, 0.05, MT.trim, x + 0.18, y + 0.06, z + 0.1)
     ;[-0.1, 0.1].forEach(function (dx) {
@@ -4711,7 +4711,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         sel: function (n: any, ce: any) {
           return n.x > 0.3 && ce.y > 0.98
         },
-        sdf: function (x: any, y: number, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(Math.abs(z) - 0.5, 1.02 - y, y - 1.3)
         },
       })
@@ -4720,7 +4720,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         sel: function (n: any, ce: any) {
           return n.x < -0.3 && ce.y > 1.0
         },
-        sdf: function (x: any, y: number, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           return Math.max(Math.abs(z) - 0.36, 1.1 - y, y - 1.31)
         },
       })
@@ -4729,7 +4729,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         sel: function (n: any, ce: any) {
           return n.y > 0.3 && ce.x > 0.9 && ce.y > 0.6
         },
-        sdf: function (x: number, y: any, z: number) {
+        sdf: function (x: number, y: number, z: number) {
           const t = clamp((x - 1.17) / 0.5, 0, 1)
           return Math.max(0.94 - x, x - 1.69, Math.abs(z) - (0.44 - 0.16 * t * t))
         },

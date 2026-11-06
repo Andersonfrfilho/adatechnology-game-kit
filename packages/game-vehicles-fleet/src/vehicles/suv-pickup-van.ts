@@ -306,7 +306,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     })
   }
   /* Shark-fin antenna at the end of the roof */
-  function dorsalFin(c: VehicleContext, x: any, col?: any) {
+  function dorsalFin(c: VehicleContext, x: any, col?: string) {
     const m = c.meta,
       g = c.roundBox(0.16, 0.06, 0.05, 0.025, col ? c.paint(col) : GLOSS, x, m.top! + 0.02, 0, { taper: { sx: 0.35, shift: -0.05 } })
     return g
@@ -508,7 +508,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     return out
   }
   /* Wide C pillar in the bodywork colour (no quarter window): xb/xt = front edge at the bottom and top (sloped like the real door). */
-  function paintedPillar(c: VehicleContext, xb: number, xt: number, col: any, o?: any) {
+  function paintedPillar(c: VehicleContext, xb: number, xt: number, col: string, o?: any) {
     o = o || {}
     const E = glasshouse(c),
       yt = E.top - 0.025,
@@ -555,7 +555,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     )
   }
   /* Waist line that rises to the rear: a car-colour panel covers the base of the glass from x0 (rise 0) to the rear (rise dy). */
-  function beltline(c: VehicleContext, x0: number, dy: number, col: any) {
+  function beltline(c: VehicleContext, x0: number, dy: number, col: string) {
     const E = glasshouse(c),
       xr = E.back(E.yb + dy) + 0.03,
       y0 = E.b - 0.02
@@ -2305,7 +2305,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     const hw = W / 2,
       yS = 0.3,
       yT = P.roof - 0.25
-    const side = function (x0: any, x1: any, sd: number) {
+    const side = function (x0: number, x1: number, sd: number) {
       return sd < 0 ? [x0, x1, yS, yT, -hw - 0.25, -hw + 0.34] : [x0, x1, yS, yT, hw - 0.34, hw + 0.25]
     }
     c.zone('door_rear_right', trl('labels.right_sliding_door'), side(P.slide[0], P.slide[1], 1), null, {
@@ -2586,7 +2586,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
             const hp = c.hood.piv,
               hg = hp.children[0].geometry.attributes.position
             /* hood height at the point; with no vertex nearby, searches a larger window (never returns the -9 of "not found") */
-            const topAt = function (lx: number, z?: any) {
+            const topAt = function (lx: number, z?: number) {
               z = z || 0
               for (let tol = 0.07; tol < 0.6; tol *= 1.8) {
                 let y = -9
