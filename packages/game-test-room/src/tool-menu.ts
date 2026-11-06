@@ -27,10 +27,18 @@ export interface ToolMenuOptions {
   readonly groups: () => readonly ToolMenuGroup[]
   /** The tool in hand, marked in the list. */
   readonly current: () => string
-  readonly onPick: (toolId: string) => void
+  /** The tool in the left hand when there is one in each hand, marked too. */
+  readonly currentLeft?: () => string | null
+  /** A click puts the tool in hand; with Shift held (`second`) the host puts one in the other hand as well, when the tool goes one in each hand. */
+  readonly onPick: (toolId: string, pick: ToolMenuPick) => void
   /** Called when the menu opens (the room frees the mouse) and closes. */
   readonly onOpen?: (open: boolean) => void
   readonly thumb: (thumbnail: string, credit?: string) => HTMLElement
+}
+
+/** How a tool was picked: `second` is a Shift+click, the tool asked for in the other hand too. */
+export interface ToolMenuPick {
+  readonly second: boolean
 }
 
 export interface ToolMenu {
@@ -74,7 +82,8 @@ export function createToolMenu(o: ToolMenuOptions): ToolMenu {
   const close = mk('button', 'tr-btn', '×')
   close.type = 'button'
   close.title = o.t('ui.tool_menu.close')
-  header.append(mk('h3', undefined, o.t('ui.tool_menu')), search, close)
+  // a Shift+click puts one in each hand: the header says so once, the room knows which weapons take it
+  header.append(mk('h3', undefined, o.t('ui.tool_menu')), mk('small', 'tr-hint', o.t('ui.tool_menu.dual')), search, close)
   const tabs = mk('div', 'tr-tabs')
   const body = mk('div', 'tr-wmenu-body')
   element.append(header, tabs, body)
@@ -83,15 +92,17 @@ export function createToolMenu(o: ToolMenuOptions): ToolMenu {
   let groups: readonly ToolMenuGroup[] = []
 
   const toolButton = (tool: ToolMenuTool, group?: string): HTMLButtonElement => {
-    const button = mk('button', tool.id === o.current() ? 'tr-btn on' : 'tr-btn')
+    const left = o.currentLeft?.() === tool.id
+    const button = mk('button', tool.id === o.current() || left ? 'tr-btn on' : 'tr-btn')
     button.type = 'button'
     button.title = tool.name
+    if (left) button.dataset.left = ''
     button.dataset.tool = tool.id
     if (tool.thumbnail) button.appendChild(o.thumb(tool.thumbnail, tool.thumbnailCredit))
     button.appendChild(mk('span', undefined, tool.name))
     if (group) button.appendChild(mk('small', undefined, group))
-    button.onclick = () => {
-      o.onPick(tool.id)
+    button.onclick = (event: MouseEvent) => {
+      o.onPick(tool.id, { second: event.shiftKey })
       toggle(false)
     }
     return button

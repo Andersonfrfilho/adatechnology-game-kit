@@ -456,7 +456,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
         // the weapon against a wall asks as often as the laser, on the clock of the simulation (so a fast-forwarded room measures as often per frame)
         contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
-        ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null } : {}),
+        ...(lent.holdFrame ? { bodyHold: () => lent.holdFrame?.() ?? null, leftBodyHold: () => lent.holdFrame?.('L') ?? null } : {}),
         firstPerson: () => lent.player().cameraMode === 'first',
         // the lens of the gun in first person, how far it is brought to the eye (the right button) and how the body moves (the bob and the sway follow it)
         ...(lent.setViewmodelFov ? { viewmodelFov: (degrees: number | null) => lent.setViewmodelFov?.(degrees) } : {}),
@@ -515,7 +515,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       })
       const offFrame = lent.onFrame((dt) => created.update(dt))
       const offHands = lent.setHandTargets?.(() => created.handTargets())
-      const offMuzzle = lent.setMuzzleSource?.(() => created.muzzle())
+      const offMuzzle = lent.setMuzzleSource?.((hand) => created.muzzle(hand))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
         accessories.dispose()

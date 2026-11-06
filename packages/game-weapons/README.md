@@ -271,6 +271,17 @@ optic that is fitted over `aimSeconds`), and only when the click lands on the ro
 a throwable) leaves the button to the room, which grabs with it. The bench's **Supported** switch (`supported_stance`) puts the weapon in the supported stance (deployed or prone), so the bipod effect can be exercised;
 it goes back off when another tool is taken. The laser measures its distance at most 30 times a second and ignores hidden nodes (a hidden ancestor counts) and the weapon in the hands.
 
+### A weapon in each hand
+
+`rules.dualWield` says which weapons go one in each hand and what that costs: `categories` (`pistol`, `revolver`), `weapons` (the Mini Uzi, Uzi, MAC-10, vz. 61, MP7, the knives, the
+machete and the hatchet) less `exclude`, and the multipliers of a weapon held so: `spread` ×1.8 and `recoil` ×1.35. `canDualWield(arsenal, id)` answers it; each hand gets its own
+`arsenal.create(id)` (its own magazine, reload, heat and fire rate) with `setStance({ dualWield: true })`, which applies the multipliers and keeps the weapon from aiming. A game changes
+the lists with `createArsenal({ rules: { dualWield: { weapons: [...] } } })` (an array replaces the shipped one).
+
+**In the test room**: Shift+click in the weapon picker puts two of an eligible weapon in the hands (a second Shift+click changes the left one; a plain click goes back to one). The left
+mouse button fires the right hand, the right button the left hand (no aiming with two); R reloads the right one, then the left one: one hand holds the other weapon meanwhile, so the
+two never reload at once and neither hand leaves its grip for the magazine.
+
 ## API
 
 - `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws), `attachments`, `canFit(weapon, attachment, options?)`, `restore(snapshot, options?)`,

@@ -78,3 +78,77 @@ describe('the weapon picker of the room', () => {
     room.dispose()
   })
 })
+
+describe('a weapon in each hand from the picker', () => {
+  const pick = (container: HTMLElement, room: ReturnType<typeof open>['room'], id: string, shiftKey: boolean): void => {
+    room.toggleToolMenu(true)
+    const search = menuOf(container).querySelector('.tr-search') as HTMLInputElement
+    search.value = id
+    search.dispatchEvent(new Event('input'))
+    const button = toolButtons(container).find((entry) => entry.dataset.tool === id) as HTMLElement
+    expect(button, id).toBeDefined()
+    button.dispatchEvent(new MouseEvent('click', { shiftKey, bubbles: true }))
+  }
+
+  it('Shift+click puts two of the weapon in the hands, a second Shift+click changes the left one, a plain click goes back to one', () => {
+    const { container, room } = open()
+    pick(container, room, 'glock_17', true)
+    expect(room.tool.def.id).toBe('glock_17')
+    expect(room.offTool?.def.id).toBe('glock_17')
+    expect(room.offTool).not.toBe(room.tool)
+    pick(container, room, 'mini_uzi', true)
+    expect(room.tool.def.id).toBe('glock_17')
+    expect(room.offTool?.def.id).toBe('mini_uzi')
+    room.toggleToolMenu(true)
+    ;(menuOf(container).querySelector('[data-group="firearms"]') as HTMLElement).click()
+    expect((menuOf(container).querySelector('[data-left]') as HTMLElement | null)?.dataset.tool).toBe('mini_uzi')
+    room.toggleToolMenu(false)
+    pick(container, room, 'beretta_92fs', false)
+    expect(room.tool.def.id).toBe('beretta_92fs')
+    expect(room.offTool).toBeNull()
+    room.dispose()
+  })
+
+  it('a rifle goes in the hands alone, Shift or not', () => {
+    const { container, room } = open()
+    pick(container, room, 'glock_17', true)
+    pick(container, room, 'ak_47', true)
+    expect(room.tool.def.id).toBe('ak_47')
+    expect(room.offTool).toBeNull()
+    room.dispose()
+  })
+
+  it('the left mouse button fires the right hand, the right button the left hand, each with its own magazine', async () => {
+    const renderer = stubRenderer()
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer, ui: true })
+    room.setTool('glock_17')
+    expect(room.setOffTool('glock_17')).toBe(true)
+    for (let i = 0; i < 40; i++) room.update(1 / 60)
+    room.look([0, 1.6, 2], [0, 1.2, -11])
+    const dom = renderer.domElement
+    // no pointer lock here: a press held past the drag delay is a pull of the trigger
+    dom.dispatchEvent(new MouseEvent('mousedown', { button: 0, bubbles: true }))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    room.update(1 / 60)
+    window.dispatchEvent(new MouseEvent('mouseup', { button: 0 }))
+    for (let i = 0; i < 3; i++) room.update(1 / 60)
+    expect(room.tool.ammo).toBe(room.tool.capacity - 1)
+    expect(room.offTool!.ammo).toBe(room.offTool!.capacity)
+    dom.dispatchEvent(new MouseEvent('mousedown', { button: 2, bubbles: true }))
+    room.update(1 / 60)
+    window.dispatchEvent(new MouseEvent('mouseup', { button: 2 }))
+    for (let i = 0; i < 3; i++) room.update(1 / 60)
+    expect(room.offTool!.ammo).toBe(room.offTool!.capacity - 1)
+    expect(room.tool.ammo).toBe(room.tool.capacity - 1)
+    // with one weapon the right button grabs again: nothing fires
+    room.setOffTool(null)
+    const before = room.tool.ammo
+    dom.dispatchEvent(new MouseEvent('mousedown', { button: 2, bubbles: true }))
+    window.dispatchEvent(new MouseEvent('mouseup', { button: 2 }))
+    room.update(1 / 60)
+    expect(room.tool.ammo).toBe(before)
+    room.dispose()
+  })
+})

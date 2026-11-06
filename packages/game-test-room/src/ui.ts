@@ -4,7 +4,7 @@ import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
 import { createTestTablePanel, TEST_TABLE_CSS } from './test-table-panel'
 import { createToolMenu, TOOL_MENU_CSS } from './tool-menu'
-import type { ToolMenuGroup } from './tool-menu'
+import type { ToolMenuGroup, ToolMenuPick } from './tool-menu'
 import type { TestTable } from './test-table'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
@@ -116,7 +116,7 @@ export interface UiOptions {
   /** The room's test table: its panel goes between the inspector and the log. Absent: no panel. */
   testTable?: TestTable
   /** The tool picker (every tool of the arsenal by tab and section) and the key that opens it, shown on its button. Absent: no picker. */
-  toolMenu?: { groups: () => readonly ToolMenuGroup[]; onPick: (toolId: string) => void; onOpen?: (open: boolean) => void; keyLabel: string }
+  toolMenu?: { groups: () => readonly ToolMenuGroup[]; onPick: (toolId: string, pick: ToolMenuPick) => void; onOpen?: (open: boolean) => void; keyLabel: string; currentLeft?: () => string | null }
 }
 
 export interface RoomUi {
@@ -315,7 +315,7 @@ export function createUi(o: UiOptions): RoomUi {
   let currentTool = ''
   const menuOptions = o.toolMenu
   const toolMenu = menuOptions
-    ? createToolMenu({ t, groups: menuOptions.groups, current: () => currentTool, onPick: menuOptions.onPick, ...(menuOptions.onOpen ? { onOpen: menuOptions.onOpen } : {}), thumb })
+    ? createToolMenu({ t, groups: menuOptions.groups, current: () => currentTool, onPick: menuOptions.onPick, ...(menuOptions.onOpen ? { onOpen: menuOptions.onOpen } : {}), ...(menuOptions.currentLeft ? { currentLeft: menuOptions.currentLeft } : {}), thumb })
     : null
   if (toolMenu && menuOptions) {
     const menuButton = mk('button', 'tr-slot tr-menu-btn')

@@ -45,8 +45,14 @@ export interface MuzzlePose {
   readonly drawsFlash: boolean
 }
 
-/** Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). */
-export type MuzzleSource = () => MuzzlePose | null
+/** A hand of the body: `R` the right, `L` the left. A tool in one hand alone is in the right; the left holds one of its own only with a tool in each hand (`HostTool.offHand`). */
+export type ToolHand = 'R' | 'L'
+
+/**
+ * Read by the host at each shot; null while the tool in the hands has no muzzle (a knife, a bare hand). `hand` is the hand that fired (absent: the right one); a source that draws
+ * one tool only answers the same for both.
+ */
+export type MuzzleSource = (hand?: ToolHand) => MuzzlePose | null
 
 /**
  * The layer of what the first-person view draws over the world (three.js `Object3D.layers`): the tool in the hands and the arms that hold it. A host with a first-person view draws

@@ -1,6 +1,6 @@
 import type { AttachmentId, AttachmentInstall, MountKind, StatModifier, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
-import type { AmmoCore, AmmoJacket, CaseType, FireMode, WeaponCategory, WeaponDef } from './types'
+import type { AmmoCore, AmmoJacket, CaseType, FireMode, WeaponCategory, WeaponDef, WeaponId } from './types'
 
 export type FaultId = 'misfire' | 'stovepipe' | 'double_feed' | 'failure_to_extract'
 
@@ -104,6 +104,17 @@ export interface WeaponRules {
      * own magnification instead. A category left out does not zoom.
      */
     readonly ironSightZoom: Readonly<Record<string, number>>
+  }
+  /**
+   * A weapon in each hand: which weapons a body can hold one of in each hand (by `categories`, plus the ids in `weapons`, less the ids in `exclude`), and how much worse each one shoots
+   * then (`spread` and `recoil` multiply the one-handed numbers: one hand holds the weapon, none steadies it, and the eye cannot sight two at once).
+   */
+  readonly dualWield: {
+    readonly categories: readonly WeaponCategory[]
+    readonly weapons: readonly WeaponId[]
+    readonly exclude: readonly WeaponId[]
+    readonly spread: number
+    readonly recoil: number
   }
   /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
   readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }

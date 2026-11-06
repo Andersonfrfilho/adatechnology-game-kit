@@ -153,6 +153,8 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
   const zoomOf = (tool: HostTool): number => aimZoomOf(arsenal, tool.weapon, tool.attachments?.map((part) => part.id))
 
   const aims = (tool: HostTool): boolean => {
+    // a weapon in each hand is held out: the right button is the left hand's trigger
+    if (tool.offHand) return false
     const kind = arsenal.weapons.get(tool.weapon)?.action.kind
     return kind === 'firearm' || kind === 'launcher'
   }

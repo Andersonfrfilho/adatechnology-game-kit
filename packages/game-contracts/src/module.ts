@@ -7,7 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
-import type { HandPose, HandTargetSource, MuzzleSource } from './hands'
+import type { HandPose, HandTargetSource, MuzzleSource, ToolHand } from './hands'
 import type { GaitId, SurfaceId } from './foley'
 import type { ContainerSpec } from './fluids'
 import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
@@ -156,12 +156,13 @@ export interface ModuleArea {
 }
 
 /**
- * What the player did with the tool in hand, as the host reports it. Hosts emit what they support; modules ignore what they do not need. The
+ * What the player did with the tool in hand, as the host reports it. A tool event names the `hand` whose tool it is when the player holds one in each (`HostTool.offHand`): `L` for the
+ * left; absent is the right, the hand of a tool held alone. A `tool` event with `hand: 'L'` puts the left hand's tool in it, and one with an empty `weapon` lets the left hand go. Hosts emit what they support; modules ignore what they do not need. The
  * names are of a tool's cycle, not of a firearm: a nail gun, a chainsaw or a hose has modes, faults and a safety too.
  */
 export type HostEvent =
   /** The tool is put in hand; `duration` is the seconds the rule takes to ready it (absent: no draw time). */
-  | { type: 'tool'; weapon: string; duration?: number }
+  | { type: 'tool'; weapon: string; duration?: number; hand?: ToolHand }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
   | {
       type: 'shot'
@@ -177,35 +178,36 @@ export type HostEvent =
        */
       origin?: Vec3
       direction?: Vec3
+      hand?: ToolHand
     }
   /** The trigger was pulled, the round was spent and nothing left the tool (a dud cartridge): no projectile, no recoil. */
-  | { type: 'misfire'; weapon: string }
+  | { type: 'misfire'; weapon: string; hand?: ToolHand }
   /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */
-  | { type: 'reload'; weapon: string; phase: 'start' | 'end'; kind?: string; duration?: number }
-  | { type: 'empty'; weapon: string }
-  | { type: 'mode'; weapon: string; mode: string }
-  | { type: 'fault'; weapon: string; fault: string }
-  | { type: 'clear'; weapon: string; fault: string; phase: 'start' | 'end'; duration?: number }
-  | { type: 'safety'; weapon: string; on: boolean }
+  | { type: 'reload'; weapon: string; phase: 'start' | 'end'; kind?: string; duration?: number; hand?: ToolHand }
+  | { type: 'empty'; weapon: string; hand?: ToolHand }
+  | { type: 'mode'; weapon: string; mode: string; hand?: ToolHand }
+  | { type: 'fault'; weapon: string; fault: string; hand?: ToolHand }
+  | { type: 'clear'; weapon: string; fault: string; phase: 'start' | 'end'; duration?: number; hand?: ToolHand }
+  | { type: 'safety'; weapon: string; on: boolean; hand?: ToolHand }
   /** The action works between shots (a pump, a bolt); `duration` is the seconds of the cycle, on `start`. */
-  | { type: 'cycle'; weapon: string; phase: 'start' | 'end'; duration?: number }
+  | { type: 'cycle'; weapon: string; phase: 'start' | 'end'; duration?: number; hand?: ToolHand }
   /** A step of a longer phase (a reload's magazine out, magazine in, charge), at the moment the rule reaches it. */
-  | { type: 'stage'; weapon: string; stage: string }
+  | { type: 'stage'; weapon: string; stage: string; hand?: ToolHand }
   /** One more round went into the tool while it loads round by round. */
-  | { type: 'feed'; weapon: string }
+  | { type: 'feed'; weapon: string; hand?: ToolHand }
   /**
    * A throwable with a timer fuse is cooked: the trigger pulls the pin (`start`, `fuse` is the whole fuse), releasing throws it with what is left of
    * the fuse (`throw`), and holding past the fuse sets it off in the hand (`burst`, `fuse` 0).
    */
-  | { type: 'cook'; weapon: string; phase: 'start' | 'throw' | 'burst'; fuse: number }
+  | { type: 'cook'; weapon: string; phase: 'start' | 'throw' | 'burst'; fuse: number; hand?: ToolHand }
   /** An accessory went on (`fit`), came off (`remove`) or broke (`break`) at `mount`; `duration` is the seconds the work takes, on `fit` and `remove`. */
-  | { type: 'attachment'; weapon: string; action: 'fit' | 'remove' | 'break'; attachment: string; mount: string; duration?: number }
+  | { type: 'attachment'; weapon: string; action: 'fit' | 'remove' | 'break'; attachment: string; mount: string; duration?: number; hand?: ToolHand }
   /** A light or a laser was turned on or off. */
-  | { type: 'toggle'; weapon: string; attachment: string; on: boolean }
+  | { type: 'toggle'; weapon: string; attachment: string; on: boolean; hand?: ToolHand }
   /** The stock was folded or slid in (`collapsed`) or opened (`extended`); `kind` is how it moves (`fold`, `retract`), `duration` the seconds it takes. */
-  | { type: 'stock'; weapon: string; state: 'collapsed' | 'extended'; kind?: string; duration?: number }
+  | { type: 'stock'; weapon: string; state: 'collapsed' | 'extended'; kind?: string; duration?: number; hand?: ToolHand }
   /** The weapon in hand changed between the main weapon and the one under its barrel (`on`: the under-barrel one is in use); `duration` is the seconds of the switch. */
-  | { type: 'underbarrel'; weapon: string; on: boolean; duration?: number }
+  | { type: 'underbarrel'; weapon: string; on: boolean; duration?: number; hand?: ToolHand }
   /**
    * Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off.
    * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
@@ -257,6 +259,11 @@ export interface HostTool {
   mass?: number
   /** Seconds to bring the tool to the sights, with what is on it. */
   aimSeconds?: number
+  /**
+   * The tool in the left hand when the player holds one in each (a pistol in each hand): its own rounds, reload and state. Absent with one tool, which is in the right hand. A tool
+   * in each hand is held out, never brought to the eye: the second button pulls the left one's trigger instead.
+   */
+  offHand?: HostTool
 }
 
 export interface HostToolAttachment {
@@ -420,9 +427,9 @@ export interface ModuleHost {
   /**
    * Where the player's body holds a tool now (world space), in every view (the weapon is the body's own): `position` is the pocket of the right shoulder a stock rests on, `quaternion` turns
    * to the aim (-z the aim, x right, y up, as a camera). A module draws the tool there at its real size. Null for a host with no body (the module puts the same pocket under the camera's eye);
-   * a host without a body leaves it out.
+   * a host without a body leaves it out. With `hand: 'L'` it is the pocket of the left shoulder (the same frame mirrored), where a tool in the left hand is held.
    */
-  holdFrame?(): HandPose | null
+  holdFrame?(hand?: ToolHand): HandPose | null
   /**
    * Puts the player's hand on a leaf the module moves itself (a door of a house): the host plays the reach to `handle()`, calls `onGrip` when the hand is on it (the module then turns
    * the handle and swings the leaf), keeps the hand on `handle()` for `seconds` as it moves, and takes it back; the body pulls or pushes (`pull`) or shakes a locked one (`locked`).

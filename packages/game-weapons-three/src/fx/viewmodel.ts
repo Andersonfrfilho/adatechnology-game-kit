@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, FIRST_PERSON_LAYER, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
-import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, HandPose } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, ToolHand, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -25,7 +25,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
-import { createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
+import { BODY_HOLD, createEyeFrame, limitSupportSpan, placeOnBody } from './body-hold'
 import { placeInView, toWorldLens, VIEW_HOLD } from './view-hold'
 import type { ViewHoldKind } from './view-hold'
 import type { FxLayers } from './layers'
@@ -37,8 +37,8 @@ import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
 import { createClipEventHandler } from './viewmodel-events'
 import { handWorkOf, workWeights } from './hand-work'
-import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
-import type { Hold } from './hand-hold'
+import { HAND_HOLD, holdOfModel, oneHandHold, targetsOf } from './hand-hold'
+import type { HandAnchor, Hold } from './hand-hold'
 
 const PI = Math.PI
 const HEAT_DISPLAY_MAX_FALLBACK = 750
@@ -101,6 +101,10 @@ export interface ViewmodelOptions {
   lights?: LightBudget
   /** The host's pools (`host.pools`): the burning droplets and the ground flames of a flamethrower take their geometry and material from them. Without them each makes its own (deprecated, removed in the next major). */
   pools?: RenderPools
+  /** The hand this viewmodel draws the tool in (default `R`). The left one draws the tool of the left hand with a tool in each hand: held out to the left, its hand on the mirror of the grip. */
+  hand?: ToolHand
+  /** True while the other hand holds a tool of its own (a tool in each hand): the tool is held in this hand alone, out to its side, and never brought to the eye. */
+  oneHand?: () => boolean
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -213,6 +217,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   holder.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), PI / 2)
   hand.add(holder)
   let tasks: Task[] = []
+  // the stock of the model in the hands, folded while it is held in one hand (a machine pistol held out has no shoulder to rest it on)
+  let stockRig: ReturnType<typeof createModelRig> | null = null
+  let stockFolded = false
   let session: Session | null = null
   let player: ToolClipPlayer | null = null
   let condition = options.condition ?? 'new'
@@ -265,6 +272,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     discardObject3D(session.model.root)
     player = null
     session = null
+    stockRig = null
     tasks = []
     hold = null
   }
@@ -335,6 +343,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
     const rpm = action.kind === 'firearm' ? action.rpm : 0
     const rig = createModelRig(model)
+    stockRig = rig
+    stockFolded = false
     const clips = buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily })
     feedCued = clips.feed?.events?.some((entry) => entry.type === 'sound') ?? false
     player = createToolClipPlayer({
@@ -343,7 +353,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       onEvent: createClipEventHandler(world, session),
       repeatInterval: () => (rpm > 0 ? 60 / rpm : 0.1),
     })
-    if (model.parts.stockMove && onTool?.stock === 'collapsed') rig.setPartPose('stock', collapsedStockPose(model.parts.stockMove))
+    if (model.parts.stockMove && onTool?.stock === 'collapsed') {
+      rig.setPartPose('stock', collapsedStockPose(model.parts.stockMove))
+      stockFolded = true
+    }
     applyCondition(kit, model, condition)
     lastAmmo = options.tool?.().ammo ?? 0
     // the recorded shots and reload steps load as the weapon comes to the hands, so the first shot already plays its recording
@@ -427,15 +440,22 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
 
   // the tool is the body's own, at its real size, in every view
   let modelRear = 0
-  const eyeFrame = createEyeFrame(THREE, camera)
+  const side: ToolHand = options.hand ?? 'R'
+  const eyeFrame = createEyeFrame(THREE, camera, side)
+  // with a tool in each hand this one is held in its own hand alone; the left hand's is always so
+  const isOneHand = (): boolean => side === 'L' || options.oneHand?.() === true
+  const heldHold = (): Hold | null => (hold && isOneHand() ? oneHandHold(hold, side) : hold)
+  /** The anchor the hand that holds the tool takes: the right grip, or for the left hand its mirror. */
+  const heldAnchor = (current: Hold | null): HandAnchor | null => (side === 'L' ? (current?.left ?? null) : (current?.right ?? null))
   /** How far the weapon, as placed, has to rise for the grips of both hands to stay above `HAND_IN_VIEW.floor` of the view (the grips fixed on the model, not the hands, which move to the port and the magazine, nor a hand on a part that slides). */
   const liftToKeepInView = (): number => {
-    if (!hold || !session || !('fov' in camera)) return 0
+    const held = heldHold()
+    if (!held || !session || !('fov' in camera)) return 0
     const tanHalf = Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360)
     eyeTurn.copy(camera.quaternion).invert()
-    const rest = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), 0)
+    const rest = targetsOf(THREE, held, session.model.root.getWorldQuaternion(rootQuaternion), 0)
     let needed = 0
-    for (const [anchor, pose] of [[hold.right, rest.R], [hold.left, rest.L]] as const) {
+    for (const [anchor, pose] of [[held.right, rest.R], [held.left, rest.L]] as const) {
       if (!anchor || !pose || anchor.part !== session.model.root) continue
       seen.set(...pose.position).sub(camera.position).applyQuaternion(eyeTurn)
       if (-seen.z > 0.05) needed = Math.max(needed, HAND_IN_VIEW.floor * -seen.z * tanHalf - seen.y)
@@ -446,11 +466,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (!session) return
     const family = session.model.parts.family
     session.holderScale = 1
+    const oneHand = isOneHand()
+    const held = heldHold()
     if (options.firstPerson?.()) {
-      const kind: ViewHoldKind = session.model.parts.carry === 'hip' ? 'hip' : family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long'
-      // a gun carried at the hip has no sights to bring to the eye
-      const aim = kind === 'hip' ? 0 : (options.aim?.() ?? 0)
-      placeInView({ THREE, hand, holder, camera, right: hold?.right ?? null, box: restBox, kind, aim, offset: viewMotion(dt, aim) })
+      const kind: ViewHoldKind = oneHand ? 'dual' : session.model.parts.carry === 'hip' ? 'hip' : family === 'pistol' || family === 'revolver' ? 'handgun' : family === 'rocket' ? 'launcher' : 'long'
+      // two weapons, or a gun carried at the hip: no sights to bring to the eye
+      const aim = oneHand || kind === 'hip' ? 0 : (options.aim?.() ?? 0)
+      placeInView({ THREE, hand, holder, camera, right: heldAnchor(held), box: restBox, kind, aim, offset: viewMotion(dt, aim), ...(side === 'L' ? { mirror: true } : {}) })
       setLens(kind)
       lift = 0
       pull = 0
@@ -458,7 +480,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
     setLens(null)
     hand.scale.set(1, 1, 1)
-    placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', hip: session.model.parts.carry === 'hip', right: hold?.right ?? null, left: hold?.left ?? null })
+    if (oneHand) placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: true, right: heldAnchor(held), left: null, grip: BODY_HOLD.dualGrip, ...(side === 'L' ? { mirror: true } : {}) })
+    else placeOnBody({ THREE, hand, holder, frame: options.bodyHold?.() ?? eyeFrame(), rear: modelRear, lengthMetres: session.lengthMetres, handgun: family === 'pistol' || family === 'revolver', hip: session.model.parts.carry === 'hip', right: hold?.right ?? null, left: hold?.left ?? null })
     hand.updateMatrixWorld(true)
     lift += (liftToKeepInView() - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
     if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
@@ -475,6 +498,16 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (pull < 1e-4) return
     hand.position.addScaledVector(ahead, -pull)
     hand.updateMatrixWorld(true)
+  }
+
+  /** A gun held in one hand beside another has its stock folded; back in two hands it is as the rule says. */
+  const foldStock = (current: Session, tool: HostTool | undefined): void => {
+    const move = current.model.parts.stockMove
+    if (!move || !stockRig) return
+    const want = isOneHand() || tool?.stock === 'collapsed'
+    if (want === stockFolded) return
+    stockFolded = want
+    stockRig.setPartPose('stock', want ? collapsedStockPose(move) : {})
   }
 
   const glow = (tool: HostTool | undefined): void => {
@@ -547,6 +580,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         const wantsMagazine = reloading || options.tool?.().reloading === true
         magazineHand += ((wantsMagazine ? 1 : 0) - magazineHand) * Math.min(1, dt * HAND_HOLD.magRate)
         const tool = options.tool?.()
+        foldStock(session, tool)
         syncAttachments(session, tool)
         session.attachments?.update()
         glow(tool)
@@ -597,13 +631,14 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       return { position: [at.x, at.y, at.z], direction: [along.x, along.y, along.z], drawsFlash: kind === 'firearm' || kind === 'launcher' }
     },
     handTargets() {
-      if (!session || !hold) return null
+      const held = heldHold()
+      if (!session || !held) return null
       hand.updateMatrixWorld(true)
-      const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
+      const targets = targetsOf(THREE, held, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, held.works ? workWeights(held.works, player?.running ?? []) : undefined)
       const trigger = session.model.parts.trigger
-      // a gun carried at the hip fires by the thumb on its spade grip: the whole hand, the index too, closes on the handle
+      // a gun carried at the hip fires by the thumb on its spade grip: the whole hand, the index too, closes on the handle; the contract curls the right hand's index finger, the left one closes with its grip
       if (session.model.parts.carry === 'hip') targets.fingers = { index: 1 }
-      else if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      else if (trigger && side === 'R') targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
       return limitSupportSpan(targets)
     },
     get inHand() {

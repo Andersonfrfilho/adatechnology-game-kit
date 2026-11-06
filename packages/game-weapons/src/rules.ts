@@ -80,6 +80,14 @@ export const DEFAULT_RULES: WeaponRules = {
     // the iron sights close the view in a little: more for a long gun, whose sights sit farther from the eye, than for a handgun
     ironSightZoom: { pistol: 1.1, revolver: 1.1, smg: 1.2, carbine: 1.25, shotgun: 1.15, rifle: 1.3, hunting: 1.35, dmr: 1.4, sniper: 1.4, machine_gun: 1.2, launcher: 1.15, bow: 1.15, crossbow: 1.25 },
   },
+  // a weapon in each hand: the handguns, the machine pistols short and light enough for one hand, and the one-hand blades; one hand and no sight picture open the cone and lift the muzzle more
+  dualWield: {
+    categories: ['pistol', 'revolver'],
+    weapons: ['mini_uzi', 'uzi', 'mac_10', 'vz61', 'hk_mp7a1', 'knife', 'tactical_knife', 'machete', 'hatchet'],
+    exclude: [],
+    spread: 1.8,
+    recoil: 1.35,
+  },
   // Arsenal §08/§11: coronha retrátil saca mais rápido, mais recuo; os números são padrões aprovados pelo dono (2026-10-24)
   stock: {
     seconds: 0.6,
