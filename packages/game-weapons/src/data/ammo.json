@@ -948,6 +948,60 @@
       "sources": [
         "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
       ]
+    },
+    {
+      "id": "7_62x25:fmj",
+      "caliber": "7_62x25",
+      "kind": "fmj",
+      "label": "7.62x25 Tokarev FMJ",
+      "core": "lead",
+      "jacket": "steel",
+      "penetration": {
+        "steel": 3.5,
+        "concrete": 30,
+        "brick": 60,
+        "wood": 100
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "7_92x57:fmj",
+      "caliber": "7_92x57",
+      "kind": "fmj",
+      "label": "7.92x57 s.S. ball",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 5.5,
+        "concrete": 125,
+        "brick": 250,
+        "wood": 330
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
+    },
+    {
+      "id": "9x39:fmj",
+      "caliber": "9x39",
+      "kind": "fmj",
+      "label": "9x39 SP-5",
+      "core": "lead",
+      "jacket": "gilding_metal",
+      "penetration": {
+        "steel": 3.0,
+        "concrete": 30,
+        "brick": 70,
+        "wood": 130
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
     }
   ]
 }

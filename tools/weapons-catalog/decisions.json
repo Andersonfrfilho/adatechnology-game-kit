@@ -85,7 +85,8 @@
       "Thompson",
       "Walther",
       "B&T",
-      "IWI"
+      "IWI",
+      "Mauser"
     ],
     "source": "gallery",
     "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
@@ -1353,6 +1354,150 @@
         "source": "reference",
         "reason": "Aro de 12,07 mm, estojo de 53,3 mm e cartucho de 66,5 mm. https://en.wikipedia.org/wiki/.45-70"
       }
+    },
+    "7_62x25": {
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Cartucho de pistola de garrafa a 488 m/s (supersônico): sem linha no Arsenal; o nível \"alto\" do §04 tem 300 m no §12, o mesmo do .357 Magnum."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "7.62×25 mm Tokarev",
+          "bulletGrams": 5.5,
+          "muzzleSpeed": 488,
+          "dragPer100m": 0.12,
+          "kind": "fmj",
+          "diameter": 7.85,
+          "id": "7_62x25"
+        },
+        "source": "reference",
+        "reason": "Projétil FMJ de 5,5 g; 488 m/s da PPSh-41 (a página da arma); diâmetro do projétil 7,85 mm; arrasto de 0,12 igual ao da 5,7×28 e da 4,6×30 (derivado: projétil leve e fino). https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 9.95,
+          "overallLength": 35.2,
+          "caseLength": 25.0,
+          "projectileDiameter": 7.85
+        },
+        "source": "reference",
+        "reason": "Aro de 9,95 mm, estojo de 25,0 mm e cartucho de 35,2 mm. https://en.wikipedia.org/wiki/7.62%C3%9725mm_Tokarev"
+      }
+    },
+    "7_92x57": {
+      "noise": {
+        "value": 420,
+        "source": "derived",
+        "reason": "Cartucho de fuzil de potência alta, sem linha no Arsenal: o mesmo nível do .308 e do .30-06 do §12 (420 m)."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "7.92×57 mm Mauser",
+          "bulletGrams": 11.7,
+          "muzzleSpeed": 760,
+          "dragPer100m": 0.08,
+          "kind": "fmj",
+          "diameter": 8.22,
+          "id": "7_92x57"
+        },
+        "source": "reference",
+        "reason": "Projétil de 11,7 g (RWS DK); 760 m/s do Kar98k (a página da arma); diâmetro do projétil 8,22 mm; arrasto de 0,08 igual ao do .30-06 (derivado: mesma classe de projétil). https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 11.95,
+          "overallLength": 82.0,
+          "caseLength": 57.0,
+          "projectileDiameter": 8.22
+        },
+        "source": "reference",
+        "reason": "Aro de 11,95 mm, estojo de 57,0 mm e cartucho de 82,0 mm. https://en.wikipedia.org/wiki/7.92%C3%9757mm_Mauser"
+      }
+    },
+    "9x39": {
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Cartucho de fuzil derivado do 7,62×39, sem linha no Arsenal: o mesmo nível do 7,62×39 do §12 (300 m), antes do silenciador integral da arma."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo sem aro, em garrafa (rimless, bottleneck). https://en.wikipedia.org/wiki/9%C3%9739mm"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "9×39 mm SP-5",
+          "bulletGrams": 16.1,
+          "muzzleSpeed": 290,
+          "dragPer100m": 0.2,
+          "kind": "fmj",
+          "diameter": 9.27,
+          "id": "9x39"
+        },
+        "source": "reference",
+        "reason": "Projétil SP-5 de 16,1 g a 290 m/s (subsônico); diâmetro do projétil 9,27 mm; arrasto de 0,2 igual ao do 9×19 (derivado: projétil pesado e lento). https://en.wikipedia.org/wiki/9%C3%9739mm"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 11.33,
+          "overallLength": 56.0,
+          "caseLength": 38.7,
+          "projectileDiameter": 9.27
+        },
+        "source": "reference",
+        "reason": "Aro de 11,33 mm, estojo de 38,7 mm e cartucho de 56,0 mm. https://en.wikipedia.org/wiki/9%C3%9739mm"
+      }
     }
   },
   "energyScale": {
@@ -2298,6 +2443,26 @@
       "value": "rifle_7_62x39",
       "source": "derived",
       "reason": "Metralhadora 7,62: arquétipo 7,62×39."
+    },
+    "smg:7_62x25": {
+      "value": "smg_9mm",
+      "source": "derived",
+      "reason": "Submetralhadora de 7,62×25: sem arquétipo mais quente, o mais próximo é o de 9 mm; o coice da arma sai da energia do calibre sobre o peso, então já escala."
+    },
+    "sniper:7_92x57": {
+      "value": "rifle_bolt_308",
+      "source": "derived",
+      "reason": "Fuzil de ferrolho em 7,92×57: arquétipo .308 de ferrolho (mesma classe de energia)."
+    },
+    "machine_gun:7_92x57": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Metralhadora 7,92×57: arquétipo de metralhadora de 7,62 (alcance de 350 m); o coice escala pela energia do calibre."
+    },
+    "dmr:9x39": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Fuzil de 9×39 de alcance de 400 m: arquétipo de fuzil de 7,62×39 (350 m), não o .308 de ferrolho de 800 m."
     }
   },
   "semiRate": {
@@ -3228,6 +3393,19 @@
       ],
       "source": "reference",
       "reason": "A alça de transporte do G36K leva a mesma mira integrada do G36. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "vss_vintorez": {
+      "value": [
+        {
+          "id": "integral_suppressor",
+          "mount": "muzzle",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "O VSS tem o silenciador integral em volta do cano, sem boca para outro acessório; não sai. https://en.wikipedia.org/wiki/VSS_Vintorez"
     }
   },
   "arsenalFeatures": {
@@ -6470,6 +6648,204 @@
       },
       "source": "reference",
       "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+    },
+    "PPSh-41": {
+      "value": {
+        "id": "ppsh_41",
+        "name": "PPSh-41",
+        "of": "Thompson M1A1",
+        "caliber": "7_62x25",
+        "caliberText": "7,62×25",
+        "capacity": "71/35",
+        "length": 843,
+        "barrel": 269,
+        "emptyMass": 3.63,
+        "options": {
+          "rpm": 1250
+        },
+        "reloadFrom": "Thompson M1A1",
+        "muzzleSpeed": 488,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "843 mm. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 269 mm. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,63 kg sem o carregador. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tambor de 71 ou carregador curvo de 35. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "1 250 tiros/min. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "488 m/s. https://en.wikipedia.org/wiki/PPSh-41"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Thompson M1A1: submetralhadora de ferrolho aberto com tambor ou carregador por baixo."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/PPSh-41"
+    },
+    "Mauser Kar98k": {
+      "value": {
+        "id": "mauser_kar98k",
+        "name": "Mauser Kar98k",
+        "of": "Mosin-Nagant 91/30",
+        "caliber": "7_92x57",
+        "caliberText": "7,92×57",
+        "capacity": "5",
+        "length": 1110,
+        "barrel": 600,
+        "emptyMass": 3.7,
+        "reloadFrom": "Mosin-Nagant 91/30",
+        "muzzleSpeed": 760,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1110 mm. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 600 mm. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,7 a 4,1 kg; o menor. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador interno de 5, carregado por clipe. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "760 m/s. https://en.wikipedia.org/wiki/Karabiner_98k"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Mosin-Nagant 91/30: fuzil de ferrolho de carregador interno carregado por cima com clipe."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Karabiner_98k"
+    },
+    "MG42": {
+      "value": {
+        "id": "mg42",
+        "name": "MG42",
+        "of": "M60",
+        "caliber": "7_92x57",
+        "caliberText": "7,92×57",
+        "capacity": "50",
+        "length": 1220,
+        "barrel": 530,
+        "emptyMass": 11.6,
+        "options": {
+          "rpm": 1200
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 740,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "1220 mm. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 530 mm. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "11,6 kg. https://en.wikipedia.org/wiki/MG_42"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "fita de 50 (há também a de 250 e o tambor de 50). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "1 200 tiros/min (900 a 1 500 conforme o ferrolho). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "740 m/s (cartucho s.S.). https://en.wikipedia.org/wiki/MG_42"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da M60: metralhadora de fita com tampa do alimentador por cima."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/MG_42"
+    },
+    "VSS Vintorez": {
+      "value": {
+        "id": "vss_vintorez",
+        "name": "VSS Vintorez",
+        "of": "SVD Dragunov",
+        "caliber": "9x39",
+        "caliberText": "9×39",
+        "capacity": "10/20/30",
+        "length": 894,
+        "barrel": 200,
+        "emptyMass": 2.6,
+        "options": {
+          "rpm": 850
+        },
+        "reloadFrom": "AK-47",
+        "muzzleSpeed": 295,
+        "noise": 75,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "894 mm. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 200 mm sob o silenciador integral. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "2,6 kg sem carregador e sem luneta. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregadores de 10, 20 e 30. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "800 a 900 tiros/min; fica o meio, 850. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "280 a 310 m/s (subsônico); fica o meio, 295. https://en.wikipedia.org/wiki/VSS_Vintorez"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do AK-47: carregador de caixa que entra por baixo em ângulo, como o do VSS."
+          },
+          "noise": {
+            "source": "derived",
+            "reason": "O silenciador integral entra nos números base: calibre 9×39 (300 m) × 0,4 (ruído −60%) × 0,625 (subsônica −75% no total, porque 295 m/s < 343 m/s) = 75 m, a mesma conta da MP5SD3."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/VSS_Vintorez"
     }
   },
   "gp25Mount": {
@@ -6678,6 +7054,55 @@
       },
       "source": "reference: the free Commons photos pinned in packages/game-weapons-three/assets/weapon-references.json",
       "reason": "The PS90 inherited the FN P90 model (a block of boxes). The SDK draws the civilian rifle: thumbhole stock with the rounded olive body, the translucent magazine on top under the integrated optic housing, and the 407 mm barrel with its flash hider sticking out of the front."
+    },
+    "ppsh_41": {
+      "value": {
+        "builder": "ppsh",
+        "caliber": "7,62×25",
+        "length": 843,
+        "barrel": 269,
+        "options": {
+          "mag": "drum",
+          "rpm": 1250
+        }
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The PPSh-41 inherited the Thompson (a rifle body with a box magazine). The SDK draws the real one: wooden stock and body in one piece, the stamped receiver, the perforated barrel jacket ending in the slanted muzzle brake, the 71-round drum under the receiver and the tangent rear sight."
+    },
+    "mauser_kar98k": {
+      "value": {
+        "builder": "kar98",
+        "caliber": "7,92×57",
+        "length": 1110,
+        "barrel": 600,
+        "options": {}
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The Kar98k inherited the Mosin-Nagant. The SDK draws the real one: long bolt action with the turned-down bolt handle, the full wooden stock with the finger groove and the pistol-grip curve, a single barrel band, the nose cap with the bayonet lug and the 5-round internal magazine flush with the stock."
+    },
+    "mg42": {
+      "value": {
+        "builder": "mg42",
+        "caliber": "7,92×57",
+        "length": 1220,
+        "barrel": 530,
+        "options": {
+          "rpm": 1200
+        }
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The MG42 inherited the M60. The SDK draws the real one: the perforated rectangular barrel shroud with the big barrel-change opening, the conical muzzle booster, the front bipod, the belt feed tray on the left and the brown butt with the pistol grip."
+    },
+    "vss_vintorez": {
+      "value": {
+        "builder": "vss",
+        "caliber": "9×39",
+        "length": 894,
+        "barrel": 200,
+        "options": {}
+      },
+      "source": "reference: the free Commons photos of the first lot (side view of each weapon, licence checked)",
+      "reason": "The VSS inherited the SVD. The SDK draws the real one: the thick integral suppressor covering the barrel, the AK-like receiver with its top cover, the skeletal wooden stock with its two cut-outs and the 10-round box magazine."
     }
   },
   "weaponTags": {

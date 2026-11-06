@@ -22,6 +22,7 @@ const createMaterials = (THREE: Three) => {
     olive: standard(0x4b5231, 0.8, 0.05),
     tan: standard(0x9c8a63, 0.8, 0.05),
     wood: standard(0x4a2c17, 0.55, 0),
+    beech: standard(0xb98650, 0.6, 0),
     woodL: standard(0x5e3a1f, 0.55, 0),
     brass: standard(0xc39a45, 0.28, 0.9),
     copper: standard(0xb06a3b, 0.3, 0.85),

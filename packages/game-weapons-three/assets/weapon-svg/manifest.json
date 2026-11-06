@@ -481,6 +481,10 @@
    "source": "generated",
    "file": "generated/makarov_pm.svg"
   },
+  "mauser_kar98k": {
+   "source": "generated",
+   "file": "generated/mauser_kar98k.svg"
+  },
   "meat_cleaver": {
    "source": "generated",
    "file": "generated/meat_cleaver.svg"
@@ -488,6 +492,10 @@
   "mg3": {
    "source": "generated",
    "file": "generated/mg3.svg"
+  },
+  "mg42": {
+   "source": "generated",
+   "file": "generated/mg42.svg"
   },
   "mini_uzi": {
    "source": "generated",
@@ -552,6 +560,10 @@
   "pp19_bizon": {
    "source": "generated",
    "file": "generated/pp19_bizon.svg"
+  },
+  "ppsh_41": {
+   "source": "generated",
+   "file": "generated/ppsh_41.svg"
   },
   "propane_p13": {
    "source": "generated",
@@ -756,6 +768,10 @@
    "license": "CC0",
    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
    "page": "https://commons.wikimedia.org/wiki/File:Uzi_silhouette.svg"
+  },
+  "vss_vintorez": {
+   "source": "generated",
+   "file": "generated/vss_vintorez.svg"
   },
   "vz61": {
    "source": "commons",

@@ -1797,6 +1797,39 @@
     },
     "variantOf": "winchester_1894"
   },
+  "ppsh_41": {
+    "builder": "ppsh",
+    "caliber": "7,62×25",
+    "length": 843,
+    "barrel": 269,
+    "options": {
+      "mag": "drum",
+      "rpm": 1250
+    }
+  },
+  "mauser_kar98k": {
+    "builder": "kar98",
+    "caliber": "7,92×57",
+    "length": 1110,
+    "barrel": 600,
+    "options": {}
+  },
+  "mg42": {
+    "builder": "mg42",
+    "caliber": "7,92×57",
+    "length": 1220,
+    "barrel": 530,
+    "options": {
+      "rpm": 1200
+    }
+  },
+  "vss_vintorez": {
+    "builder": "vss",
+    "caliber": "9×39",
+    "length": 894,
+    "barrel": 200,
+    "options": {}
+  },
   "m79": {
     "builder": "breakLauncher",
     "caliber": "40×46",
