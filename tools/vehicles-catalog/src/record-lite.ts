@@ -39,7 +39,11 @@ const frotaLeveSource = (): string => {
   return text.slice(start, end)
 }
 
-type Built = { grupo: any; tris: number; drawCalls: number; L: number; W: number; H: number; podadas?: number; danificaveis: any[] }
+/** A damageable box of the light fleet (the page's names). */
+type LiteDamageable = { tipo: string; zona: string; parte: string; lado: string; caixa: THREE.Box3 }
+type Built = { grupo: THREE.Object3D; tris: number; drawCalls: number; L: number; W: number; H: number; podadas?: number; danificaveis: LiteDamageable[]; cor?: string }
+/** The light fleet the page script defines. */
+type LiteFleet = { criar(options: { THREE: typeof THREE }): { construir(key: string, options: { qualidade: string; semente: number }): Built } }
 
 export const recordLite = (): Record<string, unknown> => {
   const restore = installPortableMath()
@@ -48,10 +52,11 @@ export const recordLite = (): Record<string, unknown> => {
     sandbox.window = sandbox
     const context = createContext(sandbox)
     runInContext(`${frotaLeveSource()}\nthis.FrotaLeve = FrotaLeve`, context, { filename: 'frota-leve.js' })
-    const api = (sandbox.FrotaLeve as any).criar({ THREE })
+    const api = (sandbox.FrotaLeve as LiteFleet).criar({ THREE })
     const describe = (v: Built) => {
       const classes: Record<string, unknown> = {}
-      v.grupo.traverse((m: any) => {
+      v.grupo.traverse((node) => {
+        const m = node as THREE.Mesh
         if (!m.isMesh || !m.geometry.attributes.position) return
         const g = m.geometry
         classes[m.name || 'mesh'] = { vertices: g.attributes.position.count, indices: g.index ? g.index.count : 0, hash: fnv(g.attributes.position.array) }
@@ -77,10 +82,10 @@ export const recordLite = (): Record<string, unknown> => {
     const out: Record<string, unknown> = {}
     for (const key of LITE_GOLDEN_KEYS) {
       const lite = api.construir(key, { qualidade: 'jogo', semente: LITE_GOLDEN_SEED }) as Built & { cor: string }
-      out[`${key}:lite`] = { color: (lite as any).cor, ...describe(lite) }
+      out[`${key}:lite`] = { color: lite.cor, ...describe(lite) }
     }
     const high = api.construir('hatch', { qualidade: 'alta', semente: LITE_GOLDEN_SEED }) as Built & { cor: string }
-    out['hatch:high'] = { color: (high as any).cor, ...describe(high) }
+    out['hatch:high'] = { color: high.cor, ...describe(high) }
     return { seed: LITE_GOLDEN_SEED, vehicles: out }
   } finally {
     restore()

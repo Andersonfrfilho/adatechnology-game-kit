@@ -31,7 +31,7 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - [x] Adaptadores three: `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62 (o `type Three = any` virou `typeof THREE`)
 - [ ] Adaptadores three que faltam: `game-characters-three` (resto, fora do construtor de sobreviventes), `game-vehicles-three` 75 (depois dos PRs de carro)
 - [ ] Veículos: `game-vehicles` 1.584 e `game-vehicles-fleet` 2.247 (depois que os PRs de física dos carros entrarem)
-- [ ] `tools/`: `vehicles-catalog` 14, `characters-catalog` 1, `golden` 1
+- [x] `tools/`: `vehicles-catalog`, `characters-catalog`, `compat-check` e `golden` sem `any` (os documentos falsos, o digest da frota, a frota leve e o snapshot exato com tipos estruturais)
 
 ### Fora dos pacotes, ainda em JavaScript
 - [ ] `examples/*`: 17 salas de teste, todas em `.js` (`test-room` tem 10 arquivos, as outras 3 a 5)

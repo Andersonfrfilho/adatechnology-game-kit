@@ -748,35 +748,5 @@
     "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
-  },
-  "tools/characters-catalog/tests/sheet-sources.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "tools/compat-check/tests/fake-dom.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "tools/golden/src/exact-snapshot.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "tools/vehicles-catalog/src/digest.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "tools/vehicles-catalog/src/fake-dom.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "tools/vehicles-catalog/src/record-lite.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
   }
 }
