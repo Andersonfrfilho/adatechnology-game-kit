@@ -217,6 +217,25 @@ export const FIRE_LOOP: LoopRecipe = {
   sources: ['sdk: the roar under the crackles of a fire'],
 }
 
+/** A smoke canister burning (an M18 and the like): a steady hiss of gas through the vents, bright and without crackles; the fallback of the recorded loop of the same id. */
+export const SMOKE_HISS_LOOP: LoopRecipe = {
+  id: 'smoke_grenade_hiss',
+  bus: 'world',
+  order: 'chain_loop',
+  source: { kind: 'noise', loop: true },
+  filters: { mode: 'serial', bank: [{ type: 'highpass', frequency: { set: 1400 }, q: 0.7 }, { type: 'lowpass', frequency: { set: 7000 }, q: 0.5 }] },
+  volume: 0,
+  sources: ['sdk: a smoke canister venting (the gas through its holes, steady for its whole burn)'],
+}
+
+/** The pin of a hand grenade pulled and the lever let go: two small metal clicks, heard only near. */
+export const GRENADE_PIN_PULL: SoundRecipe = blast(
+  'grenade_pin_pull',
+  [noise({ type: 'highpass', f: [3200, 4200], d: 0.025, vol: 0.5 }), noise({ type: 'bandpass', f: [2200, 2800], q: 2, d: 0.04, vol: 0.4, delay: 0.18 })],
+  ['sdk: the ring pulled from the fuse, then the spoon flying off'],
+  FIRE_FALLOFF,
+)
+
 /**
  * What is burning, for the sound: each fuel has its own roar (a gas jet, a fuel pool, wood, plastic) and its own share of crackles. The rules are the
  * same for all (the level grows with how much burns, fades with distance, never clips); only the timbre comes from the fuel.

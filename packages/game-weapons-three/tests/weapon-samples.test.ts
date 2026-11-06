@@ -12,7 +12,7 @@ import { createArsenal } from '@adatechnology/game-weapons'
 import type { CaliberDef } from '@adatechnology/game-weapons'
 
 import { buildWeaponModelById, createWeaponFx } from '../src'
-import { CUES_IN_SAMPLE, GUNSHOT_SAMPLE_IDS, RELOAD_CUE_IDS, RELOAD_SAMPLE_HITS, SPEED_OF_SOUND, createWeaponAudio, weaponSampleBank } from '../src/audio'
+import { CUES_IN_SAMPLE, GUNSHOT_SAMPLE_IDS, LAUNCH_SOUND_IDS, RELOAD_CUE_IDS, RELOAD_SAMPLE_HITS, SPEED_OF_SOUND, createWeaponAudio, weaponSampleBank } from '../src/audio'
 import { GUNSHOT_IDS } from '../src/audio/recipes'
 import { buildToolClips } from '../src/animation/clip-set'
 
@@ -59,7 +59,7 @@ describe('the recorded files of the firearms', () => {
     }
     for (const surface of ['concreto', 'terra', 'metal']) expect(ids.has(`casing_drop_${surface}`), surface).toBe(true)
     for (const id of ids) {
-      if (GUNSHOT_SAMPLE_IDS.includes(id) || id.startsWith('casing_drop_') || id.startsWith('mag_drop_')) continue
+      if (GUNSHOT_SAMPLE_IDS.includes(id) || id.startsWith('casing_drop_') || id.startsWith('mag_drop_') || Object.values(LAUNCH_SOUND_IDS).includes(id)) continue
       const cue = id.replace(/_(light|medium|heavy)$/, '')
       expect(RELOAD_CUE_IDS as readonly string[], id).toContain(cue)
       expect(RELOAD_SAMPLE_HITS[cue], `hit of ${cue}`).toBeGreaterThan(0)
@@ -173,6 +173,23 @@ describe('the sounds the weapon files do not carry', () => {
     audio.thud({ surface: 'wood_hard', speed: 1, bounce: 1 })
     expect(fake.plays.map((play) => play.id)).toEqual(['bullet_whiz', 'mag_drop_madeira'])
     expect(fake.plays[0]?.options.position).toEqual([1, 0, 0])
+  })
+})
+
+describe('a launcher firing', () => {
+  it('plays the recording of a 40 mm grenade or a rocket leaving the tube once it is there, a synthesized thump until then, never the blast class', () => {
+    const fake = fakeEngine(new Set())
+    const audio = createWeaponAudio(0.6, { engine: fake.engine, samples: { manifest } })
+    audio.launch('grenade', 0.6, 0)
+    audio.launch('rocket', 0.6, 0)
+    expect(fake.plays.length).toBeGreaterThan(0)
+    expect(fake.plays.some((play) => play.id === 'weapon_class_burst' || Object.values(LAUNCH_SOUND_IDS).includes(play.id))).toBe(false)
+    fake.plays.length = 0
+    fake.engine.register({ id: 'game', sets: [{ id: 'launcher_40mm', variants: ['bullet_whiz~1'] }, { id: 'rocket_launch', variants: ['bullet_whiz~1'] }] })
+    audio.launch('grenade', 0.6, 0)
+    audio.launch('rocket', 0.6, 40)
+    expect(fake.plays.map((play) => play.id)).toEqual(['launcher_40mm', 'rocket_launch'])
+    expect(fake.plays[1]!.options.volume).toBeCloseTo(0.3)
   })
 })
 

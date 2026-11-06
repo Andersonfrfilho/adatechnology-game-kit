@@ -35,7 +35,7 @@ export { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 export type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 export { RELOAD_CUES, RELOAD_CUE_IDS, DEFAULT_SOUND_PROFILE, reloadCueSteps, soundProfileOf } from './audio/reload-sounds'
 export type { ReloadCueId, SoundProfile } from './audio/reload-sounds'
-export { CASING_SAMPLE, casingSampleId, CUES_IN_SAMPLE, GUNSHOT_SAMPLE, GUNSHOT_SAMPLE_IDS, RELOAD_SAMPLE, RELOAD_SAMPLE_HITS, WEIGHT_INTENSITY, weaponSampleBank, weaponSampleDefaults } from './audio/samples'
+export { CASING_SAMPLE, casingSampleId, CUES_IN_SAMPLE, GUNSHOT_SAMPLE, GUNSHOT_SAMPLE_IDS, LAUNCH_SAMPLE, RELOAD_SAMPLE, RELOAD_SAMPLE_HITS, WEIGHT_INTENSITY, weaponSampleBank, weaponSampleDefaults } from './audio/samples'
 export type { WeaponSampleOptions } from './audio/samples'
 
 /** What a reload cue played: its recording, the recording's fitted copy (game-audio/fitted, while the files load or where they are missing), nothing (another cue's recording carries it), or the synthesized steps. */
@@ -127,10 +127,22 @@ export interface WeaponAudio {
   flyby(input: FlybyInput & { readonly position?: readonly [number, number, number] }): void
   /** A magazine landing on the floor: the floor material, the speed and which bounce (all optional). */
   thud(input?: MagazineDropInput): void
+  /**
+   * A launcher firing: the "thoomp" of a 40 mm grenade leaving the tube (`grenade`) or the roar of a rocket leaving it (`rocket`), at `distance`
+   * metres. The host's recording (`LAUNCH_SOUND_IDS`) once it is loaded; a synthesized thump or whoosh until then, never the blast of an explosion.
+   */
+  launch(kind: LaunchKind, volume?: number, distance?: number): void
   /** Master volume, 0 to 1. */
   setVolume(volume: number): void
   dispose(): void
 }
+
+/** What leaves a launcher: a 40 mm grenade (M79, M32, M203) or a rocket (RPG-7, AT4, Carl Gustaf). */
+export type LaunchKind = 'grenade' | 'rocket'
+/** The recorded sound of each launch (game-audio's sfx manifest, category armas). */
+export const LAUNCH_SOUND_IDS: Readonly<Record<LaunchKind, string>> = { grenade: 'launcher_40mm', rocket: 'rocket_launch' }
+/** Metres at which a launch is heard at half its level. */
+const LAUNCH_HALF_AT = 40
 
 const NOISE_SECONDS = 1.5
 const DEFAULT_SEED = 1
@@ -368,6 +380,18 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
         return
       }
       burst({ seconds: 0.09, gain: 0.35 * (input.speed === undefined ? 1 : Math.min(1, Math.max(0.3, input.speed / 2.5))) * ((input.bounce ?? 0) === 0 ? 1 : 0.5), filter: 'lowpass', frequency: 380 })
+    },
+    launch(kind, volume = 1, distance = 0) {
+      const level = Math.min(1, volume / (1 + distance / LAUNCH_HALF_AT))
+      const id = LAUNCH_SOUND_IDS[kind]
+      if (hostReady(id)) {
+        channel.play(id, { volume: level })
+        return
+      }
+      // a 40 mm grenade: a hollow low pop out of the tube; a rocket: a thump, then the motor's hiss going away
+      burst({ seconds: kind === 'rocket' ? 0.22 : 0.16, gain: 0.7 * level, filter: 'lowpass', frequency: kind === 'rocket' ? 220 : 170 })
+      burst({ seconds: 0.035, gain: 0.25 * level, filter: 'highpass', frequency: 1800 })
+      if (kind === 'rocket') burst({ seconds: 0.8, gain: 0.3 * level, filter: 'highpass', frequency: 1100, at: 0.04 })
     },
     setVolume(next) {
       const level = Math.max(0, Math.min(1, next))

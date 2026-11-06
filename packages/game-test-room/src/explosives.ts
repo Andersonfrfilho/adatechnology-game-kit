@@ -6,6 +6,7 @@ import type { VfxWorld } from '@adatechnology/game-vfx'
 import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
+import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
 import { segmentTouchesBox } from './segment-box'
 import type { ProjectileModel, ProjectileQuery } from './types'
@@ -19,6 +20,10 @@ const SMOKE_PUFF_LIFE = 3.2
 const SMOKE_PUFF_SPEED = 1.7
 const SMOKE_PUFF_SIZE = 5
 const SMOKE_PUFF_ALPHA = 1.5
+/** The hiss of the burning canisters: the loop id, its level next to one canister, the metres at which it is half that, and the most it rises with many. */
+export const SMOKE_HISS = { loop: 'smoke_grenade_hiss', volume: 0.7, halfAt: 6, max: 1 } as const
+/** The pin pulled from a hand grenade as it is thrown. */
+export const GRENADE_PIN_SOUND = 'grenade_pin_pull'
 
 /** A canister that is burning: where it lies, the seconds left and the colour of its smoke. */
 type SmokeSource = { readonly point: Vec3; left: number; owed: number; readonly color: number }
@@ -100,6 +105,8 @@ export type ExplosivesContext = {
   readonly random?: () => number
   /** The host's model for a projectile or a charge; without it, or when it answers nothing, the room draws a primitive. */
   readonly projectileModel?: ((query: ProjectileQuery) => ProjectileModel | null | undefined) | undefined
+  /** The room's sound engine: a burning canister hisses (`SMOKE_HISS`), a hand grenade's pin clicks when it is thrown. Without it they are silent. */
+  readonly audio?: Pick<AudioEngine, 'loop' | 'play'> | null
 }
 
 export type Explosives = {
@@ -127,6 +134,25 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   const random = context.random ?? Math.random
   const meshes: THREE_NS.Object3D[] = []
   const up = new THREE.Vector3(0, 1, 0)
+  let smokeHiss: AudioLoopHandle | null = null
+
+  // one loop for every canister burning: its level is the canisters' sum, each fading with its distance to the camera
+  const hissSmoke = (): void => {
+    if (!context.audio) return
+    if (smokeSources.length === 0) {
+      smokeHiss?.stop()
+      smokeHiss = null
+      return
+    }
+    const at = camera.position
+    let level = 0
+    for (const source of smokeSources) {
+      const distance = Math.hypot(source.point[0] - at.x, source.point[1] - at.y, source.point[2] - at.z)
+      level += SMOKE_HISS.volume / (1 + (distance / SMOKE_HISS.halfAt) ** 2)
+    }
+    smokeHiss ??= context.audio.loop(SMOKE_HISS.loop)
+    smokeHiss.set({ volume: Math.min(SMOKE_HISS.max, level) })
+  }
 
   // a projectile's mesh is its own (geometry, material, the model the host built for it): freed when it leaves the scene, keeping what the scene still draws
   const drop = (objects: THREE_NS.Object3D[]): void => {
@@ -136,6 +162,8 @@ export function createExplosives(context: ExplosivesContext): Explosives {
 
   const clear = (): void => {
     smokeSources.length = 0
+    smokeHiss?.stop()
+    smokeHiss = null
     projectiles.length = 0
     drop(meshes)
     meshes.length = 0
@@ -194,6 +222,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       age: 0,
       ...(use.explosive !== undefined ? { body: createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives), aligned: isRocket } : {}),
     })
+    if (!isRocket && !isMolotov && use.explosive !== undefined) context.audio?.play(GRENADE_PIN_SOUND, { position: use.origin })
     const key = isRocket ? 'act.launch' : isMolotov ? 'act.throw.molotov' : 'act.throw.grenade'
     action(isRocket ? 'launch_projectile' : 'throw_projectile', translate(key, { weapon: context.toolName(), fuse: format(use.fuse, 1), arm: format(use.armDistance ?? 0, 0) }), {
       data: { weapon: context.toolId(), fuse: use.fuse, explosive: use.explosive },
@@ -481,6 +510,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       }
       if (source.left <= 0) smokeSources.splice(index, 1)
     }
+    hissSmoke()
   }
 
   const update = (dt: number): void => {

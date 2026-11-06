@@ -39,6 +39,9 @@ export const GUNSHOT_SAMPLE: SampleDefaults = {
   priority: 3,
 }
 const SUPPRESSED_SAMPLE: SampleDefaults = { ...GUNSHOT_SAMPLE, gain: 0.55, crossover: { from: 10, to: 50 }, falloff: { model: 'inverse_square', k: 0.004, minGain: 0.0008 } }
+/** A launcher firing (`launcher_40mm`, `rocket_launch`): a near take only, carried far like a shot but below its level. */
+export const LAUNCH_SAMPLE: SampleDefaults = { bus: 'weapons', gain: 0.9, pitch: 0.04, falloff: { model: 'inverse_square', k: 0.001, minGain: 0.001 }, cutoffK: 0.03, priority: 3 }
+const LAUNCH_IDS: ReadonlySet<string> = new Set(['launcher_40mm', 'rocket_launch'])
 /** A reload step: heard at the hands, about a third of a shot's level after the converter's peak normalization. */
 export const RELOAD_SAMPLE: SampleDefaults = { bus: 'weapons', gain: 0.32, pitch: 0.05, falloff: { model: 'inverse_square', k: 0.05, minGain: 0.002 }, cutoffK: 0.02, priority: 2 }
 
@@ -65,7 +68,7 @@ const isGunshot = (id: string): boolean => GUNSHOT_SAMPLE_IDS.includes(id)
 /** The numbers of a sound of the manifest: a gunshot, a case landing or a reload step (`armas` only). */
 export function weaponSampleDefaults(sound: { readonly id: string; readonly category: string }, overrides: WeaponSampleOptions['sounds'] = {}): SampleDefaults | undefined {
   if (sound.category !== 'armas') return undefined
-  const base = sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') || sound.id.startsWith('mag_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
+  const base = LAUNCH_IDS.has(sound.id) ? LAUNCH_SAMPLE : sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') || sound.id.startsWith('mag_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
   return { ...base, ...overrides[sound.id] }
 }
 

@@ -87,6 +87,21 @@ describe('sound in the hands and in the area', () => {
   })
 })
 
+describe('a launcher in the hands', () => {
+  it('fires with the launch of its grenade, not the blast of an explosion', () => {
+    for (const weapon of ['m79', 'm32_mgl']) {
+      const { room, module } = areaRoom()
+      const launch = vi.spyOn(module.audio!, 'launch')
+      const play = vi.spyOn(module.audio!, 'play')
+      equip(room, weapon)
+      room.use()
+      run(room, 0.3)
+      expect(launch, weapon).toHaveBeenCalledWith('grenade', expect.any(Number), expect.any(Number))
+      expect(play, weapon).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number))
+    }
+  })
+})
+
 describe('bench of the weapons module', () => {
   it('declares the layers, the controls and the metrics, and the room accepts them', () => {
     const { room } = areaRoom()
