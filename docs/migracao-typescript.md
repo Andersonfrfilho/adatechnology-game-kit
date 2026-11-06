@@ -35,11 +35,15 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - Achados tipando o `game-vehicles` (corrigidos): `zoneDamageAt` devolve `{ main, list }` e `zonePoint` recebe o lado e devolve `{ p, dir }`, mas a API pública dizia outra coisa; `locate` e `partOfSurface` recebiam o ponto como número; o giro do `fling` era tipado como número; `broken` das lanternas também vale `'gone'`
 - [x] `tools/`: `vehicles-catalog`, `characters-catalog`, `compat-check` e `golden` sem `any` (os documentos falsos, o digest da frota, a frota leve e o snapshot exato com tipos estruturais)
 
-### Fora dos pacotes, ainda em JavaScript
-Checados com JSDoc pelo `tsconfig.scripts.checked.json` (CI: `pnpm typecheck:scripts`): 63 de 131. Faltam 68:
-- [ ] `examples/*`: 39 (`test-room` 13; as outras áreas de 1 a 4)
-- [ ] `tools/`: 24 (`golden` 16, `characters-catalog` 8)
-- [x] `site/`: os 4 (`build-site`, `capture-thumbs`, `catalog`, `landing`)
+### Fora dos pacotes, em JavaScript com JSDoc
+- [x] Os 135 scripts de `examples/`, `tools/` e `site/` checados strict pelo `tsconfig.scripts.json` (CI: `pnpm typecheck:scripts`). A lista
+  `tsconfig.scripts.checked.json` saiu: o check pega o `include` inteiro, então um script novo já entra checado.
+- [x] O que cada página de teste põe no `window` para os scripts (sala, relatórios das áreas, showroom, sondas de som, perf, auditoria) tem tipo em
+  `types/scripts-globals.d.ts`; a página que atribui e o script que lê quebram juntos
+- Achados tipando os scripts (a corrigir em PR próprio): os kits de veículo das áreas urbana e de clima recebem `room.vfx` (o mundo de efeitos,
+  `play(id, ponto)`) onde esperam um `EffectSink` (`play(pedido)`), e a fumaça, a poeira e o fogo desses carros somem; o `perf.mjs` lê
+  `room.tool.id`, que não existe (é `def.id`), e o aviso de arma errada nunca dispara; o teste da área de móveis conta peças `'detached'`, que não é
+  um status de peça
 
 ### Regras
 - [x] Regra "tudo tipado" no `CLAUDE.md` (seção 8)
