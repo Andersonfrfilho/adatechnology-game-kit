@@ -42,7 +42,7 @@ if (!playwright || !existsSync(page)) {
     const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
     const tab = await context.newPage()
     tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
-    tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
+    tab.on('pageerror', (/** @type {Error} */ e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__itemsReport, null, { timeout: 90000 })
     await tab.evaluate(() => {
@@ -59,6 +59,7 @@ if (!playwright || !existsSync(page)) {
       const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => ['real_size', 'models', 'budgets', 'ruler', 'finds', 'freshness', 'craft'].some((id) => s.id.endsWith(id)))
       const result = await room.runScenarios(scenarios)
       const bench = room.bench('items_area')
+      if (!bench) throw new Error('the items area has no bench')
       bench.set('seed', 3)
       bench.act('roll_finds')
       for (let i = 0; i < 30; i++) room.update(0.02)

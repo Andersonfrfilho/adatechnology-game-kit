@@ -9,9 +9,13 @@ import { STORIES_EXAMPLE, createStoriesTestModule } from '@adatechnology/game-st
 
 export { STORIES_EXAMPLE, createStoriesTestModule, createStoryWorld, defaultStoryContent }
 
+/** @type {ReturnType<typeof createStoriesTestModule> | null} */
 let current = null
 
-/** The module for the room's locale (`?lang=en` or pt-BR); other pages (the furniture area) load it next to their own. */
+/**
+ * The module for the room's locale (`?lang=en` or pt-BR); other pages (the furniture area) load it next to their own.
+ * @param {Partial<Parameters<typeof createStoriesTestModule>[0]>} [options]
+ */
 export function createModule(options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   current = createStoriesTestModule({ ...defaultStoryContent(locale), ...options, locale })
@@ -46,7 +50,11 @@ function addFileButton() {
   document.body.append(label)
 }
 
-/** Creates the module, loads it and opens the stories area. Returns the room's module report. */
+/**
+ * Creates the module, loads it and opens the stories area. Returns the room's module report.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createStoriesTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const report = room.loadModule(createModule(options))
   room.openArea('stories_area')

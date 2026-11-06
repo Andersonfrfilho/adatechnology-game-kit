@@ -35,7 +35,8 @@ export function createModule(options = {}) {
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  registerBodyMaterial(room.world)
+  // the world's materials are a read-only map to the rest of the kit; the room's own world takes the body material before the module loads
+  registerBodyMaterial(/** @type {{ readonly materials: Map<string, unknown> }} */ (/** @type {unknown} */ (room.world)))
   const report = room.loadModule(createModule({ fluids: room.fluids, film: room.film, ...options, locale: lang }))
   room.openArea(CHARACTERS_AREA_ID)
   return report

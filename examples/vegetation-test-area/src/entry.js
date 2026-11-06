@@ -15,7 +15,6 @@ export function createModule(options = {}) {
 
 /**
  * Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the vegetation area. Returns the room's module report.
- * @param {{ openArea: (arg0: string) => void; }} room
  * @param {import('@adatechnology/game-test-room').TestRoom} room
  * @param {Partial<Parameters<typeof createVegetationTestModule>[0]>} [options]
  */

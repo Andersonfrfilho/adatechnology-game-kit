@@ -7,7 +7,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright')
+const { chromium } = /** @type {typeof import('playwright')} */ (require('playwright'))
 
 const args = process.argv.slice(2)
 const flag = (/** @type {string} */ name, /** @type {string | number} */ fallback) => {
