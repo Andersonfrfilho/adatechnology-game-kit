@@ -54,6 +54,8 @@ export interface ModelOptions {
   g36?: number
   /** The SVD Dragunov's chunky slotted wooden handguard (with `stock: 'svd'`, its thumbhole stock). */
   svd?: number
+  /** The Kalashnikov's stamped receiver (dust cover, rear sight block, selector lever) and, with `mag: 'curved'`, its smooth banana magazine. */
+  kalashnikov?: number
   charge?: number
   rail?: number
   jacket?: number
