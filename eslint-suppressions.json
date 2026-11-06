@@ -239,11 +239,6 @@
       "count": 1
     }
   },
-  "packages/game-vehicles/src/kit.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 16
-    }
-  },
   "packages/game-vehicles/src/locale.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 9

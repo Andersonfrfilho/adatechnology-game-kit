@@ -4,7 +4,9 @@ import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStr
 import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
 import type { BuildContext, Kit, SceneNode } from './types'
-import type { DamageZone, VehicleKit, VehicleKitOptions } from './api'
+import type { Material } from 'three'
+
+import type { BuildFunction, BuildZoneState, DamageZone, KitConfiguration, Plugin, ScenarioResult, VehicleKit, VehicleKitOptions, VehicleSpec } from './api'
 import { installMaterials } from './materials'
 import { installGeometry } from './geometry'
 import { installContext } from './context'
@@ -43,7 +45,7 @@ import { installDamageables } from './damageables'
  * The returned object is the public API; every call creates an independent kit (its own registry, caches and configuration).
  */
 export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
-  const opts: any = options || {}
+  const opts = (options || {}) as VehicleKitOptions
   if (!opts.THREE || !opts.THREE.Vector3) throw new Error('createVehicleKit: options.THREE (the three.js namespace) is required')
   /* the light mode settings, and the three.js namespace whose generators obey them */
   const lod = createLod(opts.lod)
@@ -87,9 +89,9 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
   kit.fleet = []
   kit.builders = {}
-  kit.register = function (spec: any, build: any) {
+  kit.register = function (spec: VehicleSpec, build: BuildFunction) {
     if (!spec || !spec.key || typeof build !== 'function') throw new Error('kit.register: spec.key and a build function are required')
-    const i = kit.fleet.findIndex(function (v: any) {
+    const i = kit.fleet.findIndex(function (v: VehicleSpec) {
       return v.key === spec.key
     })
     spec.build = build
@@ -101,7 +103,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
   kit.find = function (key: string) {
     return (
-      kit.fleet.find(function (v: any) {
+      kit.fleet.find(function (v: VehicleSpec) {
         return v.key === key
       }) || null
     )
@@ -144,36 +146,36 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   const I = kit._
 
   /* ================= extension: configure, plugin, hooks ================= */
-  const HOOKS: Record<string, Array<(...args: any[]) => void>> = {}
+  const HOOKS: Record<string, Array<(...args: unknown[]) => void>> = {}
   /** `kit.on(event, fn)` / `kit.hook(event, ...args)`. Events: `defaultDamage(c)` after the default damage of a car. */
-  kit.on = function (ev: string, fn: (...args: any[]) => void) {
+  kit.on = function (ev: string, fn: (...args: unknown[]) => void) {
     ;(HOOKS[ev] = HOOKS[ev] || []).push(fn)
     return kit
   }
-  kit.hook = function (ev: string, ...args: any[]) {
+  kit.hook = function (ev: string, ...args: unknown[]) {
     ;(HOOKS[ev] || []).forEach(function (fn) {
       fn.apply(kit, args)
     })
   }
-  kit.configure = function (o: any) {
-    o = o || {}
+  kit.configure = function (cfg?: KitConfiguration | null) {
+    const o: KitConfiguration = cfg || {}
     if (o.bands)
-      o.bands.forEach(function (b: number, i: number) {
+      o.bands.forEach(function (b, i: number) {
         if (kit.bands[i] && b) Object.assign(kit.bands[i], b)
       })
     if (o.zoneEffects)
       Object.keys(o.zoneEffects).forEach(function (k) {
-        kit.zoneEffects[k] = o.zoneEffects[k]
+        kit.zoneEffects[k] = o.zoneEffects![k]
       })
     if (o.partEffects) Object.assign(kit.partEffects, o.partEffects)
     if (o.scenarios) o.scenarios.forEach(kit.scenario)
     if (o.flagEffects)
       Object.keys(o.flagEffects).forEach(function (k) {
-        kit.flagEffects[k] = Object.assign({ order: 50, settle: true }, o.flagEffects[k])
+        kit.flagEffects[k] = Object.assign({ order: 50, settle: true }, o.flagEffects![k])
       })
     if (o.fluids)
       Object.keys(o.fluids).forEach(function (k) {
-        kit.defineFluid(k, o.fluids[k])
+        kit.defineFluid(k, o.fluids![k])
       })
     if (o.fuels) Object.assign(kit.fuels, o.fuels)
     if (o.groups)
@@ -191,15 +193,16 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       if (tx.ui) kit.config.texts.ui = Object.assign(kit.config.texts.ui || {}, tx.ui)
     }
     ;['impactStain', 'defaultSplat', 'defaultGroup', 'damagedScenario'].forEach(function (k) {
-      if (o[k] !== undefined) kit.config[k] = o[k]
+      const v = (o as Record<string, unknown>)[k]
+      if (v !== undefined) kit.config[k] = v
     })
     return kit
   }
   kit.plugins = []
-  kit.plugin = function (p: any) {
+  kit.plugin = function (p?: Plugin | null) {
     if (!p) return kit
     if (p.configure) kit.configure(p.configure)
-    if (typeof p.install === 'function') p.install(kit)
+    if (typeof p.install === 'function') p.install(kit as unknown as VehicleKit)
     kit.plugins.push(p.name || '(unnamed)')
     return kit
   }
@@ -246,7 +249,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
    * `zoneState.scenario` (an id or name a pack registered) computes that scenario on the vehicle being built, so a burnt or wrecked
    * vehicle is one call; an explicit `health` / `flags` given alongside override the scenario's (health per zone id, flags by name).
    */
-  kit.build = function (key: string, state?: string, zoneState?: any, options?: { lod?: boolean }) {
+  kit.build = function (key: string, state?: string, zoneState?: BuildZoneState | null, options?: { lod?: boolean }) {
     const spec = kit.find(key)
     if (!spec) throw new Error('Unknown vehicle: ' + key)
     const lodBefore = lod.on
@@ -257,7 +260,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       lod.on = lodBefore
     }
   }
-  function buildVehicle(spec: any, key: string, state?: string, zoneState?: any) {
+  function buildVehicle(spec: VehicleSpec, key: string, state?: string, zoneState?: BuildZoneState | null) {
     const st = state || 'intact'
     /* a vehicle renamed after the first release keeps its old key as the seed of every random stream */
     const seedKey = spec.seedKey || key
@@ -265,7 +268,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     c.spec = spec
     c.key = key
     c.seedKey = seedKey
-    spec.build(c, kit)
+    spec.build!(c, kit as unknown as VehicleKit)
     const m = c.meta
     m.kind = m.kind || 'car'
     if (m.length == null || m.width == null || m.front == null) {
@@ -281,7 +284,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       if (m.belt == null) m.belt = m.clearance + m.bodyHeight
     }
     if (c.engineHealth == null) c.engineHealth = 1
-    if (['electric', 'none'].indexOf(spec.fuel) < 0 && ['boat', 'plane', 'heli'].indexOf(m.kind) < 0 && m.exhaust !== false) {
+    if (['electric', 'none'].indexOf(spec.fuel as string) < 0 && ['boat', 'plane', 'heli'].indexOf(m.kind) < 0 && m.exhaust !== false) {
       const ex = m.exhaust || new kit.V3(m.rear + 0.05, Math.max(0.2, (m.clearance || 0.3) * 0.7), (m.width || 1.6) * 0.3)
       kit.addEmitter(c, ex, 'exhaust', { dir: m.exhaustDir || new kit.V3(-1, 0, 0) })
     }
@@ -298,7 +301,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     if (zoneState == null && st === 'damaged' && kit.config.damagedScenario) zoneState = kit.zoneScenario(c, kit.config.damagedScenario)
     else if (zoneState && zoneState.scenario != null) {
       c.scenario = zoneState.scenario
-      let fromScenario: any = { health: {}, flags: {} }
+      let fromScenario: ScenarioResult | { health: Record<string, number>; flags: Record<string, boolean> } = { health: {}, flags: {} }
       try {
         fromScenario = kit.zoneScenario(c, zoneState.scenario)
       } catch (e) {
@@ -316,8 +319,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
         c.zoneState.health[z.id] = 100
       })
     }
-    c.vehicle.traverse(function (o: any) {
-      if (o.isMesh && !(o.material && o.material.transparent)) o.receiveShadow = true
+    c.vehicle.traverse(function (o: SceneNode) {
+      if (o.isMesh && !(o.material && (o.material as Material).transparent)) o.receiveShadow = true
     })
     return c
   }
@@ -336,7 +339,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   kit.registerLegacySeeds = registerLegacySeeds
 
   /* a content pack adds its own strings (under its own top-level key) to the locale this kit was created with */
-  kit.registerLocale = function (code: string, table: Record<string, any>) {
+  kit.registerLocale = function (code: string, table: Record<string, unknown>) {
     registerLocale(code, table)
     assignDeep(strings, resolveStrings(opts.locale))
     return kit
