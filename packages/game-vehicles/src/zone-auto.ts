@@ -1,7 +1,10 @@
 /** Automatic zone derivation for each vehicle family. */
-import type { DamageZone } from './api'
+import type { Box3, Object3D } from 'three'
+
+import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
 import { legacyGlassId, legacyLightId } from './legacy-seeds'
+import type { ZoneBoxInput } from './zone-core'
 
 const REAR_GLASS_KEYS = ['rear_window', 'window_rear', 'quarter_glass']
 
@@ -15,7 +18,8 @@ export function installZoneAuto(kit: Kit) {
   /* ---- automatic derivation by vehicle type ---- */
   function autoZones(c: BuildContext) {
     const m = c.meta
-    let Z: any = []
+    /* the zones as they are derived: the rest of their fields (health, owned) come in `deriveZones` */
+    let Z: DamageZone[] = []
     const inv = I.worldInverseOf(c)
     const kind = m.kind || 'car'
     const F = m.front
@@ -27,8 +31,8 @@ export function installZoneAuto(kit: Kit) {
     const top = m.top || belt + 0.5
     const hw = W / 2
     const WH = I.wheelInfo(c)
-    function add(id: string, name: string, type: string, box: any, o?: any) {
-      const z = Object.assign({ id: id, name: name, type: type, box: I.normalizeBox(box) }, o || {})
+    function add(id: string, name: string, type: string, box: ZoneBoxInput, o?: Record<string, unknown>) {
+      const z = Object.assign({ id: id, name: name, type: type, box: I.normalizeBox(box) }, o || {}) as unknown as DamageZone
       Z.push(z)
       return z
     }
@@ -57,15 +61,16 @@ export function installZoneAuto(kit: Kit) {
         const key = (pt && pt.key) || gd.key || null
         return { g: g, n: label, key: key, side: gd.side || 0, bb: bb, cen: bb.getCenter(new V3()) }
       })
-      const isWindshield = function (q: any) {
+      type GlassInfo = (typeof info)[number]
+      const isWindshield = function (q: GlassInfo) {
         return q.key ? /(^|_)windshield($|_)/.test(q.key) : matchers.windshield.test(q.n)
       }
-      const isRearGlass = function (q: any) {
+      const isRearGlass = function (q: GlassInfo) {
         return q.key ? REAR_GLASS_KEYS.indexOf(q.key) >= 0 || /(^|_)rear($|_)/.test(q.key) : matchers.rear.test(q.n)
       }
       if (!grouped && gl.length <= 10) {
-        const used: any = {}
-        const usedSeed: any = {}
+        const used: Record<string, number> = {}
+        const usedSeed: Record<string, number> = {}
         info.forEach(function (q) {
           let n = q.n
           let word = q.side ? (q.side < 0 ? 'left' : 'right') : null
@@ -107,7 +112,7 @@ export function installZoneAuto(kit: Kit) {
         })
         return
       }
-      const groups: any = { f: [], l: [], r: [], b: [] }
+      const groups: Record<string, GlassInfo[]> = { f: [], l: [], r: [], b: [] }
       info.forEach(function (q) {
         const k =
           isWindshield(q) || (Math.abs(q.cen.z) < W * 0.25 && q.cen.x > (F + R) / 2)
@@ -128,11 +133,11 @@ export function installZoneAuto(kit: Kit) {
         const L2 = groups[G[0]]
         if (!L2.length) return
         const bb = new THREE.Box3()
-        L2.forEach(function (q: any) {
+        L2.forEach(function (q) {
           bb.union(q.bb)
         })
         add(G[4], t('zones.' + G[1]), 'glass', bb.expandByScalar(0.04), {
-          glass: L2.map(function (q: any) {
+          glass: L2.map(function (q) {
             return q.g
           }),
           fxKey: G[2],
@@ -144,7 +149,7 @@ export function installZoneAuto(kit: Kit) {
     }
     function lightZones() {
       lightsDone = true
-      const G: any = {}
+      const G: Record<string, VehicleLamp[]> = {}
       c.lights.forEach(function (Lt) {
         const cen = I.lightCenter(c, Lt, inv)
         const k = Lt.kind === 'taillight' ? 'taillight' : 'headlight'
@@ -164,9 +169,9 @@ export function installZoneAuto(kit: Kit) {
             : t(p[0] === 'headlight' ? 'zones.headlight' : 'zones.taillight_side', { s: p[1] === 'left' ? -1 : 1 })
         if (fam === 'bike' && p[0] === 'headlight') return /* the motorcycle headlight sits in the fairing */
         /* lights on the same side that are far apart (roof light, trunk taillight) become separate zones, so the box does not cover half the vehicle */
-        const cl2: any = []
+        const cl2: { L: VehicleLamp[]; bb: Box3 }[] = []
         const split = fam === 'car' || fam === 'heavy' || fam === 'military'
-        G[key].forEach(function (Lt: any) {
+        G[key].forEach(function (Lt) {
           if (!split) {
             if (!cl2.length) cl2.push({ L: [], bb: new THREE.Box3() })
             cl2[0].L.push(Lt)
@@ -174,7 +179,7 @@ export function installZoneAuto(kit: Kit) {
             return
           }
           const lb = I.lightBoxOf(c, Lt, inv)
-          const q = cl2.find(function (k2: any) {
+          const q = cl2.find(function (k2) {
             return k2.bb.distanceToPoint(lb.getCenter(new V3())) < 0.7
           })
           if (q) {
@@ -182,10 +187,10 @@ export function installZoneAuto(kit: Kit) {
             q.bb.union(lb)
           } else cl2.push({ L: [Lt], bb: lb.clone() })
         })
-        cl2.sort(function (a2: any, b2: any) {
+        cl2.sort(function (a2, b2) {
           return (p[0] === 'headlight' ? -1 : 1) * (a2.bb.max.x - b2.bb.max.x) || a2.bb.min.y - b2.bb.min.y
         })
-        cl2.forEach(function (q: any, i: number) {
+        cl2.forEach(function (q, i) {
           add(i ? key + '_' + (i + 1) : key, i ? n + ' (' + (i + 1) + ')' : n, 'light', q.bb.expandByScalar(0.03), {
             lights: q.L,
             fxKey: p[0],
@@ -199,21 +204,21 @@ export function installZoneAuto(kit: Kit) {
       if (!WH) return
       const ws = WH.list
       if (byAxle || ws.length > 6) {
-        const ax: any = []
+        const ax: { x: number; w: Object3D[] }[] = []
         ws.slice()
-          .sort(function (a: any, b: any) {
+          .sort(function (a: Object3D, b: Object3D) {
             return b.position.x - a.position.x
           })
           .forEach(function (w) {
-            const a = ax.find(function (q: any) {
+            const a = ax.find(function (q) {
               return Math.abs(q.x - w.position.x) < 0.75
             })
             if (a) a.w.push(w)
             else ax.push({ x: w.position.x, w: [w] })
           })
-        ax.forEach(function (a: any, i: number) {
+        ax.forEach(function (a, i) {
           const bb = new THREE.Box3()
-          a.w.forEach(function (w: any) {
+          a.w.forEach(function (w) {
             bb.union(I.localBox(c, w, inv))
           })
           const n =
@@ -228,7 +233,7 @@ export function installZoneAuto(kit: Kit) {
         })
         return
       }
-      const used: any = {}
+      const used: Record<string, number> = {}
       ws.forEach(function (w) {
         const fr = w.position.x >= (WH.xf + WH.xr) / 2 ? 'front' : 'rear'
         const sd = Math.abs(w.position.z) < 0.08 ? 0 : w.position.z < 0 ? -1 : 1
@@ -243,7 +248,7 @@ export function installZoneAuto(kit: Kit) {
         add(id, n, 'wheel', I.localBox(c, w, inv).expandByScalar(0.04), { wheels: [w], who: '', seedId: seed })
       })
     }
-    function internal(kind2: string, n: string, fxKey: string, sz?: any) {
+    function internal(kind2: string, n: string, fxKey: string, sz?: number[]) {
       const ps = I.partsOf(c, kind2)
       if (!ps.length) return null
       const p = ps[0].pos
@@ -275,7 +280,7 @@ export function installZoneAuto(kit: Kit) {
       const C = rearDoor ? Math.max(pil[1] != null && pil[1] < B - 0.4 ? pil[1] : rb, xr + rr * 0.2) : B
       const y0s = Math.max(0.03, cl - 0.12)
       const y1s = belt + 0.03
-      const sideB = function (x0: number, x1: number, s: number, y0?: any, y1?: any) {
+      const sideB = function (x0: number, x1: number, s: number, y0?: number | null, y1?: number | null) {
         return s < 0
           ? [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, -hw - out, -hw + sb]
           : [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, hw - sb, hw + out]
@@ -576,7 +581,7 @@ export function installZoneAuto(kit: Kit) {
         tags: ['rear'],
       })
       /* weapon: the longest mesh in x above the belt line (barrel) */
-      let gun: any = null
+      let gun = null as { o: Object3D; bb: Box3 } | null
       let gl2 = 0
       c.vehicle.traverse(function (o: SceneNode) {
         if (!o.isMesh || o.userData.decal) return
@@ -747,7 +752,7 @@ export function installZoneAuto(kit: Kit) {
       if (gear.length) {
         /* legs and fairings of the wheels (low parts near each wheel) belong to the gear: they fold and disappear together */
         const gb = new THREE.Box3()
-        const gobj: any = []
+        const gobj: Object3D[] = []
         gear.forEach(function (w) {
           gb.union(I.localBox(c, w, inv))
         })
@@ -779,7 +784,7 @@ export function installZoneAuto(kit: Kit) {
       glassDone = true
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: DamageZone) {
+      Z = Z.filter(function (z) {
         return z.type !== 'glass'
       }) /* the aircraft glass stays in the cabin */
     } else if (fam === 'heli') {
@@ -838,7 +843,7 @@ export function installZoneAuto(kit: Kit) {
       glassZones(true)
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: DamageZone) {
+      Z = Z.filter(function (z) {
         return z.type !== 'glass'
       }) /* glass goes to the nose and the cabin */
     } else {

@@ -374,11 +374,6 @@
       "count": 11
     }
   },
-  "packages/game-vehicles/src/zone-auto.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 29
-    }
-  },
   "packages/game-vehicles/src/zone-core.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 21
