@@ -1,7 +1,7 @@
 /** Spoked wheels and track assemblies. */
 import type { Kit } from './types'
 
-export function installWheels(kit: Kit): void {
+export function installWheels(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -143,5 +143,9 @@ export function installWheels(kit: Kit): void {
     return { mesh: tm, wheels: gs, sprocket: spr, idler: idl }
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

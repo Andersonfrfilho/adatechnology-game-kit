@@ -31,7 +31,7 @@ type CrackedLamp = {
 }
 type CrackedLampHost = { toEffects(p: unknown): unknown; dirToEffects(d: unknown): unknown }
 
-export function installGlassDamage(kit: Kit): void {
+export function installGlassDamage(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -88,7 +88,7 @@ export function installGlassDamage(kit: Kit): void {
     }
     x.lineCap = 'round'
     x.lineJoin = 'round'
-    function seg(p: any, q: any, wd: any, col: any) {
+    function seg(p: any, q: any, wd: number, col: string) {
       x.strokeStyle = col
       x.lineWidth = wd
       x.beginPath()
@@ -408,5 +408,9 @@ export function installGlassDamage(kit: Kit): void {
   }
   kit.crackLight = crackLight
 
-  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight })
+  const shared = { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight }
+
+  Object.assign(I, shared)
+
+  return shared
 }

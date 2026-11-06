@@ -1,7 +1,9 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
+import type { MeshStandardMaterial, Vector3 } from 'three'
+
 import type { Kit } from './types'
 
-export function installExplosion(kit: Kit): void {
+export function installExplosion(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -12,10 +14,10 @@ export function installExplosion(kit: Kit): void {
   /* Chain: the engine catches fire with black smoke (3 to 8 s), the vehicle jumps ~1.5 m, the hood and the rear bumper fly off with a fire trail,
      the tempered glass bursts into cubes and the laminated windshield crazes and the burnt-out shell is left with a low fire. Fuel tank explosion damage: > 200 fire, > 400 explodes in 0.6 s.
      The tanker truck (meta.bigBlast) makes a gas station tank explosion: lethal radius 12 m, injury radius 30 m, 16 m mushroom cloud. */
-  const BURNT = ['#1d1a17', '#26211c', '#171514', '#2e2620'].map(function (h, i) {
+  const BURNT: MeshStandardMaterial[] = ['#1d1a17', '#26211c', '#171514', '#2e2620'].map(function (h, i) {
     return makeMaterial(h, { roughness: 1, metalness: i === 3 ? 0.35 : 0.15 })
   })
-  const BURNT_RUB = makeMaterial('#0b0b0b', { roughness: 1 })
+  const BURNT_RUB: MeshStandardMaterial = makeMaterial('#0b0b0b', { roughness: 1 })
   function boomMat(hex: any, op: number, add?: any) {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color(hex),
@@ -68,7 +70,7 @@ export function installExplosion(kit: Kit): void {
     }
     return null
   }
-  function fling(c: any, obj: any, v: any, w: any) {
+  function fling(c: any, obj: any, v: Vector3, w: Vector3) {
     if (!obj || !obj.parent) return null
     c.root.updateMatrixWorld(true)
     const bb = new THREE.Box3().setFromObject(obj)
@@ -395,5 +397,9 @@ export function installExplosion(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { BURNT, BURNT_RUB, boomMat, enginePos, fling, burnAll, bigBoomFx, detonate, tickBoom, tickFlying })
+  const shared = { BURNT, BURNT_RUB, boomMat, enginePos, fling, burnAll, bigBoomFx, detonate, tickBoom, tickFlying }
+
+  Object.assign(I, shared)
+
+  return shared
 }

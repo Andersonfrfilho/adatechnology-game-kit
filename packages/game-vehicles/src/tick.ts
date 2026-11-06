@@ -1,7 +1,7 @@
 /** Per-frame update loop for particles, fluids, spinning parts and rollover. */
 import type { Kit } from './types'
 
-export function installTick(kit: Kit): void {
+export function installTick(kit: Kit) {
   const I = kit._
 
   /* ================= per-frame loop ================= */
@@ -38,5 +38,9 @@ export function installTick(kit: Kit): void {
     return true
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

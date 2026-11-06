@@ -1,7 +1,7 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
 import type { Kit } from './types'
 
-export function installZoneDerive(kit: Kit): void {
+export function installZoneDerive(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -296,5 +296,9 @@ export function installZoneDerive(kit: Kit): void {
   }
   kit.zoneOwner = ownerOf
 
-  Object.assign(I, { parseDir, resolveObjs, deriveZones, carMap, zonesOf, ownerOf })
+  const shared = { parseDir, resolveObjs, deriveZones, carMap, zonesOf, ownerOf }
+
+  Object.assign(I, shared)
+
+  return shared
 }

@@ -1,11 +1,11 @@
 /** Impact resolution: direction, surface lookup, deformation, shards and sparks. */
-import type { Object3D } from 'three'
+import type { MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
 import type { Kit } from './types'
 import { clamp, hash, markDecal } from './util'
 import { raycastIndexed } from './tri-index'
 
-export function installImpact(kit: Kit): void {
+export function installImpact(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -14,7 +14,7 @@ export function installImpact(kit: Kit): void {
 
   /* ================= impact ================= */
   /* Dent field: smooth falloff (smoothstep), low-frequency ripple (<= 0.015), never crosses the centre plane. */
-  function dentField(v: any, H: any) {
+  function dentField(v: Vector3, H: any) {
     const d = v.distanceTo(H.p)
     if (d >= H.R) return 0
     const t = 1 - d / H.R
@@ -144,8 +144,8 @@ export function installImpact(kit: Kit): void {
     }
   }
   kit.applyPart = applyPart
-  const SCRATCH_MATERIAL = makeMaterial('#9da3a6', { metalness: 0.85, roughness: 0.35 })
-  const SOOT_MATERIAL = makeMaterial('#141312', {
+  const SCRATCH_MATERIAL: MeshStandardMaterial = makeMaterial('#9da3a6', { metalness: 0.85, roughness: 0.35 })
+  const SOOT_MATERIAL: MeshStandardMaterial = makeMaterial('#141312', {
     roughness: 1,
     transparent: true,
     opacity: 0.38,
@@ -157,7 +157,7 @@ export function installImpact(kit: Kit): void {
   const _ray = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _ray.layers.enableAll()
-  function findSurface(c: any, p: any, dir: any) {
+  function findSurface(c: any, p: any, dir: Vector3) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const o = p.clone().addScaledVector(dir, -1.2).applyMatrix4(Mw)
@@ -183,7 +183,7 @@ export function installImpact(kit: Kit): void {
     }
     return null
   }
-  function scratches(c: any, p: any, dir: any, force: number) {
+  function scratches(c: any, p: Vector3, dir: Vector3, force: number) {
     const d = dir.clone().normalize()
     const t1 = new V3().crossVectors(d, Math.abs(d.y) > 0.9 ? new V3(1, 0, 0) : new V3(0, 1, 0)).normalize()
     const t2 = new V3().crossVectors(d, t1)
@@ -219,7 +219,7 @@ export function installImpact(kit: Kit): void {
     soot.lookAt(soot.position.clone().sub(d))
   }
   /* Impact at point p (c.vehicle coordinates), direction dir (into the vehicle), force 0.3..1.4. Returns the parts hit. */
-  function impact(c: any, p: any, dir: any, force: number, opts?: any) {
+  function impact(c: any, p: Vector3, dir: Vector3, force: number, opts?: any) {
     opts = opts || {}
     dir = dir.clone().normalize()
     const m = c.meta
@@ -410,7 +410,7 @@ export function installImpact(kit: Kit): void {
   const _pr = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _pr.layers.enableAll()
-  function probe(c: any, o: any, d: any, far: number) {
+  function probe(c: any, o: Vector3, d: Vector3, far: number) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const inv = new THREE.Matrix4().copy(Mw).invert()
@@ -509,7 +509,7 @@ export function installImpact(kit: Kit): void {
   }
   kit.zoneImpact = zoneImpact
 
-  Object.assign(I, {
+  const shared = {
     dentField,
     hangBumper,
     tankFuel,
@@ -525,5 +525,9 @@ export function installImpact(kit: Kit): void {
     _pr,
     probe,
     zoneImpact,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

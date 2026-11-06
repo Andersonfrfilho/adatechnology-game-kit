@@ -1,7 +1,7 @@
 /** Truck cab and chassis builders. */
 import type { Kit } from './types'
 
-export function installTrucks(kit: Kit): void {
+export function installTrucks(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -146,5 +146,9 @@ export function installTrucks(kit: Kit): void {
     m.length = L
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

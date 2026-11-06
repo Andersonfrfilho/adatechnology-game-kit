@@ -1,4 +1,6 @@
 /** Fluid types (oil, stains, rain...) and the splat/puddle system. */
+import type { Vector3 } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 
@@ -12,7 +14,7 @@ const PUDDLE_COLORS: Record<string, number> = {
   battery_acid: 0xd8d8c8,
 }
 
-export function installFluids(kit: Kit): void {
+export function installFluids(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -39,7 +41,7 @@ export function installFluids(kit: Kit): void {
   /* Liquid splat: a flat stain glued to the surface, irregular outline, satellite drops and a trickle that runs down,
      thins and ends in a bulb. The trickle stops when the volume runs out. Glossy when fresh, dries matte in the fluid type's time.
      o: { fluid (key of kit.fluidTypes; default config.defaultSplat), glass, obj (mesh to attach to; the trickle follows its curve) } */
-  kit.splat = function (c: any, p: any, n: any, r: number, o: any) {
+  kit.splat = function (c: any, p: Vector3, n: Vector3, r: number, o: any) {
     o = o || {}
     n = n.clone().normalize()
     const fdef = kit.fluidTypes[o.fluid || kit.config.defaultSplat] || kit.fluidTypes.stain
@@ -494,5 +496,9 @@ export function installFluids(kit: Kit): void {
     return n
   }
 
-  Object.assign(I, { _fr, buildDrip, DOWNHILL, PN, puddleGeometry, rimGeometry, puddle, shapePuddle, updateFluids })
+  const shared = { _fr, buildDrip, DOWNHILL, PN, puddleGeometry, rimGeometry, puddle, shapePuddle, updateFluids }
+
+  Object.assign(I, shared)
+
+  return shared
 }

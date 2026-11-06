@@ -1,14 +1,17 @@
 /** Glass panes: windshield quads, side windows and ghost glass. */
+import type { Mesh, Object3D } from 'three'
+
 import type { Kit } from './types'
 
-export function installGlass(kit: Kit): void {
+export function installGlass(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
   const { MATERIALS, crease, cutGeometry, pathShape, subdivide, tumble, uvProject } = I
 
   /* the rubber around a side window, by its pane: it goes where the pane goes */
-  I.paneSeals = new WeakMap()
+  const paneSeals = new WeakMap<Object3D, Mesh>()
+  I.paneSeals = paneSeals
 
   /* ================= glass ================= */
   kit.addGlass = function (c: any, geo: any, label: any, type?: any, o?: any) {
@@ -56,7 +59,7 @@ export function installGlass(kit: Kit): void {
   kit.sideWindows = function (c: any, polys: any, Wg: number, T: any, label: any, o: any) {
     o = o || {}
     ;(o.sides || [1, -1]).forEach(function (s: number) {
-      polys.forEach(function (poly: any, i: any) {
+      polys.forEach(function (poly: number[][], i: any) {
         const shp = pathShape(
           poly.map(function (p: any) {
             return [p[0], p[1], 0.035]
@@ -88,7 +91,7 @@ export function installGlass(kit: Kit): void {
           zpos: zpos,
           aspect: asp,
         })
-        const pts = shp.getSpacedPoints(36).map(function (p: any) {
+        const pts = shp.getSpacedPoints(36).map(function (p) {
           return [p.x, p.y, s * (I.halfAt(Wg, T, p.y) + 0.005)]
         })
         pts.pop()
@@ -99,7 +102,7 @@ export function installGlass(kit: Kit): void {
     })
   }
   /* Cuts a ready mesh (mesh local coordinates) and recomputes the normals. */
-  kit.cutMesh = function (mesh: any, tests: any, deg: any, o: string) {
+  kit.cutMesh = function (mesh: any, tests: any, deg: any, o?: { sub?: number }) {
     /* o.sub: subdivide first (edges longer than o.sub, in m) for windows inside large faces; drops colour/uv */
     const src = o && o.sub ? subdivide(mesh.geometry, o.sub) : mesh.geometry
     const r = cutGeometry(src, tests)
@@ -108,7 +111,7 @@ export function installGlass(kit: Kit): void {
     mesh.geometry = r.geo
     return r.cut
   }
-  kit.quadDef = function (pb: number[], pt: number[], Wg: any, T: any, which: string, bev: any, o: any) {
+  kit.quadDef = function (pb: number[], pt: number[], Wg: number, T: any, which: string, bev: any, o: any) {
     o = o || {}
     bev = bev == null ? 0.05 : bev
     const dx = pt[0] - pb[0]
@@ -180,5 +183,9 @@ export function installGlass(kit: Kit): void {
     return m
   }
 
-  Object.assign(I, {})
+  const shared = { paneSeals }
+
+  Object.assign(I, shared)
+
+  return shared
 }

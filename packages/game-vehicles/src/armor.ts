@@ -1,8 +1,10 @@
 /** Armoured vehicle details (plating, hatches, add-on armour) and the applyArmor helper. */
+import type { MeshStandardMaterial } from 'three'
+
 import type { Kit } from './types'
 import { clamp, hash } from './util'
 
-export function installArmor(kit: Kit): void {
+export function installArmor(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -10,8 +12,8 @@ export function installArmor(kit: Kit): void {
   const { makeMaterial, MATERIALS } = I
 
   /* ================= modified state ================= */
-  const STEEL_MATERIAL = makeMaterial('#4e534f', { metalness: 0.55, roughness: 0.5 })
-  const PLATE_MATERIALS = ['#4f5450', '#5b605b', '#454a47', '#56584f', '#4b4d4a'].map(function (h) {
+  const STEEL_MATERIAL: MeshStandardMaterial = makeMaterial('#4e534f', { metalness: 0.55, roughness: 0.5 })
+  const PLATE_MATERIALS: MeshStandardMaterial[] = ['#4f5450', '#5b605b', '#454a47', '#56584f', '#4b4d4a'].map(function (h) {
     return makeMaterial(h, { metalness: 0.5, roughness: 0.55 })
   })
   kit.steelMaterial = STEEL_MATERIAL
@@ -252,5 +254,9 @@ export function installArmor(kit: Kit): void {
   }
   kit.applyArmor = applyArmor
 
-  Object.assign(I, { STEEL_MATERIAL, PLATE_MATERIALS, jerryCan, applyArmor })
+  const shared = { STEEL_MATERIAL, PLATE_MATERIALS, jerryCan, applyArmor }
+
+  Object.assign(I, shared)
+
+  return shared
 }

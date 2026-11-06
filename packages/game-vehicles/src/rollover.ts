@@ -2,7 +2,7 @@
 import type { Kit } from './types'
 import { hash } from './util'
 
-export function installRollover(kit: Kit): void {
+export function installRollover(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -46,7 +46,7 @@ export function installRollover(kit: Kit): void {
     }
     const lo: any = []
     const up = []
-    pts.forEach(function (p: any) {
+    pts.forEach(function (p: number[]) {
       while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop()
       lo.push(p)
     })
@@ -284,5 +284,9 @@ export function installRollover(kit: Kit): void {
   }
   kit.rollContact = rollContact
 
-  Object.assign(I, { rollMeshes, convexHull, rollContact, exactMinY, finishRoll, tickRoll })
+  const shared = { rollMeshes, convexHull, rollContact, exactMinY, finishRoll, tickRoll }
+
+  Object.assign(I, shared)
+
+  return shared
 }

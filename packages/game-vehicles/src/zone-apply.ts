@@ -5,7 +5,7 @@ import type { Kit } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
 
-export function installZoneApply(kit: Kit): void {
+export function installZoneApply(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -226,5 +226,9 @@ export function installZoneApply(kit: Kit): void {
     return c.zoneState
   }
 
-  Object.assign(I, { fadePaint, abandonFx, burntFx, settleDrops })
+  const shared = { fadePaint, abandonFx, burntFx, settleDrops }
+
+  Object.assign(I, shared)
+
+  return shared
 }

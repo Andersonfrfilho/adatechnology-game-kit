@@ -1,8 +1,10 @@
 /** Headlights and taillights in several styles, with beams and glow. */
+import type { MeshStandardMaterial } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 
-export function installLights(kit: Kit): void {
+export function installLights(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -19,7 +21,7 @@ export function installLights(kit: Kit): void {
     c.vehicle.add(g)
     return g
   }
-  function gm(g: any, geo: any, mat: any, x?: any, y?: any, z?: any) {
+  function gm(g: any, geo: any, mat: MeshStandardMaterial, x?: any, y?: any, z?: any) {
     const m = new THREE.Mesh(geo, mat)
     m.position.set(x || 0, y || 0, z || 0)
     m.castShadow = false
@@ -76,7 +78,7 @@ export function installLights(kit: Kit): void {
     return sp
   }
   kit.halo = halo
-  function lampKit(g: any, d: number, inner: any, lens: any, lensMat: any, refl?: any) {
+  function lampKit(g: any, d: number, inner: any, lens: any, lensMat: MeshStandardMaterial, refl?: any) {
     refl = refl || MATERIALS.reflector
     return {
       housing: function (w: any, h: number, y?: any, z?: any, geoFn?: any) {
@@ -342,5 +344,9 @@ export function installLights(kit: Kit): void {
     return g
   }
 
-  Object.assign(I, { lampGroup, gm, wedgeY, haloTex, glowTexture, haloMats, halo, lampKit })
+  const shared = { lampGroup, gm, wedgeY, haloTex, glowTexture, haloMats, halo, lampKit }
+
+  Object.assign(I, shared)
+
+  return shared
 }

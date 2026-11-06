@@ -1,5 +1,5 @@
 /** Zone core: bands, effects text, box helpers and part lookups. */
-import type { Box3 } from 'three'
+import type { Box3, Matrix4 } from 'three'
 
 import type { Kit } from './types'
 import { clamp } from './util'
@@ -16,7 +16,7 @@ export interface ZoneBox {
 /** What `normalizeBox` reads: `[x0, x1, y0, y1, z0, z1]`, a `ZoneBox` or a three.js `Box3`. */
 export type ZoneBoxInput = readonly number[] | ZoneBox | Box3
 
-export function installZoneCore(kit: Kit): void {
+export function installZoneCore(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -107,7 +107,7 @@ export function installZoneCore(kit: Kit): void {
     return new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
   }
   /* box of an object in c.vehicle coordinates */
-  function localBox(c: any, o: any, inv: any) {
+  function localBox(c: any, o: any, inv: Matrix4) {
     inv = inv || worldInverseOf(c)
     const bb = new THREE.Box3()
     const tmp = new THREE.Box3()
@@ -184,7 +184,7 @@ export function installZoneCore(kit: Kit): void {
     return !!o
   }
 
-  Object.assign(I, {
+  const shared = {
     BANDS,
     bandOf,
     ZONE_WEIGHTS,
@@ -207,5 +207,9 @@ export function installZoneCore(kit: Kit): void {
     lightBoxOf,
     hideObj,
     shown,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

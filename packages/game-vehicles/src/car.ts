@@ -1,7 +1,9 @@
 /** The generic car builder: shell, glasshouse, lights, wheels, interior and engine bay in one call. */
+import type { MeshStandardMaterial, Vector3 } from 'three'
+
 import type { Kit } from './types'
 
-export function installCar(kit: Kit): void {
+export function installCar(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -69,7 +71,7 @@ export function installCar(kit: Kit): void {
     const qr = kit.quadDef([gh.rb, gh.belt], [gh.rt, gh.roof], gh.Wg, T, 'rear', bev)
     const gHoles = []
     if (intr) {
-      polys.forEach(function (p: any) {
+      polys.forEach(function (p) {
         gHoles.push(kit.holeSide(p))
       })
       gHoles.push(
@@ -186,10 +188,10 @@ export function installCar(kit: Kit): void {
     m.underbodyGroup = ug
     const DK = makeMaterial('#1a1b1c', { roughness: 0.75, metalness: 0.3 })
     const ST = MATERIALS.steel
-    function box(w: number, h: number, d: number, mat: any, x: number, y: number, z: number) {
+    function box(w: number, h: number, d: number, mat: MeshStandardMaterial, x: number, y: number, z: number) {
       return c.roundBox(w, h, d, Math.min(0.02, h * 0.4), mat, x, y, z, { parent: ug })
     }
-    function rod(a: any, b: any, r: number, mat: any) {
+    function rod(a: Vector3, b: Vector3, r: number, mat: MeshStandardMaterial) {
       return c.rod(a, b, r, mat, { parent: ug, seg: 8 })
     }
     const diesel = o.motor === 'diesel' || o.motor === 'v8' || o.motor === 'v8_na'
@@ -385,5 +387,9 @@ export function installCar(kit: Kit): void {
     return out
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

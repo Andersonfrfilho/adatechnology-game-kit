@@ -1,10 +1,12 @@
 /** Particle system: smoke, fire, sparks, shards, dust and water. */
+import type { Vector3 } from 'three'
+
 import type { Kit } from './types'
 import { warnOnce } from '@adatechnology/game-contracts'
 import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
 
-export function installParticles(kit: Kit): void {
+export function installParticles(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -145,7 +147,7 @@ export function installParticles(kit: Kit): void {
   }
   /* Particle in the sibling group c.effects (vehicle world coordinates). type: spark|shard|cube|lens|scrap|plastic|dust|smoke|fire|water|droplet */
   /* The effects world draws the puff and its budget caps it: positions and velocities go from the vehicle's effects group to the world. */
-  function routeParticle(c: any, effects: any, type: any, pos: any, vel: any, o: any) {
+  function routeParticle(c: any, effects: any, type: string, pos: any, vel: any, o: any) {
     c.effects.updateWorldMatrix(true, false)
     const at = pos.clone().applyMatrix4(c.effects.matrixWorld)
     const to = vel.clone().transformDirection(c.effects.matrixWorld).multiplyScalar(vel.length())
@@ -165,7 +167,7 @@ export function installParticles(kit: Kit): void {
     )
     return null
   }
-  kit.spawn = function (c: any, type: string, pos: any, vel: any, o: any) {
+  kit.spawn = function (c: any, type: string, pos: Vector3, vel: any, o: any) {
     o = o || {}
     const effects = ROUTED_PARTICLE_TYPES[type] ? kit.effects?.() : undefined
     if (effects) return routeParticle(c, effects, type, pos, vel, o)
@@ -408,7 +410,7 @@ export function installParticles(kit: Kit): void {
     })
   }
 
-  Object.assign(I, {
+  const shared = {
     PARTICLE_LIMIT,
     PARTICLE_GEOMETRIES,
     PARTICLE_MATERIALS,
@@ -428,5 +430,9 @@ export function installParticles(kit: Kit): void {
     burst,
     exhaustLook,
     tickEmit,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

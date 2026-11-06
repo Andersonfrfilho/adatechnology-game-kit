@@ -2,7 +2,7 @@
 import type { Kit } from './types'
 import { clamp, rng, strHash } from './util'
 
-export function installScenarios(kit: Kit): void {
+export function installScenarios(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -172,5 +172,9 @@ export function installScenarios(kit: Kit): void {
     return { p: p, dir: dir }
   }
 
-  Object.assign(I, { BODY_TYPES })
+  const shared = { BODY_TYPES }
+
+  Object.assign(I, shared)
+
+  return shared
 }

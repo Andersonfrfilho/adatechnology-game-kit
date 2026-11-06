@@ -2,6 +2,8 @@
  * Damageable parts: what a bullet, a bat or a crash can hurt on a built vehicle, as boxes. Port of `coletarDanificaveis` and `tipoDaZona`
  * (frota-leve.js 14391-14405), driven by the zones the kit already derives, so it works for any vehicle of any pack.
  */
+import type { Matrix4 } from 'three'
+
 import type { Kit } from './types'
 
 export type DamageableMaterial = 'metal' | 'glass' | 'rubber' | 'fuel'
@@ -41,7 +43,7 @@ export function installDamageables(kit: Kit): void {
    * Every damageable zone of a built vehicle: `{ material, zone, part, side, box }`. `box` is a `THREE.Box3` in the coordinates of
    * `c.vehicle`, or in the frame of `matrix` when one is given (for example the output frame of `game-vehicles-three`).
    */
-  kit.damageables = function (c: any, matrix?: any) {
+  kit.damageables = function (c: any, matrix?: Matrix4) {
     const out: any[] = []
     for (const zone of c.zones || []) {
       const kind = kindOf(zone)

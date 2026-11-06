@@ -19,7 +19,7 @@ export interface TextTextureOptions {
   [option: string]: unknown
 }
 
-export function installMaterials(kit: Kit): void {
+export function installMaterials(kit: Kit) {
   const THREE = kit.THREE
   const I = kit._
   const document = kit.document
@@ -204,5 +204,9 @@ export function installMaterials(kit: Kit): void {
   }
   kit.textTexture = textTexture
 
-  Object.assign(I, { RUST, cache, studioEnvironment, makeMaterial, makeFlatMaterial, DOUBLE_SIDE, toColor, MATERIALS, paintColor, texCache, textTexture })
+  const shared = { RUST, cache, studioEnvironment, makeMaterial, makeFlatMaterial, DOUBLE_SIDE, toColor, MATERIALS, paintColor, texCache, textTexture }
+
+  Object.assign(I, shared)
+
+  return shared
 }

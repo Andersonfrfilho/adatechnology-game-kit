@@ -1,8 +1,10 @@
 /** Cabin interior: seats, steering wheel, dashboard and bus rows. */
+import type { MeshStandardMaterial } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 
-export function installInterior(kit: Kit): void {
+export function installInterior(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -136,7 +138,7 @@ export function installInterior(kit: Kit): void {
     })
     if (o.drv != null) c.roundBox(0.006, 0.12, w * 0.3, 0.004, MATERIALS.dark, xb - 0.003, y - 0.2, -Math.sign(o.drv || -1) * w * 0.25)
   }
-  function consoleBox(c: any, x: number, fl: number, h: number, mat: any) {
+  function consoleBox(c: any, x: number, fl: number, h: number, mat: MeshStandardMaterial) {
     c.roundBox(0.62, h, 0.2, 0.04, mat, x, fl + h / 2, 0)
     c.rod(new V3(x + 0.18, fl + h, 0), new V3(x + 0.13, fl + h + 0.13, 0), 0.011, MATERIALS.chrome, { seg: 6 })
     c.sphere(0.03, MATERIALS.plastic, x + 0.13, fl + h + 0.14, 0)
@@ -262,5 +264,9 @@ export function installInterior(kit: Kit): void {
     return n
   }
 
-  Object.assign(I, { consoleBox })
+  const shared = { consoleBox }
+
+  Object.assign(I, shared)
+
+  return shared
 }

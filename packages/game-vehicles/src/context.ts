@@ -1,9 +1,11 @@
+import type { MeshStandardMaterial, Vector3 } from 'three'
+
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
 import type { Kit } from './types'
 import { clamp, rng } from './util'
 
-export function installContext(kit: Kit): void {
+export function installContext(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -55,7 +57,7 @@ export function installContext(kit: Kit): void {
       this.time = 0
       this.rand = rng(seed || 7)
     }
-    add(geo: any, mat: any, x: number, y: number, z: number, parent: any) {
+    add(geo: any, mat: MeshStandardMaterial, x: number, y: number, z: number, parent: any) {
       const m = new THREE.Mesh(geo, mat)
       m.position.set(x || 0, y || 0, z || 0)
       m.castShadow = true
@@ -75,7 +77,7 @@ export function installContext(kit: Kit): void {
       this.paints.add(pm)
       return pm
     }
-    roundBox(w: any, h: any, d: any, r: any, mat: any, x: any, y: any, z: any, o: any) {
+    roundBox(w: any, h: any, d: any, r: number, mat: any, x: number, y: number, z: number, o: any) {
       o = o || {}
       let geo = roundedBoxGeometry(w, h, d, r)
       if (o.taper) taper(geo, o.taper)
@@ -86,20 +88,20 @@ export function installContext(kit: Kit): void {
       if (o.def) this.deform.push(m)
       return m
     }
-    cylinder(r1: any, r2: any, h: any, mat: any, x: any, y: any, z: any, axis: string, o: any) {
+    cylinder(r1: any, r2: any, h: any, mat: any, x: number, y: number, z: number, axis: string, o: any) {
       o = o || {}
       const m = this.add(new THREE.CylinderGeometry(r1, r2, h, o.seg || 20, 1, !!o.open), mat, x, y, z, o.parent)
       if (axis === 'x') m.rotation.z = -PI / 2
       else if (axis === 'z') m.rotation.x = PI / 2
       return m
     }
-    sphere(r: any, mat: any, x: any, y: any, z: any, sx: any, sy: any, sz: any, o: any) {
+    sphere(r: any, mat: any, x: number, y: number, z: number, sx: any, sy: any, sz: any, o: any) {
       o = o || {}
       const m = this.add(new THREE.SphereGeometry(r, o.ws || 18, o.hs || 12, 0, PI * 2, 0, o.tl || PI), mat, x, y, z, o.parent)
       m.scale.set(sx || 1, sy || 1, sz || 1)
       return m
     }
-    rod(a: any, b: any, r: any, mat: any, o: any) {
+    rod(a: Vector3, b: Vector3, r: any, mat: any, o: any) {
       o = o || {}
       const len = a.distanceTo(b)
       const m = this.add(
@@ -123,7 +125,7 @@ export function installContext(kit: Kit): void {
       )
       return this.add(new THREE.TubeGeometry(curve, o.seg || 40, r, o.rs || 8, !!o.closed), mat, 0, 0, 0, o.parent)
     }
-    text(txt: any, w: any, h: any, x: any, y: any, z: any, face: string, o: any) {
+    text(txt: string, w: any, h: any, x: number, y: number, z: number, face: string, o: any) {
       o = o || {}
       const mat = new THREE.MeshStandardMaterial({ map: textTexture(txt, o), transparent: !o.bg, roughness: 0.6, alphaTest: o.bg ? 0 : 0.3 })
       if (o.glow) {
@@ -137,7 +139,7 @@ export function installContext(kit: Kit): void {
       else m.rotation.y = ({ '+z': 0, '-z': PI, '+x': PI / 2, '-x': -PI / 2 } as Record<string, number>)[face] || 0
       return m
     }
-    plate(x: any, y: any, z: any, face: any, txt: any) {
+    plate(x: any, y: any, z: any, face: string, txt: any) {
       /* the plate is rigid: soft body deformation (warp, sculpting) does not bend it; a dent carries it as a rigid body */
       const pl = this.text(txt || kit.config.plate, 0.4, 0.13, x, y, z, face, {
         w: 400,
@@ -268,4 +270,5 @@ export function installContext(kit: Kit): void {
   }
   kit.BuildContext = BuildContext
   I.BuildContext = BuildContext
+  return { resolveLabel, BuildContext }
 }

@@ -1,10 +1,12 @@
 /** Hoods, engine bays and hinge helpers. */
+import type { MeshStandardMaterial, Vector3 } from 'three'
+
 import type { Kit } from './types'
 
 /** How far a hood drawn from the hull is raised over the hull, metres. */
 const HOOD_LIFT = 0.008
 
-export function installHood(kit: Kit): void {
+export function installHood(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -65,7 +67,7 @@ export function installHood(kit: Kit): void {
     return c.hood
   }
   /* Turns any set of meshes into a hinged hood (tractor, truck). pivot in c.vehicle; axis "z" (front rises). */
-  kit.hinge = function (c: any, objs: any, pivot: any, o: any) {
+  kit.hinge = function (c: any, objs: any, pivot: Vector3, o: any) {
     o = o || {}
     const piv = new THREE.Group()
     piv.position.copy(pivot)
@@ -146,7 +148,7 @@ export function installHood(kit: Kit): void {
           c.cylinder(0.012, 0.012, 0.02, MATERIALS.steel, o.axle + Math.cos(a) * 0.055, fl + H * 0.7 + 0.01, s * (zw - 0.12) + Math.sin(a) * 0.055)
         }
       })
-    function reservoir(x: number, y: number, z: number, w: number, h: number, d: number, shell: any, liq: any, cap: any) {
+    function reservoir(x: number, y: number, z: number, w: number, h: number, d: number, shell: MeshStandardMaterial, liq: MeshStandardMaterial, cap: MeshStandardMaterial) {
       c.roundBox(w, h, d, 0.02, shell, x, y, z).castShadow = false
       if (liq) c.roundBox(w * 0.85, h * 0.55, d * 0.85, 0.015, liq, x, y - h * 0.18, z)
       c.cylinder(0.026, 0.026, 0.025, cap, x, y + h / 2 + 0.012, z)
@@ -401,5 +403,9 @@ export function installHood(kit: Kit): void {
     return out
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

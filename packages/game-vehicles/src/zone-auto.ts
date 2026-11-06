@@ -4,7 +4,7 @@ import { legacyGlassId, legacyLightId } from './legacy-seeds'
 
 const REAR_GLASS_KEYS = ['rear_window', 'window_rear', 'quarter_glass']
 
-export function installZoneAuto(kit: Kit): void {
+export function installZoneAuto(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -861,5 +861,9 @@ export function installZoneAuto(kit: Kit): void {
     return Z
   }
 
-  Object.assign(I, { autoZones })
+  const shared = { autoZones }
+
+  Object.assign(I, shared)
+
+  return shared
 }

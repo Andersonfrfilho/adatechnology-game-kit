@@ -67,7 +67,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     hash,
     clamp,
     smooth,
-    _: {},
+    // filled by the modules below, each with the helpers it shares
+    _: {} as Kit['_'],
   }
 
   /* ================= data ================= */

@@ -1,9 +1,11 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
+import type { Matrix4, Vector3 } from 'three'
+
 import type { Kit } from './types'
 import { smooth } from './util'
 import { liveTriIndex, touchTriIndex } from './tri-index'
 
-export function installZoneDent(kit: Kit): void {
+export function installZoneDent(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -13,7 +15,7 @@ export function installZoneDent(kit: Kit): void {
   function sm(t: number) {
     return smooth(t)
   }
-  function subdivIn(geo: any, rel: any, B: any, maxLen: number) {
+  function subdivIn(geo: any, rel: Matrix4, B: any, maxLen: number) {
     const a = geo.attributes.position.array
     /* the result grows from the size of the mesh (a typed array: a plain array of this many numbers is the slowest part of the call) */
     let out = new Float32Array(a.length + 4096)
@@ -91,7 +93,7 @@ export function installZoneDent(kit: Kit): void {
     return g
   }
   /* meshes this zone may dent: shell (c.deform), paint, its own parts and, with anyMesh, any mesh */
-  function dentTargets(c: any, z: any, inv: any) {
+  function dentTargets(c: any, z: any, inv: Matrix4) {
     const dset = new Set(c.deform)
     const out: any = []
     c.vehicle.traverse(function (o: any) {
@@ -110,7 +112,7 @@ export function installZoneDent(kit: Kit): void {
     return out
   }
   /* the box `B` (zone frame) seen from the frame that `m` maps into it: [x0, y0, z0, x1, y1, z1] of its 8 corners, widened a hair */
-  function boxInFrame(B: any, m: any, tmp: any) {
+  function boxInFrame(B: any, m: Matrix4, tmp: Vector3) {
     const r = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
     for (let i = 0; i < 8; i++) {
       tmp.set(i & 1 ? B.x1 : B.x0, i & 2 ? B.y1 : B.y0, i & 4 ? B.z1 : B.z0).applyMatrix4(m)
@@ -140,7 +142,7 @@ export function installZoneDent(kit: Kit): void {
     const cv = I.boxLo(B, ax[1]) + hv
     const C = new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + (m.bodyHeight || 0.6) * 0.5, 0)
     const edge = opt.edge || 0.28
-    function field(p: any) {
+    function field(p: Vector3) {
       if (!I.boxContains(B, p.x, p.y, p.z, 0)) return 0
       const u = p.getComponent(ax[0])
       const v = p.getComponent(ax[1])
@@ -257,7 +259,7 @@ export function installZoneDent(kit: Kit): void {
   }
   /* the box, in the frame of a mesh (rel maps it to the vehicle frame), that holds the panel cut: every point with sdf < 0 of the cut test lies in it;
      undefined when rel cannot be inverted. The pad swallows the rounding of the inverse. */
-  function panelBoundsIn(rel: any, rect: number[], B: any, a: number, ax: number[]) {
+  function panelBoundsIn(rel: Matrix4, rect: number[], B: any, a: number, ax: number[]) {
     const det = rel.determinant()
     if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return undefined
     const back = rel.clone().invert()
@@ -278,7 +280,7 @@ export function installZoneDent(kit: Kit): void {
     return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
   }
   /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
-  function cutPanel(c: any, z: any, rect: number[], keep: any, dirty: any, o: any) {
+  function cutPanel(c: any, z: any, rect: number[], keep: any, dirty: any, o?: any) {
     o = o || {}
     const B = z.box
     const d = z.dir
@@ -320,7 +322,7 @@ export function installZoneDent(kit: Kit): void {
         sel:
           o.anyN || z.cutAll
             ? null
-            : function (n: any) {
+            : function (n: Vector3) {
                 nv.copy(n).applyMatrix3(nm).normalize()
                 return nv.dot(outN) > 0.3
               },
@@ -362,7 +364,7 @@ export function installZoneDent(kit: Kit): void {
     return pieces
   }
   /* groups meshes into a pivot (in c.vehicle coordinates) keeping the world position */
-  function pivotOf(c: any, objs: any, at: any) {
+  function pivotOf(c: any, objs: any, at: Vector3) {
     const piv = new THREE.Group()
     piv.position.copy(at)
     piv.userData.rigid = true
@@ -382,5 +384,9 @@ export function installZoneDent(kit: Kit): void {
     return piv
   }
 
-  Object.assign(I, { sm, subdivIn, dentTargets, zoneDent, cutPanel, pivotOf })
+  const shared = { sm, subdivIn, dentTargets, zoneDent, cutPanel, pivotOf }
+
+  Object.assign(I, shared)
+
+  return shared
 }

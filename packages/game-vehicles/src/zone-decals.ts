@@ -1,8 +1,11 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
+import type { Matrix4, MeshStandardMaterial, Vector3 } from 'three'
+
+import type { MaterialOptions } from './materials'
 import type { Kit } from './types'
 import { TRI_BLOCK, triIndexOf } from './tri-index'
 
-export function installZoneDecals(kit: Kit): void {
+export function installZoneDecals(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -10,10 +13,10 @@ export function installZoneDecals(kit: Kit): void {
   const { makeMaterial, DOUBLE_SIDE } = I
 
   /* ---- damage materials ---- */
-  function dmat(hex: string, o: any) {
+  function dmat(hex: string, o: MaterialOptions): MeshStandardMaterial {
     return makeMaterial(hex, Object.assign({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -3, side: DOUBLE_SIDE }, o || {}))
   }
-  const DAMAGE_MATERIALS = {
+  const DAMAGE_MATERIALS: Record<string, MeshStandardMaterial> = {
     /* without an environment map, high-metalness metal turns black and chipped paint looks like a bullet hole: light, barely metallic metal */
     fine: dmat('#b9bec0', { metalness: 0.3, roughness: 0.45 }),
     deep: dmat('#d6dadc', { metalness: 0.35, roughness: 0.35 }),
@@ -48,13 +51,13 @@ export function installZoneDecals(kit: Kit): void {
   const _zq = new THREE.Quaternion()
   const _zq2 = new THREE.Quaternion()
   const _zz = new V3(0, 0, 1)
-  function orientDecal(m: any, p: any, n: any, ang: any) {
+  function orientDecal(m: any, p: any, n: Vector3, ang: number) {
     _zq.setFromUnitVectors(_zz, n)
     _zq2.setFromAxisAngle(n, ang || 0)
     m.quaternion.copy(_zq2.multiply(_zq))
     m.position.copy(p).addScaledVector(n, 0.004)
   }
-  function decalMesh(c: any, geo: any, mat: any, p: any, n: any, ang: number, obj?: any) {
+  function decalMesh(c: any, geo: any, mat: MeshStandardMaterial, p: any, n: any, ang: number, obj?: any) {
     const m = c.add(geo, mat, 0, 0, 0)
     m.castShadow = false
     m.receiveShadow = false
@@ -193,7 +196,7 @@ export function installZoneDecals(kit: Kit): void {
   /* scratch of `proxyIn`, grown to the biggest mesh seen */
   let _keep = new Uint32Array(0)
   let _box = new Float32Array(0)
-  function proxyIn(o: any, Mw: any, R: any) {
+  function proxyIn(o: any, Mw: Matrix4, R: any) {
     /* the region (vehicle frame) as a box in the frame of the mesh */
     _pm.copy(o.matrixWorld).invert().multiply(Mw)
     const lo = [Infinity, Infinity, Infinity]
@@ -313,7 +316,7 @@ export function installZoneDecals(kit: Kit): void {
     for (let i = 0; i < hits.length; i++) if (hits[i].object.proxyOf) hits[i].object = hits[i].object.proxyOf
     return hits
   }
-  function zoneCands(c: any, z: any, inv: any, glassToo: any) {
+  function zoneCands(c: any, z: any, inv: any, glassToo?: any) {
     const out: any = []
     c.vehicle.traverse(function (o: any) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || o.isSprite) return
@@ -450,7 +453,7 @@ export function installZoneDecals(kit: Kit): void {
     g.computeVertexNormals()
     return g
   }
-  function scratchDecal(c: any, s: any, len: number, wd: number, mat: any, ang: number, cands: any, B: any, pts?: any) {
+  function scratchDecal(c: any, s: any, len: number, wd: number, mat: MeshStandardMaterial, ang: number, cands: any, B: any, pts?: any) {
     pts = pts || scratchPath(c, s, len, ang, cands, B)
     if (!pts) return null
     const m = c.add(ribbonGeo(pts, wd, mat === DAMAGE_MATERIALS.deep ? 0.0038 : 0.003), mat, 0, 0, 0)
@@ -525,7 +528,7 @@ export function installZoneDecals(kit: Kit): void {
     return S
   }
 
-  Object.assign(I, {
+  const shared = {
     dmat,
     DAMAGE_MATERIALS,
     _zq,
@@ -546,5 +549,9 @@ export function installZoneDecals(kit: Kit): void {
     ribbonGeo,
     scratchDecal,
     zoneDecals,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

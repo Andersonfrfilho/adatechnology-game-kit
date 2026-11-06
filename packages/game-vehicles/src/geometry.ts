@@ -3,7 +3,7 @@ import type { Kit } from './types'
 import { clamp } from './util'
 import { TRI_BLOCK, boundsFromIndex, storeTriIndex, triIndexOf } from './tri-index'
 
-export function installGeometry(kit: Kit): void {
+export function installGeometry(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -436,7 +436,7 @@ export function installGeometry(kit: Kit): void {
       for (let i = 0; i < P.length; i++) o[i] = P[i] + (Q[i] - P[i]) * k
       return o
     }
-    function clip(t: any, d: any, s: number) {
+    function clip(t: number[][], d: any, s: number) {
       const out = []
       for (let i = 0; i < 3; i++) {
         const j = (i + 1) % 3
@@ -763,5 +763,9 @@ export function installGeometry(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, creaseTask, refreshBounds, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
+  const shared = { roundedBoxGeometry, taper, subdivide, crease, creaseTask, refreshBounds, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject }
+
+  Object.assign(I, shared)
+
+  return shared
 }

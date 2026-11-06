@@ -1,9 +1,11 @@
 /** Car body shell, panels and body helpers. */
+import type { BufferGeometry } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 import { raycastIndexed } from './tri-index'
 
-export function installBody(kit: Kit): void {
+export function installBody(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -28,7 +30,7 @@ export function installBody(kit: Kit): void {
           items.push({ arc: [a[0], a[1], a[2], a0, PI - a0, false] })
         })
     const bev = o.bev == null ? 0.05 : o.bev
-    let geo = new THREE.ExtrudeGeometry(pathShape(items), {
+    let geo: BufferGeometry = new THREE.ExtrudeGeometry(pathShape(items), {
       depth: Math.max(0.01, o.W - 2 * bev),
       bevelEnabled: bev > 0,
       bevelThickness: bev,
@@ -100,10 +102,10 @@ export function installBody(kit: Kit): void {
     function lx(x0: number, x1: number, y: number) {
       return x0 + ((x1 - x0) * (y - gh.belt)) / (gh.roof - gh.belt)
     }
-    function rearX(y: any) {
+    function rearX(y: number) {
       return lx(gh.rb, gh.rt, y) + inn * 1.3
     }
-    function frontX(y: any) {
+    function frontX(y: number) {
       return lx(gh.fb, gh.ft, y) - inn * 1.3
     }
     const ps = gh.pillars.slice().sort(function (a: number, b: number) {
@@ -187,5 +189,9 @@ export function installBody(kit: Kit): void {
     return h ? h.p.x : items ? profX(items, y, front !== false) : null
   }
 
-  Object.assign(I, { halfAt, shell, autoWindows, profX, _sr })
+  const shared = { halfAt, shell, autoWindows, profX, _sr }
+
+  Object.assign(I, shared)
+
+  return shared
 }

@@ -1,8 +1,10 @@
 /** Per-zone damage for separate parts: lights, wheels, glass, internals, rotors and landing gear. */
+import type { Vector3 } from 'three'
+
 import type { Kit } from './types'
 import { clamp, hash, rng } from './util'
 
-export function installDamageParts(kit: Kit): void {
+export function installDamageParts(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -536,7 +538,7 @@ export function installDamageParts(kit: Kit): void {
     const rel = new THREE.Matrix4()
     const irel = new THREE.Matrix4()
     const blend = 0.25
-    function rot(p: any, k: number) {
+    function rot(p: Vector3, k: number) {
       const a2 = ang * k
       const cs = Math.cos(a2)
       const sn = Math.sin(a2)
@@ -590,7 +592,7 @@ export function installDamageParts(kit: Kit): void {
     void K
   }
 
-  Object.assign(I, {
+  const shared = {
     glassPt,
     glassIn,
     glassBand,
@@ -608,5 +610,9 @@ export function installDamageParts(kit: Kit): void {
     bumperBand,
     partBand,
     bendAft,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

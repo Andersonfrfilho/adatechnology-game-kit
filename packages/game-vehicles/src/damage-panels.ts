@@ -1,8 +1,10 @@
 /** Per-zone damage for body panels: doors, lids, hoods, roofs, hulls and wings. */
+import type { Matrix4 } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 
-export function installDamagePanels(kit: Kit): void {
+export function installDamagePanels(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -150,7 +152,7 @@ export function installDamagePanels(kit: Kit): void {
     if (z.type === 'door' && b === 2) doorGap(c, z, b, cands)
   }
   /* torn-off roof: the headliner and whatever is attached on top (beacon, light bar, roof rack, roof lights) come away with it */
-  function roofOff(c: any, z: any, inv: any) {
+  function roofOff(c: any, z: any, inv: Matrix4) {
     const B = z.box
     const top = c.meta.top || B.y1
     c.vehicle.traverse(function (o: any) {
@@ -180,7 +182,7 @@ export function installDamagePanels(kit: Kit): void {
     })
   }
   /* torn-off tail cone: everything behind the start of the cone (pylon, fin, tail rotor, tail skid) disappears, from any zone */
-  function tailOff(c: any, z: any, inv: any) {
+  function tailOff(c: any, z: any, inv: Matrix4) {
     const kx = z.box.x1 - (z.box.x1 - z.box.x0) * 0.15
     c.vehicle.children.forEach(function (o: any) {
       if (!o.visible || o.userData.decal || o.isSprite) return
@@ -192,7 +194,7 @@ export function installDamagePanels(kit: Kit): void {
       return I.shown(c, sp.o)
     })
   }
-  function followersIn(c: any, z: any, inv: any) {
+  function followersIn(c: any, z: any, inv: Matrix4) {
     const dset = new Set(c.deform)
     const out: any = []
     c.vehicle.children.forEach(function (o: any) {
@@ -211,7 +213,7 @@ export function installDamagePanels(kit: Kit): void {
     })
     return out
   }
-  function windowsOver(c: any, z: any, inv: any) {
+  function windowsOver(c: any, z: any, inv: Matrix4) {
     return c.glass.filter(function (g: any) {
       if (!g.parent || !g.visible) return false
       const cen = I.localBox(c, g, inv).getCenter(new V3())
@@ -260,7 +262,7 @@ export function installDamagePanels(kit: Kit): void {
     piv.rotation.y = z.side * 0.25
   }
   /* door hanging on a hinge: the door skin becomes a part, swings out on the front hinge and falls behind */
-  function doorHang(c: any, z: any, dirty: any, inv: any) {
+  function doorHang(c: any, z: any, dirty: any, inv: Matrix4) {
     const B = z.box
     const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
     const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: any) {
@@ -376,5 +378,9 @@ export function installDamagePanels(kit: Kit): void {
     piv.quaternion.setFromAxisAngle(axisV, sgn * (0.6 + R() * 0.3))
   }
 
-  Object.assign(I, { panelBand, roofOff, tailOff, followersIn, windowsOver, doorGap, mirrorHang, doorHang, lidHang, flapHang })
+  const shared = { panelBand, roofOff, tailOff, followersIn, windowsOver, doorGap, mirrorHang, doorHang, lidHang, flapHang }
+
+  Object.assign(I, shared)
+
+  return shared
 }

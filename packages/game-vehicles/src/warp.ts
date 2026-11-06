@@ -2,7 +2,7 @@
 import type { Kit } from './types'
 import { clamp, smooth } from './util'
 
-export function installWarp(kit: Kit): void {
+export function installWarp(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -198,5 +198,9 @@ export function installWarp(kit: Kit): void {
   kit.geo.resample = resample
   kit.geo.smoothLoft = smoothLoft
 
-  Object.assign(I, { makeWarp, applyWarp, resample, smoothLoft })
+  const shared = { makeWarp, applyWarp, resample, smoothLoft }
+
+  Object.assign(I, shared)
+
+  return shared
 }
