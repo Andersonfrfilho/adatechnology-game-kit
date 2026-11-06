@@ -32,6 +32,10 @@ export const HAND_HOLD = {
   forend: 0.6,
   /** How far the shooting hand slides on its grip so the thumb reaches the safety lever. */
   thumbReach: 0.02,
+  /** A palm resting on a carry handle: how far above the handle's mark its middle sits (a palm's whole thickness, so the hand lies on the bar and not through it). */
+  handleLift: 0.03,
+  /** How far back (toward the hand's own side) from the handle's mark that palm sits, so the knuckles reach the far edge of the bar and the fingers close around it. */
+  handleBack: 0.03,
   /** How fast the supporting hand goes to the magazine and back, per second. */
   magRate: 7,
 } as const
@@ -182,10 +186,10 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
 /** The hold a model names (`holdRight`, `holdLeft`): each palm on top of its handle, the back of the hand up; the right hand's fingers forward over a handle across the gun, the left's across the carry handle. */
 function namedHold(THREE: Three, model: WeaponModel, holderScale: number): Hold {
   const { parts } = model
-  const on = (mark: THREE_NS.Object3D | undefined, fingers: THREE_NS.Vector3): HandAnchor | null => (mark ? { part: mark, offset: V(THREE, 0, HAND_HOLD.palm, 0), quaternion: handFrame(THREE, fingers, V(THREE, 0, 1, 0)) } : null)
+  const on = (mark: THREE_NS.Object3D | undefined, fingers: THREE_NS.Vector3, offset: THREE_NS.Vector3): HandAnchor | null => (mark ? { part: mark, offset, quaternion: handFrame(THREE, fingers, V(THREE, 0, 1, 0)) } : null)
   return {
-    right: on(parts.holdRight, V(THREE, 1, 0, 0)),
-    left: on(parts.holdLeft, V(THREE, 0, 0, 1)),
+    right: on(parts.holdRight, V(THREE, 1, 0, 0), V(THREE, 0, HAND_HOLD.palm, 0)),
+    left: on(parts.holdLeft, V(THREE, 0, 0, 1), V(THREE, 0, HAND_HOLD.handleLift, -HAND_HOLD.handleBack)),
     leftMagazine: null,
     scale: holderScale,
     grip: HAND_HOLD.closed,
