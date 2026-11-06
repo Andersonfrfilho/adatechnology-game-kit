@@ -5,7 +5,7 @@
 // newest origin/main in its own worktree, waits until the machine is idle and on the charger, builds it and runs the whole battery, comparing the
 // frame times against the last main that passed here, on this same machine. Each run writes a folder per date with the logs and a STATUS file, and a
 // failure raises a desktop notice. Scheduled by the user systemd timer in tools/gpu/systemd/ (install-nightly.sh).
-//   node tools/gpu/nightly-gpu.mjs              run now (the timer runs it under the GPU lock: flock ~/.cache/adatechnology-game-kit/gpu.lock)
+//   node tools/gpu/nightly-gpu.mjs              run now; it waits for an idle machine first, then takes the GPU lock of the pre-push for the whole run
 //   NIGHTLY_REF=<ref>                           measure another ref (default origin/main)
 //   NIGHTLY_REPORTS=<dir>                       where the dated folders go (default ~/Documents/personal/adatechnology-game-kit-shots/nightly)
 //   NIGHTLY_MAX_LOAD=2  NIGHTLY_WAIT_MIN=240    the 1-minute load it waits below, and for how long at most
@@ -29,6 +29,7 @@ const ref = process.env.NIGHTLY_REF ?? 'origin/main'
 const MAX_LOAD = Number(process.env.NIGHTLY_MAX_LOAD ?? Math.max(2, cpus().length / 4))
 const WAIT_MINUTES = Number(process.env.NIGHTLY_WAIT_MIN ?? 240)
 const POLL_MS = 60_000
+const GPU_LOCK = join(cacheDir, 'gpu.lock')
 
 const today = new Date().toISOString().slice(0, 10)
 const reportDir = join(reportsRoot, today)
@@ -93,12 +94,9 @@ function checkout(sha) {
   }
 }
 
-async function main() {
+/** Waits for an idle machine without the lock (a push in the queue would keep the load up and never get it), then runs again under the lock. */
+async function underLock() {
   writeFileSync(summary, `# GPU daily run ${today}\n\n`)
-  git(['fetch', '-q', 'origin', 'main'])
-  const sha = git(['rev-parse', ref])
-  const state = readState()
-  note(`commit: ${sha} (${ref}); compared with the last main that passed here: ${state.lastPassed ?? 'none yet'}`)
   const notRun = await waitUntilIdle()
   if (notRun) {
     note(`not run: ${notRun}`)
@@ -106,6 +104,16 @@ async function main() {
     notify('game-kit: GPU daily run skipped', notRun)
     return 0
   }
+  mkdirSync(cacheDir, { recursive: true })
+  const locked = spawnSync('flock', [GPU_LOCK, process.execPath, fileURLToPath(import.meta.url)], { stdio: 'inherit', env: { ...process.env, NIGHTLY_LOCKED: '1' } })
+  return locked.status ?? 1
+}
+
+async function main() {
+  git(['fetch', '-q', 'origin', 'main'])
+  const sha = git(['rev-parse', ref])
+  const state = readState()
+  note(`commit: ${sha} (${ref}); compared with the last main that passed here: ${state.lastPassed ?? 'none yet'}`)
   checkout(sha)
   const quiet = { PRE_PUSH_ON_BATTERY: '1' }
   const steps = [
@@ -134,4 +142,4 @@ async function main() {
   return failed.length ? 1 : 0
 }
 
-process.exit(await main())
+process.exit(process.env.NIGHTLY_LOCKED ? await main() : await underLock())
