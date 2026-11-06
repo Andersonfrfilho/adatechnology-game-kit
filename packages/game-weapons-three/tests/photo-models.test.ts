@@ -39,3 +39,21 @@ describe('the SVD Dragunov drawn from its photo', () => {
     expect(across(0.22, -0.11)).toBeGreaterThan(0)
   })
 })
+
+describe('the bolt-action rifles with the sporter stock of their photos', () => {
+  it.each(['remington_700', 'remington_700_300wm', 'hunting_rifle_30_06', 'm24_sws', 'steyr_ssg_69'])('%s: the butt drops below the comb, so the stock is no longer a straight bar on a block', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    model.root.updateMatrixWorld(true)
+    const scale = model.inner.scale.x
+    // the height of the weapon at x (in the builder's metres): the top seen from above to the bottom seen from below
+    const heightAt = (from: number, to: number): number => {
+      const x = model.inner.position.x + ((from + to) / 2) * scale
+      const down = new THREE.Raycaster(new THREE.Vector3(x, 1, 0), new THREE.Vector3(0, -1, 0)).intersectObject(model.inner, true)[0]
+      const up = new THREE.Raycaster(new THREE.Vector3(x, -1, 0), new THREE.Vector3(0, 1, 0)).intersectObject(model.inner, true)[0]
+      return down && up ? down.point.y - up.point.y : 0
+    }
+    // the butt is taller than the wrist, the wrist is the narrow waist of the stock
+    expect(heightAt(0, 0.04)).toBeGreaterThan(0.12)
+    expect(heightAt(0.17, 0.21)).toBeLessThan(0.1)
+  })
+})

@@ -9,7 +9,7 @@ export interface RifleContext {
   parts: ModelParts
   options: ModelOptions
   furniture: THREE.Material
-  /** A one-piece wooden stock (`trad`, `straight`). */
+  /** A one-piece stock (`trad`, `straight`, `sporter`). */
   isTraditional: boolean
   /** Total and barrel length, stock length, receiver start and end (x), receiver height and width, barrel radius, barrel height, receiver length. */
   length: number

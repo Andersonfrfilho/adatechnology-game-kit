@@ -790,7 +790,7 @@
     "barrel": 650,
     "options": {
       "olive": 1,
-      "stock": "trad",
+      "stock": "sporter",
       "mag": "internal",
       "scope": 3,
       "bolt": 1,
@@ -846,7 +846,7 @@
     "barrel": 610,
     "options": {
       "wood": 1,
-      "stock": "trad",
+      "stock": "sporter",
       "mag": "internal",
       "scope": 3,
       "bolt": 1,
@@ -860,7 +860,7 @@
     "barrel": 610,
     "options": {
       "olive": 1,
-      "stock": "trad",
+      "stock": "sporter",
       "mag": "internal",
       "scope": 3,
       "bolt": 1,
@@ -1024,7 +1024,7 @@
     "barrel": 560,
     "options": {
       "wood": 1,
-      "stock": "trad",
+      "stock": "sporter",
       "mag": "internal",
       "scope": 3,
       "bolt": 1,
@@ -1153,13 +1153,12 @@
     "barrel": 610,
     "options": {
       "wood": 1,
-      "stock": "trad",
+      "stock": "sporter",
       "mag": "internal",
       "scope": 3,
       "bolt": 1,
       "round": 1
-    },
-    "variantOf": "remington_700"
+    }
   },
   "hk_mp5sd3": {
     "builder": "rifle",

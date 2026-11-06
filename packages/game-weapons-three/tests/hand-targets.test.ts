@@ -247,7 +247,7 @@ describe('the weapons redrawn from the photo of the real one keep the hands on t
     expect(farthest).toBeGreaterThan(0.03)
   })
 
-  const longGuns = ['svd_dragunov']
+  const longGuns = ['svd_dragunov', 'remington_700', 'm24_sws', 'steyr_ssg_69']
   it.each(longGuns)('%s: the right hand at the grip and the left forward of it, under the barrel', (weapon) => {
     const { room, last } = roomWithRecorder()
     equip(room, weapon)

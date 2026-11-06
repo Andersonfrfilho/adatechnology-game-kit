@@ -101,7 +101,7 @@ export function buildRifle(kit: ModelKit, options: ModelOptions): BuiltModel {
   const parts: ModelParts = { family: 'rifle', glow: [] }
   const length = (options.L ?? 0) / 1000
   const barrelLength = (options.B ?? 0) / 1000
-  const isTraditional = options.stock === 'trad' || options.stock === 'straight'
+  const isTraditional = options.stock === 'trad' || options.stock === 'straight' || options.stock === 'sporter'
   const stockLength = options.stock === 'none' ? 0 : options.stockLen || Math.min(0.36, Math.max(0.2, 0.3 * length))
   const receiverStart = stockLength
   const receiverEnd = Math.max(receiverStart + 0.12, length - barrelLength * 0.92)
