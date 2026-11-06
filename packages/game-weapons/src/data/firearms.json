@@ -8034,49 +8034,59 @@
     ]
   },
   {
-    "id": "fn_ps90",
-    "name": "FN PS90",
-    "maker": "FN",
-    "category": "smg",
+    "id": "famas",
+    "name": "FAMAS",
+    "category": "rifle",
     "action": {
       "kind": "firearm",
-      "caliber": "5_7x28",
-      "rpm": 120,
+      "caliber": "5_56x45",
+      "rpm": 1000,
       "modes": [
+        "auto",
         "semi"
       ],
-      "magazine": 50,
-      "reload": 3,
-      "muzzleSpeed": 715,
-      "spreadDeg": 1.5,
-      "bloomDeg": 0.35,
-      "recoveryDegPerS": 6,
+      "magazine": 25,
+      "reload": 2.8,
+      "muzzleSpeed": 960,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
       "recoil": [
-        0.69,
-        0.38
+        0.99,
+        0.6
       ],
-      "range": 80,
-      "family": "top_magazine",
+      "range": 400,
+      "family": "magazine",
       "timings": {
         "draw": 0.35,
-        "reload": 3,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
         "clear": 1.2
       }
     },
-    "mass": 2.86,
+    "mass": 3.61,
     "dimensions": {
-      "length": 0.668,
-      "barrel": 0.407,
-      "emptyMass": 2.86
+      "length": 0.757,
+      "barrel": 0.488,
+      "emptyMass": 3.61
     },
-    "archetype": "smg_9mm",
-    "variantOf": "fn_p90",
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
     "sources": [
       "reference",
       "derived",
       "sdk"
     ],
     "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
       {
         "kind": "sling",
         "interfaces": [
@@ -8090,45 +8100,45 @@
     "fitted": []
   },
   {
-    "id": "bt_mp9",
-    "name": "B&T MP9",
-    "maker": "B&T",
-    "category": "smg",
+    "id": "iwi_tavor",
+    "name": "IWI Tavor",
+    "maker": "IWI",
+    "category": "rifle",
     "action": {
       "kind": "firearm",
-      "caliber": "9x19",
-      "rpm": 1100,
+      "caliber": "5_56x45",
+      "rpm": 850,
       "modes": [
         "auto",
         "semi"
       ],
       "magazine": 30,
-      "reload": 2.4,
-      "muzzleSpeed": 400,
-      "spreadDeg": 1.5,
-      "bloomDeg": 0.35,
-      "recoveryDegPerS": 6,
+      "reload": 2.8,
+      "muzzleSpeed": 910,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
       "recoil": [
-        1.66,
-        0.92
+        0.98,
+        0.59
       ],
-      "range": 80,
+      "range": 400,
       "family": "magazine",
       "timings": {
         "draw": 0.35,
-        "reload": 2.4,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
         "clear": 1.2
       }
     },
-    "mass": 1.4,
+    "mass": 3.27,
     "dimensions": {
-      "length": 0.523,
-      "barrel": 0.13,
-      "emptyMass": 1.4,
-      "lengthCollapsed": 0.303
+      "length": 0.72,
+      "barrel": 0.46,
+      "emptyMass": 3.27
     },
-    "archetype": "smg_9mm",
-    "variantOf": "uzi",
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
     "sources": [
       "reference",
       "derived",
@@ -8150,7 +8160,7 @@
           "mag_box"
         ],
         "sources": [
-          "gallery"
+          "derived"
         ]
       },
       {
@@ -8163,50 +8173,47 @@
         ]
       }
     ],
-    "fitted": [],
-    "stock": {
-      "kind": "fold",
-      "foldAxis": "right"
-    }
+    "fitted": []
   },
   {
-    "id": "mp40",
-    "name": "MP40",
-    "category": "smg",
+    "id": "l85a2",
+    "name": "L85A2",
+    "category": "rifle",
     "action": {
       "kind": "firearm",
-      "caliber": "9x19",
-      "rpm": 550,
+      "caliber": "5_56x45",
+      "rpm": 700,
       "modes": [
         "auto",
         "semi"
       ],
-      "magazine": 32,
-      "reload": 2.9,
-      "spreadDeg": 1.5,
-      "bloomDeg": 0.35,
-      "recoveryDegPerS": 6,
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 940,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
       "recoil": [
-        0.48,
-        0.27
+        0.9,
+        0.54
       ],
-      "range": 80,
+      "range": 400,
       "family": "magazine",
       "timings": {
         "draw": 0.35,
-        "reload": 2.9,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
         "clear": 1.2
       }
     },
-    "mass": 4,
+    "mass": 3.82,
     "dimensions": {
-      "length": 0.833,
-      "barrel": 0.251,
-      "emptyMass": 4,
-      "lengthCollapsed": 0.63
+      "length": 0.785,
+      "barrel": 0.518,
+      "emptyMass": 3.82
     },
-    "archetype": "smg_9mm",
-    "variantOf": "thompson_m1a1",
+    "archetype": "rifle_5_56",
+    "variantOf": "steyr_aug_a1",
     "sources": [
       "reference",
       "derived",
@@ -8214,12 +8221,21 @@
     ],
     "mounts": [
       {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
         "kind": "magazine",
         "interfaces": [
           "mag_box"
         ],
         "sources": [
-          "gallery"
+          "derived"
         ]
       },
       {
@@ -8232,10 +8248,64 @@
         ]
       }
     ],
-    "fitted": [],
-    "stock": {
-      "kind": "fold",
-      "foldAxis": "under"
-    }
+    "fitted": []
+  },
+  {
+    "id": "winchester_1887",
+    "name": "Winchester 1887",
+    "maker": "Winchester",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 109.09,
+      "modes": [
+        "lever"
+      ],
+      "magazine": 5,
+      "reload": 0.6,
+      "perRound": true,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.33,
+        0.39
+      ],
+      "range": 800,
+      "family": "lever",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.6,
+        "perRound": 0.6,
+        "cycle": 0.55,
+        "clear": 1.2
+      }
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 1.016,
+      "barrel": 0.508,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_bolt_308",
+    "variantOf": "winchester_1894",
+    "sources": [
+      "reference",
+      "derived",
+      "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   }
 ]

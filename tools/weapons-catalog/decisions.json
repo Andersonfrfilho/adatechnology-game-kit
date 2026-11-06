@@ -84,7 +84,8 @@
       "Knight's",
       "Thompson",
       "Walther",
-      "B&T"
+      "B&T",
+      "IWI"
     ],
     "source": "gallery",
     "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
@@ -6271,6 +6272,204 @@
       },
       "source": "reference",
       "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/MP_40"
+    },
+    "FAMAS": {
+      "value": {
+        "id": "famas",
+        "name": "FAMAS",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "25",
+        "length": 757,
+        "barrel": 488,
+        "emptyMass": 3.61,
+        "options": {
+          "look": "famas",
+          "rpm": 1000
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 960,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "757 mm. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 488 mm. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,61 kg sem carregador. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 25. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "900 a 1000 tiros/min. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "960 m/s. https://en.wikipedia.org/wiki/FAMAS"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/FAMAS"
+    },
+    "IWI Tavor": {
+      "value": {
+        "id": "iwi_tavor",
+        "name": "IWI Tavor",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 720,
+        "barrel": 460,
+        "emptyMass": 3.27,
+        "options": {
+          "look": "tavor",
+          "rail": 1,
+          "rpm": 850
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 910,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "TAR-21: 720 mm. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 460 mm. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,27 kg. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "750 a 900 tiros/min. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "910 m/s. https://en.wikipedia.org/wiki/IWI_Tavor"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/IWI_Tavor"
+    },
+    "L85A2": {
+      "value": {
+        "id": "l85a2",
+        "name": "L85A2",
+        "of": "Steyr AUG A1",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 785,
+        "barrel": 518,
+        "emptyMass": 3.82,
+        "options": {
+          "look": "sa80",
+          "rail": 1,
+          "rpm": 700
+        },
+        "reloadFrom": "Steyr AUG A1",
+        "muzzleSpeed": 940,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "785 mm. https://en.wikipedia.org/wiki/SA80"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 518 mm. https://en.wikipedia.org/wiki/SA80"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "3,82 kg sem a luneta e o carregador. https://en.wikipedia.org/wiki/SA80"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "carregador de 30 (STANAG). https://en.wikipedia.org/wiki/SA80"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "610 a 775 tiros/min. https://en.wikipedia.org/wiki/SA80"
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "940 m/s. https://en.wikipedia.org/wiki/SA80"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga do Steyr AUG A1: bullpup, o carregador atrás da empunhadura."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/SA80"
+    },
+    "Winchester 1887": {
+      "value": {
+        "id": "winchester_1887",
+        "name": "Winchester 1887",
+        "of": "Winchester 1894",
+        "caliber": "12ga_00buck",
+        "caliberText": "12 ga",
+        "capacity": "5",
+        "length": 1016,
+        "barrel": 508,
+        "emptyMass": 3.6,
+        "options": {
+          "br": 0.012,
+          "tube": 1,
+          "m1887": 1
+        },
+        "reloadFrom": "Winchester 1894",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "a versão de cano de 20 pol. (riot): 1016 mm; a de caça tinha 30 ou 32 pol. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "cano de 20 pol. (508 mm). https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "cerca de 3,6 kg. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "tubo de 4 mais 1 na câmara. https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Recarga da Winchester 1894: alavanca e carga pelo lado, cartucho a cartucho."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação do lote 1 (aprovado pelo dono, 2026-11-05): https://en.wikipedia.org/wiki/Winchester_Model_1887/1901"
     }
   },
   "gp25Mount": {

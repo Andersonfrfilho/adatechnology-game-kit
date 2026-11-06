@@ -70,6 +70,10 @@ export interface ModelOptions {
   rod?: number
   bands?: number
   shot?: number
+  /** The body a bullpup is drawn with when it is not the Steyr AUG (`famas`, `tavor`, `sa80`). */
+  look?: string
+  /** The Winchester 1887 lever-action shotgun (its own receiver, lever loop and stock). */
+  m1887?: number
   /** Launcher type: `rpg`, `m72`, `at4`, `carl`, `flame`, `flameDIY`. */
   lt?: string
 }

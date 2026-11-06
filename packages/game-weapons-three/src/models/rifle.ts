@@ -7,6 +7,7 @@ import { buildFittings } from './rifle-fittings'
 import { buildForend } from './rifle-forend'
 import { buildG36Lower, buildG36Receiver, buildG36Top, fillG36Magazine } from './rifle-g36'
 import { buildGrip, buildMagazine } from './rifle-controls'
+import { buildLeverShotgun } from './lever-shotgun'
 import { buildStock } from './rifle-stock'
 import type { RifleContext } from './rifle-context'
 import type { BuiltModel, ModelFamily, ModelOptions, ModelParts } from './types'
@@ -94,6 +95,7 @@ const familyOf = (o: ModelOptions): ModelFamily => {
 
 /** Port of the gallery's `rifle`, the builder of 51 of the weapons: receiver, barrel, forend, grip, magazine, stock and what is fitted on them. */
 export function buildRifle(kit: ModelKit, options: ModelOptions): BuiltModel {
+  if (options.m1887) return buildLeverShotgun(kit, options)
   const { M } = kit
   const group = kit.group()
   const parts: ModelParts = { family: 'rifle', glow: [] }
