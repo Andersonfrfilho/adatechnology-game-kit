@@ -672,5 +672,71 @@
     "sources": [
       "sdk"
     ]
+  },
+  {
+    "id": "7_62x25",
+    "label": "7.62×25 mm Tokarev",
+    "diameter": 7.85,
+    "bulletGrams": 5.5,
+    "muzzleSpeed": 488,
+    "dragPer100m": 0.12,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 9.95,
+      "overallLength": 35.2,
+      "caseLength": 25,
+      "projectileDiameter": 7.85
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "7_92x57",
+    "label": "7.92×57 mm Mauser",
+    "diameter": 8.22,
+    "bulletGrams": 11.7,
+    "muzzleSpeed": 760,
+    "dragPer100m": 0.08,
+    "kind": "fmj",
+    "noise": 420,
+    "caseType": "rifle",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 11.95,
+      "overallLength": 82,
+      "caseLength": 57,
+      "projectileDiameter": 8.22
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "9x39",
+    "label": "9×39 mm SP-5",
+    "diameter": 9.27,
+    "bulletGrams": 16.1,
+    "muzzleSpeed": 290,
+    "dragPer100m": 0.2,
+    "kind": "fmj",
+    "noise": 300,
+    "caseType": "rifle",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 11.33,
+      "overallLength": 56,
+      "caseLength": 38.7,
+      "projectileDiameter": 9.27
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]

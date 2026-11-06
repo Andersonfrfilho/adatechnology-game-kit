@@ -1,6 +1,6 @@
 # Checklist das animações por arma
 
-Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (132):
+Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir de `tests/checklist.test.ts` (rode `WRITE_DOCS=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/docs.test.ts`); `tests/docs.test.ts` falha se este arquivo ficar diferente do que o teste mede. Cada ✓ ou ✗ vem de um teste automático que passa por **todas** as armas com modelo (136):
 
 - **mão de apoio**: as duas mãos existem, ficam na frente do olho, dentro da vista e a até 12 cm do modelo na mão.
 - **dedo no gatilho**: com peça de gatilho no modelo, o indicador direito repousa estendido, vai ao gatilho e puxa a cada tiro (metralhadora e lança-chamas seguram o gatilho), e volta; sem peça de gatilho a empunhadura é a normal (—).
@@ -138,6 +138,10 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | IWI Tavor (`iwi_tavor`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 3,40 s | ✓ | n/a | ✓ |
 | L85A2 (`l85a2`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 3,40 s | ✓ | n/a | ✓ |
 | Winchester 1887 (`winchester_1887`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 4,15 s | ✓ | n/a | ✓ |
+| PPSh-41 (`ppsh_41`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,90 s / 2,90 s | ✓ | n/a | ✓ |
+| Mauser Kar98k (`mauser_kar98k`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
+| MG42 (`mg42`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
+| VSS Vintorez (`vss_vintorez`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 3,40 s | ✓ | n/a | ✓ |
 | RPG-7 (`rpg_7`) | ✓ | ✓ | ✓ | — | ✓ 4,50 s / — | ✓ | n/a | ✓ |
 | M72 LAW (`m72_law`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |
 | AT4 (`at4`) | ✓ | ✓ | ✓ | — | ✓ 1,15 s / — | ✓ | n/a | ✓ |
