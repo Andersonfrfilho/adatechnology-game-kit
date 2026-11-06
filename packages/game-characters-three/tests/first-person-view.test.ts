@@ -121,13 +121,15 @@ const materialsOf = (object: THREE.Object3D): THREE.Material[] => {
   const material = (object as THREE.Mesh).material
   return Array.isArray(material) ? material : [material]
 }
+// what the hooks see of the renderer: the eye clip switches its local clipping on
+const renderer = { localClippingEnabled: false }
 const before = (object: THREE.Object3D, camera: unknown): void => {
   const mesh = object as THREE.Mesh
-  ;(mesh.onBeforeRender as unknown as Hook)(null, null, camera, null, materialsOf(object)[0], null)
+  ;(mesh.onBeforeRender as unknown as Hook)(renderer, null, camera, null, materialsOf(object)[0], null)
 }
 const after = (object: THREE.Object3D, camera: unknown): void => {
   const mesh = object as THREE.Mesh
-  ;(mesh.onAfterRender as unknown as Hook)(null, null, camera, null, materialsOf(object)[0], null)
+  ;(mesh.onAfterRender as unknown as Hook)(renderer, null, camera, null, materialsOf(object)[0], null)
 }
 
 describe('setView', () => {
@@ -255,5 +257,57 @@ describe('lens', () => {
       for (let i = 0; i < position.count; i++) near.push(vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld).distanceTo(eye))
     })
     expect(Math.min(...near)).toBeGreaterThan(0.1)
+  })
+})
+
+describe('eye clip', () => {
+  const viewCamera = new THREE.PerspectiveCamera()
+  const otherCamera = new THREE.PerspectiveCamera()
+  const torsoMeshes = (avatar: ReturnType<typeof createPlayerAvatar>): THREE.Mesh[] => {
+    const head = new Set(hiddenObjects(avatar))
+    const out: THREE.Mesh[] = []
+    ;(avatar.rig.upper as unknown as THREE.Object3D).traverse((o) => { if ((o as THREE.Mesh).isMesh && !head.has(o)) out.push(o as THREE.Mesh) })
+    return out
+  }
+  const planeWhileDrawn = (mesh: THREE.Mesh, camera: unknown): THREE.Plane | null => {
+    before(mesh, camera)
+    const plane = materialsOf(mesh)[0]!.clippingPlanes?.[0] ?? null
+    const copy = plane ? plane.clone() : null
+    after(mesh, camera)
+    return copy
+  }
+  const inBody = (avatar: ReturnType<typeof createPlayerAvatar>, x: number, y: number, z: number): THREE.Vector3 =>
+    (avatar.rig.upper as unknown as THREE.Object3D).localToWorld(new THREE.Vector3(x, y - 0.9, z))
+
+  it('cuts the shoulders and the back for the first-person camera and keeps the chest, the belly and the legs', () => {
+    const avatar = settle()
+    avatar.setView('first', viewCamera)
+    avatar.root.updateMatrixWorld(true)
+    const meshes = torsoMeshes(avatar)
+    expect(meshes.length).toBeGreaterThan(3)
+    const plane = planeWhileDrawn(meshes[0]!, viewCamera)
+    expect(plane).not.toBeNull()
+    // the top of the shoulders and the back of the collar are behind the eyes: a real head hides them from its own eyes
+    expect(plane!.distanceToPoint(inBody(avatar, 0.2, 1.5, 0))).toBeLessThan(0)
+    expect(plane!.distanceToPoint(inBody(avatar, 0, 1.55, -0.1))).toBeLessThan(0)
+    // the front of the chest and the belly are in front: a look down sees them
+    expect(plane!.distanceToPoint(inBody(avatar, 0, 1.3, 0.17))).toBeGreaterThan(0)
+    expect(plane!.distanceToPoint(inBody(avatar, 0, 1.05, 0.16))).toBeGreaterThan(0)
+    expect(renderer.localClippingEnabled).toBe(true)
+    // the legs are not cut at all
+    let leg: THREE.Mesh | null = null
+    for (const l of avatar.rig.legs as unknown as Array<{ g: THREE.Object3D }>) l.g.traverse((o) => { if (!leg && (o as THREE.Mesh).isMesh) leg = o as THREE.Mesh })
+    expect(planeWhileDrawn(leg!, viewCamera)).toBeNull()
+  })
+
+  it('puts the plane back after the draw, and leaves other cameras and the third person whole', () => {
+    const avatar = settle()
+    const mesh = torsoMeshes(avatar)[0]!
+    avatar.setView('first', viewCamera)
+    planeWhileDrawn(mesh, viewCamera)
+    expect(materialsOf(mesh)[0]!.clippingPlanes).toBeNull()
+    expect(planeWhileDrawn(mesh, otherCamera)).toBeNull()
+    avatar.setView('third', viewCamera)
+    expect(planeWhileDrawn(mesh, viewCamera)).toBeNull()
   })
 })

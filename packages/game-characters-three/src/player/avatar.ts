@@ -19,6 +19,7 @@ import { createRigAnimator } from '../rich/animator'
 import type { PoseTargets, RichRig } from '../rich/animator'
 import type { Three, THREE_NS } from '../three'
 import { createArmReach, type ReachView } from './arm-reach'
+import { createEyeClip } from './eye-clip'
 import { createHeadHider } from './head-hiding'
 import type { AvatarViewMode } from './head-hiding'
 
@@ -29,6 +30,7 @@ const CLIP_CASCADE = 5
 const FALL_SECONDS = 0.3
 /** The builder's eyes in the head's own frame (best-builder: eyes at y 1.815, z about 0.16). */
 const BUILDER_EYE = [0, 1.815, 0.16] as const
+const EYE_CLIP_BEHIND = 0.06 // the plane the first-person view cuts the upper body at stands this far behind the eyes: the chest shows, the shoulders do not
 const EYE_OFFSET = [0, -0.068, 0] as const // brings the measured standing eye (1.768 m) to about 1.70 m
 const EYE_BOB = 0.5
 
@@ -278,6 +280,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const headHider = createHeadHider([rig.headG as unknown as THREE_NS.Object3D, ...(rig.neck ? [rig.neck as unknown as THREE_NS.Object3D] : [])])
   // the body's arms, from the shoulders: hidden from the eye when the view draws arms of its own (`AvatarViewOptions.arms`)
   const armsHider = createHeadHider(rig.arms.map((arm) => arm.g as unknown as THREE_NS.Object3D))
+  const eyeClip = createEyeClip(THREE, { roots: [rig.upper as unknown as THREE_NS.Object3D], eye: eyeSocket, front: rig.upper as unknown as THREE_NS.Object3D, behind: EYE_CLIP_BEHIND })
   const eyeLocal = new THREE.Vector3()
   let bob = 0 // the vertical bob the gait adds to the hips target, taken off the eye by `1 - eyeBob`
   let hipWithoutBob: number | null = null // the hips' cascade run again on the target with no bob, so the bob left after smoothing can be told apart
@@ -674,6 +677,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     },
     setView: (mode, camera, viewOptions) => {
       headHider.setView(mode, camera)
+      eyeClip.setView(mode, camera)
       armsHider.setView(viewOptions?.arms ? mode : 'third', camera)
     },
     play(clip, playOptions = {}) {
