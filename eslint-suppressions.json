@@ -239,16 +239,6 @@
       "count": 1
     }
   },
-  "packages/game-vehicles/src/hood.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-vehicles/src/interior.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
   "packages/game-vehicles/src/kit.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 16
@@ -277,11 +267,6 @@
   "packages/game-vehicles/src/util.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
-    }
-  },
-  "packages/game-vehicles/src/wheels.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
     }
   },
   "packages/game-vehicles/tests/crease.test.ts": {

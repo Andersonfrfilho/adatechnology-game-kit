@@ -1,4 +1,7 @@
 /** Spoked wheels and track assemblies. */
+import type { Group, Material } from 'three'
+
+import type { LabelArgument } from './context'
 import type { BuildContext, Kit } from './types'
 
 export function installWheels(kit: Kit) {
@@ -10,7 +13,7 @@ export function installWheels(kit: Kit) {
 
   /* ================= special wheels ================= */
   /* Spoked wheel for motorcycle/bicycle. o: { spokes, knobby, disc, cast (5-spoke alloy), z, label } */
-  kit.spokedWheel = function (c: BuildContext, x: number, r: number, tireR: any, o: any) {
+  kit.spokedWheel = function (c: BuildContext, x: number, r: number, tireR: number, o?: { spokes?: number; knobby?: boolean; disc?: boolean; cast?: boolean; z?: number; label?: LabelArgument } | null) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, o.z || 0)
@@ -69,7 +72,7 @@ export function installWheels(kit: Kit) {
     return g
   }
   /* Simple track (tank). o: { x0 (drive wheel, rear), x1 (idler wheel, front), z, w, r (road wheels), n, top, mat } */
-  kit.tracks = function (c: BuildContext, o: any) {
+  kit.tracks = function (c: BuildContext, o: { x0: number; x1: number; z: number; w?: number; r?: number; n?: number; top?: number; mat?: Material; wheelMat?: Material }) {
     const x0 = o.x0
     const x1 = o.x1
     const z = o.z
@@ -84,8 +87,8 @@ export function installWheels(kit: Kit) {
     const rsY = top - rs - th
     const sp = ((x1 - x0 - 2 * rs) / Math.max(1, n - 1)) * 0.92
     const firstX = x0 + rs + 0.1
-    const gs: any = []
-    function road(x: number, y: number, rr: any) {
+    const gs: Group[] = []
+    function road(x: number, y: number, rr: number) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)

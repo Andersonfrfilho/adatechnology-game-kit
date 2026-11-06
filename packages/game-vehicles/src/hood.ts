@@ -1,7 +1,24 @@
 /** Hoods, engine bays and hinge helpers. */
-import type { BufferGeometry, MeshStandardMaterial, Vector3 } from 'three'
+import type { BufferGeometry, ColorRepresentation, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
+import type { LabelArgument } from './context'
+import type { CutTest } from './geometry'
 import type { BuildContext, Kit } from './types'
+
+/** The engine bay of `kit.engineBay`: firewall and front x, half width, floor and free height, motor, axle x, paint, and the labels and views of the bay. */
+export type EngineBaySpec = {
+  x0: number
+  x1: number
+  zw: number
+  floor: number
+  top: number
+  motor?: string
+  axle?: number
+  col?: ColorRepresentation
+  label?: LabelArgument
+  turbo?: boolean
+  view?: unknown
+}
 
 /** How far a hood drawn from the hull is raised over the hull, metres. */
 const HOOD_LIFT = 0.008
@@ -15,7 +32,7 @@ export function installHood(kit: Kit) {
 
   /* ================= hood and engine bay ================= */
   /* Hood made from the skin cut out of the hull (shell holes with a tag). o: { x0 (hinge), col, open (rad), hole (extra hole, e.g. blower) } */
-  kit.makeHood = function (c: BuildContext, geo: BufferGeometry, o: any) {
+  kit.makeHood = function (c: BuildContext, geo: BufferGeometry, o?: { x0?: number; col?: ColorRepresentation; open?: number; hole?: CutTest | null; label?: LabelArgument; noLatch?: boolean } | null) {
     o = o || {}
     if (!geo || !geo.attributes.position.count) return null
     if (o.hole) geo = cutGeometry(geo, [o.hole]).geo
@@ -67,12 +84,12 @@ export function installHood(kit: Kit) {
     return c.hood
   }
   /* Turns any set of meshes into a hinged hood (tractor, truck). pivot in c.vehicle; axis "z" (front rises). */
-  kit.hinge = function (c: BuildContext, objs: any, pivot: Vector3, o: any) {
+  kit.hinge = function (c: BuildContext, objs: readonly Object3D[], pivot: Vector3, o?: { open?: number; len?: number; zw?: number; sign?: number; bayLabel?: LabelArgument; noLatch?: boolean; label?: LabelArgument } | null) {
     o = o || {}
     const piv = new THREE.Group()
     piv.position.copy(pivot)
     c.vehicle.add(piv)
-    objs.forEach(function (m: any) {
+    objs.forEach(function (m) {
       if (m.parent) m.parent.remove(m)
       m.position.sub(pivot)
       piv.add(m)
@@ -96,7 +113,7 @@ export function installHood(kit: Kit) {
     return c.hood
   }
   /* Engine bay. o: { x0 (firewall), x1 (front), zw (half width), floor, top (free height under the hood), motor: gasoline|diesel|electric|v8 (with blower)|v8_na (naturally aspirated V8), axle (axle x, strut towers), col, frunk } */
-  kit.engineBay = function (c: BuildContext, o: any) {
+  kit.engineBay = function (c: BuildContext, o: EngineBaySpec) {
     const x0 = o.x0
     const x1 = o.x1
     const zw = o.zw
@@ -107,7 +124,7 @@ export function installHood(kit: Kit) {
     const H = top - fl
     const cx = (x0 + x1) / 2
     const paint = c.paint(o.col || c.meta.color || '#666')
-    const out: any = {}
+    const out: Record<string, Vector3> = {}
     c.roundBox(L, 0.03, 2 * zw, 0.01, MATERIALS.bay, cx, fl, 0)
     c.roundBox(0.03, H + 0.04, 2 * zw, 0.01, MATERIALS.bay, x0 + 0.015, fl + H / 2, 0)
     ;[1, -1].forEach(function (s) {
@@ -145,7 +162,7 @@ export function installHood(kit: Kit) {
         c.cylinder(0.09, 0.12, H * 0.7, paint, o.axle, fl + H * 0.35, s * (zw - 0.12), null, { seg: 16 })
         for (let k = 0; k < 3; k++) {
           const a = (k / 3) * PI * 2
-          c.cylinder(0.012, 0.012, 0.02, MATERIALS.steel, o.axle + Math.cos(a) * 0.055, fl + H * 0.7 + 0.01, s * (zw - 0.12) + Math.sin(a) * 0.055)
+          c.cylinder(0.012, 0.012, 0.02, MATERIALS.steel, o.axle! + Math.cos(a) * 0.055, fl + H * 0.7 + 0.01, s * (zw - 0.12) + Math.sin(a) * 0.055)
         }
       })
     function reservoir(x: number, y: number, z: number, w: number, h: number, d: number, shell: MeshStandardMaterial, liq: MeshStandardMaterial, cap: MeshStandardMaterial) {
