@@ -3,8 +3,8 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installLotPerimeter(K: Kernel, shared: Shared): void {
   const { EPS, boxC, bx, colorOf, cursor, freeSpans, pieceRecord } = K;
-  const makeApi = (...a: any[]): any => K.makeApi(...a);
-  const sh = (...a: any[]): any => K.sh(...a);
+  const makeApi = (...a: Parameters<Kernel['makeApi']>): ReturnType<Kernel['makeApi']> => K.makeApi(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   function perimeter() {
     const R = shared.ctx.r, lt = R.lot, C = shared.ctx.colors; if (!lt) return; cursor.group = 'lot';
     const rnd = (() => { let s = 99; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();

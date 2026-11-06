@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installHouseStairs(K: Kernel, shared: Shared): void {
   const { rectsOf, Y0, boxC, bx, cursor, flights, stairFootprint, structurePiece } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   function buildStairs() {
     const R = shared.ctx.r; shared.ctx.stairs = [];
     for (const vo of flights()) {

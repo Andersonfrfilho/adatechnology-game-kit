@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installHouseBaseboard(K: Kernel, shared: Shared): void {
   const { Y0, bx, cursor, sideOf } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== R46: external baseboard and protective sidewalk around the ground floor, closing the outer corners =====
   function baseboardAndSidewalk() {
     const R = shared.ctx.r, W = 0.6, t = 0.012, ht = 0.35, color = sh(shared.ctx.colors.facade != null ? shared.ctx.colors.facade : 0xd8d0c0, 0.62), y0 = Y0(0), cal = 0xd4d0c6;

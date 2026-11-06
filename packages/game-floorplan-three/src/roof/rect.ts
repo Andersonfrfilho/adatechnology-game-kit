@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installRoofRect(K: Kernel, shared: Shared): void {
   const { R_STYLE, bx, cursor, pieceOfPane, polyFace, ridge, tileRelief } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   function roofRect(type, X0, Z0, X1, Z1, yb, roofColor, gable, F, touchesU = [0, 0, 0, 0]) {
     const C = shared.ctx.colors, o = type === 'fiber_cement' ? 0.3 : 0.45, x0 = X0 - (touchesU[0] ? 0 : o), x1 = X1 + (touchesU[2] ? 0 : o), z0 = Z0 - (touchesU[1] ? 0 : o), z1 = Z1 + (touchesU[3] ? 0 : o), dx = x1 - x0, dz = z1 - z0, xm = (x0 + x1) / 2, zm = (z0 + z1) / 2;
     const mat = type === 'fiber_cement' ? 'fiber_cement' : 'tile', tp = type === 'fiber_cement' ? 0.2 : 0.5, alongX = dx >= dz, up = [0, 1, 0];

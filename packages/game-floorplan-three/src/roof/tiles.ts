@@ -3,7 +3,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installRoofTiles(K: Kernel, shared: Shared): void {
   const { UV_SCALE, _Y, _h2, _q, accFor, cursor, put, rgbOf, structurePiece } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   const R_STYLE = () => (shared.ctx.r && shared.ctx.r.style) || 'budget';
   // ===== R56: tile relief. colonial = curved rows (cap and channel); fibre cement = waves. Each plane is a strip extruded in the fall direction, with profile normals and a colour alternating per row; everything goes into the roof mesh =====
   function tileRelief(mat, pts, color, type) {

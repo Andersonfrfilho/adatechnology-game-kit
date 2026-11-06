@@ -3,12 +3,12 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installHouseDoors(K: Kernel, shared: Shared): void {
-  const seedKey = (id: any): any => K.seedKey(id);
+  const seedKey = (id: unknown): unknown => K.seedKey(id);
   const { EPS, Y0, boxC, bx, cursor, effectiveHeight, nearestWall, part, pieceOf, pieceRecord, roomAt, sideOf, wallBox } = K;
-  const SEED = (...a: any[]): any => K.SEED(...a);
+  const SEED = (...a: Parameters<Kernel['SEED']>): ReturnType<Kernel['SEED']> => K.SEED(...a);
   const definePiece = (...a: any[]): any => K.definePiece(...a);
-  const rngString = (...a: any[]): any => K.rngString(...a);
-  const sh = (...a: any[]): any => K.sh(...a);
+  const rngString = (...a: Parameters<Kernel['rngString']>): ReturnType<Kernel['rngString']> => K.rngString(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   function doorLineSides(p) { // colours of both sides in the door gap, from the neighbouring wall
     const R = shared.ctx.r, alongU = p.axis === 'u', a = p.at - p.width / 2, b = p.at + p.width / 2;
     const w = R.walls.find(w => w.floor === p.floor && w.axis === p.axis && Math.abs((alongU ? w.v0 : w.u0) - p.pos) < EPS && w.type === 'wall' && (Math.abs((alongU ? w.u1 : w.v1) - a) < 0.02 || Math.abs((alongU ? w.u0 : w.v0) - b) < 0.02));

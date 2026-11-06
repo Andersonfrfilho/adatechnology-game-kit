@@ -166,7 +166,7 @@
   },
   "packages/game-floorplan-three/src/create.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     }
   },
   "packages/game-floorplan-three/src/destruction/breach.ts": {
@@ -189,29 +189,9 @@
       "count": 5
     }
   },
-  "packages/game-floorplan-three/src/furniture/builders.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 12
-    }
-  },
-  "packages/game-floorplan-three/src/furniture/extra-types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/furniture/fixtures.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/furniture/place-items.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 7
-    }
-  },
-  "packages/game-floorplan-three/src/furniture/plants.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
+      "count": 6
     }
   },
   "packages/game-floorplan-three/src/furniture/spec.ts": {
@@ -219,39 +199,9 @@
       "count": 26
     }
   },
-  "packages/game-floorplan-three/src/furniture/taps.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/furniture/type-table.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/furniture/yard.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/house/baseboard.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/house/doors.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 11
-    }
-  },
-  "packages/game-floorplan-three/src/house/outbuildings.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/house/stairs.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 3
     }
   },
   "packages/game-floorplan-three/src/interactables/bridge.ts": {
@@ -289,24 +239,9 @@
       "count": 2
     }
   },
-  "packages/game-floorplan-three/src/lights/fixtures.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
   "packages/game-floorplan-three/src/lights/room-light.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/lot/gates.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/lot/perimeter.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
     }
   },
   "packages/game-floorplan-three/src/materials/materials.ts": {
@@ -324,29 +259,14 @@
       "count": 9
     }
   },
-  "packages/game-floorplan-three/src/roof/gutters.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/roof/rect.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/roof/roofs.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 12
+      "count": 10
     }
   },
   "packages/game-floorplan-three/src/roof/slabs.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/roof/tiles.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 1
     }
   },
   "packages/game-floorplan-three/src/test-area/module.ts": {
@@ -374,19 +294,9 @@
       "count": 71
     }
   },
-  "packages/game-floorplan-three/src/utilities/electrical.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "packages/game-floorplan-three/src/utilities/water.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
-    }
-  },
-  "packages/game-floorplan-three/src/vegetation/bridge.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
     }
   },
   "packages/game-floorplan-three/src/wall.ts": {

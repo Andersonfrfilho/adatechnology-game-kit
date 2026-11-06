@@ -6,7 +6,7 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
   const gutter = (...a: any[]): any => K.gutter(...a);
   const gutterConfig = (...a: any[]): any => K.gutterConfig(...a);
   const roofRect = (...a: any[]): any => K.roofRect(...a);
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   const slabs = (...a: any[]): any => K.slabs(...a);
   function roofs() {
     const R = shared.ctx.r, F = R.facade, C = shared.ctx.colors, nA = R.floors.length, type = F.roof; cursor.group = 'roof';

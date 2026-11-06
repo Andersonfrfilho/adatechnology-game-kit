@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installRoofSlabs(K: Kernel, shared: Shared): void {
   const { boxC, bx, cursor, drain, roomAt, structurePiece } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // slab: a plate per cell; parapet only on the outer perimeter (nothing between neighbouring slabs or next to the upper storey)
   function slabs(f, xs, zs, O, U, nx, nz, full, pe, C) {
     cursor.pc = null;

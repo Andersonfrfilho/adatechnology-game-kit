@@ -2,7 +2,7 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installVegetationBridge(K: Kernel, shared: Shared): void {
-  const seedKey = (id: any): any => K.seedKey(id);
+  const seedKey = (id: unknown): unknown => K.seedKey(id);
   const { THREE, SEED, rngString } = K;
   // ---------- R39: vegetation from the game-vegetation package (cfg.vegetation): one merged mesh per group (wood, foliage, flowers), wind and bending around the player ----------
   const VEG_POT = ['potted_areca', 'potted_snake_plant', 'potted_fern'], VEG_CACTUS = { cactus_mandacaru: 'mandacaru', cactus_palm: 'prickly_pear', cactus_crown: 'crown_cactus', cactus_xique: 'xique_xique', cactus_pot: 'potted_cactus' };

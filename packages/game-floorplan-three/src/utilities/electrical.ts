@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
   const { _Y, _q, _v3, bx, cursor, cylBase, pieceRecord, put } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== R50: electrical structure (res.electrical): pole, service drop and meter, breaker panel, exposed conduits. Outlets and switches belong to the furniture team: here only their positions are registered (house.electrical) =====
   function electricalStructure() {
     const E = shared.ctx.r.utilities.electrical; shared.ctx.electricalInfo = null; if (!E) return;

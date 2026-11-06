@@ -82,7 +82,7 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   const invalidateShadow = () => { if (cfg.onChange) cfg.onChange({ shadow: true }) }
   const colliderChanged = (c: any) => { if (c && cfg.onCollider) cfg.onCollider(c) }
   const shared: Shared = { mats: null, quality: cfg.quality === 'game' ? 'game' : 'high' }
-  const seedKey = (id: any) => { if (cfg.seedKey && id != null) { const k = cfg.seedKey(String(id)); return k == null ? id : k } return id }
+  const seedKey = (id: unknown): unknown => { if (cfg.seedKey && id != null) { const k = cfg.seedKey(String(id)); return k == null ? id : k } return id }
   // the kernel's three: its primitive geometries (the GEO templates, breach units, fragments, mirrors) are made by game-shapes, bit-identical and cached by parameters
   // the installers below fill the rest of the kernel (Object.assign), so it starts with only what create() itself knows
   const K = { t: createTranslator(cfg.locale), seedKey, THREE: shapeGeometries(THREE), cfg, DOC, PROPS, Reflector, FLEET, HP, invalidate, invalidateShadow, colliderChanged, VERSION, rectsOf: statics.rectsOf, isOpenArea: statics.isOpenArea, OPEN_ROOM_TYPES: statics.OPEN_ROOM_TYPES } as Partial<Kernel> as Kernel

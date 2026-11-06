@@ -4,7 +4,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installLotGates(K: Kernel, shared: Shared): void {
   const { bx, colorOf, cursor, cylBase } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // gates: masonry pillars with caps, leaf set against the pillars (gap = a..b, leaf from a+0.05 to b-0.05 for 60-interacao.js to capture), hinges on the swing ones;
   // automatic tilt-up and sliding (mid/high) carry a motor box; the sliding one has a floor track, a top guide and a rack
   // opening direction of the sliding gate: +1 to the right (if it fits in the lot), otherwise -1

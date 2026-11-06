@@ -3,7 +3,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installRoofGutters(K: Kernel, shared: Shared): void {
   const { boxC, bx, cursor, roomAt } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== gutters and downpipes (deterministic by seed): luxury/high/mid ~60%, budget/commercial ~30% =====
   function gutterConfig() {
     const R = shared.ctx.r, structure = R.style, high = structure === 'high' || structure === 'luxury', p = high || structure === 'mid' ? 0.6 : 0.3;

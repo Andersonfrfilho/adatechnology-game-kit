@@ -3,7 +3,7 @@ import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installHouseOutbuildings(K: Kernel, shared: Shared): void {
   const { t, bx, cursor, floorColor } = K;
-  const sh = (...a: any[]): any => K.sh(...a);
+  const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== R43: yard buildings (res.outbuildings: walk-in outbuilding) =====
   // room, walls (with the door gap), door, windows and items enter the plan lists the rest of the SDK already knows how to draw (doors/colliders/E, windows, ceiling, roof, light)
   const OUTBUILDING_USE = { guest_room: ['bedroom', 'bedroom', t('outbuilding.guest_room')], office: ['office', 'office', t('outbuilding.office')], storage: ['stockroom', 'stockroom', t('outbuilding.storage')], gourmet: ['living', 'gourmet', t('outbuilding.gourmet')] };
