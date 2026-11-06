@@ -1,5 +1,18 @@
 # @adatechnology/game-test-room
 
+## 0.28.1
+
+### Patch Changes
+
+- 45fd34d: Bare rock (`bedrock`) as a ground of its own, with a lot in the test room; the HUD names every ground profile. `cratersAt` of the effects: on rock, asphalt or a slab a blast leaves only soot, not a dirt crater.
+- Updated dependencies [45fd34d]
+  - @adatechnology/game-terrain@0.4.0
+  - @adatechnology/game-terrain-three@0.5.0
+  - @adatechnology/game-vfx@0.9.0
+  - @adatechnology/game-destruction-three@0.17.2
+  - @adatechnology/game-fluids-three@0.4.15
+  - @adatechnology/game-vfx-three@0.7.3
+
 ## 0.28.0
 
 ### Minor Changes

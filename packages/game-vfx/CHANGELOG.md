@@ -1,5 +1,11 @@
 # @adatechnology/game-vfx
 
+## 0.9.0
+
+### Minor Changes
+
+- 45fd34d: Bare rock (`bedrock`) as a ground of its own, with a lot in the test room; the HUD names every ground profile. `cratersAt` of the effects: on rock, asphalt or a slab a blast leaves only soot, not a dirt crater.
+
 ## 0.8.0
 
 ### Minor Changes

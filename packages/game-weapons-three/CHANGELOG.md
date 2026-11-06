@@ -1,5 +1,13 @@
 # @adatechnology/game-weapons-three
 
+## 0.17.1
+
+### Patch Changes
+
+- Updated dependencies [45fd34d]
+  - @adatechnology/game-vfx@0.9.0
+  - @adatechnology/game-vfx-three@0.7.3
+
 ## 0.17.0
 
 ### Minor Changes
