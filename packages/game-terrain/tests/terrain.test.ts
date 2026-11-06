@@ -140,6 +140,57 @@ describe('bars under load', () => {
     expect(terrain.heightAt(5, 5)).toBeCloseTo(-0.12, 5)
   })
 
+  it('a weight standing on bare bars bends them, and they do not spring back when it leaves', () => {
+    const terrain = make('concrete_slab')
+    terrain.bear([{ x: 0, z: 0, radius: 0.2, newtons: 800 }])
+    expect(bendAtCentre(terrain)).toBe(0)
+    digDown(terrain)
+    terrain.bear([{ x: 0, z: 0, radius: 0.2, newtons: 800 }])
+    const person = bendAtCentre(terrain)
+    expect(person).toBeGreaterThan(0.1)
+    expect(person).toBeLessThan(0.5)
+    terrain.bear([])
+    expect(bendAtCentre(terrain)).toBe(person)
+    terrain.bear([{ x: 0, z: 0, radius: 0.2, newtons: 1600 }])
+    expect(bendAtCentre(terrain)).toBeCloseTo(person * 2, 5)
+  })
+
+  it('weights over the same bars add up: a stack of blocks is as heavy as their sum', () => {
+    const one = make('suspended_slab')
+    digDown(one)
+    const block = { x: 0, z: 0, radius: 0.16, newtons: 590 }
+    expect(one.bear([block])).toBe(false)
+    const stack = make('suspended_slab')
+    digDown(stack)
+    expect(stack.bear(Array.from({ length: 9 }, () => block))).toBe(true)
+    expect(stack.heightAt(0, 0)).toBeLessThan(-3)
+    const sideBySide = make('suspended_slab')
+    digDown(sideBySide)
+    const grid = Array.from({ length: 9 }, (_, i) => ({ ...block, x: ((i % 3) - 1) * 0.33, z: (Math.floor(i / 3) - 1) * 0.33 }))
+    expect(sideBySide.bear(grid)).toBe(true)
+  })
+
+  it('a slab over a void gives way under a weight its bare bars cannot hold; on the ground it only sags', () => {
+    const void_ = make('suspended_slab')
+    digDown(void_)
+    expect(void_.bear([{ x: 0, z: 0, radius: 0.3, newtons: 1000 }])).toBe(false)
+    expect(void_.heightAt(0, 0)).toBeGreaterThan(-0.2)
+    expect(void_.bear([{ x: 0, z: 0, radius: 0.3, newtons: 9000 }])).toBe(true)
+    expect(void_.heightAt(0, 0)).toBeLessThan(-3)
+    expect(void_.heightAt(5, 5)).toBeCloseTo(-0.12, 5)
+    const ground = make('concrete_slab')
+    digDown(ground)
+    expect(ground.bear([{ x: 0, z: 0, radius: 0.3, newtons: 9000 }])).toBe(false)
+    expect(ground.heightAt(0, 0)).toBeCloseTo(-0.12, 5)
+  })
+
+  it('weight on the intact part of a slab is the concrete\'s', () => {
+    const terrain = make('suspended_slab')
+    terrain.bear([{ x: 0, z: 0, radius: 0.3, newtons: 20000 }])
+    expect(bendAtCentre(terrain)).toBe(0)
+    expect(terrain.heightAt(0, 0)).toBe(0)
+  })
+
   it('the snapshot keeps the bent bars', () => {
     const terrain = make('concrete_slab')
     digDown(terrain)
