@@ -1,10 +1,34 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
-import type { BufferGeometry, Material, Matrix4, Object3D, Vector3 } from 'three'
+import type { BufferGeometry, Material, Matrix4, Mesh, Object3D, Vector3 } from 'three'
 
 import type { DamageZone } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
 import { smooth } from './util'
 import { liveTriIndex, touchTriIndex } from './tri-index'
+import type { ZoneBox } from './zone-core'
+
+/** A mesh a zone dents, and whether it is the vehicle's shell (`c.deform`). */
+export type DentTarget = { o: Mesh; deform: boolean }
+/** A dent: centre (`u`, `v`, absolute tangent coordinates), radii (`ru`, `rv`, metres), depth and the phase of its ripple. */
+export type Dent = { u: number; v: number; ru: number; rv: number; depth: number; ph: number }
+export type DentOptions = {
+  /** a crease along the panel: its `v`, width and depth */
+  crease?: { v: number; w: number; depth: number } | null
+  /** how close to the zone's edge the dent fades, as a share of it */
+  edge?: number
+  /** the meshes to dent (default: `dentTargets`) */
+  targets?: DentTarget[]
+  noSub?: boolean
+  /** the longest edge after subdividing, metres */
+  sub?: number
+  /** moves a point already dented by `f` */
+  extra?: (p: Vector3, f: number) => void
+  /** moves any point of the mesh; answers whether it moved */
+  extraAll?: (p: Vector3) => boolean
+}
+/** A piece `cutPanel` made: the whole mesh (`whole`), a cut piece hung on the vehicle (`mesh`), or a cut whose piece was dropped (`cut` alone). */
+export type PanelPiece = { mesh?: Mesh; whole?: boolean; cut?: boolean }
+export type CutPanelOptions = { anyN?: boolean; pieceTasks?: Map<Mesh, { geo: BufferGeometry; step: (deadline: number) => boolean }> }
 
 export function installZoneDent(kit: Kit) {
   const THREE = kit.THREE
@@ -16,7 +40,7 @@ export function installZoneDent(kit: Kit) {
   function sm(t: number) {
     return smooth(t)
   }
-  function subdivIn(geo: BufferGeometry, rel: Matrix4, B: any, maxLen: number) {
+  function subdivIn(geo: BufferGeometry, rel: Matrix4, B: ZoneBox, maxLen: number) {
     const a = geo.attributes.position.array
     /* the result grows from the size of the mesh (a typed array: a plain array of this many numbers is the slowest part of the call) */
     let out = new Float32Array(a.length + 4096)
@@ -42,7 +66,7 @@ export function installZoneDent(kit: Kit) {
     function d(p: number[], q: number[]) {
       return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
     }
-    function mid(p: any, q: any) {
+    function mid(p: number[], q: number[]) {
       return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2]
     }
     function tri(A: number[], Bv: number[], C: number[], depth: number) {
@@ -96,7 +120,7 @@ export function installZoneDent(kit: Kit) {
   /* meshes this zone may dent: shell (c.deform), paint, its own parts and, with anyMesh, any mesh */
   function dentTargets(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const dset = new Set<Object3D>(c.deform)
-    const out: any = []
+    const out: DentTarget[] = []
     c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || !o.geometry.attributes.position) return
       for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
@@ -108,12 +132,12 @@ export function installZoneDent(kit: Kit) {
       if (!ok) return
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
       if (!I.boxIntersects(z.box, I.localBox(c, o, inv))) return
-      out.push({ o: o, deform: dset.has(o) })
+      out.push({ o: o as Mesh, deform: dset.has(o) })
     })
     return out
   }
   /* the box `B` (zone frame) seen from the frame that `m` maps into it: [x0, y0, z0, x1, y1, z1] of its 8 corners, widened a hair */
-  function boxInFrame(B: any, m: Matrix4, tmp: Vector3) {
+  function boxInFrame(B: ZoneBox, m: Matrix4, tmp: Vector3) {
     const r = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
     for (let i = 0; i < 8; i++) {
       tmp.set(i & 1 ? B.x1 : B.x0, i & 2 ? B.y1 : B.y0, i & 4 ? B.z1 : B.z0).applyMatrix4(m)
@@ -125,7 +149,7 @@ export function installZoneDent(kit: Kit) {
     return r
   }
   /* dents: [{ u, v (centre, absolute tangent coordinates), ru, rv (radii in m), depth }], crease: { v, w, depth } */
-  function zoneDent(c: BuildContext, z: DamageZone, dents: any, dirty: any, opt: any) {
+  function zoneDent(c: BuildContext, z: DamageZone, dents: Dent[], dirty: Set<Object3D>, opt?: DentOptions | null) {
     opt = opt || {}
     const B = z.box
     const d = z.dir
@@ -153,12 +177,12 @@ export function installZoneDent(kit: Kit) {
       const tin = Math.abs(p.getComponent(a) - outer) / Math.max(0.05, depthA)
       const md = 1 - sm((tin - 0.5) / 0.5)
       let amt = 0
-      dents.forEach(function (D: any) {
+      dents.forEach(function (D) {
         const r = Math.hypot((u - D.u) / D.ru, (v - D.v) / D.rv)
         if (r < 1) amt = Math.max(amt, D.depth * sm(1 - r) * (1 + 0.12 * Math.sin(u * 9.1 + v * 5.3 + D.ph)))
       })
-      if (opt.crease) {
-        const cr = opt.crease
+      if (opt!.crease) {
+        const cr = opt!.crease
         const t = 1 - Math.abs(v - cr.v) / cr.w
         if (t > 0) amt = Math.max(amt, cr.depth * sm(t) * sm((1 - Math.abs(su)) / 0.45))
       }
@@ -171,7 +195,7 @@ export function installZoneDent(kit: Kit) {
     const rel = new THREE.Matrix4()
     const irel = new THREE.Matrix4()
     const v = new V3()
-    T.forEach(function (t: any) {
+    T.forEach(function (t) {
       const msh = t.o
       let g = msh.geometry
       rel.multiplyMatrices(inv, msh.matrixWorld)
@@ -234,14 +258,14 @@ export function installZoneDent(kit: Kit) {
     })
     /* rigid parts (trim, handles, liner, plate) follow the field at their centre */
     const dset = new Set<Object3D>(c.deform)
-    const moved: any = []
+    const moved: Object3D[] = []
     c.vehicle.children.forEach(function (o: SceneNode) {
       if (dset.has(o) || o.userData.noFollow || o.userData.decal || o.isSprite || o.userData.glass) return
       if (!(o.isMesh || (o.isGroup && o.userData.rigid))) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z) return
       if (
-        T.some(function (t: any) {
+        T.some(function (t) {
           return t.o === o
         })
       )
@@ -260,7 +284,7 @@ export function installZoneDent(kit: Kit) {
   }
   /* the box, in the frame of a mesh (rel maps it to the vehicle frame), that holds the panel cut: every point with sdf < 0 of the cut test lies in it;
      undefined when rel cannot be inverted. The pad swallows the rounding of the inverse. */
-  function panelBoundsIn(rel: Matrix4, rect: number[], B: any, a: number, ax: number[]) {
+  function panelBoundsIn(rel: Matrix4, rect: number[], B: ZoneBox, a: number, ax: number[]) {
     const det = rel.determinant()
     if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return undefined
     const back = rel.clone().invert()
@@ -281,7 +305,7 @@ export function installZoneDent(kit: Kit) {
     return { lo: lo.map((x) => x - pad), hi: hi.map((x) => x + pad) }
   }
   /* cuts the skin inside a rectangle of the zone; returns the cut piece (or null). rect: [u0, u1, v0, v1] absolute. `o.pieceTasks` (a Map) takes the smoothing of the kept pieces as tasks to run later, by mesh. */
-  function cutPanel(c: BuildContext, z: DamageZone, rect: number[], keep: any, dirty: any, o?: any) {
+  function cutPanel(c: BuildContext, z: DamageZone, rect: number[], keep: boolean, dirty: Set<Object3D>, o?: CutPanelOptions | null): PanelPiece[] {
     o = o || {}
     const B = z.box
     const d = z.dir
@@ -291,15 +315,15 @@ export function installZoneDent(kit: Kit) {
     })
     const inv = I.worldInverseOf(c)
     const outN = d.clone().negate()
-    const T = dentTargets(c, z, inv).filter(function (t: any) {
-      return !t.o.userData.glass && (t.deform || z.cutAll || z.anyMesh || (c.paints && c.paints.has(t.o.material)))
+    const T = dentTargets(c, z, inv).filter(function (t) {
+      return !t.o.userData.glass && (t.deform || z.cutAll || z.anyMesh || (c.paints && c.paints.has(t.o.material as Material)))
     })
-    const pieces: any = []
+    const pieces: PanelPiece[] = []
     const rel = new THREE.Matrix4()
     const v = new V3()
     const nv = new V3()
     const nm = new THREE.Matrix3()
-    T.forEach(function (t: any) {
+    T.forEach(function (t) {
       const msh = t.o
       const g = msh.geometry
       if (!g.attributes.position.count) return
@@ -319,9 +343,9 @@ export function installZoneDent(kit: Kit) {
       }
       const test = {
         tag: 'part',
-        pieces: keep ? (o.pieceTasks ? 'later' : 'crease') : 'none',
+        pieces: keep ? (o!.pieceTasks ? 'later' : 'crease') : 'none',
         sel:
-          o.anyN || z.cutAll
+          o!.anyN || z.cutAll
             ? null
             : function (n: Vector3) {
                 nv.copy(n).applyMatrix3(nm).normalize()
@@ -359,26 +383,26 @@ export function installZoneDent(kit: Kit) {
       rel.decompose(pm.position, pm.quaternion, pm.scale)
       c.vehicle.add(pm)
       pm.updateMatrixWorld(true)
-      if (o.pieceTasks) o.pieceTasks.set(pm, r.tasks.part)
+      if (o!.pieceTasks) o!.pieceTasks.set(pm, r.tasks.part)
       pieces.push({ mesh: pm, cut: true })
     })
     return pieces
   }
   /* groups meshes into a pivot (in c.vehicle coordinates) keeping the world position */
-  function pivotOf(c: BuildContext, objs: any, at: Vector3) {
+  function pivotOf(c: BuildContext, objs: readonly (Object3D | null | undefined)[], at: Vector3) {
     const piv = new THREE.Group()
     piv.position.copy(at)
     piv.userData.rigid = true
     piv.userData.noFollow = true
     c.vehicle.add(piv)
     c.root.updateMatrixWorld(true)
-    objs.forEach(function (o: any) {
+    objs.forEach(function (o) {
       if (o && o.parent) {
         piv.attach(o)
-        o.traverse(function (x: any) {
+        o.traverse(function (x) {
           x.userData.noFollow = true
         })
-        const di = c.deform.indexOf(o)
+        const di = c.deform.indexOf(o as Mesh)
         if (di >= 0) c.deform.splice(di, 1)
       }
     })

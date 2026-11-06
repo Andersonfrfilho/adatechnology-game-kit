@@ -1511,7 +1511,7 @@ export class VehicleVisuals implements CreaseWork {
     let pcs: Array<{ mesh?: Obj }> = []
     const pieceTasks = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
     try {
-      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks })
+      pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks }) as Array<{ mesh?: Obj }>
     } catch {
       pcs = []
     }

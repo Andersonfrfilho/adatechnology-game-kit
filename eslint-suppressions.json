@@ -244,11 +244,6 @@
       "count": 3
     }
   },
-  "packages/game-vehicles/src/damage-panels.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 25
-    }
-  },
   "packages/game-vehicles/src/damageables.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
@@ -377,11 +372,6 @@
   "packages/game-vehicles/src/zone-core.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 21
-    }
-  },
-  "packages/game-vehicles/src/zone-dent.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 22
     }
   },
   "packages/game-vehicles/src/zone-derive.ts": {
