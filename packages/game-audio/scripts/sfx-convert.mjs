@@ -1,9 +1,9 @@
 // @ts-check
 // pnpm --filter @adatechnology/game-audio sfx:convert [--inbox <dir>] [--files <dir>] [--out <dir>] [--game-out <dir>] [--only <categoria>] [--dry-run]
 //
-// The kit ships no audio (the SDK is public): the originals and the converted files live in the game's repository (ZombiAdA assets/sfx-originais and
-// assets/sfx), found through packages/game-audio/scripts/sfx-dir.mjs (`.sfx-local.json` or KIT_SFX_INBOX / KIT_SFX_DIR). Only the manifest and the
-// credits are written into the kit. `--out <dir>` puts the files, the manifest and the credits together in one folder.
+// The kit ships its converted files (packages/game-audio/assets/sfx, CC0 and CC-BY only); the originals stay outside it (ZombiAdA
+// assets/sfx-originais), found through packages/game-audio/scripts/sfx-dir.mjs (`.sfx-local.json` or KIT_SFX_INBOX / KIT_SFX_DIR). `--files <dir>`
+// writes the converted files elsewhere (a game's folder); `--out <dir>` puts the files, the manifest and the credits together in one folder.
 //
 // Converts the files the sound team drops in <inbox>/<categoria>/ (wav, ogg, mp3, flac, aif) to what the kit plays:
 //   - Ogg Vorbis q6, 48 kHz, mono (a name with `_loop` keeps stereo: rain, fire and engine loops may be stereo);
@@ -59,7 +59,7 @@ function parseArgs(argv) {
     else if (flag === '--dry-run') args.dryRun = true
     else throw new Error(`unknown flag ${flag}`)
   }
-  // the files go to the game's folder unless --out keeps everything in one place
+  // the files go next to the manifest (or where sfx-dir points) unless --out keeps everything in one place
   if (!args.files) args.files = outGiven ? args.out : kitSfxDir(root)
   return args
 }
@@ -196,8 +196,8 @@ function creditsMarkdown(manifest) {
   return [
     '# Créditos dos sons',
     '',
-    `Gerado por \`scripts/sfx-convert.mjs\` a partir do \`CREDITOS.md\` dos originais. Os arquivos ficam fora do kit (ZombiAdA \`assets/sfx/\`); aqui só as referências.`,
-    'Só CC0 e CC-BY (o kit e o jogo são públicos); quem usa um som CC-BY credita o autor abaixo.',
+    `Gerado por \`scripts/sfx-convert.mjs\` a partir do \`CREDITOS.md\` dos originais. Pasta: \`packages/game-audio/assets/sfx\` (os sons padrão do kit).`,
+    'Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um jogo pode apontar qualquer som para os seus arquivos (`pointSamples`).',
     '',
     '| arquivo | fonte | autor | licença |',
     '|---|---|---|---|',

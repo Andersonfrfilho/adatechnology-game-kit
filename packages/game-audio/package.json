@@ -36,6 +36,10 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js"
     },
+    "./fitted": {
+      "types": "./dist/fitted.d.ts",
+      "import": "./dist/fitted.js"
+    },
     "./global": "./dist/index.global.js",
     "./assets/*": "./assets/*"
   },

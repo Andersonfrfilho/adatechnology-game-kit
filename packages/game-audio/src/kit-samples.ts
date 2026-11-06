@@ -3,11 +3,11 @@
  * with. `kitSampleBank` turns the converter's manifest into a bank; `KIT_SAMPLE_ALIASES` lets a recipe id the kit already plays (`shut_wood`,
  * `rattle`...) be answered by the takes of a file id (`door_wood_shut`), so a sound that was synthesized becomes the recording with no change where
  * it is played: the recipe of the same id plays while the files load, and wherever they cannot be fetched (`file://`). `loadKitSamples` fetches the
- * manifest from where the folder is served and registers the bank on an engine.
+ * manifest from where the folder is served and registers the bank on an engine. `pointSamples` lets a game play its own files for any id instead.
  */
 import { sampleBankFromManifest } from './manifest'
 import type { SampleDefaults, SfxManifest, SfxManifestSound } from './manifest'
-import type { BusId, SoundBank } from './recipe'
+import type { BusId, SampleRef, SampleSound, SoundBank } from './recipe'
 
 /** The bus of a manifest category (the folder the file sits in). */
 export const KIT_CATEGORY_BUS: Readonly<Record<string, BusId>> = {
@@ -125,5 +125,40 @@ export async function loadKitSamples(engine: Registers, options: LoadKitSamplesO
   const bank = kitSampleBank(manifest, options)
   engine.register(bank)
   if (options.preload && engine.loadSamples) void engine.loadSamples(options.preload).catch(() => undefined)
+  return bank
+}
+
+/** A game's own files, by sound id: one url or several takes (relative to `baseUrl`). */
+export type SampleFiles = Readonly<Record<string, string | readonly string[]>>
+
+export type PointSamplesOptions = {
+  /** Put before every url (the game's folder, `./sfx/` say). */
+  readonly baseUrl?: string
+  /** The bank id (default `game_samples`). */
+  readonly id?: string
+  /** Bus of an id the kit has no sound for (default `world`). */
+  readonly bus?: BusId
+}
+
+type PointsSamples = { register(bank: SoundBank): void; readonly registry: { sample(id: string): SampleSound | undefined } }
+
+/**
+ * Points sound ids at a game's own files: each id keeps the kit's numbers (bus, level, pitch spread, falloff, choke) and plays the game's takes in
+ * place of the kit's (its far takes, tiers and room tails included, since they are the kit's files); an id the kit has no sound for is added on
+ * `bus`. Call it after the kit's bank (`loadKitSamples`): a later bank wins, so the rest of the kit's sounds stay. For a whole folder laid out like
+ * the kit's (`<categoria>/<nome>.ogg` and a `manifest.json`), `loadKitSamples(engine, { baseUrl: '<folder>/', id: 'game_samples' })` does the same.
+ */
+export function pointSamples(engine: PointsSamples, files: SampleFiles, options: PointSamplesOptions = {}): SoundBank {
+  const baseUrl = options.baseUrl ?? ''
+  const samples = Object.entries(files).map(([id, urls]): SampleSound => {
+    const close: SampleRef[] = (typeof urls === 'string' ? [urls] : [...urls]).map((url) => ({ url: `${baseUrl}${url}` }))
+    if (close.length === 0) throw new Error(`pointSamples: ${id} has no file`)
+    const kit = engine.registry.sample(id)
+    if (!kit) return { id, bus: options.bus ?? 'world', close, sources: ['game: pointSamples'] }
+    const { far: _far, tiers: _tiers, tail: _tail, ...numbers } = kit
+    return { ...numbers, close }
+  })
+  const bank: SoundBank = { id: options.id ?? 'game_samples', samples }
+  engine.register(bank)
   return bank
 }

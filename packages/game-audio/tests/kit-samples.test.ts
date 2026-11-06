@@ -58,3 +58,19 @@ describe('kit samples', () => {
     }
   })
 })
+
+describe('a game pointing ids at its own files', () => {
+  it('keeps the kit numbers of the id, plays the game takes in place of every kit file, and adds the ids the kit lacks', async () => {
+    const { createSoundRegistry, kitSampleBank, pointSamples } = await import('../src')
+    const registry = createSoundRegistry([kitSampleBank(manifest as never, { baseUrl: '/kit/' })])
+    const kit = registry.sample('pistol_9mm')!
+    pointSamples({ registry, register: (bank) => registry.register(bank) }, { pistol_9mm: ['armas/tiro_1.ogg', 'armas/tiro_2.ogg'], radio_static: 'ui/radio.ogg' }, { baseUrl: '/game/' })
+    const game = registry.sample('pistol_9mm')!
+    expect(game.close.map((take) => take.url)).toEqual(['/game/armas/tiro_1.ogg', '/game/armas/tiro_2.ogg'])
+    expect(game.bus).toBe(kit.bus)
+    expect(game.far).toBeUndefined()
+    expect(game.tiers).toBeUndefined()
+    expect(registry.sample('radio_static')).toMatchObject({ id: 'radio_static', bus: 'world', close: [{ url: '/game/ui/radio.ogg' }] })
+    expect(registry.sample('wood_hit')!.close[0]!.url).toMatch(/^\/kit\//)
+  })
+})

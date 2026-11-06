@@ -103,16 +103,41 @@ engine.play('pistol_9mm', { position: [10, 0, -40], environment: 'indoor', delay
 - Each play: a take drawn among all but the last one (round-robin, never twice in a row), the rate ± `pitch` (default 4 %), the level by `falloff`, a lowpass by distance (`cutoffK`) and behind a wall (`occlusion`), the pan.
 - Sample voices of a bus go through a zero-delay limiter (ceiling −1 dBFS); `choke: { voices }` fades the oldest plays of a sound for rapid fire.
 - `onVoiceStart` reports every voice (recipe or sample, the files and takes, `requestedAt` / `startAt`): the event log the criteria measure.
-- **No audio ships in the kit.** `assets/sfx/manifest.json` is only the references (sound id → path, with source, author and licence) and
-  `assets/sfx/CREDITOS.md` the credits; the files live in the game's repository (ZombiAdA `assets/sfx/<categoria>/`, originals in
-  `assets/sfx-originais/`). A game serves that folder and passes it as `baseUrl`; a take whose file is missing plays the recipe of its id.
-- On this machine, `scripts/sfx-dir.mjs` says where the files are: `KIT_SFX_DIR` / `KIT_SFX_INBOX`, or `.sfx-local.json` at the repo root (ignored
-  by git) `{ "kit": "../zombiada/assets/sfx", "inbox": "../zombiada/assets/sfx-originais" }`, or `.sfx/` and `.sfx-inbox/`. The test room links
-  them into `dist/sfx/`; the tests that read files skip without them; CI fails on any audio file tracked by git.
+- **The kit's default sounds ship with it**: `assets/sfx/<categoria>/<nome>.ogg` (1050 takes, CC0 and CC-BY only), with `assets/sfx/manifest.json`
+  (sound id → path, with source, author and licence) and `assets/sfx/CREDITOS.md` (who to credit for a CC-BY sound). A game serves that folder and
+  passes it as `baseUrl`; a take whose file is missing plays its fitted copy (or the recipe of its id). The originals the converter reads stay
+  outside the kit (ZombiAdA `assets/sfx-originais/`).
+- **A game plays its own files for any id**: `pointSamples(engine, { pistol_9mm: ['armas/tiro_1.ogg', 'armas/tiro_2.ogg'] }, { baseUrl: './sfx/' })`
+  after `loadKitSamples` keeps the kit's numbers for the id (bus, level, falloff) and plays the game's takes; an id the kit lacks is added. A whole
+  folder laid out like the kit's, with its own `manifest.json`: `loadKitSamples(engine, { baseUrl: './game-sfx/', id: 'game_samples' })` after the
+  kit's. Nothing in the kit changes.
+- On this machine, `scripts/sfx-dir.mjs` says where the files are: the kit's own folder, or `KIT_SFX_DIR` / `KIT_SFX_INBOX`, or `.sfx-local.json` at
+  the repo root (ignored by git) `{ "kit": "../zombiada/assets/sfx", "inbox": "../zombiada/assets/sfx-originais" }` to try a game's set in the
+  kit's pages. The test room links them into `dist/sfx/`. Git (CI and pre-commit, `tools/local-audio/local-audio.mjs guard-git`) takes only the
+  manifest's CC0 and CC-BY files under `assets/sfx/`, no other audio.
 - New files: the original in `<inbox>/<categoria>/` with a line in its `CREDITOS.md`, then `pnpm --filter @adatechnology/game-audio sfx:convert`
   (ffmpeg): Ogg Vorbis mono 48 kHz, −1 dBFS peak, attack on the first ms, written to the game's folder, with the manifest and credits updated here.
   Only CC0 and CC-BY (the kit and the game are public).
 - Measuring: `measureCriteria({ sound, banks, loader })` renders C1–C9 through the real engine on an `OfflineAudioContext`; the test room's `?area=sound_check_area` (`createSoundCheckModule`) runs it on a button and records 3 s for C10. `CALIBRATION_SOUND` is a kit-made sample sound (no file) with every layer, for checking the path end to end.
+
+## Fitted copies of the recordings (`@adatechnology/game-audio/fitted`)
+
+Where the files are not on the machine (CI, the published site, a clean clone) or have not loaded yet, a recorded id plays its **fitted copy**:
+numbers measured from each take by `tools/sfx-sources/fit.mjs`, not audio. Each take becomes a recipe of white noise through fourteen bandpass bands
+(35 Hz to 17 kHz, two biquads in series each), each band with its own gain curve down to -80 dB, plus the ringing partials as sines; the
+takes of an id form a set, and a loop keeps its average band gains. Through the real engine, over the 136 one-shot sounds measured, they land a
+median 2.3 dB from the recording (mean band error over time; the pistol 1.7, a punch 1.5) where the hand-made recipes were 26 dB away.
+
+```ts
+import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
+
+registerFittedSounds(engine) // after the game's own banks: the fitted set replaces the older recipe of the same id, its recorded takes stay
+```
+
+- `KIT_SAMPLE_ALIASES` are answered too (`shut_wood` plays the fitted `door_wood_shut`), and the bare id of tiered recordings plays the medium tier.
+- `FITTED_KEEPS_RECIPE` (`fire_extinguish`, `gas_leak`) keep their recipes, which read params; `{ replace: false }` keeps every older recipe.
+- Vehicles are not fitted: their loops follow the engine's RPM.
+- After new recordings: `node tools/sfx-sources/fit.mjs` (ffmpeg, the files where `scripts/sfx-dir.mjs` finds them) rewrites `src/data/fitted-sfx.json`.
 
 ## Local sound pack (your own files, by config)
 

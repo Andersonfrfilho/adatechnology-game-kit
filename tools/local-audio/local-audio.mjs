@@ -4,7 +4,8 @@
 //   link <dist>   points `<dist>/local-audio/files` at `root` (a symlink, never a copy) and writes `<dist>/local-audio/pack.json` for the page;
 //   guard <dir>   fails when <dir> holds an audio file that is not one of the SDK's own (`packages/game-audio/assets/sfx/manifest.json`) or a copied
 //                 `local-audio` folder (the symlink is allowed: it is not followed and no deploy dereferences it);
-//   guard-git     fails when git tracks or stages the config, a `local-audio/` folder or any audio file (the kit ships none).
+//   guard-git     fails when git tracks or stages the config, a `local-audio/` folder or an audio file that is not one of the kit's own sounds
+//                 (`packages/game-audio/assets/sfx/<categoria>/<nome>.ogg`, listed in the manifest with a CC0 or CC-BY licence).
 import { execFileSync } from 'node:child_process'
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -14,6 +15,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CONFIG = process.env.LOCAL_AUDIO_CONFIG ?? join(REPO, 'audio.local.json')
 const AUDIO = /\.(wav|ogg|mp3|flac|aif|aiff|m4a|opus)$/i
 const LOCAL_DIR = 'local-audio'
+const SDK_SFX = 'packages/game-audio/assets/sfx/'
 
 /** @param {string} message */
 const fail = (message) => {
@@ -44,13 +46,14 @@ function link(dist) {
   console.log(`local-audio: ${Object.keys(sounds).length} ids linked into ${relative(REPO, target)} (files stay in ${root})`)
 }
 
-/** The SDK's own audio files, as paths relative to its sfx folder. */
+/** The SDK's own audio files (CC0 or CC-BY in the manifest), as paths relative to its sfx folder. */
 function sdkFiles() {
   const manifest = join(REPO, 'packages/game-audio/assets/sfx/manifest.json')
   if (!existsSync(manifest)) return new Set()
-  /** @type {{ sounds: { layers: Record<string, { file: string }[]> }[] }} */
+  /** @type {{ sounds: { layers: Record<string, { file: string, license?: string }[]> }[] }} */
   const parsed = JSON.parse(readFileSync(manifest, 'utf8'))
-  return new Set(parsed.sounds.flatMap((sound) => Object.values(sound.layers).flat().map((entry) => entry.file)))
+  const entries = parsed.sounds.flatMap((sound) => Object.values(sound.layers).flat())
+  return new Set(entries.filter((entry) => entry.license === 'CC0' || entry.license === 'CC-BY').map((entry) => entry.file))
 }
 
 /** @param {string} dir @returns {string[]} problems */
@@ -79,12 +82,13 @@ function guardDir(dir) {
 
 /** @returns {string[]} problems */
 function guardGit() {
+  const sdk = sdkFiles()
   const tracked = execFileSync('git', ['ls-files', '--cached'], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean)
   return tracked.flatMap((file) => {
     if (/(^|\/)audio\.local\.json$/.test(file)) return [`${file}: the local config is tracked`]
     if (/(^|\/)dist\/local-audio\/|^local-audio\//.test(file)) return [`${file}: a local-audio folder is tracked`]
-    // the kit ships no audio at all (the SDK is public; the files live in the game's repository): no path of git may hold one
-    if (AUDIO.test(file)) return [`${file}: audio in git (the kit ships none: the files go to the game's assets/sfx, the kit keeps only the manifest)`]
+    // the kit's own sounds only: a file of the manifest (CC0 or CC-BY) in packages/game-audio/assets/sfx; no other path of git may hold audio
+    if (AUDIO.test(file) && !(file.startsWith(SDK_SFX) && sdk.has(file.slice(SDK_SFX.length)))) return [`${file}: audio in git that is not one of the kit's sounds (packages/game-audio/assets/sfx, in the manifest, CC0 or CC-BY)`]
     return []
   })
 }

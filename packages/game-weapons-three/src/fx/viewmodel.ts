@@ -157,10 +157,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt, options.particleLimit)
   particles.onBounce = (kind, hit) => {
-    if (kind === 'magazine') audio?.thud()
-    if (kind !== 'casing' || !audio) return
-    const caseType = hit?.object.userData['caseType'] as string | undefined
+    if (!audio || (kind !== 'casing' && kind !== 'magazine')) return
     const surface = hit ? options.surfaceAt?.(hit.object.position.x, hit.object.position.z) : undefined
+    if (kind === 'magazine') {
+      audio.thud({ ...(surface ? { surface } : {}), ...(hit ? { speed: hit.speed, bounce: hit.bounce } : {}) })
+      return
+    }
+    const caseType = hit?.object.userData['caseType'] as string | undefined
     audio.casing({ ...(caseType ? { caseType } : {}), ...(surface ? { surface } : {}), ...(hit ? { speed: hit.speed, bounce: hit.bounce } : {}) })
   }
   // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)

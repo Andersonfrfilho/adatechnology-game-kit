@@ -1,14 +1,13 @@
 // @ts-check
-// Where the kit's recorded sound files live on this machine. The SDK is public and ships no audio: git holds only the references
-// (`packages/game-audio/assets/sfx/manifest.json`: id → relative path, with source, author and licence) and the files stay in the game's repository
-// (ZombiAdA `assets/sfx/<categoria>/`). A build, a test or a tool that needs the files asks here; when the folder is missing they are skipped and every
-// sound plays its synthesized recipe.
+// Where the kit's recorded sound files live on this machine. The SDK ships its own default sounds, all CC0 or CC-BY with their credits:
+// `packages/game-audio/assets/sfx/<categoria>/<nome>.ogg`, next to the manifest (id → relative path, with source, author and licence). A build, a
+// test or a tool that needs the files asks here. The originals the converter reads stay outside the kit (ZombiAdA `assets/sfx-originais/`).
 //
-// The folder, in this order:
+// The folder of the converted files, in this order (another folder is for trying a set of files of a game in the kit's own pages):
 //   1. the environment: KIT_SFX_DIR (converted .ogg) and KIT_SFX_INBOX (originals the converter reads);
 //   2. `.sfx-local.json` at the repo root (ignored by git): { "kit": "../zombiada/assets/sfx", "inbox": "../zombiada/assets/sfx-originais" },
 //      paths relative to the repo root or absolute;
-//   3. `.sfx/` and `.sfx-inbox/` at the repo root (ignored by git).
+//   3. the kit's own `packages/game-audio/assets/sfx/` (the files) and `.sfx-inbox/` at the repo root (the originals, ignored by git).
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 /** The repository root of the kit. */
 export const KIT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 
-/** The references the kit keeps in git: the manifest and the credits of every file. */
+/** The kit's sounds in git: the files, the manifest and the credits of every file. */
 export const KIT_SFX_MANIFEST_DIR = join(KIT_ROOT, 'packages/game-audio/assets/sfx')
 
 /** @param {string} root @returns {{ kit?: unknown, inbox?: unknown }} */
@@ -36,7 +35,7 @@ const fromConfig = (root, value) => (typeof value === 'string' && value.length >
  * @returns {string}
  */
 export function kitSfxDir(root = KIT_ROOT) {
-  return process.env.KIT_SFX_DIR ? resolve(process.env.KIT_SFX_DIR) : (fromConfig(root, localConfig(root).kit) ?? join(root, '.sfx'))
+  return process.env.KIT_SFX_DIR ? resolve(process.env.KIT_SFX_DIR) : (fromConfig(root, localConfig(root).kit) ?? join(root, 'packages/game-audio/assets/sfx'))
 }
 
 /**

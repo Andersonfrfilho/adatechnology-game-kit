@@ -5,7 +5,9 @@ import { join } from 'node:path'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createToolClipPlayer } from '@adatechnology/game-contracts'
+import { createSoundRegistry } from '@adatechnology/game-audio'
 import type { AudioEngine, PlayOptions, SampleStatus, SfxManifest, SoundBank } from '@adatechnology/game-audio'
+import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { CaliberDef } from '@adatechnology/game-weapons'
 
@@ -30,8 +32,10 @@ const fakeEngine = (ready: ReadonlySet<string>) => {
   let loads = 0
   let calls = 0
   const random = () => ((calls = (calls * 9301 + 49297) % 233280), calls / 233280)
+  const registry = createSoundRegistry()
   const engine = {
-    register: (bank: SoundBank) => void banks.push(bank),
+    registry,
+    register: (bank: SoundBank) => void (banks.push(bank), registry.register(bank)),
     channel: () => ({ random, play: (id: string, options: PlayOptions = {}) => (plays.push({ id, options }), null), plan: () => null }),
     sampleStatus: (id: string): SampleStatus => (ready.has(id) ? 'ready' : 'none'),
     loadSamples: async () => {
@@ -55,7 +59,7 @@ describe('the recorded files of the firearms', () => {
     }
     for (const surface of ['concreto', 'terra', 'metal']) expect(ids.has(`casing_drop_${surface}`), surface).toBe(true)
     for (const id of ids) {
-      if (GUNSHOT_SAMPLE_IDS.includes(id) || id.startsWith('casing_drop_')) continue
+      if (GUNSHOT_SAMPLE_IDS.includes(id) || id.startsWith('casing_drop_') || id.startsWith('mag_drop_')) continue
       const cue = id.replace(/_(light|medium|heavy)$/, '')
       expect(RELOAD_CUE_IDS as readonly string[], id).toContain(cue)
       expect(RELOAD_SAMPLE_HITS[cue], `hit of ${cue}`).toBeGreaterThan(0)
@@ -130,6 +134,45 @@ describe('createWeaponAudio with samples', () => {
     audio.cue('pump_back', { weight: 'heavy', material: 'steel' }, 0.094)
     expect(fake.plays.length).toBeGreaterThan(0)
     for (const play of fake.plays) expect(play.options.delay ?? 0).toBeGreaterThanOrEqual(0.094 - 1e-9)
+  })
+})
+
+describe('the fitted copies of the recordings', () => {
+  it('play under the recorded id while the files load, instead of the synthesized layers, and say so', () => {
+    const fake = fakeEngine(new Set())
+    const shots: string[] = []
+    const cases: string[] = []
+    const audio = createWeaponAudio(0.6, { engine: fake.engine, samples: { manifest }, onGunshot: (_shot, _input, played) => void shots.push(played.kind), onCasing: (_sound, played) => void cases.push(played) })
+    registerFittedSounds(fake.engine)
+    audio.shot(500, 'pistol', { caliber: caliber('9x19') })
+    expect(fake.plays.map((play) => play.id)).toEqual(['pistol_9mm'])
+    expect(shots).toEqual(['fitted'])
+    fake.plays.length = 0
+    expect(audio.cue('mag_seat', { weight: 'light', material: 'polymer' })).toBe('fitted')
+    expect(fake.plays.map((play) => play.id)).toEqual(['mag_seat'])
+    fake.plays.length = 0
+    audio.casing({ caseType: 'pistol', surface: 'concrete', bounce: 0 })
+    expect(fake.plays.map((play) => play.id)).toEqual(['casing_drop_concreto'])
+    expect(cases).toEqual(['fitted'])
+    expect(fake.loads()).toBe(1)
+  })
+})
+
+describe('the sounds the weapon files do not carry', () => {
+  it('play the host recording or fitted copy of the bullet passing and of the magazine on its floor, else the synthesized ones', () => {
+    const fake = fakeEngine(new Set())
+    const audio = createWeaponAudio(0.6, { engine: fake.engine, samples: { manifest } })
+    audio.flyby({ miss: 1, speed: 300 })
+    audio.thud({ surface: 'concrete', speed: 2, bounce: 0 })
+    expect(fake.plays.some((play) => play.id === 'bullet_whiz' || play.id.startsWith('mag_drop_'))).toBe(false)
+    fake.plays.length = 0
+    registerFittedSounds(fake.engine)
+    fake.engine.register({ id: 'game', sets: [{ id: 'mag_drop_madeira', variants: ['bullet_whiz~1'] }] })
+    audio.flyby({ miss: 1, speed: 300, position: [1, 0, 0] })
+    audio.thud({ surface: 'wood_hard', speed: 2, bounce: 0 })
+    audio.thud({ surface: 'wood_hard', speed: 1, bounce: 1 })
+    expect(fake.plays.map((play) => play.id)).toEqual(['bullet_whiz', 'mag_drop_madeira'])
+    expect(fake.plays[0]?.options.position).toEqual([1, 0, 0])
   })
 })
 

@@ -3,6 +3,7 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
@@ -334,6 +335,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
+  // the fitted copies of the recordings (game-audio/fitted): what each recorded id plays while its files load, or where they are not on the machine
+  if (audio && options.fittedSounds !== false) registerFittedSounds(audio)
   const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
     destructionSound?.onSound(key, point, volume, detail)
     if (detail) options.onSound?.(key, point, volume, detail)

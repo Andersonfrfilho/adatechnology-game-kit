@@ -14,11 +14,11 @@ coverage
 examples/test-room/base
 examples/audio-test-area/shots/body-reel/
 
-# the kit ships no audio (the SDK is public): the files live in the game's repository (ZombiAdA assets/sfx and assets/sfx-originais) and git holds
-# only packages/game-audio/assets/sfx/manifest.json (id -> path) and CREDITOS.md. Local copies or links, by packages/game-audio/scripts/sfx-dir.mjs:
+# the kit's own sounds are packages/game-audio/assets/sfx/<categoria>/*.ogg (CC0 and CC-BY, each one in manifest.json and CREDITOS.md); the
+# originals the converter reads stay outside (ZombiAdA assets/sfx-originais). Local copies or links, by packages/game-audio/scripts/sfx-dir.mjs:
 .sfx/
 .sfx-inbox/
-# and no audio file anywhere in the tree (guard-git checks the same in CI and pre-commit)
+# and no other audio file anywhere in the tree (guard-git checks the same in CI and pre-commit)
 *.ogg
 *.oga
 *.wav
@@ -29,6 +29,7 @@ examples/audio-test-area/shots/body-reel/
 *.aif
 *.aiff
 *.opus
+!packages/game-audio/assets/sfx/*/*.ogg
 
 # the owner's own sounds (packs the kit cannot redistribute), converted by `pnpm --filter @adatechnology/game-audio sfx:user`: local only
 .sfx-local/
