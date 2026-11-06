@@ -3,16 +3,23 @@ import { engine } from '@adatechnology/game-floorplan'
 import { register, RESIDENTIAL_TOWER_DEFAULTS, buildResidentialTower, residentialTowerLayout, residentialTowerTemplate } from '../src'
 import en from '../src/locales/en.json'
 import ptBR from '../src/locales/pt-BR.json'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
+
+/** The plan of a tower as these tests read it: the tower's numbers in `config.tower`, and each room's label and the storeys a stair links. */
+interface TowerPlan extends FloorplanResult {
+  config: { tower: { storeys: number } & Record<string, unknown> }
+  rooms: (FloorplanResult['rooms'][number] & { label: string; link?: number[] })[]
+}
 
 register(engine, { region: 'br' })
 
 /** The residential tower (design T10-estrutura-real.md §11): the plan of an apartment skyscraper, from the same layout as its structure. */
 describe('residential tower', () => {
-  const plan = engine.generate('residential_tower', { seed: 4, floors: 20, locale: 'en' }) as any
+  const plan = engine.generate('residential_tower', { seed: 4, floors: 20, locale: 'en' }) as TowerPlan
   const layout = residentialTowerLayout({ storeys: 20 })
 
   it('the game configures the tower at generation: floors wins over tower.storeys, every field of tower is reachable, the max is raised by tower.range', () => {
-    const gen = (o: object) => (engine.generate('residential_tower', { seed: 4, locale: 'en', ...o }) as any).config.tower
+    const gen = (o: object) => (engine.generate('residential_tower', { seed: 4, locale: 'en', ...o }) as TowerPlan).config.tower
     expect(gen({ floors: 24, tower: { storeys: 30 } }).storeys).toBe(24)
     expect(gen({ tower: { storeys: 35 } }).storeys).toBe(35)
     expect(residentialTowerLayout({ storeys: 90 }).storeys).toBe(60)
@@ -31,10 +38,10 @@ describe('residential tower', () => {
     const zt = engine.getZone('zt')!
     expect([zt.maxFloors, zt.maxHeight]).toEqual([60, 240])
     expect(zt.allowedUses).toContain('residential_multi')
-    const inZt = engine.generate('residential_tower', { seed: 4, floors: 60, zone: 'zt' }) as any
+    const inZt = engine.generate('residential_tower', { seed: 4, floors: 60, zone: 'zt' }) as TowerPlan
     expect(inZt.floors).toHaveLength(60)
-    expect(inZt.zoning.violations).toEqual([])
-    const inZr3 = engine.generate('residential_tower', { seed: 4, floors: 60, zone: 'zr3_zm' }) as any
+    expect(inZt.zoning!.violations).toEqual([])
+    const inZr3 = engine.generate('residential_tower', { seed: 4, floors: 60, zone: 'zr3_zm' }) as TowerPlan
     expect(inZr3.floors.length).toBeLessThanOrEqual(12 + 8)
   })
 
@@ -65,7 +72,7 @@ describe('residential tower', () => {
     const door = plan.doors.find((d: { b: string }) => d.b === 'outside')
     expect(door).toMatchObject({ a: 'lobby_0_entrance', side: 'front', width: 3, exterior: true })
     expect(plan.rooms.filter((r: { floor: number }) => r.floor === 0).map((r: { label: string }) => r.label)).toEqual(expect.arrayContaining(['concierge', 'lobby_entrance', 'bike_room']))
-    for (let f = 0; f < 20; f++) expect(plan.rooms.find((r: { floor: number; type: string }) => r.floor === f && r.type === 'stairs').link).toEqual(f < 19 ? [f, f + 1] : [f - 1, f])
+    for (let f = 0; f < 20; f++) expect(plan.rooms.find((r: { floor: number; type: string }) => r.floor === f && r.type === 'stairs')!.link).toEqual(f < 19 ? [f, f + 1] : [f - 1, f])
     expect(plan.rooms.filter((r: { floor: number; label: string }) => r.floor === 19 && r.label === 'plant_room')).toHaveLength(4)
   })
 
@@ -109,9 +116,9 @@ describe('residential tower', () => {
       expect(locale.zones.zt).toBeTruthy()
       for (const key of ['concierge', 'bike_room', 'lobby_entrance', 'laundry_room', 'storage_room']) expect((locale.labels as Record<string, string>)[key]).toBeTruthy()
     }
-    const pt = engine.generate('residential_tower', { seed: 4, floors: 20, locale: 'pt-BR' }) as any
+    const pt = engine.generate('residential_tower', { seed: 4, floors: 20, locale: 'pt-BR' }) as TowerPlan
     expect(pt.name).toBe('Torre residencial')
     expect(pt.floors[1].name).toBe('Andar tipo')
-    expect(pt.rooms.find((r: { id: string }) => r.id === 'concierge_0').name).toBe('Portaria')
+    expect(pt.rooms.find((r: { id: string }) => r.id === 'concierge_0')!.name).toBe('Portaria')
   })
 })

@@ -1,14 +1,14 @@
 import * as THREE from 'three'
-import type { VehicleKit } from '../../src'
+import type { VehicleContext, VehicleKit } from '../../src'
 
 const V3 = THREE.Vector3
 
-function ticks(kit: VehicleKit, c: any, n: number): void {
+function ticks(kit: VehicleKit, c: VehicleContext, n: number): void {
   for (let i = 0; i < n; i++) kit.tick(c, 1 / 30)
 }
 
 /** Interactions applied to a freshly built `proto`; the names are the keys of `tests/fixtures/golden.json`. */
-export const OPERATIONS: Record<string, (kit: VehicleKit, c: any) => void> = {
+export const OPERATIONS: Record<string, (kit: VehicleKit, c: VehicleContext) => void> = {
   'zoneImpact front': (kit, c) => {
     kit.zoneImpact(c, 'front', 1.0)
     ticks(kit, c, 60)
@@ -93,10 +93,10 @@ export function registerCaseScenario(kit: VehicleKit): void {
   kit.scenario({
     id: 'sc1',
     name: 'Scenario one',
-    init: (x: any) => {
+    init: (x) => {
       x.limit = x.front - 0.4 * x.length
     },
-    zone: (z: any, x: any) => {
+    zone: (z, x) => {
       if (x.center.x > x.limit) x.set(z, 15 + x.rand() * 20)
       if (z.type === 'roof') x.set(z, 10)
       if (x.isWindshield) x.set(z, 5)

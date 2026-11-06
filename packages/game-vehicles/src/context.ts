@@ -1,9 +1,24 @@
+import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
+import type { MaterialOptions, TextTextureOptions } from './materials'
+import type { GlassQuad } from './glass'
+import type { ZoneDef } from './zone-derive'
+import type { FlyingPiece, RollState, VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
 import type { Kit } from './types'
+import type { ZoneBoxInput } from './zone-core'
 import { clamp, rng } from './util'
 
-export function installContext(kit: Kit): void {
+/** A part's label: a text, or `{ key }` (the text of `parts.<key>`), or `{ key, label }` (the given text, keeping the key). */
+export type LabelArgument = string | { key?: string; label?: string }
+
+/** Where a builder puts a new mesh: its parent (default `c.vehicle`). */
+interface ParentOption {
+  parent?: Object3D | null
+}
+
+export function installContext(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -14,7 +29,7 @@ export function installContext(kit: Kit): void {
    * Normalises a label argument. A plain string is used as given; `{ key }` takes the text from the locale (`parts.<key>`);
    * `{ key, label }` uses the given text but keeps the key, which the zone derivation uses to recognise the part.
    */
-  function resolveLabel(l: any): { label: string; key?: string } {
+  function resolveLabel(l: LabelArgument): { label: string; key?: string } {
     if (l && typeof l === 'object') return { key: l.key, label: l.label != null ? l.label : kit.t('parts.' + l.key) }
     return { label: l }
   }
@@ -25,6 +40,29 @@ export function installContext(kit: Kit): void {
   /** The object every vehicle builder receives. Axes: +x front, +y up, +z right (driver at negative z), ground at y = 0, metres. */
   class BuildContext {
     [key: string]: any
+    declare root: Group
+    declare vehicle: Group
+    declare effects: Group
+    declare state: string
+    declare glass: Mesh[]
+    declare deform: Mesh[]
+    declare wheels: Object3D[]
+    declare parts: VehiclePart[]
+    declare lights: VehicleLamp[]
+    declare spin: VehicleSpin[]
+    declare emitters: VehicleEmitter[]
+    declare log: unknown[]
+    declare paints: Set<Material>
+    declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
+    declare flipped: boolean
+    declare rollState: RollState | null
+    declare quads: GlassQuad[]
+    declare zoneDefs: ZoneDef[]
+    declare flying?: FlyingPiece[]
+    /** How far each wheel drops when the zones are applied (flat tyre, broken rim), to settle the body on them. */
+    declare zoneDrops: { x: number; z: number; d: number }[]
+    declare time: number
+    declare rand: () => number
     constructor(state: string, seed?: number) {
       this.root = new THREE.Group()
       this.vehicle = new THREE.Group()
@@ -55,7 +93,7 @@ export function installContext(kit: Kit): void {
       this.time = 0
       this.rand = rng(seed || 7)
     }
-    add(geo: any, mat: any, x: any, y: any, z: any, parent: any) {
+    add(geo: BufferGeometry, mat: Material | Material[], x?: number, y?: number, z?: number, parent?: Object3D | null): Mesh {
       const m = new THREE.Mesh(geo, mat)
       m.position.set(x || 0, y || 0, z || 0)
       m.castShadow = true
@@ -64,7 +102,7 @@ export function installContext(kit: Kit): void {
       return m
     }
     /** Paint material; `meta.matte` (or `o.matte`) gives a matte finish to everything, including parts created later (damage, hood). */
-    paint(hex: any, o: any) {
+    paint(hex: ColorRepresentation, o?: MaterialOptions & { matte?: boolean }): MeshStandardMaterial {
       o = Object.assign({}, o || {})
       const matte = o.matte != null ? o.matte : this.meta.matte
       delete o.matte
@@ -75,9 +113,9 @@ export function installContext(kit: Kit): void {
       this.paints.add(pm)
       return pm
     }
-    roundBox(w: any, h: any, d: any, r: any, mat: any, x: any, y: any, z: any, o: any) {
+    roundBox(w: number, h: number, d: number, r: number, mat: Material | Material[], x?: number, y?: number, z?: number, o?: ParentOption & { taper?: Parameters<typeof taper>[1]; sub?: number; def?: boolean; rot?: readonly number[] }): Mesh {
       o = o || {}
-      let geo = roundedBoxGeometry(w, h, d, r)
+      let geo: BufferGeometry = roundedBoxGeometry(w, h, d, r)
       if (o.taper) taper(geo, o.taper)
       if (o.sub) geo = crease(subdivide(geo, o.sub), 40)
       else if (o.def) geo = crease(geo.toNonIndexed(), 50)
@@ -86,20 +124,20 @@ export function installContext(kit: Kit): void {
       if (o.def) this.deform.push(m)
       return m
     }
-    cylinder(r1: any, r2: any, h: any, mat: any, x: any, y: any, z: any, axis: any, o: any) {
+    cylinder(r1: number, r2: number, h: number, mat: Material | Material[], x?: number, y?: number, z?: number, axis?: string | null, o?: ParentOption & { seg?: number; open?: boolean }): Mesh {
       o = o || {}
       const m = this.add(new THREE.CylinderGeometry(r1, r2, h, o.seg || 20, 1, !!o.open), mat, x, y, z, o.parent)
       if (axis === 'x') m.rotation.z = -PI / 2
       else if (axis === 'z') m.rotation.x = PI / 2
       return m
     }
-    sphere(r: any, mat: any, x: any, y: any, z: any, sx: any, sy: any, sz: any, o: any) {
+    sphere(r: number, mat: Material | Material[], x?: number, y?: number, z?: number, sx?: number, sy?: number, sz?: number, o?: ParentOption & { ws?: number; hs?: number; tl?: number }): Mesh {
       o = o || {}
       const m = this.add(new THREE.SphereGeometry(r, o.ws || 18, o.hs || 12, 0, PI * 2, 0, o.tl || PI), mat, x, y, z, o.parent)
       m.scale.set(sx || 1, sy || 1, sz || 1)
       return m
     }
-    rod(a: any, b: any, r: any, mat: any, o: any) {
+    rod(a: Vector3, b: Vector3, r: number, mat: Material | Material[], o?: ParentOption & { r2?: number; seg?: number }): Mesh {
       o = o || {}
       const len = a.distanceTo(b)
       const m = this.add(
@@ -113,17 +151,17 @@ export function installContext(kit: Kit): void {
       m.quaternion.setFromUnitVectors(new V3(0, 1, 0), new V3().subVectors(b, a).normalize())
       return m
     }
-    tube(pts: any, r: any, mat: any, o: any) {
+    tube(pts: readonly (Vector3 | readonly number[])[], r: number, mat: Material | Material[], o?: ParentOption & { closed?: boolean; seg?: number; rs?: number }): Mesh {
       o = o || {}
       const curve = new THREE.CatmullRomCurve3(
-        pts.map(function (p: any) {
-          return p.isVector3 ? p.clone() : new V3(p[0], p[1], p[2] || 0)
+        pts.map(function (p) {
+          return (p as Vector3).isVector3 ? (p as Vector3).clone() : new V3((p as readonly number[])[0], (p as readonly number[])[1], (p as readonly number[])[2] || 0)
         }),
         !!o.closed,
       )
       return this.add(new THREE.TubeGeometry(curve, o.seg || 40, r, o.rs || 8, !!o.closed), mat, 0, 0, 0, o.parent)
     }
-    text(txt: any, w: any, h: any, x: any, y: any, z: any, face: any, o: any) {
+    text(txt: string, w: number, h: number, x?: number, y?: number, z?: number, face?: string, o?: ParentOption & TextTextureOptions & { glow?: ColorRepresentation }): Mesh {
       o = o || {}
       const mat = new THREE.MeshStandardMaterial({ map: textTexture(txt, o), transparent: !o.bg, roughness: 0.6, alphaTest: o.bg ? 0 : 0.3 })
       if (o.glow) {
@@ -134,10 +172,10 @@ export function installContext(kit: Kit): void {
       const m = this.add(new THREE.PlaneGeometry(w, h), mat, x, y, z, o.parent)
       m.castShadow = false
       if (face === '+y' || face === '-y') m.rotation.x = face === '+y' ? -PI / 2 : PI / 2
-      else m.rotation.y = ({ '+z': 0, '-z': PI, '+x': PI / 2, '-x': -PI / 2 } as Record<string, number>)[face] || 0
+      else m.rotation.y = ({ '+z': 0, '-z': PI, '+x': PI / 2, '-x': -PI / 2 } as Record<string, number>)[face as string] || 0
       return m
     }
-    plate(x: any, y: any, z: any, face: any, txt: any) {
+    plate(x: number, y: number, z: number, face?: string, txt?: string): Mesh {
       /* the plate is rigid: soft body deformation (warp, sculpting) does not bend it; a dent carries it as a rigid body */
       const pl = this.text(txt || kit.config.plate, 0.4, 0.13, x, y, z, face, {
         w: 400,
@@ -153,16 +191,16 @@ export function installContext(kit: Kit): void {
       pl.userData.plate = true
       return pl
     }
-    part(kind: any, label: any, obj: any, pos: any, reach?: any, o?: any) {
+    part(kind: string, label: LabelArgument, obj: Object3D | null, pos: Vector3 | readonly number[], reach?: number, o?: Record<string, unknown>): VehiclePart {
       const L = I.resolveLabel(label)
       const pt = Object.assign(
-        { kind: kind, label: L.label, key: L.key, obj: obj, pos: pos.clone ? pos.clone() : new V3(pos[0], pos[1], pos[2]), reach: reach || 1 },
+        { kind: kind, label: L.label, key: L.key, obj: obj, pos: (pos as Vector3).clone ? (pos as Vector3).clone() : new V3((pos as readonly number[])[0], (pos as readonly number[])[1], (pos as readonly number[])[2]), reach: reach || 1 },
         o || {},
       )
       this.parts.push(pt)
       return pt
     }
-    wheel(x: any, z: any, r: any, w: any, o: any) {
+    wheel(x: number, z: number, r: number, w: number, o?: { y?: number; rimR?: number; lugs?: boolean; chevron?: boolean; rim?: Material; spokes?: number; spokeMat?: Material; noPart?: boolean; label?: LabelArgument }): Group {
       o = o || {}
       const s = z >= 0 ? 1 : -1
       const g = new THREE.Group()
@@ -187,7 +225,7 @@ export function installContext(kit: Kit): void {
       g.add(tire)
       if (o.lugs) {
         const nl = Math.round(r * 30)
-        const lugs: any = []
+        const lugs: BufferGeometry[] = []
         for (let i = 0; i < nl; i++) {
           const a = (i / nl) * PI * 2
           ;[-1, 1].forEach(function (sd) {
@@ -246,21 +284,21 @@ export function installContext(kit: Kit): void {
       return g
     }
     /** Point in `c.vehicle` coordinates to effects-group coordinates (vehicle world, ground y = 0). */
-    toEffects(p: any) {
+    toEffects(p: Vector3): Vector3 {
       this.vehicle.updateMatrix()
       return p.clone().applyMatrix4(this.vehicle.matrix)
     }
-    dirToEffects(d: any) {
+    dirToEffects(d: Vector3): Vector3 {
       return d.clone().applyQuaternion(this.vehicle.quaternion)
     }
 
 
     /** Declares or refines a damage zone: `c.zone(id, label, box, parts, options)`. Pass `label === false` to remove an auto-derived zone. */
-    zone(id: string, label: any, box?: any, parts?: any, o?: any) {
-      const d: any = Object.assign({ id: id }, o || {})
+    zone(id: string, label: string | false | null | undefined, box?: ZoneBoxInput | null, parts?: Object3D | VehicleLamp | readonly (Object3D | VehicleLamp)[] | null, o?: Record<string, unknown>) {
+      const d = Object.assign({ id: id }, o || {}) as ZoneDef
       if (label === false) d.remove = true
       else if (label) d.name = label
-      if (box) d.box = I.normalizeBox(box)
+      if (box) d.box = I.normalizeBox(box)!
       if (parts) d.objs = Array.isArray(parts) ? parts.slice() : [parts]
       this.zoneDefs.push(d)
       return d
@@ -268,4 +306,5 @@ export function installContext(kit: Kit): void {
   }
   kit.BuildContext = BuildContext
   I.BuildContext = BuildContext
+  return { resolveLabel, BuildContext }
 }

@@ -1,8 +1,35 @@
 /** Soft body warp (sculpting) used for panel deformation. */
-import type { Kit } from './types'
+import type { Mesh, Object3D, Vector2 } from 'three'
+
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, smooth } from './util'
 
-export function installWarp(kit: Kit): void {
+/** The rounding of `makeWarp`: where the front and rear start (xF, xR) and how long they bend (Lf, Lr), the half width, the bow and pinch of each end, the side curve (belt, ys, yb, kt, kb) and the drop of the nose. */
+export type WarpOptions = {
+  xF: number
+  xR: number
+  Lf: number
+  Lr: number
+  hw: number
+  bowF: number
+  bowR: number
+  pinF: number
+  pinR: number
+  belt: number
+  ys: number
+  yb: number
+  kt: number
+  kb: number
+  dropF?: number
+  dropY?: number
+}
+/** A point warp: (x, y, z) to [x, y, z]. */
+export type WarpFn = (x: number, y: number, z: number) => number[]
+/** A loft station of `smoothLoft`: [x, top, bottom, width, exponent?, z centre?]. */
+export type LoftRow = readonly number[]
+export type SmoothLoftOptions = { smooth?: number; seg?: number; axis?: string; p?: number; crease?: number }
+
+export function installWarp(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -13,8 +40,8 @@ export function installWarp(kit: Kit): void {
   /* ================= global rounding (warp), resampled loft ================= */
   /* makeWarp(o) creates f(x, y, z) -> [x, y, z] that rounds the front/rear in plan view and curves the side.
      o: { xF, xR, Lf, Lr, hw, bowF, bowR, pinF, pinR, belt, ys, yb, kt, kb, dropF, dropY }. applyWarp(c, f) deforms everything already assembled. */
-  function makeWarp(o: any) {
-    function sec(y: any) {
+  function makeWarp(o: WarpOptions) {
+    function sec(y: number) {
       if (y >= o.belt) return o.kt
       if (y >= o.ys) {
         const a = (y - o.ys) / (o.belt - o.ys)
@@ -23,33 +50,33 @@ export function installWarp(kit: Kit): void {
       const b = clamp((o.ys - y) / (o.ys - o.yb), 0, 1.25)
       return o.kb * b * b
     }
-    const f = function (x: any, y: any, z: any) {
+    const f = function (x: number, y: number, z: number) {
       const tF = smooth((x - (o.xF - o.Lf)) / o.Lf)
       const tR = smooth((o.xR + o.Lr - x) / o.Lr)
       const u = Math.min(1.15, Math.abs(z) / o.hw)
       const u2 = u * u
-      const dropF = o.dropF ? o.dropF * tF * u2 * smooth((y - o.dropY) / 0.25) : 0
+      const dropF = o.dropF ? o.dropF * tF * u2 * smooth((y - o.dropY!) / 0.25) : 0
       return [x - o.bowF * tF * u2 + o.bowR * tR * u2, y - dropF, z * (1 - sec(y)) * (1 - o.pinF * tF * tF) * (1 - o.pinR * tR * tR)]
     }
     f.sec = sec
     return f
   }
-  function applyWarp(c: any, Wf: any) {
+  function applyWarp(c: BuildContext, Wf: WarpFn) {
     c.root.updateMatrixWorld(true)
     const gInv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
     const rel = new THREE.Matrix4()
     const irel = new THREE.Matrix4()
     const v = new V3()
-    const use = new Map()
-    c.root.traverse(function (o: any) {
+    const use = new Map<unknown, number>()
+    c.root.traverse(function (o: SceneNode) {
       if (o.isMesh) use.set(o.geometry, (use.get(o.geometry) || 0) + 1)
     })
-    const skip = new Set(c.wheels)
-    const dset = new Set(c.deform)
+    const skip = new Set<Object3D>(c.wheels)
+    const dset = new Set<Object3D>(c.deform)
     const yAx = new V3(0, 1, 0)
-    function warpMesh(msh: any) {
+    function warpMesh(msh: Mesh) {
       const g = msh.geometry
-      if (use.get(g) > 1 || !g.attributes.position) return false
+      if (use.get(g)! > 1 || !g.attributes.position) return false
       rel.multiplyMatrices(gInv, msh.matrixWorld)
       irel.copy(rel).invert()
       const p = g.attributes.position
@@ -66,7 +93,7 @@ export function installWarp(kit: Kit): void {
       g.computeBoundingBox()
       return true
     }
-    function rigid(o: any) {
+    function rigid(o: Object3D) {
       const p = o.position
       const r = Wf(p.x, p.y, p.z)
       const a = Wf(p.x, p.y, p.z - 0.03)
@@ -75,44 +102,44 @@ export function installWarp(kit: Kit): void {
       p.set(r[0], r[1], r[2])
       if (Math.abs(yaw) > 1e-4) o.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(yAx, yaw))
     }
-    c.glass.forEach(function (gm: any) {
+    c.glass.forEach(function (gm) {
       const GD = gm.userData.glass
       if (!GD || !GD.outline || GD.zpos == null) return
       let cx = 0
       let cy = 0
-      GD.outline.forEach(function (p: any) {
+      GD.outline.forEach(function (p: Vector2) {
         cx += p.x
         cy += p.y
       })
       cx /= GD.outline.length
       cy /= GD.outline.length
       const f = Wf(cx, cy, GD.zpos)[2] / GD.zpos
-      GD.outline = GD.outline.map(function (p: any) {
+      GD.outline = GD.outline.map(function (p: Vector2) {
         const r = Wf(p.x, p.y, GD.zpos)
         return new THREE.Vector2(r[0], r[1])
       })
       GD.zpos *= f
       GD.Wg *= f
     })
-    c.vehicle.children.slice().forEach(function (o: any) {
+    c.vehicle.children.slice().forEach(function (o: SceneNode) {
       if (skip.has(o) || o.userData.noWarp) return
       if (o.isMesh) {
-        if (!warpMesh(o)) rigid(o)
+        if (!warpMesh(o as Mesh)) rigid(o)
         return
       }
-      const defs: any = []
-      o.traverse(function (x: any) {
-        if (x !== o && x.isMesh && dset.has(x)) defs.push(x)
+      const defs: Mesh[] = []
+      o.traverse(function (x: SceneNode) {
+        if (x !== o && x.isMesh && dset.has(x)) defs.push(x as Mesh)
       })
       if (defs.length) defs.forEach(warpMesh)
       else rigid(o)
     })
   }
-  function resample(st: any, n: any) {
+  function resample(st: readonly (readonly (number | null | undefined)[])[], n: number): number[][] {
     if (lod.on) n = Math.max(lod.minStations, Math.round(n * lod.stationFraction))
-    const out = []
+    const out: number[][] = []
     const L = st.length
-    function P(i: any) {
+    function P(i: number) {
       return st[Math.max(0, Math.min(L - 1, i))]
     }
     for (let k = 0; k <= n; k++) {
@@ -123,7 +150,7 @@ export function installWarp(kit: Kit): void {
       const b = P(i)
       const c2 = P(i + 1)
       const d = P(i + 2)
-      const row = []
+      const row: number[] = []
       for (let j = 0; j < b.length; j++) {
         let p0 = a[j] == null ? b[j] : a[j]
         let p1 = b[j]
@@ -139,16 +166,16 @@ export function installWarp(kit: Kit): void {
     }
     return out
   }
-  function smoothLoft(st: any, o: any) {
+  function smoothLoft(st: readonly LoftRow[], o?: SmoothLoftOptions | null) {
     o = o || {}
     if (lod.on) o = Object.assign({}, o, { seg: Math.max(lod.minLoftSegments, Math.round((o.seg || 24) * lod.loftSegmentFraction)) })
     if (o.smooth) st = resample(st, o.smooth)
     const seg = o.seg || 24
-    const pos: any = []
-    const idx = []
+    const pos: number[] = []
+    const idx: number[] = []
     const ring = seg + 1
     const axisY = o.axis === 'y'
-    st.forEach(function (s: any) {
+    st.forEach(function (s) {
       const a0 = s[1]
       const b0 = s[2]
       const cc = (a0 + b0) / 2
@@ -198,5 +225,9 @@ export function installWarp(kit: Kit): void {
   kit.geo.resample = resample
   kit.geo.smoothLoft = smoothLoft
 
-  Object.assign(I, { makeWarp, applyWarp, resample, smoothLoft })
+  const shared = { makeWarp, applyWarp, resample, smoothLoft }
+
+  Object.assign(I, shared)
+
+  return shared
 }

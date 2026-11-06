@@ -2,7 +2,10 @@
  * Damageable parts: what a bullet, a bat or a crash can hurt on a built vehicle, as boxes. Port of `coletarDanificaveis` and `tipoDaZona`
  * (frota-leve.js 14391-14405), driven by the zones the kit already derives, so it works for any vehicle of any pack.
  */
-import type { Kit } from './types'
+import type { Matrix4 } from 'three'
+
+import type { Damageable, DamageZone } from './api'
+import type { BuildContext, Kit } from './types'
 
 export type DamageableMaterial = 'metal' | 'glass' | 'rubber' | 'fuel'
 export type DamageableSide = 'center' | 'left' | 'right'
@@ -31,7 +34,7 @@ export function installDamageables(kit: Kit): void {
   const THREE = kit.THREE
   kit.damageableKinds = { ...defaultDamageableKinds }
 
-  const kindOf = (zone: any): DamageableKind | null => {
+  const kindOf = (zone: DamageZone): DamageableKind | null => {
     const kinds = kit.damageableKinds
     if (zone.type === 'internal') return zone.sub ? kinds[`internal:${zone.sub}`] || null : null
     return kinds[`${zone.type}:${zone.fxKey}`] || kinds[zone.type] || null
@@ -41,8 +44,8 @@ export function installDamageables(kit: Kit): void {
    * Every damageable zone of a built vehicle: `{ material, zone, part, side, box }`. `box` is a `THREE.Box3` in the coordinates of
    * `c.vehicle`, or in the frame of `matrix` when one is given (for example the output frame of `game-vehicles-three`).
    */
-  kit.damageables = function (c: any, matrix?: any) {
-    const out: any[] = []
+  kit.damageables = function (c: BuildContext, matrix?: Matrix4) {
+    const out: Damageable[] = []
     for (const zone of c.zones || []) {
       const kind = kindOf(zone)
       if (!kind || !zone.box) continue

@@ -1,6 +1,9 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
+import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type * as THREE_NS from 'three'
+import type { Group, Material, Mesh, Object3D, Texture } from 'three'
 
 import { fuse, liteMaterials, liteMeshes } from './lite'
 import { primaryPaint } from './build'
@@ -27,13 +30,20 @@ export type VehicleLod = {
   dispose(): void
 }
 
-const isShown = (object: any, top: any): boolean => {
-  for (let node = object; node && node !== top; node = node.parent) if (node.visible === false) return false
+/** What the level of detail reads of the vehicle kit: its three.js, the materials nobody sees from outside and the studio environment. */
+export type VehicleLodKit = {
+  readonly THREE: typeof THREE_NS
+  lodHiddenMaterials(): ReadonlySet<Material>
+  studioEnvironment(): Texture | null
+}
+
+const isShown = (object: Object3D, top: Object3D): boolean => {
+  for (let node: Object3D | null = object; node && node !== top; node = node.parent) if (node.visible === false) return false
   return true
 }
 
 /** Shows `full` near and the kit's fused light mode (one mesh per class of material) far, in `root`'s own space. Hit tests read the full model, visible or not. */
-export function createVehicleLod(kit: any, context: any, root: any, full: any, options: VehicleLodOptions = {}): VehicleLod {
+export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, root: Object3D, full: Object3D, options: VehicleLodOptions = {}): VehicleLod {
   const THREE = kit.THREE
   const now = options.now ?? (() => performance.now())
   // when the vehicle last changed (hit, rebuilt, a batched part given back): a hit one is batched again only after a quiet time
@@ -42,15 +52,16 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
   // blast. A model rebuilt in place (the destructible's reset) is new geometry, so it is drawn whole again.
   let isUploaded = false
   let modelKey = ''
-  const culled = new Map<any, boolean>()
-  const keyOf = (): string => full.children.filter((child: any) => child.name !== 'static-batches').map((child: any) => child.uuid).join()
+  const culled = new Map<Mesh, boolean>()
+  const keyOf = (): string => full.children.filter((child) => child.name !== 'static-batches').map((child) => child.uuid).join()
   const armUpload = (): void => {
     // a model rebuilt again before its first draw (frames skipped on a slow machine) lets go of the old one's meshes
     for (const [mesh, wasCulled] of culled) mesh.frustumCulled = wasCulled
     culled.clear()
     modelKey = keyOf()
     isUploaded = false
-    full.traverse((object: any) => {
+    full.traverse((node) => {
+      const object = node as Mesh
       if (!object.isMesh || culled.has(object)) return
       culled.set(object, object.frustumCulled)
       object.frustumCulled = false
@@ -61,25 +72,26 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
       return
     }
     const before = probe.onAfterRender
-    probe.onAfterRender = function (this: any, ...args: unknown[]) {
+    probe.onAfterRender = function (this: Mesh, ...args: Parameters<Mesh['onAfterRender']>) {
       isUploaded = true
       probe.onAfterRender = before
       before?.apply(this, args)
     }
   }
   armUpload()
-  let lite: any = null
+  let lite: Group | null = null
   let isFused = false
   let isLocked = false
   // near, the full model draws its still parts in batches by material; a part that moves, dents or falls draws on its own again
   let batcher: StaticBatcher | null = null
-  let shadow: any = null
-  const castsShadow = new Set<any>()
+  let shadow: Mesh | null = null
+  const castsShadow = new Set<Mesh>()
   /** One mesh with the shape of the fused body, drawn only into the shadow map. */
-  const shadowProxyOf = (fused: any): any => {
+  const shadowProxyOf = (fused: Group): Mesh => {
     const positions: number[] = []
     const indices: number[] = []
-    for (const mesh of fused.children) {
+    for (const child of fused.children) {
+      const mesh = child as Mesh
       if (!mesh.isMesh || !mesh.castShadow) continue
       const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrix)
       const offset = positions.length / 3
@@ -105,7 +117,7 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
   const batchLocked = (): void => {
     // the parts keep their own shadows (the proxy has the shape of the vehicle before the hit); the batches cast for the still ones
     batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
-    batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+    batcher.group.traverse((object) => (object.userData.skipLite = true))
     // the batches copy the parts' triangles: a hit test reads the parts (`surfaceRay`), never the copy
     batcher.group.userData.noSurfaceRay = true
     markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
@@ -122,14 +134,15 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
       shadow ??= shadowProxyOf(lite)
       shadow.visible = !isFused
       // the shadow comes from the one proxy, not from each part: a part's own shadow would be one more pass per draw
-      full.traverse((object: any) => {
+      full.traverse((node) => {
+        const object = node as Mesh
         if (!object.isMesh || !object.castShadow) return
         castsShadow.add(object)
         object.castShadow = false
       })
       // merged a material at a time over the next frames (BATCH_BUDGET_MS each), never in one frame
       batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
-      batcher.group.traverse((object: any) => (object.userData.skipLite = true))
+      batcher.group.traverse((object) => (object.userData.skipLite = true))
       batcher.group.userData.noSurfaceRay = true
       markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
       return
@@ -142,15 +155,16 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
       batcher = null
     }
   }
-  const build = (): any => {
+  const build = (): Group => {
     root.updateMatrixWorld(true)
     const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
     // a painted texture (a livery, a lettering) does not survive the fusion into vertex colours: those meshes stay as they are, drawn from the same geometry
-    const textured: any[] = []
-    full.traverse((object: any) => {
+    const textured: Mesh[] = []
+    full.traverse((node) => {
+      const object = node as Mesh
       if (!object.isMesh || object.userData.skipLite || !isShown(object, full)) return
       const materials = Array.isArray(object.material) ? object.material : [object.material]
-      if (materials.some((material: any) => material?.map && !/plate/i.test(material.name ?? '')) && !/plate/i.test(object.name ?? '')) textured.push(object)
+      if (materials.some((material) => (material as Material & { map?: Texture | null })?.map && !/plate/i.test(material.name ?? '')) && !/plate/i.test(object.name ?? '')) textured.push(object)
     })
     for (const mesh of textured) mesh.userData.skipLite = true
     const fusion = fuse(THREE, { ...context, vehicle: full }, inverse, null, primaryPaint(context), kit.lodHiddenMaterials())
@@ -211,7 +225,7 @@ export function createVehicleLod(kit: any, context: any, root: any, full: any, o
       shadow = null
       if (!lite) return
       lite.removeFromParent()
-      lite.traverse((object: any) => object.geometry?.dispose())
+      lite.traverse((object) => (object as Mesh).geometry?.dispose())
       lite = null
     },
   }

@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 
 import { CONTENT_TABLES } from '../src/utilities/content-tables'
 import { engine } from './support'
+import type { StructuredResult } from '../src'
 
 const catalog = createGoodsItems()
-const generate = (template: string, seed: number, state = 'normal', extra: Record<string, unknown> = {}): any => engine.generate(template, { seed, state, ...extra })
+const generate = (template: string, seed: number, state = 'normal', extra: Record<string, unknown> = {}): StructuredResult => engine.generate(template, { seed, state, ...extra }) as StructuredResult
 
 describe('the goods catalog answers what the furniture holds (composition of the floorplan with the items)', () => {
   it('has a pool for every content table of the structure pack that the visor has one for, and no more', () => {
@@ -34,8 +35,8 @@ describe('the goods catalog answers what the furniture holds (composition of the
     const seen = new Set<string>()
     for (let seed = 1; seed <= 15; seed++) {
       const result = generate('single_storey_a', seed)
-      const fridge = result.items.find((m: any) => m.category === 'fridge')
-      const stacks = result.contents[fridge.id] as { itemId: string }[]
+      const fridge = result.items.find((m) => m.category === 'fridge')
+      const stacks = result.contents[fridge!.id]!
       expect(stacks.length, `seed ${seed}`).toBeGreaterThan(0)
       for (const stack of stacks) {
         expect(catalog.has(stack.itemId), stack.itemId).toBe(true)
@@ -49,7 +50,7 @@ describe('the goods catalog answers what the furniture holds (composition of the
     for (const state of ['normal', 'fortified', 'abandoned']) {
       for (const template of ['single_storey_a', 'townhouse', 'mansion', 'mid_modern_townhouse']) {
         const result = generate(template, 3, state)
-        for (const stacks of Object.values(result.contents) as { itemId: string }[][]) for (const stack of stacks) expect(catalog.has(stack.itemId), `${template}/${state}: ${stack.itemId}`).toBe(true)
+        for (const stacks of Object.values(result.contents)) for (const stack of stacks) expect(catalog.has(stack.itemId), `${template}/${state}: ${stack.itemId}`).toBe(true)
       }
     }
   })
@@ -60,11 +61,11 @@ describe('the goods catalog answers what the furniture holds (composition of the
     let fortified = 0
     for (let seed = 1; seed <= 20; seed++) {
       const abandoned = generate('single_storey_a', seed, 'abandoned')
-      const fridge = abandoned.items.find((m: any) => m.category === 'fridge')
-      if ((abandoned.contents[fridge.id] as { itemId: string }[]).some((stack) => stack.itemId === 'leftover_meal')) spoiled++
+      const fridge = abandoned.items.find((m) => m.category === 'fridge')
+      if (abandoned.contents[fridge!.id]!.some((stack) => stack.itemId === 'leftover_meal')) spoiled++
       for (const [state, set] of [['normal', 'n'], ['fortified', 'f']] as const) {
         const result = generate('single_storey_a', seed, state)
-        const total = (Object.values(result.contents) as { count: number }[][]).flat().reduce((sum, stack) => sum + stack.count, 0)
+        const total = Object.values(result.contents).flat().reduce((sum, stack) => sum + stack.count, 0)
         if (set === 'n') normal += total
         else fortified += total
       }

@@ -1,8 +1,11 @@
 /** Damage scenarios and the scenario registry. */
-import type { Kit } from './types'
+import type { Object3D, Vector3 } from 'three'
+
+import type { DamageZone, ScenarioContext, ScenarioDefinition, VehicleContext, ZoneDamageEntry } from './api'
+import type { BuildContext, Kit } from './types'
 import { clamp, rng, strHash } from './util'
 
-export function installScenarios(kit: Kit): void {
+export function installScenarios(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -12,9 +15,9 @@ export function installScenarios(kit: Kit): void {
      flags (flipped, burnt, abandoned or those of kit.flagEffects). X carries: c, meta, front, rear, length, width, clearance, top, rand (deterministic random),
      center (centre of the current zone), isWindshield (windshield zone), bodyTypes (bodywork types), clamp. Returns { health, flags, scenario }. */
   kit.scenarios = []
-  kit.scenario = function (def: any) {
+  kit.scenario = function (def: ScenarioDefinition) {
     if (!def || !def.id || typeof def.zone !== 'function') throw new Error('kit.scenario: id and zone(z, X) are required')
-    const i = kit.scenarios.findIndex(function (s: any) {
+    const i = kit.scenarios.findIndex(function (s: ScenarioDefinition) {
       return s.id === def.id
     })
     if (i >= 0) kit.scenarios[i] = def
@@ -28,7 +31,7 @@ export function installScenarios(kit: Kit): void {
   /* fire and soot */
   kit.flagEffects.burnt = { order: 40, settle: true, apply: I.burntFx }
   const BODY_TYPES = { panel: 1, door: 1, roof: 1, lid: 1, hood: 1, bumper: 1 }
-  kit.zoneScenario = function (c: any, name: any) {
+  kit.zoneScenario = function (c: BuildContext, name: string) {
     const Zs = I.zonesOf(c)
     const m = c.meta
     const F = m.front
@@ -37,18 +40,18 @@ export function installScenarios(kit: Kit): void {
     const W = m.width || 1.7
     const cl = m.clearance || 0.3
     const top = m.top || 1.5
-    const S = kit.scenarios.find(function (s: any) {
+    const S: ScenarioDefinition | undefined = kit.scenarios.find(function (s: ScenarioDefinition) {
       return s.id === name || s.name === name
     })
     const sc = S ? S.id : name
     const health: Record<string, number> = {}
-    const flags: any = {}
+    const flags: Record<string, boolean> = {}
     const rand = rng(strHash((c.seedKey || c.key || '') + '|' + ((S && S.seedId) || sc)))
-    function set(z: any, v: any) {
+    function set(z: DamageZone, v: number) {
       health[z.id] = clamp(Math.round(v), 0, 100)
     }
-    const X: any = {
-      c: c,
+    const X: ScenarioContext = {
+      c: c as VehicleContext,
       meta: m,
       front: F,
       rear: R,
@@ -67,63 +70,63 @@ export function installScenarios(kit: Kit): void {
     }
     if (S) {
       if (S.init) S.init(X)
-      Zs.forEach(function (z: any) {
+      Zs.forEach(function (z: DamageZone) {
         X.center = I.boxCenter(z.box)
         X.isWindshield = z.tags.indexOf('windshield') >= 0
-        S.zone(z, X)
+        S!.zone(z, X)
       })
     }
     return { health: health, flags: flags, scenario: sc }
   }
   /* overall health (weighted average) */
-  kit.zoneOverall = function (c: any) {
+  kit.zoneOverall = function (c: BuildContext) {
     const Zs = I.zonesOf(c)
     let s = 0
     let w = 0
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       s += z.health * z.weight
       w += z.weight
     })
     let h = w ? Math.round(s / w) : 100
     /* floor by the worst structural zone: a destroyed or torn-off zone does not leave the vehicle "Intact" on average */
-    const st = Zs.filter(function (z: any) {
+    const st = Zs.filter(function (z: DamageZone) {
       return !z.internal && z.type !== 'glass' && z.type !== 'light'
     })
-      .map(function (z: any) {
+      .map(function (z: DamageZone) {
         return z.health
       })
-      .sort(function (a: any, b: any) {
+      .sort(function (a: number, b: number) {
         return a - b
       })
     if (st.length) {
       const w3 = st.slice(0, 3)
       const m3 =
-        w3.reduce(function (a: any, b: any) {
+        w3.reduce(function (a: number, b: number) {
           return a + b
         }, 0) / w3.length
       h = Math.min(h, Math.round(st[0] + 30), Math.round(m3 + 22))
     }
-    const gl = Zs.filter(function (z: any) {
+    const gl = Zs.filter(function (z: DamageZone) {
       return z.type === 'glass' || z.type === 'light'
-    }).map(function (z: any) {
+    }).map(function (z: DamageZone) {
       return z.health
     })
     if (gl.length) h = Math.min(h, Math.round(Math.min.apply(null, gl) + 55))
     return { health: h, band: I.bandOf(h), name: kit.bands[I.bandOf(h)].name }
   }
   /* zone of point p (c.vehicle coordinates), with the optional mesh that was hit */
-  kit.zoneAt = function (c: any, p: any, obj: any) {
+  kit.zoneAt = function (c: BuildContext, p: Vector3, obj?: Object3D | null): DamageZone | null {
     const Zs = I.zonesOf(c)
     const own = obj ? I.ownerOf(c, obj) : null
     if (own) return own
-    let best: any = null
-    Zs.forEach(function (z: any) {
+    let best = null as DamageZone | null
+    Zs.forEach(function (z: DamageZone) {
       if (z.internal) return
-      if (I.boxContains(z.box, p.x, p.y, p.z, 0.03) && (!best || I.boxVolume(z.box) < I.boxVolume(best.box))) best = z
+      if (I.boxContains(z.box, p.x, p.y, p.z, 0.03) && (!best || I.boxVolume(z.box) < I.boxVolume(best!.box))) best = z
     })
     if (best) return best
     let bd = 1e9
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       if (z.internal) return
       const d = I.boxDistance(z.box, p)
       if (d < bd) {
@@ -134,12 +137,12 @@ export function installScenarios(kit: Kit): void {
     return best
   }
   /* impact at a point: takes health from the zones near the point, according to the force (0.3..1.4) */
-  kit.zoneDamageAt = function (c: any, p: any, dir: any, force: any, obj: any) {
+  kit.zoneDamageAt = function (c: BuildContext, p: Vector3, dir: Vector3 | null | undefined, force: number, obj?: Object3D | null) {
     const Zs = I.zonesOf(c)
-    const main = kit.zoneAt(c, p, obj)
+    const main: DamageZone | null = kit.zoneAt(c, p, obj)
     const Rr = 0.35 + 0.35 * force
-    const out: any = []
-    Zs.forEach(function (z: any) {
+    const out: ZoneDamageEntry[] = []
+    Zs.forEach(function (z: DamageZone) {
       const d = z === main ? 0 : I.boxDistance(z.box, p)
       let dmg = 0
       if (z === main) dmg = force * 36
@@ -151,7 +154,7 @@ export function installScenarios(kit: Kit): void {
     return { main: main ? main.id : null, list: out }
   }
   /* point and direction of the impacts by side (Front, Rear, Left side and Right side buttons) */
-  kit.zonePoint = function (c: any, zone: any) {
+  kit.zonePoint = function (c: BuildContext, zone: string) {
     const m = c.meta
     const mid = m.clearance + (m.bodyHeight || 0.6) * 0.5
     let p
@@ -172,5 +175,9 @@ export function installScenarios(kit: Kit): void {
     return { p: p, dir: dir }
   }
 
-  Object.assign(I, { BODY_TYPES })
+  const shared = { BODY_TYPES }
+
+  Object.assign(I, shared)
+
+  return shared
 }

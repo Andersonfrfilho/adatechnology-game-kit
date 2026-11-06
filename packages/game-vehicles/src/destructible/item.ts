@@ -1,3 +1,5 @@
+import type { Group } from 'three'
+
 import type { VehicleContext, VehicleKit } from '../api'
 import type { BuildState } from '../api'
 
@@ -11,7 +13,7 @@ export interface VehicleItemOptions {
 
 export interface VehicleItem {
   /** Add this to the scene: origin at the centre of the footprint on the floor, front facing +z. */
-  root: any
+  root: Group
   /** The built vehicle inside it. */
   vehicle: VehicleContext
 }

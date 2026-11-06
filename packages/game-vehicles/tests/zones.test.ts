@@ -65,7 +65,7 @@ describe('zone derivation from meta', () => {
     const c = kit.build('proto', 'intact')
     const THREE = kit.THREE
     expect(kit.zoneAt(c, new THREE.Vector3(2, 0.6, 0))?.id).toBe('bumper_front')
-    const hit = kit.zoneDamageAt(c, new THREE.Vector3(2, 0.6, 0), new THREE.Vector3(-1, 0, 0), 1) as any
+    const hit = kit.zoneDamageAt(c, new THREE.Vector3(2, 0.6, 0), new THREE.Vector3(-1, 0, 0), 1)
     expect(hit.main).toBe('bumper_front')
     expect(hit.list[0]).toEqual({ id: 'bumper_front', name: 'Front bumper', damage: 36 })
   })

@@ -27,6 +27,7 @@ if (!existsSync(page)) {
   console.error('examples/test-room/dist/test-room.html is missing: run node examples/test-room/build.mjs first')
   process.exit(2)
 }
+/** @type {typeof import('playwright')} */
 const { chromium } = (() => {
   for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
     try {
@@ -38,7 +39,9 @@ const { chromium } = (() => {
   throw new Error('playwright not found (set NODE_PATH or install it)')
 })()
 
+/** @type {{ drawn?: Array<{ area: string, match: string, fix?: string }> }} */
 const { drawn = [] } = JSON.parse(readFileSync(join(here, 'allowlist.json'), 'utf8'))
+/** @param {string} area @param {string} path */
 const pendingOf = (area, path) => drawn.find((entry) => (entry.area === '*' || entry.area === area) && new RegExp(entry.match).test(path))
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
@@ -49,11 +52,14 @@ const tab = await browser.newPage({ viewport: { width: 640, height: 400 } })
 await tab.goto(url, { timeout: 180000 })
 await tab.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
 
-/** Opens an area (none: the room as it starts), waits until the scene stops growing, and returns the unmarked drawings grouped by path, and the stand-ins. */
+/**
+ * Opens an area (none: the room as it starts), waits until the scene stops growing, and returns the unmarked drawings grouped by path, and the stand-ins.
+ * @param {string | null} area
+ */
 const census = (area) =>
   tab.evaluate(async (area) => {
     const room = window.__testRoom
-    const frames = (n) => new Promise((done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
+    const frames = (/** @type {number} */ n) => new Promise((/** @type {(value?: unknown) => void} */ done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
     const count = () => { let n = 0; room.scene.traverse(() => n++); return n }
     if (area) await room.openAreaAsync(area)
     // modules build some of their area over a few frames: wait until the scene stops growing, at most 60 s (a frame of the vehicles area takes seconds in software GL)
@@ -64,16 +70,19 @@ const census = (area) =>
       if (now === last) break
       last = now
     }
+    /** @type {Record<string, number>} */
     const unmarked = {}
+    /** @type {Set<string>} */
     const standIns = new Set()
-    const pathOf = (o) => { const names = []; for (let q = o; q && q !== room.scene; q = q.parent) names.push(q.name || `(${q.type})`); return names.reverse().join(' > ') }
-    room.scene.traverse((o) => {
+    const pathOf = (/** @type {THREE.Object3D} */ o) => { const names = []; for (let /** @type {THREE.Object3D | null} */ q = o; q && q !== room.scene; q = q.parent) names.push(q.name || `(${q.type})`); return names.reverse().join(' > ') }
+    room.scene.traverse((/** @type {ScriptSceneNode} */ o) => {
       if (!(o.isMesh || o.isLine || o.isPoints || o.isSprite)) return
-      for (let q = o; q; q = q.parent) if (q.visible === false) return
+      for (let /** @type {THREE.Object3D | null} */ q = o; q; q = q.parent) if (q.visible === false) return
+      /** @type {{ id?: string, owner?: string, standIn?: boolean } | null} */
       let origin = null
-      for (let q = o; q && !origin; q = q.parent) origin = q.userData?.kitOrigin ?? null
+      for (let /** @type {THREE.Object3D | null} */ q = o; q && !origin; q = q.parent) origin = q.userData?.kitOrigin ?? null
       if (origin) {
-        if (origin.standIn) standIns.add(origin.id ?? origin.owner)
+        if (origin.standIn) standIns.add(/** @type {string} */ (origin.id ?? origin.owner))
         return
       }
       const path = pathOf(o)

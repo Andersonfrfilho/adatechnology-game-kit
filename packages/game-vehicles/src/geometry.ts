@@ -1,9 +1,38 @@
 /** Geometry helpers: rounded boxes, lofts, creasing, subdivision, merging and convex hulls. */
+import type { BufferGeometry, Vector3 } from 'three'
+
 import type { Kit } from './types'
 import { clamp } from './util'
 import { TRI_BLOCK, boundsFromIndex, storeTriIndex, triIndexOf } from './tri-index'
 
-export function installGeometry(kit: Kit): void {
+/** One vertex of a triangle being cut: its position, then its color and uv when the geometry has them. */
+type CutVertex = number[]
+type CutTri = CutVertex[]
+/** A cut for `geo.cut`: `sel(normal, centre)` picks the triangles, `sdf(x, y, z)` < 0 is removed, the removed pieces with a `tag` come back in `.cut[tag]`. */
+export type CutTest = {
+  sel?: ((n: Vector3, ce: Vector3) => boolean) | null
+  sdf: (x: number, y: number, z: number) => number
+  tag?: string
+  /** a box (in the frame of the geometry) that holds every point with sdf < 0 */
+  bounds?: { lo: number[]; hi: number[] }
+  /** how the removed pieces are smoothed: 'none', 'later' (a crease task) or right away */
+  pieces?: string
+}
+/** what is copied as it is ([first, end) triangles) or the triangles that went through the test */
+type CutSegment = [number, number] | CutTri[]
+type Rgb = { r: number; g: number; b: number }
+/** A station of a loft: centre x and y, width, height and the superellipse power. */
+export type LoftStation = { x: number; y: number; w: number; h: number; p?: number }
+export type HullSpec = { n?: number; L: number; p?: number; beam(t: number): number; keel(t: number): number; sheer(t: number): number }
+/** A corner of a path ([x, y, radius]) or an arc ({ arc: [cx, cy, r, from, to, clockwise] }). */
+export type PathItem = { readonly arc?: readonly [number, number, number, number, number, boolean?]; readonly [i: number]: number }
+export type TaperSpec = { sx?: number | null; sz?: number | null; shift?: number }
+export type TumbleSpec = { belt: number; top: number; k: number }
+/** A side window of a truck cab (`holeQuad`): base point, the axes along and across it, the inset, length and the heights at both ends. */
+export type HoleQuadSpec = { n: number[]; pb: number[]; u: number[]; ins: number; L: number; hb: number; ht: number; bev: number }
+export type HoleSideOptions = { shrink?: number; zMin?: number; tag?: string; side?: number | null }
+
+export function installGeometry(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -11,7 +40,7 @@ export function installGeometry(kit: Kit): void {
   const lod = kit.lod
 
   /* ================= geometry ================= */
-  function roundedBoxGeometry(w: any, h: any, d: any, r: any) {
+  function roundedBoxGeometry(w: number, h: number, d: number, r: number) {
     r = Math.max(0.002, Math.min(r, w * 0.45, h * 0.45, d * 0.45))
     /* light mode: a small or hard-edged box is a plain box (12 triangles), the rest gets fewer rounding rings */
     if (lod.on && (r < 0.012 || Math.max(w, h, d) < lod.flatBoxEdge || Math.min(w, h, d) < 0.08)) return new THREE.BoxGeometry(w, h, d)
@@ -23,7 +52,7 @@ export function installGeometry(kit: Kit): void {
     const hx = w / 2 - r
     const hy = h / 2 - r
     const hz = d / 2 - r
-    function map(v: any, hi: any) {
+    function map(v: number, hi: number) {
       const i = Math.round((v + 0.5) * n)
       return i <= nb ? -hi - (r * (nb - i)) / nb : hi + (r * (i - nb - 1)) / nb
     }
@@ -43,9 +72,9 @@ export function installGeometry(kit: Kit): void {
     }
     return g
   }
-  function taper(geo: any, t: any) {
+  function taper(geo: BufferGeometry, t: TaperSpec) {
     geo.computeBoundingBox()
-    const bb = geo.boundingBox
+    const bb = geo.boundingBox!
     const h = bb.max.y - bb.min.y
     const p = geo.attributes.position
     const sx = t.sx == null ? 1 : t.sx
@@ -59,18 +88,18 @@ export function installGeometry(kit: Kit): void {
     p.needsUpdate = true
     geo.computeVertexNormals()
   }
-  function subdivide(geo: any, maxLen: any) {
+  function subdivide(geo: BufferGeometry, maxLen: number) {
     if (lod.on) maxLen = maxLen * lod.subdivisionFactor
     const src = geo.index ? geo.toNonIndexed() : geo
     const a = src.attributes.position.array
-    const out: any = []
-    function d(p: any, q: any) {
+    const out: number[] = []
+    function d(p: number[], q: number[]) {
       return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
     }
-    function m(p: any, q: any) {
+    function m(p: number[], q: number[]) {
       return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2]
     }
-    function tri(A: any, B: any, C: any, depth: any) {
+    function tri(A: number[], B: number[], C: number[], depth: number) {
       const ab = d(A, B)
       const bc = d(B, C)
       const ca = d(C, A)
@@ -102,7 +131,7 @@ export function installGeometry(kit: Kit): void {
   const latestCrease = new WeakMap<object, object>()
   /* The smoothing of `crease` as slices: `step(deadline)` works until the clock passes it and returns whether it finished.
      The normals start as flat face normals, so the mesh draws right between the slices; the end result is the same as one call. */
-  function creaseTask(geo: any, deg: any) {
+  function creaseTask(geo: BufferGeometry, deg: number) {
     if (geo.index) {
       const ni = geo.toNonIndexed()
       Object.keys(ni.attributes).forEach(function (k) {
@@ -252,17 +281,17 @@ export function installGeometry(kit: Kit): void {
     }
     return { geo: geo, step: step }
   }
-  function crease(geo: any, deg: any) {
+  function crease(geo: BufferGeometry, deg: number) {
     creaseTask(geo, deg).step(Infinity)
     return geo
   }
-  function pathShape(items: any) {
+  function pathShape(items: readonly PathItem[]) {
     const s = new THREE.Shape()
     const n = items.length
-    function sp(it: any) {
+    function sp(it: PathItem) {
       return it.arc ? [it.arc[0] + it.arc[2] * Math.cos(it.arc[3]), it.arc[1] + it.arc[2] * Math.sin(it.arc[3])] : [it[0], it[1]]
     }
-    function ep(it: any) {
+    function ep(it: PathItem) {
       return it.arc ? [it.arc[0] + it.arc[2] * Math.cos(it.arc[4]), it.arc[1] + it.arc[2] * Math.sin(it.arc[4])] : [it[0], it[1]]
     }
     const ins = []
@@ -294,7 +323,7 @@ export function installGeometry(kit: Kit): void {
     }
     return s
   }
-  function tumble(geo: any, T: any) {
+  function tumble(geo: BufferGeometry, T: TumbleSpec | null | undefined) {
     if (!T) return
     const p = geo.attributes.position
     for (let i = 0; i < p.count; i++) {
@@ -303,14 +332,14 @@ export function installGeometry(kit: Kit): void {
     }
     p.needsUpdate = true
   }
-  function loftGeometry(st: any, seg: any, pw: any, colorFn: any) {
+  function loftGeometry(st: readonly LoftStation[], seg: number, pw: number, colorFn?: ((x: number, y: number, z: number, s: LoftStation) => Rgb) | null) {
     seg = seg || 22
     pw = pw || 2
-    const pos: any = []
-    const col: any = []
+    const pos: number[] = []
+    const col: number[] = []
     const idx = []
     const ring = seg + 1
-    st.forEach(function (s: any) {
+    st.forEach(function (s) {
       for (let j = 0; j <= seg; j++) {
         const a = (j / seg) * PI * 2
         const c = Math.cos(a)
@@ -353,7 +382,7 @@ export function installGeometry(kit: Kit): void {
     g.computeVertexNormals()
     return g
   }
-  function hullGeometry(o: any, colorFn: any) {
+  function hullGeometry(o: HullSpec, colorFn?: ((x: number, y: number, z: number) => Rgb) | null) {
     const n = o.n || 18
     const m = 14
     const pos = []
@@ -402,7 +431,7 @@ export function installGeometry(kit: Kit): void {
      Triangles crossing the edge are cut along the line sdf = 0. Removed pieces with a tag come back in .cut[tag].
      A lone test may carry `bounds` { lo, hi } (a box in the frame of the geometry that holds every point with sdf < 0): triangles outside it are
      copied as they are, with no per-triangle work, and the result is the same as testing them. */
-  function cutGeometry(geo: any, tests: any) {
+  function cutGeometry(geo: BufferGeometry, tests: readonly CutTest[]) {
     const idx = geo.index ? geo.index.array : null
     const names = ['position'].concat(
       ['color', 'uv'].filter(function (n) {
@@ -417,27 +446,27 @@ export function installGeometry(kit: Kit): void {
     })
     const nv = idx ? idx.length : geo.attributes.position.count
     function readTri(f: number) {
-      const t = []
+      const t: CutTri = []
       for (let k = 0; k < 3; k++) {
         const vi = idx ? idx[f + k] : f + k
-        const v = []
+        const v: CutVertex = []
         for (let a = 0; a < names.length; a++) for (let q = 0; q < sizes[a]; q++) v.push(arrs[a][vi * sizes[a] + q])
         t.push(v)
       }
       return t
     }
-    const cut: any = {}
+    const cut: Record<string, CutTri[]> = {}
     const n = new V3()
     const e1 = new V3()
     const e2 = new V3()
     const ce = new V3()
-    function lerp(P: any, Q: any, k: any) {
+    function lerp(P: number[], Q: number[], k: number) {
       const o = new Array(P.length)
       for (let i = 0; i < P.length; i++) o[i] = P[i] + (Q[i] - P[i]) * k
       return o
     }
-    function clip(t: any, d: any, s: any) {
-      const out = []
+    function clip(t: number[][], d: number[], s: number) {
+      const out: CutTri = []
       for (let i = 0; i < 3; i++) {
         const j = (i + 1) % 3
         const di = s * d[i]
@@ -447,10 +476,10 @@ export function installGeometry(kit: Kit): void {
       }
       return out
     }
-    function fan(poly: any, arr: any) {
+    function fan(poly: CutTri, arr: CutTri[]) {
       for (let i = 1; i < poly.length - 1; i++) arr.push([poly[0], poly[i], poly[i + 1]])
     }
-    function testTri(T: any, t: any, next: any, rem: any) {
+    function testTri(T: CutTest, t: CutTri, next: CutTri[], rem: CutTri[] | null) {
       const A = t[0]
       const B = t[1]
       const C = t[2]
@@ -479,13 +508,13 @@ export function installGeometry(kit: Kit): void {
       }
     }
     /* what the result is made of, in order: [first, end) triangle ranges copied as they are, and lists of triangles that went through the test */
-    const segments: any = []
+    const segments: CutSegment[] = []
     let total = 0
     const ti = tests.length === 1 && tests[0].bounds ? triIndexOf(geo) : undefined
     if (ti) {
       const T = tests[0]
-      const lo = T.bounds.lo
-      const hi = T.bounds.hi
+      const lo = T.bounds!.lo
+      const hi = T.bounds!.hi
       const rem = T.tag ? (cut[T.tag] = cut[T.tag] || []) : null
       const boxes = ti.boxes
       const blocks = ti.blocks
@@ -510,7 +539,7 @@ export function installGeometry(kit: Kit): void {
             continue
           }
           closeRun(t)
-          const next: any = []
+          const next: CutTri[] = []
           testTri(T, readTri(t * 3), next, rem)
           if (next.length) {
             segments.push(next)
@@ -520,12 +549,12 @@ export function installGeometry(kit: Kit): void {
       }
       closeRun(ti.triangles)
     } else {
-      let tris: any = []
+      let tris: CutTri[] = []
       for (let f = 0; f < nv; f += 3) tris.push(readTri(f))
-      tests.forEach(function (T: any) {
-        const next: any = []
+      tests.forEach(function (T) {
+        const next: CutTri[] = []
         const rem = T.tag ? (cut[T.tag] = cut[T.tag] || []) : null
-        tris.forEach(function (t: any) {
+        tris.forEach(function (t) {
           testTri(T, t, next, rem)
         })
         tris = next
@@ -533,7 +562,7 @@ export function installGeometry(kit: Kit): void {
       segments.push(tris)
       total = tris.length
     }
-    function fill(segs: any, count: number, boxesOut?: Float64Array) {
+    function fill(segs: CutSegment[], count: number, boxesOut?: Float64Array) {
       const g = new THREE.BufferGeometry()
       const dst = names.map(function (_nm, a) {
         return new Float32Array(count * 3 * sizes[a])
@@ -542,24 +571,25 @@ export function installGeometry(kit: Kit): void {
         return 0
       })
       let wb = 0
-      segs.forEach(function (seg: any) {
+      segs.forEach(function (seg) {
         if (typeof seg[0] === 'number') {
+          const run = seg as [number, number]
           for (let a = 0; a < names.length; a++) {
             const size = sizes[a]
             if (!idx) {
-              dst[a].set(arrs[a].subarray(seg[0] * 3 * size, seg[1] * 3 * size), w[a])
-              w[a] += (seg[1] - seg[0]) * 3 * size
+              dst[a].set((arrs[a] as Float32Array).subarray(run[0] * 3 * size, run[1] * 3 * size), w[a])
+              w[a] += (run[1] - run[0]) * 3 * size
               continue
             }
-            for (let f = seg[0] * 3; f < seg[1] * 3; f++) for (let q = 0; q < size; q++) dst[a][w[a]++] = arrs[a][idx[f] * size + q]
+            for (let f = run[0] * 3; f < run[1] * 3; f++) for (let q = 0; q < size; q++) dst[a][w[a]++] = arrs[a][idx[f] * size + q]
           }
           if (boxesOut && ti) {
-            boxesOut.set(ti.boxes.subarray(seg[0] * 6, seg[1] * 6), wb)
-            wb += (seg[1] - seg[0]) * 6
+            boxesOut.set(ti.boxes.subarray(run[0] * 6, run[1] * 6), wb)
+            wb += (run[1] - run[0]) * 6
           }
           return
         }
-        seg.forEach(function (t: any) {
+        ;(seg as CutTri[]).forEach(function (t) {
           if (boxesOut) {
             for (let k = 0; k < 3; k++) {
               boxesOut[wb + k] = Math.fround(Math.min(t[0][k], t[1][k], t[2][k]))
@@ -581,13 +611,13 @@ export function installGeometry(kit: Kit): void {
       return g
     }
     const boxesOut = ti ? new Float64Array(total * 6) : undefined
-    const out: any = { geo: fill(segments, total, boxesOut), cut: {}, tasks: {} }
+    const out: { geo: BufferGeometry; cut: Record<string, BufferGeometry>; tasks: Record<string, ReturnType<typeof creaseTask>> } = { geo: fill(segments, total, boxesOut), cut: {}, tasks: {} }
     if (boxesOut) storeTriIndex(out.geo, boxesOut)
     Object.keys(cut).forEach(function (k) {
       const piece = fill([cut[k]], cut[k].length)
-      const mode = tests.find(function (T: any) {
+      const mode = tests.find(function (T) {
         return T.tag === k
-      }).pieces
+      })!.pieces
       if (mode === 'none') out.cut[k] = piece
       else if (mode === 'later') {
         out.cut[k] = piece
@@ -598,7 +628,7 @@ export function installGeometry(kit: Kit): void {
   }
   /* The bounding box and sphere of a geometry, the same numbers as computeBoundingBox and computeBoundingSphere; for a non-indexed geometry with a
      complete triangle index the box comes from the blocks and the vertices are read once, and nothing is redone while the positions stand. */
-  function refreshBounds(geo: any) {
+  function refreshBounds(geo: BufferGeometry) {
     const found = boundsFromIndex(geo)
     if (!found) {
       geo.computeBoundingSphere()
@@ -625,10 +655,10 @@ export function installGeometry(kit: Kit): void {
   }
   const boundsDone = new WeakMap<object, number>()
   /* Merges geometries (already transformed) into one, for repeated parts such as track links and honeycomb. */
-  function mergeGeometries(list: any) {
-    const pos: any = []
-    const nor: any = []
-    list.forEach(function (g: any) {
+  function mergeGeometries(list: readonly BufferGeometry[]) {
+    const pos: number[] = []
+    const nor: number[] = []
+    list.forEach(function (g) {
       const n = g.index ? g.toNonIndexed() : g
       if (!n.attributes.normal) n.computeVertexNormals()
       const pa = n.attributes.position.array
@@ -644,9 +674,9 @@ export function installGeometry(kit: Kit): void {
     return g
   }
   /* Normalised 0..1 UV projecting onto the two axes of greatest extent (or onto the given axes, e.g. "xy"). */
-  function uvProject(geo: any, axes: any) {
+  function uvProject(geo: BufferGeometry, axes?: string) {
     geo.computeBoundingBox()
-    const bb = geo.boundingBox
+    const bb = geo.boundingBox!
     const sz = new V3().subVectors(bb.max, bb.min)
     const ax = axes
       ? [axes.charCodeAt(0) - 120, axes.charCodeAt(1) - 120]
@@ -681,18 +711,18 @@ export function installGeometry(kit: Kit): void {
     uvProject: uvProject,
   }
   /* Ready-made holes for shell({ holes }) and geo.cut */
-  kit.holeTop = function (x0: any, x1: any, z: any, yMin: any, tag: any) {
+  kit.holeTop = function (x0: number, x1: number, z: number, yMin: number, tag: string) {
     return {
       tag: tag,
-      sel: function (n: any, ce: any) {
+      sel: function (n: Vector3, ce: Vector3) {
         return n.y > 0.3 && ce.y > yMin
       },
-      sdf: function (x: any, y: any, zz: any) {
+      sdf: function (x: number, y: number, zz: number) {
         return Math.max(x0 - x, x - x1, Math.abs(zz) - z)
       },
     }
   }
-  kit.holeSide = function (poly: any, o: any) {
+  kit.holeSide = function (poly: readonly number[][], o?: HoleSideOptions | null) {
     o = o || {}
     let area = 0
     for (let i = 0; i < poly.length; i++) {
@@ -701,7 +731,7 @@ export function installGeometry(kit: Kit): void {
       area += a[0] * b[1] - b[0] * a[1]
     }
     const sg = area > 0 ? 1 : -1
-    const E2 = poly.map(function (a: any, i: any) {
+    const E2 = poly.map(function (a, i) {
       const b = poly[(i + 1) % poly.length]
       const dx = b[0] - a[0]
       const dy = b[1] - a[1]
@@ -712,10 +742,10 @@ export function installGeometry(kit: Kit): void {
     const zMin = o.zMin || 0
     return {
       tag: o.tag,
-      sel: function (n: any, ce: any) {
+      sel: function (n: Vector3, ce: Vector3) {
         return Math.abs(n.z) > 0.5 && Math.abs(ce.z) >= zMin && (o.side == null || Math.sign(ce.z) === o.side)
       },
-      sdf: function (x: any, y: any) {
+      sdf: function (x: number, y: number) {
         let d = -1e9
         for (let i = 0; i < E2.length; i++) {
           const e = E2[i]
@@ -725,13 +755,13 @@ export function installGeometry(kit: Kit): void {
       },
     }
   }
-  kit.holeQuad = function (q: any, margin: any) {
+  kit.holeQuad = function (q: HoleQuadSpec, margin: number) {
     margin = margin || 0
     return {
-      sel: function (n: any) {
+      sel: function (n: Vector3) {
         return n.x * q.n[0] + n.y * q.n[1] > 0.55
       },
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: number, y: number, z: number) {
         const rx = x - q.pb[0]
         const ry = y - q.pb[1]
         const s = rx * q.u[0] + ry * q.u[1]
@@ -744,16 +774,16 @@ export function installGeometry(kit: Kit): void {
       },
     }
   }
-  kit.holeBox = function (min: any, max: any, sel: any, tag: any) {
+  kit.holeBox = function (min: number[], max: number[], sel: ((n: Vector3, ce: Vector3) => boolean) | null | undefined, tag: string) {
     return {
       tag: tag,
       sel: sel || null,
-      sdf: function (x: any, y: any, z: any) {
+      sdf: function (x: number, y: number, z: number) {
         return Math.max(min[0] - x, x - max[0], min[1] - y, y - max[1], min[2] - z, z - max[2])
       },
     }
   }
-  kit.holeWhere = function (sel: any, tag: any) {
+  kit.holeWhere = function (sel: (n: Vector3, ce: Vector3) => boolean, tag: string) {
     return {
       tag: tag,
       sel: sel,
@@ -763,5 +793,9 @@ export function installGeometry(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { roundedBoxGeometry, taper, subdivide, crease, creaseTask, refreshBounds, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject })
+  const shared = { roundedBoxGeometry, taper, subdivide, crease, creaseTask, refreshBounds, pathShape, tumble, loftGeometry, hullGeometry, cutGeometry, mergeGeometries, uvProject }
+
+  Object.assign(I, shared)
+
+  return shared
 }

@@ -10,9 +10,38 @@ export interface SystemsText {
   climate: string
   demist: string
   wiperModes: Record<'off' | 'intermittent' | 'slow' | 'fast', string>
-  refused: Record<'battery_flat' | 'too_slow' | 'locked' | 'missing', string>
-  events: Record<'stall' | 'out_of_fuel' | 'bogged' | 'aquaplaning' | 'battery_flat' | 'overheating' | 'seized' | 'spare_fitted' | 'no_spare' | 'cruise_cancelled', string>
-  actions: Record<'puncture' | 'fit_spare' | 'refuel' | 'drain_battery' | 'jump_start' | 'break_radiator' | 'empty_tank' | 'remote_lock' | 'remote_unlock' | 'force_door' | 'crash_wall' | 'park_behind', string>
+  refused: Record<'battery_flat' | 'too_slow' | 'locked' | 'missing' | 'no_key' | 'no_siren', string>
+  events: Record<'stall' | 'out_of_fuel' | 'bogged' | 'aquaplaning' | 'battery_flat' | 'overheating' | 'seized' | 'spare_fitted' | 'no_spare' | 'cruise_cancelled' | 'hotwire_started' | 'hotwire_joined', string>
+  actions: Record<
+    | 'puncture'
+    | 'fit_spare'
+    | 'refuel'
+    | 'drain_battery'
+    | 'jump_start'
+    | 'break_radiator'
+    | 'empty_tank'
+    | 'remote_lock'
+    | 'remote_unlock'
+    | 'force_door'
+    | 'crash_wall'
+    | 'park_behind'
+    | 'take_key'
+    | 'cold_rain'
+    | 'glovebox_contents'
+    | 'trunk_contents'
+    | 'take_from_trunk',
+    string
+  >
+  /** The siren, the beacon and the glovebox switches as the log shows them. */
+  siren: string
+  sirenModes: Record<'off' | 'wail' | 'yelp', string>
+  beacon: string
+  glovebox: string
+  lid: Record<'open' | 'shut', string>
+  storage: { names: Record<'glovebox' | 'trunk', string>; empty: string; shut: string; list: string; none: string; taken: string; ground: string }
+  fog: { misted: string; clear: string; weather: string; fair: string; metric: string }
+  keyTaken: string
+  keyBack: string
   parking: Record<'placed' | 'none', string>
   track: string
   adjust: Record<'seat_forward' | 'seat_height' | 'mirror_left' | 'mirror_right', string>
@@ -24,7 +53,7 @@ export interface SystemsText {
 
 export const SYSTEMS_TEXT: Record<string, SystemsText> = {
   'pt-BR': {
-    keys: 'C embreagem (câmbio manual) · X lampejo do farol alto · Z esguicho do limpador · 7 modo econômico/normal/esporte · 8 controle de tração · 9 ABS · 0 piloto automático · - ar-condicionado · = desembaçador · ] troca a faixa do rádio ou da fita',
+    keys: 'C embreagem (câmbio manual) · X lampejo do farol alto · Z esguicho do limpador · 7 modo econômico/normal/esporte · 8 controle de tração · 9 ABS · 0 piloto automático · - ar-condicionado · = desembaçador · ] troca a faixa do rádio ou da fita · ; sirene · \' giroflex (veículo de emergência) · / porta-luvas · sem a chave, segure I: ligação direta',
     profile: 'Modo de condução',
     profiles: { eco: 'econômico', normal: 'normal', sport: 'esporte' },
     traction: 'Controle de tração',
@@ -34,7 +63,7 @@ export const SYSTEMS_TEXT: Record<string, SystemsText> = {
     climate: 'Ar-condicionado',
     demist: 'Desembaçador',
     wiperModes: { off: 'desligado', intermittent: 'intermitente', slow: 'lento', fast: 'rápido' },
-    refused: { battery_flat: 'Bateria descarregada: o motor de partida não gira', too_slow: 'Piloto automático só acima de 30 km/h', locked: 'Porta travada', missing: 'Este veículo não tem essa peça' },
+    refused: { battery_flat: 'Bateria descarregada: o motor de partida não gira', too_slow: 'Piloto automático só acima de 30 km/h', locked: 'Porta travada', missing: 'Este veículo não tem essa peça', no_key: 'Sem a chave: segure I para fazer a ligação direta', no_siren: 'Este veículo não tem sirene nem giroflex' },
     events: {
       stall: 'O motor morreu',
       out_of_fuel: 'Acabou o combustível',
@@ -46,8 +75,19 @@ export const SYSTEMS_TEXT: Record<string, SystemsText> = {
       spare_fitted: 'Estepe colocado',
       no_spare: 'Não há estepe',
       cruise_cancelled: 'Piloto automático desligado',
+      hotwire_started: 'Fios descascados sob a coluna: continue segurando I',
+      hotwire_joined: 'Ligação direta feita: a ignição pegou e o motor de partida gira',
     },
-    actions: { puncture: 'Furar pneu (dianteiro esquerdo)', fit_spare: 'Trocar pelo estepe', refuel: 'Abastecer', drain_battery: 'Descarregar bateria', jump_start: 'Chupeta (carregar bateria)', break_radiator: 'Furar o radiador', empty_tank: 'Deixar o tanque na reserva', remote_lock: 'Controle: travar (arma o alarme)', remote_unlock: 'Controle: destravar', force_door: 'Forçar a porta do motorista', crash_wall: 'Bater no muro (parada seca)', park_behind: 'Estacionar um carro atrás (sensor de ré)' },
+    actions: { puncture: 'Furar pneu (dianteiro esquerdo)', fit_spare: 'Trocar pelo estepe', refuel: 'Abastecer', drain_battery: 'Descarregar bateria', jump_start: 'Chupeta (carregar bateria)', break_radiator: 'Furar o radiador', empty_tank: 'Deixar o tanque na reserva', remote_lock: 'Controle: travar (arma o alarme)', remote_unlock: 'Controle: destravar', force_door: 'Forçar a porta do motorista', crash_wall: 'Bater no muro (parada seca)', park_behind: 'Estacionar um carro atrás (sensor de ré)', take_key: 'Tirar a chave (ligação direta) / devolver', cold_rain: 'Tempo: frio e chuva / bom', glovebox_contents: 'Ver o porta-luvas', trunk_contents: 'Ver o porta-malas', take_from_trunk: 'Tirar um item do porta-malas para o chão' },
+    siren: 'Sirene',
+    sirenModes: { off: 'desligada', wail: 'contínua', yelp: 'rápida (cruzamento)' },
+    beacon: 'Giroflex',
+    glovebox: 'Porta-luvas',
+    lid: { open: 'aberto', shut: 'fechado' },
+    storage: { names: { glovebox: 'Porta-luvas', trunk: 'Porta-malas' }, empty: '{0}: vazio', shut: '{0} fechado: abra antes (porta-luvas com / sentado, porta-malas com 6)', list: '{0} ({1} kg): {2}', none: 'Este veículo não tem {0}', taken: '{0} tirado do porta-malas e posto no chão', ground: '{0} tirado do porta-malas (sem catálogo de itens nesta sala para pô-lo no chão)' },
+    fog: { misted: 'O para-brisa embaçou por dentro: = desembaçador, ar-condicionado ou um vidro aberto', clear: 'Para-brisa desembaçado', weather: 'Lá fora: 8 °C e chuva', fair: 'Lá fora: 25 °C, sem chuva', metric: 'Vidro embaçado' },
+    keyTaken: 'Sem a chave no contato: segure I para a ligação direta',
+    keyBack: 'Chave de volta no contato',
     parking: { placed: 'Carro parado 3 m atrás: dê ré e escute o sensor', none: 'Sem catálogo de veículos nesta sala: o sensor não tem o que ver' },
     track: 'faixa {0}',
     adjust: { seat_forward: 'Banco: frente/trás (m)', seat_height: 'Banco: altura (m)', mirror_left: 'Retrovisor esquerdo: ângulo', mirror_right: 'Retrovisor direito: ângulo' },
@@ -57,7 +97,7 @@ export const SYSTEMS_TEXT: Record<string, SystemsText> = {
     done: { puncture: 'Pneu dianteiro esquerdo furado', refuel: 'Tanque cheio', drain_battery: 'Bateria quase sem carga', jump_start: 'Bateria carregada', break_radiator: 'Radiador furado: o motor vai esquentar', empty_tank: 'Tanque na reserva' },
   },
   en: {
-    keys: 'C clutch (manual gearbox) · X flash the high beam · Z washer · 7 eco/normal/sport · 8 traction control · 9 ABS · 0 cruise control · - air conditioning · = demister · ] next radio or tape track',
+    keys: "C clutch (manual gearbox) · X flash the high beam · Z washer · 7 eco/normal/sport · 8 traction control · 9 ABS · 0 cruise control · - air conditioning · = demister · ] next radio or tape track · ; siren · ' beacon (emergency vehicle) · / glovebox · without the key, hold I: hotwire",
     profile: 'Drive profile',
     profiles: { eco: 'eco', normal: 'normal', sport: 'sport' },
     traction: 'Traction control',
@@ -67,7 +107,7 @@ export const SYSTEMS_TEXT: Record<string, SystemsText> = {
     climate: 'Air conditioning',
     demist: 'Demister',
     wiperModes: { off: 'off', intermittent: 'intermittent', slow: 'slow', fast: 'fast' },
-    refused: { battery_flat: 'Flat battery: the starter does not turn', too_slow: 'Cruise control only above 30 km/h', locked: 'The door is locked', missing: 'This vehicle has no such part' },
+    refused: { battery_flat: 'Flat battery: the starter does not turn', too_slow: 'Cruise control only above 30 km/h', locked: 'The door is locked', missing: 'This vehicle has no such part', no_key: 'No key: hold I to hotwire it', no_siren: 'This vehicle has no siren or beacon' },
     events: {
       stall: 'The engine stalled',
       out_of_fuel: 'Out of fuel',
@@ -79,8 +119,19 @@ export const SYSTEMS_TEXT: Record<string, SystemsText> = {
       spare_fitted: 'Spare tyre fitted',
       no_spare: 'No spare tyre left',
       cruise_cancelled: 'Cruise control off',
+      hotwire_started: 'Wires stripped under the column: keep holding I',
+      hotwire_joined: 'Hotwired: the ignition is live and the starter turns',
     },
-    actions: { puncture: 'Puncture a tyre (front left)', fit_spare: 'Fit the spare', refuel: 'Refuel', drain_battery: 'Drain the battery', jump_start: 'Jump start (charge the battery)', break_radiator: 'Puncture the radiator', empty_tank: 'Leave the tank on reserve', remote_lock: 'Remote: lock (arms the alarm)', remote_unlock: 'Remote: unlock', force_door: "Force the driver's door", crash_wall: 'Hit a wall (dead stop)', park_behind: 'Park a car behind (rear sensor)' },
+    actions: { puncture: 'Puncture a tyre (front left)', fit_spare: 'Fit the spare', refuel: 'Refuel', drain_battery: 'Drain the battery', jump_start: 'Jump start (charge the battery)', break_radiator: 'Puncture the radiator', empty_tank: 'Leave the tank on reserve', remote_lock: 'Remote: lock (arms the alarm)', remote_unlock: 'Remote: unlock', force_door: "Force the driver's door", crash_wall: 'Hit a wall (dead stop)', park_behind: 'Park a car behind (rear sensor)', take_key: 'Take the key out (hotwire) / give it back', cold_rain: 'Weather: cold and rain / fair', glovebox_contents: 'Look in the glovebox', trunk_contents: 'Look in the trunk', take_from_trunk: 'Take an item out of the trunk to the ground' },
+    siren: 'Siren',
+    sirenModes: { off: 'off', wail: 'wail', yelp: 'yelp (junction)' },
+    beacon: 'Beacon',
+    glovebox: 'Glovebox',
+    lid: { open: 'open', shut: 'shut' },
+    storage: { names: { glovebox: 'Glovebox', trunk: 'Trunk' }, empty: '{0}: empty', shut: '{0} shut: open it first (glovebox with / while seated, trunk with 6)', list: '{0} ({1} kg): {2}', none: 'This vehicle has no {0}', taken: '{0} taken out of the trunk and put on the ground', ground: '{0} taken out of the trunk (no item catalogue in this room to put it on the ground)' },
+    fog: { misted: 'The windshield misted up inside: = demister, air conditioning or a window down', clear: 'Windshield clear', weather: 'Outside: 8 °C and rain', fair: 'Outside: 25 °C, no rain', metric: 'Glass misted' },
+    keyTaken: 'No key in the ignition: hold I to hotwire',
+    keyBack: 'Key back in the ignition',
     parking: { placed: 'A car parked 3 m behind: reverse and listen to the sensor', none: 'No vehicle catalogue in this room: the sensor has nothing to see' },
     track: 'track {0}',
     adjust: { seat_forward: 'Seat: forward/back (m)', seat_height: 'Seat: height (m)', mirror_left: 'Left mirror: angle', mirror_right: 'Right mirror: angle' },

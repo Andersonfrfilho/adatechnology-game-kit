@@ -1,8 +1,11 @@
 /** Per-zone damage for separate parts: lights, wheels, glass, internals, rotors and landing gear. */
-import type { Kit } from './types'
+import type { CanvasTexture, Material, Mesh, MeshStandardMaterial, Object3D, Sprite, Vector3 } from 'three'
+
+import type { DamageZone, VehicleLamp } from './api'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, hash, rng } from './util'
 
-export function installDamageParts(kit: Kit): void {
+export function installDamageParts(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -11,20 +14,20 @@ export function installDamageParts(kit: Kit): void {
   const { MATERIALS } = I
 
   /* ---- glass ---- */
-  function glassPt(c: any, g: any, rnd: any) {
+  function glassPt(c: BuildContext, g: Mesh, rnd: () => number) {
     g.geometry.computeBoundingBox()
-    const bb = g.geometry.boundingBox.clone().applyMatrix4(g.matrix)
+    const bb = g.geometry.boundingBox!.clone().applyMatrix4(g.matrix)
     const s = bb.getSize(new V3())
     return new V3(bb.min.x + s.x * (0.3 + rnd() * 0.4), bb.min.y + s.y * (0.3 + rnd() * 0.4), bb.min.z + s.z * (0.3 + rnd() * 0.4))
   }
-  function glassIn(c: any, g: any) {
+  function glassIn(c: BuildContext, g: Mesh) {
     const p = glassPt(c, g, function () {
       return 0.5
     })
     const m = c.meta
     return new V3((m.front + m.rear) / 2 - p.x, 0, -p.z).normalize()
   }
-  function glassBand(c: any, z: any, g: any, b: any) {
+  function glassBand(c: BuildContext, z: DamageZone, g: Mesh, b: number) {
     const G = g.userData.glass
     if (!G || !g.parent) return
     const R = c.rand
@@ -44,13 +47,13 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- headlights and taillights ---- */
-  const crackLensCache = new Map()
-  let crackTextureCache: any = null
+  const crackLensCache = new Map<Material, Material>()
+  let crackTextureCache: CanvasTexture | null = null
   function crackTexture() {
     if (crackTextureCache) return crackTextureCache
     const cv = document.createElement('canvas')
     cv.width = cv.height = 128
-    const x: any = cv.getContext('2d')
+    const x = cv.getContext('2d') as CanvasRenderingContext2D
     const r = rng(77)
     x.fillStyle = '#ffffff'
     x.fillRect(0, 0, 128, 128)
@@ -77,22 +80,22 @@ export function installDamageParts(kit: Kit): void {
     crackTextureCache = new THREE.CanvasTexture(cv)
     return crackTextureCache
   }
-  function crackLens(mat: any) {
-    if (crackLensCache.has(mat)) return crackLensCache.get(mat)
-    const m2 = mat.clone()
+  function crackLens(mat: Material): Material {
+    if (crackLensCache.has(mat)) return crackLensCache.get(mat)!
+    const m2 = mat.clone() as MeshStandardMaterial
     m2.map = crackTexture()
     m2.needsUpdate = true
     crackLensCache.set(mat, m2)
     return m2
   }
-  function lightBand(c: any, z: any, Lt: any, b: any) {
+  function lightBand(c: BuildContext, z: DamageZone, Lt: VehicleLamp | null | undefined, b: number) {
     if (!Lt || Lt.broken === 'gone') return
     const dir = new V3(Lt.kind === 'taillight' ? 1 : -1, 0, 0)
     if (b === 1) {
-      Lt.lens.forEach(function (m: any) {
+      Lt.lens.forEach(function (m: Mesh) {
         if (m.material && !Array.isArray(m.material)) m.material = crackLens(m.material)
       })
-      ;(Lt.halo || []).forEach(function (h: any) {
+      ;(Lt.halo || []).forEach(function (h: Sprite) {
         h.material = h.material.clone()
         h.material.opacity *= 0.55
       })
@@ -108,7 +111,7 @@ export function installDamageParts(kit: Kit): void {
       if (b === 4) {
         if (Lt.group) Lt.group.visible = false
         else
-          Lt.lens.concat(Lt.inner).forEach(function (m: any) {
+          Lt.lens.concat(Lt.inner).forEach(function (m: Object3D) {
             m.visible = false
           })
         Lt.broken = 'gone'
@@ -116,20 +119,21 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- wheels: flat flattens the bottom of the tyre; without a tyre, the wheel sits on its rim ---- */
-  function tireMeshes(w: any) {
-    const out: any = []
-    w.traverse(function (o: any) {
+  function tireMeshes(w: Object3D): Mesh[] {
+    const out: Mesh[] = []
+    w.traverse(function (node) {
+      const o = node as Mesh
       if (o.isMesh && o.material === MATERIALS.rubber) out.push(o)
     })
     return out
   }
-  function flattenTire(w: any, k: any) {
+  function flattenTire(w: Object3D, k: number) {
     const r = w.userData.r || 0.3
     const yb = -r * (1 - k)
     const v = new V3()
     const M = new THREE.Matrix4()
     const Mi = new THREE.Matrix4()
-    tireMeshes(w).forEach(function (t: any) {
+    tireMeshes(w).forEach(function (t) {
       if (!t.userData.zCloned) {
         t.geometry = t.geometry.clone()
         t.userData.zCloned = true
@@ -153,7 +157,7 @@ export function installDamageParts(kit: Kit): void {
       t.geometry.computeBoundingSphere()
     })
   }
-  function wheelBand(c: any, z: any, w: any, b: any) {
+  function wheelBand(c: BuildContext, z: DamageZone, w: Object3D | null | undefined, b: number) {
     if (!w || !w.parent) return
     const r = w.userData.r || 0.3
     const s = w.position.z >= 0 ? 1 : -1
@@ -177,14 +181,15 @@ export function installDamageParts(kit: Kit): void {
       c.zoneDrops.push({ x: w.position.x, z: w.position.z, d: r * 0.24 })
     } else if (b === 4) {
       let rr = 0
-      w.traverse(function (o: any) {
+      w.traverse(function (node) {
+        const o = node as Mesh
         if (!o.isMesh || o.material === MATERIALS.rubber) return
         if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere()
-        const cc = o.geometry.boundingSphere.center.clone().applyMatrix4(o.matrix)
-        rr = Math.max(rr, Math.hypot(cc.x, cc.y) + o.geometry.boundingSphere.radius * 0.7)
+        const cc = o.geometry.boundingSphere!.center.clone().applyMatrix4(o.matrix)
+        rr = Math.max(rr, Math.hypot(cc.x, cc.y) + o.geometry.boundingSphere!.radius * 0.7)
       })
       rr = clamp(rr || r * 0.62, r * 0.4, r * 0.85)
-      tireMeshes(w).forEach(function (t: any) {
+      tireMeshes(w).forEach(function (t) {
         t.visible = false
       })
       c.zoneDrops.push({ x: w.position.x, z: w.position.z, d: r - rr })
@@ -199,17 +204,17 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- aircraft landing gear: dented sags, destroyed breaks the front leg (nose on the ground), torn off = belly landing ---- */
-  function gearBand(c: any, z: any, b: any) {
+  function gearBand(c: BuildContext, z: DamageZone, b: number) {
     const R = c.rand
-    const ws = z.wheels.filter(function (w: any) {
+    const ws = z.wheels.filter(function (w) {
       return w.parent
     })
-    const objs = z.owned.filter(function (o: any) {
+    const objs = z.owned.filter(function (o) {
       return o.parent
     })
     if (!ws.length) return
     if (b <= 2) {
-      ws.forEach(function (w: any) {
+      ws.forEach(function (w) {
         wheelBand(c, z, w, b)
       })
       return
@@ -217,19 +222,19 @@ export function installDamageParts(kit: Kit): void {
     if (b === 3) {
       const xmax = Math.max.apply(
         null,
-        ws.map(function (w: any) {
+        ws.map(function (w) {
           return w.position.x
         }),
       )
-      const front = ws.filter(function (w: any) {
+      const front = ws.filter(function (w) {
         return w.position.x > xmax - 0.3
       })
-      ws.forEach(function (w: any) {
+      ws.forEach(function (w) {
         if (front.indexOf(w) < 0) wheelBand(c, z, w, 2)
       })
-      front.forEach(function (w: any) {
+      front.forEach(function (w) {
         const r = w.userData.r || 0.3
-        const near = objs.filter(function (o: any) {
+        const near = objs.filter(function (o) {
           const p = o.position
           const bb = I.localBox(c, o, I.worldInverseOf(c))
           const cen = bb.getCenter(new V3())
@@ -238,7 +243,7 @@ export function installDamageParts(kit: Kit): void {
         })
         const inv = I.worldInverseOf(c)
         const top = new V3(w.position.x, w.position.y + r, w.position.z)
-        near.forEach(function (o: any) {
+        near.forEach(function (o) {
           const bb = I.localBox(c, o, inv)
           top.y = Math.max(top.y, bb.max.y)
         })
@@ -252,14 +257,14 @@ export function installDamageParts(kit: Kit): void {
       return
     }
     /* torn off: the gear disappears and the aircraft settles on its belly, slightly nose down */
-    ws.concat(objs).forEach(function (o: any) {
+    ws.concat(objs).forEach(function (o) {
       I.hideObj(c, o)
     })
     /* propeller stopped horizontally (hit the ground and the engine died) */
-    I.partsOf(c, 'propeller').forEach(function (hp: any) {
+    I.partsOf(c, 'propeller').forEach(function (hp) {
       const o = hp.obj
       if (!o || !o.parent) return
-      c.spin = c.spin.filter(function (q: any) {
+      c.spin = c.spin.filter(function (q) {
         return q.o !== o
       })
       let best = 0
@@ -280,9 +285,9 @@ export function installDamageParts(kit: Kit): void {
     const inv2 = I.worldInverseOf(c)
     let lo = 1e9
     let xs = 0
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.isSprite || !o.geometry || !o.geometry.attributes.position) return
-      for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
+      for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
       const bb = I.localBox(c, o, inv2)
       if (bb.min.y < lo) {
         lo = bb.min.y
@@ -301,7 +306,7 @@ export function installDamageParts(kit: Kit): void {
     c.effects.add(mk)
   }
   /* ---- internal zones: engine, radiator, tank, battery, underbody ---- */
-  function internalBand(c: any, z: any, b: any) {
+  function internalBand(c: BuildContext, z: DamageZone, b: number) {
     const m = c.meta
     const p = z.pos ? z.pos.clone() : I.boxCenter(z.box)
     const sub = z.sub || z.id
@@ -350,7 +355,7 @@ export function installDamageParts(kit: Kit): void {
     }
   }
   /* ---- hood ---- */
-  function hoodBand(c: any, z: any, b: any, dirty: any) {
+  function hoodBand(c: BuildContext, z: DamageZone, b: number, dirty: Set<Object3D>) {
     const H = c.hood && z.owned.indexOf(c.hood.piv) >= 0 ? c.hood : null
     if (!H) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -366,7 +371,7 @@ export function installDamageParts(kit: Kit): void {
     }
     if (b === 4) {
       H.piv.visible = false
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.kind === 'hood') p.done = true
       })
       c.hood = null
@@ -389,7 +394,8 @@ export function installDamageParts(kit: Kit): void {
       const xf = H.x0 + (H.x1 - H.x0) * (0.5 + R() * 0.1)
       const k = 0.55 + R() * 0.2
       const v = new V3()
-      H.piv.children.forEach(function (msh: any) {
+      H.piv.children.forEach(function (node: Object3D) {
+        const msh = node as Mesh
         if (!msh.isMesh) return
         msh.updateMatrix()
         const M = msh.matrix
@@ -414,7 +420,7 @@ export function installDamageParts(kit: Kit): void {
     } else I.zoneDecals(c, z, { deep: 3, chip: 3 }, I.zoneCands(c, z, I.worldInverseOf(c)))
   }
   /* ---- bumper ---- */
-  function bumperBand(c: any, z: any, b: any, dirty: any) {
+  function bumperBand(c: BuildContext, z: DamageZone, b: number, dirty: Set<Object3D>) {
     const o = z.owned[0]
     if (!o || !o.parent) return I.panelBand(c, z, b, dirty)
     const R = c.rand
@@ -455,13 +461,13 @@ export function installDamageParts(kit: Kit): void {
     o.rotation.y += (R() - 0.5) * 0.5
     o.rotation.x += (R() - 0.5) * 0.12
     o.userData.noFollow = true
-    c.parts.forEach(function (q: any) {
+    c.parts.forEach(function (q) {
       if (q.obj === o) q.done = true
     })
   }
   /* ---- loose parts (bike, rotor, weapon, skid) ---- */
-  function partBand(c: any, z: any, b: any, dirty: any) {
-    const objs = z.owned.filter(function (o: any) {
+  function partBand(c: BuildContext, z: DamageZone, b: number, dirty: Set<Object3D>) {
+    const objs = z.owned.filter(function (o) {
       return o.parent
     })
     if (!objs.length) return I.panelBand(c, z, b, dirty)
@@ -484,24 +490,24 @@ export function installDamageParts(kit: Kit): void {
       return
     }
     if (z.kindPart && b >= 2 && b <= 3) {
-      objs.forEach(function (o: any) {
-        o.children.forEach(function (ch: any, i: any) {
+      objs.forEach(function (o) {
+        o.children.forEach(function (ch: SceneNode, i: number) {
           if (ch.type === 'Group' || ch.isMesh) {
             ch.rotation.z += (-0.12 - hash(i, 1, 1) * 0.2) * (b - 1)
             ch.rotation.x += (i % 2 ? 0.15 : -0.15) * (b - 1)
           }
         })
       })
-      c.spin = c.spin.filter(function (s: any) {
+      c.spin = c.spin.filter(function (s) {
         return objs.indexOf(s.o) < 0
       })
       return
     }
     if (b === 4) {
-      objs.forEach(function (o: any) {
+      objs.forEach(function (o) {
         I.hideObj(c, o)
       })
-      c.spin = c.spin.filter(function (s: any) {
+      c.spin = c.spin.filter(function (s) {
         return objs.indexOf(s.o) < 0
       })
       return
@@ -522,13 +528,13 @@ export function installDamageParts(kit: Kit): void {
     const piv = I.pivotOf(c, objs, at)
     piv.quaternion.setFromAxisAngle(axis, th)
     piv.position.y -= b === 3 ? 0.03 : 0.01
-    c.spin = c.spin.filter(function (s: any) {
+    c.spin = c.spin.filter(function (s) {
       return objs.indexOf(s.o) < 0
     })
   }
   /* bent tail cone: everything behind the crease (cone, fin, tail rotor) rotates downward around it.
      Meshes that cross the crease bend per vertex; whole parts behind it rotate as a rigid body. */
-  function bendAft(c: any, z: any, kx: any, ky: any, ang: any, dirty: any) {
+  function bendAft(c: BuildContext, z: DamageZone, kx: number, ky: number, ang: number, dirty: Set<Object3D>) {
     const inv = I.worldInverseOf(c)
     const q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 0, 1), ang)
     const K = new V3(kx, ky, 0)
@@ -536,7 +542,7 @@ export function installDamageParts(kit: Kit): void {
     const rel = new THREE.Matrix4()
     const irel = new THREE.Matrix4()
     const blend = 0.25
-    function rot(p: any, k: any) {
+    function rot(p: Vector3, k: number) {
       const a2 = ang * k
       const cs = Math.cos(a2)
       const sn = Math.sin(a2)
@@ -545,9 +551,9 @@ export function installDamageParts(kit: Kit): void {
       p.x = kx + dx * cs - dy * sn
       p.y = ky + dx * sn + dy * cs
     }
-    const rigid: any = []
-    const verts: any = []
-    c.vehicle.children.forEach(function (o: any) {
+    const rigid: Object3D[] = []
+    const verts: Mesh[] = []
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (o.userData.decal || o.isSprite || !o.visible) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z && ow.id !== 'rotor_cauda' && I.boxCenter(ow.box).x > kx) return
@@ -555,15 +561,15 @@ export function installDamageParts(kit: Kit): void {
       if (bb.isEmpty() || bb.min.x >= kx) return
       if (bb.max.x < kx - 0.02 || !o.isMesh) {
         if (bb.max.x < kx + 0.3) rigid.push(o)
-      } else verts.push(o)
+      } else verts.push(o as Mesh)
     })
-    rigid.forEach(function (o: any) {
+    rigid.forEach(function (o) {
       const p = o.position.clone()
       rot(p, 1)
       o.position.copy(p)
       o.quaternion.premultiply(q)
     })
-    verts.forEach(function (msh: any) {
+    verts.forEach(function (msh) {
       if (!msh.geometry || !msh.geometry.attributes.position) return
       if (!msh.userData.zCloned && c.deform.indexOf(msh) < 0) {
         msh.geometry = msh.geometry.clone()
@@ -590,7 +596,7 @@ export function installDamageParts(kit: Kit): void {
     void K
   }
 
-  Object.assign(I, {
+  const shared = {
     glassPt,
     glassIn,
     glassBand,
@@ -608,5 +614,9 @@ export function installDamageParts(kit: Kit): void {
     bumperBand,
     partBand,
     bendAft,
-  })
+  }
+
+  Object.assign(I, shared)
+
+  return shared
 }

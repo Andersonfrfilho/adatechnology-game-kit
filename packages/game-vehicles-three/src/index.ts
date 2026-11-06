@@ -10,7 +10,7 @@ export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, DEFAULT_TEST_WRECKS, l
 /** @deprecated import from '@adatechnology/game-vehicles-three/testing' */
 export type { DocumentLike, EffectsLike, ModuleRoomLike, VehicleEffectIds, VehicleSoundIds, VehiclesContext, VehicleWreck, VehiclesRoom, VehiclesTestFleet, VehiclesTestOptions } from './testing'
 export { VEHICLE_LOD_DISTANCE, createVehicleLod } from './vehicle-lod'
-export type { VehicleLod } from './vehicle-lod'
+export type { VehicleLod, VehicleLodKit } from './vehicle-lod'
 export { createProvingModule, loadProvingModule, PROVING_AREA_ID, PROVING_TEXT } from './test-area/proving'
 export type { ProvingModuleOptions, ProvingRoomLike, ProvingText } from './test-area/proving'
 export { createVehicleLamps, LAMP_RULES } from './lamps'
@@ -21,3 +21,5 @@ export type { BodyEvent, BodyThree, VehicleBody, VehicleBodyOptions, WindowId } 
 export type { LampSwitch, VehicleLamps } from './lamps'
 export { createVehicleDashboard, DASHBOARD_LOOK } from './dashboard'
 export type { DashboardOptions, DashboardReading, VehicleDashboard } from './dashboard'
+export { createWindshieldMist, MIST_RULES } from './windshield-mist'
+export type { MistThree, WindshieldMist } from './windshield-mist'

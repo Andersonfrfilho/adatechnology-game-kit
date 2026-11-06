@@ -9,7 +9,7 @@ import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
-const pkg = (name) => join(root, 'packages', name)
+const pkg = (/** @type {string} */ name) => join(root, 'packages', name)
 
 function findEsbuild() {
   const store = join(root, 'node_modules/.pnpm')
@@ -30,6 +30,9 @@ const threeDir = join(pkg('game-test-room'), 'node_modules/three')
 
 // Two bundles of the same src/main.js: the BARE room (an empty room; the page the other test areas load their module into, kept in base/)
 // and the default page (the same room that loads the teams' content, see the end of this file).
+/**
+ * @param {boolean} full
+ */
 async function bundleMain(full) {
   const result = await esbuild.build({
     entryPoints: [join(here, 'src/main.js')],
@@ -46,7 +49,7 @@ async function bundleMain(full) {
   })
   return result.outputFiles[0].text
 }
-const safe = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
+const safe = (/** @type {string} */ s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
 // the loading indicator's look comes from the room's own source (game-test-room/src/loading-view.ts, no dependency), so the screen the page starts with and the one the room shows later are one
 const view = await esbuild.build({ entryPoints: [join(pkg('game-test-room'), 'src/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
 const { LOADING_CSS, loadingMarkup } = await import(`data:text/javascript;base64,${Buffer.from(view.outputFiles[0].text).toString('base64')}`)
@@ -55,7 +58,7 @@ const template = readFileSync(join(here, 'index.html'), 'utf8')
 // The default page paints a loading screen on its first frame; the bare room has nothing to load, so it has none.
 const overlay = `${loadingMarkup({ title: 'Carregando a sala de testes…', step: 'Iniciando…', solid: true, fixed: true, id: 'boot' })}
 <script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){var b=document.getElementById('boot');b.querySelector('.tr-loading-label').textContent='Loading the test room…';b.querySelector('.tr-loading-step').textContent='Starting…'}})()</script>`
-const page = (bundle, full) =>
+const page = (/** @type {string} */ bundle, /** @type {boolean} */ full) =>
   template
     .replace('/*STYLE*/', () => css)
     .replace('<!--BOOT-->', () => (full ? overlay : ''))
@@ -142,16 +145,16 @@ const sfxManifestFull = existsSync(join(sfxManifestDir, 'manifest.json')) ? JSON
 const presentSfx = (manifest) => ({
   ...manifest,
   sounds: manifest.sounds
-    .map((sound) => ({ ...sound, layers: Object.fromEntries(Object.entries(sound.layers).map(([layer, takes]) => [layer, takes.filter((entry) => existsSync(join(sfxDir, entry.file)))]).filter(([, takes]) => takes.length > 0)) }))
-    .filter((sound) => Object.keys(sound.layers).length > 0),
+    .map((sound) => ({ ...sound, layers: Object.fromEntries(Object.entries(sound.layers).map(([layer, takes]) => [layer, takes.filter((/** @type {{ file: string; }} */ entry) => existsSync(join(sfxDir, entry.file)))]).filter(([, takes]) => takes.length > 0)) }))
+    .filter((/** @type {{ layers: {}; }} */ sound) => Object.keys(sound.layers).length > 0),
 })
 const sfxManifest = sfxManifestFull ? presentSfx(sfxManifestFull) : null
 const sfxTakes = sfxManifest ? sfxManifest.sounds.reduce((count, sound) => count + Object.values(sound.layers).flat().length, 0) : 0
 console.log(sfxTakes > 0 ? `sfx: ${sfxTakes} recorded takes from ${sfxDir}` : `sfx: no recorded files at ${sfxDir} (the recipes play; see packages/game-audio/scripts/sfx-dir.mjs)`)
 // the ones the modules use (the weapons' shots and reload steps) inlined as data urls: the page still makes no request
 const SFX_CATEGORIES = new Set(['armas'])
-const sfxSounds = (sfxManifest?.sounds ?? []).filter((sound) => SFX_CATEGORIES.has(sound.category))
-const sfxFiles = Object.fromEntries(sfxSounds.flatMap((sound) => Object.values(sound.layers).flat()).map((entry) => [entry.file, `data:audio/ogg;base64,${readFileSync(join(sfxDir, entry.file)).toString('base64')}`]))
+const sfxSounds = (sfxManifest?.sounds ?? []).filter((/** @type {{ category: string; }} */ sound) => SFX_CATEGORIES.has(sound.category))
+const sfxFiles = Object.fromEntries(sfxSounds.flatMap((sound) => Object.values(sound.layers).flat()).map((/** @type {{ file: string; }} */ entry) => [entry.file, `data:audio/ogg;base64,${readFileSync(join(sfxDir, entry.file)).toString('base64')}`]))
 const sfxScript = sfxManifest ? `<script>window.__kitSfx=${safe(JSON.stringify({ manifest: { ...sfxManifest, sounds: sfxSounds }, files: sfxFiles }))}</script>\n` : ''
 const html = `${fullHtml.slice(0, at)}${sfxScript}<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
 

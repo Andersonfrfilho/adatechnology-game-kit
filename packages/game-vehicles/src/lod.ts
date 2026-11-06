@@ -3,7 +3,8 @@
  * (frota-leve.js lines 21-65, 232-257, 1205-1221, 14155-14170). Every number is a setting; with `on` false nothing changes, so every golden
  * of the full-detail build stays byte for byte the same.
  */
-import type { Kit } from './types'
+import type { BuildContext, Kit, SceneNode, Three } from './types'
+import type { Curve, ExtrudeGeometryOptions, Object3D, Shape, Vector2, Vector3 } from 'three'
 
 export interface LodSettings {
   /** Light mode is active for the builds that run now. Set by `kit.build(key, state, zones, { lod: true })`. */
@@ -49,6 +50,8 @@ export function createLod(options?: Partial<LodSettings>): LodSettings {
   return { ...defaultLodSettings, ...(options || {}), on: false }
 }
 
+type CanvasArgs = ConstructorParameters<Three['CanvasTexture']>
+
 /** Fewer segments of a generator when the light mode is on, never below `min`. */
 const fewer = (lod: LodSettings, n: number, min: number): number => Math.max(min, Math.round(n * lod.segmentFraction))
 
@@ -56,53 +59,53 @@ const fewer = (lod: LodSettings, n: number, min: number): number => Math.max(min
  * A copy of the three.js namespace whose geometry generators take fewer segments while `lod.on` is true (and whose canvas textures come out in
  * sRGB when three has colour management). With `lod.on` false every generator passes its arguments through untouched.
  */
-export function wrapThreeForLod(TH: any, lod: LodSettings): any {
-  const T: any = Object.assign({}, TH)
+export function wrapThreeForLod(TH: Three, lod: LodSettings): Three {
+  const T: Three = Object.assign({}, TH)
   if (TH.SRGBColorSpace) {
     T.CanvasTexture = class extends TH.CanvasTexture {
-      constructor(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h: any, i: any) {
+      constructor(a: CanvasArgs[0], b?: CanvasArgs[1], c?: CanvasArgs[2], d?: CanvasArgs[3], e?: CanvasArgs[4], f?: CanvasArgs[5], g?: CanvasArgs[6], h?: CanvasArgs[7], i?: CanvasArgs[8]) {
         super(a, b, c, d, e, f, g, h, i)
         this.colorSpace = TH.SRGBColorSpace
       }
     }
   }
   T.CylinderGeometry = class extends TH.CylinderGeometry {
-    constructor(rt: any, rb: any, h: any, rs: any, hs: any, open: any, ts: any, tl: any) {
+    constructor(rt?: number, rb?: number, h?: number, rs?: number, hs?: number, open?: boolean, ts?: number, tl?: number) {
       super(rt, rb, h, lod.on && rs != null ? fewer(lod, rs, 6) : rs, lod.on ? 1 : hs, open, ts, tl)
     }
   }
   T.SphereGeometry = class extends TH.SphereGeometry {
-    constructor(r: any, ws: any, hs: any, ps: any, pl: any, ts: any, tl: any) {
+    constructor(r?: number, ws?: number, hs?: number, ps?: number, pl?: number, ts?: number, tl?: number) {
       super(r, lod.on && ws != null ? fewer(lod, ws, 8) : ws, lod.on && hs != null ? fewer(lod, hs, 5) : hs, ps, pl, ts, tl)
     }
   }
   T.TorusGeometry = class extends TH.TorusGeometry {
-    constructor(r: any, tube: any, rs: any, ts: any, arc: any) {
+    constructor(r?: number, tube?: number, rs?: number, ts?: number, arc?: number) {
       super(r, tube, lod.on && rs != null ? fewer(lod, rs, 4) : rs, lod.on && ts != null ? fewer(lod, ts, 8) : ts, arc)
     }
   }
   T.LatheGeometry = class extends TH.LatheGeometry {
-    constructor(pts: any, seg: any, a: any, b: any) {
+    constructor(pts?: Vector2[], seg?: number, a?: number, b?: number) {
       super(pts, lod.on && seg != null ? fewer(lod, seg, 10) : seg, a, b)
     }
   }
   T.TubeGeometry = class extends TH.TubeGeometry {
-    constructor(path: any, ts: any, r: any, rs: any, closed: any) {
+    constructor(path?: Curve<Vector3>, ts?: number, r?: number, rs?: number, closed?: boolean) {
       if (lod.on) {
         let len = 1
         try {
-          len = path.getLength()
+          len = path!.getLength()
         } catch (e) {
           /* a path without a length keeps the default */
         }
         ts = Math.max(6, Math.min(ts == null ? 64 : ts, Math.ceil(len / 0.14)))
-        rs = r < 0.025 ? 3 : Math.max(4, fewer(lod, rs == null ? 8 : rs, 4))
+        rs = r! < 0.025 ? 3 : Math.max(4, fewer(lod, rs == null ? 8 : rs, 4))
       }
       super(path, ts, r, rs, closed)
     }
   }
   T.ExtrudeGeometry = class extends TH.ExtrudeGeometry {
-    constructor(shape: any, o: any) {
+    constructor(shape?: Shape | Shape[], o?: ExtrudeGeometryOptions) {
       if (lod.on && o) {
         o = Object.assign({}, o)
         if (o.curveSegments) o.curveSegments = fewer(lod, o.curveSegments, 5)
@@ -112,12 +115,12 @@ export function wrapThreeForLod(TH: any, lod: LodSettings): any {
     }
   }
   T.CircleGeometry = class extends TH.CircleGeometry {
-    constructor(r: any, seg: any, a: any, b: any) {
+    constructor(r?: number, seg?: number, a?: number, b?: number) {
       super(r, lod.on && seg != null ? fewer(lod, seg, 8) : seg, a, b)
     }
   }
   T.RingGeometry = class extends TH.RingGeometry {
-    constructor(a: any, b: any, ts: any, ps: any, c: any, d: any) {
+    constructor(a?: number, b?: number, ts?: number, ps?: number, c?: number, d?: number) {
       super(a, b, lod.on && ts != null ? fewer(lod, ts, 8) : ts, ps, c, d)
     }
   }
@@ -133,9 +136,9 @@ const INTERIOR_FUNCTIONS = ['interior', 'engineBay', 'seat', 'dashboard', 'steer
  */
 export function installLod(kit: Kit): void {
   const lod: LodSettings = kit.lod
-  const meshesOf = (c: any): Set<any> => {
-    const set = new Set<any>()
-    c.vehicle.traverse((o: any) => {
+  const meshesOf = (c: BuildContext): Set<Object3D> => {
+    const set = new Set<Object3D>()
+    c.vehicle.traverse((o: SceneNode) => {
       if (o.isMesh) set.add(o)
     })
     return set
@@ -143,12 +146,12 @@ export function installLod(kit: Kit): void {
   for (const name of INTERIOR_FUNCTIONS) {
     const original = kit[name]
     if (typeof original !== 'function') continue
-    kit[name] = function (this: unknown, ...args: any[]) {
-      const c = args[0]
+    kit[name] = function (this: unknown, ...args: unknown[]) {
+      const c = args[0] as BuildContext | undefined
       if (!lod.on || !c || !c.vehicle) return original.apply(this, args)
       const before = meshesOf(c)
       const result = original.apply(this, args)
-      c.vehicle.traverse((o: any) => {
+      c.vehicle.traverse((o: SceneNode) => {
         if (o.isMesh && !before.has(o)) o.userData.skipLite = true
       })
       return result

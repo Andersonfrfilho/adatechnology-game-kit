@@ -5,6 +5,8 @@ import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-
 import { residentialItems } from '@adatechnology/game-floorplan-residential'
 
 import { create } from '../create.js'
+import type * as THREE_NS from 'three'
+import type { BuildContext, Frame, FurnitureApi, HouseRendererInternal, Mount, Three } from '../kernel-types.js'
 
 /** What `furnitureSpec` reads of a catalogue entry (the items of `game-floorplan-residential` and the other packs have more). */
 export interface FurnitureCatalogEntry {
@@ -40,7 +42,7 @@ export interface FurnitureSpecResult {
   /** One part per box or cylinder the builder drew, origin at the centre of the footprint on the floor. */
   spec: DestructibleSpec
   /** Draws the piece: one mesh per part, named by the part id, coloured as the builder coloured it. */
-  build(THREE: any): any
+  build(THREE: Three): THREE_NS.Group
   /** The widest high horizontal part and the height of its upper face (what loose things rest on), or null when the piece has none. */
   /** What loose things rest on. A solid top is boards: `parts` are all of them, `part` the one in the middle. */
   top: { part: string; y: number; parts?: string[] } | null
@@ -139,11 +141,11 @@ const BASE_MATERIAL: Record<string, string> = {
 }
 
 // one house renderer per three.js namespace: it makes the type table the builders hang from
-const renderers = new WeakMap<object, any>()
-function rendererOf(THREE: any, document: unknown): any {
+const renderers = new WeakMap<object, HouseRendererInternal>()
+function rendererOf(THREE: Three, document: unknown): HouseRendererInternal {
   let r = renderers.get(THREE)
   if (!r) {
-    r = create(THREE, document ? { document: document as never } : {})
+    r = create(THREE, document ? { document: document as never } : {}) as HouseRendererInternal /* `buildApi` hands out the kernel too */
     renderers.set(THREE, r)
   }
   return r
@@ -158,7 +160,7 @@ interface RecordOptions {
 }
 
 /** Runs `run` with a recording stand-in for the drawing api and turns what it drew into a spec, a drawing and the top. `root` is the frame of the piece (the builder's `M`). */
-function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, opts: RecordOptions): { spec: DestructibleSpec; build: (T3: any) => any; top: FurnitureSpecResult['top'] } {
+function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureApi) => void, opts: RecordOptions): { spec: DestructibleSpec; build: (T3: Three) => THREE_NS.Group; top: FurnitureSpecResult['top'] } {
   const o = { chairs: opts.chairs }
   const materialOf = { ...BASE_MATERIAL, ...opts.materials }
   const drawn: Drawn[] = []
@@ -168,12 +170,12 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
   const xyz = new THREE.Euler()
   const v = new THREE.Vector3()
 
-  const loc = (M: any, lx: number, lz: number): [number, number] => {
+  const loc = (M: Frame, lx: number, lz: number): [number, number] => {
     const c = Math.cos(M.ry)
     const s = Math.sin(M.ry)
     return [M.x + lx * c + lz * s, M.z - lx * s + lz * c]
   }
-  const record = (M: any, key: string, shape: PartSpec['shape'], px: number, py: number, pz: number, rx: number, ry: number, rz: number, color: number): void => {
+  const record = (M: Frame, key: string, shape: PartSpec['shape'], px: number, py: number, pz: number, rx: number, ry: number, rz: number, color: number): void => {
     if ((o.chairs === false && M !== root) || key === 'water') return // water is not a solid
     q.setFromEuler(eul.set(rx, ry, rz, 'YXZ'))
     const turned = rx !== 0 || ry !== 0 || rz !== 0
@@ -182,7 +184,7 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
     const max: [number, number, number] = [-Infinity, -Infinity, -Infinity]
     for (const sx of [-0.5, 0.5]) for (const sy of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) {
       v.set(sx * size[0], sy * size[1], sz * size[2]).applyQuaternion(q)
-      const c = [v.x + px - root.x, v.y + py, v.z + pz - root.z]
+      const c = [v.x + px - root.x, v.y + py, v.z + pz - root.z] as [number, number, number]
       for (let k = 0; k < 3; k++) {
         min[k] = Math.min(min[k], c[k])
         max[k] = Math.max(max[k], c[k])
@@ -198,12 +200,12 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
     drawn.push({ id: `${key}_${n}`, key, shape, position: [px - root.x, py, pz - root.z], rotation, color, min, max })
   }
 
-  const A = {
-    box(M: any, mat: string, x: number, y: number, z: number, bw: number, bh: number, bd: number, color: number, ry = 0, rx = 0, rz = 0): void {
+  const A: FurnitureApi = {
+    box(M: Frame, mat: string, x: number, y: number, z: number, bw: number, bh: number, bd: number, color: number, ry = 0, rx = 0, rz = 0): void {
       const [px, pz] = loc(M, x, z)
       record(M, mat, { kind: 'box', size: [bw, bh, bd] }, px, M.base + y + bh / 2, pz, rx, M.ry + ry, rz, color)
     },
-    cylinder(M: any, mat: string, x: number, y: number, z: number, r: number, ch: number, color: number, rx = 0, rz = 0): void {
+    cylinder(M: Frame, mat: string, x: number, y: number, z: number, r: number, ch: number, color: number, rx = 0, rz = 0): void {
       const [px, pz] = loc(M, x, z)
       record(M, mat, { kind: 'cylinder', radius: r, height: ch }, px, M.base + y + (rx || rz ? 0 : ch / 2), pz, rx || 0, M.ry, rz || 0, color)
     },
@@ -271,10 +273,10 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
   const spec: DestructibleSpec = { name, parts, joints, tags: ['furniture'] }
   const colors = new Map(drawn.map((p) => [p.id, p.color]))
 
-  const build = (T3: any): any => {
+  const build = (T3: Three): THREE_NS.Group => {
     const group = markKitOrigin(new T3.Group(), { owner: 'game-floorplan-three', kind: 'furniture', id: name })
     group.name = name
-    const mats = new Map<string, any>()
+    const mats = new Map<string, THREE_NS.MeshStandardMaterial>()
     for (const p of parts) {
       const color = colors.get(p.id) ?? 0x888888
       const metal = p.material === 'steel'
@@ -318,7 +320,7 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
  * @example
  * const { spec, build, top } = furnitureSpec(THREE, 'bookcase') // 1.2 x 0.35 x 2 m, boards and books
  */
-export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptions = {}): FurnitureSpecResult {
+export function furnitureSpec(THREE: Three, type: string, opts: FurnitureSpecOptions = {}): FurnitureSpecResult {
   const renderer = rendererOf(THREE, opts.document)
   const ent = renderer.types[type]
   if (!ent) throw new Error(`game-floorplan-three: no builder for the furniture type "${type}"`)
@@ -330,7 +332,7 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
   const o = opts.options ?? {}
   const seed = Math.round(opts.seed ?? 1)
   const plain = SHELVING.test(type) ? 'paper' : 'plastic'
-  const root: any = { x: seed, z: 0, ry: 0, w, d, h, y: 0, base: 0, palette: o.palette, seed: `furniture_${type}_${seed}` }
+  const root: Mount = { x: seed, z: 0, ry: 0, w, d, h, y: 0, base: 0, palette: o.palette, seed: `furniture_${type}_${seed}` }
   const { K, shared } = renderer.internals
   const before = K.PARTS.length
   const made = recordSpec(
@@ -340,7 +342,7 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
     (A) => {
       const saved = { api0: shared.api0, ctx: shared.ctx }
       shared.api0 = A // the levers and taps that the kit draws as moving parts go through its own api
-      shared.ctx = shared.ctx ?? {} // outside a house the builders read the style of the plan from here
+      shared.ctx = shared.ctx ?? ({} as BuildContext) // outside a house the builders read the style of the plan from here
       try {
         ent.f(root, A)
       } finally {
@@ -351,8 +353,8 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
     { materials: { plain, ...o.materials }, chairs: o.chairs, carcass: SHELVING.test(type) },
   )
   const spouts = K.PARTS.slice(before)
-    .filter((p: any) => p.type === 'water_tap')
-    .map((p: any): [number, number, number] => [p.pos[0] - root.x, p.pos[1], p.pos[2] - root.z])
+    .filter((p) => p.type === 'water_tap')
+    .map((p): [number, number, number] => [p.pos[0] - root.x, p.pos[1], p.pos[2] - root.z])
   K.PARTS.length = before
   return { spec: made.spec, build: made.build, top: made.top, size: { w, d, h }, spouts }
 }
@@ -370,7 +372,7 @@ export interface TapSpecResult {
   /** The tap as parts (base, column, spout, lever), origin on the counter under the column (`counter`) or on the wall plate's centre line at the floor (`wall`). */
   spec: DestructibleSpec
   /** Draws the tap: one mesh per part, named by the part id. */
-  build(THREE: any): any
+  build(THREE: Three): THREE_NS.Group
   /** Where the water leaves the spout, in the space of the spec. */
   spout: [number, number, number]
 }
@@ -379,11 +381,11 @@ export interface TapSpecResult {
  * The team's tap (`counterTap` of the sink, `wallTap` of the laundry tub: `furniture/taps.ts`) drawn by the same code into parts, with the lever at rest. `spout` is where its
  * water thread starts, so a host can put a tap of the fluids world there; the water thread itself is not drawn.
  */
-export function tapSpec(THREE: any, opts: TapSpecOptions = {}): TapSpecResult {
+export function tapSpec(THREE: Three, opts: TapSpecOptions = {}): TapSpecResult {
   const renderer = rendererOf(THREE, opts.document)
   const { K, shared } = renderer.internals
   const kind = opts.kind ?? 'counter'
-  const root: any = { x: 1, z: 0, ry: 0, w: 0.3, d: 0.3, h: 0.3, y: 0, base: 0, seed: `tap_${kind}` }
+  const root: Mount = { x: 1, z: 0, ry: 0, w: 0.3, d: 0.3, h: 0.3, y: 0, base: 0, seed: `tap_${kind}` }
   const before = K.PARTS.length
   const made = recordSpec(THREE, kind === 'counter' ? 'tap' : 'wall_tap', root, (A) => {
     const kit = K.kit2(root, A)
@@ -396,7 +398,7 @@ export function tapSpec(THREE: any, opts: TapSpecOptions = {}): TapSpecResult {
       shared.api0 = saved
     }
   }, { materials: {} })
-  const water = K.PARTS.slice(before).find((p: any) => p.type === 'water_tap')
+  const water = K.PARTS.slice(before).find((p) => p.type === 'water_tap')
   if (!water) throw new Error('game-floorplan-three: the tap drew no water thread')
   K.PARTS.length = before
   return { spec: made.spec, build: made.build, spout: [water.pos[0] - root.x, water.pos[1], water.pos[2] - root.z] }

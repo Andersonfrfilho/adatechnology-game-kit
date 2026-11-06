@@ -1,6 +1,13 @@
 // What the landing page says about each example, area and package family, in pt-BR.
 // `setup` runs inside the example page (window.__testRoom / window.__showroom) before its thumbnail is captured.
 
+/**
+ * @typedef {{ id: string, title: string, what: string, setup: string }} ExampleArea
+ * @typedef {{ name: string, title: string, summary: string, controls?: string, url: string, ready: string, setup?: string, areas: ExampleArea[] }} ExampleEntry
+ * @typedef {{ id: string, title: string, what: string, packages: string[], thumb: string | null, seeIn: string | null }} FamilyEntry
+ */
+
+/** @param {{ ids: string[], eye: number[], target: number[], z?: number, gap?: number }} row */
 const roomRow = ({ ids, eye, target, z = -3, gap = 1.7 }) => `(() => {
   const r = window.__testRoom
   r.clear()
@@ -9,12 +16,14 @@ const roomRow = ({ ids, eye, target, z = -3, gap = 1.7 }) => `(() => {
   r.look(${JSON.stringify(eye)}, ${JSON.stringify(target)})
 })()`
 
+/** @param {string} entryId */
 const showroomSpot = (entryId) => `(() => {
   const s = window.__showroom
   s.teleport(${JSON.stringify(entryId)})
   s.step(0.5)
 })()`
 
+/** @type {ExampleEntry[]} */
 export const EXAMPLES = [
   {
     name: 'test-room',
@@ -205,6 +214,7 @@ export const EXAMPLES = [
   },
 ]
 
+/** @type {FamilyEntry[]} */
 export const FAMILIES = [
   { id: 'characters', title: 'Personagens', what: 'Corpo com 17 segmentos e dano por região, pessoas, uniformizados, mortos-vivos e a multidão instanciada, com feridas e olhos', packages: ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-uniformed', 'game-characters-undead'], thumb: 'characters-test-area', seeIn: 'characters-test-area' },
   { id: 'animals', title: 'Animais', what: 'Treze espécies de quadrúpede, ave e cobra com andar, estados vivo, infectado e morto, e a regra de surto', packages: ['game-animals', 'game-animals-species', 'game-animals-three'], thumb: 'animals-test-area', seeIn: 'animals-test-area' },
@@ -229,4 +239,5 @@ export const FAMILIES = [
   { id: 'base', title: 'Base e ferramentas', what: 'Contratos entre módulos, sala de testes reutilizável e ferramentas de teste dentro do jogo', packages: ['game-contracts', 'game-test-room', 'game-devtools'], thumb: 'test-room-furniture', seeIn: 'test-room' },
 ]
 
+/** @param {string} key */
 export const thumbFile = (key) => `thumbs/${key}.jpg`

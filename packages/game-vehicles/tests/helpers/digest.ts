@@ -1,3 +1,10 @@
+import type { BufferGeometry, Color, Material, Object3D } from 'three'
+
+import type { VehicleContext } from '../../src'
+
+/** A node as the digest reads it: any object, with the geometry and material a mesh has. */
+type Node = Object3D & { geometry?: BufferGeometry; material?: (Material & { color?: Color; roughness?: number }) | Material[] }
+
 /** Order-sensitive digest of a built vehicle: the same function produced the golden fixtures from the original SDK. */
 function round(x: number): number {
   return Math.round(x * 1e4) / 1e4
@@ -15,10 +22,11 @@ function fnv(values: ArrayLike<number>): string {
   return (h >>> 0).toString(16)
 }
 
-function describe(root: any): string[] {
+function describe(root: Object3D): string[] {
   const out: string[] = []
   root.updateMatrixWorld(true)
-  root.traverse((o: any) => {
+  root.traverse((node) => {
+    const o = node as Node
     let s =
       o.type +
       (o.visible ? '' : '!') +
@@ -57,7 +65,7 @@ export interface Digest {
   counts: string
 }
 
-export function digest(c: any): Digest {
+export function digest(c: VehicleContext): Digest {
   const lines = describe(c.root)
   let h = 2166136261
   const text = lines.join('\n')

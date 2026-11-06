@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "include": [],
+  "files": ["src/kernel-types.ts", "src/kernel-types-systems.ts", "src/kernel/geometry.ts", "src/kernel/noise.ts", "src/kernel/close-scene.ts", "src/furniture/api.ts", "src/furniture/builders.ts", "src/furniture/place-items.ts", "src/furniture/extra-types.ts", "src/furniture/fixtures.ts", "src/furniture/yard.ts", "src/furniture/taps.ts", "src/furniture/type-table.ts", "src/furniture/plants.ts", "src/lights/fixtures.ts", "src/house/helpers.ts", "src/house/floors.ts", "src/house/stairs.ts", "src/house/baseboard.ts", "src/house/building.ts", "src/house/outbuildings.ts", "src/house/windows.ts", "src/house/walls.ts", "src/house/doors.ts", "src/roof/tiles.ts", "src/roof/rect.ts", "src/roof/gutters.ts", "src/roof/slabs.ts", "src/roof/roofs.ts", "src/lot/terrain.ts", "src/lot/perimeter.ts", "src/lot/gates.ts", "src/lights/decor.ts", "src/utilities/water.ts", "src/utilities/solar.ts", "src/utilities/electrical.ts",
+    "src/locale.ts",
+    "src/materials/textures.ts",
+    "src/materials/materials.ts",
+    "src/animation/clotheslines.ts",
+    "src/mirrors.ts",
+    "src/cars.ts",
+    "src/vegetation/bridge.ts",
+    "src/interaction/collision.ts",
+    "src/interaction/doors.ts",
+    "src/interaction/target.ts",
+    "src/interaction/state.ts",
+    "src/interaction/items.ts",
+    "src/interaction/fittings.ts",
+    "src/lights/room-light.ts",
+    "src/interactables/kit.ts",
+    "src/interactables/bridge.ts",
+    "src/build/build.ts",
+    "src/build/instance.ts",
+    "src/build/api.ts",
+    "src/test-area/scenarios.ts",
+    "src/navigation/bind.ts",
+    "src/navigation/floor-navigator.ts",
+    "src/navigation/from-house.ts",
+    "src/statics.ts"]
+}

@@ -7,7 +7,53 @@ import { hashText } from './scene-hash'
  * must not change a single bit. It reads the objects duck-typed, so it works with any three.js version and without importing it.
  */
 
-type Any = Record<string, any>
+type Fields = Record<string, unknown>
+
+/** What the snapshot reads of a buffer attribute. */
+interface SnapAttribute { array: ArrayBufferView; itemSize: number; normalized: boolean; count: number }
+/** What the snapshot reads of a geometry. */
+interface SnapGeometry {
+  type: string
+  parameters?: unknown
+  attributes?: Record<string, SnapAttribute>
+  index?: { array: ArrayBufferView; count: number } | null
+  groups?: unknown[]
+  drawRange?: { start: number; count: number }
+  boundingBox?: { min: object; max: object } | null
+  boundingSphere?: { center: object; radius: number } | null
+  userData?: Fields
+}
+/** What the snapshot reads of a material. */
+interface SnapMaterial { type: string; name: string; color?: { getHexString?(): string }; side: unknown; transparent: unknown; opacity: unknown; vertexColors: unknown; depthWrite: unknown }
+/** What the snapshot reads of an object of the tree (mesh, light, instanced mesh, LOD). */
+interface SnapObject {
+  type: string
+  name: string
+  visible: boolean
+  castShadow: boolean
+  receiveShadow: boolean
+  renderOrder: number
+  frustumCulled: boolean
+  position?: object
+  quaternion?: object
+  scale?: object
+  matrixAutoUpdate: boolean
+  userData: Fields
+  geometry?: SnapGeometry
+  material?: SnapMaterial | SnapMaterial[]
+  isInstancedMesh?: boolean
+  count?: number
+  instanceMatrix?: { array: ArrayBufferView }
+  instanceColor?: { array: ArrayBufferView } | null
+  isLight?: boolean
+  color?: { getHexString?(): string }
+  intensity?: number
+  distance?: number
+  decay?: number
+  isLOD?: boolean
+  levels?: { distance: number }[]
+  children: SnapObject[]
+}
 
 const FNV_OFFSET = 2166136261
 const FNV_PRIME = 16777619
@@ -26,14 +72,14 @@ export function hashBytes(view: ArrayBufferView): string {
 /** A number as text that keeps -0 and every bit of a double. */
 const num = (value: unknown): string => (typeof value !== 'number' ? String(value) : Object.is(value, -0) ? '-0' : String(value))
 
-const vec = (v: Any | undefined, keys: readonly string[]): string => (v ? keys.map((k) => num(v[k])).join(',') : '-')
+const vec = (v: object | undefined, keys: readonly string[]): string => (v ? keys.map((k) => num((v as Fields)[k])).join(',') : '-')
 
 /** JSON with sorted keys and exact numbers, without uuids; functions and three objects (objects, materials, textures) by a placeholder. */
 function stable(value: unknown, depth = 0): string {
   if (depth > 6) return '…'
   if (typeof value === 'number') return num(value)
   if (value === null || typeof value !== 'object') return typeof value === 'function' ? 'fn' : JSON.stringify(value) ?? 'undefined'
-  const o = value as Any
+  const o = value as Fields
   if (ArrayBuffer.isView(o)) return `bytes(${hashBytes(o)})`
   if (o.isObject3D || o.isMaterial || o.isTexture) return `<${o.type ?? 'object'}${o.name ? ` ${o.name}` : ''}>`
   if (Array.isArray(o)) return `[${o.map((x) => stable(x, depth + 1)).join(',')}]`
@@ -45,10 +91,10 @@ function stable(value: unknown, depth = 0): string {
     .join(',')}}`
 }
 
-function geometryLines(g: Any): string[] {
+function geometryLines(g: SnapGeometry): string[] {
   const lines = [`geometry ${g.type} params=${g.parameters ? stable(g.parameters) : '-'}`]
-  for (const [name, a] of Object.entries(g.attributes ?? {}) as Array<[string, Any]>) {
-    const array = a.array as ArrayBufferView
+  for (const [name, a] of Object.entries(g.attributes ?? {})) {
+    const array = a.array
     // the array type, not the wrapper class: Float32BufferAttribute is only a constructor that copies into a Float32Array
     lines.push(`  ${name} ${array.constructor.name} size=${a.itemSize} normalized=${a.normalized} count=${a.count} ${hashBytes(array)}`)
   }
@@ -63,13 +109,13 @@ function geometryLines(g: Any): string[] {
 
 // where the object comes from (`markKitOrigin` of game-contracts) is not part of the drawing: a builder that starts marking its root keeps its golden
 const PROVENANCE_KEYS = new Set(['kitOrigin'])
-function drawnUserData(userData: Any): Any | null {
+function drawnUserData(userData: Fields): Fields | null {
   if (!userData) return null
   const keys = Object.keys(userData).filter((key) => !PROVENANCE_KEYS.has(key))
   return keys.length ? Object.fromEntries(keys.map((key) => [key, userData[key]])) : null
 }
 
-function materialLine(m: Any, ids: Map<object, number>): string {
+function materialLine(m: SnapMaterial, ids: Map<object, number>): string {
   let id = ids.get(m)
   if (id === undefined) {
     id = ids.size
@@ -89,11 +135,11 @@ export interface ExactSnapshot {
 }
 
 /** The exact snapshot of `root` and everything under it. */
-export function exactSnapshot(root: Any): ExactSnapshot {
+export function exactSnapshot(root: object): ExactSnapshot {
   const ids = new Map<object, number>()
   const nodes: string[] = []
   const all: string[] = []
-  const walk = (o: Any, path: string): void => {
+  const walk = (o: SnapObject, path: string): void => {
     const lines = [
       `${path} ${o.type} name=${o.name} visible=${o.visible} cast=${o.castShadow} receive=${o.receiveShadow} order=${o.renderOrder} culled=${o.frustumCulled}`,
       `  p=${vec(o.position, ['x', 'y', 'z'])} q=${vec(o.quaternion, ['x', 'y', 'z', 'w'])} s=${vec(o.scale, ['x', 'y', 'z'])} auto=${o.matrixAutoUpdate}`,
@@ -102,13 +148,13 @@ export function exactSnapshot(root: Any): ExactSnapshot {
     if (userData) lines.push(`  userData ${stable(userData)}`)
     if (o.geometry) lines.push(...geometryLines(o.geometry))
     if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) lines.push(materialLine(m, ids))
-    if (o.isInstancedMesh) lines.push(`  instances count=${o.count} matrices=${hashBytes(o.instanceMatrix.array)} colors=${o.instanceColor ? hashBytes(o.instanceColor.array) : '-'}`)
+    if (o.isInstancedMesh) lines.push(`  instances count=${o.count} matrices=${hashBytes((o.instanceMatrix as { array: ArrayBufferView }).array)} colors=${o.instanceColor ? hashBytes(o.instanceColor.array) : '-'}`)
     if (o.isLight) lines.push(`  light color=${o.color?.getHexString?.()} intensity=${num(o.intensity)} distance=${num(o.distance)} decay=${num(o.decay)}`)
-    if (o.isLOD) lines.push(`  levels ${(o.levels as Any[]).map((l) => num(l.distance)).join(',')}`)
+    if (o.isLOD) lines.push(`  levels ${(o.levels as { distance: number }[]).map((l) => num(l.distance)).join(',')}`)
     all.push(...lines)
     nodes.push(`${path} ${o.type} ${hashText(lines.join('\n'))}`)
-    ;(o.children as Any[]).forEach((child, index) => walk(child, `${path}/${index}`))
+    o.children.forEach((child, index) => walk(child, `${path}/${index}`))
   }
-  walk(root, '0')
+  walk(root as SnapObject, '0') // read duck-typed: any three.js version
   return { hash: hashText(all.join('\n')), nodes, lines: all }
 }

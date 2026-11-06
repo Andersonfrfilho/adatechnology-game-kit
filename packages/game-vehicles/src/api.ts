@@ -2,7 +2,11 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
+import type { Group, Matrix4, Mesh, Object3D, Vector3 } from 'three'
+
 import type { LodSettings } from './lod'
+import type { ZoneBox } from './zone-core'
+import type { BuildContext } from './types'
 import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
@@ -31,8 +35,11 @@ export interface Band {
   color: string
 }
 
-/** Where a vehicle is built: the context returned by {@link VehicleKit.build}. */
-export interface VehicleContext {
+/** Where a vehicle is built: the context returned by {@link VehicleKit.build}, with the builders of {@link BuildContext}. */
+export type VehicleContext = BuildContext & VehicleContextFields
+
+/** The fields of a built vehicle's context. */
+export interface VehicleContextFields {
   /** Add this to the scene. */
   root: ThreeObject
   /** The vehicle itself (a child of `root`); zones, parts and meshes live here. */
@@ -70,8 +77,11 @@ export interface VehicleMeta {
   bodyKind?: 'box' | 'body'
   exhaust?: ThreeVector | false
   exhaustDir?: ThreeVector
-  /** Replaces the default armour (state `modified`). */
-  armor?: (c: VehicleContext, kit: VehicleKit) => void
+  /**
+   * Replaces the default armour (state `modified`). A few fleet vehicles write their protection level here as text (`'III'`) while they
+   * build and set the builder afterwards.
+   */
+  armor?: ((c: VehicleContext, kit: VehicleKit) => void) | string
   [key: string]: any
 }
 
@@ -108,6 +118,83 @@ export interface VehiclePart {
 /** A part label: a plain string, or a locale key (`parts.<key>`) with an optional text override. */
 export type PartLabel = string | { key: string; label?: string }
 
+/** A mesh the rollover rests on, with its matrix into the vehicle frame (`rollMeshes`). */
+export interface RollMesh {
+  o: Mesh
+  M: Matrix4
+}
+
+/** A rollover in progress (`kit.roll`): time and duration, side, the support hull S ([y, z]), the contact point and the fall target. */
+export interface RollState {
+  t: number
+  dur: number
+  s: number
+  S: number[][]
+  last: number
+  cz: number
+  target: number
+  x: number
+  L: number
+  bounce: number
+  cen: number[]
+  hitAt: readonly number[] | null
+  hits: number
+  thin: RollMesh[]
+  y0: number
+  /** State a plugin keeps on the rollover (the fleet's military group marks its own handling). */
+  [extra: string]: unknown
+}
+
+/** A part thrown by an explosion (`fling`): its holder, linear and angular velocity, radius, whether it landed and how long it keeps burning. */
+export interface FlyingPiece {
+  o: Group
+  v: Vector3
+  w: Vector3
+  r: number
+  landed: boolean
+  trail: number
+}
+
+/** A part turning on its own every frame (a wheel, a rotor, a propeller): `v` radians per second about `axis`, slowing by `decay` per second. */
+export interface VehicleSpin {
+  o: Object3D
+  axis: 'x' | 'y' | 'z'
+  v: number
+  decay?: number
+  /** a road wheel, turned by the vehicle's speed */
+  track?: boolean
+  /** a per-frame hook disguised as a spin (its `o.rotation` getter runs code), not a real part */
+  hook?: boolean
+}
+
+/** A continuous source of smoke or fire (`kit.addEmitter`): where (`c.vehicle`, or the vehicle world with `world`), how many puffs a second. */
+export interface VehicleEmitter {
+  p: Vector3
+  kind: string
+  world: boolean
+  rate: number
+  acc: number
+  s: number
+  dir: Vector3 | null
+  gap: number
+}
+
+/** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */
+export interface VehicleLamp {
+  group: ThreeObject | null
+  lens: ThreeObject[]
+  inner: ThreeObject[]
+  kind: string
+  tint: string
+  /** broken; `'gone'` once the whole unit came off */
+  broken: boolean | 'gone'
+  cracked?: boolean
+  dark?: boolean
+  /** The additive halo sprites of the lamp, hidden when it breaks. */
+  halo?: ThreeObject[]
+  [extra: string]: unknown
+}
+
 /** A damage zone of a built vehicle. */
 export interface DamageZone {
   id: string
@@ -119,13 +206,25 @@ export interface DamageZone {
   health: number
   band: number
   internal?: boolean
-  owned?: boolean
+  /** The objects of the vehicle the zone holds (resolved when the zones are derived). */
+  owned: ThreeObject[]
+  /** The lamps, panes and wheels the zone holds. */
+  lights: VehicleLamp[]
+  glass: ThreeObject[]
+  wheels: ThreeObject[]
   tags: string[]
   /** `[xMin, xMax, zMin, zMax]` rectangle on the top-down damage map. */
   map: [number, number, number, number]
-  box: ThreeObject
+  /** The zone's box in `c.vehicle` coordinates. */
+  box: ZoneBox
   /** Overrides the id used to seed the random damage (keeps the output of an earlier pack identical). */
   seedId?: string
+  /** What the zone is (`panel`, `door`, `glass`, `light`, `wheel`, `internal`...). */
+  type: string
+  /** The internal system an internal zone stands for (`engine`, `fuel_tank`, `underbody`...). */
+  sub?: string
+  /** The effects key (sounds, labels) when it differs from the id. */
+  fxKey?: string
   [key: string]: any
 }
 
@@ -319,6 +418,10 @@ export interface ParticleMaterials {
 export interface ImpactOptions {
   /** Do not leave a stain. */
   noStain?: boolean
+  /** No sparks, scrap or splashes. */
+  noFx?: boolean
+  /** Deepest dent in metres (the default comes from the width and the force). */
+  maxDepth?: number
   [key: string]: any
 }
 
@@ -345,6 +448,12 @@ export interface ZoneDamageEntry {
   id: string
   name: string
   damage: number
+}
+
+/** What `zoneDamageAt` returns: the id of the zone hit and the damage it spread to every zone near the point. */
+export interface ZoneDamageResult {
+  main: string | null
+  list: ZoneDamageEntry[]
 }
 
 export interface DamageMapOptions {
@@ -436,8 +545,9 @@ export interface VehicleKit {
   zoneScenario(c: VehicleContext, idOrName: string): ScenarioResult
   zoneOverall(c: VehicleContext): OverallHealth
   zoneAt(c: VehicleContext, point: ThreeVector, object?: ThreeObject): DamageZone | null
-  zoneDamageAt(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, object?: ThreeObject): ZoneDamageEntry[]
-  zonePoint(c: VehicleContext, zone: DamageZone): ThreeVector
+  zoneDamageAt(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, object?: ThreeObject): ZoneDamageResult
+  /** Point and direction of an impact on one side (`front`, `rear`, `left` or `right`), in vehicle coordinates. */
+  zonePoint(c: VehicleContext, side: 'front' | 'rear' | 'left' | 'right' | string): { p: Vector3; dir: Vector3 }
   zoneImpact(c: VehicleContext, side: 'front' | 'rear' | 'left' | 'right' | string, force: number): unknown
   impact(c: VehicleContext, point: ThreeVector, dir: ThreeVector, force: number, options?: ImpactOptions): unknown[]
   splat(

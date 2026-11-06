@@ -1,14 +1,16 @@
 import { createLightBudget } from '@adatechnology/game-render-three'
+import type { LightHandle } from '@adatechnology/game-render-three'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
+import type { HouseRenderer } from '../src'
 
 const EMPTY = [1e9, 1e9, -1e9, -1e9]
 
-function maskUniforms(renderer: any) {
-  const material = Object.values(renderer.materials as Record<string, any>).find((m) => m?.onBeforeCompile && m.userData?.roomLightMask)
-  const shader: any = { uniforms: {}, vertexShader: 'void main() {\n#include <begin_vertex>', fragmentShader: 'void main() {\ngetPointLightInfo( pointLight, geometryPosition, directLight );' }
-  material.onBeforeCompile(shader, null)
+function maskUniforms(renderer: HouseRenderer): Record<string, { value: Float32Array }> {
+  const material = Object.values(renderer.materials).find((m) => (m?.onBeforeCompile as unknown) && m.userData?.roomLightMask)!
+  const shader: { uniforms: Record<string, { value: Float32Array }>; vertexShader: string; fragmentShader: string } = { uniforms: {}, vertexShader: 'void main() {\n#include <begin_vertex>', fragmentShader: 'void main() {\ngetPointLightInfo( pointLight, geometryPosition, directLight );' }
+  material.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms, null as unknown as THREE.WebGLRenderer)
   return shader.uniforms
 }
 
@@ -19,7 +21,7 @@ describe('room lights through a LightBudget', () => {
     const budget = createLightBudget(THREE, scene, { point: 8, spot: 0, pointShadows: 2, shadowSettings: { bias: -0.0012, normalBias: 0.05, near: 0.12 } })
     const blast = budget.acquire({ owner: 'vfx.blast', priority: 900, urgent: true, color: 0xffffff, intensity: 1, distance: 10, position: [50, 0, 50] })!
     const rooms = renderer.lighting({ scene, n: 4, shadows: 2, budget })
-    expect(rooms.lights.map((handle: any) => handle.slot)).not.toContain(blast.slot)
+    expect(rooms.lights.map((handle) => (handle as { slot?: number }).slot)).not.toContain(blast.slot)
     const focus = new THREE.Vector3(0, 1.6, 0)
     rooms.update([house], focus, {})
     expect(rooms.stats.rooms).toBeGreaterThan(1)
@@ -27,12 +29,12 @@ describe('room lights through a LightBudget', () => {
     expect(uniforms.uRB0.value.length).toBe(8 * 4)
     expect(Array.from(uniforms.uRB0.value.slice(blast.slot * 4, blast.slot * 4 + 4))).toEqual(EMPTY)
     for (let index = 0; index < rooms.n; index++) {
-      const slot = rooms.lights[index].slot
+      const slot = (rooms.lights[index] as LightHandle).slot /* with a budget the lights are its handles */
       const crate = rooms.crates[index]
       if (!crate) continue
       expect(Array.from(uniforms.uRB0.value.slice(slot * 4, slot * 4 + 4))).toEqual(crate.rects[0].map((value: number) => Math.fround(value)))
     }
-    const lit = rooms.lights.filter((_: any, index: number) => rooms.crates[index]).map((handle: any) => (budget.group.children[handle.slot] as THREE.PointLight).intensity)
+    const lit = rooms.lights.filter((_, index) => rooms.crates[index]).map((handle) => (budget.group.children[(handle as { slot: number }).slot] as THREE.PointLight).intensity)
     expect(lit.every((intensity: number) => intensity > 0)).toBe(true)
   })
 

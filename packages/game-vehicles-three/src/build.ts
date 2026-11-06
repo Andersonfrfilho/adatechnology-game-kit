@@ -1,5 +1,7 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Damageable, VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
+import type * as THREE_NS from 'three'
+import type { Group, Material, Mesh, MeshStandardMaterial, Object3D } from 'three'
 
 import { colorFromSeed as defaultColorFromSeed, fleetDims as defaultFleetDims, paintPalettes as defaultPaintPalettes, paletteOf as defaultPaletteOf } from '@adatechnology/game-vehicles-fleet'
 
@@ -43,7 +45,7 @@ export interface BuiltVehicle {
   color: string | null
   seed: number | string | null
   /** Group in the game frame: front on +z, right on -x, centred on x and z, wheels on y = 0. */
-  group: any
+  group: Group
   /** Damageable boxes in the game frame. */
   damageables: Damageable[]
   triangles: number
@@ -67,7 +69,7 @@ export interface BuiltVehicle {
 }
 
 export interface VehiclesThree {
-  readonly THREE: any
+  readonly THREE: typeof THREE_NS
   readonly kit: VehicleKit
   build(key: string, options?: BuildVehicleOptions): BuiltVehicle
 }
@@ -84,12 +86,13 @@ export interface VehiclesThreeOptions {
 }
 
 /** Triangles and draw calls of the visible meshes of an object (a multi-material mesh costs one call per group). */
-function count(root: any): { triangles: number; drawCalls: number } {
+function count(root: Object3D): { triangles: number; drawCalls: number } {
   let triangles = 0
   let drawCalls = 0
-  root.traverse((o: any) => {
+  root.traverse((node) => {
+    const o = node as Mesh
     if (!o.isMesh || !o.geometry) return
-    for (let p = o; p; p = p.parent) if (p.visible === false) return
+    for (let p: Object3D | null = o; p; p = p.parent) if (p.visible === false) return
     const g = o.geometry
     const n = g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0
     if (Array.isArray(o.material) && g.groups.length) drawCalls += g.groups.length
@@ -100,11 +103,12 @@ function count(root: any): { triangles: number; drawCalls: number } {
 }
 
 /** The material most triangles are painted with: the body colour. */
-export function primaryPaint(c: any): any {
-  let best: any = null
+export function primaryPaint(c: { vehicle: Object3D; paints: ReadonlySet<Material> }): MeshStandardMaterial | null {
+  let best: MeshStandardMaterial | null = null
   let bestCount = -1
-  const counts = new Map<any, number>()
-  c.vehicle.traverse((o: any) => {
+  const counts = new Map<Material, number>()
+  c.vehicle.traverse((node) => {
+    const o = node as Mesh
     if (!o.isMesh || !o.geometry) return
     const mats = Array.isArray(o.material) ? o.material : [o.material]
     const g = o.geometry
@@ -114,7 +118,7 @@ export function primaryPaint(c: any): any {
   counts.forEach((n, m) => {
     if (n > bestCount) {
       bestCount = n
-      best = m
+      best = m as MeshStandardMaterial
     }
   })
   return best
@@ -139,7 +143,7 @@ function eyeOf(THREE: { Vector3: new (x: number, y: number, z: number) => Point 
   return [+seat.x.toFixed(3), +(seat.y + SEATED_EYE.up).toFixed(3), +(seat.z - SEATED_EYE.back).toFixed(3)]
 }
 
-export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): VehiclesThree {
+export function createVehiclesThree(THREE: typeof THREE_NS, options: VehiclesThreeOptions): VehiclesThree {
   const kit = options.kit
   const fleet: VehicleFleetContent = options.fleet ?? { colorFromSeed: defaultColorFromSeed, fleetDims: defaultFleetDims, paintPalettes: defaultPaintPalettes, paletteOf: defaultPaletteOf }
   const { colorFromSeed, fleetDims, paintPalettes, paletteOf } = fleet
@@ -153,18 +157,19 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
     if (!spec) throw new Error(`createVehiclesThree: unknown vehicle "${key}"`)
     const seed = o.seed == null ? null : o.seed
     const color = o.color || (seed != null ? colorFromSeed(seed, isMilitary(key) ? paintPalettes.military : paintPalettes.civil) : null)
-    const c: any = kit.build(key, o.state || 'intact', undefined, { lod: quality === 'lite' })
+    const c = kit.build(key, o.state || 'intact', undefined, { lod: quality === 'lite' })
     c.root.updateMatrixWorld(true)
     const primary = primaryPaint(c)
     const rotation = new THREE.Matrix4().makeRotationY(-Math.PI / 2)
     const bounds = new THREE.Box3()
     const piece = new THREE.Box3()
     const turned = new THREE.Matrix4()
-    c.vehicle.traverse((m: any) => {
+    c.vehicle.traverse((node: Object3D) => {
+      const m = node as Mesh
       if (!m.isMesh || !m.geometry || m.userData.ghost) return
-      for (let p = m; p; p = p.parent) if (p.visible === false) return
+      for (let p: Object3D | null = m; p; p = p.parent) if (p.visible === false) return
       m.geometry.computeBoundingBox()
-      piece.copy(m.geometry.boundingBox).applyMatrix4(turned.multiplyMatrices(rotation, m.matrixWorld))
+      piece.copy(m.geometry.boundingBox!).applyMatrix4(turned.multiplyMatrices(rotation, m.matrixWorld))
       bounds.union(piece)
     })
     const cx = (bounds.min.x + bounds.max.x) / 2
@@ -190,9 +195,10 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       if (color && primary) {
         const repainted = primary.clone()
         repainted.color.set(color)
-        c.vehicle.traverse((m: any) => {
+        c.vehicle.traverse((node: Object3D) => {
+          const m = node as Mesh
           if (!m.isMesh) return
-          if (Array.isArray(m.material)) m.material = m.material.map((x: any) => (x === primary ? repainted : x))
+          if (Array.isArray(m.material)) m.material = m.material.map((x) => (x === primary ? repainted : x))
           else if (m.material === primary) m.material = repainted
         })
       }
@@ -226,7 +232,8 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
       context: quality === 'high' ? c : null,
       driverEye,
       dispose() {
-        group.traverse((m: any) => {
+        group.traverse((node) => {
+          const m = node as Mesh
           if (m.geometry) m.geometry.dispose()
         })
       },
@@ -237,7 +244,7 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
 }
 
 /** Tags the meshes of each damageable zone (and the tyres) so a hit test can tell what it hit. */
-function markDamageables(c: any, damageables: Damageable[]): void {
+function markDamageables(c: VehicleContext, damageables: Damageable[]): void {
   const byZone: Record<string, Damageable> = {}
   for (const d of damageables) byZone[d.zone] = d
   for (const z of c.zones || []) {
@@ -246,7 +253,7 @@ function markDamageables(c: any, damageables: Damageable[]): void {
     for (const o of z.objs || z.meshes || []) if (o && o.userData) o.userData.damageable = { material: d.material, zone: d.zone }
   }
   for (const w of c.wheels || []) {
-    const z = (c.zones || []).find((zz: any) => zz.type === 'wheel' && zz.objs && zz.objs.indexOf(w) >= 0)
+    const z = (c.zones || []).find((zz) => zz.type === 'wheel' && zz.objs && zz.objs.indexOf(w) >= 0)
     w.userData.damageable = { material: 'rubber', zone: z ? z.id : 'wheel' }
   }
 }

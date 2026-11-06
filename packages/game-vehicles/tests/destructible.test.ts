@@ -233,9 +233,9 @@ describe('detaching and mechanics', () => {
       const evs = unbolt(d, `${id}~${id.startsWith('mirror') ? 'door_front_left' : 'underbody'}`)
       expect(find(evs, 'detach'), id).toHaveLength(1)
     }
-    expect((c as any).flying.length).toBeGreaterThanOrEqual(5)
+    expect(c.flying!.length).toBeGreaterThanOrEqual(5)
     for (let i = 0; i < 90; i++) kit.tick(c, 1 / 30)
-    for (const piece of (c as any).flying) expect(piece.o.position.y).toBeLessThan(0.5)
+    for (const piece of c.flying!) expect(piece.o.position.y).toBeLessThan(0.5)
     expect(d.detachedParts().sort()).toEqual(['battery', 'bumper_front', 'headlight_left', 'mirror_left', 'tow_hitch'])
   })
 

@@ -1,9 +1,12 @@
 /** Glass cracks, shattering and tempered or laminated breakage textures. */
-import type { Kit } from './types'
+import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, Object3D, Texture, Vector2, Vector3 } from 'three'
+
+import type { VehicleLamp } from './api'
+import type { BuildContext, Kit, Three } from './types'
 import { clamp } from './util'
 
 /** The material of a pane with cracks drawn on it. A host warms its program at load with any texture: the first crack is in the middle of a blast. */
-export function crackedGlassMaterial(THREE: any, texture: unknown): any {
+export function crackedGlassMaterial(THREE: Three, texture: Texture): MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: 0xffffff,
     map: texture,
@@ -18,20 +21,19 @@ export function crackedGlassMaterial(THREE: any, texture: unknown): any {
 }
 
 /** What `crackLight` reads of a lamp the kit drew (`c.lights`) and of its vehicle. */
-type LampMesh = { material: unknown; position: { clone(): unknown } }
+type LampMesh = Mesh
 type CrackedLamp = {
   lens: LampMesh[]
   inner: LampMesh[]
   halo?: Array<{ visible: boolean }>
-  group: { position: { clone(): unknown } } | null
+  group: Object3D | null
   tint: string
   broken: unknown
   cracked?: boolean
   dark?: boolean
 }
-type CrackedLampHost = { toEffects(p: unknown): unknown; dirToEffects(d: unknown): unknown }
 
-export function installGlassDamage(kit: Kit): void {
+export function installGlassDamage(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -41,7 +43,7 @@ export function installGlassDamage(kit: Kit): void {
 
   /* ================= glass: cracks and shattering ================= */
   /* The point of the pane nearest the hit, on the triangle under it: a pane has few vertices, the web starts where the round landed. */
-  function glassUV(c: any, msh: any, pLocal: any) {
+  function glassUV(c: BuildContext, msh: Mesh, pLocal: Vector3) {
     const pos = msh.geometry.attributes.position
     const uv = msh.geometry.attributes.uv
     if (!uv) return [0.5, 0.5]
@@ -72,9 +74,9 @@ export function installGlassDamage(kit: Kit): void {
     return out
   }
   /* Crack web: thick opaque lines at the centre, thinning outward, with a dark outline so it reads from afar. */
-  function drawWeb(x: any, cx: any, cy: any, s: any, ax: any, rnd: any) {
+  function drawWeb(x: CanvasRenderingContext2D, cx: number, cy: number, s: number, ax: number, rnd: () => number) {
     const n = 16 + Math.floor(rnd() * 8)
-    const spokes: any = []
+    const spokes: number[][][] = []
     for (let i = 0; i < n; i++) {
       const a = (i / n) * PI * 2 + (rnd() - 0.5) * 0.35
       const L = (70 + rnd() * 95) * s
@@ -88,7 +90,7 @@ export function installGlassDamage(kit: Kit): void {
     }
     x.lineCap = 'round'
     x.lineJoin = 'round'
-    function seg(p: any, q: any, wd: any, col: any) {
+    function seg(p: number[], q: number[], wd: number, col: string) {
       x.strokeStyle = col
       x.lineWidth = wd
       x.beginPath()
@@ -96,11 +98,11 @@ export function installGlassDamage(kit: Kit): void {
       x.lineTo(q[0], q[1])
       x.stroke()
     }
-    ;[
+    ;([
       ['rgba(8,12,14,0.55)', 2.2],
       ['rgba(244,248,250,0.97)', 0],
-    ].forEach(function (pass: any) {
-      spokes.forEach(function (pts: any) {
+    ] as [string, number][]).forEach(function (pass) {
+      spokes.forEach(function (pts) {
         for (let k = 1; k < pts.length; k++) {
           const t = k / pts.length
           seg(pts[k - 1], pts[k], Math.max(0.8, 4.2 * (1 - t) + 0.6) + pass[1], pass[0])
@@ -110,7 +112,7 @@ export function installGlassDamage(kit: Kit): void {
         x.lineWidth = Math.max(0.8, 2.6 - r * 0.45) + pass[1] * 0.6
         x.strokeStyle = pass[0]
         x.beginPath()
-        spokes.forEach(function (sp: any, j: any) {
+        spokes.forEach(function (sp, j) {
           const p = sp[Math.min(r, sp.length - 1)]
           const q = spokes[(j + 1) % spokes.length][Math.min(r, sp.length - 1)]
           if (rnd() < 0.8) {
@@ -131,8 +133,8 @@ export function installGlassDamage(kit: Kit): void {
     x.fill()
   }
   // a 2D context that draws nothing: every call and gradient is a no-op
-  const NO_CANVAS: any = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true })
-  function crackGlass(c: any, msh: any, p: any, force: any, sc?: any) {
+  const NO_CANVAS = new Proxy(function () {}, { get: () => NO_CANVAS, apply: () => NO_CANVAS, set: () => true }) as unknown as CanvasRenderingContext2D
+  function crackGlass(c: BuildContext, msh: Mesh, p: Vector3, force: number, sc?: number | null) {
     const G = msh.userData.glass
     // a pane already gone shows its edge, not the crack layer (freed when it broke): the web is drawn on nothing, so the random stream (and every
     // seeded result after it) stays the same as when the hidden canvas was still drawn on
@@ -157,12 +159,12 @@ export function installGlassDamage(kit: Kit): void {
     G.hits++
   }
   /* irregular edge attached to the frame for glass without an outline (cut from the shell): only the strip near the open edges remains */
-  function glassRim(geo: any, rnd: any) {
+  function glassRim(geo: BufferGeometry, rnd: () => number) {
     const src = geo.index ? geo.toNonIndexed() : geo
     const p = src.attributes.position
-    const cnt: any = {}
-    const toColor: any = []
-    function key(i: any) {
+    const cnt: Record<string, { n: number; a: number; b: number }> = {}
+    const toColor: Vector3[][] = []
+    function key(i: number) {
       return Math.round(p.getX(i) * 1000) + ',' + Math.round(p.getY(i) * 1000) + ',' + Math.round(p.getZ(i) * 1000)
     }
     for (let f = 0; f < p.count; f += 3)
@@ -184,7 +186,7 @@ export function installGlassDamage(kit: Kit): void {
     const ab = new V3()
     const ap = new V3()
     const q2 = new V3()
-    function dist(x: any, y: any, z: any) {
+    function dist(x: number, y: number, z: number) {
       let best = 1e9
       q2.set(x, y, z)
       for (let i = 0; i < toColor.length; i++) {
@@ -202,7 +204,7 @@ export function installGlassDamage(kit: Kit): void {
     const sub = subdivide(src, 0.03)
     const r = cutGeometry(sub, [
       {
-        sdf: function (x: any, y: any, z: any) {
+        sdf: function (x: number, y: number, z: number) {
           return 0.02 + 0.07 * nz(x * 9 + z * 5, y * 9 + z * 3) * nz(x * 23, y * 23 + z * 17) - dist(x, y, z)
         },
       },
@@ -210,37 +212,37 @@ export function installGlassDamage(kit: Kit): void {
     if (!r.geo.attributes.position.count) return null
     return crease(r.geo, 60)
   }
-  function shatterGlass(c: any, msh: any, force: any, dir: any) {
+  function shatterGlass(c: BuildContext, msh: Mesh, force: number, dir: Vector3) {
     const G = msh.userData.glass
     if (G.broken) return
     G.broken = true
     // the crack layer (its own material over a 256 px canvas) is replaced by the edge below: free it, or every broken pane keeps a texture on the GPU for good
     const freeCracks = function () {
       if (!G.tex) return
-      if (msh.material !== MATERIALS.glassEdge && msh.material?.map === G.tex) msh.material.dispose()
+      if (msh.material !== MATERIALS.glassEdge && (msh.material as MeshStandardMaterial)?.map === G.tex) (msh.material as Material).dispose()
       G.tex.dispose()
       G.tex = null
       G.cv = null
       G.cracksFreed = true
     }
-    const cubesAt = []
+    const cubesAt: Vector3[] = []
     if (G.outline && G.T !== undefined) {
       const out = G.outline
       let cx = 0
       let cy = 0
-      out.forEach(function (p: any) {
+      out.forEach(function (p: Vector2) {
         cx += p.x
         cy += p.y
       })
       cx /= out.length
       cy /= out.length
       const shp = new THREE.Shape(
-        out.map(function (p: any) {
+        out.map(function (p: Vector2) {
           return new THREE.Vector2(p.x, p.y)
         }),
       )
       const hole = new THREE.Path()
-      out.forEach(function (p: any, i: any) {
+      out.forEach(function (p: Vector2, i: number) {
         const dx = cx - p.x
         const dy = cy - p.y
         const d = Math.hypot(dx, dy) || 1
@@ -262,7 +264,7 @@ export function installGlassDamage(kit: Kit): void {
       let maxx = -1e9
       let miny = 1e9
       let maxy = -1e9
-      out.forEach(function (p: any) {
+      out.forEach(function (p: Vector2) {
         minx = Math.min(minx, p.x)
         maxx = Math.max(maxx, p.x)
         miny = Math.min(miny, p.y)
@@ -275,7 +277,7 @@ export function installGlassDamage(kit: Kit): void {
       }
     } else {
       msh.geometry.computeBoundingBox()
-      const bb = msh.geometry.boundingBox.clone().applyMatrix4(msh.matrix)
+      const bb = msh.geometry.boundingBox!.clone().applyMatrix4(msh.matrix)
       const rim = glassRim(msh.geometry, c.rand)
       if (rim) {
         msh.geometry.dispose()
@@ -295,7 +297,7 @@ export function installGlassDamage(kit: Kit): void {
           ),
         )
     }
-    const seatGeo: any = []
+    const seatGeo: BufferGeometry[] = []
     const d = dir.clone().normalize()
     /* a pane on an open door falls from where the door has it, not from where the door was closed */
     if (msh.parent && msh.parent !== c.vehicle) {
@@ -307,9 +309,9 @@ export function installGlassDamage(kit: Kit): void {
     }
     cubesAt.forEach(function (p, i) {
       if (i % 3 === 0 && c.seatTops.length && !c.rollState && !c.flipped) {
-        let best: any = null
+        let best = null as (typeof c.seatTops)[number] | null
         let bd = 1e9
-        c.seatTops.forEach(function (s: any) {
+        c.seatTops.forEach(function (s) {
           const dd = Math.hypot(s.x - p.x, s.z - p.z)
           if (dd < bd) {
             bd = dd
@@ -336,7 +338,7 @@ export function installGlassDamage(kit: Kit): void {
       c.vehicle.add(sm)
     }
   }
-  function hitGlass(c: any, msh: any, p: any, dir: any, force: any) {
+  function hitGlass(c: BuildContext, msh: Mesh | null | undefined, p: Vector3, dir: Vector3, force: number) {
     const G = msh && msh.userData.glass
     if (!G || G.broken) return
     if (G.type === 'laminated') {
@@ -345,10 +347,10 @@ export function installGlassDamage(kit: Kit): void {
     } else shatterGlass(c, msh, force, dir)
   }
   kit.hitGlass = hitGlass
-  function breakLight(c: any, L: any, dir: any) {
+  function breakLight(c: BuildContext, L: VehicleLamp | null | undefined, dir: Vector3) {
     if (!L || L.broken) return
     L.broken = true
-    L.lens.forEach(function (m: any) {
+    L.lens.forEach(function (m: Mesh) {
       // a lens broken by a hit leaves its jagged edge in the bezel, as a broken pane does; a lamp broken by the zone's band keeps the old look
       const rim = L.lensMaterial ? glassRim(m.geometry, c.rand) : null
       if (!rim) {
@@ -362,13 +364,13 @@ export function installGlassDamage(kit: Kit): void {
     })
     // without its lens and its bulb the housing is a dark hollow: the reflector, a lit chrome bowl while the lamp worked, shows dull and dark
     if (L.lensMaterial)
-      (L.reflector || []).forEach(function (m: { material: unknown }) {
+      ((L.reflector || []) as { material: unknown }[]).forEach(function (m) {
         m.material = MATERIALS.broken
       })
-    L.inner.forEach(function (m: any) {
+    L.inner.forEach(function (m: Mesh) {
       m.material = MATERIALS.bulbBroken
     })
-    ;(L.halo || []).forEach(function (h: any) {
+    ;(L.halo || []).forEach(function (h: Object3D) {
       h.visible = false
     })
     const p = L.group ? L.group.position.clone() : L.inner[0] ? L.inner[0].position.clone() : new V3()
@@ -379,9 +381,9 @@ export function installGlassDamage(kit: Kit): void {
   }
   kit.breakLight = breakLight
   /* A cracked polycarbonate or acrylic lens turns hazy white along its cracks (crazing): the crack texture on a lens dense enough to show it. */
-  const crazedCache = new Map<unknown, unknown>()
+  const crazedCache = new Map<Material, Material>()
   const CRAZED_OPACITY = 0.6
-  function crazed(material: unknown): unknown {
+  function crazed(material: Material): Material {
     const known = crazedCache.get(material)
     if (known) return known
     const m = I.crackLens(material).clone()
@@ -393,7 +395,7 @@ export function installGlassDamage(kit: Kit): void {
   }
   /* A lamp whose lens is holed or cracked but still in place (polycarbonate, acrylic): the lens shows the cracks and sheds a few chips; a round
      through it wrecks the bulb or LED behind it, so the lamp goes dark. */
-  function crackLight(c: CrackedLampHost, L: CrackedLamp, dir: { clone(): { negate(): unknown } }, pierced: boolean): void {
+  function crackLight(c: BuildContext, L: CrackedLamp, dir: Vector3, pierced: boolean): void {
     if (!L || L.broken) return
     if (!L.cracked) {
       L.cracked = true
@@ -408,5 +410,9 @@ export function installGlassDamage(kit: Kit): void {
   }
   kit.crackLight = crackLight
 
-  Object.assign(I, { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight })
+  const shared = { glassUV, drawWeb, crackGlass, glassRim, shatterGlass, hitGlass, breakLight, crackLight }
+
+  Object.assign(I, shared)
+
+  return shared
 }

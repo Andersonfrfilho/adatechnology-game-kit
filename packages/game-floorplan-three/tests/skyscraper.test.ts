@@ -1,3 +1,4 @@
+import type * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
@@ -14,16 +15,16 @@ describe('skyscraper plans in the renderer', () => {
         expect(tower.floors).toHaveLength(20)
         expect(house.floors).toHaveLength(20)
         for (const floor of house.floors) expect(floor.children.length).toBeGreaterThan(3)
-        expect(house.doors.map((d) => d.id)).toEqual(tower.doors.map((d: any) => d.id))
+        expect(house.doors.map((d) => d.id)).toEqual(tower.doors.map((d) => d.id))
       })
 
       it('has meshes with geometry on the top storey and on the ground one (walls and floors), and the stairs between them', () => {
         for (const group of [house.floors[0], house.floors[19]]) {
           let vertices = 0
-          group.traverse((node: any) => { if (node.geometry?.attributes?.position) vertices += node.geometry.attributes.position.count })
+          group.traverse((node) => { const geometry = (node as Partial<THREE.Mesh>).geometry; if (geometry?.attributes?.position) vertices += geometry.attributes.position.count })
           expect(vertices).toBeGreaterThan(1000)
         }
-        expect(tower.items.some((i: any) => i.category === 'stairs' && i.floor === 5)).toBe(true)
+        expect(tower.items.some((i) => i.category === 'stairs' && i.floor === 5)).toBe(true)
       })
     })
   }

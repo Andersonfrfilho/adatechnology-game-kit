@@ -1,11 +1,15 @@
 /** Boxes of the triangles of a geometry, grouped in blocks, so a region query visits the few triangles near it instead of every one. */
+import type { Box3, BufferAttribute, BufferGeometry, Intersection, InterleavedBufferAttribute, Material, Matrix4, Mesh, Object3D, Ray, Raycaster, Sphere, Vector3 } from 'three'
+
+import type { Three } from './types'
+
 
 export const TRI_BLOCK = 32
 
 export type TriIndex = {
-  position: any
+  position: BufferAttribute | InterleavedBufferAttribute
   positionVersion: number
-  index: any
+  index: BufferAttribute | null
   indexVersion: number
   triangles: number
   /** min x, y, z and max x, y, z of each triangle (exact: the same values the vertices hold) */
@@ -17,18 +21,18 @@ export type TriIndex = {
 
 const cache = new WeakMap<object, TriIndex>()
 
-function trianglesOf(geo: any): number {
+function trianglesOf(geo: BufferGeometry): number {
   return Math.floor((geo.index ? geo.index.count : geo.attributes.position.count) / 3)
 }
-function supports(geo: any): boolean {
+function supports(geo: BufferGeometry): boolean {
   const pos = geo.attributes && geo.attributes.position
-  return !!pos && !pos.isInterleavedBufferAttribute && pos.itemSize === 3
+  return !!pos && !(pos as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && pos.itemSize === 3
 }
-function isCurrent(geo: any, ti: TriIndex): boolean {
+function isCurrent(geo: BufferGeometry, ti: TriIndex): boolean {
   const pos = geo.attributes.position
   return (
     ti.position === pos &&
-    ti.positionVersion === pos.version &&
+    ti.positionVersion === (pos as BufferAttribute).version &&
     ti.index === (geo.index || null) &&
     ti.indexVersion === (geo.index ? geo.index.version : 0) &&
     ti.triangles === trianglesOf(geo)
@@ -54,7 +58,7 @@ function boxBlock(ti: TriIndex, block: number): void {
     }
   }
 }
-function boxTriangle(geo: any, ti: TriIndex, t: number): void {
+function boxTriangle(geo: BufferGeometry, ti: TriIndex, t: number): void {
   const P = geo.attributes.position.array
   const ix = geo.index ? geo.index.array : null
   const a = (ix ? ix[t * 3] : t * 3) * 3
@@ -66,7 +70,7 @@ function boxTriangle(geo: any, ti: TriIndex, t: number): void {
     ti.boxes[j + 3 + k] = Math.max(P[a + k], P[b + k], P[c + k])
   }
 }
-function advance(geo: any, ti: TriIndex, deadline: number): boolean {
+function advance(geo: BufferGeometry, ti: TriIndex, deadline: number): boolean {
   const total = blockCount(ti.triangles)
   while (ti.builtBlocks < total) {
     const block = ti.builtBlocks
@@ -78,12 +82,12 @@ function advance(geo: any, ti: TriIndex, deadline: number): boolean {
   }
   return ti.builtBlocks === total
 }
-function start(geo: any, store: WeakMap<object, TriIndex> = cache): TriIndex {
+function start(geo: BufferGeometry, store: WeakMap<object, TriIndex> = cache): TriIndex {
   const pos = geo.attributes.position
   const triangles = trianglesOf(geo)
   const ti: TriIndex = {
     position: pos,
-    positionVersion: pos.version,
+    positionVersion: (pos as BufferAttribute).version,
     index: geo.index || null,
     indexVersion: geo.index ? geo.index.version : 0,
     triangles,
@@ -96,7 +100,7 @@ function start(geo: any, store: WeakMap<object, TriIndex> = cache): TriIndex {
 }
 
 /** The index of a geometry (built now if it is not there or the positions changed), or undefined for a layout it does not cover. */
-export function triIndexOf(geo: any): TriIndex | undefined {
+export function triIndexOf(geo: BufferGeometry): TriIndex | undefined {
   if (!supports(geo)) return undefined
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
@@ -105,7 +109,7 @@ export function triIndexOf(geo: any): TriIndex | undefined {
 }
 
 /** Builds the index of a geometry a slice at a time; true once it is complete and current. */
-export function warmTriIndex(geo: any, deadline: number): boolean {
+export function warmTriIndex(geo: BufferGeometry, deadline: number): boolean {
   if (!supports(geo)) return true
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
@@ -113,7 +117,7 @@ export function warmTriIndex(geo: any, deadline: number): boolean {
 }
 
 /** Keeps the index of the result of a cut: `boxes` are the boxes of its triangles in order. */
-export function storeTriIndex(geo: any, boxes: Float64Array): void {
+export function storeTriIndex(geo: BufferGeometry, boxes: Float64Array): void {
   const ti = start(geo)
   ti.boxes = boxes
   const total = blockCount(ti.triangles)
@@ -122,15 +126,15 @@ export function storeTriIndex(geo: any, boxes: Float64Array): void {
 }
 
 /** Before moving vertices of a non-indexed geometry: its index when it is complete and current (pass it to `touchTriIndex` after). */
-export function liveTriIndex(geo: any): TriIndex | undefined {
+export function liveTriIndex(geo: BufferGeometry): TriIndex | undefined {
   if (geo.index || !supports(geo)) return undefined
   const ti = cache.get(geo)
   return ti && isCurrent(geo, ti) && ti.builtBlocks === blockCount(ti.triangles) ? ti : undefined
 }
 
 /** After moving `vertices` of a non-indexed geometry and flagging its positions: only their triangles are measured again. */
-export function touchTriIndex(geo: any, ti: TriIndex, vertices: number[]): void {
-  if (ti.positionVersion + 1 !== geo.attributes.position.version) return
+export function touchTriIndex(geo: BufferGeometry, ti: TriIndex, vertices: number[]): void {
+  if (ti.positionVersion + 1 !== (geo.attributes.position as BufferAttribute).version) return
   const blocks = new Set<number>()
   for (const v of vertices) {
     const t = Math.floor(v / 3)
@@ -139,11 +143,11 @@ export function touchTriIndex(geo: any, ti: TriIndex, vertices: number[]): void 
     blocks.add(Math.floor(t / TRI_BLOCK))
   }
   blocks.forEach((b) => boxBlock(ti, b))
-  ti.positionVersion = geo.attributes.position.version
+  ti.positionVersion = (geo.attributes.position as BufferAttribute).version
 }
 
 /** The box of every vertex of a non-indexed geometry from its complete, current index (one pass over the blocks); undefined when it cannot be taken from there. */
-export function boundsFromIndex(geo: any): { box: Float64Array; version: number } | undefined {
+export function boundsFromIndex(geo: BufferGeometry): { box: Float64Array; version: number } | undefined {
   if (geo.index || !supports(geo)) return undefined
   const ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti) || ti.builtBlocks !== blockCount(ti.triangles) || !ti.triangles || geo.attributes.position.count !== ti.triangles * 3) return undefined
@@ -161,7 +165,7 @@ export function boundsFromIndex(geo: any): { box: Float64Array; version: number 
  * `boundsFromIndex`), and a ray must not change what the vehicle looks like.
  */
 const rayCache = new WeakMap<object, TriIndex>()
-function rayIndexOf(geo: any): TriIndex | undefined {
+function rayIndexOf(geo: BufferGeometry): TriIndex | undefined {
   const shared = cache.get(geo)
   if (shared && isCurrent(geo, shared) && shared.builtBlocks === blockCount(shared.triangles)) return shared
   let ti = rayCache.get(geo)
@@ -173,18 +177,18 @@ function rayIndexOf(geo: any): TriIndex | undefined {
 /** One hit of `raycastIndexed`: the fields of a three.js intersection the vehicle code reads. */
 export type IndexedHit = {
   distance: number
-  point: any
-  object: any
-  face: { a: number; b: number; c: number; normal: any; materialIndex: number }
+  point: Vector3
+  object: Object3D
+  face: { a: number; b: number; c: number; normal: Vector3; materialIndex: number }
   faceIndex: number
 }
 
 /** Slack on a block's box, metres: a hit on its very edge is not lost to rounding. */
 const BLOCK_SLACK = 1e-6
 
-type RayScratch = { inverse: any; local: any; box: any; a: any; b: any; c: any; point: any; world: any; sphere: any }
+type RayScratch = { inverse: Matrix4; local: Ray; box: Box3; a: Vector3; b: Vector3; c: Vector3; point: Vector3; world: Vector3; sphere: Sphere }
 const scratch = new WeakMap<object, RayScratch>()
-function scratchOf(THREE: any): RayScratch {
+function scratchOf(THREE: Three): RayScratch {
   let s = scratch.get(THREE)
   if (!s) {
     s = {
@@ -204,7 +208,8 @@ function scratchOf(THREE: any): RayScratch {
 }
 
 /** The meshes `Mesh.raycast` of three.js would answer the same way as the index: its own raycast, one material, positions only, no skin or morph. */
-function indexable(THREE: any, mesh: any): boolean {
+function indexable(THREE: Three, object: Object3D): boolean {
+  const mesh = object as Mesh & { isSkinnedMesh?: boolean; isInstancedMesh?: boolean; isBatchedMesh?: boolean }
   const geo = mesh.geometry
   // a mesh with a raycast of its own (a decal that rays pass through) answers for itself
   if (mesh.raycast !== THREE.Mesh.prototype.raycast) return false
@@ -214,17 +219,17 @@ function indexable(THREE: any, mesh: any): boolean {
   return supports(geo)
 }
 
-function raycastMesh(THREE: any, raycaster: any, mesh: any, out: IndexedHit[]): void {
+function raycastMesh(THREE: Three, raycaster: Raycaster, mesh: Mesh, out: IndexedHit[]): void {
   const geo = mesh.geometry
   const s = scratchOf(THREE)
   if (geo.boundingSphere === null) geo.computeBoundingSphere()
-  s.sphere.copy(geo.boundingSphere).applyMatrix4(mesh.matrixWorld)
+  s.sphere.copy(geo.boundingSphere!).applyMatrix4(mesh.matrixWorld)
   if (!raycaster.ray.intersectsSphere(s.sphere)) return
   const ti = rayIndexOf(geo)
   if (!ti) return
   s.inverse.copy(mesh.matrixWorld).invert()
   s.local.copy(raycaster.ray).applyMatrix4(s.inverse)
-  const material = mesh.material
+  const material = mesh.material as Material
   const back = material.side === THREE.BackSide
   const cull = material.side === THREE.FrontSide
   const P = geo.attributes.position
@@ -266,10 +271,11 @@ function raycastMesh(THREE: any, raycaster: any, mesh: any, out: IndexedHit[]): 
   }
 }
 
-function collect(THREE: any, raycaster: any, object: any, recursive: boolean, out: IndexedHit[]): void {
+function collect(THREE: Three, raycaster: Raycaster, object: Object3D, recursive: boolean, out: IndexedHit[]): void {
   if (object.layers.test(raycaster.layers)) {
-    if (indexable(THREE, object)) raycastMesh(THREE, raycaster, object, out)
-    else object.raycast(raycaster, out)
+    if (indexable(THREE, object)) raycastMesh(THREE, raycaster, object as Mesh, out)
+    // three.js adds its own intersections (a sprite's has no face)
+    else object.raycast(raycaster, out as unknown as Intersection[])
   }
   if (recursive) for (const child of object.children) collect(THREE, raycaster, child, true, out)
 }
@@ -279,7 +285,7 @@ function collect(THREE: any, raycaster: any, object: any, recursive: boolean, ou
  * triangles whose box it crosses instead of every triangle of a heavy body, with the same triangle test, so the hits are the same.
  * Meshes the index does not cover (skinned, morphed, several materials) and other objects go through their own `raycast`.
  */
-export function raycastIndexed(THREE: any, raycaster: any, objects: readonly any[], recursive = false): IndexedHit[] {
+export function raycastIndexed(THREE: Three, raycaster: Raycaster, objects: readonly Object3D[], recursive = false): IndexedHit[] {
   const out: IndexedHit[] = []
   for (const object of objects) collect(THREE, raycaster, object, recursive, out)
   out.sort((x, y) => x.distance - y.distance)

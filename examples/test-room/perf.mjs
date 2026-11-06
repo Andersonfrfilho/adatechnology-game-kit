@@ -30,7 +30,7 @@ const sliceOf = (list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT -
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
 // PERF_SHARD=cold|warm|storm|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
 const [SHARD, SLICE] = (process.env.PERF_SHARD ?? 'all').split(':')
-const runs = (part) => SHARD === 'all' || SHARD === part || (part === 'warm' && SHARD === 'storm')
+const runs = (/** @type {string} */ part) => SHARD === 'all' || SHARD === part || (part === 'warm' && SHARD === 'storm')
 const [SLICE_AT, SLICE_COUNT] = (SLICE ?? '1/1').split('/').map(Number)
 // A hitch is a frame that misses two 60 Hz refreshes; a long task blocks input for more than 50 ms.
 const BUDGET = {
@@ -56,7 +56,7 @@ const SIXTY_HZ_MS = 16.7
 const CONVERGE_SECONDS = 2
 const SETTLED_SHARE = 0.05
 const MAX_SWING = 0.1
-const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
+const applyPixelRatio = () => (PIXEL_RATIO > 0 ? page.evaluate((/** @type {number} */ ratio) => window.__testRoom.webgl.setPixelRatio(ratio), PIXEL_RATIO) : undefined)
 let chainSetupBuffers = 0
 const CHAIN_THROWN = (process.env.PERF_CHAIN_THROWN ?? 'frag_grenade,frag_grenade,frag_grenade,rpg_7,molotov').split(',').filter(Boolean)
 // the horde phases: the budgets of `design-chain-horde.md` §14; the crowd step is provisional until the measured baseline (docs/desempenho-explosoes.md)
@@ -116,8 +116,11 @@ const browser = await chromium.launch({
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
 const page = await browser.newPage({ viewport: { width: VIEW_WIDTH, height: VIEW_HEIGHT }, deviceScaleFactor: 1 })
+/**
+ * @type {string[]}
+ */
 const pageErrors = []
-page.on('pageerror', (error) => pageErrors.push(error.message))
+page.on('pageerror', (/** @type {{ message: string; }} */ error) => pageErrors.push(error.message))
 await page.addInitScript(countWebGlCalls)
 if (process.env.PERF_STACKS) await page.addInitScript(tagAttributeCreators)
 await page.goto(`${pathToFileURL(dist).href}?area=vfx${process.env.PERF_QUERY ?? ''}`, { timeout: 180000 })
@@ -165,8 +168,8 @@ if (runs('horde')) for (const id of HORDE_PHASES) hordeMetrics[id] = await horde
 // out of the exit code: tools/gpu/perf-gate.mjs blocks those against main measured on the same machine instead.
 /** @type {{ text: string, kind: 'hard' | 'target' }[]} */
 const failures = []
-const fail = (text, kind = 'target') => failures.push({ text, kind })
-const hard = (text) => fail(text, 'hard')
+const fail = (/** @type {string} */ text, kind = 'target') => failures.push({ text, kind })
+const hard = (/** @type {string} */ text) => fail(text, 'hard')
 for (const p of phases) {
   const programBudget = p.name === 'chain_horde' ? HORDE_BUDGET.chainPrograms : BUDGET.programsAfterLoad
   if (p.programs > programBudget) hard(`${p.name}: ${p.programs} shader programs compiled during play (budget ${programBudget}): ${p.programNames.join(' | ')}`)
@@ -193,14 +196,17 @@ console.log(failures.length === 0 ? 'PERF  every budget holds' : `PERF  ${failur
 await browser.close()
 process.exit(blocking.length === 0 ? 0 : 1)
 
+/**
+ * @param {number} ms
+ */
 function pause(ms) {
-  return page.evaluate((delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
+  return page.evaluate((/** @type {number | undefined} */ delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms)
 }
 
 async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE_TIMEOUT_MS } = {}) {
   for (const id of ids) {
     // a player draws the weapon in real time; waitUntilReady would simulate the draw inside one task and stall the page like no player does
-    await page.evaluate((weapon) => window.__testRoom.equip(weapon), id)
+    await page.evaluate((/** @type {string} */ weapon) => window.__testRoom.equip(weapon), id)
     await page.waitForFunction(() => window.__testRoom.tool?.phase == null, null, { timeout: SETTLE_TIMEOUT_MS, polling: 100 }).catch(() => pageErrors.push(`${id} never got ready`))
     await pause(DRAW_MS)
     const fired = await pullUntilItGoes(id, aim)
@@ -234,10 +240,13 @@ async function pullUntilItGoes(id, aim) {
   }
 }
 
-/** Resolves after `count` frames of the page (the room's loop runs first in each of them). */
+/**
+ * Resolves after `count` frames of the page (the room's loop runs first in each of them).
+ * @param {number} count
+ */
 function nextFrames(count) {
-  return page.evaluate((frames) => new Promise((resolve) => {
-    const step = (left) => (left === 0 ? resolve() : requestAnimationFrame(() => step(left - 1)))
+  return page.evaluate((/** @type {number} */ frames) => new Promise((resolve) => {
+    const step = (/** @type {number} */ left) => (left === 0 ? resolve() : requestAnimationFrame(() => step(left - 1)))
     step(frames)
   }), count)
 }
@@ -248,6 +257,9 @@ function readHorde() {
 }
 
 // the horde phases: a page of their own, the bench state in the URL, the crowd baked at load (`eager`), the measurement from the first frame the room is ready
+/**
+ * @param {string} id
+ */
 async function hordePhase(id) {
   const scene = id === 'dense_horde' ? 'dense_wall' : 'chain_line'
   await page.goto(`${pathToFileURL(dist).href}?area=crowd_area&bench.crowd_area=scene=${scene};count=${HORDE};physics=1;seed=${HORDE_SEED}${process.env.PERF_QUERY ?? ''}`, { timeout: 0 })
@@ -266,13 +278,17 @@ async function hordePhase(id) {
   return { ...found, name: id, adaptation }
 }
 
+/**
+ * @param {{ (): boolean; (): boolean; }} condition
+ * @param {number} seconds
+ */
 async function waitForHorde(condition, seconds) {
   const timeout = GPU_MODE ? seconds * 1000 : SETTLE_TIMEOUT_MS
   await page.waitForFunction(condition, null, { timeout, polling: 250 }).catch(() => undefined)
 }
 
 async function playDenseHorde() {
-  await page.waitForFunction((n) => window.__testRoom.metrics().module.agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
+  await page.waitForFunction((/** @type {number} */ n) => window.__testRoom.metrics().module.agents >= n, HORDE, { timeout: SETTLE_TIMEOUT_MS, polling: 250 })
   // gpu mode plays the 30 s of the plan; software GL plays until the horde has done what the phase is for (falls by pressure, climbers) or the timeout
   if (GPU_MODE) await pause(HORDE_BUDGET.denseSeconds * 1000)
   else await waitForHorde(() => {
@@ -339,8 +355,8 @@ async function phase(name, run) {
 /** When the detail settled (the last time it was off its final value by more than the share) and how much it still moves after that. */
 function adaptationOf(samples) {
   const final = samples.at(-1)?.scale ?? 1
-  const lastOff = samples.findLast((sample) => Math.abs(sample.scale - final) > final * SETTLED_SHARE)
-  const settled = lastOff ? samples.filter((sample) => sample.seconds > lastOff.seconds) : samples
+  const lastOff = samples.findLast((/** @type {{ scale: number; }} */ sample) => Math.abs(sample.scale - final) > final * SETTLED_SHARE)
+  const settled = lastOff ? samples.filter((/** @type {{ seconds: number; }} */ sample) => sample.seconds > lastOff.seconds) : samples
   const scales = settled.map((sample) => sample.scale)
   return {
     finalDetailScale: Math.round(final * 100) / 100,
@@ -370,7 +386,7 @@ function measureCalibration() {
   canvas.width = innerWidth
   canvas.height = innerHeight
   const gl = canvas.getContext('webgl2')
-  const compile = (type, source) => {
+  const compile = (/** @type {number} */ type, /** @type {string} */ source) => {
     const shader = gl.createShader(type)
     gl.shaderSource(shader, source)
     gl.compileShader(shader)
@@ -442,7 +458,7 @@ async function readLightSlots() {
   const room = window.__testRoom
   const { lights, webgl, scene, camera } = room
   const problems = []
-  const near = (a, b, tolerance) => Math.abs(a - b) <= tolerance
+  const near = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ tolerance) => Math.abs(a - b) <= tolerance
   const lease = (() => {
     for (let count = lights.sizes.point; count > 0; count--) {
       const taken = lights.lease({ owner: 'perf.light_slots', point: count })
@@ -455,8 +471,8 @@ async function readLightSlots() {
     const spot = lights.acquire({ owner: 'perf.light_slots', kind: 'spot', priority: 1e6, color: [1, 1, 1], intensity: 1, distance: 30, position: [0, 3, 0], angle: 0.5 })
     if (spot) spots.push(spot)
   }
-  const colourOf = (k, total) => [(k + 1) / (total + 1), 1 - (k + 1) / (total + 1), 0.25 + 0.5 * ((k * 7) % total) / total]
-  const worldOf = (k) => [-6 + k * 0.8, 1.2 + (k % 3) * 0.7, -4 - (k % 5) * 0.9]
+  const colourOf = (/** @type {number} */ k, /** @type {number} */ total) => [(k + 1) / (total + 1), 1 - (k + 1) / (total + 1), 0.25 + 0.5 * ((k * 7) % total) / total]
+  const worldOf = (/** @type {number} */ k) => [-6 + k * 0.8, 1.2 + (k % 3) * 0.7, -4 - (k % 5) * 0.9]
   const handles = lease ? lease.handles : []
   handles.forEach((handle, k) => handle.update({ color: colourOf(k, handles.length), intensity: 1.5, distance: 20, position: worldOf(k) }))
   spots.forEach((handle, k) => handle.update({ color: colourOf(k + 3, spots.length + 3), intensity: 2, distance: 30, position: worldOf(k + 20), target: [worldOf(k + 20)[0], 0, worldOf(k + 20)[2]] }))
@@ -483,8 +499,8 @@ async function readLightSlots() {
       })
     }
     // the colours are linear numbers the budget wrote as linear, so the uniform equals colour x intensity exactly
-    check('point', handles, uniforms.pointLights, (k) => colourOf(k, handles.length), worldOf, 1.5)
-    check('spot', spots, uniforms.spotLights, (k) => colourOf(k + 3, spots.length + 3), (k) => worldOf(k + 20), 2)
+    check('point', handles, uniforms.pointLights, (/** @type {number} */ k) => colourOf(k, handles.length), worldOf, 1.5)
+    check('spot', spots, uniforms.spotLights, (/** @type {number} */ k) => colourOf(k + 3, spots.length + 3), (/** @type {number} */ k) => worldOf(k + 20), 2)
   }
   const report = { point: handles.map((handle) => handle.slot), spot: spots.map((handle) => handle.slot), problems }
   lease?.release()
@@ -500,7 +516,7 @@ function countWebGlCalls() {
   const used = new WeakSet()
   for (const Context of [WebGL2RenderingContext, WebGLRenderingContext]) {
     const proto = Context.prototype
-    const wrap = (name, key) => {
+    const wrap = (/** @type {string} */ name, /** @type {string} */ key) => {
       const original = proto[name]
       if (!original) return
       proto[name] = function (...args) {
@@ -612,10 +628,16 @@ function listDraws() {
 }
 
 function installFrameRecorder() {
+  /**
+     * @type {number[]}
+     */
   const frames = []
+  /**
+     * @type {number[]}
+     */
   const longTasks = []
   let last = performance.now()
-  const tick = (now) => {
+  const tick = (/** @type {number} */ now) => {
     frames.push(now - last)
     last = now
     requestAnimationFrame(tick)
@@ -638,8 +660,8 @@ function installFrameRecorder() {
     read(name, start) {
       const counts = window.__glCounts
       const slice = frames.slice(start.frame + 2).sort((a, b) => a - b)
-      const at = (q) => slice[Math.min(slice.length - 1, Math.floor(slice.length * q))] ?? 0
-      const round = (value) => Math.round(value * 10) / 10
+      const at = (/** @type {number} */ q) => slice[Math.min(slice.length - 1, Math.floor(slice.length * q))] ?? 0
+      const round = (/** @type {number} */ value) => Math.round(value * 10) / 10
       const frameCount = Math.max(1, frames.length - start.frame)
       return {
         name,

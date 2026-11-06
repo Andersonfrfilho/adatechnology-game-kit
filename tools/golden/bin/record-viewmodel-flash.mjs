@@ -13,10 +13,12 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const COMMIT = 'd15e990'
 const require = createRequire(resolve(root, 'packages/game-weapons-three/package.json'))
+/** @type {typeof import('three')} */
 const THREE = require('three')
+/** @type {typeof import('typescript')} */
 const ts = require('typescript')
 
-const show = (file) => execFileSync('git', ['show', `${COMMIT}:packages/game-weapons-three/src/fx/${file}`], { cwd: root, encoding: 'utf8' })
+const show = (/** @type {string} */ file) => execFileSync('git', ['show', `${COMMIT}:packages/game-weapons-three/src/fx/${file}`], { cwd: root, encoding: 'utf8' })
 const sources = { 'effects.ts': show('effects.ts'), 'particles.ts': show('particles.ts') }
 const work = mkdtempSync(resolve(tmpdir(), 'viewmodel-flash-'))
 for (const [file, text] of Object.entries(sources)) {
@@ -28,7 +30,7 @@ const { createEffects } = await import(pathToFileURL(resolve(work, 'effects.mjs'
 const { createParticles } = await import(pathToFileURL(resolve(work, 'particles.mjs')).href)
 
 // Park-Miller 16807, the stream game-vfx plays a seed with (`lehmer`)
-const lehmer = (seed) => {
+const lehmer = (/** @type {number} */ seed) => {
   let state = seed
   return () => {
     state = (state * 16807) % 2147483647
@@ -50,17 +52,19 @@ const kit = () => {
 
 const SAMPLES = [1, 2, 3, 4, 5, 6, 8, 12, 50, 100, 150, 190, 200]
 const FRAMES = 200
-const quaternion = (yaw, pitch, roll) => new THREE.Quaternion().setFromEuler(new THREE.Euler(roll, yaw, pitch, 'YXZ'))
+const quaternion = (/** @type {number} */ yaw, /** @type {number} */ pitch, /** @type {number} */ roll) => new THREE.Quaternion().setFromEuler(new THREE.Euler(roll, yaw, pitch, 'YXZ'))
+/** @type {Array<{ name: string, seed: number, size: number, point: [number, number, number], turn: [number, number, number], dt: number }>} */
 export const SCENARIOS = [
   { name: 'level, 100 fps', seed: 7, size: 0.8, point: [0.3, 1.2, -0.5], turn: [0.7, -0.4, 0.2], dt: 0.01 },
   { name: 'straight x, 60 fps, a shell', seed: 123456, size: 2.6, point: [0, 1, 0], turn: [0, 0, 0], dt: 1 / 60 },
   { name: 'aimed up, 60 fps', seed: 99, size: 1.6, point: [-1, 0.5, 2], turn: [-2.1, 1.0, 0], dt: 1 / 60 },
 ]
 
-const round = (value) => Number(value.toPrecision(14))
-const vector = (v) => [round(v.x), round(v.y), round(v.z)]
-const turn = (q) => [round(q.x), round(q.y), round(q.z), round(q.w)]
-const solid = (mesh) => {
+const round = (/** @type {number} */ value) => Number(value.toPrecision(14))
+const vector = (/** @type {import('three').Vector3} */ v) => [round(v.x), round(v.y), round(v.z)]
+const turn = (/** @type {import('three').Quaternion} */ q) => [round(q.x), round(q.y), round(q.z), round(q.w)]
+const solid = (/** @type {import('three').Object3D} */ object) => {
+  const mesh = /** @type {import('three').Mesh<import('three').BufferGeometry & { parameters: Record<string, unknown> }, import('three').MeshBasicMaterial>} */ (object)
   mesh.updateWorldMatrix(true, false)
   const position = new THREE.Vector3()
   const rotation = new THREE.Quaternion()
@@ -78,6 +82,7 @@ const solid = (mesh) => {
   }
 }
 
+/** @type {unknown[]} */
 const runs = []
 for (const scenario of SCENARIOS) {
   const scene = new THREE.Group()
@@ -90,9 +95,9 @@ for (const scenario of SCENARIOS) {
     effects.update(scenario.dt)
     particles.update(scenario.dt)
     if (!SAMPLES.includes(frame)) continue
-    const light = scene.children.find((child) => child.isPointLight)
-    const group = scene.children.find((child) => child.isGroup)
-    const puffs = scene.children.filter((child) => child.isMesh)
+    const light = /** @type {import('three').PointLight} */ (scene.children.find((child) => /** @type {{ isPointLight?: boolean }} */ (child).isPointLight))
+    const group = scene.children.find((child) => /** @type {Partial<import('three').Group>} */ (child).isGroup)
+    const puffs = scene.children.filter((child) => /** @type {Partial<import('three').Mesh>} */ (child).isMesh)
     frames.push({
       frame,
       flash: group ? group.children.map(solid) : [],
@@ -112,4 +117,4 @@ const fixture = {
 const outDir = resolve(root, 'tools/golden/fixtures/weapons')
 mkdirSync(outDir, { recursive: true })
 writeFileSync(resolve(outDir, 'viewmodel-flash.json'), `${JSON.stringify(fixture, null, 2)}\n`)
-console.log(`viewmodel-flash.json: ${runs.length} scenarios, ${runs.reduce((n, run) => n + run.frames.length, 0)} sampled frames`)
+console.log(`viewmodel-flash.json: ${runs.length} scenarios, ${runs.reduce((/** @type {number} */ n, run) => n + /** @type {{ frames: unknown[] }} */ (run).frames.length, 0)} sampled frames`)

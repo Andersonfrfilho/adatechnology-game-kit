@@ -3,6 +3,8 @@ import { createDestructionRenderer } from '@adatechnology/game-destruction-three
 import { describe, expect, it } from 'vitest'
 
 import { bindNavigator, createFloorNavigator, navigationDefOf } from '../src'
+import type { House, HouseBoxCollider } from '../src'
+import type { DestructionEvent } from '@adatechnology/game-destruction'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
 // The floor navigator (the team's AndaresSDK, a 10 cm grid per floor) and its binding to the house and to its destruction.
@@ -72,12 +74,12 @@ describe('run-time changes of the grid', () => {
 describe('a built house', () => {
   const plan = planOf('sobrado', 3)
   const { house } = houseOf(plan)
-  const def = navigationDefOf(house as any, { own: true })
+  const def = navigationDefOf(house, { own: true })
 
   it('takes the heights, the wall colliders and the flights from the house', () => {
-    expect(def.floors.map((f) => f.y)).toEqual(house.r.floors.map((f: any) => f.y0))
-    expect(def.floors.map((f) => f.h)).toEqual(house.r.floors.map((f: any) => f.ceiling))
-    const walls = house.colliders.filter((c: any) => c.type === 'wall' && c.f === 0)
+    expect(def.floors.map((f) => f.y)).toEqual(house.r.floors.map((f) => f.y0))
+    expect(def.floors.map((f) => f.h)).toEqual(house.r.floors.map((f) => f.ceiling))
+    const walls = house.colliders.filter((c) => c.type === 'wall' && c.f === 0)
     expect(def.floors[0]!.solids).toHaveLength(walls.length)
     expect(def.stairs).toHaveLength(house.stairs.length)
     expect(def.stairs![0]!.slice(4, 6)).toEqual([house.stairs[0].f, house.stairs[0].to])
@@ -88,10 +90,10 @@ describe('a built house', () => {
   it('leaves the gaps of the doors free and the wall cells solid', () => {
     const nav = createFloorNavigator()
     nav.register(def)
-    const wall = house.colliders.find((c: any) => c.type === 'wall' && c.f === 0)
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall' && c.f === 0)!
     expect(nav.blocked((wall.x0 + wall.x1) / 2, (wall.z0 + wall.z1) / 2, 0)).toBe(1)
-    const door = house.doors.find((d: any) => d.floor === 0)
-    expect(nav.blocked(door.cx, door.cz, 0)).toBe(0)
+    const door = house.doors.find((d) => d.floor === 0)
+    expect(nav.blocked(door!.cx, door!.cz, 0)).toBe(0)
   })
 
   it('lets a person climb to the floor above', () => {
@@ -103,7 +105,7 @@ describe('a built house', () => {
 
   it('uses the name of the house as its id unless told otherwise', () => {
     expect(def.id).toBe(house.name)
-    expect(navigationDefOf(house as any, { id: 'mine' }).id).toBe('mine')
+    expect(navigationDefOf(house, { id: 'mine' }).id).toBe('mine')
   })
 })
 
@@ -112,14 +114,14 @@ describe('bound to the destruction', () => {
   function fixture() {
     const { house } = houseOf(planOf('sobrado', 3))
     const nav = createFloorNavigator()
-    nav.register(navigationDefOf(house as any, { id: 'h', own: true }))
-    const listeners: ((e: any) => void)[] = []
-    const fake = { r: house.r, structure: house.structure, destruction: { onEvent: (fn: (e: any) => void) => { listeners.push(fn); return () => { listeners.splice(listeners.indexOf(fn), 1) } } } }
-    const binding = bindNavigator(nav, 'h', fake as any)
-    const send = (e: any): void => listeners.slice().forEach((fn) => fn(e))
+    nav.register(navigationDefOf(house, { id: 'h', own: true }))
+    const listeners: ((e: DestructionEvent) => void)[] = []
+    const fake = { r: house.r, structure: house.structure, destruction: { onEvent: (fn: (e: DestructionEvent) => void) => { listeners.push(fn); return () => { listeners.splice(listeners.indexOf(fn), 1) } } } }
+    const binding = bindNavigator(nav, 'h', fake)
+    const send = (e: object): void => listeners.slice().forEach((fn) => fn(e as DestructionEvent))
     return { house, nav, binding, send, listeners }
   }
-  const middle = (house: any, id: string): [number, number] => { const p = house.structure.byId.get(id); return [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
+  const middle = (house: House, id: string): [number, number] => { const p = house.structure.byId.get(id); return [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
 
   it('opens the cells inside the opening of a wall that reaches stage 2', () => {
     const { house, nav, send } = fixture()
@@ -191,9 +193,9 @@ describe('bound to the destruction', () => {
     const { house } = houseOf(plan, { destruction: world, destructionRenderer: renderer })
     scene.add(house.group)
     const nav = createFloorNavigator()
-    nav.register(navigationDefOf(house as any, { id: 'real', own: true }))
+    nav.register(navigationDefOf(house, { id: 'real', own: true }))
     house.destruction.activate()
-    bindNavigator(nav, 'real', house as any)
+    bindNavigator(nav, 'real', house)
     const [x, z] = middle(house, 'wall_0_0')
     expect(nav.blocked(x, z, 0)).toBe(1)
     world.hitPart(house.destruction.id, 'wall_0_0', { type: 'blunt', point: [x, 1.3, z], energy: 3e6, radius: 0.35, source: 'test' })

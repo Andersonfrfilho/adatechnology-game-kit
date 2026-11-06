@@ -4,6 +4,8 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { en, ptBR } from '../src'
+import type * as THREE from 'three'
+import type { House, HouseBoxCollider, HouseFurnitureCollider } from '../src'
 import { houseOf, planOf } from './helpers/houses'
 
 // The fourth slice: what the player does in the house (doors, lights, collision, prompts), the furniture map and the bridges that get their
@@ -11,8 +13,8 @@ import { houseOf, planOf } from './helpers/houses'
 afterEach(() => { vi.restoreAllMocks() })
 
 /** An eye one metre in front of a door of the ground floor, looking at it. */
-function facing(house: any) {
-  const door = house.doors.find((d: any) => d.floor === 0)
+function facing(house: House) {
+  const door = house.doors.find((d) => d.floor === 0)!
   return { door, eye: { x: door.cx, y: 1.6, z: door.cz - 0.9, floor: 0, yaw: 0, pitch: 0 } }
 }
 
@@ -23,10 +25,10 @@ describe('doors', () => {
     for (const [locale, open, close] of [['en', 'E: open the door', 'E: close the door'], ['pt-BR', 'E: abrir a porta', 'E: fechar a porta']] as const) {
       const { house } = houseOf(plan, { locale })
       const { eye } = facing(house)
-      expect(house.target(eye).text).toBe(open)
+      expect(house.target(eye)!.text).toBe(open)
       house.interact(eye)
       for (let i = 0; i < 4; i++) house.update(1, 1000 * (i + 1))
-      expect(house.target(eye).text).toBe(close)
+      expect(house.target(eye)!.text).toBe(close)
     }
   })
 
@@ -34,14 +36,14 @@ describe('doors', () => {
     const { house } = houseOf(plan)
     const { door } = facing(house)
     expect(door.open).toBe(false)
-    expect(door.col.off).toBeFalsy()
+    expect(door.col!.off).toBeFalsy()
     house.toggleDoor(door.id)
     expect(door.open).toBe(true)
-    expect(door.col.off).toBe(true)
+    expect(door.col!.off).toBe(true)
     for (let i = 0; i < 4; i++) house.update(1, 1000 * (i + 1))
     house.toggleDoor(door)
     expect(door.open).toBe(false)
-    expect(door.col.off).toBe(false)
+    expect(door.col!.off).toBe(false)
   })
 
   it('swings the leaf while time passes and keeps the state across a rebuild with the same state', () => {
@@ -74,7 +76,7 @@ describe('lights and rooms', () => {
 
   it('switches the lamps of a room', () => {
     const { house } = houseOf(plan, {}, { night: true })
-    const room = house.lights.list[0].roomId
+    const room = house.lights.list[0]!.roomId!
     expect(house.lightOn(room)).toBe(true)
     house.toggleLight(room)
     expect(house.lightOn(room)).toBe(false)
@@ -95,9 +97,9 @@ describe('collision', () => {
   const { house } = houseOf(plan)
 
   it('stops at walls and furniture and lets the open air and an open door through', () => {
-    const wall = house.colliders.find((c: any) => c.type === 'wall')
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall')!
     expect(house.collide((wall.x0 + wall.x1) / 2, (wall.z0 + wall.z1) / 2, wall.f)).toBe(true)
-    const piece = house.colliders.find((c: any) => c.type === 'furniture')
+    const piece = house.colliders.find((c): c is HouseFurnitureCollider => c.type === 'furniture')!
     expect(house.collide(piece.obb.cx, piece.obb.cz, piece.f)).toBe(true)
     const free = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].flatMap((x) => [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map((z): [number, number] => [x, z])).find(([x, z]) => house.roomAt(0, x, z) && !house.collide(x, z, 0))
     expect(free).toBeTruthy()
@@ -110,7 +112,7 @@ describe('collision', () => {
   })
 
   it('takes the radius of the walker', () => {
-    const wall = house.colliders.find((c: any) => c.type === 'wall')
+    const wall = house.colliders.find((c): c is HouseBoxCollider => c.type === 'wall')!
     const x = (wall.x0 + wall.x1) / 2, z = wall.z1 + 0.3
     expect(house.collide(x, z, wall.f, { radius: 0.1 })).toBe(false)
     expect(house.collide(x, z, wall.f, { radius: 0.5 })).toBe(true)
@@ -147,14 +149,14 @@ describe('the furniture map', () => {
 
   it('has a builder for every type of item the plan places, except the stairs (their own module)', () => {
     const { renderer } = houseOf(plan)
-    const types = new Set<string>(plan.items.map((i: any) => i.type))
+    const types = new Set<string>(plan.items.map((i) => i.type))
     expect([...types].filter((t) => !renderer.types[t])).toEqual(['stairs'])
-    for (const entry of Object.values<any>(renderer.types)) expect(typeof entry.f).toBe('function')
+    for (const entry of Object.values(renderer.types)) expect(typeof entry.f).toBe('function')
   })
 
   it('says where each builder comes from', () => {
     const { renderer } = houseOf(plan)
-    const sources = new Set(Object.values<any>(renderer.types).map((entry) => entry.source).filter((source) => source !== undefined))
+    const sources = new Set(Object.values(renderer.types).map((entry) => entry.source).filter((source) => source !== undefined))
     expect(sources.has('props3d')).toBe(true)
     expect([...sources].every((source) => /^(game|props3d)/.test(source))).toBe(true)
     expect(renderer.types.fountain.source).toBe('game')
@@ -182,23 +184,23 @@ describe('bridges that get their packages injected', () => {
   it('plants the garden with the vegetation package it is given, one merged object per group', () => {
     const vegetation = { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies }
     const { house } = houseOf(plan, { vegetation })
-    expect(house.vegetation.plants).toBeGreaterThan(5)
-    expect(house.vegetation.triangles).toBeGreaterThan(1000)
-    expect(house.vegetation.colliders.length).toBeGreaterThan(0)
-    const objects: any[] = []
-    house.group.traverse((o: any) => { if (o.name === 'vegetation') objects.push(o) })
+    expect(house.vegetation!.plants).toBeGreaterThan(5)
+    expect(house.vegetation!.triangles).toBeGreaterThan(1000)
+    expect(house.vegetation!.colliders.length).toBeGreaterThan(0)
+    const objects: THREE.Object3D[] = []
+    house.group.traverse((o) => { if (o.name === 'vegetation') objects.push(o) })
     expect(objects.length).toBeGreaterThan(0)
-    expect(new Set(objects.map((o) => o.parent.name || o.parent.userData.group)).size).toBeGreaterThan(0)
+    expect(new Set(objects.map((o) => o.parent!.name || o.parent!.userData.group)).size).toBeGreaterThan(0)
     const meshes: string[] = []
-    objects[0].traverse((o: any) => { if (o.isMesh) meshes.push(o.name) })
+    objects[0]!.traverse((o) => { if ((o as THREE.Mesh).isMesh) meshes.push(o.name) })
     expect(meshes.every((n) => n.startsWith('veg/'))).toBe(true)
     house.update(0.016, 100, { x: 3, y: 1.6, z: 3 })
   })
 
   it('draws the same plants for the same seed', () => {
     const vegetation = { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies }
-    const a = houseOf(plan, { vegetation }).house.vegetation
-    const b = houseOf(plan, { vegetation }).house.vegetation
+    const a = houseOf(plan, { vegetation }).house.vegetation!
+    const b = houseOf(plan, { vegetation }).house.vegetation!
     expect({ plants: a.plants, triangles: a.triangles, lodCounts: a.lodCounts }).toEqual({ plants: b.plants, triangles: b.triangles, lodCounts: b.lodCounts })
   })
 })

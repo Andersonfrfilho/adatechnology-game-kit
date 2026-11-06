@@ -29,6 +29,9 @@ if (!playwright || !existsSync(page)) {
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+  /**
+     * @type {string[]}
+     */
   const errors = []
   const external = []
   let failed = 0
@@ -45,11 +48,11 @@ if (!playwright || !existsSync(page)) {
       return route.abort()
     })
     const tab = await context.newPage()
-    tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}&arena=40`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__floorplanReport, null, { timeout: 90000 })
-    const frames = (seconds) => tab.evaluate((s) => { for (let t = 0; t < s; t += 0.05) window.__testRoom.update(0.05) }, seconds)
+    const frames = (/** @type {number} */ seconds) => tab.evaluate((/** @type {number} */ s) => { for (let t = 0; t < s; t += 0.05) window.__testRoom.update(0.05) }, seconds)
     await frames(1)
     await tab.waitForTimeout(300)
     await tab.screenshot({ path: join(shots, `floorplan-${lang}.png`) })
@@ -58,7 +61,7 @@ if (!playwright || !existsSync(page)) {
       const report = window.__floorplanReport
       const room = window.__testRoom
       const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === report.module)
-      return { ok: report.ok, items: report.items, scenarios: report.scenarios, problems: report.problems, checks: checks.length, failedChecks: checks.filter((e) => e.type !== 'pass').map((e) => e.text), houses: report.area.houses.length, parts: room.metrics().module.parts, bench: room.bench('floorplan_area').controls().map((c) => c.id) }
+      return { ok: report.ok, items: report.items, scenarios: report.scenarios, problems: report.problems, checks: checks.length, failedChecks: checks.filter((/** @type {{ type: string; }} */ e) => e.type !== 'pass').map((e) => e.text), houses: report.area.houses.length, parts: room.metrics().module.parts, bench: room.bench('floorplan_area').controls().map((c) => c.id) }
     })
     check(`[${lang}] contract report is clean: 5 specimens, 7 scenarios, every check passed`, loaded.ok && loaded.problems.length === 0 && loaded.items.length === 5 && loaded.scenarios.length === 7 && loaded.failedChecks.length === 0 && loaded.checks > 0, loaded)
     check(`[${lang}] the first house stands in the room's world (one house, over 100 parts)`, loaded.houses === 1 && Number(loaded.parts) > 100, { houses: loaded.houses, parts: loaded.parts })
@@ -67,7 +70,7 @@ if (!playwright || !existsSync(page)) {
       const iv = window.__floorplanReport.area.houses[0].house.interactives
       if (!iv || !iv.active) return { active: false }
       const types = new Set([...iv.entries.values()].map((e) => e.type))
-      return { active: true, entries: iv.entries.size, interactables: iv.interactables().length, types: ['fridge', 'wall_socket', 'wall_switch'].filter((t) => types.has(t)), lamps: iv.plane.items.filter((e) => e.type === 'lamp').length, warnings: iv.warnings, adapter: iv.kit.A.version }
+      return { active: true, entries: iv.entries.size, interactables: iv.interactables().length, types: ['fridge', 'wall_socket', 'wall_switch'].filter((t) => types.has(t)), lamps: iv.plane.items.filter((/** @type {{ type: string; }} */ e) => e.type === 'lamp').length, warnings: iv.warnings, adapter: iv.kit.A.version }
     })
     check(`[${lang}] the first house is made of kit objects: fridge, sockets, switches and the lamps of the rooms, built by the package's default adapter`, kit.active && kit.entries > 30 && kit.interactables > 10 && kit.types.length === 3 && kit.lamps > 0 && kit.warnings.length === 0 && kit.adapter === '0.3.0', kit)
     check(`[${lang}] the bench lists the package, the typology, the state, the seed and the actions`, ['package', 'template', 'state', 'seed', 'houses', 'budget', 'build', 'enter', 'up', 'down', 'door', 'strike'].every((id) => loaded.bench.includes(id)), loaded.bench)
@@ -180,9 +183,9 @@ if (!playwright || !existsSync(page)) {
       for (let i = 0; i < 20; i++) room.update(0.05)
       const roomy = sum()
       bench.set('lod', '2')
-      const hidden = area.houses.every((h) => h.house.lod === 2)
+      const hidden = area.houses.every((/** @type {{ house: { lod: number; }; }} */ h) => h.house.lod === 2)
       bench.set('lod', '0')
-      const full = area.houses.every((h) => h.house.lod === 0)
+      const full = area.houses.every((/** @type {{ house: { lod: number; }; }} */ h) => h.house.lod === 0)
       bench.set('houses', 1)
       bench.set('lod', 'auto')
       for (let i = 0; i < 40; i++) room.update(0.05)
@@ -218,7 +221,7 @@ if (!playwright || !existsSync(page)) {
     // the scenarios: the six of the team and the typologies
     const scen = await tab.evaluate(async () => {
       const room = window.__testRoom
-      const list = room.scenarios.filter((s) => s.id.startsWith('house_') || s.id === 'floorplan_typologies')
+      const list = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('house_') || s.id === 'floorplan_typologies')
       const result = await room.runScenarios(list)
       return { total: list.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => [r.id, r.checks.filter((c) => !c.ok).map((c) => c.label)]) }
     })

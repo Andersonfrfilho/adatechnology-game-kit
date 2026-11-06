@@ -13,12 +13,13 @@ import { parseArgs } from 'node:util'
 import { exposeInPage } from './expose-in-page.mjs'
 
 const TOOL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
+/** @type {Record<string, string>} */
 const MIME_TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css' }
 const CHROME_BIN = process.env.CHROME_BIN ?? 'google-chrome-stable'
 const CDP_CALL_TIMEOUT_MS = 30000
 const THREE_ADDON_URL = /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@[^/]+\/examples\/js\/.+\/([^/]+\.js)$/
 const THREE_URL = /^https:\/\/(cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/[^/]+|(cdn\.jsdelivr\.net\/npm|unpkg\.com)\/three@[^/]+\/build)\/three(\.min)?\.js(\?.*)?$/
-const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
+const sleep = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
 
 const { values } = parseArgs({
   options: {
@@ -34,7 +35,7 @@ const { values } = parseArgs({
     'timeout-ms': { type: 'string', default: '90000' },
   },
 })
-for (const required of ['page', 'capture', 'out']) {
+for (const required of /** @type {const} */ (['page', 'capture', 'out'])) {
   if (!values[required]) throw new Error(`missing --${required} (see the header of bin/record.mjs)`)
 }
 const seed = Number(values.seed)
@@ -44,13 +45,17 @@ const exposedNames = values.expose.split(',').map((name) => name.trim()).filter(
 const params = { seed, ...Object.fromEntries(values.param.map((entry) => [entry.split('=')[0], entry.slice(entry.indexOf('=') + 1)])) }
 
 // A published artifact page references its scripts relative to a folder with the page's own name; serve both under "/".
+/**
+ * @param {string} pagePath
+ * @returns {Promise<import('node:http').Server>}
+ */
 function startStaticServer(pagePath) {
   const pageDir = dirname(resolve(pagePath))
   const assetDir = join(pageDir, basename(pagePath, extname(pagePath)))
   const server = createServer((request, response) => {
     let urlPath
     try {
-      urlPath = decodeURIComponent(new URL(request.url, 'http://local').pathname)
+      urlPath = decodeURIComponent(new URL(/** @type {string} */ (request.url), 'http://local').pathname)
     } catch {
       return response.writeHead(400).end()
     }
@@ -66,13 +71,21 @@ function startStaticServer(pagePath) {
 
 // Chrome picks its own debugging port (--remote-debugging-port=0) and writes it to <profile>/DevToolsActivePort; a fixed port could be
 // another Chrome that is already running.
+/**
+ * A CDP message: an answer to a call (`id`) or an event (`method`).
+ * @typedef {{ id?: number, method?: string, params: { requestId: string, request: { url: string } }, result: { result: { value?: unknown }, exceptionDetails?: { text: string, exception?: { description?: string } } }, error?: { message: string } }} CdpMessage
+ * @typedef {{ send: (method: string, params?: object, limitMs?: number) => Promise<CdpMessage>, evaluate: (expression: string) => Promise<unknown> }} CdpClient
+ */
+
+/** @param {string} profile @returns {Promise<WebSocket>} */
 async function connect(profile) {
   const portFile = join(profile, 'DevToolsActivePort')
   for (let attempt = 0; attempt < 120; attempt++) {
     try {
       const port = readFileSync(portFile, 'utf8').split('\n')[0].trim()
+      /** @type {Array<{ type: string, webSocketDebuggerUrl: string }>} */
       const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json()
-      const socket = new WebSocket(targets.find((target) => target.type === 'page').webSocketDebuggerUrl)
+      const socket = new WebSocket(/** @type {{ webSocketDebuggerUrl: string }} */ (targets.find((target) => target.type === 'page')).webSocketDebuggerUrl)
       await new Promise((done, fail) => {
         socket.addEventListener('open', done)
         socket.addEventListener('error', fail)
@@ -85,14 +98,18 @@ async function connect(profile) {
   throw new Error(`Chrome did not publish a debugging port in ${portFile}`)
 }
 
+/** @param {WebSocket} socket @param {(message: CdpMessage) => void} onEvent @returns {CdpClient} */
 function createClient(socket, onEvent) {
   let nextId = 0
+  /** @type {Map<number, (message: CdpMessage) => void>} */
   const pending = new Map()
   socket.addEventListener('message', (event) => {
+    /** @type {CdpMessage} */
     const message = JSON.parse(event.data)
-    if (message.id && pending.has(message.id)) pending.get(message.id)(message)
+    if (message.id && pending.has(message.id)) /** @type {(message: CdpMessage) => void} */ (pending.get(message.id))(message)
     else if (message.method) onEvent(message)
   })
+  /** @type {CdpClient['send']} */
   const send = (method, params = {}, limitMs = CDP_CALL_TIMEOUT_MS) =>
     new Promise((done, fail) => {
       const id = ++nextId
@@ -107,6 +124,7 @@ function createClient(socket, onEvent) {
       })
       socket.send(JSON.stringify({ id, method, params }))
     })
+  /** @type {CdpClient['evaluate']} */
   const evaluate = async (expression) => {
     const { result, error } = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, timeoutMs)
     if (error) throw new Error(error.message)
@@ -116,6 +134,7 @@ function createClient(socket, onEvent) {
   return { send, evaluate }
 }
 
+/** @param {CdpClient} client @param {string} expression */
 async function waitFor(client, expression) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
@@ -126,9 +145,10 @@ async function waitFor(client, expression) {
 }
 
 // Offline and repeatable: the page's three.js CDN URL is answered from disk and every other external request is refused.
+/** @param {CdpClient} client @param {string} origin @returns {(message: CdpMessage) => void} */
 function answerRequests(client, origin) {
   // an answer can arrive after Chrome was stopped; it must not become an unhandled rejection that fails a finished recording
-  const answer = (method, params) => void client.send(method, params).catch(() => {})
+  const answer = (/** @type {string} */ method, /** @type {object} */ params) => void client.send(method, params).catch(() => {})
   const threeSource = values.three ? readFileSync(resolve(values.three)).toString('base64') : undefined
   const addons = new Map(values.addon.map((file) => [basename(file), readFileSync(resolve(file)).toString('base64')]))
   return (message) => {
@@ -150,9 +170,9 @@ function answerRequests(client, origin) {
 
 async function record() {
   const bundle = readFileSync(join(TOOL_DIR, 'dist/index.global.js'), 'utf8')
-  const captureScript = readFileSync(resolve(values.capture), 'utf8')
-  const server = await startStaticServer(values.page)
-  const origin = `http://127.0.0.1:${server.address().port}`
+  const captureScript = readFileSync(resolve(/** @type {string} */ (values.capture)), 'utf8')
+  const server = await startStaticServer(/** @type {string} */ (values.page))
+  const origin = `http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (server.address()).port}`
   const profile = mkdtempSync(join(tmpdir(), 'golden-tool-'))
   const chrome = spawn(
     CHROME_BIN,
@@ -160,6 +180,7 @@ async function record() {
     { stdio: 'ignore' },
   )
   try {
+    /** @type {(message: CdpMessage) => void} */
     let handleEvent = () => {}
     const client = createClient(await connect(profile), (message) => handleEvent(message))
     handleEvent = answerRequests(client, origin)
@@ -168,10 +189,10 @@ async function record() {
     const setup = `${bundle}\n;globalThis.__GOLDEN_PARAMS = ${JSON.stringify(params)};GoldenTool.stepFrames = GoldenTool.installDeterminism({ seed: ${seed} }).stepFrames`
     await client.send('Page.addScriptToEvaluateOnNewDocument', { source: setup })
     await client.send('Page.navigate', { url: `${origin}/` })
-    await waitFor(client, values.ready)
+    await waitFor(client, /** @type {string} */ (values.ready))
     const goldenRecord = await client.evaluate(captureScript)
-    mkdirSync(dirname(resolve(values.out)), { recursive: true })
-    writeFileSync(resolve(values.out), JSON.stringify(goldenRecord, null, 1) + '\n')
+    mkdirSync(dirname(resolve(/** @type {string} */ (values.out))), { recursive: true })
+    writeFileSync(resolve(/** @type {string} */ (values.out)), JSON.stringify(goldenRecord, null, 1) + '\n')
     console.log(`golden written to ${values.out}`)
   } finally {
     const exited = new Promise((done) => chrome.once('exit', done))

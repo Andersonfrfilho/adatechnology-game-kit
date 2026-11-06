@@ -1,7 +1,10 @@
 /** Truck cab and chassis builders. */
-import type { Kit } from './types'
+import type { ColorRepresentation } from 'three'
 
-export function installTrucks(kit: Kit): void {
+import type { HeadlightOptions, GrilleOptions } from './lights'
+import type { BuildContext, Kit } from './types'
+
+export function installTrucks(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -9,7 +12,10 @@ export function installTrucks(kit: Kit): void {
 
   /* ================= trucks ================= */
   /* Forward cab. o: { f (front x), W, col, len (2.05), roofY (2.92), belt (1.75), floor (1.25), wheelR (0.52), wheelW (0.32), int:{col,trim}, hl, grille, sleeper } */
-  kit.truckCab = function (c: any, o: any) {
+  kit.truckCab = function (
+    c: BuildContext,
+    o: { f: number; W: number; col: ColorRepresentation; len?: number; roofY?: number; belt?: number; floor?: number; wheelR?: number; wheelW?: number; int?: { col?: ColorRepresentation; trim?: ColorRepresentation }; hl?: Partial<HeadlightOptions>; grille?: Partial<GrilleOptions>; visor?: boolean },
+  ) {
     const f = o.f
     const W = o.W
     const col = o.col
@@ -108,7 +114,7 @@ export function installTrucks(kit: Kit): void {
     return m
   }
   /* Chassis, rear axles, tank and fenders. o: { f, L, W, axles:[x..], dual, tank ('left'|'right'|false), wheelR, wheelW } */
-  kit.truckChassis = function (c: any, o: any) {
+  kit.truckChassis = function (c: BuildContext, o: { f: number; L: number; W: number; axles?: number[]; dual?: boolean; tank?: 'left' | 'right' | false; wheelR?: number; wheelW?: number }) {
     const f = o.f
     const L = o.L
     const W = o.W
@@ -121,7 +127,7 @@ export function installTrucks(kit: Kit): void {
       c.roundBox(L - 0.3, 0.25, 0.12, 0.03, MATERIALS.trim, (f + rear) / 2 - 0.1, 0.68, z)
     })
     const axles = o.axles || [rear + 1.9, rear + 0.85]
-    axles.forEach(function (x: any) {
+    axles.forEach(function (x: number) {
       ;[1, -1].forEach(function (s) {
         c.wheel(x, s * (W / 2 - 0.2), wr, ww, { rim: rim, spokes: 8 })
         if (o.dual !== false) c.wheel(x, s * (W / 2 - 0.55), wr, ww - 0.02, { rim: rim, spokes: 8, noPart: true })
@@ -146,5 +152,9 @@ export function installTrucks(kit: Kit): void {
     m.length = L
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

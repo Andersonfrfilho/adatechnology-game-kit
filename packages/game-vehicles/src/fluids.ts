@@ -1,5 +1,48 @@
 /** Fluid types (oil, stains, rain...) and the splat/puddle system. */
-import type { Kit } from './types'
+import type { BufferGeometry, Color, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from 'three'
+
+import type { FluidDefinition } from './api'
+import type { BuildContext, Kit, SceneNode } from './types'
+
+/** A lobe of a puddle's outline: its angle, width, how far it reaches and when it stops growing. */
+export type PuddleLobe = { a: number; w: number; amp: number; stop: number }
+/** A puddle on the ground (`puddle`): its mesh, age, final radius, centre, outline lobes and noise, and the oil drop, crown, gasoline haze and rim it may have. */
+export type Puddle = {
+  kind: string
+  m: Mesh<BufferGeometry, MeshStandardMaterial>
+  t: number
+  max: number
+  x0: number
+  z0: number
+  lobes: PuddleLobe[]
+  nz: (x: number, y: number) => number
+  ph: number
+  R?: Float32Array
+  rim?: Mesh<BufferGeometry, MeshBasicMaterial>
+  drop?: Mesh
+  dy0?: number
+  crown?: Mesh<BufferGeometry, MeshStandardMaterial>
+  phase?: number
+  haze?: Mesh<BufferGeometry, MeshBasicMaterial>
+  fire?: boolean
+}
+/** A fluid type after `defineFluid`: the definition with its key and both colours. */
+type ResolvedFluid = FluidDefinition & { key: string; freshC: Color; dryC: Color; dryTime: number; roughFresh: number; roughDry: number; metalFresh: number; metalDry: number }
+/** A splat on the body (`kit.splat`) with its trickle. */
+export type Splat = {
+  kind: string
+  def: ResolvedFluid
+  grp: Group
+  mat: MeshStandardMaterial
+  drip: Mesh
+  r: number
+  t: number
+  onGlass: boolean
+  Lmax: number
+  off: number[]
+  len: number
+  w0: number
+}
 import { clamp } from './util'
 
 /** Colour of the puddle each car fluid leaves: coolant green, brake fluid amber, transmission and power steering fluid red, washer fluid blue, battery acid a pale stain. */
@@ -12,7 +55,7 @@ const PUDDLE_COLORS: Record<string, number> = {
   battery_acid: 0xd8d8c8,
 }
 
-export function installFluids(kit: Kit): void {
+export function installFluids(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -24,7 +67,7 @@ export function installFluids(kit: Kit): void {
      def: { fresh, dry (hex colours), dryTime (s until dry), roughFresh, roughDry, metalFresh, metalDry, wipeable (wiper/rain remove the fresh one) }
      Types without "fresh" (def.update(c, f, dt, i) returning true removes it) become fully custom fluids of the plugin. */
   kit.fluidTypes = {}
-  kit.defineFluid = function (key: any, def: any) {
+  kit.defineFluid = function (key: string, def: FluidDefinition | null | undefined) {
     const d = Object.assign({ dryTime: 600, roughFresh: 0.12, roughDry: 0.92, metalFresh: 0.15, metalDry: 0, wipeable: false }, def || {})
     d.key = key
     d.freshC = new THREE.Color(d.fresh || '#444444')
@@ -39,7 +82,7 @@ export function installFluids(kit: Kit): void {
   /* Liquid splat: a flat stain glued to the surface, irregular outline, satellite drops and a trickle that runs down,
      thins and ends in a bulb. The trickle stops when the volume runs out. Glossy when fresh, dries matte in the fluid type's time.
      o: { fluid (key of kit.fluidTypes; default config.defaultSplat), glass, obj (mesh to attach to; the trickle follows its curve) } */
-  kit.splat = function (c: any, p: any, n: any, r: any, o: any) {
+  kit.splat = function (c: BuildContext, p: Vector3, n: Vector3, r: number, o?: { fluid?: string; glass?: boolean; obj?: SceneNode | null } | null) {
     o = o || {}
     n = n.clone().normalize()
     const fdef = kit.fluidTypes[o.fluid || kit.config.defaultSplat] || kit.fluidTypes.stain
@@ -63,7 +106,7 @@ export function installFluids(kit: Kit): void {
     grp.quaternion.setFromRotationMatrix(M)
     const rnd = c.rand
     const nz = I.valueNoise(Math.floor(rnd() * 1000))
-    function blobShape(cx: any, cz: any, rr: any, k: any, ph: any) {
+    function blobShape(cx: number, cz: number, rr: number, k: number, ph: number) {
       const sh = new THREE.Shape()
       const N = 28
       for (let i = 0; i <= N; i++) {
@@ -93,7 +136,7 @@ export function installFluids(kit: Kit): void {
     /* trickle path: samples along the descent, glued to the surface by ray against the source mesh */
     const Lmax = r * (2.2 + rnd() * 2.2)
     const NS = 10
-    const off = []
+    const off: number[] = []
     c.root.updateMatrixWorld(true)
     for (let k = 0; k <= NS; k++) {
       const xl = r * 0.55 + (Lmax * k) / NS
@@ -116,7 +159,7 @@ export function installFluids(kit: Kit): void {
     const drip = new THREE.Mesh(new THREE.BufferGeometry(), mat)
     drip.castShadow = false
     grp.add(drip)
-    const f = {
+    const f: Splat = {
       kind: fdef.key,
       def: fdef,
       grp: grp,
@@ -134,12 +177,12 @@ export function installFluids(kit: Kit): void {
     c.fluids.push(f)
     return f
   }
-  function buildDrip(f: any, L: any) {
+  function buildDrip(f: Splat, L: number) {
     const pos = []
     const NS = 12
     const r = f.r
     const x0 = r * 0.55
-    function hAt(x: any) {
+    function hAt(x: number) {
       const u = clamp((x - x0) / f.Lmax, 0, 1) * (f.off.length - 1)
       const i = Math.min(f.off.length - 2, Math.floor(u))
       const t = u - i
@@ -227,7 +270,7 @@ export function installFluids(kit: Kit): void {
     g.setIndex(idx)
     return g
   }
-  function puddle(c: any, kind: any, pLocal: any, maxR: any) {
+  function puddle(c: BuildContext, kind: string, pLocal: Vector3, maxR: number) {
     const q = c.toEffects(pLocal)
     const oily = kind === 'oil' || kind === 'diesel'
     const mat =
@@ -273,7 +316,7 @@ export function installFluids(kit: Kit): void {
     m.raycast = function () {}
     c.effects.add(m)
     const rnd = c.rand
-    const lobes = []
+    const lobes: PuddleLobe[] = []
     const nl = 5 + Math.floor(rnd() * 3)
     const down = Math.atan2(DOWNHILL.z, DOWNHILL.x)
     for (let i = 0; i < nl; i++) {
@@ -281,7 +324,7 @@ export function installFluids(kit: Kit): void {
       const dh = Math.max(0, Math.cos(a - down))
       lobes.push({ a: a, w: 0.22 + rnd() * 0.3, amp: (0.1 + rnd() * 0.16) * (1 + 1.1 * dh), stop: 0.35 + rnd() * 0.65 })
     }
-    const f: any = { kind: kind, m: m, t: 0, max: maxR, x0: q.x, z0: q.z, lobes: lobes, nz: I.valueNoise(Math.floor(rnd() * 999)), ph: rnd() * 10 }
+    const f: Puddle = { kind: kind, m: m, t: 0, max: maxR, x0: q.x, z0: q.z, lobes: lobes, nz: I.valueNoise(Math.floor(rnd() * 999)), ph: rnd() * 10 }
     if (oily) {
       const rim = new THREE.Mesh(
         rimGeometry(),
@@ -339,7 +382,7 @@ export function installFluids(kit: Kit): void {
     return f
   }
   kit.puddle = puddle
-  function shapePuddle(f: any) {
+  function shapePuddle(f: Puddle) {
     const t = f.t
     let g
     let evap = 1
@@ -353,7 +396,7 @@ export function installFluids(kit: Kit): void {
       const a = (k / PN) * PI * 2
       let rr =
         0.68 + 0.22 * f.nz(Math.cos(a) * 2.3 + f.ph, Math.sin(a) * 2.3 + f.ph) + 0.08 * f.nz(Math.cos(a) * 6 + 3, Math.sin(a) * 6 + 3)
-      f.lobes.forEach(function (L: any) {
+      f.lobes.forEach(function (L) {
         const d = Math.atan2(Math.sin(a - L.a), Math.cos(a - L.a)) / L.w
         rr += L.amp * Math.exp(-d * d) * Math.min(1, grow / L.stop)
       })
@@ -363,8 +406,8 @@ export function installFluids(kit: Kit): void {
         evap = clamp(1 - e * (0.75 + 0.5 * f.nz(Math.cos(a) * 3 + 9, Math.sin(a) * 3 + 9)) - e * e * 0.4, 0, 1)
         rr *= evap
       }
-      f.R[k] = g * rr
-      pos.setXYZ(k + 1, Math.cos(a) * f.R[k], 0, Math.sin(a) * f.R[k])
+      f.R![k] = g * rr
+      pos.setXYZ(k + 1, Math.cos(a) * f.R![k], 0, Math.sin(a) * f.R![k])
     }
     pos.needsUpdate = true
     f.m.geometry.computeBoundingSphere()
@@ -372,7 +415,7 @@ export function installFluids(kit: Kit): void {
       const hp = f.haze.geometry.attributes.position
       for (let j = 0; j < PN; j++) {
         const aa = (j / PN) * PI * 2
-        const w = f.R[j] * (1 + 0.08 * Math.sin(t * 11 + j))
+        const w = f.R![j] * (1 + 0.08 * Math.sin(t * 11 + j))
         hp.setXYZ(j + 1, Math.cos(aa) * w, 0.03 * Math.sin(t * 9 + j * 0.7), Math.sin(aa) * w)
       }
       hp.needsUpdate = true
@@ -384,7 +427,7 @@ export function installFluids(kit: Kit): void {
       const col = new THREE.Color()
       for (let q = 0; q < PN; q++) {
         const an = (q / PN) * PI * 2
-        const R = f.R[q]
+        const R = f.R![q]
         const band = Math.min(0.085, R * 0.16)
         rp.setXYZ(2 * q, Math.cos(an) * (R - band), 0, Math.sin(an) * (R - band))
         rp.setXYZ(2 * q + 1, Math.cos(an) * (R + 0.004), 0, Math.sin(an) * (R + 0.004))
@@ -398,7 +441,7 @@ export function installFluids(kit: Kit): void {
     }
     return evap
   }
-  function updateFluids(c: any, dt: any) {
+  function updateFluids(c: BuildContext, dt: number) {
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]
       f.t += dt
@@ -480,7 +523,7 @@ export function installFluids(kit: Kit): void {
   }
   kit.updateFluids = updateFluids
   /* The wiper (glass only) and rain clean only fresh stains (less than half dry) of the types with wipeable. */
-  kit.wipe = function (c: any, mode: any) {
+  kit.wipe = function (c: BuildContext, mode: string) {
     let n = 0
     for (let i = c.fluids.length - 1; i >= 0; i--) {
       const f = c.fluids[i]
@@ -494,5 +537,9 @@ export function installFluids(kit: Kit): void {
     return n
   }
 
-  Object.assign(I, { _fr, buildDrip, DOWNHILL, PN, puddleGeometry, rimGeometry, puddle, shapePuddle, updateFluids })
+  const shared = { _fr, buildDrip, DOWNHILL, PN, puddleGeometry, rimGeometry, puddle, shapePuddle, updateFluids }
+
+  Object.assign(I, shared)
+
+  return shared
 }

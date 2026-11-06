@@ -1,7 +1,12 @@
 // Sizing of a sanitized SVG for drawing. The sanitizer itself is src/sanitize.ts (sanitizeSvg, exported by the tool).
-const attribute = (tag, name) => new RegExp(`\\s${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, 'i').exec(tag)?.slice(2).find((value) => value !== undefined)
+const attribute = (/** @type {string} */ tag, /** @type {string} */ name) => new RegExp(`\\s${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, 'i').exec(tag)?.slice(2).find((value) => value !== undefined)
 
 /** The sanitized text with a root `viewBox` (from width/height when missing) and a `width`/`height` of `longSide` pixels on the long side, ready to be drawn. Undefined when it is not an SVG. */
+/**
+ * @param {string} clean
+ * @param {number} longSide
+ * @returns {{ svg: string, width: number, height: number } | undefined}
+ */
 export function sizedSvg(clean, longSide) {
   const root = /<svg\b[^>]*>/i.exec(clean)
   if (!root) return undefined

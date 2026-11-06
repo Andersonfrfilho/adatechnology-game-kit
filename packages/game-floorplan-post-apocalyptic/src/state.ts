@@ -1,7 +1,7 @@
-import type { LotPerimeterPiece, PlacedItem, PlanAxis, Rect, Room, StateContext, StatePlugin, Vec2 } from '@adatechnology/game-floorplan'
+import type { LotPerimeterPiece, PlaceOnFloorOptions, PlacedItem, PlanAxis, Rect, Room, StateContext, StatePlugin, Vec2 } from '@adatechnology/game-floorplan'
 import { LEGACY_STREAMS, legacyCarId } from './legacy-seeds'
 
-type Item = PlacedItem & Record<string, any>  
+type Item = PlacedItem & Record<string, unknown>
 
 const HEAVY_CATEGORIES = new Set(['sofa', 'wardrobe', 'wardrobe_large', 'fridge', 'shelf_unit', 'tv_unit', 'buffet', 'china_cabinet', 'pantry', 'bookcase', 'dining_table_large', 'freezer', 'wall_shelving'])
 const CONTAINER_CATEGORIES = new Set(['dresser', 'nightstand', 'wardrobe', 'wardrobe_large', 'vanity_table', 'sideboard', 'console_table', 'buffet', 'china_cabinet', 'pantry', 'shelf_unit', 'laundry_shelf', 'laundry_cabinet', 'kitchen_cabinet'])
@@ -32,7 +32,7 @@ function toolbox(c: StateContext) {
   const addSolid = (room: Room, r: Rect) => {
     ;(extraSolids[room.id] = extraSolids[room.id] || []).push(r)
   }
-  const placeItem = (room: Room, type: string, o?: Record<string, any>, extra?: Record<string, unknown>) => {  
+  const placeItem = (room: Room, type: string, o?: PlaceOnFloorOptions & { f?: Vec2 }, extra?: Record<string, unknown>) => {
     const r = placeOnFloor(room, type, rng, o || {})
     if (!r) return null
     const it = CATALOG[type]
@@ -42,7 +42,7 @@ function toolbox(c: StateContext) {
     return register(m)
   }
   /** Places `n` items in random rooms, retrying when they do not fit. */
-  const placeMany = (rooms: Room[], type: string, o: Record<string, any>, n: number) => {  
+  const placeMany = (rooms: Room[], type: string, o: PlaceOnFloorOptions & { f?: Vec2 }, n: number) => {
     let ok = 0
     const L = shuffle(rooms, rng)
     for (let t = 0; t < L.length * 3 && ok < n; t++) if (placeItem(L[t % L.length], type, o)) ok++

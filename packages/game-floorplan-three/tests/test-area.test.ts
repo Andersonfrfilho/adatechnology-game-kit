@@ -1,4 +1,5 @@
 import { checkBench, checkSpec } from '@adatechnology/game-contracts'
+import type { DestructibleSpec } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
 import { fakeRoom } from './helpers/area-room'
@@ -21,25 +22,25 @@ describe('the module declares itself', () => {
   it('gives the room specs that pass its checks, one box per part named by the part, with the water tank and the gas bottle', () => {
     const { module, world } = fakeRoom()
     for (const item of module.items('en')) {
-      const root = item.build(THREE) as any
-      const spec = (item.spec as any)(root)
+      const root = item.build(THREE) as THREE.Object3D
+      const spec = (item.spec as (root: unknown) => DestructibleSpec)(root)
       const report = checkSpec(spec, { materials: world.materials.keys() })
       expect(report.problems, item.id).toEqual([])
       const names = new Set<string>()
-      root.traverse((o: any) => o.isMesh && names.add(o.name))
+      root.traverse((o) => (o as THREE.Mesh).isMesh && names.add(o.name))
       expect(names.size, item.id).toBeGreaterThan(5)
-      for (const name of names) expect(spec.parts.some((p: any) => p.id === name), `${item.id} ${name}`).toBe(true)
+      for (const name of names) expect(spec.parts.some((p) => p.id === name), `${item.id} ${name}`).toBe(true)
     }
-    const whole = (module.items('en').find((i) => i.id === 'house_casa_inteira')!.spec as any)((module.items('en').find((i) => i.id === 'house_casa_inteira')!.build(THREE)))
-    expect(whole.parts.some((p: any) => p.contains?.fluid === 'water')).toBe(true)
-    expect(whole.parts.some((p: any) => p.explodes)).toBe(true)
+    const whole = (module.items('en').find((i) => i.id === 'house_casa_inteira')!.spec as (root: unknown) => DestructibleSpec)((module.items('en').find((i) => i.id === 'house_casa_inteira')!.build(THREE)))
+    expect(whole.parts.some((p) => p.contains?.fluid === 'water')).toBe(true)
+    expect(whole.parts.some((p) => p.explodes)).toBe(true)
   })
 
   it('lists only the templates the engine has, by package', () => {
     const { module } = fakeRoom({ groups: [{ id: 'residential', templates: ['townhouse', 'no_such_template'] }, { id: 'commercial', templates: ['market'] }, { id: 'ghost', templates: ['zzz'] }] })
     expect(module.groups().map((g) => [g.id, g.templates])).toEqual([['residential', ['townhouse']], ['commercial', ['market']]])
-    const control = module.controls!('en').find((c) => c.id === 'package') as any
-    expect(control.options.map((o: any) => o.id)).toEqual(['residential', 'commercial'])
+    const control = module.controls!('en').find((c) => c.id === 'package') as unknown as { options: { id: string }[] }
+    expect(control.options.map((o) => o.id)).toEqual(['residential', 'commercial'])
   })
 })
 
@@ -111,17 +112,17 @@ describe('houses in the room', () => {
     r.frame(0.1)
     const { house, plan } = r.module.houses[0]!
     const group = house.group
-    const world = (u: number, v: number) => group.localToWorld(new (r.camera.position.constructor as any)(u, 0.5, v))
-    const wall = plan.walls.find((w: any) => w.floor === 0 && w.exterior)
+    const world = (u: number, v: number) => group.localToWorld(new (r.camera.position.constructor as typeof THREE.Vector3)(u, 0.5, v))
+    const wall = plan.walls.find((w) => w.floor === 0 && w.exterior)
     expect(wall).toBeTruthy()
-    const blockedAt = (p: any) => [...r.blockers].some((fn) => fn(p.x, p.z, 0.3))
+    const blockedAt = (p: THREE.Vector3) => [...r.blockers].some((fn) => fn(p.x, p.z, 0.3))
     const outside = world(-4, -4)
     expect(blockedAt(outside)).toBe(false)
-    const room = plan.rooms.find((x: any) => x.floor === 0)
+    const room = plan.rooms.find((x) => x.floor === 0)!
     const inside = world((room.u0 + room.u1) / 2, (room.v0 + room.v1) / 2)
     expect(blockedAt(inside)).toBe(false)
     // a point on the front wall away from the door is blocked
-    const door = plan.doors.find((d: any) => d.exterior && d.floor === 0)
+    const door = plan.doors.find((d) => d.exterior && d.floor === 0)!
     const sill = world(door.u + 2, 0.02)
     expect(blockedAt(sill)).toBe(true)
     const through = world(door.u, door.v)
@@ -138,7 +139,7 @@ describe('houses in the room', () => {
     r.frame(0.5)
     r.act('door')
     r.frame(1)
-    expect(house.doors.some((d: any) => d.open)).toBe(true)
+    expect(house.doors.some((d) => d.open)).toBe(true)
     expect(blockedAt(through)).toBe(false)
   })
 
@@ -167,7 +168,7 @@ describe('houses in the room', () => {
     expect(metric('parts')).toBeGreaterThan(100)
     expect(metric('broken')).toBe(0)
     // aim at the front wall from the street side
-    const p = house.group.localToWorld(new (r.camera.position.constructor as any)(5, 1.4, 0.1))
+    const p = house.group.localToWorld(new (r.camera.position.constructor as typeof THREE.Vector3)(5, 1.4, 0.1))
     r.host.bench.look([p.x, 1.6, p.z + 6], [p.x, 1.4, p.z])
     r.set('hit', 'c4')
     r.act('strike')
@@ -218,7 +219,7 @@ describe('the scenarios stop listening when they end (CLAUDE.md, "Memória")', (
     const { module, room, step } = fakeRoom({ locale: 'en' })
     const on = room.world.on.bind(room.world)
     let open = 0
-    room.world.on = ((type: any, fn: any) => {
+    room.world.on = ((type: Parameters<typeof on>[0], fn: Parameters<typeof on>[1]) => {
       open++
       const off = on(type, fn)
       return () => {

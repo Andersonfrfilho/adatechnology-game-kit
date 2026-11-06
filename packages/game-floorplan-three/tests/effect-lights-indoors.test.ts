@@ -2,28 +2,30 @@ import { createLightBudget } from '@adatechnology/game-render-three'
 import { describe, expect, it } from 'vitest'
 
 import { rectsOf } from '../src'
+import type { HouseRenderer } from '../src'
+import type { HouseRendererInternal } from '../src/kernel-types-systems'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
 const EMPTY = [1e9, 1e9, -1e9, -1e9]
 
 /** The mask uniforms of the renderer: the arrays every masked material shares. */
-const maskUniforms = (renderer: any): Record<string, { value: Float32Array }> => renderer.internals.K.LZU
+const maskUniforms = (renderer: HouseRenderer): Record<string, { value: Float32Array }> => (renderer as HouseRendererInternal).internals.K.LZU as unknown as Record<string, { value: Float32Array }>
 
 function setup(options: Record<string, unknown> = {}) {
   const { house, renderer } = houseOf(planOf('casaA', 3), options, { night: true })
   const scene = new THREE.Scene()
   const budget = createLightBudget(THREE, scene, { point: 6, spot: 0, pointShadows: 0 })
-  const rooms = (house as any).r.rooms.filter((room: any) => room.type !== 'void')
+  const rooms = house.r.rooms.filter((room) => room.type !== 'void')
   const [first, second] = rooms
-  const centerOf = (room: any): [number, number, number] => {
+  const centerOf = (room: (typeof rooms)[number]): [number, number, number] => {
     const [a, b, c, d] = rectsOf(room)[0]
-    return [(a + c) / 2, (house as any).y0(room.floor) + 1.2, (b + d) / 2]
+    return [(a + c) / 2, house.y0(room.floor) + 1.2, (b + d) / 2]
   }
   const blast = (position: [number, number, number]) => budget.acquire({ owner: 'vfx.blast', priority: 900, urgent: true, color: 0xffaa55, intensity: 5, distance: 10, position })!
   const rectOf = (slot: number) => Array.from(maskUniforms(renderer).uRB0.value.slice(slot * 4, slot * 4 + 4))
   const lit = (): void => {
     budget.present([0, 1.6, 0], 1)
-    renderer.effectLights({ budget }).update([house])
+    renderer.effectLights!({ budget }).update([house])
   }
   return { house, renderer, budget, first, second, centerOf, blast, rectOf, lit }
 }
@@ -65,16 +67,16 @@ describe('effect lights indoors', () => {
 
   it('lights the rooms either side of an open door when the blast is in the doorway', () => {
     const { house, renderer, budget, blast, rectOf, lit } = setup()
-    const door = (house as any).r.doors.find((candidate: any) => !candidate.exterior)
+    const door = house.r.doors.find((candidate) => !candidate.exterior)!
     expect(door).toBeDefined()
     const alongU = door.axis === 'u'
-    const doorway: [number, number, number] = [alongU ? door.at : door.pos, (house as any).y0(door.floor) + 1, alongU ? door.pos : door.at]
-    ;(renderer as any).effectLights({ budget })
-    ;(house as any).internal.doorState.set(door.id, true)
+    const doorway: [number, number, number] = [alongU ? door.at : door.pos, house.y0(door.floor) + 1, alongU ? door.pos : door.at]
+    ;renderer.effectLights!({ budget })
+    ;house.internal.doorState.set(door.id, true)
     const handle = blast(doorway)
     lit()
     const open = rectOf(handle.slot)
-    ;(house as any).internal.doorState.set(door.id, false)
+    ;house.internal.doorState.set(door.id, false)
     lit()
     expect(open).not.toEqual(EMPTY)
   })
@@ -83,12 +85,12 @@ describe('effect lights indoors', () => {
     const { house, renderer, budget, blast } = setup()
     const rooms = renderer.lighting({ scene: new THREE.Scene(), n: 2, shadows: 0, budget })
     rooms.update([house], new THREE.Vector3(0, 1.6, 0), {})
-    const mine = rooms.lights.map((handle: any) => handle.slot)
-    const before = mine.map((slot: number) => Array.from(maskUniforms(renderer).uRB0.value.slice(slot * 4, slot * 4 + 4)))
+    const mine = rooms.lights.map((handle) => (handle as { slot: number }).slot)
+    const before = mine.map((slot) => Array.from(maskUniforms(renderer).uRB0.value.slice(slot * 4, slot * 4 + 4)))
     blast([0, 1, 0])
     budget.present([0, 1.6, 0], 1)
     rooms.update([house], new THREE.Vector3(0, 1.6, 0), {})
-    const after = mine.map((slot: number) => Array.from(maskUniforms(renderer).uRB0.value.slice(slot * 4, slot * 4 + 4)))
+    const after = mine.map((slot) => Array.from(maskUniforms(renderer).uRB0.value.slice(slot * 4, slot * 4 + 4)))
     expect(after).toEqual(before)
   })
 })

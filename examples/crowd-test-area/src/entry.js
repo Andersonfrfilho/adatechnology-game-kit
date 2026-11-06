@@ -15,7 +15,7 @@ import { create } from '@adatechnology/game-infection'
 
 export { createCrowdTestModule }
 
-const cardOf = (id) => UNDEAD_TYPES.find((card) => card.id === id)
+const cardOf = (/** @type {string} */ id) => UNDEAD_TYPES.find((card) => card.id === id)
 
 /** The body builders of the kit: the Bestiário v17 builder with the undead types' names and eyes. */
 const builders = (THREE) => {
@@ -64,7 +64,7 @@ const SCENE_PROPS = {
  */
 const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, worker: globalThis.crossOriginIsolated ? 'auto' : 'off' })
 
-const sizeOf = (species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
+const sizeOf = (/** @type {{ body: { kind: string; }; }} */ species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
 
 /** The module with the kit's own content; options replace any of it (another pack, other bodies, no animals). */
 export function createModule(options = {}) {

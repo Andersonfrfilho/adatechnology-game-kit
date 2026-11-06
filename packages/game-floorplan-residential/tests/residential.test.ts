@@ -13,7 +13,7 @@ beforeAll(() => {
   register(engine, { region: 'br' })
 })
 
-const flatten = (o: any, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flatten(v, p + k + '.') : [p + k]))
+const flatten = (o: object, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flatten(v, p + k + '.') : [p + k]))
 
 describe('residential pack', () => {
   it('registers the eleven templates under their English ids', () => {
@@ -31,8 +31,8 @@ describe('residential pack', () => {
   it('pt-BR reproduces the old Portuguese names', () => {
     const r = engine.generate('townhouse', { seed: 3, locale: 'pt-BR' })
     expect(r.name).toBe('Sobrado (2 andares)')
-    expect(r.rooms.map((c: any) => c.name)).toEqual(expect.arrayContaining(['Sala', 'Cozinha', 'Lavabo', 'Escada', 'Sacada', 'Banheiro']))
-    expect(engine.generate('mansion', { seed: 1, locale: 'pt-BR' }).floors.map((f: any) => f.name)).toEqual(['Térreo', 'Andar superior', 'Cobertura'])
+    expect(r.rooms.map((c) => c.name)).toEqual(expect.arrayContaining(['Sala', 'Cozinha', 'Lavabo', 'Escada', 'Sacada', 'Banheiro']))
+    expect(engine.generate('mansion', { seed: 1, locale: 'pt-BR' }).floors.map((f) => f.name)).toEqual(['Térreo', 'Andar superior', 'Cobertura'])
   })
 
   it('unknown regions are rejected', () => {
@@ -68,8 +68,8 @@ describe('urban zoning (region br)', () => {
 
   it('has a pt-BR and an en label for each zone', () => {
     for (const z of ZONE_IDS) {
-      expect((en as any).zones[z], z).toBeTruthy()
-      expect((ptBR as any).zones[z], z).toBeTruthy()
+      expect((en.zones as Record<string, unknown> | undefined)?.[z], z).toBeTruthy()
+      expect((ptBR.zones as Record<string, unknown> | undefined)?.[z], z).toBeTruthy()
     }
   })
 
@@ -117,7 +117,7 @@ describe('urban zoning (region br)', () => {
   it('raises setbacks to the zone minimums and reports them', () => {
     engine.defineZone({ id: 'wide_test', allowedUses: ['residential_single'], maxFloors: 2, maxHeight: 9, setbacks: { front: 9, side: 4, back: 6 }, maxCoverage: 0.5, maxFar: 1, minLot: 100, minFrontage: 5, permeableMin: 0.5 })
     const r = engine.generate('townhouse', { seed: 1, zone: 'wide_test' })
-    const fields = r.zoning!.adjustments.map((a: any) => a.field)
+    const fields = r.zoning!.adjustments.map((a) => a.field)
     expect(fields).toEqual(expect.arrayContaining(['frontSetback', 'marginLeft', 'marginRight']))
     expect(r.lot!.setback).toBeGreaterThanOrEqual(9)
     expect(r.zoning!.violations).toEqual([])
@@ -125,7 +125,7 @@ describe('urban zoning (region br)', () => {
 
   it('enforces the permeable area by turning paved yards into lawn', () => {
     const r = engine.generate('townhouse', { seed: 1, zone: 'wide_test' })
-    expect(r.zoning!.adjustments.some((a: any) => a.field.startsWith('ground:') && a.to === 'lawn' && a.reason === 'permeable_min')).toBe(true)
+    expect(r.zoning!.adjustments.some((a) => a.field.startsWith('ground:') && a.to === 'lawn' && a.reason === 'permeable_min')).toBe(true)
   })
 
   it('apartments clamp the storey they sit on', () => {

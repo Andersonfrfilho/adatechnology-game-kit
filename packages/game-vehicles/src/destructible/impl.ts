@@ -5,6 +5,8 @@
  *
  * It depends on the contracts only (types) and on the kit it is given: not on the default destruction world.
  */
+import type { Matrix4, Object3D, Vector3 } from 'three'
+
 import type {
   AnimationClipSpec,
   DamageType,
@@ -24,6 +26,7 @@ import { ARMOUR_LEVELS, armourLevelOf } from './armour'
 import type { ArmourLevel, ArmourLevelId } from './armour'
 import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
+import type { KitShared, SceneNode } from '../types'
 import { clamp, rng, strHash } from '../util'
 import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, type VehicleModel } from './model'
 import type { CreaseQueue } from './crease-queue'
@@ -36,7 +39,7 @@ export interface VehicleDestructibleOptions {
   /** Display name. Default: the vehicle name. */
   name?: string
   /** Object whose space `describe()` answers in (the wrapper the host placed the vehicle in). Default: `c.root`. */
-  frame?: any
+  frame?: unknown
   /** Tow hitch: the option wins over the spec flag, the spec flag over the seeded choice. */
   hitch?: boolean
   /** Do not create or move any mesh (logic only, for servers and tests that need no scene). */
@@ -155,7 +158,8 @@ interface JState {
 interface Leak {
   rate: number
   fluid: string
-  pud: any
+  /** the puddle the leak feeds (`kit._.puddle`), null until it lands */
+  pud: ReturnType<KitShared['puddle']> | null
 }
 
 /** Joules a projectile needs to get through one layer of the material (before the role factor). */
@@ -241,11 +245,11 @@ const r2 = (n: number): number => Math.round(n * 1e4) / 1e4
 export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleContext, options: VehicleDestructibleOptions = {}): VehicleDestructible {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
-  const I = (kit as any)._ as Record<string, any>
+  const I = (kit as unknown as { _: KitShared })._
   let c = vehicleCtx
   const id = options.id ?? c.key
   const headless = !!options.headless
-  const armourId = armourLevelOf(c.meta as any, options.armour)
+  const armourId = armourLevelOf(c.meta, options.armour)
   const armourLevel: ArmourLevel | null = armourId ? { ...ARMOUR_LEVELS[armourId], ...options.armourLevels?.[armourId] } : null
   const seedBase = strHash(`${c.key}|${id}|${options.seed ?? 0}`)
   let rand = rng(seedBase)
@@ -274,26 +278,26 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   let steerSign = 1
   let specCache: DestructibleSpec | null = null
 
-  const frame = (): any => options.frame ?? c.root
+  const frame = (): Object3D => (options.frame ?? c.root) as Object3D
   const sync = (): void => {
     c.root.updateWorldMatrix(true, true)
     frame().updateWorldMatrix(true, false)
   }
-  const toFrameMatrix = (): any => {
+  const toFrameMatrix = (): Matrix4 => {
     sync()
     return new THREE.Matrix4().copy(frame().matrixWorld).invert().multiply(c.vehicle.matrixWorld)
   }
-  const toWorld = (v: Vec3 | any): Vec3 => {
-    const p = Array.isArray(v) ? new V3(v[0], v[1], v[2]) : v.clone()
+  const toWorld = (v: Vec3 | Vector3): Vec3 => {
+    const p = Array.isArray(v) ? new V3(v[0], v[1], v[2]) : (v as Vector3).clone()
     const w = c.vehicle.localToWorld(p)
     return [w.x, w.y, w.z]
   }
-  const toLocal = (w: Vec3): any => c.vehicle.worldToLocal(new V3(w[0], w[1], w[2]))
-  const dirToLocal = (d: Vec3): any => {
+  const toLocal = (w: Vec3): Vector3 => c.vehicle.worldToLocal(new V3(w[0], w[1], w[2]))
+  const dirToLocal = (d: Vec3): Vector3 => {
     const inv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
     return new V3(d[0], d[1], d[2]).transformDirection(inv)
   }
-  const dirToWorld = (v: any): Vec3 => {
+  const dirToWorld = (v: Vector3): Vec3 => {
     const d = v.clone().transformDirection(c.vehicle.matrixWorld)
     return [d.x, d.y, d.z]
   }
@@ -408,7 +412,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const syncZone = (p: PState): void => {
     const zid = p.def.zoneId
     if (!zid) return
-    const z = (kit.zonesOf(c) as any[]).find((q) => q.id === zid)
+    const z = kit.zonesOf(c).find((q) => q.id === zid)
     if (!z) return
     const h = Math.round(clamp((p.hp / p.def.hp) * 100, 0, 100))
     z.health = h
@@ -485,14 +489,14 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   // ---- geometry helpers ----------------------------------------------------------------------------------------------------------------
-  const distToBox = (d: PartDef, v: any): number => {
+  const distToBox = (d: PartDef, v: Vector3): number => {
     const dx = Math.max(Math.abs(v.x - d.box.center[0]) - d.box.size[0] / 2, 0)
     const dy = Math.max(Math.abs(v.y - d.box.center[1]) - d.box.size[1] / 2, 0)
     const dz = Math.max(Math.abs(v.z - d.box.center[2]) - d.box.size[2] / 2, 0)
     return Math.hypot(dx, dy, dz)
   }
   const vol = (d: PartDef): number => d.box.size[0] * d.box.size[1] * d.box.size[2]
-  const locate = (v: any, tol: number, skip?: (p: PState) => boolean): PState | null => {
+  const locate = (v: Vector3, tol: number, skip?: (p: PState) => boolean): PState | null => {
     let best: PState | null = null
     let bd = Infinity
     for (const d of model.parts) {
@@ -507,14 +511,14 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     }
     return best
   }
-  const faceNormal = (d: PartDef, v: any): any => {
+  const faceNormal = (d: PartDef, v: Vector3): Vector3 => {
     const rel = [(v.x - d.box.center[0]) / (d.box.size[0] / 2), (v.y - d.box.center[1]) / (d.box.size[1] / 2), (v.z - d.box.center[2]) / (d.box.size[2] / 2)]
     const k = rel.map(Math.abs).indexOf(Math.max(...rel.map(Math.abs)))
     const n = [0, 0, 0]
     n[k] = rel[k] >= 0 ? 1 : -1
     return new V3(n[0], n[1], n[2])
   }
-  const fromVehicle = (v: any, M: any): Vec3 => {
+  const fromVehicle = (v: Vector3, M: Matrix4): Vec3 => {
     const p = v.clone().applyMatrix4(M)
     return [p.x, p.y, p.z]
   }
@@ -542,8 +546,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   // ---- fluids --------------------------------------------------------------------------------------------------------------------------
-  const fluidKind = (fluid: string): string => (fluid === 'fuel' ? ((c.spec as any).fuel === 'diesel' ? 'diesel' : 'gasoline') : fluid)
-  const startLeak = (p: PState, holePoint: any, caliber: number, out: DestructionEvent[], dirLocal: any): void => {
+  const fluidKind = (fluid: string): string => (fluid === 'fuel' ? (c.spec.fuel === 'diesel' ? 'diesel' : 'gasoline') : fluid)
+  const startLeak = (p: PState, holePoint: Vector3, caliber: number, out: DestructionEvent[], dirLocal: Vector3): void => {
     const d = p.def
     if (!d.contains || (p.liters ?? 0) <= 0) return
     const cap = d.contains.liters
@@ -569,7 +573,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   // ---- fire ----------------------------------------------------------------------------------------------------------------------------
-  const centreOf = (d: PartDef): any => new V3(d.box.center[0], d.box.center[1], d.box.center[2])
+  const centreOf = (d: PartDef): Vector3 => new V3(d.box.center[0], d.box.center[1], d.box.center[2])
   const ignite = (p: PState, out: DestructionEvent[]): void => {
     if (p.burning || p.lost) return
     const d = p.def
@@ -584,7 +588,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       if (l?.pud && l.fluid === 'fuel') I.igniteFuel(c, l.pud)
     }
   }
-  const burningBlast = (centreLocal: any, radius: number, energy: number, source: string | undefined, out: DestructionEvent[]): void => {
+  const burningBlast = (centreLocal: Vector3, radius: number, energy: number, source: string | undefined, out: DestructionEvent[]): void => {
     for (const d of model.parts) {
       const p = ps.get(d.id)!
       if (p.lost) continue
@@ -604,12 +608,12 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     tank.liters = 0
     leaks.delete(d.id)
     if (vis) kit.explode(c, { delay: 0.6 })
-    else (c as any).blast = (c as any).blast ?? { phase: 'fire', t: 0, T: 0.6 }
+    else c.blast = c.blast ?? { phase: 'fire', t: 0, T: 0.6 }
     lose(tank, 'broken', out)
     burningBlast(centreOf(d), spec.radius, spec.energy, source, out)
     for (const q of ps.values()) if (!q.lost && q.def.ignitionC && q.def.role !== 'fuel_tank') q.temp = Math.max(q.temp, q.def.ignitionC)
   }
-  const heat = (centreLocal: any, radius: number, temp: number, dur: number, out: DestructionEvent[], falloff = 0.05): void => {
+  const heat = (centreLocal: Vector3, radius: number, temp: number, dur: number, out: DestructionEvent[], falloff = 0.05): void => {
     for (const d of model.parts) {
       const p = ps.get(d.id)!
       if (p.lost) continue
@@ -691,7 +695,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
 
   // ---- hits ----------------------------------------------------------------------------------------------------------------------------
-  const normalOf = (d: PartDef, v: any): any => faceNormal(d, v)
+  const normalOf = (d: PartDef, v: Vector3): Vector3 => faceNormal(d, v)
   const ballistic = (h: Hit, out: DestructionEvent[]): void => {
     sync()
     const M = toFrameMatrix()
@@ -880,7 +884,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   }
   const tankPart = (): PState | undefined => [...ps.values()].find((p) => p.def.role === 'fuel_tank' && p.def.contains)
   const computeStatus = (): VehicleStatus => {
-    const electric = (c.spec as any).fuel === 'electric'
+    const electric = c.spec.fuel === 'electric'
     const tank = tankPart()
     const fuel = tank ? (tank.liters ?? 0) : electric ? 1 : 1
     const engineOk = sound('engine') && !exploded && !seized && fuel > 0.05
@@ -919,16 +923,16 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     }
     if (!s.canStart && !deadEngine) {
       deadEngine = true
-      ;(c as any).engineHealth = 0
+      ;c.engineHealth = 0
     } else if (s.canStart && deadEngine) {
       deadEngine = false
-      ;(c as any).engineHealth = 1
+      ;c.engineHealth = 1
     }
   }
 
   // ---- blast and rollover sync -----------------------------------------------------------------------------------------------------------
   const afterBlast = (out: DestructionEvent[]): void => {
-    if (blastHandled || !(c as any).exploded) return
+    if (blastHandled || !c.exploded) return
     blastHandled = true
     // the kit threw the hood, the doors, the rear bumper and one wheel
     const hood = ps.get(vis?.hood?.id ?? '')
@@ -941,11 +945,11 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         for (const j of js) if (!j.open && j.def.a === d.id) openJoint(j, 'break', out)
       }
     }
-    const left = new Set((c.wheels as any[]).filter((w) => w.parent))
+    const left = new Set(c.wheels.filter((w) => w.parent))
     for (const p of ps.values()) {
       if (p.def.role !== 'rim' || p.lost) continue
-      const z = (kit.zonesOf(c) as any[]).find((q) => q.id === p.def.zoneId)
-      const ws = (z?.wheels ?? []) as any[]
+      const z = kit.zonesOf(c).find((q) => q.id === p.def.zoneId)
+      const ws: Object3D[] = z?.wheels ?? []
       if (ws.length && ws.every((w) => !left.has(w))) {
         visualDone.add(p.def.id)
         for (const j of js) if (!j.open && j.def.a === p.def.id) openJoint(j, 'break', out)
@@ -958,7 +962,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     }
   }
   const afterRoll = (out: DestructionEvent[]): void => {
-    if (rollHandled || !(c as any).flipped) return
+    if (rollHandled || !c.flipped) return
     rollHandled = true
     const M = toFrameMatrix()
     const rot = new THREE.Matrix4().extractRotation(M)
@@ -1004,7 +1008,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       }
     })
     const joints: JointSpec[] = model.joints.map((j) => ({ id: j.id, a: j.a, b: j.b, kind: j.kind, strength: j.strength, tools: [...j.tools], seconds: j.seconds }))
-    specCache = { name: options.name ?? (c.spec as any).name ?? c.key, parts, joints, tags: ['vehicle', kindOf(c)] }
+    specCache = { name: options.name ?? c.spec.name ?? c.key, parts, joints, tags: ['vehicle', kindOf(c)] }
     return specCache
   }
 
@@ -1043,7 +1047,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       open: j.open,
       ...(j.open && j.by ? { openedBy: j.by } : {}),
     }))
-    return { id, name: options.name ?? (c.spec as any).name ?? c.key, position: [0, 0, 0], rotation: [0, 0, 0, 1], parts, joints, groups: groupsCache.map((g) => [...g]), destroyed: parts.every((p) => p.status === 'broken' || p.status === 'melted' || p.status === 'ashes') }
+    return { id, name: options.name ?? c.spec.name ?? c.key, position: [0, 0, 0], rotation: [0, 0, 0, 1], parts, joints, groups: groupsCache.map((g) => [...g]), destroyed: parts.every((p) => p.status === 'broken' || p.status === 'melted' || p.status === 'ashes') }
   }
 
   // the host reads state() per part per frame; it only changes when a hit, a tool, a fire, a leak or a blast/roll happened
@@ -1062,26 +1066,26 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   surfaceRays.layers.enableAll()
   surfaceRays.camera = new THREE.PerspectiveCamera()
-  let meshParts: Map<any, string> | null = null
-  const paneParts = (): Map<any, string> => {
+  let meshParts: Map<Object3D, string> | null = null
+  const paneParts = (): Map<Object3D, string> => {
     if (meshParts) return meshParts
     meshParts = new Map()
     for (const d of model.parts) {
       if (d.role !== 'glass') continue
-      const z = (kit.zonesOf(c) as any[]).find((q: any) => q.id === d.zoneId)
+      const z = kit.zonesOf(c).find((q) => q.id === d.zoneId)
       for (const g of z?.glass ?? d.panes ?? []) meshParts.set(g, d.id)
     }
     return meshParts
   }
-  const isDrawnSurface = (o: any): boolean => {
-    for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return false
+  const isDrawnSurface = (o: Object3D): boolean => {
+    for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return false
     return true
   }
   /** The part a drawn mesh belongs to: its pane, the door hanging it, the piece drawn for it, else the smallest box of bodywork at the point. */
-  const partOfSurface = (o: any, v: any): PState | null => {
+  const partOfSurface = (o: Object3D, v: Vector3): PState | null => {
     const pane = paneParts().get(o)
     if (pane) return ps.get(pane) ?? null
-    for (let q = o; q && q !== c.vehicle; q = q.parent) {
+    for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) {
       if (vis?.plateIdOf(q)) return ps.get(vis.plateIdOf(q)!) ?? null
       const piece = vis?.extraIdOf(q)
       if (piece) return ps.get(piece) ?? null
@@ -1093,10 +1097,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
    * (`userData.noSurfaceRay`: the static batches of the vehicle LOD, one merged mesh per material over the same triangles). Testing those too
    * doubled the triangles a ray reads, and the room's aim reads it every frame (perf.mjs, 2026-11-03: up to 270 ms in a frame on software GL).
    */
-  const surfaceMeshes: any[] = []
-  const collectSurfaces = (o: any): void => {
+  const surfaceMeshes: Object3D[] = []
+  const collectSurfaces = (o: Object3D): void => {
     if (!o.visible || o.userData.decal || o.userData.ghost || o.userData.noSurfaceRay) return
-    if (o.isMesh) surfaceMeshes.push(o)
+    if ((o as SceneNode).isMesh) surfaceMeshes.push(o)
     for (const child of o.children) collectSurfaces(child)
   }
   const surfaceRay = (ray: SurfaceRay): SurfaceRayHit | null => {
@@ -1174,7 +1178,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const wasSimulating = isSimulating()
     const handledBefore = (blastHandled ? 1 : 0) + (rollHandled ? 2 : 0)
     // a clip that turns the hood drives it: the kit keeps what it is told
-    const hood = (c as any).hood
+    const hood = c.hood
     if (hood) {
       const sign = hood.sign || 1
       const cur = hood.piv.rotation.z / sign
@@ -1184,7 +1188,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       }
     }
     if (vis) kit.tick(c, dt)
-    else if ((c as any).blast) I.tickBoom?.(c, dt)
+    else if (c.blast) I.tickBoom?.(c, dt)
     stepFire(dt, out)
     for (const [pid, l] of leaks) {
       const p = ps.get(pid)!
@@ -1230,7 +1234,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       p.temp = Math.min(p.temp, 120)
     }
     if (!partId) {
-      c.emitters = (c.emitters as any[]).filter((e) => e.kind !== 'fire' && e.kind !== 'black')
+      c.emitters = c.emitters.filter((e) => e.kind !== 'fire' && e.kind !== 'black')
     }
   }
 
@@ -1248,7 +1252,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     }
     kit.dispose(old)
     c = next
-    ;(c.root as any).userData = { ...(c.root as any).userData, ...(old.root as any).userData }
+    ;c.root.userData = { ...c.root.userData, ...old.root.userData }
     clock = 0
     setup()
   }
@@ -1263,7 +1267,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
 
   const impl: VehicleDestructible = {
     id,
-    name: options.name ?? (c.spec as any).name,
+    name: options.name ?? c.spec.name,
     get vehicle() {
       return c
     },

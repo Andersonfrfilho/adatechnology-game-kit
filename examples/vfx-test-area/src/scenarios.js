@@ -6,9 +6,9 @@ const BLAST_BUDGET = { particles: 400, lights: 6 }
 
 export function buildScenarios(locale, sink, catalog) {
   const en = locale === 'en'
-  const T = (pt, e) => (en ? e : pt)
+  const T = (/** @type {string} */ pt, /** @type {string} */ e) => (en ? e : pt)
   const sc = (id, name, run) => ({ id: `vfx_${id}`, name, run })
-  const stat = (key) => sink()?.stats?.()[key] ?? 0
+  const stat = (/** @type {string} */ key) => sink()?.stats?.()[key] ?? 0
 
   return [
     sc('explosions', T('Todas as explosões do Lab', 'Every explosion of the Lab'), ({ step, expect }) => {

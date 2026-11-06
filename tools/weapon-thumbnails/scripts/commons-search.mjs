@@ -16,11 +16,17 @@ const BASE = (() => {
 })()
 const UA = 'adatechnology-game-kit-thumbnail-research/1.0 (https://github.com/Andersonfrfilho/adatechnology-game-kit) node-fetch'
 const API = 'https://commons.wikimedia.org/w/api.php'
-const wait = (ms) => new Promise((r) => setTimeout(r, ms))
-const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+/**
+ * A file of Wikimedia Commons found for a weapon, with its licence; `raw` is where the download was kept.
+ * @typedef {{ title: string, mime: string, originalUrl: string, page: string, width: number, height: number, author: string, license: string, licenseUrl: string, credit: string, creditHtml: string, ok: boolean, raw?: string }} Candidate
+ * @typedef {{ id: string, searches: number, candidates: Candidate[] }} SearchResult
+ */
+const wait = (/** @type {number} */ ms) => new Promise((r) => setTimeout(r, ms))
+const norm = (/** @type {string} */ s) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
 const ALLOWED = /^(public domain|pd[- ]|cc0|cc[- ]by[- ]sa|cc[- ]by[- ]\d|cc[- ]by \d)/i
 const NOT_ALLOWED = /\b(nc|nd)\b/i
 let last = 0
+/** @param {string} url @returns {Promise<unknown>} */
 async function get(url, asText = false) {
   const delta = Date.now() - last
   if (delta < 550) await wait(550 - delta)
@@ -45,22 +51,25 @@ for (const [id, [query, ...keys]] of Object.entries(SUBJECTS)) {
     if (titles.size >= 4 || searches >= 10) break
     searches++
     const url = `${API}?action=query&format=json&list=search&srnamespace=6&srlimit=25&srsearch=${encodeURIComponent(q)}`
-    const data = await get(url)
+    const data = /** @type {{ query?: { search?: Array<{ title: string }> } }} */ (await get(url))
     for (const hit of data.query?.search ?? []) {
       const title = hit.title
       if (!/\.svg$/i.test(title)) continue
       if (keys.some((k) => norm(title).includes(k))) titles.set(title, true)
     }
   }
+  /** @type {Candidate[]} */
   const candidates = []
   if (titles.size) {
     const list = [...titles.keys()].slice(0, 8)
-    const info = await get(`${API}?action=query&format=json&prop=imageinfo&iiprop=url|mime|size|extmetadata&titles=${encodeURIComponent(list.join('|'))}`)
+    const info = /** @type {{ query?: { pages?: Record<string, { title: string, imageinfo?: Array<{ mime: string, url: string, descriptionurl: string, width: number, height: number, extmetadata?: Record<string, { value?: string }> }> }> } }} */ (
+      await get(`${API}?action=query&format=json&prop=imageinfo&iiprop=url|mime|size|extmetadata&titles=${encodeURIComponent(list.join('|'))}`)
+    )
     for (const page of Object.values(info.query?.pages ?? {})) {
       const ii = page.imageinfo?.[0]
       if (!ii) continue
       const meta = ii.extmetadata ?? {}
-      const v = (k) => (meta[k]?.value ?? '').replace(/<[^>]+>/g, '').trim()
+      const v = (/** @type {string} */ k) => (meta[k]?.value ?? '').replace(/<[^>]+>/g, '').trim()
       const license = v('LicenseShortName')
       candidates.push({
         title: page.title, mime: ii.mime, originalUrl: ii.url, page: ii.descriptionurl, width: ii.width, height: ii.height,
@@ -71,7 +80,7 @@ for (const [id, [query, ...keys]] of Object.entries(SUBJECTS)) {
     for (const [i, c] of candidates.filter((c) => c.ok).slice(0, 3).entries()) {
       const dir = join(BASE, 'raw', id)
       mkdirSync(dir, { recursive: true })
-      const text = await get(c.originalUrl, true)
+      const text = /** @type {string} */ (await get(c.originalUrl, true))
       writeFileSync(join(dir, `${i}.svg`), text)
       c.raw = `raw/${id}/${i}.svg`
     }

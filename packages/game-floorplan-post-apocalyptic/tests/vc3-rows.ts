@@ -2,6 +2,7 @@
  * Puts an SDK plan back into the team's vocabulary (PlantasSDK of the Visor de casas 3D) and writes the same rows that
  * tools/golden/captures/floorplan-plans.js writes on the page, so both sides hash the same text.
  */
+import type { FloorplanResult, ResultItem, ResultLot } from '@adatechnology/game-floorplan'
 import idMap from './fixtures/team-golden/vc3-id-map.json'
 
 type Pairs = readonly (readonly [string, string])[]
@@ -65,37 +66,36 @@ function cell(value: unknown): string {
 
 const row = (values: readonly unknown[]): string => values.map(cell).join('|')
 
-type Loose = { [key: string]: any }
 
-function itemRow(item: Loose): string {
+function itemRow(item: ResultItem): string {
   const { type, x, z, y, ry, w, d, h, frontU, frontV, aabb, floor, outdoor, clearance, flat, low } = item
   return row([teamType(type), x, z, y, ry, w, d, h, frontU, frontV, aabb, teamRoom(item.room), floor, outdoor, item.mode === null ? null : teamWord(item.mode), clearance, flat, low])
 }
 
-function lotRows(lot: Loose | null): string[] {
+function lotRows(lot: ResultLot | null): string[] {
   if (!lot) return []
   return [
     row(['lot', lot.rect, lot.setback, lot.backyard, teamStyle(lot.style), lot.pool]),
-    ...lot.zones.map((zone: Loose) => row(['zone', teamRoom(zone.id), teamWord(zone.type), zone.parts, teamType(zone.ground)])),
-    ...lot.perimeter.map((s: Loose) => row(['perimeter', s.id, teamSide(s.side), s.u0, s.v0, s.u1, s.v1, teamBoundary(s.type), teamWord(s.material), s.height, teamTop(s.top), s.totalHeight, s.thickness])),
-    ...lot.gates.map((g: Loose) => row(['gate', g.id, teamProse(g.type), teamWord(g.model), g.u, g.v, g.axis, g.width, g.height, teamSide(g.side), teamRoom(teamWord(g.to)), teamWord(g.material), g.open])),
-    ...lot.paths.map((p: Loose) => row(['path', teamOpeningId(p.id), teamWord(p.type), teamOpeningId(p.from), teamOpeningId(p.to), p.width, p.rects, p.points])),
+    ...lot.zones.map((zone) => row(['zone', teamRoom(zone.id), teamWord(zone.type), zone.parts, teamType(zone.ground)])),
+    ...lot.perimeter.map((s) => row(['perimeter', s.id, teamSide(s.side), s.u0, s.v0, s.u1, s.v1, teamBoundary(s.type), teamWord(s.material), s.height, teamTop(s.top), s.totalHeight, s.thickness])),
+    ...lot.gates.map((g) => row(['gate', g.id, teamProse(g.type), teamWord(g.model), g.u, g.v, g.axis, g.width, g.height, teamSide(g.side), teamRoom(teamWord(g.to)), teamWord(g.material), g.open])),
+    ...lot.paths.map((p) => row(['path', teamOpeningId(p.id), teamWord(p.type), teamOpeningId(p.from), teamOpeningId(p.to), p.width, p.rects, p.points])),
   ]
 }
 
 export type PlanLists = { [list: string]: string[] }
 
-export function teamRowsOf(plan: Loose): PlanLists {
+export function teamRowsOf(plan: FloorplanResult): PlanLists {
   return {
-    rooms: plan.rooms.map((room: Loose) => row([teamRoom(room.id), teamRoom(room.type), room.floor, room.parts, room.link, room.ceiling])),
-    walls: plan.walls.map((wall: Loose) => row([wall.floor, wall.axis, wall.u0, wall.v0, wall.u1, wall.v1, wall.thickness, wall.sides.map(teamRoom), wall.exterior, teamWord(wall.type), wall.h])),
+    rooms: plan.rooms.map((room) => row([teamRoom(room.id), teamRoom(room.type), room.floor, room.parts, room.link, room.ceiling])),
+    walls: plan.walls.map((wall) => row([wall.floor, wall.axis, wall.u0, wall.v0, wall.u1, wall.v1, wall.thickness, wall.sides.map(teamRoom), wall.exterior, teamWord(wall.type), wall.h])),
     openings: [
-      ...plan.doors.map((door: Loose) => row(['door', door.floor, door.axis, door.u, door.v, door.pos, door.at, door.width, teamRoom(door.a), teamRoom(door.b), teamRoom(door.opensTo), door.exterior, teamSide(door.side), door.leaves, teamWord(door.model), teamWord(door.type), door.steps ?? 0, teamWord(door.hinge), door.zones, door.blocked])),
-      ...plan.windows.map((win: Loose) => row(['window', win.floor, win.axis, win.u, win.v, win.pos, win.at, win.width, win.y0, win.y1, teamRoom(win.room), teamSide(win.side), win.boards])),
+      ...plan.doors.map((door) => row(['door', door.floor, door.axis, door.u, door.v, door.pos, door.at, door.width, teamRoom(door.a), teamRoom(door.b), teamRoom(door.opensTo), door.exterior, teamSide(door.side), door.leaves, teamWord(door.model), teamWord(door.type), door.steps ?? 0, teamWord(door.hinge), door.zones, door.blocked])),
+      ...plan.windows.map((win) => row(['window', win.floor, win.axis, win.u, win.v, win.pos, win.at, win.width, win.y0, win.y1, teamRoom(win.room), teamSide(win.side), win.boards])),
       ...plan.openPairs.map((open: readonly string[]) => row(['open', cell(open.map(teamRoom))])),
     ],
     items: plan.items.map(itemRow),
-    stateItems: plan.stateItems.map((item: Loose) => row([itemRow(item), teamWord(item.mount), item.state === 'fortified' ? 'protegida' : item.state === 'abandoned' ? 'abandonada' : item.state])),
+    stateItems: plan.stateItems.map((item) => row([itemRow(item), teamWord(item.mount), item.state === 'fortified' ? 'protegida' : item.state === 'abandoned' ? 'abandonada' : item.state])),
     lot: lotRows(plan.lot),
   }
 }

@@ -1,11 +1,14 @@
 /* The creasing of the kit before the typed-array grouping, kept as the reference the new one must match bit for bit. */
-/* eslint-disable */
-export function referenceCrease(THREE: any, geo: any, deg: any): any {
+import type { BufferGeometry } from 'three'
+
+import type { Three } from '../../src/types'
+
+export function referenceCrease(THREE: Three, geo: BufferGeometry, deg: number): BufferGeometry {
   const PI = Math.PI
   if (geo.index) {
     const ni = geo.toNonIndexed()
     Object.keys(ni.attributes).forEach(function (k) {
-      geo.setAttribute(k, ni.attributes[k])
+      geo.setAttribute(k, ni.attributes[k]!)
     })
     geo.setIndex(null)
   }
@@ -17,14 +20,14 @@ export function referenceCrease(THREE: any, geo: any, deg: any): any {
   const map = new Map<number | string, number[]>()
   /* vertices closer than 1/2000 share a key; the three rounded coordinates pack into one number (17 bits each) so the lookup hashes no string */
   const RANGE = 65536
-  function key(i: any): number | string {
+  function key(i: number): number | string {
     const x = Math.round(p.getX(i) * 2000)
     const y = Math.round(p.getY(i) * 2000)
     const z = Math.round(p.getZ(i) * 2000)
     if (Math.abs(x) < RANGE && Math.abs(y) < RANGE && Math.abs(z) < RANGE) return ((x + RANGE) * 131072 + (y + RANGE)) * 131072 + (z + RANGE)
     return x + ',' + y + ',' + z
   }
-  const keys = new Array(n)
+  const keys: (number | string)[] = new Array(n)
   for (let f = 0; f < faces; f++) {
     const ax = p.getX(3 * f)
     const ay = p.getY(3 * f)

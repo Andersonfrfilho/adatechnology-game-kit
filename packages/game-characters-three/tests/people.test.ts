@@ -11,7 +11,7 @@ import golden from './fixtures/team-golden/portraits-people.json'
 
 // Recorded from the Retratos do Vale page (three r128) by tools/characters-catalog: the page's `buildPerson` for the 44 PEOPLE, built in order from one
 // shared `rng(77)`, hashed node by node. The specs are the generated game slice (`people.json`, a copy of the page's PEOPLE).
-const PEOPLE = JSON.parse(readFileSync(join(__dirname, '../../../specs/001-migracao-entregas-dos-times/game-slice/characters/people.json'), 'utf8')) as Record<string, any>[]
+const PEOPLE = JSON.parse(readFileSync(join(__dirname, '../../../specs/001-migracao-entregas-dos-times/game-slice/characters/people.json'), 'utf8')) as Array<Parameters<ReturnType<typeof createPersonBuilder>['buildPerson']>[0] & { id: string }>
 
 type Scene = { objects: number; hash: string }
 const scenes = golden.scenes as unknown as Record<string, Scene>

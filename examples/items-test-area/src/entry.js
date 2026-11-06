@@ -8,6 +8,10 @@ import { createItemsTestModule } from '@adatechnology/game-items-three/testing'
 export { createItemsTestModule, createGoodsItems }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR) over the goods catalog, loads it and opens the items area (behind the room's loading indicator). Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createItemsTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const catalog = options.catalog ?? createGoodsItems()

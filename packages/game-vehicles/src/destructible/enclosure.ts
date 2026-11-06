@@ -4,6 +4,8 @@
  * away; a bullet hole lets a little in at a rate that grows with its size, and the gaps of a shut door let a trace in.
  */
 import type { Enclosure, EnclosureBox, ObjectState, Vec3 } from '@adatechnology/game-contracts'
+import type { Object3D, Quaternion, Vector3 } from 'three'
+
 import type { VehicleContext } from '../api'
 import type { LocalBox, PartRole, VehicleModel } from './model'
 
@@ -25,7 +27,7 @@ export interface CabinSource {
 
 export interface CabinEnclosureOptions {
   /** The object the destructible answers in (its `frame` option, where the host placed the vehicle): the holes of `state()` are in its space. Default `vehicle.root`. */
-  readonly frame?: any
+  readonly frame?: unknown
   /** Gaps of the shut doors and vents, share per second of the smoke pressing on the closed shell (default {@link CABIN_LEAK}). */
   readonly leak?: number
   /** How open a door or lid has to be (share of its full swing) to count as open (default 0.06: ajar). */
@@ -81,8 +83,8 @@ export function cabinEnclosure(source: CabinSource, options: CabinEnclosureOptio
   const state = source.state()
   if (state.destroyed) return null
   // the vehicle's own three.js classes, whatever namespace built it
-  const V3 = node.position.constructor as new (x?: number, y?: number, z?: number) => any
-  const Quat = node.quaternion.constructor as new () => any
+  const V3 = node.position.constructor as new (x?: number, y?: number, z?: number) => Vector3
+  const Quat = node.quaternion.constructor as new () => Quaternion
   const mid: Vec3 = [(cabin.x0 + cabin.x1) / 2, (cabin.y0 + cabin.y1) / 2, 0]
   const half: Vec3 = [(cabin.x1 - cabin.x0) / 2, (cabin.y1 - cabin.y0) / 2, cabin.z]
   const ajar = options.ajar ?? 0.06
@@ -96,7 +98,7 @@ export function cabinEnclosure(source: CabinSource, options: CabinEnclosureOptio
   })
   // the holes of state() are in the frame's space: back to the vehicle's own
   node.updateWorldMatrix?.(true, false)
-  const frame = options.frame ?? c.root
+  const frame = (options.frame ?? c.root) as { localToWorld?: Object3D['localToWorld']; updateWorldMatrix?: Object3D['updateWorldMatrix'] } | null | undefined
   frame?.updateWorldMatrix?.(true, false)
   const inverse = node.matrixWorld.clone().invert()
   for (const def of source.model.parts) {

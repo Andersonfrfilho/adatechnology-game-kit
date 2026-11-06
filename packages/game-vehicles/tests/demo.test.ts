@@ -53,7 +53,7 @@ describe('demo vehicle', () => {
       expect(c.zoneErrors ?? []).toEqual([])
       expect(c.zones.length).toBeGreaterThan(20)
       let meshes = 0
-      c.root.traverse((o: any) => {
+      c.root.traverse((o: { isMesh?: boolean }) => {
         if (o.isMesh) meshes++
       })
       expect(meshes).toBeGreaterThan(50)

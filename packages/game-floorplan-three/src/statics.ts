@@ -1,13 +1,22 @@
 // Literal port of the team's Casa3DSDK static utilities (outside the instance). See MIGRATION.md.
 // create
 
+import type { Rect, RoomRects } from './kernel-types.js';
+
+/** A house as the shared draw budget reads it: its distance, its draw calls with and without the small pieces, and how to set its LOD. */
+export interface LodHouse {
+  distance(focus: unknown): number
+  stats: { drawCalls: number; drawCallsLOD1: number }
+  setLod(level: number): void
+}
+
 // ---- static utilities (they do not depend on an instance) ----
-export const OPEN_ROOM_TYPES = new Set(['balcony', 'terrace', 'veranda', 'balcony_gourmet']);
-export const rectsOf = c => (c.parts && c.parts.length ? c.parts : [[c.u0, c.v0, c.u1, c.v1]]);
-export const isOpenArea = c => OPEN_ROOM_TYPES.has(c.type) || c.outdoor === true;
+export const OPEN_ROOM_TYPES: Set<string> = new Set(['balcony', 'terrace', 'veranda', 'balcony_gourmet']);
+export const rectsOf = (c: RoomRects): readonly Rect[] => (c.parts && c.parts.length ? c.parts : [[c.u0, c.v0, c.u1, c.v1]]);
+export const isOpenArea = (c: { type: string; outdoor?: boolean }): boolean => OPEN_ROOM_TYPES.has(c.type) || c.outdoor === true;
 // open area: no roof or ceiling
 // spreads the draw-call budget among several houses: the ones closest to the focus stay complete; the farther ones lose the small pieces (LOD 1) and finally vanish (LOD 2).
-export function planLod(houses, focus, budget) {
+export function planLod<H extends LodHouse>(houses: readonly H[], focus: unknown, budget: number): { total: number; levels: number[]; houses: H[] } {
     const l = houses.map(c => ({ c, d: c.distance(focus), n0: c.stats.drawCalls, n1: c.stats.drawCallsLOD1, level: 0 })).sort((a, b) => a.d - b.d);
     let total = l.reduce((s, x) => s + x.n0, 0);
     for (let i = l.length - 1; i >= 0 && total > budget; i--) { total -= l[i].n0 - l[i].n1; l[i].level = 1; }

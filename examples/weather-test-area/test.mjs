@@ -28,16 +28,19 @@ if (!playwright || !existsSync(page)) {
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+  /**
+     * @type {string[]}
+     */
   const errors = []
   let failed = 0
-  const check = (name, ok, detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
   for (const lang of ['pt-BR', 'en']) {
     const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
     const tab = await context.newPage()
-    tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__weatherReport, null, { timeout: 90000 })
@@ -49,7 +52,7 @@ if (!playwright || !existsSync(page)) {
     const state = await tab.evaluate(async () => {
       const room = window.__testRoom
       const report = window.__weatherReport
-      const scenarios = room.scenarios.filter((s) => ['storm', 'blend', 'determinism', 'dry_ground'].some((id) => s.id.endsWith(id)))
+      const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => ['storm', 'blend', 'determinism', 'dry_ground'].some((id) => s.id.endsWith(id)))
       const result = await room.runScenarios(scenarios)
       const bench = room.bench('weather_area')
       const before = room.metrics().module
@@ -66,7 +69,7 @@ if (!playwright || !existsSync(page)) {
     const picture = await tab.evaluate(() => {
       const room = window.__testRoom
       const bench = room.bench('weather_area')
-      const run = (seconds) => { for (let t = 0; t < seconds; t += 0.05) room.update(0.05) }
+      const run = (/** @type {number} */ seconds) => { for (let t = 0; t < seconds; t += 0.05) room.update(0.05) }
       const names = () => room.bench('weather_area').layers().map((layer) => layer.id)
       bench.set('state', 'storm')
       run(8)
@@ -97,7 +100,7 @@ if (!playwright || !existsSync(page)) {
     })
     await tab.waitForTimeout(200)
     await tab.screenshot({ path: join(shots, `weather-fog-${lang}.png`) })
-    check(`[${lang}] the storm is drawn: 14 000-point curtain, 4 000 near streaks, linear fog of 110 m, the lamp rig lit`, picture.storm.curtain && picture.storm.drawn === 14000 && picture.storm.near === 4000 && picture.storm.fog && picture.storm.far === 110 && picture.storm.lamp.length === 2 && picture.storm.lamp.every((i) => i === 2.4), picture)
+    check(`[${lang}] the storm is drawn: 14 000-point curtain, 4 000 near streaks, linear fog of 110 m, the lamp rig lit`, picture.storm.curtain && picture.storm.drawn === 14000 && picture.storm.near === 4000 && picture.storm.fog && picture.storm.far === 110 && picture.storm.lamp.length === 2 && picture.storm.lamp.every((/** @type {number} */ i) => i === 2.4), picture)
     check(`[${lang}] the weather layers are in the bench`, ['far_rain', 'near_rain', 'mist', 'sky', 'lightning', 'headlights', 'haze'].every((id) => picture.storm.layers.includes(id)), picture.storm.layers)
     check(`[${lang}] the fog weather: exponential-squared fog 0.075, mist and ash in the sprite pool, no rain curtain; extreme heat shows the haze`, mist.exp2 && Math.abs(mist.density - 0.075) < 1e-9 && mist.sprites > 0 && !mist.curtain && mist.heat, mist)
     check(`[${lang}] the bridges reach the room: the storm's wind goes to the effects world, the rain and wind loops open on its engine`, Math.abs(state.wind[0] - 4.5) < 1e-9 && state.wind[2] === 0 && state.loops >= 1 && state.thunder, { wind: state.wind, loops: state.loops, thunder: state.thunder })
