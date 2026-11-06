@@ -14,7 +14,7 @@ const MEANING = ['fracture', 'collapse', 'hole', 'leak', 'explode']
 
 type Recorded = { id: string; passed: number; failed: number; checks: boolean[]; events: number }
 const recorded = golden.events.filter((event) => event.type === 'scenario').map((event) => event.data as unknown as Recorded)
-const meaningOf = (id: string): string[] => [...new Set(golden.events.filter((event) => event.type === 'world' && (event.data as any).scenario === id).map((event) => (event.data as any).event.type as string))].filter((type) => MEANING.includes(type)).sort()
+const meaningOf = (id: string): string[] => [...new Set(golden.events.filter((event) => event.type === 'world' && (event.data as { scenario?: string }).scenario === id).map((event) => (event.data as { event: { type: string } }).event.type))].filter((type) => MEANING.includes(type)).sort()
 
 describe('team golden: the house area scenarios', () => {
   it('has the six scenarios of the page', () => {
@@ -28,7 +28,7 @@ describe('team golden: the house area scenarios', () => {
       const scenario = module.scenarios!('en').find((s) => s.id === entry.id)!
       expect(scenario).toBeTruthy()
       const seen = new Set<string>()
-      world.on('*', (event: any) => seen.add(event.type))
+      world.on('*', (event) => seen.add(event.type))
       const checks: boolean[] = []
       await scenario.run({ room, step, expect: (ok) => checks.push(ok) })
       expect(checks).toEqual(entry.checks)

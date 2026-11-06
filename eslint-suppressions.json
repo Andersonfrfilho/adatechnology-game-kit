@@ -39,84 +39,9 @@
       "count": 42
     }
   },
-  "packages/game-floorplan-three/tests/effect-lights-indoors.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 12
-    }
-  },
   "packages/game-floorplan-three/tests/exact-golden.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
-    }
-  },
-  "packages/game-floorplan-three/tests/golden-scene.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-floorplan-three/tests/helpers/area-room.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 11
-    }
-  },
-  "packages/game-floorplan-three/tests/helpers/fake-document.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/tests/helpers/houses.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/tests/interactables-default.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-floorplan-three/tests/interaction.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    }
-  },
-  "packages/game-floorplan-three/tests/lot-roof.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 14
-    }
-  },
-  "packages/game-floorplan-three/tests/navigation.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 10
-    }
-  },
-  "packages/game-floorplan-three/tests/room-lights-budget.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-floorplan-three/tests/skyscraper.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/tests/structure.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 12
-    }
-  },
-  "packages/game-floorplan-three/tests/team-golden-house-area.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/tests/test-area.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 18
-    }
-  },
-  "packages/game-floorplan-three/tests/wall.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
     }
   },
   "packages/game-vehicles-fleet/src/context.ts": {

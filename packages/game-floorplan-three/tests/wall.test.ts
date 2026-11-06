@@ -18,17 +18,17 @@ describe('wallPiece', () => {
     const plan = wallPlan({ w: 10, h: 3 })
     expect(plan.construction.system).toBe('masonry')
     expect(plan.construction.foundation.type).toBe('strip_footing')
-    const parts = plan.structure.parts.map((p: any) => `${p.id}:${p.role}:${p.material}`)
+    const parts = plan.structure.parts.map((p) => `${p.id}:${p.role}:${p.material}`)
     const pillars = ['wall_column_0_0', 'wall_column_0_1', 'wall_column_0_2', 'wall_column_0_3']
     expect(parts).toEqual(['ground_beam_0:beam:concrete', 'wall_0_0:wall:brick', 'plate_0_0:beam:concrete', ...pillars.map((id) => `${id}:column:concrete`)])
     // one at each end of the 10 m wall, flush with it, and two between them: three spans of 3.2 m, none over 4 m
     const centres = plan.structure.parts.filter((p: StructurePiece) => p.role === 'column').map((p: StructurePiece) => Math.round(((p.aabb[0] + p.aabb[2]) / 2) * 100) / 100)
     expect(centres).toEqual([-4.9, -1.63, 1.63, 4.9])
     for (const pillar of plan.structure.parts.filter((p: StructurePiece) => p.role === 'column')) {
-      expect([pillar.y0, pillar.y1]).toEqual([0, plan.structure.parts.find((p: StructurePiece) => p.id === 'wall_0_0').y1])
+      expect([pillar.y0, pillar.y1]).toEqual([0, plan.structure.parts.find((p: StructurePiece) => p.id === 'wall_0_0')!.y1])
       expect(pillar.aabb[3] - pillar.aabb[1]).toBeCloseTo(0.2)
     }
-    expect(plan.structure.supports.map((s: any) => `${s.part}>${s.on}:${s.joint}`)).toEqual([
+    expect(plan.structure.supports.map((s) => `${s.part}>${s.on}:${s.joint}`)).toEqual([
       'ground_beam_0>ground:rebar', 'wall_0_0>ground_beam_0:mortar', 'plate_0_0>wall_0_0:mortar', ...pillars.flatMap((id) => [`${id}>ground:rebar`, `plate_0_0>${id}:rebar`]),
     ])
   })
@@ -48,12 +48,12 @@ describe('wallPiece', () => {
 
   it('gives the spec a house gives: the plastered brick wall with its units and breach, the bond beam with rebar', () => {
     const { spec } = make()
-    const wall = spec.parts.find((p: any) => p.id === 'wall_0_0')
-    expect(wall.layers.some((l: any) => l.material === 'plaster')).toBe(true)
-    expect(wall.units).toBeTruthy()
-    expect(wall.breach).toBeTruthy()
-    expect(spec.parts.find((p: any) => p.id === 'plate_0_0').reinforcement).toBeTruthy()
-    expect(spec.joints.map((j: any) => j.id)).toEqual(expect.arrayContaining(['ground_beam_0~ground', 'wall_0_0~ground_beam_0', 'plate_0_0~wall_0_0']))
+    const wall = spec.parts.find((p) => p.id === 'wall_0_0')
+    expect(wall!.layers!.some((l) => l.material === 'plaster')).toBe(true)
+    expect(wall!.units).toBeTruthy()
+    expect(wall!.breach).toBeTruthy()
+    expect(spec.parts.find((p) => p.id === 'plate_0_0')!.reinforcement).toBeTruthy()
+    expect(spec.joints!.map((j) => j.id)).toEqual(expect.arrayContaining(['ground_beam_0~ground', 'wall_0_0~ground_beam_0', 'plate_0_0~wall_0_0']))
     // the ground beam is buried foundation: anchored, it never falls
     expect(spec.parts.find((p: { id: string }) => p.id === 'ground_beam_0')).toMatchObject({ anchored: true, structure: { role: 'foundation' } })
     const report = checkSpec(spec, { materials: createDestruction({ seed: 1 }).materials.keys() })
@@ -71,14 +71,14 @@ describe('wallPiece', () => {
     const rifle = (x: number, y: number) => world.shoot([x, y, 5], [0, 0, -1], 2100, 7.62, 'test')
     for (const [x, y] of [[-4.97, 2.97], [-4.9, 2.85], [-4.97, 1.5], [-4.85, 1.5], [4.97, 2.97], [4.95, 0.6]]) for (let i = 0; i < 4; i++) rifle(x!, y!)
     follower.update()
-    const units = root.getObjectByName('breach:wall_0_0') as any
+    const units = root.getObjectByName('breach:wall_0_0') as THREE.InstancedMesh
     expect(units.count).toBeGreaterThan(0)
     root.updateMatrixWorld(true)
     const drawn = new THREE.Box3(), cell = new THREE.Box3(), m = new THREE.Matrix4()
     units.geometry.computeBoundingBox()
     for (let i = 0; i < units.count; i++) {
       units.getMatrixAt(i, m)
-      drawn.union(cell.copy(units.geometry.boundingBox).applyMatrix4(m).applyMatrix4(units.matrixWorld))
+      drawn.union(cell.copy(units.geometry.boundingBox!).applyMatrix4(m).applyMatrix4(units.matrixWorld))
     }
     expect(drawn.min.x).toBeGreaterThanOrEqual(wall.min.x - 1e-6)
     expect(drawn.max.x).toBeLessThanOrEqual(wall.max.x + 1e-6)
@@ -216,7 +216,7 @@ describe('wallPiece', () => {
   it('is drawn by the house renderer, centred on the origin, with the wall meshes labelled by part', () => {
     const root = make().build(THREE)
     const labelled: string[] = []
-    root.traverse((o: any) => { if (o.isMesh && o.userData.destructionPart) labelled.push(o.userData.destructionPart) })
+    root.traverse((o) => { if ((o as THREE.Mesh).isMesh && o.userData.destructionPart) labelled.push(o.userData.destructionPart) })
     expect(labelled).toContain('wall_0_0')
     const box = new THREE.Box3().setFromObject(root)
     expect(box.min.x).toBeLessThan(-4.9)
