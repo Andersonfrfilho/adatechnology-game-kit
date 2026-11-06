@@ -95,6 +95,12 @@ export type ModelFamily = 'pistol' | 'revolver' | 'rifle' | 'semiint' | 'semi12'
 /** The named parts a model exposes to the animation: pivots and marks inside the model, never copies. */
 export interface ModelParts {
   family: ModelFamily
+  /** Where the right hand takes a gun that names it (a rotary gun's rear spade grip, a horizontal handle along z): the top of the handle. */
+  holdRight?: THREE_NS.Object3D
+  /** Where the supporting hand takes a gun that names it (the carry handle on top): the top of the handle, the palm on it. */
+  holdLeft?: THREE_NS.Object3D
+  /** How the body carries it: `hip`, too heavy for the shoulder (a hand-held rotary gun), low at the right hip, level ahead. */
+  carry?: 'hip'
   /** Recoil strength of the model (the page's `kick`). */
   kick?: number
   /** How far the slide or bolt travels back, in metres. */

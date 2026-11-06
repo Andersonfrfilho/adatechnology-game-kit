@@ -48,6 +48,10 @@ function buildHousing(kit: ModelKit, parts: ModelParts, group: BuiltModel['group
     cylinderZ(group, 0.016, 0.07, M.poly, 0.06, -0.01, side * 0.2, 14)
   }
   parts.trigger = box(group, 0.012, 0.02, 0.016, M.dark, 0.1, 0.085, 0.14, 0.3)
+  // carried at the hip: the right hand on the right spade grip, the left on the carry handle on top
+  parts.holdRight = kit.mark(group, 0.06, 0.006, 0.2)
+  parts.holdLeft = kit.mark(group, 0.22, 0.164, 0)
+  parts.carry = 'hip'
   parts.safety = box(group, 0.014, 0.006, 0.01, M.dark, 0.2, 0.073, -0.076, 0.4)
 }
 
