@@ -56,7 +56,7 @@ const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCata
 const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
 const scenery = {
   // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
-  target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow },
+  target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
   shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true, pushable: true },
   test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },

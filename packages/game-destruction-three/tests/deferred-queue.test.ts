@@ -25,7 +25,7 @@ function setup(options: Partial<RendererOptions> = {}) {
   const breakAll = (): void => {
     for (const id of ids) world.emit({ type: 'fracture', object: 'o1', part: id, style: 'shatter', fragments: [], point: [0, 0, 0] })
   }
-  return { renderer, meshes, breakAll }
+  return { renderer, world, meshes, breakAll }
 }
 
 const brokenCount = (meshes: Record<string, THREE.Mesh>): number => Object.values(meshes).filter((mesh) => !mesh.visible).length
@@ -79,6 +79,15 @@ describe('events as a deferred queue', () => {
     queue.detach?.()
     breakAll()
     renderer.update(0.016)
+    expect(brokenCount(meshes)).toBe(PART_COUNT)
+  })
+  it('never drops a break behind a flood of damage events: a blast that fills the queue still draws every part it broke', () => {
+    const { renderer, world, meshes, breakAll } = setup()
+    const queue = renderer.deferredQueue()
+    queue.attach?.()
+    for (let index = 0; index < 5000; index++) world.emit({ type: 'damage', object: 'o1', part: 'part0', amount: 1, damageType: 'explosive', hp: 1 })
+    breakAll()
+    queue.run(Infinity, () => 0)
     expect(brokenCount(meshes)).toBe(PART_COUNT)
   })
 })

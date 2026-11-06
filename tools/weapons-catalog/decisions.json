@@ -5638,5 +5638,42 @@
     },
     "source": "reference",
     "reason": "O GP-25 só se prende ao AK (suporte no cano e no guarda-mão do AKM/AK-74): o SKS tem baioneta mas não recebe o GP-25. Troca a regra do desenho \"bayo → gp25\" por \"bayo e ak → gp25\". https://en.wikipedia.org/wiki/GP-25"
+  },
+  "weaponModels": {
+    "m79": {
+      "value": {
+        "builder": "breakLauncher",
+        "caliber": "40×46",
+        "length": 730,
+        "barrel": 356,
+        "options": {
+          "stock": "fixed",
+          "wood": 1,
+          "mag": "none",
+          "hg": "wood",
+          "hgFrac": 0.4,
+          "br": 0.022,
+          "hR": 0.05
+        }
+      },
+      "source": "gallery: buildExp(\"m79\") of Galeria 3D do Arsenal (explosivos), rifle({ L: 730, B: 356, stock: \"fixed\", wood: 1, mag: \"none\", hg: \"wood\", hgFrac: 0.4, br: 0.022, hR: 0.05 })",
+      "reason": "The M79 is drawn by the gallery among its explosives; the SDK builds it with the same rifle options and a break-action hinge (breakLauncher), so it loads one grenade at the breech as the real one opens."
+    }
+  },
+  "weaponTags": {
+    "fn_p90": {
+      "value": [
+        "pdw"
+      ],
+      "source": "reference",
+      "reason": "The FN P90 was designed as a personal defence weapon (PDW), the class it is sold and known as; the weapon picker lists PDWs in a section of their own."
+    },
+    "hk_mp7a1": {
+      "value": [
+        "pdw"
+      ],
+      "source": "reference",
+      "reason": "The HK MP7 is Heckler & Koch's personal defence weapon (PDW), the other weapon of the class with the P90."
+    }
   }
 }
