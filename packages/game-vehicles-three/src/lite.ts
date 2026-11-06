@@ -3,6 +3,10 @@
  * with the meshes nobody sees from outside left out. A literal port: the classes, the thresholds (3 cm prune, 0.99 opacity, 0.5 metalness,
  * 0.25 and 0.45 emissive) and the colours are the team's.
  */
+import type * as THREE_NS from 'three'
+import type { BufferGeometry, Color, Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Texture } from 'three'
+
+type Three = typeof THREE_NS
 
 /** The six classes of a fused vehicle, in the order they are added to the group. */
 export const LITE_CLASSES = ['paint', 'trim', 'metal', 'glass', 'light', 'plate'] as const
@@ -10,6 +14,26 @@ export type LiteClass = (typeof LITE_CLASSES)[number]
 
 /** Smallest extent in metres a piece needs to survive the fusion (the plate is always kept). */
 export const PRUNE_BELOW = 0.03
+
+/** A material of the built vehicle as the fusion reads it (standard, basic or line materials alike). */
+export type LiteSourceMaterial = Material & {
+  map?: Texture | null
+  color: Color
+  metalness?: number
+  roughness?: number
+  emissive?: Color
+  emissiveIntensity?: number
+  isMeshBasicMaterial?: boolean
+}
+
+/** What the fusion reads of the built vehicle: its root and the paints (`c.paints`). */
+export interface LiteSource {
+  vehicle: Object3D
+  paints?: ReadonlySet<Material> | null
+}
+
+/** A material of the fused vehicle (`liteMaterials`). */
+export type LiteMaterial = MeshStandardMaterial | MeshBasicMaterial
 
 interface Accumulator {
   P: number[]
@@ -20,7 +44,7 @@ interface Accumulator {
   nv: number
   alpha: boolean
   uv: boolean
-  map: any
+  map: Texture | null | undefined
 }
 
 export interface LiteFusion {
@@ -35,7 +59,7 @@ const createAccumulators = (): Record<LiteClass, Accumulator> => {
 }
 
 /** Which class a material belongs to, or `null` when it is left out. */
-export function classify(mat: any, mesh: any, c: any): LiteClass | null {
+export function classify(mat: LiteSourceMaterial, mesh: Object3D, c: LiteSource): LiteClass | null {
   if (mat.map) {
     if (mesh.userData.plate) return 'plate'
     if ((mat.userData && mat.userData.grille) || mat.name === 'grille' || (mat.metalness != null && mat.roughness != null && !mat.transparent)) return 'trim'
@@ -52,14 +76,14 @@ export function classify(mat: any, mesh: any, c: any): LiteClass | null {
   const ei = mat.emissiveIntensity == null ? 1 : mat.emissiveIntensity
   if (e && ((e.r + e.g + e.b) / 3) * ei > 0.25 && !mat.metalness) return 'light'
   if (e && ((e.r + e.g + e.b) / 3) * ei > 0.45) return 'light'
-  if (mat.metalness >= 0.5) return 'metal'
+  if ((mat.metalness as number) >= 0.5) return 'metal'
   if (c.paints && c.paints.has(mat)) return 'paint'
   if (mat.opacity < 1 && mat.transparent) return null
   return 'trim'
 }
 
 /** The vertex colour of a piece of a class. `paintColor` replaces the primary paint. */
-export function classColor(mat: any, cls: LiteClass, primary: any, paintColor: any, out: any): any {
+export function classColor(mat: LiteSourceMaterial, cls: LiteClass, primary: Material | null | undefined, paintColor: Color | null | undefined, out: Color): Color {
   if (cls === 'paint' && paintColor && mat === primary) return out.copy(paintColor)
   if (cls === 'light') {
     const e = mat.emissive
@@ -78,7 +102,7 @@ export function classColor(mat: any, cls: LiteClass, primary: any, paintColor: a
 }
 
 /** The material of each class (vertex colours; glass blends; light is unlit; the plate keeps its canvas texture). */
-export function liteMaterials(THREE: any, environment: any): Record<LiteClass, any> {
+export function liteMaterials(THREE: Three, environment: Texture | null): Record<LiteClass, LiteMaterial> {
   return {
     paint: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.3, side: THREE.DoubleSide, envMap: environment, envMapIntensity: 0.35 }),
     trim: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0.08, side: THREE.DoubleSide }),
@@ -93,7 +117,7 @@ export function liteMaterials(THREE: any, environment: any): Record<LiteClass, a
  * Walks the built vehicle and collects every visible mesh, in the frame of `pivot`, into one set of arrays per class.
  * `hidden` is the set of materials nobody sees from outside (`kit.lodHiddenMaterials()`).
  */
-export function fuse(THREE: any, c: any, pivot: any, paintColor: any, primary: any, hidden: ReadonlySet<any>): LiteFusion {
+export function fuse(THREE: Three, c: LiteSource, pivot: Matrix4, paintColor: Color | null, primary: Material | null | undefined, hidden: ReadonlySet<Material>): LiteFusion {
   const acc = createAccumulators()
   const mw = new THREE.Matrix4()
   const nm = new THREE.Matrix3()
@@ -102,9 +126,10 @@ export function fuse(THREE: any, c: any, pivot: any, paintColor: any, primary: a
   const tmp = new THREE.Box3()
   let pruned = 0
   c.vehicle.updateMatrixWorld(true)
-  c.vehicle.traverse((o: any) => {
+  c.vehicle.traverse((node) => {
+    const o = node as Mesh<BufferGeometry, LiteSourceMaterial | LiteSourceMaterial[]> & { isInstancedMesh?: boolean; isSkinnedMesh?: boolean }
     if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry || !o.geometry.attributes.position) return
-    for (let p = o; p; p = p.parent) if (p.visible === false) return
+    for (let p: Object3D | null = o; p; p = p.parent) if (p.visible === false) return
     if (o.userData && (o.userData.ghost || o.userData.skipLite)) return
     const mats = Array.isArray(o.material) ? o.material : [o.material]
     const geo = o.geometry
@@ -112,7 +137,7 @@ export function fuse(THREE: any, c: any, pivot: any, paintColor: any, primary: a
     nm.getNormalMatrix(mw)
     const flip = mw.determinant() < 0
     geo.computeBoundingBox()
-    tmp.copy(geo.boundingBox).applyMatrix4(mw)
+    tmp.copy(geo.boundingBox!).applyMatrix4(mw)
     const ext = Math.max(tmp.max.x - tmp.min.x, tmp.max.y - tmp.min.y, tmp.max.z - tmp.min.z)
     const pa = geo.attributes.position
     const na = geo.attributes.normal
@@ -121,8 +146,8 @@ export function fuse(THREE: any, c: any, pivot: any, paintColor: any, primary: a
     const ix = geo.index
     const tot = ix ? ix.count : pa.count
     const groups = Array.isArray(o.material) && geo.groups.length ? geo.groups : [{ start: 0, count: tot, materialIndex: 0 }]
-    groups.forEach((gr: any) => {
-      const mat = mats[gr.materialIndex] || mats[0]
+    groups.forEach((gr) => {
+      const mat = mats[gr.materialIndex as number] || mats[0]
       if (!mat || hidden.has(mat)) return
       const cls = classify(mat, o, c)
       if (!cls) return
@@ -175,8 +200,8 @@ export function fuse(THREE: any, c: any, pivot: any, paintColor: any, primary: a
 }
 
 /** One mesh per class that has triangles. */
-export function liteMeshes(THREE: any, fusion: LiteFusion, materials: Record<LiteClass, any>): any[] {
-  const meshes: any[] = []
+export function liteMeshes(THREE: Three, fusion: LiteFusion, materials: Record<LiteClass, LiteMaterial>): Mesh[] {
+  const meshes: Mesh[] = []
   for (const name of LITE_CLASSES) {
     const A = fusion.acc[name]
     if (!A.I.length) continue
@@ -191,7 +216,7 @@ export function liteMeshes(THREE: any, fusion: LiteFusion, materials: Record<Lit
     let mt = materials[name]
     if (name === 'plate') {
       mt = mt.clone()
-      mt.map = A.map
+      mt.map = A.map as Texture | null
       if (mt.map) mt.map.needsUpdate = true
     }
     const mesh = new THREE.Mesh(g, mt)

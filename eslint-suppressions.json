@@ -174,16 +174,6 @@
       "count": 10
     }
   },
-  "packages/game-vehicles-three/src/build.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 17
-    }
-  },
-  "packages/game-vehicles-three/src/lite.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 24
-    }
-  },
   "packages/game-vehicles-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 19
@@ -191,12 +181,7 @@
   },
   "packages/game-vehicles-three/src/test-area/proving/module.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 13
-    }
-  },
-  "packages/game-vehicles-three/src/vehicle-lod.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 24
+      "count": 2
     }
   },
   "packages/game-vehicles-three/tests/damage-drives.test.ts": {
