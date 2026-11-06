@@ -1,5 +1,23 @@
 # @adatechnology/game-weapons-three
 
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies [41760ac]
+- Updated dependencies [e8cae79]
+- Updated dependencies [3894641]
+- Updated dependencies [8976efa]
+- Updated dependencies [8888b33]
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-floorplan-three@0.11.0
+  - @adatechnology/game-vfx-three@0.7.5
+  - @adatechnology/game-vfx@0.10.1
+  - @adatechnology/game-contracts@0.29.0
+  - @adatechnology/game-items-three@0.7.7
+  - @adatechnology/game-audio@0.9.3
+  - @adatechnology/game-weapons@0.9.1
+
 ## 0.18.0
 
 ### Minor Changes

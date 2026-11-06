@@ -1,5 +1,35 @@
 # @adatechnology/game-destruction-three
 
+## 0.18.0
+
+### Minor Changes
+
+- 41760ac: Broken objects: nothing floats, nothing invisible collides. After each break the renderer checks what is left of the object on the next update (`onBrokenChecked`)
+  and lets go at once what stood on something and lost it; whatever is not a structure loses its footing by the same rule as furniture. What lay asleep on a piece
+  wakes in the same update that piece starts to move. `shownBoxes(objectId, partId?)` gives the world boxes of what is still drawn. The test room measures the player
+  against those boxes (a broken leg leaves no collider), logs a `broken_floating` failure when the check had to let something go, and looks for what a thrown body
+  hit from the hip to the shoulder. The floor plan's golden hashes of the two house destruction scenes change: debris asleep on pieces that move now wakes.
+- e8cae79: A piece's contacts follow the surface it rests on: on another piece the push is along the normal of that piece's face (a tilted table top pushes across itself,
+  not straight up), and friction is Coulomb in the plane of the surface, static while the point holds and dynamic while it slides (0.7 and 0.6 unless the piece
+  says otherwise, mixed by geometric mean between two pieces). A box on a top tilted past atan(μ) slides down it toward the low side; gentler, it stays. Pieces on
+  the top of another are no longer pushed sideways off it by the separation of pieces side by side. The floor plan's golden hashes of the three house destruction
+  scenes change with the solver.
+
+### Patch Changes
+
+- 148cbbb: A loose piece of furniture touches the ground by the corners of each part left of it, not by the box around them all: a top left on one leg, or on the two legs of one
+  side, has its centre of mass off what holds it and goes over until it lies on the floor.
+- 8976efa: Grit and dust go on falling where a blow broke a hard face. A spall or a unit knocked out of masonry or concrete keeps shedding a pinch of grit and dust for 2 to 5 seconds, less and less as the loose bits run out; dust hangs 2 to 5 seconds before it settles and chips stay 2 to 4 seconds, long enough to reach the floor.
+- Updated dependencies [a3b0fd7]
+- Updated dependencies [3894641]
+- Updated dependencies [8976efa]
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-destruction@0.19.0
+  - @adatechnology/game-vfx-three@0.7.5
+  - @adatechnology/game-vfx@0.10.1
+  - @adatechnology/game-contracts@0.29.0
+  - @adatechnology/game-audio@0.9.3
+
 ## 0.17.3
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @adatechnology/game-vehicles-three
 
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-contracts@0.29.0
+  - @adatechnology/game-audio@0.9.3
+  - @adatechnology/game-vehicles@0.6.7
+  - @adatechnology/game-vehicles-driving@0.2.16
+  - @adatechnology/game-vehicles-proving@0.1.7
+
 ## 0.8.2
 
 ### Patch Changes

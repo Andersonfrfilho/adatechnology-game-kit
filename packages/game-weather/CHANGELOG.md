@@ -1,5 +1,13 @@
 # @adatechnology/game-weather
 
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-contracts@0.29.0
+  - @adatechnology/game-audio@0.9.3
+
 ## 0.3.8
 
 ### Patch Changes

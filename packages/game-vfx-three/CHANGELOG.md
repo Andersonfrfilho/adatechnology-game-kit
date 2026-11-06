@@ -1,5 +1,15 @@
 # @adatechnology/game-vfx-three
 
+## 0.7.5
+
+### Patch Changes
+
+- 3894641: Black smoke (burning plastic, foam, rubber, asphalt) reads as a cloud, not as a flat black blob: the puff shader keeps a floor of albedo for the dark puffs, as soot still scatters some light, and lights their rim with the sky so the volume shows. Grey and white smoke, dust and fire keep the Lab's look.
+- Updated dependencies [8976efa]
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-vfx@0.10.1
+  - @adatechnology/game-contracts@0.29.0
+
 ## 0.7.4
 
 ### Patch Changes

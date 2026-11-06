@@ -1,5 +1,35 @@
 # @adatechnology/game-test-room
 
+## 0.29.1
+
+### Patch Changes
+
+- 41760ac: Broken objects: nothing floats, nothing invisible collides. After each break the renderer checks what is left of the object on the next update (`onBrokenChecked`)
+  and lets go at once what stood on something and lost it; whatever is not a structure loses its footing by the same rule as furniture. What lay asleep on a piece
+  wakes in the same update that piece starts to move. `shownBoxes(objectId, partId?)` gives the world boxes of what is still drawn. The test room measures the player
+  against those boxes (a broken leg leaves no collider), logs a `broken_floating` failure when the check had to let something go, and looks for what a thrown body
+  hit from the hip to the shoulder. The floor plan's golden hashes of the two house destruction scenes change: debris asleep on pieces that move now wakes.
+- Updated dependencies [a3b0fd7]
+- Updated dependencies [41760ac]
+- Updated dependencies [e8cae79]
+- Updated dependencies [3894641]
+- Updated dependencies [148cbbb]
+- Updated dependencies [8976efa]
+- Updated dependencies [b1f747f]
+  - @adatechnology/game-destruction@0.19.0
+  - @adatechnology/game-destruction-three@0.18.0
+  - @adatechnology/game-vfx-three@0.7.5
+  - @adatechnology/game-vfx@0.10.1
+  - @adatechnology/game-contracts@0.29.0
+  - @adatechnology/game-terrain@0.5.2
+  - @adatechnology/game-audio@0.9.3
+  - @adatechnology/game-fluids@0.5.4
+  - @adatechnology/game-fluids-three@0.4.17
+  - @adatechnology/game-player@0.5.7
+  - @adatechnology/game-runtime@0.2.7
+  - @adatechnology/game-terrain-three@0.5.3
+  - @adatechnology/game-weapons@0.9.1
+
 ## 0.29.0
 
 ### Minor Changes
