@@ -1,5 +1,5 @@
 /** Soft body warp (sculpting) used for panel deformation. */
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, smooth } from './util'
 
 export function installWarp(kit: Kit) {
@@ -41,7 +41,7 @@ export function installWarp(kit: Kit) {
     const irel = new THREE.Matrix4()
     const v = new V3()
     const use = new Map()
-    c.root.traverse(function (o: any) {
+    c.root.traverse(function (o: SceneNode) {
       if (o.isMesh) use.set(o.geometry, (use.get(o.geometry) || 0) + 1)
     })
     const skip = new Set(c.wheels)
@@ -94,7 +94,7 @@ export function installWarp(kit: Kit) {
       GD.zpos *= f
       GD.Wg *= f
     })
-    c.vehicle.children.slice().forEach(function (o: any) {
+    c.vehicle.children.slice().forEach(function (o: SceneNode) {
       if (skip.has(o) || o.userData.noWarp) return
       if (o.isMesh) {
         if (!warpMesh(o)) rigid(o)

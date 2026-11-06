@@ -1,8 +1,8 @@
 /** Per-zone damage for separate parts: lights, wheels, glass, internals, rotors and landing gear. */
-import type { Vector3 } from 'three'
+import type { Object3D, Vector3 } from 'three'
 
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, hash, rng } from './util'
 
 export function installDamageParts(kit: Kit) {
@@ -283,9 +283,9 @@ export function installDamageParts(kit: Kit) {
     const inv2 = I.worldInverseOf(c)
     let lo = 1e9
     let xs = 0
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.isSprite || !o.geometry || !o.geometry.attributes.position) return
-      for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
+      for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
       const bb = I.localBox(c, o, inv2)
       if (bb.min.y < lo) {
         lo = bb.min.y
@@ -550,7 +550,7 @@ export function installDamageParts(kit: Kit) {
     }
     const rigid: any = []
     const verts: any = []
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (o.userData.decal || o.isSprite || !o.visible) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z && ow.id !== 'rotor_cauda' && I.boxCenter(ow.box).x > kx) return

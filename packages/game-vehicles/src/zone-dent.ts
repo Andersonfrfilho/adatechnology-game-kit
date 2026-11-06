@@ -1,8 +1,8 @@
 /** Zone dent field: deterministic vertex displacement inside a zone box. */
-import type { BufferGeometry, Matrix4, Vector3 } from 'three'
+import type { BufferGeometry, Material, Matrix4, Object3D, Vector3 } from 'three'
 
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { smooth } from './util'
 import { liveTriIndex, touchTriIndex } from './tri-index'
 
@@ -95,16 +95,16 @@ export function installZoneDent(kit: Kit) {
   }
   /* meshes this zone may dent: shell (c.deform), paint, its own parts and, with anyMesh, any mesh */
   function dentTargets(c: BuildContext, z: DamageZone, inv: Matrix4) {
-    const dset = new Set(c.deform)
+    const dset = new Set<Object3D>(c.deform)
     const out: any = []
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || !o.geometry.attributes.position) return
-      for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
+      for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
       const ow = I.ownerOf(c, o)
       const isG = !!o.userData.glass
       if (isG && !(z.alsoGlass || ow === z)) return
       if (ow && ow !== z && !(isG && z.alsoGlass)) return
-      const ok = dset.has(o) || (c.paints && c.paints.has(o.material)) || ow === z || z.anyMesh
+      const ok = dset.has(o) || (c.paints && c.paints.has(o.material as Material)) || ow === z || z.anyMesh
       if (!ok) return
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
       if (!I.boxIntersects(z.box, I.localBox(c, o, inv))) return
@@ -233,9 +233,9 @@ export function installZoneDent(kit: Kit) {
       }
     })
     /* rigid parts (trim, handles, liner, plate) follow the field at their centre */
-    const dset = new Set(c.deform)
+    const dset = new Set<Object3D>(c.deform)
     const moved: any = []
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (dset.has(o) || o.userData.noFollow || o.userData.decal || o.isSprite || o.userData.glass) return
       if (!(o.isMesh || (o.isGroup && o.userData.rigid))) return
       const ow = I.ownerOf(c, o)

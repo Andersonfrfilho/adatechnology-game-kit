@@ -1,7 +1,7 @@
 /** Car body shell, panels and body helpers. */
-import type { BufferGeometry } from 'three'
+import type { BufferGeometry, Material, Object3D } from 'three'
 
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp } from './util'
 import { raycastIndexed } from './tri-index'
 
@@ -163,11 +163,11 @@ export function installBody(kit: Kit) {
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const inv = new THREE.Matrix4().copy(Mw).invert()
-    const dset = new Set(c.deform)
+    const dset = new Set<Object3D>(c.deform)
     const cands: any = []
-    c.vehicle.traverse(function (q: any) {
+    c.vehicle.traverse(function (q: SceneNode) {
       if (!q.isMesh || !q.visible || q.userData.glass || q.userData.decal || q.isSprite) return
-      if (o.all || dset.has(q) || (c.paints && c.paints.has(q.material))) cands.push(q)
+      if (o.all || dset.has(q) || (c.paints && c.paints.has(q.material as Material))) cands.push(q)
     })
     const d = (dir.isVector3 ? dir.clone() : new V3(dir[0], dir[1], dir[2])).normalize()
     const p0 = org.isVector3 ? org.clone() : new V3(org[0], org[1], org[2])

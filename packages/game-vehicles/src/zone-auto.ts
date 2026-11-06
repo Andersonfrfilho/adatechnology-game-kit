@@ -1,6 +1,6 @@
 /** Automatic zone derivation for each vehicle family. */
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { legacyGlassId, legacyLightId } from './legacy-seeds'
 
 const REAR_GLASS_KEYS = ['rear_window', 'window_rear', 'quarter_glass']
@@ -578,7 +578,7 @@ export function installZoneAuto(kit: Kit) {
       /* weapon: the longest mesh in x above the belt line (barrel) */
       let gun: any = null
       let gl2 = 0
-      c.vehicle.traverse(function (o: any) {
+      c.vehicle.traverse(function (o: SceneNode) {
         if (!o.isMesh || o.userData.decal) return
         const bb = I.localBox(c, o, inv)
         const sx = bb.max.x - bb.min.x
@@ -692,7 +692,7 @@ export function installZoneAuto(kit: Kit) {
       const span = W / 2
       const wingBB = new THREE.Box3()
       const tailX = R + Math.min(2.0, 0.28 * L)
-      c.vehicle.traverse(function (o: any) {
+      c.vehicle.traverse(function (o: SceneNode) {
         if (!o.isMesh || o.userData.decal) return
         const bb = I.localBox(c, o, inv)
         if (Math.max(Math.abs(bb.min.z), Math.abs(bb.max.z)) > Math.max(2.0, span * 0.45) && bb.min.x > tailX) wingBB.union(bb)
@@ -751,7 +751,7 @@ export function installZoneAuto(kit: Kit) {
         gear.forEach(function (w) {
           gb.union(I.localBox(c, w, inv))
         })
-        c.vehicle.children.forEach(function (o: any) {
+        c.vehicle.children.forEach(function (o: SceneNode) {
           if (!o.isMesh || o.userData.decal || o.userData.glass || c.wheels.indexOf(o) >= 0) return
           const bb = I.localBox(c, o, inv)
           const cen = bb.getCenter(new V3())

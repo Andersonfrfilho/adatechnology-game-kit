@@ -2,7 +2,7 @@
 import type { MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
 import type { VehiclePart } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, hash, markDecal } from './util'
 import { raycastIndexed } from './tri-index'
 
@@ -324,17 +324,17 @@ export function installImpact(kit: Kit) {
         }
       }
     })
-    const dset = new Set(c.deform)
+    const dset = new Set<Object3D>(c.deform)
     const box = new THREE.Box3()
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (dset.has(o) || o.userData.noFollow) return
       if (!(o.isMesh || (o.isGroup && o.userData.rigid))) return
       if (!o.userData.c0) {
         if (o.isMesh) {
-          if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere()
-          o.userData.c0 = o.geometry.boundingSphere.center.clone().applyMatrix4(o.matrix)
-          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox()
-          o.userData.bb0 = o.geometry.boundingBox.clone().applyMatrix4(o.matrix)
+          if (!o.geometry!.boundingSphere) o.geometry!.computeBoundingSphere()
+          o.userData.c0 = o.geometry!.boundingSphere!.center.clone().applyMatrix4(o.matrix)
+          if (!o.geometry!.boundingBox) o.geometry!.computeBoundingBox()
+          o.userData.bb0 = o.geometry!.boundingBox!.clone().applyMatrix4(o.matrix)
         } else {
           box.setFromObject(o)
           box.applyMatrix4(gInv)

@@ -1,8 +1,8 @@
 /** Per-zone damage for body panels: doors, lids, hoods, roofs, hulls and wings. */
-import type { Matrix4 } from 'three'
+import type { Matrix4, Mesh, Object3D } from 'three'
 
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp } from './util'
 
 export function installDamagePanels(kit: Kit) {
@@ -156,7 +156,7 @@ export function installDamagePanels(kit: Kit) {
   function roofOff(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const B = z.box
     const top = c.meta.top || B.y1
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || !o.visible || o.userData.decal || o.userData.glass) return
       if (o.material === MATERIALS.headliner) {
         const hb = I.localBox(c, o, inv)
@@ -164,8 +164,8 @@ export function installDamagePanels(kit: Kit) {
         if (I.boxContains(B, hc.x, hc.y, hc.z, 0.12)) I.hideObj(c, o)
       }
     })
-    c.vehicle.children.forEach(function (o: any) {
-      if (!o.visible || o.userData.decal || o.isSprite || o.userData.glass || c.deform.indexOf(o) >= 0 || c.wheels.indexOf(o) >= 0) return
+    c.vehicle.children.forEach(function (o: SceneNode) {
+      if (!o.visible || o.userData.decal || o.isSprite || o.userData.glass || c.deform.indexOf(o as Mesh) >= 0 || c.wheels.indexOf(o) >= 0) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z) return
       const bb = I.localBox(c, o, inv)
@@ -185,7 +185,7 @@ export function installDamagePanels(kit: Kit) {
   /* torn-off tail cone: everything behind the start of the cone (pylon, fin, tail rotor, tail skid) disappears, from any zone */
   function tailOff(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const kx = z.box.x1 - (z.box.x1 - z.box.x0) * 0.15
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (!o.visible || o.userData.decal || o.isSprite) return
       const bb = I.localBox(c, o, inv)
       if (bb.isEmpty()) return
@@ -196,9 +196,9 @@ export function installDamagePanels(kit: Kit) {
     })
   }
   function followersIn(c: BuildContext, z: DamageZone, inv: Matrix4) {
-    const dset = new Set(c.deform)
+    const dset = new Set<Object3D>(c.deform)
     const out: any = []
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (dset.has(o) || o.userData.decal || o.isSprite || o.userData.glass || !o.visible) return
       if (!(o.isMesh || (o.isGroup && o.userData.rigid))) return
       const ow = I.ownerOf(c, o)

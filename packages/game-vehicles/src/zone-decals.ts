@@ -1,9 +1,9 @@
 /** Zone decals: scratches, rust, burn marks and dents drawn as textures. */
-import type { BufferGeometry, Matrix4, MeshStandardMaterial, Vector3 } from 'three'
+import type { BufferGeometry, Matrix4, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
 import type { MaterialOptions } from './materials'
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { TRI_BLOCK, triIndexOf } from './tri-index'
 
 export function installZoneDecals(kit: Kit) {
@@ -319,9 +319,9 @@ export function installZoneDecals(kit: Kit) {
   }
   function zoneCands(c: BuildContext, z: DamageZone, inv: Matrix4, glassToo?: any) {
     const out: any = []
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || o.userData.decal || o.userData.ghost || !o.geometry || o.isSprite) return
-      for (let q = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
+      for (let q: Object3D | null = o; q && q !== c.vehicle; q = q.parent) if (!q.visible) return
       if (o.userData.glass && !glassToo) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z) return

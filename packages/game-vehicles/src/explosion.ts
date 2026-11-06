@@ -1,7 +1,7 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
 import type { MeshStandardMaterial, Vector3 } from 'three'
 
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 
 export function installExplosion(kit: Kit) {
   const THREE = kit.THREE
@@ -95,7 +95,7 @@ export function installExplosion(kit: Kit) {
   }
   function burnAll(c: BuildContext) {
     let i = 0
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (o.isSprite) {
         o.visible = false
         return

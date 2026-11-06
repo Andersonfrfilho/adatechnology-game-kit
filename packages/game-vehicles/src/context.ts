@@ -44,7 +44,7 @@ export function installContext(kit: Kit) {
     declare state: string
     declare glass: Mesh[]
     declare deform: Mesh[]
-    declare wheels: Group[]
+    declare wheels: Object3D[]
     declare parts: VehiclePart[]
     declare lights: VehicleLamp[]
     declare log: unknown[]

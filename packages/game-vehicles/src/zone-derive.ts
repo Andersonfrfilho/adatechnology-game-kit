@@ -1,6 +1,6 @@
 /** Zone derivation from the vehicle meta, merged with builder declarations. */
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 
 export function installZoneDerive(kit: Kit) {
   const THREE = kit.THREE
@@ -179,7 +179,7 @@ export function installZoneDerive(kit: Kit) {
       return z.type === 'part'
     })
     if (looseParts.length)
-      c.vehicle.children.forEach(function (o: any) {
+      c.vehicle.children.forEach(function (o: SceneNode) {
         if (owner.has(o) || o.userData.decal || o.isSprite || o.userData.glass || c.wheels.indexOf(o) >= 0) return
         const bb = I.localBox(c, o, inv)
         if (bb.isEmpty()) return
@@ -206,7 +206,7 @@ export function installZoneDerive(kit: Kit) {
       z.mirrors = []
       const B = z.box
       const belt = m.belt || 1
-      c.vehicle.children.forEach(function (o: any) {
+      c.vehicle.children.forEach(function (o: SceneNode) {
         if (owner.has(o) || !o.isMesh || o.userData.decal) return
         const bb = I.localBox(c, o, inv)
         const cen = bb.getCenter(new V3())
@@ -231,7 +231,7 @@ export function installZoneDerive(kit: Kit) {
           mb.union(I.localBox(c, o, inv))
         })
         mb.expandByScalar(0.05)
-        c.vehicle.children.forEach(function (o: any) {
+        c.vehicle.children.forEach(function (o: SceneNode) {
           if (owner.has(o) || !o.isMesh || o.userData.decal || o.userData.glass) return
           const bb = I.localBox(c, o, inv)
           const sz = bb.getSize(new V3())

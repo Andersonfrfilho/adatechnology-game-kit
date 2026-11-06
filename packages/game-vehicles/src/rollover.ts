@@ -1,7 +1,7 @@
 /** Rollover physics and the rolled-over state. */
-import type { Vector3 } from 'three'
+import type { Object3D, Vector3 } from 'three'
 
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { hash } from './util'
 
 export function installRollover(kit: Kit) {
@@ -20,12 +20,12 @@ export function installRollover(kit: Kit) {
     const thin: any = []
     c.root.updateMatrixWorld(true)
     const inv = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
-    c.vehicle.traverse(function (ob: any) {
+    c.vehicle.traverse(function (ob: SceneNode) {
       if (!ob.isMesh || !ob.geometry || !ob.geometry.attributes.position) return
-      for (let q = ob; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return
+      for (let q: Object3D | null = ob; q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) return
       const M = new THREE.Matrix4().multiplyMatrices(inv, ob.matrixWorld)
       if (!ob.geometry.boundingBox) ob.geometry.computeBoundingBox()
-      const sz = ob.geometry.boundingBox.getSize(new V3())
+      const sz = ob.geometry.boundingBox!.getSize(new V3())
       const sc = new V3().setFromMatrixScale(M)
       const d = [sz.x * sc.x, sz.y * sc.y, sz.z * sc.z].sort(function (a, b) {
         return a - b

@@ -1,8 +1,8 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
-import type { Mesh } from 'three'
+import type { Material, Mesh } from 'three'
 
 import type { DamageZone } from './api'
-import type { BuildContext, Kit } from './types'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
 
@@ -15,11 +15,11 @@ export function installZoneApply(kit: Kit) {
   /* ---- applying all zones ---- */
   function fadePaint(c: BuildContext) {
     const cache2 = new Map()
-    c.vehicle.traverse(function (o: any) {
-      if (!o.isMesh || !c.paints || !c.paints.has(o.material)) return
+    c.vehicle.traverse(function (o: SceneNode) {
+      if (!o.isMesh || !c.paints || !c.paints.has(o.material as Material)) return
       let nm2 = cache2.get(o.material)
       if (!nm2) {
-        nm2 = o.material.clone()
+        nm2 = (o.material as Material).clone()
         const hsl: any = {}
         nm2.color.getHSL(hsl)
         nm2.color.setHSL(hsl.h, hsl.s * 0.45, Math.min(0.75, hsl.l * 0.9 + 0.08))
