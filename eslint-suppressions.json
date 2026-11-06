@@ -1,49 +1,4 @@
 {
-  "packages/game-floorplan-three/src/build/api.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/destruction/breach.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 42
-    }
-  },
-  "packages/game-floorplan-three/src/destruction/pieces.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "packages/game-floorplan-three/src/destruction/world.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
-  "packages/game-floorplan-three/src/kernel-types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/src/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
-  "packages/game-floorplan-three/tests/blast-presentation.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    }
-  },
-  "packages/game-floorplan-three/tests/destruction.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 42
-    }
-  },
-  "packages/game-floorplan-three/tests/exact-golden.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
   "packages/game-vehicles-three/src/test-area/module.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 19

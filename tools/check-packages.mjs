@@ -90,7 +90,7 @@ function checkDeclaredEqualsImported(directory, manifest, report) {
 
 // "Everything is typed" (CLAUDE.md section 10): no package turns the strict checks off and no source file opts out with @ts-nocheck.
 // The ones below predate the rule; each is removed from its list when the package is fixed, and nothing new may be added.
-const STRICT_OFF_KNOWN = new Set(['game-floorplan-three'])
+const STRICT_OFF_KNOWN = new Set([])
 /** @type {Set<string>} */
 const TS_NOCHECK_KNOWN = new Set([])
 const STRICT_FLAGS = ['strict', 'noImplicitAny', 'strictNullChecks', 'noImplicitThis', 'strictFunctionTypes']

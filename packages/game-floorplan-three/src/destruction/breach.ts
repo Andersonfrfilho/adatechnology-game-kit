@@ -1,25 +1,17 @@
 import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
-import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type * as THREE_NS from 'three'
+import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/game-contracts'
 import type { Kernel, Shared } from '../kernel-types.js'
 
-/** The pieces of a house the destruction renderer draws; the breach view reads them from the structure the house assembled. */
-export interface BreachViewOptions {
-  house: any
-  structure: any
-  /** The destructible spec the world was given (units and layers per part). */
-  spec: () => any
-  /** Repaint damaged walls from `flush` (once per wall per frame, within a time budget) instead of on every event. */
-  deferPaint?: boolean
-  /** Milliseconds `flush` may spend repainting walls (at least one wall is always repainted). Default `Infinity`: every damaged wall is painted at the flush. */
-  paintBudgetMs?: number
-}
+import type { BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
+export type { BreachViewOptions }
 
 /**
  * Collapses the vertices of a range of a merged mesh to one point (the piece vanishes) and returns what it overwrote. The range is listed in
  * `userData.collapsedRanges` and the mesh's first positions kept in `userData._p0`, so a renderer that rewrites the mesh (the destruction renderer's dents
  * and hidden parts) keeps it collapsed and puts back the right positions.
  */
-export function collapseRange(mesh: any, v0: number, v1: number): Float32Array {
+export function collapseRange(mesh: THREE_NS.Mesh, v0: number, v1: number): Float32Array {
   const pos = mesh.geometry.attributes.position
   const a = pos.array as Float32Array
   const u = mesh.userData
@@ -36,7 +28,7 @@ export function collapseRange(mesh: any, v0: number, v1: number): Float32Array {
 }
 
 /** Puts back what `collapseRange` overwrote. */
-export function restoreRange(mesh: any, v0: number, saved: Float32Array): void {
+export function restoreRange(mesh: THREE_NS.Mesh, v0: number, saved: Float32Array): void {
   const pos = mesh.geometry.attributes.position
   ;(pos.array as Float32Array).set(saved, v0 * 3)
   pos.needsUpdate = true
@@ -63,6 +55,50 @@ const MAX_FLAKES = 64
 
 /** A unit laid bare in a wall, a box in the house's space (centre and size) with its colour. */
 interface UnitBox { x: number; y: number; z: number; sx: number; sy: number; sz: number; colour: number }
+
+/** A cell of a wall in the plane of its mask: along the wall from its start (`a` to `b`) and up (`y0` to `y1`). */
+interface Span { a: number; b: number; y0: number; y1: number }
+
+/** What a `chip` took out, in the house's space: its centre and its half extents along the wall and up. */
+interface ChipBox { center: number[]; along: number; up: number }
+
+/** A round patch in the house's space: an opening or a spall. */
+interface Disc { center: number[]; radius: number }
+
+/** A mask in the plane of a wall (along × height): what is cut of the wall's face, or of the units laid bare behind it. */
+interface WallMask {
+  data: Uint8Array
+  texture: THREE_NS.DataTexture
+  w: number
+  h: number
+  alongU: boolean
+  start: number
+  len: number
+  y0: number
+  height: number
+  rect: THREE_NS.Vector4
+}
+
+/** The damage view of a wall: its ranges, the shells that draw it cut, the masks, the units laid bare and the damage of each part it draws. */
+interface WallView {
+  host: string
+  parts: string[]
+  items: StructureRangeItem[]
+  mask: WallMask
+  core: WallMask
+  unitMaterial: THREE_NS.MeshLambertMaterial
+  shells: THREE_NS.Mesh<THREE_NS.BufferGeometry, THREE_NS.Material>[]
+  saved: { it: StructureRangeItem; v0: number; data: Float32Array }[] | null
+  units: THREE_NS.InstancedMesh | null
+  gone: number
+  pits: number
+  bounds: number[]
+  chips: Map<string, ChipBox[]>
+  spalls: Map<string, Disc[]>
+  openings: Map<string, Disc>
+  flakes: number
+  fallen: Set<string>
+}
 
 /** The part of `unit` inside `box` (house space, `[minX, minY, minZ, maxX, maxY, maxZ]`), or null when nothing of it is. */
 export function clipToBox(unit: UnitBox, box: readonly number[]): UnitBox | null {
@@ -106,12 +142,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
-    const views = new Map<string, any>()
+    const views = new Map<string, WallView>()
     /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
-    const dirty = new Set<any>()
+    const dirty = new Set<WallView>()
     const paintBudgetMs = opts.paintBudgetMs ?? Infinity
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
-    const dropped: any[] = []
+    const dropped: WallView[] = []
     let lod = 0
     const unitGeometry = new THREE.BoxGeometry(1, 1, 1)
     const tmp = { m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(), c: new THREE.Color() }
@@ -119,7 +155,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     /** A world point in the house's own space (the space of the structure's parts). */
     const local = (p: number[]): number[] => {
       house.updateMatrixWorld(true)
-      const v = house.worldToLocal(tmp.p.set(p[0], p[1], p[2]))
+      const v = house.worldToLocal(tmp.p.set(p[0]!, p[1]!, p[2]!))
       return [v.x, v.y, v.z]
     }
 
@@ -127,7 +163,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * The units of a part: one cell per unit of its courses (running or stack bond), up from `y0`, along the host wall (`mask`) from the wall's start: a beam
      * on the wall starts where the wall does, a pillar in the wall where it stands along it.
      */
-    function cells(part: any, units: any, mask: { alongU: boolean; start: number }) {
+    function cells(part: HouseStructurePart, units: PartUnits, mask: { alongU: boolean; start: number }) {
       const [u0, v0, u1, v1] = part.aabb
       const alongU = mask.alongU
       const len = alongU ? u1 - u0 : v1 - v0
@@ -148,26 +184,26 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return out
     }
 
-    const specOf = (id: string) => opts.spec()?.parts?.find((q: any) => q.id === id)
-    const same = (a: number[], b: number[]) => a.every((x, k) => Math.abs(x - b[k]) < 1e-3)
+    const specOf = (id: string) => opts.spec()?.parts?.find((q) => q.id === id)
+    const same = (a: number[], b: number[]) => a.every((x, k) => Math.abs(x - b[k]!) < 1e-3)
 
     /**
      * The part whose mesh draws `partId`: itself, or for a beam the house draws inside the wall under it (a bond beam behind the wall's plaster), that
      * wall.
      */
     function hostOf(partId: string): string | null {
-      if (structure.meshesOf(partId).some((it: any) => it.mesh)) return partId
+      if (structure.meshesOf(partId).some((it) => it.mesh)) return partId
       const part = structure.byId.get(partId)
       if (!part) return null
       for (const q of structure.parts) {
-        if (q.id !== partId && same(q.aabb, part.aabb) && Math.abs(q.y1 - part.y0) < 0.01 && structure.meshesOf(q.id).some((it: any) => it.mesh)) return q.id
+        if (q.id !== partId && same(q.aabb, part.aabb) && Math.abs(q.y1 - part.y0) < 0.01 && structure.meshesOf(q.id).some((it) => it.mesh)) return q.id
       }
       return part.role === 'column' ? wallAround(part) : null
     }
 
     /** The drawn wall a pillar stands in (its centre in the wall's plan box, its height along the wall's): the pillar is under that wall's plaster. */
     function wallAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string | null {
-      const cu = (part.aabb[0] + part.aabb[2]) / 2, cv = (part.aabb[1] + part.aabb[3]) / 2
+      const cu = (part.aabb[0]! + part.aabb[2]!) / 2, cv = (part.aabb[1]! + part.aabb[3]!) / 2
       for (const q of structure.parts) {
         if (q.id === part.id || (q.role !== 'wall' && q.role !== 'partition') || !structure.meshesOf(q.id).some((it: { mesh?: unknown }) => it.mesh)) continue
         const inside = cu >= q.aabb[0] - 1e-3 && cu <= q.aabb[2] + 1e-3 && cv >= q.aabb[1] - 1e-3 && cv <= q.aabb[3] + 1e-3
@@ -188,13 +224,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
     const riders = (hostId: string): string[] =>
-      structure.parts.filter((q: any) => q.id !== hostId && specOf(q.id)?.units && hostOf(q.id) === hostId && !structure.meshesOf(q.id).some((it: any) => it.mesh)).map((q: any) => q.id)
+      structure.parts.filter((q) => q.id !== hostId && specOf(q.id)?.units && hostOf(q.id) === hostId && !structure.meshesOf(q.id).some((it) => it.mesh)).map((q) => q.id)
 
     /** The wall's range of the merged mesh as a mesh of its own, same transform, with a clone of its material that discards what the mask cuts. */
-    function shell(it: any, mask: any) {
+    function shell(it: StructureRangeItem, mask: WallMask) {
       const g0 = it.mesh.geometry, g = new THREE.BufferGeometry()
       const src = it.mesh.userData._p0 || g0.attributes.position.array
-      for (const [name, attr] of Object.entries<any>(g0.attributes)) {
+      for (const [name, attr] of Object.entries(g0.attributes)) {
         const k = attr.itemSize
         g.setAttribute(name, new THREE.BufferAttribute((name === 'position' ? src : attr.array).slice(it.v0 * k, it.v1 * k), k))
       }
@@ -204,11 +240,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         g.setIndex(new THREE.BufferAttribute(ix, 1))
       }
       g.computeBoundingBox(); g.computeBoundingSphere()
-      const base = it.mesh.material
+      const base = it.mesh.material as THREE_NS.Material
       const material = base.clone()
       const toHouse = { value: new THREE.Matrix4() }
-      material.onBeforeCompile = (sh: any) => {
-        base.onBeforeCompile?.(sh)
+      material.onBeforeCompile = (sh: THREE_NS.WebGLProgramParametersWithUniforms) => {
+        (base.onBeforeCompile as ((sh: THREE_NS.WebGLProgramParametersWithUniforms) => void) | undefined)?.(sh)
         sh.uniforms.uToHouse = toHouse
         sh.uniforms.uMask = { value: mask.texture }
         sh.uniforms.uMaskRect = { value: mask.rect }
@@ -234,7 +270,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       mesh.position.copy(it.mesh.position); mesh.quaternion.copy(it.mesh.quaternion); mesh.scale.copy(it.mesh.scale)
       mesh.castShadow = it.mesh.castShadow; mesh.receiveShadow = it.mesh.receiveShadow; mesh.renderOrder = it.mesh.renderOrder
       mesh.onBeforeRender = () => { house.updateMatrixWorld(); toHouse.value.copy(house.matrixWorld).invert().multiply(mesh.matrixWorld) }
-      it.mesh.parent.add(mesh)
+      it.mesh.parent!.add(mesh)
       mesh.updateMatrixWorld(true)
       toHouse.value.copy(house.matrixWorld).invert().multiply(mesh.matrixWorld)
       return mesh
@@ -244,9 +280,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * The material of the units laid bare in a wall: white lit by the colour of each instance, cut through where shots broke the units (`core`, a mask
      * like the wall's), and darker on the faces seen from inside a unit (the walls of a crater).
      */
-    function unitsMaterial(core: any) {
+    function unitsMaterial(core: WallMask) {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide })
-      material.onBeforeCompile = (sh: any) => {
+      material.onBeforeCompile = (sh: THREE_NS.WebGLProgramParametersWithUniforms) => {
         sh.uniforms.uCore = { value: core.texture }
         sh.uniforms.uCoreRect = { value: core.rect }
         sh.uniforms.uCoreAlongX = { value: core.alongU ? 1 : 0 }
@@ -265,7 +301,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** The box, in the house's space, of what the merged mesh draws of a wall (its ranges, as the house built them): no unit of its damage goes past it. */
-    function drawnBounds(items: any[]): number[] {
+    function drawnBounds(items: StructureRangeItem[]): number[] {
       house.updateMatrixWorld(true)
       const box = new THREE.Box3(), toHouse = new THREE.Matrix4().copy(house.matrixWorld).invert()
       for (const it of items) {
@@ -277,11 +313,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** The mask in the plane of the host wall (along the wall × height), spanning the host and the beams it draws. */
-    function maskOf(hostId: string, parts: string[]) {
-      const host = structure.byId.get(hostId)
+    function maskOf(hostId: string, parts: string[]): WallMask {
+      const host = structure.byId.get(hostId)!
       const [u0, v0, u1, v1] = host.aabb
       const alongU = u1 - u0 >= v1 - v0
-      const y0 = Math.min(...parts.map((id) => structure.byId.get(id).y0)), y1 = Math.max(...parts.map((id) => structure.byId.get(id).y1))
+      const y0 = Math.min(...parts.map((id) => structure.byId.get(id)!.y0)), y1 = Math.max(...parts.map((id) => structure.byId.get(id)!.y1))
       const len = alongU ? u1 - u0 : v1 - v0
       const w = Math.max(2, Math.min(2048, Math.ceil(len / MASK_TEXEL))), h = Math.max(2, Math.min(1024, Math.ceil((y1 - y0) / MASK_TEXEL)))
       const data = new Uint8Array(w * h)
@@ -311,7 +347,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       (Math.hypot((s - cs) / Math.max(rs, 1e-4), (y - cy) / Math.max(ry, 1e-4)) - 1) * Math.min(rs, ry)
 
     /** Share of a cell [a, b] × [y0, y1] the boxes cover (overlaps between them counted once, on a coarse grid). */
-    function covered(c: any, boxes: any[]): number {
+    function covered(c: Span, boxes: { s0: number; s1: number; y0: number; y1: number }[]): number {
       const n = 8
       let hit = 0
       for (let j = 0; j < n; j++) {
@@ -329,30 +365,30 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * hole through the unit, the plaster broken off around it), the masks (what is gone or broken through, plus a ragged edge of plaster around it,
      * and the opening) and the units seen inside the edge of the cut.
      */
-    function paint(view: any) {
+    function paint(view: WallView) {
       const { mask, core } = view
-      const along = (p: number[]) => (mask.alongU ? p[0] : p[2]) - mask.start
+      const along = (p: number[]) => (mask.alongU ? p[0]! : p[2]!) - mask.start
       const holes: { a: number; b: number; y0: number; y1: number }[] = []
       const pits: { s: number; y: number; rs: number; ry: number }[] = []
       const discs: { s: number; y: number; r: number }[] = []
       // where the plaster (or the cover) came off and the unit under it stayed: a patch of the face, ragged at the edge
       const flakes: { s: number; y: number; r: number }[] = []
-      const shown: any[] = []
+      const shown: { c: Span; part: HouseStructurePart; units: PartUnits; thick: number; mid: number }[] = []
       const pillars = pillarSpans(view)
       for (const id of view.parts) {
-        const part = structure.byId.get(id), units = specOf(id).units, chips = view.chips.get(id), opening = view.openings.get(id), spalls = view.spalls.get(id)
+        const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
         // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
         const own = cells(part, units, mask)
         const all = id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own
         if (view.fallen.has(id)) { holes.push(...all); continue }
-        const thick = mask.alongU ? part.aabb[3] - part.aabb[1] : part.aabb[2] - part.aabb[0]
-        const mid = mask.alongU ? (part.aabb[1] + part.aabb[3]) / 2 : (part.aabb[0] + part.aabb[2]) / 2
-        if (opening) discs.push({ s: along(opening.center), y: opening.center[1], r: opening.radius })
-        for (const k of spalls) flakes.push({ s: along(k.center), y: k.center[1], r: k.radius })
-        const boxes = chips.map((k: any) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1] - k.up, y1: k.center[1] + k.up }))
-        const gone = (c: any) => covered(c, boxes.filter((k: any) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)) >= 0.9
-          || (opening && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]) < opening.radius)
-        const kept = []
+        const thick = mask.alongU ? part.aabb[3]! - part.aabb[1]! : part.aabb[2]! - part.aabb[0]!
+        const mid = mask.alongU ? (part.aabb[1]! + part.aabb[3]!) / 2 : (part.aabb[0]! + part.aabb[2]!) / 2
+        if (opening) discs.push({ s: along(opening.center), y: opening.center[1]!, r: opening.radius })
+        for (const k of spalls) flakes.push({ s: along(k.center), y: k.center[1]!, r: k.radius })
+        const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
+        const gone = (c: Span) => covered(c, boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)) >= 0.9
+          || (opening && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
+        const kept: typeof all = []
         for (const c of all) (gone(c) ? holes : kept).push(c)
         for (const c of kept) shown.push({ c, part, units, thick, mid })
         // the shots that broke a unit and left the rest of it: a crater in it
@@ -366,7 +402,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const ragged = (s: number, y: number) => 0.6 * noise2(s, y, 0.03) + 0.4 * noise2(s + 7.3, y - 3.1, 0.011)
       mask.data.fill(0)
       core.data.fill(0)
-      const stamp = (m: any, s0: number, s1: number, y0: number, y1: number, inside: (s: number, y: number) => boolean) => {
+      const stamp = (m: WallMask, s0: number, s1: number, y0: number, y1: number, inside: (s: number, y: number) => boolean) => {
         const i0 = Math.max(0, Math.floor((s0 - reach) / m.len * m.w)), i1 = Math.min(m.w - 1, Math.ceil((s1 + reach) / m.len * m.w))
         const j0 = Math.max(0, Math.floor((y0 - reach - m.y0) / m.height * m.h)), j1 = Math.min(m.h - 1, Math.ceil((y1 + reach - m.y0) / m.height * m.h))
         for (let j = j0; j <= j1; j++) {
@@ -392,7 +428,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       mask.texture.needsUpdate = true
       core.texture.needsUpdate = true
       // the units the cut lays bare: those within reach of a hole or a crater
-      const near = (c: any) => holes.some((h) => boxDistance((c.a + c.b) / 2, (c.y0 + c.y1) / 2, h.a - (c.b - c.a) / 2, h.b + (c.b - c.a) / 2, h.y0 - (c.y1 - c.y0) / 2, h.y1 + (c.y1 - c.y0) / 2) <= reach)
+      const near = (c: Span) => holes.some((h) => boxDistance((c.a + c.b) / 2, (c.y0 + c.y1) / 2, h.a - (c.b - c.a) / 2, h.b + (c.b - c.a) / 2, h.y0 - (c.y1 - c.y0) / 2, h.y1 + (c.y1 - c.y0) / 2) <= reach)
         || discs.some((d) => boxDistance(d.s, d.y, c.a, c.b, c.y0, c.y1) <= d.r + reach)
         || pits.some((p) => boxDistance(p.s, p.y, c.a, c.b, c.y0, c.y1) <= Math.max(p.rs, p.ry) + reach)
         || flakes.some((f) => boxDistance(f.s, f.y, c.a, c.b, c.y0, c.y1) <= 2 * f.r)
@@ -444,35 +480,35 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      */
     function chipBox(chip: { center: number[]; size: number[]; rotation: number[] }, alongU: boolean) {
       house.updateMatrixWorld(true)
-      const q = tmp.q.set(chip.rotation[0], chip.rotation[1], chip.rotation[2], chip.rotation[3]).premultiply(house.getWorldQuaternion(new THREE.Quaternion()).invert())
+      const q = tmp.q.set(chip.rotation[0]!, chip.rotation[1]!, chip.rotation[2]!, chip.rotation[3]!).premultiply(house.getWorldQuaternion(new THREE.Quaternion()).invert())
       let a = 0, u = 0
       for (let k = 0; k < 3; k++) {
         const axis = tmp.p.set(k === 0 ? 1 : 0, k === 1 ? 1 : 0, k === 2 ? 1 : 0).applyQuaternion(q)
-        a += Math.abs(alongU ? axis.x : axis.z) * chip.size[k] / 2
-        u += Math.abs(axis.y) * chip.size[k] / 2
+        a += Math.abs(alongU ? axis.x : axis.z) * chip.size[k]! / 2
+        u += Math.abs(axis.y) * chip.size[k]! / 2
       }
       return { center: local(chip.center), along: a, up: u }
     }
 
     /** The damage view of a wall (not yet cut): the wall and what it draws inside it (its bond beam, its pillars). Null when the wall has no mesh range. */
-    function newView(hostId: string) {
-      const items = structure.meshesOf(hostId).filter((it: any) => it.mesh)
+    function newView(hostId: string): WallView | null {
+      const items = structure.meshesOf(hostId).filter((it): it is StructureRangeItem => !!it.mesh)
       if (!items.length) return null
       const parts = [hostId, ...riders(hostId)].filter((id) => structure.byId.get(id) && specOf(id)?.units)
       const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
       return {
         host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
-        chips: new Map(parts.map((id) => [id, [] as any[]])), spalls: new Map(parts.map((id) => [id, [] as any[]])), openings: new Map(), flakes: 0, fallen: new Set<string>(),
+        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(),
       }
     }
 
     /** Moves the wall's range to the masked shells (once): from then on the wall is drawn cut where its units went. */
-    function cut(view: NonNullable<ReturnType<typeof newView>>): void {
+    function cut(view: WallView): void {
       if (view.saved) return
-      view.shells = view.items.map((it: any) => shell(it, view.mask))
+      view.shells = view.items.map((it) => shell(it, view.mask))
       // and what shows where it is cut: the units
       for (const m of view.shells) m.userData.behind = () => view.units
-      view.saved = view.items.map((it: any) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
+      view.saved = view.items.map((it) => ({ it, v0: it.v0, data: collapseRange(it.mesh, it.v0, it.v1) }))
     }
 
     /** Takes out of the wall of `partId` (or of the wall that draws it) the units the change removed, and draws the damage again. */
@@ -486,10 +522,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         if (view.openings.has(partId)) return false
         view.openings.set(partId, { center: local(change.opening.center), radius: change.opening.radius })
       }
-      if (change.chip) view.chips.get(partId).push(chipBox(change.chip, view.mask.alongU))
-      for (const chip of change.chips ?? []) view.chips.get(partId).push(chipBox(chip, view.mask.alongU))
+      if (change.chip) view.chips.get(partId)!.push(chipBox(change.chip, view.mask.alongU))
+      for (const chip of change.chips ?? []) view.chips.get(partId)!.push(chipBox(chip, view.mask.alongU))
       if (change.spall) {
-        const list = view.spalls.get(partId)
+        const list = view.spalls.get(partId)!
         list.push({ center: local(change.spall.center), radius: change.spall.radius })
         if (list.length > MAX_FLAKES) list.shift()
       }
@@ -501,8 +537,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return true
     }
 
-    function plain(view: any, shown: boolean) {
-      for (const s of view.saved) {
+    function plain(view: WallView, shown: boolean) {
+      for (const s of view.saved!) {
         if (shown) restoreRange(s.it.mesh, s.v0, s.data)
         else s.data = collapseRange(s.it.mesh, s.v0, s.it.v1)
       }
@@ -544,7 +580,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
     paintQueues.add(queue)
 
-    function dispose(view: any) {
+    function dispose(view: WallView) {
       dirty.delete(view)
       if (view.units) { view.units.removeFromParent(); view.units.dispose() }
       view.unitMaterial.dispose()
@@ -554,12 +590,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     return {
       /** Handles a `stage` event of the house's object. Returns true when the wall was cut. */
-      stage(event: any): boolean { return event.stage === 2 && !!event.opening ? draw(event.part, { opening: event.opening }) : false },
+      stage(event: Extract<DestructionEvent, { type: 'stage' }>): boolean { return event.stage === 2 && !!event.opening ? draw(event.part, { opening: event.opening }) : false },
       /**
        * Handles a `spall` of a wall of units: the coat comes off in a ragged patch and the units show under it, drawn by the house (the destruction
        * renderer leaves its flat patch out on the meshes `claim` marked). Returns true when the wall was cut.
        */
-      spall(event: any): boolean {
+      spall(event: Extract<DestructionEvent, { type: 'spall' }>): boolean {
         const r = Math.sqrt(Math.max(0, event.area) / Math.PI)
         return r > 0 ? draw(event.part, { spall: { center: event.point, radius: r } }) : false
       },
@@ -584,7 +620,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
        * Handles a `chip` event: what came out (a unit, or a crater a shot broke through one) leaves a hole in the wall where it was; a `torn` chip (what a blow
        * tore off a face) leaves the marks the renderer drew. Returns true when the wall was cut.
        */
-      chip(event: any): boolean {
+      chip(event: Extract<DestructionEvent, { type: 'chip' }>): boolean {
         if (event.torn) return false
         const rotation = event.rotation ?? [0, 0, 0, 1]
         // a blast's units come in one event and are painted once
@@ -593,7 +629,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
-        let host = views.get(partId) ?? [...views.values()].find((view) => view.parts.includes(partId))
+        let host: WallView | null | undefined = views.get(partId) ?? [...views.values()].find((view) => view.parts.includes(partId))
         // a wall that falls whole before any damage was drawn on it: its pillars and bond beam still stand where it was
         if (!host && lod === 0 && riders(partId).length > 0) {
           host = newView(partId)
@@ -617,7 +653,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const was = lod; lod = level
         if ((was === 0) === (level === 0)) return
         for (const v of views.values()) {
-          v.units.visible = level === 0
+          v.units!.visible = level === 0
           for (const m of v.shells) m.visible = level === 0
           plain(v, level !== 0)
         }
@@ -646,7 +682,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         gone: [...views.values()].reduce((n, v) => n + v.gone, 0),
         craters: [...views.values()].reduce((n, v) => n + v.pits, 0),
         flakes: [...views.values()].reduce((n, v) => n + v.flakes, 0),
-        units: [...views.values()].reduce((n, v) => n + v.units.count, 0),
+        units: [...views.values()].reduce((n, v) => n + v.units!.count, 0),
       }),
     }
   }

@@ -13,6 +13,6 @@ export function buildApi(K: Kernel, shared: Shared): HouseRendererInternal {
         /** The chipped-plaster painting of every house of this renderer as a `DeferredQueue` for a frame budget (id `floorplan.breach-paint`); asking for it changes nothing. */
         deferredQueue: () => K.breachPaintQueue as DeferredQueue, /* the destruction side is typed with the breach */
         cars: { model: carModel, group: carGroup, info: (k: string, seed?: number) => { const m = carModel(k, seed); return m && { parts: m.parts.length, tris: m.tris, L: m.L, W: m.W, H: m.H }; } },
-        dispose() { if (shared.vegMaterials) { shared.vegMaterials.dispose(); shared.vegMaterials = null; } for (const m of Object.values(shared.mats)) { if (m && m.dispose) m.dispose(); } for (const [k, t] of Object.entries<any>(TEX)) if (t && t.dispose && !(cfg.textures && cfg.textures[k as keyof typeof cfg.textures])) t.dispose(); for (const t of Object.values<any>(ATLAS)) if (t && t.dispose) t.dispose(); },
+        dispose() { if (shared.vegMaterials) { shared.vegMaterials.dispose(); shared.vegMaterials = null; } for (const m of Object.values(shared.mats)) { if (m && m.dispose) m.dispose(); } for (const [k, t] of Object.entries(TEX)) if (t && t.dispose && !(cfg.textures && cfg.textures[k as keyof typeof cfg.textures])) t.dispose(); for (const t of Object.values(ATLAS)) if (t && t.dispose) t.dispose(); },
       };
 }

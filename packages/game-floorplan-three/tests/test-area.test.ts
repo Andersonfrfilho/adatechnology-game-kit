@@ -68,12 +68,12 @@ describe('houses in the room', () => {
     expect(r.module.houses).toHaveLength(1)
     const { house } = r.module.houses[0]!
     expect(house.destruction.active).toBe(true)
-    expect(r.world.has(house.destruction.id)).toBe(true)
+    expect(r.world.has(house.destruction.id!)).toBe(true)
     expect(r.scene.children).toContain(house.group)
     expect(r.looks).toHaveLength(1)
     r.act('clear')
     expect(r.module.houses).toHaveLength(0)
-    expect(r.world.has(house.destruction.id)).toBe(false)
+    expect(r.world.has(house.destruction.id!)).toBe(false)
   })
 
   it('the room clearing its area takes the houses away; the detach takes everything', () => {
