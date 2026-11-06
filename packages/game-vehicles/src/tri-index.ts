@@ -1,5 +1,5 @@
 /** Boxes of the triangles of a geometry, grouped in blocks, so a region query visits the few triangles near it instead of every one. */
-import type { BufferAttribute, BufferGeometry, Vector3 } from 'three'
+import type { Box3, BufferAttribute, BufferGeometry, Intersection, InterleavedBufferAttribute, Material, Matrix4, Mesh, Object3D, Ray, Raycaster, Sphere, Vector3 } from 'three'
 
 import type { Three } from './types'
 
@@ -7,9 +7,9 @@ import type { Three } from './types'
 export const TRI_BLOCK = 32
 
 export type TriIndex = {
-  position: any
+  position: BufferAttribute | InterleavedBufferAttribute
   positionVersion: number
-  index: any
+  index: BufferAttribute | null
   indexVersion: number
   triangles: number
   /** min x, y, z and max x, y, z of each triangle (exact: the same values the vertices hold) */
@@ -177,18 +177,18 @@ function rayIndexOf(geo: BufferGeometry): TriIndex | undefined {
 /** One hit of `raycastIndexed`: the fields of a three.js intersection the vehicle code reads. */
 export type IndexedHit = {
   distance: number
-  point: any
-  object: any
-  face: { a: number; b: number; c: number; normal: any; materialIndex: number }
+  point: Vector3
+  object: Object3D
+  face: { a: number; b: number; c: number; normal: Vector3; materialIndex: number }
   faceIndex: number
 }
 
 /** Slack on a block's box, metres: a hit on its very edge is not lost to rounding. */
 const BLOCK_SLACK = 1e-6
 
-type RayScratch = { inverse: any; local: any; box: any; a: any; b: any; c: Vector3; point: any; world: any; sphere: any }
+type RayScratch = { inverse: Matrix4; local: Ray; box: Box3; a: Vector3; b: Vector3; c: Vector3; point: Vector3; world: Vector3; sphere: Sphere }
 const scratch = new WeakMap<object, RayScratch>()
-function scratchOf(THREE: any): RayScratch {
+function scratchOf(THREE: Three): RayScratch {
   let s = scratch.get(THREE)
   if (!s) {
     s = {
@@ -208,7 +208,8 @@ function scratchOf(THREE: any): RayScratch {
 }
 
 /** The meshes `Mesh.raycast` of three.js would answer the same way as the index: its own raycast, one material, positions only, no skin or morph. */
-function indexable(THREE: any, mesh: any): boolean {
+function indexable(THREE: Three, object: Object3D): boolean {
+  const mesh = object as Mesh & { isSkinnedMesh?: boolean; isInstancedMesh?: boolean; isBatchedMesh?: boolean }
   const geo = mesh.geometry
   // a mesh with a raycast of its own (a decal that rays pass through) answers for itself
   if (mesh.raycast !== THREE.Mesh.prototype.raycast) return false
@@ -218,17 +219,17 @@ function indexable(THREE: any, mesh: any): boolean {
   return supports(geo)
 }
 
-function raycastMesh(THREE: Three, raycaster: any, mesh: any, out: IndexedHit[]): void {
+function raycastMesh(THREE: Three, raycaster: Raycaster, mesh: Mesh, out: IndexedHit[]): void {
   const geo = mesh.geometry
   const s = scratchOf(THREE)
   if (geo.boundingSphere === null) geo.computeBoundingSphere()
-  s.sphere.copy(geo.boundingSphere).applyMatrix4(mesh.matrixWorld)
+  s.sphere.copy(geo.boundingSphere!).applyMatrix4(mesh.matrixWorld)
   if (!raycaster.ray.intersectsSphere(s.sphere)) return
   const ti = rayIndexOf(geo)
   if (!ti) return
   s.inverse.copy(mesh.matrixWorld).invert()
   s.local.copy(raycaster.ray).applyMatrix4(s.inverse)
-  const material = mesh.material
+  const material = mesh.material as Material
   const back = material.side === THREE.BackSide
   const cull = material.side === THREE.FrontSide
   const P = geo.attributes.position
@@ -270,10 +271,11 @@ function raycastMesh(THREE: Three, raycaster: any, mesh: any, out: IndexedHit[])
   }
 }
 
-function collect(THREE: any, raycaster: any, object: any, recursive: boolean, out: IndexedHit[]): void {
+function collect(THREE: Three, raycaster: Raycaster, object: Object3D, recursive: boolean, out: IndexedHit[]): void {
   if (object.layers.test(raycaster.layers)) {
-    if (indexable(THREE, object)) raycastMesh(THREE, raycaster, object, out)
-    else object.raycast(raycaster, out)
+    if (indexable(THREE, object)) raycastMesh(THREE, raycaster, object as Mesh, out)
+    // three.js adds its own intersections (a sprite's has no face)
+    else object.raycast(raycaster, out as unknown as Intersection[])
   }
   if (recursive) for (const child of object.children) collect(THREE, raycaster, child, true, out)
 }
@@ -283,7 +285,7 @@ function collect(THREE: any, raycaster: any, object: any, recursive: boolean, ou
  * triangles whose box it crosses instead of every triangle of a heavy body, with the same triangle test, so the hits are the same.
  * Meshes the index does not cover (skinned, morphed, several materials) and other objects go through their own `raycast`.
  */
-export function raycastIndexed(THREE: any, raycaster: any, objects: readonly any[], recursive = false): IndexedHit[] {
+export function raycastIndexed(THREE: Three, raycaster: Raycaster, objects: readonly Object3D[], recursive = false): IndexedHit[] {
   const out: IndexedHit[] = []
   for (const object of objects) collect(THREE, raycaster, object, recursive, out)
   out.sort((x, y) => x.distance - y.distance)

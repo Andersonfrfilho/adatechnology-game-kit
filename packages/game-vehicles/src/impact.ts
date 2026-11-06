@@ -422,7 +422,7 @@ export function installImpact(kit: Kit) {
       const h = hits[i]
       const ob = h.object
       let ok = !!h.face
-      for (let q = ob; ok && q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) ok = false
+      for (let q: Object3D | null = ob; ok && q && q !== c.vehicle; q = q.parent) if (!q.visible || q.userData.decal || q.userData.ghost) ok = false
       if (ok) return { p: h.point.clone().applyMatrix4(inv), obj: ob }
     }
     return null
