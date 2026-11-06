@@ -551,14 +551,15 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     else if (tool.suppressed !== undefined) current.suppressed = tool.suppressed
     else current.suppressed = hasSuppressor(tool.attachments ? fittedOf(tool.attachments) : (current.def.fitted ?? []))
     if (tool.underbarrelActive && current.model.parts.uglMuzzle) {
-      audio?.play('explosion', LAUNCH_VOLUME, distance())
+      audio?.launch('grenade', LAUNCH_VOLUME, distance())
       return
     }
     const action = current.def.action
     if (action.kind === 'launcher') {
       // a grenade launcher (the M79) fires no rocket and has no backblast: its grenade is the host's projectile
-      if (current.model.parts.family === 'rocket') launchRocket(heavy(current), options.flyRocket !== false)
-      audio?.play('explosion', LAUNCH_VOLUME, distance())
+      const isRocket = current.model.parts.family === 'rocket'
+      if (isRocket) launchRocket(heavy(current), options.flyRocket !== false)
+      audio?.launch(isRocket ? 'rocket' : 'grenade', LAUNCH_VOLUME, distance())
     }
     if (action.kind !== 'firearm') return
     const caliber = caliberOf(arsenal, current.def)

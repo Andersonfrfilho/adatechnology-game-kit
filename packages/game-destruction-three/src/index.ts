@@ -42,6 +42,8 @@ export {
   FIRE_FALLOFF,
   FIRE_LOOP,
   FIRE_SOUNDS,
+  GRENADE_PIN_PULL,
+  SMOKE_HISS_LOOP,
 } from './audio/blast-fire'
 export type { BlastKind } from './audio/blast-fire'
 export { BLAST_FIRE_SAMPLES, blastFireSampleBank } from './audio/samples'

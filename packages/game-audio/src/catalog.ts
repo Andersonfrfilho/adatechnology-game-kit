@@ -28,6 +28,8 @@ export const SFX_CATALOG: readonly SfxEntry[] = [
     ['revolver_38_357', 2, 'sfx_pistol'],
     ['revolver_44_50ae', 3, 'sfx_pistol'],
     ['smg_9mm_auto', 1, 'sfx_pistol'],
+    ['launcher_40mm', 2],
+    ['rocket_launch', 2],
     ['shotgun_12', 1, 'sfx_shotgun'],
     ['rifle_5_56', 1, 'sfx_rifle'],
     ['rifle_7_62x39', 1, 'sfx_rifle'],
