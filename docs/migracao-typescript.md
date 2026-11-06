@@ -1,6 +1,6 @@
 # Migração para TypeScript: o que já foi feito
 
-Levantamento na main em 2026-11-03. Atualize ao terminar cada passo (CLAUDE.md, seção 8).
+Levantamento na main em 2026-11-03, atualizado em 2026-11-06. Atualize ao terminar cada passo (CLAUDE.md, seção 8).
 
 ## Já migrado
 
@@ -29,14 +29,17 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - [ ] Casas, `any` que sobram (só nos testes, menos o post-apocalyptic): `game-floorplan-residential` 12, `game-floorplan-commercial` 13, `game-floorplan-interactables` 29, `game-floorplan-structure` 85, `game-floorplan-post-apocalyptic` 125
 - [ ] `game-floorplan-three` 536 (junto com ligar o strict)
 - [x] Adaptadores three: `game-interactables-three` 31, `game-vegetation-three` 40, `game-urban-three` 62 (o `type Three = any` virou `typeof THREE`)
-- [ ] Adaptadores three que faltam: `game-characters-three` (resto, fora do construtor de sobreviventes), `game-vehicles-three` 75 (depois dos PRs de carro)
-- [ ] Veículos: `game-vehicles` 1.584 e `game-vehicles-fleet` 2.247 (depois que os PRs de física dos carros entrarem)
+- [ ] Adaptadores three que faltam: `game-characters-three` (resto, fora do construtor de sobreviventes), `game-vehicles-three` 49 (o que sobra está nos arquivos do PR de som do carro)
+- [x] `game-vehicles`: 1.584 → 29. `src` e testes sem `any`; as referências de vinco e corte dos testes perderam o `eslint-disable` e ganharam tipos. Sobram os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada), que só saem depois da frota tipada, porque a frota escreve campos livres neles
+- [ ] `game-vehicles-fleet` 2.247 → 898 (checada contra o fonte novo do `game-vehicles`, sem build, por `paths`)
+- Achados tipando o `game-vehicles` (corrigidos): `zoneDamageAt` devolve `{ main, list }` e `zonePoint` recebe o lado e devolve `{ p, dir }`, mas a API pública dizia outra coisa; `locate` e `partOfSurface` recebiam o ponto como número; o giro do `fling` era tipado como número; `broken` das lanternas também vale `'gone'`
 - [x] `tools/`: `vehicles-catalog`, `characters-catalog`, `compat-check` e `golden` sem `any` (os documentos falsos, o digest da frota, a frota leve e o snapshot exato com tipos estruturais)
 
 ### Fora dos pacotes, ainda em JavaScript
-- [ ] `examples/*`: 17 salas de teste, todas em `.js` (`test-room` tem 10 arquivos, as outras 3 a 5)
-- [ ] `tools/`: 40 arquivos `.js`/`.mjs`
-- [ ] `site/`: 4 arquivos `.js`
+Checados com JSDoc pelo `tsconfig.scripts.checked.json` (CI: `pnpm typecheck:scripts`): 63 de 131. Faltam 68:
+- [ ] `examples/*`: 39 (`test-room` 13; as outras áreas de 1 a 4)
+- [ ] `tools/`: 24 (`golden` 16, `characters-catalog` 8)
+- [x] `site/`: os 4 (`build-site`, `capture-thumbs`, `catalog`, `landing`)
 
 ### Regras
 - [x] Regra "tudo tipado" no `CLAUDE.md` (seção 8)
