@@ -1,7 +1,60 @@
 /** The generic car builder: shell, glasshouse, lights, wheels, interior and engine bay in one call. */
-import type { MeshStandardMaterial, Vector3 } from 'three'
+import type { ColorRepresentation, Material, Mesh, MeshStandardMaterial, Vector3 } from 'three'
 
+import type { Greenhouse } from './body'
+import type { LabelArgument } from './context'
+import type { CutTest, PathItem } from './geometry'
+import type { WarpFn, WarpOptions } from './warp'
 import type { BuildContext, Kit } from './types'
+
+type WheelOptions = Parameters<BuildContext['wheel']>[4] & { track?: number }
+/** A wheel of `kit.car`: [x, radius, width, options]. */
+export type CarWheel = readonly [number, number, number, WheelOptions?]
+type LampSpec = { style?: string; w?: number; h?: number; y?: number; in?: number; yaw?: number; dx?: number; mat?: Material; wrap?: boolean }
+type GrilleSpec = { style?: string; w?: number; h?: number; y?: number; emblem?: boolean }
+/** The spec of `kit.car` (see the comment above it). */
+export type CarSpec = {
+  W: number
+  gh: Greenhouse & { k: number; r1?: number; r2?: number }
+  col: ColorRepresentation
+  roofCol?: ColorRepresentation
+  mirrorCol?: ColorRepresentation
+  lower: readonly PathItem[]
+  noseY: number
+  tailY: number
+  bottomY: number
+  arches?: readonly number[][] | null
+  interior?: false | Record<string, unknown> | null
+  hood?: boolean | { motor?: string; front?: number } | null
+  wheels?: readonly CarWheel[]
+  holes?: readonly CutTest[]
+  bed?: unknown
+  under?: boolean
+  motor?: string
+  spareUnder?: boolean
+  warp?: WarpOptions | WarpFn | null
+  bodyBumper?: boolean
+  headMat?: Material
+  headW?: number
+  headH?: number
+  headY?: number
+  hl?: LampSpec | null
+  grille?: false | GrilleSpec | null
+  noGrille?: boolean
+  tailW?: number
+  tailH?: number
+  tailLightY?: number
+  tl?: LampSpec | null
+  seams?: readonly number[]
+  handles?: readonly number[]
+  plateRearY?: number
+  noAntenna?: boolean
+  track?: number
+  noRadiator?: boolean
+  tankLabel?: LabelArgument
+}
+/** The underbody of `kit.underbody`: width, bottom height, the wheels, the motor and a spare wheel under the rear. */
+export type UnderbodySpec = { W: number; bottomY: number; wheels: readonly CarWheel[]; motor?: string; spare?: boolean }
 
 export function installCar(kit: Kit) {
   const THREE = kit.THREE
@@ -26,7 +79,7 @@ export function installCar(kit: Kit) {
        hood           { motor, front } | true | false   (engine bay under an opening hood)
        wheels         [[x, radius, width, options], ...]
        bodyBumper, mirrorCol, noAntenna, plateRearY   misc. options */
-  kit.car = function (c: BuildContext, s: any) {
+  kit.car = function (c: BuildContext, s: CarSpec) {
     const W = s.W
     const gh = s.gh
     const bev = 0.05
@@ -39,7 +92,7 @@ export function installCar(kit: Kit) {
     const intr = s.interior === false ? null : Object.assign({ rows: 2 }, s.interior || {})
     const hoodO = s.hood ? Object.assign({ motor: 'gasoline' }, s.hood === true ? {} : s.hood) : null
     let tireW = 0.2
-    ;(s.wheels || []).forEach(function (w: number[]) {
+    ;(s.wheels || []).forEach(function (w) {
       tireW = Math.max(tireW, w[2])
     })
     const low = []
@@ -48,7 +101,7 @@ export function installCar(kit: Kit) {
     const hx1 = front - (hoodO && hoodO.front != null ? hoodO.front : 0.2)
     const zH = W / 2 - 0.13
     if (hoodO) low.push(kit.holeTop(hx0, hx1, zH, s.bottomY + 0.2, 'hood'))
-    ;(s.holes || []).forEach(function (h: any) {
+    ;(s.holes || []).forEach(function (h) {
       low.push(h)
     })
     const lowMesh = I.shell(c, {
@@ -77,7 +130,7 @@ export function installCar(kit: Kit) {
       gHoles.push(
         kit.holeQuad(qf),
         kit.holeQuad(qr),
-        kit.holeWhere(function (n: any, ce: any) {
+        kit.holeWhere(function (n: Vector3, ce: Vector3) {
           return n.y < -0.7 && ce.y < gh.belt + 0.02
         }),
       )
@@ -164,15 +217,15 @@ export function installCar(kit: Kit) {
   }
   /* Underbody visible when rolled over: axles, arms, oil pan, differential (rear-wheel drive), exhaust with muffler, tank, spare wheel.
      o: { W, bottomY, wheels: [[x, r, w]..], motor, spare (true = spare wheel under the rear) } */
-  kit.underbody = function (c: BuildContext, o: any) {
+  kit.underbody = function (c: BuildContext, o: UnderbodySpec) {
     const m = c.meta
     const W = o.W
     const by = o.bottomY
     const ws = o.wheels
-      .map(function (w: any) {
+      .map(function (w) {
         return w
       })
-      .sort(function (a: number[], b: number[]) {
+      .sort(function (a, b) {
         return b[0] - a[0]
       })
     if (ws.length < 2) return
@@ -248,7 +301,7 @@ export function installCar(kit: Kit) {
     })
     return ug
   }
-  kit.carDetails = function (c: BuildContext, s: any) {
+  kit.carDetails = function (c: BuildContext, s: CarSpec) {
     const m = c.meta
     const W = m.width
     const by = s.bottomY
@@ -305,10 +358,10 @@ export function installCar(kit: Kit) {
         c.roundBox(0.02, 0.08, 0.05, 0.01, MATERIALS.chrome, mx - 0.07, my, mz)
         c.rod(new V3(mx + 0.02, my - 0.02, mz - sd * 0.04), new V3(mx + 0.04, my - 0.05, sd * (W / 2 - 0.02)), 0.015, MATERIALS.trim)
       }
-      ;(s.seams || []).forEach(function (x: any) {
+      ;(s.seams || []).forEach(function (x) {
         c.roundBox(0.012, m.belt - by - 0.14, 0.006, 0.003, MATERIALS.dark, x, (m.belt + by) / 2 + 0.04, sd * (W / 2 + 0.002))
       })
-      ;(s.handles || []).forEach(function (x: any) {
+      ;(s.handles || []).forEach(function (x) {
         c.roundBox(0.13, 0.035, 0.025, 0.012, MATERIALS.chrome, x, m.belt - 0.12, sd * (W / 2 + 0.01))
       })
       if (s.arches && s.arches.length > 1) {
@@ -331,7 +384,7 @@ export function installCar(kit: Kit) {
     m.exhaust = new V3(br - 0.17, by + 0.04, W * 0.3)
     if (!s.noAntenna && m.roof) c.rod(new V3(m.roof.x0 + 0.1, m.top, 0), new V3(m.roof.x0 - 0.05, m.top + 0.22, 0), 0.008, MATERIALS.trim)
     /* s.track (or w[3].track): track width from tyre centre to tyre centre; without it the tyre touches the body edge */
-    ;(s.wheels || []).forEach(function (w: any) {
+    ;(s.wheels || []).forEach(function (w) {
       const tk = (w[3] && w[3].track) || s.track
       ;[1, -1].forEach(function (sd) {
         c.wheel(w[0], sd * (tk ? tk / 2 : W / 2 - w[2] / 2 + 0.03), w[1], w[2], w[3] || {})
@@ -354,13 +407,13 @@ export function installCar(kit: Kit) {
   }
   /* Fender flare: an arched strip over the wheel arch, on both sides.
      x, y: wheel centre; r: arch radius; z: half width where it attaches; o: { w (strip width), t (thickness), mat, a0 (start angle), sides } */
-  kit.archFlare = function (c: BuildContext, x: number, y: number, r: number, z: number, o: any) {
+  kit.archFlare = function (c: BuildContext, x: number, y: number, r: number, z: number, o?: { w?: number; t?: number; mat?: Material; a0?: number; sides?: readonly number[] } | null) {
     o = o || {}
     const w = o.w || 0.07
     const t = o.t || 0.03
     const mat = o.mat || MATERIALS.trim
     const a0 = o.a0 == null ? 0.12 : o.a0
-    const out: any = []
+    const out: Mesh[] = []
     ;(o.sides || [1, -1]).forEach(function (sd: number) {
       const shp = new THREE.Shape()
       const N = 24
