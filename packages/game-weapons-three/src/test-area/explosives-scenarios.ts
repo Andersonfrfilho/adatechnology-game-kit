@@ -30,11 +30,13 @@ const PUSH_READ_AT = 0.8
 const MOVED = 0.15
 /** Below this share of the blast getting through the cover (a stove, a cupboard, a fridge between), a body is sheltered: it is not expected to fly, only to move less than in the open. */
 const SHELTERED = 0.5
-/** Most a sheltered body may move outward (m): behind solid cover the blast barely reaches it. */
+/** Least bound (m) on how far a sheltered body may move outward: behind solid cover the blast barely reaches it. */
 const SHELTERED_MOST = 1
 /** Height (m) of the point of a body the blast is measured at: the chest of a person, the middle of a loose thing. */
 const CHEST = 1.1
 const MIDDLE = 0.3
+/** Metres around a body its drawn boxes are looked for in (a chair is the widest of them). */
+const AIM_SEARCH = 1.5
 /** The heavy, free furniture of the area that the blast also reaches (a table too heavy to grab, not fixed). */
 const HEAVY_ITEMS = ['camp_table']
 /** Mass (kg) of a person of the area, the slowing of a body sliding on the ground (m/s², `stepKnock`), and the slack (m) a body may move beyond the wave's push (a step, a fall). */
@@ -113,6 +115,32 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
       }
       const partsBefore = new Map(placed.map((body) => [body.objectId, partsOf(body.objectId)] as const))
       expect(placed.length > 0, fillText(text.push_found, { n: placed.length, kinds: [...new Set(placed.map((body) => body.kind))].join(', ') }), { placed: placed.map((body) => body.itemId) })
+      // the share of the blast that got to each body through what stood between; the blast and the body itself left out
+      // where the blast is measured on each body: the middle of what is drawn of it, as the renderer shoves it (a bottle lying on the floor is low, under a stove's top), the chest of a person
+      const aimOf = new Map(
+        placed.map((body) => {
+          const from = origin.get(body.objectId) ?? body.from
+          if (body.kind === 'zombie' || body.kind === 'survivor') return [body.objectId, [from[0], from[1] + CHEST, from[2]] as Vec3] as const
+          const boxes = room.renderer.solidsNear?.(from[0], from[2], AIM_SEARCH).filter((box) => box.objectId === body.objectId) ?? []
+          if (boxes.length === 0) return [body.objectId, [from[0], from[1] + MIDDLE, from[2]] as Vec3] as const
+          const low = [0, 1, 2].map((axis) => Math.min(...boxes.map((box) => box.min[axis]!)))
+          const high = [0, 1, 2].map((axis) => Math.max(...boxes.map((box) => box.max[axis]!)))
+          return [body.objectId, [0, 1, 2].map((axis) => (low[axis]! + high[axis]!) / 2) as Vec3] as const
+        }),
+      )
+      const coverAt = (point: Vec3): Map<string, number> =>
+        new Map(
+          placed.map((body) => {
+            const ignore = source ? [source, body.objectId] : [body.objectId]
+            return [body.objectId, room.world.blastReach?.(point, aimOf.get(body.objectId) ?? body.from, { ignore }) ?? 1] as const
+          }),
+        )
+      // the cover as the wave met it, read when the part of the world goes off (the cylinder says so before it tears and throws what stands around), as the renderer
+      // shoves by it: the cupboard it tears apart was cover, the stove it throws was not in the way yet; a thrown charge goes off as a world blast
+      let coverOf: Map<string, number> | undefined
+      const stopListening = room.world.on('*', (event) => {
+        if ((event.type === 'explode' || event.type === 'blast') && !coverOf) coverOf = coverAt(event.point)
+      })
       if (mode === 'p13') bench.actions.shoot()
       else {
         room.setTool('frag_grenade')
@@ -125,18 +153,11 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         step(0.05)
         waited += 0.05
       }
+      stopListening()
       const blast = bench.lastBlast()
       expect(!!blast, text.push_told, { waited })
       if (!blast) return
-      // the share of the blast that got to each body through what stood between, read as it goes off (before what it throws stands in the way); the blast and the body itself left out
-      const coverOf = new Map(
-        placed.map((body) => {
-          const from = origin.get(body.objectId) ?? body.from
-          const person = body.kind === 'zombie' || body.kind === 'survivor'
-          const ignore = source ? [source, body.objectId] : [body.objectId]
-          return [body.objectId, room.world.blastReach?.(blast.point, [from[0], from[1] + (person ? CHEST : MIDDLE), from[2]], { ignore }) ?? 1] as const
-        }),
-      )
+      const cover = coverOf ?? coverAt(blast.point)
       step(PUSH_READ_AT)
       const rows = placed.map((body) => {
         const from = origin.get(body.objectId) ?? body.from
@@ -144,21 +165,24 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const distance = flat(from, blast.point)
         const away = Math.max(1e-6, distance)
         const outward = ((now[0] - from[0]) * (from[0] - blast.point[0]) + (now[2] - from[2]) * (from[2] - blast.point[2])) / away
-        return { ...body, distance, outward, moved: flat(now, from), cover: coverOf.get(body.objectId) ?? 1 }
+        return { ...body, distance, outward, moved: flat(now, from), cover: cover.get(body.objectId) ?? 1 }
       })
       // a loose item or a heavy piece of furniture the blast tore apart (a can whose welded shell split, a camp table whose legs flew off) is no longer one body: its root is
       // the piece that kept it, not where the thing went, and it can meet its own pieces in the air
       const torn = (row: { kind: string; objectId: string }): boolean =>
         (PUSH_KINDS.some((entry) => entry.kind === row.kind) || HEAVY_ITEMS.includes(row.kind)) && partsOf(row.objectId) < (partsBefore.get(row.objectId) ?? 0)
       const inReach = rows.filter((row) => row.distance < blast.radius * 0.85 && !torn(row))
-      // what stood behind cover is not thrown like what stood in the open: it moves little or not at all
-      const sheltered = inReach.filter((row) => row.cover < SHELTERED)
-      for (const row of sheltered) {
-        expect(row.outward < SHELTERED_MOST, fillText(text.push_sheltered, { what: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), cover: (row.cover * 100).toFixed(0), moved: Math.max(0, row.outward).toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, cover: row.cover } })
-      }
       // a person (a survivor or a zombie of the area) is not a loose thing: the blast wave decides how far it goes (checked below)
       const isPerson = (row: { kind: string }): boolean => row.kind === 'survivor' || row.kind === 'zombie'
       const reached = inReach.filter((row) => row.cover >= SHELTERED && !isPerson(row))
+      // what stood behind cover is not thrown like what stood in the open: the push goes as the square root of the share that got through, so the way it goes as the
+      // share itself; it moves no farther than that share of what one of its kind went in the open nearer the blast (and a metre at most when none was)
+      const sheltered = inReach.filter((row) => row.cover < SHELTERED)
+      for (const row of sheltered) {
+        const open = reached.filter((other) => other.kind === row.kind && other.distance <= row.distance).map((other) => other.outward)
+        const most = Math.max(SHELTERED_MOST, row.cover * Math.max(0, ...open))
+        expect(row.outward < most, fillText(text.push_sheltered, { what: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), cover: (row.cover * 100).toFixed(0), moved: Math.max(0, row.outward).toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, cover: row.cover, most } })
+      }
       const movedAway = reached.filter((row) => row.outward >= MOVED)
       const least = reached.length === 0 ? 0 : Math.min(...reached.map((row) => row.outward))
       expect(reached.length > 0 && movedAway.length === reached.length, fillText(text.push_outward, { moved: movedAway.length, n: reached.length, least: least.toFixed(2) }), { rows: reached.map((row) => ({ kind: row.kind, distance: row.distance, outward: row.outward })), torn: rows.filter(torn).map((row) => row.objectId) })

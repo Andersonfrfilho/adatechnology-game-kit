@@ -46,9 +46,11 @@ export interface BlastShove {
   readonly falloff: number
 }
 
+const clampShare = (share: number): number => Math.min(1, Math.max(0, share))
+
 /**
  * The shove a blast gives to a body of `mass` kg whose centre is at `position`: away from the centre, lifted a little, with the speed
- * `min(maxSpeed, sqrt(2 * energy * reach * coupling / mass)) * (1 - distance / radius) ^ 2`. Undefined when the body is outside the radius or the speed is under `minSpeed`.
+ * `sqrt(reach) * min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - distance / radius) ^ 2`. Undefined when the body is outside the radius or the speed is under `minSpeed`.
  * The same rule moves the loose items and furniture of the test room and the people of the characters module, so a game that tunes the options tunes all of them.
  */
 export function blastShove(blast: BlastSource, target: { readonly position: Vec3; readonly mass: number }, options: BlastShoveOptions = {}): BlastShove | undefined {
@@ -60,7 +62,9 @@ export function blastShove(blast: BlastSource, target: { readonly position: Vec3
   if (!(blast.radius > 0) || distance > blast.radius) return undefined
   const falloff = (1 - distance / blast.radius) ** o.falloffPower
   const mass = Math.max(target.mass, 0.05)
-  const speed = Math.min(o.maxSpeed, Math.sqrt((2 * blast.energy * (blast.reach ?? 1) * o.coupling) / mass)) * falloff
+  // cover takes its share off the push itself, past the cap too: a light thing behind a cupboard is not thrown as fast as one in the open
+  const reach = clampShare(blast.reach ?? 1)
+  const speed = Math.sqrt(reach) * Math.min(o.maxSpeed, Math.sqrt((2 * blast.energy * o.coupling) / mass)) * falloff
   if (!(speed >= o.minSpeed)) return undefined
   // straight above or below the centre there is no "away": the push goes up
   const direction: Vec3 = distance > 1e-4 ? [dx / distance, dy / distance + o.lift, dz / distance] : [0, 1, 0]
