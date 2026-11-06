@@ -1,4 +1,5 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { CutTest, VehicleContext } from '@adatechnology/game-vehicles'
+import type { Material, Vector3 } from 'three'
 import type { FleetContext } from '../context'
 
 /* Boats group of the fleet ("water" group). Uses only the kit API.
@@ -22,7 +23,7 @@ export function installBoatsExtra(fx: FleetContext): void {
     tb = EA.tab
 
   /* triangular sail: tack T, head (top) Hd, sheet clew C, belly cam (fraction of the chord) towards +z */
-  function sailGeo(T: number[], Hd: number[], C: number[], cam: number, o?: any) {
+  function sailGeo(T: number[], Hd: number[], C: number[], cam: number, o?: { nu?: number; nv?: number; roach?: number }) {
     o = o || {}
     const nu = o.nu || 10,
       nv = o.nv || 16,
@@ -58,7 +59,7 @@ export function installBoatsExtra(fx: FleetContext): void {
     return g
   }
   /* lifeline: runs through the stanchion rings pts and sags a little between them */
-  function ropeAlong(c: VehicleContext, pts: any, sag: number, r: number, mat: any) {
+  function ropeAlong(c: VehicleContext, pts: readonly (readonly number[])[], sag: number, r: number, mat: Material) {
     const out = []
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i],
@@ -424,7 +425,7 @@ export function installBoatsExtra(fx: FleetContext): void {
             ])(t),
           ]
         },
-        sheer: function (t: any) {
+        sheer: function (t: number) {
           return [
             tb([
               [0, 1.22],
@@ -446,7 +447,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return 0.0 - y
         }),
         c.paint('#7b2220', { roughness: 0.6 }),
@@ -455,7 +456,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.skinOf(
         c,
         hull,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return 0.035 - Math.abs(y - 0.07)
         }),
         navy,
@@ -477,7 +478,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       c.deform.push(fd)
       const sd = c.add(
         EA.deckGeo(H, x0 + 0.02, -1.05, {
-          inner: function (x: any) {
+          inner: function (x: number) {
             return H.sheerAt(x).z - 0.3
           },
           n: 14,
@@ -519,7 +520,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       EA.fuseSkin(
         c,
         trST,
-        EA.bandT(function (x: any, y: number) {
+        EA.bandT(function (x: number, y: number) {
           return y - 1.53
         }),
         nonskid,
@@ -536,7 +537,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         const gw = EA.skinOf(
           c,
           trunk,
-          EA.bandT(function (x: any, y: any, z: number) {
+          EA.bandT(function (x: number, y: number, z: number) {
             return -Math.max(winP(x, y), 0.5 - s * z)
           }),
           MT.glassDark,
@@ -618,7 +619,7 @@ export function installBoatsExtra(fx: FleetContext): void {
       main.castShadow = jib.castShadow = true
       c.text('D26', 0.8, 0.5, mx - 1.2, 7.3, 0.03, '+z', { fg: '#1d3b6b', parent: rig })
       c.text('D26', 0.8, 0.5, mx - 1.2, 7.3, -0.03, '-z', { fg: '#1d3b6b', parent: rig })
-      function wireTo(a: any, b: any) {
+      function wireTo(a: readonly number[], b: readonly number[]) {
         c.rod(new V3(a[0], a[1], a[2]), new V3(b[0], b[1], b[2]), 0.006, wire, R)
       }
       wireTo([mx + 0.06, 8.85, 0], [3.85, 1.28, 0])
@@ -871,7 +872,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         grey,
       )
       c.deform.push(strake)
-      const rings: any = []
+      const rings: number[][] = []
       ;[1, -1].forEach(function (s) {
         for (let x = -1.9; x <= 1.31; x += 0.64) rings.push([x, yc + 0.17, s * (zc + 0.17)])
       })
@@ -891,7 +892,7 @@ export function installBoatsExtra(fx: FleetContext): void {
         ])
         .concat(rp)
       ropeAlong(c, loop, 0.05, 0.011, rope)
-      loop.forEach(function (p: any) {
+      loop.forEach(function (p) {
         c.roundBox(0.06, 0.05, 0.02, 0.01, MT.steel, p[0], p[1] - 0.02, p[2])
       })
       ;[1, -1].forEach(function (s) {
@@ -1113,16 +1114,16 @@ export function installBoatsExtra(fx: FleetContext): void {
         hy0 = dk(hx),
         hh = 1.85,
         cab = c.roundBox(3.4, hh, 2.3, 0.1, cabC, hx, hy0 + hh / 2, 0, { def: true, taper: { sx: 0.88, sz: 0.92, shift: -0.2 } })
-      const cutF = {
-        sel: function (n: any) {
+      const cutF: CutTest = {
+        sel: function (n: Vector3) {
           return n.x > 0.5
         },
         sdf: function (x: number, y: number, z: number) {
           return Math.max(0.2 - y, y - 0.75, Math.abs(z) - 0.98, 0.04 - Math.abs(z - 0.33), 0.04 - Math.abs(z + 0.33))
         },
       }
-      const cutD = {
-        sel: function (n: any, ce: any) {
+      const cutD: CutTest = {
+        sel: function (n: Vector3, ce: Vector3) {
           return n.x < -0.5 && ce.x < 0
         },
         sdf: function (x: number, y: number, z: number) {
