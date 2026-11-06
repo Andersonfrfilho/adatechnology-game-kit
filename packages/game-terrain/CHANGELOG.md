@@ -1,5 +1,11 @@
 # @adatechnology/game-terrain
 
+## 0.5.0
+
+### Minor Changes
+
+- 018c556: `terrain.bear(loads)`: weight standing still on bare bars bends them, weights over the same hole add up, and a slab over a void gives way under what its bars cannot hold. The test room hands it the player and every resting piece.
+
 ## 0.4.0
 
 ### Minor Changes
