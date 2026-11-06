@@ -109,7 +109,7 @@ export function installArmor(kit: Kit) {
           })
         }
       })
-      c.quads.forEach(function (q: any) {
+      c.quads.forEach(function (q) {
         const off = 0.06
         const bx2 = q.b[0] + q.n[0] * off
         const by2 = q.b[1] + q.n[1] * off
@@ -154,13 +154,13 @@ export function installArmor(kit: Kit) {
       const x0 = m.rear + 0.15
       const x1 = m.front - 0.15
       const brk = [x0, x1]
-      const wl: any = []
+      const wl: number[][] = []
       c.wheels.forEach(function (w) {
         if (!w.parent) return
         const r = w.userData.r || 0.33
         wl.push([w.position.x - r - 0.07, w.position.x + r + 0.07, w.position.y + r + 0.05])
       })
-      wl.forEach(function (w: any) {
+      wl.forEach(function (w) {
         if (w[0] > x0 && w[0] < x1) brk.push(w[0])
         if (w[1] > x0 && w[1] < x1) brk.push(w[1])
       })
@@ -168,7 +168,7 @@ export function installArmor(kit: Kit) {
         return a - b
       })
       const yTop = Math.min(m.belt - 0.06, m.clearance + 0.15 + Math.min(m.bodyHeight, 1.0) * 0.75)
-      const pieces: any = []
+      const pieces: number[][] = []
       for (let b = 0; b < brk.length - 1; b++) {
         const a0 = brk[b]
         const a1 = brk[b + 1]

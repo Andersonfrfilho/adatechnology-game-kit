@@ -5,7 +5,8 @@ import type { DamageZone, VehicleLamp } from './api'
 import type { BuildContext, Kit, SceneNode } from './types'
 
 /** What a builder declares about a zone (`c.zone(...)`): new fields, or `remove`; `objs` are parts by label or kind, lamps or objects. */
-type ZoneDef = Partial<DamageZone> & { id: string; remove?: boolean; replace?: boolean; fit?: boolean; objs?: unknown[] }
+/** A zone as `c.zone` declares or refines it: any field of a zone, plus remove, replace, fit and the objects it holds. */
+export type ZoneDef = Partial<DamageZone> & { id: string; remove?: boolean; replace?: boolean; fit?: boolean; objs?: unknown[] }
 
 export function installZoneDerive(kit: Kit) {
   const THREE = kit.THREE

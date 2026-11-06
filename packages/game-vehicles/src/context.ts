@@ -3,6 +3,8 @@ import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshSt
 import { markKitOrigin } from '@adatechnology/game-contracts'
 
 import type { MaterialOptions, TextTextureOptions } from './materials'
+import type { GlassQuad } from './glass'
+import type { ZoneDef } from './zone-derive'
 import type { FlyingPiece, RollState, VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
 import type { Kit } from './types'
 import type { ZoneBoxInput } from './zone-core'
@@ -54,6 +56,8 @@ export function installContext(kit: Kit) {
     declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
     declare flipped: boolean
     declare rollState: RollState | null
+    declare quads: GlassQuad[]
+    declare zoneDefs: ZoneDef[]
     declare flying?: FlyingPiece[]
     /** How far each wheel drops when the zones are applied (flat tyre, broken rim), to settle the body on them. */
     declare zoneDrops: { x: number; z: number; d: number }[]
@@ -221,7 +225,7 @@ export function installContext(kit: Kit) {
       g.add(tire)
       if (o.lugs) {
         const nl = Math.round(r * 30)
-        const lugs: any = []
+        const lugs: BufferGeometry[] = []
         for (let i = 0; i < nl; i++) {
           const a = (i / nl) * PI * 2
           ;[-1, 1].forEach(function (sd) {
@@ -291,10 +295,10 @@ export function installContext(kit: Kit) {
 
     /** Declares or refines a damage zone: `c.zone(id, label, box, parts, options)`. Pass `label === false` to remove an auto-derived zone. */
     zone(id: string, label: string | false | null | undefined, box?: ZoneBoxInput | null, parts?: Object3D | VehicleLamp | readonly (Object3D | VehicleLamp)[] | null, o?: Record<string, unknown>) {
-      const d: any = Object.assign({ id: id }, o || {})
+      const d = Object.assign({ id: id }, o || {}) as ZoneDef
       if (label === false) d.remove = true
       else if (label) d.name = label
-      if (box) d.box = I.normalizeBox(box)
+      if (box) d.box = I.normalizeBox(box)!
       if (parts) d.objs = Array.isArray(parts) ? parts.slice() : [parts]
       this.zoneDefs.push(d)
       return d

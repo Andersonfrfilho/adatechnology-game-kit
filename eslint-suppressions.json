@@ -224,14 +224,9 @@
       "count": 26
     }
   },
-  "packages/game-vehicles/src/armor.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
   "packages/game-vehicles/src/context.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 1
     }
   },
   "packages/game-vehicles/src/damageables.ts": {
