@@ -329,11 +329,6 @@
       "count": 2
     }
   },
-  "packages/game-vehicles/src/warp.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 13
-    }
-  },
   "packages/game-vehicles/src/wheels.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 5
