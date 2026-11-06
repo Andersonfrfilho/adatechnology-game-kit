@@ -643,6 +643,7 @@ export interface BuildContext {
   panelView: PanelView
   panelsOf: Map<string, StructurePart[]>
   showPillars: boolean
+  baseboardBand: boolean
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number
