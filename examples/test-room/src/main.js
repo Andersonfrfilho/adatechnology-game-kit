@@ -93,7 +93,7 @@ const room = createTestRoom({
   area: !deferred ? (params.get('area') ?? undefined) : undefined,
   bench: {
     state: Object.fromEntries([...params].filter(([key]) => key.startsWith(BENCH_PARAM_PREFIX)).map(([key, value]) => [key.slice(BENCH_PARAM_PREFIX.length), value])),
-    onChange: (moduleId, encoded) => {
+    onChange: (/** @type {string} */ moduleId, /** @type {string} */ encoded) => {
       const url = new URL(location.href)
       url.searchParams.set(BENCH_PARAM_PREFIX + moduleId, encoded)
       if (url.href !== location.href) history.replaceState(null, '', url)
@@ -163,7 +163,7 @@ async function start() {
   const table = params.get('table') ?? (params.get('area') || items || params.get('scenario') ? '0' : '')
   if (table !== '0') {
     const groups = room.testTable.groups()
-    const goods = room.testTable.items().find((item) => item.id === 'item_canned_beans')?.group
+    const goods = room.testTable.items().find((/** @type {{ id: string; }} */ item) => item.id === 'item_canned_beans')?.group
     room.testTable.open(groups.includes(table) ? table : (goods ?? groups[0]))
   }
   // pushing furniture: a light piece, one too heavy for the player and one against the wall
@@ -190,7 +190,7 @@ async function start() {
   const wanted = params.get('scenario')
   if (wanted) {
     const [share, shares] = (params.get('shard') ?? '1/1').split('/').map(Number)
-    const list = wanted === 'all' ? room.scenarios.filter((_, i) => i % shares === share - 1) : room.scenarios.filter((s) => s.id === wanted)
+    const list = wanted === 'all' ? room.scenarios.filter((_, i) => i % shares === share - 1) : room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id === wanted)
     room.runScenarios(list).then((report) => {
       window.__testRoomReport = report
     })

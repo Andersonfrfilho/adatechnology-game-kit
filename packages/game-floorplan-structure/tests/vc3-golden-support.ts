@@ -8,6 +8,7 @@ import { engine } from './support'
 import { sdkStateOf, sdkTemplateOf, teamConstruction, teamRoof, teamTank, text } from './team-vocabulary'
 export { hashOf, hashRows, sdkTemplateOf, teamLists, text } from './team-vocabulary'
 import type { TeamStructureLists } from './team-vocabulary'
+import type { StructuredResult } from '../src'
 
 /** Structure of the plans recorded from the Visor de casas 3D: 17 templates x seeds 1-25 x 3 states, one hash per list. */
 export type StructureEvent = {
@@ -28,15 +29,15 @@ export const SINGLES = ['levels', 'construction', 'roof', 'waterTank'] as const
 /** Five seeds at a time, so no test holds the worker for long. */
 export const chunksOf = (templates: string[]): [string, number, number][] => templates.flatMap((template) => [1, 6, 11, 16, 21].map((from): [string, number, number] => [template, from, from + 4]))
 
-export function generate(event: StructureEvent) {
-  return engine.generate(sdkTemplateOf.get(event.template) as string, { seed: event.seed, state: sdkStateOf.get(event.state), wallDetail: 'coarse', wallPillars: false, groundBeams: false, visorSections: true })
+export function generate(event: StructureEvent): StructuredResult {
+  return engine.generate(sdkTemplateOf.get(event.template) as string, { seed: event.seed, state: sdkStateOf.get(event.state), wallDetail: 'coarse', wallPillars: false, groundBeams: false, visorSections: true }) as StructuredResult
 }
 
-export function singlesOf(result: any): Record<(typeof SINGLES)[number], unknown> {
+export function singlesOf(result: StructuredResult): Record<(typeof SINGLES)[number], unknown> {
   return {
     levels: [result.structure.levels, result.structure.elevation],
     construction: teamConstruction(result.construction),
-    roof: teamRoof(result.roof),
+    roof: teamRoof(result.roof!),
     waterTank: teamTank(result.waterTank),
   }
 }

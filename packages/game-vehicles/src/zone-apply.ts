@@ -1,44 +1,47 @@
 /** Applies zone health to a built vehicle: bands, decals, owned parts and scenarios. */
-import type { Kit } from './types'
+import type { HSL, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three'
+
+import type { DamageZone } from './api'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp, rng, strHash } from './util'
 import { SEED_SALTS, legacyZoneId } from './legacy-seeds'
 
-export function installZoneApply(kit: Kit): void {
+export function installZoneApply(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
   const { RUST, crease } = I
 
   /* ---- applying all zones ---- */
-  function fadePaint(c: any) {
-    const cache2 = new Map()
-    c.vehicle.traverse(function (o: any) {
-      if (!o.isMesh || !c.paints || !c.paints.has(o.material)) return
-      let nm2 = cache2.get(o.material)
+  function fadePaint(c: BuildContext) {
+    const cache2 = new Map<Material, MeshStandardMaterial>()
+    c.vehicle.traverse(function (o: SceneNode) {
+      if (!o.isMesh || !c.paints || !c.paints.has(o.material as Material)) return
+      let nm2 = cache2.get(o.material as Material)
       if (!nm2) {
-        nm2 = o.material.clone()
-        const hsl: any = {}
+        nm2 = (o.material as MeshStandardMaterial).clone()
+        const hsl = {} as HSL
         nm2.color.getHSL(hsl)
         nm2.color.setHSL(hsl.h, hsl.s * 0.45, Math.min(0.75, hsl.l * 0.9 + 0.08))
         nm2.color.lerp(RUST, 0.12)
         nm2.roughness = 0.96
         nm2.metalness = 0.05
-        cache2.set(o.material, nm2)
+        cache2.set(o.material as Material, nm2)
       }
       o.material = nm2
     })
   }
-  function abandonFx(c: any) {
+  function abandonFx(c: BuildContext) {
     fadePaint(c)
     I.hurtEngine(c, 0.45)
     const inv = I.worldInverseOf(c)
-    ;(c.zones || []).forEach(function (z: any) {
+    ;(c.zones || []).forEach(function (z: DamageZone) {
       if (z.internal || ['panel', 'door', 'roof', 'lid', 'hood', 'bumper'].indexOf(z.type) < 0) return
       c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.rust + legacyZoneId(z)))
       I.zoneDecals(c, z, { rust: 3 }, I.zoneCands(c, z, inv))
     })
   }
-  function burntFx(c: any) {
+  function burntFx(c: BuildContext) {
     I.burnAll(c)
     const m = c.meta
     const ep = I.enginePos(c)
@@ -46,44 +49,44 @@ export function installZoneApply(kit: Kit): void {
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 5, s: 0.6 })
     kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 4, s: 0.55 })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 3, s: 1.3 })
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind !== 'exhaust'
     })
     c.burnt = true
   }
-  function settleDrops(c: any) {
+  function settleDrops(c: BuildContext) {
     const D = c.zoneDrops
     if (!D || !D.length || (['boat', 'plane', 'heli'].indexOf(c.meta.kind) >= 0 && c.meta.kind !== 'plane')) return
     const WH = I.wheelInfo(c)
     if (!WH) return
-    const P = function (w: any) {
+    const P = function (w: Object3D): Vector3 {
       return w.userData.gpos || w.position
     } /* a wheel that went inside a pivot (broken gear) keeps its original position */
-    const xs = WH.list.map(function (w: any) {
+    const xs = WH.list.map(function (w) {
       return P(w).x
     })
-    const zs2 = WH.list.map(function (w: any) {
+    const zs2 = WH.list.map(function (w) {
       return P(w).z
     })
-    const dAt = function (w: any) {
-      const q = D.filter(function (e: any) {
+    const dAt = function (w: Object3D) {
+      const q = D.filter(function (e) {
         return Math.abs(e.x - P(w).x) < 0.01 && Math.abs(e.z - P(w).z) < 0.01
       })
       return q.length
         ? Math.max.apply(
             null,
-            q.map(function (e: any) {
+            q.map(function (e) {
               return e.d
             }),
           )
         : 0
     }
     const xc =
-      xs.reduce(function (s: any, v: any) {
+      xs.reduce(function (s: number, v: number) {
         return s + v
       }, 0) / xs.length
     const zc =
-      zs2.reduce(function (s: any, v: any) {
+      zs2.reduce(function (s: number, v: number) {
         return s + v
       }, 0) / zs2.length
     let sxx = 0
@@ -92,7 +95,7 @@ export function installZoneApply(kit: Kit): void {
     let sxd = 0
     let szd = 0
     let sd = 0
-    WH.list.forEach(function (w: any) {
+    WH.list.forEach(function (w) {
       const x = P(w).x - xc
       const z2 = P(w).z - zc
       const d = -dAt(w)
@@ -116,23 +119,23 @@ export function installZoneApply(kit: Kit): void {
     c.vehicle.rotation.x += -Math.asin(clamp(Bz, -0.5, 0.5))
     c.vehicle.position.y += t - A * xc - Bz * zc
   }
-  kit.applyZones = function (c: any, zs: any) {
+  kit.applyZones = function (c: BuildContext, zs?: { health?: Record<string, number>; flags?: Record<string, unknown> } | null) {
     const Zs = I.zonesOf(c)
     zs = zs || {}
     const H = zs.health || {}
     const FL = zs.flags || {}
     c.zoneState = { health: {}, flags: Object.assign({}, FL) }
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       z.health = H[z.id] == null ? 100 : clamp(Math.round(H[z.id]), 0, 100)
       z.band = I.bandOf(z.health)
       c.zoneState.health[z.id] = z.health
     })
     const R0 = c.rand
-    const dirty = new Set()
+    const dirty = new Set<Mesh>()
     let any = false
     c.zoneDrops = []
     c.zoneErrors = c.zoneErrors || []
-    Zs.forEach(function (z: any) {
+    Zs.forEach(function (z: DamageZone) {
       if (z.health >= 100) return
       any = true
       c.rand = rng(strHash((c.seedKey || c.key) + '|' + legacyZoneId(z) + '|' + z.band))
@@ -140,15 +143,15 @@ export function installZoneApply(kit: Kit): void {
         const b = z.band
         if (z.type === 'wheel' && z.fxKey === 'landing_gear' && c.meta.kind === 'plane') I.gearBand(c, z, b)
         else if (z.type === 'wheel')
-          z.wheels.forEach(function (w: any) {
+          z.wheels.forEach(function (w) {
             I.wheelBand(c, z, w, b)
           })
         else if (z.type === 'glass')
-          z.glass.forEach(function (g: any) {
+          z.glass.forEach(function (g) {
             I.glassBand(c, z, g, b)
           })
         else if (z.type === 'light')
-          z.lights.forEach(function (Lt: any) {
+          z.lights.forEach(function (Lt) {
             I.lightBand(c, z, Lt, b)
           })
         else if (z.type === 'internal') I.internalBand(c, z, b)
@@ -157,26 +160,26 @@ export function installZoneApply(kit: Kit): void {
         else if (z.type === 'part') I.partBand(c, z, b, dirty)
         else I.panelBand(c, z, b, dirty)
         if (z.type !== 'glass')
-          z.glass.forEach(function (g: any) {
+          z.glass.forEach(function (g) {
             if (b === 1 && g !== z.glass[0]) return
             I.glassBand(c, z, g, b === 4 ? 4 : b)
           })
         if (z.type !== 'light')
-          z.lights.forEach(function (Lt: any) {
+          z.lights.forEach(function (Lt) {
             I.lightBand(c, z, Lt, b)
           })
         if (z.type !== 'wheel' && !z.track)
-          z.wheels.forEach(function (w: any) {
+          z.wheels.forEach(function (w) {
             I.wheelBand(c, z, w, b)
           })
         if (z.sub && z.type !== 'internal' && b >= 2)
           I.internalBand(c, Object.assign({}, z, { pos: z.pos || I.boxCenter(z.box) }), Math.min(b, 3))
         if (typeof z.onBand === 'function') z.onBand(c, b, z, kit)
-      } catch (e: any) {
-        c.zoneErrors.push(z.id + ': ' + (e && e.message))
+      } catch (e) {
+        c.zoneErrors.push(z.id + ': ' + (e && (e as Error).message))
       }
     })
-    dirty.forEach(function (msh: any) {
+    dirty.forEach(function (msh) {
       const g = msh.geometry
       if (g.userData.crease || !g.index) crease(g, 42)
       else g.computeVertexNormals()
@@ -185,8 +188,8 @@ export function installZoneApply(kit: Kit): void {
     })
     try {
       settleDrops(c)
-    } catch (e: any) {
-      c.zoneErrors.push('settling: ' + e.message)
+    } catch (e) {
+      c.zoneErrors.push('settling: ' + (e as Error).message)
     }
     c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.scenario))
     const flagList = Object.keys(FL)
@@ -224,5 +227,9 @@ export function installZoneApply(kit: Kit): void {
     return c.zoneState
   }
 
-  Object.assign(I, { fadePaint, abandonFx, burntFx, settleDrops })
+  const shared = { fadePaint, abandonFx, burntFx, settleDrops }
+
+  Object.assign(I, shared)
+
+  return shared
 }

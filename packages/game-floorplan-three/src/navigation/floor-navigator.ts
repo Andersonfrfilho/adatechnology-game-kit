@@ -28,8 +28,8 @@ export interface NavHouseDef {
   id: string
   floors: NavFloor[]
   stairs?: NavStair[]
-  groups?: unknown[]
-  roof?: unknown
+  groups?: NavShowable[]
+  roof?: NavShowable
   /** The fine grid also rules the ground floor inside the house (default: the ground floor uses the game's grid, except stairs and banisters). */
   own?: boolean
   /** The house's rectangle (default: the union of its solids and stairs). */
@@ -53,7 +53,7 @@ export interface NavFlight {
   axis: 0 | 1
   from: number
   to: number
-  group: any
+  group: StairGroup
   yFrom: number
   yTo: number
   dir: number
@@ -62,15 +62,36 @@ export interface NavFlight {
   e: number
 }
 
+/** What is drawn of a floor (or the roof): an object with `visible`, a function `show(visible)`, or a list of them. */
+export type NavShowable = { visible: boolean } | ((visible: boolean) => void) | readonly NavShowable[] | null | undefined
+
+/** The flights that share one stair footprint: the axis they climb along, the footprint and each flight's floors. */
+export interface StairGroup {
+  ax: 0 | 1
+  r: number[]
+  m: { from: number; to: number; inv: boolean }[]
+}
+
+/** The path field of a floor on the coarse grid: free cells, distances and the BFS queue to the current target cell. */
+export interface PathField {
+  gx: number
+  gz: number
+  free: Uint8Array
+  d: Int16Array
+  q: Int32Array
+  target: number
+  t: number
+}
+
 export interface NavHouse {
   id: string
   own: boolean
   floors: NavFloor[]
-  groups: unknown[]
-  roof: unknown
+  groups: NavShowable[]
+  roof: NavShowable
   flights: NavFlight[]
   grids: Uint8Array[]
-  fields: any[]
+  fields: (PathField | null)[]
   /** Triples (floor, cell, previous value) of the run-time changes of the grid. */
   journal: number[]
   shown: number
@@ -89,7 +110,7 @@ const VOID = 4 // no floor (a collapsed slab)
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v)
 
 export function createFloorNavigator() {
-  const N: any = { houses: [] as NavHouse[], x0: 1e9, z0: 1e9, x1: -1e9, z1: -1e9, currentHouse: null as NavHouse | null, currentFloor: 0, time: 0, result: { y: 0, floor: 0, dx: 0, dz: 0, t: 0, stair: null } as NavResult }
+  const N: { houses: NavHouse[]; x0: number; z0: number; x1: number; z1: number; currentHouse: NavHouse | null; currentFloor: number; time: number; result: NavResult } = { houses: [] as NavHouse[], x0: 1e9, z0: 1e9, x1: -1e9, z1: -1e9, currentHouse: null as NavHouse | null, currentFloor: 0, time: 0, result: { y: 0, floor: 0, dx: 0, dz: 0, t: 0, stair: null } as NavResult }
 
   // ----- fine grid of a floor: bit 1 solid, bit 2 forced free (inside the stair), bit 4 no floor -----
   function paint(c: NavHouse, g: Uint8Array, x0: number, z0: number, x1: number, z1: number, v: number) {
@@ -102,12 +123,12 @@ export function createFloorNavigator() {
     const c: NavHouse = { id: def.id, own: !!def.own, floors: def.floors, groups: def.groups || [], roof: def.roof || null, flights: [], grids: [], fields: [], journal: [], shown: -2, x0: 0, z0: 0, x1: 0, z1: 0, ox: 0, oz: 0, nx: 0, nz: 0, n: def.floors.length }
     // the house's rectangle: union of the solids and stairs of all floors (or the given one)
     let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9
-    const env = (r: any) => { x0 = Math.min(x0, r[0], r[2]); z0 = Math.min(z0, r[1], r[3]); x1 = Math.max(x1, r[0], r[2]); z1 = Math.max(z1, r[1], r[3]) }
+    const env = (r: { 0: number; 1: number; 2: number; 3: number }) => { x0 = Math.min(x0, r[0], r[2]); z0 = Math.min(z0, r[1], r[3]); x1 = Math.max(x1, r[0], r[2]); z1 = Math.max(z1, r[1], r[3]) }
     if (def.rect) env(def.rect); else { for (const a of def.floors) for (const s of a.solids || []) env(s); for (const e of def.stairs || []) env(e) }
     c.x0 = x0; c.z0 = z0; c.x1 = x1; c.z1 = z1
     c.ox = x0 - 0.5; c.oz = z0 - 0.5; c.nx = Math.ceil((x1 - x0 + 1) / CELL); c.nz = Math.ceil((z1 - z0 + 1) / CELL)
     // stairs: groups the ones with the same footprint; each flight takes a lane and the odd ones climb backwards (U-turn)
-    const groups: any[] = []
+    const groups: StairGroup[] = []
     for (const e of def.stairs || []) {
       const r = [Math.min(e[0], e[2]), Math.min(e[1], e[3]), Math.max(e[0], e[2]), Math.max(e[1], e[3])], ax = e[6] === 'z' ? 1 : 0, inv = ax ? e[3] < e[1] : e[2] < e[0]
       let g = groups.find((q) => q.ax === ax && Math.abs(q.r[0] - r[0]) < 0.08 && Math.abs(q.r[1] - r[1]) < 0.08 && Math.abs(q.r[2] - r[2]) < 0.08 && Math.abs(q.r[3] - r[3]) < 0.08)
@@ -115,9 +136,9 @@ export function createFloorNavigator() {
       g.m.push({ from: e[4], to: e[5], inv })
     }
     for (const g of groups) {
-      g.m.sort((a: any, b: any) => a.from - b.from)
+      g.m.sort((a, b) => a.from - b.from)
       const k = g.m.length, lat = g.ax ? 0 : 1 // lateral axis
-      g.m.forEach((m: any, q: number) => {
+      g.m.forEach((m, q: number) => {
         const r = g.r.slice(), l0 = g.r[lat], w = (g.r[lat + 2] - l0) / k
         r[lat] = l0 + w * q; r[lat + 2] = l0 + w * (q + 1)
         const s: NavFlight = { x0: r[0], z0: r[1], x1: r[2], z1: r[3], axis: g.ax, from: m.from, to: m.to, group: g, yFrom: def.floors[m.from].y, yTo: def.floors[m.to].y, dir: 0, lo: 0, len: 0, e: 0 }
@@ -269,7 +290,7 @@ export function createFloorNavigator() {
   function apply(c: NavHouse, floor: number) {
     if (c.shown === floor) return
     c.shown = floor
-    const show = (o: any, v: boolean) => { if (!o) return; if (typeof o === 'function') o(v); else if (Array.isArray(o)) o.forEach((q) => show(q, v)); else o.visible = v }
+    const show = (o: NavShowable, v: boolean): void => { if (!o) return; if (typeof o === 'function') o(v); else if (Array.isArray(o)) o.forEach((q) => show(q, v)); else (o as { visible: boolean }).visible = v }
     for (let a = 0; a < c.groups.length; a++) show(c.groups[a], floor < 0 || a <= floor)
     show(c.roof, floor < 0)
   }

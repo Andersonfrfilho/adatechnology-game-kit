@@ -24,14 +24,17 @@ if (!playwright || !existsSync(page)) {
   console.log('skipped the browser check (no playwright or no room page)')
 } else {
   const slice = join(here, '../../specs/001-migracao-entregas-dos-times/game-slice/stories')
-  const read = (file) => JSON.parse(readFileSync(join(slice, file), 'utf8'))
+  const read = (/** @type {string} */ file) => JSON.parse(readFileSync(join(slice, file), 'utf8'))
   const content = existsSync(slice) ? { people: read('cast.json'), stories: [...read('stories.json'), read('roles.json')], life: read('life.json'), actions: read('actions.json').map((a) => ({ id: a.id, name: a.name })), playerBase: 'jogador', days: 90 } : null
   const shots = join(here, 'shots')
   mkdirSync(shots, { recursive: true })
   const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+  /**
+     * @type {string[]}
+     */
   const errors = []
   let failed = 0
-  const check = (name, ok, detail) => {
+  const check = (/** @type {string} */ name, /** @type {boolean} */ ok, /** @type {string[] | undefined} */ detail) => {
     if (!ok) failed++
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail === undefined ? '' : `  ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`)
   }
@@ -39,14 +42,14 @@ if (!playwright || !existsSync(page)) {
     const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
     const tab = await context.newPage()
     await tab.route(/^https?:/, (route) => route.abort())
-    tab.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    tab.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
     tab.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
     await tab.goto(`${pathToFileURL(page).href}?lang=${lang}`, { timeout: 180000 })
     await tab.waitForFunction(() => window.__storiesReport, null, { timeout: 90000 })
     const state = await tab.evaluate(async (content) => {
       const room = window.__testRoom
       const report = window.__storiesReport
-      const scenarios = room.scenarios.filter((s) => s.id.startsWith('stories_'))
+      const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('stories_'))
       const result = await room.runScenarios(scenarios)
       const bench = room.bench('stories_area')
       bench.set('day', 25)

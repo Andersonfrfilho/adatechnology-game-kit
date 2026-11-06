@@ -1,6 +1,6 @@
 /** Open and close clips for the doors, the hood and the trunk lid, in the `AnimationClipSpec` of the contracts. */
 import type { AnimationClipSpec, AnimationPose } from '@adatechnology/game-contracts'
-import type { VehicleContext, VehicleKit } from '../api'
+import type { DamageZone, VehicleContext, VehicleKit } from '../api'
 import type { VehicleModel } from './model'
 import type { VehicleVisuals } from './visual'
 
@@ -8,7 +8,7 @@ import type { VehicleVisuals } from './visual'
 const DURATION = 1.2
 
 export function createVehicleClips(model: VehicleModel, vis: VehicleVisuals | null, kit: VehicleKit, c: VehicleContext): AnimationClipSpec[] {
-  const zones = kit.zonesOf(c) as any[]
+  const zones: DamageZone[] = kit.zonesOf(c)
   const doors: Record<string, AnimationPose> = {}
   const hood: Record<string, AnimationPose> = {}
   const lid: Record<string, AnimationPose> = {}
@@ -19,7 +19,7 @@ export function createVehicleClips(model: VehicleModel, vis: VehicleVisuals | nu
       const sgn = z.hinge === 'rear' ? -1 : 1
       doors[p.id] = { rotation: [0, (z.side < 0 ? -1 : 1) * sgn * 1.15, 0] }
     } else if (p.role === 'lid' && (!vis || vis.plates.has(p.id))) lid[p.id] = { rotation: [0, 0, -1.15] }
-    else if (p.role === 'hood' && (!vis || vis.hood?.id === p.id)) hood[p.id] = { rotation: [0, 0, (vis?.hood?.open ?? (c as any).hood?.open ?? 1) * (vis?.hood?.sign ?? (c as any).hood?.sign ?? 1)] }
+    else if (p.role === 'hood' && (!vis || vis.hood?.id === p.id)) hood[p.id] = { rotation: [0, 0, (vis?.hood?.open ?? c.hood?.open ?? 1) * (vis?.hood?.sign ?? c.hood?.sign ?? 1)] }
   }
   const clips: AnimationClipSpec[] = []
   const pair = (name: string, poses: Record<string, AnimationPose>, latch: string): void => {

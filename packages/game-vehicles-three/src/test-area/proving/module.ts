@@ -1,6 +1,8 @@
 import { createVehicleCamera, defaultEye, mirrorPoses } from '@adatechnology/game-camera'
 import type { MirrorPose, VehicleCameraMode, VehicleFrame, VehicleThreeLib } from '@adatechnology/game-camera'
 import { markKitOrigin } from '@adatechnology/game-contracts'
+import type * as THREE_NS from 'three'
+import type { CanvasTexture, Group, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry } from 'three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { CABIN_BANK, LIBRARY_BANK, RADIO_BANK } from '@adatechnology/game-audio'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
@@ -30,7 +32,7 @@ import type { ProvingText } from './text'
 
 export const PROVING_AREA_ID = 'vehicles_proving'
 
-type Three = any
+type Three = typeof THREE_NS
 
 /** Content comes in by option (the adapter does not import a content pack): the example wires the kit's fleet, a game its own catalogue. */
 export interface ProvingModuleOptions {
@@ -89,11 +91,12 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   const kits = new WeakMap<object, VehicleKit>()
 
   let host: ModuleHost | null = null
-  let three: Three = null
-  let track: any = null
-  let strip: any = null
-  let board: { mesh: any; canvas: any; texture: any } | null = null
-  let car: { built: BuiltVehicle; guides: any; subject: ProvingSubject } | null = null
+  // set in attach (nothing runs before it)
+  let three = null as unknown as Three
+  let track: Group | null = null
+  let strip: Mesh<PlaneGeometry, MeshStandardMaterial> | null = null
+  let board: { mesh: Mesh; canvas: HTMLCanvasElement; texture: CanvasTexture } | null = null
+  let car: { built: BuiltVehicle; guides: Group; subject: ProvingSubject } | null = null
   let run: ProvingRun | null = null
   let parking: { driver: SemiDriver; time: number } | null = null
   /** The player at the wheel: the room's walking keys are held and the vehicle takes them. */
@@ -122,7 +125,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   let lastWrap = 0
   // the car's own sounds (engine by RPM and load, starter, tyres), as on the lane of the vehicles area
   let engine: VehicleSound | undefined
-  const rig = { camera: null as any, vehicle: null as ReturnType<typeof createVehicleCamera> | null, mirrors: [] as Array<{ pose: MirrorPose; camera: any; remove: () => void }> }
+  const rig = { camera: null as PerspectiveCamera | null, vehicle: null as ReturnType<typeof createVehicleCamera> | null, mirrors: [] as Array<{ pose: MirrorPose; camera: PerspectiveCamera; remove: () => void }> }
 
   const name = (id: string): string => options.nameOf?.(id) ?? id.replace(/_/g, ' ')
   const kitFor = (THREE: Three): VehicleKit => {
@@ -222,7 +225,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     const stand = new THREE.Mesh(new THREE.BoxGeometry(0.25, 3.4, 0.25), legs.material)
     stand.position.set(0, -4.6, -0.1)
     mesh.add(legs, stand)
-    track.add(mesh)
+    track!.add(mesh)
     board = { mesh, canvas, texture }
     drawBoard()
   }
@@ -306,7 +309,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     drawBoard()
   }
   /** Guide lines of the reversing camera (on layer 1, which only that camera sees): green, yellow and red at 3, 2 and 1 m behind the bumper, bending with the steering. */
-  const reverseGuides = (built: BuiltVehicle): any => {
+  const reverseGuides = (built: BuiltVehicle): Group => {
     const THREE = three
     const group = new THREE.Group()
     group.name = 'reverse_guides'
@@ -333,7 +336,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       cross.userData.mid = a
       group.add(cross)
     }
-    group.traverse((o: any) => o.layers.set(1))
+    group.traverse((o) => o.layers.set(1))
     return group
   }
   const bendGuides = (steer: number): void => {
@@ -793,7 +796,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     }
     if (car) engine?.update({ dt, position: [car.built.group.position.x, 0.5, car.built.group.position.z], speed, throttle: run ? 1 : (driving?.throttle ?? 0), rpm: driving ? driving.driver.state.rpm : undefined })
     const f = frameOf(speed)
-    if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera, f, dt)
+    if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera!, f, dt)
     if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, aimed(m.pose), f)
     void steer
     const key = `${host.bench?.layer('mirrors')}|${host.bench?.layer('reverse_camera')}`
@@ -890,7 +893,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     scenarios: (): ModuleScenario[] => [],
     attach(lent) {
       host = lent
-      three = lent.THREE
+      three = lent.THREE as Three
       rig.camera = new three.PerspectiveCamera(60, 1.6, 0.05, 900)
       rig.vehicle = createVehicleCamera(three as VehicleThreeLib)
       lent.audio?.register?.(LIBRARY_BANK)

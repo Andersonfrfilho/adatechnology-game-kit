@@ -25,6 +25,9 @@ const check = (name, ok, detail) => {
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
+/**
+ * @type {string[]}
+ */
 const errors = []
 async function open(query = '') {
   const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
@@ -36,7 +39,7 @@ async function open(query = '') {
   })
   const page = await context.newPage()
   // the weapon thumbnails (../weapon-svg/) exist only in the built site: on file:// each one is a CORS error plus a bare "Failed to load resource"
-  page.on('console', (m) => m.type() === 'error' && !/weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(m.text()) && errors.push(m.text()))
+  page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && !/weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(m.text()) && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
   // the page builds the whole room before "load" (about 30 s on a CI runner with software GL): the default 30 s of goto is not enough
   await page.goto(pathToFileURL(dist).href + query, { timeout: 180000 })
@@ -53,7 +56,7 @@ for (const lang of languages) {
     const r = window.__furnitureReport
     const room = window.__testRoom
     const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === r.module)
-    return { module: r.module, ok: r.ok, items: r.items.length, scenarios: r.scenarios.length, problems: r.problems, checks: checks.length, failed: checks.filter((e) => e.type !== 'pass').map((e) => e.text), clips: checks.filter((e) => e.data?.check === 'animation').length }
+    return { module: r.module, ok: r.ok, items: r.items.length, scenarios: r.scenarios.length, problems: r.problems, checks: checks.length, failed: checks.filter((/** @type {{ type: string; }} */ e) => e.type !== 'pass').map((e) => e.text), clips: checks.filter((/** @type {{ data: { check: string; }; }} */ e) => e.data?.check === 'animation').length }
   })
   check(`[${lang}] module loaded, 51 items, contract report ok`, rep.ok && rep.items === 51 && rep.problems.length === 0, rep)
   check(`[${lang}] every checkAnimation line in the room log passed`, rep.clips > 100 && rep.failed.length === 0, { clips: rep.clips, failed: rep.failed.slice(0, 3) })
@@ -77,7 +80,7 @@ for (const lang of languages) {
 
   const report = await page.evaluate(async () => {
     const room = window.__testRoom
-    const rep = await room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('furniture_')))
+    const rep = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('furniture_')))
     return { passed: rep.passed, failed: rep.failed, bad: rep.results.filter((r) => !r.ok).map((r) => `${r.id}: ${r.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) }
   })
   check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 14, report)
@@ -86,7 +89,7 @@ for (const lang of languages) {
   const people = await page.evaluate(async () => {
     const room = window.__testRoom
     const r = window.__furnitureReport
-    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('zombie_behind_door')))
+    const run = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string | string[]; }} */ s) => s.id.includes('zombie_behind_door')))
     room.clear()
     return { characters: r.characters?.ok && r.characters.problems.length === 0 && r.characters.items.length, animals: r.animals?.ok && r.animals.problems.length === 0 && r.animals.items.length, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
@@ -96,7 +99,7 @@ for (const lang of languages) {
   const cars = await page.evaluate(async () => {
     const room = window.__testRoom
     const r = window.__furnitureReport.vehicles
-    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('car_in_the_yard')))
+    const run = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string | string[]; }} */ s) => s.id.includes('car_in_the_yard')))
     room.clear()
     return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
@@ -106,7 +109,7 @@ for (const lang of languages) {
   const plants = await page.evaluate(async () => {
     const room = window.__testRoom
     const r = window.__furnitureReport.vegetation
-    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'veg_axe_fells_crown' || s.id === 'veg_walk_on_grass'))
+    const run = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id === 'veg_axe_fells_crown' || s.id === 'veg_walk_on_grass'))
     room.clear()
     return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
@@ -116,7 +119,7 @@ for (const lang of languages) {
   const city = await page.evaluate(async () => {
     const room = window.__testRoom
     const r = window.__furnitureReport.urban
-    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'urban_light_budget' || s.id === 'urban_road_dashes'))
+    const run = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id === 'urban_light_budget' || s.id === 'urban_road_dashes'))
     room.clear()
     return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
@@ -163,7 +166,7 @@ for (const lang of languages) {
     const bench = room.bench('weapons_area')
     const accepted = bench ? bench.set('fit_muzzle', 'suppressor') : false
     for (let i = 0; i < 800; i++) room.update(0.02)
-    const result = { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, controls: bench ? bench.controls().map((c) => c.id).filter((id) => id.startsWith('fit_')).length : 0, accepted, suppressed: room.tool.suppressed }
+    const result = { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, controls: bench ? bench.controls().map((c) => c.id).filter((/** @type {string} */ id) => id.startsWith('fit_')).length : 0, accepted, suppressed: room.tool.suppressed }
     room.setTool('hand')
     return result
   })
@@ -197,7 +200,7 @@ for (const lang of languages) {
     const after = room.world.part(so.objectId, 'shell')?.liters ?? 0
     const leaked = room.log.entries({ type: 'leak' }).length
     const wet = room.fluids.stains().length + room.fluids.streams().length
-    const parts = room.world.state(so.objectId).parts.filter((p) => p.status === 'broken' || p.status === 'detached').length
+    const parts = room.world.state(so.objectId).parts.filter((/** @type {{ status: string; }} */ p) => p.status === 'broken' || p.status === 'detached').length
     room.setTool('hand')
     room.clear()
     return { before, after, leaked, wet, parts }
@@ -218,7 +221,7 @@ for (const lang of languages) {
 
   // the sound and weather modules ride along: both on what the room lends (host.audio, host.environment); a storm writes the room's environment and a sound plays on the room's engine
   // with the light budget the fog never goes back to null, so the lit programs keep their key: the off state is the neutral fog of game-render-three, which fogs nothing
-  const sky = await page.evaluate((NEUTRAL_FOG_NEAR) => {
+  const sky = await page.evaluate((/** @type {number} */ NEUTRAL_FOG_NEAR) => {
     const room = window.__testRoom
     const report = window.__furnitureReport
     const weather = room.bench('weather_area')
@@ -233,7 +236,7 @@ for (const lang of languages) {
     const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null || room.scene.fog.near >= NEUTRAL_FOG_NEAR, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
     // the weather picture rides along: the storm draws the rain curtain and the near rain over the furniture; the room's sky and fog stay as they were
     const curtain = room.scene.getObjectByName('weather-rain-curtain')
-    result.picture = { curtain: curtain?.visible === true, drawn: curtain?.geometry.drawRange.count, near: room.vfx.peekWorkshop()?.rain.count, layers: weather.layers().map((layer) => layer.id).filter((id) => id.endsWith('_rain') || ['mist', 'sky', 'lightning', 'headlights', 'haze'].includes(id)), skyOn: weather.layer('sky'), rig: room.scene.getObjectByName('weather-lamp-rig') !== undefined }
+    result.picture = { curtain: curtain?.visible === true, drawn: curtain?.geometry.drawRange.count, near: room.vfx.peekWorkshop()?.rain.count, layers: weather.layers().map((layer) => layer.id).filter((/** @type {string} */ id) => id.endsWith('_rain') || ['mist', 'sky', 'lightning', 'headlights', 'haze'].includes(id)), skyOn: weather.layer('sky'), rig: room.scene.getObjectByName('weather-lamp-rig') !== undefined }
     weather.set('state', 'clear')
     for (let i = 0; i < 20; i++) room.update(0.1)
     result.windAfter = room.vfx.wind()
@@ -247,7 +250,7 @@ for (const lang of languages) {
   const body = await page.evaluate(async () => {
     const room = window.__testRoom
     const loaded = window.__furnitureReport.player
-    const scenarios = room.scenarios.filter((s) => s.id.startsWith('player_'))
+    const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('player_'))
     const result = await room.runScenarios(scenarios)
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed }
   })
@@ -257,7 +260,7 @@ for (const lang of languages) {
   const horde = await page.evaluate(async () => {
     const room = window.__testRoom
     const loaded = window.__furnitureReport.crowd
-    const scenarios = room.scenarios.filter((s) => s.id.startsWith('crowd_'))
+    const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('crowd_'))
     const result = await room.runScenarios(scenarios)
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
   })
@@ -267,7 +270,7 @@ for (const lang of languages) {
   const tales = await page.evaluate(async () => {
     const room = window.__testRoom
     const loaded = window.__furnitureReport.stories
-    const scenarios = room.scenarios.filter((s) => s.id.startsWith('stories_'))
+    const scenarios = room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('stories_'))
     const result = await room.runScenarios(scenarios)
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
   })
@@ -278,7 +281,7 @@ for (const lang of languages) {
 
 if (PART === 'all' || PART === 'shots') {
   const p = await open('?lang=pt-BR&ui=0')
-  const shot = async (name, setup) => {
+  const shot = async (/** @type {string} */ name, /** @type {string} */ setup) => {
     await p.evaluate(setup)
     await p.waitForTimeout(500)
     // software GL: the first picture of a fresh page also compiles every material in view (the weather rig's fleet car among them), so the 30 s default is too tight; the test-room test uses the same 180 s
@@ -302,7 +305,7 @@ if (PART === 'all' || PART === 'shots') {
     for (let i = 0; i < 80; i++) room.update(0.02)
     room.setTool('pistol_9mm')
     room.update(0.4)
-    for (let n = 0; n < 6 && room.world.state(id).parts.some((p) => p.id === 'door_fridge'); n++) {
+    for (let n = 0; n < 6 && room.world.state(id).parts.some((/** @type {{ id: string; }} */ p) => p.id === 'door_fridge'); n++) {
       room.look([0, 1.1, -3.4], [0, 1.1, -4.7]); room.use()
       for (let i = 0; i < 25; i++) room.update(0.02)
     }

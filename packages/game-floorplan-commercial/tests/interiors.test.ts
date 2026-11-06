@@ -112,7 +112,7 @@ describe.each(Object.entries(PROGRAMS))('interior %s', (id, program) => {
 
   it('has the rooms and dimensions of the scene', () => {
     const plan = engine.generate(id, { seed: 1 })
-    const dimensions = Object.fromEntries(plan.rooms.map((room: any) => [room.id, [Math.round((room.parts[0][2] - room.parts[0][0]) * 100) / 100, Math.round((room.parts[0][3] - room.parts[0][1]) * 100) / 100]]))
+    const dimensions = Object.fromEntries(plan.rooms.map((room) => [room.id, [Math.round((room.parts[0][2] - room.parts[0][0]) * 100) / 100, Math.round((room.parts[0][3] - room.parts[0][1]) * 100) / 100]]))
     expect(dimensions).toEqual(program.rooms)
   })
 
@@ -138,7 +138,7 @@ describe.each(Object.entries(PROGRAMS))('interior %s', (id, program) => {
     const plan = engine.generate(id, { seed: 1 })
     for (const [label, room, container] of program.pins) {
       expect(hints.some((hint) => hint.room === room && hint.container === container), label).toBe(true)
-      expect(plan.items.some((item: any) => item.room === room && item.category === container), label).toBe(true)
+      expect(plan.items.some((item) => item.room === room && item.category === container), label).toBe(true)
     }
     expect(hints.length).toBe(program.pins.length)
   })

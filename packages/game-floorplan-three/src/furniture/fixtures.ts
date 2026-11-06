@@ -3,7 +3,7 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installFurnitureFixtures(K: Kernel, _shared: Shared): void {
-  const seedKey = (id: any): any => K.seedKey(id);
+  const seedKey = (id: unknown): unknown => K.seedKey(id);
   const { FURNITURE, MIRRORS, SEED, arcPoints, cursor, kit2, rngString, sh } = K;
   // shower: curved arm, round head, round valve (handle part), hidden water; stall with rounded corners and profiles
   FURNITURE.box = function (M, A) {
@@ -12,13 +12,13 @@ export function installFurnitureFixtures(K: Kernel, _shared: Shared): void {
     // tray: low slab, rounded edge and round drain
     K.b('plain', 0, 0, 0, w - 0.02, 0.05, d - 0.02, 0xe6e8e6); K.c('metal', 0, 0.05, 0, 0.045, 0.006, 0xb0b4b8); K.c('plain', 0, 0.05, 0, 0.032, 0.008, 0x40484c);
     // stall walls: back (-z) and side (-x). Glass: side (+x), 90 degree arc at the front corner and front panel with an access gap
-    const px0 = w / 2 - 0.012, pzF = d / 2 - 0.012, gl = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), a = Math.atan2(-(z1 - z0), x1 - x0); K.b('glass', (x0 + x1) / 2, 0.052, (z0 + z1) / 2, L + 0.004, gh - 0.052, gt, 0xffffff, a); };
-    const tube = (p, q, r) => K.t('metal', p, q, r, cr);
+    const px0 = w / 2 - 0.012, pzF = d / 2 - 0.012, gl = (x0: number, z0: number, x1: number, z1: number): void => { const L = Math.hypot(x1 - x0, z1 - z0), a = Math.atan2(-(z1 - z0), x1 - x0); K.b('glass', (x0 + x1) / 2, 0.052, (z0 + z1) / 2, L + 0.004, gh - 0.052, gt, 0xffffff, a); };
+    const tube = (p: number[], q: number[], r: number): void => K.t('metal', p, q, r, cr);
     gl(px0, -d / 2 + 0.05, px0, pzF - R);                                                       // side
     const arc = arcPoints(px0 - R, pzF - R, R, 0, Math.PI / 2, 6);                                // curved corner (x,z)
     for (let i = 0; i < arc.length - 1; i++) gl(arc[i][0], arc[i][1], arc[i + 1][0], arc[i + 1][1]);
     const fx1 = Math.max(-w / 2 + 0.36, px0 - R - 0.5); gl(px0 - R, pzF, fx1, pzF);               // fixed front panel
-    const rail = (y, r) => { tube([px0, y, -d / 2 + 0.05], [px0, y, pzF - R], r); for (let i = 0; i < arc.length - 1; i++) tube([arc[i][0], y, arc[i][1]], [arc[i + 1][0], y, arc[i + 1][1]], r); tube([px0 - R, y, pzF], [fx1, y, pzF], r); };
+    const rail = (y: number, r: number): void => { tube([px0, y, -d / 2 + 0.05], [px0, y, pzF - R], r); for (let i = 0; i < arc.length - 1; i++) tube([arc[i][0], y, arc[i][1]], [arc[i + 1][0], y, arc[i + 1][1]], r); tube([px0 - R, y, pzF], [fx1, y, pzF], r); };
     rail(gh, 0.011); rail(0.055, 0.009);
     for (const [x, z] of [[px0, -d / 2 + 0.05], [fx1, pzF]]) tube([x, 0.05, z], [x, gh + 0.005, z], 0.011);
     for (const [x, y, z] of [[px0, gh, -d / 2 + 0.05], [fx1, gh, pzF], [px0 - R, gh, pzF]]) K.e('metal', x, y, z, 0.013, 0.026, cr);

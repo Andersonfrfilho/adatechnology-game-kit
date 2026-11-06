@@ -23,7 +23,7 @@ export const ARMOUR_LEVELS: Readonly<Record<ArmourLevelId, ArmourLevel>> = {
 }
 
 /** The level a vehicle has: the host's option, else its spec (`armor`), else III for the old `armored`/`bullet` flags, else none. */
-export function armourLevelOf(meta: { armor?: string; armored?: boolean; bullet?: boolean }, option?: ArmourLevelId | null): ArmourLevelId | null {
+export function armourLevelOf(meta: { armor?: unknown; armored?: boolean; bullet?: boolean }, option?: ArmourLevelId | null): ArmourLevelId | null {
   if (option !== undefined) return option
   if (meta.armor === 'IIIA' || meta.armor === 'III') return meta.armor
   return meta.armored || meta.bullet ? 'III' : null

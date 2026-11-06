@@ -63,11 +63,11 @@ describe('breach paint as a deferred queue', () => {
 
   it('goes back to painting from flush() on detach, and the renderer queue covers every house', () => {
     const { d, shoot, queue, houseRenderer } = setup()
-    expect(houseRenderer.renderer.deferredQueue().pending()).toBe(0)
+    expect(houseRenderer.renderer.deferredQueue!().pending()).toBe(0)
     queue.attach?.()
     queue.detach?.()
     shoot()
-    expect(houseRenderer.renderer.deferredQueue().pending()).toBe(queue.pending())
+    expect(houseRenderer.renderer.deferredQueue!().pending()).toBe(queue.pending())
     d.breach.flush()
     expect(queue.pending()).toBe(0)
   })

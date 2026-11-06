@@ -1,4 +1,4 @@
-import type { VehicleKit, VehicleSpec } from '@adatechnology/game-vehicles'
+import type { VehicleContext, VehicleKit, VehicleSpec } from '@adatechnology/game-vehicles'
 
 /** Label of a part or a glass pane: a locale key (`fleet.labels.<key>`) with its translated text. */
 export interface FleetLabel {
@@ -18,7 +18,7 @@ export interface FleetShared {
 export interface FleetContext {
   kit: VehicleKit
   /** Registers a vehicle (skipped when the game picked other vehicles). */
-  register(spec: VehicleSpec, build: (c: any, kit: VehicleKit) => void): void
+  register(spec: VehicleSpec, build: (c: VehicleContext, kit: VehicleKit) => void): void
   shared: FleetShared
   /** Translates a key of the pack table (`fleet.<key>`). */
   t(key: string, vars?: Record<string, unknown>): string

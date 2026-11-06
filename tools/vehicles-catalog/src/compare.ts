@@ -22,7 +22,7 @@ const STATES = [
 /** Crash flags that only the game plugin adds (zombie blood); the SDK has no such flag, so the page's damaged state leaves it out. */
 const GAME_ONLY_FLAGS = ['frontBlood']
 
-type PageApi = { build: (key: string, state: string, zones?: unknown) => { root: unknown }; zoneScenario: (vehicle: unknown, id: string) => { flags: Record<string, boolean> }; config: { damagedScenario: string } }
+type PageApi = { build: (key: string, state: string, zones?: unknown) => { root: THREE.Object3D }; zoneScenario: (vehicle: unknown, id: string) => { flags: Record<string, boolean> }; config: { damagedScenario: string } }
 
 /** Runs the page scripts in a fresh context with the same three.js and the fake canvas document, and returns the SDK global the page builds with. */
 const runPage = (scripts: readonly PageScript[]): PageApi => {

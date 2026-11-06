@@ -1,10 +1,14 @@
 /** Automatic zone derivation for each vehicle family. */
-import type { Kit } from './types'
+import type { Box3, Object3D } from 'three'
+
+import type { DamageZone, VehicleLamp } from './api'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { legacyGlassId, legacyLightId } from './legacy-seeds'
+import type { ZoneBoxInput } from './zone-core'
 
 const REAR_GLASS_KEYS = ['rear_window', 'window_rear', 'quarter_glass']
 
-export function installZoneAuto(kit: Kit): void {
+export function installZoneAuto(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
@@ -12,9 +16,10 @@ export function installZoneAuto(kit: Kit): void {
   const matchers = kit.matchers
 
   /* ---- automatic derivation by vehicle type ---- */
-  function autoZones(c: any) {
+  function autoZones(c: BuildContext) {
     const m = c.meta
-    let Z: any = []
+    /* the zones as they are derived: the rest of their fields (health, owned) come in `deriveZones` */
+    let Z: DamageZone[] = []
     const inv = I.worldInverseOf(c)
     const kind = m.kind || 'car'
     const F = m.front
@@ -26,8 +31,8 @@ export function installZoneAuto(kit: Kit): void {
     const top = m.top || belt + 0.5
     const hw = W / 2
     const WH = I.wheelInfo(c)
-    function add(id: any, name: any, type: any, box: any, o?: any) {
-      const z = Object.assign({ id: id, name: name, type: type, box: I.normalizeBox(box) }, o || {})
+    function add(id: string, name: string, type: string, box: ZoneBoxInput, o?: Record<string, unknown>) {
+      const z = Object.assign({ id: id, name: name, type: type, box: I.normalizeBox(box) }, o || {}) as unknown as DamageZone
       Z.push(z)
       return z
     }
@@ -40,14 +45,14 @@ export function installZoneAuto(kit: Kit): void {
     let wheelsDone = false
 
     /* glass, lights and wheels in common */
-    function glassZones(grouped: any) {
+    function glassZones(grouped: boolean) {
       glassDone = true
-      const gl = c.glass.filter(function (g: any) {
+      const gl = c.glass.filter(function (g) {
         return g.parent && g.userData.glass && !g.userData.ghost
       })
       if (!gl.length) return
-      const info = gl.map(function (g: any) {
-        const pt = c.parts.find(function (p: any) {
+      const info = gl.map(function (g) {
+        const pt = c.parts.find(function (p) {
           return p.obj === g
         })
         const gd = g.userData.glass
@@ -56,16 +61,17 @@ export function installZoneAuto(kit: Kit): void {
         const key = (pt && pt.key) || gd.key || null
         return { g: g, n: label, key: key, side: gd.side || 0, bb: bb, cen: bb.getCenter(new V3()) }
       })
-      const isWindshield = function (q: any) {
+      type GlassInfo = (typeof info)[number]
+      const isWindshield = function (q: GlassInfo) {
         return q.key ? /(^|_)windshield($|_)/.test(q.key) : matchers.windshield.test(q.n)
       }
-      const isRearGlass = function (q: any) {
+      const isRearGlass = function (q: GlassInfo) {
         return q.key ? REAR_GLASS_KEYS.indexOf(q.key) >= 0 || /(^|_)rear($|_)/.test(q.key) : matchers.rear.test(q.n)
       }
       if (!grouped && gl.length <= 10) {
-        const used: any = {}
-        const usedSeed: any = {}
-        info.forEach(function (q: any) {
+        const used: Record<string, number> = {}
+        const usedSeed: Record<string, number> = {}
+        info.forEach(function (q) {
           let n = q.n
           let word = q.side ? (q.side < 0 ? 'left' : 'right') : null
           let appended = null
@@ -106,8 +112,8 @@ export function installZoneAuto(kit: Kit): void {
         })
         return
       }
-      const groups: any = { f: [], l: [], r: [], b: [] }
-      info.forEach(function (q: any) {
+      const groups: Record<string, GlassInfo[]> = { f: [], l: [], r: [], b: [] }
+      info.forEach(function (q) {
         const k =
           isWindshield(q) || (Math.abs(q.cen.z) < W * 0.25 && q.cen.x > (F + R) / 2)
             ? 'f'
@@ -127,11 +133,11 @@ export function installZoneAuto(kit: Kit): void {
         const L2 = groups[G[0]]
         if (!L2.length) return
         const bb = new THREE.Box3()
-        L2.forEach(function (q: any) {
+        L2.forEach(function (q) {
           bb.union(q.bb)
         })
         add(G[4], t('zones.' + G[1]), 'glass', bb.expandByScalar(0.04), {
-          glass: L2.map(function (q: any) {
+          glass: L2.map(function (q) {
             return q.g
           }),
           fxKey: G[2],
@@ -143,8 +149,8 @@ export function installZoneAuto(kit: Kit): void {
     }
     function lightZones() {
       lightsDone = true
-      const G: any = {}
-      c.lights.forEach(function (Lt: any) {
+      const G: Record<string, VehicleLamp[]> = {}
+      c.lights.forEach(function (Lt) {
         const cen = I.lightCenter(c, Lt, inv)
         const k = Lt.kind === 'taillight' ? 'taillight' : 'headlight'
         const s = Math.abs(cen.z) < W * 0.12 ? 'center' : cen.z < 0 ? 'left' : 'right'
@@ -163,9 +169,9 @@ export function installZoneAuto(kit: Kit): void {
             : t(p[0] === 'headlight' ? 'zones.headlight' : 'zones.taillight_side', { s: p[1] === 'left' ? -1 : 1 })
         if (fam === 'bike' && p[0] === 'headlight') return /* the motorcycle headlight sits in the fairing */
         /* lights on the same side that are far apart (roof light, trunk taillight) become separate zones, so the box does not cover half the vehicle */
-        const cl2: any = []
+        const cl2: { L: VehicleLamp[]; bb: Box3 }[] = []
         const split = fam === 'car' || fam === 'heavy' || fam === 'military'
-        G[key].forEach(function (Lt: any) {
+        G[key].forEach(function (Lt) {
           if (!split) {
             if (!cl2.length) cl2.push({ L: [], bb: new THREE.Box3() })
             cl2[0].L.push(Lt)
@@ -173,7 +179,7 @@ export function installZoneAuto(kit: Kit): void {
             return
           }
           const lb = I.lightBoxOf(c, Lt, inv)
-          const q = cl2.find(function (k2: any) {
+          const q = cl2.find(function (k2) {
             return k2.bb.distanceToPoint(lb.getCenter(new V3())) < 0.7
           })
           if (q) {
@@ -181,10 +187,10 @@ export function installZoneAuto(kit: Kit): void {
             q.bb.union(lb)
           } else cl2.push({ L: [Lt], bb: lb.clone() })
         })
-        cl2.sort(function (a2: any, b2: any) {
+        cl2.sort(function (a2, b2) {
           return (p[0] === 'headlight' ? -1 : 1) * (a2.bb.max.x - b2.bb.max.x) || a2.bb.min.y - b2.bb.min.y
         })
-        cl2.forEach(function (q: any, i: any) {
+        cl2.forEach(function (q, i) {
           add(i ? key + '_' + (i + 1) : key, i ? n + ' (' + (i + 1) + ')' : n, 'light', q.bb.expandByScalar(0.03), {
             lights: q.L,
             fxKey: p[0],
@@ -193,26 +199,26 @@ export function installZoneAuto(kit: Kit): void {
         })
       })
     }
-    function wheelZones(byAxle: any) {
+    function wheelZones(byAxle: boolean) {
       wheelsDone = true
       if (!WH) return
       const ws = WH.list
       if (byAxle || ws.length > 6) {
-        const ax: any = []
+        const ax: { x: number; w: Object3D[] }[] = []
         ws.slice()
-          .sort(function (a: any, b: any) {
+          .sort(function (a: Object3D, b: Object3D) {
             return b.position.x - a.position.x
           })
-          .forEach(function (w: any) {
-            const a = ax.find(function (q: any) {
+          .forEach(function (w) {
+            const a = ax.find(function (q) {
               return Math.abs(q.x - w.position.x) < 0.75
             })
             if (a) a.w.push(w)
             else ax.push({ x: w.position.x, w: [w] })
           })
-        ax.forEach(function (a: any, i: any) {
+        ax.forEach(function (a, i) {
           const bb = new THREE.Box3()
-          a.w.forEach(function (w: any) {
+          a.w.forEach(function (w) {
             bb.union(I.localBox(c, w, inv))
           })
           const n =
@@ -227,8 +233,8 @@ export function installZoneAuto(kit: Kit): void {
         })
         return
       }
-      const used: any = {}
-      ws.forEach(function (w: any) {
+      const used: Record<string, number> = {}
+      ws.forEach(function (w) {
         const fr = w.position.x >= (WH.xf + WH.xr) / 2 ? 'front' : 'rear'
         const sd = Math.abs(w.position.z) < 0.08 ? 0 : w.position.z < 0 ? -1 : 1
         let n = sd ? t('zones.wheel_' + fr + '_side', { s: sd }) : t('zones.wheel_' + fr)
@@ -242,7 +248,7 @@ export function installZoneAuto(kit: Kit): void {
         add(id, n, 'wheel', I.localBox(c, w, inv).expandByScalar(0.04), { wheels: [w], who: '', seedId: seed })
       })
     }
-    function internal(kind2: any, n: any, fxKey: any, sz?: any) {
+    function internal(kind2: string, n: string, fxKey: string, sz?: number[]) {
       const ps = I.partsOf(c, kind2)
       if (!ps.length) return null
       const p = ps[0].pos
@@ -265,7 +271,7 @@ export function installZoneAuto(kit: Kit): void {
       const doorF = fb - 0.03
       const pil =
         gh && gh.pillars
-          ? gh.pillars.slice().sort(function (a: any, b: any) {
+          ? gh.pillars.slice().sort(function (a: number, b: number) {
               return b - a
             })
           : []
@@ -274,14 +280,14 @@ export function installZoneAuto(kit: Kit): void {
       const C = rearDoor ? Math.max(pil[1] != null && pil[1] < B - 0.4 ? pil[1] : rb, xr + rr * 0.2) : B
       const y0s = Math.max(0.03, cl - 0.12)
       const y1s = belt + 0.03
-      const sideB = function (x0: any, x1: any, s: any, y0?: any, y1?: any) {
+      const sideB = function (x0: number, x1: number, s: number, y0?: number | null, y1?: number | null) {
         return s < 0
           ? [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, -hw - out, -hw + sb]
           : [x0, x1, y0 == null ? y0s : y0, y1 == null ? y1s : y1, hw - sb, hw + out]
       }
       let bF = m.frontBumper && m.frontBumper.parent ? m.frontBumper : null
       let bR = m.rearBumper && m.rearBumper.parent ? m.rearBumper : null
-      I.partsOf(c, 'bumper').forEach(function (p: any) {
+      I.partsOf(c, 'bumper').forEach(function (p) {
         if (!p.obj || !p.obj.parent) return
         if (p.pos.x > (F + R) / 2) bF = bF || p.obj
         else bR = bR || p.obj
@@ -575,9 +581,9 @@ export function installZoneAuto(kit: Kit): void {
         tags: ['rear'],
       })
       /* weapon: the longest mesh in x above the belt line (barrel) */
-      let gun: any = null
+      let gun = null as { o: Object3D; bb: Box3 } | null
       let gl2 = 0
-      c.vehicle.traverse(function (o: any) {
+      c.vehicle.traverse(function (o: SceneNode) {
         if (!o.isMesh || o.userData.decal) return
         const bb = I.localBox(c, o, inv)
         const sx = bb.max.x - bb.min.x
@@ -601,14 +607,14 @@ export function installZoneAuto(kit: Kit): void {
         alsoGlass: true,
       })
       if (lag.length)
-        lag.forEach(function (p: any) {
+        lag.forEach(function (p) {
           const s = p.pos.z < 0 ? -1 : 1
           const bb = I.localBox(c, p.obj, inv)
-          const ws2 = c.wheels.filter(function (w: any) {
+          const ws2 = c.wheels.filter(function (w) {
             return Math.sign(w.position.z) === s
           })
           const objs = [p.obj]
-          c.spin.forEach(function (sp: any) {
+          c.spin.forEach(function (sp) {
             if (sp.track && Math.sign(sp.o.position.z) === s) objs.push(sp.o)
           })
           add('track_' + (s < 0 ? 'left' : 'right'), t('zones.track', { s }), 'part', bb.expandByScalar(0.05), {
@@ -622,12 +628,12 @@ export function installZoneAuto(kit: Kit): void {
         })
       else if (WH)
         [-1, 1].forEach(function (s) {
-          const ws3 = WH.list.filter(function (w: any) {
+          const ws3 = WH.list.filter(function (w) {
             return Math.sign(w.position.z) === s
           })
           if (!ws3.length) return
           const bb = new THREE.Box3()
-          ws3.forEach(function (w: any) {
+          ws3.forEach(function (w) {
             bb.union(I.localBox(c, w, inv))
           })
           add('wheels_' + (s < 0 ? 'left' : 'right'), t('zones.wheels_side', { s }), 'wheel', bb.expandByScalar(0.04), {
@@ -691,7 +697,7 @@ export function installZoneAuto(kit: Kit): void {
       const span = W / 2
       const wingBB = new THREE.Box3()
       const tailX = R + Math.min(2.0, 0.28 * L)
-      c.vehicle.traverse(function (o: any) {
+      c.vehicle.traverse(function (o: SceneNode) {
         if (!o.isMesh || o.userData.decal) return
         const bb = I.localBox(c, o, inv)
         if (Math.max(Math.abs(bb.min.z), Math.abs(bb.max.z)) > Math.max(2.0, span * 0.45) && bb.min.x > tailX) wingBB.union(bb)
@@ -740,24 +746,24 @@ export function installZoneAuto(kit: Kit): void {
         anyMesh: true,
         tags: ['rear'],
       })
-      const gear = c.wheels.filter(function (w: any) {
+      const gear = c.wheels.filter(function (w) {
         return w.parent
       })
       if (gear.length) {
         /* legs and fairings of the wheels (low parts near each wheel) belong to the gear: they fold and disappear together */
         const gb = new THREE.Box3()
-        const gobj: any = []
-        gear.forEach(function (w: any) {
+        const gobj: Object3D[] = []
+        gear.forEach(function (w) {
           gb.union(I.localBox(c, w, inv))
         })
-        c.vehicle.children.forEach(function (o: any) {
+        c.vehicle.children.forEach(function (o: SceneNode) {
           if (!o.isMesh || o.userData.decal || o.userData.glass || c.wheels.indexOf(o) >= 0) return
           const bb = I.localBox(c, o, inv)
           const cen = bb.getCenter(new V3())
           const sz = bb.getSize(new V3())
           if (bb.isEmpty() || cen.y > cl * 0.85 || bb.max.y > cl + 0.45 || Math.max(sz.x, sz.y, sz.z) > 1.6) return
           if (
-            !gear.some(function (w: any) {
+            !gear.some(function (w) {
               return Math.abs(w.position.x - cen.x) < 0.7 && Math.abs(w.position.z - cen.z) < 0.9
             })
           )
@@ -778,7 +784,7 @@ export function installZoneAuto(kit: Kit): void {
       glassDone = true
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: any) {
+      Z = Z.filter(function (z) {
         return z.type !== 'glass'
       }) /* the aircraft glass stays in the cabin */
     } else if (fam === 'heli') {
@@ -820,7 +826,7 @@ export function installZoneAuto(kit: Kit): void {
           dir: [0, 0, 1],
           kindPart: 'tail_rotor',
         })
-      const gear2 = c.wheels.filter(function (w: any) {
+      const gear2 = c.wheels.filter(function (w) {
         return w.parent
       })
       add(
@@ -837,7 +843,7 @@ export function installZoneAuto(kit: Kit): void {
       glassZones(true)
       lightZones()
       wheelsDone = true
-      Z = Z.filter(function (z: any) {
+      Z = Z.filter(function (z) {
         return z.type !== 'glass'
       }) /* glass goes to the nose and the cabin */
     } else {
@@ -861,5 +867,9 @@ export function installZoneAuto(kit: Kit): void {
     return Z
   }
 
-  Object.assign(I, { autoZones })
+  const shared = { autoZones }
+
+  Object.assign(I, shared)
+
+  return shared
 }

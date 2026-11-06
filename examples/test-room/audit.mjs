@@ -24,7 +24,7 @@ const { chromium } = (() => {
 const args = process.argv.slice(2)
 const itemId = args.find((a) => !a.startsWith('--'))
 if (!itemId) throw new Error('usage: node audit.mjs <itemId> [--out dir] [--url url] [--only a,b]')
-const opt = (name, fallback) => {
+const opt = (/** @type {string} */ name, /** @type {string} */ fallback) => {
   const i = args.indexOf(`--${name}`)
   return i >= 0 ? args[i + 1] : fallback
 }
@@ -47,7 +47,7 @@ await page.evaluate(() => {
   const room = window.__testRoom
   const A = (window.__audit = {})
   A.spawnAt = [-7, 0, -6]
-  A.fresh = (id, extra = []) => {
+  A.fresh = (/** @type {string} */ id, extra = []) => {
     room.clear()
     room.setDebugCamera(null)
     const so = room.spawn(id, A.spawnAt, 0)
@@ -69,7 +69,7 @@ await page.evaluate(() => {
     const st = room.world.state(A.so.objectId)
     if (!st) return { gone: true }
     const parts = st.parts
-    const count = (k) => parts.reduce((n, p) => n + (p[k]?.length ?? 0), 0)
+    const count = (/** @type {string} */ k) => parts.reduce((n, p) => n + (p[k]?.length ?? 0), 0)
     const p = A.so.root.position
     const q = A.so.root.quaternion
     const tilt = (2 * Math.acos(Math.min(1, Math.abs(q.w))) * 180) / Math.PI
@@ -77,11 +77,11 @@ await page.evaluate(() => {
       holes: count('holes'),
       dents: count('dents'),
       cracks: count('cracks'),
-      broken: parts.filter((x) => x.status !== 'intact' && x.status !== 'damaged').map((x) => `${x.id}:${x.status}`),
-      damaged: parts.filter((x) => x.hp < x.maxHp).length,
+      broken: parts.filter((/** @type {{ status: string; }} */ x) => x.status !== 'intact' && x.status !== 'damaged').map((x) => `${x.id}:${x.status}`),
+      damaged: parts.filter((/** @type {{ hp: number; maxHp: number; }} */ x) => x.hp < x.maxHp).length,
       burning: parts.filter((x) => x.burning).length,
-      charred: parts.filter((x) => x.char > 0.05).length,
-      melted: parts.filter((x) => x.melt > 0.05).length,
+      charred: parts.filter((/** @type {{ char: number; }} */ x) => x.char > 0.05).length,
+      melted: parts.filter((/** @type {{ melt: number; }} */ x) => x.melt > 0.05).length,
       maxTemp: Math.round(Math.max(...parts.map((x) => x.temperature))),
       pieces: st.groups.length,
       destroyed: st.destroyed,
@@ -104,8 +104,12 @@ await page.evaluate(() => {
   }
 })
 
-const sleep = (ms) => page.waitForTimeout(ms)
-/** Run `act` in the page, then sample the metrics every 100 ms for `seconds` (frame time at the peak, the most fragments and particles). */
+const sleep = (/** @type {number} */ ms) => page.waitForTimeout(ms)
+/**
+ * Run `act` in the page, then sample the metrics every 100 ms for `seconds` (frame time at the peak, the most fragments and particles).
+ * @param {{ (k: string): number; (): number; (): number; (): number; (): number; (): number; }} act
+ * @param {string | undefined} [arg]
+ */
 async function measure(act, seconds = 2.5, arg) {
   const before = await page.evaluate(() => window.__audit.metrics())
   const cost = await page.evaluate(act, arg)
@@ -130,13 +134,13 @@ async function step(name, fn) {
   report.steps[name].seconds = Math.round((Date.now() - t0) / 100) / 10
   console.log(name, JSON.stringify(report.steps[name]))
 }
-const shot = (name) => page.screenshot({ path: join(outDir, `${name}.png`), timeout: 180000 })
-const snap = async (name, dist) => {
+const shot = (/** @type {string} */ name) => page.screenshot({ path: join(outDir, `${name}.png`), timeout: 180000 })
+const snap = async (/** @type {string} */ name, /** @type {undefined} */ dist) => {
   await page.evaluate((d) => window.__audit.look3q(d), dist)
   await sleep(300)
   await shot(name)
 }
-const fresh = (extra) => page.evaluate(([id, ex]) => window.__audit.fresh(id, ex), [itemId, extra ?? []])
+const fresh = (/** @type {(string | number[])[][] | undefined} */ extra) => page.evaluate(([id, ex]) => window.__audit.fresh(id, ex), [itemId, extra ?? []])
 const result = async (name, m, dist) => {
   const out = { state: await page.evaluate(() => window.__audit.state()), events: await page.evaluate(() => window.__audit.events()), perf: m }
   await snap(name, dist)
@@ -153,9 +157,9 @@ report.info = { ...info, ...(await page.evaluate(() => {
 console.log('info', JSON.stringify(report.info))
 await snap('00-inteiro')
 
-const trial = (kind) => async () => {
+const trial = (/** @type {string} */ kind) => async () => {
   await fresh()
-  const m = await measure((k) => {
+  const m = await measure((/** @type {string} */ k) => {
     const t = performance.now()
     window.__testRoom.testTable.trial(k, window.__audit.so.objectId)
     return Math.round((performance.now() - t) * 10) / 10
@@ -163,7 +167,7 @@ const trial = (kind) => async () => {
   return result(`trial-${kind}`, m)
 }
 // a shot aimed at a height: `h` 0..1 of the object's height, from 3 m in front
-const shotAt = (h, weapon) => async () => {
+const shotAt = (/** @type {number} */ h, /** @type {string} */ weapon) => async () => {
   await fresh()
   await page.evaluate(([hh, w]) => {
     const A = window.__audit
@@ -276,7 +280,7 @@ await step('jogador_esbarra', async () => {
     return true
   })
   await sleep(500)
-  const player = await page.evaluate(() => window.__testRoom.camera.position.toArray().map((v) => Math.round(v * 100) / 100))
+  const player = await page.evaluate(() => window.__testRoom.camera.position.toArray().map((/** @type {number} */ v) => Math.round(v * 100) / 100))
   return { walked: r, playerEnd: player, ...(await result('jogador-esbarra', { cost: 0 })) }
 })
 await step('empurrado_por_objeto', async () => {

@@ -2,9 +2,9 @@
  * Minimal canvas/document fakes so the kit can create its canvas textures in Node (three.js only stores the canvas).
  * The UI tests use the real happy-dom document instead.
  */
-function makeContext(): any {
+function makeContext(): CanvasRenderingContext2D {
   const gradient = { addColorStop() {} }
-  const target: Record<string, any> = {
+  const target: Record<string, unknown> = {
     createLinearGradient: () => gradient,
     createRadialGradient: () => gradient,
     createImageData: (w: number, h: number) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }),
@@ -21,24 +21,24 @@ function makeContext(): any {
     set() {
       return true
     },
-  })
+  }) as unknown as CanvasRenderingContext2D
 }
 
-function makeCanvas(): any {
+function makeCanvas(): HTMLCanvasElement {
   const ctx = makeContext()
-  return { width: 0, height: 0, getContext: () => ctx, style: {}, addEventListener() {}, tagName: 'CANVAS' }
+  return { width: 0, height: 0, getContext: () => ctx, style: {}, addEventListener() {}, tagName: 'CANVAS' } as unknown as HTMLCanvasElement
 }
 
-export const fakeDocument: any = {
+export const fakeDocument = {
   createElement: (tag: string) => (tag === 'canvas' ? makeCanvas() : { style: {}, appendChild() {}, setAttribute() {} }),
   createElementNS: () => ({ style: {}, setAttribute() {} }),
-}
+} as unknown as Document
 
 /**
  * A document that fakes only canvases and delegates everything else to the real (happy-dom) one: the UI needs real elements,
  * while vehicle textures need a canvas context that happy-dom does not provide.
  */
-export function hybridDocument(real: Document): any {
+export function hybridDocument(real: Document): Document {
   return {
     createElement: (tag: string) => (tag === 'canvas' ? makeCanvas() : real.createElement(tag)),
     createElementNS: (ns: string, tag: string) => real.createElementNS(ns, tag),
@@ -47,5 +47,5 @@ export function hybridDocument(real: Document): any {
     get head() {
       return real.head
     },
-  }
+  } as unknown as Document
 }

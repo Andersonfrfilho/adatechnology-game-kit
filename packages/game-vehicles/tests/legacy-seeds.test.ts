@@ -32,8 +32,8 @@ describe('registerLegacySeeds', () => {
     const original = kit.addGlass
     const rename: Record<string, string> = { windshield: 'cockpit_windshield', rear_window: 'cockpit_rear_glass' }
     const panes = () => {
-      kit.addGlass = (c: any, g: any, label: any, type: any, o: any) => {
-        const key = label && label.key
+      kit.addGlass = (c: unknown, g: unknown, label: string | { key?: string; label?: string }, type: unknown, o: unknown) => {
+        const key = typeof label === 'object' && label ? label.key : undefined
         return original(c, g, key && rename[key] ? { key: rename[key], label: 'Pane' } : label, type, o)
       }
       try {

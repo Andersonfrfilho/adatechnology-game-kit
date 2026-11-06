@@ -1,11 +1,14 @@
+import type { DestructionWorld } from '@adatechnology/game-destruction'
+import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { HouseRendererOptions } from '../types.js'
 
 /** The part of the floorplan engine (`engine` of `@adatechnology/game-floorplan`, with the content packs the page registered) the test area reads. */
 export interface FloorplanEngineLike {
-  generate(template: string, options?: { seed?: number; state?: string; floors?: number }): any
+  generate(template: string, options?: { seed?: number; state?: string; floors?: number }): FloorplanResult
   listTemplates(): Array<{ id: string; name?: string; floors?: number; floorRange?: number[] | null }>
   listStates(): string[]
-  translate?(namespace: any, key: string, locale?: string, vars?: Record<string, string | number>): string
+  translate?(namespace: string, key: string, locale?: string, vars?: Record<string, string | number>): string
 }
 
 /** A pack of templates the bench lists together (residential, commercial, rural, post-apocalyptic). Ids the engine does not know are left out. */
@@ -43,8 +46,8 @@ export interface FloorplanTestOptions {
   /** The states the bench offers (`normal`, `fortified`, `abandoned`). Default: the engine's. */
   states?: readonly string[]
   /** The room's destruction world and renderer (`room.world`, `room.renderer`): the houses built here register in them, so every shot, blast and fire of the room reaches the walls. */
-  world?: any
-  renderer?: any
+  world?: DestructionWorld
+  renderer?: DestructionRenderer
   /** Passed to the house renderer: `fleet`, `reflector`, `interactives`, `vegetation`, `props`, `textures`... */
   house?: Partial<HouseRendererOptions>
   /** Template and seed the bench starts with. */

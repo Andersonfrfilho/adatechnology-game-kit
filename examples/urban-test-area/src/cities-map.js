@@ -13,8 +13,8 @@ const T = {
 export function drawLayout(ctx, layout, width, height) {
   const [w, d] = layout.size
   const scale = Math.min(width / w, height / d)
-  const px = (x) => width / 2 + x * scale
-  const pz = (z) => height / 2 + z * scale
+  const px = (/** @type {number} */ x) => width / 2 + x * scale
+  const pz = (/** @type {number} */ z) => height / 2 + z * scale
   ctx.clearRect(0, 0, width, height)
   ctx.fillStyle = '#10141a'
   ctx.fillRect(0, 0, width, height)
@@ -46,7 +46,7 @@ export function fillDowntown(urban, layout, seed = 7) {
   const b = urban.builder({ seed })
   const placed = []
   let blocks = 0
-  for (const d of layout.districts.filter((x) => FILL_KINDS.includes(x.kind))) {
+  for (const d of layout.districts.filter((/** @type {{ kind: string; }} */ x) => FILL_KINDS.includes(x.kind))) {
     for (const block of layout.blocks(d.id)) {
       blocks++
       placed.push(...urban.cities.fillBlock(b, block, { k: 2 }))
@@ -96,7 +96,7 @@ export function openCityPlans({ parent = globalThis.document?.body, locale = 'pt
     const stats = urban.cities.stats(layout).map((s) => `${s.kind} ${(s.share * 100).toFixed(1)}%`).join(' · ')
     info.textContent = `${layout.name} (${layout.scale}, ${layout.size.join(' x ')} m) — ${layout.description} | ${stats}` + (buildings ? ` | ${buildings.blocks} ${t.blocks}, ${buildings.placed.length} ${t.buildings}` : '')
   }
-  const select_ = (id) => {
+  const select_ = (/** @type {string} */ id) => {
     select.value = id
     buildings = null
     redraw()

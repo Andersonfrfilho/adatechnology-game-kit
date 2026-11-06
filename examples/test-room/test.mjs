@@ -28,15 +28,21 @@ mkdirSync(shotsDir, { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
+/**
+ * @type {string[]}
+ */
 const consoleErrors = []
 // an adapter that made its own effects world or audio engine says so with `[game-kit]`: the room lends every one, so none may appear
+/**
+ * @type {string[]}
+ */
 const fallbackWarnings = []
 // CI runs software GL, several times slower and nothing there reads the pictures: screenshots get a long timeout, and the first-person steps, the contact sheets and the close-ups keep every assertion
 // (both languages, the 100 weapons held, each number) but take no picture; the pictures in shots/ come from a run on a developer's machine
 const CI = Boolean(process.env.CI)
 const SHOT = { timeout: 180000 }
 const started = Date.now()
-const lap = (label) => console.log(`TIME  ${((Date.now() - started) / 1000).toFixed(0)} s  ${label}`)
+const lap = (/** @type {string} */ label) => console.log(`TIME  ${((Date.now() - started) / 1000).toFixed(0)} s  ${label}`)
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 } })
 await context.route('**/*', (route) => {
   const url = route.request().url()
@@ -46,8 +52,8 @@ await context.route('**/*', (route) => {
 })
 const page = await context.newPage()
 // the weapon thumbnails (../weapon-svg/) exist only in the built site: on file:// each one is a CORS error plus a bare "Failed to load resource"
-const isThumbnailError = (text) => /weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(text)
-page.on('console', (m) => {
+const isThumbnailError = (/** @type {string} */ text) => /weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(text)
+page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => {
   if (m.type() === 'error' && !isThumbnailError(m.text())) consoleErrors.push(m.text())
   if (m.type() === 'warning' && m.text().startsWith('[game-kit]')) fallbackWarnings.push(m.text())
 })
@@ -59,7 +65,7 @@ const url = pathToFileURL(dist).href
 // shares of them), `views` or `views:i/2` (1: the SDK content and the first screenshots; 2: the burning sofa, the player's body, the test table: each
 // page load takes minutes on software GL, so the halves run in parallel jobs), `hands` (first person, close-ups, contact sheets); unset runs all
 const [PART, SHARD] = (process.env.EXAMPLE_PART || 'all').split(':')
-const runs = (part) => PART === 'all' || PART === part
+const runs = (/** @type {string} */ part) => PART === 'all' || PART === part
 const report = { passed: 0, failed: 0, results: [] }
 let bodyOk = true
 
@@ -79,7 +85,7 @@ if (runs('scenarios')) {
 }
 
 if (runs('views')) {
-  const viewsHalf = (i) => !SHARD || SHARD.split('/')[0] === String(i)
+  const viewsHalf = (/** @type {number} */ i) => !SHARD || SHARD.split('/')[0] === String(i)
   if (viewsHalf(1)) {
     await page.goto(`${url}?ui=0&table=0`, { timeout: 180000 })
     await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
@@ -101,7 +107,7 @@ if (runs('views')) {
       }
       return { counts: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.length])), all, spawnable, problems: Object.values(r).flatMap((x) => x?.problems ?? []).length }
     })
-    const extra = content.all.filter((id) => id.startsWith('weapon_') || id.startsWith('item_')).length
+    const extra = content.all.filter((/** @type {string} */ id) => id.startsWith('weapon_') || id.startsWith('item_')).length
     const demoLeft = DEMO_IDS.filter((id) => content.all.includes(id))
     const spawnOk = Object.values(content.spawnable).every(Boolean)
     const contentOk = content.counts.household === 51 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
@@ -110,6 +116,10 @@ if (runs('views')) {
   }
 
   // screenshots: a fresh room per scene, driven through window.__testRoom
+  /**
+     * @param {string} name
+     * @param {{ (): void; (): void; (): void; }} setup
+     */
   async function shot(name, setup) {
     await page.goto(`${url}?ui=1`, { timeout: 180000 })
     await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 180000 })
@@ -147,7 +157,7 @@ if (runs('views')) {
     // the player's body: one body for both views, drawn in first person (the default, the camera at its eyes) and after V, with the startup hint in the log and the V hint on the HUD
     await page.goto(`${url}?ui=1`, { timeout: 180000 })
     await page.waitForFunction(() => window.__testRoom, null, { timeout: 180000 })
-    const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
+    const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((/** @type {{ text: string; }} */ e) => /\bV\b/.test(e.text)) }))
     await page.keyboard.press('KeyV')
     await page.evaluate(() => {
       const r = window.__testRoom
@@ -227,7 +237,7 @@ if (runs('hands')) {
       const r = window.__testRoom
       r.clear()
       for (let i = 0; i < 600; i++) r.update(1 / 60)
-      window.S = { r, run: (n) => { for (let i = 0; i < n; i++) r.update(1 / 60) }, look: () => r.look([-9, 1.7, 9], [-9, 1.5, -10]) }
+      window.S = { r, run: (/** @type {number} */ n) => { for (let i = 0; i < n; i++) r.update(1 / 60) }, look: () => r.look([-9, 1.7, 9], [-9, 1.5, -10]) }
       window.S.look()
       window.S.run(10)
     })
@@ -277,7 +287,7 @@ if (runs('hands')) {
       window.C = {
         r,
         key: (code, extra = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { code, ...extra })),
-        at: (name) => {
+        at: (/** @type {string} */ name) => {
           const part = r.scene.getObjectByName('weapon-viewmodel')?.getObjectByName(name)
           if (!part) return null
           part.updateWorldMatrix(true, false)
@@ -285,7 +295,7 @@ if (runs('hands')) {
           return [e[12], e[13], e[14]]
         },
         view: (position, target, fov = 40) => r.setDebugCamera({ position, target, fov }),
-        armed: (id) => {
+        armed: (/** @type {string} */ id) => {
           r.setDebugCamera(null)
           r.resume()
           window.S.look()
@@ -330,11 +340,11 @@ if (runs('hands')) {
         }
       }
       r.pause()
-      const sounds = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'shell_insert').map((e) => +e.t.toFixed(2))
+      const sounds = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && e.data?.cue === 'shell_insert').map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
       const port = window.C.at('loadPort')
       if (arg.view && port) window.C.view([port[0] + 0.32, port[1] + 0.1, port[2] + 0.08], port, 38)
       const steps = run.ammo.flatMap((a, i) => (i > 0 && a !== run.ammo[i - 1] ? [{ at: +(i / 60).toFixed(2), ammo: a }] : []))
-      const actions = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && ['pump_back', 'pump_forward'].includes(e.data?.cue)).map((e) => +e.t.toFixed(2))
+      const actions = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && ['pump_back', 'pump_forward'].includes(e.data?.cue)).map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
       const hand = r.handState().targets.R.position
       const awayFromGrip = +Math.hypot(hand[0] - run.rest[0], hand[1] - run.rest[1], hand[2] - run.rest[2]).toFixed(3)
       return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, actions, awayFromGrip, grip: r.handState().targets.grip, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
@@ -348,8 +358,8 @@ if (runs('hands')) {
     }
     full = await page.evaluate(pumpTo, { to: 60 * 8 })
     const secs = full.steps.map((entry) => entry.at)
-    const gaps = secs.slice(1).map((t, i) => +(t - secs[i]).toFixed(2))
-    verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each, every shell in before the pump', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading && full.actions.length === 2 && full.sounds.at(-1) < full.actions[0], { ...full, gaps })
+    const gaps = secs.slice(1).map((/** @type {number} */ t, /** @type {string | number} */ i) => +(t - secs[i]).toFixed(2))
+    verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each, every shell in before the pump', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((/** @type {number} */ g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading && full.actions.length === 2 && full.sounds.at(-1) < full.actions[0], { ...full, gaps })
 
     // the pistol, empty: the slide is racked by the support hand (it goes back and forward) and the snap is heard as it closes
     const glockTo = (arg) => {
@@ -373,7 +383,7 @@ if (runs('hands')) {
       if (arg.rear) while (run.frames < 400 && !(run.track.length > 1 && run.track.at(-1).x < -0.02 && run.track.at(-1).x >= run.track.at(-2).x)) step()
       else while (run.frames < arg.to) step()
       r.pause()
-      const snap = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'slide_release').map((e) => +e.t.toFixed(2))
+      const snap = r.log.entries().slice(run.before).filter((/** @type {{ type: string; data: { cue: string; }; }} */ e) => e.type === 'sound' && e.data?.cue === 'slide_release').map((/** @type {{ t: number; }} */ e) => +e.t.toFixed(2))
       const at = window.C.at('slide')
       // from the left and above, where the support hand reaches over the slide
       if (arg.view && at) window.C.view([at[0] - 0.28, at[1] + 0.16, at[2] + 0.12], [at[0], at[1] - 0.02, at[2]], 38)
@@ -424,7 +434,7 @@ if (runs('hands')) {
     }
 
     // the trigger finger, 25 cm from the grip: extended along the frame at rest, curled on the trigger mid-pull, extended again once released
-    const finger = (phase) => {
+    const finger = (/** @type {string} */ phase) => {
       const r = window.C.r
       const S = window.S
       if (phase === 'rest') {
@@ -483,7 +493,7 @@ if (runs('hands')) {
     const CELL = { w: 384, h: 216 }
     const images = []
     for (const id of CI ? [] : ids) {
-      await page.evaluate((tool) => {
+      await page.evaluate((/** @type {string} */ tool) => {
         const r = window.__testRoom
         r.setTool(tool)
         for (let i = 0; i < 45; i++) r.update(1 / 60)

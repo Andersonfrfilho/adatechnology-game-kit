@@ -1,10 +1,12 @@
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { engine } from '@adatechnology/game-floorplan'
+import type { BenchChange, BenchSheet, ControlPatch, ControlValue, DestructibleSpec, ModuleHost } from '@adatechnology/game-contracts'
 import { register as registerPostApocalyptic } from '@adatechnology/game-floorplan-post-apocalyptic'
 import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 
 import { createFloorplanTestModule } from '../../src'
+import type { FloorplanTestOptions } from '../../src'
 import { THREE, planOf } from './houses'
 import { fakeDocument } from './fake-document'
 
@@ -18,7 +20,7 @@ function registerExtras(): void {
 }
 
 /** A room reduced to what the area uses: a destruction world and its renderer, a scene, a camera, `spawn` of the module's items and the frame loop. */
-export function fakeRoom(options: Record<string, unknown> = {}) {
+export function fakeRoom(options: FloorplanTestOptions = {}) {
   planOf('single_storey_a', 1)
   registerExtras()
   const world = createDestruction({ seed: 1 })
@@ -30,9 +32,9 @@ export function fakeRoom(options: Record<string, unknown> = {}) {
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
   const clears = new Set<() => void>()
   const looks: Array<{ eye: number[]; target: number[] }> = []
-  const bench = { values: new Map<string, unknown>(), layers: new Map<string, boolean>(), listeners: new Set<(c: any) => void>(), sheets: [] as any[], patches: [] as any[] }
+  const bench = { values: new Map<string, unknown>(), layers: new Map<string, boolean>(), listeners: new Set<(c: BenchChange) => void>(), sheets: [] as (BenchSheet | null)[], patches: [] as [string, ControlPatch][] }
   const moduleOptions = { engine, locale: 'en', world, renderer, house: { document: fakeDocument }, ...options }
-  const module = createFloorplanTestModule(moduleOptions as any)
+  const module = createFloorplanTestModule(moduleOptions)
   let counter = 0
   const host = {
     THREE,
@@ -49,20 +51,20 @@ export function fakeRoom(options: Record<string, unknown> = {}) {
     bench: {
       value: (id: string) => bench.values.get(id),
       layer: (id: string) => bench.layers.get(id) ?? false,
-      onChange: (fn: (c: any) => void) => (bench.listeners.add(fn), () => bench.listeners.delete(fn)),
-      patch: (id: string, patch: any) => bench.patches.push([id, patch]),
+      onChange: (fn: (c: BenchChange) => void) => (bench.listeners.add(fn), () => bench.listeners.delete(fn)),
+      patch: (id: string, patch: ControlPatch) => bench.patches.push([id, patch]),
       look: (eye: number[], target: number[]) => {
         looks.push({ eye, target })
         camera.position.set(eye[0], eye[1], eye[2])
         camera.lookAt(target[0], target[1], target[2])
         camera.updateMatrixWorld(true)
       },
-      sheet: (sheet: any) => bench.sheets.push(sheet),
+      sheet: (sheet: BenchSheet | null) => bench.sheets.push(sheet),
     },
   }
   // the declared bench: layers at their defaults
   for (const layer of module.layers?.('en') ?? []) bench.layers.set(layer.id, layer.default ?? false)
-  const detach = module.attach!(host as any)
+  const detach = module.attach!(host as unknown as ModuleHost)
   const frame = (seconds: number, dt = 1 / 30): void => {
     for (let t = 0; t < seconds; t += dt) {
       for (const fn of frames) fn(dt)
@@ -71,7 +73,7 @@ export function fakeRoom(options: Record<string, unknown> = {}) {
     }
   }
   const act = (id: string): void => bench.listeners.forEach((fn) => fn({ kind: 'action', id }))
-  const set = (id: string, value: unknown): void => {
+  const set = (id: string, value: ControlValue): void => {
     bench.values.set(id, value)
     bench.listeners.forEach((fn) => fn({ kind: 'control', id, value }))
   }
@@ -86,11 +88,11 @@ export function fakeRoom(options: Record<string, unknown> = {}) {
     scene,
     spawn(itemId: string, position: number[]) {
       const item = items.find((i) => i.id === itemId)!
-      const root = item.build(THREE) as any
+      const root = item.build(THREE) as THREE.Object3D
       root.position.set(position[0], position[1], position[2])
       scene.add(root)
       const id = `${itemId}_${++counter}`
-      world.add((item.spec as any)(root), { id, position: position as any })
+      world.add((item.spec as (root: unknown) => DestructibleSpec)(root), { id, position: position as [number, number, number] })
       return { objectId: id, root }
     },
   }

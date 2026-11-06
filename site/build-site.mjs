@@ -10,25 +10,31 @@ import { renderLanding } from './landing.mjs'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const out = join(root, 'site/dist')
 
+/** @typedef {{ name: string, version?: string, description?: string, private?: boolean, scripts?: Record<string, string> }} PackageJson */
+/** @param {string} p @returns {PackageJson} */
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'))
+/** @param {string} base */
 const dirs = (base) =>
   existsSync(base) ? readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort() : []
 
 // Every published example gets a way back to the landing page; the standalone builds stay untouched.
 const BACK_LINK = `<a href="../" id="kit-back" title="Voltar ao Game Kit" style="position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483647;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-left:0;border-radius:0 8px 8px 0;padding:10px 10px 10px 8px;font:600 13px/1.2 system-ui,sans-serif;text-decoration:none;writing-mode:vertical-rl;transform-origin:center">← Voltar ao kit</a>`
-const withBackLink = (html) => (/<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, (body) => `${body}\n${BACK_LINK}`) : `${BACK_LINK}\n${html}`)
+/** @param {string} html */
+const withBackLink = (html) => (/<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, (/** @type {string} */ body) => `${body}\n${BACK_LINK}`) : `${BACK_LINK}\n${html}`)
 
 // Pages that show the weapon thumbnails link their credits (CC BY and CC BY-SA ask for the credit where the picture appears).
 const CREDITS_LINK = `<a href="../weapon-svg/credits.html" id="kit-weapon-credits" style="position:fixed;right:8px;bottom:8px;z-index:2147483646;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-radius:6px;padding:3px 8px;font:12px/1.4 system-ui,sans-serif;text-decoration:none">Miniaturas das armas: créditos e licenças</a>`
 const WEAPON_THUMBNAIL_EXAMPLES = new Set(['weapons-test-area', 'test-room'])
+/** @param {string} name @param {string} html */
 const withCreditsLink = (name, html) => (WEAPON_THUMBNAIL_EXAMPLES.has(name) && /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${CREDITS_LINK}\n</body>`) : html)
 
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 
+/** @type {import('./landing.mjs').SiteExample[]} */
 const examples = []
 // test-room goes first: other examples (interactables-test-area, vfx-test-area, weapons-test-area) load their area into its page
-const exampleNames = dirs(join(root, 'examples')).sort((a, b) => (b === 'test-room') - (a === 'test-room'))
+const exampleNames = dirs(join(root, 'examples')).sort((a, b) => Number(b === 'test-room') - Number(a === 'test-room'))
 for (const name of exampleNames) {
   const dir = join(root, 'examples', name)
   const pkgPath = join(dir, 'package.json')

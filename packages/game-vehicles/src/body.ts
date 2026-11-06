@@ -1,9 +1,30 @@
 /** Car body shell, panels and body helpers. */
-import type { Kit } from './types'
+import type { BufferGeometry, ColorRepresentation, Material, Object3D, Vector3 } from 'three'
+
+import type { CutTest, PathItem, TumbleSpec } from './geometry'
+import type { BuildContext, Kit, SceneNode } from './types'
 import { clamp } from './util'
 import { raycastIndexed } from './tri-index'
 
-export function installBody(kit: Kit): void {
+/** A body shell (`kit.shell`): the side profile, its width, the wheel arches ([x, y, r]), the holes cut in it and the tumble of the sides. */
+export type ShellSpec = {
+  items: readonly PathItem[]
+  W: number
+  arches?: readonly number[][] | null
+  bottomY?: number
+  bev?: number | null
+  sub?: number
+  T?: TumbleSpec | null
+  holes?: readonly CutTest[] | null
+  archInner?: number | null
+  mat?: Material
+  col?: ColorRepresentation
+}
+/** The greenhouse of a car: belt and roof heights, the rear and front pillar feet and tops, the pillars between windows and the width. */
+export type Greenhouse = { belt: number; roof: number; rb: number; rt: number; fb: number; ft: number; pillars: readonly number[]; Wg: number }
+type VectorLike = Vector3 | readonly number[]
+
+export function installBody(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -11,24 +32,24 @@ export function installBody(kit: Kit): void {
   const { MATERIALS, crease, cutGeometry, pathShape, subdivide, tumble } = I
 
   /* ================= bodies ================= */
-  function halfAt(Wg: any, T: any, y: any) {
+  function halfAt(Wg: number, T: TumbleSpec | null | undefined, y: number) {
     return (Wg / 2) * (T ? 1 - T.k * clamp((y - T.belt) / (T.top - T.belt), 0, 1) : 1)
   }
   kit.halfAt = halfAt
-  function shell(c: any, o: any) {
+  function shell(c: BuildContext, o: ShellSpec) {
     const items = o.items.slice()
     if (o.arches)
       o.arches
         .slice()
-        .sort(function (a: any, b: any) {
+        .sort(function (a: readonly number[], b: readonly number[]) {
           return b[0] - a[0]
         })
-        .forEach(function (a: any) {
-          const a0 = Math.asin(clamp((o.bottomY - a[1]) / a[2], -1, 1))
+        .forEach(function (a: readonly number[]) {
+          const a0 = Math.asin(clamp((o.bottomY! - a[1]) / a[2], -1, 1))
           items.push({ arc: [a[0], a[1], a[2], a0, PI - a0, false] })
         })
     const bev = o.bev == null ? 0.05 : o.bev
-    let geo = new THREE.ExtrudeGeometry(pathShape(items), {
+    let geo: BufferGeometry = new THREE.ExtrudeGeometry(pathShape(items), {
       depth: Math.max(0.01, o.W - 2 * bev),
       bevelEnabled: bev > 0,
       bevelThickness: bev,
@@ -40,19 +61,19 @@ export function installBody(kit: Kit): void {
     geo.translate(0, 0, -(o.W - 2 * bev) / 2)
     geo = subdivide(geo, o.sub || 0.2)
     tumble(geo, o.T)
-    const tests = (o.holes || []).slice()
-    let cut: any = {}
+    const tests: CutTest[] = (o.holes || []).slice()
+    let cut: ReturnType<typeof cutGeometry>['cut'] | Record<string, never> = {}
     if (o.arches && o.archInner != null)
-      o.arches.forEach(function (a: any) {
-        const zk = o.archInner
+      o.arches.forEach(function (a: readonly number[]) {
+        const zk = o.archInner!
         tests.push({
-          sel: function (n: any, ce: any) {
+          sel: function (n: Vector3, ce: Vector3) {
             const dx = a[0] - ce.x
             const dy = a[1] - ce.y
             const d = Math.hypot(dx, dy) || 1
             return d < a[2] + 0.08 && (n.x * dx + n.y * dy) / d > 0.4
           },
-          sdf: function (x: any, y: any, z: any) {
+          sdf: function (x: number, y: number, z: number) {
             return Math.abs(z) - zk
           },
         })
@@ -63,64 +84,65 @@ export function installBody(kit: Kit): void {
       cut = r.cut
     }
     crease(geo, 42)
-    const m = c.add(geo, o.mat || c.paint(o.col))
+    const m = c.add(geo, o.mat || c.paint(o.col!))
     c.deform.push(m)
     m.userData.cut = cut
     if (o.arches)
-      o.arches.forEach(function (a: any) {
-        const a0 = Math.asin(clamp((o.bottomY - a[1]) / a[2], -1, 1))
+      o.arches.forEach(function (a: readonly number[]) {
+        const a0 = Math.asin(clamp((o.bottomY! - a[1]) / a[2], -1, 1))
         const rr = a[2] - 0.01
+        const archInner = o.archInner!
         if (o.archInner == null) {
           const wl = c.add(new THREE.CylinderGeometry(rr, rr, o.W - 0.12, 20, 1, true, a0 + PI / 2, PI - 2 * a0), MATERIALS.dark, a[0], a[1], 0)
           wl.rotation.x = PI / 2
           wl.castShadow = false
         } else
           [1, -1].forEach(function (s) {
-            const len = o.W / 2 - 0.06 - o.archInner
+            const len = o.W / 2 - 0.06 - archInner
             const w2 = c.add(
               new THREE.CylinderGeometry(rr, rr, len, 20, 1, true, a0 + PI / 2, PI - 2 * a0),
               MATERIALS.dark,
               a[0],
               a[1],
-              s * (o.archInner + len / 2),
+              s * (archInner + len / 2),
             )
             w2.rotation.x = PI / 2
             w2.castShadow = false
-            const cap = c.add(new THREE.CircleGeometry(rr, 20, a0, PI - 2 * a0), MATERIALS.dark, a[0], a[1], s * o.archInner)
+            const cap = c.add(new THREE.CircleGeometry(rr, 20, a0, PI - 2 * a0), MATERIALS.dark, a[0], a[1], s * archInner)
             cap.castShadow = false
           })
       })
     return m
   }
   kit.shell = shell
-  function autoWindows(gh: any) {
+  function autoWindows(gh: Greenhouse) {
     const inn = 0.075
     const yb = gh.belt + 0.06
     const yt = gh.roof - 0.075
-    function lx(x0: any, x1: any, y: any) {
+    function lx(x0: number, x1: number, y: number) {
       return x0 + ((x1 - x0) * (y - gh.belt)) / (gh.roof - gh.belt)
     }
-    function rearX(y: any) {
+    function rearX(y: number) {
       return lx(gh.rb, gh.rt, y) + inn * 1.3
     }
-    function frontX(y: any) {
+    function frontX(y: number) {
       return lx(gh.fb, gh.ft, y) - inn * 1.3
     }
-    const ps = gh.pillars.slice().sort(function (a: any, b: any) {
+    const ps = gh.pillars.slice().sort(function (a: number, b: number) {
       return a - b
     })
     const bounds = [-1e9]
-    ps.forEach(function (p: any) {
+    ps.forEach(function (p: number) {
       bounds.push(p - 0.06, p + 0.06)
     })
     bounds.push(1e9)
-    const polys = []
+    const polys: number[][][] = []
     for (let i = 0; i < bounds.length; i += 2) {
       ;(function (xa, xb) {
-        const L = function (y: any) {
+        const L = function (y: number) {
           return Math.max(xa, rearX(y))
         }
-        const R = function (y: any) {
+        const R = function (y: number) {
           return Math.min(xb, frontX(y))
         }
         if (R(yb) - L(yb) > 0.15 && R(yt) - L(yt) > 0.05)
@@ -135,7 +157,7 @@ export function installBody(kit: Kit): void {
     return polys
   }
   kit.autoWindows = autoWindows
-  function profX(items: any, y: any, front: any) {
+  function profX(items: readonly PathItem[], y: number, front: boolean) {
     let best = front ? -1e9 : 1e9
     for (let i = 0; i < items.length; i++) {
       const a = items[i]
@@ -156,19 +178,23 @@ export function installBody(kit: Kit): void {
   const _sr = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   _sr.layers.enableAll()
-  kit.surfaceAt = function (c: any, org: any, dir: any, o: any) {
+  kit.surfaceAt = function (c: BuildContext, org: VectorLike, dir: VectorLike, o?: { all?: boolean; max?: number } | null) {
     o = o || {}
     c.root.updateMatrixWorld(true)
     const Mw = c.vehicle.matrixWorld
     const inv = new THREE.Matrix4().copy(Mw).invert()
-    const dset = new Set(c.deform)
-    const cands: any = []
-    c.vehicle.traverse(function (q: any) {
+    const dset = new Set<Object3D>(c.deform)
+    const cands: Object3D[] = []
+    c.vehicle.traverse(function (q: SceneNode) {
       if (!q.isMesh || !q.visible || q.userData.glass || q.userData.decal || q.isSprite) return
-      if (o.all || dset.has(q) || (c.paints && c.paints.has(q.material))) cands.push(q)
+      if (o.all || dset.has(q) || (c.paints && c.paints.has(q.material as Material))) cands.push(q)
     })
-    const d = (dir.isVector3 ? dir.clone() : new V3(dir[0], dir[1], dir[2])).normalize()
-    const p0 = org.isVector3 ? org.clone() : new V3(org[0], org[1], org[2])
+    const dv = dir as Vector3
+    const da = dir as readonly number[]
+    const d = (dv.isVector3 ? dv.clone() : new V3(da[0], da[1], da[2])).normalize()
+    const ov = org as Vector3
+    const oa = org as readonly number[]
+    const p0 = ov.isVector3 ? ov.clone() : new V3(oa[0], oa[1], oa[2])
     _sr.set(p0.clone().applyMatrix4(Mw), d.clone().transformDirection(Mw))
     _sr.near = 0
     _sr.far = o.max || 20
@@ -179,7 +205,7 @@ export function installBody(kit: Kit): void {
     return { p: h.point.clone().applyMatrix4(inv), n: n, obj: h.object }
   }
   /* x of the skin at the front (front = true) or at the rear, at height y and side z; falls back to profX(items) if the ray finds nothing */
-  kit.surfaceX = function (c: any, y: any, z: any, front: any, items: any) {
+  kit.surfaceX = function (c: BuildContext, y: number, z: number, front: boolean, items?: readonly PathItem[] | null) {
     const m = c.meta
     const sg = front === false ? -1 : 1
     const x0 = sg > 0 ? (m.front || 3) + 2 : (m.rear || -3) - 2
@@ -187,5 +213,9 @@ export function installBody(kit: Kit): void {
     return h ? h.p.x : items ? profX(items, y, front !== false) : null
   }
 
-  Object.assign(I, { halfAt, shell, autoWindows, profX, _sr })
+  const shared = { halfAt, shell, autoWindows, profX, _sr }
+
+  Object.assign(I, shared)
+
+  return shared
 }

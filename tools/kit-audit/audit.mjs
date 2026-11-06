@@ -16,7 +16,10 @@ const root = resolve(here, '../..')
 /** Primitives: a three.js geometry built on the spot, or a box/cylinder/sphere part of a destructible spec. */
 const PRIMITIVE = /new\s+[\w$.]+\.(Box|Cylinder|Sphere|Cone|Capsule|Plane|Torus)Geometry\s*\(|kind:\s*['"](box|cylinder|sphere)['"]/
 
-/** Words of a stretch of code: identifiers split on camelCase, `_` and `-`, lower case, without accents. */
+/**
+ * Words of a stretch of code: identifiers split on camelCase, `_` and `-`, lower case, without accents.
+ * @param {string} text
+ */
 export function wordsOf(text) {
   return new Set(
     text
@@ -30,11 +33,19 @@ export function wordsOf(text) {
 }
 
 /** Owner of a file: `game-weather-three` for a package, `examples/weather-test-area` for an example. */
-const ownerOf = (file) => {
+const ownerOf = (/** @type {string} */ file) => {
   const parts = relative(root, file).split('/')
   return parts[0] === 'packages' ? parts[1] : `${parts[0]}/${parts[1]}`
 }
 
+/**
+ * @typedef {{ owners: string[], words: string[], use: string }} DomainRule
+ * @typedef {{ scan: string[], skip: string[], window: number, domains: Record<string, DomainRule> }} Rules
+ * @typedef {{ file: string, domain: string, reason?: string, fix?: string }} ListEntry
+ * @typedef {{ file: string, line: number, owner: string, domain: string, words: string[], code: string, use: string, owners: string[], allowed?: string, pending?: string }} Finding
+ */
+
+/** @param {string} dir @param {string[]} skip @param {string[]} [out] @returns {string[]} */
 const walk = (dir, skip, out = []) => {
   if (!existsSync(dir)) return out
   for (const name of readdirSync(dir)) {
@@ -46,7 +57,9 @@ const walk = (dir, skip, out = []) => {
   return out
 }
 
+/** @param {Rules} rules */
 const filesOf = (rules) => {
+  /** @type {string[]} */
   const files = []
   for (const pattern of rules.scan) {
     const [group, , ...rest] = pattern.split('/')
@@ -55,12 +68,19 @@ const filesOf = (rules) => {
   return files.sort()
 }
 
-/** Every finding of the repository (or of `options.packages` / `options.domains`), with `allowed` set from the allowlist. */
+/**
+ * Every finding of the repository (or of `options.packages` / `options.domains`), with `allowed` set from the allowlist.
+ * @param {{ packages?: string[], domains?: string[] }} [options]
+ * @returns {Finding[]}
+ */
 export function audit(options = {}) {
+  /** @type {Rules} */
   const rules = JSON.parse(readFileSync(join(here, 'rules.json'), 'utf8'))
+  /** @type {{ allowed?: ListEntry[], pending?: ListEntry[] }} */
   const lists = JSON.parse(readFileSync(join(here, 'allowlist.json'), 'utf8'))
   const allowlist = lists.allowed ?? []
   const pending = lists.pending ?? []
+  /** @type {Finding[]} */
   const findings = []
   for (const file of filesOf(rules)) {
     const owner = ownerOf(file)
@@ -85,8 +105,12 @@ export function audit(options = {}) {
   return findings
 }
 
-/** One entry per file and domain (the lines together): what a person reads. */
+/**
+ * One entry per file and domain (the lines together): what a person reads.
+ * @param {Finding[]} findings
+ */
 export function group(findings) {
+  /** @type {Map<string, { file: string, owner: string, domain: string, lines: number[], words: Set<string>, use: string, allowed?: string, pending?: string }>} */
   const byKey = new Map()
   for (const f of findings) {
     const key = `${f.file}::${f.domain}`
@@ -101,7 +125,7 @@ export function group(findings) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {
   const args = process.argv.slice(2)
-  const valuesOf = (flag) => args.flatMap((arg, index) => (arg === flag ? [args[index + 1]] : []))
+  const valuesOf = (/** @type {string} */ flag) => args.flatMap((arg, index) => (arg === flag ? [args[index + 1]] : []))
   const findings = audit({ packages: valuesOf('--package'), domains: valuesOf('--domain') })
   const grouped = group(findings)
   const open = grouped.filter((entry) => !entry.allowed && !entry.pending)

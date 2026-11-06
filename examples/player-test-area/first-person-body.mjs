@@ -21,6 +21,9 @@ if (shots) mkdirSync(shots, { recursive: true })
 
 const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const tab = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/**
+ * @type {string[]}
+ */
 const errors = []
 tab.on('pageerror', (error) => errors.push(String(error)))
 await tab.goto(`${pathToFileURL(page).href}?lang=pt-BR&ui=0`, { timeout: 180000 })
@@ -49,6 +52,9 @@ await tab.evaluate(() => {
       avatar.root.updateMatrixWorld(true)
       return Hd.localToWorld(EYES.clone())
     },
+    /**
+     * @param {string} way
+     */
     hide(way) {
       for (const m of hidden) {
         m.layers.set(0)
@@ -62,6 +68,9 @@ await tab.evaluate(() => {
       }
     },
     nearest(camera) {
+      /**
+         * @type {{ d: number; at: string; }[]}
+         */
       const out = []
       const box = new T.Box3()
       avatar.root.updateMatrixWorld(true)
@@ -76,7 +85,7 @@ await tab.evaluate(() => {
   }
 })
 
-const measure = (label, setup) =>
+const measure = (/** @type {string} */ label, /** @type {string} */ setup) =>
   tab.evaluate(
     ([label, setup]) => {
       const room = window.__testRoom

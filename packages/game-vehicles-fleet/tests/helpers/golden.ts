@@ -65,8 +65,8 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
 
         it('has the zones and the parts of the original, with the original pt-BR names', () => {
           const c = kitFor('pt-BR').build(key, 'intact')
-          expect(c.zones.map((z: any) => [legacyZoneId(z), z.name])).toEqual(g.zones)
-          expect(c.parts.map((p: any) => [p.kind, p.label])).toEqual(g.parts)
+          expect(c.zones.map((z) => [legacyZoneId(z), z.name])).toEqual(g.zones)
+          expect(c.parts.map((p) => [p.kind, p.label])).toEqual(g.parts)
           expect(c.zoneErrors || []).toEqual([])
         })
 
@@ -95,13 +95,13 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
           const kit = kitFor('en')
           const c = kit.build(key, 'intact')
           expect(digest(c)).toEqual(g.intact)
-          expect(c.zones.map((z: any) => legacyZoneId(z))).toEqual(g.zones.map((z) => z[0]))
-          expect(c.parts.map((p: any) => p.kind)).toEqual(g.parts.map((p) => p[0]))
+          expect(c.zones.map((z) => legacyZoneId(z))).toEqual(g.zones.map((z) => z[0]))
+          expect(c.parts.map((p) => p.kind)).toEqual(g.parts.map((p) => p[0]))
           expect(c.zones).toHaveLength(g.zones.length)
           for (const [where, text] of [
-            ...strings(c.zones.map((z: any) => z.name)),
-            ...strings(c.parts.map((p: any) => p.label)),
-            ...strings(c.glass.map((p: any) => p.label)),
+            ...strings(c.zones.map((z) => z.name)),
+            ...strings(c.parts.map((p) => p.label)),
+            ...strings(c.glass.map((p) => p.userData.glass?.label)),
           ]) {
             expect(text, where).not.toMatch(/fleet\.|\{[a-z]+\}/)
             expect(text.trim(), where).not.toBe('')

@@ -9,6 +9,7 @@ import { createAnimalOutbreak } from '@adatechnology/game-characters-undead'
 export { createAnimalsTestModule }
 
 /** The module with the kit's own species and outbreak rule; options replace or extend any of them. */
+/** @param {Partial<Parameters<typeof createAnimalsTestModule>[0]>} [options] */
 export function createModule(options = {}) {
   return createAnimalsTestModule({
     species: SPECIES,
@@ -18,6 +19,10 @@ export function createModule(options = {}) {
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the animals area. Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createAnimalsTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createModule({ ...options, locale: lang }))

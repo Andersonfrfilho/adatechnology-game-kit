@@ -5,6 +5,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { interiorTemplateIds } from '@adatechnology/game-floorplan-commercial'
 import { FULL, N, STATES, TOWER_TEMPLATES, checkPlan, createFailures, engine, sizes, variants } from './support'
+import type { Plan } from './support'
 
 // The suite is CPU-bound and synchronous; yield a macrotask between tests so the worker can report progress.
 afterEach(() => new Promise<void>((r) => setTimeout(r, 0)))
@@ -23,7 +24,7 @@ describe('generated plans (seeds x states x variants)', () => {
         for (let s = 1; s <= N; s++) {
           const opts: Record<string, unknown> = { seed: s, state, ...extra }
           Object.assign(opts, sizes(id, s, opts))
-          let res: any
+          let res: Plan
           try {
             res = engine.generate(id, opts)
           } catch (e) {
@@ -73,8 +74,8 @@ describe('density by class', () => {
     let outdoor = 0
     for (let s = 1; s <= 40; s++) {
       const r = engine.generate(id, { seed: s, state: 'normal' })
-      decor += r.items.filter((m: any) => m.decor && m.category !== 'ground_cover').length
-      outdoor += r.items.filter((m: any) => m.outdoor && m.category !== 'ground_cover' && !m.decor).length
+      decor += r.items.filter((m) => m.decor && m.category !== 'ground_cover').length
+      outdoor += r.items.filter((m) => m.outdoor && m.category !== 'ground_cover' && !m.decor).length
     }
     return [decor / 40, outdoor / 40]
   }
@@ -93,8 +94,8 @@ describe('density by class', () => {
 describe('template specifics', () => {
   it('single_storey_a has the four rooms and its recorded slots', () => {
     const r = engine.generate('single_storey_a', { w: 11, d: 11, seed: 5 })
-    expect(r.rooms.map((c: any) => c.id).sort().join()).toBe('bathroom,bedroom,kitchen,living')
-    const slots = engine.slots('single_storey_a', { w: 11, d: 11 }).filter((s: any) => s.valid && !s.outdoor).map((s: any) => s.room + '.' + s.id)
+    expect(r.rooms.map((c) => c.id).sort().join()).toBe('bathroom,bedroom,kitchen,living')
+    const slots = engine.slots('single_storey_a', { w: 11, d: 11 }).filter((s) => s.valid && !s.outdoor).map((s) => s.room + '.' + s.id)
     const wanted = ['living.tv_unit_right', 'living.sofa_right', 'living.table_right', 'living.rug_right', 'living.armchair', 'living.shelf', 'living.counter', 'kitchen.fridge', 'kitchen.stove', 'kitchen.sink', 'kitchen.table', 'bedroom.bed', 'bedroom.nightstand_left', 'bedroom.wardrobe', 'bathroom.toilet', 'bathroom.washbasin', 'bathroom.shower']
     for (const k of wanted) expect(slots.some((x: string) => x === k || x.startsWith(k + '@')), k).toBe(true)
   })
@@ -102,11 +103,11 @@ describe('template specifics', () => {
   it('townhouse has two floors, linked stairs and a balcony', () => {
     const r = engine.generate('townhouse', { seed: 3 })
     expect(r.floors.length).toBe(2)
-    const stairs = r.items.filter((m: any) => m.type === 'stairs')
+    const stairs = r.items.filter((m) => m.type === 'stairs')
     expect(stairs.length).toBe(2)
     expect(stairs[0].floor).not.toBe(stairs[1].floor)
     expect(stairs[0].link).toBeTruthy()
-    expect(r.rooms.some((c: any) => c.type === 'balcony' && c.floor === 1)).toBe(true)
+    expect(r.rooms.some((c) => c.type === 'balcony' && c.floor === 1)).toBe(true)
     expect(r.facade.balcony).toBeTruthy()
   })
 
@@ -116,18 +117,18 @@ describe('template specifics', () => {
     const c = engine.generate('single_storey_a', { seed: 1, style: 'luxury' })
     expect(n.style).toBe('high')
     expect(c.style).toBe('high')
-    expect(n.lot!.perimeter.some((s: any) => s.type === 'wall' && s.height >= 2.5)).toBe(true)
-    expect(p.lot!.perimeter.every((s: any) => s.height <= 2.0)).toBe(true)
+    expect(n.lot!.perimeter.some((s) => s.type === 'wall' && s.height >= 2.5)).toBe(true)
+    expect(p.lot!.perimeter.every((s) => s.height <= 2.0)).toBe(true)
     expect(p.lot!.pool).toBeTruthy()
-    expect(c.lot!.perimeter.some((s: any) => s.height >= 2.5)).toBe(true)
+    expect(c.lot!.perimeter.some((s) => s.height >= 2.5)).toBe(true)
   })
 
   it('commercial: the market has no garden, a steel door and a cargo gate', () => {
     const m = engine.generate('market', { seed: 1 })
-    expect(m.lot!.zones.some((z: any) => z.type === 'garden')).toBe(false)
+    expect(m.lot!.zones.some((z) => z.type === 'garden')).toBe(false)
     expect(m.facade.steelDoor).toBeTruthy()
-    expect(m.doors.some((p: any) => p.model === 'steel' && p.exterior)).toBe(true)
-    expect(m.lot!.gates.some((g: any) => g.type === 'cargo')).toBe(true)
+    expect(m.doors.some((p) => p.model === 'steel' && p.exterior)).toBe(true)
+    expect(m.lot!.gates.some((g) => g.type === 'cargo')).toBe(true)
   })
 
   it('only the mansion and high-end houses must have a pool', () => {
@@ -144,33 +145,33 @@ describe('template specifics', () => {
     expect(b && b.elevator && b.stairs && b.hall && b.unitsPerFloor && b.floors).toBeTruthy()
     expect(engine.generate('apartment_modern', { seed: 1 }).style).toBe('mid')
     expect(high.style).toBe('high')
-    expect(high.rooms.some((c: any) => c.name.includes('Varanda gourmet'))).toBe(true)
-    expect(high.rooms.filter((c: any) => c.type === 'bedroom' && c.name.startsWith('Suíte')).length).toBe(3)
-    expect(high.rooms.some((c: any) => c.name === 'Dependência')).toBe(true)
+    expect(high.rooms.some((c) => c.name!.includes('Varanda gourmet'))).toBe(true)
+    expect(high.rooms.filter((c) => c.type === 'bedroom' && c.name!.startsWith('Suíte')).length).toBe(3)
+    expect(high.rooms.some((c) => c.name === 'Dependência')).toBe(true)
   })
 
   it('mansion has three floors and a terrace by default', () => {
     const ma = engine.generate('mansion', { seed: 2 })
     expect(ma.floors.length).toBe(3)
-    expect(ma.rooms.some((c: any) => c.type === 'terrace')).toBe(true)
+    expect(ma.rooms.some((c) => c.type === 'terrace')).toBe(true)
   })
 
   it('high_end_contemporary program: closet, spa, sauna, soaking tub, two cars, double-height living', () => {
     const al = engine.generate('high_end_contemporary', { seed: 2 })
     expect(al.floors.length).toBe(2)
-    expect(al.rooms.filter((c: any) => c.type === 'bedroom').length).toBeGreaterThanOrEqual(4)
-    expect(al.rooms.some((c: any) => c.type === 'closet')).toBe(true)
-    expect(al.rooms.some((c: any) => c.type === 'spa')).toBe(true)
-    expect(al.items.some((m: any) => m.type === 'sauna')).toBe(true)
-    expect(al.items.some((m: any) => m.type === 'soaking_tub')).toBe(true)
-    expect(al.items.filter((m: any) => m.category === 'car').length).toBeGreaterThanOrEqual(2)
-    expect(al.rooms.find((c: any) => c.type === 'living' && c.id === 'living')!.ceiling).toBeGreaterThanOrEqual(5)
+    expect(al.rooms.filter((c) => c.type === 'bedroom').length).toBeGreaterThanOrEqual(4)
+    expect(al.rooms.some((c) => c.type === 'closet')).toBe(true)
+    expect(al.rooms.some((c) => c.type === 'spa')).toBe(true)
+    expect(al.items.some((m) => m.type === 'sauna')).toBe(true)
+    expect(al.items.some((m) => m.type === 'soaking_tub')).toBe(true)
+    expect(al.items.filter((m) => m.category === 'car').length).toBeGreaterThanOrEqual(2)
+    expect(al.rooms.find((c) => c.type === 'living' && c.id === 'living')!.ceiling).toBeGreaterThanOrEqual(5)
   })
 })
 
 describe('colour palettes', () => {
-  const C = engine.color as any
-  const L = C.lstar as (c: number) => number
+  const C = engine.color
+  const L = C.lstar
   const ROLES = ['facade', 'facade_detail', 'wall', 'gate', 'roof', 'ceiling', 'wood', 'fabric_main', 'fabric_accent', 'metal', 'picture_accent', 'exterior_floor']
   for (const style of ['budget', 'mid', 'high', 'commercial']) {
     it(`${style}: valid, contrasted, varied, deterministic and desaturated when abandoned`, () => {
@@ -178,14 +179,14 @@ describe('colour palettes', () => {
       const seen = new Set<string>()
       for (const state of STATES) {
         for (let s = 1; s <= N; s++) {
-          const p = engine.palette({ seed: s, style, state }) as Record<string, any>
+          const p = engine.palette({ seed: s, style, state }) as unknown as Record<string, number>
           const tag = `${style}/${state}#${s}`
           const keys = Object.keys(p).filter((k) => k !== 'meta')
           for (const k of keys) if (!Number.isInteger(p[k]) || p[k] < 0 || p[k] > 0xffffff) F.add('invalid colour', tag + k)
           for (const k of ROLES) if (p[k] == null) F.add('missing role', tag + k)
           const rooms = keys.filter((k) => k.startsWith('wall_')).map((k) => k.slice(5))
           for (const c of rooms) {
-            const w = p['wall_' + c]
+            const w = p['wall_' + c]!
             const f = p['floor_' + c]
             if (f == null) { F.add('missing floor colour', tag + c); continue }
             if (Math.abs(L(w) - L(f)) < C.MIN_WALL_FLOOR_CONTRAST) F.add('wall x floor contrast', tag + c)
@@ -198,8 +199,8 @@ describe('colour palettes', () => {
         }
       }
       if (seen.size < N * 3 * 0.95) F.add('repeated palettes', `${style} ${seen.size}/${N * 3}`)
-      const a = engine.palette({ seed: 7, style, state: 'abandoned' }) as any
-      const n = engine.palette({ seed: 7, style, state: 'normal' }) as any
+      const a = engine.palette({ seed: 7, style, state: 'abandoned' }) as unknown as { facade: number }
+      const n = engine.palette({ seed: 7, style, state: 'normal' }) as unknown as { facade: number }
       if (!(C.hsl(a.facade).s <= C.hsl(n.facade).s + 1e-9 && L(a.facade) <= L(n.facade) + 1e-9)) F.add('abandoned is not desaturated and darker', style)
       if (JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' })) !== JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' }))) F.add('palette is not deterministic', style)
       expect(F.report()).toEqual([])

@@ -28,6 +28,9 @@ if (!chromium) {
 }
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
+/**
+ * @type {boolean[]}
+ */
 const results = []
 const check = (name, ok, detail) => {
   results.push(ok)
@@ -36,6 +39,9 @@ const check = (name, ok, detail) => {
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
+/**
+ * @type {string[]}
+ */
 const errors = []
 async function open(query = '') {
   const context = await browser.newContext({ viewport: { width: 1100, height: 650 } })
@@ -46,7 +52,7 @@ async function open(query = '') {
     return route.abort()
   })
   const page = await context.newPage()
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+  page.on('console', (/** @type {{ type: () => string; text: () => string; }} */ m) => m.type() === 'error' && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
   await page.goto(pathToFileURL(dist).href + query, { timeout: 180000 })
   await page.waitForFunction(() => window.__vfxReport, null, { timeout: 90000 })
@@ -64,7 +70,7 @@ for (const lang of ['pt-BR', 'en']) {
 
   const report = await page.evaluate(async () => {
     const room = window.__testRoom
-    const rep = await room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('vfx_')))
+    const rep = await room.runScenarios(room.scenarios.filter((/** @type {{ id: string; }} */ s) => s.id.startsWith('vfx_')))
     return { passed: rep.passed, failed: rep.failed, bad: rep.results.filter((r) => !r.ok).map((r) => `${r.id}: ${r.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) }
   })
   check(`[${lang}] every effects scenario is green`, report.failed === 0 && report.passed >= 3, report)

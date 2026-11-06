@@ -1,7 +1,10 @@
 /** Spoked wheels and track assemblies. */
-import type { Kit } from './types'
+import type { Group, Material } from 'three'
 
-export function installWheels(kit: Kit): void {
+import type { LabelArgument } from './context'
+import type { BuildContext, Kit } from './types'
+
+export function installWheels(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -10,7 +13,7 @@ export function installWheels(kit: Kit): void {
 
   /* ================= special wheels ================= */
   /* Spoked wheel for motorcycle/bicycle. o: { spokes, knobby, disc, cast (5-spoke alloy), z, label } */
-  kit.spokedWheel = function (c: any, x: any, r: any, tireR: any, o: any) {
+  kit.spokedWheel = function (c: BuildContext, x: number, r: number, tireR: number, o?: { spokes?: number; knobby?: boolean; disc?: boolean; cast?: boolean; z?: number; label?: LabelArgument } | null) {
     o = o || {}
     const g = new THREE.Group()
     g.position.set(x, r, o.z || 0)
@@ -69,7 +72,7 @@ export function installWheels(kit: Kit): void {
     return g
   }
   /* Simple track (tank). o: { x0 (drive wheel, rear), x1 (idler wheel, front), z, w, r (road wheels), n, top, mat } */
-  kit.tracks = function (c: any, o: any) {
+  kit.tracks = function (c: BuildContext, o: { x0: number; x1: number; z: number; w?: number; r?: number; n?: number; top?: number; mat?: Material; wheelMat?: Material }) {
     const x0 = o.x0
     const x1 = o.x1
     const z = o.z
@@ -84,8 +87,8 @@ export function installWheels(kit: Kit): void {
     const rsY = top - rs - th
     const sp = ((x1 - x0 - 2 * rs) / Math.max(1, n - 1)) * 0.92
     const firstX = x0 + rs + 0.1
-    const gs: any = []
-    function road(x: any, y: any, rr: any) {
+    const gs: Group[] = []
+    function road(x: number, y: number, rr: number) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)
@@ -108,7 +111,7 @@ export function installWheels(kit: Kit): void {
     for (let k = 0; k < 3; k++) road(x0 + (x1 - x0) * (0.25 + k * 0.25), top - th - 0.07, 0.07)
     const path = []
     const segs = 40
-    function arc(cx: any, cy: any, rr: any, a0: any, a1: any) {
+    function arc(cx: number, cy: number, rr: number, a0: number, a1: number) {
       for (let s = 0; s <= segs / 4; s++) {
         const a = a0 + ((a1 - a0) * s) / (segs / 4)
         path.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr])
@@ -143,5 +146,9 @@ export function installWheels(kit: Kit): void {
     return { mesh: tm, wheels: gs, sprocket: spr, idler: idl }
   }
 
-  Object.assign(I, {})
+  const shared = {}
+
+  Object.assign(I, shared)
+
+  return shared
 }

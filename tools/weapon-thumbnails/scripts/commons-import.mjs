@@ -9,21 +9,25 @@ import { openRenderer } from './commons-render.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const folder = join(here, '../../../packages/game-weapons-three/assets/weapon-svg')
+/** @type {typeof import('../src/index')} */
 const { bitmapSilhouetteSvg, sanitizeSvg, MAX_SVG_BYTES } = await import(pathToFileURL(join(here, '../dist/index.js')).href)
 const work = process.argv[2]
 if (!work) throw new Error('usage: node scripts/commons-import.mjs <work folder>')
+/** @type {Record<string, { title: string }>} */
 const picks = JSON.parse(readFileSync(join(work, 'picks.json'), 'utf8'))
 mkdirSync(join(folder, 'commons'), { recursive: true })
 mkdirSync(join(work, 'clean'), { recursive: true })
 const sourcesPath = join(folder, 'commons-sources.json')
+/** @type {Record<string, Record<string, string>>} */
 let sources = {}
 try {
   sources = JSON.parse(readFileSync(sourcesPath, 'utf8'))
 } catch {}
 // The Credit line of the file page keeps only its links (e.g. game-icons.net, the collection the drawing came from).
-const creditOf = (candidate) => [...(candidate.creditHtml ?? '').matchAll(/href="([^"]+)"/g)].map((match) => match[1]).join(', ')
+const creditOf = (/** @type {import('./commons-search.mjs').Candidate} */ candidate) => [...(candidate.creditHtml ?? '').matchAll(/href="([^"]+)"/g)].map((match) => match[1]).join(', ')
 const renderer = await openRenderer()
 for (const [id, pick] of Object.entries(picks)) {
+  /** @type {import('./commons-search.mjs').SearchResult} */
   const search = JSON.parse(readFileSync(join(work, 'search', `${id}.json`), 'utf8'))
   const candidate = search.candidates.find((entry) => entry.title === pick.title)
   if (!candidate?.raw || !candidate.ok) {

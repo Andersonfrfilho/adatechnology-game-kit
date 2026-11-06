@@ -1,16 +1,20 @@
+import type { Mesh, Vector3 } from 'three'
+
+import type { Three } from '../types'
+
 /** How many times a face is halved at most. */
 const SUBDIVIDE_DEPTH = 12
 
 export type SubdivideNearParams = {
-  readonly mesh: any
+  readonly mesh: Mesh
   /** No edge of a picked face stays longer than this, in the mesh's units. */
   readonly maxLen: number
   /** Picks the faces to split, given their corners in world space. */
-  readonly near: (corners: any[]) => boolean
+  readonly near: (corners: Vector3[]) => boolean
 }
 
 /** Splits the faces of a mesh that `near` picks until no edge is longer than `maxLen`; the others stay as they are. Drops colour and uv, as a full subdivision does. */
-export function subdivideNear(THREE: any, params: SubdivideNearParams): void {
+export function subdivideNear(THREE: Three, params: SubdivideNearParams): void {
   const { mesh, maxLen, near } = params
   const src = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry
   const a = src.attributes.position.array as ArrayLike<number>

@@ -15,6 +15,9 @@ const browser = await chromium.launch({
   args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-gpu-vsync', '--no-sandbox'],
   ...(process.env.PERF_CHROME ? { executablePath: process.env.PERF_CHROME } : {}),
 })
+/**
+ * @type {string[]}
+ */
 const errors = []
 const open = async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } })

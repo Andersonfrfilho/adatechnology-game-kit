@@ -48,7 +48,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
         for (const [id, pc] of shared.ctx.pieces) { // tagged pieces that do not come from the plan: windows, doors, tank, pipes, wiring, cylinder, walls
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
-          const p = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill : 0.15)), meshes: meshes.get(id).length, extra: true };
+          const p = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill as number : 0.15)), meshes: meshes.get(id).length, extra: true };
           for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }

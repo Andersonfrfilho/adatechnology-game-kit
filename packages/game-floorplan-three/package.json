@@ -43,7 +43,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.strict.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
@@ -57,7 +57,13 @@
     "@adatechnology/game-floorplan-residential": "workspace:^"
   },
   "peerDependencies": {
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "@adatechnology/game-floorplan": "workspace:^",
+    "@adatechnology/game-vegetation": "workspace:^",
+    "@adatechnology/game-vegetation-species": "workspace:^",
+    "@adatechnology/game-interactables": "workspace:^",
+    "@adatechnology/game-interactables-three": "workspace:^",
+    "@adatechnology/game-destruction-three": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
@@ -78,5 +84,25 @@
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-floorplan-rural": "workspace:^",
     "@adatechnology/game-floorplan-post-apocalyptic": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@adatechnology/game-floorplan": {
+      "optional": true
+    },
+    "@adatechnology/game-vegetation": {
+      "optional": true
+    },
+    "@adatechnology/game-vegetation-species": {
+      "optional": true
+    },
+    "@adatechnology/game-interactables": {
+      "optional": true
+    },
+    "@adatechnology/game-interactables-three": {
+      "optional": true
+    },
+    "@adatechnology/game-destruction-three": {
+      "optional": true
+    }
   }
 }

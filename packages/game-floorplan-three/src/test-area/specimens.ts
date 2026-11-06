@@ -1,6 +1,10 @@
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import { create } from '../create.js'
+import type * as ThreeNS from 'three'
+import type { DestructibleSpec } from '@adatechnology/game-contracts'
+import type { FloorplanResult } from '@adatechnology/game-floorplan'
+import type { Three } from '../kernel-types.js'
 import type { HouseRendererOptions } from '../types.js'
 import type { FloorplanEngineLike, SpecimenDef } from './types.js'
 
@@ -26,8 +30,8 @@ const COLOR: Record<string, number> = {
 
 /** What the area keeps of a built specimen: the structure spec the house draws (what the destruction world is given) and the plan it came from. */
 export interface SpecimenSpec {
-  readonly spec: any
-  readonly plan: any
+  readonly spec: DestructibleSpec
+  readonly plan: FloorplanResult
 }
 
 const cache = new WeakMap<object, Map<string, SpecimenSpec>>()
@@ -36,7 +40,7 @@ const cache = new WeakMap<object, Map<string, SpecimenSpec>>()
  * The structure spec of a specimen: the engine draws the plan, the house renderer draws the house, and the house describes its structure (`house.structure.spec`) with what the water tank holds and
  * what makes the gas bottle explode. The spec is cached per three.js namespace and specimen; each call hands out a copy.
  */
-export function specimenSpec(THREE: any, engine: FloorplanEngineLike, def: SpecimenDef, houseOptions: Partial<HouseRendererOptions> = {}): SpecimenSpec {
+export function specimenSpec(THREE: Three, engine: FloorplanEngineLike, def: SpecimenDef, houseOptions: Partial<HouseRendererOptions> = {}): SpecimenSpec {
   let byId = cache.get(THREE)
   if (!byId) cache.set(THREE, (byId = new Map()))
   const key = `${def.id}|${def.template}|${def.seed ?? 1}|${def.state ?? 'normal'}|${def.portico ? 'p' : ''}|${def.sizing ? JSON.stringify(def.sizing) : ''}`
@@ -57,8 +61,8 @@ export function specimenSpec(THREE: any, engine: FloorplanEngineLike, def: Speci
  * One box (or cylinder, sphere) per part, named by the part id and coloured by its material, in the space of the house (the origin at the corner of the plan): what the team's house area draws, so the
  * room binds each mesh to the part of the same name. The anchored terrain slab is left out (the room has a floor).
  */
-export function buildSpecimenMeshes(THREE: any, spec: any): any {
-  const G = shapeGeometries(THREE) as any
+export function buildSpecimenMeshes(THREE: Three, spec: DestructibleSpec): ThreeNS.Group {
+  const G = shapeGeometries(THREE)
   const root = new THREE.Group()
   for (const part of spec.parts) {
     if (part.id === 'ground') continue

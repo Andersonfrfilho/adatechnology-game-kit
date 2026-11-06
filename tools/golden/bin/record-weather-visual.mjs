@@ -14,7 +14,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const source = readFileSync(resolve(root, 'specs/001-migracao-entregas-dos-times/artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js'), 'utf8')
 const seedFlag = process.argv.indexOf('--seed')
 const seed = seedFlag > 0 ? Number(process.argv[seedFlag + 1]) : 1
-const sha = (text) => createHash('sha256').update(text).digest('hex')
+const sha = (/** @type {string} */ text) => createHash('sha256').update(text).digest('hex')
 
 const block = cutBetween(source, 'const RAIN = 14000;', 'function skyUpdate')
 const sky = cutBetween(source, 'function skyUpdate', "$('clock')")
@@ -23,13 +23,22 @@ const palette = cutBetween(source, 'const sky = new THREE.Color()', '// luz de s
 const fogSetup = cutBetween(source, 'scene.fog = new THREE.Fog(', ';')
 
 // the stubs keep the arguments the block gives three.js
+/** @type {Stub[]} */
 const made = []
-class Stub { constructor(...args) { this.args = args; this.attributes = {}; made.push(this) } setAttribute(name, attribute) { this.attributes[name] = attribute } copy() {} }
+class Stub {
+  constructor(/** @type {unknown[]} */ ...args) {
+    this.args = args
+    /** @type {Record<string, unknown>} */
+    this.attributes = {}
+    made.push(this)
+  }
+  setAttribute(/** @type {string} */ name, /** @type {unknown} */ attribute) { this.attributes[name] = attribute } copy() {} }
 class Vector3 extends Stub {}
-class BufferAttribute extends Stub { constructor(array, size) { super(array, size); this.array = array } }
-class ShaderMaterial extends Stub { constructor(options) { super(options); Object.assign(this, options) } }
-class Points extends Stub { constructor(geometry, material) { super(geometry, material); this.geometry = geometry; this.material = material } }
+class BufferAttribute extends Stub { constructor(/** @type {ArrayLike<number>} */ array, /** @type {number} */ size) { super(array, size); this.array = array } }
+class ShaderMaterial extends Stub { constructor(/** @type {object} */ options) { super(options); Object.assign(this, options) } }
+class Points extends Stub { constructor(/** @type {unknown} */ geometry, /** @type {unknown} */ material) { super(geometry, material); this.geometry = geometry; this.material = material } }
 class BufferGeometry extends Stub {}
+/** @type {Record<string, unknown> & { Math: Math, __rain?: { RAIN: number, rp: ArrayLike<number>, rainMat: { vertexShader: string, fragmentShader: string, transparent: boolean, depthWrite: boolean, uniforms: object }, rain: { frustumCulled?: boolean } } }} */
 const sandbox = {
   THREE: { BufferGeometry, BufferAttribute, ShaderMaterial, Points, Vector3 },
   timeU: { value: 0 },
@@ -38,7 +47,7 @@ const sandbox = {
 }
 sandbox.Math.random = createSeededRandom(seed)
 runInNewContext(`${block}\nglobalThis.__rain = { RAIN, rp, rainMat, rain }`, sandbox, { timeout: 20000 })
-const { RAIN, rp, rainMat, rain } = sandbox.__rain
+const { RAIN, rp, rainMat, rain } = /** @type {NonNullable<typeof sandbox.__rain>} */ (sandbox.__rain)
 const positions = Float32Array.from(rp)
 const bytes = Buffer.from(positions.buffer, positions.byteOffset, positions.byteLength)
 

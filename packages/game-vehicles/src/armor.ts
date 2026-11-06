@@ -1,8 +1,10 @@
 /** Armoured vehicle details (plating, hatches, add-on armour) and the applyArmor helper. */
-import type { Kit } from './types'
+import type { MeshStandardMaterial } from 'three'
+
+import type { BuildContext, Kit } from './types'
 import { clamp, hash } from './util'
 
-export function installArmor(kit: Kit): void {
+export function installArmor(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -10,12 +12,12 @@ export function installArmor(kit: Kit): void {
   const { makeMaterial, MATERIALS } = I
 
   /* ================= modified state ================= */
-  const STEEL_MATERIAL = makeMaterial('#4e534f', { metalness: 0.55, roughness: 0.5 })
-  const PLATE_MATERIALS = ['#4f5450', '#5b605b', '#454a47', '#56584f', '#4b4d4a'].map(function (h) {
+  const STEEL_MATERIAL: MeshStandardMaterial = makeMaterial('#4e534f', { metalness: 0.55, roughness: 0.5 })
+  const PLATE_MATERIALS: MeshStandardMaterial[] = ['#4f5450', '#5b605b', '#454a47', '#56584f', '#4b4d4a'].map(function (h) {
     return makeMaterial(h, { metalness: 0.5, roughness: 0.55 })
   })
   kit.steelMaterial = STEEL_MATERIAL
-  function jerryCan(c: any, x: any, y: any, z: any, col: any) {
+  function jerryCan(c: BuildContext, x: number, y: number, z: number, col: string) {
     c.roundBox(0.34, 0.44, 0.16, 0.04, makeMaterial(col, { roughness: 0.5 }), x, y, z)
     c.tube(
       [
@@ -30,7 +32,7 @@ export function installArmor(kit: Kit): void {
     c.cylinder(0.025, 0.025, 0.05, MATERIALS.trim, x + 0.12, y + 0.24, z)
   }
   kit.jerryCan = jerryCan
-  function applyArmor(c: any) {
+  function applyArmor(c: BuildContext) {
     const m = c.meta
     const k = m.kind
     if (k === 'bike') {
@@ -86,7 +88,7 @@ export function installArmor(kit: Kit): void {
       return
     }
     if (!m.bullet) {
-      c.glass.slice().forEach(function (gm2: any) {
+      c.glass.slice().forEach(function (gm2) {
         if (!gm2.parent) return
         const b = new THREE.Box3().setFromObject(gm2)
         const dx = b.max.x - b.min.x
@@ -107,7 +109,7 @@ export function installArmor(kit: Kit): void {
           })
         }
       })
-      c.quads.forEach(function (q: any) {
+      c.quads.forEach(function (q) {
         const off = 0.06
         const bx2 = q.b[0] + q.n[0] * off
         const by2 = q.b[1] + q.n[1] * off
@@ -152,13 +154,13 @@ export function installArmor(kit: Kit): void {
       const x0 = m.rear + 0.15
       const x1 = m.front - 0.15
       const brk = [x0, x1]
-      const wl: any = []
-      c.wheels.forEach(function (w: any) {
+      const wl: number[][] = []
+      c.wheels.forEach(function (w) {
         if (!w.parent) return
         const r = w.userData.r || 0.33
         wl.push([w.position.x - r - 0.07, w.position.x + r + 0.07, w.position.y + r + 0.05])
       })
-      wl.forEach(function (w: any) {
+      wl.forEach(function (w) {
         if (w[0] > x0 && w[0] < x1) brk.push(w[0])
         if (w[1] > x0 && w[1] < x1) brk.push(w[1])
       })
@@ -166,13 +168,13 @@ export function installArmor(kit: Kit): void {
         return a - b
       })
       const yTop = Math.min(m.belt - 0.06, m.clearance + 0.15 + Math.min(m.bodyHeight, 1.0) * 0.75)
-      const pieces: any = []
+      const pieces: number[][] = []
       for (let b = 0; b < brk.length - 1; b++) {
         const a0 = brk[b]
         const a1 = brk[b + 1]
         const mid = (a0 + a1) / 2
         let bot = m.clearance + 0.1
-        wl.forEach(function (w: any) {
+        wl.forEach(function (w: number[]) {
           if (mid > w[0] && mid < w[1]) bot = Math.max(bot, w[2])
         })
         if (yTop - bot < 0.14 || a1 - a0 < 0.12) continue
@@ -180,12 +182,12 @@ export function installArmor(kit: Kit): void {
         for (let q = 0; q < np; q++) pieces.push([a0 + ((a1 - a0) * q) / np, a0 + ((a1 - a0) * (q + 1)) / np, bot])
       }
       ;[1, -1].forEach(function (s2) {
-        pieces.forEach(function (pc: any, j: any) {
+        pieces.forEach(function (pc: number[], j: number) {
           const pl = pc[1] - pc[0] - 0.03
           const px = (pc[0] + pc[1]) / 2
           const plH = yTop - pc[2]
           const py = pc[2] + plH / 2
-          function zAt(x: any) {
+          function zAt(x: number) {
             const h = I.probe(c, new V3(x, py, s2 * (m.width / 2 + 2)), new V3(0, 0, -s2), 2 + m.width * 0.4)
             return h && Math.abs(h.p.z) > m.width * 0.3 ? h.p.z : (s2 * m.width) / 2
           }
@@ -252,5 +254,9 @@ export function installArmor(kit: Kit): void {
   }
   kit.applyArmor = applyArmor
 
-  Object.assign(I, { STEEL_MATERIAL, PLATE_MATERIALS, jerryCan, applyArmor })
+  const shared = { STEEL_MATERIAL, PLATE_MATERIALS, jerryCan, applyArmor }
+
+  Object.assign(I, shared)
+
+  return shared
 }

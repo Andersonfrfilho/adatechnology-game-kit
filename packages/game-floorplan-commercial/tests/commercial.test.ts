@@ -28,7 +28,7 @@ describe('commercial pack', () => {
   it('pt-BR reproduces the old Portuguese names', () => {
     const m = engine.generate('market', { seed: 1, locale: 'pt-BR' })
     expect(m.name).toBe('Mercadinho')
-    expect(m.rooms.map((c: any) => c.name)).toEqual(['Caixas', 'Loja', 'Estoque', 'Banheiro', 'Escritório'])
+    expect(m.rooms.map((c) => c.name)).toEqual(['Caixas', 'Loja', 'Estoque', 'Banheiro', 'Escritório'])
   })
 
   it('en and pt-BR have the same top-level namespaces', () => {
@@ -38,9 +38,9 @@ describe('commercial pack', () => {
   it('has a steel front door, a cargo gate and no garden (the shops on the street line)', () => {
     for (const id of SHOP_TEMPLATE_IDS) {
       const r = engine.generate(id, { seed: 2 })
-      expect(r.lot!.zones.some((z: any) => z.type === 'garden')).toBe(false)
-      expect(r.lot!.gates.some((g: any) => g.type === 'cargo')).toBe(true)
-      expect(r.doors.some((p: any) => p.model === 'steel' && p.exterior)).toBe(true)
+      expect(r.lot!.zones.some((z) => z.type === 'garden')).toBe(false)
+      expect(r.lot!.gates.some((g) => g.type === 'cargo')).toBe(true)
+      expect(r.doors.some((p) => p.model === 'steel' && p.exterior)).toBe(true)
       expect(engine.validate(r)).toEqual([])
       expect(r.missing).toEqual([])
     }
@@ -54,8 +54,8 @@ describe('urban zoning (region br, commercial)', () => {
     expect(zc.maxFloors).toBeGreaterThanOrEqual(12)
     expect(engine.getZone('zi')).toBeTruthy()
     for (const z of ['zc', 'zi']) {
-      expect((en as any).zones[z], z).toBeTruthy()
-      expect((ptBR as any).zones[z], z).toBeTruthy()
+      expect((en.zones as Record<string, unknown> | undefined)?.[z], z).toBeTruthy()
+      expect((ptBR.zones as Record<string, unknown> | undefined)?.[z], z).toBeTruthy()
     }
   })
 
@@ -79,6 +79,6 @@ describe('urban zoning (region br, commercial)', () => {
 
   it('pushes the front setback to the zone minimum', () => {
     const r = engine.generate('pharmacy', { seed: 3, zone: 'zr3_zm' })
-    expect(r.zoning!.violations.filter((v: any) => v.rule.startsWith('setback'))).toEqual([])
+    expect(r.zoning!.violations.filter((v) => v.rule.startsWith('setback'))).toEqual([])
   })
 })

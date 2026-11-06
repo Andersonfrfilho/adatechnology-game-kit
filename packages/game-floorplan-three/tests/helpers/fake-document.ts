@@ -1,5 +1,7 @@
+import type { DocumentLike } from '@adatechnology/game-props3d'
+
 /** A `document` whose canvases swallow every 2D call: the renderer only needs the textures to exist, the scene hash never reads their pixels. */
-function makeContext(): any {
+function makeContext(): unknown {
   const gradient = { addColorStop() {} }
   const target: Record<string, unknown> = {
     createLinearGradient: () => gradient,
@@ -21,11 +23,11 @@ function makeContext(): any {
   })
 }
 
-export const fakeDocument: any = {
+export const fakeDocument = {
   createElement: (tag: string) => {
     if (tag !== 'canvas') return { style: {}, appendChild() {}, setAttribute() {} }
     const context = makeContext()
     return { width: 0, height: 0, getContext: () => context, style: {}, addEventListener() {}, tagName: 'CANVAS' }
   },
   createElementNS: () => ({ style: {}, setAttribute() {} }),
-}
+} as unknown as DocumentLike

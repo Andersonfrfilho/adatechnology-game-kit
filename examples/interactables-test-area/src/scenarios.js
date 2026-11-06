@@ -5,10 +5,10 @@ const AT = [0, 0, -5] // where scenarios spawn things; the camera looks from +z 
 
 export function buildScenarios(locale, analysisOf) {
   const en = locale === 'en'
-  const T = (pt, e) => (en ? e : pt)
-  const n1 = (n) => Number(n).toFixed(1)
+  const T = (/** @type {string} */ pt, /** @type {string} */ e) => (en ? e : pt)
+  const n1 = (/** @type {number} */ n) => Number(n).toFixed(1)
 
-  const specPart = (type, id) => analysisOf(type).destructible.parts.find((p) => p.id === id)
+  const specPart = (/** @type {string} */ type, /** @type {string} */ id) => analysisOf(type).destructible.parts.find((/** @type {{ id: string; }} */ p) => p.id === id)
   const world = (p, at = AT) => [at[0] + p.position[0], at[1] + p.position[1], at[2] + p.position[2]]
   const spawn = (room, type, at = AT, rot = 0) => room.spawn(type, at, rot).objectId
   const part = (room, id, pid) => room.world.part(id, pid)
@@ -33,12 +33,12 @@ export function buildScenarios(locale, analysisOf) {
     const e = so.root.getObjectByName(partId).matrixWorld.elements
     return { id: `${partId}~hinge`, position: [e[12] - at[0], e[13] - at[1], e[14] - at[2]], shape: { size: [0, 0, 0] } }
   }
-  const jointTarget = (type, partId) => {
+  const jointTarget = (/** @type {string} */ type, /** @type {string} */ partId) => {
     const d = analysisOf(type).destructible
-    const a = d.parts.find((p) => p.id === partId)
-    const j = (d.joints ?? []).find((q) => q.a === partId || q.b === partId)
+    const a = d.parts.find((/** @type {{ id: string; }} */ p) => p.id === partId)
+    const j = (d.joints ?? []).find((/** @type {{ a: string; b: string; }} */ q) => q.a === partId || q.b === partId)
     const b = d.parts.find((p) => p.id === (j.a === partId ? j.b : j.a))
-    const box = (p) => p.position.map((c, k) => [c - p.shape.size[k] / 2, c + p.shape.size[k] / 2])
+    const box = (/** @type {{ position: number[]; shape: { size: { [x: string]: number; }; }; }} */ p) => p.position.map((/** @type {number} */ c, /** @type {string | number} */ k) => [c - p.shape.size[k] / 2, c + p.shape.size[k] / 2])
     const A = box(a)
     const B = box(b)
     const pos = [0, 1, 2].map((k) => (Math.max(A[k][0], B[k][0]) + Math.min(A[k][1], B[k][1])) / 2)
@@ -60,8 +60,8 @@ export function buildScenarios(locale, analysisOf) {
       // 120 points a shot): shooting the hinge marks it, it takes a heavy blow to tear the door off
       room.setTool('pistol_9mm')
       for (let i = 0; i < 3; i++) shoot(room, step, hinge)
-      const hinges = () => (room.world.state(id)?.joints ?? []).filter((j) => j.id.startsWith('door_fridge'))
-      const worn = hinges().some((j) => j.hp < j.maxHp)
+      const hinges = () => (room.world.state(id)?.joints ?? []).filter((/** @type {{ id: string; }} */ j) => j.id.startsWith('door_fridge'))
+      const worn = hinges().some((/** @type {{ hp: number; maxHp: number; }} */ j) => j.hp < j.maxHp)
       expect(worn, T('Os tiros na dobradiça a desgastaram', 'The shots at the hinge wore it'), { hinges: hinges().map((j) => j.hp) })
       const c = world(hinge)
       let blows = 0
@@ -95,7 +95,7 @@ export function buildScenarios(locale, analysisOf) {
 
     sc('chair_kicked_apart', T('Cadeira de jantar: um chute atrás do outro solta os parafusos e ela desmonta', 'Dining chair: kick after kick frees the screws and it comes apart'), ({ room, step, expect }) => {
       const id = spawn(room, 'dining_chair')
-      const legs = analysisOf('dining_chair').destructible.parts.filter((p) => p.position[1] - p.shape.size[1] / 2 < 0.02 && p.shape.size[1] > 0.3)
+      const legs = analysisOf('dining_chair').destructible.parts.filter((/** @type {{ position: number[]; shape: { size: number[]; }; }} */ p) => p.position[1] - p.shape.size[1] / 2 < 0.02 && p.shape.size[1] > 0.3)
       const before = room.world.state(id).parts.length
       let kicks = 0
       for (; kicks < 16 && room.world.state(id).parts.length === before; kicks++) {
@@ -109,7 +109,7 @@ export function buildScenarios(locale, analysisOf) {
       const screws = room.log.entries({ type: 'detach', objectId: id }).length
       expect(room.world.state(id).parts.length < before || screws > 0, T(`Chutes: ${kicks}; peças que saíram: ${before - room.world.state(id).parts.length}; juntas abertas: ${open}; linhas de soltura: ${screws}`, `Kicks: ${kicks}; pieces that came off: ${before - room.world.state(id).parts.length}; open joints: ${open}; detach lines: ${screws}`), { kicks, open })
       const joints = analysisOf('dining_chair').destructible.joints
-      expect(joints.every((j) => j.kind === 'screw'), T(`Todas as ${joints.length} juntas da cadeira são parafusos`, `All ${joints.length} joints of the chair are screws`))
+      expect(joints.every((/** @type {{ kind: string; }} */ j) => j.kind === 'screw'), T(`Todas as ${joints.length} juntas da cadeira são parafusos`, `All ${joints.length} joints of the chair are screws`))
     }),
 
     sc('camp_canister_shot', T('Botijão de camping: tiros no casco furam o aço e o gás explode, uma explosão pequena ao lado do fogareiro', 'Camping canister: shots at the shell pierce the steel and the gas explodes, a small blast beside the stove'), ({ room, step, expect }) => {
@@ -133,7 +133,7 @@ export function buildScenarios(locale, analysisOf) {
       }
       step(1.5)
       const moved = c0.distanceTo(room.spawned().find((q) => q.objectId === stove)?.root.position ?? c0)
-      const hurt = (room.world.state(stove)?.parts ?? []).filter((p) => p.status !== 'intact').length
+      const hurt = (room.world.state(stove)?.parts ?? []).filter((/** @type {{ status: string; }} */ p) => p.status !== 'intact').length
       expect(count(room, 'explode', id) > 0, T(`Botijão explodiu após ${shots} tiro(s) e ${seconds} s de chama (${shell.explodes.energy} J, raio ${shell.explodes.radius} m)`, `Canister exploded after ${shots} shot(s) and ${seconds} s of flame (${shell.explodes.energy} J, radius ${shell.explodes.radius} m)`), { shots, seconds })
       expect(shell.explodes.energy < 12000, T(`Explosão pequena: ${shell.explodes.energy} J (um botijão de cozinha tem muito mais)`, `A small blast: ${shell.explodes.energy} J (a kitchen bottle has far more)`), { energy: shell.explodes.energy })
       expect(moved > 0.05 || hurt > 0, T(`O fogareiro ao lado: moveu ${n1(moved)} m, ${hurt} parte(s) danificada(s)`, `The stove next to it: moved ${n1(moved)} m, ${hurt} part(s) damaged`), { moved, hurt })
@@ -142,7 +142,7 @@ export function buildScenarios(locale, analysisOf) {
     sc('camp_chair_kicked', T('Cadeira de camping: chutes soltam os clipes e a estrutura de alumínio desmonta', 'Camp chair: kicks free the clips and the aluminium frame comes apart'), ({ room, step, expect }) => {
       const id = spawn(room, 'camp_chair')
       const d = analysisOf('camp_chair').destructible
-      const legs = d.parts.filter((p) => p.position[1] - p.shape.size[1] / 2 < 0.05 && p.shape.size[1] > 0.2)
+      const legs = d.parts.filter((/** @type {{ position: number[]; shape: { size: number[]; }; }} */ p) => p.position[1] - p.shape.size[1] / 2 < 0.05 && p.shape.size[1] > 0.2)
       const before = room.world.state(id).parts.length
       let kicks = 0
       for (; kicks < 24 && room.world.state(id).parts.length === before; kicks++) {
@@ -155,7 +155,7 @@ export function buildScenarios(locale, analysisOf) {
       const open = room.world.state(id).joints.filter((j) => j.open).length
       const loose = before - room.world.state(id).parts.length
       expect(loose > 0 || open > 0, T(`Chutes: ${kicks}; peças que saíram: ${loose}; juntas abertas: ${open}`, `Kicks: ${kicks}; pieces that came off: ${loose}; open joints: ${open}`), { kicks, open })
-      expect(d.joints.every((j) => j.kind === 'clip'), T(`Todas as ${d.joints.length} juntas da cadeira são clipes`, `All ${d.joints.length} joints of the chair are clips`))
+      expect(d.joints.every((/** @type {{ kind: string; }} */ j) => j.kind === 'clip'), T(`Todas as ${d.joints.length} juntas da cadeira são clipes`, `All ${d.joints.length} joints of the chair are clips`))
     }),
 
     sc('tv_screen_shatters', T('TV: um tiro na tela quebra o vidro em cacos', 'TV: a shot at the screen shatters the glass'), ({ room, step, expect }) => {
@@ -165,7 +165,7 @@ export function buildScenarios(locale, analysisOf) {
       let shots = 0
       for (; shots < 8 && part(room, id, 'screen')?.status !== 'broken'; shots++) shoot(room, step, screen)
       step(0.5)
-      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((e) => e.part === 'screen')
+      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((/** @type {{ part: string; }} */ e) => e.part === 'screen')
       const n = Number(fr?.data?.fragments ?? 0)
       expect(part(room, id, 'screen')?.status === 'broken' && n >= 4, T(`Tela depois de ${shots} tiro(s): ${part(room, id, 'screen')?.status}, ${n} caco(s) (esperado: broken, 4 ou mais)`, `Screen after ${shots} shot(s): ${part(room, id, 'screen')?.status}, ${n} shard(s) (expected: broken, 4 or more)`), { shots, n })
       expect(part(room, id, 'screen')?.material === 'glass', T('A tela é de vidro', 'The screen is glass'))
@@ -174,7 +174,7 @@ export function buildScenarios(locale, analysisOf) {
     sc('sofa_burns', T('Sofá: fogo no estofado queima o tecido e a espuma', 'Sofa: fire on the upholstery burns the fabric and the foam'), ({ room, step, expect }) => {
       const id = spawn(room, 'sofa')
       const parts = analysisOf('sofa').destructible.parts
-      const seat = parts.filter((p) => p.material === 'foam').sort((a, b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
+      const seat = parts.filter((/** @type {{ material: string; }} */ p) => p.material === 'foam').sort((/** @type {{ shape: { size: number[]; }; }} */ a, /** @type {{ shape: { size: number[]; }; }} */ b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
       const c = world(seat)
       room.setTool('lighter')
       room.look([c[0], c[1] + 0.35, c[2] + 0.5], [c[0], c[1] + 0.05, c[2] + 0.1])
@@ -183,7 +183,7 @@ export function buildScenarios(locale, analysisOf) {
       expect(ignited.length > 0, T(`Isqueiro no assento: ${ignited.length} parte(s) pegando fogo (${[...new Set(ignited.map((p) => p.material))].join(', ')})`, `Lighter on the seat: ${ignited.length} part(s) burning (${[...new Set(ignited.map((p) => p.material))].join(', ')})`), { burning: ignited.length })
       step(240)
       const after = room.world.state(id).parts
-      const burned = (m) => after.filter((p) => p.material === m && (p.status === 'ashes' || p.char > 0.5)).length
+      const burned = (/** @type {string} */ m) => after.filter((/** @type {{ material: string; status: string; char: number; }} */ p) => p.material === m && (p.status === 'ashes' || p.char > 0.5)).length
       expect(burned('foam') > 0 && burned('fabric') + burned('foam') > 1, T(`Depois de 4 min: espuma queimada em ${burned('foam')} parte(s), tecido em ${burned('fabric')}`, `After 4 min: foam burned in ${burned('foam')} part(s), fabric in ${burned('fabric')}`), { foam: burned('foam'), fabric: burned('fabric') })
     }),
 
@@ -204,7 +204,7 @@ export function buildScenarios(locale, analysisOf) {
     sc('sofa_fire_extinguished', T('Sofá em chamas: o extintor apaga o fogo do estofado', 'Burning sofa: the extinguisher puts the upholstery fire out'), ({ room, step, expect }) => {
       const id = spawn(room, 'sofa')
       const burning = () => room.world.state(id).parts.some((p) => p.burning)
-      const seat = analysisOf('sofa').destructible.parts.filter((p) => p.material === 'foam').sort((a, b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
+      const seat = analysisOf('sofa').destructible.parts.filter((/** @type {{ material: string; }} */ p) => p.material === 'foam').sort((/** @type {{ shape: { size: number[]; }; }} */ a, /** @type {{ shape: { size: number[]; }; }} */ b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
       const c = world(seat)
       room.world.hit(id, { type: 'fire', point: c, temperature: 900, radius: 0.6, duration: 4 })
       step(6)
@@ -227,7 +227,7 @@ export function buildScenarios(locale, analysisOf) {
       room.throwHeld(16)
       step(2.5)
       const hits = room.log.entries({ type: 'impact' })
-      const wallDamage = room.log.entries().filter((e) => e.objectId === 'target_wall' && ['dent', 'damage', 'crack', 'fracture'].includes(e.type)).length
+      const wallDamage = room.log.entries().filter((/** @type {{ objectId: string; type: string; }} */ e) => e.objectId === 'target_wall' && ['dent', 'damage', 'crack', 'fracture'].includes(e.type)).length
       expect(hits.length > 0 && wallDamage > 0, T(`Impactos ${hits.length}, danos na parede ${wallDamage}`, `Impacts ${hits.length}, wall damage ${wallDamage}`), { id })
     }),
 
@@ -244,7 +244,7 @@ export function buildScenarios(locale, analysisOf) {
       }
       step(1.5)
       const moved = c0.distanceTo(room.spawned().find((s) => s.objectId === chair)?.root.position ?? c0)
-      const hurt = (room.world.state(chair)?.parts ?? []).filter((p) => p.status !== 'intact').length
+      const hurt = (room.world.state(chair)?.parts ?? []).filter((/** @type {{ status: string; }} */ p) => p.status !== 'intact').length
       expect(count(room, 'explode', id) > 0, T(`Botijão explodiu após ${seconds} s de calor (${shell.explodes.energy} J, limite ${shell.explodes.atC} °C)`, `Bottle exploded after ${seconds} s of heat (${shell.explodes.energy} J, limit ${shell.explodes.atC} °C)`), { seconds })
       expect(moved > 0.2 || hurt > 0, T(`A cadeira ao lado: moveu ${n1(moved)} m, ${hurt} parte(s) danificada(s)`, `The chair next to it: moved ${n1(moved)} m, ${hurt} part(s) damaged`), { moved, hurt })
     }),
@@ -316,7 +316,7 @@ export function buildScenarios(locale, analysisOf) {
       let shots = 0
       for (; shots < 12 && part(room, id, 'tempered_glass_2')?.status !== 'broken'; shots++) shoot(room, step, glass)
       step(0.5)
-      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((e) => e.part === 'tempered_glass_2')
+      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((/** @type {{ part: string; }} */ e) => e.part === 'tempered_glass_2')
       const n = Number(fr?.data?.fragments ?? 0)
       expect(part(room, id, 'tempered_glass_2')?.status === 'broken' && n >= 12, T(`Vidro temperado após ${shots} tiro(s): ${part(room, id, 'tempered_glass_2')?.status}, ${n} pedaço(s) (esperado: broken, 12 ou mais)`, `Tempered glass after ${shots} shot(s): ${part(room, id, 'tempered_glass_2')?.status}, ${n} piece(s) (expected: broken, 12 or more)`), { shots, n })
       expect(part(room, id, 'tempered_glass_2')?.material === 'tempered_glass', T('O vidro do box é temperado', 'The shower glass is tempered'))
@@ -324,7 +324,7 @@ export function buildScenarios(locale, analysisOf) {
 
     sc('trash_bin_crushed', T('Lixeira: golpes de marreta amassam o plástico', 'Trash bin: sledgehammer blows dent the plastic'), ({ room, step, expect }) => {
       const id = spawn(room, 'trash_bin')
-      const body = analysisOf('trash_bin').destructible.parts.filter((p) => p.material === 'plastic' && p.id !== 'lid').sort((a, b) => b.shape.size[1] - a.shape.size[1])[0]
+      const body = analysisOf('trash_bin').destructible.parts.filter((/** @type {{ material: string; id: string; }} */ p) => p.material === 'plastic' && p.id !== 'lid').sort((/** @type {{ shape: { size: number[]; }; }} */ a, /** @type {{ shape: { size: number[]; }; }} */ b) => b.shape.size[1] - a.shape.size[1])[0]
       const c = world(body)
       room.setTool('sledgehammer')
       room.waitUntilReady()
@@ -345,7 +345,7 @@ export function buildScenarios(locale, analysisOf) {
       room.world.hit(id, { type: 'explosive', point: [AT[0], AT[1] + 0.5, AT[2] + 0.9], energy: 400000, radius: 3, source: 'test' })
       step(2)
       const st = room.world.state(id)
-      const crumble = room.log.entries({ type: 'fracture', objectId: id }).filter((e) => e.data?.style === 'crumble').length
+      const crumble = room.log.entries({ type: 'fracture', objectId: id }).filter((/** @type {{ data: { style: string; }; }} */ e) => e.data?.style === 'crumble').length
       const open = (st?.joints ?? []).filter((j) => j.open && j.kind === 'mortar').length
       const total = analysisOf('bbq').destructible.parts.length
       const lost = total - (st?.parts.length ?? 0)
@@ -379,7 +379,7 @@ export function buildScenarios(locale, analysisOf) {
         const moved = []
         const rest = {}
         for (const clipId of ['open_all', 'on_all']) {
-          const clip = analysisOf(type).animations.find((c) => c.id === clipId)
+          const clip = analysisOf(type).animations.find((/** @type {{ id: string; }} */ c) => c.id === clipId)
           if (!clip) continue
           const ids = Object.keys(clip.keys[clip.keys.length - 1].parts)
           for (const pid of ids) {
@@ -395,7 +395,7 @@ export function buildScenarios(locale, analysisOf) {
           }
           const back = clipId === 'open_all' ? 'close_all' : 'off_all'
           room.playAnimation(back, id)
-          step(analysisOf(type).animations.find((c) => c.id === back).duration + 0.2)
+          step(analysisOf(type).animations.find((/** @type {{ id: string; }} */ c) => c.id === back).duration + 0.2)
           for (const pid of ids) {
             const o = so.root.getObjectByName(pid)
             const d = Math.hypot(o.position.x - rest[pid][0], o.position.y - rest[pid][1], o.position.z - rest[pid][2], o.rotation.x - rest[pid][3], o.rotation.y - rest[pid][4], o.rotation.z - rest[pid][5])
@@ -428,7 +428,7 @@ export function buildScenarios(locale, analysisOf) {
       name: T('Zumbi atrás da porta: um 7,62 atravessa a porta do guarda-roupa e depois o zumbi, na ordem', 'Zombie behind the door: a 7.62 crosses the wardrobe door and then the zombie, in that order'),
       run: ({ room, step, expect }) => {
         const wardrobe = spawn(room, 'wardrobe')
-        const back = analysisOf('wardrobe').destructible.parts.reduce((m, p) => Math.min(m, p.position[2] - p.shape.size[2] / 2), 0)
+        const back = analysisOf('wardrobe').destructible.parts.reduce((/** @type {number} */ m, /** @type {{ position: number[]; shape: { size: number[]; }; }} */ p) => Math.min(m, p.position[2] - p.shape.size[2] / 2), 0)
         let zombie
         try {
           // right behind the back of the wardrobe, facing the shooter; standing still so the aim holds
@@ -450,7 +450,7 @@ export function buildScenarios(locale, analysisOf) {
         room.look([AT[0] + 0.1, 0.7, AT[2] + 2.5], [AT[0] + 0.1, 0.7, AT[2]])
         room.use()
         step(0.6)
-        const events = room.log.entries().filter((e) => e.seq > from && e.channel === 'event')
+        const events = room.log.entries().filter((/** @type {{ seq: number; channel: string; }} */ e) => e.seq > from && e.channel === 'event')
         const first = (id) => events.findIndex((e) => e.objectId === id)
         const onDoor = first(wardrobe)
         const onZombie = first(zombie)

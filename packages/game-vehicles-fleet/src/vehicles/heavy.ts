@@ -1,3 +1,4 @@
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Heavy group: trucks, buses, armoured truck and tractor. Uses only the kit API.
@@ -26,20 +27,20 @@ export function installHeavy(fx: FleetContext): void {
   const REFL_R = CM('#b3261e', { roughness: 0.4, emissive: new THREE.Color('#2a0402'), emissiveIntensity: 0.3 }),
     REFL_W = CM('#e8e8e2', { roughness: 0.4 })
 
-  function lerp2(a: any, b: any, t: any) {
+  function lerp2(a: any, b: number[], t: number) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
   }
   function armorPlus(fn: any) {
-    return function (c: any, Z: any) {
+    return function (c: VehicleContext, Z: any) {
       Z.applyArmor(c)
       fn(c, Z)
     }
   }
-  function roofLamp(c: any, x: any, y: any, z: any) {
+  function roofLamp(c: VehicleContext, x: any, y: any, z: any) {
     c.cylinder(0.08, 0.065, 0.12, MT.steel, x, y, z, 'x')
     c.cylinder(0.07, 0.07, 0.012, MT.head, x + 0.065, y, z, 'x')
   }
-  function sandbags(c: any, x0: any, x1: any, y: any, z: any, along: any) {
+  function sandbags(c: VehicleContext, x0: number, x1: number, y: any, z: any, along: string) {
     const bag = CM('#6e6248', { roughness: 0.95 })
     if (along === 'z') {
       for (let zz = x0; zz <= x1 + 1e-6; zz += 0.42) {
@@ -54,7 +55,7 @@ export function installHeavy(fx: FleetContext): void {
     }
   }
   /* truck wheel: steel disc with ventilation holes */
-  function truckWheel(c: any, x: any, z: any, r: any, w: any, o: any) {
+  function truckWheel(c: VehicleContext, x: number, z: number, r: number, w: number, o: any) {
     o = o || {}
     const g = c.wheel(x, z, r, w, { rim: o.rim || RIM_W, spokes: 0, rimR: 0.56, noPart: o.noPart, label: o.label })
     const s = z >= 0 ? 1 : -1,
@@ -79,10 +80,10 @@ export function installHeavy(fx: FleetContext): void {
   }
   /* engine battery: the core locks the hood half-open when the engine is hit; on the tilting cab that
      would lift the whole cab, so the effect is redone without the lock */
-  function engineNoLatch(c: any) {
-    c.parts.forEach(function (p: any) {
+  function engineNoLatch(c: VehicleContext) {
+    c.parts.forEach(function (p) {
       if (p.kind !== 'engine') return
-      p.onHit = function (c2: any, pt: any, force: any) {
+      p.onHit = function (c2: VehicleContext, pt: any, force: number) {
         kit.addEmitter(c2, pt.pos.clone().add(new V3(0, 0.35, 0)), 'black')
         kit.puddle(c2, 'oil', pt.pos.clone().setY(Math.max(0.2, c2.meta.clearance || 0.3)), 0.6 + force * 0.3)
       }
@@ -93,7 +94,7 @@ export function installHeavy(fx: FleetContext): void {
   const CHR = CM('#e2e6e9', { metalness: 0.55, roughness: 0.2, emissive: new THREE.Color('#3a4046'), emissiveIntensity: 1 })
   /* the rear of the shell sits a few centimetres behind the last profile point (rounded corners and subdivision):
      plates and flat texts that carDetails puts behind would be hidden inside the shell; push outward */
-  function rearOut(c: any, n0: any, rr: any, gap: any) {
+  function rearOut(c: VehicleContext, n0: any, rr: number, gap: number) {
     c.vehicle.children.slice(n0).forEach(function (o: any) {
       if (o.isMesh && o.geometry.type === 'PlaneGeometry' && o.position.x < rr + 0.06) o.position.x = Math.min(o.position.x, rr - gap)
     })
@@ -103,7 +104,7 @@ export function installHeavy(fx: FleetContext): void {
   /* objs: cab meshes (direct children of c.g). The cab rotates around a transverse axis at the front, bottom.
      Instead of re-parenting the meshes (which would take away their rigid dent following), each one gets the
      tilt in its own matrix: the dent and the click ray keep working. */
-  function tiltCab(c: any, objs: any, pivot: any, o: any) {
+  function tiltCab(c: VehicleContext, objs: any, pivot: any, o: any) {
     o = o || {}
     const h = kit.hinge(c, [], pivot, { len: -(o.len || 1.8), open: o.open || 0.9, sign: -1, zw: 0.7, label: trl('labels.tilting_cab') })
     const piv = h.piv,
@@ -131,7 +132,7 @@ export function installHeavy(fx: FleetContext): void {
         this.matrixWorldNeedsUpdate = true
       }
     })
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.kind === 'hood' && p.obj === piv) {
         p.onHit = function () {}
         p.pos = new V3(pivot.x - 0.8, pivot.y + 1.0, 0)
@@ -151,7 +152,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= cab-over cab ================= */
   /* o: { model: delivery|constellation|atego, f (front), W, len, roof, belt, bot (cab base), floor, ax (front axle), wr, ww, col, int, glass, sideCol } */
-  function cabOver(c: any, o: any) {
+  function cabOver(c: VehicleContext, o: any) {
     const f = o.f,
       W = o.W,
       len = o.len,
@@ -180,7 +181,7 @@ export function installHeavy(fx: FleetContext): void {
       [f, bot, 0.05],
     ]
     const T = { belt: belt, top: ry + 0.03, k: dl ? 0.07 : 0.045 }
-    function wsx(y: any) {
+    function wsx(y: number) {
       return ws0[0] + ((ws1[0] - ws0[0]) * (y - ws0[1])) / (ws1[1] - ws0[1])
     }
     const q = kit.quadDef(lerp2(ws0, ws1, 0.05), lerp2(ws0, ws1, 0.93), W, T, 'front', 0.05, { inset: 0.04, side: 0.11 })
@@ -293,7 +294,7 @@ export function installHeavy(fx: FleetContext): void {
       c.rod(new V3(wsx(y0) + 0.06, y0, z - 0.25), new V3(wsx(y0 + 0.5) + 0.06, y0 + 0.5, z + 0.05), 0.011, MT.trim)
     })
     /* front per model */
-    const fx = function (y: any) {
+    const fx = function (y: number) {
       return kit.profX(items, y, true)
     }
     if (dl) {
@@ -341,7 +342,7 @@ export function installHeavy(fx: FleetContext): void {
   }
 
   /* front bumper, low headlights and front wheels (they do not tilt) */
-  function cabFront(c: any, o: any, _cab: any) {
+  function cabFront(c: VehicleContext, o: any, _cab: any) {
     const f = o.f,
       W = o.W,
       md = o.model,
@@ -414,7 +415,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= chassis ================= */
   /* o: { f, rear, W, railY, axles:[x..], wr, ww, tankX, tankSide (-1 left), guards: [x0, x1] , bar: true, mud: true, lightsY } */
-  function chassis(c: any, o: any) {
+  function chassis(c: VehicleContext, o: any) {
     const f = o.f,
       rear = o.rear,
       W = o.W,
@@ -426,7 +427,7 @@ export function installHeavy(fx: FleetContext): void {
       c.roundBox(f - rear - 0.1, 0.24, 0.09, 0.02, MT.trim, (f + rear) / 2, ry, z)
     })
     for (let x = rear + 0.3; x < f - 0.3; x += 1.3) c.roundBox(0.1, 0.18, 0.78, 0.02, MT.trim, x, ry, 0)
-    o.axles.forEach(function (ax: any, i: any) {
+    o.axles.forEach(function (ax: any, i: number) {
       c.cylinder(0.08, 0.08, W - 0.5, MT.trim, ax, wr, 0, 'z')
       if (!o.tag || i === 0) c.sphere(0.2, MT.trim, ax, wr, 0, 1, 1, 0.9)
       ;[1, -1].forEach(function (s) {
@@ -441,7 +442,7 @@ export function installHeavy(fx: FleetContext): void {
       })
     })
     /* fenders over the rear wheel set */
-    const axs = o.axles.slice().sort(function (a: any, b: any) {
+    const axs = o.axles.slice().sort(function (a: number, b: number) {
         return a - b
       }),
       a0 = axs[0] - wr - 0.12,
@@ -539,7 +540,7 @@ export function installHeavy(fx: FleetContext): void {
 
   /* ================= box body ================= */
   /* o: { x0 (front), x1 (rear), y0, y1, W, col, armored, label } */
-  function boxBody(c: any, o: any) {
+  function boxBody(c: VehicleContext, o: any) {
     const x0 = o.x0,
       x1 = o.x1,
       y0 = o.y0,
@@ -622,7 +623,7 @@ export function installHeavy(fx: FleetContext): void {
   }
 
   /* mirrored engine bay (rear engine): built with engineBay and rotated 180 degrees around a vertical axis at xm */
-  function mirrorBay(c: any, o: any, xm: any) {
+  function mirrorBay(c: VehicleContext, o: any, xm: number) {
     const n0 = c.vehicle.children.length,
       np = c.parts.length
     kit.engineBay(c, o)
@@ -632,7 +633,7 @@ export function installHeavy(fx: FleetContext): void {
       ob.position.z = -ob.position.z
       ob.quaternion.premultiply(q)
     })
-    c.parts.slice(np).forEach(function (p: any) {
+    c.parts.slice(np).forEach(function (p) {
       p.pos.x = 2 * xm - p.pos.x
       p.pos.z = -p.pos.z
     })
@@ -731,12 +732,12 @@ export function installHeavy(fx: FleetContext): void {
       })
       const m = c.meta
       m.front = f + 0.24
-      m.length = m.front - m.rear
+      m.length = m.front - m.rear!
       m.top = 3.38
       m.belt = 1.56
       m.bodyHeight = 1.6
       m.clearance = 0.42
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         const r = c.meta.roof,
           y = r.y + 0.06
         for (let x = r.x0; x <= r.x1; x += 0.6)
@@ -843,7 +844,7 @@ export function installHeavy(fx: FleetContext): void {
         ty = 2.08,
         sy = 0.82,
         sz = 1.16
-      function hz(y: any) {
+      function hz(y: number) {
         const d = (y - ty) / sy
         return sz * Math.sqrt(Math.max(0, 1 - d * d))
       }
@@ -930,7 +931,7 @@ export function installHeavy(fx: FleetContext): void {
       m.front = f + 0.24
       m.length = m.front - rear
       c.part('fuel_tank', trl('labels.cargo_tank_20_000_l'), tk, new V3(tx, ty, 0), 2.2, {
-        onHit: function (c2: any, pt: any, force: any) {
+        onHit: function (c2: VehicleContext, pt: any, force: number) {
           const pd = kit.puddle(c2, 'gasoline', new V3(tx, 1.0, 0), 1.8 + force)
           if (force >= 0.9) {
             kit.igniteFuel(c2, pd)
@@ -939,7 +940,7 @@ export function installHeavy(fx: FleetContext): void {
         },
       })
       m.bigBlast = true
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         /* mobile station: grille over the valves, hose reel and search light */
         for (let z = -1.0; z <= 1.01; z += 0.2) c.rod(new V3(-0.85, 1.28, z), new V3(0.05, 1.28, z), 0.014, kit.steelMaterial)
         c.cylinder(0.4, 0.4, 0.35, CM('#b3261e'), lx - 0.1, 1.45, 0.6, 'z')
@@ -1007,7 +1008,7 @@ export function installHeavy(fx: FleetContext): void {
       const ws0 = [f + 0.06, 1.25],
         ws1 = [f + 0.02, 2.84]
       const q = kit.quadDef(lerp2(ws0, ws1, 0.04), lerp2(ws0, ws1, 0.8), W, T, 'front', 0.05, { inset: 0.05, side: 0.12 })
-      function win(x0: any, x1: any) {
+      function win(x0: number, x1: number) {
         return [
           [x0, 1.68],
           [x1, 1.68],
@@ -1081,7 +1082,7 @@ export function installHeavy(fx: FleetContext): void {
         winR,
         W,
         T,
-        function (i: any) {
+        function (i: number) {
           return lbl('window_' + (i + 1))
         },
         { sides: [1] },
@@ -1091,7 +1092,7 @@ export function installHeavy(fx: FleetContext): void {
         winL,
         W,
         T,
-        function (i: any) {
+        function (i: number) {
           return lbl('window_' + (i + 1))
         },
         { sides: [-1] },
@@ -1127,7 +1128,7 @@ export function installHeavy(fx: FleetContext): void {
         c.rod(new V3(hx, 1.1, dz + 0.03), new V3(hx, 2.2, dz + 0.03), 0.014, MT.chrome)
       })
       ;[1, -1].forEach(function (s) {
-        const zs = function (y: any) {
+        const zs = function (y: number) {
           return s * (kit.halfAt(W, T, y) + 0.004)
         }
         const segs =
@@ -1257,7 +1258,7 @@ export function installHeavy(fx: FleetContext): void {
         fxKey: 'roof',
         who: trl('who.whoever_is_seated'),
       })
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         sandbags(c, -0.8, 0.8, 3.3, 3.4, 'z')
         roofLamp(c, 3.8, 3.45, 0.7)
         roofLamp(c, 3.8, 3.45, -0.7)
@@ -1341,7 +1342,7 @@ export function installHeavy(fx: FleetContext): void {
         [f - 0.25, 2.66],
         [f - 1.2, 2.66],
       ]
-      function strip(x0: any, x1: any, pitch: any) {
+      function strip(x0: number, x1: number, pitch: number) {
         const out = []
         for (let x = x0; x < x1 - 0.3; x += pitch)
           out.push([
@@ -1399,7 +1400,7 @@ export function installHeavy(fx: FleetContext): void {
         winR,
         W,
         T,
-        function (i: any) {
+        function (i: number) {
           return lbl('window_' + (i + 1))
         },
         { sides: [1] },
@@ -1409,7 +1410,7 @@ export function installHeavy(fx: FleetContext): void {
         winL,
         W,
         T,
-        function (i: any) {
+        function (i: number) {
           return lbl('window_' + (i + 1))
         },
         { sides: [-1] },
@@ -1457,7 +1458,7 @@ export function installHeavy(fx: FleetContext): void {
         })
       })
       ;[1, -1].forEach(function (s) {
-        const zs = function (y: any) {
+        const zs = function (y: number) {
           return s * (kit.halfAt(W, T, y) + 0.004)
         }
         const segs =
@@ -1495,7 +1496,7 @@ export function installHeavy(fx: FleetContext): void {
         c.roundBox(0.06, 0.05, 0.015, 0.01, MT.amber, 2.5, 0.55, zs(0.55))
       })
       /* front LED destination sign, black front and headlights */
-      const fx = function (y: any) {
+      const fx = function (y: number) {
         return kit.profX(items, y, true)
       }
       /* LED destination sign right above the windshield, on the same dark glass band */
@@ -1612,10 +1613,12 @@ export function installHeavy(fx: FleetContext): void {
         weight: 0.5,
         anchor: [3.3, 3.12, 0],
       })
-      ;[
-        [dF, 'front_door', trl('labels.front_door'), 'porta_dianteira'],
-        [dM, 'middle_door', trl('labels.middle_door'), 'porta_central'],
-      ].forEach(function (P) {
+      ;(
+        [
+          [dF, 'front_door', trl('labels.front_door'), 'porta_dianteira'],
+          [dM, 'middle_door', trl('labels.middle_door'), 'porta_central'],
+        ] as [unknown, string, string, string][]
+      ).forEach(function (P) {
         const d: any = P[0]
         c.zone(P[1], P[2], [d[0][0] - 0.05, d[1][0] + 0.05, 0.3, 2.78, W / 2 - 0.3, W / 2 + 0.25], null, {
           type: 'panel',
@@ -1650,10 +1653,10 @@ export function installHeavy(fx: FleetContext): void {
       lidObjs.push(c.text('207', 0.5, 0.2, rr - 0.09, 1.28, 0, '-x', { fg: '#ffb02e', bg: '#060606', glow: '#e09020' }))
       kit.hinge(c, lidObjs, new V3(rr - 0.03, 1.42, 0), { len: -0.4, open: 1.2, sign: -1, zw: 0.8, label: trl('labels.engine_cover') })
       m.glasshouse = { fb: f, belt: 1.3, Wg: W }
-      c.parts.forEach(function (p: any) {
+      c.parts.forEach(function (p) {
         if (p.kind === 'radiator') p.pos.set(rr + 0.3, 0.7, 0)
       })
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         sandbags(c, -1.6, 0.6, 3.3, -0.5, 'x')
         roofLamp(c, f - 0.2, 3.38, 0.7)
         roofLamp(c, f - 0.2, 3.38, -0.7)
@@ -1791,7 +1794,7 @@ export function installHeavy(fx: FleetContext): void {
       m.belt = 1.86
       m.bodyHeight = 1.4
       m.clearance = 0.45
-      m.armor = armorPlus(function (c: any) {
+      m.armor = armorPlus(function (c: VehicleContext) {
         /* roof watchtower with a shield and a spotlight */
         c.cylinder(0.42, 0.42, 0.35, kit.steelMaterial, -1.3, 3.35, 0, null, { seg: 20, open: true })
         c.roundBox(0.06, 0.45, 0.8, 0.03, kit.steelMaterial, -0.85, 3.5, 0, { rot: [0, 0, -0.2] })
@@ -2020,7 +2023,7 @@ export function installHeavy(fx: FleetContext): void {
         anchor: [-1.32, 1.6, 0],
         weight: 0.6,
       })
-      m.armor = function (c: any) {
+      m.armor = function (c: VehicleContext) {
         const S = kit.steelMaterial
         /* front blade (plough type) on arms, wire cage around the operator, jerry cans on the fenders */
         c.roundBox(0.1, 0.72, 2.2, 0.04, S, 2.55, 0.5, 0, { rot: [0, 0, -0.25] })

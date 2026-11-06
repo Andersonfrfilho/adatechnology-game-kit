@@ -19,7 +19,7 @@ const { chromium } = (() => {
   }
   throw new Error('playwright not found')
 })()
-const opt = (name, dflt) => {
+const opt = (/** @type {string} */ name, /** @type {string} */ dflt) => {
   const i = process.argv.indexOf(`--${name}`)
   return i >= 0 ? process.argv[i + 1] : dflt
 }
@@ -28,7 +28,7 @@ const base = opt('url', pathToFileURL(join(here, 'dist/test-room.html')).href)
 const materials = JSON.parse(readFileSync(join(here, '../../packages/game-destruction/src/data/materials.json'), 'utf8'))
 const all = (Array.isArray(materials) ? materials : (materials.materials ?? Object.values(materials))).map((m) => m.id)
 const only = opt('only', '').split(',').filter(Boolean)
-const ids = only.length ? all.filter((m) => only.includes(m)) : all
+const ids = only.length ? all.filter((/** @type {string} */ m) => only.includes(m)) : all
 mkdirSync(outDir, { recursive: true })
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--autoplay-policy=no-user-gesture-required'] })
@@ -85,22 +85,22 @@ await page.evaluate((mats) => {
     A.events.length = 0
     return A.so.objectId
   }
-  A.aim = (tool, dist = 2.5, y = 0.6) => {
+  A.aim = (/** @type {string} */ tool, dist = 2.5, y = 0.6) => {
     room.setTool(tool)
     room.look([A.at[0], 1.6, A.at[2] + dist], [A.at[0], y, A.at[2]])
   }
   A.material = () => room.world.state(A.so.objectId)?.parts.map((p) => p.material)
 }, all)
 
-const sleep = (ms) => page.waitForTimeout(ms)
+const sleep = (/** @type {number} */ ms) => page.waitForTimeout(ms)
 const collect = () =>
   page.evaluate(() => {
     const A = window.__snd
     const t0 = A.events[0]?.t ?? A.sounds[0]?.t ?? 0
     return {
-      events: A.events.map((e) => ({ ...e, t: Math.round(e.t - t0) })),
+      events: A.events.map((/** @type {{ t: number; }} */ e) => ({ ...e, t: Math.round(e.t - t0) })),
       // only what sounded at the slab (a blast also reaches the room's scenery)
-      sounds: A.sounds.filter((s) => !s.position || Math.hypot(s.position[0] - A.at[0], s.position[2] - A.at[2]) < 1.5).map((s) => ({ ...s, t: Math.round(s.t - t0), volume: Math.round(s.volume * 100) / 100 })),
+      sounds: A.sounds.filter((/** @type {{ position: number[]; }} */ s) => !s.position || Math.hypot(s.position[0] - A.at[0], s.position[2] - A.at[2]) < 1.5).map((/** @type {{ t: number; volume: number; }} */ s) => ({ ...s, t: Math.round(s.t - t0), volume: Math.round(s.volume * 100) / 100 })),
       others: A.sounds.length,
       parts: A.material(),
       stats: window.__testRoom.audio.stats(),
@@ -111,7 +111,7 @@ async function act(m, kind) {
   await page.evaluate((mm) => window.__snd.fresh(mm), m)
   await sleep(300)
   if (kind === 'shot' || kind === 'kick') {
-    await page.evaluate((k) => window.__snd.aim(k === 'shot' ? 'pistol_9mm' : 'kick', k === 'shot' ? 3 : 0.6, k === 'shot' ? 0.6 : 0.45), kind)
+    await page.evaluate((/** @type {string} */ k) => window.__snd.aim(k === 'shot' ? 'pistol_9mm' : 'kick', k === 'shot' ? 3 : 0.6, k === 'shot' ? 0.6 : 0.45), kind)
     await page.evaluate(() => window.__testRoom.waitUntilReady(5))
     await sleep(200)
     await page.evaluate(() => {
@@ -120,7 +120,7 @@ async function act(m, kind) {
       return window.__testRoom.use(0)
     })
   } else {
-    await page.evaluate((k) => window.__testRoom.testTable.trial(k, window.__snd.so.objectId), kind)
+    await page.evaluate((/** @type {string} */ k) => window.__testRoom.testTable.trial(k, window.__snd.so.objectId), kind)
   }
   await sleep(kind === 'blast' ? 2500 : 1200)
   return collect()
@@ -143,7 +143,7 @@ for (const m of ids) {
   }
   report.materials[m] = r
   const tally = (list) => Object.entries(list.reduce((a, x) => ((a[x] = (a[x] ?? 0) + 1), a), {})).map(([k, n]) => (n > 1 ? `${k}x${n}` : k)).join(' ')
-  const brief = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.error ?? `ev[${tally((v.events ?? []).map((e) => e.type + (e.damageType ? ':' + e.damageType : '')))}] snd[${tally((v.sounds ?? []).map((s) => s.id))}] first=${v.sounds?.[0]?.t ?? '-'}ms`]))
+  const brief = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.error ?? `ev[${tally((v.events ?? []).map((/** @type {{ type: string; damageType: string; }} */ e) => e.type + (e.damageType ? ':' + e.damageType : '')))}] snd[${tally((v.sounds ?? []).map((s) => s.id))}] first=${v.sounds?.[0]?.t ?? '-'}ms`]))
   console.log(m, JSON.stringify(brief))
 }
 writeFileSync(join(outDir, 'report.json'), JSON.stringify(report, null, 1))

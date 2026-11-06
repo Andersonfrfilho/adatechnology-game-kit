@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
-const pkg = (name) => join(root, 'packages', name)
+const pkg = (/** @type {string} */ name) => join(root, 'packages', name)
 
 function findEsbuild() {
   const store = join(root, 'node_modules/.pnpm')
@@ -44,7 +44,7 @@ const result = await esbuild.build({
     '@adatechnology/game-destruction': join(pkg('game-destruction'), 'dist/index.js'),
   },
 })
-const safe = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
+const safe = (/** @type {string} */ s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
 const bundle = safe(result.outputFiles[0].text)
 const app = safe(readFileSync(join(here, 'src/showroom.js'), 'utf8'))
 const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8'))

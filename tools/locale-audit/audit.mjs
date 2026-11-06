@@ -13,7 +13,18 @@ import vm from 'node:vm'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
+/** @type {typeof import('typescript')} */
 const ts = createRequire(join(root, 'package.json'))('typescript')
+
+/**
+ * @typedef {{ values?: string[], keys?: string[], keyPatterns?: string[], excluded?: string[], knownGaps?: Record<string, string> }} Allowlist
+ * @typedef {{ exports: unknown, probe?: Record<string, unknown> }} ModuleRecord
+ * @typedef {{ path: string, en: unknown, pt: unknown }} Pair
+ * @typedef {Pair & { owner: string, file: string }} OwnedPair
+ * @typedef {{ owner: string, file: string, table: string, missingInEn: string[], missingInPt: string[], copies: string[], placeholderMismatch: string[], known: string[], values: Record<string, string>, keys: number }} CompareResult
+ * @typedef {{ owner: string, file: string, reason: string }} Failure
+ * @typedef {{ results: CompareResult[], failures: Failure[] }} Outcome
+ */
 
 const args = process.argv.slice(2)
 const wantCheck = args.includes('--check')
@@ -21,6 +32,7 @@ const wantValues = args.includes('--values')
 const wantJson = args.includes('--json')
 const onlyPackages = args.flatMap((arg, index) => (arg === '--package' ? [args[index + 1]] : []))
 
+/** @type {Allowlist} */
 const allowlist = JSON.parse(readFileSync(join(here, 'allowlist.json'), 'utf8'))
 const allowedValues = new Set(allowlist.values ?? [])
 const allowedKeys = new Set(allowlist.keys ?? [])
@@ -33,13 +45,16 @@ const PT = 'pt-BR'
 const SOURCE_EXTENSIONS = ['.ts', '.js', '.mjs']
 
 /** Owner of a file: the package folder, the example folder or `site`. */
+/** @param {string} file */
 const ownerOf = (file) => {
   const parts = relative(root, file).split('/')
   return parts[0] === 'site' ? 'site' : `${parts[0] === 'packages' ? '' : `${parts[0]}/`}${parts[1]}`
 }
 
+/** @param {string} owner */
 const isExcluded = (owner) => excluded.some((pattern) => pattern.test(owner))
 
+/** @param {string} dir @param {string[]} [out] @returns {string[]} */
 const walk = (dir, out = []) => {
   if (!existsSync(dir)) return out
   for (const name of readdirSync(dir)) {
@@ -52,6 +67,7 @@ const walk = (dir, out = []) => {
 }
 
 const candidateFiles = () => {
+  /** @type {string[]} */
   const files = []
   for (const group of ['packages', 'examples']) {
     for (const name of readdirSync(join(root, group))) walk(join(root, group, name), files)
@@ -62,8 +78,10 @@ const candidateFiles = () => {
 
 // ---- tiny CommonJS loader over TypeScript's transpiler ----
 
+/** @type {Map<string, ModuleRecord>} */
 const moduleCache = new Map()
 
+/** @param {string} from @param {string} request */
 const resolveImport = (from, request) => {
   if (request.startsWith('@adatechnology/')) {
     const name = request.slice('@adatechnology/'.length)
@@ -76,7 +94,9 @@ const resolveImport = (from, request) => {
   return options.find((option) => existsSync(option) && statSync(option).isFile())
 }
 
+/** @param {import('typescript').SourceFile} sourceFile */
 const topLevelNames = (sourceFile) => {
+  /** @type {string[]} */
   const names = []
   for (const statement of sourceFile.statements) {
     if (!ts.isVariableStatement(statement)) continue
@@ -85,8 +105,10 @@ const topLevelNames = (sourceFile) => {
   return names
 }
 
+/** @param {string} file @returns {unknown} */
 const loadModule = (file) => {
-  if (moduleCache.has(file)) return moduleCache.get(file).exports
+  if (moduleCache.has(file)) return /** @type {ModuleRecord} */ (moduleCache.get(file)).exports
+  /** @type {ModuleRecord} */
   const record = { exports: {} }
   moduleCache.set(file, record)
   if (file.endsWith('.json')) {
@@ -101,24 +123,28 @@ const loadModule = (file) => {
     fileName: `${file}.ts`,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, resolveJsonModule: true },
   }).outputText
+  /** @param {string} request @returns {unknown} */
   const localRequire = (request) => {
     const target = resolveImport(file, request)
     if (!target) return {}
     const loaded = loadModule(target)
-    return target.endsWith('.json') ? { default: loaded, ...loaded, __esModule: true } : loaded
+    return target.endsWith('.json') ? { default: loaded, .../** @type {object} */ (loaded), __esModule: true } : loaded
   }
+  /** @type {Record<string, unknown>} */
   const sandbox = { module: record, exports: record.exports, require: localRequire, console, globalThis: {}, URLSearchParams, Intl }
   sandbox.globalThis = sandbox
   record.probe = undefined
   vm.runInNewContext(output, sandbox, { filename: file, timeout: 5000 })
-  record.probe = sandbox.__localeProbe
+  record.probe = /** @type {Record<string, unknown> | undefined} */ (sandbox.__localeProbe)
   return record.exports
 }
 
 // ---- table detection ----
 
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
 const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
 
+/** @param {unknown} value @param {string} [prefix] @param {Map<string, unknown>} [out] @returns {Map<string, unknown>} */
 const flatten = (value, prefix = '', out = new Map()) => {
   if (typeof value === 'string' || typeof value === 'function') out.set(prefix, value)
   else if (Array.isArray(value)) value.forEach((item, index) => flatten(item, `${prefix}[${index}]`, out))
@@ -127,6 +153,7 @@ const flatten = (value, prefix = '', out = new Map()) => {
 }
 
 /** Finds `{ en, 'pt-BR' }` pairs anywhere inside a value. A pair with only one of them comes back with the other as undefined. */
+/** @param {unknown} value @param {string} path @param {Pair[]} found @param {Set<unknown>} seen @returns {void} */
 const findPairs = (value, path, found, seen) => {
   if (!isPlainObject(value) || seen.has(value)) return
   seen.add(value)
@@ -137,11 +164,15 @@ const findPairs = (value, path, found, seen) => {
   for (const [key, item] of Object.entries(value)) findPairs(item, path === '' ? key : `${path}.${key}`, found, seen)
 }
 
+/** @param {string} name */
 const normalizeTableName = (name) => name.replace(/[_-]/g, '').toLowerCase()
 
 /** Pairs of standalone tables named like `EN` / `PT_BR`, `modesEn` / `modesPtBr`, `en` / `ptBR`. */
+/** @param {Record<string, unknown>} names */
 const findNamedPairs = (names) => {
+  /** @type {Pair[]} */
   const pairs = []
+  /** @type {Map<string, Record<string, unknown>>} */
   const byBase = new Map()
   for (const name of Object.keys(names)) {
     const normalized = normalizeTableName(name)
@@ -158,25 +189,31 @@ const findNamedPairs = (names) => {
   return pairs
 }
 
+/** @param {string} file */
 const tablesOfFile = (file) => {
   if (file.endsWith('.json')) {
     const data = loadModule(file)
+    /** @type {Pair[]} */
     const found = []
     findPairs(data, '', found, new Set())
     return found
   }
   const exports = loadModule(file)
-  const probe = moduleCache.get(file).probe ?? {}
+  const probe = /** @type {ModuleRecord} */ (moduleCache.get(file)).probe ?? {}
+  /** @type {Pair[]} */
   const found = []
+  /** @type {Set<unknown>} */
   const seen = new Set()
-  for (const [name, value] of Object.entries({ ...probe, ...exports })) findPairs(value, name, found, seen)
-  const named = findNamedPairs({ ...probe, ...exports })
+  for (const [name, value] of Object.entries({ ...probe, .../** @type {object} */ (exports) })) findPairs(value, name, found, seen)
+  const named = findNamedPairs({ ...probe, .../** @type {object} */ (exports) })
   for (const pair of named) if (![...seen].includes(pair.en) && !found.some((entry) => entry.en === pair.en)) found.push(pair)
   return found
 }
 
 /** `locales/en.json` next to `locales/pt-BR.json`. */
+/** @param {string[]} files */
 const jsonLocalePairs = (files) => {
+  /** @type {(Pair & { file: string })[]} */
   const pairs = []
   for (const file of files) {
     if (!file.endsWith(`/${EN}.json`)) continue
@@ -188,13 +225,17 @@ const jsonLocalePairs = (files) => {
 
 // ---- comparison ----
 
+/** @param {unknown} text */
 const placeholders = (text) => (typeof text === 'string' ? (text.match(/\{[^{}\s]*\}/g) ?? []).sort().join(' ') : '')
 
 const STRUCTURAL_KEY = /(^|\.)(id|role|roles|state|base|action|living|crosses)(\[\d+\])?$/
 
+/** @param {string} text */
 const hasLetters = (text) => /\p{L}{3,}/u.test(text)
 
+/** @param {OwnedPair} pair @returns {CompareResult} */
 const compare = ({ owner, file, path, en, pt }) => {
+  /** @type {CompareResult} */
   const result = { owner, file: relative(root, file), table: path, missingInEn: [], missingInPt: [], copies: [], placeholderMismatch: [], known: [], values: {}, keys: 0 }
   if (en === undefined || pt === undefined) {
     const side = en === undefined ? 'en' : 'pt-BR'
@@ -223,9 +264,12 @@ const compare = ({ owner, file, path, en, pt }) => {
   return result
 }
 
+/** @returns {Outcome} */
 const run = () => {
   const files = candidateFiles()
+  /** @type {CompareResult[]} */
   const results = []
+  /** @type {Failure[]} */
   const failures = []
   const pairedJson = new Set()
   for (const pair of jsonLocalePairs(files)) {
@@ -244,7 +288,7 @@ const run = () => {
     try {
       for (const pair of tablesOfFile(file)) results.push(compare({ ...pair, owner, file }))
     } catch (error) {
-      failures.push({ owner, file: relative(root, file), reason: String(error.message ?? error).split('\n')[0] })
+      failures.push({ owner, file: relative(root, file), reason: String(/** @type {{ message?: unknown }} */ (error).message ?? error).split('\n')[0] })
     }
   }
   const seenSignatures = new Set()
@@ -258,15 +302,19 @@ const run = () => {
   return { results: unique.filter((entry) => onlyPackages.length === 0 || onlyPackages.includes(entry.owner)), failures }
 }
 
+/** @param {CompareResult} entry */
 const issuesOf = (entry) => entry.missingInEn.length + entry.missingInPt.length + entry.copies.length
 
+/** @param {Outcome} outcome */
 const report = ({ results, failures }) => {
+  /** @type {Map<string, CompareResult[]>} */
   const byOwner = new Map()
   for (const entry of results) byOwner.set(entry.owner, [...(byOwner.get(entry.owner) ?? []), entry])
+  /** @type {string[]} */
   const lines = []
   let total = 0
   for (const owner of [...byOwner.keys()].sort()) {
-    const entries = byOwner.get(owner)
+    const entries = /** @type {CompareResult[]} */ (byOwner.get(owner))
     const issues = entries.reduce((sum, entry) => sum + issuesOf(entry), 0)
     const keys = entries.reduce((sum, entry) => sum + entry.keys, 0)
     total += issues
@@ -274,7 +322,7 @@ const report = ({ results, failures }) => {
     for (const entry of entries) {
       if (issuesOf(entry) === 0 && entry.placeholderMismatch.length === 0 && entry.known.length === 0) continue
       const label = `${entry.file}${entry.table ? ` [${entry.table}]` : ''}`
-      const show = (title, list) => list.length > 0 && lines.push(`     ${title} (${list.length}) in ${label}: ${list.slice(0, wantValues ? 400 : 40).join(', ')}${list.length > (wantValues ? 400 : 40) ? ', ...' : ''}`)
+      const show = (/** @type {string} */ title, /** @type {string[]} */ list) => list.length > 0 && lines.push(`     ${title} (${list.length}) in ${label}: ${list.slice(0, wantValues ? 400 : 40).join(', ')}${list.length > (wantValues ? 400 : 40) ? ', ...' : ''}`)
       show('known gap, not counted', entry.known)
       show('missing in en', entry.missingInEn)
       show('missing in pt-BR', entry.missingInPt)

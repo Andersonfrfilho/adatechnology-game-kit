@@ -5,16 +5,16 @@ import { THREE, houseOf, planOf } from './helpers/houses'
 // Lot, roofs, gutters, mirrors, lights and cars: the second slice of the port.
 class FakeReflector extends THREE.Mesh {
   options: unknown
-  constructor(geometry: any, options: unknown) {
+  constructor(geometry: THREE.BufferGeometry, options: unknown) {
     super(geometry, new THREE.MeshBasicMaterial())
     this.options = options
-    ;(this as any).type = 'Reflector'
+    ;(this as { type: string }).type = 'Reflector'
   }
   dispose(): void {}
 }
 
 const fleet = {
-  build(kind: string, options: { quality: string; seed: number }): any {
+  build(kind: string, options: { quality: string; seed: number }): { group: THREE.Group } {
     const group = new THREE.Group()
     group.userData.kind = `${kind}:${options.quality}:${options.seed}`
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0xaa2222 }))
@@ -32,16 +32,16 @@ describe('lot', () => {
 
   it('draws the zones, the sidewalk and the lot wall of the plan', () => {
     expect(house.lot).toBeTruthy()
-    const meshes = house.lot.children.filter((c: any) => c.isMesh).map((c: any) => c.name)
+    const meshes = house.lot!.children.filter((c) => (c as THREE.Mesh).isMesh).map((c) => c.name)
     expect(meshes).toEqual(expect.arrayContaining(['lot/sidewalk', 'lot/plaster', 'lot/floor']))
-    const types = new Set(house.colliders.map((c: any) => c.type))
+    const types = new Set(house.colliders.map((c) => c.type))
     expect(types.has('lot_wall')).toBe(true)
     expect(types.has('gate')).toBe(true)
   })
 
   it('keeps the lot wall and gates out when the game has its own', () => {
     const { house: bare } = houseOf(plan, {}, { noPerimeter: true })
-    const types = new Set(bare.colliders.map((c: any) => c.type))
+    const types = new Set(bare.colliders.map((c) => c.type))
     expect(types.has('lot_wall')).toBe(false)
     expect(types.has('gate')).toBe(false)
   })
@@ -49,16 +49,16 @@ describe('lot', () => {
   it('leaves the ground, street and lawn out when the app already has them', () => {
     const withTerrain = houseOf(plan).house.group
     const without = houseOf(plan, {}, { terrain: false }).house.group
-    const count = (root: any): number => { let n = 0; root.traverse(() => n++); return n }
+    const count = (root: THREE.Object3D): number => { let n = 0; root.traverse(() => n++); return n }
     expect(count(without)).toBeLessThan(count(withTerrain))
   })
 
   it('hides the lot on request', () => {
     const { house: other } = houseOf(plan)
     other.show({ lot: false })
-    expect(other.lot.visible).toBe(false)
+    expect(other.lot!.visible).toBe(false)
     other.show({ lot: true })
-    expect(other.lot.visible).toBe(true)
+    expect(other.lot!.visible).toBe(true)
   })
 
   it('has no lot for a plan without one', () => {
@@ -72,30 +72,30 @@ describe('roof and gutters', () => {
 
   it('draws the roof of the plan over the top floor, with its tiles', () => {
     expect(house.roof).toBeTruthy()
-    expect(house.roof.children.map((c: any) => c.name)).toEqual(expect.arrayContaining(['roof/tile']))
-    const box = new THREE.Box3().setFromObject(house.roof)
-    expect(box.max.y).toBeCloseTo(plan.roof.ridge, 0)
+    expect(house.roof!.children.map((c) => c.name)).toEqual(expect.arrayContaining(['roof/tile']))
+    const box = new THREE.Box3().setFromObject(house.roof!)
+    expect(box.max.y).toBeCloseTo(plan.roof!.ridge!, 0)
   })
 
   it('cuts the roof and the floors above to look into the plan', () => {
     const { house: cut } = houseOf(plan)
     cut.show({ cut: true, floor: 0 })
-    expect(cut.roof.visible).toBe(false)
+    expect(cut.roof!.visible).toBe(false)
     expect(cut.floors[1].visible).toBe(false)
     cut.show({ cut: false })
-    expect(cut.roof.visible).toBe(true)
+    expect(cut.roof!.visible).toBe(true)
   })
 
   it('lays gutters along the eaves', () => {
-    expect(house.gutters.gutters.length).toBeGreaterThan(0)
-    for (const gutter of house.gutters.gutters) expect(gutter.b).toBeGreaterThan(gutter.a)
+    expect(house.gutters!.gutters.length).toBeGreaterThan(0)
+    for (const gutter of house.gutters!.gutters) expect(gutter.b).toBeGreaterThan(gutter.a)
   })
 
   it('draws the roof of a commercial plan too', () => {
     const market = planOf('mercado', 3)
     const { house: shop } = houseOf(market)
     expect(shop.roof).toBeTruthy()
-    expect(new THREE.Box3().setFromObject(shop.roof).max.y).toBeGreaterThan(market.roof.y0)
+    expect(new THREE.Box3().setFromObject(shop.roof!).max.y).toBeGreaterThan(market.roof!.y0!)
   })
 })
 
@@ -130,18 +130,18 @@ describe('mirrors', () => {
     house.group.updateMatrixWorld(true)
     house.internal.mirrors.house = house.house
     house.chooseMirror(camera)
-    expect(list.filter((m: any) => m.real.visible)).toHaveLength(1)
+    expect(list.filter((m) => m.real!.visible)).toHaveLength(1)
     camera.position.set(500, 500, 500)
     house.chooseMirror(camera)
-    expect(list.filter((m: any) => m.real.visible)).toHaveLength(0)
-    expect(list.every((m: any) => m.fake.visible)).toBe(true)
+    expect(list.filter((m) => m.real!.visible)).toHaveLength(0)
+    expect(list.every((m) => m.fake.visible)).toBe(true)
   })
 
   it('uses only the environment map without a Reflector or in game quality', () => {
     for (const [options, build] of [[{}, {}], [{ reflector: FakeReflector }, { quality: 'game' as const }]] as const) {
       const { house } = houseOf(plan, options, build)
       const names: string[] = []
-      house.group.traverse((o: any) => { if (o.name === 'mirror/environment') names.push(o.name); expect(o.type).not.toBe('Reflector') })
+      house.group.traverse((o) => { if (o.name === 'mirror/environment') names.push(o.name); expect(o.type).not.toBe('Reflector') })
       expect(names.length).toBeGreaterThan(0)
     }
   })
@@ -160,7 +160,7 @@ describe('cars', () => {
 
   it('takes the kinds of a lot style from the options', () => {
     const { house } = houseOf(plan, { fleet, carKinds: { budget: ['custom_kind'] } })
-    expect(house.cars.map((c: any) => c.k)).toEqual(house.cars.map(() => 'custom_kind'))
+    expect(house.cars.map((c) => c.k)).toEqual(house.cars.map(() => 'custom_kind'))
   })
 
   it('merges the car model by material and builds it once per kind and seed', () => {

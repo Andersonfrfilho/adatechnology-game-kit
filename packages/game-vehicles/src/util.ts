@@ -38,8 +38,8 @@ export function strHash(s: string): number {
 }
 
 /** Marks an object and all its children as decals (ignored by raycasts, rollover and crash fields). */
-export function markDecal(o: any): void {
-  o.traverse((x: any) => {
+export function markDecal(o: { traverse(fn: (x: { userData: Record<string, unknown> }) => void): void }): void {
+  o.traverse((x) => {
     x.userData.decal = true
   })
 }

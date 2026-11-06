@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { CHAIR_TABLES, CONTENT_MAP, FloorplanInteractables, TYPE_MAP, create, createTranslator, mergeRegistry } from '../src'
 import { GameInteractables, GameInteractablesHousehold, planOf } from './support/plans'
+import type { EntryItem } from '../src'
 import { loadTeamAdapter, planToKit, teamSeedKey, teamShape, withoutSource } from './support/team-shape'
 
 const kit = { GameInteractables, GameInteractablesHousehold }
@@ -39,9 +40,9 @@ describe('registries: the game adds, replaces and drops entries without touching
 
   it('a type dropped from typeMap stays out of the kit and is counted as unmapped', () => {
     const base = mapped(create(kit))
-    expect(base.items.some((e: any) => e.type === 'fridge')).toBe(true)
+    expect(base.items.some((e) => e.type === 'fridge')).toBe(true)
     const without = mapped(create({ ...kit, typeMap: { fridge_large: null } }))
-    expect(without.items.some((e: any) => e.type === 'fridge')).toBe(false)
+    expect(without.items.some((e) => e.type === 'fridge')).toBe(false)
     expect(without.unmapped['fridge/fridge_large']).toBe(1)
     expect(without.mapped).not.toContain('kitchen.fridge')
   })
@@ -58,7 +59,7 @@ describe('registries: the game adds, replaces and drops entries without touching
   it('contentMap sends an item of the plan to the household item the game wants', () => {
     const r = planOf('single_storey_a', 3)
     const stacks = r.contents['kitchen.pantry']
-    const id = stacks[0].itemId
+    const id = stacks![0]!.itemId
     const a = create({ ...kit, contentMap: { [id]: 'sugar' } })
     const placed = Object.values(a.plan(r, { seed: r.seed }).items.find((e) => e.id === 'kitchen.pantry')!.item.contents ?? {}).flat().filter((s) => s != null)
     expect(placed.some((s) => s.type === 'sugar' && s.data?.source === id)).toBe(true)
@@ -130,24 +131,24 @@ describe('plan options', () => {
     const r = planOf('townhouse', 2)
     const adapter = create(kit)
     const on = adapter.plan(r, { seed: r.seed, lightsOn: true })
-    expect(on.items.filter((e: any) => e.type === 'lamp').every((e: any) => e.lit)).toBe(true)
+    expect(on.items.filter((e) => e.type === 'lamp').every((e) => e.lit)).toBe(true)
     const off = adapter.plan(r, { seed: r.seed, night: true, lightsOn: () => false })
-    expect(off.items.filter((e: any) => e.type === 'lamp').some((e: any) => e.lit)).toBe(false)
+    expect(off.items.filter((e) => e.type === 'lamp').some((e) => e.lit)).toBe(false)
     const night = adapter.plan(r, { seed: r.seed, night: true })
-    expect(night.items.filter((e: any) => e.type === 'lamp').every((e: any) => e.lit)).toBe(true)
-    expect(night.items.filter((e: any) => e.type === 'wall_switch').every((e: any) => e.lit)).toBe(true)
+    expect(night.items.filter((e) => e.type === 'lamp').every((e) => e.lit)).toBe(true)
+    expect(night.items.filter((e) => e.type === 'wall_switch').every((e) => e.lit)).toBe(true)
     const day = adapter.plan(r, { seed: r.seed })
-    expect(day.items.filter((e: any) => e.type === 'lamp').some((e: any) => e.lit)).toBe(false)
+    expect(day.items.filter((e) => e.type === 'lamp').some((e) => e.lit)).toBe(false)
   })
 
   it('an abandoned house and an off-grid cabin do not light at night', () => {
     const adapter = create(kit)
     const abandoned = planOf('townhouse', 2, 'abandoned')
-    expect(adapter.plan(abandoned, { seed: 2, night: true }).items.filter((e: any) => e.type === 'lamp').some((e: any) => e.lit)).toBe(false)
+    expect(adapter.plan(abandoned, { seed: 2, night: true }).items.filter((e) => e.type === 'lamp').some((e) => e.lit)).toBe(false)
     const cabin = planOf('log_cabin', 1)
     const offgrid = cabin.utilities.electrical.mode === 'offgrid'
-    const lanterns = adapter.plan(cabin, { seed: 1, night: true }).items.filter((e: any) => e.type === 'lantern_lamp')
-    if (offgrid) expect(lanterns.every((e: any) => e.lit)).toBe(true)
+    const lanterns = adapter.plan(cabin, { seed: 1, night: true }).items.filter((e) => e.type === 'lantern_lamp')
+    if (offgrid) expect(lanterns.every((e) => e.lit)).toBe(true)
   })
 })
 
@@ -170,7 +171,7 @@ describe('world', () => {
     const r = planOf('single_storey_a', 3)
     const planned = adapter.plan(r, { seed: r.seed })
     const world = adapter.createWorld(r, { seed: r.seed })
-    const out = adapter.add(world, planned, { build: (type: string, item: any) => (type === 'toilet' ? null : adapter.household.build(type, item, GameInteractablesHousehold.createRecorder().api)) })
+    const out = adapter.add(world, planned, { build: (type: string, item: EntryItem) => (type === 'toilet' ? null : adapter.household.build(type, item, GameInteractablesHousehold.createRecorder().api)) })
     expect(out.warnings).toEqual([expect.stringContaining('build returned nothing for bathroom.toilet')])
     expect(out.added).toBe(planned.items.length - 1)
   })

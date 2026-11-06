@@ -57,7 +57,7 @@ const CONTENT_KEYS = {
 }
 
 /** The wear an item shows by how far it is through its shelf life. */
-const wearOf = (item, data) => (item.shelfLife && data?.ageDays !== undefined ? (data.ageDays >= item.shelfLife ? 2 : data.ageDays >= item.shelfLife * 0.5 ? 1 : 0) : 0)
+const wearOf = (/** @type {{ shelfLife: number; }} */ item, /** @type {{ ageDays: number | undefined; }} */ data) => (item.shelfLife && data?.ageDays !== undefined ? (data.ageDays >= item.shelfLife ? 2 : data.ageDays >= item.shelfLife * 0.5 ? 1 : 0) : 0)
 
 /**
  * `fillContainers` for the furniture area: rolls what the piece holds with the goods catalog, puts the stacks in its slots and draws each as the real item (the model of the team
@@ -111,10 +111,10 @@ const STEP_LABELS = {
  * The furniture area is the last step and its report is the base of the whole one.
  */
 function loadSteps(room, options, lang) {
-  const on = (key) => options[key] !== false
-  const label = (key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
+  const on = (/** @type {string | number} */ key) => options[key] !== false
+  const label = (/** @type {string | number} */ key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
   const steps = []
-  const mod = (key, create, before) => {
+  const mod = (/** @type {string} */ key, create, /** @type {{ (): void; (): void; } | undefined} */ before) => {
     if (!on(key)) return
     steps.push({
       key,
@@ -130,12 +130,12 @@ function loadSteps(room, options, lang) {
   }
   // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
   const sfx = globalThis.__kitSfx
-  const samples = sfx ? { manifest: sfx.manifest, url: (file) => sfx.files[file] ?? file } : undefined
+  const samples = sfx ? { manifest: sfx.manifest, url: (/** @type {string | number} */ file) => sfx.files[file] ?? file } : undefined
   mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false, items: itemModels, ...(samples ? { samples } : {}) }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
-  const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
+  const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((/** @type {{ id: string; }} */ p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
   mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(room.world))

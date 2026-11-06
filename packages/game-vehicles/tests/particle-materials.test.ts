@@ -17,12 +17,12 @@ function pool() {
   return { materials, owned, released }
 }
 
-const world = () => ({ effects: new THREE.Group(), particles: [] as any[], rand: () => 0.5 })
+const world = () => ({ effects: new THREE.Group(), particles: [] as unknown[], rand: () => 0.5 })
 
 describe('particle materials from the host pool', () => {
   it('each puff owns its material through the pool and gives it back when it dies, without disposing it', () => {
     const { materials, owned, released } = pool()
-    const kit: any = makeKit({ particleMaterials: materials }, false)
+    const kit = makeKit({ particleMaterials: materials }, false)
     const c = world()
     const puff = kit.spawn(c, 'smoke', new THREE.Vector3(), new THREE.Vector3(0, 1, 0), { life: 0.2 })
     expect(owned).toEqual([puff.m.material])
@@ -36,14 +36,14 @@ describe('particle materials from the host pool', () => {
 
   it('solid particles keep the shared materials and never go through the pool', () => {
     const { materials, owned } = pool()
-    const kit: any = makeKit({ particleMaterials: materials }, false)
+    const kit = makeKit({ particleMaterials: materials }, false)
     const c = world()
     kit.spawn(c, 'spark', new THREE.Vector3(), new THREE.Vector3(1, 1, 0), { life: 0.1 })
     expect(owned).toEqual([])
   })
 
   it('without a pool the puff disposes its own material, as before', () => {
-    const kit: any = makeKit({}, false)
+    const kit = makeKit({}, false)
     const c = world()
     const puff = kit.spawn(c, 'smoke', new THREE.Vector3(), new THREE.Vector3(0, 1, 0), { life: 0.1 })
     let disposed = 0

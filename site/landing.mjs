@@ -1,17 +1,33 @@
 // Landing page of the demo site: examples with their areas, then packages grouped by family, all with thumbnails.
 import { EXAMPLES, FAMILIES, thumbFile } from './catalog.mjs'
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+/**
+ * @typedef {{ name: string, description: string, version: string }} SitePackage
+ * @typedef {{ name: string, description?: string }} SiteExample
+ * @typedef {(key: string) => boolean} HasThumb
+ * @typedef {Omit<import('./catalog.mjs').FamilyEntry, 'packages'> & { members: SitePackage[] }} Family
+ */
+
+/** @type {Record<string, string>} */
+const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
+/** @param {unknown} s */
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ESCAPES[c])
+/** @param {string} name */
 const shortName = (name) => name.replace('@adatechnology/', '')
 // accents are dropped on both sides, so "gas" finds "gás"
+/** @param {string} text */
 const fold = (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+/** @param {...(string | undefined | unknown[])} parts */
 const searchText = (...parts) => esc(fold(parts.flat().join(' ')))
 
+/** @param {string | null} key @param {string} alt @param {HasThumb} hasThumb */
 function thumb(key, alt, hasThumb) {
   if (!key || !hasThumb(key)) return `<div class="thumb thumb-empty" aria-hidden="true"><span>sem prévia 3D</span></div>`
   return `<img class="thumb" src="${thumbFile(key)}" alt="${esc(alt)}" loading="lazy">`
 }
 
+/** @param {SiteExample} example @param {HasThumb} hasThumb */
 function renderExample(example, hasThumb) {
   const meta = EXAMPLES.find((entry) => entry.name === example.name)
   const title = meta?.title ?? example.name
@@ -37,6 +53,7 @@ function renderExample(example, hasThumb) {
     </article>`
 }
 
+/** @param {SitePackage} pkg */
 function renderPackage(pkg) {
   const install = `pnpm add ${pkg.name}`
   return `<li class="pkg" data-search="${searchText(pkg.name, pkg.description)}">
@@ -46,11 +63,17 @@ function renderPackage(pkg) {
       </li>`
 }
 
+/**
+ * @param {SitePackage[]} packages
+ * @returns {Family[]}
+ */
 function groupPackages(packages) {
   const byName = new Map(packages.map((pkg) => [shortName(pkg.name), pkg]))
+  /** @type {Set<string>} */
   const used = new Set()
+  /** @type {Family[]} */
   const families = FAMILIES.map((family) => {
-    const members = family.packages.map((name) => byName.get(name)).filter(Boolean)
+    const members = /** @type {SitePackage[]} */ (family.packages.map((name) => byName.get(name)).filter(Boolean))
     members.forEach((pkg) => used.add(shortName(pkg.name)))
     return { ...family, members }
   }).filter((family) => family.members.length)
@@ -59,6 +82,7 @@ function groupPackages(packages) {
   return families
 }
 
+/** @param {Family} family @param {Map<string, string>} examplesByName @param {HasThumb} hasThumb */
 function renderFamily(family, examplesByName, hasThumb) {
   const seeIn = family.seeIn && examplesByName.get(family.seeIn)
   return `<article class="family" data-kind="pacote" data-family="${esc(family.id)}" data-search="${searchText(family.title, family.what, family.members.map((p) => [p.name, p.description]))}">
@@ -72,6 +96,7 @@ function renderFamily(family, examplesByName, hasThumb) {
     </article>`
 }
 
+/** @param {{ examples: SiteExample[], packages: SitePackage[], hasThumb: HasThumb }} site */
 export function renderLanding({ examples, packages, hasThumb }) {
   const families = groupPackages(packages)
   const examplesByName = new Map(EXAMPLES.map((entry) => [entry.name, entry.title]))

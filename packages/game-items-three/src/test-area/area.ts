@@ -323,8 +323,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     name,
     movable: false,
     build: (THREE: unknown) => {
-      const piece = furnitureSpec(THREE, type, { ...size, options: { chairs: false } })
-      const root = piece.build(THREE) as THREE_NS.Object3D
+      const piece = furnitureSpec(THREE as typeof THREE_NS, type, { ...size, options: { chairs: false } })
+      const root = piece.build(THREE as typeof THREE_NS) as THREE_NS.Object3D
       root.userData.furnitureSpec = { ...piece.spec, name }
       decorate?.(root)
       return root

@@ -1,20 +1,28 @@
 // Contact sheet of the candidates found by commons-search.mjs, to choose by eye which one is the side profile of THAT weapon.
 // Usage: node scripts/commons-sheet.mjs <work folder> <out.png> <first> <count> [titles.json: only the candidates with these titles]
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { createRequire } from 'node:module'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { sanitizeSvg, sizedSvg } from './commons-sanitize.mjs'
+import { sizedSvg } from './commons-sanitize.mjs'
+
+// the sanitizer is the tool's own (src/sanitize.ts), from its build, as commons-import.mjs reads it
+const here = dirname(fileURLToPath(import.meta.url))
+/** @type {{ sanitizeSvg: (text: string) => string }} */
+const { sanitizeSvg } = await import(pathToFileURL(join(here, '../dist/index.js')).href)
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright-core')
 const [work, out, first = '0', count = '12', only] = process.argv.slice(2)
 const wanted = only ? new Set(JSON.parse(readFileSync(only, 'utf8'))) : undefined
+/** @type {string[]} */
 const cells = []
 for (const file of readdirSync(join(work, 'search')).sort()) {
+  /** @type {import('./commons-search.mjs').SearchResult} */
   const search = JSON.parse(readFileSync(join(work, 'search', file), 'utf8'))
   search.candidates.filter((entry) => entry.ok && entry.raw && (!wanted || wanted.has(entry.title))).forEach((entry, index) => {
-    const sized = sizedSvg(sanitizeSvg(readFileSync(join(work, entry.raw), 'utf8')), 600)
+    const sized = sizedSvg(sanitizeSvg(readFileSync(join(work, /** @type {string} */ (entry.raw)), 'utf8')), 600)
     if (sized) cells.push(`<figure><img src="data:image/svg+xml;base64,${Buffer.from(sized.svg).toString('base64')}"><figcaption><b>${search.id}</b> #${index}<br>${entry.title.replace(/[<>&]/g, '')}<br>${entry.license}</figcaption></figure>`)
   })
 }

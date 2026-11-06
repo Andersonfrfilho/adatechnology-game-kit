@@ -23,6 +23,10 @@ export function createRigVehicles(THREE, locale = 'pt-BR') {
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weather area. Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createWeatherTestModule>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createWeatherTestModule({ targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, vehicles: (THREE) => createRigVehicles(THREE, locale) }), ...options, locale }))

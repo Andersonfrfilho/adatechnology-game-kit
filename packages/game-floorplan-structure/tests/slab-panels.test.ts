@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { SLAB_PANEL_DEFAULTS, beamDepthFor, beamSpan, resolveSlabPanels, toDestructibleSpec } from '../src'
 import { TOWER_TEMPLATES, engine } from './support'
 import { breakParts, idsStarting, pillarsOfOneWall } from './world-helpers'
+import type { StructuredResult } from '../src'
 
 const specOf = (template: string, seed = 3, state: 'normal' | 'abandoned' = 'normal', portico: boolean | 'auto' = true) => {
-  const result: any = engine.generate(template, { seed, state })
+  const result = engine.generate(template, { seed, state }) as StructuredResult
   return { result, spec: toDestructibleSpec(result.structure, portico === 'auto' ? {} : { portico }) }
 }
 const panelsOf = (spec: { parts: { id: string }[] }, slab: string) => spec.parts.map((p) => p.id).filter((id) => new RegExp(`^${slab}_p\\d+$`).test(id))
@@ -32,14 +33,14 @@ describe('slab panels: options and rules', () => {
   })
 
   it('a smaller maxSpan cuts the slab into more panels', () => {
-    const result: any = engine.generate('townhouse', { seed: 3, state: 'normal' })
+    const result = engine.generate('townhouse', { seed: 3, state: 'normal' }) as StructuredResult
     const few = toDestructibleSpec(result.structure, { portico: true, slabPanels: { maxSpan: 7 } })
     const many = toDestructibleSpec(result.structure, { portico: true, slabPanels: { maxSpan: 3 } })
     expect(panelsOf(many, 'slab_1').length).toBeGreaterThanOrEqual(panelsOf(few, 'slab_1').length)
   })
 
   it('a building taller than maxStoreys keeps its slabs whole and its steel undeclared (a tower has its own frame); a lower limit does the same to a house', () => {
-    const result: any = engine.generate('townhouse', { seed: 3, state: 'normal' })
+    const result = engine.generate('townhouse', { seed: 3, state: 'normal' }) as StructuredResult
     expect(SLAB_PANEL_DEFAULTS.maxStoreys).toBe(8)
     const low = toDestructibleSpec(result.structure, { portico: true, slabPanels: { maxStoreys: 1 } })
     expect(low.parts.some((p) => p.id === 'slab_1')).toBe(true)
@@ -47,7 +48,7 @@ describe('slab panels: options and rules', () => {
   })
 
   it('slabPanels: false keeps the slabs whole, as the team vocabulary and the coarse detail', () => {
-    const result: any = engine.generate('townhouse', { seed: 3, state: 'normal' })
+    const result = engine.generate('townhouse', { seed: 3, state: 'normal' }) as StructuredResult
     const whole = toDestructibleSpec(result.structure, { portico: true, slabPanels: false })
     expect(whole.parts.some((p) => p.id === 'slab_1')).toBe(true)
     expect(panelsOf(whole, 'slab_1')).toEqual([])
@@ -78,7 +79,7 @@ describe('towers of the plan engine: no panels, built in seconds', () => {
   for (const template of TOWER_TEMPLATES) {
     // at its lowest storey count (20): the rule is about passing maxStoreys, and a 40-storey plan kept the fork busy long enough to miss its heartbeat in CI
     it(`${template}: whole slabs, plain concrete as before, and the spec is made in a few seconds (panels and steel took minutes on 40 storeys: the loss of each pillar is one world)`, () => {
-      const result: any = engine.generate(template, { seed: 1, floors: 20, state: 'normal' })
+      const result = engine.generate(template, { seed: 1, floors: 20, state: 'normal' }) as StructuredResult
       expect(result.structure.levels.length).toBeGreaterThan(SLAB_PANEL_DEFAULTS.maxStoreys)
       const started = Date.now()
       const spec = toDestructibleSpec(result.structure)
@@ -130,12 +131,12 @@ describe('progressive collapse only where real', () => {
     const panel = spec.parts.find((p) => /^slab_top_p\d+$/.test(p.id))!
     const world = createDestruction({ seed: 3 })
     const id = world.add(spec)
-    const events: any[] = []
+    const events: Parameters<Parameters<typeof world.on>[1]>[0][] = []
     world.on('*', (e) => events.push(e))
     const [x, y, z] = panel.position
     world.explode([x, y - 1, z], 1e6, 15)
     for (let t = 0; t < 10; t += 0.1) world.update(0.1)
-    const cracks = events.filter((e) => e.type === 'crack' && /^slab_top_/.test(e.part))
+    const cracks = events.filter((e): e is Extract<(typeof events)[number], { type: 'crack' }> => e.type === 'crack' && /^slab_top_/.test(e.part))
     expect(cracks.length).toBeGreaterThan(0)
     expect(cracks.some((e) => e.crack.normal[1] > 0.9)).toBe(true)
     expect(world.state(id)!.parts.find((p) => p.id === panel.id)!.status).not.toBe('broken')

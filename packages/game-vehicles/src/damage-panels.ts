@@ -1,15 +1,19 @@
 /** Per-zone damage for body panels: doors, lids, hoods, roofs, hulls and wings. */
-import type { Kit } from './types'
-import { clamp } from './util'
+import type { Intersection, Matrix4, Mesh, Object3D, Vector3 } from 'three'
 
-export function installDamagePanels(kit: Kit): void {
+import type { DamageZone } from './api'
+import type { BuildContext, Kit, SceneNode } from './types'
+import { clamp } from './util'
+import type { Dent, DentOptions, PanelPiece } from './zone-dent'
+
+export function installDamagePanels(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const I = kit._
   const { MATERIALS } = I
 
   /* ---- body panel (door, fender, side panel, roof, lid, armour, hull, wing) ---- */
-  function panelBand(c: any, z: any, b: any, dirty: any) {
+  function panelBand(c: BuildContext, z: DamageZone, b: number, dirty: Set<Object3D>) {
     const R = c.rand
     const inv = I.worldInverseOf(c)
     const B = z.box
@@ -36,33 +40,33 @@ export function installDamagePanels(kit: Kit): void {
       let rect = [u0 + mg, u1 - mg, v0 + mg, v1 - mg]
       if (z.type === 'door' || z.type === 'lid') rect = [u0 + 0.03, u1 - 0.03, v0 + Math.min(0.08, lv * 0.1), v1 - 0.02]
       const pcs = I.cutPanel(c, z, rect, false, dirty)
-      pcs.forEach(function (q: any) {
-        if (q.whole) I.hideObj(c, q.mesh)
+      pcs.forEach(function (q) {
+        if (q.whole) I.hideObj(c, q.mesh!)
       })
-      followersIn(c, z, inv).forEach(function (o: any) {
+      followersIn(c, z, inv).forEach(function (o) {
         I.hideObj(c, o)
       })
       /* owned parts (propeller, pylon, siren) disappear whole: cutting only the skin left pieces floating */
-      z.owned.forEach(function (o: any) {
+      z.owned.forEach(function (o) {
         if (o.parent && c.wheels.indexOf(o) < 0 && !o.userData.glass) I.hideObj(c, o)
       })
-      c.spin = c.spin.filter(function (sp: any) {
+      c.spin = c.spin.filter(function (sp) {
         return I.shown(c, sp.o)
       })
       if (z.type === 'roof') roofOff(c, z, inv)
       if (z.fxKey === 'tail_cone' && c.meta.kind === 'heli') tailOff(c, z, inv)
-      ;(z.mirrors || []).forEach(function (o: any) {
+      ;((z.mirrors || []) as Object3D[]).forEach(function (o) {
         I.hideObj(c, o)
       })
       if (z.type === 'door')
-        windowsOver(c, z, inv).forEach(function (g: any) {
+        windowsOver(c, z, inv).forEach(function (g) {
           I.glassBand(c, z, g, 4)
         })
       I.zoneDecals(c, z, { rust: 3, deep: 2 }, I.zoneCands(c, z, I.worldInverseOf(c)))
       return
     }
-    const dents = []
-    const opt: any = {}
+    const dents: Dent[] = []
+    const opt: DentOptions = {}
     if (b === 1) {
       for (let i = 0; i < 3; i++)
         dents.push({
@@ -96,7 +100,7 @@ export function installDamagePanels(kit: Kit): void {
     opt.crease = longU ? null : null
     if (longU) opt.crease = { v: vc + (R() - 0.5) * lv * 0.15, w: Math.min(0.09, lv * 0.2), depth: maxD * 0.55 }
     if (b === 3)
-      opt.extra = function (p: any, f: any) {
+      opt.extra = function (p: Vector3, f: number) {
         p.addScaledVector(d, 0.012 * Math.sin(p.getComponent(ax[0]) * 17) * Math.min(1, f / 0.05))
       }
     /* dented door: the rear edge of the door sticks out (misaligned gap) */
@@ -104,7 +108,7 @@ export function installDamagePanels(kit: Kit): void {
       const hingeHi = z.hinge !== 'rear'
       const xe = hingeHi ? B.x0 : B.x1
       const sideOut = d.clone().negate()
-      opt.extraAll = function (p: any) {
+      opt.extraAll = function (p: Vector3) {
         if (!I.boxContains(B, p.x, p.y, p.z, 0)) return false
         const t = 1 - Math.abs(p.x - xe) / 0.12
         if (t <= 0) return false
@@ -126,7 +130,7 @@ export function installDamagePanels(kit: Kit): void {
       else if (z.type === 'lid') lidHang(c, z, dirty)
       else if (z.type !== 'roof' && !z.noFlap) flapHang(c, z, dirty)
       if (z.type === 'door')
-        windowsOver(c, z, I.worldInverseOf(c)).forEach(function (g: any) {
+        windowsOver(c, z, I.worldInverseOf(c)).forEach(function (g) {
           I.glassBand(c, z, g, 3)
         })
     }
@@ -150,10 +154,10 @@ export function installDamagePanels(kit: Kit): void {
     if (z.type === 'door' && b === 2) doorGap(c, z, b, cands)
   }
   /* torn-off roof: the headliner and whatever is attached on top (beacon, light bar, roof rack, roof lights) come away with it */
-  function roofOff(c: any, z: any, inv: any) {
+  function roofOff(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const B = z.box
     const top = c.meta.top || B.y1
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (!o.isMesh || !o.visible || o.userData.decal || o.userData.glass) return
       if (o.material === MATERIALS.headliner) {
         const hb = I.localBox(c, o, inv)
@@ -161,8 +165,8 @@ export function installDamagePanels(kit: Kit): void {
         if (I.boxContains(B, hc.x, hc.y, hc.z, 0.12)) I.hideObj(c, o)
       }
     })
-    c.vehicle.children.forEach(function (o: any) {
-      if (!o.visible || o.userData.decal || o.isSprite || o.userData.glass || c.deform.indexOf(o) >= 0 || c.wheels.indexOf(o) >= 0) return
+    c.vehicle.children.forEach(function (o: SceneNode) {
+      if (!o.visible || o.userData.decal || o.isSprite || o.userData.glass || c.deform.indexOf(o as Mesh) >= 0 || c.wheels.indexOf(o) >= 0) return
       const ow = I.ownerOf(c, o)
       if (ow && ow !== z) return
       const bb = I.localBox(c, o, inv)
@@ -180,22 +184,22 @@ export function installDamagePanels(kit: Kit): void {
     })
   }
   /* torn-off tail cone: everything behind the start of the cone (pylon, fin, tail rotor, tail skid) disappears, from any zone */
-  function tailOff(c: any, z: any, inv: any) {
+  function tailOff(c: BuildContext, z: DamageZone, inv: Matrix4) {
     const kx = z.box.x1 - (z.box.x1 - z.box.x0) * 0.15
-    c.vehicle.children.forEach(function (o: any) {
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (!o.visible || o.userData.decal || o.isSprite) return
       const bb = I.localBox(c, o, inv)
       if (bb.isEmpty()) return
       if (bb.max.x < kx + 0.05) I.hideObj(c, o)
     })
-    c.spin = c.spin.filter(function (sp: any) {
+    c.spin = c.spin.filter(function (sp) {
       return I.shown(c, sp.o)
     })
   }
-  function followersIn(c: any, z: any, inv: any) {
-    const dset = new Set(c.deform)
-    const out: any = []
-    c.vehicle.children.forEach(function (o: any) {
+  function followersIn(c: BuildContext, z: DamageZone, inv: Matrix4) {
+    const dset = new Set<Object3D>(c.deform)
+    const out: Object3D[] = []
+    c.vehicle.children.forEach(function (o: SceneNode) {
       if (dset.has(o) || o.userData.decal || o.isSprite || o.userData.glass || !o.visible) return
       if (!(o.isMesh || (o.isGroup && o.userData.rigid))) return
       const ow = I.ownerOf(c, o)
@@ -211,8 +215,8 @@ export function installDamagePanels(kit: Kit): void {
     })
     return out
   }
-  function windowsOver(c: any, z: any, inv: any) {
-    return c.glass.filter(function (g: any) {
+  function windowsOver(c: BuildContext, z: DamageZone, inv: Matrix4) {
+    return c.glass.filter(function (g) {
       if (!g.parent || !g.visible) return false
       const cen = I.localBox(c, g, inv).getCenter(new V3())
       return (
@@ -224,19 +228,19 @@ export function installDamagePanels(kit: Kit): void {
       )
     })
   }
-  function doorGap(c: any, z: any, b: any, cands: any) {
+  function doorGap(c: BuildContext, z: DamageZone, b: number, cands: Object3D[]) {
     const B = z.box
     const xe = z.hinge === 'rear' ? B.x1 : B.x0
     const inv = I.worldInverseOf(c)
     const d = z.dir
     const Mw = c.vehicle.matrixWorld
-    const pts = []
+    const pts: Vector3[] = []
     for (let k = 0; k < 6; k++) {
       const y = B.y0 + 0.08 + ((B.y1 - B.y0 - 0.16) * k) / 5
       const org = new V3(xe + 0.006, y, z.side < 0 ? B.z0 - 0.5 : B.z1 + 0.5)
       I._zr.set(org.clone().applyMatrix4(Mw), d.clone().transformDirection(Mw))
       I._zr.far = 0.5 + (B.z1 - B.z0)
-      const h = I._zr.intersectObjects(cands, false)[0]
+      const h: Intersection | undefined = I._zr.intersectObjects(cands, false)[0]
       if (h) pts.push(h.point.clone().applyMatrix4(inv).addScaledVector(d, -0.004))
     }
     if (pts.length < 3) return
@@ -244,14 +248,14 @@ export function installDamagePanels(kit: Kit): void {
     seam.castShadow = false
     seam.userData.decal = true
   }
-  function mirrorHang(c: any, z: any, ang: any) {
-    const objs = z.mirrors.filter(function (o: any) {
+  function mirrorHang(c: BuildContext, z: DamageZone, ang: number) {
+    const objs = (z.mirrors as Object3D[]).filter(function (o) {
       return o.parent
     })
     if (!objs.length) return
     const inv = I.worldInverseOf(c)
     const bb = new THREE.Box3()
-    objs.forEach(function (o: any) {
+    objs.forEach(function (o) {
       bb.union(I.localBox(c, o, inv))
     })
     const at = new V3((bb.min.x + bb.max.x) / 2, (bb.min.y + bb.max.y) / 2, z.side < 0 ? bb.max.z : bb.min.z)
@@ -260,21 +264,21 @@ export function installDamagePanels(kit: Kit): void {
     piv.rotation.y = z.side * 0.25
   }
   /* door hanging on a hinge: the door skin becomes a part, swings out on the front hinge and falls behind */
-  function doorHang(c: any, z: any, dirty: any, inv: any) {
+  function doorHang(c: BuildContext, z: DamageZone, dirty: Set<Object3D>, inv: Matrix4) {
     const B = z.box
     const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), B.y1 - 0.02]
-    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: any) {
+    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: PanelPiece) {
       return q.mesh
     })
     if (!pcs.length) return
     const objs = pcs
-      .map(function (q: any) {
-        return q.mesh
+      .map(function (q): Object3D {
+        return q.mesh!
       })
       .concat(followersIn(c, z, inv))
     const hx = z.hinge === 'rear' ? B.x0 + 0.03 : B.x1 - 0.03
     const bb = new THREE.Box3()
-    objs.forEach(function (o: any) {
+    objs.forEach(function (o) {
       bb.union(I.localBox(c, o, I.worldInverseOf(c)))
     })
     const at = new V3(hx, (bb.min.y + bb.max.y) / 2, z.side < 0 ? bb.min.z : bb.max.z)
@@ -282,9 +286,9 @@ export function installDamagePanels(kit: Kit): void {
     const tilt = new THREE.Group()
     yaw.add(tilt)
     c.root.updateMatrixWorld(true)
-    objs.forEach(function (o: any) {
+    objs.forEach(function (o) {
       tilt.attach(o)
-      o.traverse(function (x: any) {
+      o.traverse(function (x) {
         x.userData.noFollow = true
       })
     })
@@ -292,32 +296,32 @@ export function installDamagePanels(kit: Kit): void {
     const sgn = z.hinge === 'rear' ? -1 : 1
     yaw.rotation.y = z.side * sgn * (0.42 + c.rand() * 0.15)
     tilt.rotation.z = sgn * Math.min(0.22, Math.asin(clamp((bb.min.y - 0.03) / Math.max(0.3, dx), 0, 0.9)))
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.kind === 'door') p.done = true
     })
   }
   /* hanging lid: opens on the top hinge (or drops on the bottom one, on a cargo bed) */
-  function lidHang(c: any, z: any, dirty: any) {
+  function lidHang(c: BuildContext, z: DamageZone, dirty: Set<Object3D>) {
     const B = z.box
     const rect = [B.y0 + 0.05, B.y1 - 0.03, B.z0 + 0.05, B.z1 - 0.05]
     const d = z.dir
     const a = I.axisOf(d)
     if (a !== 0) return flapHang(c, z, dirty)
-    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: any) {
+    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: PanelPiece) {
       return q.mesh
     })
     if (!pcs.length) return
     const bb = new THREE.Box3()
     const inv = I.worldInverseOf(c)
-    pcs.forEach(function (q: any) {
-      bb.union(I.localBox(c, q.mesh, inv))
+    pcs.forEach(function (q) {
+      bb.union(I.localBox(c, q.mesh!, inv))
     })
     const top = z.hinge !== 'down'
     const sx = d.x > 0 ? -1 : 1
     const at = new V3(sx < 0 ? bb.min.x : bb.max.x, top ? bb.max.y : bb.min.y, 0)
     const piv = I.pivotOf(
       c,
-      pcs.map(function (q: any) {
+      pcs.map(function (q) {
         return q.mesh
       }),
       at,
@@ -326,7 +330,7 @@ export function installDamagePanels(kit: Kit): void {
     piv.rotation.x = (c.rand() - 0.5) * 0.12
   }
   /* torn and bent-out metal flap on a panel corner */
-  function flapHang(c: any, z: any, dirty: any) {
+  function flapHang(c: BuildContext, z: DamageZone, dirty: Set<Object3D>) {
     const R = c.rand
     const B = z.box
     const d = z.dir
@@ -346,7 +350,7 @@ export function installDamagePanels(kit: Kit): void {
     const cu = u0 + lu * (0.3 + R() * 0.4)
     const cv = v0 + lv * (0.3 + R() * 0.4)
     const rect = [cu - fu / 2, cu + fu / 2, cv - fv / 2, cv + fv / 2]
-    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: any) {
+    const pcs = I.cutPanel(c, z, rect, true, dirty).filter(function (q: PanelPiece) {
       return q.mesh && q.cut
     })
     if (!pcs.length) return
@@ -356,13 +360,13 @@ export function installDamagePanels(kit: Kit): void {
     at.setComponent(ax[1], (rect[2] + rect[3]) / 2)
     const inv = I.worldInverseOf(c)
     const bb = new THREE.Box3()
-    pcs.forEach(function (q: any) {
-      bb.union(I.localBox(c, q.mesh, inv))
+    pcs.forEach(function (q) {
+      bb.union(I.localBox(c, q.mesh!, inv))
     })
     at.setComponent(a, bb.getCenter(new V3()).getComponent(a))
     const piv = I.pivotOf(
       c,
-      pcs.map(function (q: any) {
+      pcs.map(function (q) {
         return q.mesh
       }),
       at,
@@ -376,5 +380,9 @@ export function installDamagePanels(kit: Kit): void {
     piv.quaternion.setFromAxisAngle(axisV, sgn * (0.6 + R() * 0.3))
   }
 
-  Object.assign(I, { panelBand, roofOff, tailOff, followersIn, windowsOver, doorGap, mirrorHang, doorHang, lidHang, flapHang })
+  const shared = { panelBand, roofOff, tailOff, followersIn, windowsOver, doorGap, mirrorHang, doorHang, lidHang, flapHang }
+
+  Object.assign(I, shared)
+
+  return shared
 }

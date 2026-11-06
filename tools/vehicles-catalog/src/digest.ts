@@ -1,3 +1,5 @@
+import type * as THREE from 'three'
+
 /* Copy of packages/game-vehicles-fleet/tests/helpers/digest.ts: the compare run must hash exactly as the fleet goldens do. */
 /** Order-sensitive digest of a built vehicle: the same function produced the golden fixtures from the original SDK. */
 function round(x: number): number {
@@ -16,10 +18,11 @@ function fnv(values: ArrayLike<number>): string {
   return (h >>> 0).toString(16)
 }
 
-function describe(root: any): string[] {
+function describe(root: THREE.Object3D): string[] {
   const out: string[] = []
   root.updateMatrixWorld(true)
-  root.traverse((o: any) => {
+  root.traverse((node) => {
+    const o = node as THREE.Mesh // read duck-typed: geometry and material only when the object has them
     let s =
       o.type +
       (o.visible ? '' : '!') +
@@ -34,7 +37,7 @@ function describe(root: any): string[] {
       s += ' v' + p.count + ':' + fnv(p.array)
       if (o.geometry.index) s += ' i' + o.geometry.index.count
     }
-    const m = o.material
+    const m = o.material as (THREE.Material & { color?: THREE.Color; roughness?: number }) | THREE.Material[] | undefined
     if (m && !Array.isArray(m)) {
       s +=
         ' m' +
@@ -57,7 +60,7 @@ export interface Digest {
 }
 
 /** The scene part of the fleet golden digest (the page names its context fields in Portuguese, so only the scene graph is comparable). */
-export function digest(root: any): Digest {
+export function digest(root: THREE.Object3D): Digest {
   const lines = describe(root)
   let h = 2166136261
   const text = lines.join('\n')

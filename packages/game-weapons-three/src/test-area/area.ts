@@ -211,13 +211,13 @@ const COUNTER_FURNITURE = 'buffet'
 
 /** A counter of the furniture catalogue (`furnitureSpec` of game-floorplan-three), as an item of the area. */
 const counterItem = (name: string): TestableItem => {
-  const counter = (THREE: unknown) => furnitureSpec(THREE, COUNTER_FURNITURE, { w: COUNTER.depth, d: COUNTER.length, h: COUNTER.height })
+  const counter = (THREE: unknown) => furnitureSpec(THREE as typeof THREE_NS, COUNTER_FURNITURE, { w: COUNTER.depth, d: COUNTER.length, h: COUNTER.height })
   return {
     id: COUNTER_ITEM_ID,
     name,
     build: (THREE: unknown) => {
       const piece = counter(THREE)
-      const root = piece.build(THREE) as THREE_NS.Object3D
+      const root = piece.build(THREE as typeof THREE_NS) as THREE_NS.Object3D
       root.userData.counterSpec = { ...piece.spec, name, tags: [...(piece.spec.tags ?? []), 'furniture'] }
       return root
     },

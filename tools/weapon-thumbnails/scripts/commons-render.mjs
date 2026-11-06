@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import { sizedSvg } from './commons-sanitize.mjs'
 
 const require = createRequire(import.meta.url)
+/** @returns {typeof import('playwright')} */
 const loadPlaywright = () => {
   try {
     return require('playwright-core')
@@ -28,6 +29,7 @@ export async function openRenderer() {
   const page = await context.newPage()
   await page.setContent('<canvas id="c"></canvas>')
   return {
+    /** @param {string} cleanSvg */
     async tones(cleanSvg) {
       const sized = sizedSvg(cleanSvg, LONG_SIDE)
       if (!sized) return undefined
@@ -36,10 +38,10 @@ export async function openRenderer() {
           const image = new Image()
           image.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`
           await image.decode()
-          const canvas = document.getElementById('c')
+          const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('c'))
           canvas.width = width
           canvas.height = height
-          const context = canvas.getContext('2d', { willReadFrequently: true })
+          const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true }))
           context.clearRect(0, 0, width, height)
           context.drawImage(image, 0, 0, width, height)
           const { data } = context.getImageData(0, 0, width, height)

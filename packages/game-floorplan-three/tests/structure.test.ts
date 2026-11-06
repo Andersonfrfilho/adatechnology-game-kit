@@ -1,3 +1,4 @@
+import type * as THREE from 'three'
 import { describeScene } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
@@ -6,10 +7,10 @@ import { houseOf, planOf } from './helpers/houses'
 
 // Walls, doors, windows, floors, slabs and stairs of the house: what the first slice of the port draws, checked on the plans of the team's pairs.
 /** Where each piece of the structure sits in the merged meshes: id -> ranges `{ mesh, v0, v1, i0, i1 }` (the meshes carry them in `userData.ranges`). */
-function rangesOf(house: House): Map<string, { mesh: any; v0: number; v1: number; i0: number; i1: number }[]> {
-  const out = new Map<string, { mesh: any; v0: number; v1: number; i0: number; i1: number }[]>()
-  house.group.traverse((node: any) => {
-    for (const r of node.userData?.ranges ?? []) out.set(r.id, [...(out.get(r.id) ?? []), { mesh: node, v0: r.v0, v1: r.v1, i0: r.i0, i1: r.i1 }])
+function rangesOf(house: House): Map<string, { mesh: THREE.Mesh; v0: number; v1: number; i0: number; i1: number }[]> {
+  const out = new Map<string, { mesh: THREE.Mesh; v0: number; v1: number; i0: number; i1: number }[]>()
+  house.group.traverse((node) => {
+    for (const r of node.userData?.ranges ?? []) out.set(r.id, [...(out.get(r.id) ?? []), { mesh: node as THREE.Mesh, v0: r.v0, v1: r.v1, i0: r.i0, i1: r.i1 }])
   })
   return out
 }
@@ -28,11 +29,11 @@ describe('walls, doors, windows, floors and stairs', () => {
           expect(house.groups[`f${index}`]).toBe(floor)
           expect(floor.children.length).toBeGreaterThan(5)
         })
-        expect(house.r.floors.map((f: any) => f.index)).toEqual(plan.floors.map((f: any) => f.index))
+        expect(house.r.floors.map((f) => f.index)).toEqual(plan.floors.map((f) => f.index))
       })
 
       it('draws every door of the plan, with the id of the plan', () => {
-        expect(house.doors.map((d) => d.id)).toEqual(plan.doors.map((d: any) => d.id))
+        expect(house.doors.map((d) => d.id)).toEqual(plan.doors.map((d) => d.id))
         for (const door of house.doors) {
           expect(door.open).toBe(false)
           expect(door.floor).toBeGreaterThanOrEqual(0)
@@ -46,11 +47,11 @@ describe('walls, doors, windows, floors and stairs', () => {
         // the frames of the doors and windows are pieces of the mesh from the start
         for (const door of house.doors) expect(ranges.get(`jamb:${door.id}`)?.length, door.id).toBeGreaterThan(0)
         // with the destruction binding the walls of the structure are pieces too
-        const walls = plan.structure.parts.filter((p: any) => p.role === 'wall' || p.role === 'partition')
+        const walls = plan.structure.parts.filter((p) => p.role === 'wall' || p.role === 'partition')
         expect(walls.length).toBeGreaterThan(3)
         for (const wall of walls) expect(ranges.get(wall.id)?.length, wall.id).toBeGreaterThan(0)
         // every range sits inside its mesh and the ranges of one mesh never overlap: a piece that disappears takes nothing of another
-        const byMesh = new Map<any, { v0: number; v1: number; i0: number; i1: number }[]>()
+        const byMesh = new Map<THREE.Mesh, { v0: number; v1: number; i0: number; i1: number }[]>()
         for (const list of ranges.values()) for (const r of list) byMesh.set(r.mesh, [...(byMesh.get(r.mesh) ?? []), r])
         for (const [mesh, list] of byMesh) {
           const count = mesh.geometry.attributes.position.count
@@ -66,11 +67,11 @@ describe('walls, doors, windows, floors and stairs', () => {
 
       it('has a slab for every floor above the ground, at the level of the floor', () => {
         const ranges = rangesOf(house)
-        const slabs = plan.structure.parts.filter((p: any) => p.role === 'slab')
-        for (const floor of plan.floors.filter((f: any) => f.index > 0)) {
-          const slab = slabs.find((s: any) => s.floor === floor.index && Math.abs(s.y1 - floor.y0) < 0.1)
+        const slabs = plan.structure.parts.filter((p) => p.role === 'slab')
+        for (const floor of plan.floors.filter((f) => f.index > 0)) {
+          const slab = slabs.find((s) => s.floor === floor.index && Math.abs(s.y1 - floor.y0) < 0.1)
           expect(slab, `floor ${floor.index}`).toBeTruthy()
-          expect(ranges.get(slab.id)?.length, slab.id).toBeGreaterThan(0)
+          expect(ranges.get(slab!.id)?.length, slab!.id).toBeGreaterThan(0)
         }
       })
 
@@ -98,7 +99,7 @@ describe('walls, doors, windows, floors and stairs', () => {
     const plan = planOf('sobrado', 3)
     const { house } = houseOf(plan)
     const glass = new Set<string>()
-    house.floors.forEach((floor) => floor.traverse((node: any) => { if (node.isMesh && /glass/.test(node.name)) glass.add(node.name) }))
+    house.floors.forEach((floor) => floor.traverse((node) => { if ((node as THREE.Mesh).isMesh && /glass/.test(node.name)) glass.add(node.name) }))
     expect(glass.size).toBeGreaterThan(0)
     expect(plan.windows.length).toBeGreaterThan(0)
   })

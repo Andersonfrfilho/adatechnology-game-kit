@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { VEHICLE_REBATCH_AFTER_MS, createVehicleLod } from '../src/vehicle-lod'
+import type { VehicleLodKit } from '../src/vehicle-lod'
+import type { VehicleContext } from '@adatechnology/game-vehicles'
 
 /** A vehicle of `parts` panels sharing one material (one batch), placed in a root, the way the area places a built vehicle. */
 function vehicle(parts = 12): { root: THREE.Group; full: THREE.Group; meshes: THREE.Mesh[] } {
@@ -36,7 +38,7 @@ describe('vehicle-lod: a vehicle hit in play', () => {
   it('is batched again once nothing has changed on it for the quiet time, and keeps its own shadows', () => {
     let clock = 0
     const { root, full, meshes } = vehicle()
-    const lod = createVehicleLod({ THREE }, {}, root, full, { now: () => clock })
+    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => clock })
     lod.update(30, true)
     drawOnce(full)
     lod.update(30, true)
@@ -57,7 +59,7 @@ describe('vehicle-lod: a vehicle hit in play', () => {
   it('gives a part that changes its own draw back, and waits for quiet again when every part changed', () => {
     let clock = 0
     const { root, full, meshes } = vehicle(4)
-    const lod = createVehicleLod({ THREE }, {}, root, full, { now: () => clock })
+    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => clock })
     lod.update(30, true)
     drawOnce(full)
     clock += VEHICLE_REBATCH_AFTER_MS

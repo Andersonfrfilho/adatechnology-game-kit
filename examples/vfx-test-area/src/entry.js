@@ -8,11 +8,16 @@ import { createVfxArea as create } from './area.js'
 export { createVfxTestModule }
 
 /** The module for `room.loadModule`. */
+/** @param {Partial<Parameters<typeof create>[0]>} [options] */
 export function createVfxArea(options = {}) {
   return create({ createVfxTestModule, recipeIds: Object.keys(GAME_EFFECTS), ...options })
 }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the effects area. Returns the room's module report. */
+/**
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof create>[0]>} [options]
+ */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createVfxArea({ ...options, locale: lang }))

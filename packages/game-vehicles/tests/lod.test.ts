@@ -1,14 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
+import type { Mesh, Object3D } from 'three'
 import { defaultLodSettings } from '../src'
 import { makeKit } from './helpers/kit'
 
 /* the builds are long synchronous loops: let the worker report between tests */
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
-function triangles(root: any): number {
+function triangles(root: Object3D): number {
   let n = 0
-  root.traverse((o: any) => {
+  root.traverse((node) => {
+    const o = node as Mesh
     if (o.isMesh && o.geometry) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3
   })
   return n
@@ -32,9 +34,9 @@ describe('light mode', () => {
   })
 
   it('tags the interior meshes of a light build and leaves the full build untagged', () => {
-    const tagged = (root: any): number => {
+    const tagged = (root: Object3D): number => {
       let n = 0
-      root.traverse((o: any) => {
+      root.traverse((o) => {
         if (o.userData && o.userData.skipLite) n++
       })
       return n

@@ -7,7 +7,7 @@ import { resolveSlabPanels } from './slab-panels'
 import type { SlabPanelOptions } from './slab-panels'
 import { applySlabPanels, beamDepthFor, deepenBondBeams } from './slab-panels'
 import { applyPanels, applyUnits } from './wall-detail'
-import type { FoundationType, PartRole, Structure, StructurePart, WallDetail } from './types'
+import type { FoundationType, PartRole, PlanStructure, StructurePart, WallDetail } from './types'
 
 export interface DestructibleSpecOptions {
   /** Fraction of its capacity a pillar or bearing wall uses at rest (default 0.65). */
@@ -156,7 +156,7 @@ const partSpecOf = (part: StructurePart, capacity: number | undefined, detailed:
  * that anchors it. Capacities are sized from the loads at rest, as a designer would: a house stands whole, holds the loss of one pillar or bearing wall
  * and falls with two.
  */
-export function toDestructibleSpec(structure: Structure, options: DestructibleSpecOptions = {}): DestructibleSpec {
+export function toDestructibleSpec(structure: PlanStructure, options: DestructibleSpecOptions = {}): DestructibleSpec {
   const { safety = 0.65, redundancy = 0.97, safetyOthers = 0.45 } = options
   const kept = structure.parts.filter((part) => !options.filter || options.filter(part))
   const portico = options.portico ?? (options.wallDetail !== 'coarse' && structure.framed)
@@ -191,7 +191,7 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)
 }
 
-function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean, panelled: boolean): DestructibleSpec {
+function withRebar(spec: DestructibleSpec, structure: PlanStructure, options: DestructibleSpecOptions, portico: boolean, panelled: boolean): DestructibleSpec {
   const { redundancy = 0.97, safetyOthers = 0.45 } = options
   const rebar = options.rebar ?? panelled
   if (!rebar || !structure.construction.frame.rebar) return spec
@@ -206,7 +206,7 @@ function withRebar(spec: DestructibleSpec, structure: Structure, options: Destru
 }
 
 /** Puts the house on its soil: the raft (with its piles) in place of the terrain, or the terrain with a footing under each part on it. */
-function onSoil(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions): DestructibleSpec {
+function onSoil(spec: DestructibleSpec, structure: PlanStructure, options: DestructibleSpecOptions): DestructibleSpec {
   if (options.soil === undefined) return spec
   const out: DestructibleSpec = { ...spec, soil: options.soil }
   const type = options.foundation ?? structure.construction.foundation.type

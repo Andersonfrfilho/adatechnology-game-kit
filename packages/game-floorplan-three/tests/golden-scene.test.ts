@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { planLod } from '../src'
 import type { House } from '../src'
+import type * as THREE from 'three'
 import { houseOf, planOf } from './helpers/houses'
 
 // The scene the team's Casa3DSDK drew in the Visor de casas 3D (headless Chrome, three r160), six template/seed pairs: whole house, lot, roof and
@@ -17,11 +18,11 @@ type HouseEvent = { key: string; template: string; seed: number; state: string; 
 const houseEvents = golden.events.filter((event) => event.type === 'house').map((event) => event.data as unknown as HouseEvent)
 
 /** The new plan with the legacy ids the page's plan had: the seeded draws of the renderer key on them (`seedKey`). */
-function build(event: HouseEvent): { house: House; plan: any } {
+function build(event: HouseEvent): { house: House; plan: ReturnType<typeof planOf> } {
   // the team's sections (the 12 cm pillars of the raised tank), below the NBR 6118 minimum the kit now builds
   const plan = planOf(event.template, event.seed, event.state, { visorSections: true })
   const legacy = new Map<string, string>()
-  const pair = (now: any[], before: string[]): void => now.forEach((entry, index) => { if (before[index] !== undefined) legacy.set(entry.id, before[index] as string) })
+  const pair = (now: readonly { id: string }[], before: string[]): void => now.forEach((entry, index) => { if (before[index] !== undefined) legacy.set(entry.id, before[index] as string) })
   pair(plan.items, event.ids.items)
   pair(plan.rooms, event.ids.rooms)
   pair(plan.doors, event.ids.doors)
@@ -58,7 +59,7 @@ describe('team golden: the scene of the Visor de casas 3D', () => {
     const plans = golden.events.filter((event) => event.type === 'lod-plan')
     expect(plans).toHaveLength(25)
     for (const event of plans) {
-      const { focus, budget, total, levels, order, applied } = event.data as any
+      const { focus, budget, total, levels, order, applied } = event.data as unknown as { focus: [number, number, number]; budget: number; total: number; levels: unknown; order: number[]; applied: unknown }
       const plan = planLod(houses, { x: focus[0], y: focus[1], z: focus[2] }, budget)
       expect({ total: plan.total, levels: plan.levels, order: plan.houses.map((h: House) => houses.indexOf(h)), applied: houses.map((h) => h.lod) }, `focus ${focus} budget ${budget}`).toEqual({ total, levels, order, applied })
     }
@@ -67,7 +68,7 @@ describe('team golden: the scene of the Visor de casas 3D', () => {
   for (const event of houseEvents) {
     it(`${event.key}: house, lot, roof and every floor match node by node`, () => {
       const house = built.get(event.key) as House
-      const scenes: Record<string, any> = { [`${event.key}/house`]: house.group }
+      const scenes: Record<string, THREE.Object3D> = { [`${event.key}/house`]: house.group }
       if (house.lot) scenes[`${event.key}/lot`] = house.lot
       if (house.roof) scenes[`${event.key}/roof`] = house.roof
       house.floors.forEach((floor, index) => { scenes[`${event.key}/floor${index}`] = floor })
@@ -79,7 +80,7 @@ describe('team golden: the scene of the Visor de casas 3D', () => {
 
     it(`${event.key}: draw calls match`, () => {
       const house = built.get(event.key) as House
-      const stats = golden.events.find((e) => e.type === 'stats' && (e.data as any).key === event.key)?.data as any
+      const stats = golden.events.find((e) => e.type === 'stats' && (e.data as { key?: string }).key === event.key)?.data as unknown as { drawCalls: number; drawCallsLOD1: number; triangles: number }
       expect(house.stats.drawCalls).toBe(stats.drawCalls)
       expect(house.stats.drawCallsLOD1).toBe(stats.drawCallsLOD1)
       expect(house.stats.triangles).toBe(stats.triangles)

@@ -11,6 +11,7 @@ const spec = resolve(root, 'specs/001-migracao-entregas-dos-times')
 const seedFlag = process.argv.indexOf('--seed')
 const seed = seedFlag > 0 ? Number(process.argv[seedFlag + 1]) : 1
 
+/** @type {Array<{ profile: import('../src/team-audio').TeamAudioProfile, source: string, out: string }>} */
 const targets = [
   { profile: 'game', source: resolve(spec, 'artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js'), out: 'game-audio.json' },
   { profile: 'art_scene', source: resolve(spec, 'sources/arte__cena-de-arte.js'), out: 'art-scene-audio.json' },

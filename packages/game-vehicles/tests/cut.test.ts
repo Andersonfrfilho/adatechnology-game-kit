@@ -3,26 +3,29 @@ import { makeKit } from './helpers/kit'
 import { referenceCrease } from './helpers/crease-reference'
 import { referenceCutGeometry } from './helpers/cut-reference'
 import { triIndexOf } from '../src/tri-index'
+import type { BufferGeometry, Vector3 } from 'three'
+import type { CutTest } from '../src/geometry'
+import type { Three } from '../src/types'
 
-function boxTest(THREE: any, lo: number[], hi: number[], sel: boolean) {
+function boxTest(THREE: Three, lo: number[], hi: number[], sel: boolean): CutTest {
   const n = new THREE.Vector3()
   return {
     tag: 'part',
-    sel: sel ? (normal: any) => n.copy(normal).dot(new THREE.Vector3(0, 1, 0)) > 0.3 : null,
+    sel: sel ? (normal: Vector3) => n.copy(normal).dot(new THREE.Vector3(0, 1, 0)) > 0.3 : null,
     sdf: (x: number, y: number, z: number) => Math.max(lo[0] - x, x - hi[0], lo[1] - y, y - hi[1], lo[2] - z, z - hi[2]),
   }
 }
 
-function same(a: any, b: any) {
+function same(a: BufferGeometry, b: BufferGeometry) {
   expect(Object.keys(a.attributes).sort()).toEqual(Object.keys(b.attributes).sort())
-  for (const k of Object.keys(a.attributes)) expect(Array.from(a.attributes[k].array)).toEqual(Array.from(b.attributes[k].array))
+  for (const k of Object.keys(a.attributes)) expect(Array.from(a.attributes[k]!.array)).toEqual(Array.from(b.attributes[k]!.array))
 }
 
 describe('cutGeometry', () => {
   it('matches the reference bit for bit, with and without bounds, on indexed and non-indexed geometry', () => {
-    const kit: any = makeKit()
+    const kit = makeKit()
     const THREE = kit.THREE
-    const crease = (g: any, d: any) => referenceCrease(THREE, g, d)
+    const crease = (g: BufferGeometry, d: number) => referenceCrease(THREE, g, d)
     const shapes = [new THREE.SphereGeometry(1, 40, 28), new THREE.BoxGeometry(2, 1, 1, 8, 4, 4), new THREE.TorusGeometry(1, 0.3, 12, 40).toNonIndexed()]
     const regions = [
       { lo: [-0.3, -0.4, -2], hi: [0.5, 0.6, 2] },

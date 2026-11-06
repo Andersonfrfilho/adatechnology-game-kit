@@ -1,7 +1,11 @@
 /** Fuel tank explosion, fireball, flying debris and burnt-out state. */
-import type { Kit } from './types'
+import type { BufferGeometry, ColorRepresentation, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Vector3 } from 'three'
 
-export function installExplosion(kit: Kit): void {
+import type { FlyingPiece } from './api'
+
+import type { BuildContext, Kit, SceneNode } from './types'
+
+export function installExplosion(kit: Kit) {
   const THREE = kit.THREE
   const V3 = THREE.Vector3
   const PI = Math.PI
@@ -12,11 +16,11 @@ export function installExplosion(kit: Kit): void {
   /* Chain: the engine catches fire with black smoke (3 to 8 s), the vehicle jumps ~1.5 m, the hood and the rear bumper fly off with a fire trail,
      the tempered glass bursts into cubes and the laminated windshield crazes and the burnt-out shell is left with a low fire. Fuel tank explosion damage: > 200 fire, > 400 explodes in 0.6 s.
      The tanker truck (meta.bigBlast) makes a gas station tank explosion: lethal radius 12 m, injury radius 30 m, 16 m mushroom cloud. */
-  const BURNT = ['#1d1a17', '#26211c', '#171514', '#2e2620'].map(function (h, i) {
+  const BURNT: MeshStandardMaterial[] = ['#1d1a17', '#26211c', '#171514', '#2e2620'].map(function (h, i) {
     return makeMaterial(h, { roughness: 1, metalness: i === 3 ? 0.35 : 0.15 })
   })
-  const BURNT_RUB = makeMaterial('#0b0b0b', { roughness: 1 })
-  function boomMat(hex: any, op: any, add?: any) {
+  const BURNT_RUB: MeshStandardMaterial = makeMaterial('#0b0b0b', { roughness: 1 })
+  function boomMat(hex: ColorRepresentation, op: number, add?: boolean) {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color(hex),
       transparent: true,
@@ -27,15 +31,15 @@ export function installExplosion(kit: Kit): void {
       blending: add ? THREE.AdditiveBlending : THREE.NormalBlending,
     })
   }
-  function enginePos(c: any) {
-    const mot = c.parts.find(function (p: any) {
+  function enginePos(c: BuildContext) {
+    const mot = c.parts.find(function (p) {
       return p.kind === 'engine'
     })
     if (mot) return mot.pos.clone()
     const m = c.meta
     return new V3(m.front - 0.6, (m.clearance || 0.3) + 0.3, 0)
   }
-  kit.explode = function (c: any, o: any) {
+  kit.explode = function (c: BuildContext, o?: { now?: boolean; delay?: number | null } | null) {
     o = o || {}
     if (c.blast || c.exploded) return false
     const fuse = o.now ? 0 : o.delay != null ? o.delay : 3 + c.rand() * 5
@@ -50,7 +54,7 @@ export function installExplosion(kit: Kit): void {
     return fuse
   }
   /* explosion damage on the tank (sum). Returns "fire", "explosion" or null */
-  kit.blastDamage = function (c: any, amount: any) {
+  kit.blastDamage = function (c: BuildContext, amount: number) {
     c.tankDamage = (c.tankDamage || 0) + amount
     if (c.tankDamage > 400 && !c.exploded && (!c.blast || c.blast.phase === 'fire')) {
       c.blast = { phase: 'fire', t: 0, T: 0.6 }
@@ -58,7 +62,7 @@ export function installExplosion(kit: Kit): void {
     }
     if (c.tankDamage > 200 && !c.tankFire) {
       c.tankFire = true
-      const tk = c.parts.find(function (p: any) {
+      const tk = c.parts.find(function (p) {
         return p.kind === 'fuel_tank'
       })
       const tp = tk ? tk.pos.clone() : enginePos(c)
@@ -68,7 +72,7 @@ export function installExplosion(kit: Kit): void {
     }
     return null
   }
-  function fling(c: any, obj: any, v: any, w: any) {
+  function fling(c: BuildContext, obj: Object3D, v: Vector3, w: Vector3) {
     if (!obj || !obj.parent) return null
     c.root.updateMatrixWorld(true)
     const bb = new THREE.Box3().setFromObject(obj)
@@ -81,19 +85,19 @@ export function installExplosion(kit: Kit): void {
     c.effects.updateMatrixWorld(true)
     holder.attach(obj)
     const sz = bb.getSize(new V3())
-    const piece = { o: holder, v: v, w: w, r: Math.max(0.08, Math.min(sz.x, sz.y, sz.z) * 0.5 + 0.02), landed: false, trail: 2.2 }
+    const piece: FlyingPiece = { o: holder, v: v, w: w, r: Math.max(0.08, Math.min(sz.x, sz.y, sz.z) * 0.5 + 0.02), landed: false, trail: 2.2 }
     c.flying = c.flying || []
     c.flying.push(piece)
-    obj.traverse(function (x: any) {
+    obj.traverse(function (x: Object3D) {
       x.userData.noFollow = true
     })
-    const di = c.deform.indexOf(obj)
+    const di = c.deform.indexOf(obj as Mesh)
     if (di >= 0) c.deform.splice(di, 1)
     return piece
   }
-  function burnAll(c: any) {
+  function burnAll(c: BuildContext) {
     let i = 0
-    c.vehicle.traverse(function (o: any) {
+    c.vehicle.traverse(function (o: SceneNode) {
       if (o.isSprite) {
         o.visible = false
         return
@@ -111,24 +115,24 @@ export function installExplosion(kit: Kit): void {
       }
       o.material = BURNT[i++ % BURNT.length]
     })
-    c.lights.forEach(function (L: any) {
+    c.lights.forEach(function (L) {
       L.broken = true
-      L.lens.forEach(function (m: any) {
+      L.lens.forEach(function (m: Object3D) {
         m.visible = false
       })
-      ;(L.halo || []).forEach(function (h: any) {
+      ;(L.halo || []).forEach(function (h: Object3D) {
         h.visible = false
       })
     })
   }
-  function bigBoomFx(c: any) {
+  function bigBoomFx(c: BuildContext) {
     const g = new THREE.Group()
     c.effects.add(g)
     c.bigFx = { g: g, t: 0, rings: [], col: [] }
-    ;[
+    ;([
       [12, '#d8322a', kit.t('blast.lethal', { m: 12 })],
       [30, '#e0a548', kit.t('blast.injury', { m: 30 })],
-    ].forEach(function (r: any) {
+    ] as [number, string, string][]).forEach(function (r) {
       const ring = new THREE.Mesh(new THREE.RingGeometry(r[0] - 0.25, r[0], 96), boomMat(r[1], 0.85))
       ring.rotation.x = -PI / 2
       ring.position.y = 0.06
@@ -153,7 +157,7 @@ export function installExplosion(kit: Kit): void {
       c.bigFx.rings.push(ring, fill, lb)
     })
   }
-  function detonate(c: any) {
+  function detonate(c: BuildContext) {
     const m = c.meta
     const B = c.blast
     const ep = enginePos(c)
@@ -167,7 +171,7 @@ export function installExplosion(kit: Kit): void {
     B.rz = (c.rand() - 0.5) * 0.35
     c.exploded = true
     c.engineHealth = 0
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind !== 'exhaust'
     })
     /* flash, fireball, smoke, shock wave on the ground */
@@ -215,7 +219,7 @@ export function installExplosion(kit: Kit): void {
     })
     I.burst(c, 'plastic', cen, 8, { speed: 4 })
     /* the glass bursts into shards */
-    c.glass.slice().forEach(function (gm2: any) {
+    c.glass.slice().forEach(function (gm2) {
       const G = gm2.userData.glass
       if (!G || G.broken || !gm2.visible || !gm2.parent) return
       // a laminated windshield holds together by its film: it crazes all over and stays; a tempered pane bursts into cubes
@@ -226,7 +230,7 @@ export function installExplosion(kit: Kit): void {
       I.shatterGlass(c, gm2, 1.4, new V3(0, 1, 0))
     })
     /* parts that fly off with a fire trail */
-    function rv(a: any, b: any) {
+    function rv(a: number, b: number) {
       return a + c.rand() * (b - a)
     }
     if (c.hood) {
@@ -244,22 +248,22 @@ export function installExplosion(kit: Kit): void {
     /* a wheel is bolted to its hub: the tyres burn, no wheel flies off */
     burnAll(c)
     /* low fire that stays on the shell */
-    c.emitters = c.emitters.filter(function (e: any) {
+    c.emitters = c.emitters.filter(function (e) {
       return e.kind === 'exhaust' ? false : true
     })
-    c.emitters.forEach(function (e: any) {
+    c.emitters.forEach(function (e) {
       if (e.kind === 'fire') e.rate = Math.min(e.rate, 7)
     })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 8, s: 0.8 })
     kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 6, s: 0.7 })
     kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 4, s: 1.4 })
-    c.parts.forEach(function (p: any) {
+    c.parts.forEach(function (p) {
       if (p.kind === 'glass' || p.kind === 'headlight' || p.kind === 'taillight' || p.kind === 'hood') p.done = true
     })
     c.log.push({ kind: 'explosion', label: kit.t(big ? 'blast.tank_explosion' : 'blast.explosion') })
     if (big) bigBoomFx(c)
   }
-  function tickBoom(c: any, dt: any) {
+  function tickBoom(c: BuildContext, dt: number) {
     const B = c.blast
     B.t += dt
     if (B.phase === 'fire') {
@@ -308,8 +312,8 @@ export function installExplosion(kit: Kit): void {
       }
     }
   }
-  function tickFlying(c: any, dt: any) {
-    ;(c.flying || []).forEach(function (P: any) {
+  function tickFlying(c: BuildContext, dt: number) {
+    ;(c.flying || []).forEach(function (P) {
       if (P.landed) {
         if (P.trail > 0) {
           P.trail -= dt
@@ -385,7 +389,7 @@ export function installExplosion(kit: Kit): void {
         }
       }
       const fade = F.t < 6 ? 1 : Math.max(0, 1 - (F.t - 6) / 2)
-      F.rings.forEach(function (r: any, i: any) {
+      F.rings.forEach(function (r: Mesh<BufferGeometry, MeshBasicMaterial>, i: number) {
         r.material.opacity = (i % 3 === 1 ? 0.07 : 0.85) * fade * Math.min(1, F.t * 3)
       })
       if (fade <= 0) {
@@ -395,5 +399,9 @@ export function installExplosion(kit: Kit): void {
     }
   }
 
-  Object.assign(I, { BURNT, BURNT_RUB, boomMat, enginePos, fling, burnAll, bigBoomFx, detonate, tickBoom, tickFlying })
+  const shared = { BURNT, BURNT_RUB, boomMat, enginePos, fling, burnAll, bigBoomFx, detonate, tickBoom, tickFlying }
+
+  Object.assign(I, shared)
+
+  return shared
 }
