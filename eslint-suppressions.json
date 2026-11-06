@@ -59,14 +59,9 @@
       "count": 17
     }
   },
-  "packages/game-vehicles-fleet/src/vehicles/cars-extra.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 183
-    }
-  },
   "packages/game-vehicles-fleet/src/vehicles/heavy.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 32
+      "count": 30
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/helicopters-extra.ts": {
@@ -81,7 +76,7 @@
   },
   "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 30
+      "count": 22
     }
   },
   "packages/game-vehicles-fleet/src/vehicles/planes-extra.ts": {

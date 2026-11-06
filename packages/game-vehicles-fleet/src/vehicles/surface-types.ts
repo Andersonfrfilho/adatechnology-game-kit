@@ -204,6 +204,9 @@ export interface CarDetailCtx {
   wrapR: number
   bF: BumperSpec & { wrap?: number }
   bR: BumperSpec & { wrap?: number }
+  /** Left here by a model's own `extra`: its mast antenna and whether it has a hood ornament. */
+  antenna?: Object3D
+  hoodOrn?: boolean
 }
 
 /** The warp of a fleet car, with its side curve `sec(y)`. */

@@ -1,4 +1,6 @@
-import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { Material } from 'three'
+import type { BodyOptions } from './surface-types'
+import type { HeadlightOptions, VehicleContext } from '@adatechnology/game-vehicles'
 import type { FleetContext } from '../context'
 
 /* Motorcycles added after the first batch (group F). Uses only the kit API.
@@ -92,14 +94,14 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     g.setIndex(idx)
     return G.crease(g.toNonIndexed(), o.crease || 60)
   }
-  function body(c: VehicleContext, st: number[][], mat: any, o?: any) {
+  function body(c: VehicleContext, st: number[][], mat: Material, o?: BodyOptions | null) {
     o = o || {}
     const m = c.add(sloft(st, o), mat, 0, 0, 0, o.parent)
     if (o.def !== false) c.deform.push(m)
     return m
   }
   /* half width of the loft (x axis) at position x and height y: to glue texts and trim to the side */
-  function loftHalf(st: any, x: number, y: number) {
+  function loftHalf(st: readonly (readonly number[])[], x: number, y: number) {
     for (let i = 0; i < st.length - 1; i++) {
       const a = st[i],
         b = st[i + 1]
@@ -166,7 +168,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     c.deform.push(f)
     return f
   }
-  function lamp(c: VehicleContext, o: any) {
+  function lamp(c: VehicleContext, o: HeadlightOptions & { roll?: number; pitch?: number }) {
     const L = kit.headlight(c, o)
     if (o.roll) L.group.rotation.x = o.roll
     if (o.pitch) L.group.rotation.z = o.pitch
@@ -180,7 +182,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     L.inner.push(m)
     return m
   }
-  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: any, low: any, o?: any) {
+  function fork(c: VehicleContext, top: number[], axle: number[], zg: number, r: number, up: Material, low: Material, o?: { split?: number; lowK?: number; gaiter?: boolean; clamp?: Material } | null) {
     o = o || {}
     ;[1, -1].forEach(function (s) {
       const a = new V3(top[0], top[1], s * zg),
@@ -314,7 +316,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     c.cylinder(0.07, 0.055, 0.1, MT.steel, x, y, z, 'x')
     c.cylinder(0.06, 0.06, 0.012, MT.head, x + 0.055, y, z, 'x')
   }
-  function bikeMeta(c: VehicleContext, o: any) {
+  function bikeMeta(c: VehicleContext, o: Record<string, unknown>) {
     Object.assign(c.meta, { kind: 'bike', clearance: 0.25, bodyHeight: 0.6, belt: 0.88 }, o)
   }
   /* meshes created since mark n0 (without wheels, headlights, taillights or glass, which already have their own zone) */
