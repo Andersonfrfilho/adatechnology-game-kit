@@ -14,9 +14,9 @@ function setup() {
   scene.add(house.group)
   const d = house.destruction
   d.activate()
-  const centre = (id: string): [number, number, number] => { const p = house.structure.byId.get(id); return [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
+  const centre = (id: string): [number, number, number] => { const p = house.structure.byId.get(id); return [(p!.aabb[0] + p!.aabb[2]) / 2, (p!.y0 + p!.y1) / 2, (p!.aabb[1] + p!.aabb[3]) / 2] }
   const shoot = (): void => {
-    for (const id of ['wall_0_0', 'wall_0_1', 'wall_0_2']) world.hitPart(d.id, id, { type: 'ballistic', point: centre(id), direction: [0, 0, -1], energy: 500, caliber: 9 })
+    for (const id of ['wall_0_0', 'wall_0_1', 'wall_0_2']) world.hitPart(d.id!, id, { type: 'ballistic', point: centre(id), direction: [0, 0, -1], energy: 500, caliber: 9 })
   }
   return { d, house, shoot, queue: d.breach.deferredQueue(), houseRenderer }
 }

@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
+import type { VehicleDestructible } from '@adatechnology/game-vehicles'
 import { makeFleetKit } from './helpers/kit'
 
 function sedan() {
-  const kit: any = makeFleetKit('en')
-  const item: any = buildVehicleItem(kit, 'midsize_sedan')
-  return createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root }) as any
+  const kit = makeFleetKit('en')
+  const item = buildVehicleItem(kit, 'midsize_sedan')
+  return createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
 }
 /** Drains a fluid: holes the part until it is empty. */
-function drain(d: any, role: string) {
-  const part = d.describe().parts.find((p: any) => p.tags?.includes(role) || p.id.startsWith(role))
-  d.hit({ type: 'ballistic', point: d.partWorldCenter(part.id), part: part.id, direction: [0, 1, 0], energy: 3500, caliber: 12.7 })
-  for (let i = 0; i < 600; i++) d.update(1)
+function drain(d: VehicleDestructible, role: string) {
+  const part = d.describe().parts.find((p) => p.tags?.includes(role) || p.id.startsWith(role))
+  d.hit({ type: 'ballistic', point: d.partWorldCenter(part!.id), part: part!.id, direction: [0, 1, 0], energy: 3500, caliber: 12.7 })
+  for (let i = 0; i < 600; i++) d.update!(1)
 }
 /** Seconds of driving at `load` until the engine will not start, up to `limit`. */
-function runUntilDead(d: any, load: number, limit = 900) {
+function runUntilDead(d: VehicleDestructible, load: number, limit = 900) {
   for (let t = 0; t < limit; t++) {
     d.runEngine(1, load)
     if (!d.status().canStart) return t

@@ -10,7 +10,7 @@ import type { BuildContext, Kit } from './types'
 type WheelOptions = Parameters<BuildContext['wheel']>[4] & { track?: number }
 /** A wheel of `kit.car`: [x, radius, width, options]. */
 export type CarWheel = readonly [number, number, number, WheelOptions?]
-type LampSpec = { style?: string; w?: number; h?: number; y?: number; in?: number; yaw?: number; dx?: number; mat?: Material; wrap?: boolean }
+type LampSpec = { style?: string; w?: number; h?: number; y?: number; in?: number; yaw?: number; dx?: number; mat?: Material; wrap?: number }
 type GrilleSpec = { style?: string; w?: number; h?: number; y?: number; emblem?: boolean }
 /** The spec of `kit.car` (see the comment above it). */
 export type CarSpec = {

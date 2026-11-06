@@ -1,16 +1,22 @@
 import { createDestruction } from '@adatechnology/game-destruction'
+import type { DestructionEvent } from '@adatechnology/game-contracts'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import type { House } from '../src'
+import type { StructureRangeItem } from '../src/destruction/types'
+import type { BufferGeometry, InstancedMesh, Material, Mesh, MeshLambertMaterial, Object3D } from 'three'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
 /** What the tests read of a part of the structure. */
+/** A breach mask as the shells and units carry it (`userData.breachMask`, `userData.breachCore`). */
+type WallMaskData = { data: Uint8Array; w: number; h: number; alongU: boolean; start: number; len: number; y0: number; height: number }
+type StageEvent = Extract<DestructionEvent, { type: 'stage' }>
 type StructurePiece = { id: string; role: string; aabb: number[]; y0: number; y1: number }
 
 // The third slice: the house bound to the destruction of its structure (a vertex range per piece, brick courses at LOD 0, spalls and the rebar cage
 // from the renderer) with a real world of @adatechnology/game-destruction and the real renderer of @adatechnology/game-destruction-three.
-function setup(options: { template?: string; seed?: number; onDamage?: (...args: any[]) => void } = {}) {
+function setup(options: { template?: string; seed?: number; onDamage?: (...args: unknown[]) => void } = {}) {
   const plan = planOf(options.template ?? 'sobrado', options.seed ?? 3)
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
@@ -19,18 +25,18 @@ function setup(options: { template?: string; seed?: number; onDamage?: (...args:
   scene.add(house.group)
   const d = house.destruction
   d.activate()
-  const events: any[] = []
-  world.on('*', (e: any) => events.push(e))
+  const events: DestructionEvent[] = []
+  world.on('*', (e: DestructionEvent) => events.push(e))
   const run = (seconds: number): void => { for (let t = 0; t < seconds; t += 0.05) { world.update(0.05); renderer.update(0.05) } }
-  const centre = (id: string): [number, number, number] => { const p = house.structure.byId.get(id); return [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
+  const centre = (id: string): [number, number, number] => { const p = house.structure.byId.get(id); return [(p!.aabb[0] + p!.aabb[2]) / 2, (p!.y0 + p!.y1) / 2, (p!.aabb[1] + p!.aabb[3]) / 2] }
   return { plan, world, scene, renderer, house, d, events, run, centre }
 }
 
 /** True when every vertex of the piece's ranges sits on one point (the piece is hidden). */
 function hidden(house: House, id: string): boolean {
-  const items = house.structure.meshesOf(id).filter((it: any) => it.mesh && !it.whole && !it.obj)
+  const items = house.structure.meshesOf(id).filter((it): it is StructureRangeItem => !!(it.mesh && !it.whole && !it.obj))
   expect(items.length).toBeGreaterThan(0)
-  return items.every((it: any) => {
+  return items.every((it) => {
     const a = it.mesh.geometry.attributes.position.array
     for (let k = it.v0 + 1; k < it.v1; k++) if (a[k * 3] !== a[it.v0 * 3] || a[k * 3 + 1] !== a[it.v0 * 3 + 1] || a[k * 3 + 2] !== a[it.v0 * 3 + 2]) return false
     return true
@@ -40,38 +46,38 @@ function hidden(house: House, id: string): boolean {
 describe('registration in the world', () => {
   it('describes the walls one part each, with the assembly of their masonry', () => {
     const { d, house } = setup()
-    const wall = d.spec.parts.find((p: any) => p.id === 'wall_0_0')
+    const wall = d.spec!.parts.find((p) => p.id === 'wall_0_0')
     expect(wall).toBeTruthy()
-    expect(wall.units).toBeTruthy()
-    expect(wall.breach).toBeTruthy()
-    expect(d.spec.parts.some((p: any) => /_pier_|_sill_|_lintel_/.test(p.id) && house.structure.byId.has(p.id.replace(/_(pier|sill|lintel|spandrel)_\d+$/, '')))).toBe(false)
+    expect(wall!.units).toBeTruthy()
+    expect(wall!.breach).toBeTruthy()
+    expect(d.spec!.parts.some((p) => /_pier_|_sill_|_lintel_/.test(p.id) && house.structure.byId.has(p.id.replace(/_(pier|sill|lintel|spandrel)_\d+$/, '')))).toBe(false)
   })
 
   it('gives the water tank what it holds and the gas cylinder what makes it explode, with the thin wall of each', () => {
     const { d } = setup({ template: 'single_storey_a', seed: 1 })
-    const tank = d.spec.parts.find((p: any) => p.id === 'water_tank')
-    const gas = d.spec.parts.find((p: any) => /^gas_cylinder/.test(p.id))
-    expect(tank.contains).toEqual({ fluid: 'water', liters: 500 })
-    expect(tank.thickness).toBeLessThan(0.01)
-    expect(gas.contains.pressurized).toBe(true)
-    expect(gas.explodes.energy).toBeGreaterThan(0)
-    expect(gas.thickness).toBeLessThan(0.01)
+    const tank = d.spec!.parts.find((p) => p.id === 'water_tank')
+    const gas = d.spec!.parts.find((p) => /^gas_cylinder/.test(p.id))
+    expect(tank!.contains).toEqual({ fluid: 'water', liters: 500 })
+    expect(tank!.thickness).toBeLessThan(0.01)
+    expect(gas!.contains!.pressurized).toBe(true)
+    expect(gas!.explodes!.energy).toBeGreaterThan(0)
+    expect(gas!.thickness).toBeLessThan(0.01)
   })
 
   it('gives the concrete that is drawn (a panel of the slab) the rebar of reinforced concrete', () => {
     const { d } = setup()
-    const slab = d.spec.parts.find((p: any) => p.id === 'slab_1_p0')
-    expect(slab.reinforcement).toBeTruthy()
-    expect(d.spec.parts.find((p: any) => p.id === 'roof_a' || p.material === 'ceramic')?.reinforcement).toBeUndefined()
+    const slab = d.spec!.parts.find((p) => p.id === 'slab_1_p0')
+    expect(slab!.reinforcement).toBeTruthy()
+    expect(d.spec!.parts.find((p) => p.id === 'roof_a' || p.material === 'ceramic')?.reinforcement).toBeUndefined()
   })
 
   it('registers the house once and the world knows every part', () => {
     const { d, world, house } = setup()
     expect(d.active).toBe(true)
-    expect(world.has(d.id)).toBe(true)
-    for (const id of house.structure.byId.keys()) expect(world.part(d.id, id), id).toBeTruthy()
+    expect(world.has(d.id!)).toBe(true)
+    for (const id of house.structure.byId.keys()) expect(world.part(d.id!, id), id).toBeTruthy()
     d.activate()
-    expect(world.has(d.id)).toBe(true)
+    expect(world.has(d.id!)).toBe(true)
   })
 
   it('binds each part to the vertex range, mesh or group that draws it', () => {
@@ -79,8 +85,9 @@ describe('registration in the world', () => {
     const ranges = d.ranges()
     const drawn = [...house.structure.byId.keys()].filter((id) => house.structure.meshesOf(id).length)
     expect(Object.keys(ranges).sort()).toEqual(drawn.sort())
-    for (const [id, items] of Object.entries<any[]>(ranges)) {
-      for (const item of items) {
+    for (const [id, items] of Object.entries(ranges)) {
+      for (const bound of items) {
+        const item = bound as Partial<Object3D> & { mesh: Mesh; range?: [number, number] }
         if (item.range) {
           expect(item.mesh.isMesh, id).toBe(true)
           expect(item.range[1]).toBeGreaterThan(item.range[0])
@@ -94,7 +101,7 @@ describe('registration in the world', () => {
     const { d, world, house } = setup()
     const id = d.id
     house.dispose()
-    expect(world.has(id)).toBe(false)
+    expect(world.has(id!)).toBe(false)
   })
 })
 
@@ -105,7 +112,7 @@ describe('fracture and reset', () => {
     expect(panels.length).toBeGreaterThan(1)
     expect(house.structure.byId.has('slab_1')).toBe(false)
     expect(panels.filter((id) => house.structure.meshesOf(id).length).length).toBeGreaterThan(1)
-    for (const id of panels) expect(house.structure.byId.get(id).role).toBe('slab')
+    for (const id of panels) expect(house.structure.byId.get(id)!.role).toBe('slab')
     const bare = houseOf(planOf('sobrado', 3)).house
     expect(bare.structure.byId.has('slab_1')).toBe(true)
     expect(bare.structure.byId.has('slab_1_p0')).toBe(false)
@@ -113,13 +120,13 @@ describe('fracture and reset', () => {
 
   it('a slab panel that fractures hides its own tiles and leaves the other panels of the slab', () => {
     const { house, d, world, centre, run, events } = setup()
-    const drawn = [...house.structure.byId.keys()].filter((id) => /^slab_1_p\d+$/.test(id) && house.structure.meshesOf(id).some((it: any) => it.mesh && !it.whole))
+    const drawn = [...house.structure.byId.keys()].filter((id) => /^slab_1_p\d+$/.test(id) && house.structure.meshesOf(id).some((it) => it.mesh && !it.whole))
     expect(drawn.length).toBeGreaterThan(1)
     const first = drawn[0]!
     const dist = (id: string): number => Math.hypot(...(centre(id).map((v, k) => v - centre(first)[k]) as number[]))
     const other = [...drawn].sort((a, b) => dist(b) - dist(a))[0]!
     expect(hidden(house, first)).toBe(false)
-    world.hitPart(d.id, first, { type: 'explosive', point: centre(first), energy: 5e9, radius: 1, source: 'test' })
+    world.hitPart(d.id!, first, { type: 'explosive', point: centre(first), energy: 5e9, radius: 1, source: 'test' })
     run(1)
     expect(events.some((e) => (e.type === 'fracture' && e.part === first) || (e.type === 'collapse' && e.parts.includes(first)))).toBe(true)
     expect(hidden(house, first)).toBe(true)
@@ -128,24 +135,24 @@ describe('fracture and reset', () => {
 
   it('hides the wall that fractures and puts it back on reset', () => {
     const { house, d, world, centre, run, events } = setup()
-    const before = house.structure.meshesOf('wall_0_0').map((it: any) => it.mesh.geometry.attributes.position.array.slice(it.v0 * 3, it.v1 * 3))
+    const before = house.structure.meshesOf('wall_0_0').map((it) => it.mesh!.geometry.attributes.position.array.slice(it.v0! * 3, it.v1! * 3))
     expect(hidden(house, 'wall_0_0')).toBe(false)
-    world.hitPart(d.id, 'wall_0_0', { type: 'blunt', point: centre('wall_0_0'), energy: 3e6, radius: 0.35, source: 'test' })
+    world.hitPart(d.id!, 'wall_0_0', { type: 'blunt', point: centre('wall_0_0'), energy: 3e6, radius: 0.35, source: 'test' })
     run(1)
     expect(events.some((e) => e.type === 'fracture' && e.part === 'wall_0_0')).toBe(true)
     expect(hidden(house, 'wall_0_0')).toBe(true)
     d.reset()
     expect(hidden(house, 'wall_0_0')).toBe(false)
-    const after = house.structure.meshesOf('wall_0_0').map((it: any) => it.mesh.geometry.attributes.position.array.slice(it.v0 * 3, it.v1 * 3))
+    const after = house.structure.meshesOf('wall_0_0').map((it) => it.mesh!.geometry.attributes.position.array.slice(it.v0! * 3, it.v1! * 3))
     expect(after).toEqual(before)
-    expect(d.piece('wall_0_0').status).toBe('intact')
+    expect(d.piece('wall_0_0')!.status).toBe('intact')
   })
 
   it('draws a spall decal where a bullet hits a wall', () => {
     const { d, world, renderer, centre, run, events } = setup()
     const decals = renderer.stats().decals
     // a 9 mm round: it scars the plaster but does not knock the brick under it out (a brick that comes out takes its marks with it)
-    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 500, caliber: 9 })
+    world.hitPart(d.id!, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 500, caliber: 9 })
     run(0.2)
     expect(events.some((e) => e.type === 'chip')).toBe(false)
     expect(renderer.stats().decals).toBeGreaterThan(decals)
@@ -154,33 +161,33 @@ describe('fracture and reset', () => {
   it('takes the plaster off a 9 mm hit in a ragged patch with the brick under it, and no flat patch or star of cracks', () => {
     const { d, house, world, centre, run, events } = setup()
     const at = centre('wall_0_0')
-    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 500, caliber: 9 })
+    world.hitPart(d.id!, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 500, caliber: 9 })
     run(0.2)
-    const spall = events.find((e: any) => e.type === 'spall' && e.part === 'wall_0_0') as any
+    const spall = events.find((e: DestructionEvent) => e.type === 'spall' && e.part === 'wall_0_0') as Extract<DestructionEvent, { type: 'spall' }>
     expect(spall).toBeDefined()
-    expect(events.some((e: any) => e.type === 'crack' && e.part === 'wall_0_0')).toBe(false)
+    expect(events.some((e: DestructionEvent) => e.type === 'crack' && e.part === 'wall_0_0')).toBe(false)
     const statistics = d.statistics().breached
     expect(statistics.flakes).toBe(1)
     expect(statistics.gone).toBe(0)
     expect(statistics.craters).toBe(0)
-    const shell = house.group.getObjectByName('breach-shell') as any
+    const shell = house.group.getObjectByName('breach-shell') as Mesh<BufferGeometry, MeshLambertMaterial>
     expect(shell.userData.cutAt(new THREE.Vector3(...(spall.point as [number, number, number])))).toBe(true)
-    const units = house.group.getObjectByName('breach:wall_0_0') as any
+    const units = house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
     expect(units.count).toBeGreaterThan(0)
     expect(units.material.userData.breachCore.data.some((x: number) => x > 0)).toBe(false)
     // the destruction renderer drew no patch of its own on the wall (a patch is a disc in the brick's colour)
-    const item = house.structure.meshesOf('wall_0_0').find((it: any) => it.mesh)
-    expect(item.mesh.userData.drawnSpalls).toContain('wall_0_0')
-    expect(item.mesh.children.filter((c: any) => c.renderOrder === 1)).toHaveLength(0)
+    const item = house.structure.meshesOf('wall_0_0').find((it) => it.mesh)
+    expect(item!.mesh!.userData.drawnSpalls).toContain('wall_0_0')
+    expect(item!.mesh!.children.filter((c) => c.renderOrder === 1)).toHaveLength(0)
     // the hole sits on the brick laid bare, behind the face of the plaster
-    const hole = item.mesh.children.find((c: any) => c.renderOrder === 2)
+    const hole = item!.mesh!.children.find((c) => c.renderOrder === 2)
     expect(hole).toBeDefined()
   })
 
   it('takes the marks of a brick that comes out away with it', () => {
     const { d, world, renderer, centre, run, events } = setup()
     const decals = renderer.stats().decals
-    world.hitPart(d.id, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 2e4, caliber: 12 })
+    world.hitPart(d.id!, 'wall_0_0', { type: 'ballistic', point: centre('wall_0_0'), direction: [0, 0, -1], energy: 2e4, caliber: 12 })
     run(0.2)
     expect(events.some((e) => e.type === 'chip')).toBe(true)
     expect(renderer.stats().decals).toBe(decals)
@@ -189,7 +196,7 @@ describe('fracture and reset', () => {
   it('draws the rebar cage of a concrete slab that spalls, as instanced bars', () => {
     const { d, world, renderer, run, events } = setup()
     expect(renderer.rebarCount()).toBe(0)
-    world.hitPart(d.id, 'slab_1_p0', { type: 'explosive', point: d.spec.parts.find((p: any) => p.id === 'slab_1_p0').position, energy: 4e5, radius: 1.5 })
+    world.hitPart(d.id!, 'slab_1_p0', { type: 'explosive', point: d.spec!.parts.find((p) => p.id === 'slab_1_p0')!.position, energy: 4e5, radius: 1.5 })
     run(1)
     expect(events.some((e) => e.type === 'expose')).toBe(true)
     expect(renderer.rebarCount()).toBeGreaterThan(0)
@@ -199,10 +206,10 @@ describe('fracture and reset', () => {
     const calls: unknown[][] = []
     const { house, d } = setup({ onDamage: (...args) => calls.push(args) })
     const part = house.parts['door:d0_0']
-    expect(part.damageable.hp).toBeGreaterThan(0)
+    expect(part.damageable!.hp).toBeGreaterThan(0)
     house.damage('door:d0_0', null, 'strike', 1e6)
-    expect(part.damageable.hp).toBe(0)
-    expect(d.piece('door:d0_0').status).toBe('broken')
+    expect(part.damageable!.hp).toBe(0)
+    expect(d.piece('door:d0_0')!.status).toBe('broken')
     expect(calls.length).toBeGreaterThan(0)
   })
 })
@@ -211,11 +218,11 @@ describe('a wall cut where its units came out, at full detail', () => {
   /** A blunt hit on a wall that reaches stage 2 without fracturing it, read at the moment of the stage event (stage 3 comes in the same step). */
   function breach() {
     const s = setup()
-    const seen: { statistics: any; mesh: any; hidden: boolean; opening: any }[] = []
-    s.world.on('stage', (e: any) => {
+    const seen: { statistics: ReturnType<House['destruction']['statistics']>['breached']; mesh: Object3D | undefined; hidden: boolean; opening: StageEvent['opening'] }[] = []
+    s.world.on('stage', (ev: DestructionEvent) => { const e = ev as StageEvent;
       if (e.part === 'wall_0_0' && e.stage === 2) seen.push({ statistics: s.d.statistics().breached, mesh: s.house.group.getObjectByName('breach:wall_0_0'), hidden: hidden(s.house, 'wall_0_0'), opening: e.opening })
     })
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
     return { ...s, seen }
   }
@@ -223,39 +230,39 @@ describe('a wall cut where its units came out, at full detail', () => {
   it('cuts the wall only where the units came out and keeps the paint of the rest', () => {
     const s = setup()
     let checked = false
-    s.world.on('stage', (e: any) => {
+    s.world.on('stage', (ev: DestructionEvent) => { const e = ev as StageEvent;
       if (e.part !== 'wall_0_0' || e.stage !== 2) return
       const statistics = s.d.statistics().breached
       expect(statistics.walls).toBe(1)
       expect(statistics.gone).toBeGreaterThan(0)
       expect(hidden(s.house, 'wall_0_0')).toBe(true)
       // the units around the opening, drawn behind the cut
-      const units = s.house.group.getObjectByName('breach:wall_0_0') as any
+      const units = s.house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
       expect(units?.isInstancedMesh).toBe(true)
       expect(units.count).toBe(statistics.units)
       expect(units.count).toBeGreaterThan(0)
       expect(units.instanceColor).toBeTruthy()
       // the wall itself: the same geometry and material as the house drew it, cut by a mask only at the opening
-      const shell = s.house.group.getObjectByName('breach-shell') as any
-      const item = s.house.structure.meshesOf('wall_0_0').find((it: any) => it.mesh)
-      expect(shell.material.type).toBe(item.mesh.material.type)
-      expect(shell.material.map).toBe(item.mesh.material.map)
-      expect(shell.geometry.attributes.position.count).toBe(item.v1 - item.v0)
-      expect(Array.from(shell.geometry.attributes.color.array.slice(0, 3))).toEqual(Array.from(item.mesh.geometry.attributes.color.array.slice(item.v0 * 3, item.v0 * 3 + 3)))
+      const shell = s.house.group.getObjectByName('breach-shell') as Mesh<BufferGeometry, MeshLambertMaterial>
+      const item = s.house.structure.meshesOf('wall_0_0').find((it) => it.mesh)
+      expect(shell.material.type).toBe((item!.mesh!.material as Material).type)
+      expect(shell.material.map).toBe((item!.mesh!.material as MeshLambertMaterial).map)
+      expect(shell.geometry.attributes.position.count).toBe(item!.v1! - item!.v0!)
+      expect(Array.from(shell.geometry.attributes.color.array.slice(0, 3))).toEqual(Array.from(item!.mesh!.geometry.attributes.color.array.slice(item!.v0! * 3, item!.v0! * 3 + 3)))
       const mask = shell.userData.breachMask
       const at = (p: number[]) => {
         const v = s.house.group.worldToLocal(new THREE.Vector3(p[0], p[1], p[2]))
         const i = Math.floor(((mask.alongU ? v.x : v.z) - mask.start) / mask.len * mask.w), j = Math.floor((v.y - mask.y0) / mask.height * mask.h)
         return mask.data[j * mask.w + i]
       }
-      expect(at(e.opening.center)).toBe(255)
+      expect(at(e.opening!.center)).toBe(255)
       const part = s.house.structure.byId.get('wall_0_0')
-      const far = mask.alongU ? [part.aabb[0] + 0.05, part.y0 + 0.05, 0] : [0, part.y0 + 0.05, part.aabb[1] + 0.05]
+      const far = mask.alongU ? [part!.aabb[0] + 0.05, part!.y0 + 0.05, 0] : [0, part!.y0 + 0.05, part!.aabb[1] + 0.05]
       expect(mask.data[Math.floor((far[1] - mask.y0) / mask.height * mask.h) * mask.w + Math.floor(((mask.alongU ? far[0] : far[2]) - mask.start) / mask.len * mask.w)]).toBe(0)
       expect(mask.data.filter((x: number) => x > 0).length).toBeLessThan(mask.data.length / 4)
       checked = true
     })
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
     expect(checked).toBe(true)
   })
@@ -263,20 +270,20 @@ describe('a wall cut where its units came out, at full detail', () => {
   it('breaks a brick where a rifle round goes through it: a crater cut through the brick, the rest of the brick and the wall around it stay', () => {
     const s = setup()
     const at = s.centre('wall_0_0')
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 2100, caliber: 7.62, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'ballistic', point: at, direction: [0, 0, -1], energy: 2100, caliber: 7.62, source: 'test' })
     s.run(0.2)
-    const chip = s.events.find((e: any) => e.type === 'chip' && e.part === 'wall_0_0') as any
+    const chip = s.events.find((e: DestructionEvent) => e.type === 'chip' && e.part === 'wall_0_0') as Extract<DestructionEvent, { type: 'chip' }>
     expect(chip).toBeDefined()
     expect(Math.max(chip.size[0], chip.size[2])).toBeLessThan(0.15)
     const statistics = s.d.statistics().breached
     expect(statistics.gone).toBe(0)
     expect(statistics.craters).toBe(1)
-    const shell = s.house.group.getObjectByName('breach-shell') as any
+    const shell = s.house.group.getObjectByName('breach-shell') as Mesh<BufferGeometry, MeshLambertMaterial>
     const mask = shell.userData.breachMask
-    const units = s.house.group.getObjectByName('breach:wall_0_0') as any
+    const units = s.house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
     expect(units.count).toBeGreaterThan(0)
     expect(units.material.side).toBe(THREE.DoubleSide)
-    const texel = (m: any, p: number[]) => {
+    const texel = (m: WallMaskData, p: number[]) => {
       const v = s.house.group.worldToLocal(new THREE.Vector3(p[0], p[1], p[2]))
       return m.data[Math.floor((v.y - m.y0) / m.height * m.h) * m.w + Math.floor(((m.alongU ? v.x : v.z) - m.start) / m.len * m.w)]
     }
@@ -294,24 +301,24 @@ describe('a wall cut where its units came out, at full detail', () => {
   it('leaves no unit inside the opening', () => {
     const s = setup()
     let checked = false
-    s.world.on('stage', (e: any) => {
+    s.world.on('stage', (ev: DestructionEvent) => { const e = ev as StageEvent;
       if (e.part !== 'wall_0_0' || e.stage !== 2) return
-      const mesh = s.house.group.getObjectByName('breach:wall_0_0') as any
+      const mesh = s.house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
       const m = new THREE.Matrix4(); const p = new THREE.Vector3()
-      for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); p.setFromMatrixPosition(m); expect(p.distanceTo(new THREE.Vector3(...(e.opening.center as [number, number, number])))).toBeGreaterThanOrEqual(e.opening.radius - 1e-6) }
+      for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); p.setFromMatrixPosition(m); expect(p.distanceTo(new THREE.Vector3(...(e.opening!.center as [number, number, number])))).toBeGreaterThanOrEqual(e.opening!.radius - 1e-6) }
       checked = true
     })
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
     expect(checked).toBe(true)
   })
 
   it('goes back to the box at LOD 1 and 2 and to the cut wall at LOD 0', () => {
     const s = setup()
-    s.world.on('stage', (e: any) => {
+    s.world.on('stage', (ev: DestructionEvent) => { const e = ev as StageEvent;
       if (e.part !== 'wall_0_0' || e.stage !== 2) return
-      const mesh = s.house.group.getObjectByName('breach:wall_0_0') as any
-      const shell = s.house.group.getObjectByName('breach-shell') as any
+      const mesh = s.house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
+      const shell = s.house.group.getObjectByName('breach-shell') as Mesh<BufferGeometry, MeshLambertMaterial>
       expect(mesh.visible).toBe(true)
       expect(shell.visible).toBe(true)
       s.house.setLod(1)
@@ -323,7 +330,7 @@ describe('a wall cut where its units came out, at full detail', () => {
       expect(shell.visible).toBe(true)
       expect(hidden(s.house, 'wall_0_0')).toBe(true)
     })
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
   })
 
@@ -331,7 +338,7 @@ describe('a wall cut where its units came out, at full detail', () => {
     const { house, d, events } = breach()
     const wall = house.structure.byId.get('wall_0_0')
     // the concrete pillars that stand in the wall (under its plaster) and the bond beam on it
-    const inWall = house.structure.parts.filter((p: StructurePiece) => p.role === 'column' && (p.aabb[0] + p.aabb[2]) / 2 >= wall.aabb[0] && (p.aabb[0] + p.aabb[2]) / 2 <= wall.aabb[2] && (p.aabb[1] + p.aabb[3]) / 2 >= wall.aabb[1] && (p.aabb[1] + p.aabb[3]) / 2 <= wall.aabb[3])
+    const inWall = house.structure.parts.filter((p: StructurePiece) => p.role === 'column' && (p.aabb[0] + p.aabb[2]) / 2 >= wall!.aabb[0] && (p.aabb[0] + p.aabb[2]) / 2 <= wall!.aabb[2] && (p.aabb[1] + p.aabb[3]) / 2 >= wall!.aabb[1] && (p.aabb[1] + p.aabb[3]) / 2 <= wall!.aabb[3])
     expect(inWall.length).toBeGreaterThan(1)
     expect(events.some((e: { type: string; part?: string; parts?: Array<string | { id: string }> }) => (e.type === 'fracture' && e.part === 'wall_0_0') || (e.type === 'collapse' && (e.parts ?? []).some((p) => (typeof p === 'string' ? p : p.id) === 'wall_0_0')))).toBe(true)
     expect(events.some((e: { type: string; part?: string }) => e.type === 'fracture' && inWall.some((p: StructurePiece) => p.id === e.part))).toBe(false)
@@ -347,7 +354,7 @@ describe('a wall cut where its units came out, at full detail', () => {
   it('draws no courses when the house is at LOD 1', () => {
     const s = setup()
     s.house.setLod(1)
-    s.world.hitPart(s.d.id, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+    s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
     s.run(0.5)
     expect(s.d.statistics().breached.walls).toBe(0)
   })

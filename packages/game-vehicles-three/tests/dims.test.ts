@@ -46,7 +46,7 @@ describe('colour and frame', () => {
     const high = vehicles.build('compact_hatch', { quality: 'high' })
     expect(high.context).toBeTruthy()
     let tagged = 0
-    high.group.traverse((o: any) => {
+    high.group.traverse((o) => {
       if (o.userData.damageable) tagged++
     })
     expect(tagged).toBeGreaterThan(0)

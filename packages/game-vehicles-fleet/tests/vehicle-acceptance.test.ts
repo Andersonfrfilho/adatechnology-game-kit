@@ -55,7 +55,7 @@ function auditModel(key: string): string[] {
   const shoot = (origin: THREE.Vector3, dir: THREE.Vector3) => d.surfaceRay!({ origin: origin.toArray() as [number, number, number], direction: dir.toArray() as [number, number, number], maxDistance: 30 })
 
   // a pane takes the round that goes to it
-  c.vehicle.traverse((o: any) => {
+  c.vehicle.traverse((o: THREE.Mesh) => {
     const glass = o.userData?.glass
     if (!o.isMesh || !glass) return
     const hits = paneAims(o, centre).map(({ at, normal: n }) => shoot(at.clone().addScaledVector(n, 3), n.clone().negate()))
@@ -105,11 +105,11 @@ function auditModel(key: string): string[] {
       continue
     }
     const part = d.describe().parts.find((p) => p.id === id)!
-    const zone = (kit as any).zonesOf(c).find((q: any) => q.id === id)
+    const zone = kit.zonesOf(c).find((q) => q.id === id)
     const zoneBox = zone ? { ...zone.box, side: zone.side } : { x0: 0, x1: 0, y0: 0, y1: 0, z0: 0, z1: 0, side: 1 }
     if (zone) {
-      for (const o of c.vehicle.children as any[]) {
-        if (!o.isMesh || o.material !== (kit as any)._.MATERIALS.chrome) continue
+      for (const o of c.vehicle.children as THREE.Mesh[]) {
+        if (!o.isMesh || o.material !== kit.materials.chrome) continue
         const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
         const at = b.getCenter(new THREE.Vector3())
         const s = b.getSize(new THREE.Vector3())
@@ -133,7 +133,7 @@ function auditModel(key: string): string[] {
     d.hit({ ...SHOT, point: hit.point, part: hit.part, normal: hit.normal, direction: out.clone().negate().toArray() as [number, number, number] })
     const mark = () => {
       const marks: THREE.Object3D[] = []
-      piv.traverse((o: any) => {
+      piv.traverse((o: THREE.Mesh) => {
         if (o.userData?.decal) marks.push(o)
       })
       return marks[0]
@@ -146,14 +146,14 @@ function auditModel(key: string): string[] {
     const after = mark()?.getWorldPosition(new THREE.Vector3())
     if (before && after && before.distanceTo(after) < 0.02) problems.push(`${id}: the hole did not swing with the door`)
     let openOut = false
-    piv.traverse((o: any) => {
+    piv.traverse((o: THREE.Mesh) => {
       if (!o.isMesh || !o.visible || o.userData?.decal) return
       const b = new THREE.Box3().setFromObject(o)
       if (Math.abs(b.getCenter(new THREE.Vector3())[across] - centre[across]) > Math.abs(edgeClosed[across] - centre[across]) + 0.05) openOut = true
     })
     if (!openOut) problems.push(`${id}: opening does not swing it out of the body`)
     let skin = 0
-    piv.traverse((o: any) => {
+    piv.traverse((o: THREE.Mesh) => {
       if (o.isMesh && o.visible) skin++
     })
     if (skin === 0) problems.push(`${id}: nothing hangs on the hinge`)
@@ -192,9 +192,9 @@ function auditModel(key: string): string[] {
     // nothing the model draws on the side stays across the open door (a strip, a trim, a frame), except the sill it opens over
     const doorIds = new Set(doors)
     const point = new THREE.Vector3()
-    c.vehicle.traverse((o: any) => {
+    c.vehicle.traverse((o: THREE.Mesh) => {
       if (!o.isMesh || !o.visible || o.userData.decal || o.userData.glass) return
-      for (let q = o; q; q = q.parent) if (q.name && doorIds.has(q.name)) return
+      for (let q: THREE.Object3D | null = o; q; q = q.parent) if (q.name && doorIds.has(q.name)) return
       const b = new THREE.Box3().setFromObject(o).applyMatrix4(inverse)
       const s = b.getSize(new THREE.Vector3())
       const m = b.getCenter(new THREE.Vector3())

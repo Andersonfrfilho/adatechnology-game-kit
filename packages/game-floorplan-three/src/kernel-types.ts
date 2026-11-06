@@ -13,7 +13,7 @@ import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-
 
 import type { Translate } from './locale.js'
 import type { HouseRendererOptions } from './types.js'
-import type { InteractivePiece, KernelAnimationClotheslines, KernelBuildBuild, KernelCars, KernelInteractablesBridge, KernelInteractablesKit, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionFittings, KernelInteractionItems, KernelInteractionState, KernelInteractionTarget, KernelLightsRoomLight, KernelMaterialsMaterials, KernelMaterialsTextures, KernelMirrors, KernelVegetationBridge, SharedState, KernelBuildInstance } from './kernel-types-systems.js'
+import type { InteractivePiece, KernelAnimationClotheslines, KernelBuildBuild, KernelCars, KernelInteractablesBridge, KernelInteractablesKit, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionFittings, KernelInteractionItems, KernelInteractionState, KernelInteractionTarget, KernelLightsRoomLight, KernelMaterialsMaterials, KernelMaterialsTextures, KernelMirrors, KernelVegetationBridge, SharedState, KernelBuildInstance, KernelDestruction } from './kernel-types-systems.js'
 
 export type * from './kernel-types-systems.js'
 
@@ -892,10 +892,10 @@ export interface KernelCloseScene {
   closeScene(mats: Record<string, THREE_NS.Material>): Record<string, THREE_NS.Group>
 }
 
-/** The modules typed so far, and the members of the others by name until they are typed. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild, KernelBuildInstance {
-  [member: string]: any
+/** Every module of the kernel, typed; a member no module declares is `unknown`. */
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild, KernelBuildInstance, KernelDestruction {
+  [member: string]: unknown
 }
 
 export type Shared = SharedState
-export type Installer = (K: Kernel, shared: Shared) => any
+export type Installer = (K: Kernel, shared: Shared) => unknown

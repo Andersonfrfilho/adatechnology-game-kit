@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { Mesh, Object3D } from 'three'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
 import { makeFleetKit } from './helpers/kit'
 
@@ -8,13 +9,14 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    lens keeps its jagged edge in the bezel): the panels and the body are the same, only the lamps the tear breaks differ. */
 const GOLDEN_DIGEST = '798:2827258869'
 
-function digestOf(root: any): string {
+function digestOf(root: Object3D): string {
   let h = 2166136261
   const mix = (v: number) => {
     h = Math.imul(h ^ v, 16777619) >>> 0
   }
   let meshes = 0
-  root.traverse((o: any) => {
+  root.traverse((obj) => {
+    const o = obj as Mesh
     if (!o.isMesh || !o.geometry) return
     meshes++
     mix(o.visible ? 1 : 0)
@@ -32,11 +34,11 @@ function digestOf(root: any): string {
 
 describe('panels torn off the sedan', () => {
   it('end with the same geometry as before the cut and the decals used the box of the panel', () => {
-    const kit: any = makeFleetKit('en')
+    const kit = makeFleetKit('en')
     const item = buildVehicleItem(kit, 'midsize_sedan')
-    const d: any = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
+    const d = createVehicleDestructible(kit, item.vehicle, { id: 'sedan', frame: item.root })
     for (const part of HITS) d.hit({ type: 'explosive', point: d.partWorldCenter(part), energy: 400000, radius: 3 })
-    for (let frame = 0; frame < 600; frame++) d.update(1 / 60)
+    for (let frame = 0; frame < 600; frame++) d.update!(1 / 60)
     const first = digestOf(item.root)
     console.log('DIGEST', first)
     expect(first).toBe(GOLDEN_DIGEST)

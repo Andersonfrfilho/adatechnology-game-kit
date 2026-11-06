@@ -11,8 +11,10 @@ import type * as Interactables from '@adatechnology/game-interactables'
 import type { InteractablesEffects, InteractablesGfx, InteractablesScreen, SpeciesLibrary } from './adapter-shapes.js'
 import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, HouseholdKit, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
 import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
-import type { BuildOptions, Damageable, House, HouseFleetDamageable, HouseRenderer, HouseInteractable, LightingOptions } from './types.js'
-import type { BoxCollider, DoorLeaf, ElectricalInfo, Flight, FurnitureApi, GutterConfig, Hex, HouseDoor, HouseItem, HouseRecord, HouseRoom, ItemRef, LightRequest, MirrorRecord, Mount, PieceRecord, RoofRect, SolarInfo, StairRecord, Three, TypeEntry, TypeTable, Vec3, WaterState } from './kernel-types.js'
+import type { BuildOptions, Damageable, House, HouseFleetDamageable, HousePart, HouseRenderer, HouseInteractable, LightingOptions } from './types.js'
+import type { BreachView, BreachViewOptions, DestructionCollider, HouseDestruction, HouseStructure } from './destruction/types.js'
+import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type { BoxCollider, DoorLeaf, ElectricalInfo, Flight, FurnitureApi, GutterConfig, Hex, HouseDoor, HouseItem, HouseRecord, HouseRoom, ItemRef, LightRequest, MirrorRecord, Mount, PieceRecord, RoofRect, SolarInfo, StairRecord, Three, TypeEntry, TypeTable, Vec3, WaterApi, WaterState } from './kernel-types.js'
 
 /** The procedural textures (`materials/textures`): what `cfg.textures` can replace. */
 export type TextureName = 'roughcast' | 'block' | 'tile' | 'dirt' | 'grass' | 'asphalt' | 'sidewalk' | 'fiber_cement'
@@ -705,6 +707,23 @@ export interface SharedState {
   destructionSeq: number
   mirrorEnv: THREE_NS.CubeTexture | null
   mirrorMat: THREE_NS.MeshStandardMaterial | null
+}
+
+/** What `destruction/pieces`, `destruction/breach` and `destruction/world` put on the kernel: the fragments, the structure of a house and its adapter to the destruction world. */
+export interface KernelDestruction {
+  FRAGMENT_COLOR: Record<string, number>
+  FRAGMENT_GEO: THREE_NS.BoxGeometry
+  FRAGMENT_MAT: Record<string, THREE_NS.MeshLambertMaterial>
+  fragmentMaterial(material: string): THREE_NS.MeshLambertMaterial
+  /** Tags the loose groups that are pieces (doors, water tank, gas cylinder, pipes, gates, panels): userData on the meshes and a piece record. */
+  markGroups(r: HouseRecord, root: THREE_NS.Group, parts: Record<string, HousePart>): void
+  /** The structure of a built house (`house.structure`). */
+  assembleStructure(r0: HouseRecord, root: THREE_NS.Group): HouseStructure
+  /** The adapter of a built house to the destruction world (`house.destruction`). */
+  createHouseDestruction(root: THREE_NS.Group, house: THREE_NS.Group, structure: HouseStructure, parts: Record<string, HousePart>, colliders: readonly DestructionCollider[], water: WaterApi): HouseDestruction
+  createBreachView(opts: BreachViewOptions): BreachView
+  /** The painting of every house's breach, as one queue for a frame budget. */
+  breachPaintQueue: DeferredQueue
 }
 
 /** What `build/build` puts on the kernel: `build(result, options)` draws a house and returns it (`House`). */

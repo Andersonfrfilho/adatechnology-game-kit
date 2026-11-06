@@ -121,7 +121,7 @@ describe('bound to the destruction', () => {
     const send = (e: object): void => listeners.slice().forEach((fn) => fn(e as DestructionEvent))
     return { house, nav, binding, send, listeners }
   }
-  const middle = (house: House, id: string): [number, number] => { const p = house.structure.byId.get(id); return [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
+  const middle = (house: House, id: string): [number, number] => { const p = house.structure.byId.get(id); return [(p!.aabb[0] + p!.aabb[2]) / 2, (p!.aabb[1] + p!.aabb[3]) / 2] }
 
   it('opens the cells inside the opening of a wall that reaches stage 2', () => {
     const { house, nav, send } = fixture()
@@ -149,7 +149,7 @@ describe('bound to the destruction', () => {
   it('removes the floor cells under a slab that fractures or collapses', () => {
     const { house, nav, send } = fixture()
     const slab = house.structure.byId.get('slab_1')
-    const x = (slab.aabb[0] + slab.aabb[2]) / 2, z = (slab.aabb[1] + slab.aabb[3]) / 2
+    const x = (slab!.aabb[0] + slab!.aabb[2]) / 2, z = (slab!.aabb[1] + slab!.aabb[3]) / 2
     expect(nav.blocked(x, z, 1)).toBe(0)
     send({ type: 'fracture', part: 'slab_1' })
     expect(nav.blocked(x, z, 1)).toBe(1)
@@ -158,7 +158,7 @@ describe('bound to the destruction', () => {
   it('ignores a slab that is not a floor (the one under the roof)', () => {
     const { house, nav, send } = fixture()
     const ceiling = house.structure.byId.get('slab_ceiling')
-    const x = (ceiling.aabb[0] + ceiling.aabb[2]) / 2, z = (ceiling.aabb[1] + ceiling.aabb[3]) / 2
+    const x = (ceiling!.aabb[0] + ceiling!.aabb[2]) / 2, z = (ceiling!.aabb[1] + ceiling!.aabb[3]) / 2
     const before = [0, 1].map((f) => nav.blocked(x, z, f))
     send({ type: 'collapse', parts: ['slab_ceiling'] })
     expect([0, 1].map((f) => nav.blocked(x, z, f))).toEqual(before)
@@ -198,7 +198,7 @@ describe('bound to the destruction', () => {
     bindNavigator(nav, 'real', house)
     const [x, z] = middle(house, 'wall_0_0')
     expect(nav.blocked(x, z, 0)).toBe(1)
-    world.hitPart(house.destruction.id, 'wall_0_0', { type: 'blunt', point: [x, 1.3, z], energy: 3e6, radius: 0.35, source: 'test' })
+    world.hitPart(house.destruction.id!, 'wall_0_0', { type: 'blunt', point: [x, 1.3, z], energy: 3e6, radius: 0.35, source: 'test' })
     for (let t = 0; t < 1; t += 0.05) { world.update(0.05); renderer.update(0.05) }
     expect(nav.blocked(x, z, 0)).toBe(0)
     house.destruction.reset()

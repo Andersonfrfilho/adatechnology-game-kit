@@ -2,7 +2,7 @@ import { createVehicleCamera, defaultEye, mirrorPoses } from '@adatechnology/gam
 import type { MirrorPose, VehicleCameraMode, VehicleFrame, VehicleThreeLib } from '@adatechnology/game-camera'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
-import type { CanvasTexture, Group, Mesh, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry } from 'three'
+import type { CanvasTexture, Group, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry } from 'three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { CABIN_BANK, LIBRARY_BANK, RADIO_BANK } from '@adatechnology/game-audio'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
@@ -199,7 +199,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     startLine.rotation.x = -Math.PI / 2
     startLine.position.set(TRACK.x0, 0.017, TRACK.z)
     track.add(startLine)
-    ;(host.scene as any).add(track)
+    ;(host.scene as Object3D).add(track)
     buildBoard()
   }
   const setSurface = (surface: string): void => {
@@ -301,7 +301,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     const built = createVehiclesThree(three, { kit: kitFor(three) }).build(settings.vehicle, { quality: 'high' })
     const guides = reverseGuides(built)
     built.group.add(guides)
-    ;(host.scene as any).add(built.group)
+    ;(host.scene as Object3D).add(built.group)
     car = { built, guides, subject }
     wheels = createWheelRoll(three, built)
     pose({ x: 0, z: TRACK.start, yaw: 0, pitch: 0, roll: 0, height: 0 }, 0)
