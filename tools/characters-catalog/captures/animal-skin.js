@@ -6,14 +6,14 @@
   const slices = globalThis.__SLICES
   const { BICHOS, bichoPele } = new Function('THREE', 'scene', `${slices.animals}\nreturn { BICHOS, bichoPele }`)(THREE, new THREE.Scene())
   const recorder = GoldenTool.createEventRecorder()
-  const fnv = (array) => {
+  const fnv = (/** @type {ArrayLike<number>} */ array) => {
     let hash = 0x811c9dc5
     for (let index = 0; index < array.length; index++) hash = Math.imul(hash ^ (Math.round(array[index] * 1e4) | 0), 0x01000193) >>> 0
     return hash.toString(16).padStart(8, '0')
   }
   recorder.record('hash', { algorithm: 'fnv1a-32 over round(value * 1e4)' })
   for (const species of slices.species) {
-    const sp = BICHOS.SPECIES.find((entry) => entry.id === species.sourceId)
+    const sp = BICHOS.SPECIES.find((/** @type {{ id: string }} */ entry) => entry.id === species.sourceId)
     for (const infected of [false, true]) {
       const animal = sp.snake ? BICHOS.snake(sp) : sp.b ? BICHOS.bird(sp) : BICHOS.quad(sp)
       animal.id = species.sourceId

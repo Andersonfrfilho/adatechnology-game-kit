@@ -6,18 +6,20 @@
 // Params: seed, lines (`1` keeps the text of each node, so that a mismatch shows which node changed; `0` keeps only the hash).
 (() => {
   const { seed, lines = '1' } = globalThis.__GOLDEN_PARAMS
-  const source = [...document.scripts].map((script) => script.textContent).find((text) => text.includes('const MODELS = ['))
+  const source = /** @type {string} */ ([...document.scripts].map((script) => script.textContent).find((text) => /** @type {string} */ (text).includes('const MODELS = [')))
   const from = source.indexOf('const mats = []')
   const modelsEnd = source.indexOf('const STAGE_TARGET')
   const stageFrom = modelsEnd
   const setStageAt = source.indexOf('function setStage(s)')
   const stageEnd = source.indexOf('\n  }\n', setStageAt) + 4
   const body = `const T = THREE;\nconst draw = () => {};\n${source.slice(from, modelsEnd)}\n${source.slice(stageFrom, stageEnd)}\nreturn { mats, MODELS, setStage }`
-  const { mats, MODELS, setStage } = new Function('THREE', body)(THREE)
+  const { mats, MODELS, setStage } = /** @type {{ mats: import('three').MeshStandardMaterial[]; MODELS: [string, () => import('three').Object3D][]; setStage: (stage: number) => void }} */ (new Function('THREE', body)(THREE))
 
-  const round = (value) => Math.round(value * 10000) / 10000
+  const round = (/** @type {number} */ value) => Math.round(value * 10000) / 10000
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {Record<string, import('three').Object3D>} */
   const scenes = {}
+  /** @type {[number, number][]} */
   const owned = []
   MODELS.forEach(([id, build], index) => {
     const before = mats.length

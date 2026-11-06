@@ -1,11 +1,12 @@
-/* global GoldenTool */
+/* global GoldenTool, THREE */
 // Capture for the Galeria do Vale Cinzento: the silhouettes the page draws from far away (house types and a city building).
 // Needs the recorder flag --expose rng,R,root,sobrado,laje,colonial,chalet,companyHouse,stilt,farmhouse,house,building (the page keeps them inside an IIFE).
 // Each case runs with a fresh root group and the page's own seeded generator rng(7); the scene hash is the root's.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const page = globalThis.GoldenExposed
+  const page = /** @type {GalleryPage} */ (globalThis.GoldenExposed)
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {[string, () => void][]} */
   const CASES = [
     ['sobrado', () => page.sobrado(0, 0, 8, 9, 0xc8bca8, 0x5a3a2a, 0)],
     ['sobrado_rotated', () => page.sobrado(3, -2, 7, 8, 0xb0a48c, undefined, 0.6)],
@@ -24,9 +25,10 @@
     ['building', () => page.building(0, 0, 12, 14, 20, 0x8a8a86, {})],
     ['building_shop', () => page.building(0, 0, 12, 14, 20, 0x8a8a86, { shop: 1, lit: 0.2 })],
   ]
+  /** @type {Record<string, import('three').Group>} */
   const scenes = {}
   for (const [label, build] of CASES) {
-    page.root = new globalThis.THREE.Group()
+    page.root = new THREE.Group()
     page.R = page.rng(7)
     build()
     scenes[label] = page.root

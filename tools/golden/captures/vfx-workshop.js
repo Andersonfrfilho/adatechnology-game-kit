@@ -5,7 +5,18 @@
 // Params: mode = effects (default) | fluids | trace | weather (only rain, fog and headlights: `chuva` in its 3 options, `neblina` and `farol`, with the
 // rain streaks and the hemisphere light, which the lightning of the storm moves).
 (() => {
-  const X = GoldenExposed
+  /** @typedef {Record<string, Float32Array> & { n: number; spawn: (options: unknown) => unknown }} Pool a particle pool of the page: its typed arrays by name and its live count */
+  /** @typedef {{ on: boolean; x: number; y: number; z: number; sx: number; sy: number; t: number; life: number; rest?: boolean }} Piece a debris, decal or ring slot */
+  /** @typedef {{ id: string; loop: number; param?: { opts: unknown[] } }} Effect */
+  /** @typedef {'debris' | 'decal' | 'ring' | 'flash' | 'fLaunch'} Wrapped */
+  /**
+   * What `--expose` opens of the page's closure.
+   * @typedef {{ renderer: { render: () => void }; addP: Pool; norP: Pool; streak: Pool; auto: boolean; S: Record<string, number>; DB: Piece[]; DC: Piece[]; RG: Piece[];
+   *   LP: { L: import('three').Light }[]; RN: { on: boolean; n: number }; rainPos: Float32Array; hemi: import('three').Light; pr: number; select: (id: string, restart: boolean) => void;
+   *   FX: Effect[]; fh: Float32Array; fdry: Float32Array; H: { g: import('three').Object3D; arms: import('three').Object3D[] }[] }
+   *   & { [name in Wrapped]: (...args: unknown[]) => unknown }} VfxWorkshop
+   */
+  const X = /** @type {VfxWorkshop} */ (GoldenExposed)
   const { mode = 'effects' } = globalThis.__GOLDEN_PARAMS
   const FRAME_MS = 1000 / 60
   const SKIPPED = new Set(['chuva', 'neblina', 'farol', 'fluidos'])
@@ -13,19 +24,21 @@
   const MAX_SPAWNS = 300
   const INSTANT_FRAMES = [6, 30, 60, 120]
   const FILM_INSTANTS = [0.5, 1, 2, 5, 10]
-  const round4 = (value) => Math.round(value * 1e4) / 1e4 + 0
+  const round4 = (/** @type {number} */ value) => Math.round(value * 1e4) / 1e4 + 0
+  /** @type {(value: unknown) => unknown} */
   const clean = (value) => {
     if (value === null || value === undefined) return null
     if (typeof value === 'number') return round4(value)
     if (typeof value === 'boolean' || typeof value === 'string') return value
     if (typeof value === 'function') return undefined
     if (Array.isArray(value)) return value.map((entry) => clean(entry) ?? null)
-    if (value.isVector3) return [value.x, value.y, value.z].map(round4)
-    if (value.isColor) return [value.r, value.g, value.b].map(round4)
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => typeof entry !== 'function').map(([key, entry]) => [key, clean(entry)]))
+    const object = /** @type {Partial<import('three').Vector3 & import('three').Color>} */ (value)
+    if (object.isVector3) return /** @type {number[]} */ ([object.x, object.y, object.z]).map(round4)
+    if (object.isColor) return /** @type {number[]} */ ([object.r, object.g, object.b]).map(round4)
+    return Object.fromEntries(Object.entries(/** @type {object} */ (value)).filter(([, entry]) => typeof entry !== 'function').map(([key, entry]) => [key, clean(entry)]))
   }
-  const hashArray = (array, count) => GoldenTool.hashText(Array.from(array.subarray(0, count), (value) => round4(value)).join(','))
-  const poolHash = (pool, strides) =>
+  const hashArray = (/** @type {Float32Array} */ array, /** @type {number} */ count) => GoldenTool.hashText(Array.from(array.subarray(0, count), (value) => round4(value)).join(','))
+  const poolHash = (/** @type {Pool} */ pool, /** @type {[string, number][]} */ strides) =>
     GoldenTool.hashText(
       strides
         .map(([name, stride]) => `${name}:${hashArray(pool[name], pool.n * stride)}`)
@@ -35,11 +48,12 @@
   const nativeRandom = Math.random
   let randomCalls = 0
   let frame = 0
+  /** @type {string[]} */
   let spawns = []
-  const trace = (kind, args) => {
+  const trace = (/** @type {string} */ kind, /** @type {unknown[]} */ args) => {
     if (spawns.length < MAX_SPAWNS) spawns.push(`${frame} ${kind} ${randomCalls} ${JSON.stringify(clean(args))}`)
   }
-  const seededFor = (id, option) => {
+  const seededFor = (/** @type {string} */ id, /** @type {number} */ option) => {
     const next = GoldenTool.createSeededRandom(parseInt(GoldenTool.hashText(`${id}:${option}`), 16))
     randomCalls = 0
     Math.random = () => {
@@ -50,15 +64,16 @@
   const silence = () => {
     X.renderer.render = () => {}
   }
+  /** @type {Record<string, (...args: unknown[]) => unknown>} */
   const original = {}
-  const wrapFunction = (name) => {
+  const wrapFunction = (/** @type {Wrapped} */ name) => {
     original[name] = X[name]
     X[name] = (...args) => {
       trace(name, args)
       return original[name](...args)
     }
   }
-  const wrapSpawn = (pool, label) => {
+  const wrapSpawn = (/** @type {Pool} */ pool, /** @type {string} */ label) => {
     const spawn = pool.spawn.bind(pool)
     pool.spawn = (options) => {
       trace(label, [options])
@@ -69,14 +84,14 @@
     }
   }
   const restores = [wrapSpawn(X.addP, 'add'), wrapSpawn(X.norP, 'normal'), wrapSpawn(X.streak, 'streak')]
-  for (const name of ['debris', 'decal', 'ring', 'flash']) wrapFunction(name)
+  for (const name of /** @type {const} */ (['debris', 'decal', 'ring', 'flash'])) wrapFunction(name)
   silence()
   X.auto = false
 
   const screenState = () => Object.values(X.S).map(round4).join(' ')
   const counts = () => [X.addP.n, X.norP.n, X.streak.n, X.DB.filter((d) => d.on).length, X.DC.filter((d) => d.on).length, X.RG.filter((d) => d.on).length, X.LP.filter((l) => l.L.intensity > 0).length]
-  const weatherFields = () => (mode === 'weather' ? { rain: X.RN.on ? GoldenTool.hashText(`${X.RN.n}:${hashArray(X.rainPos, X.RN.n * 6)}`) : 'off', drops: X.RN.n, hemi: round4(X.hemi.intensity) } : {})
-  const instantOf = (id, option, seconds) => {
+  const weatherFields = () => (mode === 'weather' ? { rain: X.RN.on ? GoldenTool.hashText(`${X.RN.n}:${hashArray(X.rainPos, X.RN.n * 6)}`) : 'off', drops: X.RN.n, hemi: round4(X.hemi.intensity) } : /** @type {Record<string, never>} */ ({}))
+  const instantOf = (/** @type {string} */ id, /** @type {number} */ option, /** @type {number} */ seconds) => {
     recorder.record('instant', {
       id,
       option,
@@ -92,7 +107,7 @@
     })
   }
 
-  const recordEffect = (effect, option) => {
+  const recordEffect = (/** @type {Effect} */ effect, /** @type {number} */ option) => {
     seededFor(effect.id, option)
     X.pr = option
     X.select(effect.id, true)
@@ -100,6 +115,7 @@
     const frames = Math.round(seconds * 60) - 1
     frame = 0
     spawns = []
+    /** @type {string[]} */
     const timeline = []
     for (frame = 1; frame <= frames; frame++) {
       GoldenTool.stepFrames(1, FRAME_MS)
@@ -111,8 +127,8 @@
     recorder.record('frames', { id: effect.id, option, counts: timeline.join(' ') })
   }
 
-  const recordFilm = (option) => {
-    const effect = X.FX.find((entry) => entry.id === 'fluidos')
+  const recordFilm = (/** @type {number} */ option) => {
+    const effect = /** @type {Effect} */ (X.FX.find((entry) => entry.id === 'fluidos'))
     seededFor('fluidos', option)
     let launches = 0
     original.fLaunch = X.fLaunch
@@ -139,12 +155,14 @@
 
   // `trace`: what the film test needs from the page and cannot rebuild without it: the dripping arm's world position for each frame (the
   // zombie is animated by the page) and the running count of `Math.random` calls, to check the replay draws the same numbers in the same order.
-  const recordTrace = (option) => {
+  const recordTrace = (/** @type {number} */ option) => {
     seededFor('fluidos', option)
     X.pr = option
     X.select('fluidos', true)
-    const Vector3 = X.H[0].g.position.constructor
+    const Vector3 = /** @type {typeof import('three').Vector3} */ (X.H[0].g.position.constructor)
+    /** @type {string[]} */
     const sources = []
+    /** @type {number[]} */
     const draws = []
     for (let frameIndex = 0; frameIndex < 600; frameIndex++) {
       if (option === 0 || option === 3) {
@@ -165,7 +183,7 @@
     for (let option = 0; option < 4; option++) recordFilm(option)
   } else if (mode === 'weather') {
     for (const id of ['chuva', 'neblina', 'farol']) {
-      const effect = X.FX.find((entry) => entry.id === id)
+      const effect = /** @type {Effect} */ (X.FX.find((entry) => entry.id === id))
       const options = effect.param ? effect.param.opts.length : 1
       for (let option = 0; option < options; option++) recordEffect(effect, option)
     }
@@ -176,7 +194,7 @@
       for (let option = 0; option < options; option++) recordEffect(effect, option)
     }
   }
-  for (const [name, fn] of Object.entries(original)) X[name] = fn
+  for (const [name, fn] of Object.entries(original)) X[/** @type {Wrapped} */ (name)] = fn
   for (const restore of restores) restore()
   Math.random = nativeRandom
   return GoldenTool.createGoldenRecord({ name: mode === 'trace' ? 'vfx-workshop-fluids-trace' : mode === 'fluids' ? 'vfx-workshop-fluids' : mode === 'weather' ? 'vfx-workshop-weather' : 'vfx-workshop', seed: 0, events: recorder.events(), scenes: {} })

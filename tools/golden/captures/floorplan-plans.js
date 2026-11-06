@@ -6,15 +6,17 @@
 (() => {
   const { seed, seedFrom = '1', seedTo = '25', states = '', templates = '', rows: withRows = '0' } = globalThis.__GOLDEN_PARAMS
   const recorder = GoldenTool.createEventRecorder()
-  const number = (value) => String(Math.round(value * 1000) / 1000 + 0)
+  const number = (/** @type {number} */ value) => String(Math.round(value * 1000) / 1000 + 0)
+  /** @type {(value: unknown) => string} */
   const cell = (value) => {
     if (typeof value === 'number') return number(value)
     if (Array.isArray(value)) return '[' + value.map(cell).join(',') + ']'
     return value === null || value === undefined ? '-' : String(value)
   }
-  const row = (values) => values.map(cell).join('|')
-  const itemRow = (item) => row([item.tipo, item.x, item.z, item.y, item.ry, item.w, item.d, item.h, item.fu, item.fv, item.aabb, item.comodo, item.andar, item.externo, item.modo, item.folga, item.plano, item.baixo])
+  const row = (/** @type {readonly unknown[]} */ values) => values.map(cell).join('|')
+  const itemRow = (/** @type {TeamPlanItem} */ item) => row([item.tipo, item.x, item.z, item.y, item.ry, item.w, item.d, item.h, item.fu, item.fv, item.aabb, item.comodo, item.andar, item.externo, item.modo, item.folga, item.plano, item.baixo])
 
+  /** @param {TeamPlan} res */
   function listsOf(res) {
     const lot = res.lote
     return {

@@ -3,8 +3,10 @@
 // hash each. The page draws from a shared seeded stream (`rng(77)`), so the people are built in the order of `PEOPLE`, once. Only the hash is kept.
 (() => {
   const { seed } = globalThis.__GOLDEN_PARAMS
-  const { buildPerson, PEOPLE } = globalThis.__team
+  /** @typedef {{ id: string }} Person */
+  const { buildPerson, PEOPLE } = /** @type {{ buildPerson: (person: Person, infected: boolean) => { root: import('three').Object3D; chars: unknown[] }; PEOPLE: Person[] }} */ (globalThis.__team)
   const recorder = GoldenTool.createEventRecorder()
+  /** @type {Record<string, GoldenScene>} */
   const scenes = {}
   for (const person of PEOPLE) {
     const built = buildPerson(person, false)
