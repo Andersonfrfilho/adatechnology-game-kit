@@ -279,7 +279,7 @@ describe('eye clip', () => {
   const inBody = (avatar: ReturnType<typeof createPlayerAvatar>, x: number, y: number, z: number): THREE.Vector3 =>
     (avatar.rig.upper as unknown as THREE.Object3D).localToWorld(new THREE.Vector3(x, y - 0.9, z))
 
-  it('cuts the shoulders and the back for the first-person camera and keeps the chest, the belly and the legs', () => {
+  it('cuts the shoulders, the back and the hips for the first-person camera and keeps the legs whole', () => {
     const avatar = settle()
     avatar.setView('first', viewCamera)
     avatar.root.updateMatrixWorld(true)
@@ -287,12 +287,14 @@ describe('eye clip', () => {
     expect(meshes.length).toBeGreaterThan(3)
     const plane = planeWhileDrawn(meshes[0]!, viewCamera)
     expect(plane).not.toBeNull()
-    // the top of the shoulders and the back of the collar are behind the eyes: a real head hides them from its own eyes
+    // the top of the shoulders, the back of the collar and the top of the hips are behind the eyes: a real head hides them from its own eyes
     expect(plane!.distanceToPoint(inBody(avatar, 0.2, 1.5, 0))).toBeLessThan(0)
     expect(plane!.distanceToPoint(inBody(avatar, 0, 1.55, -0.1))).toBeLessThan(0)
-    // the front of the chest and the belly are in front: a look down sees them
-    expect(plane!.distanceToPoint(inBody(avatar, 0, 1.3, 0.17))).toBeGreaterThan(0)
-    expect(plane!.distanceToPoint(inBody(avatar, 0, 1.05, 0.16))).toBeGreaterThan(0)
+    expect(plane!.distanceToPoint(inBody(avatar, 0, 0.95, 0.1))).toBeLessThan(0)
+    // the hips are cut with the trunk: a look down does not see the top of the trousers from inside the body
+    const hips = (avatar.rig.fig as unknown as THREE.Object3D).children.filter((child) => (child as THREE.Mesh).isMesh) as THREE.Mesh[]
+    expect(hips.length).toBeGreaterThan(0)
+    expect(planeWhileDrawn(hips[0]!, viewCamera)).not.toBeNull()
     expect(renderer.localClippingEnabled).toBe(true)
     // the legs are not cut at all
     let leg: THREE.Mesh | null = null

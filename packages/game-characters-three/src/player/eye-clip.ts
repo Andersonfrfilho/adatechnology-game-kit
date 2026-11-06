@@ -6,13 +6,13 @@ export type EyeClip = {
 }
 
 export type EyeClipOptions = {
-  /** What is cut: the upper body (torso, shoulders, arms). The legs stay whole, as a person lying down still sees them. */
+  /** What is cut: the trunk (torso, shoulders, arms, hips). The legs stay whole, as a person looking down sees them. */
   readonly roots: readonly THREE_NS.Object3D[]
   /** The eye socket the first-person camera sits at. */
   readonly eye: THREE_NS.Object3D
   /** The object whose +z is the body's front (the upper body, so a lean or a lie turns the plane with it). */
   readonly front: THREE_NS.Object3D
-  /** Metres behind the eye the plane stands: the chest in front of it shows, the shoulders and the back do not. */
+  /** Metres behind the eye the plane stands (0: at the eyes): what is in front of it shows, the shoulders and the back do not. */
   readonly behind: number
 }
 
@@ -26,7 +26,7 @@ const isDrawable = (object: THREE_NS.Object3D): boolean => {
 
 /**
  * Cuts the body at a plane just behind the eyes, for one camera: what a real head hides from its own eyes (the tops of the shoulders, the collar, the
- * back) is not drawn, so a look down shows the chest, the belly and the legs instead of the shirt seen from above as a ring around the camera. The plane
+ * back) is not drawn, so a look down shows the front of the chest and the legs instead of the shirt seen from above as a ring around the camera. The plane
  * goes on the materials only while that camera draws them (`clippingPlanes`, world space) and comes off after, so shadows, mirrors and the third person
  * keep the whole body. The renderer's `localClippingEnabled` is switched on the first time: it takes effect from the next frame.
  */
